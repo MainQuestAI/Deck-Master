@@ -358,6 +358,14 @@ class Store:
             from .models import require_writer
             document = copy.deepcopy(document)
             require_writer(document, "rc3-entry.v1")
+        # New Task execution contracts and their writer floor share this pointer
+        # swap, including initial create and every producer/dispatch path.
+        if (WRITER_RANK.get(document.get("compatibility", {}).get("minimum_writer"), -1)
+                < WRITER_RANK["rc4-content.v1"] and
+                any("method_manifest" in self.read_object_json(ref) for ref in document.get("tasks") or [])):
+            from .models import require_writer
+            document = copy.deepcopy(document)
+            require_writer(document, "rc4-content.v1")
         validate_document_semantics(document)
         change = document.get("change") or {}
         change_operation = operation_id or change.get("operation_id") or ""
@@ -416,25 +424,16 @@ class Store:
         Older changes have no request digest. Do not infer one from their ID.
         The operations directory is a rebuildable cache, not another ledger.
         """
-        from .snapshots import committed_snapshots
-
-        _validate_operation_id(operation_id)
-        for document in committed_snapshots(self):
-            change = document.get("change") or {}
-            if change.get("operation_id") != operation_id:
-                continue
-            if change.get("operation_commit"):
-                from .operations import committed_record
-                record, response = committed_record(self, operation_id)
-                return {"format": "operation_receipt.v1", "request_digest": record["request_digest"],
-                        "response": response}
-            receipt = change.get("operation_receipt")
-            if receipt is not None:
-                validate_schema("document", document)
-                if receipt["response"]["revision_id"] != document["revision_id"]:
-                    raise StoreError("operation_receipt", "stored response revision differs from its commit")
-            return copy.deepcopy(receipt)
-        return None
+        from .operations import resolve_operation, lookup_error
+        found = resolve_operation(self, operation_id)
+        if found.state == 'unknown':
+            if found.reason == 'legacy_receipt_only':
+                return None
+            raise lookup_error(found, operation_id)
+        if found.state == 'not_found':
+            return None
+        return {"format": "operation_receipt.v1", "request_digest": found.record['request_digest'],
+                "response": copy.deepcopy(found.result)}
 
     # ---------- locks and staging ----------
 

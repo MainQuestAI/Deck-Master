@@ -26,6 +26,7 @@ from jsonschema.exceptions import best_match
 from referencing import Registry, Resource
 
 SCHEMA_FILES = {
+    "work_context.v2": "work-context.v2.schema.json",
     "collaboration": "collaboration.v1.schema.json",
     "collaboration_decision": "collaboration-decision.v1.schema.json",
     "collaboration_authorization": "collaboration-authorization.v1.schema.json",
@@ -341,6 +342,13 @@ def validate_page_semantics(page: dict[str, Any]) -> None:
 
 def validate_task_semantics(task: dict[str, Any]) -> None:
     validate_schema("task", task)
+    if "method_manifest" in task:
+        manifest = task["method_manifest"]
+        if len({item["id"] for item in manifest}) != len(manifest):
+            raise ModelError("task/method_manifest", "duplicate method id")
+        digest = sha256_bytes(canonical_json_bytes([[item["relative_path"], item["sha256"]] for item in manifest]))
+        if (task.get("method_release") or {}).get("methods_sha256") != digest:
+            raise ModelError("task/method_release", "method digest must match the frozen ordered manifest")
     for index, allowance in enumerate(task.get("call_allowances") or []):
         state = allowance.get("state")
         if state not in ("reserved", "in_flight", "consumed", "released", "unknown"):
@@ -405,7 +413,7 @@ def validate_review_semantics(review: dict[str, Any]) -> None:
                          "verified_user review evidence requires an identity receipt; adoption verifies its adapter")
 
 
-def validate_narrative_semantics(narrative: dict[str, Any]) -> None:
+def validate_narrative_semantics(narrative: dict[str, Any], *, policy: str | None = None) -> None:
     """Narrative semantics (CONTRACTS §11.1): reference integrity across
     nodes/edges/issues, argument maturity requirements, and the authority
     floor for reported facts and calculations. Source support quality stays a
@@ -457,6 +465,44 @@ def validate_narrative_semantics(narrative: dict[str, Any]) -> None:
                              "an argument narrative needs a central node that exists in nodes")
     elif central is not None and central not in known:
         raise ModelError("narrative/central_node_id", "central node id must exist in nodes")
+
+    if policy is not None and policy != "argument-connectivity.v1":
+        raise ModelError("narrative/policy", "unsupported content validation policy")
+    if policy == "argument-connectivity.v1" and narrative.get("maturity") == "argument":
+        adjacent = {node_id: set() for node_id in node_ids}
+        for edge in narrative.get("edges") or []:
+            left, right = edge["from_node_id"], edge["to_node_id"]
+            adjacent[left].add(right)
+            adjacent[right].add(left)
+        for node in nodes:
+            for qualifier in node.get("qualification_node_ids") or []:
+                adjacent[node["node_id"]].add(qualifier)
+                adjacent[qualifier].add(node["node_id"])
+        reached, pending = set(), [central]
+        while pending:
+            node_id = pending.pop()
+            if node_id not in reached:
+                reached.add(node_id)
+                pending.extend(adjacent[node_id] - reached)
+        unreachable = sorted(known - reached)
+        if unreachable:
+            raise NarrativeDisconnected(central, unreachable)
+
+
+class NarrativeDisconnected(ModelError):
+    http_status = 400
+    error_code = "narrative_disconnected"
+    exit_code = 2
+
+    def __init__(self, central, unreachable):
+        super().__init__("payload.narrative.nodes",
+                         f"argument-connectivity.v1: nodes {unreachable} are disconnected from {central}; "
+                         "add genuine support/explanation/qualification relations or move unrelated material out")
+        self.central_node_id = central
+        self.unreachable_node_ids = unreachable
+        self.policy = "argument-connectivity.v1"
+        self.error_details = {"central_node_id": central, "unreachable_node_ids": unreachable,
+                              "policy": self.policy}
 
 
 def validate_content_plan_semantics(plan: dict[str, Any], *, require_page_links=True) -> None:
@@ -526,7 +572,7 @@ def validate_compose_result_semantics(result: dict[str, Any]) -> None:
 WRITER_RANK = {None: 0, "generation.v1": 1, "content-plan.v1": 2,
                "changes.v1": 3, "candidates.v1": 4, "run-desk.v1": 5, "style-recipes.v1": 6, "content-ops.v1": 7,
                "content-candidates.v1": 8, "icon-quality.v1": 9, "workbench-quality.v1": 10,
-               "collaboration.v1": 11, "rc3.v1": 12, "rc3-entry.v1": 13}
+               "collaboration.v1": 11, "rc3.v1": 12, "rc3-entry.v1": 13, "rc4-content.v1": 14}
 
 
 def require_writer(document, minimum):
@@ -555,7 +601,7 @@ def collaboration_required(document) -> bool:
     writer also keeps its mandatory initial-region contract.
     """
     return (document.get('collaboration') is not None or
-            document.get('compatibility', {}).get('minimum_writer') in ('collaboration.v1', 'rc3-entry.v1'))
+            document.get('compatibility', {}).get('minimum_writer') in ('collaboration.v1', 'rc3-entry.v1', 'rc4-content.v1'))
 
 
 # Central registry of accepted proposal projections (CONTRACTS §3.1). A

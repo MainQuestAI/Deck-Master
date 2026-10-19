@@ -10,8 +10,18 @@ agents working in this repository.
 2. `docs/agent-task-index.md` for user-intent to command routing.
 3. `docs/agent-recovery-playbook.md` for blocked-state repair decisions.
 4. `src/deck_master/resources/contracts/` for runtime JSON contracts and schema truth.
-5. For mainline rebuild work: `docs/specs/deck-master-rebuild-v1/task-cards/README.md`
-   first, then `task-cards/<T-NN>.md` and `inventory/baseline-record.md`.
+5. For the current RC4 increment:
+   `docs/specs/deck-master-next-iteration-20261019/06-CODEX-HANDOFF.md`,
+   then its specified reading order and the assigned N1–N6 card.
+   The unique candidate ledger is
+   `docs/reports/rc4/iteration-20261019/execution-ledger.json`.
+
+RC4 inherits the rebuild, Flow Quality and RC3 contracts where the current
+increment does not explicitly change them. Read historical cards only for
+the dependency in question; they are not a prerequisite to every task.
+For historical rebuild work, use
+`docs/specs/deck-master-rebuild-v1/task-cards/README.md` and its assigned card.
+Recorded past test results are not current candidate evidence.
 
 ## Rebuild Baseline (v1.1)
 
@@ -84,6 +94,12 @@ deck-master view --project <dir> --json
   Accept only `content_update` for the resulting `compose/input_revision` task.
 - Continue an existing project: `deck-master continue --project <dir>`; execute
   only the returned pending Host tasks.
+- Read `methods --project … --task-id … --read` and use the Task's frozen
+  ordered manifest, protocol and capabilities. Claim actual execution with
+  `task start --execution-ref … --supported-protocol … --capability …` before
+  producing results; repeat capability flags for the actual required set.
+  Copying a handoff is not a claim. Follow `basis_changed` through formal
+  retirement/reissue; never add today's role defaults to an old Task.
 - Adopt a Host result: `deck-master task accept --project … --task-id …
   --operation-id … --produced-against … --result result.json`.
 - Review/edit/export: `deck-master view --open --project <dir>`;
@@ -92,6 +108,13 @@ deck-master view --project <dir> --json
   as `needs_tool` with the real reason.
 - Repair blocked state: read `docs/agent-recovery-playbook.md` and follow the
   matching blocked code.
+
+`capabilities.read_protocols` negotiates `work_context.v2` separately from
+production protocols. Full bodies are the default; manifest is not ready
+context, and returned/deduplicated bytes are not proof of Host reading,
+method application, independent review or approval. Reads alone never raise
+the project writer floor. New persistent RC4 method/policy facts require
+`rc4-content.v1`; installation rollback does not lower that boundary.
 
 ## Forbidden Actions
 

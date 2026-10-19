@@ -317,6 +317,10 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             else:self._send_json({'error':'not found'},404);return
             self._send_json(result)
         except Exception as exc:
+            if self.path == '/api/inputs/update':
+                payload, status = input_update_error(exc)
+                self._send_json(payload, status)
+                return
             if self.path.startswith(('/api/drafts/', '/api/ui-state', '/api/gallery', '/api/overview', '/api/text-ranges/', '/api/annotations/', '/api/changes/', '/api/candidates/', '/api/stages/', '/api/styles/', '/api/icons/', '/api/candidate-preview/', '/api/content/', '/api/export', '/api/history/')):
                 self._send_error(exc)
                 return
@@ -846,3 +850,31 @@ def service_status(project_dir: Path | str) -> dict:
     alive = _health_ok(state.get("url"), project_dir)
     return {"view_status": "running" if alive else "stale",
             "review_url": state.get("url") if alive else None, "port": state.get("port")}
+
+
+def input_update_error(exc):
+    """Narrow legacy inputs adapter preserving structured business decisions."""
+    from .operations import OperationError
+    from .errors import InputRevisionConflict
+    from .service import ServiceError
+    if isinstance(exc, (OperationError, InputRevisionConflict)):
+        return exc.payload(), exc.http_status
+    if isinstance(exc, (TypedServiceError, ServiceError, ModelError, TypeError, ValueError, KeyError)):
+        code = getattr(exc, 'error_code', 'invalid_input')
+        if code == 'local_state_invalid':
+            code = 'invalid_input'
+        field = getattr(exc, 'path', 'request')
+        if (not isinstance(field, str) or field.startswith(('/', '\\'))
+                or (len(field) > 1 and field[1] == ':')):
+            field = 'patch/source_changes'
+        return {'error': {'code': code,
+                         'message': 'input request is invalid; check the named field',
+                         'field': field,
+                         'next_action': 'fix the named request field'}}, 422 if isinstance(exc, TypedServiceError) else 400
+    from .store import ConflictError
+    if isinstance(exc, ConflictError):
+        conflict = InputRevisionConflict('base_revision', 'project changed; inspect current inputs')
+        return conflict.payload(), 409
+    return {'error': {'code': 'operation_unavailable', 'message': 'operation could not be verified',
+                     'field': 'project', 'operation_state': 'unknown', 'retryable': False,
+                     'next_action': 'inspect the original operation and preserve its request'}}, 503

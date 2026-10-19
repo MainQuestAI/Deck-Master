@@ -113,7 +113,7 @@ def test_formal_adoption_hands_full_immutable_context_to_every_visual_consumer(t
     assert task['protocol_version'] == 'changes.v1'
     assert set(task['required_capabilities']) == {'content_requirements_v1','style_recipe','style_recipe_v3','collaboration.v1','rc3-entry.v1'}
     assert 'change_binding' not in task and 'change_plan' not in task['required_capabilities']
-    assert doc['compatibility']['minimum_writer'] == 'rc3-entry.v1'
+    assert doc['compatibility']['minimum_writer'] == 'rc4-content.v1'
     assert tasks.task_inputs_current(store, doc, task)
     digests = editing._current_artifact_digests(store, doc)
     assert digests['style:p1'] == _style_digest(context)
@@ -283,7 +283,7 @@ def test_historical_no_cap_queue_reads_original_context_but_rejects_target_downg
         service.task_summary(store,after,task)
 
 
-def test_legacy_generation_shape_without_requirements_remains_legacy_at_rc3_floor(tmp_path):
+def test_legacy_generation_shape_without_requirements_preserves_current_writer_floor(tmp_path):
     _,store,_,sent,author = _adopted(tmp_path)
     doc=store.load_document();entry=doc['pages'][0]
     page=store.read_object_json(entry['page'])
@@ -327,7 +327,8 @@ def test_legacy_generation_shape_without_requirements_remains_legacy_at_rc3_floo
     assert {'rc3-entry.v1', 'collaboration.v1'} <= set(task['required_capabilities'])
     assert 'content_requirements_v1' not in task['required_capabilities']
     assert service.task_summary(store,store.load_document(),task)['page_design_contexts']['p1']==legacy
-    assert store.load_document()['compatibility']['minimum_writer']=='rc3-entry.v1'
+    # The historical image shape does not lower this current project's Task floor.
+    assert store.load_document()['compatibility']['minimum_writer']=='rc4-content.v1'
     proposed=copy.deepcopy(page);proposed['customer_visible']['title']='Explicit legacy combined Page/SVG repair'
     assert pipeline.page_asset_paths(store,store.load_document(),store.load_document()['pages'][0],tmp_path,page=proposed)=={}
 

@@ -1,16 +1,39 @@
 """Safe committed snapshot traversal shared by projections and recovery."""
 from __future__ import annotations
 
+import hashlib
 import json
+import copy
+import os
+import stat as stat_module
+from contextlib import contextmanager
+from contextvars import ContextVar
 from functools import lru_cache
 import re
 
-from .models import validate_ref
+from .models import validate_ref, validate_schema
 from .store import StoreError
 
 IDENTIFIER = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}\Z")
 SLOTS = ("page", "blueprint", "svg", "svg_preview", "ppt_preview")
 READ_FAILURES = (StoreError, OSError, ValueError, KeyError, TypeError, AttributeError, RuntimeError)
+_request_evidence = ContextVar('snapshot_request_evidence', default=None)
+
+
+@contextmanager
+def reuse_current_snapshot():
+    """Reuse one verified current snapshot within a public operation read.
+
+    The entry still validates current before any lookup or cache publication.
+    Only its first snapshot is retained, for this request, and every reuse
+    checks the canonical file signature again. Forks and weak signatures never
+    reuse it. No Document enters the persistent process coverage cache.
+    """
+    token = _request_evidence.set({'pid': os.getpid(), 'key': None, 'value': None})
+    try:
+        yield
+    finally:
+        _request_evidence.reset(token)
 
 
 class ReadModelError(StoreError):
@@ -31,7 +54,23 @@ class ReadModelError(StoreError):
         }}
 
 
-def _snapshot(store, revision):
+def snapshot_signature(store, revision):
+    """Safe local signature; no weak timestamp is trusted for cached absence."""
+    if not isinstance(revision, str) or not IDENTIFIER.fullmatch(revision):
+        raise ReadModelError("invalid_revision", "revision", "invalid revision identifier", http_status=400)
+    path = store.revisions_dir / (revision + ".json")
+    if any(p.is_symlink() for p in (store.deck_root, store.revisions_dir, path)):
+        raise ReadModelError("revision_unavailable", "revision", "snapshot is not available in this project")
+    info = path.stat()
+    if not stat_module.S_ISREG(info.st_mode):
+        raise ReadModelError("revision_unavailable", "revision", "snapshot is not a regular file")
+    if not all(isinstance(getattr(info, key, None), int) for key in ("st_mtime_ns", "st_ctime_ns")):
+        return None
+    return info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns
+
+
+def snapshot_evidence(store, revision):
+    """Decode canonical bytes once, retaining their digest and stable signature."""
     if not isinstance(revision, str) or not IDENTIFIER.fullmatch(revision):
         raise ReadModelError("invalid_revision", "revision", "invalid revision identifier", http_status=400)
     path = store.revisions_dir / (revision + ".json")
@@ -41,7 +80,20 @@ def _snapshot(store, revision):
     try:
         if path.resolve().parent != store.revisions_dir.resolve():
             raise ValueError("outside revision directory")
-        doc = json.loads(path.read_bytes())
+        before = snapshot_signature(store, revision)
+        scope = _request_evidence.get()
+        if scope is not None and scope['pid'] != os.getpid():
+            scope = None
+        key = (str(store.project_root), revision)
+        if (scope is not None and before is not None and scope['key'] == key
+                and scope['value'][1] == before):
+            # Keep canonical evidence isolated from mutations by consumers.
+            return copy.deepcopy(scope['value'])
+        data = path.read_bytes()
+        doc = json.loads(data)
+        after = snapshot_signature(store, revision)
+        if before != after:
+            raise ValueError("snapshot changed while reading")
         if (not isinstance(doc, dict) or doc.get("revision_id") != revision
                 or doc.get("schema_version") != "deck_document.v1"
                 or not isinstance(doc.get("project_id"), str)
@@ -49,6 +101,7 @@ def _snapshot(store, revision):
                 or not isinstance(doc.get("outputs"), dict)
                 or any(not isinstance(doc.get(k), list) for k in ("tasks", "reviews"))
                 or any(not isinstance(p, dict) or not isinstance(p.get("page_id"), str) for p in doc["pages"])
+                or "parent_revision_id" not in doc
                 or (doc.get("parent_revision_id") is not None
                     and not isinstance(doc["parent_revision_id"], str))):
             raise ValueError("invalid snapshot identity")
@@ -59,13 +112,23 @@ def _snapshot(store, revision):
                 # A corrupt Document must not echo an absolute or foreign path
                 # as a public slot/ref before object-level error handling runs.
                 validate_ref(ref, where="snapshot/ref")
-        return doc
+        digest = hashlib.sha256(data).hexdigest()
+        if scope is not None:
+            validate_schema('document', doc)
+            if scope['value'] is None and after is not None:
+                scope['key'] = key
+                scope['value'] = copy.deepcopy((doc, after, digest))
+        return doc, after, digest
     except (OSError, ValueError, RuntimeError) as exc:
         raise ReadModelError("revision_unavailable", "revision", "snapshot is not readable in this project") from exc
 
 
-def committed_snapshots(store):
-    """Capture current once and walk only its same-project committed ancestry."""
+def _snapshot(store, revision):
+    return snapshot_evidence(store, revision)[0]
+
+
+def capture_head(store):
+    """Capture a safe current Document once, without creating a project."""
     try:
         if store.deck_root.is_symlink() or (store.deck_root / "current.json").is_symlink():
             raise ValueError("symlinked pointer")
@@ -74,19 +137,57 @@ def committed_snapshots(store):
             raise ValueError("no current revision")
     except READ_FAILURES as exc:
         raise ReadModelError("project_unavailable", "project", "project snapshot is not readable") from exc
-    doc = _snapshot(store, current)
+    return _snapshot(store, current)
+
+
+def _walk_head(store, head):
+    doc = head
     project_id = doc["project_id"]
-    yield doc
-    visited = {current}
-    while doc.get("parent_revision_id"):
-        parent = doc["parent_revision_id"]
-        if parent in visited:
-            break
-        visited.add(parent)
-        doc = _snapshot(store, parent)
+    visited = set()
+    while True:
+        if doc['revision_id'] in visited:
+            raise ReadModelError("revision_unavailable", "revision", "snapshot ancestry contains a cycle")
+        visited.add(doc['revision_id'])
         if doc["project_id"] != project_id:
-            break
+            raise ReadModelError("revision_unavailable", "revision", "snapshot ancestry crosses projects")
         yield doc
+        parent = doc.get("parent_revision_id")
+        if parent is None:
+            return
+        doc = _snapshot(store, parent)
+
+
+def committed_snapshots(store, *, head_revision=None):
+    """Walk the fixed same-project ancestry; incomplete history is an error."""
+    head = capture_head(store)
+    if head_revision is not None:
+        for candidate in _walk_head(store, head):
+            if candidate['revision_id'] == head_revision:
+                head = candidate
+                break
+        else:
+            raise ReadModelError("revision_not_found", "revision", "head is not committed in this project")
+    yield from _walk_head(store, head)
+
+
+def load_artifact_control(store, revision=None):
+    """Return artifact and control anchored to the same captured pointer."""
+    from .models import ModelError, validate_schema
+    try:
+        control = capture_head(store)
+        validate_schema('document', control)
+        if revision is None:
+            return control, control
+        if not isinstance(revision, str) or not IDENTIFIER.fullmatch(revision):
+            raise ReadModelError("invalid_revision", "revision", "invalid revision identifier", http_status=400)
+        for artifact in _walk_head(store, control):
+            if artifact is not control:
+                validate_schema('document', artifact)
+            if artifact['revision_id'] == revision:
+                return artifact, control
+        raise ReadModelError("revision_not_found", "revision", "revision is not committed in this project")
+    except ModelError as exc:
+        raise ReadModelError("revision_unavailable", "revision", "snapshot is not readable in this project") from exc
 
 
 @lru_cache(maxsize=4096)

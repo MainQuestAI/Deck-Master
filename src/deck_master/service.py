@@ -34,6 +34,7 @@ from .sources import discover_sources, read_source_snapshot
 from .store import Store, StoreError, ConflictError
 from .production import project_prompt, resolve_design
 from .review import PAGE_VISUAL_KINDS
+from .work_context import response_projection
 
 AUTO_VIEW = "auto_view_then_production"
 CONTINUE_PRODUCTION = "continue_production"
@@ -92,6 +93,7 @@ def _new_source_id(existing_ids: set[str]) -> str:
     return candidate
 
 
+@response_projection
 def create(
     project_dir: Path | str,
     *,
@@ -394,15 +396,23 @@ def open_compose_task(store: Store, document: dict, *, operation_id: str,
     return task
 
 
-def _pending_host_tasks(document: dict, store: Store, *, include_trials=True) -> list[dict]:
+def _pending_host_tasks(document: dict, store: Store, *, include_trials=True, read_protocol=None, body_mode=None, cache_offer=None, observed_context=None, collector=None) -> list[dict]:
+    from .work_context import active_collector, ResourceCollector, validate_options
+    mode = validate_options(read_protocol, body_mode, cache_offer)
+    collector = collector or active_collector()
+    own_collector = collector is None and read_protocol is not None
+    if own_collector:
+        collector = ResourceCollector(body_mode=mode, cache_offer=cache_offer, observed_context=observed_context)
+    if collector is not None:
+        store = collector.store(store)
     pending = []
     dispatch_documents = {}
     for ref in document.get("tasks") or []:
         task = store.read_object_json(ref)
         if (task.get("status") in ("awaiting_host", "running") and
                 (include_trials or task.get("stage_request", {}).get("mode") != "trial")):
-            pending.append(task_summary(store, document, task, dispatch_documents=dispatch_documents))
-    return pending
+            pending.append(task_summary(store, document, task, dispatch_documents=dispatch_documents, collector=collector))
+    return collector.envelope({"project_id": document["project_id"], "current_revision": document["revision_id"], "tasks": pending}) if own_collector else pending
 
 
 @tasks_mod._project_transaction
@@ -474,7 +484,71 @@ def _project_context(store: Store, document: dict, task: dict, dispatched: dict)
     return context
 
 
-def task_summary(store: Store, document: dict, task: dict, *, dispatch_documents=None) -> dict:
+def task_summary(store: Store, document: dict, task: dict, *, dispatch_documents=None,
+                 read_protocol=None, body_mode=None, cache_offer=None, observed_context=None, collector=None) -> dict:
+    from .work_context import active_collector, ResourceCollector, validate_options
+    mode = validate_options(read_protocol, body_mode, cache_offer)
+    collector = collector or active_collector()
+    own_collector = collector is None and read_protocol is not None
+    if own_collector:
+        collector = ResourceCollector(body_mode=mode, cache_offer=cache_offer, observed_context=observed_context)
+    if collector is None:
+        return _task_summary_v1(store, document, task, dispatch_documents=dispatch_documents)
+    store = collector.store(store)
+    try:
+        order = _task_summary_v1(store, document, task,
+                                dispatch_documents=dispatch_documents if dispatch_documents is not None else collector.documents,
+                                collector=collector)
+    except (StoreError, OSError, ValueError) as exc:
+        # A damaged immutable dependency cannot erase still-readable Task,
+        # source and Page facts, or be replaced by a different current version.
+        from .method_resources import resolve_task_methods
+        resolved = resolve_task_methods(task, reader=collector.read_method)
+        order = {**copy.deepcopy(task), 'method_resources': resolved['methods'],
+                 'method_basis_status': resolved['basis_status'], 'method_basis_issues': resolved['issues'],
+                 'method_manifest': resolved['method_manifest'],
+                 'current_method_release': resolved['current_method_release'],
+                 'project_context': {'current_revision': document['revision_id'],
+                                     'dispatch_revision': task.get('dispatch_revision'), 'context_status': 'unavailable'},
+                 'source_reading': [], 'sources': [], 'page_entries': [],
+                 'work_order_gap': str(exc)}
+        collector.unavailable('work_order', task['task_id'],
+                              {'reader': 'work context', 'task_id': task['task_id'],
+                               'dispatch_revision': task.get('dispatch_revision')}, exc)
+        try:
+            dispatched = _dispatch_snapshot(store, document, task)
+            order['sources'] = copy.deepcopy(dispatched.get('sources') or [])
+            order['page_entries'] = [copy.deepcopy(entry) for entry in dispatched.get('pages') or []
+                                     if entry['page_id'] in (task.get('scope_pages') or [])]
+            order['resolved_design_context'] = copy.deepcopy(dispatched.get('design_context') or {})
+            order['outputs'] = copy.deepcopy(dispatched.get('outputs') or {})
+            order['reference_images'] = []
+            from PIL import Image
+            import io
+            for entry in order['page_entries']:
+                if not entry.get('blueprint'):
+                    continue
+                original, dimensions = None, None
+                try:
+                    original = store.read_object_json(entry['blueprint'])
+                    with Image.open(io.BytesIO(store.read_object_bytes(original['file']))) as image:
+                        dimensions = list(image.size)
+                except (StoreError, OSError, ValueError) as image_exc:
+                    collector.unavailable('original_image', entry['page_id'],
+                                          {'reader': 'immutable object', 'artifact': entry['blueprint']}, image_exc)
+                order['reference_images'].append({'page_id': entry['page_id'], 'artifact': entry['blueprint'],
+                                                  'file': original['file'] if original else None,
+                                                  'dimensions': dimensions,
+                                                  'requirement': 'Read this exact immutable image before reconstructing; matching page text alone does not establish visual fidelity.'})
+            order['source_inventory_state'] = 'available'
+        except (StoreError, OSError, ValueError):
+            order['source_inventory_state'] = 'unavailable'
+    order = collector.project(store, document, order)
+    return collector.envelope({"project_id": document["project_id"], "current_revision": document["revision_id"],
+                               "tasks": [order]}) if own_collector else order
+
+
+def _task_summary_v1(store: Store, document: dict, task: dict, *, dispatch_documents=None, collector=None) -> dict:
     """The Host work order: identity, inputs, resolved design, method entrypoints."""
     revision = task.get("dispatch_revision")
     if dispatch_documents is None:
@@ -483,11 +557,13 @@ def task_summary(store: Store, document: dict, task: dict, *, dispatch_documents
         # One response may contain many tasks from the same immutable dispatch
         # snapshot. Read that snapshot once for this response, never across
         # operations; current task/input freshness is still checked below.
-        if revision not in dispatch_documents:
-            dispatch_documents[revision] = _dispatch_snapshot(store, document, task)
-        dispatched = dispatch_documents[revision]
-    methods = method_resources(task.get("kind") or "", intent=task.get("intent") or task.get("review_stage"),
-                               phase=(task.get("collaboration_binding") or {}).get("phase"))
+        dispatch_key = (str(store.project_root.resolve()), document['project_id'], revision)
+        if dispatch_key not in dispatch_documents:
+            dispatch_documents[dispatch_key] = _dispatch_snapshot(store, document, task)
+        dispatched = dispatch_documents[dispatch_key]
+    from .method_resources import resolve_task_methods
+    resolved_methods = resolve_task_methods(task, reader=collector.read_method if collector else None)
+    methods = resolved_methods["methods"]
     from . import visual_styles
     summary = {
         "task_id": task["task_id"],
@@ -495,10 +571,11 @@ def task_summary(store: Store, document: dict, task: dict, *, dispatch_documents
         "kind": task["kind"],
         "intent": task.get("intent"),
         "method_release": task.get("method_release"),
-        "current_method_release": method_release(methods),
-        "method_basis_status": ("not_recorded" if not task.get("method_release") else
-                                "current" if task["method_release"]["methods_sha256"] ==
-                                method_release(methods)["methods_sha256"] else "basis_changed"),
+        "current_method_release": resolved_methods["current_method_release"],
+        "method_basis_status": resolved_methods["basis_status"],
+        "method_basis_issues": resolved_methods["issues"],
+        "method_manifest": resolved_methods["method_manifest"],
+        "content_validation_policy": task.get("content_validation_policy"),
         "review_stage": task.get("review_stage", "final"),
         "status": task["status"],
         "scope_pages": task.get("scope_pages") or [],
@@ -539,17 +616,23 @@ def task_summary(store: Store, document: dict, task: dict, *, dispatch_documents
             "sources": [{"source_id": s["source_id"], "source_version": source_version(s)} for s in dispatched["sources"]],
             "prior": projection(store, dispatched),
             "instruction": "Return content_plan with every resulting page goal, chapter, versioned source locator and unresolved fact; Page remains the body-copy truth."}
+    from .store import StoreError
     summary['source_reading'] = []
     for source in dispatched.get('sources') or []:
         ref=source.get('extract')
         if ref and ref['path'].endswith('.json'):
-            extract=store.read_object_json(ref)
-            summary['source_reading'].append({
-                'source_id': source['source_id'], **extract,
-                'extract_path': str(store.project_root / ref['path']),
-                'original_path': str(store.project_root / extract['original_file']['path'])
-                if extract.get('original_file') else extract['original_uri'],
-            })
+            try:
+                extract=store.read_object_json(ref)
+                summary['source_reading'].append({
+                    'source_id': source['source_id'], **extract,
+                    'extract_path': str(store.project_root / ref['path']),
+                    'original_path': str(store.project_root / extract['original_file']['path'])
+                    if extract.get('original_file') else extract['original_uri'],
+                })
+            except (StoreError, OSError, ValueError, KeyError, TypeError):
+                if collector is None:
+                    raise
+                continue
     if task.get('kind') in ('reconstruct','repair','review'):
         summary['page_entries'] = [e for e in document['pages'] if e['page_id'] in task['scope_pages']]
         summary['reference_images'] = []
@@ -578,10 +661,19 @@ def task_summary(store: Store, document: dict, task: dict, *, dispatch_documents
             if entry['blueprint']:
                 from PIL import Image
                 import io
-                original=store.read_object_json(entry['blueprint'])
-                with Image.open(io.BytesIO(store.read_object_bytes(original['file']))) as image:
-                    dimensions=list(image.size)
-                summary['reference_images'].append({'page_id':entry['page_id'],'artifact':entry['blueprint'],'file':original['file'],'dimensions':dimensions,'requirement':'Read this exact immutable image before reconstructing; matching page text alone does not establish visual fidelity.'})
+                original = None
+                try:
+                    original=store.read_object_json(entry['blueprint'])
+                    with Image.open(io.BytesIO(store.read_object_bytes(original['file']))) as image:
+                        dimensions=list(image.size)
+                except (StoreError, OSError, ValueError) as exc:
+                    if collector is None:
+                        raise
+                    collector.unavailable('original_image', entry['page_id'],
+                                          {'reader': 'immutable object', 'artifact': entry['blueprint'],
+                                           'file': original.get('file') if original else None}, exc)
+                    dimensions = None
+                summary['reference_images'].append({'page_id':entry['page_id'],'artifact':entry['blueprint'],'file':original['file'] if original else None,'dimensions':dimensions,'requirement':'Read this exact immutable image before reconstructing; matching page text alone does not establish visual fidelity.'})
         summary['outputs'] = document['outputs']
         summary['staging_dir'] = str(store.staging_dir / task['operation_id'])
         if task.get('review_stage') == 'page_visual':
@@ -758,6 +850,7 @@ def _eligibility_report(decision: dict) -> dict:
     }
 
 
+@response_projection
 def continue_project(project_dir: Path | str) -> dict:
     """Run runnable local work and return the stable pending Host tasks.
 
@@ -893,6 +986,7 @@ def _continue_project(project_dir: Path | str) -> dict:
         return {**_response(status='completed', document=initial, requested_action='continue',
             next_action='return_requested_content', result_refs=initial_completion['outputs']), 'completion': initial_completion}
     _recover_input_revision(store)
+    tasks_mod.reissue_changed_method_tasks(store)
     document = _retire_missing_page_inputs(store, store.load_document())
     pending = _pending_host_tasks(document, store, include_trials=False)
     if any(t["kind"] == "blueprint" for t in pending):
@@ -1171,6 +1265,31 @@ def _continue_project(project_dir: Path | str) -> dict:
                      result_refs=[document['outputs']['pptx']],next_action='export')
 
 
+def _review_dispatch_scope(store, document, stage, page_ids, units):
+    """Compare actual unit scope without changing an existing Task contract."""
+    from jsonschema import Draft202012Validator
+    from . import models
+    from .method_resources import method_ids_for
+    if units is None:
+        if stage == 'preproduction':
+            from .content_review import required_units
+            kinds = required_units(store, document)
+        else:
+            from .review import PAGE_VISUAL_KINDS, REVIEW_DIMENSIONS
+            kinds = PAGE_VISUAL_KINDS if stage == 'page_visual' else REVIEW_DIMENSIONS
+        units = [{'kind': kind, 'page_ids': page_ids, 'reason': 'missing'} for kind in kinds]
+    validator = Draft202012Validator(models.load_schema('task')['properties']['review_units'])
+    error = next(validator.iter_errors(units), None)
+    if error is not None:
+        path = '/'.join(str(part) for part in error.absolute_path)
+        raise models.ModelError('task/review_units' + ('/' + path if path else ''), error.message)
+    method_ids_for('review', intent=stage, review_units=units)
+    grouped = {}
+    for unit in units:
+        grouped.setdefault((unit['kind'], unit['reason']), set()).update(unit['page_ids'])
+    return frozenset((kind, reason, frozenset(pages)) for (kind, reason), pages in grouped.items())
+
+
 @tasks_mod._project_transaction
 def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, page_hash=None,
                    review_stage=None, review_units=None, extra_inputs=(), executor_type=None,
@@ -1199,9 +1318,14 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
     entries = [e for e in document['pages'] if e['page_id'] in page_ids]
     from .production import design_handoff_protocol_fields
     protocol = design_handoff_protocol_fields(store, document, entries) if review_stage != 'preproduction' else {}
+    review_scope = (_review_dispatch_scope(store, document, review_stage, page_ids, review_units)
+                    if kind == 'review' else None)
     for ref in document['tasks']:
         task = store.read_object_json(ref)
         if task.get('stage_request', {}).get('mode') != 'trial' and task['kind'] == kind and task['scope_pages'] == page_ids and task['instruction'] == instruction and task.get('review_stage', 'final') == (review_stage or 'final') and task['status'] in ('awaiting_host','running') and (task.get('collaboration_binding') or {}).get('executor_type', 'host') == (executor_type or 'host') and all(task.get(key) == value for key, value in protocol.items()):
+            if kind == 'review' and _review_dispatch_scope(
+                    store, document, task.get('review_stage'), task['scope_pages'], task.get('review_units')) != review_scope:
+                continue
             return task
     inputs = [ref for e in entries for slot,ref in e.items() if slot != 'page_id' and ref]
     inputs += [ref for ref in document['outputs'].values() if ref]
@@ -1257,30 +1381,87 @@ def inputs_show(project_dir: Path | str) -> dict:
 
 
 def _read_input_operation(store: Store, operation_id: str) -> dict | None:
-    import re as _re
-    from .store import OPERATION_ID_PATTERN
+    from .operations import read_legacy_record
+    return read_legacy_record(store, operation_id)
 
-    if not _re.fullmatch(OPERATION_ID_PATTERN, operation_id or ""):
-        raise ServiceError("(operation-id)", "operation ids must match [A-Za-z0-9][A-Za-z0-9_.-]*")
-    path = store.deck_root / "operations" / f"{operation_id}.json"
-    if not path.is_file():
-        return None
-    record = json.loads(path.read_text("utf-8"))
-    if record.get("kind") != "input_update":
-        raise InputRevisionConflict(
-            f"(operation {operation_id})",
-            "operation id already used by a different operation type",
-        )
-    # Receipts are written before the atomic Document pointer. An interrupted
-    # commit is a replay only when its revision is in committed history.
-    expected = record['result']['revision_id']
-    document = store.load_document()
-    while document['revision_id'] != expected:
-        parent = document.get('parent_revision_id')
-        if not parent:
-            return None
-        document = store.load_document(parent)
-    return record
+
+def _input_request_digest(document, patch, base_revision, patch_dir):
+    """Bind raw JSON and lexical relative-path context, before any material IO."""
+    import os
+    relative = False
+    changes = patch.get('source_changes')
+    if isinstance(changes, dict):
+        for key in ('add', 'replace'):
+            items = changes.get(key)
+            if isinstance(items, list):
+                for item in items:
+                    path = item.get('path') if isinstance(item, dict) else None
+                    if isinstance(path, str) and not os.path.isabs(os.path.expanduser(path)):
+                        relative = True
+    return sha256_bytes(canonical_json_bytes({
+        'protocol': 'inputs-update-request.v1', 'kind': 'inputs.update',
+        'project_id': document['project_id'], 'base_revision': base_revision, 'patch': patch,
+        'relative_path_base': os.path.abspath(os.path.expanduser(str(patch_dir))) if relative else None}))
+
+
+def _recover_input_request(store, operation_id, digest, patch, patch_dir, *, content=False):
+    """Common atomic/legacy occupancy check, with no filesystem normalization."""
+    from . import operations
+    lookup = operations.resolve_operation(store, operation_id)
+    if lookup.state == 'committed':
+        expected_kind = 'content.inputs' if content else 'input_update'
+        if lookup.stored_kind != expected_kind:
+            if content:
+                raise operations.OperationError('operation_type_conflict', 'operation_id',
+                    'operation belongs to another operation type', exit_code=5, operation_id=operation_id,
+                    operation_state='committed')
+            raise InputRevisionConflict('operation_id', 'operation belongs to another operation type',
+                                        cause='operation_type_conflict', operation_id=operation_id)
+        if lookup.record['request_digest'] != digest:
+            if content:
+                raise operations.OperationError('operation_payload_conflict', 'operation_id',
+                    'operation was committed with a different request', exit_code=5, operation_id=operation_id,
+                    operation_state='committed')
+            raise InputRevisionConflict('operation_id', 'operation was committed with a different request',
+                                        cause='operation_payload_conflict', operation_id=operation_id)
+        if content:
+            return operations._recover_lookup(store, operation_id, lookup, digest)
+        return {**lookup.result, 'current_revision_id': lookup.head_revision, 'replayed': True}
+    if lookup.state == 'unknown' and lookup.reason != 'legacy_receipt_only':
+        raise operations.lookup_error(lookup, operation_id)
+    legacy = operations.read_legacy_record(store, operation_id, head_revision=lookup.head_revision)
+    if legacy is not None:
+        if content:
+            raise operations.OperationError('operation_type_conflict', 'operation_id',
+                'operation belongs to another operation type', exit_code=5, operation_id=operation_id)
+        changes = patch.get('source_changes')
+        # Old path/upload normalization depended on the then-current filesystem.
+        # It cannot safely be reconstructed after that state has disappeared.
+        if isinstance(changes, dict) and any(changes.get(k) for k in ('add', 'replace')):
+            raise operations.lookup_error(lookup, operation_id)
+        normalized = _normalize_input_patch(patch, patch_dir=patch_dir)
+        old_digest = sha256_bytes(canonical_json_bytes(normalized))
+        if legacy['request_sha256'] != old_digest:
+            raise InputRevisionConflict('operation_id', 'operation was recorded with a different patch',
+                                        cause='operation_payload_conflict', operation_id=operation_id)
+        return {**legacy['result'], 'current_revision_id': lookup.head_revision, 'replayed': True}
+    if lookup.state == 'unknown':
+        raise operations.lookup_error(lookup, operation_id)
+    return None
+
+
+def _commit_input_receipt(store, document, base_revision, operation_id, digest, result):
+    from . import operations
+    from .models import require_writer
+    require_writer(document, 'content-ops.v1')
+    receipt = {'format': 'operation_receipt.v1', 'request_digest': digest, 'response': result}
+    store._commit_locked(base_revision=base_revision, document=document, operation_id=operation_id,
+                         blobs=[], operation_receipt=receipt)
+    record = {'operation_id': operation_id, 'kind': 'input_update', 'project_id': document['project_id'],
+              'base_revision': base_revision, 'committed_revision_id': document['revision_id'],
+              'request_digest': digest}
+    warning = operations.publish_index(store, record)
+    return {**result, **({'journal_warning': warning} if warning else {})}
 
 
 def _write_input_operation(store: Store, operation_id: str, request_digest: str, result: dict) -> None:
@@ -1442,31 +1623,38 @@ def inputs_update(
     without re-reading sources; the same id with different content, or a
     stale base revision, is refused with ``input_revision_conflict`` (exit 5).
     """
-    from .errors import InputRevisionConflict
+    from . import operations
+    from .models import require_writer
+    from .snapshots import capture_head, ReadModelError
 
+    if not isinstance(patch, dict):
+        raise ServiceError('(patch)', 'patch must be a JSON object')
+    try:
+        operations.validate_id(operation_id, new=_recoverable_workbench)
+    except operations.OperationError as exc:
+        if _recoverable_workbench:
+            raise
+        raise ServiceError('operation_id', 'invalid operation identifier') from exc
+    if not isinstance(base_revision, str) or not base_revision:
+        raise ServiceError('base_revision', 'must be a nonempty revision identifier')
     store = Store(Path(project_dir).expanduser())
-    store.ensure_layout()
-    patch_dir = Path(patch_dir).expanduser() if patch_dir else Path.cwd()
+    patch_dir = Path(patch_dir).expanduser() if patch_dir is not None else Path.cwd()
+    try:
+        current = capture_head(store)
+    except ReadModelError as exc:
+        raise operations.lookup_error(operations.OperationLookup('unknown', reason='history_unreadable'), operation_id) from exc
     business_digest = None
     if _recoverable_workbench:
-        from . import operations
-        from .models import require_writer
-        operations.validate_id(operation_id, new=True)
-        current = store.load_document()
         if not store.workbench_protocol_required(current):
             raise ServiceError('(project)', 'recoverable content inputs require workbench.v3')
         business_digest = operations.request_digest(current, 'content.inputs', base_revision, {'input': patch})
-        existing = operations.recover(store, operation_id, business_digest)
-        if existing:
-            return existing
+    request_digest = (_input_request_digest(current, patch, base_revision, patch_dir)
+                      if not _recoverable_workbench else business_digest)
+    existing = _recover_input_request(store, operation_id, request_digest, patch, patch_dir,
+                                      content=_recoverable_workbench)
+    if existing is not None:
+        return existing
     normalized = _normalize_input_patch(patch, patch_dir=patch_dir, upload_project=store.project_root)
-    request_digest = sha256_bytes(canonical_json_bytes(normalized))
-    if not _recoverable_workbench:
-        existing = _read_input_operation(store, operation_id)
-        if existing is not None:
-            if existing.get("request_sha256") == request_digest:
-                return existing["result"]
-            raise InputRevisionConflict(f"(operation {operation_id})", "operation id already applied with a different patch")
 
     # Stage every new material before taking the lock; any failure rejects the
     # whole request and leaves current state untouched (§5.3 step 2).
@@ -1484,19 +1672,17 @@ def inputs_update(
         staged_replace.append((item, read_confirmed_material(item)))
 
     with store._locked():
-        if _recoverable_workbench:
-            record = operations.recover(store, operation_id, business_digest)
-            if record:
-                return record
-        else:
-            record = _read_input_operation(store, operation_id)
-            if record is not None:
-                if record.get("request_sha256") == request_digest:
-                    return record["result"]
-                raise InputRevisionConflict(f"(operation {operation_id})", "operation id already applied with a different patch")
+        record = _recover_input_request(store, operation_id, request_digest, patch, patch_dir,
+                                        content=_recoverable_workbench)
+        if record is not None:
+            return record
         document = store.load_document()
-        eligibility.guard(store, document, "content.inputs_update",
-                          context={"targets": {"layers": ["narrative"]}})
+        try:
+            eligibility.guard(store, document, "content.inputs_update",
+                              context={"targets": {"layers": ["narrative"]}})
+        except eligibility.EligibilityBlocked as exc:
+            exc.operation_id = operation_id
+            raise
         if document["revision_id"] != base_revision:
             raise InputRevisionConflict(
                 "(base-revision)",
@@ -1572,27 +1758,22 @@ def inputs_update(
 
         probe = {"task": new_task, "sources": new_sources}
         new_digest = compute_input_digest(probe)
-        names_changed = new_sources != document.get('sources', [])
         if new_digest == old_digest:
             result = {"status": "unchanged", "input_digest": new_digest,
                       "input_alignment": input_alignment(document),
                       "revision_id": document["revision_id"], "diff": diff,
                       "reason": normalized["reason"]}
-            if names_changed or _recoverable_workbench:
-                bumped = bump_revision(document, {
-                    "operation_id": operation_id, "kind": "input_update",
-                    "description": "inputs update (display names only)", "read_set": []})
-                bumped["sources"] = new_sources
-                result["revision_id"] = bumped["revision_id"]
+            bumped = bump_revision(document, {
+                "operation_id": operation_id, "kind": "input_update",
+                "description": "inputs update (unchanged business inputs)", "read_set": []})
+            bumped["sources"] = new_sources
+            result["revision_id"] = bumped["revision_id"]
             if _recoverable_workbench:
                 require_writer(bumped, 'content-ops.v1')
                 return operations.commit_locked(store, document=bumped, base_revision=document['revision_id'],
                     operation_id=operation_id, kind='content.inputs', digest=business_digest, result=result)
-            _write_input_operation(store, operation_id, request_digest, result)
-            if names_changed:
-                store._commit_locked(base_revision=document["revision_id"], document=bumped,
-                                     operation_id=operation_id, blobs=[])
-            return result
+            return _commit_input_receipt(store, bumped, document["revision_id"],
+                                         operation_id, request_digest, result)
 
         new_document = bump_revision(document, {
             "operation_id": operation_id, "kind": "input_update",
@@ -1649,10 +1830,8 @@ def inputs_update(
             require_writer(new_document, 'content-ops.v1')
             return operations.commit_locked(store, document=new_document, base_revision=document['revision_id'],
                 operation_id=operation_id, kind='content.inputs', digest=business_digest, result=result)
-        _write_input_operation(store, operation_id, request_digest, result)
-        store._commit_locked(base_revision=document["revision_id"], document=new_document,
-                             operation_id=operation_id, blobs=[])
-        return result
+        return _commit_input_receipt(store, new_document, document["revision_id"],
+                                     operation_id, request_digest, result)
 
 
 def _entry_from_extract(store: Store, path: Path, extract, source_id: str, *, data: bytes, usage_note: str = "") -> dict:

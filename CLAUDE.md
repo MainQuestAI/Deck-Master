@@ -1,59 +1,25 @@
-# Deck Master Agent Guidance
+# Deck Master — Claude entry
 
-## GBrain Search Guidance (configured by /sync-gbrain)
-<!-- gstack-gbrain-search-guidance:start -->
+Read [AGENTS.md](AGENTS.md) first, then the
+[intent index](docs/agent-task-index.md) and the current task's method or
+[RC4 increment](docs/specs/deck-master-next-iteration-20261019/README.md).
+They define the same Runtime, contracts, scope and recovery rules used by
+other Hosts. Claude has no separate installation or approval policy.
 
-GBrain is set up and synced on this machine. The agent should prefer gbrain
-over Grep when the question is semantic or when you don't know the exact
-identifier yet.
+Inspect the actual checkout, interpreter and deck-master doctor results.
+Use rg for local files and symbols. An optional search index is useful only
+after its availability, source and freshness have been checked; no clone
+implicitly has one.
 
-**This worktree is pinned to a worktree-scoped code source** via the
-`.gbrain-source` file in the repo root (kubectl-style context). Any
-`gbrain code-def`, `code-refs`, `code-callers`, `code-callees`, or `query`
-call from anywhere under this worktree routes to that source by default —
-no `--source` flag needed. Conductor sibling worktrees of the same repo
-each have their own pin and their own indexed pages, so semantic results
-match the actual code on disk in this worktree.
+Use the actual loaded Skill and its matching Runtime. Task methods come from
+the frozen manifest; a changed basis requires the documented recovery path.
+Return completed content or bounded samples at their requested scope.
+Review stays read-only, and a role name does not create independent identity.
 
-Two indexed corpora available via the `gbrain` CLI:
-- This worktree's code (auto-pinned via `.gbrain-source`).
-- `~/.gstack/` curated memory (registered as `gstack-brain-<user>` source via
-  the existing federation pipeline).
+No local service, fixed port, launchd job or deployment is assumed.
+Start the loopback workbench through the documented CLI only when needed.
+Push, merge, releases and activation follow the user's actual authorization.
 
-Prefer gbrain when:
-- "Where is X handled?" / semantic intent, no exact string yet:
-    `gbrain search "<terms>"` or `gbrain query "<question>"`
-- "Where is symbol Y defined?" / symbol-based code questions:
-    `gbrain code-def <symbol>` or `gbrain code-refs <symbol>`
-- "What calls Y?" / "What does Y depend on?":
-    `gbrain code-callers <symbol>` / `gbrain code-callees <symbol>`
-- "What did we decide last time?" / past plans, retros, learnings:
-    `gbrain search "<terms>" --source gstack-brain-<user>`
-
-Grep is still right for known exact strings, regex, multiline patterns, and
-file globs. Run `/sync-gbrain` after meaningful code changes; for ongoing
-auto-sync across all worktrees, run `gbrain autopilot --install` once per
-machine — gbrain's daemon handles incremental refresh on a schedule.
-
-Safety: don't run `/sync-gbrain` while `gbrain autopilot` is active — the
-orchestrator refuses destructive source ops when it detects a running autopilot
-to avoid racing it (#1734). Prefer registering user repos with `gbrain sources
-add --path <dir>` (no `--url`): URL-managed sources can auto-reclone, and the
-sync code walk for them requires an explicit `--allow-reclone` opt-in.
-
-<!-- gstack-gbrain-search-guidance:end -->
-
-## Deploy Configuration (configured by /setup-deploy)
-- Platform: local Mac launchd
-- Production URL: http://127.0.0.1:5050
-- Deploy workflow: manual local setup after push/tag
-- Deploy status command: launchctl print gui/$(id -u)/com.mainquest.deck-master.preview
-- Merge method: fast-forward main, then tag release
-- Project type: local CLI + localhost Review Cockpit
-- Post-deploy health check: http://127.0.0.1:5050/api/runs
-
-### Custom deploy hooks
-- Pre-merge: python3 -m pytest -q tests
-- Deploy trigger: install Deck Master skill, then bootstrap local launchd service
-- Deploy status: launchctl print gui/$(id -u)/com.mainquest.deck-master.preview
-- Health check: curl -sf http://127.0.0.1:5050/api/runs
+The former machine-specific instructions are preserved as
+[historical maintainer guidance](docs/archive/maintainer-environment/CLAUDE-before-rc4-20261019.md).
+They describe a past setup and are not prerequisites for this checkout.

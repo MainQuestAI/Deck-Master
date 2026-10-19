@@ -6,4 +6,4 @@ HOME, or loads fonts (spec 01.2).
 
 from __future__ import annotations
 
-__version__ = "1.0.0rc3"
+__version__ = "1.0.0rc4"

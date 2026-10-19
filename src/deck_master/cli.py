@@ -63,15 +63,25 @@ def _fail(exc: Exception, *, legacy_command=None) -> int:
     if isinstance(exc, OperationError):
         return _emit_and_exit(exc.payload(), exc.exit_code)
 
+    from .errors import InputRevisionConflict
+    from .work_context import ReadProtocolError
+    if isinstance(exc, (InputRevisionConflict, ReadProtocolError)):
+        return _emit_and_exit(exc.payload(), exc.exit_code)
+
     error_code = getattr(exc, "error_code", None)
     if error_code is not None:
         from .errors import NEXT_ACTIONS_BY_CODE
 
-        return _emit_and_exit(
-            _error(error_code, str(exc), NEXT_ACTIONS_BY_CODE.get(error_code, "follow the named recovery"),
-                   field=getattr(exc, "path", None)),
-            getattr(exc, "exit_code", 2),
-        )
+        if legacy_command == 'inputs' and error_code in ('source_unreadable', 'source_unsupported', 'needs_tool'):
+            return _emit_and_exit(_error(error_code, 'input material requires attention',
+                NEXT_ACTIONS_BY_CODE.get(error_code, 'inspect the selected material'), field='patch/source_changes'),
+                getattr(exc, 'exit_code', 2))
+
+        payload = _error(error_code, str(exc), NEXT_ACTIONS_BY_CODE.get(error_code, "follow the named recovery"),
+                         field=getattr(exc, "path", None))
+        if getattr(exc, "error_details", None):
+            payload["error"]["details"] = exc.error_details
+        return _emit_and_exit(payload, getattr(exc, "exit_code", 2))
     if isinstance(exc, NeedsTool):
         return _emit_and_exit(_error("needs_tool", str(exc), "configure the reported tool"), 3)
     if isinstance(exc, (EnvelopeError, ModelError, ServiceError, SvgError)):
@@ -89,6 +99,22 @@ def _emit_and_exit(payload: dict, code: int) -> int:
     return code
 
 
+def _add_read_options(parser):
+    parser.add_argument("--read-protocol")
+    parser.add_argument("--body-mode")
+    parser.add_argument("--cache-offer", help="Path to a JSON cache offer; requires an observed adapter context to omit bytes")
+
+
+def _read_options(options):
+    from .work_context import validate_options
+    offer = None
+    if options.cache_offer:
+        with open(options.cache_offer, encoding="utf-8") as stream:
+            offer = json.load(stream)
+    validate_options(options.read_protocol, options.body_mode, offer)
+    return {"read_protocol": options.read_protocol, "body_mode": options.body_mode, "cache_offer": offer}
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="deck-master", description="Deck Master rebuilt core")
     parser.add_argument("--version", action="version", version=f"deck-master {__version__}")
@@ -99,9 +125,11 @@ def build_parser() -> argparse.ArgumentParser:
     methods.add_argument("--kind", choices=("compose", "blueprint", "reconstruct", "review", "repair", "style_analyze"), default="compose")
     methods.add_argument("--intent")
     methods.add_argument("--phase")
+    methods.add_argument("--review-unit", action="append", choices=("content", "argument", "page_copy", "progression", "speech", "blueprint_content", "blueprint_fidelity", "conversion", "readability", "privacy"))
     methods.add_argument("--read", action="store_true")
     methods.add_argument("--project")
     methods.add_argument("--task-id")
+    _add_read_options(methods)
     collab = sub.add_parser("collaboration", help="Use existing Runtime collaboration transactions")
     commands = collab.add_subparsers(dest="collaboration_command", required=True)
     leaves = [(commands.add_parser("show"), "show", False)]
@@ -172,13 +200,16 @@ def build_parser() -> argparse.ArgumentParser:
     installs=installation.add_subparsers(dest='install_command',required=True)
     candidate=installs.add_parser('candidate');candidate.add_argument('--prefix',required=True);candidate.add_argument('--manifest',required=True)
     activation=installs.add_parser('activate');activation.add_argument('--prefix',required=True);activation.add_argument('--release-id',required=True)
+    activation.add_argument('--transaction-id', help='UUIDv4 for exact installation recovery/replay')
     activation.add_argument('--no-host-registration',dest='no_host_registration',action='store_true',
                             help='CI/non-interactive: do not create or touch the Codex skill link')
     rollback=installs.add_parser('rollback');rollback.add_argument('--prefix',required=True)
+    rollback.add_argument('--transaction-id', help='UUIDv4; freeze the rollback target and replay its original result')
     rollback.add_argument('--no-host-registration',action='store_true',
                           help='CI/non-interactive: do not create or touch the Codex skill link')
 
     create = sub.add_parser("create")
+    _add_read_options(create)
     create.add_argument("--brief", required=False, help="task brief text (or --brief-file)")
     create.add_argument("--brief-file", required=False)
     create.add_argument("--title", default="")
@@ -204,6 +235,7 @@ def build_parser() -> argparse.ArgumentParser:
                         help="JSON object carrying the task facts (spec v1.1 3.1 fields)")
 
     continue_cmd = sub.add_parser("continue")
+    _add_read_options(continue_cmd)
     continue_cmd.add_argument("--project", required=True)
     continue_cmd.add_argument("--no-open", action="store_true")
 
@@ -440,8 +472,23 @@ def main(argv: list[str] | None = None) -> int:
             if options.project or options.task_id:
                 if not options.project or not options.task_id:
                     raise ModelError("methods", "project and task-id are required together")
-                return _emit(read_task_methods(options.project, options.task_id))
-            items = (read_methods if options.read else method_resources)(options.kind, intent=options.intent, phase=options.phase)
+                return _emit(read_task_methods(options.project, options.task_id, **_read_options(options)))
+            read_options = _read_options(options)
+            if options.read_protocol:
+                from .work_context import ResourceCollector
+                collector = ResourceCollector(body_mode=options.body_mode or 'full', cache_offer=read_options['cache_offer'])
+                from .method_resources import resolve_root, method_ids_for, RELATIVE_PATHS
+                entries = []
+                for mid in method_ids_for(options.kind, intent=options.intent, phase=options.phase, review_units=options.review_unit):
+                    path = resolve_root() / RELATIVE_PATHS[mid]
+                    try:
+                        from .models import sha256_bytes
+                        digest = sha256_bytes(collector.read_method(path))
+                    except OSError:
+                        digest = None
+                    entries.append({'id': mid, 'relative_path': RELATIVE_PATHS[mid], 'path': str(path), 'sha256': digest})
+                return _emit(collector.envelope({'methods': collector.methods(entries), 'tasks': []}))
+            items = (read_methods if options.read else method_resources)(options.kind, intent=options.intent, phase=options.phase, review_units=options.review_unit)
             return _emit({"status": "ready", "methods": items, "method_release": method_release(items)})
         if options.command in ("collaboration", "eligibility", "review"):
             from .collaboration_api import invoke, error_response
@@ -503,12 +550,25 @@ def main(argv: list[str] | None = None) -> int:
             return _emit(legacy_mapping_table())
         if options.command == 'install':
             from .install import install_candidate,activate,rollback
+            from .errors import InstallationTransactionError
             try:
                 if options.install_command=='candidate':result=install_candidate(options.prefix,options.manifest)
-                elif options.install_command=='activate':result=activate(options.prefix,options.release_id,register_host=not options.no_host_registration)
-                else:result=rollback(options.prefix,register_host=not options.no_host_registration)
+                elif options.install_command=='activate':result=activate(options.prefix,options.release_id,register_host=not options.no_host_registration,transaction_id=options.transaction_id)
+                else:result=rollback(options.prefix,register_host=not options.no_host_registration,transaction_id=options.transaction_id)
+            except InstallationTransactionError as exc:
+                return _emit_and_exit(exc.payload(), exc.exit_code)
             except ValueError as exc:
+                if getattr(exc, 'transaction_id', None):
+                    failure = InstallationTransactionError('installation_failed', str(exc), transaction_id=exc.transaction_id, state=exc.transaction_state,
+                                                           details={'original_error_type': type(exc).__name__, 'old_state_verified': exc.transaction_state == 'rolled_back'})
+                    return _emit_and_exit(failure.payload(), failure.exit_code)
                 return _emit_and_exit(_error('invalid_input',str(exc),'check candidate and prefix'),2)
+            except (OSError, RuntimeError) as exc:
+                if not getattr(exc, 'transaction_id', None):
+                    raise
+                failure = InstallationTransactionError('installation_failed', str(exc), transaction_id=exc.transaction_id, state=exc.transaction_state,
+                                                       details={'original_error_type': type(exc).__name__, 'old_state_verified': exc.transaction_state == 'rolled_back'})
+                return _emit_and_exit(failure.payload(), failure.exit_code)
             return _emit(result)
         if options.command == 'doctor':
             from .doctor import diagnose
@@ -556,6 +616,7 @@ def main(argv: list[str] | None = None) -> int:
             _emit(result)
             return 0 if result['status'] == 'verified' else 3
         if options.command == "create":
+            read_options = _read_options(options)
             rejected = _reject_legacy_run(options.out, '--out')
             if rejected is not None:
                 return rejected
@@ -582,6 +643,7 @@ def main(argv: list[str] | None = None) -> int:
                 existing_decisions=task_fields.get("existing_decisions"),
                 project_format=options.project_format,
                 request_input=_declaration_file(options.request_input, request=True),
+                **read_options,
             )
             if _project_has_pages(options.out):
                 payload = _attach_workbench_url(options.out, payload)
@@ -590,7 +652,7 @@ def main(argv: list[str] | None = None) -> int:
             rejected = _reject_legacy_run(options.project)
             if rejected is not None:
                 return rejected
-            payload = service.continue_project(options.project)
+            payload = service.continue_project(options.project, **_read_options(options))
             _emit(payload)
             return 3 if payload["status"] in ("awaiting_host", "needs_tool", "needs_input") else 0
         if options.command == "inputs":

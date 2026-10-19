@@ -1,0 +1,2817 @@
+{
+  "schema_version": "rc4_n2_install_recovery_evidence.v2",
+  "executed_at_utc": "2026-10-19T04:12:29.525804+00:00",
+  "git_head_at_execution": "a08bc68c1cbbbc806205104c2bb01f3f096305f0",
+  "dirty_worktree": true,
+  "candidate_commit": "integration Owner records the final commit in the unique execution ledger",
+  "implementation_files_sha256": {
+    "src/deck_master/install.py": "3f0d3fd38a156628b3d348809cc682f83a784af17b9e67ad6eb2e9bb9217f87b",
+    "src/deck_master/activation_transaction.py": "efcbad3f3772a1eb72e188cd6c187546dbb59a4ed73bb85d75112d421ca2718c",
+    "src/deck_master/cli.py": "d80f1f8658b45afd7e73f1cd526c466e873fde3d17313363dbdefce3c25788bd",
+    "src/deck_master/errors.py": "9cdb98032e0efbb878d8f92397d8cf919204878727009b8bb6c086ef7ffafa3a",
+    "tests/rebuild/test_install_transaction_recovery.py": "0cfb44790cb06cf24aeaa0ea438fbced16c0f7005942472dbe08165290d6ec41",
+    "tests/rebuild/test_rc3_install_four_links.py": "a2667451e5762810481f365fbdc9ee41d3a624e53604e648e6ddbca59b774626",
+    "tests/rebuild/test_review_round3.py": "d8618814fbe87a9ba7fc8d0c349cf22994839d0be16da052b5bcf0da914ad87b"
+  },
+  "test_command": ".venv/bin/python -m pytest tests/rebuild/test_install_transaction_recovery.py tests/rebuild/test_rc3_install_four_links.py tests/rebuild/test_install_host_skill.py tests/rebuild/test_rc3_resource_inventory.py tests/rebuild/test_install.py::test_activation_failure_preserves_current_and_rollback tests/rebuild/test_review_round3.py tests/rebuild/test_review_round4.py --junitxml=docs/reports/rc4/iteration-20261019/N2-focused-junit.xml -q",
+  "pytest": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "262",
+    "time": "20.075",
+    "timestamp": "2026-10-19T04:10:01.175533+00:00",
+    "hostname": "fcd830c3f48b"
+  },
+  "ac_mapping": {
+    "AC-N2-01": {
+      "engineering_assertions_passed": true,
+      "tests": [
+        "test_normal_contract_and_no_duplicate_same_target_actions",
+        "test_upgrade_four_links_rollback_single_and_return"
+      ],
+      "passed_cases": 2,
+      "evidence_scope": "SYNTHETIC_ENGINEERING"
+    },
+    "AC-N2-02": {
+      "engineering_assertions_passed": true,
+      "tests": [
+        "test_keyboard_interrupt_each_addition_and_pointer_restores_original_inodes",
+        "test_cli_structured_interrupt_and_invalid_transaction_id"
+      ],
+      "passed_cases": 13,
+      "evidence_scope": "SYNTHETIC_ENGINEERING"
+    },
+    "AC-N2-03": {
+      "engineering_assertions_passed": true,
+      "tests": [
+        "test_process_death_prepared_pointer_and_final_result_windows",
+        "test_process_death_each_addition_no_recreation_of_published_inode",
+        "test_death_between_backup_and_replacement_recovers_original_plan"
+      ],
+      "passed_cases": 23,
+      "evidence_scope": "SYNTHETIC_ENGINEERING"
+    },
+    "AC-N2-04": {
+      "engineering_assertions_passed": true,
+      "tests": [
+        "test_exact_activate_and_rollback_replay_after_later_switch_changes_nothing",
+        "test_replay_reports_current_unknown_without_reapplying_history",
+        "test_historical_replay_does_not_clear_another_transactions_pending_pointer"
+      ],
+      "passed_cases": 3,
+      "evidence_scope": "SYNTHETIC_ENGINEERING"
+    },
+    "AC-N2-05": {
+      "engineering_assertions_passed": true,
+      "tests": [
+        "test_no_id_completed_rollback_toggles_but_unfinished_rollback_freezes_target"
+      ],
+      "passed_cases": 1,
+      "evidence_scope": "SYNTHETIC_ENGINEERING",
+      "integration_dependency": "Root synchronizes canonical installation/recovery documentation; test assertions do not replace that wording."
+    },
+    "AC-N2-06": {
+      "engineering_assertions_passed": true,
+      "tests": [
+        "test_rollback_death_each_removal_preserves_backup_and_converges",
+        "test_keyboard_interrupt_each_actual_removal_restores_original",
+        "test_link_retirement_compensation_dies_and_restores_original_link_inode"
+      ],
+      "passed_cases": 35,
+      "evidence_scope": "SYNTHETIC_ENGINEERING"
+    },
+    "AC-N2-07": {
+      "engineering_assertions_passed": true,
+      "tests": [
+        "test_external_replacement_is_preserved_and_compensates_only_owned_paths",
+        "test_external_occupant_arriving_at_rename_boundary_is_never_overwritten",
+        "test_external_preparation_replacement_is_preserved_and_refused",
+        "test_occupied_retired_link_preserves_external_path_and_original_backup",
+        "test_atomic_rename_refuses_occupant_after_final_path_check",
+        "test_atomic_rename_pins_host_parent_when_ancestor_is_replaced",
+        "test_atomic_rename_primitive_preserves_both_source_and_existing_destination",
+        "test_unsupported_atomic_rename_never_uses_overwriting_fallback"
+      ],
+      "passed_cases": 33,
+      "evidence_scope": "SYNTHETIC_ENGINEERING"
+    },
+    "AC-N2-08": {
+      "engineering_assertions_passed": true,
+      "tests": [
+        "test_same_id_different_request_is_rejected_without_mutation",
+        "test_two_prefixes_share_host_lock_and_recheck_after_waiting"
+      ],
+      "passed_cases": 5,
+      "evidence_scope": "SYNTHETIC_ENGINEERING"
+    },
+    "AC-N2-09": {
+      "engineering_assertions_passed": true,
+      "tests": [
+        "test_opt_out_never_resolves_or_writes_host_including_recovery",
+        "test_legacy_optout_preserves_host_configuration_and_inodes_whole_lifecycle",
+        "test_legacy_companion_move_and_exact_retirement_survive_process_death"
+      ],
+      "passed_cases": 9,
+      "evidence_scope": "SYNTHETIC_ENGINEERING"
+    },
+    "AC-N2-10": {
+      "engineering_assertions_passed": true,
+      "tests": [
+        "test_compensation_process_dies_again_and_resumes_reverse_direction",
+        "test_second_keyboard_interrupt_leaves_compensating_until_original_retry",
+        "test_pending_write_failure_preserves_prepared_plan_and_recovers",
+        "test_record_write_failure_after_action_reports_unknown_then_recovers_original_transaction",
+        "test_completed_record_with_stale_pending_does_not_apply_again",
+        "test_replay_still_returns_completed_result_when_stale_pointer_unlink_repeatedly_fails",
+        "test_pending_cleanup_captures_and_preserves_racing_replacement",
+        "test_pending_publish_never_replaces_external_occupant_at_syscall_boundary",
+        "test_process_death_after_pending_capture_replays_completed_receipt"
+      ],
+      "passed_cases": 16,
+      "evidence_scope": "SYNTHETIC_ENGINEERING"
+    },
+    "AC-N2-11": {
+      "engineering_assertions_passed": true,
+      "tests": [
+        "test_damaged_or_foreign_records_and_changed_resources_are_never_reinterpreted",
+        "test_corrupt_pending_pointer_preserves_record_and_does_not_guess_new_transaction",
+        "test_copied_record_in_different_prefix_refuses_original_paths",
+        "test_strict_resource_change_after_prepared_is_recovery_conflict_with_safe_compensation",
+        "test_journal_symlink_is_refused_without_writing_its_external_target"
+      ],
+      "passed_cases": 12,
+      "evidence_scope": "SYNTHETIC_ENGINEERING"
+    },
+    "AC-N2-12": {
+      "engineering_assertions_passed": true,
+      "tests": [
+        "test_every_link_conflict_aborts_before_any_activation",
+        "test_failure_during_each_link_creation_compensates_every_pointer_and_link",
+        "test_strict_installed_release_validation_stays_in_force_before_activation",
+        "test_full_source_wheel_and_installer_mapping_is_exact",
+        "test_rollback_never_changes_any_project_writer_floor"
+      ],
+      "passed_cases": 27,
+      "evidence_scope": "SYNTHETIC_ENGINEERING",
+      "integration_dependency": "Root attaches final candidate SHA/tree and separate installed-wheel/renderer gates; actual user HOME was not exercised."
+    }
+  },
+  "platform": {
+    "executed": "linux",
+    "python": "3.12.14",
+    "atomic_rename_executed": "Linux renameat2(RENAME_NOREPLACE) on current temporary filesystem",
+    "implemented_not_run": [
+      "macOS renameatx_np(RENAME_EXCL)"
+    ],
+    "unsupported_behavior": "refuse; no overwriting rename fallback"
+  },
+  "not_run_and_limits": [
+    "actual user HOME activation/migration/loaded Skills",
+    "physical power loss and unsupported platform/filesystem combinations",
+    "installed-wheel/renderer release gates are separate integration evidence; fabricated activation releases do not replace those gates",
+    "noncooperating source replacement can be retained at its backup/capture location and reported as conflict; destination non-overwrite is atomic, not a universal filesystem compare-and-swap"
+  ],
+  "safety": {
+    "real_home_touched": false,
+    "external_models_called": false,
+    "shared_services_terminated": false,
+    "fixture_children_only_exit_code": 91,
+    "project_writer_floor_modified": false
+  },
+  "collection_notes": {
+    "first_attempt": {
+      "result": "failed; no PASS report written",
+      "reason": "previous/after_backup breakpoint had no previous inode, so child did not exit at the requested breakpoint"
+    },
+    "repair": "collector fixture only: activate bare, then old before that case; production code and 262-test result unchanged",
+    "successful_retry": {
+      "requested_breakpoints": 47,
+      "verified_exit_code": 91,
+      "completed": 42,
+      "rolled_back": 5
+    },
+    "home_isolation": "HOME and CODEX_HOME both explicitly set beneath each /tmp fixture before activation"
+  },
+  "summary": {
+    "process_death_cases": 47,
+    "directions": {
+      "forward": 25,
+      "retirement": 16,
+      "compensation": 5,
+      "optout": 1
+    },
+    "final_states": {
+      "completed": 42,
+      "rolled_back": 5
+    },
+    "every_requested_breakpoint_exited_91_and_recovered": true
+  },
+  "retained_evidence": {
+    "raw": {
+      "artifact": "N2-install-recovery-evidence.raw.json",
+      "storage": "outside repository; exact path in owner handoff",
+      "sha256": "68c3fc02571ef1b5a17058f2aa4a4a292a5b3cb31b81df8484af9f10a6d2b640",
+      "bytes": 730488,
+      "contains": "47 complete frozen requests, original managed snapshots, each action/preparation/backup before and after recovery; temporary fixtures removed after capture"
+    },
+    "junit": {
+      "artifact": "N2-focused-junit.xml",
+      "sha256": "ae8a790538d70735bf4b0448f3746441419aea38b03952d0fa50db57300cabf3",
+      "tests": 262
+    }
+  },
+  "key_proofs": {
+    "atomic_destination_occupants": {
+      "tests": [
+        "test_atomic_rename_refuses_occupant_after_final_path_check"
+      ],
+      "passed_cases": 18,
+      "verified_assertions": [
+        "18 cases: file/symlink/directory injected at final syscall for backup, publish, unpublish, restore, retire and restore-retired",
+        "external dev/inode/type/target/hash/mode preserved; durable recovery_conflict; no false complete rollback"
+      ],
+      "basis": "actual filesystem assertions in hashed test source; all matching JUnit cases passed"
+    },
+    "pinned_parent_and_unsupported": {
+      "tests": [
+        "test_atomic_rename_pins_host_parent_when_ancestor_is_replaced",
+        "test_atomic_rename_primitive_preserves_both_source_and_existing_destination",
+        "test_atomic_rename_success_retains_inode_and_rejects_changed_parent",
+        "test_unsupported_atomic_rename_never_uses_overwriting_fallback"
+      ],
+      "passed_cases": 6,
+      "verified_assertions": [
+        "replacement Host directory and foreign bytes/inodes unchanged",
+        "existing destination and prepared source identities both preserved",
+        "successful move retains source inode; unsupported filesystem restores all original managed paths"
+      ],
+      "basis": "actual filesystem assertions in hashed test source; all matching JUnit cases passed"
+    },
+    "pending_racing_replacement": {
+      "tests": [
+        "test_pending_cleanup_captures_and_preserves_racing_replacement",
+        "test_pending_publish_never_replaces_external_occupant_at_syscall_boundary",
+        "test_process_death_after_pending_capture_replays_completed_receipt"
+      ],
+      "passed_cases": 6,
+      "verified_assertions": [
+        "racing file/symlink retained at original path or captured evidence location",
+        "a second occupant is also preserved; unknown pointer/capture refuses new activation",
+        "capture death replays completed receipt without changing managed paths"
+      ],
+      "basis": "actual filesystem assertions in hashed test source; all matching JUnit cases passed"
+    },
+    "shared_host_lock": {
+      "tests": [
+        "test_two_prefixes_share_host_lock_and_recheck_after_waiting"
+      ],
+      "passed_cases": 1,
+      "verified_assertions": [
+        "two dedicated prefixes contend for same lock; fixed prefix-then-Host order",
+        "first child succeeds; second exits 5 after locked recheck; second current absent",
+        "shared lock inode unchanged; first complete four-entry installation verified"
+      ],
+      "basis": "actual filesystem assertions in hashed test source; all matching JUnit cases passed"
+    },
+    "optout_and_legacy": {
+      "tests": [
+        "test_opt_out_never_resolves_or_writes_host_including_recovery",
+        "test_legacy_optout_preserves_host_configuration_and_inodes_whole_lifecycle",
+        "test_legacy_companion_move_and_exact_retirement_survive_process_death"
+      ],
+      "passed_cases": 9,
+      "verified_assertions": [
+        "Host resolver forbidden by test in opt-out; entire observed Host tree names/dev/inode/type/target/hash/mode unchanged",
+        "normal activation, KeyboardInterrupt and process-death recovery covered",
+        "legacy companion preserved and only exact managed retirement list processed"
+      ],
+      "basis": "actual filesystem assertions in hashed test source; all matching JUnit cases passed"
+    },
+    "launcher_bytes_and_mode": {
+      "tests": [
+        "test_same_bytes_launcher_mode_repair_is_published_atomically_and_compensated",
+        "test_keyboard_interrupt_each_addition_and_pointer_restores_original_inodes"
+      ],
+      "passed_cases": 13,
+      "verified_assertions": [
+        "launcher full bytes/hash/mode and pointer/link inode equality checked after compensation",
+        "final executable mode verified after successful replacement"
+      ],
+      "basis": "actual filesystem assertions in hashed test source; all matching JUnit cases passed"
+    }
+  },
+  "process_death_cases": [
+    {
+      "case": 1,
+      "transaction_id": "c50c0e0b-25ff-4546-bbb5-d53e21e54839",
+      "direction": "forward",
+      "breakpoint": "prepared",
+      "named_step": null,
+      "child_exit_code": 91,
+      "request": {
+        "verb": "activate",
+        "target_release_id": "new",
+        "target_release_sha256": "1a352af59d70c3f5f4b96369297debe775000fb3f13079532cc03cf5d3faaa1b",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/old",
+        "previous": null
+      },
+      "state_after_exit": "prepared",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/new",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 5,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 0,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:561294",
+          "kind": "symlink",
+          "target": "releases/old"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:561348",
+          "kind": "symlink",
+          "target": "releases/new"
+        }
+      }
+    },
+    {
+      "case": 2,
+      "transaction_id": "99e9722a-2185-416b-a786-f525f796f583",
+      "direction": "forward",
+      "breakpoint": "pending",
+      "named_step": null,
+      "child_exit_code": 91,
+      "request": {
+        "verb": "activate",
+        "target_release_id": "new",
+        "target_release_sha256": "1a352af59d70c3f5f4b96369297debe775000fb3f13079532cc03cf5d3faaa1b",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/old",
+        "previous": null
+      },
+      "state_after_exit": "prepared",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/new",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 5,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 0,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:561399",
+          "kind": "symlink",
+          "target": "releases/old"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:561453",
+          "kind": "symlink",
+          "target": "releases/new"
+        }
+      }
+    },
+    {
+      "case": 3,
+      "transaction_id": "54d0a755-dfb3-4d7b-9edf-77eb65af9752",
+      "direction": "forward",
+      "breakpoint": "before_completed",
+      "named_step": null,
+      "child_exit_code": 91,
+      "request": {
+        "verb": "activate",
+        "target_release_id": "new",
+        "target_release_sha256": "1a352af59d70c3f5f4b96369297debe775000fb3f13079532cc03cf5d3faaa1b",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/old",
+        "previous": null
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/new",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 5,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 5,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:561546",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:561546",
+          "kind": "symlink",
+          "target": "releases/new"
+        }
+      }
+    },
+    {
+      "case": 4,
+      "transaction_id": "79e84c07-99d4-4593-9026-1c01f14ddeda",
+      "direction": "forward",
+      "breakpoint": "completed",
+      "named_step": null,
+      "child_exit_code": 91,
+      "request": {
+        "verb": "activate",
+        "target_release_id": "new",
+        "target_release_sha256": "1a352af59d70c3f5f4b96369297debe775000fb3f13079532cc03cf5d3faaa1b",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/old",
+        "previous": null
+      },
+      "state_after_exit": "completed",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/new",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 5,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 5,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:561647",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:561647",
+          "kind": "symlink",
+          "target": "releases/new"
+        }
+      }
+    },
+    {
+      "case": 5,
+      "transaction_id": "620fdae9-89f6-47ad-88e3-f4338fea2887",
+      "direction": "forward",
+      "breakpoint": "pending_captured",
+      "named_step": null,
+      "child_exit_code": 91,
+      "request": {
+        "verb": "activate",
+        "target_release_id": "new",
+        "target_release_sha256": "1a352af59d70c3f5f4b96369297debe775000fb3f13079532cc03cf5d3faaa1b",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/old",
+        "previous": null
+      },
+      "state_after_exit": "completed",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/new",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 5,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 5,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:561780",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:561780",
+          "kind": "symlink",
+          "target": "releases/new"
+        }
+      }
+    },
+    {
+      "case": 6,
+      "transaction_id": "0bebc916-4a4a-4f2e-b5cf-235bf16ff081",
+      "direction": "forward",
+      "breakpoint": "before_action",
+      "named_step": "current",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "activate",
+        "target_release_id": "new",
+        "target_release_sha256": "1a352af59d70c3f5f4b96369297debe775000fb3f13079532cc03cf5d3faaa1b",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/old",
+        "previous": null
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/new",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 5,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 1,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:561827",
+          "kind": "symlink",
+          "target": "releases/old"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:561874",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "named_step": {
+          "kind": "link",
+          "after_exit": {
+            "dev_inode": "33:561827",
+            "kind": "symlink",
+            "target": "releases/old"
+          },
+          "backup_after_exit": null,
+          "after_recovery": {
+            "dev_inode": "33:561874",
+            "kind": "symlink",
+            "target": "releases/new"
+          }
+        }
+      }
+    },
+    {
+      "case": 7,
+      "transaction_id": "fab417b6-8672-4952-b041-074944006f3f",
+      "direction": "forward",
+      "breakpoint": "after_backup",
+      "named_step": "current",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "activate",
+        "target_release_id": "new",
+        "target_release_sha256": "1a352af59d70c3f5f4b96369297debe775000fb3f13079532cc03cf5d3faaa1b",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/old",
+        "previous": null
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/new",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 5,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 1,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": null,
+        "current_after_recovery": {
+          "dev_inode": "33:561949",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "named_step": {
+          "kind": "link",
+          "after_exit": null,
+          "backup_after_exit": {
+            "dev_inode": "33:561925",
+            "kind": "symlink",
+            "target": "releases/old"
+          },
+          "after_recovery": {
+            "dev_inode": "33:561949",
+            "kind": "symlink",
+            "target": "releases/new"
+          }
+        }
+      }
+    },
+    {
+      "case": 8,
+      "transaction_id": "47aa8813-9e13-41d9-8586-6de484abfd62",
+      "direction": "forward",
+      "breakpoint": "after_action",
+      "named_step": "current",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "activate",
+        "target_release_id": "new",
+        "target_release_sha256": "1a352af59d70c3f5f4b96369297debe775000fb3f13079532cc03cf5d3faaa1b",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/old",
+        "previous": null
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/new",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 5,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 2,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:562013",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:562013",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "named_step": {
+          "kind": "link",
+          "after_exit": {
+            "dev_inode": "33:562013",
+            "kind": "symlink",
+            "target": "releases/new"
+          },
+          "backup_after_exit": {
+            "dev_inode": "33:561998",
+            "kind": "symlink",
+            "target": "releases/old"
+          },
+          "after_recovery": {
+            "dev_inode": "33:562013",
+            "kind": "symlink",
+            "target": "releases/new"
+          }
+        }
+      }
+    },
+    {
+      "case": 9,
+      "transaction_id": "f3cc3903-3273-4d3e-8712-211da0a48a81",
+      "direction": "forward",
+      "breakpoint": "applied",
+      "named_step": "current",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "activate",
+        "target_release_id": "new",
+        "target_release_sha256": "1a352af59d70c3f5f4b96369297debe775000fb3f13079532cc03cf5d3faaa1b",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/old",
+        "previous": null
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/new",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 5,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 2,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:562077",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:562077",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "named_step": {
+          "kind": "link",
+          "after_exit": {
+            "dev_inode": "33:562077",
+            "kind": "symlink",
+            "target": "releases/new"
+          },
+          "backup_after_exit": {
+            "dev_inode": "33:562062",
+            "kind": "symlink",
+            "target": "releases/old"
+          },
+          "after_recovery": {
+            "dev_inode": "33:562077",
+            "kind": "symlink",
+            "target": "releases/new"
+          }
+        }
+      }
+    },
+    {
+      "case": 10,
+      "transaction_id": "48f13113-afe5-4bbd-b327-fb0e78dbaf90",
+      "direction": "forward",
+      "breakpoint": "before_action",
+      "named_step": "previous",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "activate",
+        "target_release_id": "new",
+        "target_release_sha256": "1a352af59d70c3f5f4b96369297debe775000fb3f13079532cc03cf5d3faaa1b",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/old",
+        "previous": null
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/new",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 5,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 0,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:562125",
+          "kind": "symlink",
+          "target": "releases/old"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:562140",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "named_step": {
+          "kind": "link",
+          "after_exit": null,
+          "backup_after_exit": null,
+          "after_recovery": {
+            "dev_inode": "33:562139",
+            "kind": "symlink",
+            "target": "releases/old"
+          }
+        }
+      }
+    },
+    {
+      "case": 11,
+      "transaction_id": "9b59f237-4b47-42ce-a27d-b8d5bc127a06",
+      "direction": "forward",
+      "breakpoint": "after_backup",
+      "named_step": "previous",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "activate",
+        "target_release_id": "new",
+        "target_release_sha256": "1a352af59d70c3f5f4b96369297debe775000fb3f13079532cc03cf5d3faaa1b",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/old",
+        "previous": "releases/bare"
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/new",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 5,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 0,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:562216",
+          "kind": "symlink",
+          "target": "releases/old"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:562254",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "named_step": {
+          "kind": "link",
+          "after_exit": null,
+          "backup_after_exit": {
+            "dev_inode": "33:562215",
+            "kind": "symlink",
+            "target": "releases/bare"
+          },
+          "after_recovery": {
+            "dev_inode": "33:562253",
+            "kind": "symlink",
+            "target": "releases/old"
+          }
+        }
+      }
+    },
+    {
+      "case": 12,
+      "transaction_id": "959ec2f6-b396-4e96-827f-7de80e7eb015",
+      "direction": "forward",
+      "breakpoint": "after_action",
+      "named_step": "previous",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "activate",
+        "target_release_id": "new",
+        "target_release_sha256": "1a352af59d70c3f5f4b96369297debe775000fb3f13079532cc03cf5d3faaa1b",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/old",
+        "previous": null
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/new",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 5,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 1,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:562307",
+          "kind": "symlink",
+          "target": "releases/old"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:562370",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "named_step": {
+          "kind": "link",
+          "after_exit": {
+            "dev_inode": "33:562369",
+            "kind": "symlink",
+            "target": "releases/old"
+          },
+          "backup_after_exit": null,
+          "after_recovery": {
+            "dev_inode": "33:562369",
+            "kind": "symlink",
+            "target": "releases/old"
+          }
+        }
+      }
+    },
+    {
+      "case": 13,
+      "transaction_id": "41aca349-308b-41b0-b355-cb1cacab2914",
+      "direction": "forward",
+      "breakpoint": "applied",
+      "named_step": "previous",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "activate",
+        "target_release_id": "new",
+        "target_release_sha256": "1a352af59d70c3f5f4b96369297debe775000fb3f13079532cc03cf5d3faaa1b",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/old",
+        "previous": null
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/new",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 5,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 1,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:562435",
+          "kind": "symlink",
+          "target": "releases/old"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:562488",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "named_step": {
+          "kind": "link",
+          "after_exit": {
+            "dev_inode": "33:562487",
+            "kind": "symlink",
+            "target": "releases/old"
+          },
+          "backup_after_exit": null,
+          "after_recovery": {
+            "dev_inode": "33:562487",
+            "kind": "symlink",
+            "target": "releases/old"
+          }
+        }
+      }
+    },
+    {
+      "case": 14,
+      "transaction_id": "bb1f52df-afb4-4891-b6ca-318a9868cd89",
+      "direction": "forward",
+      "breakpoint": "before_action",
+      "named_step": "deck-master",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "activate",
+        "target_release_id": "new",
+        "target_release_sha256": "1a352af59d70c3f5f4b96369297debe775000fb3f13079532cc03cf5d3faaa1b",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/old",
+        "previous": null
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/new",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 6,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 2,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:562614",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:562614",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "named_step": {
+          "kind": "link",
+          "after_exit": null,
+          "backup_after_exit": null,
+          "after_recovery": {
+            "dev_inode": "33:562616",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-master"
+          }
+        }
+      }
+    },
+    {
+      "case": 15,
+      "transaction_id": "49b7a58b-fabf-4cb8-802b-89f7cf663750",
+      "direction": "forward",
+      "breakpoint": "after_action",
+      "named_step": "deck-master",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "activate",
+        "target_release_id": "new",
+        "target_release_sha256": "1a352af59d70c3f5f4b96369297debe775000fb3f13079532cc03cf5d3faaa1b",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/old",
+        "previous": null
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/new",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 6,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 3,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:562742",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:562742",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "named_step": {
+          "kind": "link",
+          "after_exit": {
+            "dev_inode": "33:562743",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-master"
+          },
+          "backup_after_exit": null,
+          "after_recovery": {
+            "dev_inode": "33:562743",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-master"
+          }
+        }
+      }
+    },
+    {
+      "case": 16,
+      "transaction_id": "8a8cddd3-e766-4c01-8bb9-49e816294d62",
+      "direction": "forward",
+      "breakpoint": "applied",
+      "named_step": "deck-master",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "activate",
+        "target_release_id": "new",
+        "target_release_sha256": "1a352af59d70c3f5f4b96369297debe775000fb3f13079532cc03cf5d3faaa1b",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/old",
+        "previous": null
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/new",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 6,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 3,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:562862",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:562862",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "named_step": {
+          "kind": "link",
+          "after_exit": {
+            "dev_inode": "33:562863",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-master"
+          },
+          "backup_after_exit": null,
+          "after_recovery": {
+            "dev_inode": "33:562863",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-master"
+          }
+        }
+      }
+    },
+    {
+      "case": 17,
+      "transaction_id": "fc66421f-a173-439d-9abb-2d236b24e2a7",
+      "direction": "forward",
+      "breakpoint": "before_action",
+      "named_step": "deck-content",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "activate",
+        "target_release_id": "new",
+        "target_release_sha256": "1a352af59d70c3f5f4b96369297debe775000fb3f13079532cc03cf5d3faaa1b",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/old",
+        "previous": null
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/new",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 5,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 2,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:562988",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:562988",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "named_step": {
+          "kind": "link",
+          "after_exit": null,
+          "backup_after_exit": null,
+          "after_recovery": {
+            "dev_inode": "33:562989",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-content"
+          }
+        }
+      }
+    },
+    {
+      "case": 18,
+      "transaction_id": "66eedf66-b97c-403c-a025-855348955255",
+      "direction": "forward",
+      "breakpoint": "after_action",
+      "named_step": "deck-content",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "activate",
+        "target_release_id": "new",
+        "target_release_sha256": "1a352af59d70c3f5f4b96369297debe775000fb3f13079532cc03cf5d3faaa1b",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/old",
+        "previous": null
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/new",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 5,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 3,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:563099",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:563099",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "named_step": {
+          "kind": "link",
+          "after_exit": {
+            "dev_inode": "33:563100",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-content"
+          },
+          "backup_after_exit": null,
+          "after_recovery": {
+            "dev_inode": "33:563100",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-content"
+          }
+        }
+      }
+    },
+    {
+      "case": 19,
+      "transaction_id": "5b68c85c-315b-4199-923e-aa6bef3d3036",
+      "direction": "forward",
+      "breakpoint": "applied",
+      "named_step": "deck-content",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "activate",
+        "target_release_id": "new",
+        "target_release_sha256": "1a352af59d70c3f5f4b96369297debe775000fb3f13079532cc03cf5d3faaa1b",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/old",
+        "previous": null
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/new",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 5,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 3,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:563236",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:563236",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "named_step": {
+          "kind": "link",
+          "after_exit": {
+            "dev_inode": "33:563237",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-content"
+          },
+          "backup_after_exit": null,
+          "after_recovery": {
+            "dev_inode": "33:563237",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-content"
+          }
+        }
+      }
+    },
+    {
+      "case": 20,
+      "transaction_id": "f7cc3bd1-0d92-41ed-b09b-2ce9d98b5e81",
+      "direction": "forward",
+      "breakpoint": "before_action",
+      "named_step": "deck-design",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "activate",
+        "target_release_id": "new",
+        "target_release_sha256": "1a352af59d70c3f5f4b96369297debe775000fb3f13079532cc03cf5d3faaa1b",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/old",
+        "previous": null
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/new",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 5,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 3,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:563355",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:563355",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "named_step": {
+          "kind": "link",
+          "after_exit": null,
+          "backup_after_exit": null,
+          "after_recovery": {
+            "dev_inode": "33:563357",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-design"
+          }
+        }
+      }
+    },
+    {
+      "case": 21,
+      "transaction_id": "17adc042-687e-49f3-995f-8991d97b7e95",
+      "direction": "forward",
+      "breakpoint": "after_action",
+      "named_step": "deck-design",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "activate",
+        "target_release_id": "new",
+        "target_release_sha256": "1a352af59d70c3f5f4b96369297debe775000fb3f13079532cc03cf5d3faaa1b",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/old",
+        "previous": null
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/new",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 5,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 4,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:563490",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:563490",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "named_step": {
+          "kind": "link",
+          "after_exit": {
+            "dev_inode": "33:563492",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-design"
+          },
+          "backup_after_exit": null,
+          "after_recovery": {
+            "dev_inode": "33:563492",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-design"
+          }
+        }
+      }
+    },
+    {
+      "case": 22,
+      "transaction_id": "defdad94-1def-46fc-986f-060f5c49dd5f",
+      "direction": "forward",
+      "breakpoint": "applied",
+      "named_step": "deck-design",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "activate",
+        "target_release_id": "new",
+        "target_release_sha256": "1a352af59d70c3f5f4b96369297debe775000fb3f13079532cc03cf5d3faaa1b",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/old",
+        "previous": null
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/new",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 5,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 4,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:563598",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:563598",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "named_step": {
+          "kind": "link",
+          "after_exit": {
+            "dev_inode": "33:563600",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-design"
+          },
+          "backup_after_exit": null,
+          "after_recovery": {
+            "dev_inode": "33:563600",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-design"
+          }
+        }
+      }
+    },
+    {
+      "case": 23,
+      "transaction_id": "5f2b0d65-de12-4baf-b9d0-93da895966c3",
+      "direction": "forward",
+      "breakpoint": "before_action",
+      "named_step": "deck-review",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "activate",
+        "target_release_id": "new",
+        "target_release_sha256": "1a352af59d70c3f5f4b96369297debe775000fb3f13079532cc03cf5d3faaa1b",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/old",
+        "previous": null
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/new",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 5,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 4,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:563721",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:563721",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "named_step": {
+          "kind": "link",
+          "after_exit": null,
+          "backup_after_exit": null,
+          "after_recovery": {
+            "dev_inode": "33:563724",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-review"
+          }
+        }
+      }
+    },
+    {
+      "case": 24,
+      "transaction_id": "ed76afcb-fd3f-4f41-a14f-eb35d912c4f2",
+      "direction": "forward",
+      "breakpoint": "after_action",
+      "named_step": "deck-review",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "activate",
+        "target_release_id": "new",
+        "target_release_sha256": "1a352af59d70c3f5f4b96369297debe775000fb3f13079532cc03cf5d3faaa1b",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/old",
+        "previous": null
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/new",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 5,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 5,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:563817",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:563817",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "named_step": {
+          "kind": "link",
+          "after_exit": {
+            "dev_inode": "33:563820",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-review"
+          },
+          "backup_after_exit": null,
+          "after_recovery": {
+            "dev_inode": "33:563820",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-review"
+          }
+        }
+      }
+    },
+    {
+      "case": 25,
+      "transaction_id": "c9937864-3313-4cb4-8a7e-6ec2f7dd9a65",
+      "direction": "forward",
+      "breakpoint": "applied",
+      "named_step": "deck-review",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "activate",
+        "target_release_id": "new",
+        "target_release_sha256": "1a352af59d70c3f5f4b96369297debe775000fb3f13079532cc03cf5d3faaa1b",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/old",
+        "previous": null
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/new",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 5,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 5,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:563922",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:563922",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "named_step": {
+          "kind": "link",
+          "after_exit": {
+            "dev_inode": "33:563925",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-review"
+          },
+          "backup_after_exit": null,
+          "after_recovery": {
+            "dev_inode": "33:563925",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-review"
+          }
+        }
+      }
+    },
+    {
+      "case": 26,
+      "transaction_id": "8ed72078-5c27-496b-948e-722b7df4818e",
+      "direction": "retirement",
+      "breakpoint": "before_action",
+      "named_step": "deck-master",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "rollback",
+        "target_release_id": "bare",
+        "target_release_sha256": "0d5144c41a26d0f4de57c00d23e4a80ba579b15a9d17251448d255f3e851bf73",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/new",
+        "previous": "releases/bare"
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/bare",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 6,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 2,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:564066",
+          "kind": "symlink",
+          "target": "releases/bare"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:564066",
+          "kind": "symlink",
+          "target": "releases/bare"
+        },
+        "named_step": {
+          "kind": "remove",
+          "after_exit": {
+            "dev_inode": "33:564015",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-master"
+          },
+          "backup_after_exit": null,
+          "after_recovery": null
+        }
+      }
+    },
+    {
+      "case": 27,
+      "transaction_id": "931a6896-f621-43e1-af7e-cb86d1f27c1c",
+      "direction": "retirement",
+      "breakpoint": "after_backup",
+      "named_step": "deck-master",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "rollback",
+        "target_release_id": "bare",
+        "target_release_sha256": "0d5144c41a26d0f4de57c00d23e4a80ba579b15a9d17251448d255f3e851bf73",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/new",
+        "previous": "releases/bare"
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/bare",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 6,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 2,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:564241",
+          "kind": "symlink",
+          "target": "releases/bare"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:564241",
+          "kind": "symlink",
+          "target": "releases/bare"
+        },
+        "named_step": {
+          "kind": "remove",
+          "after_exit": null,
+          "backup_after_exit": {
+            "dev_inode": "33:564174",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-master"
+          },
+          "after_recovery": null
+        }
+      }
+    },
+    {
+      "case": 28,
+      "transaction_id": "eff29282-11c5-4f0c-9869-6188da19e2c4",
+      "direction": "retirement",
+      "breakpoint": "after_action",
+      "named_step": "deck-master",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "rollback",
+        "target_release_id": "bare",
+        "target_release_sha256": "0d5144c41a26d0f4de57c00d23e4a80ba579b15a9d17251448d255f3e851bf73",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/new",
+        "previous": "releases/bare"
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/bare",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 6,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 2,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:564431",
+          "kind": "symlink",
+          "target": "releases/bare"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:564431",
+          "kind": "symlink",
+          "target": "releases/bare"
+        },
+        "named_step": {
+          "kind": "remove",
+          "after_exit": null,
+          "backup_after_exit": {
+            "dev_inode": "33:564334",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-master"
+          },
+          "after_recovery": null
+        }
+      }
+    },
+    {
+      "case": 29,
+      "transaction_id": "f0cb3e87-b6c5-4e08-a428-d593a0a2093e",
+      "direction": "retirement",
+      "breakpoint": "applied",
+      "named_step": "deck-master",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "rollback",
+        "target_release_id": "bare",
+        "target_release_sha256": "0d5144c41a26d0f4de57c00d23e4a80ba579b15a9d17251448d255f3e851bf73",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/new",
+        "previous": "releases/bare"
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/bare",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 6,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 2,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:564537",
+          "kind": "symlink",
+          "target": "releases/bare"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:564537",
+          "kind": "symlink",
+          "target": "releases/bare"
+        },
+        "named_step": {
+          "kind": "remove",
+          "after_exit": null,
+          "backup_after_exit": {
+            "dev_inode": "33:564516",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-master"
+          },
+          "after_recovery": null
+        }
+      }
+    },
+    {
+      "case": 30,
+      "transaction_id": "6c100fa2-2144-418b-839d-a99134d2f066",
+      "direction": "retirement",
+      "breakpoint": "before_action",
+      "named_step": "deck-content",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "rollback",
+        "target_release_id": "bare",
+        "target_release_sha256": "0d5144c41a26d0f4de57c00d23e4a80ba579b15a9d17251448d255f3e851bf73",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/new",
+        "previous": "releases/bare"
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/bare",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 6,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 2,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:564633",
+          "kind": "symlink",
+          "target": "releases/bare"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:564633",
+          "kind": "symlink",
+          "target": "releases/bare"
+        },
+        "named_step": {
+          "kind": "remove",
+          "after_exit": {
+            "dev_inode": "33:564613",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-content"
+          },
+          "backup_after_exit": null,
+          "after_recovery": null
+        }
+      }
+    },
+    {
+      "case": 31,
+      "transaction_id": "e765de3b-21d5-430e-8427-352b86014cf8",
+      "direction": "retirement",
+      "breakpoint": "after_backup",
+      "named_step": "deck-content",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "rollback",
+        "target_release_id": "bare",
+        "target_release_sha256": "0d5144c41a26d0f4de57c00d23e4a80ba579b15a9d17251448d255f3e851bf73",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/new",
+        "previous": "releases/bare"
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/bare",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 6,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 2,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:564730",
+          "kind": "symlink",
+          "target": "releases/bare"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:564730",
+          "kind": "symlink",
+          "target": "releases/bare"
+        },
+        "named_step": {
+          "kind": "remove",
+          "after_exit": null,
+          "backup_after_exit": {
+            "dev_inode": "33:564710",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-content"
+          },
+          "after_recovery": null
+        }
+      }
+    },
+    {
+      "case": 32,
+      "transaction_id": "d42bb7c7-b08b-4a93-9850-177bf65142ea",
+      "direction": "retirement",
+      "breakpoint": "after_action",
+      "named_step": "deck-content",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "rollback",
+        "target_release_id": "bare",
+        "target_release_sha256": "0d5144c41a26d0f4de57c00d23e4a80ba579b15a9d17251448d255f3e851bf73",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/new",
+        "previous": "releases/bare"
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/bare",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 6,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 2,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:564854",
+          "kind": "symlink",
+          "target": "releases/bare"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:564854",
+          "kind": "symlink",
+          "target": "releases/bare"
+        },
+        "named_step": {
+          "kind": "remove",
+          "after_exit": null,
+          "backup_after_exit": {
+            "dev_inode": "33:564807",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-content"
+          },
+          "after_recovery": null
+        }
+      }
+    },
+    {
+      "case": 33,
+      "transaction_id": "730bec76-9556-40ed-ac74-a01ec38958aa",
+      "direction": "retirement",
+      "breakpoint": "applied",
+      "named_step": "deck-content",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "rollback",
+        "target_release_id": "bare",
+        "target_release_sha256": "0d5144c41a26d0f4de57c00d23e4a80ba579b15a9d17251448d255f3e851bf73",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/new",
+        "previous": "releases/bare"
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/bare",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 6,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 2,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:565002",
+          "kind": "symlink",
+          "target": "releases/bare"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:565002",
+          "kind": "symlink",
+          "target": "releases/bare"
+        },
+        "named_step": {
+          "kind": "remove",
+          "after_exit": null,
+          "backup_after_exit": {
+            "dev_inode": "33:564951",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-content"
+          },
+          "after_recovery": null
+        }
+      }
+    },
+    {
+      "case": 34,
+      "transaction_id": "47f12308-c063-4e9d-a11f-a5ca07a453c1",
+      "direction": "retirement",
+      "breakpoint": "before_action",
+      "named_step": "deck-design",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "rollback",
+        "target_release_id": "bare",
+        "target_release_sha256": "0d5144c41a26d0f4de57c00d23e4a80ba579b15a9d17251448d255f3e851bf73",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/new",
+        "previous": "releases/bare"
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/bare",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 6,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 2,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:565109",
+          "kind": "symlink",
+          "target": "releases/bare"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:565109",
+          "kind": "symlink",
+          "target": "releases/bare"
+        },
+        "named_step": {
+          "kind": "remove",
+          "after_exit": {
+            "dev_inode": "33:565090",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-design"
+          },
+          "backup_after_exit": null,
+          "after_recovery": null
+        }
+      }
+    },
+    {
+      "case": 35,
+      "transaction_id": "6ea153c2-1e72-4158-b193-49885211ec94",
+      "direction": "retirement",
+      "breakpoint": "after_backup",
+      "named_step": "deck-design",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "rollback",
+        "target_release_id": "bare",
+        "target_release_sha256": "0d5144c41a26d0f4de57c00d23e4a80ba579b15a9d17251448d255f3e851bf73",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/new",
+        "previous": "releases/bare"
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/bare",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 6,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 2,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:565206",
+          "kind": "symlink",
+          "target": "releases/bare"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:565206",
+          "kind": "symlink",
+          "target": "releases/bare"
+        },
+        "named_step": {
+          "kind": "remove",
+          "after_exit": null,
+          "backup_after_exit": {
+            "dev_inode": "33:565187",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-design"
+          },
+          "after_recovery": null
+        }
+      }
+    },
+    {
+      "case": 36,
+      "transaction_id": "ac0b5deb-b6b4-4d3a-9d5d-267c93241a71",
+      "direction": "retirement",
+      "breakpoint": "after_action",
+      "named_step": "deck-design",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "rollback",
+        "target_release_id": "bare",
+        "target_release_sha256": "0d5144c41a26d0f4de57c00d23e4a80ba579b15a9d17251448d255f3e851bf73",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/new",
+        "previous": "releases/bare"
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/bare",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 6,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 2,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:565303",
+          "kind": "symlink",
+          "target": "releases/bare"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:565303",
+          "kind": "symlink",
+          "target": "releases/bare"
+        },
+        "named_step": {
+          "kind": "remove",
+          "after_exit": null,
+          "backup_after_exit": {
+            "dev_inode": "33:565284",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-design"
+          },
+          "after_recovery": null
+        }
+      }
+    },
+    {
+      "case": 37,
+      "transaction_id": "0f023f5c-a611-4455-82e4-40ebe0a631ab",
+      "direction": "retirement",
+      "breakpoint": "applied",
+      "named_step": "deck-design",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "rollback",
+        "target_release_id": "bare",
+        "target_release_sha256": "0d5144c41a26d0f4de57c00d23e4a80ba579b15a9d17251448d255f3e851bf73",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/new",
+        "previous": "releases/bare"
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/bare",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 6,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 2,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:565433",
+          "kind": "symlink",
+          "target": "releases/bare"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:565433",
+          "kind": "symlink",
+          "target": "releases/bare"
+        },
+        "named_step": {
+          "kind": "remove",
+          "after_exit": null,
+          "backup_after_exit": {
+            "dev_inode": "33:565381",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-design"
+          },
+          "after_recovery": null
+        }
+      }
+    },
+    {
+      "case": 38,
+      "transaction_id": "1f47879f-ea8f-4354-864a-541267d73814",
+      "direction": "retirement",
+      "breakpoint": "before_action",
+      "named_step": "deck-review",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "rollback",
+        "target_release_id": "bare",
+        "target_release_sha256": "0d5144c41a26d0f4de57c00d23e4a80ba579b15a9d17251448d255f3e851bf73",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/new",
+        "previous": "releases/bare"
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/bare",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 6,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 2,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:565562",
+          "kind": "symlink",
+          "target": "releases/bare"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:565562",
+          "kind": "symlink",
+          "target": "releases/bare"
+        },
+        "named_step": {
+          "kind": "remove",
+          "after_exit": {
+            "dev_inode": "33:565544",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-review"
+          },
+          "backup_after_exit": null,
+          "after_recovery": null
+        }
+      }
+    },
+    {
+      "case": 39,
+      "transaction_id": "8e0653a3-de9d-4c55-bc36-a70c94e4a1bf",
+      "direction": "retirement",
+      "breakpoint": "after_backup",
+      "named_step": "deck-review",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "rollback",
+        "target_release_id": "bare",
+        "target_release_sha256": "0d5144c41a26d0f4de57c00d23e4a80ba579b15a9d17251448d255f3e851bf73",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/new",
+        "previous": "releases/bare"
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/bare",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 6,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 2,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:565659",
+          "kind": "symlink",
+          "target": "releases/bare"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:565659",
+          "kind": "symlink",
+          "target": "releases/bare"
+        },
+        "named_step": {
+          "kind": "remove",
+          "after_exit": null,
+          "backup_after_exit": {
+            "dev_inode": "33:565641",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-review"
+          },
+          "after_recovery": null
+        }
+      }
+    },
+    {
+      "case": 40,
+      "transaction_id": "1ba7051a-3f04-4379-8f92-97de78b3a208",
+      "direction": "retirement",
+      "breakpoint": "after_action",
+      "named_step": "deck-review",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "rollback",
+        "target_release_id": "bare",
+        "target_release_sha256": "0d5144c41a26d0f4de57c00d23e4a80ba579b15a9d17251448d255f3e851bf73",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/new",
+        "previous": "releases/bare"
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/bare",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 6,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 2,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:565756",
+          "kind": "symlink",
+          "target": "releases/bare"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:565756",
+          "kind": "symlink",
+          "target": "releases/bare"
+        },
+        "named_step": {
+          "kind": "remove",
+          "after_exit": null,
+          "backup_after_exit": {
+            "dev_inode": "33:565738",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-review"
+          },
+          "after_recovery": null
+        }
+      }
+    },
+    {
+      "case": 41,
+      "transaction_id": "3865b8e5-cc39-4a55-b1df-0b5c8c2431f1",
+      "direction": "retirement",
+      "breakpoint": "applied",
+      "named_step": "deck-review",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "rollback",
+        "target_release_id": "bare",
+        "target_release_sha256": "0d5144c41a26d0f4de57c00d23e4a80ba579b15a9d17251448d255f3e851bf73",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/new",
+        "previous": "releases/bare"
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/bare",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 6,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 2,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:565875",
+          "kind": "symlink",
+          "target": "releases/bare"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:565875",
+          "kind": "symlink",
+          "target": "releases/bare"
+        },
+        "named_step": {
+          "kind": "remove",
+          "after_exit": null,
+          "backup_after_exit": {
+            "dev_inode": "33:565835",
+            "kind": "symlink",
+            "target": "<fixture>/prefix/.deck-master/current/skill/deck-review"
+          },
+          "after_recovery": null
+        }
+      }
+    },
+    {
+      "case": 42,
+      "transaction_id": "92d20d1f-fb67-4e04-a296-67c1343a5ff4",
+      "direction": "compensation",
+      "breakpoint": "compensating",
+      "named_step": null,
+      "child_exit_code": 91,
+      "request": {
+        "verb": "activate",
+        "target_release_id": "new",
+        "target_release_sha256": "1a352af59d70c3f5f4b96369297debe775000fb3f13079532cc03cf5d3faaa1b",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/old",
+        "previous": null
+      },
+      "state_after_exit": "compensating",
+      "recovery": {
+        "final_state": "rolled_back",
+        "current": "releases/old",
+        "result": "installation_interrupted",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 5,
+        "compared_against": "original_before",
+        "published_inode_witness_count_at_exit": 5,
+        "published_inodes_reused_on_forward_recovery": null,
+        "original_backups_retained_after_completion": null,
+        "current_after_exit": {
+          "dev_inode": "33:565990",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:565929",
+          "kind": "symlink",
+          "target": "releases/old"
+        }
+      }
+    },
+    {
+      "case": 43,
+      "transaction_id": "375bb7a8-9b1a-4bf0-8f5a-de7acdb83643",
+      "direction": "compensation",
+      "breakpoint": "before_restore",
+      "named_step": null,
+      "child_exit_code": 91,
+      "request": {
+        "verb": "activate",
+        "target_release_id": "new",
+        "target_release_sha256": "1a352af59d70c3f5f4b96369297debe775000fb3f13079532cc03cf5d3faaa1b",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/old",
+        "previous": null
+      },
+      "state_after_exit": "compensating",
+      "recovery": {
+        "final_state": "rolled_back",
+        "current": "releases/old",
+        "result": "installation_interrupted",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 5,
+        "compared_against": "original_before",
+        "published_inode_witness_count_at_exit": 5,
+        "published_inodes_reused_on_forward_recovery": null,
+        "original_backups_retained_after_completion": null,
+        "current_after_exit": {
+          "dev_inode": "33:566126",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:566070",
+          "kind": "symlink",
+          "target": "releases/old"
+        }
+      }
+    },
+    {
+      "case": 44,
+      "transaction_id": "83afb0a3-6ae8-493e-8c1c-d750700e07fd",
+      "direction": "compensation",
+      "breakpoint": "after_unpublish",
+      "named_step": null,
+      "child_exit_code": 91,
+      "request": {
+        "verb": "activate",
+        "target_release_id": "new",
+        "target_release_sha256": "1a352af59d70c3f5f4b96369297debe775000fb3f13079532cc03cf5d3faaa1b",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/old",
+        "previous": null
+      },
+      "state_after_exit": "compensating",
+      "recovery": {
+        "final_state": "rolled_back",
+        "current": "releases/old",
+        "result": "installation_interrupted",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 5,
+        "compared_against": "original_before",
+        "published_inode_witness_count_at_exit": 4,
+        "published_inodes_reused_on_forward_recovery": null,
+        "original_backups_retained_after_completion": null,
+        "current_after_exit": {
+          "dev_inode": "33:566247",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:566182",
+          "kind": "symlink",
+          "target": "releases/old"
+        }
+      }
+    },
+    {
+      "case": 45,
+      "transaction_id": "de818e1e-d6c3-4471-aaa6-e18d2fb3ce86",
+      "direction": "compensation",
+      "breakpoint": "after_restore",
+      "named_step": null,
+      "child_exit_code": 91,
+      "request": {
+        "verb": "activate",
+        "target_release_id": "new",
+        "target_release_sha256": "1a352af59d70c3f5f4b96369297debe775000fb3f13079532cc03cf5d3faaa1b",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/old",
+        "previous": null
+      },
+      "state_after_exit": "compensating",
+      "recovery": {
+        "final_state": "rolled_back",
+        "current": "releases/old",
+        "result": "installation_interrupted",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 5,
+        "compared_against": "original_before",
+        "published_inode_witness_count_at_exit": 4,
+        "published_inodes_reused_on_forward_recovery": null,
+        "original_backups_retained_after_completion": null,
+        "current_after_exit": {
+          "dev_inode": "33:566383",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:566311",
+          "kind": "symlink",
+          "target": "releases/old"
+        }
+      }
+    },
+    {
+      "case": 46,
+      "transaction_id": "840050e2-d778-4eb6-a358-61a9bf8f3edd",
+      "direction": "compensation",
+      "breakpoint": "restored",
+      "named_step": null,
+      "child_exit_code": 91,
+      "request": {
+        "verb": "activate",
+        "target_release_id": "new",
+        "target_release_sha256": "1a352af59d70c3f5f4b96369297debe775000fb3f13079532cc03cf5d3faaa1b",
+        "register_host": true
+      },
+      "before": {
+        "current": "releases/old",
+        "previous": null
+      },
+      "state_after_exit": "compensating",
+      "recovery": {
+        "final_state": "rolled_back",
+        "current": "releases/old",
+        "result": "installation_interrupted",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 5,
+        "compared_against": "original_before",
+        "published_inode_witness_count_at_exit": 4,
+        "published_inodes_reused_on_forward_recovery": null,
+        "original_backups_retained_after_completion": null,
+        "current_after_exit": {
+          "dev_inode": "33:566503",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:566442",
+          "kind": "symlink",
+          "target": "releases/old"
+        }
+      }
+    },
+    {
+      "case": 47,
+      "transaction_id": "1c1e1c4b-c1a6-4d4b-ba13-010dcc291297",
+      "direction": "optout",
+      "breakpoint": "after_action",
+      "named_step": "current",
+      "child_exit_code": 91,
+      "request": {
+        "verb": "activate",
+        "target_release_id": "new",
+        "target_release_sha256": "1a352af59d70c3f5f4b96369297debe775000fb3f13079532cc03cf5d3faaa1b",
+        "register_host": false
+      },
+      "before": {
+        "current": "releases/old",
+        "previous": null
+      },
+      "state_after_exit": "applying",
+      "recovery": {
+        "final_state": "completed",
+        "current": "releases/new",
+        "result": "activated",
+        "pending_removed": true,
+        "verified": true
+      },
+      "identity_comparison": {
+        "all_frozen_action_identities_match": true,
+        "verified_action_count": 2,
+        "compared_against": "expected_after",
+        "published_inode_witness_count_at_exit": 2,
+        "published_inodes_reused_on_forward_recovery": true,
+        "original_backups_retained_after_completion": true,
+        "current_after_exit": {
+          "dev_inode": "33:566650",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "current_after_recovery": {
+          "dev_inode": "33:566650",
+          "kind": "symlink",
+          "target": "releases/new"
+        },
+        "named_step": {
+          "kind": "link",
+          "after_exit": {
+            "dev_inode": "33:566650",
+            "kind": "symlink",
+            "target": "releases/new"
+          },
+          "backup_after_exit": {
+            "dev_inode": "33:566568",
+            "kind": "symlink",
+            "target": "releases/old"
+          },
+          "after_recovery": {
+            "dev_inode": "33:566650",
+            "kind": "symlink",
+            "target": "releases/new"
+          }
+        }
+      }
+    }
+  ]
+}

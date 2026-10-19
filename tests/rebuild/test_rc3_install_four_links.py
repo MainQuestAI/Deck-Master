@@ -5,6 +5,8 @@ wheel/venv diagnostic. All roots are temporary, never the actual user's HOME.
 """
 import json
 import os
+import re
+import stat
 from pathlib import Path
 
 import pytest
@@ -38,12 +40,30 @@ def _snapshot(prefix, host):
     for root in (prefix, host):
         if root.exists():
             for path in root.rglob('*'):
+                # Persistent control evidence is intentionally retained after a
+                # rollback. Still compare every managed pointer/link/launcher,
+                # including its inode (equal bytes are insufficient ownership).
+                journal_root = prefix / '.deck-master/transactions/activation'
+                if (path == prefix / '.deck-master/activation-pending.json' or
+                        path == journal_root.parent or
+                        path == journal_root or journal_root in path.parents or
+                        path == host / '.deck-master-registration.lock' or
+                        (path.parent == prefix / '.deck-master' and
+                         re.fullmatch(r'\.deck-master-pending-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(before|after)', path.name)) or
+                        re.fullmatch(r'\.deck-master-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}-[0-9]+\.(before|after)', path.name)):
+                    continue
+                if path == prefix / '.deck-master/bin' and not (path / 'deck-master').exists():
+                    # A new parent may be retained after an interrupted prepare;
+                    # prove it contains only this installer's UUID preparations.
+                    assert all(re.fullmatch(r'\.deck-master-[0-9a-f-]{36}-[0-9]+\.after', item.name)
+                               for item in path.iterdir())
+                    continue
                 if path.is_symlink():
-                    rows[str(path)] = ('link', os.readlink(path))
+                    rows[str(path)] = ('link', os.readlink(path), path.lstat().st_ino)
                 elif path.is_file() and path.name != 'install.lock':
-                    rows[str(path)] = ('file', path.read_bytes())
+                    rows[str(path)] = ('file', path.read_bytes(), stat.S_IMODE(path.stat().st_mode), path.stat().st_ino)
                 elif path.is_dir():
-                    rows[str(path)] = ('directory',)
+                    rows[str(path)] = ('directory', path.stat().st_ino)
     return rows
 
 

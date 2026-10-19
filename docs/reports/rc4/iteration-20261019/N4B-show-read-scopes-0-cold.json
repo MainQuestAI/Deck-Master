@@ -1,0 +1,53 @@
+{
+  "scope": "SYNTHETIC_ENGINEERING",
+  "source_sha": "a08bc68c1cbbbc806205104c2bb01f3f096305f0",
+  "python": "3.12.14",
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "executed_files_sha256": {
+    "src/deck_master/operations.py": "19e657510526d6456d48a3a4042244f253fc071dd4ed4583d89205038752d4da",
+    "src/deck_master/snapshots.py": "45f46acdc124b8a5f040e4f1310947f8c7dff0465e435c5c1f61c8985588c6f1",
+    "src/deck_master/operation_coverage.py": "55726995059acec9e52930f4f930df0d399e915143d922e84675204afd23197e",
+    "tests/rebuild/test_operation_coverage.py": "3d100b33bc8b4315efff1842e500299e4deab894958813b6fe00ba28b3295609"
+  },
+  "cache_mode": "cold",
+  "newer_revisions": 0,
+  "public_entry_total": {
+    "snapshot_read": 2,
+    "snapshot_decode": 2,
+    "snapshot_bytes": 3553,
+    "snapshot_stat": 16,
+    "receipt_read": 0,
+    "receipt_bytes": 0,
+    "receipt_decode": 2,
+    "receipt_reader": 0,
+    "result_read": 0,
+    "result_bytes": 0,
+    "result_decode": 1,
+    "result_reader": 0,
+    "other_decode": 3,
+    "object_read": 1,
+    "object_bytes": 566,
+    "elapsed_seconds": 0.004447220999736601
+  },
+  "entry_current_validation": [
+    {
+      "snapshot_read": 1,
+      "snapshot_decode": 1
+    }
+  ],
+  "i01_resolver": [
+    {
+      "snapshot_read": 1,
+      "snapshot_decode": 1
+    }
+  ],
+  "snapshot_read_revisions": [
+    "a6b714c5ef274a99b36c219df23c0e16",
+    "6408647124b0456292b9694d244e6346"
+  ],
+  "snapshot_decode_revisions": [
+    "a6b714c5ef274a99b36c219df23c0e16",
+    "6408647124b0456292b9694d244e6346"
+  ],
+  "note": "one I01 call; every canonical snapshot read/decoded at most once across the complete public entry"
+}

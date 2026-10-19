@@ -68,10 +68,13 @@ def test_changed_or_missing_calibration_cannot_relabel_an_old_preproduction_task
     calibration = installed_methods / "references/content-calibration.md"
     calibration.write_bytes(calibration.read_bytes() + b"\nnew calibration revision\n")
     monkeypatch.setattr(method_resources, "resolve_root", lambda: installed_methods)
-    changed = method_resources.read_task_methods(project, task["task_id"])
-    assert changed["status"] == "basis_changed"
-    assert changed["dispatch_method_release"] == initial["dispatch_method_release"]
-    assert changed["current_method_release"] != initial["dispatch_method_release"]
+    # RC4 producer freezes a manifest: drift is diagnosed, never returned as
+    # replacement method bytes under the old Task contract.
+    changed = method_resources.resolve_task_methods(task)
+    assert changed["basis_status"] == "basis_changed"
+    assert changed["method_manifest"] == task["method_manifest"]
+    with pytest.raises(MethodResourceMissing, match="content-calibration"):
+        method_resources.read_task_methods(project, task["task_id"])
     calibration.unlink()
     with pytest.raises(MethodResourceMissing, match="content-calibration"):
         method_resources.read_task_methods(project, task["task_id"])

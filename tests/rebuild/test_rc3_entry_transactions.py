@@ -138,7 +138,7 @@ def test_default_new_and_manuscript_import_have_real_entry_control_without_grant
     project = tmp_path / 'current'
     result = service.create(project, brief='explicit L1 public create')
     store = Store(project); doc = store.load_document()
-    assert doc['compatibility']['minimum_writer'] == 'rc3-entry.v1'
+    assert doc['compatibility']['minimum_writer'] == 'rc4-content.v1'
     assert doc['collaboration']['request']['instruction_evidence']['source_ref']
     assert doc['collaboration']['authorizations'] == []
     order = result['pending_tasks'][0]

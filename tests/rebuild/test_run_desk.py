@@ -51,7 +51,7 @@ def test_real_claim_time_survives_same_executor_and_unknown_call(store, monkeypa
     start(store, task)
     claimed = run_desk.detail(store.project_root, task_id=task['task_id'])
     assert claimed['task']['execution_started_at'] == '2026-09-30T00:00:00Z'
-    assert store.read_current()['minimum_writer'] == 'rc3-entry.v1'
+    assert store.read_current()['minimum_writer'] == 'rc4-content.v1'
     pointer = store.read_current()
     monkeypatch.setattr(service, '_utc_now_iso', lambda: '2026-09-30T00:20:00Z')
     start(store, task)
@@ -126,19 +126,19 @@ def test_group_links_and_handoff_claim_time_share_core_facts(store):
 def test_writer_boundary_survives_candidate_adoption_content_and_operation(store, tmp_path):
     task = dispatch(store); start(store, task); result = accept(store, task)
     adopt(store, plan(store, result['candidate_ids']))
-    assert store.read_current()['minimum_writer'] == 'rc3-entry.v1'
+    assert store.read_current()['minimum_writer'] == 'rc4-content.v1'
     from deck_master.content_plan import attach
-    doc = store.load_document(); attach(doc, doc['content_plan']); assert doc['compatibility']['minimum_writer'] == 'rc3-entry.v1'
-    for minimum in ('generation.v1', 'content-plan.v1', 'changes.v1', 'candidates.v1'):
-        require_writer(doc, minimum); assert doc['compatibility']['minimum_writer'] == 'rc3-entry.v1'
+    doc = store.load_document(); attach(doc, doc['content_plan']); assert doc['compatibility']['minimum_writer'] == 'rc4-content.v1'
+    for minimum in ('generation.v1', 'content-plan.v1', 'changes.v1', 'candidates.v1', 'rc3-entry.v1'):
+        require_writer(doc, minimum); assert doc['compatibility']['minimum_writer'] == 'rc4-content.v1'
     attempted=bump_revision(copy.deepcopy(doc),{'operation_id':'modern-floor-pin','kind':'task_update',
         'description':'Synthetic older writer hint, with all actual modern control retained','read_set':[]})
     attempted['compatibility']['minimum_writer']='icon-quality.v1'
     store.commit_change(base_revision=doc['revision_id'],document=attempted,operation_id='modern-floor-pin')
     pinned=store.load_document()
-    assert pinned['compatibility']['minimum_writer']=='rc3-entry.v1'
+    assert pinned['compatibility']['minimum_writer']=='rc4-content.v1'
     assert pinned['collaboration']==doc['collaboration'] and pinned['pages']==doc['pages']
-    # RC3 collaboration commits pin their current floor automatically. Keep
+    # Current Task method facts pin the RC4 floor automatically. Keep
     # the original strict downgrade-refusal case on an explicit older writer,
     # without deleting modern control facts or downgrading a live fixture.
     from rc3_fixtures import historical_snapshot
@@ -153,7 +153,7 @@ def test_writer_boundary_survives_candidate_adoption_content_and_operation(store
     with pytest.raises(StoreError, match='downgraded'):
         old_store.commit_change(base_revision=old_doc['revision_id'], document=lower, operation_id='bad-downgrade')
     assert old_store.load_document()==old_doc
-    assert store.read_current()['minimum_writer']=='rc3-entry.v1'
+    assert store.read_current()['minimum_writer']=='rc4-content.v1'
 
 
 def test_http_cli_identical_readonly_errors_and_legacy_tasks_shape(store, capsys):

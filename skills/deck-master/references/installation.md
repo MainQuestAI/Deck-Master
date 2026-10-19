@@ -15,9 +15,10 @@ python tools/build_release.py --out /path/to/new-release
 python -m deck_master install candidate \
   --prefix /path/to/prefix --manifest /path/to/new-release/release.json
 python -m deck_master install activate \
-  --prefix /path/to/prefix --release-id <release_id>
+  --prefix /path/to/prefix --release-id <release_id> --transaction-id <UUIDv4>
 /path/to/prefix/.deck-master/bin/deck-master doctor --step compose
-/path/to/prefix/.deck-master/bin/deck-master install rollback --prefix /path/to/prefix
+/path/to/prefix/.deck-master/bin/deck-master install rollback \
+  --prefix /path/to/prefix --transaction-id <another_UUIDv4>
 ```
 
 For the normal personal installation, `--prefix "$HOME"` produces
@@ -39,10 +40,48 @@ managed link when the target release has no Skill. CLI and Host status are
 reported separately; a preserved link can remain unreadable.
 No config.toml changes, other Host registrations or third-party Skill changes occur.
 
+## Durable transaction recovery
+
+Both activate and rollback accept an optional canonical, lowercase UUIDv4
+`--transaction-id`. Keep the exact ID for retries. It binds the verb, prefix,
+activation release, Host root and registration option; rollback freezes its
+actual old/new targets before switching. The durable journal lives under
+`<prefix>/.deck-master/transactions/activation/<id>.json`, with
+`activation-pending.json` in that installation root. These are installation
+facts, not a project Document or production authorization.
+
+A matching unfinished request resumes even when the ID is omitted. A different
+request reports `installation_transaction_pending` with the original ID;
+same-ID/different-binding reports `installation_transaction_conflict`. Reuse
+the original request. Recovery rechecks real pointers, launcher, four links,
+preparations and backups rather than trusting a recorded completed step.
+It holds the prefix lock, then the shared Host lock, and rechecks after waiting.
+The retained Host lock coordinates managed installers across prefixes.
+
+An explicit completed ID only returns its original receipt. Original
+`cli_active` and `host_skill` describe that completed transaction;
+`observed_current_release_id` / `current_install_state` independently describe
+the installation observed now. A later switch may make these differ. A
+completed rollback called again without its ID is a new toggle using current
+`previous`; it can switch back and must not be taught as an exact retry.
+
+Ctrl-C returns exit 130 with the observed transaction state. `compensating`
+continues reverse recovery; a terminal `rolled_back` ID replays its original
+failure, so a genuinely new attempt needs a new ID after the cause is resolved.
+`installation_recovery_conflict` preserves external content and the retained
+`.before`/`.after` or legacy backups for diagnosis; do not overwrite these or
+claim full restoration. Unverifiable records or persistence failures report
+an explicit unknown state. Preserve the journal and inspect the named paths.
+
+`--no-host-registration` never resolves, locks, scans, reads or writes Host
+paths, including interrupted legacy migration recovery. It changes only the
+selected prefix. A request that used this option must retain it on exact retry.
+
 Rollback follows `previous` and keeps method and CLI releases aligned. If the
 previous release predates the Skill, managed links missing from that release are removed and the result
 reports `host_skill_unregistered`. Project data and recorded calls are not rolled back. RC3-04 projects use the
-forward writer floor `rc3-entry.v1`; a real older writer must refuse them after
+forward writer floor `rc3-entry.v1`; new RC4 method/policy facts atomically
+require `rc4-content.v1`. A real older writer must refuse these projects after
 rollback, while the matching current Runtime can continue to read and settle
 existing call facts. The label `rc3.v1` alone is insufficient because historical
 RC3 binaries already recognized it.
@@ -117,9 +156,11 @@ The executable source-side verification drivers are indexed in
 candidate and then checks it using its installed interpreter. A synthetic
 browser/CLI pass is not 30-page real Host, professional or customer acceptance.
 
-## RC3 resource identity
+## Candidate resource identity
 
-The version is PEP 440 `1.0.0rc3`. `tools/build_release.py` builds both wheel and
+The source candidate version is PEP 440 `1.0.0rc4`; read the actual CLI,
+package metadata and capabilities rather than assuming the active installation
+has been upgraded. `tools/build_release.py` builds both wheel and
 sdist. The wheel contains a generated `resources/method-inventory.json` with an
 exhaustive mapping from every Skill/method resource to canonical source and
 SHA256. Unknown/missing/symlink canonical files or extra wheel Skill members

@@ -6,6 +6,13 @@ Legacy v0.9.x commands map onto this surface per spec 09.6; the full table is
 `deck-master legacy-map` and the migration notes live in
 [docs/migration-to-rebuilt-core.md](migration-to-rebuilt-core.md).
 
+The current development entry is the
+[RC4 increment](specs/deck-master-next-iteration-20261019/README.md), inherited
+contracts then the assigned N1–N6 card. Its
+[single candidate ledger](reports/rc4/iteration-20261019/execution-ledger.json)
+records current verification. RC3, Web UI v4 and rebuild reports preserve their
+own date/SHA; read those only for the contract needed by this task.
+
 ## Task Scope
 
 Choose the request before loading a production playbook. Existing directions,
@@ -18,7 +25,11 @@ decision that affects this task.
 | Complete draft at hand | `deck-master import-draft --project <dir> --input draft.json` (or `create --draft …`) | Page v2 shape; unknown fields raise, never drop |
 | Continue / next Host batch | `deck-master continue --project <dir>` | Returns stable `pending_tasks`; exit 3 = awaiting host/tool, not failure |
 | Change audience, decisions, purpose or materials | `deck-master inputs show --project <dir>` then `inputs update --project … --patch … --base-revision … --operation-id …` | `skills/deck-master/references/input-update.md`; only changed pages go in `content_update` |
-| Submit Host results | `deck-master task accept --project … --task-id … --operation-id … --produced-against … --result result.json` | Envelope shape: `docs/specs/deck-master-rebuild-v1/examples/roundtrips/result-envelope/README.md` |
+| Submit Host results | `deck-master task accept --project … --task-id … --operation-id … --produced-against … --result result.json` | Use the actual Task protocol/variant and `src/deck_master/resources/contracts/compose-result.v2.schema.json`; old roundtrips remain protocol-specific examples |
+| Read exact Task methods | `deck-master methods --project … --task-id … --read` | Frozen ordered manifest and actual bytes/hash; `basis_changed` needs formal reissue, not extra role methods |
+| Claim actual Host execution | `deck-master task start --project … --task-id … --execution-ref … --supported-protocol … --capability …` | Repeat each required capability; copy/handoff is not execution, declare only actual support |
+| Read negotiated full context | `deck-master capabilities`, then `methods … --read --read-protocol work_context.v2 --body-mode full` | Only methods/create/continue expose these CLI read options; no options means v1; transport is not application evidence |
+| Resolve a proposed direction | `deck-master collaboration decision --project … --input decision.json`, then `collaboration adopt-proposal --input adoption.json` | Actual covering decision, exact proposal and current CAS; `collaboration grant` requires actual authorization |
 | Retry a settled external call | `deck-master task call allocate --project … --task-id … --count 1` | Allocates a new allowance under the project policy; retain the earlier call outcome and evidence |
 | Start a new v3 protocol project | `deck-master create --project-format workbench.v3 --brief … --source … --out …` | Default for new projects; existing projects require explicit migration before formal writes; older cores refuse the forward writer floor |
 | Freeze a new-protocol generation input | `deck-master requests freeze --project … --task-id … --input request.json --base-revision … --operation-id …` | First claim with required capabilities; input comes from the task's generation_input |
@@ -26,7 +37,7 @@ decision that affects this task.
 | Read the content plan | `deck-master view --project … --content-plan --revision …` | Stored chapters/goals/source versions; absent plans show a labeled derived outline without writing |
 | Save version-bound opinions | `deck-master annotations save --project … --input notes.json --base-revision … --operation-id <UUIDv4>` | Saves opinions only; no task dispatch or output invalidation |
 | Preview and dispatch a bounded change | `deck-master changes plan --project … --input changes.json`, then `changes commit --plan-id … --base-revision … --operation-id <UUIDv4>` | Exact plan, page/layer targets and call bound; changing the basis requires a new plan |
-| Recover an uncertain operation | `deck-master operations show --project … --operation-id …` | Committed ancestry is authoritative; same payload/ID only after not_found |
+| Recover an uncertain operation | `deck-master operations show --project … --operation-id …` | Committed ancestry is authoritative; preserve original payload/base/ID/path context; unknown is not absence; [input recovery](../skills/deck-master/references/input-update.md) |
 | Trial one page without replacing current | `changes plan/commit` with `mode=trial` and explicit target/stage | [Candidate/Host protocol](../skills/deck-master/references/candidates-and-stages.md); candidate_result capability required |
 | Inspect and adopt selected candidates | `candidates list/show/plan/adopt --project …` | Length-one and batch selections share all-or-none CAS; no image call during adoption |
 | Plan initial design or restyle selected pages | `styles propose/confirm/plan`, then existing `changes commit/handoff` | [Style recipe protocol](../skills/deck-master/references/style-calibration.md); v3 permits an explicitly authorized first one-or-two-page candidate batch |
@@ -81,13 +92,21 @@ not modify config.toml or other Host skill roots. See
 `skills/deck-master/references/installation.md` for candidate installation,
 legacy companion migration and rollback.
 
+Both `install activate` and `install rollback` accept
+`--transaction-id <canonical-UUIDv4>` for exact recovery. A matching pending
+request resumes automatically; a different request reports the pending ID.
+Completed explicit replay reports its historical result and independent
+current observations. A new rollback without an ID can switch again using
+current `previous`; it is not an exact retry. Never lower a project's writer
+floor or overwrite an external path to make rollback appear successful.
+
 ## Workbench content operations
 
 For `content_ops.v1`, use `deck-master content plan --project <dir> --input <json>` then `content commit --plan-id … --base-revision … --operation-id <UUIDv4>`. Direct body/outline edits, reorder/remove, and bounded Host rewrite/merge/split share this transaction. Use `content inputs --input <patch.json>` for the recoverable workbench form of existing input updates, `content source --source-id … --revision …` for exact material versions, and `content lineage --page-id … --revision …` for derived-page provenance. Method: `skills/deck-master/references/input-update.md`.
 
-## Web UI active increment (2026-09-30)
+## Inherited Web UI increment (2026-09-30)
 
-For the current UI integration and capability completion increment, read
+For the inherited UI integration and capability contracts, read
 [Web UI v4 baseline](specs/deck-master-webui-v4-20260930/README.md).
 A now means UI implementation; B means capability completion. Historical
 Flow Quality and W01-W12 records keep their original names and evidence.
@@ -104,6 +123,20 @@ Named, natural-language, Master handoff and recovery paths use the same Runtime
 and current request/scope. `method_resources.read_skill_methods` reads actual
 installed bytes, task methods and current completion without dispatching work.
 Returned method bytes and actual Host application are separate evidence.
+
+New Tasks freeze their ordered `method_manifest`; the N3 resolver is the sole
+method list. Old Tasks use their provable frozen RC3 selector/digest without
+grafting new Review defaults. A changed/missing basis stays explicit and an
+active Task needs formal Runtime retirement/reissue after outstanding calls
+are settled. New method/policy writes atomically require `rc4-content.v1`;
+historical reads and exact accepted-result replay do not upgrade old facts.
+
+For v2, full is the default and permits explicit re-fetch. Manifest has
+`context_ready=false`. Delta omits only exact bytes retrievable in an actually
+observed Host session/context generation; the CLI has no such observation and
+therefore stays cold/full. Preserve all sources, Page/notes, limitations,
+original image refs/dimensions and physical constraints. Transmission or cache
+offers do not establish reading, application, review independence or approval.
 
 `content_only` + `plan_only|write_only|speech_only|content_full` each finish with
 their requested artifacts. Use `completion.state/outputs/checks/missing` instead

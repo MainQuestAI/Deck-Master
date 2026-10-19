@@ -44,6 +44,17 @@ class InputRevisionConflict(TypedServiceError):
     error_code = "input_revision_conflict"
     exit_code = 5
 
+    http_status = 409
+
+    def __init__(self, path, detail, *, cause='stale_base', operation_id=None):
+        super().__init__(path, detail)
+        self.cause, self.operation_id = cause, operation_id
+
+    def payload(self):
+        return {'error': {'code': self.error_code, 'message': self.detail, 'field': self.path,
+                         'cause': self.cause, 'operation_id': self.operation_id,
+                         'next_action': 'inspect the original operation; preserve its request and base'}}
+
 
 class InputReconciliationPending(TypedServiceError):
     """Delivery/handoff refused while the deck awaits input reconciliation (exit 3)."""
@@ -66,7 +77,30 @@ class HostSkillConflict(TypedServiceError):
     exit_code = 5
 
 
+class InstallationTransactionError(TypedServiceError):
+    """Installation control-plane failure, independent of project writers."""
+
+    def __init__(self, code, message, *, transaction_id=None, state=None, details=None):
+        super().__init__("installation", message)
+        self.error_code = code
+        self.exit_code = (130 if code == "installation_interrupted" else
+                          2 if code == "invalid_transaction_id" else
+                          4 if code in ("installation_recovery_unavailable", "installation_failed") else 5)
+        self.transaction_id = transaction_id
+        self.transaction_state = state
+        self.details = details or {}
+
+    def payload(self):
+        return {"error": {"code": self.error_code, "message": str(self),
+                          "transaction_id": self.transaction_id,
+                          "transaction_state": self.transaction_state,
+                          "next_action": "retry the original request with its transaction ID; preserve conflicting paths and backups for inspection",
+                          **self.details}}
+
+
 NEXT_ACTIONS_BY_CODE = {
+    "narrative_disconnected": "connect relevant nodes with genuine support, explanation or qualification relations; move unrelated material out instead of adding meaningless edges",
+    "basis_changed": "run continue to supersede the old execution contract and obtain a new Task with frozen methods and policy",
     "content_plan_invalid": "use the compose.v1 schema; preserve goal IDs and cite exact stored source versions/locators or record the missing basis",
     "legacy_run_format": "use the documented legacy import into a separate project; never initialize an old run in place",
     "needs_tool": "install or restore the named reader dependency in this CLI environment, then retry the same command",

@@ -271,6 +271,8 @@ def build_phase_task(store, document, *, operation_id: str, intent: str = "initi
         adoption_policy=policy,
         decision_refs=collaboration_binding.decision_refs_for(store, document, topics))
     task["collaboration_binding"] = binding
+    from .method_resources import freeze_task_methods
+    freeze_task_methods(task)
     collaboration_binding.require_binding(document, task)
     models.validate_task_semantics(task)
     return task
@@ -708,7 +710,7 @@ def _accept_framing(store, *, document, task, envelope, payload, produced_agains
         raise tasks_mod.EnvelopeError(
             "(result)/payload/narrative/maturity",
             "the framing variant carries a framing Narrative; an argument narrative is a separate phase")
-    models.validate_narrative_semantics(narrative)
+    models.validate_narrative_semantics(narrative, policy=task.get("content_validation_policy"))
     _narrative_project_check(narrative, document)
     narrative_ref = store.put_json_object(narrative)
     binding = task.get("collaboration_binding") or {}
@@ -741,7 +743,7 @@ def _accept_narrative(store, *, document, task, envelope, payload, produced_agai
         raise tasks_mod.EnvelopeError(
             "(result)/payload/narrative/maturity",
             "the narrative variant carries an argument Narrative with a central node and connected structure")
-    models.validate_narrative_semantics(narrative)
+    models.validate_narrative_semantics(narrative, policy=task.get("content_validation_policy"))
     _narrative_project_check(narrative, document)
     narrative_ref = store.put_json_object(narrative)
     result_refs = [narrative_ref]
@@ -1362,7 +1364,7 @@ def _accept_input_revision(store, *, document, task, envelope, payload, produced
     narrative = current_narrative
     if "narrative" in single:
         narrative = single["narrative"]
-        models.validate_narrative_semantics(narrative)
+        models.validate_narrative_semantics(narrative, policy=task.get("content_validation_policy"))
         _narrative_project_check(narrative, document)
         from .content_plan import ContentPlanError, validate_source_links
         for node in narrative.get('nodes') or []:
@@ -1614,6 +1616,33 @@ def _accept_input_revision(store, *, document, task, envelope, payload, produced
 # Proposal adoption (CONTRACTS §11.5, §12)
 
 
+def _committed_legacy_narrative(store, document, proposal_ref):
+    """Only historical committed acceptance, never object presence or labels."""
+    node, seen = document, set()
+    while node and node["revision_id"] not in seen:
+        seen.add(node["revision_id"])
+        receipt = (node.get("change") or {}).get("operation_receipt")
+        if receipt and not models.writer_at_least(node, "rc4-content.v1"):
+            for ref in node.get("tasks") or []:
+                task = store.read_object_json(ref)
+                response = receipt.get("response") or {}
+                if (task.get("status") == "completed" and task.get("protocol_version") == "compose.v2"
+                        and "method_manifest" not in task and "content_validation_policy" not in task
+                        and task.get("operation_id") == (node.get("change") or {}).get("operation_id")
+                        and receipt.get("format") == "operation_receipt.v1"
+                        and response.get("status") == "accepted"
+                        and response.get("variant") in ("narrative", "input_revision")
+                        and proposal_ref in (response.get("result_refs") or [])
+                        and proposal_ref in (task.get("result_refs") or [])
+                        and task.get("produced_against") == models.content_identity(document)
+                        and (task.get("collaboration_binding") or {}).get("request_id") ==
+                            ((document.get("collaboration") or {}).get("request") or {}).get("request_id")):
+                    return True
+        parent = node.get("parent_revision_id")
+        node = store.load_document(parent) if parent else None
+    return False
+
+
 def adopt_proposal(project, *, input: dict, base_revision: str, operation_id: str,
                    adapter_context=None) -> dict:
     """Promote a proposal Ref to the current pointer inside a covering Decision.
@@ -1713,6 +1742,11 @@ def adopt_proposal(project, *, input: dict, base_revision: str, operation_id: st
         invalidated = []
         updated = dict(document)
         if schema == "narrative.v1":
+            legacy_accepted = _committed_legacy_narrative(store, document, proposal_ref)
+            models.validate_narrative_semantics(
+                proposal, policy=None if legacy_accepted else "argument-connectivity.v1")
+            if not legacy_accepted:
+                models.require_writer(updated, "rc4-content.v1")
             if proposal.get("project_id") != document["project_id"]:
                 raise ModelError("collaboration/adopt_proposal/proposal_ref",
                                  "a proposal of another project cannot become this project's truth")

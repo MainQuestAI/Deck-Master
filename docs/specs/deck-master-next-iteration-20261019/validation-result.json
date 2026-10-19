@@ -1,0 +1,24 @@
+{
+  "status": "PASS",
+  "scope": "Spec package only; no product implementation or AC execution",
+  "baseline_sha": "a08bc68c1cbbbc806205104c2bb01f3f096305f0",
+  "task_cards": 6,
+  "acceptance_count": 70,
+  "product_ac_status": "70 NOT_RUN",
+  "markdown_files": 14,
+  "json_files": 4,
+  "internal_links": 32,
+  "verified_baseline_source_links": 42,
+  "verified_existing_test_paths": 14,
+  "hash_entries": 19,
+  "checks": [
+    "required files and JSON syntax",
+    "70 unique AC criteria and one final owner per AC",
+    "traceability and unexecuted ledger coverage",
+    "valid task dependencies without cycles",
+    "Markdown tables, fences, JSON examples and internal heading links",
+    "fixed-baseline citation paths, line bounds and existing test paths",
+    "package file hashes"
+  ],
+  "errors": []
+}

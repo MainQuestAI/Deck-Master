@@ -139,6 +139,7 @@ def error_response(exc, *, document=None, operation_id=None):
     elif getattr(exc, 'error_code', None):
         code = exc.error_code
         http, exit_code = getattr(exc, 'http_status', 403), getattr(exc, 'exit_code', 4)
+        details = {**details, **(getattr(exc, 'error_details', {}) or {})}
     elif isinstance(exc, (ModelError, ServiceError)):
         message = str(exc)
         gap = next((s for s in ('migration_required', 'decision_needed', 'needs_reviewer', 'authority_channel_unavailable',
@@ -195,7 +196,11 @@ def invoke(project, action, payload=None, *, adapter_context=None, expected_proj
             result = evaluate(**data, adapter_context=adapter_context)
             return _external_report_response(result)
         store = Store(project)
-        document = store.load_document()
+        if action == 'eligibility':
+            from .snapshots import load_artifact_control
+            artifact, document = load_artifact_control(store, data.get('artifact_revision'))
+        else:
+            document = store.load_document()
         if expected_project_id is not None and expected_project_id != document['project_id']:
             raise StoreError('project_id', 'URL project is not served by this service')
         if data.get('project_id') not in (None, document['project_id']):
@@ -216,8 +221,6 @@ def invoke(project, action, payload=None, *, adapter_context=None, expected_proj
         elif action == 'migration.describe':
             result = collaboration_migration.describe(project)
         elif action == 'eligibility':
-            from .snapshots import load_snapshot
-            artifact = load_snapshot(store, body.get('artifact_revision'))
             context = {k: body[k] for k in ('targets', 'persistence') if k in body}
             result = eligibility.evaluate(store, artifact, document, body['action'], context)
         elif action == 'delivery.describe':

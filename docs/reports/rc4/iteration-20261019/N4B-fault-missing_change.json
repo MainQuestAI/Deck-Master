@@ -1,0 +1,53 @@
+{
+  "scope": "SYNTHETIC_ENGINEERING",
+  "source_sha": "a08bc68c1cbbbc806205104c2bb01f3f096305f0",
+  "python": "3.12.14",
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "executed_files_sha256": {
+    "src/deck_master/operations.py": "19e657510526d6456d48a3a4042244f253fc071dd4ed4583d89205038752d4da",
+    "src/deck_master/snapshots.py": "45f46acdc124b8a5f040e4f1310947f8c7dff0465e435c5c1f61c8985588c6f1",
+    "src/deck_master/operation_coverage.py": "55726995059acec9e52930f4f930df0d399e915143d922e84675204afd23197e",
+    "tests/rebuild/test_operation_coverage.py": "3d100b33bc8b4315efff1842e500299e4deab894958813b6fe00ba28b3295609"
+  },
+  "damage": "missing_change",
+  "cache_modes": [
+    true,
+    false,
+    true
+  ],
+  "outcomes": [
+    {
+      "state": "unknown",
+      "head_revision": "1a16ec6a09b3482a9ce1f9d1bc9d8f28",
+      "receipt_format": null,
+      "stored_kind": null,
+      "committed_revision_id": null,
+      "record": null,
+      "result": null,
+      "reason": "history_unreadable"
+    },
+    {
+      "state": "unknown",
+      "head_revision": "1a16ec6a09b3482a9ce1f9d1bc9d8f28",
+      "receipt_format": null,
+      "stored_kind": null,
+      "committed_revision_id": null,
+      "record": null,
+      "result": null,
+      "reason": "history_unreadable"
+    },
+    {
+      "state": "unknown",
+      "head_revision": "1a16ec6a09b3482a9ce1f9d1bc9d8f28",
+      "receipt_format": null,
+      "stored_kind": null,
+      "committed_revision_id": null,
+      "record": null,
+      "result": null,
+      "reason": "history_unreadable"
+    }
+  ],
+  "current_revision_id": "1a16ec6a09b3482a9ce1f9d1bc9d8f28",
+  "fault_revision_id": "a1a2f3b64ba543dcb19b8b5ee9e855df",
+  "fault_bytes_sha256": "d1f4652aa4573c9b00d84c54e861b5f0c77447b6a74daeaa446f3f87c4daa9d3"
+}

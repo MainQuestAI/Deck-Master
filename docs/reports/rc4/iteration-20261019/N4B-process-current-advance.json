@@ -1,0 +1,28 @@
+{
+  "scope": "SYNTHETIC_ENGINEERING",
+  "source_sha": "a08bc68c1cbbbc806205104c2bb01f3f096305f0",
+  "python": "3.12.14",
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "executed_files_sha256": {
+    "src/deck_master/operations.py": "19e657510526d6456d48a3a4042244f253fc071dd4ed4583d89205038752d4da",
+    "src/deck_master/snapshots.py": "45f46acdc124b8a5f040e4f1310947f8c7dff0465e435c5c1f61c8985588c6f1",
+    "src/deck_master/operation_coverage.py": "55726995059acec9e52930f4f930df0d399e915143d922e84675204afd23197e",
+    "tests/rebuild/test_operation_coverage.py": "3d100b33bc8b4315efff1842e500299e4deab894958813b6fe00ba28b3295609"
+  },
+  "old_control": "54c694f7628d4546a50a88100c045294",
+  "operation_id": "absent",
+  "returned": {
+    "state": "not_found",
+    "head_revision": "31fbc65d359749c493edc4ad5dcfc6d0",
+    "receipt_format": null,
+    "stored_kind": null,
+    "committed_revision_id": null,
+    "record": null,
+    "result": null,
+    "reason": null
+  },
+  "current_revision_id": "31fbc65d359749c493edc4ad5dcfc6d0",
+  "safe_current_captures": 4,
+  "child_exitcode": 0,
+  "note": "child appends an unrelated revision; bounded retry returns new verified head"
+}

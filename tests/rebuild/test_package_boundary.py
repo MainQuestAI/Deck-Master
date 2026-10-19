@@ -95,6 +95,9 @@ RETIRED_COMMAND_NEEDLES = (
 # its refusal tests, the changelog (history), and the migration guide.
 SELF_DOCUMENTING = {"src/deck_master/cli.py", "tests/rebuild/test_cli.py",
                     "tests/rebuild/test_install.py",  # wheel denial assertions name retired commands
+                    # Frozen inventory tools inspect/name old paths; they do not execute them.
+                    "docs/specs/deck-master-rebuild-v1/inventory/scan_old_references.py",
+                    "docs/specs/deck-master-rebuild-v1/tools/materialize_inventory.py",
                     "CHANGELOG.md", "docs/migration-to-rebuilt-core.md"}
 
 
@@ -125,9 +128,9 @@ def _is_historical_audit_record(relative: str, path: Path) -> bool:
 
 
 def _living_surfaces() -> list[Path]:
-    roots = ["src/", "tests/rebuild/", "tools/", "skills/deck-master/", ".github/",
+    roots = ["src/", "tests/rebuild/", "tools/", "skills/", ".github/",
              "docs/"]
-    root_files = ["pyproject.toml", "MANIFEST.in", "README.md", "AGENTS.md",
+    root_files = ["pyproject.toml", "MANIFEST.in", "README.md", "AGENTS.md", "CLAUDE.md",
                   "CONTRIBUTING.md", "ROADMAP.md", "DESIGN.md", "CHANGELOG.md"]
     surfaces = [REPO_ROOT / name for name in root_files]
     for root in roots:
@@ -140,9 +143,9 @@ def _living_surfaces() -> list[Path]:
             if path.suffix not in {".py", ".md", ".toml", ".yml", ".yaml", ".in", ".txt"}:
                 continue
             relative = str(path.relative_to(REPO_ROOT))
-            if relative.startswith("docs/archive/"):
+            if path.suffix != ".py" and relative.startswith("docs/archive/"):
                 continue
-            if relative.startswith("docs/specs/deck-master-rebuild-v1/"):
+            if path.suffix != ".py" and relative.startswith("docs/specs/deck-master-rebuild-v1/"):
                 continue
             if _is_historical_audit_record(relative, path):
                 continue
@@ -150,7 +153,7 @@ def _living_surfaces() -> list[Path]:
     return surfaces
 
 
-def test_dated_but_unregistered_doc_stays_guarded() -> None:
+def test_dated_but_unregistered_doc_stays_guarded(tmp_path, monkeypatch) -> None:
     """A directory carrying a date is not thereby historical: only explicitly
     registered audit directories are exempt, and code inside them never is."""
     for registered in HISTORICAL_AUDIT_DIRS:
@@ -162,6 +165,17 @@ def test_dated_but_unregistered_doc_stays_guarded() -> None:
                                            Path("guide.md"))
     assert not _is_historical_audit_record("docs/reports/deep/nested-20260101/notes.md",
                                            Path("notes.md"))
+    code_paths = ["docs/archive/old/tool.py",
+                  "docs/specs/deck-master-rebuild-v1/new_tool.py",
+                  f"{HISTORICAL_AUDIT_DIRS[0]}/tool.py"]
+    dated_doc = "docs/reports/some-active-guide-20260101/guide.md"
+    for relative in [*code_paths, dated_doc]:
+        path = tmp_path / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("Run deck-master backend bind production.")
+    monkeypatch.setitem(globals(), "REPO_ROOT", tmp_path)
+    surfaces = {str(path.relative_to(tmp_path)) for path in _living_surfaces()}
+    assert {*code_paths, dated_doc} <= surfaces
 
 
 def test_retired_tree_has_zero_living_references() -> None:
@@ -180,19 +194,74 @@ def test_retired_tree_has_zero_living_references() -> None:
                        "from runtime", "from workflow", "from high_density"):
             if needle in text:
                 offenders.append(f"{relative}: {needle!r}")
-        for needle in RETIRED_COMMAND_NEEDLES:
-            # /autoplan is an external review skill, also named in archived
-            # input paths. Still forbid the bare Deck Master CLI subcommand.
-            found = re.search(r"(?<![/\w-])autoplan(?![\w-])", text) if needle == "autoplan" else needle in text
-            if found:
-                offenders.append(f"{relative}: retired command {needle!r}")
+        for issue in active_guidance_issues(text, code=path.suffix == '.py'):
+            offenders.append(f"{relative}: {issue}")
     assert not offenders, f"living references to the retired surface: {offenders[:10]}"
+
+
+def active_guidance_issues(text: str, *, code=False) -> list[str]:
+    """Reject executable retired guidance, preserving explicit migration prose.
+
+    Context only applies to prose; code never gains an exemption by naming
+    a directory historical or by mentioning a negation elsewhere in a file.
+    """
+    issues = []
+    for number, line in enumerate(text.splitlines(), 1):
+        for needle in RETIRED_COMMAND_NEEDLES:
+            pattern = r'(?<![/\w-])autoplan(?![\w-])' if needle == 'autoplan' else re.escape(needle)
+            for mention in re.finditer(pattern, line):
+                prefix = line[:mention.start()]
+                invocation = re.search(r'\bdeck-master\s+$', prefix)
+                if invocation:
+                    prefix = prefix[:invocation.start()]
+                # The modifier must bind this occurrence. Unrelated "retired
+                # cache" prose or an earlier negated command cannot hide it.
+                negative = re.search(
+                    r'(?:无需(?:运行|执行)?|不得(?:运行|执行)?|不要(?:运行|执行)?|'
+                    r'不再(?:运行|执行|要求)?|do not (?:run|use)|never (?:run|use)|'
+                    r'no longer (?:run|use|require))\s*`?$', prefix, re.I)
+                historical_name = not invocation and re.search(r'(?:旧|historical|retired)\s*`?$', prefix, re.I)
+                historical_command = re.search(
+                    r'(?:historical command|retired command)\s*:\s*`?$', prefix, re.I)
+                if not code and (negative or historical_command or historical_name):
+                    continue
+                issues.append(f'line {number}: retired command {needle!r}')
+        if not code and re.search(
+                r'GBrain is set up and synced on this machine|'
+                r'This worktree is pinned to a worktree-scoped code source|'
+                r'Platform:\s*local Mac launchd|Production URL:\s*http://127\.0\.0\.1:5050', line):
+            issues.append(f'line {number}: unverified maintainer-machine configuration')
+    return issues
+
+
+def test_active_guard_covers_four_skills_and_claude():
+    surfaces = {str(path.relative_to(REPO_ROOT)) for path in _living_surfaces()}
+    assert {'CLAUDE.md', *(f'skills/{name}/SKILL.md' for name in
+            ('deck-master', 'deck-content', 'deck-design', 'deck-review'))} <= surfaces
+    assert active_guidance_issues('Run deck-master backend bind production before create.')
+    assert active_guidance_issues('Run deck-master backend bind production; retired cache was removed.')
+    assert active_guidance_issues('Do not use a retired cache; run deck-master backend bind production.')
+    assert active_guidance_issues('Do not run deck-master backend bind old; run deck-master backend bind production.')
+    assert active_guidance_issues('GBrain is set up and synced on this machine.')
+
+
+def test_active_guard_preserves_explicit_migration_and_negative_context():
+    assert not active_guidance_issues('无需运行 deck-master backend bind production；新项目直接 create。')
+    assert not active_guidance_issues('旧 backend bind 属于历史说明，当前材料目录即可创建项目。')
+    assert not active_guidance_issues('Do not run deck-master backend bind production.')
+    assert not active_guidance_issues('Historical command: `deck-master backend bind production` (migration record).')
+    assert active_guidance_issues('Do not run deck-master backend bind production.', code=True)
+    assert active_guidance_issues('deck-master backend bind production', code=True)
+    frozen_spec = REPO_ROOT / "docs/specs/deck-master-next-iteration-20261019/task-cards/N5-docs-and-release.md"
+    baseline_rows = [line for line in frozen_spec.read_text().splitlines() if "旧 backend bind" in line]
+    assert baseline_rows
+    assert all(not active_guidance_issues(line) for line in baseline_rows)
 
 
 def test_spec_contracts_match_packaged_contracts_byte_for_byte() -> None:
     """Spec mirrors must match the active packaged contracts (P2 parity guard)."""
     spec_dirs = [REPO_ROOT / "docs" / "specs" / pack / "contracts"
-                 for pack in ("deck-master-rebuild-v1", "deck-master-workbench-v3", "deck-master-webui-usability-v1", "deck-master-v1.0.0-rc3")]
+                 for pack in ("deck-master-rebuild-v1", "deck-master-workbench-v3", "deck-master-webui-usability-v1", "deck-master-v1.0.0-rc3", "deck-master-next-iteration-20261019")]
     pkg_dir = NEW_PACKAGE / "resources" / "contracts"
     spec_files = [p for folder in spec_dirs for p in folder.glob("*.json")]
     spec_names = {p.name for p in spec_files}

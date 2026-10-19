@@ -1,0 +1,28 @@
+{
+  "scope": "SYNTHETIC_ENGINEERING",
+  "source_sha": "a08bc68c1cbbbc806205104c2bb01f3f096305f0",
+  "python": "3.12.14",
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "executed_files_sha256": {
+    "src/deck_master/operations.py": "19e657510526d6456d48a3a4042244f253fc071dd4ed4583d89205038752d4da",
+    "src/deck_master/snapshots.py": "45f46acdc124b8a5f040e4f1310947f8c7dff0465e435c5c1f61c8985588c6f1",
+    "src/deck_master/operation_coverage.py": "55726995059acec9e52930f4f930df0d399e915143d922e84675204afd23197e",
+    "tests/rebuild/test_operation_coverage.py": "3d100b33bc8b4315efff1842e500299e4deab894958813b6fe00ba28b3295609"
+  },
+  "damage": "replace",
+  "outcome": {
+    "error": {
+      "code": "operation_unavailable",
+      "message": "operation history could not be verified; preserve the original request and inspect the original operation",
+      "field": "operation_id",
+      "cause": "operation_unavailable",
+      "operation_id": "ba3c1713-18dc-4825-9753-2b80d5a1a16e",
+      "retryable": false,
+      "operation_state": "unknown",
+      "next_action": "inspect the original operation; preserve its payload, base and ID until verification succeeds",
+      "docs_ref": "docs/agent-recovery-playbook.md#workbench-operations"
+    }
+  },
+  "original_committed_revision_id": "3eb805c90d63434f9a0b93ad8819139f",
+  "index_publications": 0
+}

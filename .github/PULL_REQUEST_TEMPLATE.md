@@ -16,15 +16,17 @@
 
 <!-- Commands you ran and their result. Do not claim production readiness. -->
 
-- [ ] `python -m pytest -q` passes
-- [ ] `python deck-master CLI rebuild gate (.github/workflows/rebuild.yml) --tier ci --skip-browser-smoke --force` passes (CI tier)
-- [ ] `python deck-master CLI agent-doctor --mode preview --output json` not blocked by this change
+- [ ] Relevant focused tests collected and executed; exact commands, results and missing prerequisites recorded
+- [ ] `python -m ruff check src/deck_master tests/rebuild` passes
+- [ ] Final candidate [Rebuilt Core Gate](workflows/rebuild.yml) verified: unit matrix, real rendering, required browser, installed wheel/offline UI and recovery
+- [ ] Actual `deck-master doctor --step <affected_step>` / `deck-master capabilities` results recorded where relevant
 - [ ] No new absolute local paths, private customer names, tokens, or raw customer material in committed artifacts
 
 ## Contracts / schemas
 
-<!-- If you changed a runtime contract or schema under docs/contracts/ or
-skills/deck-master/schemas/, name it and whether a migration is documented. -->
+<!-- Runtime schema truth is src/deck_master/resources/contracts/. Name changed
+contracts, their sole registered spec mirrors and compatibility/writer-floor
+behavior. Check tests/rebuild/test_package_boundary.py. -->
 
 ## Out of scope / follow-ups
 

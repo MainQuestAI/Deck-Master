@@ -35,6 +35,18 @@ compose 的 input_revision intent 返回 content_update。upsert_pages 只放真
 
 ## 并发、恢复与等待
 
+提交前保存原始解析 JSON、`base_revision`、`operation_id` 和相对素材路径的解释目录。普通 `inputs update` 保留其安全旧式 ID 合同，不要求改为 UUID；`content inputs` 仍用 UUIDv4、自己的摘要域及返回外壳。同 ID 不能跨这两个操作族使用，换 CLI/Python/HTTP 也不能改原请求绑定。
+
+响应丢失时先运行 `deck-master operations show --project … --operation-id …`，再按原参数精确重放。新回执在 Document 提交内，与业务变化原子保存；已提交的重放先于素材解析，不能因原文件移动/删除而重复导入。返回的 `revision_id` 是原结果版本，`current_revision_id` 是当前观测；原结果中的 pending_tasks 是历史结果，必须重新 `continue` 才能获取当前任务。重放不恢复旧版本、不再次派发或发起模型调用。
+
+- `committed`：回取原结果。同 ID 的原 payload/base/路径上下文不一致或跨族会冲突，不能为重试把 base 改成 current。
+- `not_found`：已核验 canonical ancestry 没有原子提交；仍须完成旧日志的占用/绑定核验，才能由服务按保存的原请求进入新写入。磁盘缓存缺失本身不证明未提交。
+- `unknown`、`operation_unverified` 或 `operation_unavailable`：不能证明存在或不存在。保留原请求、检查历史可读性/项目归属并修复真实问题；不能直接换 ID/base 重做。`receipt_cache_unavailable` 则明确是业务已提交、派生回执缓存保存失败，不是重做许可。
+
+旧 `input_update` 日志只按其当时已记录的摘要/可达 revision 核验，不补造旧 base、路径绑定或原子回执。只有兼容日志的旧历史提交在 resolver 中是 `unknown / legacy_receipt_only`；adapter 能证明原请求时可返回 legacy replay。旧 log-only no-op 显示 `legacy_recorded`，resolver 的 not_found 不抹去该 ID 占用。路径/上传依赖无法安全复现、日志损坏或原绑定无法证明时保持 unverified，不为重放再读素材。旧 log-only no-op 的唯一日志全部丢失且 ancestry 也无 ID 时，与未使用过该 ID 无法区分，不能承诺恢复或伪造原结果。不要清理旧日志来修缓存。
+
+新普通 `inputs update` 即使 `status=unchanged`，也可提交只承载本次回执的 revision。因此 revision 可推进，而 Page refs、输入 basis、任务和调用事实保持不变，不派发新任务、不增加模型调用、不使未变内容失效。旧 no-op 不补造 revision。这与已接受 `content_update.unchanged_reason` 后整合新输入依据是不同动作。
+
 同一项目又收到更新时，旧工作单应被替代；不要用旧 produced_against 提交新输入内容。若其他执行者修改了全稿分析依赖的页面，重新读取当前版本，保留自己的工作作为可比较草稿，不强行覆盖。
 
 必要业务决定尚未明确时提出具体问题，并持久化已知上下文。恢复会话后使用同一项目继续；没有 Host 的工作台只能记录反馈和显示等待，不能宣称后台正在思考或制作。

@@ -1,0 +1,217 @@
+{
+  "evidence_class": "SYNTHETIC_ENGINEERING_AND_SOURCE_INSPECTION",
+  "observed_at": "2026-10-19T04:16:05.504383+00:00",
+  "observed_head_sha": "a08bc68c1cbbbc806205104c2bb01f3f096305f0",
+  "scope": "shared RC4 working tree; not final candidate commit or installed-wheel proof",
+  "source_version": "1.0.0rc4",
+  "capability_observation": {
+    "package_version": "1.0.0rc4",
+    "read_protocols": [
+      {
+        "protocol": "work_context.v2",
+        "body_modes": [
+          "full",
+          "delta",
+          "manifest"
+        ],
+        "default_body_mode": "full",
+        "cache_offer_requires_observed_context": true
+      }
+    ],
+    "method_source": "canonical_checkout",
+    "editable_metadata_version": "1.0.0.dev2",
+    "independent_review_receipts": false,
+    "human_review_receipts": false
+  },
+  "cli_parser_checks": {
+    "count": 18,
+    "commands": [
+      "deck-master capabilities",
+      "deck-master create --brief-file brief.txt --source materials --out my-deck --no-open",
+      "deck-master continue --project my-deck --no-open",
+      "deck-master methods --project my-deck --task-id example --read --read-protocol work_context.v2 --body-mode full",
+      "deck-master task start --project my-deck --task-id example --execution-ref host:example --supported-protocol compose.v2 --capability compose.v2 --capability collaboration.v1 --capability rc3-entry.v1",
+      "deck-master task accept --project my-deck --task-id example --operation-id compose-example --produced-against 0000000000000000000000000000000000000000000000000000000000000000 --result result.json",
+      "deck-master create --brief-file brief.txt --source materials --out my-deck --request-input request.json --no-open",
+      "deck-master import-draft --project my-deck --input draft.json --instruction-evidence instruction.json",
+      "deck-master collaboration decision --project my-deck --input decision.json",
+      "deck-master collaboration adopt-proposal --project my-deck --input adoption.json",
+      "deck-master collaboration grant --project my-deck --input authorization.json",
+      "deck-master inputs update --project my-deck --patch update.json --base-revision example --operation-id saved-example",
+      "deck-master operations show --project my-deck --operation-id saved-example",
+      "deck-master install activate --prefix prefix --release-id example --transaction-id 5fa9119f-a650-4a44-ac40-fb0589587ace",
+      "deck-master install rollback --prefix prefix --transaction-id 6eb9814b-a650-4a44-ac40-fb0589587ace",
+      "deck-master view --project my-deck --open",
+      "deck-master export --project my-deck --out out --purpose review",
+      "deck-master export --project my-deck --out out --purpose delivery"
+    ],
+    "final_readiness": "actual main compatibility adapter; not an argparse subcommand",
+    "executed_business_actions": false,
+    "notes": "Parser validation and separate read-only CLI help/capabilities; placeholders do not demonstrate task completion."
+  },
+  "active_markdown_links": {
+    "count": 45,
+    "missing": [],
+    "scope": [
+      "README.md",
+      "AGENTS.md",
+      "CLAUDE.md",
+      "ROADMAP.md",
+      "CONTRIBUTING.md",
+      ".github/PULL_REQUEST_TEMPLATE.md",
+      "docs/agent-task-index.md",
+      "docs/agent-recovery-playbook.md",
+      "skills/deck-master/SKILL.md",
+      "skills/deck-content/SKILL.md",
+      "skills/deck-design/SKILL.md",
+      "skills/deck-review/SKILL.md",
+      "skills/deck-master/references/input-update.md",
+      "skills/deck-master/references/installation.md"
+    ],
+    "anchors_checked": false,
+    "external_network_checked": false
+  },
+  "original_spec_payload": {
+    "count": 19,
+    "entries": [
+      {
+        "path": "01-ITERATION-PLAN.md",
+        "sha256": "9f806e10bc0a8ace65250db62eadcc0a8026e04d278c45eef6eeb58f9ecf2a58"
+      },
+      {
+        "path": "02-BASELINE-AND-DECISIONS.md",
+        "sha256": "b587478b021bbb7bfbd7b1c326d07e32c6cbf944bcfa393baadf5e1e8a25a256"
+      },
+      {
+        "path": "03-ARCHITECTURE-AND-COMPATIBILITY.md",
+        "sha256": "955fe73081c3ed038dd24e18560dfdf5b876fcce5d03d0afebc1b17290deb94c"
+      },
+      {
+        "path": "04-EXECUTION-PLAN.md",
+        "sha256": "2260b91584c6193a7dbf367c58d8f31f74c9764ced2406841da4e2c90df8abb8"
+      },
+      {
+        "path": "05-ACCEPTANCE.md",
+        "sha256": "9ceb401a551c01e968d4a6e6d07e1d1dfb91cfc10d76889f05bde57edb82d71f"
+      },
+      {
+        "path": "06-CODEX-HANDOFF.md",
+        "sha256": "cff2cde5030cb6f6eefd9d2610b9da6345632a56a7e1528c9aa567f7bc9f4624"
+      },
+      {
+        "path": "README.md",
+        "sha256": "e2461cfff6f979a77b29e160dbb044e00e4763ee32f5ce6ddca1dbcd8560aa63"
+      },
+      {
+        "path": "VALIDATION.md",
+        "sha256": "67a5d0e275add66f45735e17b862c1996a32ab312d30c0abd24a8b0477ed2117"
+      },
+      {
+        "path": "task-cards/N1-operation-recovery.md",
+        "sha256": "10c0cc777f6a5e9c0a15ba6ed787a6d1c774cd2123163c96fb2cd5ab9aff95ca"
+      },
+      {
+        "path": "task-cards/N2-install-recovery.md",
+        "sha256": "f266a16cbf6e61722e637d6f0cad0cf27b1d4d10538be8b8209b35b83403c29d"
+      },
+      {
+        "path": "task-cards/N3-content-review.md",
+        "sha256": "792d97d98bddd2ce8f468cefcbc43478cc9854c7d78eda744bd6e04369190c58"
+      },
+      {
+        "path": "task-cards/N4-context-and-history.md",
+        "sha256": "b6629c33da25fdb7794d258072d60d032de0a4957c64f3f11c42763bad204c49"
+      },
+      {
+        "path": "task-cards/N5-docs-and-release.md",
+        "sha256": "c36377c4d1a2b3a4226773eaac088d1c351b33a3e0223b3a46176064aaa4487b"
+      },
+      {
+        "path": "task-cards/N6-quality-improvement.md",
+        "sha256": "6ee869b9bdd6c6534f97aa41bfa468463be7d669cd3b2d81ae91882a991cf9e6"
+      },
+      {
+        "path": "templates/execution-ledger.json",
+        "sha256": "3dfb711eb440fbe8347f0e16a19a1235e12d52afa88ce1c00f673a8d6a39f1bc"
+      },
+      {
+        "path": "templates/quality-observation.json",
+        "sha256": "275538859e84744b2cdbc3c14b0bd16594983f7210a02e3a8185bef118150e64"
+      },
+      {
+        "path": "tools/validate_spec.py",
+        "sha256": "b7f1e187dc589543c002848546a88a1840875a03369139599e7812fb794d859f"
+      },
+      {
+        "path": "traceability.json",
+        "sha256": "a0ecda7ea5a5200c5755a7cad242b3da857178dbd0f179c1876be2d290a451af"
+      },
+      {
+        "path": "validation-result.json",
+        "sha256": "9b35ca300996fd4f1837d0b736fcb5ac1e0cebd3637f4c09400769d24a801773"
+      }
+    ],
+    "unchanged": true
+  },
+  "schema_mirrors": {
+    "packaged_count": 69,
+    "mirror_count": 69,
+    "unique_names": true,
+    "sets_equal": true,
+    "byte_equal": true,
+    "new_v2_mirror": "docs/specs/deck-master-next-iteration-20261019/contracts/work-context.v2.schema.json"
+  },
+  "historical_claude": {
+    "archive_path": "docs/archive/maintainer-environment/CLAUDE-before-rc4-20261019.md",
+    "source_at_baseline": "a08bc68c1cbbbc806205104c2bb01f3f096305f0:CLAUDE.md",
+    "original_sha256": "8b4cd8926ccb830edcffa97423be206fc88617981a109e3920d44657fe5fb9d8",
+    "archive_sha256": "8b4cd8926ccb830edcffa97423be206fc88617981a109e3920d44657fe5fb9d8",
+    "byte_equal": true
+  },
+  "active_file_sha256": {
+    "README.md": "09d36078536e3b57632c5664fae37eea523a57d8c98b0af70557f3292c572639",
+    "AGENTS.md": "072a820043317e6bf0d696cfa43c4bebec8e5c43471d48fd7db1d7cc8d8d926d",
+    "CLAUDE.md": "b81a1937ff71949c9264e73285586e3686d0d4c093e4be29ffd8358a6a050c8f",
+    "ROADMAP.md": "5668523c117833d4f3ded7319c00ecc146a60c37d4c8a673b243f5ab5b3f4aae",
+    "CONTRIBUTING.md": "39b5f76b04acf357754906ba07fd6f5d83fc980d671cc5589ab8248fb4cb56bf",
+    ".github/PULL_REQUEST_TEMPLATE.md": "794dc20e6c41df779c40cccf321239323fa3a3da446ca5e45149bc55f08c810e",
+    "docs/agent-task-index.md": "bf53bbc6cf695d03abae64aa6ce7577f16914ec285b247127d9730f8ca422e86",
+    "docs/agent-recovery-playbook.md": "c566b86f0d7867a0e12a22e3357c71dde80f2d6e9000582c5aed4778ea4c3839",
+    "skills/deck-master/SKILL.md": "b8f60d7e8aa57c61a7c3a8466786a59505e31980e5a26d586edf62e91faadbdd",
+    "skills/deck-content/SKILL.md": "339c04563c23d533b3cf78b8eb3464e02c1c3ef4cde651d9a65f78e41b6b0723",
+    "skills/deck-design/SKILL.md": "dcf595af61e5f9df3ef2a6d9e5a178c7292064c322bbcbfa0078bc53fd98d817",
+    "skills/deck-review/SKILL.md": "a80cdc760c5410fb65f7b4563a4498cb9b1f30f8a449e204aed4e9d2c896dd38",
+    "skills/deck-master/references/input-update.md": "1f6da62d01532069907f46e29414d65980b61ddd72e9e130541ee49a6a16c756",
+    "skills/deck-master/references/installation.md": "301d56bceb9e2accb5391e2d6abf77e2b57ac98c183395a8927d9fe7c2f337ec"
+  },
+  "verification": [
+    {
+      "command": ".venv/bin/python -m pytest --collect-only -q tests/rebuild/test_package_boundary.py tests/rebuild/test_entry_capabilities.py tests/rebuild/test_rc3_early_methods.py tests/rebuild/test_rc3_content_methods.py",
+      "result": "28 collected"
+    },
+    {
+      "command": ".venv/bin/python -m pytest -q tests/rebuild/test_package_boundary.py tests/rebuild/test_entry_capabilities.py tests/rebuild/test_rc3_early_methods.py tests/rebuild/test_rc3_content_methods.py",
+      "result": "28 passed in 12.36s",
+      "evidence": "observed tool session 53512; before final per-occurrence Spec guard assertion"
+    },
+    {
+      "command": ".venv/bin/python -m pytest -q tests/rebuild/test_package_boundary.py tests/rebuild/test_rc3_four_skills.py tests/rebuild/test_rc4_work_context.py --junitxml=docs/reports/rc4/iteration-20261019/N5-focused-junit.xml",
+      "result": "72 passed in 15.39s",
+      "log": "N5-focused-tests.log",
+      "junit": "N5-focused-junit.xml"
+    },
+    {
+      "command": ".venv/bin/python -m ruff check tests/rebuild/test_package_boundary.py",
+      "result": "All checks passed"
+    },
+    {
+      "command": "git diff --check",
+      "result": "exit 0"
+    }
+  ],
+  "limitations": [
+    "Complete Runtime N6 adoption/revision/trusted independent review is not demonstrated; see N6 evidence.",
+    "Final candidate SHA, wheel/installed identity and exact-SHA CI remain integration-owned.",
+    "No real HOME activation, external publication, merge, tag, release or deployment performed by N5."
+  ]
+}

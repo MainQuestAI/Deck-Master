@@ -1,0 +1,508 @@
+[
+  {
+    "task_id": "75921b51be56",
+    "operation_id": "compose-bd5e79b4e8b7",
+    "kind": "compose",
+    "intent": "initial",
+    "method_release": {
+      "methods_sha256": "2de3cc5894307067cbec5f30d0578b2dab2a9e6349bd7692fc40ccda84b1efe0",
+      "release_id": "1.0.0rc4"
+    },
+    "current_method_release": {
+      "release_id": "1.0.0rc4",
+      "methods_sha256": "2de3cc5894307067cbec5f30d0578b2dab2a9e6349bd7692fc40ccda84b1efe0"
+    },
+    "method_basis_status": "current",
+    "method_basis_issues": [],
+    "method_manifest": [
+      {
+        "id": "source-reading",
+        "relative_path": "references/source-reading.md",
+        "sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08"
+      },
+      {
+        "id": "content-methods",
+        "relative_path": "references/content-methods.md",
+        "sha256": "179924ef334196ae5aabe93707a8e3df4c11e957e22911fd6bbbc3a4e8fdff22"
+      },
+      {
+        "id": "content-examples",
+        "relative_path": "references/content-examples.md",
+        "sha256": "fbaa97f19b20fe7a103c6cdae263083a8aa579cbb2acddaeee1f50bd686e275a"
+      }
+    ],
+    "content_validation_policy": null,
+    "review_stage": "final",
+    "status": "awaiting_host",
+    "scope_pages": [],
+    "instruction": "按材料读出用途、权威与冲突，建立受众变化目标与具体缺口：提交 maturity=framing 的 Narrative 作为提案（payload.narrative）。不得提交完整 Page、图像、SVG 或任何用户决定。",
+    "inputs": [],
+    "dispatch_revision": "e6d4c46ac26d4cb3a811ed1b4be1d909",
+    "produced_against": "44b5a315748263e7e022d387e57fc6784d12997dc6c400cda0f094d6b1a7843c",
+    "call_allowances": [],
+    "sources": [
+      {
+        "external_use": "unspecified",
+        "extract": {
+          "path": ".deckmaster/objects/58/580c3bba477a1e17b7ad2201fcd45072758902948d6cf1d4b896a25687bdf388.json",
+          "sha256": "580c3bba477a1e17b7ad2201fcd45072758902948d6cf1d4b896a25687bdf388"
+        },
+        "format": "txt",
+        "locator_scheme": "line",
+        "name": "material.txt",
+        "original_sha256": "00f7a778d4e225707a1367c29325af0ae302a62f308957145d5e3afa1de03874",
+        "original_uri": "<synthetic-input>/material.txt",
+        "restriction": "",
+        "source_id": "src-c4b11e6e"
+      },
+      {
+        "external_use": "unspecified",
+        "extract": {
+          "path": ".deckmaster/objects/9a/9a7e8d2411140fef78363456496eb94b0d4c0ccebae5c240b8666a6a7a4c4225.json",
+          "sha256": "9a7e8d2411140fef78363456496eb94b0d4c0ccebae5c240b8666a6a7a4c4225"
+        },
+        "format": "txt",
+        "locator_scheme": "line",
+        "name": "unreferenced.txt",
+        "original_sha256": "7bbbb3aff65c1f7f6cd1dd4699f45dc2cf630ff04332fe915f06912cb295ecbc",
+        "original_uri": "<synthetic-input>/unreferenced.txt",
+        "restriction": "",
+        "source_id": "src-7ae45603"
+      }
+    ],
+    "resolved_design_context": {
+      "allowed_asset_ids": [],
+      "assets": [],
+      "canvas": {
+        "fit": "contain",
+        "height_px": 900,
+        "slide_height_in": 7.5,
+        "slide_width_in": 13.333333333333334,
+        "width_px": 1600
+      },
+      "default_style_id": "default",
+      "fonts": [
+        {
+          "asset_id": null,
+          "face": "Regular",
+          "fallback_font_ids": [],
+          "family": "Noto Sans CJK SC",
+          "font_id": "body",
+          "weight": 400
+        },
+        {
+          "asset_id": null,
+          "face": "Bold",
+          "fallback_font_ids": [],
+          "family": "Noto Sans CJK SC",
+          "font_id": "heading",
+          "weight": 700
+        }
+      ],
+      "language": "zh-CN",
+      "styles": [
+        {
+          "colors": {
+            "accent": "#1478FF",
+            "background": "#FFFFFF",
+            "text": "#14213D"
+          },
+          "layout_notes": "默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。",
+          "style_id": "default",
+          "typography": {
+            "auxiliary_size_pt": 12,
+            "body_font_id": "body",
+            "body_size_pt": 18,
+            "heading_font_id": "heading",
+            "heading_size_pt": 30
+          }
+        }
+      ]
+    },
+    "method_resources": [
+      {
+        "id": "source-reading",
+        "relative_path": "references/source-reading.md",
+        "sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08",
+        "path": "<checkout>/skills/deck-master/references/source-reading.md"
+      },
+      {
+        "id": "content-methods",
+        "relative_path": "references/content-methods.md",
+        "sha256": "179924ef334196ae5aabe93707a8e3df4c11e957e22911fd6bbbc3a4e8fdff22",
+        "path": "<checkout>/skills/deck-master/references/content-methods.md"
+      },
+      {
+        "id": "content-examples",
+        "relative_path": "references/content-examples.md",
+        "sha256": "fbaa97f19b20fe7a103c6cdae263083a8aa579cbb2acddaeee1f50bd686e275a",
+        "path": "<checkout>/skills/deck-master/references/content-examples.md"
+      }
+    ],
+    "project_context": {
+      "task": {
+        "audience": "",
+        "brief": "SYNTHETIC_ENGINEERING context probe",
+        "existing_decisions": [],
+        "page_limit": null,
+        "presentation_mode": "live",
+        "presentation_mode_source": "default",
+        "scenario": "",
+        "title": "Deck task"
+      },
+      "input_digest": "c9b0d24e433bc6134afb697966235a85466bd79cedbbf14500b3fa70b81c0376",
+      "dispatch_revision": "e6d4c46ac26d4cb3a811ed1b4be1d909",
+      "current_revision": "9f3afac261bb4086ba50ebff7553fc5d",
+      "context_status": "current",
+      "input_alignment": "no_content"
+    },
+    "staging_dir": "<synthetic-project>/.deckmaster/staging/compose-bd5e79b4e8b7",
+    "collaboration_binding": {
+      "adoption_policy": "proposal_only",
+      "authorization_ref": null,
+      "decision_refs": [],
+      "eligibility_basis": [
+        {
+          "identity": "brief",
+          "kind": "task_fact",
+          "projection": "value",
+          "ref": null,
+          "sha256": "cd78644c6028ac24f262965e52199ab747f2edcff7819b3089eb8d8a579bf484"
+        }
+      ],
+      "eligibility_digest": "9bed925786b7d868a40806b85df135fcd764647be80b7206bcae406d0230fa17",
+      "executor_type": "host",
+      "phase": "framing",
+      "request_id": "req-2652ead6c4cf",
+      "write_scope": {
+        "allow_page_membership_change": false,
+        "allow_page_order_change": false,
+        "external_artifact_ref": null,
+        "layers": [
+          "narrative"
+        ],
+        "page_ids": [],
+        "page_manifest_ref": null,
+        "purpose": "exploratory",
+        "subject": "deck"
+      }
+    },
+    "execution_ref": null,
+    "protocol_version": "compose.v2",
+    "required_capabilities": [
+      "compose.v2",
+      "collaboration.v1",
+      "rc3-entry.v1"
+    ],
+    "source_reading": [
+      {
+        "source_id": "src-c4b11e6e",
+        "detail": "",
+        "format": "txt",
+        "format_kind": "text",
+        "image_pages": [],
+        "locators": [
+          {
+            "kind": "line",
+            "locator": "L1",
+            "text": "SYNTHETIC_ENGINEERING full source"
+          },
+          {
+            "kind": "line",
+            "locator": "L2",
+            "text": "Keep the final constraint and notes."
+          }
+        ],
+        "original_file": {
+          "path": ".deckmaster/objects/00/00f7a778d4e225707a1367c29325af0ae302a62f308957145d5e3afa1de03874.txt",
+          "sha256": "00f7a778d4e225707a1367c29325af0ae302a62f308957145d5e3afa1de03874"
+        },
+        "original_sha256": "00f7a778d4e225707a1367c29325af0ae302a62f308957145d5e3afa1de03874",
+        "original_uri": "<synthetic-input>/material.txt",
+        "status": "read",
+        "tables": [],
+        "text": "SYNTHETIC_ENGINEERING full source\nKeep the final constraint and notes.\n",
+        "extract_path": "<synthetic-project>/.deckmaster/objects/58/580c3bba477a1e17b7ad2201fcd45072758902948d6cf1d4b896a25687bdf388.json",
+        "original_path": "<synthetic-project>/.deckmaster/objects/00/00f7a778d4e225707a1367c29325af0ae302a62f308957145d5e3afa1de03874.txt"
+      },
+      {
+        "source_id": "src-7ae45603",
+        "detail": "",
+        "format": "txt",
+        "format_kind": "text",
+        "image_pages": [],
+        "locators": [
+          {
+            "kind": "line",
+            "locator": "L1",
+            "text": "Required source without a Page citation."
+          }
+        ],
+        "original_file": {
+          "path": ".deckmaster/objects/7b/7bbbb3aff65c1f7f6cd1dd4699f45dc2cf630ff04332fe915f06912cb295ecbc.txt",
+          "sha256": "7bbbb3aff65c1f7f6cd1dd4699f45dc2cf630ff04332fe915f06912cb295ecbc"
+        },
+        "original_sha256": "7bbbb3aff65c1f7f6cd1dd4699f45dc2cf630ff04332fe915f06912cb295ecbc",
+        "original_uri": "<synthetic-input>/unreferenced.txt",
+        "status": "read",
+        "tables": [],
+        "text": "Required source without a Page citation.\n",
+        "extract_path": "<synthetic-project>/.deckmaster/objects/9a/9a7e8d2411140fef78363456496eb94b0d4c0ccebae5c240b8666a6a7a4c4225.json",
+        "original_path": "<synthetic-project>/.deckmaster/objects/7b/7bbbb3aff65c1f7f6cd1dd4699f45dc2cf630ff04332fe915f06912cb295ecbc.txt"
+      }
+    ]
+  },
+  {
+    "task_id": "synthetic-second",
+    "operation_id": "synthetic-second",
+    "kind": "compose",
+    "intent": "initial",
+    "method_release": {
+      "methods_sha256": "2de3cc5894307067cbec5f30d0578b2dab2a9e6349bd7692fc40ccda84b1efe0",
+      "release_id": "1.0.0rc4"
+    },
+    "current_method_release": {
+      "release_id": "1.0.0rc4",
+      "methods_sha256": "2de3cc5894307067cbec5f30d0578b2dab2a9e6349bd7692fc40ccda84b1efe0"
+    },
+    "method_basis_status": "current",
+    "method_basis_issues": [],
+    "method_manifest": [
+      {
+        "id": "source-reading",
+        "relative_path": "references/source-reading.md",
+        "sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08"
+      },
+      {
+        "id": "content-methods",
+        "relative_path": "references/content-methods.md",
+        "sha256": "179924ef334196ae5aabe93707a8e3df4c11e957e22911fd6bbbc3a4e8fdff22"
+      },
+      {
+        "id": "content-examples",
+        "relative_path": "references/content-examples.md",
+        "sha256": "fbaa97f19b20fe7a103c6cdae263083a8aa579cbb2acddaeee1f50bd686e275a"
+      }
+    ],
+    "content_validation_policy": null,
+    "review_stage": "final",
+    "status": "awaiting_host",
+    "scope_pages": [],
+    "instruction": "按材料读出用途、权威与冲突，建立受众变化目标与具体缺口：提交 maturity=framing 的 Narrative 作为提案（payload.narrative）。不得提交完整 Page、图像、SVG 或任何用户决定。",
+    "inputs": [],
+    "dispatch_revision": "e6d4c46ac26d4cb3a811ed1b4be1d909",
+    "produced_against": "44b5a315748263e7e022d387e57fc6784d12997dc6c400cda0f094d6b1a7843c",
+    "call_allowances": [],
+    "sources": [
+      {
+        "external_use": "unspecified",
+        "extract": {
+          "path": ".deckmaster/objects/58/580c3bba477a1e17b7ad2201fcd45072758902948d6cf1d4b896a25687bdf388.json",
+          "sha256": "580c3bba477a1e17b7ad2201fcd45072758902948d6cf1d4b896a25687bdf388"
+        },
+        "format": "txt",
+        "locator_scheme": "line",
+        "name": "material.txt",
+        "original_sha256": "00f7a778d4e225707a1367c29325af0ae302a62f308957145d5e3afa1de03874",
+        "original_uri": "<synthetic-input>/material.txt",
+        "restriction": "",
+        "source_id": "src-c4b11e6e"
+      },
+      {
+        "external_use": "unspecified",
+        "extract": {
+          "path": ".deckmaster/objects/9a/9a7e8d2411140fef78363456496eb94b0d4c0ccebae5c240b8666a6a7a4c4225.json",
+          "sha256": "9a7e8d2411140fef78363456496eb94b0d4c0ccebae5c240b8666a6a7a4c4225"
+        },
+        "format": "txt",
+        "locator_scheme": "line",
+        "name": "unreferenced.txt",
+        "original_sha256": "7bbbb3aff65c1f7f6cd1dd4699f45dc2cf630ff04332fe915f06912cb295ecbc",
+        "original_uri": "<synthetic-input>/unreferenced.txt",
+        "restriction": "",
+        "source_id": "src-7ae45603"
+      }
+    ],
+    "resolved_design_context": {
+      "allowed_asset_ids": [],
+      "assets": [],
+      "canvas": {
+        "fit": "contain",
+        "height_px": 900,
+        "slide_height_in": 7.5,
+        "slide_width_in": 13.333333333333334,
+        "width_px": 1600
+      },
+      "default_style_id": "default",
+      "fonts": [
+        {
+          "asset_id": null,
+          "face": "Regular",
+          "fallback_font_ids": [],
+          "family": "Noto Sans CJK SC",
+          "font_id": "body",
+          "weight": 400
+        },
+        {
+          "asset_id": null,
+          "face": "Bold",
+          "fallback_font_ids": [],
+          "family": "Noto Sans CJK SC",
+          "font_id": "heading",
+          "weight": 700
+        }
+      ],
+      "language": "zh-CN",
+      "styles": [
+        {
+          "colors": {
+            "accent": "#1478FF",
+            "background": "#FFFFFF",
+            "text": "#14213D"
+          },
+          "layout_notes": "默认样式在 create 时固化；字体名称是配置需求，不是本机安装证明。",
+          "style_id": "default",
+          "typography": {
+            "auxiliary_size_pt": 12,
+            "body_font_id": "body",
+            "body_size_pt": 18,
+            "heading_font_id": "heading",
+            "heading_size_pt": 30
+          }
+        }
+      ]
+    },
+    "method_resources": [
+      {
+        "id": "source-reading",
+        "relative_path": "references/source-reading.md",
+        "sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08",
+        "path": "<checkout>/skills/deck-master/references/source-reading.md"
+      },
+      {
+        "id": "content-methods",
+        "relative_path": "references/content-methods.md",
+        "sha256": "179924ef334196ae5aabe93707a8e3df4c11e957e22911fd6bbbc3a4e8fdff22",
+        "path": "<checkout>/skills/deck-master/references/content-methods.md"
+      },
+      {
+        "id": "content-examples",
+        "relative_path": "references/content-examples.md",
+        "sha256": "fbaa97f19b20fe7a103c6cdae263083a8aa579cbb2acddaeee1f50bd686e275a",
+        "path": "<checkout>/skills/deck-master/references/content-examples.md"
+      }
+    ],
+    "project_context": {
+      "task": {
+        "audience": "",
+        "brief": "SYNTHETIC_ENGINEERING context probe",
+        "existing_decisions": [],
+        "page_limit": null,
+        "presentation_mode": "live",
+        "presentation_mode_source": "default",
+        "scenario": "",
+        "title": "Deck task"
+      },
+      "input_digest": "c9b0d24e433bc6134afb697966235a85466bd79cedbbf14500b3fa70b81c0376",
+      "dispatch_revision": "e6d4c46ac26d4cb3a811ed1b4be1d909",
+      "current_revision": "9f3afac261bb4086ba50ebff7553fc5d",
+      "context_status": "current",
+      "input_alignment": "no_content"
+    },
+    "staging_dir": "<synthetic-project>/.deckmaster/staging/synthetic-second",
+    "collaboration_binding": {
+      "adoption_policy": "proposal_only",
+      "authorization_ref": null,
+      "decision_refs": [],
+      "eligibility_basis": [
+        {
+          "identity": "brief",
+          "kind": "task_fact",
+          "projection": "value",
+          "ref": null,
+          "sha256": "cd78644c6028ac24f262965e52199ab747f2edcff7819b3089eb8d8a579bf484"
+        }
+      ],
+      "eligibility_digest": "9bed925786b7d868a40806b85df135fcd764647be80b7206bcae406d0230fa17",
+      "executor_type": "host",
+      "phase": "framing",
+      "request_id": "req-2652ead6c4cf",
+      "write_scope": {
+        "allow_page_membership_change": false,
+        "allow_page_order_change": false,
+        "external_artifact_ref": null,
+        "layers": [
+          "narrative"
+        ],
+        "page_ids": [],
+        "page_manifest_ref": null,
+        "purpose": "exploratory",
+        "subject": "deck"
+      }
+    },
+    "execution_ref": null,
+    "protocol_version": "compose.v2",
+    "required_capabilities": [
+      "compose.v2",
+      "collaboration.v1",
+      "rc3-entry.v1"
+    ],
+    "source_reading": [
+      {
+        "source_id": "src-c4b11e6e",
+        "detail": "",
+        "format": "txt",
+        "format_kind": "text",
+        "image_pages": [],
+        "locators": [
+          {
+            "kind": "line",
+            "locator": "L1",
+            "text": "SYNTHETIC_ENGINEERING full source"
+          },
+          {
+            "kind": "line",
+            "locator": "L2",
+            "text": "Keep the final constraint and notes."
+          }
+        ],
+        "original_file": {
+          "path": ".deckmaster/objects/00/00f7a778d4e225707a1367c29325af0ae302a62f308957145d5e3afa1de03874.txt",
+          "sha256": "00f7a778d4e225707a1367c29325af0ae302a62f308957145d5e3afa1de03874"
+        },
+        "original_sha256": "00f7a778d4e225707a1367c29325af0ae302a62f308957145d5e3afa1de03874",
+        "original_uri": "<synthetic-input>/material.txt",
+        "status": "read",
+        "tables": [],
+        "text": "SYNTHETIC_ENGINEERING full source\nKeep the final constraint and notes.\n",
+        "extract_path": "<synthetic-project>/.deckmaster/objects/58/580c3bba477a1e17b7ad2201fcd45072758902948d6cf1d4b896a25687bdf388.json",
+        "original_path": "<synthetic-project>/.deckmaster/objects/00/00f7a778d4e225707a1367c29325af0ae302a62f308957145d5e3afa1de03874.txt"
+      },
+      {
+        "source_id": "src-7ae45603",
+        "detail": "",
+        "format": "txt",
+        "format_kind": "text",
+        "image_pages": [],
+        "locators": [
+          {
+            "kind": "line",
+            "locator": "L1",
+            "text": "Required source without a Page citation."
+          }
+        ],
+        "original_file": {
+          "path": ".deckmaster/objects/7b/7bbbb3aff65c1f7f6cd1dd4699f45dc2cf630ff04332fe915f06912cb295ecbc.txt",
+          "sha256": "7bbbb3aff65c1f7f6cd1dd4699f45dc2cf630ff04332fe915f06912cb295ecbc"
+        },
+        "original_sha256": "7bbbb3aff65c1f7f6cd1dd4699f45dc2cf630ff04332fe915f06912cb295ecbc",
+        "original_uri": "<synthetic-input>/unreferenced.txt",
+        "status": "read",
+        "tables": [],
+        "text": "Required source without a Page citation.\n",
+        "extract_path": "<synthetic-project>/.deckmaster/objects/9a/9a7e8d2411140fef78363456496eb94b0d4c0ccebae5c240b8666a6a7a4c4225.json",
+        "original_path": "<synthetic-project>/.deckmaster/objects/7b/7bbbb3aff65c1f7f6cd1dd4699f45dc2cf630ff04332fe915f06912cb295ecbc.txt"
+      }
+    ]
+  }
+]

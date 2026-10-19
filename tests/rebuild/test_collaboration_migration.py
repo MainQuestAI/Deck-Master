@@ -33,6 +33,12 @@ def _legacy_project(tmp_path):
         scope_pages=["p1"], instruction="legacy", inputs=[document["pages"][0]["page"]],
         dependencies=[], dispatch_revision=document["revision_id"],
         produced_against=hashlib.sha256(b"legacy").hexdigest())
+    # This fixture represents a pre-RC4 Task, not a new producer invocation.
+    task.pop("method_manifest", None)
+    task.pop("content_validation_policy", None)
+    from deck_master import method_resources
+    historical_methods = method_resources._read_ids(method_resources.rc3_method_ids_for(task["kind"]))
+    task["method_release"] = method_resources.method_release(historical_methods)
     task["call_allowances"] = [{"allowance_id": "a1", "state": "unknown",
                                 "cost_class": "host_reasoning", "slot": 1}]
     task_ref = store.put_json_object(task)

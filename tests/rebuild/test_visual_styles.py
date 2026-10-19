@@ -44,7 +44,7 @@ def test_import_and_analysis_preserve_pages_outputs_and_recover_exact_receipt(fl
     assert content_identity(after)==content_identity(before) and task['call_allowances']==[]
     order=service.task_summary(flow.store,after,task)['visual_analysis']
     assert order['reference_images'][0]['reference_id']==row['reference_id']
-    assert after['compatibility']['minimum_writer']=='rc3-entry.v1'
+    assert after['compatibility']['minimum_writer']=='rc4-content.v1'
 
 
 @pytest.mark.parametrize('data',[b'invalid',b'',b'<svg><script/></svg>'])

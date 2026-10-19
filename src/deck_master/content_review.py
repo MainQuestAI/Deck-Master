@@ -476,6 +476,7 @@ def dispatch_preproduction_review(project, *, page_ids=None, adapter_context=Non
             "subjects/dependencies 必须绑定当前 Narrative、ContentPlan 与本次全部 Page 及来源；"
             "发现必须定位到具体节点/页面/atom 与依据。"),
         extra_inputs=[packet_ref], executor_type=executor_type,
+        review_units=[{"kind": kind, "page_ids": pages, "reason": "missing"} for kind in units],
         phase="review")
     return {"status": "review_dispatched", "stage": STAGE, "requirement": state["effective"],
             "requirement_state": state, "review_draft_ref": packet_ref,

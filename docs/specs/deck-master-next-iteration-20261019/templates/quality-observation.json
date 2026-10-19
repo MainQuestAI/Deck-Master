@@ -1,0 +1,55 @@
+{
+  "schema_version": "deck_master_quality_observation.v1",
+  "document_kind": "offline_development_record",
+  "is_runtime_state": false,
+  "status": "NOT_RUN",
+  "normal_task": {
+    "project_id": null,
+    "task_ids": [],
+    "intent": null,
+    "brief": null,
+    "audience": null,
+    "purpose": null,
+    "agreed_deliverables": [],
+    "constraints": [],
+    "source_nature": null,
+    "source_refs": [],
+    "existing_decisions": []
+  },
+  "execution": {
+    "candidate_sha": null,
+    "host_identity": null,
+    "model_identity": "unknown",
+    "observable_parameters": {},
+    "environment": [],
+    "actual_calls": [],
+    "method_before": [],
+    "method_after": [],
+    "dispatch_manifests": []
+  },
+  "drafts": {
+    "fixed_input_manuscript": [],
+    "first_complete_host_output": [],
+    "first_accepted_manuscript": [],
+    "revisions": [],
+    "current_outputs": []
+  },
+  "method_changes": [],
+  "findings_and_repairs": [],
+  "artifact_checks": [],
+  "human_feedback": {
+    "status": "NOT_RUN",
+    "required_by_current_task": false,
+    "evidence": []
+  },
+  "conclusions": {
+    "demonstrated_improvements": [],
+    "remaining_issues": [],
+    "unverified_claims": [],
+    "comparable_baseline_available": false,
+    "causal_improvement_claimed": false,
+    "scope_statement": null
+  },
+  "limitations": [],
+  "next_actions": []
+}
