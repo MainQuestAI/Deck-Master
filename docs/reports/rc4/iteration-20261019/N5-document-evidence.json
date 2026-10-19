@@ -207,11 +207,23 @@
     {
       "command": "git diff --check",
       "result": "exit 0"
+    },
+    {
+      "command": ".venv/bin/python -m pytest -q tests/rebuild/test_package_boundary.py",
+      "result": "7 passed in 11.11s",
+      "log": "N5-guard-final.log",
+      "scope": "after N5 report and evidence creation"
     }
   ],
   "limitations": [
     "Complete Runtime N6 adoption/revision/trusted independent review is not demonstrated; see N6 evidence.",
     "Final candidate SHA, wheel/installed identity and exact-SHA CI remain integration-owned.",
     "No real HOME activation, external publication, merge, tag, release or deployment performed by N5."
-  ]
+  ],
+  "report_local_links": {
+    "path": "N5-active-docs.md",
+    "count_at_first_report_validation": 18,
+    "missing": [],
+    "anchors_checked": false
+  }
 }

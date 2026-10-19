@@ -169,18 +169,33 @@ def test_rank12_without_region_is_not_a_migration_and_unreadable_tasks_do_not_va
     description = collaboration_migration.describe(project)
     assert description['plan']['needs_migration']
     doc = store.load_document()
-    bad = {'path': '.deckmaster/objects/' + 'f' * 2 + '/' + 'f' * 64 + '.json', 'sha256': 'f' * 64}
+    legacy_task = tasks.new_task(task_id='legacy-unreadable-task', operation_id='legacy-task-operation',
+        kind='compose', scope_pages=[], instruction='Explicit historical Task before object loss',
+        inputs=[], dependencies=[], dispatch_revision=doc['revision_id'],
+        produced_against=models.sha256_bytes(b'explicit historical Task basis'))
+    legacy_task.pop('method_manifest', None)
+    legacy_task.pop('content_validation_policy', None)
+    from deck_master import method_resources
+    legacy_task['method_release'] = method_resources.method_release(
+        method_resources._read_ids(method_resources.rc3_method_ids_for(legacy_task['kind'])))
+    bad = store.put_json_object(legacy_task)
     changed = models.bump_revision(doc, {'operation_id': operation(), 'kind': 'task_update',
-        'description': 'explicit unreadable historical Task fact', 'read_set': []})
+        'description': 'explicit readable historical Task fact before object loss', 'read_set': []})
     changed['tasks'] = [bad]
     store.commit_change(base_revision=doc['revision_id'], document=changed, operation_id=changed['change']['operation_id'])
+    assert store.load_document()['compatibility']['minimum_writer'] == 'rc3.v1'
+    # Historical fault injection: lose an already-committed legacy object;
+    # a new writer need not accept a new unreadable Task reference.
+    (project / bad['path']).unlink()
     desc = collaboration_migration.describe(project)
     assert desc['plan']['unknown_calls'] is None and desc['plan']['unreadable_task_refs'] == [bad]
     before = store.load_document()
+    before_bytes = source_snapshot(project)
     with pytest.raises(StoreError, match='unreadable Task'):
         collaboration_migration.apply(project, base_revision=before['revision_id'],
             plan_digest=desc['plan_digest'], operation_id=operation())
     assert store.load_document() == before
+    assert source_snapshot(project) == before_bytes
 
 
 def test_running_stale_result_settles_actual_call_fact_before_business_refusal(tmp_path):

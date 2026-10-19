@@ -67,7 +67,7 @@ v2 新检验由仓库 Python 运行 `N6/check_revised_v2.py`，结果在 `runtim
 
 实际动作/目标是为上述冻结 Narrative proposal 记录有效方向采用决定，再完成 Page 接纳与 Runtime 修订。Runtime 要求有效 accepted direction 决定或 delegation；现有真实用户限制禁止改授权，且没有已认可该 Host proposal 的证据。**未提交** `collaboration.grant`、方向决定或 `adopt_proposal`，没有把同一作者改名、确认稿导入或手改对象存储当替代路径。此处为政策范围未解决的 pending 状态，不是自动批准审查拒绝，也没有不确定提交。
 
-供 Owner 核对的最小拟调用链在 `pending-authorization/`，状态明确 `PREPARED_NOT_SUBMITTED`；null 代表待绑定的真实授权证据/后续 CAS/返回 ref，不是可直接执行的授权请求。范围仅冻结 proposal、0 外部调用、拟截至 UTC 2026-10-20；不能把原委托文档当新增授权证据。
+早期拟调用链保存在 `pending-authorization/`，状态明确 `PREPARED_NOT_SUBMITTED`，未执行。集成复核确认更窄的路径可用：若用户真实确认该方向及六页 Plan，可按原话记录 `authority_mode=direct_user` 的方向决定，再采用所指 proposal；不需要新增 grant。普通 Host 证据仍准确标为 `host_attested`，不伪称验证了用户身份或专业认可。原始委托不是对后续 proposal 的自动批准，收到真实决定前继续保留 pending。
 
 第二个能力缺口：`capabilities.independent_review_receipts=false`、`human_review_receipts=false`、`providers=[]`。独立实际阅读可以保存为真实非作者审阅，但当前不能冒认 Runtime 已接纳受信独立前审，也不降为 `host_self`。受影响项保留 BLOCKED；其余方法、完整稿和修复工作继续。
 
