@@ -3,12 +3,12 @@
   "status": "PASS",
   "evidence_level": "INSTALLED_SYNTHETIC_ENGINEERING_READ_ONLY",
   "build_binding": {
-    "source_sha": "158c8b3e944a11fc04629e935e089bfb5a7f66bd",
+    "source_sha": "97f41626771357ff51fcfdba7a510db9299233ac",
     "source_dirty": false,
     "package_version": "1.0.0rc4",
-    "release_id": "158c8b3e944a-9ee7ef6359b3",
+    "release_id": "97f416267713-3cf22b1ee61c",
     "wheel": "deck_master-1.0.0rc4-py3-none-any.whl",
-    "wheel_sha256": "9ee7ef6359b3d462cb24d65505b9da598f05c644cd57a56afdfc38b0e1d9a8d0"
+    "wheel_sha256": "3cf22b1ee61cf5b4e1ec93dcc8506acfea90a18ae7a872bb392abcab94cc4f67"
   },
   "execution": {
     "python_executable": "${INSTALLED_VENV}/bin/python",
@@ -34,7 +34,7 @@
         "from_installed_venv": false
       }
     ],
-    "probe_script_sha256": "da324410ea75b806decae093a62e245a319037a778b4f9d88fa4b2737dc24099",
+    "probe_script_sha256": "0bd75e0601938458724ff9ca2a6311fc3952cd6aecd60687770a47755a58e652",
     "invocation": "${INSTALLED_VENV}/bin/python -I -B ${RAW_EVIDENCE}/verify_installed_resource_identity.py"
   },
   "installation_identity": {

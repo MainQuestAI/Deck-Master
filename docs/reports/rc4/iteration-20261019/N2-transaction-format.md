@@ -57,10 +57,17 @@ receipt can still replay its historical result without a new ownership claim.
 
 Preparation is now a durable `preparing` phase. The request, original managed
 state and each `.after`/`.witness` intent are saved before creating the artifact;
-its verified identity is saved afterward. A process exit between creation and
-identity persistence leaves a recoverable request rather than an unrecorded
-file collision. The original ID resumes after checking target resources, old
-managed state and all already-proven preparation identities. Every witness,
+its verified identity is saved afterward. Every pre-existing watched regular
+file or symlink is witnessed before formal replacement `.after` creation.
+Recovery derives the required set from the complete frozen `watched` state,
+not from a nonempty or partial preparations/anchors list. Each required identity
+must have a surviving witness. Death immediately after `Plan.begin`, before a
+required intent is registered, or before its witness exists therefore returns
+`installation_recovery_conflict` in `preparing`, preserving the original journal
+and entire scene. Once the complete set is physically pinned, a process exit
+between creation and identity persistence remains recoverable. The original ID
+resumes after checking target resources, every old managed path/parent and all
+already-proven preparation identities. Every registered witness,
 including one with acknowledgement `identity=null`, must still match its frozen
 `expected` inode identity: it keeps the old managed inode allocated. A missing
 or replaced witness is a recovery conflict before any namespace is rebuilt;
@@ -231,3 +238,11 @@ installed passes with candidate/historical import identities kept separate.
 See [second-review evidence](N2-review2-evidence.json) and
 [the new installed regression](Installed-review2-N2.json); these retain the
 original failure history and do not relabel the earlier290/build evidence.
+
+The third review found the empty/partial witness-coverage gap. Its complete-set
+repair has309 source passes and254 actual new-wheel installed passes, including
+12 new coverage negatives;47 actual child91 windows still recover42completed/
+5rolled_back. See [third-review resolution](PR124-review3-resolution.md),
+[evidence](N2-review3-evidence.json) and [installed proof](Installed-review3-N2.json).
+Original first-witness negatives and the five initial fixture failures are
+retained; sufficiently proven last-unconfirmed-witness recovery stays positive.

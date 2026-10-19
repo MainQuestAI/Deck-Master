@@ -1,0 +1,230 @@
+{
+  "schema_version": "rc4_review3_preparation_coverage.v1",
+  "scope": "SYNTHETIC_ENGINEERING_WITH_REAL_CHILD_EXIT_AND_SEPARATE_HISTORICAL_CONTROLS",
+  "reviewed_head": "72a1bde8247ac0a1933f5e4b8bbc8496675303e9",
+  "review": "https://chatgpt.com/c/6ad57133-6f3c-83ea-879a-72865126ed6c?messageId=25f7d858-fd3a-5752-8dd1-4beb88f4effa",
+  "review_finding": "R3-P2-1: complete required old-object witness coverage",
+  "candidate_source_sha": "97f41626771357ff51fcfdba7a510db9299233ac",
+  "candidate_source_tree": "4f143eb92b9823dfb895538fc5b8c2749f3bddda",
+  "source_files_sha256": {
+    "src/deck_master/install.py": "cd23abb0e1a8e23e8566d39cb25424a068d6f6b51de71abfaac31d6cc5cdbffd",
+    "src/deck_master/activation_transaction.py": "0ce5ad66f00b85baabe021c2f4de90beaf89ebab8f12d52f1a117e0aa6dbb150",
+    "tests/rebuild/test_install_preparation_coverage.py": "6146c3ba9b18e0011a577d610e35da475a349b5290a7ca3928cea6020f49eab7",
+    "tests/rebuild/test_install_preparation_compatibility.py": "2e863dc11b986efd5da62b37606686feeed27df523eac2544f704d7fdd2260f1",
+    "tests/rebuild/test_install_transaction_recovery.py": "02a6657ff73d14e5cca66ce824d5813759a5664ed4d60d997cd7e53a60f2479c"
+  },
+  "before": {
+    "pytest_failures": 4,
+    "windows": [
+      "Plan.begin returned with empty preparations/anchors/steps",
+      "partial registration with a nonempty but incomplete witness list"
+    ],
+    "result": "Original UUID incorrectly completed/verified; external old-target current or unwitnessed Host path was taken into the new plan.",
+    "raw": "raw-evidence/review3/install/raw-before/result.json"
+  },
+  "fix": {
+    "required_set": "All pre-existing REG/LNK identities in the complete frozen watched set, never inferred from nonempty preparations.",
+    "producer_order": "Pin all existing watched inodes before creating formal replacement .after objects.",
+    "recovery": "Each required identity needs a surviving witness intent with complete frozen expected identity and actual matching inode; then check every managed path/parent and all preparations before any new namespace.",
+    "missing_evidence": "installation_recovery_conflict in preparing; journal bytes, external paths and all preparations preserved.",
+    "format": "No schema/version/state-machine change; no new provider/database; activation_transaction.py unchanged."
+  },
+  "after": {
+    "source_regression": {
+      "passed": 309,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "new_coverage_cases": 12,
+    "new_cases": [
+      "begin empty list",
+      "partial nonempty list",
+      "all but final witness unregistered",
+      "final intent registered but object not created",
+      "first existing but unconfirmed witness still incomplete",
+      "complete set then actual current/launcher/Host witness lost"
+    ],
+    "begin_and_partial_raw": "raw-evidence/review3/install/raw-after/result.json",
+    "raw_invariants": "Both actual child91 cases preserve exact journal SHA256, actual external dev/inode/target, and complete actual scene.",
+    "positive_recovery": "Complete surviving old set including final created identity=null witness remains recoverable; ordinary unconfirmed .after external remnant stays unclaimed and original request continues in a new namespace.",
+    "real_death_matrix": {
+      "cases": 47,
+      "actual_child_exit": 91,
+      "states": {
+        "completed": 42,
+        "rolled_back": 5
+      },
+      "raw": "raw-evidence/review3/install/n2-review3-47-death-cases.json"
+    },
+    "historical_controls": "Actual bc6 completed and001c prepared journals retain exact logical-Host request semantics; opt-out tests remain passing.",
+    "independent_static_review": "raw-evidence/review3/integration/static-review.json"
+  },
+  "inode_control": {
+    "actual_kernel_inode_reuse_observed_locally": false,
+    "deterministic_dev_inode_collision_mapping": true,
+    "scope_note": "Real process exit and actual unlink/recreate; local overlay did not recycle the inode after1000 attempts per raw case. Synthetic mapping is labeled and is not claimed as kernel inode reuse. Latest reviewer independently reported actual reuse twice."
+  },
+  "installed_regression": "Installed-review3-N2.json",
+  "ledger_and_package_boundary": {
+    "passed": 16,
+    "failed": 0,
+    "skipped": 0
+  },
+  "build": {
+    "source_sha": "97f41626771357ff51fcfdba7a510db9299233ac",
+    "source_dirty": false,
+    "package_version": "1.0.0rc4",
+    "release_id": "97f416267713-3cf22b1ee61c",
+    "wheel_sha256": "3cf22b1ee61cf5b4e1ec93dcc8506acfea90a18ae7a872bb392abcab94cc4f67",
+    "sdist_sha256": "6356bd9a11df2ac27d60ec3d605b0527df6d5d6e466dafdf3867e3d6e739d67c"
+  },
+  "raw_artifacts": [
+    {
+      "path": "raw-evidence/review3/install/handoff.json",
+      "bytes": 8443,
+      "sha256": "9a4c8678a8bc271b270d163379ff8f463ac521aaf61088ff05b32e9aa6405312"
+    },
+    {
+      "path": "raw-evidence/review3/install/manifest.json",
+      "bytes": 3378,
+      "sha256": "5f2168f9f4f1776677ed5d3b745e3a8f2d44153c40e14a3b00e94a0fdef60ea4"
+    },
+    {
+      "path": "raw-evidence/review3/install/n2-review3-47-death-cases.json",
+      "bytes": 4289032,
+      "sha256": "6a53519278b99fd84d531671f8ed9c47ce481cc61e5bd263932b4dda8d3362fc"
+    },
+    {
+      "path": "raw-evidence/review3/install/n2-review3-47-death-cases.log",
+      "bytes": 115,
+      "sha256": "b4d5cf0c79a0c8fea197efba954d2ac49efda6281aba8bed07b3ab0d21e8d1df"
+    },
+    {
+      "path": "raw-evidence/review3/install/n2-review3-before.log",
+      "bytes": 11372,
+      "sha256": "4d9267dcc23463120778d4ee588e87cc516b8e668ef4b7e36dcfea24e0fcc614"
+    },
+    {
+      "path": "raw-evidence/review3/install/n2-review3-before.xml",
+      "bytes": 11552,
+      "sha256": "fe2e028c14933a8866b7dea9e6bf2c3f7eaa23d3c6bcbeeeb6ed0cecba890885"
+    },
+    {
+      "path": "raw-evidence/review3/install/n2-review3-first-after.log",
+      "bytes": 18275,
+      "sha256": "fe09a3ef59016e07f94ce1be311ad6f7b34d04e2ead98fdee4ef86b906a00cde"
+    },
+    {
+      "path": "raw-evidence/review3/install/n2-review3-first-after.xml",
+      "bytes": 23285,
+      "sha256": "e2347146612a7b8213e3bc5e0b6d64ca68f4665a65266cdf3cdd92bb5e3a9bef"
+    },
+    {
+      "path": "raw-evidence/review3/install/n2-review3-lint.log",
+      "bytes": 19,
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "path": "raw-evidence/review3/install/n2-review3-raw-after.log",
+      "bytes": 1485,
+      "sha256": "b98e71f5884ff2a57312ae589ddd2604ac60f469ea4f9bba3b6b223f12f17ff7"
+    },
+    {
+      "path": "raw-evidence/review3/install/n2-review3-raw-before.log",
+      "bytes": 3584,
+      "sha256": "ca11135cccf8f68bdc8cb06b17cf9220b64ba70153b94b6d86950e8d7df75eda"
+    },
+    {
+      "path": "raw-evidence/review3/install/n2-review3-regression.log",
+      "bytes": 421,
+      "sha256": "60b38772aac3473f7e8238f3c08e52e3b4e70ec6b4b25c1e361b70ee3b4b4043"
+    },
+    {
+      "path": "raw-evidence/review3/install/n2-review3-regression.xml",
+      "bytes": 51027,
+      "sha256": "a956f6a5ed06d319f3a5a8d48471edda3783d4c2d565bc2ceca4263f49d32b06"
+    },
+    {
+      "path": "raw-evidence/review3/install/n2_review3_47.py",
+      "bytes": 6665,
+      "sha256": "c29200a20c94ff53bc7fffd8bb55e3641fcfd56d042755ad28cf397ff0d44038"
+    },
+    {
+      "path": "raw-evidence/review3/install/n2_review3_probe.py",
+      "bytes": 4233,
+      "sha256": "8effcb6936b65da313712fcde16908f020fbd5cb4f1ed7591009b7b3cb6fe34c"
+    },
+    {
+      "path": "raw-evidence/review3/install/raw-after/begin/journal-after.json",
+      "bytes": 12880,
+      "sha256": "49fa4117ffaee56cc25faf16d89be04a177659d0146fe99aa2f96f45226293f6"
+    },
+    {
+      "path": "raw-evidence/review3/install/raw-after/begin/journal-before.json",
+      "bytes": 12880,
+      "sha256": "49fa4117ffaee56cc25faf16d89be04a177659d0146fe99aa2f96f45226293f6"
+    },
+    {
+      "path": "raw-evidence/review3/install/raw-after/partial/journal-after.json",
+      "bytes": 13760,
+      "sha256": "21571c7f4ffaf748bd6dc39b4f61176e2bd977360a64c11051b40d6e9992c53a"
+    },
+    {
+      "path": "raw-evidence/review3/install/raw-after/partial/journal-before.json",
+      "bytes": 13760,
+      "sha256": "21571c7f4ffaf748bd6dc39b4f61176e2bd977360a64c11051b40d6e9992c53a"
+    },
+    {
+      "path": "raw-evidence/review3/install/raw-after/result.json",
+      "bytes": 38817,
+      "sha256": "c042999eefa8a2b77592e9b1850889f002758202cbdd1868b65efa5fd32cf15b"
+    },
+    {
+      "path": "raw-evidence/review3/install/raw-before/begin/journal-after.json",
+      "bytes": 34723,
+      "sha256": "fb22639869d38d455afdfebf94233dd7d469d0a5bfc98b68b9e1567daa83682a"
+    },
+    {
+      "path": "raw-evidence/review3/install/raw-before/begin/journal-before.json",
+      "bytes": 12939,
+      "sha256": "c4d1d1d96570e2eea72d970172c53c8d504e67166ed242e4dace02ec3eca0e50"
+    },
+    {
+      "path": "raw-evidence/review3/install/raw-before/partial/journal-after.json",
+      "bytes": 35916,
+      "sha256": "a09801e67419a558b1015040b48c455a33a68ff40edbfd757aa2a6fdd8ead427"
+    },
+    {
+      "path": "raw-evidence/review3/install/raw-before/partial/journal-before.json",
+      "bytes": 14226,
+      "sha256": "8b817d6d52459a52527c39d0bb3fca034534214e23ef86e7f12f5bf671134201"
+    },
+    {
+      "path": "raw-evidence/review3/install/raw-before/result.json",
+      "bytes": 50957,
+      "sha256": "93024af2fa0f6bbfa87e5ef8f76d3dee548de222b8599316c3ed88833c165742"
+    }
+  ],
+  "limits": [
+    "Synthetic prefixes/HOME/CODEX_HOME only; actual user HOME not activated.",
+    "Darwin primitive not executed locally; no power-loss claim.",
+    "Prior closed witness-null/Host/P3 findings stay closed; no new N6 run or user acceptance inferred.",
+    "Full final exact-head CI and designated current-head review remain separate."
+  ],
+  "first_after_diagnostic": {
+    "tests": 31,
+    "failed": 5,
+    "reason": "Old positives stopped at first incomplete witness; exact production seam retained as an explicit new negative. Positives now stop only once full old proof physically exists, before final witness acknowledgement. Original failed logs preserved.",
+    "log": "raw-evidence/review3/install/n2-review3-first-after.log",
+    "junit": "raw-evidence/review3/install/n2-review3-first-after.xml"
+  },
+  "commands": {
+    "before": ".venv/bin/python -m pytest -q tests/rebuild/test_install_preparation_coverage.py --basetemp=${PRIVATE_TMP}/n2-review3-before --junitxml=${PRIVATE_TMP}/n2-review3-before.xml",
+    "raw_before": ".venv/bin/python ${PRIVATE_TMP}/n2_review3_probe.py ${PRIVATE_TMP}/n2-review3-raw-before",
+    "raw_after": ".venv/bin/python ${PRIVATE_TMP}/n2_review3_probe.py ${PRIVATE_TMP}/n2-review3-raw-after",
+    "regression": ".venv/bin/python -m pytest -q tests/rebuild/test_install_transaction_recovery.py tests/rebuild/test_install_preparation_compatibility.py tests/rebuild/test_install_preparation_coverage.py tests/rebuild/test_rc3_install_four_links.py tests/rebuild/test_install_host_skill.py tests/rebuild/test_rc3_resource_inventory.py tests/rebuild/test_install.py::test_activation_failure_preserves_current_and_rollback tests/rebuild/test_review_round3.py tests/rebuild/test_review_round4.py --basetemp=${PRIVATE_TMP}/n2-review3-regression --junitxml=${PRIVATE_TMP}/n2-review3-regression.xml",
+    "matrix": ".venv/bin/python ${PRIVATE_TMP}/n2_review3_47.py",
+    "lint": ".venv/bin/python -m ruff check src/deck_master/install.py tests/rebuild/test_install_preparation_coverage.py tests/rebuild/test_install_preparation_compatibility.py tests/rebuild/test_install_transaction_recovery.py"
+  }
+}

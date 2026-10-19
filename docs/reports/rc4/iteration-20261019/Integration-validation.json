@@ -393,5 +393,16 @@
       "complete_final_ci_required": true
     },
     "new_exact_head_ci": "NOT_RUN_AT_ASSEMBLY"
+  },
+  "third_designated_review": {
+    "reviewed_head": "72a1bde8247ac0a1933f5e4b8bbc8496675303e9",
+    "source_sha": "97f41626771357ff51fcfdba7a510db9299233ac",
+    "record": "PR124-review3-resolution.md",
+    "before4": "FAIL retained",
+    "source309": "PASS",
+    "death47": "PASS42completed5rolled_back",
+    "installed254": "PASS",
+    "ledger_boundary16": "PASS",
+    "new_exact_head_ci": "NOT_RUN_AT_ASSEMBLY"
   }
 }
