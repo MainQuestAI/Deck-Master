@@ -6,19 +6,17 @@ The [70-AC execution ledger](execution-ledger.json) is the sole acceptance regis
 
 ## Designated review follow-up
 
-The designated review of head `53021ac8` requested changes for preparation-stage recovery, symlink Host directory compatibility, stale-coverage fallback and stale ledger summaries. The [review repair record](PR124-review-resolution.md) and sole ledger preserve each real counterexample, affected AC reassessment and targeted result. The earlier inode P1 remains closed. All four targeted repairs have passing actual evidence and a verified3167 clean build. A later product topbar-reload race changes a static asset and requires another clean build/installation proof; final new-head CI remains a separate required gate. The prior001c8f10 package is superseded by these P2 repairs.
+The designated review of head `53021ac8` requested changes for preparation-stage recovery, symlink Host directory compatibility, stale-coverage fallback and stale ledger summaries. The [review repair record](PR124-review-resolution.md) and sole ledger preserve each real counterexample, affected AC reassessment and targeted result. The earlier inode P1 remains closed. All four targeted repairs have passing actual evidence and a verified3167 clean build. The later product topbar-reload repair also has a new clean0c08 build and fresh installation proof; final new-head CI remains a separate required gate. The prior001c8f10 package is superseded by these P2 repairs.
 
 ## Candidate and distribution identity
 
-The3167 distribution below is a historical verified build. The later control-reload product fix changes `project.js`; current candidate bytes require a new clean wheel/sdist and fresh installation. The ledger explicitly returns the two installation checks to NOT_RUN until that proof exists.
+- Runtime and packaged-method source: `0c08aa599a3e56651fd3522967368f4a5dd374b2`, built from a clean worktree as `1.0.0rc4` after the actual control-reload product fix.
+- Wheel: `deck_master-1.0.0rc4-py3-none-any.whl`, SHA256 `cdb99975fa9224e9d2189822e032a11e06c878cd1875c5628d48bf6301042009`.
+- Sdist: `deck_master-1.0.0rc4.tar.gz`, SHA256 `c91360fed3247ef3000845224ceb722a10b55b15fa6ab97db77daccb85807f47`.
+- Release manifest identity: `0c08aa599a3e-cdb99975fa92`. Later evidence-only changes retain these Runtime/Skill/build input bytes; the final exact PR head/tree and complete CI are recorded in the handoff/checks.
+- Earlier fe19205c/001c8f10/3167 builds retain their original provenance and are superseded. No tag or GitHub Release was created.
 
-- Runtime and packaged-method source: `3167f123487c3a2ea91848d0bec705743fbec2e3`, built from a clean worktree as `1.0.0rc4`.
-- Subsequent evidence commits retain these runtime and packaged-method bytes. The prior fe19205c build is superseded after the real CI inode-reuse repair, rather than relabeled as the new package. The ledger records the exact validation basis; [Draft PR124](https://github.com/MainQuestAI/Deck-Master/pull/124) exposes its current head/tree and exact-head checks. Later test, tool-compatibility or evidence changes are not silently relabeled as the build's source commit.
-- Wheel: `deck_master-1.0.0rc4-py3-none-any.whl`, SHA256 `93ce9a2d453aff96a371db78a8309f06b629e5bf066c9187f550b91765997d9d`.
-- Sdist: `deck_master-1.0.0rc4.tar.gz`, SHA256 `ec9bf88635226a91221c76dc4501aec302e0aa92c0d0a5536dc53a41f71f884e`.
-- Release manifest identity: `3167f123487c-93ce9a2d453a`. Build files are retained outside Git; the handoff includes their locations and hashes. No tag or GitHub Release was created.
-
-[Installed-resource-identity.json](Installed-resource-identity.json) verifies the real wheel under an isolated interpreter outside the checkout: version and metadata agree, 23 canonical resources/four Skill entries and all 69 schemas match, 275 package members match the wheel, and I05 retains frozen method order and drift diagnostics. Dependencies use the observed system site packages; Deck Master and method bytes load from the new installed package. This is not user HOME activation or evidence that the earlier N6 source execution used that installed interpreter.
+[Installed-resource-identity.json](Installed-resource-identity.json) verifies the new wheel in a fresh isolated prefix outside the checkout: actual version and metadata agree, 23 canonical resources/four Skills,69schemas,275package members,90source modules and I05 are verified. The changed `project.js` source, wheel and installed bytes are exactly equal (SHA256 `e646dfa1de19a9700a7eefea767ef49fe3fc26aa5350e2c19bfadce099a613a7`). Dependencies use observed system site packages; Deck Master loads from the new installed package. The N6 source execution retains its original identity. [Actual installed control-reload browser validation](Installed-control-reload-browser.json) passes all six policy/recovery cases with47 loaded Runtime files from this wheel and no checkout borrowing.
 
 ## Behavior and compatibility
 
@@ -30,11 +28,11 @@ The3167 distribution below is a historical verified build. The later control-rel
 
 ## Verification and remaining gate
 
-Focused results overlap and must not be summed: N2 290 passed plus 47 real process-death cases; N3 final review/budget regression 118 passed; N4 history/recovery 166 passed, context/entry 64 passed, cache-disabled shared recovery 101 passed; N5 72 passed. Source Ruff and whitespace checks passed. Original Spec payload hashes remain 19/19 unchanged.
+Focused results overlap and must not be summed: N2 290 passed plus 47 real process-death cases; N3 final review/budget regression 118 passed; N4 original history/recovery166 passed, review-affected169 passed, context/entry 64 passed, cache-disabled shared recovery 101 passed; N5 72 passed. Source Ruff and whitespace checks passed. Original Spec payload hashes remain 19/19 unchanged.
 
 The retained bc6bd55a exact-head CI failed three installation ownership cases and four shallow-checkout historical fixture setups. Same-filesystem persistent inode witnesses repair the product bug; CI now fetches the single fixed RC3 baseline for genuine old-writer tests. The original assertions, failed logs and repair evidence are retained.
 
-A later review of the cancelled browser log exposed four setup errors. Explicit old-record fixture creation now retains historical semantics; all four affected browser cases plus a modern producer contrast passed with the required-browser flag, original UI assertions and timeouts unchanged. Those historical fixture repairs retained Runtime/Skill/build-input bytes. The later control-reload product fix is separately recorded in [its reproduction and regression evidence](Integration-control-reload-repair.json) and requires a new build.
+A later review of the cancelled browser log exposed four setup errors. Explicit old-record fixture creation now retains historical semantics; all four affected browser cases plus a modern producer contrast passed with the required-browser flag, original UI assertions and timeouts unchanged. Those historical fixture repairs retained Runtime/Skill/build-input bytes. The later control-reload product fix is separately recorded in [its reproduction and regression evidence](Integration-control-reload-repair.json) and has a new clean build and fresh isolated installation proof.
 
 The existing [Rebuilt Core Gate](../../../../.github/workflows/rebuild.yml) remains authoritative for Python 3.11/3.12 × Node 22/24 units, real rendering, required browser, installed wheel/offline UI and installed recovery. Assembly observations in the ledger are timestamped; the [live exact-head checks](https://github.com/MainQuestAI/Deck-Master/pull/124/checks) and final PR handoff carry the subsequent terminal outcome. Focused passes are not substituted for that gate. The local cloud environment lacks `rsvg-convert`; the first remote rendering group on validation commit `505330e20c46a0333e88dc85f5d87d57da9c1f0d` actually passed 133 tests with one existing external Frozen A skip. No old Frozen experiment was restarted as a development prerequisite.
 

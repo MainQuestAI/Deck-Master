@@ -37,3 +37,7 @@ python -m pytest -q tests/rebuild/test_iteration_ledger.py
 ## 读取当前状态的顶栏控制竞态
 
 ba14becb的PR整套CI为成功（491浏览器、9项离线UI、240安装恢复），同head push却在移动端第二次恢复审阅要求出现490PASS/1FAIL。真实1秒project响应延迟证明：loadRoute仅锁main，顶栏仍能打开冻结旧control base的表单；Runtime CAS正确拒绝。产品修复将现有inert/aria-busy生命周期扩展到controlSlot，并由当前读取generation的finally恢复，保持已打开表单的固定basis、政策、授权及CAS。原完整policy两视口不改；同延迟2PASS，控件/真实鼠标/成功或abort恢复及既有main恢复聚焦10PASS，最终测试handler尾部修正后新四例4PASS。见 [实际反例与证据](Integration-control-reload-repair.json)。这次实际静态资源变动另需新干净构建与安装证明；3167包保留历史身份，不重标为新包。原四项P2与两项后续CI问题分别记录。
+
+最新产品修复构建源 `0c08aa599a3e56651fd3522967368f4a5dd374b2`，source_dirty=false，release identity `0c08aa599a3e-cdb99975fa92`。新wheel SHA256 `cdb99975fa9224e9d2189822e032a11e06c878cd1875c5628d48bf6301042009`，sdist SHA256 `c91360fed3247ef3000845224ceb722a10b55b15fa6ab97db77daccb85807f47`。全新隔离安装身份与改变的project.js三方字节已核验；3167只作为四P2修复的历史干净构建保留。唯一台账仅在这份新证据实际通过后恢复两个安装AC；最终精确head CI仍单列。
+
+实际新安装包中的原policy两例与新保护四例进一步得到6PASS/0skip；47个已加载模块均来自该wheel且hash逐一匹配，静态资源同包，测试conftest的源码路径插入被拦截。见 [安装态浏览器证据](Installed-control-reload-browser.json)。此为合成工程验证，不重标N6执行或用户真实验收。

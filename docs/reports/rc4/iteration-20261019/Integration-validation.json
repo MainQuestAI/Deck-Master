@@ -208,7 +208,16 @@
       "before": "True1s project-response delay reproduces old second base_revision and correct409 conflict",
       "after": "Original two viewports with per-page real delay2PASS; original2+new4+existing navigation4=10PASS; final harness-tail correction new4 reverified4PASS",
       "runtime_changed": "project.js: existing inert/aria-busy lifecycle now includes topbar controlSlot",
-      "fresh_build_required": true
+      "fresh_build_required": false,
+      "clean_build_source_sha": "0c08aa599a3e56651fd3522967368f4a5dd374b2",
+      "new_isolated_installed_identity": "PASS; Installed-resource-identity.json",
+      "actual_new_installed_browser": {
+        "status": "PASS",
+        "passed": 6,
+        "seconds": 16.25,
+        "runtime_modules_from_new_wheel": 47,
+        "evidence": "Installed-control-reload-browser.json"
+      }
     }
   ],
   "final_gate": "Live exact-head Rebuilt Core Gate at PR124 remains separate and required.",
@@ -357,7 +366,7 @@
           "case": "test_user_can_explicitly_choose_and_restore_content_review_requirement[390-844]",
           "cause": "loadRoute blocked main actions while topbar control dialogs could still freeze old control facts",
           "repair": "Reuse existing current-generation busy/inert lifecycle for controlSlot; keep pinned open-form basis and core CAS unchanged",
-          "state": "Actual before1FAIL, delayed original after2PASS; final new4 regressionPASS; fresh build and new exact-head CI pending"
+          "state": "Actual before1FAIL, delayed original2PASS, final new4 regressionPASS; new clean0c08 build and isolated installed identityPASS; final evidence-head full CI required"
         }
       ],
       "separate_from_designated_four_findings_and_style_test_sync": true,

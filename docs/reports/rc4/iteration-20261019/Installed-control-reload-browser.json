@@ -1,0 +1,112 @@
+{
+  "status": "PASS",
+  "scope": "Only the requested six-case installed browser target; shared test/product source unchanged. No additional suites run.",
+  "code_source_declared": "0c08aa599a3e56651fd3522967368f4a5dd374b2",
+  "command": "${INSTALLED_VENV}/bin/python -I -B ${RAW_EVIDENCE}/verify-installed-control-browser.py",
+  "cwd": "${WORK_DIR}",
+  "isolated": 1,
+  "dont_write_bytecode": true,
+  "wheel": {
+    "path": "/workspace/rc4-build/1.0.0rc4-control-reload/deck_master-1.0.0rc4-py3-none-any.whl",
+    "sha256": "cdb99975fa9224e9d2189822e032a11e06c878cd1875c5628d48bf6301042009"
+  },
+  "runtime_origin": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/__init__.py",
+  "static_dir": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/resources/static",
+  "project_asset": {
+    "path": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/resources/static/v2/project.js",
+    "sha256": "e646dfa1de19a9700a7eefea767ef49fe3fc26aa5350e2c19bfadce099a613a7",
+    "wheel_sha256": "e646dfa1de19a9700a7eefea767ef49fe3fc26aa5350e2c19bfadce099a613a7"
+  },
+  "pytest_arguments": [
+    "-q",
+    "--tb=short",
+    "--require-browser",
+    "--basetemp=${RAW_EVIDENCE}/installed-control-browser-tests",
+    "--junitxml=${RAW_EVIDENCE}/integration-installed-control-browser.xml",
+    "${SOURCE_CHECKOUT}/tests/rebuild/test_rc3_review_policy_browser.py"
+  ],
+  "passed": 6,
+  "failed": 0,
+  "skipped": 0,
+  "seconds": 16.25,
+  "testcases": [
+    {
+      "classname": "tests.rebuild.test_rc3_review_policy_browser",
+      "name": "test_user_can_explicitly_choose_and_restore_content_review_requirement[1440-900]",
+      "outcome": "passed"
+    },
+    {
+      "classname": "tests.rebuild.test_rc3_review_policy_browser",
+      "name": "test_user_can_explicitly_choose_and_restore_content_review_requirement[390-844]",
+      "outcome": "passed"
+    },
+    {
+      "classname": "tests.rebuild.test_rc3_review_policy_browser",
+      "name": "test_pending_work_surface_read_blocks_control_dialog_and_restores[False-1440-900]",
+      "outcome": "passed"
+    },
+    {
+      "classname": "tests.rebuild.test_rc3_review_policy_browser",
+      "name": "test_pending_work_surface_read_blocks_control_dialog_and_restores[False-390-844]",
+      "outcome": "passed"
+    },
+    {
+      "classname": "tests.rebuild.test_rc3_review_policy_browser",
+      "name": "test_pending_work_surface_read_blocks_control_dialog_and_restores[True-1440-900]",
+      "outcome": "passed"
+    },
+    {
+      "classname": "tests.rebuild.test_rc3_review_policy_browser",
+      "name": "test_pending_work_surface_read_blocks_control_dialog_and_restores[True-390-844]",
+      "outcome": "passed"
+    }
+  ],
+  "module_audit": {
+    "before": 17,
+    "after": 47,
+    "all_installed_origin": true,
+    "loaded_module_files_verified_against_wheel": 47,
+    "dedicated_import_finder_enforced_installed_root": true,
+    "blocked_source_path_insertions": [
+      {
+        "path": "${SOURCE_CHECKOUT}/src",
+        "caller": "${SOURCE_CHECKOUT}/tests/rebuild/conftest.py"
+      }
+    ],
+    "test_dependency_path": "${SOURCE_CHECKOUT}/.venv/lib/python3.12/site-packages",
+    "parent_editable_pth_executed": false,
+    "note": "pytest dependency was unavailable in the new prefix; a plain trailing parent venv site directory supplied test dependencies. The installed deck_master package was imported and validated first, and conftest source insertion was rejected."
+  },
+  "target": {
+    "path": "${SOURCE_CHECKOUT}/tests/rebuild/test_rc3_review_policy_browser.py",
+    "sha256": "a0c740ccfef5a68f4b0dd41d4c32d46fd953e6546d44bf57b1e41d16ef75d460"
+  },
+  "real_model_calls": 0,
+  "artifacts_sha256": {
+    "verify-installed-control-browser.py": "d3659ed5ae6793e8b2d89f346d925397ab7fb7db76da0dc8a3d8b27db246e26f",
+    "integration-installed-control-browser.log": "7a16baa65fc080a4c5025c3daba3c138660911e43f2e30ab15e62728e6aa4206",
+    "integration-installed-control-browser-audit.json": "a3984027575343f7b22c3e365ed0a36c784a30c51be82e86dd366dd0c3483dc6",
+    "integration-installed-control-browser.xml": "1798d315b87f7f1bdac9fd5a1247cf5f9ebfd3ac9247d1f694c4c100ef01e66d",
+    "integration-installed-control-browser-module-hashes.json": "93fbfc357fd7024ee60a6092983b028bb81fa86380540f67174d375d700488af"
+  },
+  "limits": "Targeted installed-engineering evidence only; no full browser/whole-suite claim. Root owns final commit/ledger/publication and exact final CI.",
+  "schema_version": "rc4_installed_control_reload_browser.v1",
+  "build_binding": {
+    "source_sha": "0c08aa599a3e56651fd3522967368f4a5dd374b2",
+    "source_dirty": false,
+    "release_id": "0c08aa599a3e-cdb99975fa92",
+    "wheel_sha256": "cdb99975fa9224e9d2189822e032a11e06c878cd1875c5628d48bf6301042009"
+  },
+  "control_reload_asset": {
+    "path": "deck_master/resources/static/v2/project.js",
+    "sha256": "e646dfa1de19a9700a7eefea767ef49fe3fc26aa5350e2c19bfadce099a613a7",
+    "bytes": 29038,
+    "source_wheel_and_installed_identical": true
+  },
+  "runtime_module_wheel_hashes": {
+    "status": "PASS",
+    "count": 47,
+    "evidence": "integration-installed-control-browser-module-hashes.json",
+    "sha256": "93fbfc357fd7024ee60a6092983b028bb81fa86380540f67174d375d700488af"
+  }
+}

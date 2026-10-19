@@ -354,5 +354,28 @@
     "limitation": "These previous-head runs do not certify the new project.js product fix. A new clean build and exact-head CI remain required."
   },
   "final_owned_test_sha256": "a0c740ccfef5a68f4b0dd41d4c32d46fd953e6546d44bf57b1e41d16ef75d460",
-  "new_candidate_build": "NOT_RUN: new static asset requires new clean wheel/sdist and fresh isolated installation; source3167 remains retained historical evidence."
+  "new_candidate_build": {
+    "status": "PASS",
+    "source_sha": "0c08aa599a3e56651fd3522967368f4a5dd374b2",
+    "source_dirty": false,
+    "release_id": "0c08aa599a3e-cdb99975fa92",
+    "wheel_sha256": "cdb99975fa9224e9d2189822e032a11e06c878cd1875c5628d48bf6301042009",
+    "sdist_sha256": "c91360fed3247ef3000845224ceb722a10b55b15fa6ab97db77daccb85807f47",
+    "installed_identity": "Installed-resource-identity.json",
+    "control_asset": {
+      "path": "deck_master/resources/static/v2/project.js",
+      "sha256": "e646dfa1de19a9700a7eefea767ef49fe3fc26aa5350e2c19bfadce099a613a7",
+      "bytes": 29038,
+      "source_wheel_and_installed_identical": true
+    },
+    "final_exact_head_ci": "NOT_RUN_AT_ASSEMBLY",
+    "installed_targeted_browser": {
+      "status": "PASS",
+      "passed": 6,
+      "skipped": 0,
+      "seconds": 16.25,
+      "all_loaded_runtime_modules_from_wheel": 47,
+      "evidence": "Installed-control-reload-browser.json"
+    }
+  }
 }
