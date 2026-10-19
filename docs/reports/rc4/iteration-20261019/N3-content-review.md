@@ -154,8 +154,23 @@ an upgraded project and is refused with project bytes unchanged.
 - `python -m compileall -q src/deck_master` and `git diff --check`: passed.
 - `N3-method-inventory.json`: exhaustive source inventory, 23 canonical mapped
   resources, plus the actual default final Review manifest and aggregate digest.
-  It is source inventory evidence; final installed-wheel verification belongs
-  to the integration build and is not inferred from it.
+  It records the earlier source snapshot; final Skill/document edits are bound
+  by the separate installed-wheel evidence below rather than by rewriting this
+  historical inventory.
+- `Installed-resource-identity.json`: **PASS** on the actual isolated installed
+  `1.0.0rc4` wheel, SHA-256
+  `e6e1cf3a52c0e0993b7068eff78f9c710016bf9ee5172a930db48b52c31a19be`,
+  built clean from `fe19205c3c7c78574d46a39dd908fed4d716750b`. An isolated
+  `python -I -B` runs outside the checkout, with temporary HOME/Host directories
+  and shared system dependencies. The actual module loads from the installed
+  venv. All 23 canonical mappings, four public entries, 69 schemas, 275 package
+  members and 90 source Python modules match the wheel/installed/source bytes.
+  All four no-Task Skill readers return equivalent v1/v2 full methods; five
+  in-memory Review scope manifests resolve correctly through installed I05.
+  Fixed RC3 selector and injected-reader drift diagnostics preserve the frozen
+  manifest. The venv and isolated HOME file bytes are unchanged; no project,
+  committed Task, authorization, activation or external call is created.
+  Absolute-path raw evidence and the probe script remain outside the repository.
 
 The four deselected render cases were also attempted before the final focused
 run. Each stopped at the actual missing `rsvg-convert` executable:
@@ -181,7 +196,7 @@ integration Owner's responsibility.
 | N3-09 | actual create/continue/phase/input revision/Review; new_and_legacy_stamp_finalization_have_distinct_contracts; real change-action reissue; single schema mirror guard |
 | N3-10 | rc3_selector_does_not_inject_new_review_methods; fixed-baseline subprocess; strict changed/missing calibration tests; method_reissue_preserves_unspent_fixed_page_credit; spent/unknown fixed-credit and change-action-ceiling negatives |
 | N3-11 | test_rc4_work_context.py full/delta/manifest, cold context, stale cache, drift/missing basis and complete visual/source body tests; I05 byte-reader integration |
-| N3-12 | real_old_writer_refuses_before_any_project_bytes_change; first-floor pointer-failure test; true old receipt/adoption no-floor checks; existing collaboration/independent-review/trusted-receipt regressions; source inventory. Final wheel evidence supplied by integration Owner |
+| N3-12 | real_old_writer_refuses_before_any_project_bytes_change; first-floor pointer-failure test; true old receipt/adoption no-floor checks; existing collaboration/independent-review/trusted-receipt regressions; Installed-resource-identity.json binds actual installed wheel bytes, current I05, schema and four Skill identities |
 
 No merge, release, tag, deployment, actual-user HOME activation, authorization or
 credential modification was performed by this workstream. The root Owner owns

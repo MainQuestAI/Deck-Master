@@ -52,10 +52,18 @@ def test_classic_reader_keeps_original_preparation_floor_and_protocol(tmp_path,p
         kind='blueprint', scope_pages=['p1'], instruction='Originally stored pre-RC3 preparation',
         inputs=[page_ref, preparation_ref], dependencies=[], dispatch_revision=document['revision_id'],
         produced_against=models.content_identity(document))
+    # Explicit historical queue fixture: current producers freeze RC4 facts,
+    # while this old Task keeps its original selector and preparation contract.
+    task.pop('method_manifest', None)
+    task.pop('content_validation_policy', None)
+    from deck_master import method_resources
+    task['method_release'] = method_resources.method_release(
+        method_resources._read_ids(method_resources.rc3_method_ids_for(task['kind'])))
     recorded = models.bump_revision(document, {'operation_id': 'historical-queue-fixture',
         'kind': 'task_update', 'description': 'Explicit old reader facts; no public legacy dispatch', 'read_set': []})
     recorded['tasks'] = [store.put_json_object(task)]
     store.commit_change(base_revision=document['revision_id'], document=recorded, operation_id='historical-queue-fixture')
+    assert store.load_document().get('compatibility') == document.get('compatibility')
     before = source_snapshot(path)
     pointer = store.read_current()
     actual = tasks._lookup_task(store.load_document(), task['task_id'], store)

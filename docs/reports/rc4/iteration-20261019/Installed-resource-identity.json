@@ -1,0 +1,1027 @@
+{
+  "schema_version": "rc4_installed_resource_identity.v1",
+  "status": "PASS",
+  "evidence_level": "INSTALLED_SYNTHETIC_ENGINEERING_READ_ONLY",
+  "build_binding": {
+    "source_sha": "fe19205c3c7c78574d46a39dd908fed4d716750b",
+    "source_dirty": false,
+    "package_version": "1.0.0rc4",
+    "release_id": "fe19205c3c7c-e6e1cf3a52c0",
+    "wheel": "deck_master-1.0.0rc4-py3-none-any.whl",
+    "wheel_sha256": "e6e1cf3a52c0e0993b7068eff78f9c710016bf9ee5172a930db48b52c31a19be"
+  },
+  "execution": {
+    "python_executable": "${INSTALLED_VENV}/bin/python",
+    "python_prefix": "${INSTALLED_VENV}",
+    "isolated": true,
+    "bytecode_writes_disabled": true,
+    "cwd": "${ISOLATED_CONTEXT}/cwd",
+    "home": "${ISOLATED_CONTEXT}/home",
+    "codex_home": "${ISOLATED_CONTEXT}/codex",
+    "checkout_on_sys_path": false,
+    "include_system_site_packages": true,
+    "shared_dependency_identity": [
+      {
+        "distribution": "jsonschema",
+        "version": "4.26.0",
+        "module_origin": "${BASE_PYTHON}/lib/python3.12/site-packages/jsonschema/__init__.py",
+        "from_installed_venv": false
+      },
+      {
+        "distribution": "referencing",
+        "version": "0.37.0",
+        "module_origin": "${BASE_PYTHON}/lib/python3.12/site-packages/referencing/__init__.py",
+        "from_installed_venv": false
+      }
+    ],
+    "probe_script_sha256": "da0293411f2e25fe5741e1c54c409a34e06df2652dac962b9a8859f3d410f6bc",
+    "invocation": "${INSTALLED_VENV}/bin/python -I -B ${RAW_EVIDENCE}/verify_installed_resource_identity.py"
+  },
+  "installation_identity": {
+    "module_path": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/__init__.py",
+    "module_sha256": "e41bf0a4aeb0e2b4c59d13b1f30f7f557891d1e383d3c9881d40af82e3e9886c",
+    "python_executable": "${INSTALLED_VENV}/bin/python",
+    "python_prefix": "${INSTALLED_VENV}",
+    "method_root": "${INSTALLED_VENV}/lib/python3.12/site-packages/deck_master/resources/skill",
+    "method_source": "packaged",
+    "source": null,
+    "install": null,
+    "metadata_version": "1.0.0rc4"
+  },
+  "version_identity": {
+    "module": "1.0.0rc4",
+    "distribution_metadata": "1.0.0rc4",
+    "source_pyproject": "1.0.0rc4",
+    "source_module_literal": "1.0.0rc4"
+  },
+  "complete_mapping": {
+    "count": 23,
+    "exhaustive_source_and_installed_sets_equal": true,
+    "packaged_inventory_equals_release_inventory": true,
+    "resources": [
+      {
+        "target": "deck_master/resources/skill/SKILL.md",
+        "canonical_source": "skills/deck-master/SKILL.md",
+        "sha256": "b8f60d7e8aa57c61a7c3a8466786a59505e31980e5a26d586edf62e91faadbdd",
+        "byte_length": 5764,
+        "source_equals_wheel_equals_installed": true
+      },
+      {
+        "target": "deck_master/resources/skill/agents/openai.yaml",
+        "canonical_source": "skills/deck-master/agents/openai.yaml",
+        "sha256": "68aa81c35f89e4454e8a63bf1702a11d2be860e51d0f893132ea3a80fded63c3",
+        "byte_length": 395,
+        "source_equals_wheel_equals_installed": true
+      },
+      {
+        "target": "deck_master/resources/skill/references/blueprint-svg.md",
+        "canonical_source": "skills/deck-master/references/blueprint-svg.md",
+        "sha256": "8c9555109836ef1cda0ed492f8fd230bc122ab18a75411d4355b8e0d82118e9e",
+        "byte_length": 9288,
+        "source_equals_wheel_equals_installed": true
+      },
+      {
+        "target": "deck_master/resources/skill/references/candidates-and-stages.md",
+        "canonical_source": "skills/deck-master/references/candidates-and-stages.md",
+        "sha256": "44256876da6b75e31c9a6c40d33870644594d7c8bdae73624b0c233a4c44d7ec",
+        "byte_length": 3516,
+        "source_equals_wheel_equals_installed": true
+      },
+      {
+        "target": "deck_master/resources/skill/references/collaboration-routing.md",
+        "canonical_source": "skills/deck-master/references/collaboration-routing.md",
+        "sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11",
+        "byte_length": 5515,
+        "source_equals_wheel_equals_installed": true
+      },
+      {
+        "target": "deck_master/resources/skill/references/content-calibration.md",
+        "canonical_source": "skills/deck-master/references/content-calibration.md",
+        "sha256": "887046606283bd37bec51508408adf7a4ca931341b7e59374c49c09c2b266d70",
+        "byte_length": 9534,
+        "source_equals_wheel_equals_installed": true
+      },
+      {
+        "target": "deck_master/resources/skill/references/content-examples.md",
+        "canonical_source": "skills/deck-master/references/content-examples.md",
+        "sha256": "fbaa97f19b20fe7a103c6cdae263083a8aa579cbb2acddaeee1f50bd686e275a",
+        "byte_length": 15858,
+        "source_equals_wheel_equals_installed": true
+      },
+      {
+        "target": "deck_master/resources/skill/references/content-methods.md",
+        "canonical_source": "skills/deck-master/references/content-methods.md",
+        "sha256": "179924ef334196ae5aabe93707a8e3df4c11e957e22911fd6bbbc3a4e8fdff22",
+        "byte_length": 18732,
+        "source_equals_wheel_equals_installed": true
+      },
+      {
+        "target": "deck_master/resources/skill/references/icon-quality.md",
+        "canonical_source": "skills/deck-master/references/icon-quality.md",
+        "sha256": "a178377f8d956c6bc42b534905962c57073b615d58ddde566dffdef5314a000b",
+        "byte_length": 2485,
+        "source_equals_wheel_equals_installed": true
+      },
+      {
+        "target": "deck_master/resources/skill/references/input-update.md",
+        "canonical_source": "skills/deck-master/references/input-update.md",
+        "sha256": "1f6da62d01532069907f46e29414d65980b61ddd72e9e130541ee49a6a16c756",
+        "byte_length": 8139,
+        "source_equals_wheel_equals_installed": true
+      },
+      {
+        "target": "deck_master/resources/skill/references/installation.md",
+        "canonical_source": "skills/deck-master/references/installation.md",
+        "sha256": "301d56bceb9e2accb5391e2d6abf77e2b57ac98c183395a8927d9fe7c2f337ec",
+        "byte_length": 10982,
+        "source_equals_wheel_equals_installed": true
+      },
+      {
+        "target": "deck_master/resources/skill/references/physical-units.md",
+        "canonical_source": "skills/deck-master/references/physical-units.md",
+        "sha256": "282ce2943df8b4030898ba33ab8055fd115acf9f31931499c1e4c22f50670ff3",
+        "byte_length": 3194,
+        "source_equals_wheel_equals_installed": true
+      },
+      {
+        "target": "deck_master/resources/skill/references/review-and-repair.md",
+        "canonical_source": "skills/deck-master/references/review-and-repair.md",
+        "sha256": "4b5f4117d6588c0db5f6aee5295c8f55efb1dbe87fd87f0c361783fba697958f",
+        "byte_length": 6507,
+        "source_equals_wheel_equals_installed": true
+      },
+      {
+        "target": "deck_master/resources/skill/references/source-reading.md",
+        "canonical_source": "skills/deck-master/references/source-reading.md",
+        "sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08",
+        "byte_length": 6353,
+        "source_equals_wheel_equals_installed": true
+      },
+      {
+        "target": "deck_master/resources/skill/references/style-calibration.md",
+        "canonical_source": "skills/deck-master/references/style-calibration.md",
+        "sha256": "f61172e78ebcd21f8848400d5d03375b6d80564675a628e6459fb9efdb3e889f",
+        "byte_length": 4977,
+        "source_equals_wheel_equals_installed": true
+      },
+      {
+        "target": "deck_master/resources/skill/references/visual-reference.md",
+        "canonical_source": "skills/deck-master/references/visual-reference.md",
+        "sha256": "a0ef82bd88ff1712da8c67a6db0cc454fe9b401727f02b6c40f364e8e0696a52",
+        "byte_length": 1739,
+        "source_equals_wheel_equals_installed": true
+      },
+      {
+        "target": "deck_master/resources/skills/RESOLVER.md",
+        "canonical_source": "skills/RESOLVER.md",
+        "sha256": "73f4d8613c1d27b40beb1598df61b907f4bb084c8ec20113ee24639ef63af299",
+        "byte_length": 994,
+        "source_equals_wheel_equals_installed": true
+      },
+      {
+        "target": "deck_master/resources/skills/deck-content/SKILL.md",
+        "canonical_source": "skills/deck-content/SKILL.md",
+        "sha256": "339c04563c23d533b3cf78b8eb3464e02c1c3ef4cde651d9a65f78e41b6b0723",
+        "byte_length": 6029,
+        "source_equals_wheel_equals_installed": true
+      },
+      {
+        "target": "deck_master/resources/skills/deck-content/agents/openai.yaml",
+        "canonical_source": "skills/deck-content/agents/openai.yaml",
+        "sha256": "fad8f336ddd95f77fa736d141b51b2421cdc603dbfaa9c511b4be594986c1bed",
+        "byte_length": 400,
+        "source_equals_wheel_equals_installed": true
+      },
+      {
+        "target": "deck_master/resources/skills/deck-design/SKILL.md",
+        "canonical_source": "skills/deck-design/SKILL.md",
+        "sha256": "dcf595af61e5f9df3ef2a6d9e5a178c7292064c322bbcbfa0078bc53fd98d817",
+        "byte_length": 5552,
+        "source_equals_wheel_equals_installed": true
+      },
+      {
+        "target": "deck_master/resources/skills/deck-design/agents/openai.yaml",
+        "canonical_source": "skills/deck-design/agents/openai.yaml",
+        "sha256": "de93c548a95cee0676b4650c7588d5f17fb915da0bbe4a88417a293cf31d6664",
+        "byte_length": 410,
+        "source_equals_wheel_equals_installed": true
+      },
+      {
+        "target": "deck_master/resources/skills/deck-review/SKILL.md",
+        "canonical_source": "skills/deck-review/SKILL.md",
+        "sha256": "a80cdc760c5410fb65f7b4563a4498cb9b1f30f8a449e204aed4e9d2c896dd38",
+        "byte_length": 5646,
+        "source_equals_wheel_equals_installed": true
+      },
+      {
+        "target": "deck_master/resources/skills/deck-review/agents/openai.yaml",
+        "canonical_source": "skills/deck-review/agents/openai.yaml",
+        "sha256": "c48c2292832b0d1a97cd42aca6919b8591f8f922a1ec61964a7a543703d1cfc0",
+        "byte_length": 415,
+        "source_equals_wheel_equals_installed": true
+      }
+    ]
+  },
+  "all_packaged_members_match_installed": {
+    "count": 275,
+    "all_match": true
+  },
+  "source_module_bytes_match_wheel": {
+    "count": 90,
+    "all_match": true
+  },
+  "public_skills": [
+    {
+      "skill": "deck-master",
+      "entry_sha256": "b8f60d7e8aa57c61a7c3a8466786a59505e31980e5a26d586edf62e91faadbdd",
+      "host_descriptor_sha256": "68aa81c35f89e4454e8a63bf1702a11d2be860e51d0f893132ea3a80fded63c3",
+      "methods": [
+        {
+          "id": "collaboration-routing",
+          "relative_path": "references/collaboration-routing.md",
+          "sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11"
+        },
+        {
+          "id": "input-update",
+          "relative_path": "references/input-update.md",
+          "sha256": "1f6da62d01532069907f46e29414d65980b61ddd72e9e130541ee49a6a16c756"
+        },
+        {
+          "id": "review-and-repair",
+          "relative_path": "references/review-and-repair.md",
+          "sha256": "4b5f4117d6588c0db5f6aee5295c8f55efb1dbe87fd87f0c361783fba697958f"
+        }
+      ],
+      "v1_v2_full_equivalent": true,
+      "host_application": "not_recorded"
+    },
+    {
+      "skill": "deck-content",
+      "entry_sha256": "339c04563c23d533b3cf78b8eb3464e02c1c3ef4cde651d9a65f78e41b6b0723",
+      "host_descriptor_sha256": "fad8f336ddd95f77fa736d141b51b2421cdc603dbfaa9c511b4be594986c1bed",
+      "methods": [
+        {
+          "id": "collaboration-routing",
+          "relative_path": "references/collaboration-routing.md",
+          "sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11"
+        },
+        {
+          "id": "source-reading",
+          "relative_path": "references/source-reading.md",
+          "sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08"
+        },
+        {
+          "id": "content-methods",
+          "relative_path": "references/content-methods.md",
+          "sha256": "179924ef334196ae5aabe93707a8e3df4c11e957e22911fd6bbbc3a4e8fdff22"
+        },
+        {
+          "id": "content-examples",
+          "relative_path": "references/content-examples.md",
+          "sha256": "fbaa97f19b20fe7a103c6cdae263083a8aa579cbb2acddaeee1f50bd686e275a"
+        },
+        {
+          "id": "input-update",
+          "relative_path": "references/input-update.md",
+          "sha256": "1f6da62d01532069907f46e29414d65980b61ddd72e9e130541ee49a6a16c756"
+        }
+      ],
+      "v1_v2_full_equivalent": true,
+      "host_application": "not_recorded"
+    },
+    {
+      "skill": "deck-design",
+      "entry_sha256": "dcf595af61e5f9df3ef2a6d9e5a178c7292064c322bbcbfa0078bc53fd98d817",
+      "host_descriptor_sha256": "de93c548a95cee0676b4650c7588d5f17fb915da0bbe4a88417a293cf31d6664",
+      "methods": [
+        {
+          "id": "collaboration-routing",
+          "relative_path": "references/collaboration-routing.md",
+          "sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11"
+        },
+        {
+          "id": "visual-reference",
+          "relative_path": "references/visual-reference.md",
+          "sha256": "a0ef82bd88ff1712da8c67a6db0cc454fe9b401727f02b6c40f364e8e0696a52"
+        },
+        {
+          "id": "style-calibration",
+          "relative_path": "references/style-calibration.md",
+          "sha256": "f61172e78ebcd21f8848400d5d03375b6d80564675a628e6459fb9efdb3e889f"
+        },
+        {
+          "id": "candidates-and-stages",
+          "relative_path": "references/candidates-and-stages.md",
+          "sha256": "44256876da6b75e31c9a6c40d33870644594d7c8bdae73624b0c233a4c44d7ec"
+        },
+        {
+          "id": "blueprint-svg",
+          "relative_path": "references/blueprint-svg.md",
+          "sha256": "8c9555109836ef1cda0ed492f8fd230bc122ab18a75411d4355b8e0d82118e9e"
+        },
+        {
+          "id": "physical-units",
+          "relative_path": "references/physical-units.md",
+          "sha256": "282ce2943df8b4030898ba33ab8055fd115acf9f31931499c1e4c22f50670ff3"
+        }
+      ],
+      "v1_v2_full_equivalent": true,
+      "host_application": "not_recorded"
+    },
+    {
+      "skill": "deck-review",
+      "entry_sha256": "a80cdc760c5410fb65f7b4563a4498cb9b1f30f8a449e204aed4e9d2c896dd38",
+      "host_descriptor_sha256": "c48c2292832b0d1a97cd42aca6919b8591f8f922a1ec61964a7a543703d1cfc0",
+      "methods": [
+        {
+          "id": "collaboration-routing",
+          "relative_path": "references/collaboration-routing.md",
+          "sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11"
+        },
+        {
+          "id": "source-reading",
+          "relative_path": "references/source-reading.md",
+          "sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08"
+        },
+        {
+          "id": "content-methods",
+          "relative_path": "references/content-methods.md",
+          "sha256": "179924ef334196ae5aabe93707a8e3df4c11e957e22911fd6bbbc3a4e8fdff22"
+        },
+        {
+          "id": "content-calibration",
+          "relative_path": "references/content-calibration.md",
+          "sha256": "887046606283bd37bec51508408adf7a4ca931341b7e59374c49c09c2b266d70"
+        },
+        {
+          "id": "review-and-repair",
+          "relative_path": "references/review-and-repair.md",
+          "sha256": "4b5f4117d6588c0db5f6aee5295c8f55efb1dbe87fd87f0c361783fba697958f"
+        },
+        {
+          "id": "physical-units",
+          "relative_path": "references/physical-units.md",
+          "sha256": "282ce2943df8b4030898ba33ab8055fd115acf9f31931499c1e4c22f50670ff3"
+        }
+      ],
+      "v1_v2_full_equivalent": true,
+      "host_application": "not_recorded"
+    }
+  ],
+  "schemas": {
+    "unique_files": 69,
+    "registered_file_count": 67,
+    "all_registered_files_present": true,
+    "existing_unregistered_read_contracts": [
+      "page-lineage.v1.schema.json",
+      "workbench-summary.v1.schema.json"
+    ],
+    "files": [
+      {
+        "file": "action-targets.v1.schema.json",
+        "sha256": "64f3770f0f8a1c2857f3429363dc8fe25c688daa3ce7f7f2b3ff0ab8911a8932",
+        "source_equals_installed": true
+      },
+      {
+        "file": "annotation-batch.v1.schema.json",
+        "sha256": "b60a3ecfa43c364716e64e8e4e2e817a3fd670f1223650127dba2e4a169866bf",
+        "source_equals_installed": true
+      },
+      {
+        "file": "annotation-list.v1.schema.json",
+        "sha256": "c5104cf3ac7f1e6efd5dc706f0c7f144432855d1aa74f2789dba9d9e269599f0",
+        "source_equals_installed": true
+      },
+      {
+        "file": "annotation.v1.schema.json",
+        "sha256": "c9aa3a730698550c6b1d991dca97f99af2da54011334b9e222b90b12619f55e0",
+        "source_equals_installed": true
+      },
+      {
+        "file": "artifact.v1.schema.json",
+        "sha256": "160b854726b5fbef168559baff585ce453524dae5508a63ce753c97f6458bfc4",
+        "source_equals_installed": true
+      },
+      {
+        "file": "authenticated-review-receipt.v1.schema.json",
+        "sha256": "3c1d72c0d0134bcdc70d2ec4dd9a3d9b182035d34d218d4e5279993f26081a87",
+        "source_equals_installed": true
+      },
+      {
+        "file": "candidate-adoption.v1.schema.json",
+        "sha256": "51c1f5074db7cb0319c5264cffa21ada22a67e3986d6a1243229aef28301f13e",
+        "source_equals_installed": true
+      },
+      {
+        "file": "candidate-decision.v1.schema.json",
+        "sha256": "ab4f8efbb74be2f1ffbd2d47dc40dc8e65acd5b403f2f7acf1fd299303cdda3d",
+        "source_equals_installed": true
+      },
+      {
+        "file": "candidate-selection.v1.schema.json",
+        "sha256": "6111b953a4b8f2d91c3c0733e72049116d4445eded630e1e5f63aa197e69cc31",
+        "source_equals_installed": true
+      },
+      {
+        "file": "candidate.v1.schema.json",
+        "sha256": "565edfb2378d506032f9d848c712ef9ddcf49fdd2f357fd9e360032b2b4e66ef",
+        "source_equals_installed": true
+      },
+      {
+        "file": "change-intent.v1.schema.json",
+        "sha256": "b6a69249e71c31266b53d825e58945e1e9b747c5e9d74bc4799b6dc52214dff7",
+        "source_equals_installed": true
+      },
+      {
+        "file": "change-plan.v1.schema.json",
+        "sha256": "cb3306100c71effb8cbbbcb9afe89bdca9eacd593ca0dba09482f25f99f0d943",
+        "source_equals_installed": true
+      },
+      {
+        "file": "change-set.v1.schema.json",
+        "sha256": "4d4a373703d48a9a3371ac0d8205a9467b62894d769f3fdb2a12d192acd7059d",
+        "source_equals_installed": true
+      },
+      {
+        "file": "collaboration-authorization.v1.schema.json",
+        "sha256": "dba86733df9844574e3df1c42bdd7b0b581f6fa10fb846a2674a4cfb12c3e1de",
+        "source_equals_installed": true
+      },
+      {
+        "file": "collaboration-decision.v1.schema.json",
+        "sha256": "603113ea531cca99d314d4cabf3ddb2ba952b6137ac05c045335399e08d8d8f5",
+        "source_equals_installed": true
+      },
+      {
+        "file": "collaboration.v1.schema.json",
+        "sha256": "55208be7701a78c99814c8e3e6506b6ffd1dd49264018a738256cbe92f21d2bf",
+        "source_equals_installed": true
+      },
+      {
+        "file": "compose-result.v2.schema.json",
+        "sha256": "10d256cbc7e6d35ea3d8edd6bc9abb51bd9c4af54125bceda2d23fba729af54c",
+        "source_equals_installed": true
+      },
+      {
+        "file": "content-basis.v1.schema.json",
+        "sha256": "d04fb5e3cdcc3c0295b6e9cf34e29a2bfba42e48b45c1009d0e4961362f2bc3c",
+        "source_equals_installed": true
+      },
+      {
+        "file": "content-operation-input.v1.schema.json",
+        "sha256": "fb5331ac4ebff01810c8e0f7cb189b318689df938826fc519699664b5ff1aef3",
+        "source_equals_installed": true
+      },
+      {
+        "file": "content-operation-plan.v1.schema.json",
+        "sha256": "ecaaacc944b1937aafd2ec6be42aeda3ac54dd258a46fe186aadf406ab2392c2",
+        "source_equals_installed": true
+      },
+      {
+        "file": "content-plan-input.v1.schema.json",
+        "sha256": "a652df923085978daef883c6b6a7c9c12f29764ce0f0279694b318d21dda423e",
+        "source_equals_installed": true
+      },
+      {
+        "file": "content-plan-input.v2.schema.json",
+        "sha256": "c66b18f92a7648b27bfa0b204dbeb4d02a93e2ec04d83f68ea1f12ffec3babb0",
+        "source_equals_installed": true
+      },
+      {
+        "file": "content-plan.v1.schema.json",
+        "sha256": "3f6281d9ce720f7a5a62f3476412e710435462b64ee25db4e755a055e248851b",
+        "source_equals_installed": true
+      },
+      {
+        "file": "content-plan.v2.schema.json",
+        "sha256": "a95b03ea6eaf67451c911b134a87f9081d35749da502c436bec98ed112bf1d82",
+        "source_equals_installed": true
+      },
+      {
+        "file": "content-requirements.v1.schema.json",
+        "sha256": "95d816f2196eceafa70c7c53f5cd3fcf1b93f28a4aa9b997deea76209631f8bc",
+        "source_equals_installed": true
+      },
+      {
+        "file": "document.v1.schema.json",
+        "sha256": "3fd3a86c932c277619c01a67bbb2b7f1c029e22cec044abea444cd37ae4a3197",
+        "source_equals_installed": true
+      },
+      {
+        "file": "export-manifest.v1.schema.json",
+        "sha256": "06dc96a68be11a622b431a558ccd619cf53444b89f7ccbca470545a728b50388",
+        "source_equals_installed": true
+      },
+      {
+        "file": "generation-attempt.v1.schema.json",
+        "sha256": "d2f175120a286d235db33fcefef7190156aa3f1e6cce57289e7816ec7b8be5a2",
+        "source_equals_installed": true
+      },
+      {
+        "file": "generation-input.v1.schema.json",
+        "sha256": "3169ddf2870a4dce34cb1818b5c4d5a1a013af4f66f6fd1966630b6f749b53cf",
+        "source_equals_installed": true
+      },
+      {
+        "file": "generation-request.v1.schema.json",
+        "sha256": "aeffd782e100d34b90981142c81eda50165862061cf0f6a4613f432f13082053",
+        "source_equals_installed": true
+      },
+      {
+        "file": "handoff.v1.schema.json",
+        "sha256": "fba6be613a05ef2455cd2c7a05724bfc5a77a8cf64fecddd620bd8a36da6d5ca",
+        "source_equals_installed": true
+      },
+      {
+        "file": "icon-input.v1.schema.json",
+        "sha256": "93678f038ba5aed542c09d392ff8e257118f8af417e1e10d81792fc4d3400e31",
+        "source_equals_installed": true
+      },
+      {
+        "file": "icon-recipe.v1.schema.json",
+        "sha256": "de8bca035827c403a5916e05abfb7b27d7e2fd6a7566ffda46b5a813a64c1d0c",
+        "source_equals_installed": true
+      },
+      {
+        "file": "narrative.v1.schema.json",
+        "sha256": "0a6520977528f6089095c2f48d5108f22658a6a1aac91ce50d9c0e92fe8745c9",
+        "source_equals_installed": true
+      },
+      {
+        "file": "native-image-receipt.v1.schema.json",
+        "sha256": "3b0cba2a464bbf4eabc24ee123d53498c560b37177976b2121a03305e2d817ff",
+        "source_equals_installed": true
+      },
+      {
+        "file": "operation-commit.v1.schema.json",
+        "sha256": "5f2a2c5dc618625d4583924804d02ba3dc300a1d082ee75373a0e3bba222dedd",
+        "source_equals_installed": true
+      },
+      {
+        "file": "page-derivation.v1.schema.json",
+        "sha256": "0cf1ef106bb133f9e811ac0de89fe6789755ac4d949f258f3dceeaf0ec893295",
+        "source_equals_installed": true
+      },
+      {
+        "file": "page-lineage.v1.schema.json",
+        "sha256": "6415748939d81fef58f19e3ed925aa78e37e48f1a42f6ada8ac61b20a78171e1",
+        "source_equals_installed": true
+      },
+      {
+        "file": "page.v2.schema.json",
+        "sha256": "6085b6af0e3be18514d176ddae50368117c09b4e4bc107cddce0df6aeeaa5a42",
+        "source_equals_installed": true
+      },
+      {
+        "file": "restore-plan.v1.schema.json",
+        "sha256": "08650d81b4eec9ab237bc82c43b71612aed089bc5913650f600d5f98d89e2cdc",
+        "source_equals_installed": true
+      },
+      {
+        "file": "result-reading.v1.schema.json",
+        "sha256": "def4c35ca1ac16e2e237007b050ff9ca5e553d8d9269e71c84401c87b451f6b3",
+        "source_equals_installed": true
+      },
+      {
+        "file": "review.v1.schema.json",
+        "sha256": "1ebff73c5cb747ef6295d14192c6971e7247014ad201ba3a37c9d8e795caacd9",
+        "source_equals_installed": true
+      },
+      {
+        "file": "review.v2.schema.json",
+        "sha256": "da6bb32c2aaed98e563348929b8003a55b887796c03571c6966848f4ca152120",
+        "source_equals_installed": true
+      },
+      {
+        "file": "style-input.v1.schema.json",
+        "sha256": "f77dffd56e80583e2070196ddebc4d45f5654ccf1a0ab2ea73964a79892ff676",
+        "source_equals_installed": true
+      },
+      {
+        "file": "style-input.v2.schema.json",
+        "sha256": "4504de42be8d21a6bcc063c7956ad7ac570c0e8f30e1c9279c0d39390a794f3c",
+        "source_equals_installed": true
+      },
+      {
+        "file": "style-input.v3.schema.json",
+        "sha256": "c2a3cf6593c7c8dded3513a282c73f7f92bcdc4331d70f00f16269144d0288b9",
+        "source_equals_installed": true
+      },
+      {
+        "file": "style-proposal.v1.schema.json",
+        "sha256": "749d07204beb47e82fc927c6366e9bb217e4fb881258039c4866a50a8eeed4fb",
+        "source_equals_installed": true
+      },
+      {
+        "file": "style-proposal.v2.schema.json",
+        "sha256": "566b044be1c99abdf8080dc53237f1677a1d3858bba46b8bb62d1728b512aa34",
+        "source_equals_installed": true
+      },
+      {
+        "file": "style-proposal.v3.schema.json",
+        "sha256": "f050df10e89a4c0674a27a429778e4a64b2dbf623b0dca104fa1f6eaf50b469f",
+        "source_equals_installed": true
+      },
+      {
+        "file": "style-recipe.v1.schema.json",
+        "sha256": "6d3af31d59529b1f126c9642c04010c278729e35c1a50358e78a4ebd42632b91",
+        "source_equals_installed": true
+      },
+      {
+        "file": "style-recipe.v2.schema.json",
+        "sha256": "99272084ae9db40b0f68249342ecb0ad736dd22aa9705dfa2e65d643ec5fe034",
+        "source_equals_installed": true
+      },
+      {
+        "file": "style-recipe.v3.schema.json",
+        "sha256": "fd8a2eca4495d0a7bd20901bc173b8539d4dd1440cca888967cccc037c0b3661",
+        "source_equals_installed": true
+      },
+      {
+        "file": "style-reference.v1.schema.json",
+        "sha256": "e2653d82ddff3012d0708c22bd3bf776b92992a810f412a0c72f8316cf219695",
+        "source_equals_installed": true
+      },
+      {
+        "file": "task.v1.schema.json",
+        "sha256": "bf1d0606c1ee758d7a8891932bbde05ae9874ead3ba92903335d57d846c419ac",
+        "source_equals_installed": true
+      },
+      {
+        "file": "text-range.v1.schema.json",
+        "sha256": "740f00bde01a834574041d6b76fb1556fc1fa2fd614b4a9931e4498f0c29dc95",
+        "source_equals_installed": true
+      },
+      {
+        "file": "thumbnail.v1.schema.json",
+        "sha256": "e1f728c8f081b27dbd204aeab64978dcdc34c21d345a721158432465a55ea637",
+        "source_equals_installed": true
+      },
+      {
+        "file": "tool-observation.v1.schema.json",
+        "sha256": "39140ea7bcb1594c3a5e6ab3d6bc437a6eee410eb76e5a4ec56a8d996a0a5939",
+        "source_equals_installed": true
+      },
+      {
+        "file": "ui-clear-backup.v1.schema.json",
+        "sha256": "08d0a4fb71c772c19e8b5c7bf2c73dff66f6e29945f15d0bdbfe0a6ecf578192",
+        "source_equals_installed": true
+      },
+      {
+        "file": "ui-clear-plan.v1.schema.json",
+        "sha256": "32cdf1d2725eff1bd355f2a28257d580b329dae462d440b3b77381e7df0aaa5f",
+        "source_equals_installed": true
+      },
+      {
+        "file": "ui-clear-result.v1.schema.json",
+        "sha256": "fa66e6189f35df8e2ee15d1ed4b1a022a893145cccf6b83b3603749ebb7090f3",
+        "source_equals_installed": true
+      },
+      {
+        "file": "ui-draft-record.v1.schema.json",
+        "sha256": "05a54497f367d782656101cd389e35a20ea31638c7760a701a2d998eaedfa436",
+        "source_equals_installed": true
+      },
+      {
+        "file": "ui-draft-recovery.v1.schema.json",
+        "sha256": "282d4bf684923939b1a331a3c5b68301c47428873f870021edfac5e22ee45b80",
+        "source_equals_installed": true
+      },
+      {
+        "file": "ui-draft.v1.schema.json",
+        "sha256": "00d85a6745f60bd253b69ea354a63419b35b7f181ed3b14f802a14e037ee1246",
+        "source_equals_installed": true
+      },
+      {
+        "file": "ui-gallery.v1.schema.json",
+        "sha256": "41df2687b79f0215f433a0577f892f3fe5f3c8433964d5499cd55e275729b955",
+        "source_equals_installed": true
+      },
+      {
+        "file": "ui-overview.v1.schema.json",
+        "sha256": "b9d5c371cb96a24658bba1e3fe5f12d374135f45d86da5bb118113e44bddab6b",
+        "source_equals_installed": true
+      },
+      {
+        "file": "ui-position.v1.schema.json",
+        "sha256": "8558cb2542baf0167fe56ae2f90f7f39a8cff9354e6d1c6b7f1256db5f79dbd1",
+        "source_equals_installed": true
+      },
+      {
+        "file": "visual-style-spec.v1.schema.json",
+        "sha256": "930472fda784d2324e02e0799e6edb86dda3a066cbe458c805a484fdfadba55f",
+        "source_equals_installed": true
+      },
+      {
+        "file": "work-context.v2.schema.json",
+        "sha256": "fb5faf3930f156f7bd88a375b7c5f9b9fd096c12b6607276db6d30c146c02649",
+        "source_equals_installed": true
+      },
+      {
+        "file": "workbench-summary.v1.schema.json",
+        "sha256": "5c60823ee19666aefba6fdfb6d2b9f3ceea855c9a7f4402dd521892f7e6541b0",
+        "source_equals_installed": true
+      }
+    ],
+    "work_context_v2_validated_for_all_four_skills": true,
+    "rc4_optional_task_fields_and_writer_floor_present": true
+  },
+  "capabilities": {
+    "status": "ready",
+    "read_protocols": [
+      {
+        "protocol": "work_context.v2",
+        "body_modes": [
+          "full",
+          "delta",
+          "manifest"
+        ],
+        "default_body_mode": "full",
+        "cache_offer_requires_observed_context": true
+      }
+    ],
+    "review_channel_status": "needs_reviewer",
+    "verified_user_events": false,
+    "independent_review_receipts": false,
+    "human_review_receipts": false,
+    "method_release": {
+      "release_id": "1.0.0rc4",
+      "methods_sha256": "192b82660dac0af14a0f61bfd333a26df20e903c7fabe20da870cbbd16005865"
+    },
+    "methods": [
+      {
+        "id": "collaboration-routing",
+        "relative_path": "references/collaboration-routing.md",
+        "sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11",
+        "available": true
+      },
+      {
+        "id": "physical-units",
+        "relative_path": "references/physical-units.md",
+        "sha256": "282ce2943df8b4030898ba33ab8055fd115acf9f31931499c1e4c22f50670ff3",
+        "available": true
+      },
+      {
+        "id": "style-calibration",
+        "relative_path": "references/style-calibration.md",
+        "sha256": "f61172e78ebcd21f8848400d5d03375b6d80564675a628e6459fb9efdb3e889f",
+        "available": true
+      },
+      {
+        "id": "candidates-and-stages",
+        "relative_path": "references/candidates-and-stages.md",
+        "sha256": "44256876da6b75e31c9a6c40d33870644594d7c8bdae73624b0c233a4c44d7ec",
+        "available": true
+      },
+      {
+        "id": "icon-quality",
+        "relative_path": "references/icon-quality.md",
+        "sha256": "a178377f8d956c6bc42b534905962c57073b615d58ddde566dffdef5314a000b",
+        "available": true
+      },
+      {
+        "id": "visual-reference",
+        "relative_path": "references/visual-reference.md",
+        "sha256": "a0ef82bd88ff1712da8c67a6db0cc454fe9b401727f02b6c40f364e8e0696a52",
+        "available": true
+      },
+      {
+        "id": "source-reading",
+        "relative_path": "references/source-reading.md",
+        "sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08",
+        "available": true
+      },
+      {
+        "id": "content-methods",
+        "relative_path": "references/content-methods.md",
+        "sha256": "179924ef334196ae5aabe93707a8e3df4c11e957e22911fd6bbbc3a4e8fdff22",
+        "available": true
+      },
+      {
+        "id": "content-examples",
+        "relative_path": "references/content-examples.md",
+        "sha256": "fbaa97f19b20fe7a103c6cdae263083a8aa579cbb2acddaeee1f50bd686e275a",
+        "available": true
+      },
+      {
+        "id": "content-calibration",
+        "relative_path": "references/content-calibration.md",
+        "sha256": "887046606283bd37bec51508408adf7a4ca931341b7e59374c49c09c2b266d70",
+        "available": true
+      },
+      {
+        "id": "input-update",
+        "relative_path": "references/input-update.md",
+        "sha256": "1f6da62d01532069907f46e29414d65980b61ddd72e9e130541ee49a6a16c756",
+        "available": true
+      },
+      {
+        "id": "blueprint-svg",
+        "relative_path": "references/blueprint-svg.md",
+        "sha256": "8c9555109836ef1cda0ed492f8fd230bc122ab18a75411d4355b8e0d82118e9e",
+        "available": true
+      },
+      {
+        "id": "review-and-repair",
+        "relative_path": "references/review-and-repair.md",
+        "sha256": "4b5f4117d6588c0db5f6aee5295c8f55efb1dbe87fd87f0c361783fba697958f",
+        "available": true
+      }
+    ]
+  },
+  "i05": {
+    "matrix": [
+      {
+        "review_stage": "preproduction",
+        "review_units": [
+          "argument",
+          "page_copy",
+          "progression",
+          "speech"
+        ],
+        "method_manifest": [
+          {
+            "id": "source-reading",
+            "relative_path": "references/source-reading.md",
+            "sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08"
+          },
+          {
+            "id": "content-methods",
+            "relative_path": "references/content-methods.md",
+            "sha256": "179924ef334196ae5aabe93707a8e3df4c11e957e22911fd6bbbc3a4e8fdff22"
+          },
+          {
+            "id": "content-examples",
+            "relative_path": "references/content-examples.md",
+            "sha256": "fbaa97f19b20fe7a103c6cdae263083a8aa579cbb2acddaeee1f50bd686e275a"
+          },
+          {
+            "id": "content-calibration",
+            "relative_path": "references/content-calibration.md",
+            "sha256": "887046606283bd37bec51508408adf7a4ca931341b7e59374c49c09c2b266d70"
+          },
+          {
+            "id": "review-and-repair",
+            "relative_path": "references/review-and-repair.md",
+            "sha256": "4b5f4117d6588c0db5f6aee5295c8f55efb1dbe87fd87f0c361783fba697958f"
+          }
+        ],
+        "method_release": {
+          "release_id": "1.0.0rc4",
+          "methods_sha256": "700d53672108735f961cc96b3b4fccee94e3eaf275f131a0d708e54fddc8fcfb"
+        },
+        "basis_status": "current",
+        "synthetic_reader_drift_detected_without_file_changes": true
+      },
+      {
+        "review_stage": "final",
+        "review_units": [
+          "content"
+        ],
+        "method_manifest": [
+          {
+            "id": "source-reading",
+            "relative_path": "references/source-reading.md",
+            "sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08"
+          },
+          {
+            "id": "content-methods",
+            "relative_path": "references/content-methods.md",
+            "sha256": "179924ef334196ae5aabe93707a8e3df4c11e957e22911fd6bbbc3a4e8fdff22"
+          },
+          {
+            "id": "content-calibration",
+            "relative_path": "references/content-calibration.md",
+            "sha256": "887046606283bd37bec51508408adf7a4ca931341b7e59374c49c09c2b266d70"
+          },
+          {
+            "id": "review-and-repair",
+            "relative_path": "references/review-and-repair.md",
+            "sha256": "4b5f4117d6588c0db5f6aee5295c8f55efb1dbe87fd87f0c361783fba697958f"
+          }
+        ],
+        "method_release": {
+          "release_id": "1.0.0rc4",
+          "methods_sha256": "15c4a21c8a4248dd129ebd50032ef04c4856c3fc71606c89fd3673e72f3b8a0b"
+        },
+        "basis_status": "current",
+        "synthetic_reader_drift_detected_without_file_changes": true
+      },
+      {
+        "review_stage": "final",
+        "review_units": [
+          "speech"
+        ],
+        "method_manifest": [
+          {
+            "id": "content-methods",
+            "relative_path": "references/content-methods.md",
+            "sha256": "179924ef334196ae5aabe93707a8e3df4c11e957e22911fd6bbbc3a4e8fdff22"
+          },
+          {
+            "id": "review-and-repair",
+            "relative_path": "references/review-and-repair.md",
+            "sha256": "4b5f4117d6588c0db5f6aee5295c8f55efb1dbe87fd87f0c361783fba697958f"
+          }
+        ],
+        "method_release": {
+          "release_id": "1.0.0rc4",
+          "methods_sha256": "2a7c61069ccd5aa0e945954184b55e652c94007be9a119b306535503dc266693"
+        },
+        "basis_status": "current",
+        "synthetic_reader_drift_detected_without_file_changes": true
+      },
+      {
+        "review_stage": "page_visual",
+        "review_units": [
+          "blueprint_content",
+          "blueprint_fidelity",
+          "readability"
+        ],
+        "method_manifest": [
+          {
+            "id": "review-and-repair",
+            "relative_path": "references/review-and-repair.md",
+            "sha256": "4b5f4117d6588c0db5f6aee5295c8f55efb1dbe87fd87f0c361783fba697958f"
+          },
+          {
+            "id": "physical-units",
+            "relative_path": "references/physical-units.md",
+            "sha256": "282ce2943df8b4030898ba33ab8055fd115acf9f31931499c1e4c22f50670ff3"
+          }
+        ],
+        "method_release": {
+          "release_id": "1.0.0rc4",
+          "methods_sha256": "00e36dbf5ccfc3dca40f1dc91d501530b28f4f1040f9304540c3f7771b65cfcf"
+        },
+        "basis_status": "current",
+        "synthetic_reader_drift_detected_without_file_changes": true
+      },
+      {
+        "review_stage": "final",
+        "review_units": [
+          "content",
+          "blueprint_content",
+          "blueprint_fidelity",
+          "conversion",
+          "readability",
+          "privacy"
+        ],
+        "method_manifest": [
+          {
+            "id": "source-reading",
+            "relative_path": "references/source-reading.md",
+            "sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08"
+          },
+          {
+            "id": "content-methods",
+            "relative_path": "references/content-methods.md",
+            "sha256": "179924ef334196ae5aabe93707a8e3df4c11e957e22911fd6bbbc3a4e8fdff22"
+          },
+          {
+            "id": "content-calibration",
+            "relative_path": "references/content-calibration.md",
+            "sha256": "887046606283bd37bec51508408adf7a4ca931341b7e59374c49c09c2b266d70"
+          },
+          {
+            "id": "review-and-repair",
+            "relative_path": "references/review-and-repair.md",
+            "sha256": "4b5f4117d6588c0db5f6aee5295c8f55efb1dbe87fd87f0c361783fba697958f"
+          },
+          {
+            "id": "physical-units",
+            "relative_path": "references/physical-units.md",
+            "sha256": "282ce2943df8b4030898ba33ab8055fd115acf9f31931499c1e4c22f50670ff3"
+          }
+        ],
+        "method_release": {
+          "release_id": "1.0.0rc4",
+          "methods_sha256": "a2760a46fc6c4346e98fcd8761e2ed7d8afee4d66d631ba70f986e275a1b6bf7"
+        },
+        "basis_status": "current",
+        "synthetic_reader_drift_detected_without_file_changes": true
+      }
+    ],
+    "historical_selector_basis": "current",
+    "historical_methods": [
+      "review-and-repair",
+      "physical-units"
+    ],
+    "legacy_manifest_was_not_injected": true
+  },
+  "side_effects": {
+    "installed_venv_file_bytes_unchanged": true,
+    "isolated_home_file_bytes_unchanged": true,
+    "project_created": false,
+    "project_task_committed": false,
+    "host_activated": false,
+    "authorization_changed": false,
+    "external_calls": 0
+  },
+  "limitations": [
+    "Resource availability and returned bytes do not prove Host reading, method application, independent review or professional quality.",
+    "I05 probes are synthetic in-memory Tasks, not a normal production task.",
+    "N6 normal task previously executed from source; this installed identity probe does not relabel that execution.",
+    "A standalone isolated venv is observed here, not an activated user HOME or a managed release-tree installation."
+  ]
+}
