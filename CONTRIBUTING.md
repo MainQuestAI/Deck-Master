@@ -1,11 +1,15 @@
 # Contributing
 
-Deck Master is currently a public Technical Preview. Contributions are welcome when they keep the local-first workflow reliable, verifiable, and clear for outside users.
+Contributions to Deck Master 1.x are welcome when they keep the local-first
+workflow reliable, verifiable, and clear for outside users. The project is
+licensed under [Apache-2.0](LICENSE); commits require the DCO sign-off below.
+Use GitHub issues for reproducible bugs and feature proposals, and the
+[security policy](SECURITY.md) for sensitive reports.
 
 ## Development Setup
 
 ```bash
-python3 -m venv .venv
+python3.12 -m venv .venv
 . .venv/bin/activate
 python -m pip install -e ".[dev]"
 ```
@@ -71,4 +75,9 @@ Every PR should include:
 4. Known limitations or follow-up work.
 
 Do not include private customer data, local absolute paths, credentials, logs, build outputs, or internal agent scratch files.
+
+For a bug report, include the package version, relevant `doctor` result,
+operating system and external Host/tool versions, plus a small neutral example.
+Distinguish an unavailable Host, model account, renderer or font from a core
+regression. Keep exact retries and project originals intact while investigating.
 

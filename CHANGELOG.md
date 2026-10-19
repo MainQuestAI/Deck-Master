@@ -2,6 +2,44 @@
 
 ## Unreleased
 
+No changes recorded after 1.0.0.
+
+## 1.0.0 — 2026-10-19
+
+First stable version of the rebuilt, local-first Deck Master core. Python
+package version `1.0.0`; release tag `v1.0.0`. This supersedes the historical
+v0.9 preview architecture; old project formats require the documented migration.
+
+- One `deck-master` CLI and loopback Workbench for source-backed content,
+  scoped design, editable SVG/PPT production, review, recovery and delivery.
+- Four managed Codex Skills share one canonical method source; new Tasks
+  freeze their exact ordered methods and applicable content policy.
+- Recoverable input receipts and installation transactions preserve exact
+  retries, interrupted work, cancellation and current authorization.
+- Negotiated `work_context.v2` supports full context and bounded deduplication;
+  history queries preserve committed ancestry and unknown outcomes.
+- Normal installed native independent review uses an actual fresh Codex
+  session and the existing authenticated receipt path. Literal MCP server names,
+  including dots, quotes and Unicode, remain disabled in that session.
+- Release installation, external Host requirements, first use, upgrade,
+  font configuration limits and contribution guidance are documented.
+
+The functional baseline PR125 (`d7ec4530`) passed both 7-job CI runs. The
+maintainer's actual installed Host task completed native review, native-image
+observations on two pages, real SVG/PPT rendering and formal delivery with
+`handoff-check verified`. Chinese LibreOffice rendering required an existing
+process-scoped Fontconfig configuration. Actual WPS editing was not verified
+because the device locked. These observations are not a general desktop,
+professional-review or operating-system certification.
+
+See [first run and known limitations](docs/getting-started.md). Publishing a
+tag/Release and activating a user's installation are separate operations.
+
+## Pre-rebuild unreleased notes (historical)
+
+These entries belong to the retired preview architecture and are retained as
+history; its RC Gate and companion setup are not current release requirements.
+
 - Enforce final artifact approval at every client export entry.
 - Return a failing process status when RC Gate is blocked or failed.
 - Preserve fixture run mode across state and routing commands.

@@ -2,7 +2,8 @@
 
 ## Supported Status
 
-Deck Master is a public Technical Preview. Security fixes are handled on a best-effort basis until the first formal release candidate.
+Security fixes target the current 1.x release line on a best-effort basis.
+There is no promised response SLA or independent security certification.
 
 ## Reporting
 
@@ -10,19 +11,21 @@ Please report security concerns through a private GitHub security advisory when 
 
 ## Current Threat Boundary
 
-Deck Master is a local-first developer tool. The M1 Technical Preview focuses on local fixture demo, Review Desk preview, packaging, and capability transparency.
+Deck Master is a local-first tool running with the user's filesystem permissions.
+Its Workbench is a loopback service, not a hosted multi-tenant application.
 
 Current boundaries:
 
 1. No hosted multi-tenant service is included.
 2. No production credentials should be committed or pasted into issues.
-3. Review Desk write operations use a per-server local write token plus same-origin guard.
-4. Review Desk binds to loopback hosts by default. Non-loopback preview requires explicit `--allow-remote-preview` and is only for trusted local-network demos.
-5. The Review Desk write token is not a network authentication boundary because any browser that can load the page can read it.
-6. Production backend readiness depends on configured local or open-source companion capabilities.
+3. Workbench writes require a per-server token and same-origin checks; reads are available on loopback.
+4. The server binds to `127.0.0.1`. Do not expose or reverse-proxy it as an internet service.
+5. The local write token is not a remote-user or tenant authentication system.
+6. External Hosts, model accounts and image tools have their own access and data-handling policies. Install them separately and share only material you are authorized to process.
+7. Native independent review owns an ephemeral read-only Codex session and uses exact result/receipt bindings. It does not introduce a general JSON-signing endpoint or a new credential store.
 
 ## Do Not Report As Vulnerabilities
 
 1. Missing cloud authentication for a service that is not shipped.
-2. Lack of SaaS tenant isolation in the local-only preview.
-3. Fixture demo limitations already documented in Known Limitations.
+2. Lack of SaaS tenant isolation in this local-only tool.
+3. Documented unavailable fonts, renderers or external Host capabilities, unless they expose a reproducible security flaw.

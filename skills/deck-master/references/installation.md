@@ -3,6 +3,10 @@
 The rebuilt Python package exposes one CLI: `deck-master` or `python -m deck_master`.
 For development, use Python 3.11 or 3.12 and `python -m pip install -e '.[dev]'`.
 A release used from Codex also needs its managed Skill registration.
+For release downloads, external Host requirements, first use and upgrade, see
+the repository's `docs/getting-started.md`. Published assets are listed at
+https://github.com/MainQuestAI/Deck-Master/releases; a package version alone
+does not mean an installation has been activated.
 
 ## Candidate, activation and rollback
 
@@ -127,7 +131,7 @@ Missing renderers/fonts report `needs_tool`. Old run directories report
 `legacy_run_format`; use `deck-master import legacy --input <old-run> --out <new>`
 or pin a compatible old release. Never initialize or migrate an old run in place.
 
-## Generation workbench v3 (available in this candidate)
+## Generation workbench v3
 
 After installing this wheel in a supported Python 3.11/3.12 environment, run
 `deck-master workbench --registry /path/to/isolated/projects.json --no-open`.
@@ -168,7 +172,7 @@ browser/CLI pass is not 30-page real Host, professional or customer acceptance.
 
 ## Candidate resource identity
 
-The source candidate version is PEP 440 `1.0.0rc4`; read the actual CLI,
+The source version is PEP 440 `1.0.0`; read the actual CLI,
 package metadata and capabilities rather than assuming the active installation
 has been upgraded. `tools/build_release.py` builds both wheel and
 sdist. The wheel contains a generated `resources/method-inventory.json` with an
