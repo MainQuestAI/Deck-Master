@@ -238,6 +238,1313 @@
       "phases": [],
       "review_units": [],
       "readable": false
+    },
+    {
+      "id": "example-e01-after",
+      "relative_path": "assets/content/examples/E01-marketing/after.md",
+      "kind": "example",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-design"
+      ],
+      "dependencies": [
+        "example-e01-input"
+      ],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "example-e01-before",
+      "relative_path": "assets/content/examples/E01-marketing/before.md",
+      "kind": "example",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-design"
+      ],
+      "dependencies": [
+        "example-e01-input"
+      ],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "example-e01-input",
+      "relative_path": "assets/content/examples/E01-marketing/input.md",
+      "kind": "example",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-design"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "example-e01-numbers",
+      "relative_path": "assets/content/examples/E01-marketing/numbers.json",
+      "kind": "data",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-design"
+      ],
+      "dependencies": [
+        "example-e01-input"
+      ],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "example-e02-after",
+      "relative_path": "assets/content/examples/E02-technical-choice/after.md",
+      "kind": "example",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-design"
+      ],
+      "dependencies": [
+        "example-e02-input"
+      ],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "example-e02-before",
+      "relative_path": "assets/content/examples/E02-technical-choice/before.md",
+      "kind": "example",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-design"
+      ],
+      "dependencies": [
+        "example-e02-input"
+      ],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "example-e02-input",
+      "relative_path": "assets/content/examples/E02-technical-choice/input.md",
+      "kind": "example",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-design"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "example-e02-numbers",
+      "relative_path": "assets/content/examples/E02-technical-choice/numbers.json",
+      "kind": "data",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-design"
+      ],
+      "dependencies": [
+        "example-e02-input"
+      ],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "example-e03-after",
+      "relative_path": "assets/content/examples/E03-policy-training/after.md",
+      "kind": "example",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-design"
+      ],
+      "dependencies": [
+        "example-e03-input"
+      ],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "example-e03-before",
+      "relative_path": "assets/content/examples/E03-policy-training/before.md",
+      "kind": "example",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-design"
+      ],
+      "dependencies": [
+        "example-e03-input"
+      ],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "example-e03-input",
+      "relative_path": "assets/content/examples/E03-policy-training/input.md",
+      "kind": "example",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-design"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "example-e03-numbers",
+      "relative_path": "assets/content/examples/E03-policy-training/numbers.json",
+      "kind": "data",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-design"
+      ],
+      "dependencies": [
+        "example-e03-input"
+      ],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "example-e04-after",
+      "relative_path": "assets/content/examples/E04-saas-retention/after.md",
+      "kind": "example",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-design"
+      ],
+      "dependencies": [
+        "example-e04-input"
+      ],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "example-e04-before",
+      "relative_path": "assets/content/examples/E04-saas-retention/before.md",
+      "kind": "example",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-design"
+      ],
+      "dependencies": [
+        "example-e04-input"
+      ],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "example-e04-input",
+      "relative_path": "assets/content/examples/E04-saas-retention/input.md",
+      "kind": "example",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-design"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "example-e04-numbers",
+      "relative_path": "assets/content/examples/E04-saas-retention/numbers.json",
+      "kind": "data",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-design"
+      ],
+      "dependencies": [
+        "example-e04-input"
+      ],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "example-e05-after",
+      "relative_path": "assets/content/examples/E05-inventory-review/after.md",
+      "kind": "example",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-design"
+      ],
+      "dependencies": [
+        "example-e05-input"
+      ],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "example-e05-before",
+      "relative_path": "assets/content/examples/E05-inventory-review/before.md",
+      "kind": "example",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-design"
+      ],
+      "dependencies": [
+        "example-e05-input"
+      ],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "example-e05-input",
+      "relative_path": "assets/content/examples/E05-inventory-review/input.md",
+      "kind": "example",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-design"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "example-e06-after",
+      "relative_path": "assets/content/examples/E06-rag-teaching/after.md",
+      "kind": "example",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-design"
+      ],
+      "dependencies": [
+        "example-e06-input"
+      ],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "example-e06-before",
+      "relative_path": "assets/content/examples/E06-rag-teaching/before.md",
+      "kind": "example",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-design"
+      ],
+      "dependencies": [
+        "example-e06-input"
+      ],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "example-e06-input",
+      "relative_path": "assets/content/examples/E06-rag-teaching/input.md",
+      "kind": "example",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-design"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "template-options-comparison",
+      "relative_path": "assets/content/templates/options-comparison.md",
+      "kind": "template",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review"
+      ],
+      "review_units": [
+        "content",
+        "argument",
+        "page_copy",
+        "progression"
+      ],
+      "readable": true
+    },
+    {
+      "id": "template-page-draft",
+      "relative_path": "assets/content/templates/page-draft.md",
+      "kind": "template",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review"
+      ],
+      "review_units": [
+        "content",
+        "argument",
+        "page_copy",
+        "progression"
+      ],
+      "readable": true
+    },
+    {
+      "id": "template-teaching-sequence",
+      "relative_path": "assets/content/templates/teaching-sequence.md",
+      "kind": "template",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review"
+      ],
+      "review_units": [
+        "content",
+        "argument",
+        "page_copy",
+        "progression"
+      ],
+      "readable": true
+    },
+    {
+      "id": "design-semantic-examples",
+      "relative_path": "assets/design/semantic-layout-examples.md",
+      "kind": "example",
+      "owner": "deck-design",
+      "consumers": [
+        "deck-design",
+        "deck-content",
+        "deck-review"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "master-routing-examples",
+      "relative_path": "assets/master/routing-examples.json",
+      "kind": "example",
+      "owner": "deck-master",
+      "consumers": [
+        "deck-master",
+        "deck-content",
+        "deck-design",
+        "deck-review"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "review-calibration-cases",
+      "relative_path": "assets/review/calibration-cases.json",
+      "kind": "example",
+      "owner": "deck-review",
+      "consumers": [
+        "deck-review",
+        "deck-content"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production",
+        "speech"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "case-e01-walkthrough",
+      "relative_path": "references/cases/E01-marketing.md",
+      "kind": "example",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-design"
+      ],
+      "dependencies": [
+        "example-e01-input",
+        "example-e01-after"
+      ],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "case-e02-walkthrough",
+      "relative_path": "references/cases/E02-technical-choice.md",
+      "kind": "example",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-design"
+      ],
+      "dependencies": [
+        "example-e02-input",
+        "example-e02-after"
+      ],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "case-e03-walkthrough",
+      "relative_path": "references/cases/E03-policy-training.md",
+      "kind": "example",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-design"
+      ],
+      "dependencies": [
+        "example-e03-input",
+        "example-e03-after"
+      ],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "case-e04-walkthrough",
+      "relative_path": "references/cases/E04-saas-retention.md",
+      "kind": "example",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-design"
+      ],
+      "dependencies": [
+        "example-e04-input",
+        "example-e04-after"
+      ],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "case-e05-walkthrough",
+      "relative_path": "references/cases/E05-inventory-review.md",
+      "kind": "example",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-design"
+      ],
+      "dependencies": [
+        "example-e05-input",
+        "example-e05-after"
+      ],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "case-e06-walkthrough",
+      "relative_path": "references/cases/E06-rag-teaching.md",
+      "kind": "example",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-design"
+      ],
+      "dependencies": [
+        "example-e06-input",
+        "example-e06-after"
+      ],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "content-to-visual",
+      "relative_path": "references/content-to-visual.md",
+      "kind": "instruction",
+      "owner": "deck-design",
+      "consumers": [
+        "deck-design",
+        "deck-content",
+        "deck-review"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "method-review",
+      "relative_path": "references/method-review.md",
+      "kind": "instruction",
+      "owner": "deck-review",
+      "consumers": [
+        "deck-review",
+        "deck-content"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production",
+        "speech"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "method-selection",
+      "relative_path": "references/method-selection.md",
+      "kind": "instruction",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-master"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review"
+      ],
+      "review_units": [
+        "content",
+        "argument",
+        "page_copy",
+        "progression"
+      ],
+      "readable": true
+    },
+    {
+      "id": "method-sources",
+      "relative_path": "references/method-sources.md",
+      "kind": "instruction",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-master",
+        "deck-design"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "content-m01",
+      "relative_path": "references/methods/M01-framing.md",
+      "kind": "instruction",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-master"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review"
+      ],
+      "review_units": [
+        "content",
+        "argument",
+        "page_copy",
+        "progression"
+      ],
+      "readable": true
+    },
+    {
+      "id": "content-m02",
+      "relative_path": "references/methods/M02-structured-analysis.md",
+      "kind": "instruction",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review"
+      ],
+      "review_units": [
+        "content",
+        "argument",
+        "page_copy",
+        "progression"
+      ],
+      "readable": true
+    },
+    {
+      "id": "content-m03",
+      "relative_path": "references/methods/M03-argument.md",
+      "kind": "instruction",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review"
+      ],
+      "review_units": [
+        "content",
+        "argument",
+        "page_copy",
+        "progression"
+      ],
+      "readable": true
+    },
+    {
+      "id": "content-m04",
+      "relative_path": "references/methods/M04-causal-explanations.md",
+      "kind": "instruction",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review"
+      ],
+      "review_units": [
+        "content",
+        "argument",
+        "page_copy",
+        "progression"
+      ],
+      "readable": true
+    },
+    {
+      "id": "content-m05",
+      "relative_path": "references/methods/M05-options-and-value.md",
+      "kind": "instruction",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review"
+      ],
+      "review_units": [
+        "content",
+        "argument",
+        "page_copy",
+        "progression"
+      ],
+      "readable": true
+    },
+    {
+      "id": "content-m06",
+      "relative_path": "references/methods/M06-uncertainty-stress.md",
+      "kind": "instruction",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review"
+      ],
+      "review_units": [
+        "content",
+        "argument",
+        "page_copy",
+        "progression"
+      ],
+      "readable": true
+    },
+    {
+      "id": "content-m07",
+      "relative_path": "references/methods/M07-synthesis.md",
+      "kind": "instruction",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review"
+      ],
+      "review_units": [
+        "content",
+        "argument",
+        "page_copy",
+        "progression"
+      ],
+      "readable": true
+    },
+    {
+      "id": "content-m08",
+      "relative_path": "references/methods/M08-narrative.md",
+      "kind": "instruction",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-design"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "content-m09",
+      "relative_path": "references/methods/M09-teaching.md",
+      "kind": "instruction",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-design"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "content-m10",
+      "relative_path": "references/methods/M10-compression.md",
+      "kind": "instruction",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review",
+        "deck-design"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "narrative-patterns",
+      "relative_path": "references/narrative-patterns.md",
+      "kind": "instruction",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review"
+      ],
+      "review_units": [
+        "content",
+        "argument",
+        "page_copy",
+        "progression"
+      ],
+      "readable": true
+    },
+    {
+      "id": "page-writing",
+      "relative_path": "references/page-writing.md",
+      "kind": "instruction",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production",
+        "speech"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "writing-profiles",
+      "relative_path": "references/writing-profiles.md",
+      "kind": "instruction",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production",
+        "speech"
+      ],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "helper-case-numbers",
+      "relative_path": "scripts/check_case_numbers.py",
+      "kind": "script",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "design",
+        "production",
+        "speech"
+      ],
+      "review_units": [],
+      "readable": true
     }
   ]
 }

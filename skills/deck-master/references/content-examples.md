@@ -196,3 +196,14 @@
 **实际改法**：P1 主承载准备；P2 去掉三次启动提醒，用空间讲清确认前后状态，保留不维修/不放行边界；P3 一句准确承接 P1，正文进入动作和复核，明确新增训练建议。若仅分发 P2 操作卡，必须同时带上岗准备要求；连续阅读稿的跨页承接不能直接用于无上下文单页。
 
 **合理重复的正例**：开场“未完成演练不独立接手”建立训练范围；P2“未确认不放行”约束归还动作；练习反馈再次检查“异常工具进入待检”。三者约束不同动作，保留有用，不能因都出现“负责人”就合并成一个免责声明。
+
+## 六套完整案例索引
+
+以下均为 synthetic 编辑教材，before 是手写失败示范，after 是手写改进稿，不是旧版/新版模型实验。按工作单选择案例 ID；讲解依赖 input 与 after，其他资源按需显式选择。
+
+- [E01-marketing](cases/E01-marketing.md)：`case-e01-walkthrough`。
+- [E02-technical-choice](cases/E02-technical-choice.md)：`case-e02-walkthrough`。
+- [E03-policy-training](cases/E03-policy-training.md)：`case-e03-walkthrough`。
+- [E04-saas-retention](cases/E04-saas-retention.md)：`case-e04-walkthrough`。
+- [E05-inventory-review](cases/E05-inventory-review.md)：`case-e05-walkthrough`。
+- [E06-rag-teaching](cases/E06-rag-teaching.md)：`case-e06-walkthrough`。
