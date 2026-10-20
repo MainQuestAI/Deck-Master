@@ -1,0 +1,52 @@
+{
+  "scope": "documentation_and_read_only_WU00",
+  "pr127_final_head": null,
+  "integration_base": null,
+  "merge_commit": null,
+  "latest_observed_head": "d1ee1c7d1f16db120fd4c91c2cc9e71ce31b915e",
+  "baseline_disposition": "PENDING_PARENT_FINAL_BASELINE",
+  "required_checks": [],
+  "package_evidence_ref": null,
+  "spec_drift_review": "PARTIAL_READ_ONLY",
+  "implementation_status": "NOT_STARTED",
+  "acceptance": [
+    {
+      "ac_id": "AC01",
+      "result": "BLOCKED",
+      "evidence_refs": [
+        "BASELINE.md"
+      ],
+      "limitations": "最终收口和 head 未确认"
+    },
+    {
+      "ac_id": "AC02",
+      "result": "BLOCKED",
+      "evidence_refs": [
+        "BASELINE.md"
+      ],
+      "limitations": "准确最终 head CI/包证据未核实"
+    },
+    {
+      "ac_id": "AC03",
+      "result": "BLOCKED",
+      "evidence_refs": [
+        "BASELINE.md"
+      ],
+      "limitations": "观察 head 六项已核对，最终 head 仍需复核"
+    },
+    {
+      "ac_id": "AC04",
+      "result": "BLOCKED",
+      "evidence_refs": [
+        "BASELINE.md"
+      ],
+      "limitations": "规格分支已隔离；包含最终基线的实施分支尚未建立"
+    }
+  ],
+  "product_tests": "NOT_RUN",
+  "browser": "NOT_RUN",
+  "installed": "NOT_RUN",
+  "actual_host": "NOT_RUN",
+  "professional_review": "NOT_RUN",
+  "human_acceptance": "NOT_RUN"
+}

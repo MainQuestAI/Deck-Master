@@ -1,6 +1,6 @@
 {
   "schema_version": "webui_spec_traceability.v1",
-  "spec_version": "1.0",
+  "spec_version": "1.1",
   "implementation_status": "NOT_STARTED",
   "source_report_head": "12bffbd72631ad60ada6d456b99e95c3e6b2bd0e",
   "observed_pr127_head": "02627c17d5046428609e6806569ad3cd790e7d26",
@@ -266,7 +266,7 @@
       "id": "AC08",
       "owner": "WU01",
       "scenario": "局部损坏",
-      "pass_condition": "单条资源/来源/Review 引用损坏返回可定位 issue，完好稿件仍可读；absent 与 unreadable 有区别。",
+      "pass_condition": "单条资源/来源/Review 引用损坏返回可定位 issue，完好稿件仍可读；absent 与 unreadable 有区别。schema 断言 readable=false 仅含真实 Ref/issues 或 data=null，不可强制或伪造业务字段；SnapshotRead absent/unreadable 的 data=null，ready 不接受 null，Review 不可读不变成空问题或通过。",
       "layers": [
         "integration"
       ],
@@ -357,7 +357,7 @@
       "id": "AC16",
       "owner": "WU03",
       "scenario": "零 Page 策划稿",
-      "pass_condition": "plan_only 无 Page 时仍可完整阅读 Narrative/计划；导入稿无 Narrative 时继续读正文，不自动建主线。",
+      "pass_condition": "plan_only 零 Page 仍完整阅读 Narrative 与精确关联的固定 Plan/planned_roles，未产出 Page 的 page_ref=null；不同方向关联不同 Plan，缺失/不可读不回退到另一方当前计划；导入稿无 Narrative 时继续读正文，不自动建主线。",
       "layers": [
         "browser"
       ],
@@ -380,7 +380,7 @@
       "id": "AC18",
       "owner": "WU03",
       "scenario": "候选分类与比较",
-      "pass_condition": "当前/本请求待选/历史分类正确；比较两份真实 Ref，业务替代不冒充叙事候选，后台变化不改左右稿。",
+      "pass_condition": "当前/本请求待选/历史分类正确；两份不同、可读、合法可达 Narrative Ref 可比较，支持 current+candidate，不要求多个 proposal；同 Ref/非法/不可读/不可达拒绝，历史比较禁止写入，后台变化不改左右稿及关联 Plan。",
       "layers": [
         "integration",
         "browser"
@@ -392,7 +392,7 @@
       "id": "AC19",
       "owner": "WU03",
       "scenario": "采用准入",
-      "pass_condition": "只有 argument、合法对象、有效决定和覆盖 scope 时允许采用；framing、历史及不满足策略者可读但不可写。",
+      "pass_condition": "can_record_direction_decision 与 can_adopt 分开；无决定时 needs_decision=true、不可采用但可在准入通过后记录；有效覆盖决定复用。只有 argument、合法对象、有效决定和覆盖 scope 等实际采用谓词全部成立才允许采用；framing、历史及策略拒绝保持不可写。",
       "layers": [
         "integration",
         "browser"
@@ -404,7 +404,7 @@
       "id": "AC20",
       "owner": "WU03",
       "scenario": "两步事务恢复",
-      "pass_condition": "决定成功后采用断线可按两 UUID 核实恢复；中间并发写入不静默改 base，也不重复记录决定。",
+      "pass_condition": "决定成功后采用失败/断线保留已记录决定与两份独立 UUID/payload，明确部分完成；使用决定返回 revision 重新评估采用，不沿用旧 base。中间并发写入不静默改 base，不重复记录决定；unknown 先 lookup，拒绝不得放松事务。",
       "layers": [
         "integration",
         "browser"
@@ -486,7 +486,7 @@
       "id": "AC27",
       "owner": "WU04",
       "scenario": "返回与深链",
-      "pass_condition": "刷新及从 finding/主线/来源来回切换后保留 project、revision、page、atom 和返回位置。",
+      "pass_condition": "刷新及从 finding/主线/来源来回切换后保留 project、revision、page、atom 和返回位置；finding 链接绑定 review_sha256、finding_id、原 source_index，过滤/排序仍定位非首条原对象，越界/身份不符不得默认首项。",
       "layers": [
         "browser"
       ],
@@ -497,7 +497,7 @@
       "id": "AC28",
       "owner": "WU05",
       "scenario": "Review 兼容",
-      "pass_condition": "v1 缺字段明确未记录，v2 的 impact/resolution 原样翻译，needs_review/not_evaluated/not_applicable 不变成通过。",
+      "pass_condition": "v1/v2 均按真实合同读取 finding_id、impact、resolution；只对 v1 未要求的 v2 扩展字段显示未记录，缺必填 ID 不新增兼容。不同固定 Review 的同名 finding 不混淆；needs_review/not_evaluated/not_applicable 不变成通过。",
       "layers": [
         "integration",
         "browser"
@@ -625,7 +625,7 @@
       "id": "AC39",
       "owner": "WU07",
       "scenario": "同一目录选择",
-      "pass_condition": "目录与适用性来自服务 resolver；未知/越权 ID 被拒绝，无 JS 私有规则或任意路径读取。",
+      "pass_condition": "目录与适用性来自同一服务 resolver；未知/越权 ID 拒绝，无 JS 私有规则或任意路径读取。目录可读但无新阶段返回 200，browse_status 与 dispatch_status=cannot_dispatch 及原因独立；不得用空 phase 绕过范围校验，未评估选择不能伪装 validated。",
       "layers": [
         "integration"
       ],
@@ -648,7 +648,7 @@
       "id": "AC41",
       "owner": "WU07",
       "scenario": "冻结任务保护",
-      "pass_condition": "已有待办显示依据固定；网页选择/复制不修改旧任务、不新增业务状态或进行带参派发。",
+      "pass_condition": "已有待办仍可 200 浏览目录并显示依据固定、existing_task_frozen；网页选择/复制不修改旧任务、不新增业务状态或带参派发。preparation_only 恒 true，即使 new_content_task_possible 也不产生派发许可；GET/预览不写入、消耗或提高 writer floor。",
       "layers": [
         "integration",
         "browser"
@@ -672,7 +672,7 @@
       "id": "AC43",
       "owner": "WU07",
       "scenario": "准备稿与漂移",
-      "pass_condition": "刷新可恢复个人 ID 选择；目录/字节/revision 变化使旧预览失效并禁止原复制；不丢用户选择。",
+      "pass_condition": "刷新可恢复个人 ID 选择；目录/字节/上下文指纹与 expected_basis 不符返回 409 并禁用旧复制，重新核对成功才恢复，不丢选择。无新阶段本身不是 409，原因与独立浏览明确；不可评估选择 copy_allowed=false，部分资源损坏与全局不可用分别处理。",
       "layers": [
         "integration",
         "browser"
@@ -759,6 +759,72 @@
       ],
       "status": "NOT_RUN",
       "evidence": []
+    }
+  ],
+  "revision_notes": [
+    {
+      "id": "R1",
+      "acceptance_ids": [
+        "AC19",
+        "AC20"
+      ],
+      "documents": [
+        "API-SPEC.md §4–5",
+        "UI-SPEC.md §4"
+      ]
+    },
+    {
+      "id": "R2",
+      "acceptance_ids": [
+        "AC39",
+        "AC41",
+        "AC43"
+      ],
+      "documents": [
+        "API-SPEC.md §2/8",
+        "UI-SPEC.md §8"
+      ]
+    },
+    {
+      "id": "R3",
+      "acceptance_ids": [
+        "AC16"
+      ],
+      "documents": [
+        "API-SPEC.md §4",
+        "UI-SPEC.md §4"
+      ]
+    },
+    {
+      "id": "R4",
+      "acceptance_ids": [
+        "AC18"
+      ],
+      "documents": [
+        "API-SPEC.md §4",
+        "UI-SPEC.md §4"
+      ]
+    },
+    {
+      "id": "R5",
+      "acceptance_ids": [
+        "AC27",
+        "AC28"
+      ],
+      "documents": [
+        "API-SPEC.md §7",
+        "UI-SPEC.md §2/6"
+      ]
+    },
+    {
+      "id": "R6",
+      "acceptance_ids": [
+        "AC08"
+      ],
+      "documents": [
+        "API-SPEC.md §2/4/7",
+        "UI-SPEC.md §2"
+      ]
     }
   ]
 }

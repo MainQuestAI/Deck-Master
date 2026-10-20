@@ -15,7 +15,7 @@ flowchart TD
   WU07 --> WU08
 ```
 
-依赖图表示数据和验收依赖，不授权并行改共享文件。当前建议分组：PR-A 包含 WU01–WU05；PR-B 包含 WU06–WU07；WU08 在最终集成 head 收口。两组均以 PR127 完成版为前置。
+依赖图表示数据和验收依赖，不授权并行改共享文件。默认完整 WU01–WU08 放入同一个独立新 Draft PR；A（WU01–WU05）与 B（WU06–WU07）仅为内部增量，WU08 在最终集成 head 收口。确需拆 PR 先说明原因，不擅自拆；均以 PR127 最终可用基线为前置。
 
 ## 共同行为
 
@@ -38,7 +38,7 @@ flowchart TD
 
 - 依赖：WU00。
 - 输入：最终schema、Store/snapshots、resolver。
-- 交付：六类快照读API、capability、纯验证共享函数及HTTP/API验证。
+- 交付：六类快照读API、capability、纯验证共享函数及HTTP/API验证；不可读判别 union、真实 Plan 关联与 Review 固定身份按 API 合同实现，不补造业务值。
 - 主要落点：src/deck_master/content_insight.py（拟新增）；run_desk.py、web.py、snapshots.py、capabilities.py、models.py；resources/contracts/ui-*.schema.json（拟新增）。
 - 边界：不写Document；不建立第二份论证或资源状态机。
 - 唯一负责验收：AC05, AC06, AC07, AC08, AC09, AC10。
@@ -60,7 +60,7 @@ flowchart TD
 
 - 依赖：WU01, WU02。
 - 输入：WU01主线读模型、现有decision/adopt事务。
-- 交付：主线子区、固定比较、方向决定与采用编排、未知提交恢复。
+- 交付：主线子区、零 Page 的固定 Plan 职责、current+candidate 固定比较、分离准入的方向决定/采用编排和部分成功恢复（API §4–5）。
 - 主要落点：resources/static/v2/content-sources.js、collaboration-desk.js、routes.js；argument-reading.js（拟新增）；content_production.py的纯验证抽取。
 - 边界：不能直接写confirmed；采用不启动生产。
 - 唯一负责验收：AC16, AC17, AC18, AC19, AC20, AC21, AC22。
@@ -104,7 +104,7 @@ flowchart TD
 
 - 依赖：WU01, WU02, WU06。
 - 输入：PR127 catalog/selection接口；WU01和WU02基础。
-- 交付：method-library预览/正文接口、安全示例阅读、个人准备稿与核心生成交接文本。
+- 交付：method-library预览/正文接口、安全示例阅读、个人准备稿与核心生成交接文本；浏览与派发状态分离、真实 409 指纹冲突及始终 preparation_only（API §2/8）。
 - 主要落点：src/deck_master/method_library_view.py（拟新增）、web.py、capabilities.py；resources/static/v2/method-library.js（拟新增）、drafts.js；method_resources.py只复用/小幅抽取。
 - 边界：网页不带参执行continue；不做通用派发预览引擎或新MethodPlan。
 - 唯一负责验收：AC39, AC40, AC41, AC42, AC43, AC44。

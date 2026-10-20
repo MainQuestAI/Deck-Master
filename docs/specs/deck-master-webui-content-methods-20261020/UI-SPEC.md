@@ -31,6 +31,8 @@
 | capability_missing | 当前核心暂不支持此项 | 保留原有阅读能力；禁用对应新动作 |
 | conflict / unknown_operation | 版本已变化 / 提交结果待核实 | 保留原 payload、UUID、选择与文本 |
 
+不可读分支只展示已验证 Ref 与 issue，不编造标题、成熟度、Review 内容或空问题清单；按照 API 的判别 union 消费 null。
+
 固定历史不是“错误”；旧资源在当前安装缺失也不等于旧任务从未执行。
 
 路由新增参数均为本轮拟增项：
@@ -38,7 +40,7 @@
 - 内容子区 `content_area=materials|plan|argument|methods`。
 - 主线选择 `proposal=<sha256>`，对照 `compare_proposal=<sha256>`；仅 `surface=content&content_area=argument` 合法。
 - 原子定位 `atom=<atom-id>`；仅单页 content/source 层，或质量记录跳转到该层。按真实 atom 合同校验，长度上限 256。
-- finding 定位 `finding=<finding-id>`；仅有 review 的质量记录路由。
+- finding 定位 `finding=<finding-id>&review_sha256=<sha256>&finding_index=<source_index>`；必须连同 revision 和既有 review_id，仅在质量记录路由合法。服务端解析合法完整 Review Ref，核对原数组索引与 ID；缺失、越界或不匹配显示定位错误，不默认首项。不接受路径，不新造持久 finding ID。
 - 所有新对象链接必须有 `revision`；查询 SHA 只定位服务端已证明可达的 Ref，不接受路径。
 
 沿用原有 project identity 和 action/candidate/review/task 互斥校验；新参数不能绕过原规则。跨页保留返回上下文，刷新可恢复同一对象。无效参数显示局部错误，不静默选第一条。
@@ -73,9 +75,9 @@
 3. 关键理由与条件：节点原文及关系，不用模型再总结一份。authority 翻译为“材料事实/推断/计算/建议/目标/假设/操作说明”。
 4. 未决问题：question、impact、resolution；允许“接受限制”，不能被 UI 擅自改成 resolved。
 5. 业务替代：description、benefit、cost。明确标题“可行替代与取舍”，不冒充待选叙事稿。
-6. 对应页面：依据 ContentPlan.page_roles 的真实绑定跳转；无绑定显示未记录。
+6. 对应计划职责与页面：读取固定 Plan Ref 的 input.page_roles；已绑定才跳转真实 Page，planned 职责没有 Page 时显示“尚未产出页面”，page_ref=null；无真实计划关联显示未记录。
 
-没有 Page 的 plan_only 仍能阅读 Narrative 和 planned Plan。导入稿没有 Narrative 时显示“这份导入稿未记录论证主线”，仍可读页面大纲、正文和来源。
+没有 Page 的 plan_only 仍能阅读 Narrative 和 planned Plan。当前 Plan 复用固定 revision 的 /api/content-plan；候选 Plan 从 API 的 plans 投影按 narrative_ref 精确关联。比较两方向时分别展示其真实 Plan，缺失/不可读不借用另一方的计划，不创建第二计划。导入稿没有 Narrative 时显示“这份导入稿未记录论证主线”，仍可读页面大纲、正文和来源。
 
 ### 比较
 
@@ -83,13 +85,13 @@
 
 比较展示交流任务、核心回答、关键理由、条件、未决项及页面职责。用真实节点/字段差异；不得把不同 ID 的节点强行按位置认作同一观点。非同一请求来源的历史稿可阅读，但不标成同一批候选。
 
-只有实际有多个可读 proposal 才提供比较；不为了“候选叙事”自动生成第二份。
+两份不同、可读、合法且在各自固定 snapshot 可达的 Narrative Ref 即可比较，支持 current+candidate；同 Ref、非法/不可读/不可达对象不可比较，不自动生成第二份。历史比较只读，不提供决定或采用写动作。
 
 ### 采用
 
-仅 argument 成熟度、非历史、来源合法且当前 eligibility 允许时展示“采用此方向”。framing 可读但不可采用为方向。
+仅 argument、非历史、来源合法且 can_adopt=true 时展示“采用此方向”。缺覆盖决定时 can_adopt=false，但 needs_decision=true 且 can_record_direction_decision=true 时显示“记录方向决定”，避免按钮依赖尚未创建的决定。已有有效决定复用，不重复记录；策略拒绝分别展示决定/采用的 reason_codes。framing 可读但不可采用为方向。
 
-确认区显示所选核心回答、精确范围、会受影响的既有 Plan/结果、原稿保留方式。使用同一次明确指令记录方向决定，再执行 proposal adoption；不新增方法批准。
+确认区显示所选核心回答、精确范围、会受影响的既有 Plan/结果、原稿保留方式。使用同一次明确指令记录方向决定；第一步成功后以返回 revision/decision_ref 重新读取采用准入，再执行独立 proposal adoption。决定成功不承诺采用成功，不新增方法批准。
 
 已有有效决定覆盖同一 proposal 和范围时复用。第一步成功、第二步失败显示“方向决定已记录，采用尚未完成”，提供核实/继续原采用，不能显示成功或重录新决定。
 
@@ -107,7 +109,9 @@
 
 ## 6. 审阅定位与局改（UI-04）
 
-质量记录沿用现有 `views.js` 入口，显示实际 review.status、审阅者身份和覆盖范围。完整保留 v2 的 must_fix / needs_judgment / advisory、open / fixed / accepted_variance / not_applicable；旧 v1 缺字段显示未记录。
+质量记录沿用现有 `views.js` 入口，显示实际 review.status、审阅者身份和覆盖范围。v1/v2 均完整保留 must_fix / needs_judgment / advisory、open / fixed / accepted_variance / not_applicable；仅 v1 合同未要求的 v2 扩展字段显示未记录。v1 同样要求 finding_id、impact、resolution，缺失不得伪装合法旧记录。
+
+刷新、后退、排序与过滤保持 revision+Review Ref+finding_id+原 source_index；相同 ID 的另一 Review 不替换当前对象。
 
 每条 finding 显示：问题原文、影响级别、实际记录、期望、已记录的证据、解决状态。`expected` 标为“期望”，不能伪称独立的改写建议。不能用模型临时补“为什么”或“建议”冒充原审阅者。
 
@@ -145,6 +149,8 @@
 
 上下文必须来自服务端：当前 request 的下一内容阶段，或用户明确指定的独立只读角色/阶段。若当前有冻结待办，显著提示“已有任务的依据已固定”；本轮不为该任务添加资源。
 
+没有下一阶段、等待决定或已有冻结待办时，目录可读仍正常浏览；同时展示“当前不能派发”及具体原因。browse_status 与 dispatch_status 分开呈现；没有真实阶段时不声称选择已通过范围校验，不允许复制尚未评估的选择。所有预览均为 preparation_only，new_content_task_possible 不是派发许可。
+
 本轮支持**新内容阶段**的准备及独立只读方法浏览，不把蓝图/修复/编译的所有自动继续分支抽象成通用派发预览引擎。非适用阶段仍可查看已经固定的任务资源。
 
 用户选择后点“核对所选资源”，只读返回显式选择、默认项和依赖项；三者分别展示，顺序服从现有 resolver。校验失败保留选择并定位问题。
@@ -153,7 +159,7 @@
 
 “复制给制作工具的要求”包含用户选择、核对时的版本/阶段/范围、具体未满足项及现有 CLI/API 合法用法。明确“复制尚未应用；制作工具需重新核对当前状态后派发”。禁止生成携带任意 shell 路径的命令模板；复用核心交接格式。
 
-个人准备稿只含项目身份、revision、选择 ID 和目录指纹，使用已有草稿机制。资源字节或上下文变化后需重新预览，复制按钮禁用；不能把旧预览标成最新。实际使用是否成功以新 Task 的冻结 manifest 为准。
+个人准备稿只含项目身份、revision、选择 ID 和目录指纹，使用已有草稿机制。复制前携带 expected_basis 重新核对；资源字节或上下文变化后需重新预览，复制按钮禁用；不能把旧预览标成最新。实际使用是否成功以新 Task 的冻结 manifest 为准。
 
 ## 9. 视觉与可访问性验收
 

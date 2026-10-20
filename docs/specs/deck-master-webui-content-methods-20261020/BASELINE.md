@@ -73,3 +73,24 @@ G0 不要求把专业认可或真实 HOME 激活改成 PASS；它们仍是独立
 - [RC5 工程回执](https://github.com/MainQuestAI/Deck-Master/blob/02627c17d5046428609e6806569ad3cd790e7d26/docs/reports/rc5/engineering-acceptance.md)
 - [成对稿回执](https://github.com/MainQuestAI/Deck-Master/blob/02627c17d5046428609e6806569ad3cd790e7d26/docs/reports/rc5/paired-manuscript-review.md)
 - [范围探针回执](https://github.com/MainQuestAI/Deck-Master/blob/02627c17d5046428609e6806569ad3cd790e7d26/docs/reports/rc5/scope-probe-review.md)
+
+## v1.1 云端 WU00 核对（2026-10-20）
+
+上文是原 v1.0 编制时的历史观察，不代表本云端环境或 PR127 最终状态。本环境 checkout 从干净的 main `09f0213d07fc718dc4d41a52bb69c4595fcb1ac8` 建立独立 `codex/webui-post127-spec-review-20261020` 规格分支；未访问用户本机，未检出/写入 PR127 分支，未推送、合并、发布或开始产品实现。仓库 AGENTS、任务索引、恢复指引、DESIGN、当前 UI 语言已读取；云端 .agents/.codex 为空，无额外嵌套 AGENTS。
+
+只读 ls-remote/fetch 首次观察 `02627c17`，末次观察推进至 `d1ee1c7d1f16db120fd4c91c2cc9e71ce31b915e`，main 未变。两观察 head 相差 8 文件；最新观察 head 相对 main 为 122 文件、5223 行新增、277 行删除，web.py/static 无改动。新修复把 blueprint 最终选择校验移到持久请求之前；移除 compose design/production/delivery 的错误 method-selection 默认；Review 方法读取固定 review phase/units；重派保留原冻结记录。新 WebUI 不能把这些基础能力重做一遍。
+
+现有 collaboration-desk、launcher、固定版本 /api/content-plan、正文/来源、Review 及内容操作均需复用。六项源码裁决：
+
+| 裁决 | 已读取源码锚点（main 09f0213d；PR127 修改另核对） | 规格落点 |
+|---|---|---|
+| R1 | collaboration.py:553；content_production.py:1646；eligibility.py decision.record/proposal.adopt | 独立决定/采用准入，原两个事务不变 |
+| R2 | d1ee1c7d 的 service.py _continue_project、method_resources.py、resource_catalog.py select | 目录浏览独立于派发；不调用 continue 预览，不放宽 resolver |
+| R3 | web.py:684；content_plan.py _projection_v2/show；content_production.py:485 | 固定 Plan 已有读取；候选 Plan 需要只读关联投影，零 Page 保留职责 |
+| R4 | snapshots.py 合法快照；content_production.py 采用谓词 | 比较两真实 Narrative，current+candidate 合法；比较不产生写授权 |
+| R5 | review.v1 schema（含最早提交 032de48f）；models.py:399；review.py finding 消费 | v1 已要求 finding_id/impact/resolution，无依据的缺 ID 兼容删除，固定 Ref/revision 深链 |
+| R6 | content_plan.py 不可读投影；view.py Review 局部错误 | 明确判别 union 与 null，禁止编造业务值 |
+
+本环境 `gh pr view 127` 被 Forbidden 拒绝，未重试或换渠道绕过。父线程另提供的证据：准确 head d1ee1c7d 的 CI 39398981973 仍运行，渲染通过、单元与浏览器待完成，静态复审未见新增阻断。此为转交观察，不是本环境独立验证或 CI 终态。最终 head/收口、required CI、包证据与最终基线适用性仍待父线程确认，G0 未通过。
+
+原 Library 传输失败后未重试；父线程分 15 批提供原文。本环境核对 manifest 的全部 14 个内容文件，bytes/SHA 全匹配；另保留 manifest，共 15 文件。原文冻结于提交 `4f7f2a3b`，manifest 在 original-package-manifest.json，原 inputs/impact-report.md 不修改。其历史本机路径只保留为报告文本，未访问。验证脚本已阅读未执行；本轮检查为独立文档静态核对，不代表产品/浏览器/安装/Host/专业/人类验收。

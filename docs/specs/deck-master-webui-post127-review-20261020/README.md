@@ -1,4 +1,6 @@
-# PR127 后续 WebUI 规格核对（待原包合入）
+# PR127 后续 WebUI 规格核对（历史记录）
+
+本目录已由 [原规格 v1.1](../deck-master-webui-content-methods-20261020/README.md) 接替。下文保留传输受阻时点的记录，不再是活动合同；原包现已全量核对并在原文件内修订。
 
 本目录是 2026-10-20 云端只读核对及六项修订建议，**不是原规格 v1.0 的已修订替代品**。附件官方 materialization 准备成功，官方 helper 返回 download failed，本地无 ZIP。故未检查 ZIP 路径、未解压、未读取/执行包内 validate_spec.py；原包 15 文件、9 卡/50 AC 均仅来自转交说明，未独立验证。需要父线程提供原包文本后按本目录同步 API/UI/AC/traceability，保持原编号与唯一 owner。
 

@@ -1,6 +1,6 @@
 # 开发 Spec：PR127 后续 Web UI
 
-版本 v1.0｜2026-10-20｜状态：READY_FOR_BASELINE_RECHECK / IMPLEMENTATION_NOT_STARTED。
+版本 v1.1｜2026-10-20｜状态：READY_FOR_BASELINE_RECHECK / IMPLEMENTATION_NOT_STARTED。
 
 ## 1. 产品目标
 
@@ -44,7 +44,7 @@ WU06–WU07：用途文案、设计语义说明、方法/案例准备。使用�
 
 WU08：从最终源码构建独立安装，运行浏览器主路径、范围回归、历史读取与跨版本恢复，记录实际 Host 验证和人类体验反馈的独立状态。
 
-两段均属于本轮范围，不能在只完成 A 时宣称整轮完成。每段可用独立 PR；不预占 RC6 或正式产品版本号。
+两段均属于本轮范围，不能在只完成 A 时宣称整轮完成。默认完整 WU01–WU08 放在同一个 PR127 之后的新 Draft PR，A/B 仅内部增量；确需拆 PR 必须先说明原因，不擅自拆分。不预占 PR 编号、RC6 或正式产品版本号。
 
 ## 4. 保留与非目标
 
