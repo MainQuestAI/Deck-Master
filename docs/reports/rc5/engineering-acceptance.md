@@ -42,3 +42,9 @@
 - 完整单元命令：`python -B -m pytest -q tests/rebuild -m "not render and not browser" --basetemp ../pytest-rc5-unit`。macOS默认`/private/var/...`会触发既存评测工具的private目录拒绝，故使用工作树旁专用临时目录，不改安全规则。完整日志保留在工作树旁`unit-suite-verified.log`；最终线上全矩阵结果以PR当前准确HEAD的Checks为准。
 - 本机初轮render为12 failed / 121 passed / 1 skipped；4项为已修正的新writer断言，相关用例已定向通过。剩余8项分别为源/原生图像等同性与字形溢出坐标，在未修改的PR原始1e66ae05上复跑同样8 failed / 1 passed，不能记为当前本机全绿，也不扩展本轮为渲染引擎修改。原始日志与基线对照保留在工作树旁。
 - clean-source构建与安装证据绑定5d5db8cf；其后证据文档提交不应被误报为已重新构建的包。没有tag、Release、真实HOME激活或人类专业认可。
+
+## 完整运行读回与跨平台修复
+
+- 本地完整单元运行：3461 passed、2 skipped、1 failed、635 deselected。唯一失败为相对解释器路径 `../venv/bin/python` 在子进程规范化后触发严格身份比对；原始 PR 同样复现。使用规范绝对解释器路径重跑 `test_rc3_image_events.py` 全模块：28 passed（7.03秒）。没有修改身份或权限断言。
+- `e7f6e125` 的 Linux Python 3.11 / Node 24 单元任务：3461 passed、2 skipped、1 failed。新增超长输入用例的自动参数名称进入 `PYTEST_CURRENT_TEST` 环境变量，触发 Linux 单个环境字符串长度限制，未到达算术脚本。修复为短语义测试 ID，保留原超长输入及拒绝断言；最终全矩阵结果须读回修复后的准确 HEAD。
+- `e7f6e125` 的 PR/push Linux真实渲染任务均 SUCCESS；修复后的完整 CI 状态见 PR Checks。
