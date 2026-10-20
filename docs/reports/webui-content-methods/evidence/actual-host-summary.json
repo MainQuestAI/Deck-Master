@@ -1,0 +1,50 @@
+{
+  "executor": "current cloud agent; no independent model identity claim",
+  "skill": "skills/deck-content/SKILL.md",
+  "source_kind": "public synthetic teaching material, authored in session, not test fixture",
+  "execution_ref": "cloud-webui-current-agent-20261020",
+  "framing_task_id": "3dfbde7452f1",
+  "argument_task_id": "0d32e0aa5825",
+  "result": "ACCEPTED_PROPOSAL_NOT_ADOPTED",
+  "revision_id": "2ae12fd570ba4a199a16aa45639dc521",
+  "result_refs": [
+    {
+      "path": ".deckmaster/objects/51/5166f03602c0981f4b3f8e074a58f38d0d2d742c8859e0049d9c7ca46a211471.json",
+      "sha256": "5166f03602c0981f4b3f8e074a58f38d0d2d742c8859e0049d9c7ca46a211471"
+    },
+    {
+      "path": ".deckmaster/objects/5b/5b0591bc4196d8d29d4456d524837d1cd249acdabeb5cd0277ce98b68463cda4.json",
+      "sha256": "5b0591bc4196d8d29d4456d524837d1cd249acdabeb5cd0277ce98b68463cda4"
+    }
+  ],
+  "selected_resource_ids": [
+    "content-m04"
+  ],
+  "manifest_ids": [
+    "source-reading",
+    "content-methods",
+    "content-examples",
+    "method-selection",
+    "content-m04"
+  ],
+  "project_directory": "/workspace/webui-evidence/actual-host/project",
+  "files": {
+    "methods-argument.json": "122a284b60ff7f6e300a8537434bce7c03f8e6c3a41d45c06b81c7eece5f5d8d",
+    "reading.json": "88be4811e117596cc7d4371ea45f678bcc63f682622fd49342c331b902686820",
+    "framing-result.json": "d56ce31f5f7b31bb765284f6f7eb7ac90fd4823bffd0dfcd6e39ea9672d1ad3d",
+    "methods-framing.json": "5bfe737a38863fe35c3328c2d64c50d7884447efda190e82fcbfd88ee89265fd",
+    "argument-result.json": "786747a597204f419f2c969735a901a57022b42679143961331fd6635a55ffb2",
+    "argument-receipt.json": "56b035e7898f9ed1334ad98b9976d14c0f084248ffee3eef186149c24ee6f46c",
+    "continuation.json": "5327825ced2f4adac341935144fa9ed1fb336d915d777a9005d3d4ed9af49940",
+    "teaching-source.md": "76f2bf7017adf4173614005bb50ad834d83e31d15df1e8d8f4257213f0a2f52f",
+    "preview.json": "a4256b4ddedd27e5a9a67a65553af65e957b8534851de59476e65287c5387f4b",
+    "argument-workorder.json": "0a0055fe715bef7575f475d48957a711502c116936e2b811aa5a58ca88f435bb",
+    "argument-rejected-source-enum.json": "9de5e3fe7e72200b96af4765843efdf3171edca1144d1a765bddc87f8985329e"
+  },
+  "limitations": [
+    "Teaching plan_only: zero Page; no production image dispatch",
+    "Initial invalid enum rejected, failure envelope retained; corrected default accepted",
+    "Not a three-scenario content quality evaluation",
+    "Professional review and human acceptance NOT_RUN"
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "schema_version": "spec_validation.v1",
-  "scope": "documentation_only",
+  "scope": "historical_documentation_only_snapshot",
   "spec_version": "1.1",
   "status": "PASS",
   "validation_method": "independent static inspection; bundled validate_spec.py read but NOT_EXECUTED",
@@ -22,5 +22,6 @@
   "installed_tests": "NOT_RUN",
   "actual_host_tests": "NOT_RUN",
   "professional_review": "NOT_RUN",
-  "human_acceptance": "NOT_RUN"
+  "human_acceptance": "NOT_RUN",
+  "current_execution_source": "execution-ledger.json"
 }

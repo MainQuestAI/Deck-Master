@@ -1,0 +1,68 @@
+{
+  "release_id": "3c6d4a416004-43d1dc6b688b",
+  "source_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+  "source_dirty": false,
+  "package_version": "1.0.0rc5",
+  "compiler_version": "python-native-v1",
+  "wheel": "deck_master-1.0.0rc5-py3-none-any.whl",
+  "wheel_sha256": "43d1dc6b688b60340f1a9fa253d43c9d0ee961650088f9621b51d0dd95be3032",
+  "sdist": "deck_master-1.0.0rc5.tar.gz",
+  "sdist_sha256": "3267d603c77b477e4dac6ac199e09e353086de28f4399f36a444fc9d9179090b",
+  "entry": [
+    "python",
+    "-m",
+    "deck_master"
+  ],
+  "professional_evidence": "not_evaluated",
+  "managed_install": {
+    "status": "candidate_ready",
+    "release_id": "3c6d4a416004-43d1dc6b688b",
+    "release": "/tmp/webui-managed-final/.deck-master/releases/3c6d4a416004-43d1dc6b688b",
+    "activated": false
+  },
+  "installed_browser": {
+    "status": "PASS",
+    "checks": [
+      {
+        "viewport": [
+          1280,
+          800
+        ],
+        "actual_host_plan_reading": "PASS",
+        "methods_reading": "PASS",
+        "review_atom_refresh_return": "PASS",
+        "page_horizontal_overflow": false
+      },
+      {
+        "viewport": [
+          1440,
+          900
+        ],
+        "actual_host_plan_reading": "PASS",
+        "methods_reading": "PASS",
+        "review_atom_refresh_return": "PASS",
+        "page_horizontal_overflow": false
+      },
+      {
+        "viewport": [
+          390,
+          844
+        ],
+        "actual_host_plan_reading": "PASS",
+        "methods_reading": "PASS",
+        "review_atom_refresh_return": "PASS",
+        "page_horizontal_overflow": false
+      },
+      {
+        "installed_two_step_adoption": "PASS",
+        "project_kind": "synthetic"
+      }
+    ],
+    "page_errors": [],
+    "server_package": "/tmp/webui-managed-final/.deck-master/releases/3c6d4a416004-43d1dc6b688b/venv/lib/python3.12/site-packages/deck_master",
+    "professional_review": "NOT_RUN",
+    "human_acceptance": "NOT_RUN"
+  },
+  "checkout_resources_used": false,
+  "real_home_activated": false
+}

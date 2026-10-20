@@ -22,7 +22,7 @@
   ],
   "package_evidence_ref": "docs/reports/rc5/package-verification-cloud-review.json",
   "spec_drift_review": "PASS",
-  "implementation_status": "IN_PROGRESS",
+  "implementation_status": "IMPLEMENTED_DRAFT_VERIFICATION_PARTIAL",
   "acceptance": [
     {
       "ac_id": "AC01",
@@ -57,289 +57,706 @@
       "limitations": "PR metadata GraphQL denied; parent CI confirmation plus local git/code/report correspondence. PR127 remains a declared dependency."
     }
   ],
-  "product_tests": "NOT_RUN",
-  "browser": "NOT_RUN",
-  "installed": "NOT_RUN",
-  "actual_host": "NOT_RUN",
+  "product_tests": "PASS_SCOPED_REGRESSION",
+  "browser": "PASS_SCOPED_BROWSER_PATHS",
+  "installed": "PASS_CANDIDATE_NOT_ACTIVATED",
+  "actual_host": "PARTIAL_TEACHING_PLAN_ONLY",
   "professional_review": "NOT_RUN",
   "human_acceptance": "NOT_RUN",
   "implementation_acceptance": [
     {
       "ac_id": "AC05",
       "owner": "WU01",
-      "result": "NOT_RUN",
-      "evidence_refs": []
+      "result": "PASS",
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "verified",
+      "limitations": "Six reader families compared against immutable project bytes; GET/preview no business writes."
     },
     {
       "ac_id": "AC06",
       "owner": "WU01",
       "result": "NOT_RUN",
-      "evidence_refs": []
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "partial_or_not_run",
+      "limitations": "Unreachable and duplicate query covered; exhaustive cross-project/cross-revision malicious-ref matrix not run."
     },
     {
       "ac_id": "AC07",
       "owner": "WU01",
       "result": "NOT_RUN",
-      "evidence_refs": []
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "partial_or_not_run",
+      "limitations": "Fixed revision/query/pagination checks exist; new index pagination under concurrent current changes not exhaustively exercised."
     },
     {
       "ac_id": "AC08",
       "owner": "WU01",
-      "result": "NOT_RUN",
-      "evidence_refs": []
+      "result": "PASS",
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "verified",
+      "limitations": "Corrupt Narrative, Review, Page requirements and source extraction discriminate unreadable/null/partial; schema rejects invented unreadable fields."
     },
     {
       "ac_id": "AC09",
       "owner": "WU01",
       "result": "NOT_RUN",
-      "evidence_refs": []
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "partial_or_not_run",
+      "limitations": "Imported no-Narrative and Review v1 exercised; all legacy no-manifest and v2-extension combinations not exercised through new UI."
     },
     {
       "ac_id": "AC10",
       "owner": "WU01",
       "result": "NOT_RUN",
-      "evidence_refs": []
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "partial_or_not_run",
+      "limitations": "Safe text rendering, no unrelated resource body scan, disposed-reader guard implemented; comprehensive XSS/late-response browser matrix not run."
     },
     {
       "ac_id": "AC11",
       "owner": "WU02",
       "result": "NOT_RUN",
-      "evidence_refs": []
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "partial_or_not_run",
+      "limitations": "Actual frozen manifest readback tested; old-task browser empty state not separately exercised."
     },
     {
       "ac_id": "AC12",
       "owner": "WU02",
       "result": "NOT_RUN",
-      "evidence_refs": []
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "partial_or_not_run",
+      "limitations": "Historical hash/ID fallback implemented and inspected; old-install metadata UI matrix not run."
     },
     {
       "ac_id": "AC13",
       "owner": "WU02",
       "result": "NOT_RUN",
-      "evidence_refs": []
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "partial_or_not_run",
+      "limitations": "Core resource-drift regression previously passed; new task-methods UI missing/hash-drift recovery path not fully exercised."
     },
     {
       "ac_id": "AC14",
       "owner": "WU02",
       "result": "NOT_RUN",
-      "evidence_refs": []
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "partial_or_not_run",
+      "limitations": "Existing operation recovery tests pass; method-panel unknown-call scenario not specifically exercised."
     },
     {
       "ac_id": "AC15",
       "owner": "WU02",
-      "result": "NOT_RUN",
-      "evidence_refs": []
+      "result": "PASS",
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "verified",
+      "limitations": "UI states distinguish readable/prepared/adopted; no professional/human success implied."
     },
     {
       "ac_id": "AC16",
       "owner": "WU03",
-      "result": "NOT_RUN",
-      "evidence_refs": []
+      "result": "PASS",
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "verified",
+      "limitations": "Zero-Page Narrative plus actual associated Plan tested; distinct pairs do not borrow each other’s Plan; installed actual Host has four planned roles."
     },
     {
       "ac_id": "AC17",
       "owner": "WU03",
       "result": "NOT_RUN",
-      "evidence_refs": []
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "partial_or_not_run",
+      "limitations": "Full raw Narrative preserved and structured nodes/edges/plans read; all alternatives/condition rendering shapes not browser-tested."
     },
     {
       "ac_id": "AC18",
       "owner": "WU03",
       "result": "NOT_RUN",
-      "evidence_refs": []
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "partial_or_not_run",
+      "limitations": "Two distinct reachable Narrative/Plan pairs verified; fixed comparison UI implemented, complete current+candidate/history browser matrix outstanding."
     },
     {
       "ac_id": "AC19",
       "owner": "WU03",
-      "result": "NOT_RUN",
-      "evidence_refs": []
+      "result": "PASS",
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "verified",
+      "limitations": "Missing decision vs recordable vs adoptable, reuse and historical read-only verified; existing collaboration policy regression passes."
     },
     {
       "ac_id": "AC20",
       "owner": "WU03",
       "result": "NOT_RUN",
-      "evidence_refs": []
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "partial_or_not_run",
+      "limitations": "Lost decision ACK + reload + original UUID lookup passes without duplicate decision; adoption-step lost ACK and intervening concurrent write browser scenarios outstanding."
     },
     {
       "ac_id": "AC21",
       "owner": "WU03",
-      "result": "NOT_RUN",
-      "evidence_refs": []
+      "result": "PASS",
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "verified",
+      "limitations": "Two independent writes adopt Narrative only; task refs unchanged, no Page/image dispatch."
     },
     {
       "ac_id": "AC22",
       "owner": "WU03",
       "result": "NOT_RUN",
-      "evidence_refs": []
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "partial_or_not_run",
+      "limitations": "Existing compose sub-intent regressions pass; new reading-entry write_only/speech_only browser fixtures outstanding."
     },
     {
       "ac_id": "AC23",
       "owner": "WU04",
       "result": "NOT_RUN",
-      "evidence_refs": []
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "partial_or_not_run",
+      "limitations": "Paragraph atom/source read and deep-link exercised; table cell, item, keyboard/selection matrix outstanding."
     },
     {
       "ac_id": "AC24",
       "owner": "WU04",
-      "result": "NOT_RUN",
-      "evidence_refs": []
+      "result": "PASS",
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "verified",
+      "limitations": "Synthetic later current Narrative leaves original Page bound to older Narrative/source; fixed earlier revision remains current alignment."
     },
     {
       "ac_id": "AC25",
       "owner": "WU04",
       "result": "NOT_RUN",
-      "evidence_refs": []
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "partial_or_not_run",
+      "limitations": "Absent mapping, invalid review locator and corrupt source handled; exhaustive Page atom-invalid UI matrix outstanding."
     },
     {
       "ac_id": "AC26",
       "owner": "WU04",
-      "result": "NOT_RUN",
-      "evidence_refs": []
+      "result": "PASS",
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "verified",
+      "limitations": "Method preview uses separate resolver/resources, immutable project bytes unchanged; never registers example data as sources."
     },
     {
       "ac_id": "AC27",
       "owner": "WU04",
-      "result": "NOT_RUN",
-      "evidence_refs": []
+      "result": "PASS",
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "verified",
+      "limitations": "Review Ref/revision/ID/index -> Page atom -> reload -> return tested in source and installed service; no default-first fallback."
     },
     {
       "ac_id": "AC28",
       "owner": "WU05",
       "result": "NOT_RUN",
-      "evidence_refs": []
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "partial_or_not_run",
+      "limitations": "Actual v1 required finding_id/impact/resolution retained, corrupt object rejected; all v2 impact/resolution/browser combinations outstanding."
     },
     {
       "ac_id": "AC29",
       "owner": "WU05",
       "result": "NOT_RUN",
-      "evidence_refs": []
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "partial_or_not_run",
+      "limitations": "Valid atom exact vs missing atom page_only tested; deck-level and changed-page subject scenarios not fully browser-tested."
     },
     {
       "ac_id": "AC30",
       "owner": "WU05",
       "result": "NOT_RUN",
-      "evidence_refs": []
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "partial_or_not_run",
+      "limitations": "Separate per-finding personal drafts preserve Ref/revision/index; final draft-to-plan/commit exact-scope full browser chain outstanding."
     },
     {
       "ac_id": "AC31",
       "owner": "WU05",
       "result": "NOT_RUN",
-      "evidence_refs": []
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "partial_or_not_run",
+      "limitations": "Source findings remain source layer; existing scope/review-only runtime regression passes; all layer-specific browser handoffs outstanding."
     },
     {
       "ac_id": "AC32",
       "owner": "WU05",
-      "result": "NOT_RUN",
-      "evidence_refs": []
+      "result": "PASS",
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "verified",
+      "limitations": "Draft/reading leaves review and business Document unchanged; adoption does not mutate findings."
     },
     {
       "ac_id": "AC33",
       "owner": "WU05",
       "result": "NOT_RUN",
-      "evidence_refs": []
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "partial_or_not_run",
+      "limitations": "Existing content operation recovery regression passes; newly prepared review-draft stale/scope/network scenarios not all exercised."
     },
     {
       "ac_id": "AC34",
       "owner": "WU06",
-      "result": "NOT_RUN",
-      "evidence_refs": []
+      "result": "PASS",
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "verified",
+      "limitations": "Neutral purpose/audience wording inspected; actual teaching Plan has no commercial CTA or budget requirement."
     },
     {
       "ac_id": "AC35",
       "owner": "WU06",
       "result": "NOT_RUN",
-      "evidence_refs": []
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "partial_or_not_run",
+      "limitations": "Placeholders only and old browser input regressions preserved; all new purpose examples not separately exercised."
     },
     {
       "ac_id": "AC36",
       "owner": "WU06",
       "result": "NOT_RUN",
-      "evidence_refs": []
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "partial_or_not_run",
+      "limitations": "Frozen exact Page matching and derived fallback implemented; multiple frozen-task selection guard inspected, full scenario matrix outstanding."
     },
     {
       "ac_id": "AC37",
       "owner": "WU06",
       "result": "NOT_RUN",
-      "evidence_refs": []
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "partial_or_not_run",
+      "limitations": "Installed teaching roles/conditions readable; overflow-driven content handoff scenario not exercised."
     },
     {
       "ac_id": "AC38",
       "owner": "WU06",
-      "result": "NOT_RUN",
-      "evidence_refs": []
+      "result": "PASS",
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "verified",
+      "limitations": "Requirements read is byte-preserving; no render/production side effects."
     },
     {
       "ac_id": "AC39",
       "owner": "WU07",
-      "result": "NOT_RUN",
-      "evidence_refs": []
+      "result": "PASS",
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "verified",
+      "limitations": "Shared resolver selection, strict query/ID boundary and no-new-phase 200 browser state verified."
     },
     {
       "ac_id": "AC40",
       "owner": "WU07",
       "result": "NOT_RUN",
-      "evidence_refs": []
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "partial_or_not_run",
+      "limitations": "M04+E04 exact DAG/default/explicit/dependency bytes tested; role/stage transition browser coverage partial."
     },
     {
       "ac_id": "AC41",
       "owner": "WU07",
-      "result": "NOT_RUN",
-      "evidence_refs": []
+      "result": "PASS",
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "verified",
+      "limitations": "Preparation preview and browser selection do not alter original Task manifest or dispatch."
     },
     {
       "ac_id": "AC42",
       "owner": "WU07",
       "result": "NOT_RUN",
-      "evidence_refs": []
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "partial_or_not_run",
+      "limitations": "Raw UTF8 body, DAG before exclusion and no script reads/execution tested; over-limit body and all preview variants not browser-tested."
     },
     {
       "ac_id": "AC43",
       "owner": "WU07",
       "result": "NOT_RUN",
-      "evidence_refs": []
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "partial_or_not_run",
+      "limitations": "Digest mismatch409 and saved personal IDs implemented; clipboard invalidation across byte/revision changes not fully browser-tested."
     },
     {
       "ac_id": "AC44",
       "owner": "WU07",
-      "result": "NOT_RUN",
-      "evidence_refs": []
+      "result": "PASS",
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "verified",
+      "limitations": "Session agent read real frozen methods, claimed actual Host tasks and returned accepted Narrative+Plan with selected M04. Not an independent reviewer."
     },
     {
       "ac_id": "AC45",
       "owner": "WU08",
       "result": "NOT_RUN",
-      "evidence_refs": []
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "partial_or_not_run",
+      "limitations": "Only teaching actual Host plan_only plus synthetic Runtime browser projects; diagnosis and option-choice full scenario chains remain outstanding."
     },
     {
       "ac_id": "AC46",
       "owner": "WU08",
       "result": "NOT_RUN",
-      "evidence_refs": []
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "partial_or_not_run",
+      "limitations": "1280x800/1440x900/390x844 no page overflow, existing keyboard/navigation regression passes; full new control focus/keyboard audit outstanding."
     },
     {
       "ac_id": "AC47",
       "owner": "WU08",
-      "result": "NOT_RUN",
-      "evidence_refs": []
+      "result": "PASS",
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "verified",
+      "limitations": "Clean exact SHA wheel/sdist, isolated managed candidate, installed service static hash and three-viewport plus adoption browser path; no checkout resources/HOME activation."
     },
     {
       "ac_id": "AC48",
       "owner": "WU08",
       "result": "NOT_RUN",
-      "evidence_refs": []
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "partial_or_not_run",
+      "limitations": "Existing package/compose/adapters compatibility regression passes; explicit UI removal/rollback installation exercise not run."
     },
     {
       "ac_id": "AC49",
       "owner": "WU08",
       "result": "NOT_RUN",
-      "evidence_refs": []
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "partial_or_not_run",
+      "limitations": "Exact source/package/local checks recorded; required remote CI for new Draft is pending, no old PR127 CI reused as this PR evidence."
     },
     {
       "ac_id": "AC50",
       "owner": "WU08",
-      "result": "NOT_RUN",
-      "evidence_refs": []
+      "result": "PASS",
+      "evidence_refs": [
+        "../../reports/webui-content-methods/DELIVERY.md",
+        "../../reports/webui-content-methods/evidence/package-verification.json"
+      ],
+      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
+      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "coverage": "verified",
+      "limitations": "Engineering/browser/installed/actual Host/professional/human statuses separately recorded; no merge, publication or human approval claimed."
     }
   ],
-  "implementation_branch": "codex/webui-content-methods-impl-20261020"
+  "implementation_branch": "codex/webui-content-methods-impl-20261020",
+  "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+  "evidence_report": "../../reports/webui-content-methods/DELIVERY.md",
+  "cards": [
+    {
+      "id": "WU00",
+      "implementation": "BASELINE_PASS",
+      "acceptance": "See per-AC results; implementation status does not close outstanding acceptance"
+    },
+    {
+      "id": "WU01",
+      "implementation": "IMPLEMENTED",
+      "acceptance": "See per-AC results; implementation status does not close outstanding acceptance"
+    },
+    {
+      "id": "WU02",
+      "implementation": "IMPLEMENTED",
+      "acceptance": "See per-AC results; implementation status does not close outstanding acceptance"
+    },
+    {
+      "id": "WU03",
+      "implementation": "IMPLEMENTED",
+      "acceptance": "See per-AC results; implementation status does not close outstanding acceptance"
+    },
+    {
+      "id": "WU04",
+      "implementation": "IMPLEMENTED",
+      "acceptance": "See per-AC results; implementation status does not close outstanding acceptance"
+    },
+    {
+      "id": "WU05",
+      "implementation": "IMPLEMENTED",
+      "acceptance": "See per-AC results; implementation status does not close outstanding acceptance"
+    },
+    {
+      "id": "WU06",
+      "implementation": "IMPLEMENTED",
+      "acceptance": "See per-AC results; implementation status does not close outstanding acceptance"
+    },
+    {
+      "id": "WU07",
+      "implementation": "IMPLEMENTED",
+      "acceptance": "See per-AC results; implementation status does not close outstanding acceptance"
+    },
+    {
+      "id": "WU08",
+      "implementation": "VALIDATION_PARTIAL",
+      "acceptance": "See per-AC results; implementation status does not close outstanding acceptance"
+    }
+  ]
 }

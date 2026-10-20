@@ -1,3 +1,5 @@
+> 历史检查点：以下记录已由 [DELIVERY.md](DELIVERY.md) 与最终执行账本更新；不要将旧失败/未完成状态当作当前结论。
+
 # 云端接续检查点
 
 2026-10-20T11:01:40Z 的 `date -u`、`pwd`、`git status` 均成功。当前工作树 `/workspace/Deck-Master-webui`，分支 `codex/webui-content-methods-impl-20261020`。环境可执行，并非仅依靠 inProgress 判断。原 `/workspace/Deck-Master` 未提交草稿保留；复制前 SHA 备份在 `/workspace/webui-spec-input/implementation-resume/`。
