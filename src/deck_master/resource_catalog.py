@@ -74,6 +74,11 @@ def validate_catalog(value):
             raise ValueError(f'invalid resource consumers: {mid}')
         resources[mid] = row
         paths.add(path)
+    for mid in (*LEGACY_IDS, 'installation'):
+        row = resources.get(mid)
+        if (row is None or row['relative_path'] != f'references/{mid}.md'
+                or row['readable'] != (mid != 'installation')):
+            raise ValueError(f'catalog must retain the existing resource: {mid}')
     # Validate the entire DAG, including resources not selected this time.
     active, done = set(), set()
 
@@ -120,6 +125,12 @@ def select(resources, selected, *, role, kind=None, phase=None, review_units=Non
     if not isinstance(selected, (list, tuple)) or any(not isinstance(mid, str) for mid in selected):
         raise ValueError('selected_resource_ids must be a list of registered IDs')
     output, seen = [], set()
+    if review_units is not None and (
+            not isinstance(review_units, (list, tuple)) or any(
+                not isinstance(u, str) and
+                (not isinstance(u, dict) or not isinstance(u.get('kind'), str))
+                for u in review_units)):
+        raise ValueError('invalid resource review scope')
     units = {u if isinstance(u, str) else u['kind'] for u in (review_units or [])}
 
     def visit(mid):

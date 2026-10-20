@@ -52,7 +52,7 @@ def test_original_inventory_preserved_and_shared_by_build():
 
 
 @pytest.mark.parametrize('defect', ['duplicate-id', 'duplicate-path', 'escape', 'absolute',
-                                   'backslash', 'cycle', 'unknown-dependency'])
+                                   'backslash', 'cycle', 'unknown-dependency', 'missing-legacy'])
 def test_catalog_rejects_invalid_graph_and_paths(fixture_catalog, defect):
     _, data = fixture_catalog
     row = data['resources'][-1]
@@ -68,6 +68,8 @@ def test_catalog_rejects_invalid_graph_and_paths(fixture_catalog, defect):
         row['relative_path'] = 'assets\\outside'
     elif defect == 'cycle':
         row['dependencies'] = [row['id']]
+    elif defect == 'missing-legacy':
+        data['resources'].pop(0)
     else:
         row['dependencies'] = ['missing-id']
     with pytest.raises(ValueError):
