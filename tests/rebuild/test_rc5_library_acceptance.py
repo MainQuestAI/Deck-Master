@@ -116,7 +116,8 @@ def test_arithmetic_refuses_invalid_inputs_without_execution(defect, message):
 
 @pytest.mark.parametrize('raw,code', [
     ('{"values": {}, "values": {}}', 'duplicate JSON key'),
-    (' ' * 1_000_001, 'input exceeds')])
+    (' ' * 1_000_001, 'input exceeds')],
+    ids=['duplicate-json-key', 'oversized-input'])
 def test_arithmetic_cli_bounded_json(tmp_path, raw, code):
     import json
     import subprocess
