@@ -1,0 +1,47 @@
+{
+  "status": "PARTIAL_BLOCKED",
+  "scope": "WU00 read-only source inspection and proposed specification amendments only",
+  "date": "2026-10-20",
+  "branch": "codex/webui-post127-spec-review-20261020",
+  "base": "09f0213d07fc718dc4d41a52bb69c4595fcb1ac8",
+  "observed_pr127_head": "02627c17d5046428609e6806569ad3cd790e7d26",
+  "latest_observed_pr127_head": "d1ee1c7d1f16db120fd4c91c2cc9e71ce31b915e",
+  "observed_head_delta_read": true,
+  "final_baseline_confirmed": false,
+  "engineering": {
+    "source_inspection": "COMPLETED",
+    "original_spec_revision": "BLOCKED_TRANSFER",
+    "product_implementation": "NOT_STARTED",
+    "product_tests": "NOT_RUN"
+  },
+  "host_application": "NOT_RUN",
+  "human_approval": "NOT_RUN",
+  "blockers": [
+    {
+      "action": "official Library helper materialize",
+      "target": "libfile_668beb6aa8d881918e05cbbac5e19fa7",
+      "state": "failed",
+      "reason": "download failed; cause unspecified; destination absent",
+      "retry": false
+    },
+    {
+      "action": "gh pr view 127",
+      "target": "MainQuestAI/Deck-Master PR127 GraphQL",
+      "state": "denied",
+      "reason": "Forbidden",
+      "retry": false
+    },
+    {
+      "action": "start WU01-WU08",
+      "state": "pending",
+      "reason": "await parent confirmation of PR127 final usable baseline"
+    }
+  ],
+  "constraints": {
+    "pr127_branch_written": false,
+    "pushed": false,
+    "product_code_modified": false,
+    "user_local_accessed": false,
+    "methods_scripts_executed": false
+  }
+}
