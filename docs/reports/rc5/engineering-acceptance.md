@@ -48,3 +48,11 @@
 - 本地完整单元运行：3461 passed、2 skipped、1 failed、635 deselected。唯一失败为相对解释器路径 `../venv/bin/python` 在子进程规范化后触发严格身份比对；原始 PR 同样复现。使用规范绝对解释器路径重跑 `test_rc3_image_events.py` 全模块：28 passed（7.03秒）。没有修改身份或权限断言。
 - `e7f6e125` 的 Linux Python 3.11 / Node 24 单元任务：3461 passed、2 skipped、1 failed。新增超长输入用例的自动参数名称进入 `PYTEST_CURRENT_TEST` 环境变量，触发 Linux 单个环境字符串长度限制，未到达算术脚本。修复为短语义测试 ID，保留原超长输入及拒绝断言；最终全矩阵结果须读回修复后的准确 HEAD。
 - `e7f6e125` 的 PR/push Linux真实渲染任务均 SUCCESS；修复后的完整 CI 状态见 PR Checks。
+
+## PR127 独立评审后的云端修复
+
+三项 P2 及 A/B 窄回归的修复、完整验证状态与外部访问限制见
+[云端修复回执](pr127-review-fixes-cloud.md)。本轮 clean-source 包验证单列为
+[package-verification-cloud-review.json](package-verification-cloud-review.json)，
+资源快照见 [library-integrity-cloud-review.json](library-integrity-cloud-review.json)。
+原 `5d5db8cf` 包证据和本机测试历史保留，不用当前文档 head 覆写其来源。

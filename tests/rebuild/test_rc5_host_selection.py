@@ -204,12 +204,15 @@ def test_production_compose_method_change_can_reissue_without_scope_expansion(tm
     from test_compose_v2_phases import _project, _request, _scope
     project, store = _project(tmp_path)
     _request(project, store)
+    from test_eligibility_enforcement import _grant
+    _grant(project, store, actions=['dispatch.compose'], scope=_scope())
     doc = store.load_document()
     task = tasks.new_task(task_id='production-compose', operation_id='generic-production', kind='compose',
         scope_pages=[], instruction='Synthetic generic production compose', inputs=[], dependencies=[],
         dispatch_revision=doc['revision_id'], produced_against=models.content_identity(doc))
     collaboration_binding.stamp_task(store, doc, task, phase='production', write_scope=_scope(),
-                                     adoption_policy='proposal_only')
+                                     adoption_policy='proposal_only', action='dispatch.compose')
+    assert task['collaboration_binding']['authorization_ref'] is not None
     if historical == 'early-rc5':
         task['method_manifest'].extend({k: row[k] for k in ('id', 'relative_path', 'sha256')}
                                        for row in methods._read_ids(['method-selection']))
