@@ -1,9 +1,10 @@
 # Pre-Rebuild Archive
 
 History of the v0.9.x Run OS and its retirement. Nothing here is current
-implementation truth; the active baseline is
-[docs/specs/deck-master-rebuild-v1/](../../specs/deck-master-rebuild-v1/)
-(spec pack v1.1). Current entry point and old-command mapping:
+implementation truth. Start with the [current documentation index](../../README.md);
+the [rebuild specification](../../specs/deck-master-rebuild-v1/) is an inherited
+engineering baseline, not a claim that later increments are absent.
+Current entry point and old-command mapping:
 [docs/migration-to-rebuilt-core.md](../../migration-to-rebuilt-core.md);
 `deck-master legacy-map` prints the mapping table.
 
@@ -16,7 +17,7 @@ implementation truth; the active baseline is
   with their ARCHIVED.md markers).
 - `specs-legacy/` — pre-rebuild spec directories moved from `docs/specs/`.
 - `skill-playbooks/` — the old-OS deck-master playbooks and agent instructions
-  (the current skill is `skills/deck-master/SKILL.md` plus `references/`).
+  (current roles are listed in [the four-Skill resolver](../../../skills/RESOLVER.md)).
 - `test-fixtures/fixtures/` — fixtures of the retired test suite.
 - `ci-legacy.yml` — the retired GitHub workflow (superseded by
   `.github/workflows/rebuild.yml`).
@@ -32,6 +33,6 @@ that still matters, or convert its full draft via
 
 - Old source tree (`scripts/`, 177 files): deleted per
   `docs/specs/deck-master-rebuild-v1/inventory/old-files.csv`; per-path
-  reference evidence in `../deck-master-rebuild-v1/inventory/reference-scan.md`.
+  reference evidence in [reference scan](../../specs/deck-master-rebuild-v1/inventory/reference-scan.md).
 - Old tests (`tests/*.py`, 123 entries (122 test files + tests/__init__.py) + fixtures): disposition rationale in
-  `../deck-master-rebuild-v1/inventory/old-tests-disposition.md` (AC-L06).
+  [test disposition](../../specs/deck-master-rebuild-v1/inventory/old-tests-disposition.md) (AC-L06).

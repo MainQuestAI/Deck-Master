@@ -1,0 +1,37 @@
+name: Feature / 改进建议
+description: 说明用户问题、收益和边界；不代表排期承诺
+title: '[enhancement] '
+labels:
+- enhancement
+body:
+- type: markdown
+  attributes:
+    value: 请先搜索已有 open / closed Issues，重复问题请补充到原讨论。所有反馈公开可见；只提供脱敏的最小例子，不上传客户原稿、密钥、绝对路径或完整私有日志。安全疑虑请先阅读 [安全政策](https://github.com/MainQuestAI/Deck-Master/blob/main/SECURITY.md)，不要在这里披露漏洞细节。无法提供的信息请写“未知 / 无法提供”并说明原因，不要猜测。
+- type: textarea
+  id: problem
+  attributes:
+    label: 用户场景与未满足的问题
+    description: 谁在什么任务中遇到什么阻碍？例如多页逐一比较候选很慢。
+  validations:
+    required: true
+- type: textarea
+  id: proposal
+  attributes:
+    label: 期望能力与验收示例
+    description: 描述希望改变的行为和可判断成功的例子，不必指定实现方案。
+  validations:
+    required: true
+- type: textarea
+  id: scope
+  attributes:
+    label: 替代方案、范围与非目标
+    description: 已有绕过方式为何不足？涉及 CLI、Workbench、Host、文档或其他？明确不需要什么。
+  validations:
+    required: true
+- type: textarea
+  id: environment
+  attributes:
+    label: 相关版本与环境
+    description: 如与特定版本、Host 或模型有关请注明；否则写不适用。
+  validations:
+    required: false

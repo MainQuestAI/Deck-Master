@@ -1,0 +1,10 @@
+[
+  {"name":"bug","color":"d73a4a","description":"运行故障或行为回归"},
+  {"name":"quality","color":"7057ff","description":"内容事实、论证、结构或表达质量"},
+  {"name":"enhancement","color":"a2eeef","description":"具体能力改进建议，不表示已排期"},
+  {"name":"documentation","color":"0075ca","description":"文档、示例或链接反馈"},
+  {"name":"needs-info","color":"fbca04","description":"等待指定的最小补充信息"},
+  {"name":"confirmed","color":"0e8a16","description":"已确认问题或需求，不表示已选版本"},
+  {"name":"priority:high","color":"b60205","description":"影响广或阻断主要任务，维护者优先评估"},
+  {"name":"priority:normal","color":"c2e0c6","description":"通常优先级；没有优先级标签时也按此理解"}
+]

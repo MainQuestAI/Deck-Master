@@ -89,7 +89,9 @@ Import semantics:
 
 ## Third-Party Skills
 
-仓库中旧的多 Skill 入口已退役，统一使用 `skills/deck-master/SKILL.md`。
+旧入口退役的历史不代表当前只提供一个 Skill。现行四职责为 `deck-master`、
+`deck-content`、`deck-design`、`deck-review`，共用同一 Runtime 与 canonical 方法。
+当前职责和边界见 [Skill 路由](../skills/RESOLVER.md)；不要重新安装退役入口。
 旧入口到新命令的对照见 [Flow Quality 迁移说明](specs/deck-master-flow-quality-v1.1/MIGRATION.md)。
 本机第三方 Skill 保持原样；安装器只迁移已识别的旧 companion 目录和属于该目录的失效链接。
 
@@ -97,7 +99,7 @@ Import semantics:
 
 - Routing: [docs/agent-task-index.md](agent-task-index.md)
 - Blocked states: [docs/agent-recovery-playbook.md](agent-recovery-playbook.md)
-- Contracts: [src/deck_master/resources/contracts/](contracts/)
+- Contracts: [src/deck_master/resources/contracts/](../src/deck_master/resources/contracts/)
 - Rebuild baseline: [docs/specs/deck-master-rebuild-v1/](specs/deck-master-rebuild-v1/)
 - Historical spec packs under `docs/` are archived references, not current
   truth.

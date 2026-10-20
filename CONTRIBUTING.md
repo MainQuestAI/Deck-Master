@@ -3,7 +3,10 @@
 Contributions to Deck Master 1.x are welcome when they keep the local-first
 workflow reliable, verifiable, and clear for outside users. The project is
 licensed under [Apache-2.0](LICENSE); commits require the DCO sign-off below.
-Use GitHub issues for reproducible bugs and feature proposals, and the
+Use the [support guide](SUPPORT.md) and structured Issue forms for bugs, content
+quality, feature proposals and documentation feedback. Follow the
+[maintenance guide](docs/issue-maintenance.md) for triage, version selection and
+Issue → PR → release tracking, and the
 [security policy](SECURITY.md) for sensitive reports.
 
 ## Development Setup
@@ -81,3 +84,18 @@ operating system and external Host/tool versions, plus a small neutral example.
 Distinguish an unavailable Host, model account, renderer or font from a core
 regression. Keep exact retries and project originals intact while investigating.
 
+
+## Issue-linked changes
+
+Link the actual Issue when one exists; a small documentation fix does not need
+a placeholder Issue. Explain the root cause (or why still unknown), scope,
+non-goals, verification, compatibility and documentation effects. Partial work
+uses `Refs #<issue>`; use `Fixes #<issue>` only for a complete resolution targeting
+the default branch. A merged PR is not a published release. Record the actual
+release tag and associated Issue/PR links when the change ships.
+
+For content quality, preserve authorized, sanitized input and before/after
+outputs with version/Host/model settings and professional review reasons.
+Automated checks are supporting evidence, not user acceptance. Reuse existing
+[benchmark guidance](benchmarks/README.md) when promoting a representative case;
+do not commit customer originals.
