@@ -71,7 +71,9 @@ def preview(project, request):
             except READ_FAILURES:
                 reasons.append('basis_unreadable')
         if gaps: reasons.append('basis_unreadable')
-        if phase and not eligibility.evaluate(store, doc, store.load_document(), 'dispatch.compose')['allowed']:
+        if phase and not eligibility.evaluate(store, doc, store.load_document(), 'dispatch.compose',
+                context={'targets': content_production.phase_dispatch_targets(doc, phase=phase,
+                    page_ids=phase_state.get('page_ids'))})['allowed']:
             reasons.append('policy_blocked')
         valid = bool(phase) and not reasons
         status = 'new_content_task' if valid else 'frozen_pending_task' if pending else 'no_new_phase'

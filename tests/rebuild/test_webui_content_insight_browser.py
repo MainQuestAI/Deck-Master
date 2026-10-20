@@ -180,7 +180,8 @@ def test_adoption_lost_ack_refresh_looks_up_without_second_write(tmp_path):
     finally:server.stop()
 
 
-def test_adoption_concurrent_revision_keeps_payload_until_explicit_new_request(tmp_path):
+@pytest.mark.parametrize('reopen', [False, True])
+def test_adoption_concurrent_revision_keeps_payload_until_explicit_new_request(tmp_path, reopen):
     from deck_master import models
     project,store,_,ref=candidate(tmp_path);server=WorkbenchServer(project);url=server.start();info=ui_journal.project_info(project);calls=[]
     try:
@@ -196,7 +197,8 @@ def test_adoption_concurrent_revision_keeps_payload_until_explicit_new_request(t
             page.get_by_role('button',name='确认采用此方向',exact=True).click()
             expect(page.get_by_role('button',name='核实原操作',exact=True)).to_be_enabled()
             assert calls[0]['base_revision']==decision_revision and not store.load_document().get('narrative')
-            page.reload();page.get_by_role('button',name='核实或查看原方向操作',exact=True).click()
+            if reopen:
+                page.reload();page.get_by_role('button',name='核实或查看原方向操作',exact=True).click()
             page.get_by_role('button',name='明确读取当前准入以另建采用请求',exact=True).click()
             expect(page.get_by_role('dialog')).to_contain_text('已读取当前准入，请再次核对范围后明确确认')
             assert len(calls)==1 and store.current_revision_id()==changed_revision

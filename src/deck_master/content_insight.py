@@ -89,6 +89,19 @@ def objects(store, doc):
     return list(refs.values()), errors
 
 
+def known_object_kind(doc, ref, task=None):
+    if ref == doc.get('narrative'):
+        return 'narrative'
+    if ref == doc.get('content_plan'):
+        return 'plan'
+    # compose.v2 framing/argument acceptance fixes the result order: Narrative, optional Plan.
+    if task and (task.get('collaboration_binding') or {}).get('phase') in ('framing', 'argument'):
+        results = task.get('result_refs') or []
+        if ref in results:
+            return 'narrative' if results.index(ref) == 0 else 'plan' if results.index(ref) == 1 else 'object'
+    return 'object'
+
+
 def argument_objects(store, doc):
     entries, issues = objects(store, doc)
     result = []
@@ -110,7 +123,7 @@ def argument_objects(store, doc):
                     'central_statement': central.get('statement')}
             result.append((item, obj))
         except READ_FAILURES:
-            gap = issue(ref, 'narrative'); issues.append(gap)
+            gap = issue(ref, known_object_kind(doc, ref, task)); issues.append(gap)
             if relation == 'narrative':
                 result.append(({'ref': ref, 'readable': False, 'issues': [gap]}, None))
     return result, issues
@@ -140,12 +153,12 @@ def adoption(store, doc, ref, item):
     blocked = ('historical_revision' if doc['revision_id'] != control['revision_id'] or item.get('relation') == 'historical'
                else 'argument_required' if item.get('maturity') != 'argument'
                else 'fixed_content_intent' if request.get('content_intent') in ('write_only', 'speech_only') else None)
-    if not blocked and (control.get('collaboration') or {}).get('authority_policy') == 'verified_user':
-        blocked = 'authority_channel_unavailable'
     if blocked:
         result['decision_reason_codes'] = result['adoption_reason_codes'] = [blocked]
         return result
     try:
+        if (control.get('collaboration') or {}).get('authority_policy') == 'verified_user':
+            fail('This UI channel cannot record verified-user decisions', code='authority_channel_unavailable')
         result['basis'] = dependency_slices.merge_required_basis(store, control, family='decision', key='direction', provided=[])
         # This is only admission for the existing Host-attested UI channel. The
         # actual instruction is supplied by the user and revalidated on write.
@@ -192,11 +205,15 @@ def argument(project, sha256, *, revision=None):
         return envelope(doc, 'argument', None, item['issues'], 'unreadable')
     plans, related = [], []
     plan_errors = []
-    for ref, _, _ in objects(store, doc)[0]:
+    for ref, task, _ in objects(store, doc)[0]:
+        kind = known_object_kind(doc, ref, task)
+        if kind == 'narrative':
+            continue
         try:
             plan = read(store, ref, project_id=doc['project_id'])
             if plan.get('schema_version') != 'content_plan.v2' or plan.get('narrative_ref') != item['ref']:
                 continue
+            kind = 'plan'
             models.validate_content_plan_semantics(plan)
             links = {l['page_id']: l['page_ref'] for l in plan['page_links']}
             plans.append({'ref': ref, 'readable': True, 'data': {'narrative_ref': item['ref'], 'mode': plan['mode'],
@@ -204,7 +221,9 @@ def argument(project, sha256, *, revision=None):
                                    'basis_status': 'planned' if plan['mode'] == 'planned' else 'current'}
                                   for role in plan['input']['page_roles']], 'plan': plan}})
         except READ_FAILURES:
-            gap = issue(ref, 'plan'); gaps.append(gap); plan_errors.append(gap)
+            gap = issue(ref, kind); gaps.append(gap)
+            if kind == 'plan':
+                plan_errors.append(gap)
     for entry in doc['pages']:
         try:
             page = read(store, entry['page'], 'page')
@@ -255,37 +274,49 @@ def evidence(project, page_id, *, revision=None, element_ref=None):
     if element_ref and element_ref not in {a['atom_id'] for a in atoms}:
         fail('Text atom is unavailable in this Page', code='insight_locator_unavailable', status=404)
     nodes = {n['node_id']: n for n in narrative.get('nodes', [])}; elements = []
-    checked_sources = set()
-    def links(values):
+    checked_sources = {}
+    def links(values, local_gaps):
         from .content_ops import source
         unique = {}
         for link in values:
             key = models.canonical_json_bytes(link); unique[key] = link
-            if key in checked_sources: continue
-            checked_sources.add(key)
+            if key in checked_sources:
+                if checked_sources[key] is not None:
+                    local_gaps.append(checked_sources[key])
+                continue
+            checked_sources[key] = None
             try:
                 current = source(project, source_id=link['source_id'], revision=doc['revision_id'],
                     locator=link['locator'], extract_sha256=(link['source_version'].get('extract') or {}).get('sha256'))
                 if current['source_version'] != link['source_version'] or current['location'] != 'exact':
                     raise ValueError('source locator differs')
             except READ_FAILURES:
-                gaps.append(issue(link['source_version'].get('extract'), 'source', page_id))
+                gap = issue(link['source_version'].get('extract'), 'source', page_id)
+                checked_sources[key] = gap
+                local_gaps.append(gap)
         return list(unique.values())
+    narrative_gaps = list(gaps)
     for atom in atoms:
         if element_ref and atom['atom_id'] != element_ref:
             continue
         link = next((l for l in mapping.get('visible_links', []) if l['element_ref'] == atom['atom_id']), None)
+        local_gaps = list(narrative_gaps) if link else []
         selected = [nodes[n] for n in (link or {}).get('narrative_node_ids', []) if n in nodes]
         if link and any(n not in nodes for n in link['narrative_node_ids']):
-            gaps.append(issue(ref, 'narrative_node', page_id))
+            local_gaps.append(issue(ref, 'narrative_node', page_id))
         qualification_ids = list(dict.fromkeys([q for n in selected for q in n.get('qualification_node_ids', [])] +
             [e['from_node_id'] for e in narrative.get('edges', []) if e['relation'] == 'qualifies' and e['to_node_id'] in {n['node_id'] for n in selected}]))
+        direct_links = links((link or {}).get('source_links', []), local_gaps)
+        node_links = links([s for n in selected for s in n.get('source_links', [])], local_gaps)
+        for gap in local_gaps:
+            if gap not in gaps:
+                gaps.append(gap)
         elements.append({'element_ref': atom['atom_id'], 'text': atom['text'],
-            'mapping_status': 'unreadable' if gaps and link else 'recorded' if link else 'not_recorded',
+            'mapping_status': 'unreadable' if local_gaps and link else 'recorded' if link else 'not_recorded',
             'nodes': selected, 'edges': [e for e in narrative.get('edges', []) if any(n['node_id'] in e.values() for n in selected)],
             'qualifications': [nodes[q] for q in qualification_ids if q in nodes],
-            'direct_source_links': links((link or {}).get('source_links', [])),
-            'node_source_links': links([s for n in selected for s in n.get('source_links', [])])})
+            'direct_source_links': direct_links,
+            'node_source_links': node_links})
     return envelope(doc, 'page_evidence', {'page_id': page_id, 'page_ref': entry['page'], 'narrative_ref': ref,
         'alignment': 'not_recorded' if not ref else 'current' if ref == doc.get('narrative') else 'bound_to_older_narrative',
         'elements': elements}, gaps)

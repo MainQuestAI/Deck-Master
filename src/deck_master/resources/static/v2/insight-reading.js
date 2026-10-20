@@ -57,9 +57,9 @@ function directionDialog(app,initial){
   const status=el('div',{role:'status',class:'stack'}),text=field('确认这份方向的理由',el('textarea',{rows:3,required:true}));
   try{saved=JSON.parse(localStorage.getItem(key)||'null');if(saved?.text)text.input.value=saved.text;}catch{status.append(el('p',{},'原操作草稿无法读取，请核实后再提交。'));return modal('方向操作恢复',status);}
   const persist=()=>{localStorage.setItem(key,JSON.stringify(saved));};
-  const submit=button('确认',send,true);
-  const dialog=modal('方向决定与采用',el('div',{class:'stack'},el('p',{},'记录决定与采用是两项独立操作。采用不会启动页面制作或生图。'),text.node,details('固定对象与范围',initial.data.adoption),status),[submit],{protectDraft:true});
-  function paint(){const adopted=saved?.adopted;submit.hidden=Boolean(adopted);submit.disabled=busy; text.input.disabled=Boolean(saved?.pending||saved?.decision);submit.textContent=saved?.pending?'核实原操作':saved?.decision||current.data.adoption.can_adopt?'确认采用此方向':'确认记录方向决定';if(saved?.decision&&!adopted)status.prepend(el('p',{},'方向决定已记录，采用尚未完成。'));if(adopted)status.replaceChildren(el('p',{},'方向已采用；原比较保持固定。'),button('阅读采用后的版本',()=>{dialog.close();app.go({revision:saved.adopted.revision_id});}));}
+  const submit=button('确认',send,true),recovery=el('div',{class:'stack'});
+  const dialog=modal('方向决定与采用',el('div',{class:'stack'},el('p',{},'记录决定与采用是两项独立操作。采用不会启动页面制作或生图。'),text.node,details('固定对象与范围',initial.data.adoption),status,recovery),[submit],{protectDraft:true});
+  function paint(){const adopted=saved?.adopted;recovery.hidden=Boolean(adopted);recovery.querySelector('button')?.toggleAttribute('disabled',busy);submit.hidden=Boolean(adopted);submit.disabled=busy; text.input.disabled=Boolean(saved?.pending||saved?.decision);submit.textContent=saved?.pending?'核实原操作':saved?.decision||current.data.adoption.can_adopt?'确认采用此方向':'确认记录方向决定';if(saved?.decision&&!adopted)status.prepend(el('p',{},'方向决定已记录，采用尚未完成。'));if(adopted)status.replaceChildren(el('p',{},'方向已采用；原比较保持固定。'),button('阅读采用后的版本',()=>{dialog.close();app.go({revision:saved.adopted.revision_id});}));}
   async function send(){if(busy)return;busy=true;paint();try{
     let response;
     if(saved?.pending){
@@ -81,7 +81,7 @@ function directionDialog(app,initial){
     if(kind==='decision')current=await get('/api/content/arguments/'+sha+revisionQuery(result.revision_id));
   }catch(error){status.replaceChildren(el('p',{role:'alert'},readableError(error)),el('p',{},'原版本、请求与操作编号已保留。不会自动换用新基线。'));}finally{busy=false;paint();}}
   if(saved?.decision&&!saved?.pending&&!saved?.adopted){busy=true;get('/api/content/arguments/'+sha+revisionQuery(saved.decision.revision_id)).then(value=>{current=value;}).catch(error=>{status.append(el('p',{},readableError(error)));}).finally(()=>{busy=false;paint();});}
-  status.append(button('明确读取当前准入以另建采用请求',async()=>{if(busy)return;busy=true;paint();try{if(saved?.pending){try{await get('/api/operations/'+saved.pending.payload.operation_id);throw Error('原操作已有回执，请先核实原操作。');}catch(e){if(e.code!=='operation_not_found')throw e;}saved={...saved,previous_attempts:[...(saved.previous_attempts||[]),saved.pending],pending:null};persist();}current=await get('/api/content/arguments/'+sha);
+  recovery.append(button('明确读取当前准入以另建采用请求',async()=>{if(busy)return;busy=true;paint();try{if(saved?.pending){try{await get('/api/operations/'+saved.pending.payload.operation_id);throw Error('原操作已有回执，请先核实原操作。');}catch(e){if(e.code!=='operation_not_found')throw e;}saved={...saved,previous_attempts:[...(saved.previous_attempts||[]),saved.pending],pending:null};persist();}current=await get('/api/content/arguments/'+sha);
     const admission=current.data.adoption;
     if(saved?.decision&&!admission.can_adopt&&!admission.existing_decision_ref&&admission.can_record_direction_decision){
       saved={...saved,previous_decisions:[...(saved.previous_decisions||[]),saved.decision],decision:null};persist();

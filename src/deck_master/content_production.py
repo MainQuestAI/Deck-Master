@@ -171,6 +171,15 @@ def _phase_instruction(document, phase: str, variant: str, store) -> str:
     return "按 phase 写出本阶段内容产物。"
 
 
+def phase_dispatch_targets(document, *, phase=None, intent="initial", page_ids=None):
+    """Pure targets shared by preparation and the locked phase dispatch gate."""
+    requested_layers = list(PHASE_SPEC[phase or FRAMING]["layers"])
+    if intent == "input_revision":
+        request_scope = ((document.get("collaboration") or {}).get("request") or {}).get("scope") or {}
+        requested_layers = [layer for layer in CHANGED_LAYERS if layer in request_scope.get("layers", [])]
+    return {"page_ids": sorted(page_ids or []), "layers": requested_layers}
+
+
 def open_phase_task(store, document, *, operation_id: str, intent: str = "initial",
                     input_revision_id: str | None = None, phase: str | None = None,
                     adoption_policy: str | None = None, page_ids=None,
@@ -184,12 +193,8 @@ def open_phase_task(store, document, *, operation_id: str, intent: str = "initia
     (external review F06).
     """
     from . import eligibility
-    requested_layers = list(PHASE_SPEC[phase or FRAMING]["layers"])
-    if intent == "input_revision":
-        request_scope = ((document.get("collaboration") or {}).get("request") or {}).get("scope") or {}
-        requested_layers = [layer for layer in CHANGED_LAYERS if layer in request_scope.get("layers", [])]
     eligibility.guard(store, document, "dispatch.compose",
-                      context={"targets": {"page_ids": sorted(page_ids or []), "layers": requested_layers}})
+                      context={"targets": phase_dispatch_targets(document, phase=phase, intent=intent, page_ids=page_ids)})
     task = build_phase_task(store, document, operation_id=operation_id, intent=intent,
                             input_revision_id=input_revision_id, phase=phase,
                             adoption_policy=adoption_policy, page_ids=page_ids,
