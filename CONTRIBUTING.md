@@ -99,3 +99,24 @@ outputs with version/Host/model settings and professional review reasons.
 Automated checks are supporting evidence, not user acceptance. Reuse existing
 [benchmark guidance](benchmarks/README.md) when promoting a representative case;
 do not commit customer originals.
+
+## Convenience entry points
+
+After installing development dependencies, `make smoke` inspects the actual
+CLI and runs package/entry checks. `make test` runs core unit tests; the
+renderer, required-browser and installed/offline gates remain in the workflow.
+`make preview REGISTRY=./deck-master-projects.json` starts the loopback launcher.
+`make package OUT=<new-directory>` creates wheel/sdist/provenance; it does
+not publish them. Legacy release and RC targets now stop with a retirement message.
+
+## Retired container entry point
+
+The legacy Dockerfile and Dev Container configuration are removed for 1.0.0.
+They referenced the retired preview server and did not install the rebuilt
+src-layout package correctly. A replacement image has not passed an actual
+build and runtime check, so container support is not part of this release.
+Use the Python virtual-environment instructions in [README](README.md#install)
+and the [first-run guide](docs/getting-started.md) for the supported local CLI
+and loopback Workbench. CI provisions its own renderer and browser dependencies.
+A future container entry must validate installation, CLI startup and its stated
+renderer/browser scope before it is offered as a supported path.

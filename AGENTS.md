@@ -10,7 +10,8 @@ agents working in this repository.
 2. `docs/agent-task-index.md` for user-intent to command routing.
 3. `docs/agent-recovery-playbook.md` for blocked-state repair decisions.
 4. `src/deck_master/resources/contracts/` for runtime JSON contracts and schema truth.
-5. For the current RC4 increment:
+5. For the RC5 content-method increment, read
+   `docs/specs/content-methods-rc5/README.md`. For inherited RC4 work:
    `docs/specs/deck-master-next-iteration-20261019/06-CODEX-HANDOFF.md`,
    then its specified reading order and the assigned N1–N6 card.
    The unique candidate ledger is
