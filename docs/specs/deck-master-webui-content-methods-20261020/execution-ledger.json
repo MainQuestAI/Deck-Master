@@ -22,7 +22,7 @@
   ],
   "package_evidence_ref": "docs/reports/rc5/package-verification-cloud-review.json",
   "spec_drift_review": "PASS",
-  "implementation_status": "REVIEW_FIXES_VERIFIED_INDEPENDENT_REVIEW_AND_FINAL_CI_PENDING",
+  "implementation_status": "CI_ENTRY_REGISTRY_FIXED_PENDING_REMOTE_VERIFICATION",
   "acceptance": [
     {
       "ac_id": "AC01",
@@ -57,7 +57,7 @@
       "limitations": "PR metadata GraphQL denied; parent CI confirmation plus local git/code/report correspondence. PR127 remains a declared dependency."
     }
   ],
-  "product_tests": "PASS_RELATED_137_AND_FOCUSED_6",
+  "product_tests": "ENTRY_COVERAGE_PASS_FULL_UNIT_LOCAL_SETUP_BLOCKED",
   "browser": "PASS_ENGINEERING_MATRIX",
   "installed": "PASS_CLEAN_SHA_CANDIDATE_AND_DOUBLE_SAVE_BROWSER",
   "actual_host": "PASS_THREE_CONTENT_FULL_SCENARIOS_CURRENT_AGENT",
@@ -781,16 +781,13 @@
       "owner": "WU08",
       "result": "NOT_RUN",
       "evidence_refs": [
-        "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/matrix-final.log",
-        "../../reports/webui-content-methods/evidence/regression-closure.log",
-        "../../reports/webui-content-methods/evidence/package-closure.json"
+        "../../reports/webui-content-methods/ENTRY-REGISTRY-FIX.md"
       ],
-      "candidate_sha": "554e9e2f91301f1b2fd223db1552f22d0df05bff",
+      "candidate_sha": "7b414a92c77a2578465e4495f5932320a1a95cb1",
       "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
       "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
-      "coverage": "pending_external_confirmation",
-      "limitations": "PENDING parent final-head CI and independent Draft creation; parent code review ongoing. No gh retry."
+      "coverage": "pending_new_head_ci",
+      "limitations": "Original four CI entry omissions fixed; local full unit completed with five DNS-blocked installation cases and one old SDK metadata mismatch resolved by 2-case rerun. Complete remote matrix still pending."
     },
     {
       "ac_id": "AC50",
@@ -810,7 +807,7 @@
     }
   ],
   "implementation_branch": "codex/webui-content-methods-impl-20261020",
-  "candidate_sha": "554e9e2f91301f1b2fd223db1552f22d0df05bff",
+  "candidate_sha": "7b414a92c77a2578465e4495f5932320a1a95cb1",
   "evidence_report": "../../reports/webui-content-methods/DELIVERY.md",
   "cards": [
     {
@@ -862,24 +859,25 @@
   "remote_delivery": {
     "branch": "codex/webui-content-methods-impl-20261020",
     "push": "SUCCESS",
-    "draft_pr_creation": "API_ACCESS_ERROR",
+    "draft_pr_creation": "SUCCESS_PARENT_CONNECTED_GITHUB",
     "target_base": "codex/rc5-content-methods-20261020",
     "command": "gh pr create --draft",
     "error": "Post \"https://api.github.com/graphql\": Forbidden",
-    "pr_url": null,
+    "pr_url": "https://github.com/MainQuestAI/Deck-Master/pull/130",
     "retry": "NO_CREATION_RETRY_OR_CHANNEL_SWITCH",
-    "next_step": "Parent connected GitHub creates Draft against unmerged PR127 branch and checks final head CI; do not retry gh creation",
+    "next_step": "Push same PR130 branch; parent verifies new exact head complete CI. No new PR, merge or publish.",
     "previous_label": "DENIED (ambiguous shorthand, not a tool approval rejection)",
     "tool_approval_denial": false,
-    "remote_creation_outcome": "PARENT_CONFIRMED_NO_PR_AT_PRIOR_CHECK",
+    "remote_creation_outcome": "PR130_DRAFT_CONFIRMED",
     "read_only_verification": {
       "command": "gh pr list --state all --head codex/webui-content-methods-impl-20261020 --json number,url,state,isDraft,headRefName,headRefOid,baseRefName",
       "exit_code": 1,
       "error": "Post \"https://api.github.com/graphql\": Forbidden",
       "outcome": "ACCESS_ERROR_NO_RESULT"
     },
-    "final_head_ci": "PENDING",
-    "parent_prior_branch_ci": "39415132380 at 6ee00b9b; not final candidate evidence"
+    "final_head_ci": "PENDING_NEW_HEAD",
+    "parent_prior_branch_ci": "39415132380 at 6ee00b9b; not final candidate evidence",
+    "last_confirmed_pr_head": "eabee7ddaa754757ee6f49078c431a72791fb610"
   },
   "followup": {
     "runtime_source_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
@@ -915,5 +913,32 @@
     "installed": "5 checks PASS including P1/P2 one-click",
     "previous_evidence": "441 regression, three actual Host scenes and rollback retain their original 3baf6caa source binding; not rerun/relabeled as new SHA",
     "independent_code_review": "IN_PROGRESS_PARENT"
-  }
+  },
+  "ci_entry_registry_fix": {
+    "source_sha": "7b414a92c77a2578465e4495f5932320a1a95cb1",
+    "reproduction": "4 failed, 18 passed in 0.36s",
+    "targeted": "34 passed in 1.41s",
+    "full_unit": "3 failed, 3500 passed, 2 skipped, 682 deselected, 3 errors in 630.13s",
+    "full_unit_disposition": "NOT_ALL_GREEN",
+    "local_setup_findings": {
+      "five_install_cases": "BLOCKED_DNS setuptools>=77 fixture setup; no alternate index or test weakening",
+      "image_lock_case": "parent metadata 1.0.0rc5 vs isolated child old editable metadata1.0.0.dev2; correct temporary editable SDK rerun 2 passed"
+    },
+    "uncovered": {},
+    "stale": {},
+    "ruff": "PASS src/deck_master tests/rebuild",
+    "tests_modified": false,
+    "report": "../../reports/webui-content-methods/ENTRY-REGISTRY-FIX.md"
+  },
+  "ci_history": [
+    {
+      "head": "eabee7ddaa754757ee6f49078c431a72791fb610",
+      "push_run": "39421563183",
+      "pr_run": "39422228545",
+      "unit": "FAIL_ENTRY_REGISTRY",
+      "source": "parent log inspection; same four failures reproduced locally",
+      "render": "PASS_PARENT_REPORTED",
+      "browser": "PARENT_FOLLOWING"
+    }
+  ]
 }

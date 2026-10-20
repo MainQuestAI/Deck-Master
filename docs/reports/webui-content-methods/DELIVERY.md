@@ -1,5 +1,7 @@
 # PR127 后续独立 WebUI：实现与验证回执
 
+> 最新 CI 入口清单修复见 [ENTRY-REGISTRY-FIX](ENTRY-REGISTRY-FIX.md)，源码 `7b414a92c77a2578465e4495f5932320a1a95cb1`。原四个覆盖失败已消除；完整本地unit结果及DNS/旧SDK元数据限制逐项保留，未宣称整组全绿。现有 Draft PR130 等待新head CI。
+
 > 最新独立复审修复见 [REVIEW-FIXES](REVIEW-FIXES.md)：源码/包 `554e9e2f91301f1b2fd223db1552f22d0df05bff`，137项相关回归及6重点分支通过，新安装版双写交接通过。独立代码复审仍进行中，AC49仍PENDING。以下3baf6caa结果为前轮准确历史证据，不重标为新SHA执行。
 
 2026-10-20。完整 WU01–WU08 产品范围在同一云端分支实现，A/B 仅为内部增量。当前工程验收 **49 AC PASS；AC49 等待父线程最终 head CI 与独立 Draft PR 回执**。独立专业审阅、人类体验仍为 NOT_RUN，不自动合并或发布。

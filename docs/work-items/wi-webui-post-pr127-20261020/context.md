@@ -11,3 +11,5 @@ status: engineering_verified_pending_final_ci_and_draft
 唯一规格入口：[README](../../specs/deck-master-webui-content-methods-20261020/README.md)。实际工程、安装、Host 和未完成项见 [交付回执](../../reports/webui-content-methods/DELIVERY.md) 与 [逐 AC 账本](../../specs/deck-master-webui-content-methods-20261020/execution-ledger.json)。
 
 继续仅在当前云端独立工作树完成同一 Draft；PR127 未合并是显式依赖，不自动合并它、不预占 PR 编号或 RC6、不发布/激活真实 HOME、不改用户原工作树。
+
+CI 接续：PR130 已存在，保持 Draft/base 依赖127。旧 head 的四个 eligibility entry 未分类失败已复现并在 `7b414a92c77a2578465e4495f5932320a1a95cb1` 补齐，测试未改。全量 unit 本地非全绿，DNS/旧SDK元数据的具体证据及纠正结果见 [入口修复回执](../../reports/webui-content-methods/ENTRY-REGISTRY-FIX.md)，最终完整CI待父线程跟进。
