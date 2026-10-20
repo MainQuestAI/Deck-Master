@@ -66,6 +66,10 @@ def test_manifest_file_hash_mismatch_refuses_before_creating_prefix(tmp_path):
 @pytest.mark.parametrize('mutation', ['unknown', 'missing', 'symlink'])
 def test_unknown_missing_or_symlink_canonical_file_fails(tmp_path, mutation):
     shutil.copytree(ROOT / 'skills', tmp_path / 'skills')
+    # The build hook loads the shared catalog validator from the source tree.
+    module = tmp_path / 'src/deck_master/resource_catalog.py'
+    module.parent.mkdir(parents=True)
+    shutil.copy2(ROOT / 'src/deck_master/resource_catalog.py', module)
     path = tmp_path / 'skills/deck-master/references/unknown.md'
     if mutation == 'unknown':
         path.write_text('must not silently ship')
