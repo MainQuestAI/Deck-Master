@@ -414,7 +414,7 @@ export function content(app, data) {
     el('section',{class:'studio-content-area',id:'content-area-plan','aria-label':'内容计划',hidden:true},planPanel),
     el('section',{class:'studio-content-area',id:'content-area-notes','aria-label':'工作笔记',hidden:true},panel('工作笔记',draftNode))
   ]:[];
-  const extraAreas=supportsInsights(app)?[['arguments','论证主线',argumentDesk(app)],['methods','方法与案例',methodLibrary(app)]]:[];
+  const extraAreas=supportsInsights(app)?[['arguments','论证主线',argumentDesk(app)],...(app.health.ui_capabilities?.includes('method_library_preview.v1')?[['methods','方法与案例',methodLibrary(app)]]:[])]:[];
   for(const [key,title,body] of extraAreas)workAreas.push(el('section',{class:'studio-content-area stack',id:'content-area-'+key,'aria-label':title,hidden:true},body));
   const areaNames=[['overview','方案概览'],['pages','逐页编辑与顺序'],['plan','内容计划'],['notes','工作笔记'],...extraAreas.map(([key,title])=>[key,title])];
   const areaButtons=studio?areaNames.map(([key,title])=>button(title,()=>showContentArea(key),false,{'aria-pressed':String(key===area),'aria-controls':'content-area-'+key})):[];

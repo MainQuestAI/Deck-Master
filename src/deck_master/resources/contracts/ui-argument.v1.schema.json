@@ -408,12 +408,16 @@
                             "page_id"
                           ]
                         }
+                      },
+                      "data": {
+                        "type": "null"
                       }
                     },
                     "required": [
                       "ref",
                       "readable",
-                      "issues"
+                      "issues",
+                      "data"
                     ]
                   },
                   {

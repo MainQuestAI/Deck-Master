@@ -1,7 +1,7 @@
 """Read-only preparation using the same catalog and selector as dispatch."""
 from . import content_production, eligibility, method_resources as methods, models
 from .content_insight import fail, records, snapshot
-from .resource_catalog import CATALOG_PATH, PUBLIC_SKILLS, load_catalog, safe_file, select
+from .resource_catalog import CATALOG_PATH, PUBLIC_SKILLS, validate_catalog, safe_file, select
 from .snapshots import READ_FAILURES
 
 
@@ -11,8 +11,10 @@ def digest(value):
 
 def catalog():
     root = methods.resolve_root()
-    rows = load_catalog(root)
-    return root, rows, models.sha256_bytes(safe_file(root, CATALOG_PATH).read_bytes())
+    import json
+    raw = safe_file(root, CATALOG_PATH).read_bytes()
+    rows = validate_catalog(json.loads(raw))
+    return root, rows, models.sha256_bytes(raw)
 
 
 def preview(project, request):
@@ -33,7 +35,7 @@ def preview(project, request):
         role, phase, units = ctx['role'], ctx['phase'], ctx['review_units']
         if phase is not None and phase not in {'framing', 'argument', 'page_copy', 'speech', 'review', 'production', 'design', 'delivery', 'input_revision'}:
             fail('Invalid phase')
-        if not isinstance(units, list) or any(not isinstance(u, str) for u in units):
+        if not isinstance(units, list) or any(not isinstance(u, str) or u not in methods._CONTENT_UNITS | methods._VISUAL_UNITS for u in units):
             fail('Invalid review units')
         if role == 'deck-review' and phase is None:
             phase = 'review'
@@ -73,7 +75,7 @@ def preview(project, request):
     expected = request.get('expected_basis')
     if expected is not None and expected != {'catalog_digest': catalog_digest, 'context_digest': context_digest}:
         fail('Preparation basis changed; re-preview retained IDs', code='method_preview_basis_changed', status=409)
-    defaults = []; resolved = []; dependencies = []
+    defaults = []; resolved = []; dependencies = []; titles = {}
     if valid:
         try:
             selected = select(rows, chosen, role=role, kind=kind, phase=phase, review_units=units)
@@ -83,6 +85,9 @@ def preview(project, request):
             ids = list(dict.fromkeys([*defaults, *selected]))
             for mid in ids:
                 data = safe_file(root, rows[mid]['relative_path']).read_bytes()
+                if rows[mid]['relative_path'].endswith('.md'):
+                    text = data.decode('utf-8')
+                    titles[mid] = next((line.lstrip('#').strip() for line in text.splitlines() if line.startswith('# ')), mid)
                 resolved.append({'id': mid, 'relative_path': rows[mid]['relative_path'], 'sha256': models.sha256_bytes(data)})
             dependencies = [i for i in selected if i not in chosen and i not in defaults]
         except (ValueError, OSError) as exc:
@@ -95,7 +100,7 @@ def preview(project, request):
             except ValueError: allowed = False; why = ['outside_role_phase_scope']
         elif not valid: why = list(reasons) or ['context_unavailable']
         if not row['readable']: why = ['resource_not_readable']
-        entries.append({'id': mid, 'display_name': mid, 'description': '', 'kind': row['kind'],
+        entries.append({'id': mid, 'display_name': titles.get(mid, mid), 'description': '', 'kind': row['kind'],
                         'sha256': hashes.get(mid), 'selectable': allowed, 'reason_codes': why})
     preview_digest = digest({'basis': context_digest, 'catalog': catalog_digest, 'selected': chosen, 'manifest': resolved})
     text = ('方法准备，尚未应用。请制作工具先重新核对项目版本、请求、范围和资源字节，再按正式流程处理。\n'

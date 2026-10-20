@@ -12,19 +12,21 @@ export function reader(app, path, render) {
   return box;
 }
 export const issues = value => value.issues?.length ? details('不可读记录与定位依据',value.issues) : null;
-const objectText = value => typeof value==='string'?value:JSON.stringify(value,null,2);
+const objectText = value => typeof value==='string'?value:Object.entries(value||{}).filter(([k])=>!/(^id$|_id$|_ids$|ref$|refs$)/.test(k)).map(([,v])=>typeof v==='string'?v:Array.isArray(v)?v.map(objectText).join('；'):v&&typeof v==='object'?objectText(v):String(v??'')).filter(Boolean).join(' · ');
+const roleNames={claim:'主张',evidence:'证据',qualification:'限定条件',context:'背景',action:'行动',question:'问题'};
+const relationNames={supports:'支持',qualifies:'限定',contrasts:'对比',causes:'导致',depends_on:'依赖',explains:'解释',precedes:'先于'};
 export function narrativeBody(value) {
   if(!value.data)return el('div',{},el('p',{},'这份主线有记录但暂不可读。'),issues(value));
   const d=value.data,n=d.narrative;
   return el('article',{class:'stack argument-reading'},el('h3',{},d.item.central_statement||'主线尚未形成核心回答'),
     el('p',{},d.item.communication_question||'未记录沟通问题'),
     el('p',{class:'muted'},({current:'当前主线',proposal:'本请求待选',historical:'历史主线'})[d.item.relation]+' · '+(n.maturity==='argument'?'论证稿':'框架稿')),
-    el('h4',{},'论点与条件'),n.nodes.map(node=>el('section',{class:'insight-node'},el('strong',{},node.statement||node.node_id),el('p',{},node.role),details('完整论点与来源',node))),
-    el('h4',{},'论证关系'),n.edges.map(edge=>el('p',{},`${edge.from_node_id} → ${edge.to_node_id} · ${edge.relation}`)),
+    el('h4',{},'论点与条件'),n.nodes.map(node=>el('section',{class:'insight-node'},el('strong',{},node.statement||node.node_id),el('p',{},roleNames[node.role]||'论点'),details('完整论点与来源',node))),
+    el('h4',{},'论证关系'),n.edges.map(edge=>el('p',{},`${n.nodes.find(x=>x.node_id===edge.from_node_id)?.statement||'原论点不可读'} → ${n.nodes.find(x=>x.node_id===edge.to_node_id)?.statement||'目标论点不可读'} · ${relationNames[edge.relation]||edge.relation}`)),
     el('h4',{},'未决问题'),(n.issues||[]).map(i=>el('p',{class:'read-text'},objectText(i))),
     el('h4',{},'业务替代与代价'),el('p',{class:'muted'},'以下是稿件中的业务选项，不是另一个叙事候选。'),(n.alternatives||[]).map(i=>el('p',{class:'read-text'},objectText(i))),
     el('h4',{},'固定计划与页面职责'),!d.plans.length&&el('p',{},d.plan_status==='unreadable'?'关联计划暂不可读。':'没有记录与这份主线关联的计划。'),
-    d.plans.map(plan=>plan.readable?el('div',{},plan.data.planned_roles.map(r=>el('div',{class:'read-text'},objectText(r.role),el('p',{class:'muted'},r.page_ref?'已有页面引用':'计划职责，尚无页面'))),details('固定计划原文',plan)):details('不可读计划',plan)),
+    d.plans.map(plan=>plan.readable?el('div',{},plan.data.planned_roles.map(r=>el('div',{class:'read-text'},el('strong',{},r.role.role),el('p',{},r.role.audience_question),el('p',{},r.role.intended_takeaway),el('p',{class:'muted'},r.page_ref?'已有页面引用':'计划职责，尚无页面'))),details('固定计划原文',plan)):details('不可读计划',plan)),
     details('完整主线、固定引用与决定依据',d),issues(value));
 }
 export function argumentDesk(app) {
