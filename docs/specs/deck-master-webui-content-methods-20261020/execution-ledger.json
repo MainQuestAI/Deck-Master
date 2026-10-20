@@ -758,5 +758,16 @@
       "implementation": "VALIDATION_PARTIAL",
       "acceptance": "See per-AC results; implementation status does not close outstanding acceptance"
     }
-  ]
+  ],
+  "remote_delivery": {
+    "branch": "codex/webui-content-methods-impl-20261020",
+    "push": "SUCCESS",
+    "draft_pr_creation": "DENIED",
+    "target_base": "codex/rc5-content-methods-20261020",
+    "command": "gh pr create --draft",
+    "error": "Post https://api.github.com/graphql: Forbidden",
+    "pr_url": null,
+    "retry": "NOT_ATTEMPTED",
+    "next_step": "Restore authorized access, check result, then continue same branch; do not bypass denial"
+  }
 }

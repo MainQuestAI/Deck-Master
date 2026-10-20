@@ -74,3 +74,10 @@ PYTHONPATH=src /workspace/Deck-Master/.venv/bin/python -B tools/build_release.py
 GitHub PR 元信息读取曾返回 GraphQL Forbidden，已按新证据允许的一次重试后停止；未改 API/执行环境绕过。推送与 Draft 创建是父线程另行授权的操作，实际结果由后续提交/最终回执记录。新 PR 的 required CI 尚无本任务读到的结果，不能借用 PR127 的全绿。
 
 回退可移除新 UI/capability；不重写 Document、Task、Narrative、Review，不降 writer floor。继续只在此独立云端任务修订同一 Draft，不自动合并、发布或启动浏览器派发。
+
+
+## 远端交付结果
+
+独立分支已成功推送至 `origin/codex/webui-content-methods-impl-20261020`。Draft 创建命令 `gh pr create --draft --base codex/rc5-content-methods-20261020 --head codex/webui-content-methods-impl-20261020 --body-file /workspace/webui-evidence/pr-body.md` 返回 exit 1：`Post "https://api.github.com/graphql": Forbidden`。状态 **DENIED**，没有 PR URL/编号回执，创建未获确认；没有重复创建或改 API/执行环境绕过。后续须先恢复授权访问并核对结果，再续接同一分支。没有合并或发布。
+
+正文已保存在云端 `/workspace/webui-evidence/pr-body.md`；分支可复核全部实现、准确包证据和未完成验收。此权限阻塞不改变本地 182 项回归与安装检查的实际结果，也不把 WU08 未闭合项标为通过。
