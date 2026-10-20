@@ -198,5 +198,7 @@ reason; nothing silently falls back to fixtures.
 - [Agent Recovery Playbook](docs/agent-recovery-playbook.md)
 - [Current RC4 Increment](docs/specs/deck-master-next-iteration-20261019/README.md)
 - [Migration to the Rebuilt Core](docs/migration-to-rebuilt-core.md)
+- [Support and Feedback](SUPPORT.md)
+- [Issue Maintenance](docs/issue-maintenance.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security](SECURITY.md)

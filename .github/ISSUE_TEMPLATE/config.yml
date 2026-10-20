@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 使用帮助 / Support
+    url: https://github.com/MainQuestAI/Deck-Master/blob/main/SUPPORT.md
+    about: 先查安装和诊断说明；问答入口及当前限制见此页。
+  - name: 安全报告指引 / Security
+    url: https://github.com/MainQuestAI/Deck-Master/blob/main/SECURITY.md
+    about: 先确认私密渠道，不要在公开 Issue 披露漏洞细节。

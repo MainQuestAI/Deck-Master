@@ -1,0 +1,44 @@
+name: Content / 内容质量
+description: 事实、论证、结构、表达或专业质量问题
+title: '[quality] '
+labels:
+- quality
+body:
+- type: markdown
+  attributes:
+    value: 请先搜索已有 open / closed Issues，重复问题请补充到原讨论。所有反馈公开可见；只提供脱敏的最小例子，不上传客户原稿、密钥、绝对路径或完整私有日志。安全疑虑请先阅读 [安全政策](https://github.com/MainQuestAI/Deck-Master/blob/main/SECURITY.md)，不要在这里披露漏洞细节。无法提供的信息请写“未知 / 无法提供”并说明原因，不要猜测。
+- type: textarea
+  id: problem
+  attributes:
+    label: 质量问题与影响
+    description: 哪种受众和任务受影响？例如材料仅说明相关性，输出却断言因果。
+  validations:
+    required: true
+- type: textarea
+  id: environment
+  attributes:
+    label: 版本与环境
+    description: Deck Master 版本/安装来源，OS、Python、Host 及版本、模型与相关设置（如 reasoning effort；未知可说明）。不填账号或凭据。
+  validations:
+    required: true
+- type: textarea
+  id: input
+  attributes:
+    label: 最小脱敏输入与操作
+    description: 提供虚构/脱敏 brief、相关来源片段和操作步骤；标出删减内容。不能共享时说明限制，不需原稿。
+  validations:
+    required: true
+- type: textarea
+  id: comparison
+  attributes:
+    label: 问题页段与期望标准
+    description: 标出页码/段落，摘录实际输出和期望改法及理由；如 P2 第2段应保留“尚未验证”的限定。不必贴全稿。
+  validations:
+    required: true
+- type: textarea
+  id: reproduction
+  attributes:
+    label: 复现频率与升级回归
+    description: 每次 / 偶发 / 仅一次？是否升级后出现，最后正常与首次异常版本（未知也可）？
+  validations:
+    required: false
