@@ -1,0 +1,37 @@
+{
+  "source_sha": "d1ee1c7d1f16db120fd4c91c2cc9e71ce31b915e",
+  "source_dirty": false,
+  "package_version": "1.0.0rc5",
+  "wheel_sha256": "780eb58b2b686de0510ceace153936627d09e60a7cf8d2928e692ed7b955d66d",
+  "sdist_sha256": "6a797d657694d300eaffeaf22db3afa71a0354a67f11d0d30e7706de4e675a1a",
+  "release_id": "d1ee1c7d1f16-780eb58b2b68",
+  "mapped_files": 76,
+  "managed_status": "candidate_ready",
+  "activated": false,
+  "public_skills": [
+    "deck-master",
+    "deck-content",
+    "deck-design",
+    "deck-review"
+  ],
+  "installed_resource_files": 76,
+  "installed_read": {
+    "status": "PASS",
+    "root": "/tmp/rc5-cloud-managed-ready/.deck-master/releases/d1ee1c7d1f16-780eb58b2b68/venv/lib/python3.12/site-packages/deck_master/resources/skill",
+    "ids": [
+      "collaboration-routing",
+      "source-reading",
+      "content-methods",
+      "content-calibration",
+      "review-and-repair",
+      "physical-units",
+      "method-review",
+      "content-m04"
+    ],
+    "cwd_spoof_read": false
+  },
+  "native_compile_render_probe": "PASS",
+  "professional_acceptance": "NOT_RUN",
+  "real_home_activation": "NOT_RUN",
+  "render_tool": "Debian librsvg2-bin 2.60.0+dfsg-1, extracted under /tmp; DECK_MASTER_RSVG_CONVERT explicit"
+}

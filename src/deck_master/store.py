@@ -366,6 +366,13 @@ class Store:
             from .models import require_writer
             document = copy.deepcopy(document)
             require_writer(document, "rc4-content.v1")
+        from .resource_catalog import needs_catalog_writer
+        if (WRITER_RANK.get(document.get("compatibility", {}).get("minimum_writer"), -1)
+                < WRITER_RANK["method-catalog.v1"] and
+                any(needs_catalog_writer(self.read_object_json(ref)) for ref in document.get("tasks") or [])):
+            from .models import require_writer
+            document = copy.deepcopy(document)
+            require_writer(document, "method-catalog.v1")
         validate_document_semantics(document)
         change = document.get("change") or {}
         change_operation = operation_id or change.get("operation_id") or ""

@@ -111,7 +111,12 @@ def task_method_contract_changed(task):
         return True
     if "method_manifest" not in task:
         kwargs = {"intent": task.get("intent") or task.get("review_stage"), "phase": phase}
-        if method_ids_for(task["kind"], review_units=task.get("review_units"), **kwargs) != rc3_method_ids_for(task["kind"], **kwargs):
+        # RC5 additions are defaults for new Tasks, not a reason to retire a
+        # historical Task whose original bytes and RC4 scope remain valid.
+        from .resource_catalog import LEGACY_IDS
+        historical_scope = tuple(mid for mid in method_ids_for(
+            task["kind"], review_units=task.get("review_units"), **kwargs) if mid in LEGACY_IDS)
+        if historical_scope != rc3_method_ids_for(task["kind"], **kwargs):
             return True
     return resolve_task_methods(task)["basis_status"] != "current"
 
@@ -771,6 +776,7 @@ def new_task(
     input_revision_id: str | None = None,
     method_release: dict | None = None,
     review_units: list[dict] | None = None,
+    selected_resource_ids=None,
 ) -> dict:
     """Build a minimal valid Task v1 (05 chapter wires dispatch)."""
     task = {
@@ -807,7 +813,7 @@ def new_task(
     if review_units is not None:
         task['review_units'] = review_units
     from .method_resources import freeze_task_methods
-    freeze_task_methods(task)
+    freeze_task_methods(task, selected_resource_ids=selected_resource_ids)
     validate_task_semantics(task)
     return task
 
@@ -2087,7 +2093,16 @@ def reissue_changed_method_tasks(store):
                 include_manuscript=task["kind"] != "style_analyze")
             if "budget_key" in binding:
                 replacement["collaboration_binding"]["budget_key"] = binding["budget_key"]
-        freeze_task_methods(replacement)
+        # This is a committed execution basis, not a temporary pre-binding manifest.
+        # Preserve its registered resources when formally issuing the replacement.
+        inherited = [row['id'] for row in task.get('method_manifest', [])] or None
+        # Early RC5 injected this default even outside its catalog phases.
+        # Retire that obsolete default, preserving other explicit resources and
+        # the original immutable manifest. Do not widen catalog scope to reissue.
+        if (inherited and task['kind'] == 'compose'
+                and binding.get('phase') in ('design', 'production', 'delivery')):
+            inherited = [mid for mid in inherited if mid != 'method-selection']
+        freeze_task_methods(replacement, selected_resource_ids=inherited)
         validate_task_semantics(replacement)
         prospective["tasks"].append(store.put_json_object(replacement))
         replacements.append((index, retired, replacement))

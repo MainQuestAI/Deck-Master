@@ -15,6 +15,8 @@ description: 从任务、材料或已有项目协调内容、设计、制作和�
 
 ## 方法与允许产物
 
+涉及内容的新任务，按 method-selection 识别交流任务与内容缺口，将拟采用的方法/案例 ID 随现有派发输入交给负责角色，由 Runtime 验证并冻结。不另建方法任务、分析审批或第二份内容真源；不默认读取十卡六例。已确认方向和范围继续有效。
+
 1. 读原始指令、来源、当前 request/eligibility/completion，区分决定、授权与具体文件认可。省略格式的新建默认 workbench.v3/rc3；不选择旧协议规避资格。
 2. 对新任务形成任务理解、拟议范围、关键未知和下一责任；通过同一 Runtime create/start_request，保存真实 instruction evidence。模型建议不得记成用户已接受决定。
 3. 按请求的职责调用 Content/Design/Review；传同一项目、固定版本与 scope，不复制状态。完整制作只有在资格允许时才交 Producer 继续蓝图→SVG→真实 PPT→逐页/最终检查。

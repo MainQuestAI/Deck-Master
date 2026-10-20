@@ -150,3 +150,20 @@ production grant. Imported confirmed drafts preserve their actual source and
 mapping; old formats need migration describe/apply before formal writes.
 Selected historical exports are judged against their actual file/notes and
 current control, including current pause/revoke/review facts.
+
+## RC5 method selection
+
+New dispatch through `create`, `continue` and `inputs update` accepts repeated
+`--selected-resource-id <catalog-id>`. The matching Python service input is
+`selected_resource_ids`; collaboration API `continue` accepts the same bounded
+list. IDs must be registered and applicable to the final role, phase and scope.
+For example, an argument-phase dispatch can select `content-m04` and
+`case-e04-walkthrough`; dependencies include the example's input and after text.
+This does not authorize producing a new page, changing a confirmed direction,
+or using synthetic example values as project evidence.
+
+Independent reads use `methods --kind compose --phase argument --read
+--selected-resource-id content-m04`. Existing Task reads must omit selection:
+their ordered manifest is immutable. Finish or formally retire/reissue pending
+work before selecting resources for a new dispatch. See the
+[RC5 implementation specification](specs/content-methods-rc5/README.md).

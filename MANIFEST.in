@@ -6,4 +6,4 @@ include pyproject.toml
 recursive-include src/deck_master/resources *.json *.css *.js *.html *.md *.svg *.txt
 include setup.py
 include tools/build_hook.py
-recursive-include skills *.md *.yaml
+recursive-include skills *

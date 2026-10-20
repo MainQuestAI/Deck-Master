@@ -15,6 +15,8 @@ description: 独立设计方案、版式可行性与限定样页试作；消费�
 
 ## 方法与允许产物
 
+按 content-to-visual 保留比较范围、因果/假设区分、责任与必要限定。只读本次语义关系相关示例，不重跑内容分析；Toulmin、Pugh、SCR 不对应固定版式。内容放不下时提出具体拆分/压缩候选，交 Content/用户，不静默改稿。
+
 读真实 Page 全稿、Plan 对应条目或合法 imported_mapping、来源/决定、template/recipe 与固定 scope。独立读取 visual-reference、style-calibration、candidates-and-stages、blueprint-svg 与 physical-units。先判断关系（矩阵归属、流程方向、对比条件、层级）与密度/阅读距离，再提出能承载完整正文的版式；无法承载时给出具体内容取舍候选，交 Content/用户决定，不静默删字。
 
 方案包括 Design/recipe、适用页型、代表页选择、布局理由和未覆盖范围。外部试作只对明确授权页和 allowance 执行，固定准确 generation_input/prompt/refs/canvas/物理尺寸后调用真实 ImageGen；按实际能力 freeze/begin/settle。原始蓝图、原 prompt 和失败均保留；无工具返回 needs_tool，不造图。

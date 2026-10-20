@@ -412,7 +412,7 @@ def test_content_candidate_notes_adoption_protects_current_same_cas_and_old_core
                 text='Authorize one L1 content changeset trial and its explicit selection.',
                 locator='L1:content-notes:grant'))
     original = store.load_document()
-    assert original['compatibility']['minimum_writer'] == 'rc4-content.v1'
+    assert original['compatibility']['minimum_writer'] == 'method-catalog.v1'
     if kind == 'page':
         task = content_trials.dispatch_content_trial(path, store)
         envelope = content_trials.page_envelope(store, task)
@@ -439,7 +439,7 @@ def test_content_candidate_notes_adoption_protects_current_same_cas_and_old_core
     outcome = content_trials.adopt(path, store, result['candidate_ids'])
     protected = store.load_document()
     assert protected['revision_id'] == outcome['revision_id']
-    assert protected['compatibility']['minimum_writer'] == 'rc4-content.v1'
+    assert protected['compatibility']['minimum_writer'] == 'method-catalog.v1'
     adopted_page = store.read_object_json(protected['pages'][0]['page'])
     assert adopted_page['speaker_notes'].endswith('末段')
     assert all(not store.read_object_json(ref).get('generation_attempts') for ref in protected['tasks'])
@@ -477,7 +477,7 @@ def test_empty_notes_content_candidate_preserves_current_writer_floor(tmp_path):
     _set_notes(envelope['pages'][0], '')
     result = content_trials.accept(path, task, envelope)
     content_trials.adopt(path, store, result['candidate_ids'])
-    assert store.load_document()['compatibility']['minimum_writer'] == before_writer == 'rc4-content.v1'
+    assert store.load_document()['compatibility']['minimum_writer'] == before_writer == 'method-catalog.v1'
 
 
 @pytest.mark.parametrize('output', ['pptx_notes', 'both', 'separate_script'])
@@ -494,9 +494,9 @@ def test_explicit_content_candidate_policy_consumption_protects_writer_even_with
     assert not envelope['pages'][0].get('speaker_notes')
     result = content_trials.accept(path, task, envelope)
     before = store.load_document()
-    assert before['compatibility']['minimum_writer'] == 'rc4-content.v1'
+    assert before['compatibility']['minimum_writer'] == 'method-catalog.v1'
     content_trials.adopt(path, store, result['candidate_ids'])
     adopted = store.load_document()
-    assert adopted['compatibility']['minimum_writer'] == 'rc4-content.v1'
+    assert adopted['compatibility']['minimum_writer'] == 'method-catalog.v1'
     assert adopted['pages'] == before['pages']
     assert adopted['content_plan'] == before['content_plan']

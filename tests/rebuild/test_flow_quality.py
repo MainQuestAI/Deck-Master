@@ -121,7 +121,7 @@ def test_method_resources_dispatch_by_kind_and_are_readable(tmp_path: Path) -> N
     response = service.create(project, brief="说明方案", sources=[_material(tmp_path)])
     compose = response["pending_tasks"][0]
     compose_ids = [item["id"] for item in compose["method_resources"]]
-    assert compose_ids == ["source-reading", "content-methods", "content-examples"]
+    assert compose_ids == ["source-reading", "content-methods", "content-examples", "method-selection"]
     for item in compose["method_resources"]:
         path = Path(item["path"])
         assert path.is_file()
@@ -138,14 +138,20 @@ def test_method_resources_dispatch_by_kind_and_are_readable(tmp_path: Path) -> N
 
 
 def test_method_dispatch_mapping_by_kind_and_intent() -> None:
-    from deck_master.method_resources import method_ids_for
+    from deck_master.method_resources import method_ids_for, rc3_method_ids_for
+
+    # Historical Tasks without a manifest keep the pre-catalog selector.
+    assert rc3_method_ids_for("compose", intent="initial") == (
+        "source-reading", "content-methods", "content-examples")
+    assert rc3_method_ids_for("compose", intent="input_revision", phase="page_copy") == (
+        "source-reading", "content-methods", "content-examples", "input-update")
 
     assert method_ids_for("compose", intent="initial") == (
-        "source-reading", "content-methods", "content-examples")
+        "source-reading", "content-methods", "content-examples", "method-selection")
     assert method_ids_for("compose", intent="input_revision") == (
-        "source-reading", "content-methods", "content-examples", "input-update")
-    assert method_ids_for("blueprint") == method_ids_for("reconstruct") == ("blueprint-svg", "physical-units")
-    assert method_ids_for("review") == ("source-reading", "content-methods", "content-calibration", "review-and-repair", "physical-units")
+        "source-reading", "content-methods", "content-examples", "input-update", "method-selection")
+    assert method_ids_for("blueprint") == method_ids_for("reconstruct") == ("blueprint-svg", "physical-units", "content-to-visual")
+    assert method_ids_for("review") == ("source-reading", "content-methods", "content-calibration", "review-and-repair", "physical-units", "method-review")
     assert method_ids_for("repair") == ("review-and-repair", "content-methods", "blueprint-svg", "physical-units")
     assert method_ids_for("compile") == ()
     # The dispatched entry list stays different between compose and review (AC-02).
@@ -604,7 +610,7 @@ def test_inputs_update_supersedes_and_dispatches(tmp_path: Path) -> None:
     assert dispatched["kind"] == "compose"
     assert dispatched["project_context"]["input_digest"] == result["input_digest"]
     assert [item["id"] for item in dispatched["method_resources"]] == [
-        "source-reading", "content-methods", "content-examples", "input-update"]
+        "source-reading", "content-methods", "content-examples", "input-update", "page-writing"]
     # Pages, reviews and outputs all survive; only the interface source changed.
     replaced = next(entry for entry in document["sources"]
                     if entry["source_id"] == id_by_name["interface-v1.md"])

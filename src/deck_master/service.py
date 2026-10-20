@@ -110,6 +110,7 @@ def create(
     project_format: str | None = None,
     request_input: dict | None = None,
     adapter_context=None,
+    selected_resource_ids=None,
 ) -> dict:
     """Publish a complete RC3 project atomically; no old writer is visible."""
     import shutil
@@ -164,6 +165,7 @@ def create(
         collaboration.start_request(stage, input=request, base_revision=document["revision_id"],
             operation_id=_new_operation_id("request"), adapter_context=adapter_context)
         document = store.load_document()
+        dispatched_task = None
         if request["intent"] in ("full_deck", "content_only"):
             if content_production.completion_status(store, document)['state'] == 'completed':
                 updated = content_production.close_completed_content_request(store, copy.deepcopy(document))
@@ -172,7 +174,9 @@ def create(
                     description='Complete the requested fixed content without production', updated=updated,
                     response={'request_id': updated['collaboration']['request']['request_id'], 'closed_reason': 'completed'})
             else:
-                content_production.next_phase_task(store, document)
+                dispatched_task = content_production.next_phase_task(store, document, selected_resource_ids=selected_resource_ids)
+        if selected_resource_ids is not None and dispatched_task is None:
+            raise ServiceError("selected_resource_ids", "resource selection requires a new Task dispatch")
         if not target.exists():
             target.mkdir()
         (stage / ".deckmaster").rename(target / ".deckmaster")
@@ -266,7 +270,7 @@ def _adopt_draft(store: Store, draft_payload: dict) -> dict:
     return outcome
 
 
-def revision_compose_task(store: Store, document, *, operation_id, reason, impact=None) -> dict:
+def revision_compose_task(store: Store, document, *, operation_id, reason, impact=None, selected_resource_ids=None) -> dict:
     """Build the input-reconciliation task for this project's writer boundary.
 
     A collaboration.v1 project dispatches the phased compose.v2
@@ -285,11 +289,11 @@ def revision_compose_task(store: Store, document, *, operation_id, reason, impac
             instruction += f" 影响分析：{impact_summary_text(impact)}。"
         return build_phase_task(
             store, document, operation_id=_new_operation_id("compose"), intent="input_revision",
-            input_revision_id=operation_id, instruction=instruction)
-    return _input_compose_task(document, operation_id=operation_id, reason=reason, store=store)
+            input_revision_id=operation_id, instruction=instruction, selected_resource_ids=selected_resource_ids)
+    return _input_compose_task(document, operation_id=operation_id, reason=reason, store=store, selected_resource_ids=selected_resource_ids)
 
 
-def _input_compose_task(document, *, operation_id, reason, store=None):
+def _input_compose_task(document, *, operation_id, reason, store=None, selected_resource_ids=None):
     pages = document.get("pages") or []
     if pages:
         intent = "input_revision"
@@ -323,6 +327,7 @@ def _input_compose_task(document, *, operation_id, reason, store=None):
                        "sha256": content_identity(document)}],
         dispatch_revision=document["revision_id"],
         produced_against=content_identity(document),
+        selected_resource_ids=selected_resource_ids,
     )
     from .content_plan import protocol_fields
     task.update(protocol_fields(document, intent, store=store))
@@ -331,7 +336,7 @@ def _input_compose_task(document, *, operation_id, reason, store=None):
 
 def open_compose_task(store: Store, document: dict, *, operation_id: str,
                       intent: str = "initial", input_revision_id: str | None = None,
-                      phase: str | None = None) -> dict:
+                      phase: str | None = None, selected_resource_ids=None) -> dict:
     """Open a compose Host task against the current content identity.
 
     The routing decision runs first (CONTRACTS §6.2 row 1): a content task
@@ -346,7 +351,7 @@ def open_compose_task(store: Store, document: dict, *, operation_id: str,
         # historical import envelope instead of entering the phased protocol.
         from .content_production import open_phase_task
         return open_phase_task(store, document, operation_id=operation_id, intent=intent,
-                               input_revision_id=input_revision_id, phase=phase)
+                               input_revision_id=input_revision_id, phase=phase, selected_resource_ids=selected_resource_ids)
     produced_against = content_identity(document)
     methods = method_resources("compose", intent=intent)
     task = tasks_mod.new_task(
@@ -374,6 +379,7 @@ def open_compose_task(store: Store, document: dict, *, operation_id: str,
         ],
         dispatch_revision=document["revision_id"],
         produced_against=produced_against,
+        selected_resource_ids=selected_resource_ids,
     )
     from .content_plan import protocol_fields
     task.update(protocol_fields(document, intent, store=store))
@@ -736,7 +742,7 @@ def _task_summary_v1(store: Store, document: dict, task: dict, *, dispatch_docum
 
 
 @tasks_mod._project_transaction
-def open_blueprint_task(store: Store, document: dict, page_entry: dict) -> dict:
+def open_blueprint_task(store: Store, document: dict, page_entry: dict, *, selected_resource_ids=None) -> dict:
     """Dispatch one Codex ImageGen task with one service-owned allowance."""
     current = store.load_document()
     if content_identity(current) != content_identity(document):
@@ -750,7 +756,13 @@ def open_blueprint_task(store: Store, document: dict, page_entry: dict) -> dict:
     for ref in document.get("tasks") or []:
         existing = store.read_object_json(ref)
         if existing.get("stage_request", {}).get("mode") != "trial" and existing.get("kind") == "blueprint" and existing.get("status") in ("awaiting_host", "running") and existing.get("scope_pages") == [page_entry["page_id"]]:
+            if selected_resource_ids is not None:
+                raise ServiceError("selected_resource_ids", "existing Task is frozen; use formal reissue")
             return existing
+    # Validate the final dispatch scope before persisting the production request.
+    # stamp_task still freezes the final binding below.
+    methods = method_resources("blueprint", phase="production",
+                               selected_resource_ids=selected_resource_ids)
     page_ref = page_entry["page"]
     page = store.read_object_json(page_ref)
     from .production import resolve_generation_design
@@ -760,7 +772,6 @@ def open_blueprint_task(store: Store, document: dict, page_entry: dict) -> dict:
     request["permitted_asset_files"] = _resolve_permitted_asset_files(store, request["projection"]["permitted_assets"])
     request_ref = store.put_json_object(request)
     operation_id = _new_operation_id("blueprint")
-    methods = method_resources("blueprint")
     task = tasks_mod.new_task(
         task_id=uuid.uuid4().hex[:12],
         operation_id=operation_id,
@@ -786,7 +797,8 @@ def open_blueprint_task(store: Store, document: dict, page_entry: dict) -> dict:
         store, document, task, phase="production", executor_type="host",
         page_ids=[page["page_id"]], adoption_policy="within_scope",
         action="dispatch.blueprint",
-        action_targets={"page_ids": [page["page_id"]], "layers": ["blueprint"]})
+        action_targets={"page_ids": [page["page_id"]], "layers": ["blueprint"]},
+        selected_resource_ids=selected_resource_ids)
     task, _ = tasks_mod.reserve_allowances(store, document, task, 1)
     from .generation import protocol_fields
     task.update(protocol_fields(document, store=store))
@@ -851,7 +863,7 @@ def _eligibility_report(decision: dict) -> dict:
 
 
 @response_projection
-def continue_project(project_dir: Path | str) -> dict:
+def continue_project(project_dir: Path | str, *, selected_resource_ids=None) -> dict:
     """Run runnable local work and return the stable pending Host tasks.
 
     `continue` is a routing action: it consumes the same eligibility judgement
@@ -860,7 +872,7 @@ def continue_project(project_dir: Path | str) -> dict:
     through its own gated helper.
     """
     try:
-        result = _continue_project(project_dir)
+        result = _continue_project(project_dir, selected_resource_ids=selected_resource_ids)
     except eligibility.EligibilityBlocked as exc:
         # A blocked dispatch is reported as a decision/stop card instead of an
         # exception (CONTRACTS §5: waiting for the user is not a production
@@ -909,7 +921,7 @@ def _with_eligibility(project_dir, response: dict) -> dict:
 
 
 @tasks_mod._project_transaction
-def _recover_input_revision(store):
+def _recover_input_revision(store, *, selected_resource_ids=None):
     document = store.load_document()
     all_tasks = [store.read_object_json(ref) for ref in document.get('tasks') or []]
     if input_alignment(document) != 'needs_reconciliation':
@@ -959,7 +971,8 @@ def _recover_input_revision(store):
         # request gains no reconciliation task through `continue` either
         # (independent re-review N1, F06's contract).
         task = revision_compose_task(store, updated, operation_id=change.get('operation_id'),
-                                   reason=change.get('description') or 'Resume reconciliation against current inputs')
+                                   reason=change.get('description') or 'Resume reconciliation against current inputs',
+                                   selected_resource_ids=selected_resource_ids)
         eligibility.guard(store, updated, 'dispatch.compose', context={'task': task,
             'targets': (task.get('collaboration_binding') or {}).get('write_scope')})
         updated['tasks'].append(store.put_json_object(task))
@@ -967,7 +980,7 @@ def _recover_input_revision(store):
                          operation_id=updated['change']['operation_id'], blobs=[])
 
 
-def _continue_project(project_dir: Path | str) -> dict:
+def _continue_project(project_dir: Path | str, *, selected_resource_ids=None) -> dict:
     """Run runnable local work; return the stable pending Host tasks.
 
     Reuse pending work. Reconcile changed inputs before producing existing
@@ -975,6 +988,14 @@ def _continue_project(project_dir: Path | str) -> dict:
     """
     store = Store(Path(project_dir).expanduser())
     initial = store.load_document()
+    if selected_resource_ids is not None:
+        from .resource_catalog import load_catalog
+        from .method_resources import resolve_root
+        resources = load_catalog(resolve_root())
+        if (not isinstance(selected_resource_ids, (list, tuple)) or any(
+                not isinstance(mid, str) or mid not in resources or not resources[mid]['readable']
+                for mid in selected_resource_ids)):
+            raise ServiceError("selected_resource_ids", "must name registered readable resource IDs")
     if initial.get("collaboration") is None:
         from .collaboration_migration import describe
         return _response(status="needs_input", document=initial, requested_action="continue",
@@ -985,7 +1006,9 @@ def _continue_project(project_dir: Path | str) -> dict:
     if initial_completion['state'] == 'completed':
         return {**_response(status='completed', document=initial, requested_action='continue',
             next_action='return_requested_content', result_refs=initial_completion['outputs']), 'completion': initial_completion}
-    _recover_input_revision(store)
+    if selected_resource_ids is not None and _pending_host_tasks(initial, store, include_trials=False):
+        raise ServiceError("selected_resource_ids", "pending Tasks are frozen; finish or formally retire them before selecting resources for a new dispatch")
+    _recover_input_revision(store, selected_resource_ids=selected_resource_ids)
     tasks_mod.reissue_changed_method_tasks(store)
     document = _retire_missing_page_inputs(store, store.load_document())
     pending = _pending_host_tasks(document, store, include_trials=False)
@@ -1017,7 +1040,7 @@ def _continue_project(project_dir: Path | str) -> dict:
                 next_action="return_requested_content", result_refs=completion["outputs"]), "completion": completion}
         phase_status = content_production.content_phase_status(store, document)
         if phase_status.get("action") == "dispatch":
-            task = content_production.next_phase_task(store, document)
+            task = content_production.next_phase_task(store, document, selected_resource_ids=selected_resource_ids)
             document = store.load_document()
             pending = _pending_host_tasks(document, store, include_trials=False)
             return _response(
@@ -1039,7 +1062,7 @@ def _continue_project(project_dir: Path | str) -> dict:
                 next_action="record_direction_decision",
             )
     elif not (document.get("pages") or []):
-        task = open_compose_task(store, document, operation_id=_new_operation_id("compose"))
+        task = open_compose_task(store, document, selected_resource_ids=selected_resource_ids, operation_id=_new_operation_id("compose"))
         document = store.load_document()
         pending = _pending_host_tasks(document, store, include_trials=False)
         assert pending, "compose task must be pending right after creation"
@@ -1079,19 +1102,19 @@ def _continue_project(project_dir: Path | str) -> dict:
                 # evidence for the edited Page. Any replacement still needs
                 # the real current image scope, pre-review and bounded credit;
                 # a copy-only instruction receives that named admission gap.
-                task = open_blueprint_task(store, document, entry)
+                task = open_blueprint_task(store, document, entry, selected_resource_ids=selected_resource_ids)
                 current = store.load_document()
                 return _response(status='awaiting_host', document=current, requested_action='continue',
                     pending_tasks=[task_summary(store, current, task)],
                     findings=[{'code': 'blueprint_basis_changed', 'page_id': entry['page_id'],
                         'retained_blueprint_ref': entry['blueprint']}], next_action='codex_generate_blueprint')
         if entry.get("page") and not entry.get("blueprint"):
-            task = open_blueprint_task(store, document, entry)
+            task = open_blueprint_task(store, document, entry, selected_resource_ids=selected_resource_ids)
             document = store.load_document()
             return _response(status="awaiting_host", document=document, requested_action="continue",
                              pending_tasks=[task_summary(store, document, task)], next_action="codex_generate_blueprint")
         if not entry.get("svg"):
-            task = open_host_task(store, kind='reconstruct', page_ids=[entry['page_id']],
+            task = open_host_task(store, selected_resource_ids=selected_resource_ids, kind='reconstruct', page_ids=[entry['page_id']],
                 instruction='实际阅读原始蓝图并记录上游期待；核对正文，必要纠正写新 Page。按授权资产与有效设计重建可编辑 SVG。保存原图，提交 reconstruct 信封；不得把预览图冒充原始蓝图。')
             document = store.load_document()
             return _response(status='awaiting_host', document=document, requested_action='continue',
@@ -1111,9 +1134,9 @@ def _continue_project(project_dir: Path | str) -> dict:
                                  findings=[{'code': 'renderer_execution_failed', 'page_id': entry['page_id'],
                                             'message': str(exc)}], next_action='repair_renderer_execution')
             except ConflictError:
-                return _continue_project(project_dir)
+                return _continue_project(project_dir, selected_resource_ids=selected_resource_ids)
             except SvgError as exc:
-                task = open_host_task(store, kind='reconstruct', page_ids=[entry['page_id']],
+                task = open_host_task(store, selected_resource_ids=selected_resource_ids, kind='reconstruct', page_ids=[entry['page_id']],
                     instruction=f'存量 SVG 编译失败：{exc.diagnostic}. 阅读原 Page 和蓝图，提交本页修正后的 SVG；旧 SVG 保留为历史。')
                 document = store.load_document()
                 return _response(status='awaiting_host', document=document, requested_action='continue',
@@ -1151,14 +1174,14 @@ def _continue_project(project_dir: Path | str) -> dict:
                     return _response(status='needs_input', document=document, requested_action='continue',
                                      findings=[page_check], next_action='repair_no_progress')
         if page_check['status'] == 'fail':
-            task = open_host_task(store, kind='repair', page_ids=[entry['page_id']],
+            task = open_host_task(store, selected_resource_ids=selected_resource_ids, kind='repair', page_ids=[entry['page_id']],
                                   review_stage='page_visual',
                                   instruction='本页逐页审图有 must_fix：对照 Page、原始蓝图、当前 SVG 与预览，只返修本页 Page/SVG；保留旧产物及具体发现。')
             document = store.load_document()
             return _response(status='awaiting_host', document=document, requested_action='continue',
                              pending_tasks=[task_summary(store, document, task)],
                              findings=[page_check], next_action='repair_page_visual')
-        task = open_host_task(store, kind='review', page_ids=[entry['page_id']],
+        task = open_host_task(store, selected_resource_ids=selected_resource_ids, kind='review', page_ids=[entry['page_id']],
                               review_stage='page_visual',
                               instruction='实际打开本页 Page、原始蓝图、SVG 预览，核对正文、数字、模块、图标语义、连线方向和遮挡；提交 blueprint_content、blueprint_fidelity、readability 三类记录。关闭旧发现时，replaces 必须保持同一 review_id、finding_id、page_id、kind 和 review_stage。must_fix 需本页新产物与复核证据；needs_judgment 可用具体理由、观察与证据接受合理差异。不得把原图文字当事实源。')
         document = store.load_document()
@@ -1181,7 +1204,7 @@ def _continue_project(project_dir: Path | str) -> dict:
             page_id = exc.diagnostic.get('page_id')
             if page_id not in {entry['page_id'] for entry in document['pages']}:
                 raise
-            task = open_host_task(store, kind='reconstruct', page_ids=[page_id],
+            task = open_host_task(store, selected_resource_ids=selected_resource_ids, kind='reconstruct', page_ids=[page_id],
                 instruction=f'存量 SVG 编译失败：{exc.diagnostic}. 阅读原 Page 和蓝图，提交本页修正后的 SVG；旧 SVG 保留为历史。')
             document = store.load_document()
             return _response(status='awaiting_host', document=document, requested_action='continue',
@@ -1229,7 +1252,7 @@ def _continue_project(project_dir: Path | str) -> dict:
                 # not a pass.
                 return _response(status='needs_input', document=document, requested_action='continue',
                                  findings=report['findings'], next_action='repair_no_progress')
-        task = open_host_task(store,kind='repair',page_ids=[e['page_id'] for e in document['pages']],
+        task = open_host_task(store, selected_resource_ids=selected_resource_ids,kind='repair',page_ids=[e['page_id'] for e in document['pages']],
                               instruction=f'修复实际 PPT 回读问题，修改对应 Page 或 SVG；保留失败输出。检查报告见输入。findings-sig:{sig}')
         return _response(status='awaiting_host',document=store.load_document(),requested_action='continue',
                          pending_tasks=[task_summary(store,store.load_document(),task)],findings=report['findings'],next_action='repair_readback')
@@ -1249,14 +1272,14 @@ def _continue_project(project_dir: Path | str) -> dict:
                                         'detail': '同一产物重复审阅仍有未关闭发现；补充页级修复证据或明确合理差异决定'}],
                              next_action='review_no_progress')
         if status == 'fail':
-            task = open_host_task(store, kind='repair', page_ids=[e['page_id'] for e in document['pages']],
+            task = open_host_task(store, selected_resource_ids=selected_resource_ids, kind='repair', page_ids=[e['page_id'] for e in document['pages']],
                 instruction='实际打开每页原图、SVG预览及PPT真实渲染，核对正文/模块/图标/数字/方向/Logo。'
                             '存在 must_fix：先修复对象，再按缺口补足审阅；subjects 必须包含当前 PPTX 与发现所在页的当前 Page；'
                             '未实际检查不能 pass，问题返回具体对象。')
         else:
             summary = check_summary(store, document)
             units = final_review_units(document, summary, input_alignment=_input_alignment(document))
-            task = open_host_task(store, kind='review', page_ids=[e['page_id'] for e in document['pages']],
+            task = open_host_task(store, selected_resource_ids=selected_resource_ids, kind='review', page_ids=[e['page_id'] for e in document['pages']],
                 review_units=units,
                 instruction=describe_review_units(units))
         return _response(status='awaiting_host',document=store.load_document(),requested_action='continue',
@@ -1293,7 +1316,7 @@ def _review_dispatch_scope(store, document, stage, page_ids, units):
 @tasks_mod._project_transaction
 def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, page_hash=None,
                    review_stage=None, review_units=None, extra_inputs=(), executor_type=None,
-                   phase=None):
+                   phase=None, selected_resource_ids=None):
     document = store.load_document()
     if base_revision is not None and base_revision != document['revision_id']:
         from .store import ConflictError
@@ -1326,6 +1349,8 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
             if kind == 'review' and _review_dispatch_scope(
                     store, document, task.get('review_stage'), task['scope_pages'], task.get('review_units')) != review_scope:
                 continue
+            if selected_resource_ids is not None:
+                raise ServiceError("selected_resource_ids", "existing Task is frozen; use formal reissue")
             return task
     inputs = [ref for e in entries for slot,ref in e.items() if slot != 'page_id' and ref]
     inputs += [ref for ref in document['outputs'].values() if ref]
@@ -1343,7 +1368,8 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
         phase=phase or ("review" if kind == "review" else "production"),
         executor_type=executor_type or "host", page_ids=page_ids,
         adoption_policy="within_scope", action="dispatch.host_task",
-        action_targets={"page_ids": list(page_ids), "layers": host_layers})
+        action_targets={"page_ids": list(page_ids), "layers": host_layers},
+        selected_resource_ids=selected_resource_ids)
     updated=bump_revision(document,{'operation_id':_new_operation_id('dispatch'),'kind':'task_update','description':instruction,'read_set':[]})
     if protocol:
         from .models import require_writer
@@ -1404,7 +1430,7 @@ def _input_request_digest(document, patch, base_revision, patch_dir):
         'relative_path_base': os.path.abspath(os.path.expanduser(str(patch_dir))) if relative else None}))
 
 
-def _recover_input_request(store, operation_id, digest, patch, patch_dir, *, content=False):
+def _recover_input_request(store, operation_id, digest, patch, patch_dir, *, content=False, selected_resource_ids=None):
     """Common atomic/legacy occupancy check, with no filesystem normalization."""
     from . import operations
     lookup = operations.resolve_operation(store, operation_id)
@@ -1431,6 +1457,9 @@ def _recover_input_request(store, operation_id, digest, patch, patch_dir, *, con
         raise operations.lookup_error(lookup, operation_id)
     legacy = operations.read_legacy_record(store, operation_id, head_revision=lookup.head_revision)
     if legacy is not None:
+        if selected_resource_ids is not None:
+            raise InputRevisionConflict('operation_id', 'legacy operation has no resource selection basis',
+                                        cause='operation_payload_conflict', operation_id=operation_id)
         if content:
             raise operations.OperationError('operation_type_conflict', 'operation_id',
                 'operation belongs to another operation type', exit_code=5, operation_id=operation_id)
@@ -1616,6 +1645,7 @@ def inputs_update(
     operation_id: str,
     patch_dir: Path | str | None = None,
     _recoverable_workbench: bool = False,
+    selected_resource_ids=None,
 ) -> dict:
     """Save changed inputs; supersede open tasks; dispatch the input revision.
 
@@ -1650,8 +1680,13 @@ def inputs_update(
         business_digest = operations.request_digest(current, 'content.inputs', base_revision, {'input': patch})
     request_digest = (_input_request_digest(current, patch, base_revision, patch_dir)
                       if not _recoverable_workbench else business_digest)
+    if selected_resource_ids is not None:
+        request_digest = sha256_bytes(canonical_json_bytes({"input_digest": request_digest,
+            "selected_resource_ids": selected_resource_ids}))
+        if _recoverable_workbench:
+            business_digest = request_digest
     existing = _recover_input_request(store, operation_id, request_digest, patch, patch_dir,
-                                      content=_recoverable_workbench)
+                                      content=_recoverable_workbench, selected_resource_ids=selected_resource_ids)
     if existing is not None:
         return existing
     normalized = _normalize_input_patch(patch, patch_dir=patch_dir, upload_project=store.project_root)
@@ -1673,7 +1708,7 @@ def inputs_update(
 
     with store._locked():
         record = _recover_input_request(store, operation_id, request_digest, patch, patch_dir,
-                                        content=_recoverable_workbench)
+                                        content=_recoverable_workbench, selected_resource_ids=selected_resource_ids)
         if record is not None:
             return record
         document = store.load_document()
@@ -1689,6 +1724,11 @@ def inputs_update(
                 f"base {base_revision!r} is not current (now {document['revision_id']!r}); "
                 "re-run inputs show and rebase the patch",
             )
+        if selected_resource_ids is not None:
+            # Validate against the final revision scope before source blobs or
+            # superseded Tasks are persisted. The builder is read-only.
+            revision_compose_task(store, document, operation_id=operation_id,
+                                  reason=normalized['reason'], selected_resource_ids=selected_resource_ids)
         old_digest = compute_input_digest(document)
 
         new_task = {**(document.get("task") or {}), **normalized["task_patch"]}
@@ -1759,6 +1799,8 @@ def inputs_update(
         probe = {"task": new_task, "sources": new_sources}
         new_digest = compute_input_digest(probe)
         if new_digest == old_digest:
+            if selected_resource_ids is not None:
+                raise ServiceError("selected_resource_ids", "unchanged inputs do not dispatch a new Task")
             result = {"status": "unchanged", "input_digest": new_digest,
                       "input_alignment": input_alignment(document),
                       "revision_id": document["revision_id"], "diff": diff,
@@ -1797,7 +1839,8 @@ def inputs_update(
         from .content_impact import analyze_input_change
         content_impact_result = analyze_input_change(store, document, new_document)
         task = revision_compose_task(store, new_document, operation_id=operation_id,
-                                     reason=normalized["reason"], impact=content_impact_result)
+                                     reason=normalized["reason"], impact=content_impact_result,
+                                     selected_resource_ids=selected_resource_ids)
         if normalized.get("mode", "auto") == "trial":
             if not new_document.get("pages"):
                 from .operations import OperationError

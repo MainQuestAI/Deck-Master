@@ -19,21 +19,6 @@ from .models import canonical_json_bytes, sha256_bytes
 
 from . import __version__
 
-RELATIVE_PATHS = {
-    "collaboration-routing": "references/collaboration-routing.md",
-    "physical-units": "references/physical-units.md",
-    "style-calibration": "references/style-calibration.md",
-    "candidates-and-stages": "references/candidates-and-stages.md",
-    "icon-quality": "references/icon-quality.md",
-    "visual-reference": "references/visual-reference.md",
-    "source-reading": "references/source-reading.md",
-    "content-methods": "references/content-methods.md",
-    "content-examples": "references/content-examples.md",
-    "content-calibration": "references/content-calibration.md",
-    "input-update": "references/input-update.md",
-    "blueprint-svg": "references/blueprint-svg.md",
-    "review-and-repair": "references/review-and-repair.md",
-}
 
 # Task kind / intent -> method ids (spec §3.4). compose/initial may consult
 # the examples; an input revision additionally reads the update method.
@@ -84,6 +69,26 @@ def resolve_root() -> Path:
     )
 
 
+from .resource_catalog import load_catalog, safe_file, select
+
+# Compatibility export, derived from the same catalog consumed by build/install.
+RELATIVE_PATHS = {mid: row['relative_path'] for mid, row in load_catalog(resolve_root()).items()
+                  if row['readable']}
+
+
+def _selected_ids(selected, *, kind=None, phase=None, review_units=None, role=None):
+    if selected is None:
+        return ()
+    role = role or ('deck-content' if kind == 'compose' else 'deck-review' if kind == 'review'
+                    else 'deck-design')
+    try:
+        return select(load_catalog(resolve_root()), selected, role=role, kind=kind,
+                      phase=phase, review_units=review_units)
+    except ValueError as exc:
+        from .models import ModelError
+        raise ModelError('selected_resource_ids', str(exc)) from exc
+
+
 def rc3_method_ids_for(kind: str, *, intent: str | None = None,
                        phase: str | None = None) -> tuple[str, ...]:
     if kind == "review" and intent == "preproduction":
@@ -113,7 +118,16 @@ def method_ids_for(kind: str, *, intent: str | None = None,
                    phase: str | None = None, review_units=None) -> tuple[str, ...]:
     """Select new dispatch methods from the actual review scope, in stable order."""
     if kind != "review":
-        return rc3_method_ids_for(kind, intent=intent, phase=phase)
+        base = rc3_method_ids_for(kind, intent=intent, phase=phase)
+        if kind == 'compose':
+            extra = (('writing-profiles',) if phase == 'speech' else
+                     ('page-writing',) if phase == 'page_copy' else
+                     () if phase in ('design', 'production', 'delivery') else ('method-selection',))
+        elif kind in ('blueprint', 'reconstruct', 'style_analyze'):
+            extra = ('content-to-visual',)
+        else:
+            extra = ()
+        return tuple(dict.fromkeys((*base, *extra)))
     if review_units is None:
         # An omitted scope is the Runtime's stage default, never an empty review.
         units = ({"argument", "page_copy", "progression"} if intent == "preproduction"
@@ -144,14 +158,20 @@ def method_ids_for(kind: str, *, intent: str | None = None,
         selected |= {"source-reading", "content-methods", "content-examples", "content-calibration"}
     if units & _VISUAL_UNITS:
         selected.add("physical-units")
-    return tuple(method for method in _REVIEW_ORDER if method in selected)
+    result = tuple(method for method in _REVIEW_ORDER if method in selected)
+    return (*result, "method-review") if units & (_CONTENT_UNITS | {"speech"}) else result
 
 
-def freeze_task_methods(task: dict) -> dict:
+def freeze_task_methods(task: dict, *, selected_resource_ids=None) -> dict:
     """Producer-only: freeze the execution contract before the Task is committed."""
-    phase = (task.get("collaboration_binding") or {}).get("phase")
+    binding = task.get("collaboration_binding") or {}
+    phase = binding.get("phase")
+    layers = (binding.get("write_scope") or {}).get("layers") or []
+    if task['kind'] == 'compose' and layers and set(layers) <= {'speech'}:
+        phase = 'speech'
     items = method_resources(task["kind"], intent=task.get("intent") or task.get("review_stage"),
-                             phase=phase, review_units=task.get("review_units"))
+                             phase=phase, review_units=task.get("review_units"),
+                             selected_resource_ids=selected_resource_ids)
     task["method_manifest"] = [{key: item[key] for key in ("id", "relative_path", "sha256")} for item in items]
     task["method_release"] = method_release(items)
     if task.get("protocol_version") == "compose.v2" and (
@@ -187,7 +207,11 @@ def resolve_task_methods(task: dict, *, reader=None) -> dict:
             raise MethodResourceMissing(str(relative), "unknown or duplicate frozen method resource")
         seen.add(mid)
         path = root / relative
-        actual = sha256_bytes(read_bytes(path)) if path.is_file() else None
+        try:
+            safe_file(root, relative)
+            actual = sha256_bytes(read_bytes(path))
+        except (ValueError, OSError):
+            actual = None
         actual_items.append({**entry, "sha256": actual})
         if actual is None or actual != entry.get("sha256"):
             issues.append({"id": mid, "relative_path": relative, "expected_sha256": entry.get("sha256"),
@@ -207,17 +231,27 @@ def resolve_task_methods(task: dict, *, reader=None) -> dict:
 
 
 def method_resources(kind: str, *, intent: str | None = None,
-                     phase: str | None = None, review_units=None) -> list[dict]:
+                     phase: str | None = None, review_units=None, selected_resource_ids=None) -> list[dict]:
     """Readable method entries for one task kind: id, path inside the skill, sha256."""
     root = resolve_root()
     items = []
-    for method_id in method_ids_for(kind, intent=intent, phase=phase, review_units=review_units):
+    selected_units = review_units
+    if kind == 'review' and selected_units is None:
+        selected_units = (['argument', 'page_copy', 'progression'] if intent == 'preproduction'
+                          else ['blueprint_content', 'blueprint_fidelity', 'readability']
+                          if intent == 'page_visual' else sorted(_CONTENT_UNITS | _VISUAL_UNITS))
+    selected_phase = phase or ('review' if kind == 'review' else
+                              'production' if kind in ('blueprint', 'reconstruct', 'style_analyze') else
+                              'input_revision' if intent == 'input_revision' else None)
+    for method_id in dict.fromkeys((*method_ids_for(kind, intent=intent, phase=phase, review_units=review_units),
+                                   *_selected_ids(selected_resource_ids, kind=kind, phase=selected_phase, review_units=selected_units))):
         relative = RELATIVE_PATHS[method_id]
         path = root / relative
-        if not path.is_file():
-            raise MethodResourceMissing(
-                f"method_resources/{method_id}", f"declared method file is missing: {path}"
-            )
+        try:
+            safe_file(root, relative)
+        except ValueError as exc:
+            detail = str(exc) if path.is_symlink() or path.exists() else f"declared method file is missing: {path}"
+            raise MethodResourceMissing(relative, detail) from exc
         items.append(
             {
                 "id": method_id,
@@ -243,9 +277,9 @@ def method_release(items: list[dict]) -> dict:
     return {"release_id": release_id, "methods_sha256": methods_sha256(items)}
 
 
-def read_methods(kind: str, *, intent=None, phase=None, review_units=None) -> list[dict]:
+def read_methods(kind: str, *, intent=None, phase=None, review_units=None, selected_resource_ids=None) -> list[dict]:
     """Return the exact UTF-8 bytes, with no universal-newline conversion."""
-    items = method_resources(kind, intent=intent, phase=phase, review_units=review_units)
+    items = method_resources(kind, intent=intent, phase=phase, review_units=review_units, selected_resource_ids=selected_resource_ids)
     for item in items:
         raw = Path(item["path"]).read_bytes()
         if sha256_bytes(raw) != item["sha256"]:
@@ -287,9 +321,9 @@ def read_task_methods(project, task_id: str, *, read_protocol=None, body_mode=No
 PUBLIC_SKILLS = ("deck-master", "deck-content", "deck-design", "deck-review")
 ENTRY_MODES = ("named", "natural", "master", "recovery")
 _ROLE_METHODS = {
-    "deck-master": ("collaboration-routing", "input-update", "review-and-repair"),
-    "deck-content": ("collaboration-routing", "source-reading", "content-methods", "content-examples", "input-update"),
-    "deck-design": ("collaboration-routing", "visual-reference", "style-calibration", "candidates-and-stages", "blueprint-svg", "physical-units"),
+    "deck-master": ("collaboration-routing", "input-update", "review-and-repair", "method-selection"),
+    "deck-content": ("collaboration-routing", "source-reading", "content-methods", "content-examples", "input-update", "method-selection"),
+    "deck-design": ("collaboration-routing", "visual-reference", "style-calibration", "candidates-and-stages", "blueprint-svg", "physical-units", "content-to-visual"),
     "deck-review": ("collaboration-routing", "source-reading", "content-methods", "content-calibration", "review-and-repair", "physical-units"),
 }
 _ROLE_TASKS = {
@@ -388,6 +422,10 @@ def _read_ids(ids) -> list[dict]:
     for method_id in dict.fromkeys(ids):
         relative = RELATIVE_PATHS[method_id]
         path = root / relative
+        try:
+            safe_file(root, relative)
+        except ValueError as exc:
+            raise MethodResourceMissing(relative, str(exc)) from exc
         if not path.is_file():
             raise MethodResourceMissing(relative, "declared shared method is missing")
         entries.append({"id": method_id, "relative_path": relative, "path": str(path),
@@ -397,7 +435,7 @@ def _read_ids(ids) -> list[dict]:
 
 def read_skill_methods(skill: str, *, entry_mode="named", project=None, task_id=None, text=None,
                        review_units=None, review_stage=None, read_protocol=None, body_mode=None,
-                       cache_offer=None, observed_context=None) -> dict:
+                       cache_offer=None, observed_context=None, selected_resource_ids=None) -> dict:
     """Read one responsibility's actual bytes plus current, read-only context.
 
     This does not create a project, dispatch a Task, grant scope, claim independent
@@ -414,12 +452,22 @@ def read_skill_methods(skill: str, *, entry_mode="named", project=None, task_id=
         raise ValueError(f"instruction routes to {route['skill']}; preserve its responsibility")
     if entry_mode in ("master", "recovery") and project is None:
         raise ValueError("Master handoff/recovery requires the existing project")
+    if task_id is not None and selected_resource_ids is not None:
+        raise ValueError("frozen Task methods cannot be supplemented; use formal reissue")
+    selection_units = review_units
+    if skill == 'deck-review' and selection_units is None:
+        selection_units = (['argument', 'page_copy', 'progression'] if review_stage == 'preproduction'
+                           else ['blueprint_content', 'blueprint_fidelity', 'readability']
+                           if review_stage == 'page_visual' else sorted(_CONTENT_UNITS | _VISUAL_UNITS))
+    selected = _selected_ids(selected_resource_ids, role=skill,
+                             phase='review' if skill == 'deck-review' else None,
+                             review_units=selection_units)
     if task_id is not None and project is None:
         raise ValueError("task method consumption requires its real project")
     if read_protocol:
         return _read_skill_v2(skill, entry_mode=entry_mode, project=project, task_id=task_id,
                               route=route, review_units=review_units, review_stage=review_stage,
-                              body_mode=body_mode or 'full', cache_offer=cache_offer, observed_context=observed_context)
+                              body_mode=body_mode or 'full', cache_offer=cache_offer, observed_context=observed_context, selected=selected)
     context = None
     dispatch = None
     if project is not None:
@@ -449,6 +497,8 @@ def read_skill_methods(skill: str, *, entry_mode="named", project=None, task_id=
     items = dispatch["methods"] if dispatch else _read_ids(
         ("collaboration-routing", *method_ids_for("review", intent=review_stage, review_units=review_units))
         if skill == "deck-review" else _ROLE_METHODS[skill])
+    if selected:
+        items = _read_ids(tuple(item["id"] for item in items) + selected)
     entry_methods = _read_ids(("collaboration-routing",)) if dispatch else []
     return {"schema_version": "skill_method_consumption.v1", "skill": skill, "entry_mode": entry_mode,
             "route": route, "context": context, "dispatch": dispatch,
@@ -459,7 +509,7 @@ def read_skill_methods(skill: str, *, entry_mode="named", project=None, task_id=
 
 
 def _read_skill_v2(skill, *, entry_mode, project, task_id, route, review_units, review_stage,
-                   body_mode, cache_offer, observed_context):
+                   body_mode, cache_offer, observed_context, selected=()):
     from .work_context import ResourceCollector
     from . import service, content_production
     from .store import Store
@@ -483,7 +533,7 @@ def _read_skill_v2(skill, *, entry_mode, project, task_id, route, review_units, 
         ('collaboration-routing', *method_ids_for('review', intent=review_stage, review_units=review_units))
         if skill == 'deck-review' else _ROLE_METHODS[skill])
     entries = []
-    for mid in dict.fromkeys(ids):
+    for mid in dict.fromkeys((*ids, *selected)):
         relative = RELATIVE_PATHS[mid]
         path = resolve_root() / relative
         try:

@@ -123,14 +123,20 @@ def _wheel_skills(archive):
     if set(inventory.get('generated_exceptions', {})) != {_METHOD_INVENTORY}:
         raise ValueError('unknown generated method exception')
     rows = inventory.get('files', {})
-    from .method_resources import RELATIVE_PATHS
-    expected_sources = {'skills/RESOLVER.md'}
-    expected_sources.update(f'skills/{skill}/{name}' for skill in PUBLIC_SKILLS
-                            for name in ('SKILL.md', 'agents/openai.yaml'))
-    expected_sources.update('skills/deck-master/' + relative
-                            for relative in (*RELATIVE_PATHS.values(), 'references/installation.md'))
-    if {row.get('canonical_source') for row in rows.values()} != expected_sources:
+    from .resource_catalog import CATALOG_TARGET, LEGACY_IDS, canonical_mapping, validate_catalog
+    if CATALOG_TARGET in names:
+        resources = validate_catalog(json.loads(archive.read(CATALOG_TARGET)))
+        expected_mapping = canonical_mapping(resources)
+    else:
+        # Frozen pre-catalog release format, for installation rollback compatibility.
+        # Never derive this historical inventory from the current resource defaults.
+        expected_mapping = canonical_mapping(
+            {mid: {'relative_path': f'references/{mid}.md'} for mid in (*LEGACY_IDS, 'installation')},
+            include_catalog=False)
+    if {name: row.get('canonical_source') for name, row in rows.items()} != expected_mapping:
         raise ValueError('unknown or missing canonical source in candidate inventory')
+    if any(stat.S_ISLNK(info.external_attr >> 16) for info in archive.infolist()):
+        raise ValueError('candidate wheel symlink is forbidden')
     actual = {name for name in names if not name.endswith('/') and
               (name.startswith('deck_master/resources/skill/') or name.startswith('deck_master/resources/skills/'))}
     if set(rows) != actual:

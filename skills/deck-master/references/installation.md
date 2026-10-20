@@ -172,7 +172,7 @@ browser/CLI pass is not 30-page real Host, professional or customer acceptance.
 
 ## Candidate resource identity
 
-The source version is PEP 440 `1.0.0`; read the actual CLI,
+The development source version is PEP 440 `1.0.0rc5` (RC5 is incomplete); read the actual CLI,
 package metadata and capabilities rather than assuming the active installation
 has been upgraded. `tools/build_release.py` builds both wheel and
 sdist. The wheel contains a generated `resources/method-inventory.json` with an

@@ -15,6 +15,8 @@ description: 只读审查项目快照、外部PPTX或明确文件集，检查内
 
 ## 方法与允许产物
 
+按 method-review 检查实际判断、理据、替代方案与正文，不因表格或术语齐全而通过。按审阅范围选必要方法卡与校准例，作者采用的方法不是审阅真理。检查样例数字被写成客户事实、相关性变唯一因果、设计措施变已验证保证等问题；给出具体位置、影响和修订建议，仍保持只读。
+
 实际读取指定范围、当前文件/固定快照、任务与相关来源，再读 review-and-repair、content-methods、content-calibration、physical-units；前审按工作单的完整方法集。定位到页/atom/行列归属/责任箭头/实际文件 hash，写期待、实际、事实/推论依据、用途影响、F0–F3、修复责任层及验证边界。稀疏、教学示意、诚实未知须按用途判断，不强造数字或删限定。
 
 严格只读使用 `external_review.evaluate` 或文档化 review evaluate，persistence=none；不创建项目、Task、Review 或控制记录。报告/临时文件放源目录外，不接受重叠目录、别名/符号链接、错 SHA 或覆写源。输出 findings、工程观察、source_unchanged、needs_reviewer/needs_tool 和真实覆盖限制；缺阅图/渲染不判 pass。用户另有明确保存意图才由 Master 走固定原稿绑定/CAS的 review import，保持原来源与证据等级。

@@ -1,0 +1,371 @@
+{
+  "schema_version": "content-method-migration.v1",
+  "source": "user-provided content-methods spec v1.1 / resource-seeds",
+  "resources": [
+    {
+      "id": "example-e01-after",
+      "relative_path": "assets/content/examples/E01-marketing/after.md",
+      "source_sha256": "366870b537a26ec5747a5d6bcf939a8195e7c01b7a08d4b3b58da888f9642c09",
+      "integrated_sha256": "366870b537a26ec5747a5d6bcf939a8195e7c01b7a08d4b3b58da888f9642c09",
+      "disposition": "retained_after_reading"
+    },
+    {
+      "id": "example-e01-before",
+      "relative_path": "assets/content/examples/E01-marketing/before.md",
+      "source_sha256": "5662e52c410a8c692bd5b6eea02593ec7af35802fb59e247f8faa81feab29288",
+      "integrated_sha256": "5662e52c410a8c692bd5b6eea02593ec7af35802fb59e247f8faa81feab29288",
+      "disposition": "retained_after_reading"
+    },
+    {
+      "id": "example-e01-input",
+      "relative_path": "assets/content/examples/E01-marketing/input.md",
+      "source_sha256": "a2082605674c7efc089a51168e2dbe46c367f35091728463e2814fd3878f3239",
+      "integrated_sha256": "a2082605674c7efc089a51168e2dbe46c367f35091728463e2814fd3878f3239",
+      "disposition": "retained_after_reading"
+    },
+    {
+      "id": "example-e01-numbers",
+      "relative_path": "assets/content/examples/E01-marketing/numbers.json",
+      "source_sha256": "116d60cf380446e556eb05d5a1cf291475c5127d729dec58dba3553a3f110357",
+      "integrated_sha256": "116d60cf380446e556eb05d5a1cf291475c5127d729dec58dba3553a3f110357",
+      "disposition": "retained_after_reading"
+    },
+    {
+      "id": "example-e02-after",
+      "relative_path": "assets/content/examples/E02-technical-choice/after.md",
+      "source_sha256": "e3f4772fe9328d348f3264abcb37b655d1389e8325261905ad2f86ddfa0b1e6b",
+      "integrated_sha256": "e3f4772fe9328d348f3264abcb37b655d1389e8325261905ad2f86ddfa0b1e6b",
+      "disposition": "retained_after_reading"
+    },
+    {
+      "id": "example-e02-before",
+      "relative_path": "assets/content/examples/E02-technical-choice/before.md",
+      "source_sha256": "55b51e4430fb33f2e523449378de2ad87cb21eb438af19c04c0cd26703a67670",
+      "integrated_sha256": "55b51e4430fb33f2e523449378de2ad87cb21eb438af19c04c0cd26703a67670",
+      "disposition": "retained_after_reading"
+    },
+    {
+      "id": "example-e02-input",
+      "relative_path": "assets/content/examples/E02-technical-choice/input.md",
+      "source_sha256": "08693ad3292a967ad028ed0bc5b58bcb855b9637aec9106a2084758d6100a835",
+      "integrated_sha256": "08693ad3292a967ad028ed0bc5b58bcb855b9637aec9106a2084758d6100a835",
+      "disposition": "retained_after_reading"
+    },
+    {
+      "id": "example-e02-numbers",
+      "relative_path": "assets/content/examples/E02-technical-choice/numbers.json",
+      "source_sha256": "2657a68a0126225bc5b9293fd51001fb1ac111e17fdd364ada01ce0fad15970b",
+      "integrated_sha256": "2657a68a0126225bc5b9293fd51001fb1ac111e17fdd364ada01ce0fad15970b",
+      "disposition": "retained_after_reading"
+    },
+    {
+      "id": "example-e03-after",
+      "relative_path": "assets/content/examples/E03-policy-training/after.md",
+      "source_sha256": "003eafbd351d4fbbc325d7a2f0c7bd9b885245e06d8e7adace04cb88a275cafc",
+      "integrated_sha256": "003eafbd351d4fbbc325d7a2f0c7bd9b885245e06d8e7adace04cb88a275cafc",
+      "disposition": "retained_after_reading"
+    },
+    {
+      "id": "example-e03-before",
+      "relative_path": "assets/content/examples/E03-policy-training/before.md",
+      "source_sha256": "2eddc1b0c9ee7f3adca605e87f57d81476cad9fca1dfe6b086306afdb5ff319d",
+      "integrated_sha256": "2eddc1b0c9ee7f3adca605e87f57d81476cad9fca1dfe6b086306afdb5ff319d",
+      "disposition": "retained_after_reading"
+    },
+    {
+      "id": "example-e03-input",
+      "relative_path": "assets/content/examples/E03-policy-training/input.md",
+      "source_sha256": "dbece8e69a096bd15f980f83f68fa5049c26871c380132beea63f0b71ddf7166",
+      "integrated_sha256": "dbece8e69a096bd15f980f83f68fa5049c26871c380132beea63f0b71ddf7166",
+      "disposition": "retained_after_reading"
+    },
+    {
+      "id": "example-e03-numbers",
+      "relative_path": "assets/content/examples/E03-policy-training/numbers.json",
+      "source_sha256": "4095eae0ae2b6ef71b208da182174eaa5506c4684ae5cef06260061a4ec8e958",
+      "integrated_sha256": "4095eae0ae2b6ef71b208da182174eaa5506c4684ae5cef06260061a4ec8e958",
+      "disposition": "retained_after_reading"
+    },
+    {
+      "id": "example-e04-after",
+      "relative_path": "assets/content/examples/E04-saas-retention/after.md",
+      "source_sha256": "4580168e23232bcc751218d50ee6bce3164484467b5f2f76cdc92061d80b5f3b",
+      "integrated_sha256": "4580168e23232bcc751218d50ee6bce3164484467b5f2f76cdc92061d80b5f3b",
+      "disposition": "retained_after_reading"
+    },
+    {
+      "id": "example-e04-before",
+      "relative_path": "assets/content/examples/E04-saas-retention/before.md",
+      "source_sha256": "32ceba04fd29da2fdab666a68f844e1e0a5a733a0ab6a0646b452394b1889d41",
+      "integrated_sha256": "32ceba04fd29da2fdab666a68f844e1e0a5a733a0ab6a0646b452394b1889d41",
+      "disposition": "retained_after_reading"
+    },
+    {
+      "id": "example-e04-input",
+      "relative_path": "assets/content/examples/E04-saas-retention/input.md",
+      "source_sha256": "489eef329f058b30421af30c6b483979037e5d445511d879edbaa08a91edb8c2",
+      "integrated_sha256": "ca0b091045c84fe427ff74f495e3eab15611df2e1277b67239700295dc4fa461",
+      "disposition": "revised"
+    },
+    {
+      "id": "example-e04-numbers",
+      "relative_path": "assets/content/examples/E04-saas-retention/numbers.json",
+      "source_sha256": "d2f4f1b03ecbbecb17e7313941023c274d083f8316b329f3c035a4f295c1ccdf",
+      "integrated_sha256": "d2f4f1b03ecbbecb17e7313941023c274d083f8316b329f3c035a4f295c1ccdf",
+      "disposition": "retained_after_reading"
+    },
+    {
+      "id": "example-e05-after",
+      "relative_path": "assets/content/examples/E05-inventory-review/after.md",
+      "source_sha256": "991bc537b7626b28ac2298b9fd68073d694131a0a42d18754a5cfc55eb0f6e23",
+      "integrated_sha256": "fd74f2aaad1ce67fffbb23f7c9bea8df632f07f006cacdb164c880d1eb5e5262",
+      "disposition": "revised",
+      "revision_note": "补回99.99%可用性约束；连接占用及普通商品影响改为待测机制；B事务能力改为待具体产品验证，不再冒充给定事实。"
+    },
+    {
+      "id": "example-e05-before",
+      "relative_path": "assets/content/examples/E05-inventory-review/before.md",
+      "source_sha256": "4bf80bd67aee61b72858fd2c67d7173174aa823d29ad42d9e0bf8ba9bf00c544",
+      "integrated_sha256": "4bf80bd67aee61b72858fd2c67d7173174aa823d29ad42d9e0bf8ba9bf00c544",
+      "disposition": "retained_after_reading"
+    },
+    {
+      "id": "example-e05-input",
+      "relative_path": "assets/content/examples/E05-inventory-review/input.md",
+      "source_sha256": "188700d7e8b1d31b2b0f76e60b610772e5e1ab48898540a50574febd6034e20a",
+      "integrated_sha256": "188700d7e8b1d31b2b0f76e60b610772e5e1ab48898540a50574febd6034e20a",
+      "disposition": "retained_after_reading"
+    },
+    {
+      "id": "example-e06-after",
+      "relative_path": "assets/content/examples/E06-rag-teaching/after.md",
+      "source_sha256": "c28d3c64e1678a96e7604d668de2a3006a1e1f09fa2f3eee5f0ed7be4f458459",
+      "integrated_sha256": "e34660f6d56189beaba9984462afc0843d69a87a375f8a369ba5ec402785418d",
+      "disposition": "revised"
+    },
+    {
+      "id": "example-e06-before",
+      "relative_path": "assets/content/examples/E06-rag-teaching/before.md",
+      "source_sha256": "eb929a66646002c7bb88807e6975b07fe165784c9e7f0016199c694237ea9fca",
+      "integrated_sha256": "eb929a66646002c7bb88807e6975b07fe165784c9e7f0016199c694237ea9fca",
+      "disposition": "retained_after_reading"
+    },
+    {
+      "id": "example-e06-input",
+      "relative_path": "assets/content/examples/E06-rag-teaching/input.md",
+      "source_sha256": "c6e35d7a6587ac5ffb0a87a5eb150bc6b9c3ea933527c39bb394d291ad6bf5d9",
+      "integrated_sha256": "c6e35d7a6587ac5ffb0a87a5eb150bc6b9c3ea933527c39bb394d291ad6bf5d9",
+      "disposition": "retained_after_reading"
+    },
+    {
+      "id": "template-options-comparison",
+      "relative_path": "assets/content/templates/options-comparison.md",
+      "source_sha256": "847ea5948571858ac955089ec548c180b0c497618f9d87cc7a3c84029847de70",
+      "integrated_sha256": "847ea5948571858ac955089ec548c180b0c497618f9d87cc7a3c84029847de70",
+      "disposition": "retained_after_reading"
+    },
+    {
+      "id": "template-page-draft",
+      "relative_path": "assets/content/templates/page-draft.md",
+      "source_sha256": "14ec8c9360ea21ffd787fac26141d6833386b586db519861ce7286895c46dc15",
+      "integrated_sha256": "14ec8c9360ea21ffd787fac26141d6833386b586db519861ce7286895c46dc15",
+      "disposition": "retained_after_reading"
+    },
+    {
+      "id": "template-teaching-sequence",
+      "relative_path": "assets/content/templates/teaching-sequence.md",
+      "source_sha256": "9d5acc0e563f7942e4b9d012a2ca054d78f9d2ff069e81b73852dc9e14a24c73",
+      "integrated_sha256": "9d5acc0e563f7942e4b9d012a2ca054d78f9d2ff069e81b73852dc9e14a24c73",
+      "disposition": "retained_after_reading"
+    },
+    {
+      "id": "design-semantic-examples",
+      "relative_path": "assets/design/semantic-layout-examples.md",
+      "source_sha256": "8bbd7db7c1c7cd479181246c06c4e39a1f66023e80251937f2b42111c23b8704",
+      "integrated_sha256": "8bbd7db7c1c7cd479181246c06c4e39a1f66023e80251937f2b42111c23b8704",
+      "disposition": "retained_after_reading"
+    },
+    {
+      "id": "master-routing-examples",
+      "relative_path": "assets/master/routing-examples.json",
+      "source_sha256": "e0759fd4d5a4c3dce1d7afd5b4934ad5c77654f3bad4f1cabef8ae3728f5b9a0",
+      "integrated_sha256": "e0759fd4d5a4c3dce1d7afd5b4934ad5c77654f3bad4f1cabef8ae3728f5b9a0",
+      "disposition": "retained_after_reading"
+    },
+    {
+      "id": "review-calibration-cases",
+      "relative_path": "assets/review/calibration-cases.json",
+      "source_sha256": "2065ca5ddcf8837769764cc115e5de2a9c272c771e602e67cbeb485d75fe0c89",
+      "integrated_sha256": "2065ca5ddcf8837769764cc115e5de2a9c272c771e602e67cbeb485d75fe0c89",
+      "disposition": "retained_after_reading"
+    },
+    {
+      "id": "case-e01-walkthrough",
+      "relative_path": "references/cases/E01-marketing.md",
+      "source_sha256": "c8cbb698200127c1fa76012edeb9af952bec44b2aa579f362597645ad748b196",
+      "integrated_sha256": "285b08a9e1e1688c2f8b235177919b8efe887693790f748bc402b9bb51da4827",
+      "disposition": "revised"
+    },
+    {
+      "id": "case-e02-walkthrough",
+      "relative_path": "references/cases/E02-technical-choice.md",
+      "source_sha256": "3fdfb9d648c597ea4808664cd76eab5d0e8d5ea4a298e1ac3959414dd83f5e47",
+      "integrated_sha256": "1bcbbe0844c3cc963c324907a504e92f74e08883d5c7b48cb683321d02400498",
+      "disposition": "revised"
+    },
+    {
+      "id": "case-e03-walkthrough",
+      "relative_path": "references/cases/E03-policy-training.md",
+      "source_sha256": "f8a21de687190da908807cd04236008da9cad8dc984543d462479400e5db6746",
+      "integrated_sha256": "2a249fe54d9c142e4240b3f46015639f0bbf2fbb0826cbb6b872fc54e1b80ab1",
+      "disposition": "revised"
+    },
+    {
+      "id": "case-e04-walkthrough",
+      "relative_path": "references/cases/E04-saas-retention.md",
+      "source_sha256": "4ef37f8702bdbef5b2797a35887d44025681734bc147968336c74fa64ebe2f8a",
+      "integrated_sha256": "c1c8db7ffda29b69caf2cc9a4f05f1435602c24f971ca0996978448158e1a48b",
+      "disposition": "revised"
+    },
+    {
+      "id": "case-e05-walkthrough",
+      "relative_path": "references/cases/E05-inventory-review.md",
+      "source_sha256": "48cc98d84c3a9e39fe0fb5795a1f2dd66dbb3d5942f10a80a82c8c61552ea7e0",
+      "integrated_sha256": "e63e1c523818a79ce33c238528acd162cb652db4e918db6c283c45c301ba290e",
+      "disposition": "revised"
+    },
+    {
+      "id": "case-e06-walkthrough",
+      "relative_path": "references/cases/E06-rag-teaching.md",
+      "source_sha256": "e73cf7f9b204c6c687c07194d43ae2ca66a2557e5c073f32f369e19fabb7c84d",
+      "integrated_sha256": "c5ef3e72f3e1a411ff1ea1c88e065ec35686e59c586a20227cf1c9038e51126f",
+      "disposition": "revised"
+    },
+    {
+      "id": "content-to-visual",
+      "relative_path": "references/content-to-visual.md",
+      "source_sha256": "8087ddfb9a86da086ef61ddb6bab99c11119eb320f7d4f839cc2c204376212f8",
+      "integrated_sha256": "8087ddfb9a86da086ef61ddb6bab99c11119eb320f7d4f839cc2c204376212f8",
+      "disposition": "retained_after_reading"
+    },
+    {
+      "id": "method-review",
+      "relative_path": "references/method-review.md",
+      "source_sha256": "b70e90a6c9e5f715efdc0f4f81623176a785ff40b115259c73b5ed171bf239be",
+      "integrated_sha256": "b70e90a6c9e5f715efdc0f4f81623176a785ff40b115259c73b5ed171bf239be",
+      "disposition": "retained_after_reading"
+    },
+    {
+      "id": "method-selection",
+      "relative_path": "references/method-selection.md",
+      "source_sha256": "626f660edd65245358b9e3e1594131aa74e92c88c9c8574280ff98e35ec56a96",
+      "integrated_sha256": "626f660edd65245358b9e3e1594131aa74e92c88c9c8574280ff98e35ec56a96",
+      "disposition": "retained_after_reading"
+    },
+    {
+      "id": "method-sources",
+      "relative_path": "references/method-sources.md",
+      "source_sha256": "56c25ad072923ca21d1f4c13a7b095b15eeed3e40faede41646152a19a091bac",
+      "integrated_sha256": "816af6b602d9125bcbf94772729af13f18a217daeb1492dc687a98c4732a0033",
+      "disposition": "revised"
+    },
+    {
+      "id": "content-m01",
+      "relative_path": "references/methods/M01-framing.md",
+      "source_sha256": "23364fd487c48cc8733810bba1d193940422f5b641af49644705d1caf186445d",
+      "integrated_sha256": "de0fcc09db864d5f47841eb1f91eba10f61b972e38564773a904e7124fed2e09",
+      "disposition": "revised"
+    },
+    {
+      "id": "content-m02",
+      "relative_path": "references/methods/M02-structured-analysis.md",
+      "source_sha256": "b995ad06b71c042a380860548fabda0bcd18492cf16a9a49699e2d7a70a3a0d5",
+      "integrated_sha256": "30e7e9dc8f30a4cd2a8038d734ba6e77acbb91c10d34e1cd837d4d7d408174be",
+      "disposition": "revised"
+    },
+    {
+      "id": "content-m03",
+      "relative_path": "references/methods/M03-argument.md",
+      "source_sha256": "899be92a94f312d2ef21932e180abb70a3ef509d57c3db3d8ae36c5d2047d613",
+      "integrated_sha256": "159b046b28b4e7c82a291bb50a9e8126754a007688cb61203189bae4898b6ff5",
+      "disposition": "revised"
+    },
+    {
+      "id": "content-m04",
+      "relative_path": "references/methods/M04-causal-explanations.md",
+      "source_sha256": "4743e08b0be642dd4a24d3379040f01699f28622f04ca78bc7a69d27c56ab429",
+      "integrated_sha256": "cd52c74a319cf30ade75fd029c3476636d4b4b6f9db2eadffdc5f746dd815bf9",
+      "disposition": "revised"
+    },
+    {
+      "id": "content-m05",
+      "relative_path": "references/methods/M05-options-and-value.md",
+      "source_sha256": "9b5eef23b428fe552a0010112a2db3333eefcc402d5247a8627d85b905862182",
+      "integrated_sha256": "28d4d5f645c3efacccebed78748773673e8bce730319eb887a1f52b0cde7312f",
+      "disposition": "revised"
+    },
+    {
+      "id": "content-m06",
+      "relative_path": "references/methods/M06-uncertainty-stress.md",
+      "source_sha256": "590d81c43e28e627af594ca1545419017c0a6808f0ba75efd3b6bef5ee630fc3",
+      "integrated_sha256": "fce136b1a945ac14004776368ab93e20b5181fee770d0924bd7fa46aea487d24",
+      "disposition": "revised"
+    },
+    {
+      "id": "content-m07",
+      "relative_path": "references/methods/M07-synthesis.md",
+      "source_sha256": "c2e726c61b82e3a613c6bc7b1826e47eeb7edf1f4f41fa379055ff9f1547fece",
+      "integrated_sha256": "4af0b9137f516e03d4b4dbf343ae85bb76a3535ef6b218d479ef7b1e0082fa0a",
+      "disposition": "revised"
+    },
+    {
+      "id": "content-m08",
+      "relative_path": "references/methods/M08-narrative.md",
+      "source_sha256": "c215eb5f1721f9de03d64b62f453a9743390136b4d6f754a7a956dba5c1798aa",
+      "integrated_sha256": "d4e56ac966ee88332bb4316e501e13f72698e71c45c5bdb5f8fcb271de0e42f7",
+      "disposition": "revised"
+    },
+    {
+      "id": "content-m09",
+      "relative_path": "references/methods/M09-teaching.md",
+      "source_sha256": "b2ef8bf50ab5c162dff02dbf4296f24c625f4cbc9b28ed0ea233e6a0738099a4",
+      "integrated_sha256": "99d5fde59a3360f6cd9e0101636e3d44a6fcd267643bab6f59a143bbff9dc9a8",
+      "disposition": "revised"
+    },
+    {
+      "id": "content-m10",
+      "relative_path": "references/methods/M10-compression.md",
+      "source_sha256": "1146cab9c9e8ff2a257a63fcc4e9287afcdedb0e5b73ab22dd443000e28f0906",
+      "integrated_sha256": "eebc4d4fe5a133366d2e71d937fb86fbd83b8284c440fe453126d8d2b2e6258d",
+      "disposition": "revised"
+    },
+    {
+      "id": "narrative-patterns",
+      "relative_path": "references/narrative-patterns.md",
+      "source_sha256": "16022007031c75262507b7849dd8dbe82f91dafc1e365256991aa4e6be195188",
+      "integrated_sha256": "16022007031c75262507b7849dd8dbe82f91dafc1e365256991aa4e6be195188",
+      "disposition": "retained_after_reading"
+    },
+    {
+      "id": "page-writing",
+      "relative_path": "references/page-writing.md",
+      "source_sha256": "58e47daa423a2d12de907fd5f1d1c1c4cfab03e94a0450299c77385af63d282b",
+      "integrated_sha256": "58e47daa423a2d12de907fd5f1d1c1c4cfab03e94a0450299c77385af63d282b",
+      "disposition": "retained_after_reading"
+    },
+    {
+      "id": "writing-profiles",
+      "relative_path": "references/writing-profiles.md",
+      "source_sha256": "e84fa21f7b484ccd1138f9217e304681de6396c53be5e583fb27faa2a532f54b",
+      "integrated_sha256": "e84fa21f7b484ccd1138f9217e304681de6396c53be5e583fb27faa2a532f54b",
+      "disposition": "retained_after_reading"
+    },
+    {
+      "id": "helper-case-numbers",
+      "relative_path": "scripts/check_case_numbers.py",
+      "source_sha256": "84b3e645bad4296bd26463801f71ea242011a6f5ea382bade892f6b13cb95ee8",
+      "integrated_sha256": "84b3e645bad4296bd26463801f71ea242011a6f5ea382bade892f6b13cb95ee8",
+      "disposition": "retained_after_reading"
+    }
+  ]
+}

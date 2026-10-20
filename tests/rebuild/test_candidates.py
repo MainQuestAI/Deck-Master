@@ -95,9 +95,9 @@ def test_trial_no_current_writes_and_atomic_idempotent_adoption(store):
     after = store.load_document()
     assert result['status'] == 'candidate_ready' and result['current_artifacts_changed'] is False
     assert before['pages'] == after['pages'] and before['outputs'] == after['outputs']
-    # New Task manifests establish the RC4 floor before this trial; adoption
+    # New catalog Task manifests establish the RC5 floor before this trial; adoption
     # preserves it rather than downgrading the writer alongside content.
-    assert after['compatibility']['minimum_writer'] == before['compatibility']['minimum_writer'] == 'rc4-content.v1'
+    assert after['compatibility']['minimum_writer'] == before['compatibility']['minimum_writer'] == 'method-catalog.v1'
     replay = accept(store, task)
     assert replay['status'] == 'already_applied' and replay['operation_result']['candidate_ids'] == [cid]
     assert len(candidates.listing(store.project_root)['candidates']) == 1
@@ -335,7 +335,7 @@ def test_explicit_assembly_uses_real_pipeline_after_page_gate_and_replays(store,
             task = service.open_host_task(store, kind='reconstruct', page_ids=[pid], instruction='Synthetic normal automatic SVG return')
             start(store, task)
             accept(store, task)
-        assert store.load_document()['compatibility']['minimum_writer'] == 'rc4-content.v1'
+        assert store.load_document()['compatibility']['minimum_writer'] == 'method-catalog.v1'
     for _ in range(2):
         pending = service.continue_project(store.project_root)['pending_tasks'][0]
         assert pending['kind'] == 'review' and pending['review_stage'] == 'page_visual'
@@ -348,7 +348,7 @@ def test_explicit_assembly_uses_real_pipeline_after_page_gate_and_replays(store,
     assert response['operation_result']['status'] == 'assembled'
     after = store.load_document()
     assert all(e['ppt_preview'] for e in after['pages']) and after['outputs']['pptx']
-    assert after['compatibility']['minimum_writer'] == 'rc4-content.v1'
+    assert after['compatibility']['minimum_writer'] == 'method-catalog.v1'
     assert response['operation_result']['final_review'] == 'required'
     def unexpected(*args, **kwargs): raise AssertionError('replay must not compile again')
     monkeypatch.setattr(pipeline, 'compile_deck', unexpected)
