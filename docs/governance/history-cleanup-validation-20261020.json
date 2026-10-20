@@ -1,0 +1,44 @@
+{
+  "base_sha": "09f0213d07fc718dc4d41a52bb69c4595fcb1ac8",
+  "checked_markdown_files": 11,
+  "relative_links_and_fragments_checked": 120,
+  "failures": [],
+  "rc3_body_preserved_except_banner_and_link": true,
+  "old_heading_anchors_preserved": true,
+  "original_rc3_sha256": "d9f7c6edda6793a7325c48ee02d502c5f60bed6c18b76920890d45edc8715a53",
+  "ledger_rows": 906,
+  "tracked_rows": 905,
+  "untracked_cache_rows": 1,
+  "previous_markdown_paths_retained": true,
+  "limits": "offline relative targets/headings only; external URLs, full product chain and final CI not claimed",
+  "ledger_paths_unique": true,
+  "pr128_readme_merge_check": {
+    "head": "666489c7623f6cfff6134f38696731ca35a3a3c8",
+    "result": "clean textual three-way merge; both navigation additions retained; no branch merge performed"
+  },
+  "package_boundary": {
+    "command": "python -m pytest -q -p no:cacheprovider tests/rebuild/test_package_boundary.py",
+    "result": "7 passed in 10.00s"
+  },
+  "cli_read_only_checks": [
+    {
+      "command": "python -m deck_master --version",
+      "exit_code": 0
+    },
+    {
+      "command": "python -m deck_master workbench --help",
+      "exit_code": 0
+    },
+    {
+      "command": "python -m deck_master install --help",
+      "exit_code": 0
+    },
+    {
+      "command": "python -m deck_master capabilities",
+      "exit_code": 0
+    }
+  ],
+  "diff_check": "passed",
+  "product_code_changed": false,
+  "production_chain_executed": false
+}

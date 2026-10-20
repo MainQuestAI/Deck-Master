@@ -6,7 +6,7 @@
 
 本目录保存 `origin/codex/deck-master-endgame-runtime` 历史分支中的少量高价值证据。
 
-这些文件只用于追溯 2026-06 Run OS 迁移期间的思路、验证记录和 QA 证据。当前生产基线以 `main` 在 v0.9.13 之后的 suite runtime、product capabilities、setup/readiness 和 UC story review 结构为准。
+这些文件只用于追溯 2026-06 Run OS 迁移期间的思路、验证记录和 QA 证据。下文涉及 v0.9.x 主线的说明均为当时背景，不是当前产品合同。现行使用入口见 [文档导航](../../README.md)，旧系统资料见 [pre-rebuild 归档](../pre-rebuild/README.md)。
 
 ## 已归档文件
 
@@ -32,5 +32,5 @@
 
 1. 仅作为历史证据读取。
 2. 不作为当前路线图、当前实现说明或 release note 引用。
-3. 如需复用旧 smoke 思路，请优先查看 `docs/qa/review-cockpit-smoke-scenarios.md`，那里已经转成当前主线可执行的覆盖矩阵。
+3. 旧 smoke 思路可查 [历史场景矩阵](../pre-rebuild/docs/qa/review-cockpit-smoke-scenarios.md)；它不是现行可执行验收，复用前须核对当前代码和测试。
 4. 不从本目录反向恢复旧代码或旧截图目录。
