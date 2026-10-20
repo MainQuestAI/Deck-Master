@@ -1,5 +1,7 @@
 # PR127 后续独立 WebUI：实现与验证回执
 
+> 最新浏览器回归修复见 [BROWSER-LABEL-FIX](BROWSER-LABEL-FIX.md)：测试提交 `11eba83447e121f34fdb95baddfc4ebceea3cb42`，原11项复现失败后修复为11 passed，完整 required browser **548 passed / 3642 deselected**。产品文案符合中性用途合同，仅同步七处精确测试标签；新head远端CI待确认。父线程确认旧d16ed393四组unit/render成功，但browser失败，不能称该head全绿。
+
 > 最新 CI 入口清单修复见 [ENTRY-REGISTRY-FIX](ENTRY-REGISTRY-FIX.md)，源码 `7b414a92c77a2578465e4495f5932320a1a95cb1`。原四个覆盖失败已消除；完整本地unit结果及DNS/旧SDK元数据限制逐项保留，未宣称整组全绿。现有 Draft PR130 等待新head CI。
 
 > 最新独立复审修复见 [REVIEW-FIXES](REVIEW-FIXES.md)：源码/包 `554e9e2f91301f1b2fd223db1552f22d0df05bff`，137项相关回归及6重点分支通过，新安装版双写交接通过。独立代码复审仍进行中，AC49仍PENDING。以下3baf6caa结果为前轮准确历史证据，不重标为新SHA执行。

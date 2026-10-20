@@ -13,3 +13,5 @@ status: engineering_verified_pending_final_ci_and_draft
 继续仅在当前云端独立工作树完成同一 Draft；PR127 未合并是显式依赖，不自动合并它、不预占 PR 编号或 RC6、不发布/激活真实 HOME、不改用户原工作树。
 
 CI 接续：PR130 已存在，保持 Draft/base 依赖127。旧 head 的四个 eligibility entry 未分类失败已复现并在 `7b414a92c77a2578465e4495f5932320a1a95cb1` 补齐，测试未改。全量 unit 本地非全绿，DNS/旧SDK元数据的具体证据及纠正结果见 [入口修复回执](../../reports/webui-content-methods/ENTRY-REGISTRY-FIX.md)，最终完整CI待父线程跟进。
+
+浏览器接续：父线程确认 d16ed393 的四组unit/render成功，browser为11 failed。原11项本地复现后，按中性用途合同仅同步旧测试七处精确标签，`11eba83447e121f34fdb95baddfc4ebceea3cb42` 定向11 passed，完整 required browser 548 passed / 3642 deselected / 1656.29s；无失败或跳过。见 [浏览器修复回执](../../reports/webui-content-methods/BROWSER-LABEL-FIX.md)。新head CI仍待远端确认，未重标历史包与Host证据。
