@@ -154,3 +154,20 @@ def test_invalid_input_selection_persists_no_source_or_task_objects(tmp_path):
             base_revision=Store(project).current_revision_id(), operation_id='invalid-selection',
             selected_resource_ids=['NOT_REGISTERED'])
     assert files() == before
+
+
+def test_rc5_defaults_do_not_invalidate_unmodified_legacy_task(monkeypatch, tmp_path):
+    import shutil
+    from deck_master import tasks
+    root = tmp_path / 'legacy-methods'
+    shutil.copytree(methods.resolve_root(), root)
+    monkeypatch.setattr(methods, 'resolve_root', lambda: root)
+    task = {'kind': 'compose', 'collaboration_binding': {'phase': 'production'}}
+    entries = methods._read_ids(methods.rc3_method_ids_for('compose', phase='production'))
+    task['method_release'] = methods.method_release(entries)
+    assert not tasks.task_method_contract_changed(task)
+    assert 'method_manifest' not in task
+    path = root / 'references/content-methods.md'
+    path.write_bytes(path.read_bytes() + b'\nChanged historical bytes\n')
+    assert tasks.task_method_contract_changed(task)
+    assert 'method_manifest' not in task

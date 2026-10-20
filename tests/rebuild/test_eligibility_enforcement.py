@@ -224,8 +224,11 @@ def _stamp_binding(store, task_id, *, phase="production", authorization_ref=None
                "eligibility_digest": eligibility.binding_eligibility_digest(phase, scope, [])}
     updated = {**task, "collaboration_binding": binding}
     from deck_master import method_resources
-    methods = method_resources._read_ids(method_resources.rc3_method_ids_for(task["kind"], phase=phase))
-    updated["method_release"] = method_resources.method_release(methods)
+    if "method_manifest" not in task:
+        methods = method_resources._read_ids(method_resources.rc3_method_ids_for(task["kind"], phase=phase))
+        updated["method_release"] = method_resources.method_release(methods)
+    # Real dispatched Tasks retain their manifest and matching release digest.
+    # This helper simulates a binding, not a method refresh.
     task_ref = store.put_json_object(updated)
     operation_id = f"stamp-{uuid.uuid4().hex[:8]}"
     bumped = bump_revision(document, {"operation_id": operation_id, "kind": "task_update",

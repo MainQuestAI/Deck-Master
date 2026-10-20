@@ -111,7 +111,12 @@ def task_method_contract_changed(task):
         return True
     if "method_manifest" not in task:
         kwargs = {"intent": task.get("intent") or task.get("review_stage"), "phase": phase}
-        if method_ids_for(task["kind"], review_units=task.get("review_units"), **kwargs) != rc3_method_ids_for(task["kind"], **kwargs):
+        # RC5 additions are defaults for new Tasks, not a reason to retire a
+        # historical Task whose original bytes and RC4 scope remain valid.
+        from .resource_catalog import LEGACY_IDS
+        historical_scope = tuple(mid for mid in method_ids_for(
+            task["kind"], review_units=task.get("review_units"), **kwargs) if mid in LEGACY_IDS)
+        if historical_scope != rc3_method_ids_for(task["kind"], **kwargs):
             return True
     return resolve_task_methods(task)["basis_status"] != "current"
 
