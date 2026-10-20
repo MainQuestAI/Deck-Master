@@ -94,3 +94,11 @@ G0 不要求把专业认可或真实 HOME 激活改成 PASS；它们仍是独立
 本环境 `gh pr view 127` 被 Forbidden 拒绝，未重试或换渠道绕过。父线程另提供的证据：准确 head d1ee1c7d 的 CI 39398981973 仍运行，渲染通过、单元与浏览器待完成，静态复审未见新增阻断。此为转交观察，不是本环境独立验证或 CI 终态。最终 head/收口、required CI、包证据与最终基线适用性仍待父线程确认，G0 未通过。
 
 原 Library 传输失败后未重试；父线程分 15 批提供原文。本环境核对 manifest 的全部 14 个内容文件，bytes/SHA 全匹配；另保留 manifest，共 15 文件。原文冻结于提交 `4f7f2a3b`，manifest 在 original-package-manifest.json，原 inputs/impact-report.md 不修改。其历史本机路径只保留为报告文本，未访问。验证脚本已阅读未执行；本轮检查为独立文档静态核对，不代表产品/浏览器/安装/Host/专业/人类验收。
+
+## WU00 实施门槛确认（父线程授权续接）
+
+实施基线为 3217a65630023244eac5a09b3e7570954cce9188。父线程确认精确 head CI 39401753812 在 2026-10-20 10:31 UTC completed/success（browser/installed UI、四组 unit、rendering、Group report）。本地 fetch/ls-remote 确认 PR127 分支该 SHA，main 仍 09f0213d，未包含修复；独立分支 codex/webui-content-methods-20261020 以精确 head 建立。PR127 仅为依赖，不自动合并；Draft PR 目标为其分支以展示净增量，后续再迁移到 main。
+
+包报告实际绑定 d1ee1c7d，不冒称为 3217a656 构建；git diff 核对两者 src/skills/pyproject/setup/MANIFEST/tools 均无变化，仅报告与一处测试校正，包对应的运行源码和资源适用。此前局部 shared-lock 单测失败仍为未查明的环境验证限制，不因 CI 全绿杜撰根因。产品实现按已授权范围开始，最终本轮包仍需绑定新实现 SHA。
+
+基于新授权证据只重试一次 PR127 只读 GraphQL，仍 Forbidden；不再重试或绕过。规格原始提交与修订提交保留在原分支，新分支仅 cherry-pick 文档，不改 PR127/PR128/PR129。

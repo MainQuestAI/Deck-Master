@@ -1,46 +1,60 @@
 {
   "scope": "documentation_and_read_only_WU00",
-  "pr127_final_head": null,
-  "integration_base": null,
+  "pr127_final_head": "3217a65630023244eac5a09b3e7570954cce9188",
+  "integration_base": "3217a65630023244eac5a09b3e7570954cce9188",
   "merge_commit": null,
   "latest_observed_head": "d1ee1c7d1f16db120fd4c91c2cc9e71ce31b915e",
-  "baseline_disposition": "PENDING_PARENT_FINAL_BASELINE",
-  "required_checks": [],
-  "package_evidence_ref": null,
-  "spec_drift_review": "PARTIAL_READ_ONLY",
-  "implementation_status": "NOT_STARTED",
+  "baseline_disposition": "PASS_DEPENDS_ON_UNMERGED_PR127",
+  "required_checks": [
+    {
+      "run_id": "39401753812",
+      "head": "3217a65630023244eac5a09b3e7570954cce9188",
+      "status": "completed/success",
+      "observed_at": "2026-10-20T10:31:00Z",
+      "source": "parent confirmed GitHub read",
+      "checks": [
+        "browser/installed UI",
+        "unit x4",
+        "rendering",
+        "Group report"
+      ]
+    }
+  ],
+  "package_evidence_ref": "docs/reports/rc5/package-verification-cloud-review.json",
+  "spec_drift_review": "PASS",
+  "implementation_status": "IN_PROGRESS",
   "acceptance": [
     {
       "ac_id": "AC01",
-      "result": "BLOCKED",
+      "result": "PASS",
       "evidence_refs": [
         "BASELINE.md"
       ],
-      "limitations": "最终收口和 head 未确认"
+      "limitations": "PR metadata GraphQL denied; parent CI confirmation plus local git/code/report correspondence. PR127 remains a declared dependency."
     },
     {
       "ac_id": "AC02",
-      "result": "BLOCKED",
+      "result": "PASS",
       "evidence_refs": [
         "BASELINE.md"
       ],
-      "limitations": "准确最终 head CI/包证据未核实"
+      "limitations": "PR metadata GraphQL denied; parent CI confirmation plus local git/code/report correspondence. PR127 remains a declared dependency."
     },
     {
       "ac_id": "AC03",
-      "result": "BLOCKED",
+      "result": "PASS",
       "evidence_refs": [
         "BASELINE.md"
       ],
-      "limitations": "观察 head 六项已核对，最终 head 仍需复核"
+      "limitations": "PR metadata GraphQL denied; parent CI confirmation plus local git/code/report correspondence. PR127 remains a declared dependency."
     },
     {
       "ac_id": "AC04",
-      "result": "BLOCKED",
+      "result": "PASS",
       "evidence_refs": [
         "BASELINE.md"
       ],
-      "limitations": "规格分支已隔离；包含最终基线的实施分支尚未建立"
+      "limitations": "PR metadata GraphQL denied; parent CI confirmation plus local git/code/report correspondence. PR127 remains a declared dependency."
     }
   ],
   "product_tests": "NOT_RUN",
@@ -48,5 +62,283 @@
   "installed": "NOT_RUN",
   "actual_host": "NOT_RUN",
   "professional_review": "NOT_RUN",
-  "human_acceptance": "NOT_RUN"
+  "human_acceptance": "NOT_RUN",
+  "implementation_acceptance": [
+    {
+      "ac_id": "AC05",
+      "owner": "WU01",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC06",
+      "owner": "WU01",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC07",
+      "owner": "WU01",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC08",
+      "owner": "WU01",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC09",
+      "owner": "WU01",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC10",
+      "owner": "WU01",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC11",
+      "owner": "WU02",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC12",
+      "owner": "WU02",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC13",
+      "owner": "WU02",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC14",
+      "owner": "WU02",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC15",
+      "owner": "WU02",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC16",
+      "owner": "WU03",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC17",
+      "owner": "WU03",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC18",
+      "owner": "WU03",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC19",
+      "owner": "WU03",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC20",
+      "owner": "WU03",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC21",
+      "owner": "WU03",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC22",
+      "owner": "WU03",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC23",
+      "owner": "WU04",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC24",
+      "owner": "WU04",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC25",
+      "owner": "WU04",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC26",
+      "owner": "WU04",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC27",
+      "owner": "WU04",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC28",
+      "owner": "WU05",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC29",
+      "owner": "WU05",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC30",
+      "owner": "WU05",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC31",
+      "owner": "WU05",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC32",
+      "owner": "WU05",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC33",
+      "owner": "WU05",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC34",
+      "owner": "WU06",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC35",
+      "owner": "WU06",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC36",
+      "owner": "WU06",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC37",
+      "owner": "WU06",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC38",
+      "owner": "WU06",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC39",
+      "owner": "WU07",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC40",
+      "owner": "WU07",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC41",
+      "owner": "WU07",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC42",
+      "owner": "WU07",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC43",
+      "owner": "WU07",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC44",
+      "owner": "WU07",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC45",
+      "owner": "WU08",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC46",
+      "owner": "WU08",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC47",
+      "owner": "WU08",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC48",
+      "owner": "WU08",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC49",
+      "owner": "WU08",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    },
+    {
+      "ac_id": "AC50",
+      "owner": "WU08",
+      "result": "NOT_RUN",
+      "evidence_refs": []
+    }
+  ]
 }
