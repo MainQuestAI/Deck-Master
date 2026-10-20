@@ -5,11 +5,13 @@ brief and real source material it drives content composition, blueprint
 generation, editable SVG/PPT production, review and repair — all through one
 CLI and a loopback review workbench.
 
-**Status:** RC4 development candidate, Python package `1.0.0rc4`.
-Read the [current increment](docs/specs/deck-master-next-iteration-20261019/README.md)
-and its [single candidate ledger](docs/reports/rc4/iteration-20261019/execution-ledger.json)
-for verified scope and remaining gaps. A source candidate, built wheel,
-isolated installation, active user installation and public Release are separate facts.
+**Version:** Python package `1.0.0`. Get published artifacts from
+[GitHub Releases](https://github.com/MainQuestAI/Deck-Master/releases).
+Start with the [installation and first-run guide](docs/getting-started.md).
+The [RC4 increment](docs/specs/deck-master-next-iteration-20261019/README.md)
+and its [single ledger](docs/reports/rc4/iteration-20261019/execution-ledger.json)
+retain their original candidate evidence. A source version, built wheel,
+active installation and published Release are separate facts.
 **License:** Apache-2.0.
 
 RC4 extends the existing RC3 and Flow Quality contracts with recoverable input
@@ -31,9 +33,11 @@ Deck Master is built for solution architects and proposal builders who need a re
 
 ## Install
 
-Python 3.11 and 3.12 are supported (`requires-python >=3.11,<3.14`); use
-either as the default. Python 3.14 is not a supported test environment because
-the PPTX dependency chain may not have compatible wheels yet.
+Python 3.11 and 3.12 are tested in CI. Package metadata permits Python 3.13,
+which is outside the tested matrix, and excludes Python 3.14.
+For a release installation, download its wheel and `release.json` together,
+then follow [managed installation](docs/getting-started.md#install-a-release).
+The commands below are for source development:
 
 ```bash
 python3.12 -m venv .venv
@@ -57,6 +61,9 @@ registers all four Codex Skills (Master, Content, Design, Review); see [installa
 Use your own complete material and brief. The commands below are staged:
 substitute IDs and hashes from the actual returned Task; do not paste the
 angle-bracket placeholders as values.
+They assume `deck-master` is on PATH, for example after activating the source
+venv above. For a managed release, substitute the selected prefix's absolute
+`.deck-master/bin/deck-master` launcher or add that directory to PATH first.
 
 ```bash
 # 1. New projects default to workbench.v3, with instruction evidence and
@@ -115,7 +122,8 @@ a new Narrative. Teaching content need not contain a sales CTA.
 For `full_deck`, continue only within the actual production scope. Generation
 requires its frozen request, allocated call, begin → real tool call → settle
 → accept chain. Inspect actual original images and PPT previews, page and
-final reviews, then run `final-readiness` and export `--purpose delivery`.
+final reviews, then run `final-readiness`, export `--purpose delivery`, and
+check the actual exported PPTX with `handoff-check --purpose delivery`.
 `review` can return an unfinished readable copy with its unresolved list.
 `needs_tool` and `needs_reviewer` must retain their actual reasons.
 
@@ -137,8 +145,12 @@ receipt-only revision while preserving Page/input basis and tasks. Ordinary
 [input recovery](skills/deck-master/references/input-update.md) before retrying.
 
 The [N6 normal-task evidence](docs/reports/rc4/iteration-20261019/N6-evidence.md)
-records the actual staged path and its remaining adoption/review gaps; it is
-not a claim that this candidate has completed an end-to-end delivery.
+preserves its original staged observations. Subsequent actual installed Host
+validation at PR125 head `d7ec4530` completed native independent review,
+two-page native-image observation, SVG/PPT, real rendering and formal delivery,
+with `ready` and `handoff-check verified`. This is one observed complete task;
+see the [validation scope and known limitations](docs/getting-started.md#known-limitations)
+for the font workaround and unverified WPS editing.
 
 ## Workbench
 
@@ -180,6 +192,7 @@ reason; nothing silently falls back to fixtures.
 
 ## Project Docs
 
+- [Installation, First Run, Host Requirements and Upgrade](docs/getting-started.md)
 - [Agent Entry](AGENTS.md)
 - [Agent Task Index](docs/agent-task-index.md)
 - [Agent Recovery Playbook](docs/agent-recovery-playbook.md)
