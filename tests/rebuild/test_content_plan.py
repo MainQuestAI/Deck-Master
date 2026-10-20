@@ -279,7 +279,7 @@ def test_explicit_imported_plan_is_adopted_and_restore_does_not_keep_the_wrong_p
     editing.restore(project, revision_id=empty_revision, base_revision=first["revision_id"], operation_id="restore-empty")
     assert "content_plan" not in store.load_document()
     assert json.loads((store.deck_root / "current.json").read_text())["minimum_writer"] == \
-        first['compatibility']['minimum_writer'] == 'rc4-content.v1'
+        first['compatibility']['minimum_writer'] == 'method-catalog.v1'
     assert content_plan.show(project, revision=first["revision_id"])["content_plan"]["status"] == "recorded"
 
 

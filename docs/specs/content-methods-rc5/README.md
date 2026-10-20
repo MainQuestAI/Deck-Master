@@ -9,8 +9,11 @@ Upstream: *Deck Master content-methods iteration spec v1.1*, Library
 The complete 598-line main specification was read through Library on
 2026-10-20. Its ZIP and original Markdown byte downloads were refused by the
 environment's network proxy (HTTP CONNECT 403); neither is represented here
-as a successfully materialized original. Resource integration requires the
-actual ZIP, including its proposed catalog and 52 seed resources.
+as a successfully materialized original. That historical transfer failure is retained as evidence. Local continuation on
+2026-10-20 recovered the matching v1.1 ZIP, verified all 75 file hashes/lengths,
+and reviewed its 52 seed resources. The original proxy is not claimed repaired.
+Per-file adoption and corrections are recorded in
+`docs/research/content-method-library/migration-ledger.json`.
 
 This revision adopts v1.1 conditionally with the following binding corrections.
 It does not replace its full method cards, examples, migration decisions or
@@ -121,6 +124,9 @@ common build/install mapping and frozen pre-catalog release compatibility.
 actually uses new IDs/paths; `work_context.v2` is unchanged. The package source
 is now `1.0.0rc5` development, not a completed candidate.
 
-The 52 seeds have not been imported. Host-facing CLI/service selection wiring,
-full resource migration and actual paired manuscript evidence remain pending.
-Synthetic test resources exercise these contracts and are not substitute seeds.
+The original foundation checkpoint had not imported the 52 seeds. Local
+continuation has now integrated them into the canonical library (66 catalog
+resources including the 14 preserved references), updated the four Skill entries,
+and corrected the reviewed examples. Host-facing selection and acceptance are
+being integrated separately. Consult `docs/reports/rc5/` for executed evidence;
+resource presence and synthetic tests are not manuscript-effectiveness evidence.

@@ -59,13 +59,13 @@ def test_qualification_and_weak_mixed_direction_chain_preserve_input():
 
 
 @pytest.mark.parametrize(('stage', 'units', 'expected'), [
-    ('preproduction', ['argument', 'page_copy', 'progression'], ['source-reading','content-methods','content-examples','content-calibration','review-and-repair']),
-    ('preproduction', ['page_copy','progression'], ['source-reading','content-methods','content-examples','content-calibration','review-and-repair']),
-    ('final', ['content'], ['source-reading','content-methods','content-calibration','review-and-repair']),
-    ('final', ['speech'], ['content-methods','review-and-repair']),
+    ('preproduction', ['argument', 'page_copy', 'progression'], ['source-reading','content-methods','content-examples','content-calibration','review-and-repair','method-review']),
+    ('preproduction', ['page_copy','progression'], ['source-reading','content-methods','content-examples','content-calibration','review-and-repair','method-review']),
+    ('final', ['content'], ['source-reading','content-methods','content-calibration','review-and-repair','method-review']),
+    ('final', ['speech'], ['content-methods','review-and-repair','method-review']),
     ('page_visual', ['blueprint_content','readability'], ['review-and-repair','physical-units']),
     ('final', ['conversion','privacy'], ['review-and-repair','physical-units']),
-    ('final', ['content','conversion','speech'], ['source-reading','content-methods','content-calibration','review-and-repair','physical-units']),
+    ('final', ['content','conversion','speech'], ['source-reading','content-methods','content-calibration','review-and-repair','physical-units','method-review']),
 ])
 def test_review_scope_union_is_stable(stage, units, expected):
     assert list(method_resources.method_ids_for('review', intent=stage, review_units=units)) == expected
@@ -90,7 +90,7 @@ def test_actual_create_continue_and_phase_producer_freeze_atomic_floor(tmp_path)
     service.create(project, brief='neutral training', sources=[])
     store = Store(project)
     document = store.load_document()
-    assert document['compatibility']['minimum_writer'] == 'rc4-content.v1'
+    assert document['compatibility']['minimum_writer'] == 'method-catalog.v1'
     task = store.read_object_json(document['tasks'][0])
     assert task['method_manifest']
     before = _bytes(project)
@@ -105,7 +105,7 @@ def test_actual_create_continue_and_phase_producer_freeze_atomic_floor(tmp_path)
     assert task['content_validation_policy'] == POLICY
     assert method_resources.resolve_task_methods(task)['basis_status'] == 'current'
     current = store.load_document()
-    assert current['compatibility']['minimum_writer'] == 'rc4-content.v1'
+    assert current['compatibility']['minimum_writer'] == 'method-catalog.v1'
     before_current = (project / '.deckmaster/current.json').read_bytes()
     disconnected = _argument_narrative(current['project_id'], edges=[])
     with pytest.raises(models.NarrativeDisconnected) as caught:
@@ -248,7 +248,7 @@ Path(sys.argv[1],"legacy.json").write_text(json.dumps({"task":task,"argument":ar
     monkeypatch.setattr(store_module,'_atomic_write_bytes',original_write)
     new_task=content_production.open_phase_task(store,before_document,operation_id='first-rc4-commit',phase='argument')
     assert new_task['method_manifest'] and new_task['content_validation_policy']==POLICY
-    assert store.load_document()['compatibility']['minimum_writer']=='rc4-content.v1'
+    assert store.load_document()['compatibility']['minimum_writer']=='method-catalog.v1'
 
 
 def test_orphan_and_forged_legacy_markers_do_not_bypass_adoption(tmp_path):
@@ -263,10 +263,10 @@ def test_orphan_and_forged_legacy_markers_do_not_bypass_adoption(tmp_path):
 
 
 @pytest.mark.parametrize('layers,expected', [
-    (['review'], ['source-reading','content-methods','content-calibration','review-and-repair','physical-units']),
-    (['speech'], ['content-methods','review-and-repair']),
+    (['review'], ['source-reading','content-methods','content-calibration','review-and-repair','physical-units','method-review']),
+    (['speech'], ['content-methods','review-and-repair','method-review']),
     (['svg'], ['review-and-repair','physical-units']),
-    (['page_copy'], ['source-reading','content-methods','content-calibration','review-and-repair']),
+    (['page_copy'], ['source-reading','content-methods','content-calibration','review-and-repair','method-review']),
 ])
 def test_external_review_handoff_methods_are_readonly_and_not_application(tmp_path, layers, expected):
     from deck_master import external_review
@@ -342,7 +342,7 @@ def test_real_review_dispatch_reuses_only_the_same_scope(tmp_path):
     assert content["task_id"] != visual["task_id"]
     assert content["review_units"] == content_units
     assert [item["id"] for item in content["method_manifest"]] == [
-        "source-reading", "content-methods", "content-calibration", "review-and-repair"]
+        "source-reading", "content-methods", "content-calibration", "review-and-repair", "method-review"]
     before = _bytes(project)
     with pytest.raises(models.ModelError, match="review_units"):
         service.open_host_task(store, **options, review_units=[{"kind": "bogus", "page_ids": [], "reason": "missing"}])

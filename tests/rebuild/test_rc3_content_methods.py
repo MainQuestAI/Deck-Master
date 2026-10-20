@@ -23,13 +23,13 @@ def _dispatch(tmp_path):
     return project, store, outcome
 
 
-def test_preproduction_work_order_consumes_five_actual_methods_and_complete_packet(tmp_path):
+def test_preproduction_work_order_consumes_actual_methods_and_complete_packet(tmp_path):
     project, store, outcome = _dispatch(tmp_path)
     task = outcome["task"]
     result = method_resources.read_task_methods(project, task["task_id"])
     assert result["status"] == "current"
     assert [item["id"] for item in result["methods"]] == [
-        "source-reading", "content-methods", "content-examples", "content-calibration", "review-and-repair"]
+        "source-reading", "content-methods", "content-examples", "content-calibration", "review-and-repair", "method-review"]
     summary = service.task_summary(store, store.load_document(), task)
     assert result["current_method_release"] == summary["method_release"] == task["method_release"]
     for item, dispatched in zip(result["methods"], summary["method_resources"], strict=True):
