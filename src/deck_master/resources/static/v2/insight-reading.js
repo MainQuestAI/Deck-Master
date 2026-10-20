@@ -70,7 +70,7 @@ function directionDialog(app,initial){
       if(isAdopt&&!a.can_adopt)throw Error('采用准入已变化。决定仍保留，请读取当前状态后明确重新确认。');
       if(!isAdopt&&!text.input.value.trim()){text.input.reportValidity();return;}
       const operation_id=crypto.randomUUID(),payload={project_id:app.info.project_id,base_revision:a.assessed_control_revision,operation_id};
-      if(isAdopt)Object.assign(payload,{proposal_ref:current.data.item.ref,decision_ref:saved?.decision?.decision_ref||a.existing_decision_ref,write_scope:a.write_scope});
+      if(isAdopt)Object.assign(payload,{proposal_ref:current.data.item.ref,decision_ref:a.existing_decision_ref,write_scope:a.write_scope});
       else payload.decision={topic:'direction',authority_mode:'direct_user',subject_refs:[a.subject_ref],scope:a.write_scope,basis:a.basis,value:{selected:sha},disposition:'accepted',instruction_evidence:{kind:'host_attested_instruction',text:text.input.value,source_locator:'studio:direction:'+operation_id}};
       saved={...saved,text:text.input.value,pending:{kind:isAdopt?'adopt':'decision',path:projectAPI(app)+'/collaboration/'+(isAdopt?'proposal-adoptions':'decisions'),payload}};persist();
       response=await post(saved.pending.path,payload);

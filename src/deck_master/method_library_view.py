@@ -12,8 +12,11 @@ def digest(value):
 def catalog():
     root = methods.resolve_root()
     import json
-    raw = safe_file(root, CATALOG_PATH).read_bytes()
-    rows = validate_catalog(json.loads(raw))
+    try:
+        raw = safe_file(root, CATALOG_PATH).read_bytes()
+        rows = validate_catalog(json.loads(raw))
+    except (ValueError, OSError) as exc:
+        fail(f'Method catalog unavailable: {exc}', code='method_catalog_unavailable', status=503)
     return root, rows, models.sha256_bytes(raw)
 
 
@@ -75,7 +78,7 @@ def preview(project, request):
     expected = request.get('expected_basis')
     if expected is not None and expected != {'catalog_digest': catalog_digest, 'context_digest': context_digest}:
         fail('Preparation basis changed; re-preview retained IDs', code='method_preview_basis_changed', status=409)
-    defaults = []; resolved = []; dependencies = []; titles = {}
+    defaults = []; resolved = []; dependencies = []; titles = {}; damaged = {}
     if valid:
         try:
             selected = select(rows, chosen, role=role, kind=kind, phase=phase, review_units=units)
@@ -83,15 +86,21 @@ def preview(project, request):
                 ('collaboration-routing', *methods.method_ids_for('review', review_units=units))
                 if role == 'deck-review' else methods._ROLE_METHODS[role])
             ids = list(dict.fromkeys([*defaults, *selected]))
-            for mid in ids:
+            dependencies = [i for i in selected if i not in chosen and i not in defaults]
+        except ValueError as exc:
+            fail(str(exc), code='method_preview_invalid_selection')
+        for mid in ids:
+            try:
                 data = safe_file(root, rows[mid]['relative_path']).read_bytes()
+                text = data.decode('utf-8')
                 if rows[mid]['relative_path'].endswith('.md'):
-                    text = data.decode('utf-8')
                     titles[mid] = next((line.lstrip('#').strip() for line in text.splitlines() if line.startswith('# ')), mid)
                 resolved.append({'id': mid, 'relative_path': rows[mid]['relative_path'], 'sha256': models.sha256_bytes(data)})
-            dependencies = [i for i in selected if i not in chosen and i not in defaults]
-        except (ValueError, OSError) as exc:
-            fail(str(exc), code='method_preview_invalid_selection')
+            except UnicodeError:
+                damaged[mid] = 'resource_invalid_utf8'
+            except (ValueError, OSError):
+                damaged[mid] = 'resource_unavailable'
+        reasons.extend(f'{reason}:{mid}' for mid, reason in damaged.items())
     hashes = {r['id']: r['sha256'] for r in resolved}; entries = []
     for mid, row in rows.items():
         allowed = valid and row['readable']; why = []
@@ -100,17 +109,18 @@ def preview(project, request):
             except ValueError: allowed = False; why = ['outside_role_phase_scope']
         elif not valid: why = list(reasons) or ['context_unavailable']
         if not row['readable']: why = ['resource_not_readable']
+        if mid in damaged: allowed = False; why = [damaged[mid]]
         entries.append({'id': mid, 'display_name': titles.get(mid, mid), 'description': '', 'kind': row['kind'],
                         'sha256': hashes.get(mid), 'selectable': allowed, 'reason_codes': why})
-    preview_digest = digest({'basis': context_digest, 'catalog': catalog_digest, 'selected': chosen, 'manifest': resolved})
+    preview_digest = digest({'basis': context_digest, 'catalog': catalog_digest, 'selected': chosen, 'manifest': resolved, 'damaged': damaged})
     text = ('方法准备，尚未应用。请制作工具先重新核对项目版本、请求、范围和资源字节，再按正式流程处理。\n'
             + '选择的资源 ID：' + ', '.join(chosen) + '\n固定准备依据：' + preview_digest)
     return {'schema_version': 'ui_method_preview.v1', 'project_id': project_id, 'revision_id': revision,
-        'context_status': status, 'browse_status': 'partial' if gaps else 'available', 'dispatch_status': dispatch,
-        'reason_codes': reasons, 'preparation_only': True, 'selection_status': 'validated' if valid else 'not_evaluated',
+        'context_status': status, 'browse_status': 'partial' if gaps or damaged else 'available', 'dispatch_status': dispatch,
+        'reason_codes': reasons, 'preparation_only': True, 'selection_status': 'validated' if valid and not damaged else 'not_evaluated',
         'context': ctx, 'catalog_digest': catalog_digest, 'context_digest': context_digest, 'entries': entries,
         'explicit_ids': chosen, 'default_ids': defaults, 'dependency_ids': dependencies, 'resolved_manifest': resolved,
-        'preview_digest': preview_digest, 'handoff': {'status': 'preparation_only', 'copy_allowed': valid, 'text': text if valid else ''}}
+        'preview_digest': preview_digest, 'handoff': {'status': 'preparation_only', 'copy_allowed': valid and not damaged, 'text': text if valid and not damaged else ''}}
 
 
 def resource(mid, *, catalog_digest, sha256):
@@ -120,12 +130,19 @@ def resource(mid, *, catalog_digest, sha256):
         fail('Unknown or unreadable resource', code='insight_object_not_reachable', status=404)
     if catalog_digest != current:
         fail('Catalog changed', code='method_preview_basis_changed', status=409)
-    path = safe_file(root, row['relative_path'])
+    try:
+        path = safe_file(root, row['relative_path'])
+    except (ValueError, OSError):
+        fail('Resource unavailable; re-preview retained IDs', code='method_resource_unreadable', status=503)
     if path.stat().st_size > 1024 * 1024:
         fail('Resource exceeds 1 MiB preview limit', code='method_preview_body_too_large', status=413)
     raw = path.read_bytes()
     if len(raw) > 1024 * 1024: fail('Resource exceeds preview limit', status=413)
     if models.sha256_bytes(raw) != sha256:
         fail('Resource bytes changed', code='method_preview_basis_changed', status=409)
+    try:
+        text = raw.decode('utf-8')
+    except UnicodeError:
+        fail('Resource is not valid UTF-8', code='method_resource_unreadable', status=422)
     return {'id': mid, 'kind': row['kind'], 'sha256': sha256, 'catalog_digest': current,
-            'content': raw.decode('utf-8'), 'preparation_only': True}
+            'content': text, 'preparation_only': True}

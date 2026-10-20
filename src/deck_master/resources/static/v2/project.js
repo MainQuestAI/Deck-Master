@@ -32,7 +32,7 @@ export class Project {
       localStorage.setItem(previous.activeKey, JSON.stringify(record));
       previous.disposed = true; clearTimeout(previous.timer);
       replacement = new DraftEditor(previous.info, previous.target, previous.baseRevision, previous.baseRef,
-        {readonly: previous.readonly, exactRevision: previous.exactRevision});
+        {readonly: previous.readonly, exactRevision: previous.exactRevision, contextKey: previous.contextKey});
       this.editor = replacement;
       const node = replacement.mount();
       previous.node.replaceWith(node);
