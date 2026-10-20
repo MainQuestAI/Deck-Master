@@ -249,16 +249,18 @@
     {
       "ac_id": "AC18",
       "owner": "WU03",
-      "result": "NOT_RUN",
+      "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/package-verification.json",
+        "../../reports/webui-content-methods/evidence/wu08-followup.log"
       ],
       "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
       "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
-      "coverage": "partial_or_not_run",
-      "limitations": "Two distinct reachable Narrative/Plan pairs verified; fixed comparison UI implemented, complete current+candidate/history browser matrix outstanding."
+      "command_or_steps": "pytest -q tests/rebuild/test_webui_content_insight_browser.py -k 'adoption_lost or adoption_concurrent or fixed_current'",
+      "coverage": "verified",
+      "limitations": "PASS: real browser current+candidate and current+historical fixed comparisons survive background pointer/revision change and refresh; no write controls. Distinct Plan pairing covered by existing service test. Synthetic Runtime projects, not Host quality evidence.",
+      "test_definition_sha": "9c493c6e1b0d6b6837dfc2f7f6f3e40651847976"
     },
     {
       "ac_id": "AC19",
@@ -277,16 +279,18 @@
     {
       "ac_id": "AC20",
       "owner": "WU03",
-      "result": "NOT_RUN",
+      "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/package-verification.json",
+        "../../reports/webui-content-methods/evidence/wu08-followup.log"
       ],
       "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
       "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
-      "coverage": "partial_or_not_run",
-      "limitations": "Lost decision ACK + reload + original UUID lookup passes without duplicate decision; adoption-step lost ACK and intervening concurrent write browser scenarios outstanding."
+      "command_or_steps": "pytest -q tests/rebuild/test_webui_content_insight_browser.py -k 'adoption_lost or adoption_concurrent or fixed_current'",
+      "coverage": "verified",
+      "limitations": "PASS: lost decision ACK prior test plus lost adoption ACK refresh/lookup without second write; intervening concurrent revision preserves old payload/base and decision, requires explicit new request with new UUID before adoption. No duplicate decision or dispatch.",
+      "test_definition_sha": "9c493c6e1b0d6b6837dfc2f7f6f3e40651847976"
     },
     {
       "ac_id": "AC21",
@@ -762,12 +766,29 @@
   "remote_delivery": {
     "branch": "codex/webui-content-methods-impl-20261020",
     "push": "SUCCESS",
-    "draft_pr_creation": "DENIED",
+    "draft_pr_creation": "API_ACCESS_ERROR",
     "target_base": "codex/rc5-content-methods-20261020",
     "command": "gh pr create --draft",
-    "error": "Post https://api.github.com/graphql: Forbidden",
+    "error": "Post \"https://api.github.com/graphql\": Forbidden",
     "pr_url": null,
-    "retry": "NOT_ATTEMPTED",
-    "next_step": "Restore authorized access, check result, then continue same branch; do not bypass denial"
+    "retry": "NO_CREATION_RETRY_OR_CHANNEL_SWITCH",
+    "next_step": "Parent independently checks existing PR with authorized read access; do not recreate until outcome confirmed",
+    "previous_label": "DENIED (ambiguous shorthand, not a tool approval rejection)",
+    "tool_approval_denial": false,
+    "remote_creation_outcome": "UNCERTAIN_NOT_CONFIRMED",
+    "read_only_verification": {
+      "command": "gh pr list --state all --head codex/webui-content-methods-impl-20261020 --json number,url,state,isDraft,headRefName,headRefOid,baseRefName",
+      "exit_code": 1,
+      "error": "Post \"https://api.github.com/graphql\": Forbidden",
+      "outcome": "ACCESS_ERROR_NO_RESULT"
+    }
+  },
+  "followup": {
+    "runtime_source_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+    "test_definition_sha": "9c493c6e1b0d6b6837dfc2f7f6f3e40651847976",
+    "result": "4 passed, 8 deselected in 8.91s",
+    "runtime_code_changed": false,
+    "professional_review": "NOT_RUN",
+    "human_acceptance": "NOT_RUN"
   }
 }

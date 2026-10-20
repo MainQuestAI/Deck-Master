@@ -6,7 +6,7 @@
 
 - 最终适用 PR127 基线：`3217a65630023244eac5a09b3e7570954cce9188`。父线程确认 CI `39401753812` completed/success；只作为依赖基线证据，不冒充本 PR 检查。
 - main 最后观察 `09f0213d07fc718dc4d41a52bb69c4595fcb1ac8`。PR127 未合并，本 Draft 明确依赖 `codex/rc5-content-methods-20261020`，不自动合并它。
-- 本轮准确实现与包源码：`3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3`，构建时工作树干净。后续回执提交仅文档/证据，产品代码与此 SHA 相同。
+- 本轮准确实现与包源码：`3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3`，构建时工作树干净。后续接续提交包含测试与文档/证据，产品代码与此 SHA 相同。
 - 原规格 15 文件文本已保留在 `4f7f2a3b`，14 个 manifest entries 的 SHA/bytes 全匹配；六项修订见 [REVISION-NOTES](../../specs/deck-master-webui-content-methods-20261020/REVISION-NOTES.md)。附带验证脚本只读，未执行。原 ZIP 无法物化的历史限制没有通过改 URL/执行环境绕过。
 - 原 `/workspace/Deck-Master` 的六份未提交草稿及其备份保留；实施目录 `/workspace/Deck-Master-webui`，另有独立规格工作树。
 
@@ -78,6 +78,13 @@ GitHub PR 元信息读取曾返回 GraphQL Forbidden，已按新证据允许的�
 
 ## 远端交付结果
 
-独立分支已成功推送至 `origin/codex/webui-content-methods-impl-20261020`。Draft 创建命令 `gh pr create --draft --base codex/rc5-content-methods-20261020 --head codex/webui-content-methods-impl-20261020 --body-file /workspace/webui-evidence/pr-body.md` 返回 exit 1：`Post "https://api.github.com/graphql": Forbidden`。状态 **DENIED**，没有 PR URL/编号回执，创建未获确认；没有重复创建或改 API/执行环境绕过。后续须先恢复授权访问并核对结果，再续接同一分支。没有合并或发布。
+独立分支已成功推送至 `origin/codex/webui-content-methods-impl-20261020`。Draft 创建命令 `gh pr create --draft --base codex/rc5-content-methods-20261020 --head codex/webui-content-methods-impl-20261020 --body-file /workspace/webui-evidence/pr-body.md` 返回 exit 1：`Post "https://api.github.com/graphql": Forbidden`。先前简写 **DENIED** 不代表工具审批拒绝；准确分类为 **API_ACCESS_ERROR**。没有 PR URL/编号回执，远端创建结果 **UNCERTAIN / 未确认**；没有重复创建或改 API/执行环境绕过。后续须先恢复授权访问并核对结果，再续接同一分支。没有合并或发布。
 
 正文已保存在云端 `/workspace/webui-evidence/pr-body.md`；分支可复核全部实现、准确包证据和未完成验收。此权限阻塞不改变本地 182 项回归与安装检查的实际结果，也不把 WU08 未闭合项标为通过。
+
+
+## 后续澄清与自动验证
+
+同一 `gh` 通道按 head 分支执行一次只读 `gh pr list --state all`，仍为 exit 1 / `Post "https://api.github.com/graphql": Forbidden`。工具命令已实际执行；没有审批拒绝记录。无法仅凭输出区分 GitHub 与代理访问层，也无法确认远端 PR 是否已创建；已停止，不重试创建、不换通道。父线程独立只读核对中。
+
+新增浏览器组 4 passed / 8.91s（8 deselected），测试定义提交 `9c493c6e1b0d6b6837dfc2f7f6f3e40651847976`，运行时仍为 `3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3` 的产品代码。覆盖 current+candidate/history 固定比较、采用回执丢失后 lookup、两步间并发及显式新 UUID；AC18、AC20 已按实际证据更新 PASS。未扩大为全部验收通过。见 [具体欠项和分工](WU08-FOLLOWUP.md) 与 [原日志](evidence/wu08-followup.log)。
