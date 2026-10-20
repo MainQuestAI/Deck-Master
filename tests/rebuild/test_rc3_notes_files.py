@@ -76,7 +76,7 @@ def test_real_pipeline_to_export_preserves_full_notes_and_dependencies(tmp_path,
     report = produce(root)
     assert report['status'] == 'pass' and report['desktop_editing'] == 'not_evaluated'
     doc = store.load_document()
-    assert doc['compatibility']['minimum_writer'] == 'rc4-content.v1'
+    assert doc['compatibility']['minimum_writer'] == 'method-catalog.v1'
     assert output_matches_current_svg(store, doc)
     assert [e['svg'] for e in doc['pages']] == [e['svg'] for e in before['pages']]
     assert doc['tasks'] == before['tasks']
