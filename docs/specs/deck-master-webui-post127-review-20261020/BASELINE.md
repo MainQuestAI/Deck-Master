@@ -33,4 +33,10 @@
 
 ## 续接
 
+父线程后续补充（转交证据，非本环境重新查询）：d1ee1c7d 的 CI 39398981973 尚运行，渲染通过，单元与浏览器待完成；静态复审未见新增阻断。最终验收仍 pending，不重试被拒绝的 PR 元数据查询。
+
+父线程文本转交在 API-SPEC §6 中出现“16372 tokens truncated”，缺少中间文件全文，不能据此重建原包或宣称六项已合入。已将完整 manifest 和可完整恢复的 validation.json、work-item context 保存在 /workspace/webui-spec-input/original-text；后两项分别 466、1248 bytes，SHA 与 manifest 完全匹配。该原 validation 的 PASS 仅保留历史原文，不是本任务验收结论。已请求分批补齐全文，不再下载。
+
+Review 历史补核：最早合同提交 032de48f 的 review.v1 同样要求 finding_id、impact、resolution；models.py:399 先做 schema 校验，v1 返回保留原身份。没有找到缺 finding_id 的合法兼容合同，已撤除对此假设的兜底验收要求；固定 Ref/revision 定位仍需实现。
+
 先取得原规格文本并逐条合入 API/UI/AC/traceability；原 WU owner 与 AC 不变。待父线程确认 PR127 最终可用 SHA，再 fetch 并核查与观察 head 的差异，迁移此规格提交到独立新 PR 分支，复核这些源码锚点和协议。完整 WU01–WU08 同一 Draft PR；在该门槛前不启动实现。

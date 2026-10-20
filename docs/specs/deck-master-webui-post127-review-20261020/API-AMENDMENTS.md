@@ -32,7 +32,7 @@ compare_eligible 只要求两份不同、可读、schema/语义合法且在所�
 
 locator={revision_id,review_ref,source_index,finding_id?}；source_index 为固定原始 findings 数组的零基索引（过滤/排序前）。URL 携带 revision、review Ref 的 path+sha256（安全编码并在服务端验证）、source_index；finding_id 有则附加做一致性核对。索引是只读定位器，不是新持久业务 ID。不在读取/刷新时回填旧 Review。
 
-用完整 Ref+revision 验证可达及可读后定位原数组，索引越界、ID 不一致、对象不可读则定位错误，不默认第一项。UI 过滤/排序保持原 source_index。源码当前 review.v1 要求 finding_id；如旧格式适配确实允许缺 ID，仅为合法可读的适配结果使用兜底，不把违反 schema 的损坏对象悄悄变合法。
+用完整 Ref+revision 验证可达及可读后定位原数组，索引越界、ID 不一致、对象不可读则定位错误，不默认第一项。UI 过滤/排序保持原 source_index。源码当前 review.v1 与最早合同提交 032de48f 均要求 finding_id、impact、resolution；models.validate_review_semantics 先按 schema 校验，再为 v1 保留原身份语义。没有找到合法缺 finding_id 的历史合同，不新增此兼容路径。正常链接使用 revision+review_ref+finding_id；source_index 只用于同一有效对象内的定位及一致性检查，不能让无 ID 的损坏对象变合法。
 
 ## R6 — 不可读 union
 

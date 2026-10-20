@@ -8,7 +8,7 @@
 | R2 | AC39、AC41、AC43 | 无新阶段/已有 frozen Task 仍可 HTTP 200 浏览；dispatch_status=cannot_dispatch 与原因完整；preparation_only 恒 true；400/404/409 basis_conflict/503 与局部 partial 区别；GET 前后 Document、Task、calls、writer floor 不变。 |
 | R3 | AC16 | 零 Page 可读 Narrative 与 planned_roles，page_ref=null；current Plan 只服务其确切 Narrative；两个方向分别关联不同固定 Plan；缺失/不可读 Plan 不回退到另一方。 |
 | R4 | AC18 | current+candidate 可比较；两不同 proposal 非必要；同 Ref、不可读、非法/不可达 Ref 拒绝；历史比较不提供写动作，不随后台结果漂移。 |
-| R5 | AC27、AC28 | 固定 Review 的非首条 finding 经刷新/返回/筛选/排序仍是同一 source_index；相同 finding_id 在不同 Ref 不混淆；缺 ID 的合法适配用索引；越界、Ref/revision 不匹配不默认首项。 |
+| R5 | AC27、AC28 | 固定 Review 的非首条 finding 经刷新/返回/筛选/排序仍是同一对象；相同 finding_id 在不同 Ref 不混淆；v1 缺 finding_id 按违反合同处理，不新增无依据兼容；索引越界、ID 或 Ref/revision 不匹配不默认首项。 |
 | R6 | AC08 | schema 正例：readable=true+真实 data，false+null+error；负例：false+伪造业务字段、true+null、不可读 Review 强制非空；损坏对象保持局部错误并禁止采用。 |
 
 本轮只做源码阅读和文档设计，无以上产品测试执行证据。不得以 JSON 可解析或文档差异检查代表 50 AC 通过。
