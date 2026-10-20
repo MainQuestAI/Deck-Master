@@ -1,0 +1,764 @@
+{
+  "schema_version": "webui_spec_traceability.v1",
+  "spec_version": "1.0",
+  "implementation_status": "NOT_STARTED",
+  "source_report_head": "12bffbd72631ad60ada6d456b99e95c3e6b2bd0e",
+  "observed_pr127_head": "02627c17d5046428609e6806569ad3cd790e7d26",
+  "features": {
+    "UI-01": [
+      "WU01",
+      "WU02"
+    ],
+    "UI-02": [
+      "WU01",
+      "WU03"
+    ],
+    "UI-03": [
+      "WU01",
+      "WU04"
+    ],
+    "UI-04": [
+      "WU01",
+      "WU05"
+    ],
+    "UI-05": [
+      "WU06"
+    ],
+    "UI-06": [
+      "WU07"
+    ],
+    "UI-07": [
+      "WU04",
+      "WU06"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "WU00",
+      "title": "启动与差异复核",
+      "depends_on": [],
+      "acceptance_ids": [
+        "AC01",
+        "AC02",
+        "AC03",
+        "AC04"
+      ],
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "WU01",
+      "title": "固定版本读模型",
+      "depends_on": [
+        "WU00"
+      ],
+      "acceptance_ids": [
+        "AC05",
+        "AC06",
+        "AC07",
+        "AC08",
+        "AC09",
+        "AC10"
+      ],
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "WU02",
+      "title": "任务方法依据",
+      "depends_on": [
+        "WU01"
+      ],
+      "acceptance_ids": [
+        "AC11",
+        "AC12",
+        "AC13",
+        "AC14",
+        "AC15"
+      ],
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "WU03",
+      "title": "论证主线与方向采用",
+      "depends_on": [
+        "WU01",
+        "WU02"
+      ],
+      "acceptance_ids": [
+        "AC16",
+        "AC17",
+        "AC18",
+        "AC19",
+        "AC20",
+        "AC21",
+        "AC22"
+      ],
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "WU04",
+      "title": "正文与证据联动",
+      "depends_on": [
+        "WU01",
+        "WU03"
+      ],
+      "acceptance_ids": [
+        "AC23",
+        "AC24",
+        "AC25",
+        "AC26",
+        "AC27"
+      ],
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "WU05",
+      "title": "审阅定位与修订交接",
+      "depends_on": [
+        "WU01",
+        "WU03",
+        "WU04"
+      ],
+      "acceptance_ids": [
+        "AC28",
+        "AC29",
+        "AC30",
+        "AC31",
+        "AC32",
+        "AC33"
+      ],
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "WU06",
+      "title": "用途文案与设计语义",
+      "depends_on": [
+        "WU01",
+        "WU04"
+      ],
+      "acceptance_ids": [
+        "AC34",
+        "AC35",
+        "AC36",
+        "AC37",
+        "AC38"
+      ],
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "WU07",
+      "title": "资源与案例准备",
+      "depends_on": [
+        "WU01",
+        "WU02",
+        "WU06"
+      ],
+      "acceptance_ids": [
+        "AC39",
+        "AC40",
+        "AC41",
+        "AC42",
+        "AC43",
+        "AC44"
+      ],
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "WU08",
+      "title": "整体验证与交付",
+      "depends_on": [
+        "WU02",
+        "WU03",
+        "WU04",
+        "WU05",
+        "WU06",
+        "WU07"
+      ],
+      "acceptance_ids": [
+        "AC45",
+        "AC46",
+        "AC47",
+        "AC48",
+        "AC49",
+        "AC50"
+      ],
+      "status": "NOT_STARTED"
+    }
+  ],
+  "acceptance": [
+    {
+      "id": "AC01",
+      "owner": "WU00",
+      "scenario": "最终 PR127 基线",
+      "pass_condition": "记录最终 head、集成 base、合并情况和负责会话收口依据；不能把当前 Draft 快照直接标为完成。",
+      "layers": [
+        "inspection"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC02",
+      "owner": "WU00",
+      "scenario": "检查与包证据",
+      "pass_condition": "required CI 绑定最终 head；包证据绑定准确源码；差异或环境失败有原证据和适用性结论，不挪用旧全绿。",
+      "layers": [
+        "inspection"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC03",
+      "owner": "WU00",
+      "scenario": "接口漂移",
+      "pass_condition": "逐项比对本 Spec 的现有/拟新增接口，已有同等能力移为复用，并更新对应任务和验收映射。",
+      "layers": [
+        "inspection"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC04",
+      "owner": "WU00",
+      "scenario": "工作区隔离",
+      "pass_condition": "实施分支包含最终基线；主工作区用户修改、历史 run、PR127 工作树均未被覆盖。",
+      "layers": [
+        "inspection"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC05",
+      "owner": "WU01",
+      "scenario": "无副作用读取",
+      "pass_condition": "六类项目读接口执行前后 Document、Task、调用账本和 writer floor 相同；读取不会发起 Host。",
+      "layers": [
+        "integration"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC06",
+      "owner": "WU01",
+      "scenario": "引用与项目边界",
+      "pass_condition": "不属于项目或所选快照引用链的 SHA/Task/Review 被拒绝；不允许磁盘存在即被读取。",
+      "layers": [
+        "integration"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC07",
+      "owner": "WU01",
+      "scenario": "版本与分页",
+      "pass_condition": "翻页固定同一 revision；非法/重复参数拒绝；后台 current 变化不替换子对象。",
+      "layers": [
+        "integration"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC08",
+      "owner": "WU01",
+      "scenario": "局部损坏",
+      "pass_condition": "单条资源/来源/Review 引用损坏返回可定位 issue，完好稿件仍可读；absent 与 unreadable 有区别。",
+      "layers": [
+        "integration"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC09",
+      "owner": "WU01",
+      "scenario": "老合同与能力",
+      "pass_condition": "旧无 manifest/mapping/Review v2 字段的项目可读；新能力缺失局部降级；不开新持久字段。",
+      "layers": [
+        "integration"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC10",
+      "owner": "WU01",
+      "scenario": "显示边界",
+      "pass_condition": "不可信文本/Markdown 不执行 HTML/JS；元信息列表不读取全部资源正文；迟到回包不覆盖新对象。",
+      "layers": [
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC11",
+      "owner": "WU02",
+      "scenario": "冻结清单",
+      "pass_condition": "新任务显示与其 manifest 一致的顺序/数量/hash；旧任务无清单显示未记录，不套当前默认。",
+      "layers": [
+        "integration",
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC12",
+      "owner": "WU02",
+      "scenario": "历史与当前可用性",
+      "pass_condition": "历史派发依据与现在安装检查分列；名称/类别未验证时回退，不把当前 metadata 冒充历史。",
+      "layers": [
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC13",
+      "owner": "WU02",
+      "scenario": "资源变化恢复",
+      "pass_condition": "模拟缺文件和 hash 漂移，分别展示具体对象/原因并进入现有核实入口；不改旧 manifest。",
+      "layers": [
+        "integration",
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC14",
+      "owner": "WU02",
+      "scenario": "未知调用",
+      "pass_condition": "有未结调用时不能自动分配额度或重试；只展开/核实不触发 continue、cancel 或外部执行。",
+      "layers": [
+        "integration",
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC15",
+      "owner": "WU02",
+      "scenario": "状态诚实",
+      "pass_condition": "字节可用/已返回只表示读取事实，不能显示已应用、专业通过或已认可。",
+      "layers": [
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC16",
+      "owner": "WU03",
+      "scenario": "零 Page 策划稿",
+      "pass_condition": "plan_only 无 Page 时仍可完整阅读 Narrative/计划；导入稿无 Narrative 时继续读正文，不自动建主线。",
+      "layers": [
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC17",
+      "owner": "WU03",
+      "scenario": "主线真实展示",
+      "pass_condition": "核心回答、节点关系、条件、问题及业务 alternatives 与原对象一致，不制造摘要或候选。",
+      "layers": [
+        "integration",
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC18",
+      "owner": "WU03",
+      "scenario": "候选分类与比较",
+      "pass_condition": "当前/本请求待选/历史分类正确；比较两份真实 Ref，业务替代不冒充叙事候选，后台变化不改左右稿。",
+      "layers": [
+        "integration",
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC19",
+      "owner": "WU03",
+      "scenario": "采用准入",
+      "pass_condition": "只有 argument、合法对象、有效决定和覆盖 scope 时允许采用；framing、历史及不满足策略者可读但不可写。",
+      "layers": [
+        "integration",
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC20",
+      "owner": "WU03",
+      "scenario": "两步事务恢复",
+      "pass_condition": "决定成功后采用断线可按两 UUID 核实恢复；中间并发写入不静默改 base，也不重复记录决定。",
+      "layers": [
+        "integration",
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC21",
+      "owner": "WU03",
+      "scenario": "采用范围",
+      "pass_condition": "采用结果仅更新实际允许的引用并保留历史；不隐式派发 Page/原图任务或增加额度。",
+      "layers": [
+        "integration"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC22",
+      "owner": "WU03",
+      "scenario": "只写/口播边界",
+      "pass_condition": "write_only 和 speech_only 的确认主线不被本轮入口重开；允许只读查看，不自动替换方向。",
+      "layers": [
+        "integration",
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC23",
+      "owner": "WU04",
+      "scenario": "原子定位",
+      "pass_condition": "段落/条目/表格单元通过实际 atom 映射联动来源；鼠标和键盘可用，正文选字不被破坏。",
+      "layers": [
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC24",
+      "owner": "WU04",
+      "scenario": "旧论证绑定",
+      "pass_condition": "Page 绑定旧 Narrative 时读旧对象并说明差异，不跳到当前新主线；原 locator 与 source_version 不变。",
+      "layers": [
+        "integration",
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC25",
+      "owner": "WU04",
+      "scenario": "映射缺失",
+      "pass_condition": "未映射、原子失效、来源损坏分别显示具体情况，不能猜引用或高亮；仍可读稿与页面级来源。",
+      "layers": [
+        "integration",
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC26",
+      "owner": "WU04",
+      "scenario": "示例隔离",
+      "pass_condition": "方法案例和客户来源的展示及点击路径分开；E04 数字不被 UI 登记为业务 source_id。",
+      "layers": [
+        "integration",
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC27",
+      "owner": "WU04",
+      "scenario": "返回与深链",
+      "pass_condition": "刷新及从 finding/主线/来源来回切换后保留 project、revision、page、atom 和返回位置。",
+      "layers": [
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC28",
+      "owner": "WU05",
+      "scenario": "Review 兼容",
+      "pass_condition": "v1 缺字段明确未记录，v2 的 impact/resolution 原样翻译，needs_review/not_evaluated/not_applicable 不变成通过。",
+      "layers": [
+        "integration",
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC29",
+      "owner": "WU05",
+      "scenario": "真实问题定位",
+      "pass_condition": "准确定位有效 page/element；整稿问题和失效位置降级到真实页面/范围，不跳到新版猜测文本。",
+      "layers": [
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC30",
+      "owner": "WU05",
+      "scenario": "精确修订草稿",
+      "pass_condition": "准备修改仅保存个人草稿；确认计划后才走原 plan/commit，scope/page/ref 与选中 finding 一致。",
+      "layers": [
+        "integration",
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC31",
+      "owner": "WU05",
+      "scenario": "只审与分层",
+      "pass_condition": "review_only 不自动修稿；speech/design/source 问题不统一改写正文，不得越过 request/授权范围。",
+      "layers": [
+        "integration",
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC32",
+      "owner": "WU05",
+      "scenario": "结果与解决状态",
+      "pass_condition": "修稿返回/采用不自动把旧 finding 标 fixed；算术通过和资源加载不改变专业审阅或交付判定。",
+      "layers": [
+        "integration",
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC33",
+      "owner": "WU05",
+      "scenario": "错误与回执",
+      "pass_condition": "局改 stale base、提交回包丢失和 scope 拒绝后保留草稿/原 UUID；按已有 lookup 恢复，不重复派发。",
+      "layers": [
+        "integration",
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC34",
+      "owner": "WU06",
+      "scenario": "多用途入口",
+      "pass_condition": "新建和内容区使用中性用途文案；教学、研究、工程评审不强制预算或行动建议。",
+      "layers": [
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC35",
+      "owner": "WU06",
+      "scenario": "保持输入与产物",
+      "pass_condition": "示例提示不覆盖已有 brief，不改变 intent、阅读方式或口播规则；未指定字段不伪装用户确认。",
+      "layers": [
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC36",
+      "owner": "WU06",
+      "scenario": "设计要求来源",
+      "pass_condition": "内容交接来自同版本 content_requirements；frozen_task 与 derived_from_snapshot 清楚区分。",
+      "layers": [
+        "integration",
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC37",
+      "owner": "WU06",
+      "scenario": "保留必要语义",
+      "pass_condition": "限定条件、角色/原子关系可读；缺项不补造；页面装不下只提出原内容流程，不自动删正文。",
+      "layers": [
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC38",
+      "owner": "WU06",
+      "scenario": "纯设计范围",
+      "pass_condition": "查看/交接设计要求不改变 Page 正文、页集合和页序，也不启动生图。",
+      "layers": [
+        "integration",
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC39",
+      "owner": "WU07",
+      "scenario": "同一目录选择",
+      "pass_condition": "目录与适用性来自服务 resolver；未知/越权 ID 被拒绝，无 JS 私有规则或任意路径读取。",
+      "layers": [
+        "integration"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC40",
+      "owner": "WU07",
+      "scenario": "真实依赖预览",
+      "pass_condition": "M04+E04 展开准确默认/显式/依赖和字节；不加载无关全库；角色/阶段变化后重新校验。",
+      "layers": [
+        "integration",
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC41",
+      "owner": "WU07",
+      "scenario": "冻结任务保护",
+      "pass_condition": "已有待办显示依据固定；网页选择/复制不修改旧任务、不新增业务状态或进行带参派发。",
+      "layers": [
+        "integration",
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC42",
+      "owner": "WU07",
+      "scenario": "正文安全预览",
+      "pass_condition": "input/after/walkthrough 可读，before 按需；script 不执行，data 不作指令，示例不作客户事实；过大正文明确失败。",
+      "layers": [
+        "integration",
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC43",
+      "owner": "WU07",
+      "scenario": "准备稿与漂移",
+      "pass_condition": "刷新可恢复个人 ID 选择；目录/字节/revision 变化使旧预览失效并禁止原复制；不丢用户选择。",
+      "layers": [
+        "integration",
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC44",
+      "owner": "WU07",
+      "scenario": "实际使用回读",
+      "pass_condition": "复制仍是未应用；真实 Host 重新核对后派发，新任务 manifest 才能证明所选资源实际进入任务。",
+      "layers": [
+        "host",
+        "integration"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC45",
+      "owner": "WU08",
+      "scenario": "三类场景链路",
+      "pass_condition": "经营诊断、方案比较、教学三套具来源的 Runtime 项目完成主线/依据/审阅阅读及允许的交接路径；fixture 与真实 Host 分开标记。",
+      "layers": [
+        "browser",
+        "host"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC46",
+      "owner": "WU08",
+      "scenario": "视口与可访问性",
+      "pass_condition": "1280×800、1440×900、390×844 无页面级横溢；键盘完成主要动作，焦点恢复、状态文字及长内容可读。",
+      "layers": [
+        "browser"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC47",
+      "owner": "WU08",
+      "scenario": "独立安装",
+      "pass_condition": "由最终实现 SHA 构建 wheel/sdist，在隔离 managed 环境运行同一浏览器关键路径；不借用 checkout/HOME 的资源。",
+      "layers": [
+        "installed"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC48",
+      "owner": "WU08",
+      "scenario": "兼容与回退",
+      "pass_condition": "老项目读取、当前 writer 拒写、历史版本/旧任务恢复保持；移除新 UI 不重写业务对象，不降低 writer 边界。",
+      "layers": [
+        "integration",
+        "installed"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC49",
+      "owner": "WU08",
+      "scenario": "准确版本收口",
+      "pass_condition": "最终 head 必需检查、受影响运行回归与未验证项均记录；包/报告准确绑定 SHA，未产生的证据保持 NOT_RUN。",
+      "layers": [
+        "inspection"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    },
+    {
+      "id": "AC50",
+      "owner": "WU08",
+      "scenario": "分层交付回执",
+      "pass_condition": "工程、浏览器、安装、实际 Host、专业阅读、人类体验分别记录；没有人类确认不宣称人类认可或正式发布。",
+      "layers": [
+        "inspection"
+      ],
+      "status": "NOT_RUN",
+      "evidence": []
+    }
+  ]
+}

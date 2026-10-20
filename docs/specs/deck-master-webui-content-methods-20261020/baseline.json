@@ -1,0 +1,17 @@
+{
+  "spec_version": "1.0",
+  "observed_at": "2026-10-20",
+  "timezone": "Asia/Shanghai",
+  "pr127": {
+    "head": "02627c17d5046428609e6806569ad3cd790e7d26",
+    "base": "09f0213d07fc718dc4d41a52bb69c4595fcb1ac8",
+    "state": "OPEN",
+    "is_draft": true
+  },
+  "implementation_base": null,
+  "gate_g0": "PENDING_PR127_CLOSURE",
+  "source_report_sha256": "0a93d9c0be7debe95b645b4fc53f9f15815a52f1544b80ad1f62ede2dc3493e9",
+  "source_report_type": "static_analysis_not_browser_acceptance",
+  "source_report_snapshot": "inputs/impact-report.md",
+  "document_only": true
+}

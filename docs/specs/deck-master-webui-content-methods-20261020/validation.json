@@ -1,0 +1,17 @@
+{
+  "schema_version": "spec_validation.v1",
+  "scope": "documentation_only",
+  "status": "PASS",
+  "task_count": 9,
+  "acceptance_count": 50,
+  "feature_count": 7,
+  "unique_acceptance_owners": true,
+  "dependency_graph_acyclic": true,
+  "source_report_hash_matches": true,
+  "relative_links_checked": 19,
+  "product_tests": "NOT_RUN",
+  "browser_tests": "NOT_RUN",
+  "installed_tests": "NOT_RUN",
+  "actual_host_tests": "NOT_RUN",
+  "human_acceptance": "NOT_RUN"
+}
