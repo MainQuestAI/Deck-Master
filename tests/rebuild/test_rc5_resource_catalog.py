@@ -208,6 +208,7 @@ def test_new_resource_commit_advances_feature_floor_not_read(tmp_path, fixture_c
     content_production.open_phase_task(store, store.load_document(),
         operation_id='rc5-commit', phase='argument', selected_resource_ids=['fixture-argument'])
     assert store.load_document()['compatibility']['minimum_writer'] == 'method-catalog.v1'
+    assert models.collaboration_required({'compatibility': {'minimum_writer': 'method-catalog.v1'}})
 
 
 def test_build_refuses_unknown_files_and_directory_symlinks(tmp_path):

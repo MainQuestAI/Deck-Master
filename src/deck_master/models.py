@@ -607,7 +607,8 @@ def collaboration_required(document) -> bool:
     writer also keeps its mandatory initial-region contract.
     """
     return (document.get('collaboration') is not None or
-            document.get('compatibility', {}).get('minimum_writer') in ('collaboration.v1', 'rc3-entry.v1', 'rc4-content.v1'))
+            document.get('compatibility', {}).get('minimum_writer') in (
+                'collaboration.v1', 'rc3-entry.v1', 'rc4-content.v1', 'method-catalog.v1'))
 
 
 # Central registry of accepted proposal projections (CONTRACTS §3.1). A
