@@ -81,7 +81,13 @@ function directionDialog(app,initial){
     if(kind==='decision')current=await get('/api/content/arguments/'+sha+revisionQuery(result.revision_id));
   }catch(error){status.replaceChildren(el('p',{role:'alert'},readableError(error)),el('p',{},'原版本、请求与操作编号已保留。不会自动换用新基线。'));}finally{busy=false;paint();}}
   if(saved?.decision&&!saved?.pending&&!saved?.adopted){busy=true;get('/api/content/arguments/'+sha+revisionQuery(saved.decision.revision_id)).then(value=>{current=value;}).catch(error=>{status.append(el('p',{},readableError(error)));}).finally(()=>{busy=false;paint();});}
-  status.append(button('明确读取当前准入以另建采用请求',async()=>{if(busy)return;busy=true;paint();try{if(saved?.pending){try{await get('/api/operations/'+saved.pending.payload.operation_id);throw Error('原操作已有回执，请先核实原操作。');}catch(e){if(e.code!=='operation_not_found')throw e;}saved={...saved,previous_attempts:[...(saved.previous_attempts||[]),saved.pending],pending:null};persist();}current=await get('/api/content/arguments/'+sha);status.prepend(el('p',{},'已读取当前准入，请再次核对范围后明确确认。'));}catch(e){status.prepend(el('p',{},readableError(e)));}finally{busy=false;paint();}}));
+  status.append(button('明确读取当前准入以另建采用请求',async()=>{if(busy)return;busy=true;paint();try{if(saved?.pending){try{await get('/api/operations/'+saved.pending.payload.operation_id);throw Error('原操作已有回执，请先核实原操作。');}catch(e){if(e.code!=='operation_not_found')throw e;}saved={...saved,previous_attempts:[...(saved.previous_attempts||[]),saved.pending],pending:null};persist();}current=await get('/api/content/arguments/'+sha);
+    const admission=current.data.adoption;
+    if(saved?.decision&&!admission.can_adopt&&!admission.existing_decision_ref&&admission.can_record_direction_decision){
+      saved={...saved,previous_decisions:[...(saved.previous_decisions||[]),saved.decision],decision:null};persist();
+      status.replaceChildren(el('p',{},'原决定已保留在操作历史中；当前没有有效决定，可填写理由后明确记录新决定。'));
+    }
+    status.prepend(el('p',{},'已读取当前准入，请再次核对范围后明确确认。'));}catch(e){status.prepend(el('p',{},readableError(e)));}finally{busy=false;paint();}}));
   paint();
 }
 export function taskMethods(app,id,revision){return reader(app,`/api/tasks/${encodeURIComponent(id)}/methods?`+new URLSearchParams({revision,availability:'current'}),value=>{

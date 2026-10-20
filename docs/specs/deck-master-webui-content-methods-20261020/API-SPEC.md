@@ -194,7 +194,7 @@ UI 编排规则：
 2. 已有有效决定精确覆盖该 proposal 时直接使用其 Ref；否则仅在 needs_decision 与 can_record_direction_decision 为 true 时提交第一步新 UUIDv4。没有决定时不要求 can_adopt 为 true。
 3. 第一项 ACK 后使用回执中的 control revision/decision_ref 重新读取采用准入与影响；can_adopt 为 true 后为第二项生成并保存独立 UUIDv4，禁止沿用决定前 base。记录成功但采用拒绝/失败时保留真实决定，显示“方向决定已记录，采用尚未完成”，不得重录决定或把部分成功显示为全成功。
 4. 网络中断先用既有 operations lookup 核实原 UUID。not_found 才允许原 payload/id 重放；unknown 不作失败。
-5. 中间发生别的写入时保留决定，重新读取准入与影响；不得悄悄把新 base 填进旧 payload。新提交是新的明确请求。
+5. 中间发生别的写入时保留决定，重新读取准入与影响；不得悄悄把新 base 填进旧 payload。新提交是新的明确请求。显式重新评估后若旧决定已失效且无有效替代、can_record_direction_decision=true，保留旧回执到操作历史并允许用户明确记录新决定；若存在有效 D2，新采用使用当前评估的 D2。未核实的 pending payload/UUID 不变，不自动记录决定。
 6. 第二项成功后刷新控制摘要；固定比较仍保留，用户选择是否读取新稿。不得自动继续生图。
 
 不新增合并的“批准并生成”接口；完整状态可由两份真实回执恢复。
@@ -297,6 +297,8 @@ type MethodPreview = {
 ```
 
 browse_status 与 dispatch_status 独立；独立浏览 dispatch_status=not_applicable，项目可准备新阶段也仅为 new_content_task_possible，均不产生派发许可。恒定 preparation_only=true。无法解析合法选择上下文时 copy_allowed=false，仍可浏览；恢复明确上下文并通过 resolver 后才可复制准备文本，写入口仍重新校验。目录整体不可用返回 503，局部资源损坏为 200+partial。expected_basis 不符（目录/上下文漂移）或正文资源 hash 不符才是 409；首次无上下文、普通历史阅读不为 409。重取成功后替换预览，保留用户选择。
+
+review_units 的合法性复用 method_resources.method_ids_for("review", review_units=...)，包括 speech-only；未知 unit 拒绝，不用 UI 侧私有集合遗漏合法口播范围。
 
 依赖按原 DAG 顺序、同一规则展开。preview_digest 对 context、catalog 字节、显式 ID 和最终 manifest 计算；复制前重新核对预览。变更后不给旧内容加“已核实”标识。
 

@@ -392,7 +392,7 @@
       "id": "AC19",
       "owner": "WU03",
       "scenario": "采用准入",
-      "pass_condition": "can_record_direction_decision 与 can_adopt 分开；无决定时 needs_decision=true、不可采用但可在准入通过后记录；有效覆盖决定复用。只有 argument、合法对象、有效决定和覆盖 scope 等实际采用谓词全部成立才允许采用；framing、历史及策略拒绝保持不可写。",
+      "pass_condition": "can_record_direction_decision 与 can_adopt 分开；无决定时 needs_decision=true、不可采用但可在准入通过后记录；有效覆盖决定复用。只有 argument、合法对象、有效决定和覆盖 scope 等实际采用谓词全部成立才允许采用；framing、历史及策略拒绝保持不可写。 显式重新评估旧决定失效且无替代时允许明确记录新决定；有有效 D2 时使用 D2。",
       "layers": [
         "integration",
         "browser"
@@ -404,7 +404,7 @@
       "id": "AC20",
       "owner": "WU03",
       "scenario": "两步事务恢复",
-      "pass_condition": "决定成功后采用失败/断线保留已记录决定与两份独立 UUID/payload，明确部分完成；使用决定返回 revision 重新评估采用，不沿用旧 base。中间并发写入不静默改 base，不重复记录决定；unknown 先 lookup，拒绝不得放松事务。",
+      "pass_condition": "决定成功后采用失败/断线保留已记录决定与两份独立 UUID/payload，明确部分完成；使用决定返回 revision 重新评估采用，不沿用旧 base。中间并发写入不静默改 base，不重复记录决定；unknown 先 lookup，拒绝不得放松事务。 旧决定回执归档保留，原 pending payload/UUID 不替换。",
       "layers": [
         "integration",
         "browser"
@@ -520,7 +520,7 @@
       "id": "AC30",
       "owner": "WU05",
       "scenario": "精确修订草稿",
-      "pass_condition": "准备修改仅保存个人草稿；确认计划后才走原 plan/commit，scope/page/ref 与选中 finding 一致。",
+      "pass_condition": "准备修改仅保存个人草稿；确认计划后才走原 plan/commit，scope/page/ref 与选中 finding 一致。 旧自动保存 P1 在途再输入 P2 时，单次交接点击等待最新 P2 保存后导航。",
       "layers": [
         "integration",
         "browser"
@@ -556,7 +556,7 @@
       "id": "AC33",
       "owner": "WU05",
       "scenario": "错误与回执",
-      "pass_condition": "局改 stale base、提交回包丢失和 scope 拒绝后保留草稿/原 UUID；按已有 lookup 恢复，不重复派发。",
+      "pass_condition": "局改 stale base、提交回包丢失和 scope 拒绝后保留草稿/原 UUID；按已有 lookup 恢复，不重复派发。 P1/P2 双写的 unknown/conflict 保持草稿并阻断导航，不重复业务写入。",
       "layers": [
         "integration",
         "browser"
@@ -625,7 +625,7 @@
       "id": "AC39",
       "owner": "WU07",
       "scenario": "同一目录选择",
-      "pass_condition": "目录与适用性来自同一服务 resolver；未知/越权 ID 拒绝，无 JS 私有规则或任意路径读取。目录可读但无新阶段返回 200，browse_status 与 dispatch_status=cannot_dispatch 及原因独立；不得用空 phase 绕过范围校验，未评估选择不能伪装 validated。",
+      "pass_condition": "目录与适用性来自同一服务 resolver；未知/越权 ID 拒绝，无 JS 私有规则或任意路径读取。目录可读但无新阶段返回 200，browse_status 与 dispatch_status=cannot_dispatch 及原因独立；不得用空 phase 绕过范围校验，未评估选择不能伪装 validated。 合法 speech-only 审阅单元复用核心 resolver，未知 unit 拒绝。",
       "layers": [
         "integration"
       ],
@@ -636,7 +636,7 @@
       "id": "AC40",
       "owner": "WU07",
       "scenario": "真实依赖预览",
-      "pass_condition": "M04+E04 展开准确默认/显式/依赖和字节；不加载无关全库；角色/阶段变化后重新校验。",
+      "pass_condition": "M04+E04 展开准确默认/显式/依赖和字节；不加载无关全库；角色/阶段变化后重新校验。 覆盖 deck-review/review/speech-only 默认与显式资源范围。",
       "layers": [
         "integration",
         "browser"

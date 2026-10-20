@@ -38,8 +38,13 @@ def preview(project, request):
         role, phase, units = ctx['role'], ctx['phase'], ctx['review_units']
         if phase is not None and phase not in {'framing', 'argument', 'page_copy', 'speech', 'review', 'production', 'design', 'delivery', 'input_revision'}:
             fail('Invalid phase')
-        if not isinstance(units, list) or any(not isinstance(u, str) or u not in methods._CONTENT_UNITS | methods._VISUAL_UNITS for u in units):
+        if not isinstance(units, list) or any(not isinstance(u, str) for u in units):
             fail('Invalid review units')
+        if units or role == 'deck-review':
+            try:
+                methods.method_ids_for('review', review_units=units)
+            except models.ModelError as exc:
+                fail(str(exc), code='method_preview_invalid_selection')
         if role == 'deck-review' and phase is None:
             phase = 'review'
         status, dispatch, valid = 'read_only', 'not_applicable', True

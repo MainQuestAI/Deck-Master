@@ -22,8 +22,8 @@
 | AC16 | WU03 | 零 Page 策划稿 | plan_only 零 Page 仍完整阅读 Narrative 与精确关联的固定 Plan/planned_roles，未产出 Page 的 page_ref=null；不同方向关联不同 Plan，缺失/不可读不回退到另一方当前计划；导入稿无 Narrative 时继续读正文，不自动建主线。 | browser |
 | AC17 | WU03 | 主线真实展示 | 核心回答、节点关系、条件、问题及业务 alternatives 与原对象一致，不制造摘要或候选。 | integration+browser |
 | AC18 | WU03 | 候选分类与比较 | 当前/本请求待选/历史分类正确；两份不同、可读、合法可达 Narrative Ref 可比较，支持 current+candidate，不要求多个 proposal；同 Ref/非法/不可读/不可达拒绝，历史比较禁止写入，后台变化不改左右稿及关联 Plan。 | integration+browser |
-| AC19 | WU03 | 采用准入 | can_record_direction_decision 与 can_adopt 分开；无决定时 needs_decision=true、不可采用但可在准入通过后记录；有效覆盖决定复用。只有 argument、合法对象、有效决定和覆盖 scope 等实际采用谓词全部成立才允许采用；framing、历史及策略拒绝保持不可写。 | integration+browser |
-| AC20 | WU03 | 两步事务恢复 | 决定成功后采用失败/断线保留已记录决定与两份独立 UUID/payload，明确部分完成；使用决定返回 revision 重新评估采用，不沿用旧 base。中间并发写入不静默改 base，不重复记录决定；unknown 先 lookup，拒绝不得放松事务。 | integration+browser |
+| AC19 | WU03 | 采用准入 | can_record_direction_decision 与 can_adopt 分开；无决定时 needs_decision=true、不可采用但可在准入通过后记录；有效覆盖决定复用。只有 argument、合法对象、有效决定和覆盖 scope 等实际采用谓词全部成立才允许采用；framing、历史及策略拒绝保持不可写。 显式重新评估旧决定失效且无替代时允许明确记录新决定；有有效 D2 时使用 D2。 | integration+browser |
+| AC20 | WU03 | 两步事务恢复 | 决定成功后采用失败/断线保留已记录决定与两份独立 UUID/payload，明确部分完成；使用决定返回 revision 重新评估采用，不沿用旧 base。中间并发写入不静默改 base，不重复记录决定；unknown 先 lookup，拒绝不得放松事务。 旧决定回执归档保留，原 pending payload/UUID 不替换。 | integration+browser |
 | AC21 | WU03 | 采用范围 | 采用结果仅更新实际允许的引用并保留历史；不隐式派发 Page/原图任务或增加额度。 | integration |
 | AC22 | WU03 | 只写/口播边界 | write_only 和 speech_only 的确认主线不被本轮入口重开；允许只读查看，不自动替换方向。 | integration+browser |
 | AC23 | WU04 | 原子定位 | 段落/条目/表格单元通过实际 atom 映射联动来源；鼠标和键盘可用，正文选字不被破坏。 | browser |
@@ -33,17 +33,17 @@
 | AC27 | WU04 | 返回与深链 | 刷新及从 finding/主线/来源来回切换后保留 project、revision、page、atom 和返回位置；finding 链接绑定 review_sha256、finding_id、原 source_index，过滤/排序仍定位非首条原对象，越界/身份不符不得默认首项。 | browser |
 | AC28 | WU05 | Review 兼容 | v1/v2 均按真实合同读取 finding_id、impact、resolution；只对 v1 未要求的 v2 扩展字段显示未记录，缺必填 ID 不新增兼容。不同固定 Review 的同名 finding 不混淆；needs_review/not_evaluated/not_applicable 不变成通过。 | integration+browser |
 | AC29 | WU05 | 真实问题定位 | 准确定位有效 page/element；整稿问题和失效位置降级到真实页面/范围，不跳到新版猜测文本。 | browser |
-| AC30 | WU05 | 精确修订草稿 | 准备修改仅保存个人草稿；确认计划后才走原 plan/commit，scope/page/ref 与选中 finding 一致。 | integration+browser |
+| AC30 | WU05 | 精确修订草稿 | 准备修改仅保存个人草稿；确认计划后才走原 plan/commit，scope/page/ref 与选中 finding 一致。 旧自动保存 P1 在途再输入 P2 时，单次交接点击等待最新 P2 保存后导航。 | integration+browser |
 | AC31 | WU05 | 只审与分层 | review_only 不自动修稿；speech/design/source 问题不统一改写正文，不得越过 request/授权范围。 | integration+browser |
 | AC32 | WU05 | 结果与解决状态 | 修稿返回/采用不自动把旧 finding 标 fixed；算术通过和资源加载不改变专业审阅或交付判定。 | integration+browser |
-| AC33 | WU05 | 错误与回执 | 局改 stale base、提交回包丢失和 scope 拒绝后保留草稿/原 UUID；按已有 lookup 恢复，不重复派发。 | integration+browser |
+| AC33 | WU05 | 错误与回执 | 局改 stale base、提交回包丢失和 scope 拒绝后保留草稿/原 UUID；按已有 lookup 恢复，不重复派发。 P1/P2 双写的 unknown/conflict 保持草稿并阻断导航，不重复业务写入。 | integration+browser |
 | AC34 | WU06 | 多用途入口 | 新建和内容区使用中性用途文案；教学、研究、工程评审不强制预算或行动建议。 | browser |
 | AC35 | WU06 | 保持输入与产物 | 示例提示不覆盖已有 brief，不改变 intent、阅读方式或口播规则；未指定字段不伪装用户确认。 | browser |
 | AC36 | WU06 | 设计要求来源 | 内容交接来自同版本 content_requirements；frozen_task 与 derived_from_snapshot 清楚区分。 | integration+browser |
 | AC37 | WU06 | 保留必要语义 | 限定条件、角色/原子关系可读；缺项不补造；页面装不下只提出原内容流程，不自动删正文。 | browser |
 | AC38 | WU06 | 纯设计范围 | 查看/交接设计要求不改变 Page 正文、页集合和页序，也不启动生图。 | integration+browser |
-| AC39 | WU07 | 同一目录选择 | 目录与适用性来自同一服务 resolver；未知/越权 ID 拒绝，无 JS 私有规则或任意路径读取。目录可读但无新阶段返回 200，browse_status 与 dispatch_status=cannot_dispatch 及原因独立；不得用空 phase 绕过范围校验，未评估选择不能伪装 validated。 | integration |
-| AC40 | WU07 | 真实依赖预览 | M04+E04 展开准确默认/显式/依赖和字节；不加载无关全库；角色/阶段变化后重新校验。 | integration+browser |
+| AC39 | WU07 | 同一目录选择 | 目录与适用性来自同一服务 resolver；未知/越权 ID 拒绝，无 JS 私有规则或任意路径读取。目录可读但无新阶段返回 200，browse_status 与 dispatch_status=cannot_dispatch 及原因独立；不得用空 phase 绕过范围校验，未评估选择不能伪装 validated。 合法 speech-only 审阅单元复用核心 resolver，未知 unit 拒绝。 | integration |
+| AC40 | WU07 | 真实依赖预览 | M04+E04 展开准确默认/显式/依赖和字节；不加载无关全库；角色/阶段变化后重新校验。 覆盖 deck-review/review/speech-only 默认与显式资源范围。 | integration+browser |
 | AC41 | WU07 | 冻结任务保护 | 已有待办仍可 200 浏览目录并显示依据固定、existing_task_frozen；网页选择/复制不修改旧任务、不新增业务状态或带参派发。preparation_only 恒 true，即使 new_content_task_possible 也不产生派发许可；GET/预览不写入、消耗或提高 writer floor。 | integration+browser |
 | AC42 | WU07 | 正文安全预览 | input/after/walkthrough 可读，before 按需；script 不执行，data 不作指令，示例不作客户事实；过大正文明确失败。 | integration+browser |
 | AC43 | WU07 | 准备稿与漂移 | 刷新可恢复个人 ID 选择；目录/字节/上下文指纹与 expected_basis 不符返回 409 并禁用旧复制，重新核对成功才恢复，不丢选择。无新阶段本身不是 409，原因与独立浏览明确；不可评估选择 copy_allowed=false，部分资源损坏与全局不可用分别处理。 | integration+browser |

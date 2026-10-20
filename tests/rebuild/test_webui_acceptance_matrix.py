@@ -721,3 +721,90 @@ def test_long_semantics_and_bullet_atoms_survive_narrow_design_handoff(tmp_path)
             assert store.load_document()==before and store.read_object_json(ref)['customer_visible']['body_blocks'][-1]['items'][0]['text']==text
             browser.close()
     finally:server.stop()
+
+
+@pytest.mark.browser
+@pytest.mark.parametrize('second_result',['saved','unknown','conflict'])
+def test_review_single_click_drains_old_and_latest_save(tmp_path,second_result):
+    project,store,ref=reviewed_project(tmp_path);server=WorkbenchServer(project);url=server.start();info=ui_journal.project_info(project);before=store.load_document();held=[];writes=[]
+    try:
+        with sync_playwright() as pw:
+            browser=pw.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox']);page=browser.new_page()
+            page.goto(url+'studio/#'+urlencode({'project':info['project_identity'],'surface':'runs','revision':store.current_revision_id(),'layer':'content','review':'reading-review','review_sha256':ref['sha256'],'finding':'f1','finding_index':0}))
+            page.get_by_role('button',name='准备范围交接草稿',exact=True).click();expect(page.locator('.review-draft-state')).to_contain_text('已保存到项目')
+            def hold(route):
+                payload=route.request.post_data_json;writes.append(payload)
+                if len(writes)==2 and second_result=='conflict':
+                    record=ui_journal.list_drafts(project)['records'][0];other=copy.deepcopy(record['draft']);other['content']['text']='另一窗口的明确修改'
+                    ui_journal.save(project,draft=other,expected_etag=record['etag'])
+                held.append((route,route.fetch()))
+            page.route('**/api/drafts/save',hold)
+            note=page.get_by_label('审阅交接备注');note.fill('P1：旧自动保存')
+            expect(page.locator('.review-draft-state')).to_contain_text('正在保存到项目')
+            # Pump the route handler without releasing its HTTP response.
+            page.wait_for_timeout(100);assert len(held)==1
+            note.fill('P2：最后文字与原范围')
+            page.get_by_role('button',name='保存草稿后进入原正文编辑',exact=True).click()
+            expect(page.get_by_role('dialog')).to_be_visible();assert len(writes)==1
+            with page.expect_request('**/api/drafts/save'):
+                held[0][0].fulfill(response=held[0][1])
+            page.wait_for_timeout(100);assert len(held)==2
+            expect(page.get_by_role('dialog')).to_be_visible()
+            assert writes[1]['draft']['content']['text']=='P2：最后文字与原范围'
+            if second_result=='unknown':held[1][0].abort()
+            else:held[1][0].fulfill(response=held[1][1])
+            if second_result=='saved':
+                expect(page.get_by_label('正文修改说明',exact=True)).to_have_value('P2：最后文字与原范围')
+            else:
+                expect(page.locator('.review-draft-state')).to_contain_text('保存结果待核实' if second_result=='unknown' else '保存冲突')
+                expect(page.get_by_role('dialog')).to_be_visible();expect(note).to_have_value('P2：最后文字与原范围')
+                expect(page.get_by_label('正文修改说明',exact=True)).to_have_count(0)
+            page.wait_for_timeout(700)
+            assert len(writes)==2 and store.load_document()==before
+            browser.close()
+    finally:server.stop()
+
+
+def test_method_speech_review_uses_existing_resolver_and_rejects_unknown_unit(tmp_path):
+    project,store,_,_=candidate(tmp_path);before=bytes_at(project)
+    ctx={'mode':'independent','role':'deck-review','phase':'review','review_units':['speech']}
+    value=library.preview(project,{'context':ctx,'selected_resource_ids':[]})
+    assert value['selection_status']=='validated' and value['preparation_only']
+    assert value['default_ids']==['collaboration-routing',*method_resources.method_ids_for('review',review_units=['speech'])]
+    explicit=library.preview(project,{'context':ctx,'selected_resource_ids':['writing-profiles']})
+    assert explicit['explicit_ids']==['writing-profiles'] and explicit['selection_status']=='validated'
+    assert bytes_at(project)==before
+    with pytest.raises(ui.InsightError) as error:
+        library.preview(project,{'context':{**ctx,'review_units':['invented-unit']},'selected_resource_ids':[]})
+    assert error.value.http_status==400 and bytes_at(project)==before
+
+
+@pytest.mark.browser
+def test_explicit_reassessment_allows_new_decision_after_old_rejected_without_replacement(tmp_path):
+    from deck_master import collaboration
+    from test_compose_v2_phases import _instruction
+    from test_webui_content_insight_browser import _open_direction
+    project,store,_,ref=candidate(tmp_path);server=WorkbenchServer(project);url=server.start();info=ui_journal.project_info(project)
+    try:
+        with sync_playwright() as pw:
+            browser=pw.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox']);page=browser.new_page()
+            _open_direction(page,url,info,store,ref)
+            d1ref=store.load_document()['collaboration']['decisions'][0];d1=store.read_object_json(d1ref)
+            base={k:d1[k] for k in ['topic','subject_refs','scope','value','authority_mode']};base['instruction_evidence']=_instruction(store,'reject-without-d2')
+            collaboration.record_decision(project,input={**base,'decision_id':d1['decision_id'],'replaces':d1ref,'disposition':'rejected'},base_revision=store.current_revision_id(),operation_id='reject-only-d1')
+            a=ui.argument(project,ref['sha256'])['data']['adoption'];assert a['can_record_direction_decision'] and not a['can_adopt'] and a['existing_decision_ref'] is None
+            before=store.load_document();page.reload();page.get_by_role('button',name='核实或查看原方向操作',exact=True).click()
+            page.get_by_role('button',name='明确读取当前准入以另建采用请求',exact=True).click()
+            expect(page.get_by_role('dialog')).to_contain_text('已读取当前准入')
+            expect(page.get_by_label('确认这份方向的理由')).to_be_enabled();assert store.load_document()==before
+            page.get_by_label('确认这份方向的理由').fill('明确重新记录，原拒绝历史保留')
+            with page.expect_request('**/collaboration/decisions') as request:
+                page.get_by_role('button',name='确认记录方向决定',exact=True).click()
+            expect(page.get_by_role('dialog')).to_contain_text('方向决定已记录，采用尚未完成')
+            assert request.value.post_data_json['base_revision']==before['revision_id']
+            expect(page.get_by_role('button',name='确认采用此方向',exact=True)).to_be_enabled()
+            saved=page.evaluate('(key)=>JSON.parse(localStorage.getItem(key))',f"deck-master:direction:{info['project_identity']}:{ref['sha256']}")
+            assert saved['previous_decisions'][0]['decision_ref']==d1ref and saved['decision']['decision_ref']!=d1ref
+            page.get_by_role('button',name='确认采用此方向',exact=True).click();expect(page.get_by_role('dialog')).to_contain_text('方向已采用')
+            browser.close()
+    finally:server.stop()

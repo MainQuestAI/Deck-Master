@@ -273,11 +273,17 @@ export class DraftEditor {
     this.notifyState();
   }
   async save() {
-    if (this.pendingWrite) await this.pendingWrite;
-    clearTimeout(this.timer);
-    if (this.readonly || this.disposed || !['dirty', 'error'].includes(this.status)) return;
-    this.pendingSave = {draft: structuredClone(this.draft), expected_etag: this.etag};
-    await this.submitPending();
+    do {
+      // Another waiter may start the next save before this continuation runs.
+      // Drain that write too; callers must not mistake saving for completion.
+      while (this.pendingWrite) await this.pendingWrite;
+      clearTimeout(this.timer);
+      if (this.readonly || this.disposed || !['dirty', 'error'].includes(this.status)) return;
+      this.pendingSave = {draft: structuredClone(this.draft), expected_etag: this.etag};
+      await this.submitPending();
+      // Acknowledged older text can leave newer input dirty. Save it before
+      // returning, but never automatically retry unknown/conflict/error.
+    } while (this.status === 'dirty');
   }
   async submitPending() {
     if (this.pendingWrite) return this.pendingWrite;
