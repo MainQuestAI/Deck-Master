@@ -239,7 +239,7 @@ def test_phase_dispatch_carries_compose_v2_and_binding(tmp_path):
     # Method resources follow the phase, not just the task kind.
     summary = service.task_summary(store, store.load_document(), task)
     assert [m["id"] for m in summary["method_resources"]] == \
-        ["source-reading", "content-methods", "content-examples"]
+        ["source-reading", "content-methods", "content-examples", "method-selection"]
 
 
 def test_every_task_in_a_collaboration_project_is_gated(tmp_path):

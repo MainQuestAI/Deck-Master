@@ -129,6 +129,7 @@ def build_parser() -> argparse.ArgumentParser:
     methods.add_argument("--read", action="store_true")
     methods.add_argument("--project")
     methods.add_argument("--task-id")
+    methods.add_argument("--selected-resource-id", dest="selected_resource_ids", action="append")
     _add_read_options(methods)
     collab = sub.add_parser("collaboration", help="Use existing Runtime collaboration transactions")
     commands = collab.add_subparsers(dest="collaboration_command", required=True)
@@ -212,6 +213,7 @@ def build_parser() -> argparse.ArgumentParser:
                           help='CI/non-interactive: do not create or touch the Codex skill link')
 
     create = sub.add_parser("create")
+    create.add_argument("--selected-resource-id", dest="selected_resource_ids", action="append")
     _add_read_options(create)
     create.add_argument("--brief", required=False, help="task brief text (or --brief-file)")
     create.add_argument("--brief-file", required=False)
@@ -238,6 +240,7 @@ def build_parser() -> argparse.ArgumentParser:
                         help="JSON object carrying the task facts (spec v1.1 3.1 fields)")
 
     continue_cmd = sub.add_parser("continue")
+    continue_cmd.add_argument("--selected-resource-id", dest="selected_resource_ids", action="append")
     _add_read_options(continue_cmd)
     continue_cmd.add_argument("--project", required=True)
     continue_cmd.add_argument("--no-open", action="store_true")
@@ -252,6 +255,7 @@ def build_parser() -> argparse.ArgumentParser:
                                       help="path to a patch JSON file; paths inside resolve against this file's directory")
     inputs_update_parser.add_argument("--base-revision", dest="base_revision", required=True)
     inputs_update_parser.add_argument("--operation-id", dest="operation_id", required=True)
+    inputs_update_parser.add_argument("--selected-resource-id", dest="selected_resource_ids", action="append")
 
     view_cmd = sub.add_parser("view")
     view_cmd.add_argument("--project", required=True)
@@ -473,6 +477,8 @@ def main(argv: list[str] | None = None) -> int:
         if options.command == "methods":
             from .method_resources import method_resources, method_release, read_methods, read_task_methods
             if options.project or options.task_id:
+                if options.selected_resource_ids is not None:
+                    raise ModelError("selected_resource_ids", "frozen Task methods cannot be supplemented; use formal reissue")
                 if not options.project or not options.task_id:
                     raise ModelError("methods", "project and task-id are required together")
                 return _emit(read_task_methods(options.project, options.task_id, **_read_options(options)))
@@ -480,18 +486,11 @@ def main(argv: list[str] | None = None) -> int:
             if options.read_protocol:
                 from .work_context import ResourceCollector
                 collector = ResourceCollector(body_mode=options.body_mode or 'full', cache_offer=read_options['cache_offer'])
-                from .method_resources import resolve_root, method_ids_for, RELATIVE_PATHS
-                entries = []
-                for mid in method_ids_for(options.kind, intent=options.intent, phase=options.phase, review_units=options.review_unit):
-                    path = resolve_root() / RELATIVE_PATHS[mid]
-                    try:
-                        from .models import sha256_bytes
-                        digest = sha256_bytes(collector.read_method(path))
-                    except OSError:
-                        digest = None
-                    entries.append({'id': mid, 'relative_path': RELATIVE_PATHS[mid], 'path': str(path), 'sha256': digest})
+                entries = method_resources(options.kind, intent=options.intent, phase=options.phase,
+                                           review_units=options.review_unit,
+                                           selected_resource_ids=options.selected_resource_ids)
                 return _emit(collector.envelope({'methods': collector.methods(entries), 'tasks': []}))
-            items = (read_methods if options.read else method_resources)(options.kind, intent=options.intent, phase=options.phase, review_units=options.review_unit)
+            items = (read_methods if options.read else method_resources)(options.kind, intent=options.intent, phase=options.phase, review_units=options.review_unit, selected_resource_ids=options.selected_resource_ids)
             return _emit({"status": "ready", "methods": items, "method_release": method_release(items)})
         if options.command == "review" and options.review_command == "native":
             from .native_review import run
@@ -650,6 +649,7 @@ def main(argv: list[str] | None = None) -> int:
                 existing_decisions=task_fields.get("existing_decisions"),
                 project_format=options.project_format,
                 request_input=_declaration_file(options.request_input, request=True),
+                selected_resource_ids=options.selected_resource_ids,
                 **read_options,
             )
             if _project_has_pages(options.out):
@@ -659,7 +659,7 @@ def main(argv: list[str] | None = None) -> int:
             rejected = _reject_legacy_run(options.project)
             if rejected is not None:
                 return rejected
-            payload = service.continue_project(options.project, **_read_options(options))
+            payload = service.continue_project(options.project, selected_resource_ids=options.selected_resource_ids, **_read_options(options))
             _emit(payload)
             return 3 if payload["status"] in ("awaiting_host", "needs_tool", "needs_input") else 0
         if options.command == "inputs":
@@ -681,6 +681,7 @@ def main(argv: list[str] | None = None) -> int:
                 base_revision=options.base_revision,
                 operation_id=options.operation_id,
                 patch_dir=patch_path.parent,
+                selected_resource_ids=options.selected_resource_ids,
             )
             if _project_has_pages(options.project):
                 payload = _attach_workbench_url(options.project, payload)

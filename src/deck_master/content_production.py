@@ -562,7 +562,7 @@ def completion_status(store, document):
         "next_action": "return_requested_content" if state == "completed" else phase.get("reason")}
 
 
-def next_phase_task(store, document, *, explicit_speech_mode: str | None = None):
+def next_phase_task(store, document, *, explicit_speech_mode: str | None = None, selected_resource_ids=None):
     """Dispatch the next content phase task, or None when none is due."""
     status = content_phase_status(store, document, explicit_speech_mode=explicit_speech_mode)
     if status.get("action") != "dispatch":
@@ -574,11 +574,11 @@ def next_phase_task(store, document, *, explicit_speech_mode: str | None = None)
         pages = sorted(status.get("page_ids") or [])
         task = open_phase_task(store, document, operation_id=f"compose-{uuid.uuid4().hex[:12]}",
                                phase=SPEECH, page_ids=pages,
-                               instruction=_speech_instruction(kind, pages))
+                               instruction=_speech_instruction(kind, pages), selected_resource_ids=selected_resource_ids)
         _stamp_speech_kind(store, task, kind)
         return task
     return open_phase_task(store, document, operation_id=f"compose-{uuid.uuid4().hex[:12]}",
-                           phase=phase)
+                           phase=phase, selected_resource_ids=selected_resource_ids)
 
 
 def _speech_instruction(kind: str, page_ids) -> str:

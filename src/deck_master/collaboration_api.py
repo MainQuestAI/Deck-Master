@@ -23,7 +23,7 @@ _GRANT = {'instruction_evidence', 'basis', 'authorization_id', 'replaces', 'mode
           'parent_authorization_ref', 'expires_at', 'stop_conditions', 'plan_ref', 'change_plan_id'}
 _FIELDS = {
     'show': set(), 'migration.describe': set(),
-    'continue': set(),
+    'continue': {'selected_resource_ids'},
     'request.start': _REQUEST | {'request'}, 'request.replace': _REQUEST | {'request'},
     'decision': _DECISION | {'decision'}, 'grant': _GRANT | {'authorization'},
     'adopt-proposal': {'proposal_ref', 'decision_ref', 'write_scope'},
@@ -211,7 +211,7 @@ def invoke(project, action, payload=None, *, adapter_context=None, expected_proj
                       'completion': content_production.completion_status(store, document)}
         elif action == 'continue':
             from .service import continue_project
-            result = continue_project(project)
+            result = continue_project(project, selected_resource_ids=body.get("selected_resource_ids"))
             document = store.load_document()
             if result.get('status') != 'completed' and (result.get('eligibility') or {}).get('allowed') is False:
                 response, http, code = error_response(eligibility.EligibilityBlocked(result['eligibility']), document=document)

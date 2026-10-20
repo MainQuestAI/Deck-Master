@@ -45,8 +45,8 @@ def fixture_catalog(tmp_path, monkeypatch):
 
 def test_original_inventory_preserved_and_shared_by_build():
     resources = catalog.load_catalog(ROOT / 'skills/deck-master')
-    assert len(resources) == 14  # Existing only; no seed-import claim.
-    assert len(methods.RELATIVE_PATHS) == 13
+    assert len(resources) == 66  # Fourteen legacy resources plus the 52 reviewed seeds.
+    assert len(methods.RELATIVE_PATHS) == 65
     hook = runpy.run_path(str(ROOT / 'tools/build_hook.py'))
     assert hook['canonical_mapping'](ROOT) == catalog.canonical_mapping(resources)
 
@@ -222,6 +222,7 @@ def test_build_refuses_unknown_files_and_directory_symlinks(tmp_path):
     with pytest.raises(RuntimeError, match='unknown'):
         hook['canonical_mapping'](root)
     unknown.unlink()
+    shutil.rmtree(root / 'skills/deck-master/assets')
     (root / 'skills/deck-master/assets').symlink_to(tmp_path, target_is_directory=True)
     with pytest.raises(RuntimeError, match='symlink'):
         hook['canonical_mapping'](root)

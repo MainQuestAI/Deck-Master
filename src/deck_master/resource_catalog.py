@@ -141,8 +141,8 @@ def select(resources, selected, *, role, kind=None, phase=None, review_units=Non
             raise ValueError(f'unknown or unreadable selected resource: {mid}')
         if (role not in row['consumers']
                 or kind is not None and row['task_kinds'] and kind not in row['task_kinds']
-                or row['phases'] and phase not in row['phases']
-                or row['review_units'] and (not units or not units & set(row['review_units']))):
+                or row['phases'] and (kind is not None or phase is not None) and phase not in row['phases']
+                or role == 'deck-review' and row['review_units'] and (not units or not units & set(row['review_units']))):
             raise ValueError(f'resource outside role/phase/scope: {mid}')
         seen.add(mid)
         for dependency in row['dependencies']:
