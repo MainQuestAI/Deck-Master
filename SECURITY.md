@@ -7,7 +7,21 @@ There is no promised response SLA or independent security certification.
 
 ## Reporting
 
-Please report security concerns through a private GitHub security advisory when available. If that is not available, open a GitHub issue with a high-level description and avoid posting exploit details or sensitive data.
+Do not disclose exploit steps, payloads, credentials, customer material, or
+sensitive logs in public Issues or pull requests. First check this repository's
+Security tab for GitHub's **Report a vulnerability** action. Use it only if the
+private reporting action is actually available.
+
+Private vulnerability reporting has **not been verified** for this repository
+as of 2026-10-20. This policy file does not enable it. There is no separately
+verified private contact listed here. If the private action is unavailable,
+withhold the report details. At most, open a public request saying only that a
+private security contact is needed, without identifying the vulnerability,
+affected target, reproduction, or sensitive evidence. Wait for a maintainer to
+establish a verified private channel before sharing details.
+
+Maintainers must verify the channel and update this policy before advertising
+private reporting as available; see the [setup checklist](docs/issue-maintenance.md#上线检查).
 
 ## Current Threat Boundary
 

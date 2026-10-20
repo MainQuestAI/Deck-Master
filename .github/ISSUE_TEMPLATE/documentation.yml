@@ -1,0 +1,30 @@
+name: Docs / 文档反馈
+description: 安装、使用说明、示例或链接的问题
+title: '[documentation] '
+labels:
+- documentation
+body:
+- type: markdown
+  attributes:
+    value: 请先搜索已有 open / closed Issues，重复问题请补充到原讨论。所有反馈公开可见；只提供脱敏的最小例子，不上传客户原稿、密钥、绝对路径或完整私有日志。安全疑虑请先阅读 [安全政策](https://github.com/MainQuestAI/Deck-Master/blob/main/SECURITY.md)，不要在这里披露漏洞细节。无法提供的信息请写“未知 / 无法提供”并说明原因，不要猜测。
+- type: textarea
+  id: location
+  attributes:
+    label: 文档位置与适用版本
+    description: 文档链接、章节与阅读时版本/tag；例如 getting-started 的安装章节。
+  validations:
+    required: true
+- type: textarea
+  id: problem
+  attributes:
+    label: 卡住的步骤与期望说明
+    description: 描述你按文档做了什么、实际困惑/错误、希望看到什么；引用最小片段。
+  validations:
+    required: true
+- type: textarea
+  id: suggestion
+  attributes:
+    label: 建议修正或脱敏示例
+    description: 可以只说明缺失的信息；不要求先提交补丁。
+  validations:
+    required: false
