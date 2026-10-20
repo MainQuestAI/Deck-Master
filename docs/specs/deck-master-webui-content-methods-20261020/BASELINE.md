@@ -102,3 +102,12 @@ G0 不要求把专业认可或真实 HOME 激活改成 PASS；它们仍是独立
 包报告实际绑定 d1ee1c7d，不冒称为 3217a656 构建；git diff 核对两者 src/skills/pyproject/setup/MANIFEST/tools 均无变化，仅报告与一处测试校正，包对应的运行源码和资源适用。此前局部 shared-lock 单测失败仍为未查明的环境验证限制，不因 CI 全绿杜撰根因。产品实现按已授权范围开始，最终本轮包仍需绑定新实现 SHA。
 
 基于新授权证据只重试一次 PR127 只读 GraphQL，仍 Forbidden；不再重试或绕过。规格原始提交与修订提交保留在原分支，新分支仅 cherry-pick 文档，不改 PR127/PR128/PR129。
+## 本回合只读复核补记
+
+2026-10-20，`git ls-remote` 再次成功：PR127 分支为 `3217a65630023244eac5a09b3e7570954cce9188`，main 为 `09f0213d07fc718dc4d41a52bb69c4595fcb1ac8`。这是远端引用观察，不把 head 自动认定为已收口。PR 元信息读取此前 Forbidden，本回合没有重试或绕过；最终基线确认和 required Checks 仍等待本任务明确接续证据。
+
+相对原观察 `02627c17`，共 12 文件、351 行新增、15 行删除；涉及方法阶段默认、blueprint 写前校验、旧任务重派、案例/算术脚本及回归和报告。相对 main 的 `web.py` 与静态 UI 无差异，未发现本规格六类新增阅读接口已被 PR127 实现。包报告绑定 `d1ee1c7d`；该 SHA 到 `3217a656` 仅变更四份报告和一份测试，运行源码/资源未变化。因此可说明包证据的源码适用性，不能称为从 `3217a656` 构建或本任务执行安装验证。已读取报告中共享锁测试在原基线亦失败的限制，不以其他通过记录抹除该限制。
+
+本回合开始时 `/workspace/Deck-Master` 已在另一实现分支并带有产品源码未提交改动。没有修改、执行或提交这些文件；为本回合限定的文档工作另挂载 `/workspace/Deck-Master-spec-review`，分支 `codex/webui-post127-spec-review-20261020`。本回合没有启动产品实现、推送、创建 PR、合并或发布。后续实现状态不能由此文档检查推导。
+
+重新用 `git show 4f7f2a3b:<path>` 核对原 manifest：14/14 bytes 与 SHA256 匹配；另有 manifest 本身，共 15 文件。独立静态断言确认 9 卡、50 AC、唯一 owner、ACCEPTANCE 与 traceability 的逐项 pass_condition 一致。直接读 `3217a656` 的 Review v1/v2 schema，二者 finding 均要求 finding_id/impact/resolution。附件脚本未执行；产品、浏览器、安装、实际 Host、专业阅读、人类认可均未在本回合验证。

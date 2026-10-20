@@ -15,7 +15,7 @@
   "source_report_snapshot": "inputs/impact-report.md",
   "document_only": true,
   "cloud_observation": {
-    "observed_head": "d1ee1c7d1f16db120fd4c91c2cc9e71ce31b915e",
+    "observed_head": "3217a65630023244eac5a09b3e7570954cce9188",
     "main": "09f0213d07fc718dc4d41a52bb69c4595fcb1ac8",
     "final_baseline_confirmed": false,
     "pr_metadata_local": "DENIED_FORBIDDEN",
@@ -27,6 +27,8 @@
       "browser": "PENDING"
     },
     "original_text_commit": "4f7f2a3b",
-    "original_manifest_entries_verified": 14
+    "original_manifest_entries_verified": 14,
+    "latest_observation_method": "git ls-remote; committed-source read only; no PR metadata retry",
+    "review_worktree": "/workspace/Deck-Master-spec-review"
   }
 }

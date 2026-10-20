@@ -14,3 +14,5 @@
 API-SPEC、UI-SPEC、ACCEPTANCE 与 traceability 同步；9 卡/50 AC、唯一 owner 不变。SPEC/TASKS/HANDOFF 明确全部 WU01–WU08 同一独立 Draft PR，A/B 仅内部增量，确需拆 PR 先说明原因。旧 review 目录只是传输受阻时的历史核对，当前唯一规格入口为本目录 README。
 
 WU00 部分核对已做，G0 仍 pending；产品实现未开始。工程、浏览器、安装、实际 Host、专业阅读、人类认可分层记录。文档检查 PASS 不提升任何产品 AC。
+
+本回合复核结果见 BASELINE.md「本回合只读复核补记」；最新远端观察为 3217a656，未自动升级为最终基线。
