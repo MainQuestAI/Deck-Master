@@ -21,8 +21,8 @@ width = 1440, height = 900, count = 0
         editor = page.locator('.materials-adjust-form')
 >       editor.get_by_role('textbox', name='汇报用途', exact=True).fill('PR103 材料上下文中的新用途')
 
-tests/rebuild/test_pr103_repair_browser.py:512: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_pr103_repair_browser.py:512:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 /tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/sync_api/_generated.py:18398: in fill
     self._sync(
 /tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/_impl/_locator.py:219: in fill
@@ -34,7 +34,7 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
     await self._channel.send("fill", self._timeout, locals_to_params(locals()))
 /tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/_impl/_connection.py:76: in send
     return await self._connection.wrap_api_call(
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = <playwright._impl._connection.Connection object at 0x7f57b8a72e70>
 cb = <function Channel.send.<locals>.<lambda> at 0x7f57b7b554e0>
@@ -82,8 +82,8 @@ width = 1280, height = 800, count = 0
         editor = page.locator('.materials-adjust-form')
 >       editor.get_by_role('textbox', name='汇报用途', exact=True).fill('PR103 材料上下文中的新用途')
 
-tests/rebuild/test_pr103_repair_browser.py:512: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_pr103_repair_browser.py:512:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 /tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/sync_api/_generated.py:18398: in fill
     self._sync(
 /tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/_impl/_locator.py:219: in fill
@@ -95,7 +95,7 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
     await self._channel.send("fill", self._timeout, locals_to_params(locals()))
 /tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/_impl/_connection.py:76: in send
     return await self._connection.wrap_api_call(
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = <playwright._impl._connection.Connection object at 0x7f57b866f320>
 cb = <function Channel.send.<locals>.<lambda> at 0x7f57b797f600>
@@ -143,8 +143,8 @@ width = 390, height = 844, count = 0
         editor = page.locator('.materials-adjust-form')
 >       editor.get_by_role('textbox', name='汇报用途', exact=True).fill('PR103 材料上下文中的新用途')
 
-tests/rebuild/test_pr103_repair_browser.py:512: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_pr103_repair_browser.py:512:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 /tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/sync_api/_generated.py:18398: in fill
     self._sync(
 /tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/_impl/_locator.py:219: in fill
@@ -156,7 +156,7 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
     await self._channel.send("fill", self._timeout, locals_to_params(locals()))
 /tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/_impl/_connection.py:76: in send
     return await self._connection.wrap_api_call(
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = <playwright._impl._connection.Connection object at 0x7f57b85fc410>
 cb = <function Channel.send.<locals>.<lambda> at 0x7f57b7980040>
@@ -204,8 +204,8 @@ width = 1440, height = 900, count = 1
         editor = page.locator('.materials-adjust-form')
 >       editor.get_by_role('textbox', name='汇报用途', exact=True).fill('PR103 材料上下文中的新用途')
 
-tests/rebuild/test_pr103_repair_browser.py:512: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_pr103_repair_browser.py:512:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 /tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/sync_api/_generated.py:18398: in fill
     self._sync(
 /tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/_impl/_locator.py:219: in fill
@@ -217,7 +217,7 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
     await self._channel.send("fill", self._timeout, locals_to_params(locals()))
 /tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/_impl/_connection.py:76: in send
     return await self._connection.wrap_api_call(
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = <playwright._impl._connection.Connection object at 0x7f57b85ba1e0>
 cb = <function Channel.send.<locals>.<lambda> at 0x7f57b7792520>
@@ -265,8 +265,8 @@ width = 1280, height = 800, count = 1
         editor = page.locator('.materials-adjust-form')
 >       editor.get_by_role('textbox', name='汇报用途', exact=True).fill('PR103 材料上下文中的新用途')
 
-tests/rebuild/test_pr103_repair_browser.py:512: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_pr103_repair_browser.py:512:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 /tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/sync_api/_generated.py:18398: in fill
     self._sync(
 /tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/_impl/_locator.py:219: in fill
@@ -278,7 +278,7 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
     await self._channel.send("fill", self._timeout, locals_to_params(locals()))
 /tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/_impl/_connection.py:76: in send
     return await self._connection.wrap_api_call(
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = <playwright._impl._connection.Connection object at 0x7f57b9d3e2a0>
 cb = <function Channel.send.<locals>.<lambda> at 0x7f57b776e700>
@@ -326,8 +326,8 @@ width = 390, height = 844, count = 1
         editor = page.locator('.materials-adjust-form')
 >       editor.get_by_role('textbox', name='汇报用途', exact=True).fill('PR103 材料上下文中的新用途')
 
-tests/rebuild/test_pr103_repair_browser.py:512: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_pr103_repair_browser.py:512:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 /tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/sync_api/_generated.py:18398: in fill
     self._sync(
 /tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/_impl/_locator.py:219: in fill
@@ -339,7 +339,7 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
     await self._channel.send("fill", self._timeout, locals_to_params(locals()))
 /tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/_impl/_connection.py:76: in send
     return await self._connection.wrap_api_call(
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = <playwright._impl._connection.Connection object at 0x7f57b7be9610>
 cb = <function Channel.send.<locals>.<lambda> at 0x7f57b7980040>
@@ -387,8 +387,8 @@ width = 1440, height = 900, count = 2
         editor = page.locator('.materials-adjust-form')
 >       editor.get_by_role('textbox', name='汇报用途', exact=True).fill('PR103 材料上下文中的新用途')
 
-tests/rebuild/test_pr103_repair_browser.py:512: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_pr103_repair_browser.py:512:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 /tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/sync_api/_generated.py:18398: in fill
     self._sync(
 /tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/_impl/_locator.py:219: in fill
@@ -400,7 +400,7 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
     await self._channel.send("fill", self._timeout, locals_to_params(locals()))
 /tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/_impl/_connection.py:76: in send
     return await self._connection.wrap_api_call(
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = <playwright._impl._connection.Connection object at 0x7f57b9d3e6f0>
 cb = <function Channel.send.<locals>.<lambda> at 0x7f57b76d0cc0>
@@ -448,8 +448,8 @@ width = 1280, height = 800, count = 2
         editor = page.locator('.materials-adjust-form')
 >       editor.get_by_role('textbox', name='汇报用途', exact=True).fill('PR103 材料上下文中的新用途')
 
-tests/rebuild/test_pr103_repair_browser.py:512: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_pr103_repair_browser.py:512:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 /tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/sync_api/_generated.py:18398: in fill
     self._sync(
 /tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/_impl/_locator.py:219: in fill
@@ -461,7 +461,7 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
     await self._channel.send("fill", self._timeout, locals_to_params(locals()))
 /tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/_impl/_connection.py:76: in send
     return await self._connection.wrap_api_call(
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = <playwright._impl._connection.Connection object at 0x7f57b7841fd0>
 cb = <function Channel.send.<locals>.<lambda> at 0x7f57b7791440>
@@ -509,8 +509,8 @@ width = 390, height = 844, count = 2
         editor = page.locator('.materials-adjust-form')
 >       editor.get_by_role('textbox', name='汇报用途', exact=True).fill('PR103 材料上下文中的新用途')
 
-tests/rebuild/test_pr103_repair_browser.py:512: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/rebuild/test_pr103_repair_browser.py:512:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 /tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/sync_api/_generated.py:18398: in fill
     self._sync(
 /tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/_impl/_locator.py:219: in fill
@@ -522,7 +522,7 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
     await self._channel.send("fill", self._timeout, locals_to_params(locals()))
 /tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/_impl/_connection.py:76: in send
     return await self._connection.wrap_api_call(
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = <playwright._impl._connection.Connection object at 0x7f57b76d6630>
 cb = <function Channel.send.<locals>.<lambda> at 0x7f57b78c6d40>
@@ -575,11 +575,11 @@ mode = 'task'
 >                   expect(editor.get_by_label('汇报用途', exact=True)).to_be_visible()
 E                   AssertionError: Locator expected to be visible
 E                   Actual value: None
-E                   Error: element(s) not found 
+E                   Error: element(s) not found
 E                   Call log:
 E                     - Expect "to_be_visible" locator(".materials-adjust-form").get_by_label("汇报用途", exact=True) with timeout 5000ms
 E                     - waiting for locator(".materials-adjust-form").get_by_label("汇报用途", exact=True)
-E                   
+E
 E                   Aria snapshot:
 E                   - link "跳到工作区":
 E                     - /url: "#main"
@@ -678,11 +678,11 @@ mode = 'mixed'
 >                   expect(editor.get_by_label('汇报用途', exact=True)).to_be_visible()
 E                   AssertionError: Locator expected to be visible
 E                   Actual value: None
-E                   Error: element(s) not found 
+E                   Error: element(s) not found
 E                   Call log:
 E                     - Expect "to_be_visible" locator(".materials-adjust-form").get_by_label("汇报用途", exact=True) with timeout 5000ms
 E                     - waiting for locator(".materials-adjust-form").get_by_label("汇报用途", exact=True)
-E                   
+E
 E                   Aria snapshot:
 E                   - link "跳到工作区":
 E                     - /url: "#main"

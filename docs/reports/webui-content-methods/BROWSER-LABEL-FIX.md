@@ -38,3 +38,5 @@ PIP_NO_INDEX=1 PIP_FIND_LINKS=/tmp/webui-browser-wheelhouse \
 环境：云端 Python3.12.14、Node24.19.0、系统 Chromium；CI Node22/Playwright Chromium 仍需新 head 远端验证。临时 wheelhouse 由声明依赖正常下载得到，供测试隔离 pip 使用；无替代测试或伪造依赖。原工作树、原 venv、PR127、真实 HOME 均未修改。
 
 全仓 `ruff check src/deck_master tests/rebuild` 与 `git diff --check` PASS。此轮未重跑完整 unit/render、独立 wheel 安装后的两个脚本或实际 Host；旧结果保持原 SHA。专业审阅与人类验收仍 NOT_RUN。修复继续同一 Draft PR130，不合并、不发布。
+
+证据入库时仅去除复现日志行尾空格（pytest traceback 原生输出），正文与结果保持；未经处理的原日志保留在云任务 `/workspace/webui-evidence/neutral-label-reproduction.log`。测试源码 diff-check 及最终文档/证据 diff-check 均通过。
