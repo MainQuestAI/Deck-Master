@@ -2096,6 +2096,12 @@ def reissue_changed_method_tasks(store):
         # This is a committed execution basis, not a temporary pre-binding manifest.
         # Preserve its registered resources when formally issuing the replacement.
         inherited = [row['id'] for row in task.get('method_manifest', [])] or None
+        # Early RC5 injected this default even outside its catalog phases.
+        # Retire that obsolete default, preserving other explicit resources and
+        # the original immutable manifest. Do not widen catalog scope to reissue.
+        if (inherited and task['kind'] == 'compose'
+                and binding.get('phase') in ('design', 'production', 'delivery')):
+            inherited = [mid for mid in inherited if mid != 'method-selection']
         freeze_task_methods(replacement, selected_resource_ids=inherited)
         validate_task_semantics(replacement)
         prospective["tasks"].append(store.put_json_object(replacement))

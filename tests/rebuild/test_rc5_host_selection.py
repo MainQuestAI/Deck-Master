@@ -171,3 +171,77 @@ def test_rc5_defaults_do_not_invalidate_unmodified_legacy_task(monkeypatch, tmp_
     path.write_bytes(path.read_bytes() + b'\nChanged historical bytes\n')
     assert tasks.task_method_contract_changed(task)
     assert 'method_manifest' not in task
+
+
+def test_blueprint_rejected_selection_preserves_all_project_bytes(tmp_path):
+    from deck_master import eligibility
+    from test_rc3_budget_workflow import project as budget_project, grant
+    project, store = budget_project(tmp_path)
+    authorization = grant(project, store)
+    before = store.load_document()
+    budget = eligibility.authorization_budget(store, before, authorization['authorization_ref'])
+    files = {p.relative_to(project): p.read_bytes() for p in project.rglob('*') if p.is_file()}
+    with pytest.raises(ModelError, match='outside'):
+        service.continue_project(project, selected_resource_ids=['content-m04'])
+    assert store.load_document() == before
+    assert eligibility.authorization_budget(store, before, authorization['authorization_ref']) == budget
+    assert {p.relative_to(project): p.read_bytes() for p in project.rglob('*') if p.is_file()} == files
+
+
+@pytest.mark.parametrize('protocol', [None, 'work_context.v2'])
+def test_independent_review_omitted_stage_matches_default_runtime_scope(protocol):
+    result = methods.read_skill_methods('deck-review', selected_resource_ids=['content-m04'], read_protocol=protocol)
+    assert 'content-m04' in [m['id'] for m in result['entry_methods' if protocol else 'methods']]
+    with pytest.raises(ModelError, match='outside'):
+        methods.read_skill_methods('deck-review', review_stage='page_visual',
+                                  selected_resource_ids=['content-m04'], read_protocol=protocol)
+
+
+@pytest.mark.parametrize('historical', [False, True, 'early-rc5'])
+def test_production_compose_method_change_can_reissue_without_scope_expansion(tmp_path, monkeypatch, historical):
+    import shutil
+    from deck_master import collaboration_binding, models, tasks
+    from test_compose_v2_phases import _project, _request, _scope
+    project, store = _project(tmp_path)
+    _request(project, store)
+    doc = store.load_document()
+    task = tasks.new_task(task_id='production-compose', operation_id='generic-production', kind='compose',
+        scope_pages=[], instruction='Synthetic generic production compose', inputs=[], dependencies=[],
+        dispatch_revision=doc['revision_id'], produced_against=models.content_identity(doc))
+    collaboration_binding.stamp_task(store, doc, task, phase='production', write_scope=_scope(),
+                                     adoption_policy='proposal_only')
+    if historical == 'early-rc5':
+        task['method_manifest'].extend({k: row[k] for k in ('id', 'relative_path', 'sha256')}
+                                       for row in methods._read_ids(['method-selection']))
+        task['method_release'] = methods.method_release(task['method_manifest'])
+    elif historical:
+        task.pop('method_manifest')
+        task['method_release'] = methods.method_release(methods._read_ids(
+            methods.rc3_method_ids_for('compose', phase='production')))
+    ref = store.put_json_object(task)
+    updated = models.bump_revision(doc, {'operation_id': 'save-production', 'kind': 'task_update',
+        'description': 'Synthetic generic production fixture', 'read_set': []})
+    updated['tasks'].append(ref)
+    store.commit_change(base_revision=doc['revision_id'], document=updated, operation_id='save-production')
+    old_bytes = (project / ref['path']).read_bytes()
+    old_controls = copy.deepcopy(store.load_document()['collaboration'])
+    root = tmp_path / 'updated-methods'
+    shutil.copytree(methods.resolve_root(), root)
+    path = root / 'references/content-methods.md'
+    path.write_bytes(path.read_bytes() + b'\nSynthetic method change.\n')
+    monkeypatch.setattr(methods, 'resolve_root', lambda: root)
+    tasks.reissue_changed_method_tasks(store)
+    current = store.load_document()
+    replacement = store.read_object_json(current['tasks'][-1])
+    assert 'method-selection' not in [r['id'] for r in replacement['method_manifest']]
+    with pytest.raises(ModelError, match='outside'):
+        methods.method_resources('compose', phase='production', selected_resource_ids=['method-selection'])
+    assert replacement['task_id'] != task['task_id']
+    assert replacement['collaboration_binding']['write_scope'] == task['collaboration_binding']['write_scope']
+    assert replacement['collaboration_binding']['authorization_ref'] == task['collaboration_binding']['authorization_ref']
+    assert replacement['collaboration_binding']['adoption_policy'] == 'proposal_only'
+    assert current['collaboration'] == old_controls
+    assert (project / ref['path']).read_bytes() == old_bytes
+    assert methods.resolve_task_methods(task)['basis_status'] == 'basis_changed'
+    assert methods.resolve_task_methods(replacement)['basis_status'] == 'current'
+    assert tasks._lookup_task(current, task['task_id'], store)['status'] == 'superseded'

@@ -759,6 +759,10 @@ def open_blueprint_task(store: Store, document: dict, page_entry: dict, *, selec
             if selected_resource_ids is not None:
                 raise ServiceError("selected_resource_ids", "existing Task is frozen; use formal reissue")
             return existing
+    # Validate the final dispatch scope before persisting the production request.
+    # stamp_task still freezes the final binding below.
+    methods = method_resources("blueprint", phase="production",
+                               selected_resource_ids=selected_resource_ids)
     page_ref = page_entry["page"]
     page = store.read_object_json(page_ref)
     from .production import resolve_generation_design
@@ -768,7 +772,6 @@ def open_blueprint_task(store: Store, document: dict, page_entry: dict, *, selec
     request["permitted_asset_files"] = _resolve_permitted_asset_files(store, request["projection"]["permitted_assets"])
     request_ref = store.put_json_object(request)
     operation_id = _new_operation_id("blueprint")
-    methods = method_resources("blueprint")
     task = tasks_mod.new_task(
         task_id=uuid.uuid4().hex[:12],
         operation_id=operation_id,

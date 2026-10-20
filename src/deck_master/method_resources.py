@@ -121,7 +121,8 @@ def method_ids_for(kind: str, *, intent: str | None = None,
         base = rc3_method_ids_for(kind, intent=intent, phase=phase)
         if kind == 'compose':
             extra = (('writing-profiles',) if phase == 'speech' else
-                     ('page-writing',) if phase == 'page_copy' else ('method-selection',))
+                     ('page-writing',) if phase == 'page_copy' else
+                     () if phase in ('design', 'production', 'delivery') else ('method-selection',))
         elif kind in ('blueprint', 'reconstruct', 'style_analyze'):
             extra = ('content-to-visual',)
         else:
@@ -454,12 +455,12 @@ def read_skill_methods(skill: str, *, entry_mode="named", project=None, task_id=
     if task_id is not None and selected_resource_ids is not None:
         raise ValueError("frozen Task methods cannot be supplemented; use formal reissue")
     selection_units = review_units
-    if skill == 'deck-review' and review_stage and selection_units is None:
+    if skill == 'deck-review' and selection_units is None:
         selection_units = (['argument', 'page_copy', 'progression'] if review_stage == 'preproduction'
                            else ['blueprint_content', 'blueprint_fidelity', 'readability']
                            if review_stage == 'page_visual' else sorted(_CONTENT_UNITS | _VISUAL_UNITS))
     selected = _selected_ids(selected_resource_ids, role=skill,
-                             phase='review' if skill == 'deck-review' and review_stage else None,
+                             phase='review' if skill == 'deck-review' else None,
                              review_units=selection_units)
     if task_id is not None and project is None:
         raise ValueError("task method consumption requires its real project")

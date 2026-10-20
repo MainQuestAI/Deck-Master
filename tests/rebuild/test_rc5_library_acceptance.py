@@ -129,3 +129,32 @@ def test_arithmetic_cli_bounded_json(tmp_path, raw, code):
     assert output.returncode == 2
     assert code in json.loads(output.stdout)['error']
     assert path.read_text() == raw
+
+
+@pytest.mark.parametrize('operator,values,expected,difference', [
+    ('add', {'a': str(10**40), 'b': '1'}, str(10**40), '1'),
+    ('subtract', {'a': str(10**40 + 1), 'b': str(10**40)}, '0', '1'),
+    ('multiply', {'a': str(10**40 + 1), 'b': '2'}, str(2 * 10**40), '2'),
+])
+def test_arithmetic_long_exact_values_do_not_silently_pass(operator, values, expected, difference):
+    helper = runpy.run_path(str(ROOT / 'skills/deck-master/scripts/check_case_numbers.py'))
+    doc = {'schema_version': 'case-arithmetic.v1', 'values': values,
+           'checks': [{'id': 'long', 'operator': operator, 'operands': ['a', 'b'],
+                       'expected': expected, 'tolerance': '0'}]}
+    result = helper['evaluate'](doc)
+    assert not result['all_passed']
+    assert result['checks'][0]['absolute_difference'] == difference
+
+
+def test_arithmetic_division_rounding_and_long_input_bounds():
+    helper = runpy.run_path(str(ROOT / 'skills/deck-master/scripts/check_case_numbers.py'))
+    doc = {'schema_version': 'case-arithmetic.v1', 'values': {'a': '1', 'b': '3'},
+           'checks': [{'id': 'third', 'operator': 'divide', 'operands': ['a', 'b'],
+                       'expected': '0.3333333333', 'tolerance': '0.0000000001'}]}
+    assert helper['evaluate'](doc)['all_passed']
+    doc['checks'][0]['tolerance'] = '0'
+    with pytest.raises(ValueError, match='tolerance'):
+        helper['evaluate'](doc)
+    doc['values']['a'] = '1' * 129
+    with pytest.raises(ValueError, match='too long'):
+        helper['evaluate'](doc)

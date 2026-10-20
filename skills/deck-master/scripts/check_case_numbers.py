@@ -9,7 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from decimal import Decimal, InvalidOperation, localcontext
+from decimal import Decimal, Inexact, InvalidOperation, ROUND_HALF_EVEN, localcontext
 from pathlib import Path
 from typing import Any
 
@@ -43,7 +43,11 @@ def evaluate(document: Any) -> dict[str, Any]:
     numbers = {key: decimal_value(value, f"values.{key}") for key, value in values.items()}
     output, seen = [], set()
     with localcontext() as ctx:
-        ctx.prec = 40
+        # At most 100 operands, each <=128 characters and adjusted exponent
+        # within +/-100: 26000 digits cover exact products and aligned sums,
+        # including subtraction of the bounded expected value.
+        ctx.prec = 26000
+        ctx.rounding = ROUND_HALF_EVEN
         for row in checks:
             if not isinstance(row, dict):
                 raise ValueError("check must be an object")
@@ -61,6 +65,7 @@ def evaluate(document: Any) -> dict[str, Any]:
             if op not in {"add", "multiply"} and len(refs) != 2:
                 raise ValueError(f"{cid}: {op} needs exactly two operands")
             args = [numbers[key] for key in refs]
+            rounded_division = False
             if op == "add":
                 result = sum(args, Decimal(0))
             elif op == "multiply":
@@ -73,23 +78,33 @@ def evaluate(document: Any) -> dict[str, Any]:
                 denominator = args[0] if op == "percent_change" else args[1]
                 if denominator == 0:
                     raise ValueError(f"{cid}: zero denominator")
-                result = ((args[1] - args[0]) / args[0] * 100
-                          if op == "percent_change" else args[0] / args[1])
+                numerator = (args[1] - args[0]) * 100 if op == "percent_change" else args[0]
                 if op == "share_pct":
-                    result *= 100
+                    numerator *= 100
+                # Only division rounds: 40 significant digits, half-even.
+                # Rounded quotients require an explicit positive tolerance.
+                with localcontext() as division:
+                    division.prec = 40
+                    division.clear_flags()
+                    result = numerator / denominator
+                    rounded_division = division.flags[Inexact]
             if "expected" not in row:
                 raise ValueError(f"{cid}: expected is required")
             expected = decimal_value(row["expected"], f"{cid}.expected")
             tolerance = decimal_value(row.get("tolerance", "0"), f"{cid}.tolerance")
             if tolerance < 0:
                 raise ValueError(f"{cid}: tolerance must be nonnegative")
+            if rounded_division and tolerance == 0:
+                raise ValueError(f"{cid}: rounded division requires positive tolerance")
             difference = abs(result - expected)
             output.append({"id": cid, "operator": op, "operand_keys": refs,
                            "operand_values": list(map(str, args)), "result": str(result),
                            "expected": str(expected), "absolute_difference": str(difference),
-                           "tolerance": str(tolerance), "pass": difference <= tolerance})
+                           "tolerance": str(tolerance), "pass": difference <= tolerance,
+                           "rounded_division": rounded_division})
     return {"schema_version": "case-arithmetic-result.v1", "scope": document.get("scope", ""),
             "all_passed": all(item["pass"] for item in output), "checks": output,
+            "division_rule": "40 significant digits, ROUND_HALF_EVEN; inexact division requires positive tolerance; comparison uses rounded quotient.",
             "limitation": "Arithmetic only; not source truth, denominator suitability, causality, ROI or product validation."}
 
 
