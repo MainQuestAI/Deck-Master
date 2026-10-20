@@ -109,3 +109,18 @@ set. Both must migrate together. `work_context` currently accepts exactly
 The checkout and `/workspace/.agents` contain no applicable `.agents/skills`
 guidance. `AGENTS.md`, task index and recovery playbook remain the governing
 repository instructions.
+
+
+## Engineering checkpoint (2026-10-20)
+
+The seed-independent foundation is implemented: one catalog containing only
+existing resources, deterministic dependency validation, bounded Python dispatch
+and independent read selection, final phase/scope freeze, preserved old basis,
+common build/install mapping and frozen pre-catalog release compatibility.
+`method-catalog.v1` is a feature writer boundary only when a committed Task
+actually uses new IDs/paths; `work_context.v2` is unchanged. The package source
+is now `1.0.0rc5` development, not a completed candidate.
+
+The 52 seeds have not been imported. Host-facing CLI/service selection wiring,
+full resource migration and actual paired manuscript evidence remain pending.
+Synthetic test resources exercise these contracts and are not substitute seeds.

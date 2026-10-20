@@ -943,6 +943,13 @@ def test_warm_build_removes_retired_resources(tmp_path):
         shutil.copy2(REPO / name, checkout / name)
     hook = checkout / 'tools/build_hook.py'
     current_hook = hook.read_bytes()
+    setup_file = checkout / 'setup.py'
+    current_setup = setup_file.read_bytes()
+    # The historical hook predates the catalog-aware sdist command.
+    setup_file.write_text(
+        "from pathlib import Path\nimport runpy\nfrom setuptools import setup\n"
+        "commands = runpy.run_path(str(Path(__file__).parent/'tools/build_hook.py'))\n"
+        "setup(cmdclass={'build_py': commands['BuildPy']})\n")
     hook.write_bytes((REPO / 'tests/rebuild/fixtures/packaging/legacy_build_hook.py').read_bytes())
 
     def build(name):
@@ -960,6 +967,7 @@ def test_warm_build_removes_retired_resources(tmp_path):
     for name in ('index.html', 'app.js', 'style.css'):
         (retired_ui / name).write_text('retired UI build residue')
     hook.write_bytes(current_hook)
+    setup_file.write_bytes(current_setup)
     # The second hook must actually be reimported even on coarse timestamp filesystems.
     shutil.rmtree(checkout / 'tools/__pycache__', ignore_errors=True)
     with zipfile.ZipFile(build('updated')) as archive:

@@ -771,6 +771,7 @@ def new_task(
     input_revision_id: str | None = None,
     method_release: dict | None = None,
     review_units: list[dict] | None = None,
+    selected_resource_ids=None,
 ) -> dict:
     """Build a minimal valid Task v1 (05 chapter wires dispatch)."""
     task = {
@@ -807,7 +808,7 @@ def new_task(
     if review_units is not None:
         task['review_units'] = review_units
     from .method_resources import freeze_task_methods
-    freeze_task_methods(task)
+    freeze_task_methods(task, selected_resource_ids=selected_resource_ids)
     validate_task_semantics(task)
     return task
 
@@ -2087,7 +2088,10 @@ def reissue_changed_method_tasks(store):
                 include_manuscript=task["kind"] != "style_analyze")
             if "budget_key" in binding:
                 replacement["collaboration_binding"]["budget_key"] = binding["budget_key"]
-        freeze_task_methods(replacement)
+        # This is a committed execution basis, not a temporary pre-binding manifest.
+        # Preserve its registered resources when formally issuing the replacement.
+        inherited = [row['id'] for row in task.get('method_manifest', [])] or None
+        freeze_task_methods(replacement, selected_resource_ids=inherited)
         validate_task_semantics(replacement)
         prospective["tasks"].append(store.put_json_object(replacement))
         replacements.append((index, retired, replacement))

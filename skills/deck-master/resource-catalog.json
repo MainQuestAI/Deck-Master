@@ -1,0 +1,243 @@
+{
+  "schema_version": "method_catalog.v1",
+  "resources": [
+    {
+      "id": "collaboration-routing",
+      "relative_path": "references/collaboration-routing.md",
+      "kind": "instruction",
+      "owner": "deck-master",
+      "consumers": [
+        "deck-master",
+        "deck-content",
+        "deck-design",
+        "deck-review"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "physical-units",
+      "relative_path": "references/physical-units.md",
+      "kind": "instruction",
+      "owner": "deck-master",
+      "consumers": [
+        "deck-master",
+        "deck-content",
+        "deck-design",
+        "deck-review"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "style-calibration",
+      "relative_path": "references/style-calibration.md",
+      "kind": "instruction",
+      "owner": "deck-master",
+      "consumers": [
+        "deck-master",
+        "deck-content",
+        "deck-design",
+        "deck-review"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "candidates-and-stages",
+      "relative_path": "references/candidates-and-stages.md",
+      "kind": "instruction",
+      "owner": "deck-master",
+      "consumers": [
+        "deck-master",
+        "deck-content",
+        "deck-design",
+        "deck-review"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "icon-quality",
+      "relative_path": "references/icon-quality.md",
+      "kind": "instruction",
+      "owner": "deck-master",
+      "consumers": [
+        "deck-master",
+        "deck-content",
+        "deck-design",
+        "deck-review"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "visual-reference",
+      "relative_path": "references/visual-reference.md",
+      "kind": "instruction",
+      "owner": "deck-master",
+      "consumers": [
+        "deck-master",
+        "deck-content",
+        "deck-design",
+        "deck-review"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "source-reading",
+      "relative_path": "references/source-reading.md",
+      "kind": "instruction",
+      "owner": "deck-master",
+      "consumers": [
+        "deck-master",
+        "deck-content",
+        "deck-design",
+        "deck-review"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "content-methods",
+      "relative_path": "references/content-methods.md",
+      "kind": "instruction",
+      "owner": "deck-master",
+      "consumers": [
+        "deck-master",
+        "deck-content",
+        "deck-design",
+        "deck-review"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "content-examples",
+      "relative_path": "references/content-examples.md",
+      "kind": "instruction",
+      "owner": "deck-master",
+      "consumers": [
+        "deck-master",
+        "deck-content",
+        "deck-design",
+        "deck-review"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "content-calibration",
+      "relative_path": "references/content-calibration.md",
+      "kind": "instruction",
+      "owner": "deck-master",
+      "consumers": [
+        "deck-master",
+        "deck-content",
+        "deck-design",
+        "deck-review"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "input-update",
+      "relative_path": "references/input-update.md",
+      "kind": "instruction",
+      "owner": "deck-master",
+      "consumers": [
+        "deck-master",
+        "deck-content",
+        "deck-design",
+        "deck-review"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "blueprint-svg",
+      "relative_path": "references/blueprint-svg.md",
+      "kind": "instruction",
+      "owner": "deck-master",
+      "consumers": [
+        "deck-master",
+        "deck-content",
+        "deck-design",
+        "deck-review"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "review-and-repair",
+      "relative_path": "references/review-and-repair.md",
+      "kind": "instruction",
+      "owner": "deck-master",
+      "consumers": [
+        "deck-master",
+        "deck-content",
+        "deck-design",
+        "deck-review"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [],
+      "review_units": [],
+      "readable": true
+    },
+    {
+      "id": "installation",
+      "relative_path": "references/installation.md",
+      "kind": "instruction",
+      "owner": "deck-master",
+      "consumers": [
+        "deck-master",
+        "deck-content",
+        "deck-design",
+        "deck-review"
+      ],
+      "dependencies": [],
+      "task_kinds": [],
+      "phases": [],
+      "review_units": [],
+      "readable": false
+    }
+  ]
+}

@@ -174,7 +174,7 @@ def _phase_instruction(document, phase: str, variant: str, store) -> str:
 def open_phase_task(store, document, *, operation_id: str, intent: str = "initial",
                     input_revision_id: str | None = None, phase: str | None = None,
                     adoption_policy: str | None = None, page_ids=None,
-                    instruction: str | None = None) -> dict:
+                    instruction: str | None = None, selected_resource_ids=None) -> dict:
     """Dispatch one compose.v2 phase task carrying its collaboration binding.
 
     This is the real write point for phased content tasks, so it consumes the
@@ -193,7 +193,7 @@ def open_phase_task(store, document, *, operation_id: str, intent: str = "initia
     task = build_phase_task(store, document, operation_id=operation_id, intent=intent,
                             input_revision_id=input_revision_id, phase=phase,
                             adoption_policy=adoption_policy, page_ids=page_ids,
-                            instruction=instruction)
+                            instruction=instruction, selected_resource_ids=selected_resource_ids)
     task_ref = store.put_json_object(task)
     bumped = bump_revision(document, {
         "operation_id": f"dispatch-{uuid.uuid4().hex[:12]}", "kind": "task_update",
@@ -208,7 +208,7 @@ def open_phase_task(store, document, *, operation_id: str, intent: str = "initia
 def build_phase_task(store, document, *, operation_id: str, intent: str = "initial",
                      input_revision_id: str | None = None, phase: str | None = None,
                      adoption_policy: str | None = None, page_ids=None,
-                     instruction: str | None = None) -> dict:
+                     instruction: str | None = None, selected_resource_ids=None) -> dict:
     """Build (without committing) one compose.v2 phase task.
 
     Callers that already own a project transaction — ``inputs_update`` records
@@ -272,7 +272,7 @@ def build_phase_task(store, document, *, operation_id: str, intent: str = "initi
         decision_refs=collaboration_binding.decision_refs_for(store, document, topics))
     task["collaboration_binding"] = binding
     from .method_resources import freeze_task_methods
-    freeze_task_methods(task)
+    freeze_task_methods(task, selected_resource_ids=selected_resource_ids)
     collaboration_binding.require_binding(document, task)
     models.validate_task_semantics(task)
     return task

@@ -113,6 +113,13 @@ class ResourceCollector:
     def store(self, store):
         return store if isinstance(store, RequestStore) else RequestStore(store, self)
     def read_method(self, path):
+        from .method_resources import resolve_root
+        from .resource_catalog import safe_file
+        try:
+            relative = Path(path).relative_to(resolve_root()).as_posix()
+            safe_file(resolve_root(), relative)
+        except ValueError as exc:
+            raise OSError(str(exc)) from exc
         key = str(Path(path).resolve())
         if key in self.method_errors:
             raise self.method_errors[key]

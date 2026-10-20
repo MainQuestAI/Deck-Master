@@ -333,7 +333,7 @@ def stamp_task(store, document, task: dict, *, phase: str, executor_type: str = 
                authorization_ref: dict | None = None, decision_refs=(),
                page_ids=None, action: str | None = None,
                action_targets: dict | None = None, candidate_count=0,
-               external_call_count=None) -> dict:
+               external_call_count=None, selected_resource_ids=None) -> dict:
     """Attach the binding to a task about to be dispatched.
 
     ``action`` names the service action this task executes under. When the
@@ -348,8 +348,13 @@ def stamp_task(store, document, task: dict, *, phase: str, executor_type: str = 
     no binding, no gate, byte-identical dispatch.
     """
     if not models.collaboration_required(document):
+        if selected_resource_ids is not None and "method_manifest" in task:
+            from .method_resources import freeze_task_methods
+            freeze_task_methods(task, selected_resource_ids=selected_resource_ids)
         return task
     if task.get("collaboration_binding"):
+        if selected_resource_ids is not None:
+            raise ModelError("selected_resource_ids", "already-bound Task requires formal reissue")
         require_binding(document, task)
         return task
     from .content_production import write_scope_for
@@ -382,6 +387,6 @@ def stamp_task(store, document, task: dict, *, phase: str, executor_type: str = 
         # Producer finalization after the actual phase/scope has been bound.
         # Historical Tasks without this field never acquire a new contract.
         from .method_resources import freeze_task_methods
-        freeze_task_methods(task)
+        freeze_task_methods(task, selected_resource_ids=selected_resource_ids)
     require_binding(document, task)
     return task

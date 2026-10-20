@@ -2,8 +2,17 @@
 
 ## Unreleased
 
-RC5 content-method library development follows the RC4 candidate. Formal
-1.0.0 publication is deferred until RC5 has been reviewed.
+RC5 content-method library development (`1.0.0rc5`) follows the RC4 candidate.
+Formal 1.0.0 publication is deferred until RC5 has been reviewed.
+
+- Share the static resource catalog across runtime, wheel/sdist and managed
+  installation; preserve pre-catalog releases and all existing resource IDs.
+- Accept bounded explicit resource selection in Python dispatch and independent
+  read APIs, expand dependencies and freeze after final phase/scope binding.
+- Preserve `work_context.v2` transport kinds and old frozen Task hashes; new
+  resource manifests atomically require the `method-catalog.v1` writer boundary.
+- Resource-seed integration, Host-facing selection wiring and actual paired
+  manuscript evidence remain incomplete while original ZIP transfer is blocked.
 
 ## 1.0.0rc4 — candidate, 2026-10-20
 
