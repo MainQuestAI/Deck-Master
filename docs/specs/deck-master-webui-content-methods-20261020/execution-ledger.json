@@ -22,7 +22,7 @@
   ],
   "package_evidence_ref": "docs/reports/rc5/package-verification-cloud-review.json",
   "spec_drift_review": "PASS",
-  "implementation_status": "IMPLEMENTED_ENGINEERING_VERIFIED_PENDING_FINAL_CI_AND_DRAFT",
+  "implementation_status": "REVIEW_FIXES_VERIFIED_INDEPENDENT_REVIEW_AND_FINAL_CI_PENDING",
   "acceptance": [
     {
       "ac_id": "AC01",
@@ -57,9 +57,9 @@
       "limitations": "PR metadata GraphQL denied; parent CI confirmation plus local git/code/report correspondence. PR127 remains a declared dependency."
     }
   ],
-  "product_tests": "PASS_83_PLUS_441_PLUS_1_SCOPED",
+  "product_tests": "PASS_RELATED_137_AND_FOCUSED_6",
   "browser": "PASS_ENGINEERING_MATRIX",
-  "installed": "PASS_CLEAN_SHA_INSTALL_AND_TEMPORARY_ROLLBACK",
+  "installed": "PASS_CLEAN_SHA_CANDIDATE_AND_DOUBLE_SAVE_BROWSER",
   "actual_host": "PASS_THREE_CONTENT_FULL_SCENARIOS_CURRENT_AGENT",
   "professional_review": "NOT_RUN",
   "human_acceptance": "NOT_RUN",
@@ -294,32 +294,32 @@
       "owner": "WU03",
       "result": "PASS",
       "evidence_refs": [
-        "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/matrix-final.log",
-        "../../reports/webui-content-methods/evidence/regression-closure.log",
-        "../../reports/webui-content-methods/evidence/package-closure.json"
+        "../../reports/webui-content-methods/REVIEW-FIXES.md",
+        "../../reports/webui-content-methods/evidence/independent-review-regression.log",
+        "../../reports/webui-content-methods/evidence/independent-review-focused-final.log",
+        "../../reports/webui-content-methods/evidence/package-review-fixes.json"
       ],
-      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "candidate_sha": "554e9e2f91301f1b2fd223db1552f22d0df05bff",
       "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
-      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
-      "coverage": "verified",
-      "limitations": "Missing decision vs recordable vs adoptable, reuse and historical read-only verified; existing collaboration policy regression passes."
+      "command_or_steps": "REVIEW-FIXES.md exact reproduction and related regression commands",
+      "coverage": "verified_after_independent_review_reproduction",
+      "limitations": "Explicit reassessment archives rejected D1 only when no effective replacement exists and core permits a new decision; no automatic write. D2-present branch remains covered."
     },
     {
       "ac_id": "AC20",
       "owner": "WU03",
       "result": "PASS",
       "evidence_refs": [
-        "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/matrix-final.log",
-        "../../reports/webui-content-methods/evidence/regression-closure.log",
-        "../../reports/webui-content-methods/evidence/package-closure.json"
+        "../../reports/webui-content-methods/REVIEW-FIXES.md",
+        "../../reports/webui-content-methods/evidence/independent-review-regression.log",
+        "../../reports/webui-content-methods/evidence/independent-review-focused-final.log",
+        "../../reports/webui-content-methods/evidence/package-review-fixes.json"
       ],
-      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "candidate_sha": "554e9e2f91301f1b2fd223db1552f22d0df05bff",
       "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
-      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
-      "coverage": "verified",
-      "limitations": "PASS: lost decision ACK prior test plus lost adoption ACK refresh/lookup without second write; intervening concurrent revision preserves old payload/base and decision, requires explicit new request with new UUID before adoption. No duplicate decision or dispatch.",
+      "command_or_steps": "REVIEW-FIXES.md exact reproduction and related regression commands",
+      "coverage": "verified_after_independent_review_reproduction",
+      "limitations": "Original pending payload/UUID preserved; rejected D1 receipt retained in previous_decisions before explicit new decision/second adoption.",
       "test_definition_sha": "9c493c6e1b0d6b6837dfc2f7f6f3e40651847976"
     },
     {
@@ -472,16 +472,16 @@
       "owner": "WU05",
       "result": "PASS",
       "evidence_refs": [
-        "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/matrix-final.log",
-        "../../reports/webui-content-methods/evidence/regression-closure.log",
-        "../../reports/webui-content-methods/evidence/package-closure.json"
+        "../../reports/webui-content-methods/REVIEW-FIXES.md",
+        "../../reports/webui-content-methods/evidence/independent-review-regression.log",
+        "../../reports/webui-content-methods/evidence/independent-review-focused-final.log",
+        "../../reports/webui-content-methods/evidence/package-review-fixes.json"
       ],
-      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "candidate_sha": "554e9e2f91301f1b2fd223db1552f22d0df05bff",
       "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
-      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
-      "coverage": "verified",
-      "limitations": "Per-finding personal draft to existing actual plan/commit exact scope; save-in-flight single click, multi-draft restore/import isolation."
+      "command_or_steps": "REVIEW-FIXES.md exact reproduction and related regression commands",
+      "coverage": "verified_after_independent_review_reproduction",
+      "limitations": "Held old autosave P1, edited latest P2, one blur+click, release P1 then P2: waits latest ACK then navigates. Two journal saves; no business Document change."
     },
     {
       "ac_id": "AC31",
@@ -520,16 +520,16 @@
       "owner": "WU05",
       "result": "PASS",
       "evidence_refs": [
-        "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/matrix-final.log",
-        "../../reports/webui-content-methods/evidence/regression-closure.log",
-        "../../reports/webui-content-methods/evidence/package-closure.json"
+        "../../reports/webui-content-methods/REVIEW-FIXES.md",
+        "../../reports/webui-content-methods/evidence/independent-review-regression.log",
+        "../../reports/webui-content-methods/evidence/independent-review-focused-final.log",
+        "../../reports/webui-content-methods/evidence/package-review-fixes.json"
       ],
-      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "candidate_sha": "554e9e2f91301f1b2fd223db1552f22d0df05bff",
       "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
-      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
-      "coverage": "verified",
-      "limitations": "New handoff real plan/commit stale base, scope rejection and lost commit ACK restore original UUID; retain draft and finding metadata."
+      "command_or_steps": "REVIEW-FIXES.md exact reproduction and related regression commands",
+      "coverage": "verified_after_independent_review_reproduction",
+      "limitations": "Same two-save sequence with P2 unknown/conflict blocks navigation and preserves latest text; no automatic resend. Prior stale/scope/commit ACK recovery rerun."
     },
     {
       "ac_id": "AC34",
@@ -617,32 +617,32 @@
       "owner": "WU07",
       "result": "PASS",
       "evidence_refs": [
-        "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/matrix-final.log",
-        "../../reports/webui-content-methods/evidence/regression-closure.log",
-        "../../reports/webui-content-methods/evidence/package-closure.json"
+        "../../reports/webui-content-methods/REVIEW-FIXES.md",
+        "../../reports/webui-content-methods/evidence/independent-review-regression.log",
+        "../../reports/webui-content-methods/evidence/independent-review-focused-final.log",
+        "../../reports/webui-content-methods/evidence/package-review-fixes.json"
       ],
-      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "candidate_sha": "554e9e2f91301f1b2fd223db1552f22d0df05bff",
       "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
-      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
-      "coverage": "verified",
-      "limitations": "Shared resolver selection, strict query/ID boundary and no-new-phase 200 browser state verified."
+      "command_or_steps": "REVIEW-FIXES.md exact reproduction and related regression commands",
+      "coverage": "verified_after_independent_review_reproduction",
+      "limitations": "Speech-only review preview succeeds with core method_ids_for legality; invented unit returns 400. No copied UI unit registry."
     },
     {
       "ac_id": "AC40",
       "owner": "WU07",
       "result": "PASS",
       "evidence_refs": [
-        "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/matrix-final.log",
-        "../../reports/webui-content-methods/evidence/regression-closure.log",
-        "../../reports/webui-content-methods/evidence/package-closure.json"
+        "../../reports/webui-content-methods/REVIEW-FIXES.md",
+        "../../reports/webui-content-methods/evidence/independent-review-regression.log",
+        "../../reports/webui-content-methods/evidence/independent-review-focused-final.log",
+        "../../reports/webui-content-methods/evidence/package-review-fixes.json"
       ],
-      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "candidate_sha": "554e9e2f91301f1b2fd223db1552f22d0df05bff",
       "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
-      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
-      "coverage": "verified",
-      "limitations": "M04/E04 DAG with exact defaults/explicit/dependencies; live role/phase switches revalidate with actual resolver."
+      "command_or_steps": "REVIEW-FIXES.md exact reproduction and related regression commands",
+      "coverage": "verified_after_independent_review_reproduction",
+      "limitations": "Speech-only default IDs equal core resolver; explicit writing-profiles also validated. Existing role/stage/DAG tests rerun."
     },
     {
       "ac_id": "AC41",
@@ -748,16 +748,16 @@
       "owner": "WU08",
       "result": "PASS",
       "evidence_refs": [
-        "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/matrix-final.log",
-        "../../reports/webui-content-methods/evidence/regression-closure.log",
-        "../../reports/webui-content-methods/evidence/package-closure.json"
+        "../../reports/webui-content-methods/REVIEW-FIXES.md",
+        "../../reports/webui-content-methods/evidence/independent-review-regression.log",
+        "../../reports/webui-content-methods/evidence/independent-review-focused-final.log",
+        "../../reports/webui-content-methods/evidence/package-review-fixes.json"
       ],
-      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "candidate_sha": "554e9e2f91301f1b2fd223db1552f22d0df05bff",
       "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
-      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
-      "coverage": "verified",
-      "limitations": "Clean exact SHA wheel/sdist, isolated managed installation; -I installed service with no checkout sys.path, served static SHA and three viewport/two-write browser paths."
+      "command_or_steps": "REVIEW-FIXES.md exact reproduction and related regression commands",
+      "coverage": "verified_after_independent_review_reproduction",
+      "limitations": "New clean SHA wheel/sdist installed with -I/site-packages/no checkout; three viewports plus real installed P1/P2 single-click and two-step adoption pass."
     },
     {
       "ac_id": "AC48",
@@ -786,11 +786,11 @@
         "../../reports/webui-content-methods/evidence/regression-closure.log",
         "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "candidate_sha": "554e9e2f91301f1b2fd223db1552f22d0df05bff",
       "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
       "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
       "coverage": "pending_external_confirmation",
-      "limitations": "PENDING parent connected GitHub final-head CI and independent Draft PR creation; no reuse of PR127 or earlier branch CI."
+      "limitations": "PENDING parent final-head CI and independent Draft creation; parent code review ongoing. No gh retry."
     },
     {
       "ac_id": "AC50",
@@ -810,7 +810,7 @@
     }
   ],
   "implementation_branch": "codex/webui-content-methods-impl-20261020",
-  "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+  "candidate_sha": "554e9e2f91301f1b2fd223db1552f22d0df05bff",
   "evidence_report": "../../reports/webui-content-methods/DELIVERY.md",
   "cards": [
     {
@@ -868,7 +868,7 @@
     "error": "Post \"https://api.github.com/graphql\": Forbidden",
     "pr_url": null,
     "retry": "NO_CREATION_RETRY_OR_CHANNEL_SWITCH",
-    "next_step": "Parent owns authorized connected GitHub final-head checks and Draft creation; this task does not repeat forbidden gh access",
+    "next_step": "Parent connected GitHub creates Draft against unmerged PR127 branch and checks final head CI; do not retry gh creation",
     "previous_label": "DENIED (ambiguous shorthand, not a tool approval rejection)",
     "tool_approval_denial": false,
     "remote_creation_outcome": "PARENT_CONFIRMED_NO_PR_AT_PRIOR_CHECK",
@@ -900,5 +900,20 @@
     "independent_professional_review": "NOT_RUN",
     "human_acceptance": "NOT_RUN",
     "original_worktree_integrity": "six original uncommitted file hashes unchanged"
+  },
+  "independent_code_review": "IN_PROGRESS_PARENT",
+  "review_fixes": {
+    "source_sha": "554e9e2f91301f1b2fd223db1552f22d0df05bff",
+    "reproduced_before_fix": [
+      "double-save: 1 failed, 2 passed",
+      "speech/no-D2: 2 failed"
+    ],
+    "after_fix": [
+      "6 passed, 51 deselected in 17.45s",
+      "137 passed in 135.56s"
+    ],
+    "installed": "5 checks PASS including P1/P2 one-click",
+    "previous_evidence": "441 regression, three actual Host scenes and rollback retain their original 3baf6caa source binding; not rerun/relabeled as new SHA",
+    "independent_code_review": "IN_PROGRESS_PARENT"
   }
 }

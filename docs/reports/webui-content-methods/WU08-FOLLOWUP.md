@@ -1,6 +1,6 @@
 # WU08 接续关闭记录
 
-此前 27 个工程欠项已继续执行，当前只剩 **AC49 最终 head CI / 独立 Draft PR 回执 PENDING**。不是以清单替代实施。当前产品/包源码 `3baf6caa060d95b0f59bc2a3b973b7edc122c553`；准确运行结果见 [DELIVERY](DELIVERY.md)。原 89a4db38 文档保留此前欠项及 API 错误历史。
+此前 27 个工程欠项已继续执行。独立复审随后重开双写交接、speech范围、旧决定失效恢复，现已复现修复；见 [REVIEW-FIXES](REVIEW-FIXES.md)。独立代码复审仍进行中，**AC49 最终 head CI / 独立 Draft PR 回执 PENDING**。不是以清单替代实施。当前产品/包源码 `3baf6caa060d95b0f59bc2a3b973b7edc122c553`；准确运行结果见 [DELIVERY](DELIVERY.md)。原 89a4db38 文档保留此前欠项及 API 错误历史。
 
 ## 新增验证映射
 

@@ -1,0 +1,105 @@
+F..                                                                      [100%]
+=================================== FAILURES ===================================
+__________ test_review_single_click_drains_old_and_latest_save[saved] __________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-47/test_review_single_click_drain0')
+second_result = 'saved'
+
+    @pytest.mark.browser
+    @pytest.mark.parametrize('second_result',['saved','unknown','conflict'])
+    def test_review_single_click_drains_old_and_latest_save(tmp_path,second_result):
+        project,store,ref=reviewed_project(tmp_path);server=WorkbenchServer(project);url=server.start();info=ui_journal.project_info(project);before=store.load_document();held=[];writes=[]
+        try:
+            with sync_playwright() as pw:
+                browser=pw.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox']);page=browser.new_page()
+                page.goto(url+'studio/#'+urlencode({'project':info['project_identity'],'surface':'runs','revision':store.current_revision_id(),'layer':'content','review':'reading-review','review_sha256':ref['sha256'],'finding':'f1','finding_index':0}))
+                page.get_by_role('button',name='准备范围交接草稿',exact=True).click();expect(page.locator('.review-draft-state')).to_contain_text('已保存到项目')
+                def hold(route):
+                    payload=route.request.post_data_json;writes.append(payload)
+                    if len(writes)==2 and second_result=='conflict':
+                        record=ui_journal.list_drafts(project)['records'][0];other=copy.deepcopy(record['draft']);other['content']['text']='另一窗口的明确修改'
+                        ui_journal.save(project,draft=other,expected_etag=record['etag'])
+                    held.append((route,route.fetch()))
+                page.route('**/api/drafts/save',hold)
+                note=page.get_by_label('审阅交接备注');note.fill('P1：旧自动保存')
+                expect(page.locator('.review-draft-state')).to_contain_text('正在保存到项目')
+                # Pump the route handler without releasing its HTTP response.
+                page.wait_for_timeout(100);assert len(held)==1
+                note.fill('P2：最后文字与原范围')
+                page.get_by_role('button',name='保存草稿后进入原正文编辑',exact=True).click()
+                expect(page.get_by_role('dialog')).to_be_visible();assert len(writes)==1
+                with page.expect_request('**/api/drafts/save'):
+                    held[0][0].fulfill(response=held[0][1])
+                page.wait_for_timeout(100);assert len(held)==2
+                expect(page.get_by_role('dialog')).to_be_visible()
+                assert writes[1]['draft']['content']['text']=='P2：最后文字与原范围'
+                if second_result=='unknown':held[1][0].abort()
+                else:held[1][0].fulfill(response=held[1][1])
+                if second_result=='saved':
+>                   expect(page.get_by_label('正文修改说明',exact=True)).to_have_value('P2：最后文字与原范围')
+E                   AssertionError: Locator expected to have Value 'P2：最后文字与原范围'
+E                   Actual value: None
+E                   Error: element(s) not found 
+E                   Call log:
+E                     - Expect "to_have_value" get_by_label("正文修改说明", exact=True) with timeout 5000ms
+E                     - waiting for get_by_label("正文修改说明", exact=True)
+E                   
+E                   Aria snapshot:
+E                   - link "跳到工作区":
+E                     - /url: "#main"
+E                   - complementary:
+E                     - img "Deck Master"
+E                     - navigation "项目工作区":
+E                       - button "制作总览"
+E                       - button "内容与来源"
+E                       - button "整稿画廊"
+E                       - button "风格校准"
+E                       - button "任务与交付"
+E                     - text: 当前项目
+E                     - strong: 教学
+E                     - paragraph: 当前为项目独立入口
+E                     - button "连接状态"
+E                   - banner:
+E                     - strong: 教学
+E                     - text: 当前稿
+E                     - region "本次工作状态":
+E                       - button "查看本次工作与范围": 内容进行中
+E                     - button "查看待交接任务，0 项": 待交接 0
+E                   - main:
+E                     - heading "审阅问题与范围交接" [level=1]
+E                     - paragraph: 待审阅
+E                     - paragraph: 阅读、修稿返回或采用都不会自动把旧问题标为解决。
+E                     - article:
+E                       - heading "补充限定条件" [level=2]
+E                       - paragraph: 预期：说明适用范围
+E                       - paragraph: 实际：未说明
+E                       - paragraph: 影响："must_fix"
+E                       - paragraph: 解决记录：尚未解决
+E                       - button "固定此问题链接"
+E                       - button "定位原页面文字"
+E                       - button "准备范围交接草稿"
+E                       - group: › 完整问题、证据与定位
+E                       - group: › 修订范围准入
+E                   - status: 任务与交付，R f5fe53a5
+E                   - dialog "准备范围交接":
+E                     - heading "准备范围交接" [level=2]
+E                     - paragraph: 仅准备个人草稿，不派发、不修稿、不改变审阅结论。正文、口播、设计、来源按原请求分别处理。
+E                     - heading "个人草稿" [level=2]
+E                     - text: 不提交制作任务 留给自己的内容与意见
+E                     - textbox "审阅交接备注":
+E                       - /placeholder: 记录这一页、这一层需要继续考虑的事。保存草稿不会提交制作任务。
+E                       - text: P2：最后文字与原范围
+E                     - paragraph: 基准 R f5fe53a5 · 整个项目 · 项目笔记
+E                     - status: 已保存到项目，可跨端口恢复
+E                     - button "保存个人草稿" [disabled]
+E                     - button "下载草稿恢复文件"
+E                     - text: 导入草稿恢复文件
+E                     - button "导入草稿恢复文件"
+E                     - paragraph: 恢复文件可能包含内部提示词。已保存到项目的内容可跨端口恢复；未同步内容请下载保管。
+E                     - button "保存草稿后进入原正文编辑"
+E                     - button "关闭"
+
+tests/rebuild/test_webui_acceptance_matrix.py:757: AssertionError
+=========================== short test summary info ============================
+FAILED tests/rebuild/test_webui_acceptance_matrix.py::test_review_single_click_drains_old_and_latest_save[saved]
+1 failed, 2 passed, 52 deselected in 16.15s
