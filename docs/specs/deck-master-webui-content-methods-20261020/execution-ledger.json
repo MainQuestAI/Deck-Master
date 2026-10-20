@@ -22,7 +22,7 @@
   ],
   "package_evidence_ref": "docs/reports/rc5/package-verification-cloud-review.json",
   "spec_drift_review": "PASS",
-  "implementation_status": "BROWSER_LABEL_REGRESSION_FIXED_PENDING_FINAL_REMOTE_CI",
+  "implementation_status": "FORMAL_REVIEW_FIXED_ENGINEERING_VERIFIED_PENDING_NEW_HEAD_CI",
   "acceptance": [
     {
       "ac_id": "AC01",
@@ -57,10 +57,10 @@
       "limitations": "PR metadata GraphQL denied; parent CI confirmation plus local git/code/report correspondence. PR127 remains a declared dependency."
     }
   ],
-  "product_tests": "D16ED393_UNIT_X4_RENDER_PASS_PARENT_REPORTED_NEW_HEAD_CI_PENDING",
-  "browser": "PASS_FULL_REQUIRED_BROWSER_548_TESTS",
-  "installed": "PASS_CLEAN_SHA_CANDIDATE_AND_DOUBLE_SAVE_BROWSER",
-  "actual_host": "PASS_THREE_CONTENT_FULL_SCENARIOS_CURRENT_AGENT",
+  "product_tests": "PASS_FULL_LOCAL_UNIT_RENDER_WITH_FROZEN_A_SKIPS",
+  "browser": "PASS_FULL_REQUIRED_BROWSER",
+  "installed": "PASS_CLEAN_WHEEL_TARGETED_OFFLINE_AND_FULL_RECOVERY",
+  "actual_host": "HISTORICAL_PASS_NOT_RERUN_FORMAL_REVIEW",
   "professional_review": "NOT_RUN",
   "human_acceptance": "NOT_RUN",
   "implementation_acceptance": [
@@ -117,15 +117,13 @@
       "owner": "WU01",
       "result": "PASS",
       "evidence_refs": [
-        "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/matrix-final.log",
-        "../../reports/webui-content-methods/evidence/regression-closure.log",
-        "../../reports/webui-content-methods/evidence/package-closure.json"
+        "../../reports/webui-content-methods/FORMAL-REVIEW-FIXES.md",
+        "../../reports/webui-content-methods/evidence/formal-review-package.json"
       ],
-      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "candidate_sha": "50ef4d2e64e2b732bcd7ade7758a9eb86ac2cf6e",
       "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
-      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
-      "coverage": "verified",
+      "command_or_steps": "FORMAL-REVIEW-FIXES.md complete groups and installed12",
+      "coverage": "formal_review_reproduced_and_fixed",
       "limitations": "Corrupt Narrative, Review, Page requirements and source extraction discriminate unreadable/null/partial; schema rejects invented unreadable fields."
     },
     {
@@ -149,15 +147,13 @@
       "owner": "WU01",
       "result": "PASS",
       "evidence_refs": [
-        "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/matrix-final.log",
-        "../../reports/webui-content-methods/evidence/regression-closure.log",
-        "../../reports/webui-content-methods/evidence/package-closure.json"
+        "../../reports/webui-content-methods/FORMAL-REVIEW-FIXES.md",
+        "../../reports/webui-content-methods/evidence/formal-review-package.json"
       ],
-      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "candidate_sha": "50ef4d2e64e2b732bcd7ade7758a9eb86ac2cf6e",
       "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
-      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
-      "coverage": "verified",
+      "command_or_steps": "FORMAL-REVIEW-FIXES.md complete groups and installed12",
+      "coverage": "formal_review_reproduced_and_fixed",
       "limitations": "Untrusted Narrative text rendered without executing image handler; held late HTTP response cannot overwrite new selection; unselected bodies not read."
     },
     {
@@ -294,15 +290,13 @@
       "owner": "WU03",
       "result": "PASS",
       "evidence_refs": [
-        "../../reports/webui-content-methods/REVIEW-FIXES.md",
-        "../../reports/webui-content-methods/evidence/independent-review-regression.log",
-        "../../reports/webui-content-methods/evidence/independent-review-focused-final.log",
-        "../../reports/webui-content-methods/evidence/package-review-fixes.json"
+        "../../reports/webui-content-methods/FORMAL-REVIEW-FIXES.md",
+        "../../reports/webui-content-methods/evidence/formal-review-package.json"
       ],
-      "candidate_sha": "554e9e2f91301f1b2fd223db1552f22d0df05bff",
+      "candidate_sha": "50ef4d2e64e2b732bcd7ade7758a9eb86ac2cf6e",
       "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
-      "command_or_steps": "REVIEW-FIXES.md exact reproduction and related regression commands",
-      "coverage": "verified_after_independent_review_reproduction",
+      "command_or_steps": "FORMAL-REVIEW-FIXES.md complete groups and installed12",
+      "coverage": "formal_review_reproduced_and_fixed",
       "limitations": "Explicit reassessment archives rejected D1 only when no effective replacement exists and core permits a new decision; no automatic write. D2-present branch remains covered."
     },
     {
@@ -310,15 +304,13 @@
       "owner": "WU03",
       "result": "PASS",
       "evidence_refs": [
-        "../../reports/webui-content-methods/REVIEW-FIXES.md",
-        "../../reports/webui-content-methods/evidence/independent-review-regression.log",
-        "../../reports/webui-content-methods/evidence/independent-review-focused-final.log",
-        "../../reports/webui-content-methods/evidence/package-review-fixes.json"
+        "../../reports/webui-content-methods/FORMAL-REVIEW-FIXES.md",
+        "../../reports/webui-content-methods/evidence/formal-review-package.json"
       ],
-      "candidate_sha": "554e9e2f91301f1b2fd223db1552f22d0df05bff",
+      "candidate_sha": "50ef4d2e64e2b732bcd7ade7758a9eb86ac2cf6e",
       "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
-      "command_or_steps": "REVIEW-FIXES.md exact reproduction and related regression commands",
-      "coverage": "verified_after_independent_review_reproduction",
+      "command_or_steps": "FORMAL-REVIEW-FIXES.md complete groups and installed12",
+      "coverage": "formal_review_reproduced_and_fixed",
       "limitations": "Original pending payload/UUID preserved; rejected D1 receipt retained in previous_decisions before explicit new decision/second adoption.",
       "test_definition_sha": "9c493c6e1b0d6b6837dfc2f7f6f3e40651847976"
     },
@@ -392,15 +384,13 @@
       "owner": "WU04",
       "result": "PASS",
       "evidence_refs": [
-        "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/matrix-final.log",
-        "../../reports/webui-content-methods/evidence/regression-closure.log",
-        "../../reports/webui-content-methods/evidence/package-closure.json"
+        "../../reports/webui-content-methods/FORMAL-REVIEW-FIXES.md",
+        "../../reports/webui-content-methods/evidence/formal-review-package.json"
       ],
-      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "candidate_sha": "50ef4d2e64e2b732bcd7ade7758a9eb86ac2cf6e",
       "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
-      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
-      "coverage": "verified",
+      "command_or_steps": "FORMAL-REVIEW-FIXES.md complete groups and installed12",
+      "coverage": "formal_review_reproduced_and_fixed",
       "limitations": "Explicit legacy absent mapping and invalid atom browser cases; corrupt source/Narrative partial responses and old Page binding retained."
     },
     {
@@ -617,15 +607,13 @@
       "owner": "WU07",
       "result": "PASS",
       "evidence_refs": [
-        "../../reports/webui-content-methods/REVIEW-FIXES.md",
-        "../../reports/webui-content-methods/evidence/independent-review-regression.log",
-        "../../reports/webui-content-methods/evidence/independent-review-focused-final.log",
-        "../../reports/webui-content-methods/evidence/package-review-fixes.json"
+        "../../reports/webui-content-methods/FORMAL-REVIEW-FIXES.md",
+        "../../reports/webui-content-methods/evidence/formal-review-package.json"
       ],
-      "candidate_sha": "554e9e2f91301f1b2fd223db1552f22d0df05bff",
+      "candidate_sha": "50ef4d2e64e2b732bcd7ade7758a9eb86ac2cf6e",
       "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
-      "command_or_steps": "REVIEW-FIXES.md exact reproduction and related regression commands",
-      "coverage": "verified_after_independent_review_reproduction",
+      "command_or_steps": "FORMAL-REVIEW-FIXES.md complete groups and installed12",
+      "coverage": "formal_review_reproduced_and_fixed",
       "limitations": "Speech-only review preview succeeds with core method_ids_for legality; invented unit returns 400. No copied UI unit registry."
     },
     {
@@ -633,15 +621,13 @@
       "owner": "WU07",
       "result": "PASS",
       "evidence_refs": [
-        "../../reports/webui-content-methods/REVIEW-FIXES.md",
-        "../../reports/webui-content-methods/evidence/independent-review-regression.log",
-        "../../reports/webui-content-methods/evidence/independent-review-focused-final.log",
-        "../../reports/webui-content-methods/evidence/package-review-fixes.json"
+        "../../reports/webui-content-methods/FORMAL-REVIEW-FIXES.md",
+        "../../reports/webui-content-methods/evidence/formal-review-package.json"
       ],
-      "candidate_sha": "554e9e2f91301f1b2fd223db1552f22d0df05bff",
+      "candidate_sha": "50ef4d2e64e2b732bcd7ade7758a9eb86ac2cf6e",
       "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
-      "command_or_steps": "REVIEW-FIXES.md exact reproduction and related regression commands",
-      "coverage": "verified_after_independent_review_reproduction",
+      "command_or_steps": "FORMAL-REVIEW-FIXES.md complete groups and installed12",
+      "coverage": "formal_review_reproduced_and_fixed",
       "limitations": "Speech-only default IDs equal core resolver; explicit writing-profiles also validated. Existing role/stage/DAG tests rerun."
     },
     {
@@ -681,15 +667,13 @@
       "owner": "WU07",
       "result": "PASS",
       "evidence_refs": [
-        "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/matrix-final.log",
-        "../../reports/webui-content-methods/evidence/regression-closure.log",
-        "../../reports/webui-content-methods/evidence/package-closure.json"
+        "../../reports/webui-content-methods/FORMAL-REVIEW-FIXES.md",
+        "../../reports/webui-content-methods/evidence/formal-review-package.json"
       ],
-      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "candidate_sha": "50ef4d2e64e2b732bcd7ade7758a9eb86ac2cf6e",
       "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
-      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
-      "coverage": "verified",
+      "command_or_steps": "FORMAL-REVIEW-FIXES.md complete groups and installed12",
+      "coverage": "formal_review_reproduced_and_fixed",
       "limitations": "Stored IDs restored across refresh/revision; catalog/body/revision drift blocks old copy; selection retained through partial failures."
     },
     {
@@ -748,15 +732,13 @@
       "owner": "WU08",
       "result": "PASS",
       "evidence_refs": [
-        "../../reports/webui-content-methods/REVIEW-FIXES.md",
-        "../../reports/webui-content-methods/evidence/independent-review-regression.log",
-        "../../reports/webui-content-methods/evidence/independent-review-focused-final.log",
-        "../../reports/webui-content-methods/evidence/package-review-fixes.json"
+        "../../reports/webui-content-methods/FORMAL-REVIEW-FIXES.md",
+        "../../reports/webui-content-methods/evidence/formal-review-package.json"
       ],
-      "candidate_sha": "554e9e2f91301f1b2fd223db1552f22d0df05bff",
+      "candidate_sha": "50ef4d2e64e2b732bcd7ade7758a9eb86ac2cf6e",
       "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
-      "command_or_steps": "REVIEW-FIXES.md exact reproduction and related regression commands",
-      "coverage": "verified_after_independent_review_reproduction",
+      "command_or_steps": "FORMAL-REVIEW-FIXES.md complete groups and installed12",
+      "coverage": "formal_review_reproduced_and_fixed",
       "limitations": "New clean SHA wheel/sdist installed with -I/site-packages/no checkout; three viewports plus real installed P1/P2 single-click and two-step adoption pass."
     },
     {
@@ -783,11 +765,11 @@
       "evidence_refs": [
         "../../reports/webui-content-methods/ENTRY-REGISTRY-FIX.md"
       ],
-      "candidate_sha": "7b414a92c77a2578465e4495f5932320a1a95cb1",
+      "candidate_sha": "50ef4d2e64e2b732bcd7ade7758a9eb86ac2cf6e",
       "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
       "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
       "coverage": "pending_new_head_ci",
-      "limitations": "Original four CI entry omissions fixed; local full unit completed with five DNS-blocked installation cases and one old SDK metadata mismatch resolved by 2-case rerun. Complete remote matrix still pending."
+      "limitations": "Previous33b2f522 exact-head CI success confirmed. New formal-review head CI pending after push; original Draft PR130 already exists. Final CI URL/status in PR body and final handoff."
     },
     {
       "ac_id": "AC50",
@@ -807,7 +789,7 @@
     }
   ],
   "implementation_branch": "codex/webui-content-methods-impl-20261020",
-  "candidate_sha": "7b414a92c77a2578465e4495f5932320a1a95cb1",
+  "candidate_sha": "50ef4d2e64e2b732bcd7ade7758a9eb86ac2cf6e",
   "evidence_report": "../../reports/webui-content-methods/DELIVERY.md",
   "cards": [
     {
@@ -852,8 +834,8 @@
     },
     {
       "id": "WU08",
-      "implementation": "ENGINEERING_VERIFIED_PENDING_FINAL_CI",
-      "acceptance": "AC45/46/47/48/50 PASS; AC49 PENDING parent final-head CI/Draft"
+      "implementation": "FORMAL_REVIEW_ENGINEERING_VERIFIED_PENDING_NEW_HEAD_CI",
+      "acceptance": "AC45/46/47/48/50 retain attributed evidence; AC49 new head CI pending, PR130 already exists"
     }
   ],
   "remote_delivery": {
@@ -861,23 +843,26 @@
     "push": "SUCCESS",
     "draft_pr_creation": "SUCCESS_PARENT_CONNECTED_GITHUB",
     "target_base": "codex/rc5-content-methods-20261020",
-    "command": "gh pr create --draft",
-    "error": "Post \"https://api.github.com/graphql\": Forbidden",
     "pr_url": "https://github.com/MainQuestAI/Deck-Master/pull/130",
-    "retry": "NO_CREATION_RETRY_OR_CHANNEL_SWITCH",
-    "next_step": "Push same PR130 branch; parent verifies new exact head complete CI. No new PR, merge or publish.",
-    "previous_label": "DENIED (ambiguous shorthand, not a tool approval rejection)",
-    "tool_approval_denial": false,
+    "next_step": "Push this same PR130 branch and update existing PR body with exact final head and new CI URL; no new PR or merge.",
     "remote_creation_outcome": "PR130_DRAFT_CONFIRMED",
-    "read_only_verification": {
-      "command": "gh pr list --state all --head codex/webui-content-methods-impl-20261020 --json number,url,state,isDraft,headRefName,headRefOid,baseRefName",
-      "exit_code": 1,
-      "error": "Post \"https://api.github.com/graphql\": Forbidden",
-      "outcome": "ACCESS_ERROR_NO_RESULT"
-    },
-    "final_head_ci": "PENDING_NEW_HEAD",
+    "final_head_ci": "PENDING_FORMAL_REVIEW_PUSH_HEAD",
     "parent_prior_branch_ci": "39415132380 at 6ee00b9b; not final candidate evidence",
-    "last_confirmed_pr_head": "d16ed39385274f61cf59e5833190b5db3dba7d96"
+    "last_confirmed_pr_head": "33b2f5223646e8e0751f26d7653732cd62127fc0",
+    "historical_cli_access_errors": {
+      "command": "gh pr create --draft",
+      "error": "Post \"https://api.github.com/graphql\": Forbidden",
+      "retry": "NO_CREATION_RETRY_OR_CHANNEL_SWITCH",
+      "previous_label": "DENIED (ambiguous shorthand, not a tool approval rejection)",
+      "tool_approval_denial": false,
+      "read_only_verification": {
+        "command": "gh pr list --state all --head codex/webui-content-methods-impl-20261020 --json number,url,state,isDraft,headRefName,headRefOid,baseRefName",
+        "exit_code": 1,
+        "error": "Post \"https://api.github.com/graphql\": Forbidden",
+        "outcome": "ACCESS_ERROR_NO_RESULT"
+      }
+    },
+    "current_connector_read": "SUCCESS_PR130_DRAFT_BASE_UNCHANGED"
   },
   "followup": {
     "runtime_source_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
@@ -899,7 +884,7 @@
     "human_acceptance": "NOT_RUN",
     "original_worktree_integrity": "six original uncommitted file hashes unchanged"
   },
-  "independent_code_review": "IN_PROGRESS_PARENT",
+  "independent_code_review": "FORMAL_FIVE_P2_AND_P3_FIXED_PENDING_REVIEW",
   "review_fixes": {
     "source_sha": "554e9e2f91301f1b2fd223db1552f22d0df05bff",
     "reproduced_before_fix": [
@@ -947,6 +932,12 @@
       "unit": "PASS_ALL_FOUR_JOBS_PARENT_REPORTED",
       "render": "PASS_PARENT_REPORTED",
       "browser": "11 failed, 537 passed, 3642 deselected"
+    },
+    {
+      "head": "33b2f5223646e8e0751f26d7653732cd62127fc0",
+      "pr_run": "39440435031",
+      "status": "completed/success",
+      "source": "connected GitHub exact-head workflow read; closes prior-head CI pending only"
     }
   ],
   "browser_label_fix": {
@@ -971,5 +962,25 @@
       "professional review",
       "human acceptance"
     ]
+  },
+  "formal_review_fixes": {
+    "source_sha": "50ef4d2e64e2b732bcd7ade7758a9eb86ac2cf6e",
+    "test_source_sha": "bd6702fcd3117217116c96254ac9d855acfc7995",
+    "results": {
+      "unit": "3510 passed, 2 skipped, 689 deselected in 706.32s (0:11:46)",
+      "render": "133 passed, 1 skipped, 4067 deselected, 22 warnings in 234.54s (0:03:54)",
+      "browser": "555 passed, 3646 deselected in 1864.10s (0:31:04)",
+      "source_targeted": "12 passed in 26.54s",
+      "installed_targeted": "12 passed in 24.88s",
+      "installed_recovery": "244 passed in 866.95s (0:14:26)"
+    },
+    "offline_checks": 9,
+    "report": "../../reports/webui-content-methods/FORMAL-REVIEW-FIXES.md",
+    "package_evidence": "../../reports/webui-content-methods/evidence/formal-review-package.json",
+    "skips": "2 unit + 1 render require external Frozen A installation; existing skips retained",
+    "actual_host": "NOT_RUN_THIS_ROUND",
+    "professional_review": "NOT_RUN",
+    "human_acceptance": "NOT_RUN",
+    "runtime_after_build_unchanged": true
   }
 }

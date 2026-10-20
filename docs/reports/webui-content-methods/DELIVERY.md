@@ -1,5 +1,9 @@
 # PR127 后续独立 WebUI：实现与验证回执
 
+> 本轮正式审查五项P2及P3已修复，最新证据见 [FORMAL-REVIEW-FIXES](FORMAL-REVIEW-FIXES.md)。产品/包源码 `50ef4d2e64e2b732bcd7ade7758a9eb86ac2cf6e`，本轮完整unit/render/browser、安装受影响路径及两份CI安装脚本均已执行，具体统计与Frozen A跳过单列。前轮33b2f522的CI已成功，以下历史PENDING不代表该旧head仍未收口；本轮新head CI单独待远端确认。专业效果与人类认可仍NOT_RUN。
+
+## 历史分轮回执（保留原SHA与当时状态）
+
 > 最新浏览器回归修复见 [BROWSER-LABEL-FIX](BROWSER-LABEL-FIX.md)：测试提交 `11eba83447e121f34fdb95baddfc4ebceea3cb42`，原11项复现失败后修复为11 passed，完整 required browser **548 passed / 3642 deselected**。产品文案符合中性用途合同，仅同步七处精确测试标签；新head远端CI待确认。父线程确认旧d16ed393四组unit/render成功，但browser失败，不能称该head全绿。
 
 > 最新 CI 入口清单修复见 [ENTRY-REGISTRY-FIX](ENTRY-REGISTRY-FIX.md)，源码 `7b414a92c77a2578465e4495f5932320a1a95cb1`。原四个覆盖失败已消除；完整本地unit结果及DNS/旧SDK元数据限制逐项保留，未宣称整组全绿。现有 Draft PR130 等待新head CI。

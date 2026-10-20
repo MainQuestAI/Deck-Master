@@ -2,16 +2,14 @@
 work_item_id: wi-webui-post-pr127-20261020
 record_kind: working_context
 observed_at: "2026-10-20"
-status: engineering_verified_pending_final_ci_and_draft
+status: formal_review_fixed_pending_new_head_ci
 ---
 # PR127 后续 Web UI 迭代
 
-父线程确认 PR127 最终适用基线 `3217a65630023244eac5a09b3e7570954cce9188`、CI 39401753812 成功，并授权同一云任务完整 WU01–WU08。本轮 A/B 产品范围已实现于独立分支 `codex/webui-content-methods-impl-20261020`；源码/包绑定 `554e9e2f91301f1b2fd223db1552f22d0df05bff`。独立复审追加的双写、speech resolver、失效决定恢复均已复现修复并补验；逐项工程证据记录49 AC PASS，独立代码复审仍进行中；AC49 等待父线程最终 head CI/独立 Draft PR 回执。独立专业审阅、人类认可仍 NOT_RUN。
+完整WU01–WU08/A+B已在同一云端独立分支实现，现有Draft PR130，base为未合并PR127的`3217a65630023244eac5a09b3e7570954cce9188`。不新建PR、不合并、不发布、不改真实HOME或原用户工作树。
 
-唯一规格入口：[README](../../specs/deck-master-webui-content-methods-20261020/README.md)。实际工程、安装、Host 和未完成项见 [交付回执](../../reports/webui-content-methods/DELIVERY.md) 与 [逐 AC 账本](../../specs/deck-master-webui-content-methods-20261020/execution-ledger.json)。
+最新正式审查五项P2及P3已复现修复；产品/包源码`50ef4d2e64e2b732bcd7ade7758a9eb86ac2cf6e`，测试同步`bd6702fcd3117217116c96254ac9d855acfc7995`。本轮完整本地unit/render/browser、安装版12项、离线9项及完整安装恢复都有归属明确的证据；外部Frozen A三项原跳过仍未验证。原33b2f522的PR CI39440435031已成功；本轮新head CI待推送后远端确认，PR创建不是阻塞。
 
-继续仅在当前云端独立工作树完成同一 Draft；PR127 未合并是显式依赖，不自动合并它、不预占 PR 编号或 RC6、不发布/激活真实 HOME、不改用户原工作树。
+唯一规格入口：[README](../../specs/deck-master-webui-content-methods-20261020/README.md)。最新修复与验证：[FORMAL-REVIEW-FIXES](../../reports/webui-content-methods/FORMAL-REVIEW-FIXES.md)；[执行账本](../../specs/deck-master-webui-content-methods-20261020/execution-ledger.json)。历史包/Host证据保留原SHA，不提升为本轮执行；本轮实际Host、专业效果与人类认可均NOT_RUN。
 
-CI 接续：PR130 已存在，保持 Draft/base 依赖127。旧 head 的四个 eligibility entry 未分类失败已复现并在 `7b414a92c77a2578465e4495f5932320a1a95cb1` 补齐，测试未改。全量 unit 本地非全绿，DNS/旧SDK元数据的具体证据及纠正结果见 [入口修复回执](../../reports/webui-content-methods/ENTRY-REGISTRY-FIX.md)，最终完整CI待父线程跟进。
-
-浏览器接续：父线程确认 d16ed393 的四组unit/render成功，browser为11 failed。原11项本地复现后，按中性用途合同仅同步旧测试七处精确标签，`11eba83447e121f34fdb95baddfc4ebceea3cb42` 定向11 passed，完整 required browser 548 passed / 3642 deselected / 1656.29s；无失败或跳过。见 [浏览器修复回执](../../reports/webui-content-methods/BROWSER-LABEL-FIX.md)。新head CI仍待远端确认，未重标历史包与Host证据。
+下一步：同一PR130提交当前文档/证据，推送后在原PR正文记录准确最终head、CI URL/状态，等待远端检查及复审。无需再用纯状态提交反复移动构包来源。

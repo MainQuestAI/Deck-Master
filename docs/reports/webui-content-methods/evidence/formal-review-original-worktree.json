@@ -1,0 +1,8 @@
+{
+  "src/deck_master/collaboration.py": true,
+  "src/deck_master/content_production.py": true,
+  "src/deck_master/web.py": true,
+  "src/deck_master/content_insight.py": true,
+  "src/deck_master/insight_http.py": true,
+  "tests/rebuild/test_webui_content_insight.py": true
+}
