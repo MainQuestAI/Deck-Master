@@ -156,8 +156,9 @@ for the font workaround and unverified WPS editing.
 
 ## Workbench
 
-RC3 的功能试用与口播说明保留在
-[RC3 功能进度与试用](docs/rc3-tryout.md)，其记录属于该候选时点；当前状态见 RC4 台账。
+For current use, follow the [installation and first-run guide](docs/getting-started.md).
+The [RC3 tryout](docs/rc3-tryout.md) is a historical compatibility entry, not
+the current installation or release instructions.
 
 The workbench provides a project launcher, production overview, content and
 sources, gallery, style calibration, tasks and delivery. Each page retains its
@@ -193,6 +194,10 @@ Renderer or font gaps are reported per step as `needs_tool` with the real
 reason; nothing silently falls back to fixtures.
 
 ## Project Docs
+
+Start with the [documentation index](docs/README.md) for user guides, inherited
+engineering specifications and dated evidence. Historical reports do not certify
+the current candidate; see the [archive index](docs/archive/README.md).
 
 - [Installation, First Run, Host Requirements and Upgrade](docs/getting-started.md)
 - [Agent Entry](AGENTS.md)
