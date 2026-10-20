@@ -1,6 +1,6 @@
 # Deck Master roadmap
 
-The 1.0.0 source line includes the merged RC4 increment (PR124) and normal
+The RC4 source line includes the merged RC4 increment (PR124) and normal
 installed native independent review (PR125). The
 [RC4 specification](docs/specs/deck-master-next-iteration-20261019/README.md)
 and [candidate ledger](docs/reports/rc4/iteration-20261019/execution-ledger.json)
@@ -40,7 +40,7 @@ application, professional approval or user feedback.
 Public release and activation of a user's installation require their own
 authorization. Installation rollback does not lower a project's writer floor.
 Check [GitHub Releases](https://github.com/MainQuestAI/Deck-Master/releases)
-for published assets; source version `1.0.0` alone does not publish them.
+for published assets; source version `1.0.0rc4` alone does not publish them.
 
 ## Later decisions
 

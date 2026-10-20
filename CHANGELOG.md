@@ -2,12 +2,15 @@
 
 ## Unreleased
 
-No changes recorded after 1.0.0.
+RC5 content-method library development follows the RC4 candidate. Formal
+1.0.0 publication is deferred until RC5 has been reviewed.
 
-## 1.0.0 — 2026-10-19
+## 1.0.0rc4 — candidate, 2026-10-20
 
-First stable version of the rebuilt, local-first Deck Master core. Python
-package version `1.0.0`; release tag `v1.0.0`. This supersedes the historical
+Release candidate of the rebuilt, local-first Deck Master core. Python
+package version `1.0.0rc4`; proposed prerelease tag `v1.0.0-rc4`. The earlier
+1.0.0 source preparation was not published; its formal release is cancelled.
+This candidate supersedes the historical
 v0.9 preview architecture; old project formats require the documented migration.
 
 - One `deck-master` CLI and loopback Workbench for source-backed content,
