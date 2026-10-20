@@ -180,3 +180,29 @@ def test_review_identity_source_index_page_fallback_and_no_write(tmp_path):
     broken=ui.review_reading(project,'reading-review',review_sha256=ref['sha256'])
     assert broken['data'] is None and broken['status']=='unreadable'
     models.validate_schema('ui_review_reading',broken)
+
+
+def test_m04_e04_preview_uses_real_dag_without_execution(tmp_path):
+    from deck_master import method_library_view as lib
+    from deck_master.resource_catalog import load_catalog, select
+    from deck_master.method_resources import resolve_root
+    project, store, _, _ = candidate(tmp_path)
+    chosen=['content-m04','case-e04-walkthrough'];ctx={'mode':'independent','role':'deck-content','phase':'argument','review_units':[]}
+    before=bytes_at(project);value=lib.preview(project,{'context':ctx,'selected_resource_ids':chosen})
+    expected=select(load_catalog(resolve_root()),chosen,role='deck-content',phase='argument')
+    manifest_ids=[r['id'] for r in value['resolved_manifest']]
+    assert [i for i in manifest_ids if i not in value['default_ids']]==[i for i in expected if i not in value['default_ids']]
+    assert 'example-e04-input' in manifest_ids and 'example-e04-after' in manifest_ids
+    assert 'example-e04-before' not in manifest_ids
+    assert bytes_at(project)==before
+
+
+def test_resource_list_does_not_read_unselected_bodies(tmp_path,monkeypatch):
+    from deck_master import method_library_view as lib
+    from pathlib import Path
+    project,store,_,_=candidate(tmp_path);original=Path.read_bytes;read_paths=[]
+    def observed(self):
+        read_paths.append(str(self));return original(self)
+    monkeypatch.setattr(Path,'read_bytes',observed)
+    lib.preview(project,{'context':{'mode':'independent','role':'deck-content','phase':'argument','review_units':[]},'selected_resource_ids':['content-m04']})
+    assert not any('E06' in p or 'M10' in p or 'check_case_numbers.py' in p for p in read_paths)

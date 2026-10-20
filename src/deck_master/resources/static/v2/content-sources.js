@@ -414,14 +414,15 @@ export function content(app, data) {
     el('section',{class:'studio-content-area',id:'content-area-plan','aria-label':'内容计划',hidden:true},planPanel),
     el('section',{class:'studio-content-area',id:'content-area-notes','aria-label':'工作笔记',hidden:true},panel('工作笔记',draftNode))
   ]:[];
-  const extraAreas=supportsInsights(app)?[['arguments','论证主线',argumentDesk(app)],...(app.health.ui_capabilities?.includes('method_library_preview.v1')?[['methods','方法与案例',methodLibrary(app)]]:[])]:[];
-  for(const [key,title,body] of extraAreas)workAreas.push(el('section',{class:'studio-content-area stack',id:'content-area-'+key,'aria-label':title,hidden:true},body));
+  const extraAreas=supportsInsights(app)?[['arguments','论证主线',argumentDesk(app)],...(app.health.ui_capabilities?.includes('method_library_preview.v1')?[['methods','方法与案例',()=>methodLibrary(app)]]:[])]:[];
+  for(const [key,title,body] of extraAreas){const section=el('section',{class:'studio-content-area stack',id:'content-area-'+key,'aria-label':title,hidden:true},typeof body==='function'?null:body);if(typeof body==='function')section.loadContent=()=>{section.append(body());section.loadContent=null;};workAreas.push(section);}
   const areaNames=[['overview','方案概览'],['pages','逐页编辑与顺序'],['plan','内容计划'],['notes','工作笔记'],...extraAreas.map(([key,title])=>[key,title])];
   const areaButtons=studio?areaNames.map(([key,title])=>button(title,()=>showContentArea(key),false,{'aria-pressed':String(key===area),'aria-controls':'content-area-'+key})):[];
   const areaNav=studio?el('nav',{class:'studio-content-areas','aria-label':'内容工作区'},areaButtons):null;
   function showContentArea(next,focus=true){
     if(!studio||!areaNames.some(([key])=>key===next))return;area=next;
     if(focus){app.route.content_area=next;history.replaceState(null,'',routeHash(app.info,app.route));}
+    workAreas.find(panel=>panel.id==='content-area-'+next)?.loadContent?.();
     workAreas.forEach((panel,index)=>{panel.hidden=areaNames[index][0]!==next;areaButtons[index].setAttribute('aria-pressed',String(!panel.hidden));});
     if(focus){const title=workAreas.find(p=>!p.hidden)?.querySelector('h2');if(title){title.tabIndex=-1;title.focus();}}
   }
@@ -431,7 +432,7 @@ export function content(app, data) {
     studio?workAreas:el('div',{class:'stack'},overview,el('details',{class:'panel content-order-panel'},el('summary',{class:'panel-head'},'逐页稿与顺序 · '+pages.length+' 页'),el('div',{class:'panel-body'},pageTools)),
       ref?panel('内容计划与依据',planEvidence,el('details',{},el('summary',{},'编辑内容计划'),planTools)):panel('内容计划',el('p',{},'尚未记录完整内容计划。'))),
     inputs?null:panel('历史材料',el('p',{},'此处只读固定版本的内容目标与来源，不混入当前任务要求。')),
-    !studio&&extraAreas.map(([,title,body])=>panel(title,body)),operationHome,studio?null:draftNode);
+    !studio&&extraAreas.map(([,title,body])=>panel(title,typeof body==='function'?body():body)),operationHome,studio?null:draftNode);
   if(studio&&app.route.content_area)showContentArea(app.route.content_area,false);
   if(studio&&app.contentArea){showContentArea(app.contentArea,false);delete app.contentArea;}
   if(app.readonly) for(const item of node.querySelectorAll('textarea'))item.readOnly=true;
