@@ -118,8 +118,9 @@
       "id": "example-e05-after",
       "relative_path": "assets/content/examples/E05-inventory-review/after.md",
       "source_sha256": "991bc537b7626b28ac2298b9fd68073d694131a0a42d18754a5cfc55eb0f6e23",
-      "integrated_sha256": "dc6a5e6b46ae482d8296b96f18ee4cf4178e64681d14ec9dfe62618ef738c40f",
-      "disposition": "revised"
+      "integrated_sha256": "fd74f2aaad1ce67fffbb23f7c9bea8df632f07f006cacdb164c880d1eb5e5262",
+      "disposition": "revised",
+      "revision_note": "补回99.99%可用性约束；连接占用及普通商品影响改为待测机制；B事务能力改为待具体产品验证，不再冒充给定事实。"
     },
     {
       "id": "example-e05-before",
