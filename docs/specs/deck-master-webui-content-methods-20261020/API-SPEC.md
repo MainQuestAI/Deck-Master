@@ -288,7 +288,7 @@ type MethodPreview = {
   selection_status:"validated"|"not_evaluated";
   context:object; catalog_digest:string; context_digest:string;
   entries:Array<{id:string;display_name:string;description:string;
-    kind:string;sha256:string;selectable:boolean;reason_codes:string[];}>;
+    kind:string;sha256:string|null;selectable:boolean;reason_codes:string[];}>;
   explicit_ids:string[]; default_ids:string[]; dependency_ids:string[];
   resolved_manifest:Array<{id:string;relative_path:string;sha256:string}>;
   preview_digest:string;
@@ -299,6 +299,8 @@ type MethodPreview = {
 browse_status 与 dispatch_status 独立；独立浏览 dispatch_status=not_applicable，项目可准备新阶段也仅为 new_content_task_possible，均不产生派发许可。恒定 preparation_only=true。无法解析合法选择上下文时 copy_allowed=false，仍可浏览；恢复明确上下文并通过 resolver 后才可复制准备文本，写入口仍重新校验。目录整体不可用返回 503，局部资源损坏为 200+partial。expected_basis 不符（目录/上下文漂移）或正文资源 hash 不符才是 409；首次无上下文、普通历史阅读不为 409。重取成功后替换预览，保留用户选择。
 
 依赖按原 DAG 顺序、同一规则展开。preview_digest 对 context、catalog 字节、显式 ID 和最终 manifest 计算；复制前重新核对预览。变更后不给旧内容加“已核实”标识。
+
+未选择的目录项 sha256=null（未读取字节）；只有默认、显式或依赖选中项返回已核对 hash，正文阅读使用该 hash。这样列表不为填充 hash 扫描全库；不是将 null 当作已验证字节。
 
 目录的展示名称与说明：先使用合法 UTF-8 Markdown 的首标题和明确的目录项元数据；无可验证标题退回 ID，无明确说明则 description 为空，不能由模型补造。标题读取按需缓存并绑定资源 SHA，列表不扫描/返回全库正文。本轮不为 display metadata 放宽 catalog 的精确字段校验，不维护 JS 私有 ID→业务名表。后续可另行升级 catalog 元数据。
 

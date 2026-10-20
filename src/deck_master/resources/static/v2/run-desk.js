@@ -1,3 +1,4 @@
+import {supportsInsights,taskMethods} from './insight-reading.js';
 import {cancelRecovery} from './run-recovery.js';
 import {taskHandoff} from './change-handoff.js';
 import {personalBackupButton} from './personal-recovery.js';
@@ -160,6 +161,7 @@ export function runDesk(app, data) {
     detail.replaceChildren(el('div', {class: 'stack'}, el('h3', {}, `${names[task.kind] || '制作任务'} · ${statuses[task.status] || task.status}`),
       el('p', {}, scopeLabel(task)),
       handoff?.node,
+      supportsInsights(app)&&taskMethods(app,task.task_id,revision),
       el('details', {}, el('summary',{},'制作要求与执行身份'), el('p',{},task.instruction),el('p',{class:'muted'},`任务 ${task.task_id} · ${version(revision)}`)),
       el('p', {}, `真实接手时间：${clock(task.execution_started_at)}${task.execution_started_at ? '' : '，不会用最后更新时间代替'}`),
       el('details',{},el('summary',{},'执行记录'),el('p',{class:'execution-reference'},task.execution_ref ? `执行标识：${task.execution_ref}` : '尚无接手记录')),

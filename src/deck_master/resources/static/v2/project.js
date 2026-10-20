@@ -158,7 +158,7 @@ export class Project {
           modern && route.task_id ? get('/api/tasks/' + encodeURIComponent(route.task_id) + q) : Promise.resolve(null)]);
         data = {tasks: tasks.tasks, runPage: modern ? tasks : null, runDetail: detail, history};
         if (route.task_id && !(detail || tasks.tasks.some(task => task.task_id === route.task_id))) throw new Error('此版本没有链接中的任务。请检查任务与版本，未跳到其它任务。');
-        if (route.review_id) {
+        if (route.review_id&&!this.health.ui_capabilities?.includes('content_insight.v1')) {
           const result = await get('/api/reviews' + q);
           data.review = result.reviews.find(review => review.review_id === route.review_id);
           if (!data.review) throw new Error('此版本没有链接中的质量记录，未替换为其它记录。');
@@ -196,6 +196,11 @@ export class Project {
   }
   go(patch) {
     const route = {...this.route, ...patch};
+    if(patch.surface&&patch.surface!=='content'){route.proposal=null;route.compare_proposal=null;}
+    if(patch.surface&&patch.surface!=='page')route.atom=null;
+    if((patch.surface||patch.review_id===null)&&!('review_id' in patch)){route.review_sha256=null;route.finding=null;route.finding_index=null;}
+    if(patch.review_id&&patch.review_id!==this.route.review_id&&!('review_sha256' in patch)){route.review_sha256=null;route.finding=null;route.finding_index=null;}
+    if(patch.review_id===null){route.review_sha256=null;route.finding=null;route.finding_index=null;}
     if (patch.surface && patch.surface !== 'overview' || patch.revision && patch.revision !== this.route.revision) route.overview_preferences = null;
     // A plain surface switch starts that surface on its own first screen: no task
     // detail from an earlier visit, and no page layer that another surface could

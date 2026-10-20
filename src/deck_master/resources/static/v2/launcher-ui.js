@@ -105,8 +105,8 @@ export async function launcher(root, health) {
   }
   function createForm() {
     const title = field('项目名称（必填）', el('input', {required: true, maxlength: 200, autocomplete: 'off'}));
-    const brief = field('用途（必填）', el('textarea', {required: true, rows: 3, placeholder: '这份方案要帮助听众作出什么判断？'}));
-    const audience = field('受众（必填）', el('input', {required: true, placeholder: '例如：第一次了解这个方案的业务负责人'}));
+    const brief = field('用途（必填）', el('textarea', {required: true, rows: 3, placeholder: '希望受众理解、判断、学习或完成什么？'}));
+    const audience = field('受众（必填）', el('input', {required: true, placeholder: '例如：学员、研究同行、工程评审者或业务负责人'}));
     const work = field('本次约定产物', el('select', {}, el('option', {value:'full_deck'}, '完整方案'),
       el('option', {value:'plan_only'}, '论证与大纲'), el('option', {value:'write_only'}, '上屏稿'),
       el('option', {value:'speech_only'}, '已有稿件的口播稿'), el('option', {value:'content_full'}, '完整内容')),

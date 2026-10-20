@@ -8,23 +8,22 @@
     "state": "OPEN",
     "is_draft": true
   },
-  "implementation_base": null,
-  "gate_g0": "PENDING_PR127_CLOSURE",
+  "implementation_base": "3217a65630023244eac5a09b3e7570954cce9188",
+  "gate_g0": "PASS_DEPENDS_ON_UNMERGED_PR127",
   "source_report_sha256": "0a93d9c0be7debe95b645b4fc53f9f15815a52f1544b80ad1f62ede2dc3493e9",
   "source_report_type": "static_analysis_not_browser_acceptance",
   "source_report_snapshot": "inputs/impact-report.md",
-  "document_only": true,
+  "document_only": false,
   "cloud_observation": {
     "observed_head": "3217a65630023244eac5a09b3e7570954cce9188",
     "main": "09f0213d07fc718dc4d41a52bb69c4595fcb1ac8",
-    "final_baseline_confirmed": false,
+    "final_baseline_confirmed": true,
     "pr_metadata_local": "DENIED_FORBIDDEN",
     "parent_reported_ci": {
-      "run_id": "39398981973",
-      "status": "IN_PROGRESS",
-      "renderer": "PASS",
-      "unit": "PENDING",
-      "browser": "PENDING"
+      "run_id": "39401753812",
+      "status": "completed/success",
+      "jobs": "all passed",
+      "source": "parent independent GitHub read, supplied to this task"
     },
     "original_text_commit": "4f7f2a3b",
     "original_manifest_entries_verified": 14,

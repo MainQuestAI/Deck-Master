@@ -1,3 +1,5 @@
+import {reviewReading} from './evidence-reading.js';
+import {supportsInsights} from './insight-reading.js';
 import {deliveryDesk, historyDesk} from './delivery-desk.js';
 import {runDesk} from './run-desk.js';
 import {candidateBatch} from './candidate-desk.js';
@@ -20,6 +22,7 @@ export function runs(app, data) {
         (!saved.route.task_id || saved.route.task_id === data.runDetail?.task?.task_id)) localStorage.removeItem(continuationKey);
   } catch { /* Keep unreadable recovery data intact. */ }
 
+  if (app.route.review_id&&supportsInsights(app))return reviewReading(app);
   if (data.review) {
     const review = data.review;
     return el('div', {class: 'stack'}, heading('质量记录', '此记录按正在阅读的版本固定；记录存在不代表所有交付条件已通过。',

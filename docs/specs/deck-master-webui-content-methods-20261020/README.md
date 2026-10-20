@@ -1,6 +1,6 @@
 # PR127 后续 Web UI：内容理解与方法依据
 
-状态：**开发 Spec v1.1，待 PR127 收口后实施**。2026-10-20。
+状态：**开发 Spec v1.1，WU01–WU08 实施中**。2026-10-20。
 
 本轮让用户在现有工作台中看懂方法依据、论证主线、正文证据及审阅问题，并完成有界的方向采用与修改交接。保留现有五工作面和单页制作链。
 
@@ -23,4 +23,4 @@
 
 只读接口、字段及能力标识中标为“拟新增”的部分，是本轮开发合同，不是当前运行时事实。现行持久 schema 真源仍是 `src/deck_master/resources/contracts/`。
 
-v1.1 修订与原文保存见 [修订记录](REVISION-NOTES.md)。当前 [WU00 执行账本](execution-ledger.json) 为部分只读核对，G0 未通过；完整 WU01–WU08 默认同一独立新 Draft PR。
+v1.1 修订与原文保存见 [修订记录](REVISION-NOTES.md)。当前 [WU00 执行账本](execution-ledger.json) 已记录父线程确认的最终基线与 CI，G0 通过；完整 WU01–WU08 默认同一独立新 Draft PR。

@@ -1,0 +1,369 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "ui_task_methods.v1"
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "revision_id": {
+          "type": "string"
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "field": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "ref": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "path": {
+                        "type": "string",
+                        "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+                      },
+                      "sha256": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "path",
+                      "sha256"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "page_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "code",
+              "field",
+              "message",
+              "ref",
+              "page_id"
+            ]
+          }
+        },
+        "status": {
+          "enum": [
+            "ready",
+            "partial"
+          ]
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "task_id": {
+              "type": "string"
+            },
+            "task_ref": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              },
+              "required": [
+                "path",
+                "sha256"
+              ]
+            },
+            "dispatch_revision": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "frozen_status": {
+              "enum": [
+                "recorded",
+                "not_recorded"
+              ]
+            },
+            "frozen_release": {
+              "anyOf": [
+                {
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "resources": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "relative_path": {
+                    "type": "string"
+                  },
+                  "sha256": {
+                    "type": "string"
+                  },
+                  "display_name": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "semantic_kind": {
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "instruction",
+                          "example",
+                          "template",
+                          "data",
+                          "script"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "metadata_status": {
+                    "enum": [
+                      "verified_for_release",
+                      "unavailable"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "relative_path",
+                  "sha256",
+                  "display_name",
+                  "semantic_kind",
+                  "metadata_status"
+                ]
+              }
+            },
+            "availability": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "checked_at": {
+                      "type": "string"
+                    },
+                    "observed_release_id": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "status": {
+                      "enum": [
+                        "current",
+                        "basis_changed",
+                        "unavailable"
+                      ]
+                    },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  },
+                  "required": [
+                    "checked_at",
+                    "observed_release_id",
+                    "status",
+                    "issues"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "task_id",
+            "task_ref",
+            "dispatch_revision",
+            "frozen_status",
+            "frozen_release",
+            "resources",
+            "availability"
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "project_id",
+        "revision_id",
+        "issues",
+        "status",
+        "data"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "ui_task_methods.v1"
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "revision_id": {
+          "type": "string"
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "field": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "ref": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "path": {
+                        "type": "string",
+                        "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
+                      },
+                      "sha256": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "path",
+                      "sha256"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "page_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "code",
+              "field",
+              "message",
+              "ref",
+              "page_id"
+            ]
+          }
+        },
+        "status": {
+          "enum": [
+            "absent",
+            "unreadable"
+          ]
+        },
+        "data": {
+          "type": "null"
+        }
+      },
+      "required": [
+        "schema_version",
+        "project_id",
+        "revision_id",
+        "issues",
+        "status",
+        "data"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "unreadable"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "issues": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

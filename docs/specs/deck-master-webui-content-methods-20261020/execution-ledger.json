@@ -1,9 +1,9 @@
 {
-  "scope": "documentation_and_read_only_WU00",
+  "scope": "WU01-WU08_implementation",
   "pr127_final_head": "3217a65630023244eac5a09b3e7570954cce9188",
   "integration_base": "3217a65630023244eac5a09b3e7570954cce9188",
   "merge_commit": null,
-  "latest_observed_head": "d1ee1c7d1f16db120fd4c91c2cc9e71ce31b915e",
+  "latest_observed_head": "3217a65630023244eac5a09b3e7570954cce9188",
   "baseline_disposition": "PASS_DEPENDS_ON_UNMERGED_PR127",
   "required_checks": [
     {
@@ -340,5 +340,6 @@
       "result": "NOT_RUN",
       "evidence_refs": []
     }
-  ]
+  ],
+  "implementation_branch": "codex/webui-content-methods-impl-20261020"
 }

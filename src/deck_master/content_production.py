@@ -1643,6 +1643,127 @@ def _committed_legacy_narrative(store, document, proposal_ref):
     return False
 
 
+def check_proposal_adoption(store, document, *, input):
+    """Pure adoption checks shared by fixed reading and the locked write path."""
+    from . import collaboration
+    region = collaboration._require_region(store, document)
+    proposal_ref = input.get("proposal_ref")
+    decision_ref = input.get("decision_ref")
+    write_scope = input.get("write_scope")
+    if not isinstance(proposal_ref, dict) or not isinstance(decision_ref, dict):
+        raise ModelError("collaboration/adopt_proposal",
+                         "proposal_ref and decision_ref are required Refs")
+    head = collaboration._head_for_identity(store, region, "decisions", "decision_id",
+                                           collaboration._identity_of(store, decision_ref))
+    if head is None:
+        raise ModelError("collaboration/adopt_proposal/decision_ref",
+                         "the decision must be referenced by the current collaboration region")
+    _, decision = head
+    if (decision.get("disposition") != "accepted"
+            or decision.get("authority_mode") not in ("direct_user", "delegated")):
+        raise ModelError("collaboration/adopt_proposal/decision_ref",
+                         "authority_insufficient: adoption needs an accepted decision "
+                         "recorded as direct_user or delegated")
+    state = dependency_slices.decision_effectiveness(store, document, head[0])
+    if not state["effective"]:
+        raise ModelError("collaboration/adopt_proposal/decision_ref",
+                         f"the decision is not effective: {state['reasons']}")
+    if not isinstance(write_scope, dict):
+        raise ModelError("collaboration/adopt_proposal/write_scope",
+                         "adoption names its exact write scope")
+    from . import eligibility
+    eligibility.guard(store, document, "proposal.adopt", context={"scope": write_scope})
+    gaps = scope_gaps(store, decision.get("scope") or {}, write_scope)
+    if gaps:
+        raise ModelError("collaboration/adopt_proposal/write_scope",
+                         f"scope_exceeded: the decision does not cover {gaps}")
+    try:
+        proposal = store.read_object_json(proposal_ref)
+    except Exception as exc:  # noqa: BLE001
+        raise ModelError("collaboration/adopt_proposal/proposal_ref",
+                         f"proposal is not stored: {exc}") from exc
+    schema = proposal.get("schema_version")
+    # A decision adopts only the proposals it names: an accepted direction
+    # with no subject refs approves no specific artifact, so it must not be
+    # usable to promote any proposal of the topic (CONTRACTS §3.1: a
+    # decision is about ProposalRefs, and a projection is a registered
+    # slice of the named artifact).
+    subjects = decision.get("subject_refs") or []
+    if not subjects:
+        raise ModelError(
+            "collaboration/adopt_proposal/decision_ref",
+            "the decision names no proposal (empty subject_refs), so it covers no specific "
+            "artifact; record a decision that names this proposal Ref with a registered "
+            "projection before adopting it")
+    allowed = _ADOPTION_PROJECTIONS.get(schema, ())
+    matches = [item for item in subjects
+               if (item.get("artifact_ref") or {}).get("sha256") == proposal_ref.get("sha256")]
+    if not matches:
+        raise ModelError("collaboration/adopt_proposal/proposal_ref",
+                         "the decision does not name this proposal among its subject refs")
+    if allowed and not any(item.get("projection") in allowed for item in matches):
+        raise ModelError(
+            "collaboration/adopt_proposal/proposal_ref",
+            f"the decision names this proposal with projection "
+            f"{sorted({item.get('projection') for item in matches})}; adopting a {schema} "
+            f"needs one of {list(allowed)}")
+    if schema not in ("narrative.v1", "content_plan.v2"):
+        raise ModelError(
+            "collaboration/adopt_proposal/proposal_ref",
+            "only Narrative and ContentPlan proposals adopt through this action; "
+            "Page candidates reuse the existing candidate adoption semantics")
+    topic = decision.get("topic")
+    allowed_topics = {"narrative.v1": ("direction",),
+                      "content_plan.v2": ("manuscript", "direction", "tradeoff")}[schema]
+    if topic not in allowed_topics:
+        raise ModelError("collaboration/adopt_proposal/decision_ref",
+                         f"a {schema} proposal is adopted by a {allowed_topics} decision, not {topic!r}")
+    invalidated = []
+    updated = dict(document)
+    if schema == "narrative.v1":
+        legacy_accepted = _committed_legacy_narrative(store, document, proposal_ref)
+        models.validate_narrative_semantics(
+            proposal, policy=None if legacy_accepted else "argument-connectivity.v1")
+        if not legacy_accepted:
+            models.require_writer(updated, "rc4-content.v1")
+        if proposal.get("project_id") != document["project_id"]:
+            raise ModelError("collaboration/adopt_proposal/proposal_ref",
+                             "a proposal of another project cannot become this project's truth")
+        if proposal.get("maturity") != "argument":
+            raise ModelError("collaboration/adopt_proposal/proposal_ref",
+                             "a framing proposal sets no direction; adopt an argument Narrative")
+        if document.get("narrative") and document["narrative"] != proposal_ref:
+            invalidated.append({"ref": document["narrative"], "reason": "narrative_replaced"})
+        from .variant_requests import require_fixed_narrative
+        require_fixed_narrative(store, document, proposal_ref)
+        updated["narrative"] = proposal_ref
+        current_plan_ref = document.get("content_plan")
+        if current_plan_ref:
+            current_plan = store.read_object_json(current_plan_ref)
+            if (current_plan.get("schema_version") == "content_plan.v2"
+                    and current_plan.get("narrative_ref") not in (None, proposal_ref)):
+                invalidated.append({"ref": current_plan_ref, "reason": "plan_bound_to_previous_narrative"})
+    else:
+        if proposal.get("project_id") != document["project_id"]:
+            raise ModelError("collaboration/adopt_proposal/proposal_ref",
+                             "a proposal of another project cannot become this project's truth")
+        if proposal.get("mode") not in ("planned", "bound"):
+            raise ModelError("collaboration/adopt_proposal/proposal_ref",
+                             "imported_mapping is not adopted through a proposal promotion")
+        narrative_ref = proposal.get("narrative_ref")
+        if narrative_ref is not None and narrative_ref != document.get("narrative"):
+            raise ModelError("collaboration/adopt_proposal/proposal_ref",
+                             "the plan binds a Narrative that is not the current pointer")
+        if document.get("content_plan") and document["content_plan"] != proposal_ref:
+            invalidated.append({"ref": document["content_plan"], "reason": "plan_replaced"})
+        updated["content_plan"] = proposal_ref
+        if (proposal.get('input') or {}).get('speech_policy', {}).get('output') in (
+                'pptx_notes', 'separate_script', 'both'):
+            models.require_writer(updated, 'rc3.v1')
+    models.validate_document_semantics(updated)
+    return updated, invalidated, schema
+
+
 def adopt_proposal(project, *, input: dict, base_revision: str, operation_id: str,
                    adapter_context=None) -> dict:
     """Promote a proposal Ref to the current pointer inside a covering Decision.
@@ -1667,121 +1788,8 @@ def adopt_proposal(project, *, input: dict, base_revision: str, operation_id: st
             return replay
         if document["revision_id"] != base_revision:
             raise StoreError("base_revision", "base revision is not current; reload and retry")
-        region = collaboration._require_region(store, document)
-        proposal_ref = input.get("proposal_ref")
-        decision_ref = input.get("decision_ref")
-        write_scope = input.get("write_scope")
-        if not isinstance(proposal_ref, dict) or not isinstance(decision_ref, dict):
-            raise ModelError("collaboration/adopt_proposal",
-                             "proposal_ref and decision_ref are required Refs")
-        head = collaboration._head_for_identity(store, region, "decisions", "decision_id",
-                                               collaboration._identity_of(store, decision_ref))
-        if head is None:
-            raise ModelError("collaboration/adopt_proposal/decision_ref",
-                             "the decision must be referenced by the current collaboration region")
-        _, decision = head
-        if (decision.get("disposition") != "accepted"
-                or decision.get("authority_mode") not in ("direct_user", "delegated")):
-            raise ModelError("collaboration/adopt_proposal/decision_ref",
-                             "authority_insufficient: adoption needs an accepted decision "
-                             "recorded as direct_user or delegated")
-        state = dependency_slices.decision_effectiveness(store, document, head[0])
-        if not state["effective"]:
-            raise ModelError("collaboration/adopt_proposal/decision_ref",
-                             f"the decision is not effective: {state['reasons']}")
-        if not isinstance(write_scope, dict):
-            raise ModelError("collaboration/adopt_proposal/write_scope",
-                             "adoption names its exact write scope")
-        from . import eligibility
-        eligibility.guard(store, document, "proposal.adopt", context={"scope": write_scope})
-        gaps = scope_gaps(store, decision.get("scope") or {}, write_scope)
-        if gaps:
-            raise ModelError("collaboration/adopt_proposal/write_scope",
-                             f"scope_exceeded: the decision does not cover {gaps}")
-        try:
-            proposal = store.read_object_json(proposal_ref)
-        except Exception as exc:  # noqa: BLE001
-            raise ModelError("collaboration/adopt_proposal/proposal_ref",
-                             f"proposal is not stored: {exc}") from exc
-        schema = proposal.get("schema_version")
-        # A decision adopts only the proposals it names: an accepted direction
-        # with no subject refs approves no specific artifact, so it must not be
-        # usable to promote any proposal of the topic (CONTRACTS §3.1: a
-        # decision is about ProposalRefs, and a projection is a registered
-        # slice of the named artifact).
-        subjects = decision.get("subject_refs") or []
-        if not subjects:
-            raise ModelError(
-                "collaboration/adopt_proposal/decision_ref",
-                "the decision names no proposal (empty subject_refs), so it covers no specific "
-                "artifact; record a decision that names this proposal Ref with a registered "
-                "projection before adopting it")
-        allowed = _ADOPTION_PROJECTIONS.get(schema, ())
-        matches = [item for item in subjects
-                   if (item.get("artifact_ref") or {}).get("sha256") == proposal_ref.get("sha256")]
-        if not matches:
-            raise ModelError("collaboration/adopt_proposal/proposal_ref",
-                             "the decision does not name this proposal among its subject refs")
-        if allowed and not any(item.get("projection") in allowed for item in matches):
-            raise ModelError(
-                "collaboration/adopt_proposal/proposal_ref",
-                f"the decision names this proposal with projection "
-                f"{sorted({item.get('projection') for item in matches})}; adopting a {schema} "
-                f"needs one of {list(allowed)}")
-        if schema not in ("narrative.v1", "content_plan.v2"):
-            raise ModelError(
-                "collaboration/adopt_proposal/proposal_ref",
-                "only Narrative and ContentPlan proposals adopt through this action; "
-                "Page candidates reuse the existing candidate adoption semantics")
-        topic = decision.get("topic")
-        allowed_topics = {"narrative.v1": ("direction",),
-                          "content_plan.v2": ("manuscript", "direction", "tradeoff")}[schema]
-        if topic not in allowed_topics:
-            raise ModelError("collaboration/adopt_proposal/decision_ref",
-                             f"a {schema} proposal is adopted by a {allowed_topics} decision, not {topic!r}")
-        invalidated = []
-        updated = dict(document)
-        if schema == "narrative.v1":
-            legacy_accepted = _committed_legacy_narrative(store, document, proposal_ref)
-            models.validate_narrative_semantics(
-                proposal, policy=None if legacy_accepted else "argument-connectivity.v1")
-            if not legacy_accepted:
-                models.require_writer(updated, "rc4-content.v1")
-            if proposal.get("project_id") != document["project_id"]:
-                raise ModelError("collaboration/adopt_proposal/proposal_ref",
-                                 "a proposal of another project cannot become this project's truth")
-            if proposal.get("maturity") != "argument":
-                raise ModelError("collaboration/adopt_proposal/proposal_ref",
-                                 "a framing proposal sets no direction; adopt an argument Narrative")
-            if document.get("narrative") and document["narrative"] != proposal_ref:
-                invalidated.append({"ref": document["narrative"], "reason": "narrative_replaced"})
-            from .variant_requests import require_fixed_narrative
-            require_fixed_narrative(store, document, proposal_ref)
-            updated["narrative"] = proposal_ref
-            current_plan_ref = document.get("content_plan")
-            if current_plan_ref:
-                current_plan = store.read_object_json(current_plan_ref)
-                if (current_plan.get("schema_version") == "content_plan.v2"
-                        and current_plan.get("narrative_ref") not in (None, proposal_ref)):
-                    invalidated.append({"ref": current_plan_ref, "reason": "plan_bound_to_previous_narrative"})
-        else:
-            if proposal.get("project_id") != document["project_id"]:
-                raise ModelError("collaboration/adopt_proposal/proposal_ref",
-                                 "a proposal of another project cannot become this project's truth")
-            if proposal.get("mode") not in ("planned", "bound"):
-                raise ModelError("collaboration/adopt_proposal/proposal_ref",
-                                 "imported_mapping is not adopted through a proposal promotion")
-            narrative_ref = proposal.get("narrative_ref")
-            if narrative_ref is not None and narrative_ref != document.get("narrative"):
-                raise ModelError("collaboration/adopt_proposal/proposal_ref",
-                                 "the plan binds a Narrative that is not the current pointer")
-            if document.get("content_plan") and document["content_plan"] != proposal_ref:
-                invalidated.append({"ref": document["content_plan"], "reason": "plan_replaced"})
-            updated["content_plan"] = proposal_ref
-            if (proposal.get('input') or {}).get('speech_policy', {}).get('output') in (
-                    'pptx_notes', 'separate_script', 'both'):
-                models.require_writer(updated, 'rc3.v1')
-        models.validate_document_semantics(updated)
+        updated, invalidated, schema = check_proposal_adoption(store, document, input=input)
+        proposal_ref = input["proposal_ref"]
         return collaboration.commit_collaboration_change(
             store, document, operation_id=operation_id, action=action, digest=digest,
             description=f"adopt proposal {proposal_ref['sha256'][:8]}",

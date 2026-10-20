@@ -111,3 +111,11 @@ G0 不要求把专业认可或真实 HOME 激活改成 PASS；它们仍是独立
 本回合开始时 `/workspace/Deck-Master` 已在另一实现分支并带有产品源码未提交改动。没有修改、执行或提交这些文件；为本回合限定的文档工作另挂载 `/workspace/Deck-Master-spec-review`，分支 `codex/webui-post127-spec-review-20261020`。本回合没有启动产品实现、推送、创建 PR、合并或发布。后续实现状态不能由此文档检查推导。
 
 重新用 `git show 4f7f2a3b:<path>` 核对原 manifest：14/14 bytes 与 SHA256 匹配；另有 manifest 本身，共 15 文件。独立静态断言确认 9 卡、50 AC、唯一 owner、ACCEPTANCE 与 traceability 的逐项 pass_condition 一致。直接读 `3217a656` 的 Review v1/v2 schema，二者 finding 均要求 finding_id/impact/resolution。附件脚本未执行；产品、浏览器、安装、实际 Host、专业阅读、人类认可均未在本回合验证。
+
+## 开发接续：父线程确认与隔离检查点（取代上文 pending）
+
+父线程明确确认 PR127 最终可用 head `3217a65630023244eac5a09b3e7570954cce9188`，CI run `39401753812` completed/success、全部 jobs 通过。此为外部提供证据，不重试 Forbidden 的 PR 元信息读取。main 尚为 09f0213d 时，采用未合并依赖分支，不合并 PR127。包报告绑定 d1ee1c7d，运行代码/资源与最终 head 无差异，原证据适用但不冒称精确 head 构建。G0 已满足，产品实施获明确授权。
+
+现有六文件草稿与本任务前段实现记录一致（两个核心纯检查抽取、读取服务/路由及测试），未发现无关用户改动。按 SHA256 保存至 `/workspace/webui-spec-input/implementation-resume/` 并保留原工作区。开发接续在新工作树 `/workspace/Deck-Master-webui`、分支 `codex/webui-content-methods-impl-20261020`，由 4c6102ba（包含最终基线）建立，带入最新规格 a5c40511（本分支对应 39c8256f）。原工作树与 PR127 未修改。
+
+无副作用回归曾捕获决定预检通过 resolve_evidence 写入指令文本，已将该持久化步骤留在正式事务入口，纯检查只接收已存在的证据 Ref。当前验证必须按最终实现 SHA 重新绑定；此前通过记录不自动关闭全部 AC。
