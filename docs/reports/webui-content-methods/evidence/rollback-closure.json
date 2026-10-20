@@ -1,0 +1,3365 @@
+{
+  "status": "PASS",
+  "prefix": "/tmp/webui-managed-closure",
+  "register_host": false,
+  "real_home_modified": false,
+  "steps": [
+    {
+      "stage": "baseline",
+      "release_id": "3217a6563002-eeeb272a1653",
+      "activation": {
+        "status": "already_active",
+        "release_id": "3217a6563002-eeeb272a1653",
+        "cli_active": true,
+        "migration": {
+          "migrated": false,
+          "moved": null,
+          "removed_links": [],
+          "skipped_entries": []
+        },
+        "host_skill": "host_unregistered",
+        "skill_link": null,
+        "skill_links": [
+          {
+            "name": "deck-master",
+            "status": "host_unregistered",
+            "skill_link": null
+          },
+          {
+            "name": "deck-content",
+            "status": "host_unregistered",
+            "skill_link": null
+          },
+          {
+            "name": "deck-design",
+            "status": "host_unregistered",
+            "skill_link": null
+          },
+          {
+            "name": "deck-review",
+            "status": "host_unregistered",
+            "skill_link": null
+          }
+        ],
+        "transaction_id": "dd4c5d72-e553-4c39-a73d-2c7621683d9f",
+        "transaction_state": "completed",
+        "recovered": false,
+        "observed_current_release_id": "3217a6563002-eeeb272a1653",
+        "current_install_state": "verified"
+      },
+      "probe": {
+        "package": "/tmp/webui-managed-closure/.deck-master/releases/3217a6563002-eeeb272a1653/venv/lib/python3.12/site-packages/deck_master",
+        "capabilities": [
+          "ui_draft.v1",
+          "ui_gallery.v1",
+          "ui_overview.v1",
+          "thumbnails.v1",
+          "fixed_snapshot.v1",
+          "text_range.v1",
+          "page_detail.v1",
+          "annotations.v1",
+          "changes.v1",
+          "operations.v1",
+          "candidates.v1",
+          "stages.v1",
+          "run_desk.v1",
+          "style_recipes.v1",
+          "content_ops.v1",
+          "exports.v1",
+          "restoration.v1",
+          "workbench_actions.v1",
+          "action_targets.v1",
+          "icon_quality.v1",
+          "result_reading.v1",
+          "history_summary.v1",
+          "visual_reference.v1",
+          "material_uploads.v1",
+          "external_review.v1",
+          "delivery_eligibility.v1",
+          "collaboration.v1",
+          "rc3-entry.v1"
+        ],
+        "projects": {
+          "modern": {
+            "url": "http://127.0.0.1:44075/",
+            "info": {
+              "project_id": "project",
+              "project_identity": "360183f809ca4a178243bb346d54cd105d72f3c27fc224ebc44f9615d12f3bbf",
+              "title": "记录未知与紧急交接",
+              "revision_id": "1a982d9e744948429ad67336f3dab188",
+              "project_format": "workbench.v3",
+              "minimum_writer": "method-catalog.v1",
+              "core_readers": [
+                "deckmaster-current.v1",
+                "deckmaster-current.v2"
+              ],
+              "core_writers": [
+                "generation.v1",
+                "content-plan.v1",
+                "changes.v1",
+                "candidates.v1",
+                "run-desk.v1",
+                "style-recipes.v1",
+                "content-ops.v1",
+                "content-candidates.v1",
+                "icon-quality.v1",
+                "workbench-quality.v1",
+                "collaboration.v1",
+                "rc3.v1",
+                "rc3-entry.v1",
+                "rc4-content.v1",
+                "method-catalog.v1"
+              ],
+              "host_execution": "handoff_required",
+              "draft_journal": "ui_draft.v1",
+              "sample": null,
+              "control_revision_id": "1a982d9e744948429ad67336f3dab188",
+              "collaboration": {
+                "project_id": "project",
+                "revision_id": "1a982d9e744948429ad67336f3dab188",
+                "minimum_writer": "method-catalog.v1",
+                "migrated": true,
+                "authority_policy": "traceable",
+                "quality_profile": {
+                  "content_review_requirement": "independent_model_or_human",
+                  "override_decision_ref": null,
+                  "requirement_origin": "default_new_argument"
+                },
+                "request": {
+                  "background_request_ids": [],
+                  "closed": true,
+                  "closed_reason": "completed",
+                  "content_intent": "content_full",
+                  "instruction_evidence": {
+                    "actor_id": null,
+                    "assurance": "host_attested",
+                    "kind": "host_attested_instruction",
+                    "presentation_ref": null,
+                    "source_locator": "cloud:webui:three-scenarios",
+                    "source_ref": {
+                      "path": ".deckmaster/objects/ce/ceb7ba35ce8e6eeb89d6e00bc134c73aeaae7858d347ba4c83111325b41daf9f.txt",
+                      "sha256": "ceb7ba35ce8e6eeb89d6e00bc134c73aeaae7858d347ba4c83111325b41daf9f"
+                    },
+                    "transport_receipt_ref": null
+                  },
+                  "intent": "content_only",
+                  "pause_reason": null,
+                  "paused": false,
+                  "request_id": "req-d453241bec93",
+                  "scope": {
+                    "allow_page_membership_change": true,
+                    "allow_page_order_change": true,
+                    "external_artifact_ref": null,
+                    "layers": [
+                      "narrative",
+                      "plan",
+                      "page_copy",
+                      "speech",
+                      "design",
+                      "blueprint",
+                      "svg",
+                      "review",
+                      "output"
+                    ],
+                    "page_ids": [],
+                    "page_manifest_ref": null,
+                    "purpose": "working",
+                    "subject": "deck"
+                  },
+                  "variant": null
+                },
+                "decisions": [
+                  {
+                    "authority_mode": "direct_user",
+                    "basis": [
+                      {
+                        "identity": "audience",
+                        "kind": "task_fact",
+                        "projection": "value",
+                        "ref": null,
+                        "sha256": "f2c0ff4713b1b5c5307ccc9f23bfd7c85b60b8ca16d07f78540939b82ab9a978"
+                      },
+                      {
+                        "identity": "brief",
+                        "kind": "task_fact",
+                        "projection": "value",
+                        "ref": null,
+                        "sha256": "44aaffd6aa538c18f8a2387a17a89387aae4abd41287918f09ed0ba9dd09cb5f"
+                      }
+                    ],
+                    "created_at": "2026-10-20T11:57:12Z",
+                    "decision_id": "dec-c19a4e7d95bc",
+                    "delegation_ref": null,
+                    "disposition": "accepted",
+                    "evidence": {
+                      "actor_id": null,
+                      "assurance": "host_attested",
+                      "kind": "host_attested_instruction",
+                      "presentation_ref": null,
+                      "source_locator": "cloud:webui:scenario-direction:lesson",
+                      "source_ref": {
+                        "path": ".deckmaster/objects/5c/5c30abffa61739bcd5efaad7b6930322202767a023aa085e80c22c97cdafb2e7.txt",
+                        "sha256": "5c30abffa61739bcd5efaad7b6930322202767a023aa085e80c22c97cdafb2e7"
+                      },
+                      "transport_receipt_ref": null
+                    },
+                    "invalidated_by": null,
+                    "project_id": "project",
+                    "replaces": null,
+                    "request_id": "req-d453241bec93",
+                    "schema_version": "collaboration_decision.v1",
+                    "scope": {
+                      "allow_page_membership_change": false,
+                      "allow_page_order_change": false,
+                      "external_artifact_ref": null,
+                      "layers": [
+                        "narrative"
+                      ],
+                      "page_ids": [],
+                      "page_manifest_ref": null,
+                      "purpose": "working",
+                      "subject": "deck"
+                    },
+                    "status": "active",
+                    "subject_refs": [
+                      {
+                        "artifact_kind": "narrative",
+                        "artifact_ref": {
+                          "path": ".deckmaster/objects/9f/9fe81deb38c02e53dbbef891f1acbde07ca831524fd7abbf6eabc63c31dd37f1.json",
+                          "sha256": "9fe81deb38c02e53dbbef891f1acbde07ca831524fd7abbf6eabc63c31dd37f1"
+                        },
+                        "projection": "direction"
+                      }
+                    ],
+                    "topic": "direction",
+                    "value": {
+                      "selected": "lesson"
+                    }
+                  }
+                ],
+                "authorizations": [],
+                "request_source_key": "72a171c1ef5ca2b7eb308eba333939a9069f645c02504f1aec50be889481e837",
+                "effective_decisions": [
+                  {
+                    "ref": {
+                      "path": ".deckmaster/objects/c4/c44566b5eba793e089b8c85d3be64428e496be4034f7da1b52c1d02b5cf90519.json",
+                      "sha256": "c44566b5eba793e089b8c85d3be64428e496be4034f7da1b52c1d02b5cf90519"
+                    },
+                    "record": {
+                      "authority_mode": "direct_user",
+                      "basis": [
+                        {
+                          "identity": "audience",
+                          "kind": "task_fact",
+                          "projection": "value",
+                          "ref": null,
+                          "sha256": "f2c0ff4713b1b5c5307ccc9f23bfd7c85b60b8ca16d07f78540939b82ab9a978"
+                        },
+                        {
+                          "identity": "brief",
+                          "kind": "task_fact",
+                          "projection": "value",
+                          "ref": null,
+                          "sha256": "44aaffd6aa538c18f8a2387a17a89387aae4abd41287918f09ed0ba9dd09cb5f"
+                        }
+                      ],
+                      "created_at": "2026-10-20T11:57:12Z",
+                      "decision_id": "dec-c19a4e7d95bc",
+                      "delegation_ref": null,
+                      "disposition": "accepted",
+                      "evidence": {
+                        "actor_id": null,
+                        "assurance": "host_attested",
+                        "kind": "host_attested_instruction",
+                        "presentation_ref": null,
+                        "source_locator": "cloud:webui:scenario-direction:lesson",
+                        "source_ref": {
+                          "path": ".deckmaster/objects/5c/5c30abffa61739bcd5efaad7b6930322202767a023aa085e80c22c97cdafb2e7.txt",
+                          "sha256": "5c30abffa61739bcd5efaad7b6930322202767a023aa085e80c22c97cdafb2e7"
+                        },
+                        "transport_receipt_ref": null
+                      },
+                      "invalidated_by": null,
+                      "project_id": "project",
+                      "replaces": null,
+                      "request_id": "req-d453241bec93",
+                      "schema_version": "collaboration_decision.v1",
+                      "scope": {
+                        "allow_page_membership_change": false,
+                        "allow_page_order_change": false,
+                        "external_artifact_ref": null,
+                        "layers": [
+                          "narrative"
+                        ],
+                        "page_ids": [],
+                        "page_manifest_ref": null,
+                        "purpose": "working",
+                        "subject": "deck"
+                      },
+                      "status": "active",
+                      "subject_refs": [
+                        {
+                          "artifact_kind": "narrative",
+                          "artifact_ref": {
+                            "path": ".deckmaster/objects/9f/9fe81deb38c02e53dbbef891f1acbde07ca831524fd7abbf6eabc63c31dd37f1.json",
+                            "sha256": "9fe81deb38c02e53dbbef891f1acbde07ca831524fd7abbf6eabc63c31dd37f1"
+                          },
+                          "projection": "direction"
+                        }
+                      ],
+                      "topic": "direction",
+                      "value": {
+                        "selected": "lesson"
+                      }
+                    },
+                    "effective": false,
+                    "reasons": [
+                      "request_closed"
+                    ],
+                    "basis": {
+                      "matched": [
+                        "task_fact:audience:value",
+                        "task_fact:brief:value"
+                      ],
+                      "stale": [],
+                      "unregistered": [],
+                      "current": true
+                    }
+                  }
+                ],
+                "effective_authorizations": [],
+                "blocking_cards": [
+                  {
+                    "action": "dispatch.compose",
+                    "decision": {
+                      "schema_version": "eligibility.v1",
+                      "allowed": false,
+                      "action": "dispatch.compose",
+                      "enforcement": "active",
+                      "scope": {
+                        "allow_page_membership_change": true,
+                        "allow_page_order_change": true,
+                        "external_artifact_ref": null,
+                        "layers": [
+                          "blueprint",
+                          "design",
+                          "narrative",
+                          "output",
+                          "page_copy",
+                          "plan",
+                          "review",
+                          "speech",
+                          "svg"
+                        ],
+                        "page_ids": [],
+                        "page_manifest_ref": null,
+                        "purpose": "working",
+                        "subject": "deck"
+                      },
+                      "required_artifact_refs": [
+                        {
+                          "path": ".deckmaster/objects/03/03269e2a69003ba1272f8b43bfcbb0152be39b6679a82dbb6aab10ce2b3ab900.json",
+                          "sha256": "03269e2a69003ba1272f8b43bfcbb0152be39b6679a82dbb6aab10ce2b3ab900"
+                        },
+                        {
+                          "path": ".deckmaster/objects/94/9448f956da872ed8d74e670738e39dc52b1652bea5b7d24a70ef8ca41cb9a4f0.json",
+                          "sha256": "9448f956da872ed8d74e670738e39dc52b1652bea5b7d24a70ef8ca41cb9a4f0"
+                        }
+                      ],
+                      "required_decision_topics": [],
+                      "missing_decision_topics": [],
+                      "reason_codes": [
+                        "request_closed"
+                      ],
+                      "reasons": [
+                        {
+                          "code": "request_closed",
+                          "detail": "the current request is closed (completed); start a new request for new work"
+                        }
+                      ],
+                      "responsible_role": "user",
+                      "next_action": "start a new work request for the new work",
+                      "decision_card_ref_or_projection": null,
+                      "dependency_slices": [],
+                      "eligibility_digest": "7e3cf1748393e150936e0727a3d20807a5609b65898d55758ff94b6135bcae09",
+                      "authority_assurance": "host_attested",
+                      "request_id": "req-d453241bec93",
+                      "artifact_revision_id": "1a982d9e744948429ad67336f3dab188",
+                      "control_revision_id": "1a982d9e744948429ad67336f3dab188",
+                      "facts_only": false,
+                      "binding": null,
+                      "preproduction": null,
+                      "delivery": null,
+                      "targets": {
+                        "page_ids": null,
+                        "layers": [],
+                        "subject": null
+                      }
+                    }
+                  },
+                  {
+                    "action": "dispatch.blueprint",
+                    "decision": {
+                      "schema_version": "eligibility.v1",
+                      "allowed": false,
+                      "action": "dispatch.blueprint",
+                      "enforcement": "active",
+                      "scope": {
+                        "allow_page_membership_change": true,
+                        "allow_page_order_change": true,
+                        "external_artifact_ref": null,
+                        "layers": [
+                          "blueprint",
+                          "design",
+                          "narrative",
+                          "output",
+                          "page_copy",
+                          "plan",
+                          "review",
+                          "speech",
+                          "svg"
+                        ],
+                        "page_ids": [],
+                        "page_manifest_ref": null,
+                        "purpose": "working",
+                        "subject": "deck"
+                      },
+                      "required_artifact_refs": [
+                        {
+                          "path": ".deckmaster/objects/03/03269e2a69003ba1272f8b43bfcbb0152be39b6679a82dbb6aab10ce2b3ab900.json",
+                          "sha256": "03269e2a69003ba1272f8b43bfcbb0152be39b6679a82dbb6aab10ce2b3ab900"
+                        },
+                        {
+                          "path": ".deckmaster/objects/94/9448f956da872ed8d74e670738e39dc52b1652bea5b7d24a70ef8ca41cb9a4f0.json",
+                          "sha256": "9448f956da872ed8d74e670738e39dc52b1652bea5b7d24a70ef8ca41cb9a4f0"
+                        }
+                      ],
+                      "required_decision_topics": [],
+                      "missing_decision_topics": [],
+                      "reason_codes": [
+                        "request_closed",
+                        "authority_insufficient",
+                        "needs_reviewer"
+                      ],
+                      "reasons": [
+                        {
+                          "code": "request_closed",
+                          "detail": "the current request is closed (completed); start a new request for new work"
+                        },
+                        {
+                          "code": "authority_insufficient",
+                          "detail": "no authorization names 'dispatch.blueprint' within the request scope",
+                          "action": "dispatch.blueprint"
+                        },
+                        {
+                          "code": "needs_reviewer",
+                          "detail": "the required preproduction content review has no acceptable reviewer; a review draft can still be returned, and 'continue' does not waive it",
+                          "requirement": "independent_model_or_human",
+                          "review_status": "missing",
+                          "missing_units": [
+                            "argument",
+                            "page_copy",
+                            "progression"
+                          ],
+                          "open_findings": 0
+                        }
+                      ],
+                      "responsible_role": "user",
+                      "next_action": "start a new work request for the new work",
+                      "decision_card_ref_or_projection": null,
+                      "dependency_slices": [],
+                      "eligibility_digest": "8cdbaf210eb090059d99cca90adc4a7c4064e9ea7c339a450d161a931c28a7f7",
+                      "authority_assurance": "host_attested",
+                      "request_id": "req-d453241bec93",
+                      "artifact_revision_id": "1a982d9e744948429ad67336f3dab188",
+                      "control_revision_id": "1a982d9e744948429ad67336f3dab188",
+                      "facts_only": false,
+                      "binding": null,
+                      "preproduction": {
+                        "requirement": "independent_model_or_human",
+                        "declared_requirement": "independent_model_or_human",
+                        "requirement_origin": "default_new_argument",
+                        "requirement_reasons": [],
+                        "required": true,
+                        "satisfied": false,
+                        "status": "missing",
+                        "units": [
+                          "argument",
+                          "page_copy",
+                          "progression"
+                        ],
+                        "satisfied_units": [],
+                        "missing_units": [
+                          "argument",
+                          "page_copy",
+                          "progression"
+                        ],
+                        "blocking_findings": [],
+                        "review_refs": [],
+                        "needs_reviewer": true,
+                        "via": null,
+                        "reasons": []
+                      },
+                      "delivery": null,
+                      "targets": {
+                        "page_ids": null,
+                        "layers": [],
+                        "subject": null
+                      }
+                    }
+                  },
+                  {
+                    "action": "export.delivery",
+                    "decision": {
+                      "schema_version": "eligibility.v1",
+                      "allowed": false,
+                      "action": "export.delivery",
+                      "enforcement": "active",
+                      "scope": {
+                        "allow_page_membership_change": true,
+                        "allow_page_order_change": true,
+                        "external_artifact_ref": null,
+                        "layers": [
+                          "blueprint",
+                          "design",
+                          "narrative",
+                          "output",
+                          "page_copy",
+                          "plan",
+                          "review",
+                          "speech",
+                          "svg"
+                        ],
+                        "page_ids": [],
+                        "page_manifest_ref": null,
+                        "purpose": "working",
+                        "subject": "deck"
+                      },
+                      "required_artifact_refs": [
+                        {
+                          "path": ".deckmaster/objects/03/03269e2a69003ba1272f8b43bfcbb0152be39b6679a82dbb6aab10ce2b3ab900.json",
+                          "sha256": "03269e2a69003ba1272f8b43bfcbb0152be39b6679a82dbb6aab10ce2b3ab900"
+                        },
+                        {
+                          "path": ".deckmaster/objects/94/9448f956da872ed8d74e670738e39dc52b1652bea5b7d24a70ef8ca41cb9a4f0.json",
+                          "sha256": "9448f956da872ed8d74e670738e39dc52b1652bea5b7d24a70ef8ca41cb9a4f0"
+                        }
+                      ],
+                      "required_decision_topics": [
+                        "delivery_acceptance"
+                      ],
+                      "missing_decision_topics": [
+                        "delivery_acceptance"
+                      ],
+                      "reason_codes": [
+                        "request_closed",
+                        "decision_needed",
+                        "authority_insufficient"
+                      ],
+                      "reasons": [
+                        {
+                          "code": "request_closed",
+                          "detail": "the current request is closed (completed); start a new request for new work"
+                        },
+                        {
+                          "code": "decision_needed",
+                          "detail": "required business decisions are missing or ineffective: delivery_acceptance",
+                          "missing": "decision",
+                          "topics": [
+                            "delivery_acceptance"
+                          ],
+                          "card": {
+                            "kind": "decision_card",
+                            "topics": [
+                              "delivery_acceptance"
+                            ],
+                            "projection": "delivery_acceptance",
+                            "subject_refs": [],
+                            "scope": {
+                              "allow_page_membership_change": true,
+                              "allow_page_order_change": true,
+                              "external_artifact_ref": null,
+                              "layers": [
+                                "narrative",
+                                "plan",
+                                "page_copy",
+                                "speech",
+                                "design",
+                                "blueprint",
+                                "svg",
+                                "review",
+                                "output"
+                              ],
+                              "page_ids": [],
+                              "page_manifest_ref": null,
+                              "purpose": "working",
+                              "subject": "deck"
+                            }
+                          }
+                        },
+                        {
+                          "code": "authority_insufficient",
+                          "detail": "no authorization names 'export.delivery' within the request scope",
+                          "action": "export.delivery"
+                        }
+                      ],
+                      "responsible_role": "user",
+                      "next_action": "start a new work request for the new work",
+                      "decision_card_ref_or_projection": null,
+                      "dependency_slices": [],
+                      "eligibility_digest": "670cd603f9cf6157c005f8867a462c9e3221af8eea32bc74a3307c5f1c9cdd12",
+                      "authority_assurance": "host_attested",
+                      "request_id": "req-d453241bec93",
+                      "artifact_revision_id": "1a982d9e744948429ad67336f3dab188",
+                      "control_revision_id": "1a982d9e744948429ad67336f3dab188",
+                      "facts_only": false,
+                      "binding": null,
+                      "preproduction": null,
+                      "delivery": {
+                        "professional": {
+                          "required": false,
+                          "satisfied": true,
+                          "human_signoff": false,
+                          "evidence": {
+                            "professional_use": "not_evaluated",
+                            "desktop_editing": "not_evaluated"
+                          },
+                          "reviews_considered": 0,
+                          "gap_reasons": [],
+                          "reviews": []
+                        },
+                        "output_pptx": null,
+                        "artifact_revision_id": "1a982d9e744948429ad67336f3dab188",
+                        "control_revision_id": "1a982d9e744948429ad67336f3dab188"
+                      },
+                      "targets": {
+                        "page_ids": null,
+                        "layers": [],
+                        "subject": null
+                      }
+                    }
+                  }
+                ]
+              },
+              "completion": {
+                "state": "completed",
+                "request_id": "req-d453241bec93",
+                "intent": "content_only",
+                "content_intent": "content_full",
+                "artifact_revision_id": "1a982d9e744948429ad67336f3dab188",
+                "effective_scope": {
+                  "allow_page_membership_change": true,
+                  "allow_page_order_change": true,
+                  "external_artifact_ref": null,
+                  "layers": [
+                    "narrative",
+                    "plan",
+                    "page_copy",
+                    "speech",
+                    "design",
+                    "blueprint",
+                    "svg",
+                    "review",
+                    "output"
+                  ],
+                  "page_ids": [],
+                  "page_manifest_ref": null,
+                  "purpose": "working",
+                  "subject": "deck"
+                },
+                "outputs": [
+                  {
+                    "path": ".deckmaster/objects/9f/9fe81deb38c02e53dbbef891f1acbde07ca831524fd7abbf6eabc63c31dd37f1.json",
+                    "sha256": "9fe81deb38c02e53dbbef891f1acbde07ca831524fd7abbf6eabc63c31dd37f1"
+                  },
+                  {
+                    "path": ".deckmaster/objects/6e/6e671e715dd5acab68eb72cbfe2fb1489428eca11e9599fd31c05299980e1192.json",
+                    "sha256": "6e671e715dd5acab68eb72cbfe2fb1489428eca11e9599fd31c05299980e1192"
+                  }
+                ],
+                "checks": [
+                  {
+                    "kind": "requested_content",
+                    "status": "pass",
+                    "basis": "content phases are current"
+                  }
+                ],
+                "missing": [],
+                "responsible_role": "caller",
+                "next_action": "return_requested_content"
+              },
+              "migration": {
+                "project_id": "project",
+                "revision_id": "1a982d9e744948429ad67336f3dab188",
+                "plan": {
+                  "schema_version": "collaboration_migration_plan.v1",
+                  "current_revision": "1a982d9e744948429ad67336f3dab188",
+                  "minimum_writer": "method-catalog.v1",
+                  "target_minimum_writer": "rc3-entry.v1",
+                  "needs_migration": false,
+                  "counts": {
+                    "pages": 2,
+                    "sources": 1,
+                    "reviews": 0,
+                    "tasks": 3,
+                    "runnable_tasks": 0
+                  },
+                  "tasks_to_supersede": [],
+                  "unknown_calls": 0,
+                  "known_unknown_calls": 0,
+                  "unreadable_task_refs": [],
+                  "limitations": [],
+                  "pending_decisions": [],
+                  "reusable": {
+                    "page_refs": [
+                      {
+                        "path": ".deckmaster/objects/03/03269e2a69003ba1272f8b43bfcbb0152be39b6679a82dbb6aab10ce2b3ab900.json",
+                        "sha256": "03269e2a69003ba1272f8b43bfcbb0152be39b6679a82dbb6aab10ce2b3ab900"
+                      },
+                      {
+                        "path": ".deckmaster/objects/94/9448f956da872ed8d74e670738e39dc52b1652bea5b7d24a70ef8ca41cb9a4f0.json",
+                        "sha256": "9448f956da872ed8d74e670738e39dc52b1652bea5b7d24a70ef8ca41cb9a4f0"
+                      }
+                    ],
+                    "output_pptx": false,
+                    "candidates": 0
+                  }
+                },
+                "plan_digest": "9c653fde08eb2f232ddf122420bf5dd1a46ab3b99f15f0a08ee1ab86b6048c09"
+              },
+              "effective_actions": [
+                {
+                  "action": "drafts",
+                  "supported": true,
+                  "writable": true,
+                  "reason_code": null
+                },
+                {
+                  "action": "annotations",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "request_closed"
+                },
+                {
+                  "action": "changes",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "request_closed"
+                },
+                {
+                  "action": "candidates",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "request_closed"
+                },
+                {
+                  "action": "content",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "request_closed"
+                },
+                {
+                  "action": "inputs",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "request_closed"
+                },
+                {
+                  "action": "styles",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "request_closed"
+                },
+                {
+                  "action": "icons",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "request_closed"
+                },
+                {
+                  "action": "run_desk",
+                  "supported": true,
+                  "writable": true,
+                  "reason_code": null
+                },
+                {
+                  "action": "exports",
+                  "supported": true,
+                  "writable": true,
+                  "reason_code": null
+                },
+                {
+                  "action": "restoration",
+                  "supported": true,
+                  "writable": true,
+                  "reason_code": null
+                }
+              ]
+            },
+            "historical_revision": "25c61c192d194b4f87686a0c3535e92a",
+            "task_ids": [
+              "dfc1f6d8d534",
+              "c65be018a055",
+              "7ef35c4ddf2a"
+            ]
+          },
+          "legacy": {
+            "url": "http://127.0.0.1:35247/",
+            "info": {
+              "project_id": "historical-6dd9f1cb",
+              "project_identity": "3eceb812964e2ba2f87bded3aeefde6dd131c4d8fb101cb741ec0868c73b2164",
+              "title": "",
+              "revision_id": "58902af010e346e2bcdd65138d8ec25d",
+              "project_format": "deck_document.v1",
+              "minimum_writer": null,
+              "core_readers": [
+                "deckmaster-current.v1",
+                "deckmaster-current.v2"
+              ],
+              "core_writers": [
+                "generation.v1",
+                "content-plan.v1",
+                "changes.v1",
+                "candidates.v1",
+                "run-desk.v1",
+                "style-recipes.v1",
+                "content-ops.v1",
+                "content-candidates.v1",
+                "icon-quality.v1",
+                "workbench-quality.v1",
+                "collaboration.v1",
+                "rc3.v1",
+                "rc3-entry.v1",
+                "rc4-content.v1",
+                "method-catalog.v1"
+              ],
+              "host_execution": "handoff_required",
+              "draft_journal": "ui_draft.v1",
+              "sample": null,
+              "control_revision_id": "58902af010e346e2bcdd65138d8ec25d",
+              "collaboration": {
+                "project_id": "historical-6dd9f1cb",
+                "revision_id": "58902af010e346e2bcdd65138d8ec25d",
+                "minimum_writer": null,
+                "migrated": false,
+                "authority_policy": null,
+                "quality_profile": null,
+                "request": null,
+                "decisions": [],
+                "authorizations": []
+              },
+              "completion": {
+                "state": "in_progress",
+                "request_id": null,
+                "intent": null,
+                "content_intent": null,
+                "artifact_revision_id": "58902af010e346e2bcdd65138d8ec25d",
+                "effective_scope": null,
+                "outputs": [],
+                "checks": [
+                  {
+                    "kind": "requested_content",
+                    "status": "not_evaluated",
+                    "basis": null
+                  }
+                ],
+                "missing": [],
+                "responsible_role": "content",
+                "next_action": null
+              },
+              "migration": {
+                "project_id": "historical-6dd9f1cb",
+                "revision_id": "58902af010e346e2bcdd65138d8ec25d",
+                "plan": {
+                  "schema_version": "collaboration_migration_plan.v1",
+                  "current_revision": "58902af010e346e2bcdd65138d8ec25d",
+                  "minimum_writer": null,
+                  "target_minimum_writer": "rc3-entry.v1",
+                  "needs_migration": true,
+                  "counts": {
+                    "pages": 1,
+                    "sources": 0,
+                    "reviews": 0,
+                    "tasks": 0,
+                    "runnable_tasks": 0
+                  },
+                  "tasks_to_supersede": [],
+                  "unknown_calls": 0,
+                  "known_unknown_calls": 0,
+                  "unreadable_task_refs": [],
+                  "limitations": [],
+                  "pending_decisions": [
+                    {
+                      "source": "task.presentation_mode_source",
+                      "disposition": "default_not_a_user_choice"
+                    }
+                  ],
+                  "reusable": {
+                    "page_refs": [
+                      {
+                        "path": ".deckmaster/objects/27/27c43807ce8a95ef8ef7e6782343ef768eddb6afc2963868fe05afbb40a2fe18.json",
+                        "sha256": "27c43807ce8a95ef8ef7e6782343ef768eddb6afc2963868fe05afbb40a2fe18"
+                      }
+                    ],
+                    "output_pptx": false,
+                    "candidates": 0
+                  }
+                },
+                "plan_digest": "5b2e0ca64eff13fa402b45af172d2eda3b6e89f15f3db50f55d25d45c06867df"
+              },
+              "effective_actions": [
+                {
+                  "action": "drafts",
+                  "supported": true,
+                  "writable": true,
+                  "reason_code": null
+                },
+                {
+                  "action": "annotations",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "unsupported_project_format"
+                },
+                {
+                  "action": "changes",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "unsupported_project_format"
+                },
+                {
+                  "action": "candidates",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "unsupported_project_format"
+                },
+                {
+                  "action": "content",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "unsupported_project_format"
+                },
+                {
+                  "action": "inputs",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "migration_required"
+                },
+                {
+                  "action": "styles",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "unsupported_project_format"
+                },
+                {
+                  "action": "icons",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "unsupported_project_format"
+                },
+                {
+                  "action": "run_desk",
+                  "supported": true,
+                  "writable": true,
+                  "reason_code": null
+                },
+                {
+                  "action": "exports",
+                  "supported": true,
+                  "writable": true,
+                  "reason_code": null
+                },
+                {
+                  "action": "restoration",
+                  "supported": true,
+                  "writable": true,
+                  "reason_code": null
+                }
+              ]
+            },
+            "write_refusal": "eligibility/content.inputs_update: this project predates the collaboration writer boundary; run collaboration migration apply before this action"
+          },
+          "future": {
+            "url": null,
+            "info": {
+              "project_id": null,
+              "project_identity": null,
+              "title": null,
+              "revision_id": null,
+              "project_format": "deckmaster-current.v2",
+              "minimum_writer": "future-writer.v9",
+              "core_readers": [
+                "deckmaster-current.v1",
+                "deckmaster-current.v2"
+              ],
+              "core_writers": [
+                "generation.v1",
+                "content-plan.v1",
+                "changes.v1",
+                "candidates.v1",
+                "run-desk.v1",
+                "style-recipes.v1",
+                "content-ops.v1",
+                "content-candidates.v1",
+                "icon-quality.v1",
+                "workbench-quality.v1",
+                "collaboration.v1",
+                "rc3.v1",
+                "rc3-entry.v1",
+                "rc4-content.v1",
+                "method-catalog.v1"
+              ],
+              "read_status": {
+                "status": "unreadable",
+                "reason_code": "writer_upgrade_required",
+                "detail": "this core cannot read the project pointer; open it with a matching core"
+              },
+              "host_execution": "handoff_required",
+              "draft_journal": "ui_draft.v1",
+              "sample": null,
+              "effective_actions": [
+                {
+                  "action": "drafts",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                },
+                {
+                  "action": "annotations",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                },
+                {
+                  "action": "changes",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                },
+                {
+                  "action": "candidates",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                },
+                {
+                  "action": "content",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                },
+                {
+                  "action": "inputs",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                },
+                {
+                  "action": "styles",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                },
+                {
+                  "action": "icons",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                },
+                {
+                  "action": "run_desk",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                },
+                {
+                  "action": "exports",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                },
+                {
+                  "action": "restoration",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                }
+              ]
+            },
+            "write_refusal": "operation_id: operation history could not be verified; preserve the original request and inspect the original operation",
+            "writer_guard": "current.json: unsupported minimum writer; use the matching core"
+          }
+        }
+      },
+      "business_bytes_unchanged": true
+    },
+    {
+      "stage": "upgrade",
+      "release_id": "3baf6caa060d-c531f410af0f",
+      "activation": {
+        "status": "activated",
+        "release_id": "3baf6caa060d-c531f410af0f",
+        "cli_active": true,
+        "migration": {
+          "migrated": false,
+          "moved": null,
+          "removed_links": [],
+          "skipped_entries": []
+        },
+        "previous": "releases/3217a6563002-eeeb272a1653",
+        "format_boundary": "Older binaries must not write unsupported Document schemas; restore a compatible project copy.",
+        "host_skill": "host_unregistered",
+        "skill_link": null,
+        "skill_links": [
+          {
+            "name": "deck-master",
+            "status": "host_unregistered",
+            "skill_link": null
+          },
+          {
+            "name": "deck-content",
+            "status": "host_unregistered",
+            "skill_link": null
+          },
+          {
+            "name": "deck-design",
+            "status": "host_unregistered",
+            "skill_link": null
+          },
+          {
+            "name": "deck-review",
+            "status": "host_unregistered",
+            "skill_link": null
+          }
+        ],
+        "transaction_id": "cb8d822a-af9b-49e1-89f6-64aeca20dc1d",
+        "transaction_state": "completed",
+        "recovered": false,
+        "observed_current_release_id": "3baf6caa060d-c531f410af0f",
+        "current_install_state": "verified"
+      },
+      "probe": {
+        "package": "/tmp/webui-managed-closure/.deck-master/releases/3baf6caa060d-c531f410af0f/venv/lib/python3.12/site-packages/deck_master",
+        "capabilities": [
+          "content_insight.v1",
+          "method_library_preview.v1",
+          "ui_draft.v1",
+          "ui_gallery.v1",
+          "ui_overview.v1",
+          "thumbnails.v1",
+          "fixed_snapshot.v1",
+          "text_range.v1",
+          "page_detail.v1",
+          "annotations.v1",
+          "changes.v1",
+          "operations.v1",
+          "candidates.v1",
+          "stages.v1",
+          "run_desk.v1",
+          "style_recipes.v1",
+          "content_ops.v1",
+          "exports.v1",
+          "restoration.v1",
+          "workbench_actions.v1",
+          "action_targets.v1",
+          "icon_quality.v1",
+          "result_reading.v1",
+          "history_summary.v1",
+          "visual_reference.v1",
+          "material_uploads.v1",
+          "external_review.v1",
+          "delivery_eligibility.v1",
+          "collaboration.v1",
+          "rc3-entry.v1"
+        ],
+        "projects": {
+          "modern": {
+            "url": "http://127.0.0.1:33373/",
+            "info": {
+              "project_id": "project",
+              "project_identity": "360183f809ca4a178243bb346d54cd105d72f3c27fc224ebc44f9615d12f3bbf",
+              "title": "记录未知与紧急交接",
+              "revision_id": "1a982d9e744948429ad67336f3dab188",
+              "project_format": "workbench.v3",
+              "minimum_writer": "method-catalog.v1",
+              "core_readers": [
+                "deckmaster-current.v1",
+                "deckmaster-current.v2"
+              ],
+              "core_writers": [
+                "generation.v1",
+                "content-plan.v1",
+                "changes.v1",
+                "candidates.v1",
+                "run-desk.v1",
+                "style-recipes.v1",
+                "content-ops.v1",
+                "content-candidates.v1",
+                "icon-quality.v1",
+                "workbench-quality.v1",
+                "collaboration.v1",
+                "rc3.v1",
+                "rc3-entry.v1",
+                "rc4-content.v1",
+                "method-catalog.v1"
+              ],
+              "host_execution": "handoff_required",
+              "draft_journal": "ui_draft.v1",
+              "sample": null,
+              "control_revision_id": "1a982d9e744948429ad67336f3dab188",
+              "collaboration": {
+                "project_id": "project",
+                "revision_id": "1a982d9e744948429ad67336f3dab188",
+                "minimum_writer": "method-catalog.v1",
+                "migrated": true,
+                "authority_policy": "traceable",
+                "quality_profile": {
+                  "content_review_requirement": "independent_model_or_human",
+                  "override_decision_ref": null,
+                  "requirement_origin": "default_new_argument"
+                },
+                "request": {
+                  "background_request_ids": [],
+                  "closed": true,
+                  "closed_reason": "completed",
+                  "content_intent": "content_full",
+                  "instruction_evidence": {
+                    "actor_id": null,
+                    "assurance": "host_attested",
+                    "kind": "host_attested_instruction",
+                    "presentation_ref": null,
+                    "source_locator": "cloud:webui:three-scenarios",
+                    "source_ref": {
+                      "path": ".deckmaster/objects/ce/ceb7ba35ce8e6eeb89d6e00bc134c73aeaae7858d347ba4c83111325b41daf9f.txt",
+                      "sha256": "ceb7ba35ce8e6eeb89d6e00bc134c73aeaae7858d347ba4c83111325b41daf9f"
+                    },
+                    "transport_receipt_ref": null
+                  },
+                  "intent": "content_only",
+                  "pause_reason": null,
+                  "paused": false,
+                  "request_id": "req-d453241bec93",
+                  "scope": {
+                    "allow_page_membership_change": true,
+                    "allow_page_order_change": true,
+                    "external_artifact_ref": null,
+                    "layers": [
+                      "narrative",
+                      "plan",
+                      "page_copy",
+                      "speech",
+                      "design",
+                      "blueprint",
+                      "svg",
+                      "review",
+                      "output"
+                    ],
+                    "page_ids": [],
+                    "page_manifest_ref": null,
+                    "purpose": "working",
+                    "subject": "deck"
+                  },
+                  "variant": null
+                },
+                "decisions": [
+                  {
+                    "authority_mode": "direct_user",
+                    "basis": [
+                      {
+                        "identity": "audience",
+                        "kind": "task_fact",
+                        "projection": "value",
+                        "ref": null,
+                        "sha256": "f2c0ff4713b1b5c5307ccc9f23bfd7c85b60b8ca16d07f78540939b82ab9a978"
+                      },
+                      {
+                        "identity": "brief",
+                        "kind": "task_fact",
+                        "projection": "value",
+                        "ref": null,
+                        "sha256": "44aaffd6aa538c18f8a2387a17a89387aae4abd41287918f09ed0ba9dd09cb5f"
+                      }
+                    ],
+                    "created_at": "2026-10-20T11:57:12Z",
+                    "decision_id": "dec-c19a4e7d95bc",
+                    "delegation_ref": null,
+                    "disposition": "accepted",
+                    "evidence": {
+                      "actor_id": null,
+                      "assurance": "host_attested",
+                      "kind": "host_attested_instruction",
+                      "presentation_ref": null,
+                      "source_locator": "cloud:webui:scenario-direction:lesson",
+                      "source_ref": {
+                        "path": ".deckmaster/objects/5c/5c30abffa61739bcd5efaad7b6930322202767a023aa085e80c22c97cdafb2e7.txt",
+                        "sha256": "5c30abffa61739bcd5efaad7b6930322202767a023aa085e80c22c97cdafb2e7"
+                      },
+                      "transport_receipt_ref": null
+                    },
+                    "invalidated_by": null,
+                    "project_id": "project",
+                    "replaces": null,
+                    "request_id": "req-d453241bec93",
+                    "schema_version": "collaboration_decision.v1",
+                    "scope": {
+                      "allow_page_membership_change": false,
+                      "allow_page_order_change": false,
+                      "external_artifact_ref": null,
+                      "layers": [
+                        "narrative"
+                      ],
+                      "page_ids": [],
+                      "page_manifest_ref": null,
+                      "purpose": "working",
+                      "subject": "deck"
+                    },
+                    "status": "active",
+                    "subject_refs": [
+                      {
+                        "artifact_kind": "narrative",
+                        "artifact_ref": {
+                          "path": ".deckmaster/objects/9f/9fe81deb38c02e53dbbef891f1acbde07ca831524fd7abbf6eabc63c31dd37f1.json",
+                          "sha256": "9fe81deb38c02e53dbbef891f1acbde07ca831524fd7abbf6eabc63c31dd37f1"
+                        },
+                        "projection": "direction"
+                      }
+                    ],
+                    "topic": "direction",
+                    "value": {
+                      "selected": "lesson"
+                    }
+                  }
+                ],
+                "authorizations": [],
+                "request_source_key": "72a171c1ef5ca2b7eb308eba333939a9069f645c02504f1aec50be889481e837",
+                "effective_decisions": [
+                  {
+                    "ref": {
+                      "path": ".deckmaster/objects/c4/c44566b5eba793e089b8c85d3be64428e496be4034f7da1b52c1d02b5cf90519.json",
+                      "sha256": "c44566b5eba793e089b8c85d3be64428e496be4034f7da1b52c1d02b5cf90519"
+                    },
+                    "record": {
+                      "authority_mode": "direct_user",
+                      "basis": [
+                        {
+                          "identity": "audience",
+                          "kind": "task_fact",
+                          "projection": "value",
+                          "ref": null,
+                          "sha256": "f2c0ff4713b1b5c5307ccc9f23bfd7c85b60b8ca16d07f78540939b82ab9a978"
+                        },
+                        {
+                          "identity": "brief",
+                          "kind": "task_fact",
+                          "projection": "value",
+                          "ref": null,
+                          "sha256": "44aaffd6aa538c18f8a2387a17a89387aae4abd41287918f09ed0ba9dd09cb5f"
+                        }
+                      ],
+                      "created_at": "2026-10-20T11:57:12Z",
+                      "decision_id": "dec-c19a4e7d95bc",
+                      "delegation_ref": null,
+                      "disposition": "accepted",
+                      "evidence": {
+                        "actor_id": null,
+                        "assurance": "host_attested",
+                        "kind": "host_attested_instruction",
+                        "presentation_ref": null,
+                        "source_locator": "cloud:webui:scenario-direction:lesson",
+                        "source_ref": {
+                          "path": ".deckmaster/objects/5c/5c30abffa61739bcd5efaad7b6930322202767a023aa085e80c22c97cdafb2e7.txt",
+                          "sha256": "5c30abffa61739bcd5efaad7b6930322202767a023aa085e80c22c97cdafb2e7"
+                        },
+                        "transport_receipt_ref": null
+                      },
+                      "invalidated_by": null,
+                      "project_id": "project",
+                      "replaces": null,
+                      "request_id": "req-d453241bec93",
+                      "schema_version": "collaboration_decision.v1",
+                      "scope": {
+                        "allow_page_membership_change": false,
+                        "allow_page_order_change": false,
+                        "external_artifact_ref": null,
+                        "layers": [
+                          "narrative"
+                        ],
+                        "page_ids": [],
+                        "page_manifest_ref": null,
+                        "purpose": "working",
+                        "subject": "deck"
+                      },
+                      "status": "active",
+                      "subject_refs": [
+                        {
+                          "artifact_kind": "narrative",
+                          "artifact_ref": {
+                            "path": ".deckmaster/objects/9f/9fe81deb38c02e53dbbef891f1acbde07ca831524fd7abbf6eabc63c31dd37f1.json",
+                            "sha256": "9fe81deb38c02e53dbbef891f1acbde07ca831524fd7abbf6eabc63c31dd37f1"
+                          },
+                          "projection": "direction"
+                        }
+                      ],
+                      "topic": "direction",
+                      "value": {
+                        "selected": "lesson"
+                      }
+                    },
+                    "effective": false,
+                    "reasons": [
+                      "request_closed"
+                    ],
+                    "basis": {
+                      "matched": [
+                        "task_fact:audience:value",
+                        "task_fact:brief:value"
+                      ],
+                      "stale": [],
+                      "unregistered": [],
+                      "current": true
+                    }
+                  }
+                ],
+                "effective_authorizations": [],
+                "blocking_cards": [
+                  {
+                    "action": "dispatch.compose",
+                    "decision": {
+                      "schema_version": "eligibility.v1",
+                      "allowed": false,
+                      "action": "dispatch.compose",
+                      "enforcement": "active",
+                      "scope": {
+                        "allow_page_membership_change": true,
+                        "allow_page_order_change": true,
+                        "external_artifact_ref": null,
+                        "layers": [
+                          "blueprint",
+                          "design",
+                          "narrative",
+                          "output",
+                          "page_copy",
+                          "plan",
+                          "review",
+                          "speech",
+                          "svg"
+                        ],
+                        "page_ids": [],
+                        "page_manifest_ref": null,
+                        "purpose": "working",
+                        "subject": "deck"
+                      },
+                      "required_artifact_refs": [
+                        {
+                          "path": ".deckmaster/objects/03/03269e2a69003ba1272f8b43bfcbb0152be39b6679a82dbb6aab10ce2b3ab900.json",
+                          "sha256": "03269e2a69003ba1272f8b43bfcbb0152be39b6679a82dbb6aab10ce2b3ab900"
+                        },
+                        {
+                          "path": ".deckmaster/objects/94/9448f956da872ed8d74e670738e39dc52b1652bea5b7d24a70ef8ca41cb9a4f0.json",
+                          "sha256": "9448f956da872ed8d74e670738e39dc52b1652bea5b7d24a70ef8ca41cb9a4f0"
+                        }
+                      ],
+                      "required_decision_topics": [],
+                      "missing_decision_topics": [],
+                      "reason_codes": [
+                        "request_closed"
+                      ],
+                      "reasons": [
+                        {
+                          "code": "request_closed",
+                          "detail": "the current request is closed (completed); start a new request for new work"
+                        }
+                      ],
+                      "responsible_role": "user",
+                      "next_action": "start a new work request for the new work",
+                      "decision_card_ref_or_projection": null,
+                      "dependency_slices": [],
+                      "eligibility_digest": "7e3cf1748393e150936e0727a3d20807a5609b65898d55758ff94b6135bcae09",
+                      "authority_assurance": "host_attested",
+                      "request_id": "req-d453241bec93",
+                      "artifact_revision_id": "1a982d9e744948429ad67336f3dab188",
+                      "control_revision_id": "1a982d9e744948429ad67336f3dab188",
+                      "facts_only": false,
+                      "binding": null,
+                      "preproduction": null,
+                      "delivery": null,
+                      "targets": {
+                        "page_ids": null,
+                        "layers": [],
+                        "subject": null
+                      }
+                    }
+                  },
+                  {
+                    "action": "dispatch.blueprint",
+                    "decision": {
+                      "schema_version": "eligibility.v1",
+                      "allowed": false,
+                      "action": "dispatch.blueprint",
+                      "enforcement": "active",
+                      "scope": {
+                        "allow_page_membership_change": true,
+                        "allow_page_order_change": true,
+                        "external_artifact_ref": null,
+                        "layers": [
+                          "blueprint",
+                          "design",
+                          "narrative",
+                          "output",
+                          "page_copy",
+                          "plan",
+                          "review",
+                          "speech",
+                          "svg"
+                        ],
+                        "page_ids": [],
+                        "page_manifest_ref": null,
+                        "purpose": "working",
+                        "subject": "deck"
+                      },
+                      "required_artifact_refs": [
+                        {
+                          "path": ".deckmaster/objects/03/03269e2a69003ba1272f8b43bfcbb0152be39b6679a82dbb6aab10ce2b3ab900.json",
+                          "sha256": "03269e2a69003ba1272f8b43bfcbb0152be39b6679a82dbb6aab10ce2b3ab900"
+                        },
+                        {
+                          "path": ".deckmaster/objects/94/9448f956da872ed8d74e670738e39dc52b1652bea5b7d24a70ef8ca41cb9a4f0.json",
+                          "sha256": "9448f956da872ed8d74e670738e39dc52b1652bea5b7d24a70ef8ca41cb9a4f0"
+                        }
+                      ],
+                      "required_decision_topics": [],
+                      "missing_decision_topics": [],
+                      "reason_codes": [
+                        "request_closed",
+                        "authority_insufficient",
+                        "needs_reviewer"
+                      ],
+                      "reasons": [
+                        {
+                          "code": "request_closed",
+                          "detail": "the current request is closed (completed); start a new request for new work"
+                        },
+                        {
+                          "code": "authority_insufficient",
+                          "detail": "no authorization names 'dispatch.blueprint' within the request scope",
+                          "action": "dispatch.blueprint"
+                        },
+                        {
+                          "code": "needs_reviewer",
+                          "detail": "the required preproduction content review has no acceptable reviewer; a review draft can still be returned, and 'continue' does not waive it",
+                          "requirement": "independent_model_or_human",
+                          "review_status": "missing",
+                          "missing_units": [
+                            "argument",
+                            "page_copy",
+                            "progression"
+                          ],
+                          "open_findings": 0
+                        }
+                      ],
+                      "responsible_role": "user",
+                      "next_action": "start a new work request for the new work",
+                      "decision_card_ref_or_projection": null,
+                      "dependency_slices": [],
+                      "eligibility_digest": "8cdbaf210eb090059d99cca90adc4a7c4064e9ea7c339a450d161a931c28a7f7",
+                      "authority_assurance": "host_attested",
+                      "request_id": "req-d453241bec93",
+                      "artifact_revision_id": "1a982d9e744948429ad67336f3dab188",
+                      "control_revision_id": "1a982d9e744948429ad67336f3dab188",
+                      "facts_only": false,
+                      "binding": null,
+                      "preproduction": {
+                        "requirement": "independent_model_or_human",
+                        "declared_requirement": "independent_model_or_human",
+                        "requirement_origin": "default_new_argument",
+                        "requirement_reasons": [],
+                        "required": true,
+                        "satisfied": false,
+                        "status": "missing",
+                        "units": [
+                          "argument",
+                          "page_copy",
+                          "progression"
+                        ],
+                        "satisfied_units": [],
+                        "missing_units": [
+                          "argument",
+                          "page_copy",
+                          "progression"
+                        ],
+                        "blocking_findings": [],
+                        "review_refs": [],
+                        "needs_reviewer": true,
+                        "via": null,
+                        "reasons": []
+                      },
+                      "delivery": null,
+                      "targets": {
+                        "page_ids": null,
+                        "layers": [],
+                        "subject": null
+                      }
+                    }
+                  },
+                  {
+                    "action": "export.delivery",
+                    "decision": {
+                      "schema_version": "eligibility.v1",
+                      "allowed": false,
+                      "action": "export.delivery",
+                      "enforcement": "active",
+                      "scope": {
+                        "allow_page_membership_change": true,
+                        "allow_page_order_change": true,
+                        "external_artifact_ref": null,
+                        "layers": [
+                          "blueprint",
+                          "design",
+                          "narrative",
+                          "output",
+                          "page_copy",
+                          "plan",
+                          "review",
+                          "speech",
+                          "svg"
+                        ],
+                        "page_ids": [],
+                        "page_manifest_ref": null,
+                        "purpose": "working",
+                        "subject": "deck"
+                      },
+                      "required_artifact_refs": [
+                        {
+                          "path": ".deckmaster/objects/03/03269e2a69003ba1272f8b43bfcbb0152be39b6679a82dbb6aab10ce2b3ab900.json",
+                          "sha256": "03269e2a69003ba1272f8b43bfcbb0152be39b6679a82dbb6aab10ce2b3ab900"
+                        },
+                        {
+                          "path": ".deckmaster/objects/94/9448f956da872ed8d74e670738e39dc52b1652bea5b7d24a70ef8ca41cb9a4f0.json",
+                          "sha256": "9448f956da872ed8d74e670738e39dc52b1652bea5b7d24a70ef8ca41cb9a4f0"
+                        }
+                      ],
+                      "required_decision_topics": [
+                        "delivery_acceptance"
+                      ],
+                      "missing_decision_topics": [
+                        "delivery_acceptance"
+                      ],
+                      "reason_codes": [
+                        "request_closed",
+                        "decision_needed",
+                        "authority_insufficient"
+                      ],
+                      "reasons": [
+                        {
+                          "code": "request_closed",
+                          "detail": "the current request is closed (completed); start a new request for new work"
+                        },
+                        {
+                          "code": "decision_needed",
+                          "detail": "required business decisions are missing or ineffective: delivery_acceptance",
+                          "missing": "decision",
+                          "topics": [
+                            "delivery_acceptance"
+                          ],
+                          "card": {
+                            "kind": "decision_card",
+                            "topics": [
+                              "delivery_acceptance"
+                            ],
+                            "projection": "delivery_acceptance",
+                            "subject_refs": [],
+                            "scope": {
+                              "allow_page_membership_change": true,
+                              "allow_page_order_change": true,
+                              "external_artifact_ref": null,
+                              "layers": [
+                                "narrative",
+                                "plan",
+                                "page_copy",
+                                "speech",
+                                "design",
+                                "blueprint",
+                                "svg",
+                                "review",
+                                "output"
+                              ],
+                              "page_ids": [],
+                              "page_manifest_ref": null,
+                              "purpose": "working",
+                              "subject": "deck"
+                            }
+                          }
+                        },
+                        {
+                          "code": "authority_insufficient",
+                          "detail": "no authorization names 'export.delivery' within the request scope",
+                          "action": "export.delivery"
+                        }
+                      ],
+                      "responsible_role": "user",
+                      "next_action": "start a new work request for the new work",
+                      "decision_card_ref_or_projection": null,
+                      "dependency_slices": [],
+                      "eligibility_digest": "670cd603f9cf6157c005f8867a462c9e3221af8eea32bc74a3307c5f1c9cdd12",
+                      "authority_assurance": "host_attested",
+                      "request_id": "req-d453241bec93",
+                      "artifact_revision_id": "1a982d9e744948429ad67336f3dab188",
+                      "control_revision_id": "1a982d9e744948429ad67336f3dab188",
+                      "facts_only": false,
+                      "binding": null,
+                      "preproduction": null,
+                      "delivery": {
+                        "professional": {
+                          "required": false,
+                          "satisfied": true,
+                          "human_signoff": false,
+                          "evidence": {
+                            "professional_use": "not_evaluated",
+                            "desktop_editing": "not_evaluated"
+                          },
+                          "reviews_considered": 0,
+                          "gap_reasons": [],
+                          "reviews": []
+                        },
+                        "output_pptx": null,
+                        "artifact_revision_id": "1a982d9e744948429ad67336f3dab188",
+                        "control_revision_id": "1a982d9e744948429ad67336f3dab188"
+                      },
+                      "targets": {
+                        "page_ids": null,
+                        "layers": [],
+                        "subject": null
+                      }
+                    }
+                  }
+                ]
+              },
+              "completion": {
+                "state": "completed",
+                "request_id": "req-d453241bec93",
+                "intent": "content_only",
+                "content_intent": "content_full",
+                "artifact_revision_id": "1a982d9e744948429ad67336f3dab188",
+                "effective_scope": {
+                  "allow_page_membership_change": true,
+                  "allow_page_order_change": true,
+                  "external_artifact_ref": null,
+                  "layers": [
+                    "narrative",
+                    "plan",
+                    "page_copy",
+                    "speech",
+                    "design",
+                    "blueprint",
+                    "svg",
+                    "review",
+                    "output"
+                  ],
+                  "page_ids": [],
+                  "page_manifest_ref": null,
+                  "purpose": "working",
+                  "subject": "deck"
+                },
+                "outputs": [
+                  {
+                    "path": ".deckmaster/objects/9f/9fe81deb38c02e53dbbef891f1acbde07ca831524fd7abbf6eabc63c31dd37f1.json",
+                    "sha256": "9fe81deb38c02e53dbbef891f1acbde07ca831524fd7abbf6eabc63c31dd37f1"
+                  },
+                  {
+                    "path": ".deckmaster/objects/6e/6e671e715dd5acab68eb72cbfe2fb1489428eca11e9599fd31c05299980e1192.json",
+                    "sha256": "6e671e715dd5acab68eb72cbfe2fb1489428eca11e9599fd31c05299980e1192"
+                  }
+                ],
+                "checks": [
+                  {
+                    "kind": "requested_content",
+                    "status": "pass",
+                    "basis": "content phases are current"
+                  }
+                ],
+                "missing": [],
+                "responsible_role": "caller",
+                "next_action": "return_requested_content"
+              },
+              "migration": {
+                "project_id": "project",
+                "revision_id": "1a982d9e744948429ad67336f3dab188",
+                "plan": {
+                  "schema_version": "collaboration_migration_plan.v1",
+                  "current_revision": "1a982d9e744948429ad67336f3dab188",
+                  "minimum_writer": "method-catalog.v1",
+                  "target_minimum_writer": "rc3-entry.v1",
+                  "needs_migration": false,
+                  "counts": {
+                    "pages": 2,
+                    "sources": 1,
+                    "reviews": 0,
+                    "tasks": 3,
+                    "runnable_tasks": 0
+                  },
+                  "tasks_to_supersede": [],
+                  "unknown_calls": 0,
+                  "known_unknown_calls": 0,
+                  "unreadable_task_refs": [],
+                  "limitations": [],
+                  "pending_decisions": [],
+                  "reusable": {
+                    "page_refs": [
+                      {
+                        "path": ".deckmaster/objects/03/03269e2a69003ba1272f8b43bfcbb0152be39b6679a82dbb6aab10ce2b3ab900.json",
+                        "sha256": "03269e2a69003ba1272f8b43bfcbb0152be39b6679a82dbb6aab10ce2b3ab900"
+                      },
+                      {
+                        "path": ".deckmaster/objects/94/9448f956da872ed8d74e670738e39dc52b1652bea5b7d24a70ef8ca41cb9a4f0.json",
+                        "sha256": "9448f956da872ed8d74e670738e39dc52b1652bea5b7d24a70ef8ca41cb9a4f0"
+                      }
+                    ],
+                    "output_pptx": false,
+                    "candidates": 0
+                  }
+                },
+                "plan_digest": "9c653fde08eb2f232ddf122420bf5dd1a46ab3b99f15f0a08ee1ab86b6048c09"
+              },
+              "effective_actions": [
+                {
+                  "action": "drafts",
+                  "supported": true,
+                  "writable": true,
+                  "reason_code": null
+                },
+                {
+                  "action": "annotations",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "request_closed"
+                },
+                {
+                  "action": "changes",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "request_closed"
+                },
+                {
+                  "action": "candidates",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "request_closed"
+                },
+                {
+                  "action": "content",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "request_closed"
+                },
+                {
+                  "action": "inputs",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "request_closed"
+                },
+                {
+                  "action": "styles",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "request_closed"
+                },
+                {
+                  "action": "icons",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "request_closed"
+                },
+                {
+                  "action": "run_desk",
+                  "supported": true,
+                  "writable": true,
+                  "reason_code": null
+                },
+                {
+                  "action": "exports",
+                  "supported": true,
+                  "writable": true,
+                  "reason_code": null
+                },
+                {
+                  "action": "restoration",
+                  "supported": true,
+                  "writable": true,
+                  "reason_code": null
+                }
+              ]
+            },
+            "historical_revision": "25c61c192d194b4f87686a0c3535e92a",
+            "task_ids": [
+              "dfc1f6d8d534",
+              "c65be018a055",
+              "7ef35c4ddf2a"
+            ]
+          },
+          "legacy": {
+            "url": "http://127.0.0.1:44885/",
+            "info": {
+              "project_id": "historical-6dd9f1cb",
+              "project_identity": "3eceb812964e2ba2f87bded3aeefde6dd131c4d8fb101cb741ec0868c73b2164",
+              "title": "",
+              "revision_id": "58902af010e346e2bcdd65138d8ec25d",
+              "project_format": "deck_document.v1",
+              "minimum_writer": null,
+              "core_readers": [
+                "deckmaster-current.v1",
+                "deckmaster-current.v2"
+              ],
+              "core_writers": [
+                "generation.v1",
+                "content-plan.v1",
+                "changes.v1",
+                "candidates.v1",
+                "run-desk.v1",
+                "style-recipes.v1",
+                "content-ops.v1",
+                "content-candidates.v1",
+                "icon-quality.v1",
+                "workbench-quality.v1",
+                "collaboration.v1",
+                "rc3.v1",
+                "rc3-entry.v1",
+                "rc4-content.v1",
+                "method-catalog.v1"
+              ],
+              "host_execution": "handoff_required",
+              "draft_journal": "ui_draft.v1",
+              "sample": null,
+              "control_revision_id": "58902af010e346e2bcdd65138d8ec25d",
+              "collaboration": {
+                "project_id": "historical-6dd9f1cb",
+                "revision_id": "58902af010e346e2bcdd65138d8ec25d",
+                "minimum_writer": null,
+                "migrated": false,
+                "authority_policy": null,
+                "quality_profile": null,
+                "request": null,
+                "decisions": [],
+                "authorizations": []
+              },
+              "completion": {
+                "state": "in_progress",
+                "request_id": null,
+                "intent": null,
+                "content_intent": null,
+                "artifact_revision_id": "58902af010e346e2bcdd65138d8ec25d",
+                "effective_scope": null,
+                "outputs": [],
+                "checks": [
+                  {
+                    "kind": "requested_content",
+                    "status": "not_evaluated",
+                    "basis": null
+                  }
+                ],
+                "missing": [],
+                "responsible_role": "content",
+                "next_action": null
+              },
+              "migration": {
+                "project_id": "historical-6dd9f1cb",
+                "revision_id": "58902af010e346e2bcdd65138d8ec25d",
+                "plan": {
+                  "schema_version": "collaboration_migration_plan.v1",
+                  "current_revision": "58902af010e346e2bcdd65138d8ec25d",
+                  "minimum_writer": null,
+                  "target_minimum_writer": "rc3-entry.v1",
+                  "needs_migration": true,
+                  "counts": {
+                    "pages": 1,
+                    "sources": 0,
+                    "reviews": 0,
+                    "tasks": 0,
+                    "runnable_tasks": 0
+                  },
+                  "tasks_to_supersede": [],
+                  "unknown_calls": 0,
+                  "known_unknown_calls": 0,
+                  "unreadable_task_refs": [],
+                  "limitations": [],
+                  "pending_decisions": [
+                    {
+                      "source": "task.presentation_mode_source",
+                      "disposition": "default_not_a_user_choice"
+                    }
+                  ],
+                  "reusable": {
+                    "page_refs": [
+                      {
+                        "path": ".deckmaster/objects/27/27c43807ce8a95ef8ef7e6782343ef768eddb6afc2963868fe05afbb40a2fe18.json",
+                        "sha256": "27c43807ce8a95ef8ef7e6782343ef768eddb6afc2963868fe05afbb40a2fe18"
+                      }
+                    ],
+                    "output_pptx": false,
+                    "candidates": 0
+                  }
+                },
+                "plan_digest": "5b2e0ca64eff13fa402b45af172d2eda3b6e89f15f3db50f55d25d45c06867df"
+              },
+              "effective_actions": [
+                {
+                  "action": "drafts",
+                  "supported": true,
+                  "writable": true,
+                  "reason_code": null
+                },
+                {
+                  "action": "annotations",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "unsupported_project_format"
+                },
+                {
+                  "action": "changes",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "unsupported_project_format"
+                },
+                {
+                  "action": "candidates",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "unsupported_project_format"
+                },
+                {
+                  "action": "content",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "unsupported_project_format"
+                },
+                {
+                  "action": "inputs",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "migration_required"
+                },
+                {
+                  "action": "styles",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "unsupported_project_format"
+                },
+                {
+                  "action": "icons",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "unsupported_project_format"
+                },
+                {
+                  "action": "run_desk",
+                  "supported": true,
+                  "writable": true,
+                  "reason_code": null
+                },
+                {
+                  "action": "exports",
+                  "supported": true,
+                  "writable": true,
+                  "reason_code": null
+                },
+                {
+                  "action": "restoration",
+                  "supported": true,
+                  "writable": true,
+                  "reason_code": null
+                }
+              ]
+            },
+            "write_refusal": "eligibility/content.inputs_update: this project predates the collaboration writer boundary; run collaboration migration apply before this action"
+          },
+          "future": {
+            "url": null,
+            "info": {
+              "project_id": null,
+              "project_identity": null,
+              "title": null,
+              "revision_id": null,
+              "project_format": "deckmaster-current.v2",
+              "minimum_writer": "future-writer.v9",
+              "core_readers": [
+                "deckmaster-current.v1",
+                "deckmaster-current.v2"
+              ],
+              "core_writers": [
+                "generation.v1",
+                "content-plan.v1",
+                "changes.v1",
+                "candidates.v1",
+                "run-desk.v1",
+                "style-recipes.v1",
+                "content-ops.v1",
+                "content-candidates.v1",
+                "icon-quality.v1",
+                "workbench-quality.v1",
+                "collaboration.v1",
+                "rc3.v1",
+                "rc3-entry.v1",
+                "rc4-content.v1",
+                "method-catalog.v1"
+              ],
+              "read_status": {
+                "status": "unreadable",
+                "reason_code": "writer_upgrade_required",
+                "detail": "this core cannot read the project pointer; open it with a matching core"
+              },
+              "host_execution": "handoff_required",
+              "draft_journal": "ui_draft.v1",
+              "sample": null,
+              "effective_actions": [
+                {
+                  "action": "drafts",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                },
+                {
+                  "action": "annotations",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                },
+                {
+                  "action": "changes",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                },
+                {
+                  "action": "candidates",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                },
+                {
+                  "action": "content",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                },
+                {
+                  "action": "inputs",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                },
+                {
+                  "action": "styles",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                },
+                {
+                  "action": "icons",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                },
+                {
+                  "action": "run_desk",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                },
+                {
+                  "action": "exports",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                },
+                {
+                  "action": "restoration",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                }
+              ]
+            },
+            "write_refusal": "operation_id: operation history could not be verified; preserve the original request and inspect the original operation",
+            "writer_guard": "current.json: unsupported minimum writer; use the matching core"
+          }
+        }
+      },
+      "business_bytes_unchanged": true
+    },
+    {
+      "stage": "rollback",
+      "release_id": "3217a6563002-eeeb272a1653",
+      "activation": {
+        "status": "activated",
+        "release_id": "3217a6563002-eeeb272a1653",
+        "cli_active": true,
+        "migration": {
+          "migrated": false,
+          "moved": null,
+          "removed_links": [],
+          "skipped_entries": []
+        },
+        "previous": "releases/3baf6caa060d-c531f410af0f",
+        "format_boundary": "Older binaries must not write unsupported Document schemas; restore a compatible project copy.",
+        "host_skill": "host_unregistered",
+        "skill_link": null,
+        "skill_links": [
+          {
+            "name": "deck-master",
+            "status": "host_unregistered",
+            "skill_link": null
+          },
+          {
+            "name": "deck-content",
+            "status": "host_unregistered",
+            "skill_link": null
+          },
+          {
+            "name": "deck-design",
+            "status": "host_unregistered",
+            "skill_link": null
+          },
+          {
+            "name": "deck-review",
+            "status": "host_unregistered",
+            "skill_link": null
+          }
+        ],
+        "transaction_id": "20015830-2d59-4060-a720-ce24693a5734",
+        "transaction_state": "completed",
+        "recovered": false,
+        "observed_current_release_id": "3217a6563002-eeeb272a1653",
+        "current_install_state": "verified"
+      },
+      "probe": {
+        "package": "/tmp/webui-managed-closure/.deck-master/releases/3217a6563002-eeeb272a1653/venv/lib/python3.12/site-packages/deck_master",
+        "capabilities": [
+          "ui_draft.v1",
+          "ui_gallery.v1",
+          "ui_overview.v1",
+          "thumbnails.v1",
+          "fixed_snapshot.v1",
+          "text_range.v1",
+          "page_detail.v1",
+          "annotations.v1",
+          "changes.v1",
+          "operations.v1",
+          "candidates.v1",
+          "stages.v1",
+          "run_desk.v1",
+          "style_recipes.v1",
+          "content_ops.v1",
+          "exports.v1",
+          "restoration.v1",
+          "workbench_actions.v1",
+          "action_targets.v1",
+          "icon_quality.v1",
+          "result_reading.v1",
+          "history_summary.v1",
+          "visual_reference.v1",
+          "material_uploads.v1",
+          "external_review.v1",
+          "delivery_eligibility.v1",
+          "collaboration.v1",
+          "rc3-entry.v1"
+        ],
+        "projects": {
+          "modern": {
+            "url": "http://127.0.0.1:38773/",
+            "info": {
+              "project_id": "project",
+              "project_identity": "360183f809ca4a178243bb346d54cd105d72f3c27fc224ebc44f9615d12f3bbf",
+              "title": "记录未知与紧急交接",
+              "revision_id": "1a982d9e744948429ad67336f3dab188",
+              "project_format": "workbench.v3",
+              "minimum_writer": "method-catalog.v1",
+              "core_readers": [
+                "deckmaster-current.v1",
+                "deckmaster-current.v2"
+              ],
+              "core_writers": [
+                "generation.v1",
+                "content-plan.v1",
+                "changes.v1",
+                "candidates.v1",
+                "run-desk.v1",
+                "style-recipes.v1",
+                "content-ops.v1",
+                "content-candidates.v1",
+                "icon-quality.v1",
+                "workbench-quality.v1",
+                "collaboration.v1",
+                "rc3.v1",
+                "rc3-entry.v1",
+                "rc4-content.v1",
+                "method-catalog.v1"
+              ],
+              "host_execution": "handoff_required",
+              "draft_journal": "ui_draft.v1",
+              "sample": null,
+              "control_revision_id": "1a982d9e744948429ad67336f3dab188",
+              "collaboration": {
+                "project_id": "project",
+                "revision_id": "1a982d9e744948429ad67336f3dab188",
+                "minimum_writer": "method-catalog.v1",
+                "migrated": true,
+                "authority_policy": "traceable",
+                "quality_profile": {
+                  "content_review_requirement": "independent_model_or_human",
+                  "override_decision_ref": null,
+                  "requirement_origin": "default_new_argument"
+                },
+                "request": {
+                  "background_request_ids": [],
+                  "closed": true,
+                  "closed_reason": "completed",
+                  "content_intent": "content_full",
+                  "instruction_evidence": {
+                    "actor_id": null,
+                    "assurance": "host_attested",
+                    "kind": "host_attested_instruction",
+                    "presentation_ref": null,
+                    "source_locator": "cloud:webui:three-scenarios",
+                    "source_ref": {
+                      "path": ".deckmaster/objects/ce/ceb7ba35ce8e6eeb89d6e00bc134c73aeaae7858d347ba4c83111325b41daf9f.txt",
+                      "sha256": "ceb7ba35ce8e6eeb89d6e00bc134c73aeaae7858d347ba4c83111325b41daf9f"
+                    },
+                    "transport_receipt_ref": null
+                  },
+                  "intent": "content_only",
+                  "pause_reason": null,
+                  "paused": false,
+                  "request_id": "req-d453241bec93",
+                  "scope": {
+                    "allow_page_membership_change": true,
+                    "allow_page_order_change": true,
+                    "external_artifact_ref": null,
+                    "layers": [
+                      "narrative",
+                      "plan",
+                      "page_copy",
+                      "speech",
+                      "design",
+                      "blueprint",
+                      "svg",
+                      "review",
+                      "output"
+                    ],
+                    "page_ids": [],
+                    "page_manifest_ref": null,
+                    "purpose": "working",
+                    "subject": "deck"
+                  },
+                  "variant": null
+                },
+                "decisions": [
+                  {
+                    "authority_mode": "direct_user",
+                    "basis": [
+                      {
+                        "identity": "audience",
+                        "kind": "task_fact",
+                        "projection": "value",
+                        "ref": null,
+                        "sha256": "f2c0ff4713b1b5c5307ccc9f23bfd7c85b60b8ca16d07f78540939b82ab9a978"
+                      },
+                      {
+                        "identity": "brief",
+                        "kind": "task_fact",
+                        "projection": "value",
+                        "ref": null,
+                        "sha256": "44aaffd6aa538c18f8a2387a17a89387aae4abd41287918f09ed0ba9dd09cb5f"
+                      }
+                    ],
+                    "created_at": "2026-10-20T11:57:12Z",
+                    "decision_id": "dec-c19a4e7d95bc",
+                    "delegation_ref": null,
+                    "disposition": "accepted",
+                    "evidence": {
+                      "actor_id": null,
+                      "assurance": "host_attested",
+                      "kind": "host_attested_instruction",
+                      "presentation_ref": null,
+                      "source_locator": "cloud:webui:scenario-direction:lesson",
+                      "source_ref": {
+                        "path": ".deckmaster/objects/5c/5c30abffa61739bcd5efaad7b6930322202767a023aa085e80c22c97cdafb2e7.txt",
+                        "sha256": "5c30abffa61739bcd5efaad7b6930322202767a023aa085e80c22c97cdafb2e7"
+                      },
+                      "transport_receipt_ref": null
+                    },
+                    "invalidated_by": null,
+                    "project_id": "project",
+                    "replaces": null,
+                    "request_id": "req-d453241bec93",
+                    "schema_version": "collaboration_decision.v1",
+                    "scope": {
+                      "allow_page_membership_change": false,
+                      "allow_page_order_change": false,
+                      "external_artifact_ref": null,
+                      "layers": [
+                        "narrative"
+                      ],
+                      "page_ids": [],
+                      "page_manifest_ref": null,
+                      "purpose": "working",
+                      "subject": "deck"
+                    },
+                    "status": "active",
+                    "subject_refs": [
+                      {
+                        "artifact_kind": "narrative",
+                        "artifact_ref": {
+                          "path": ".deckmaster/objects/9f/9fe81deb38c02e53dbbef891f1acbde07ca831524fd7abbf6eabc63c31dd37f1.json",
+                          "sha256": "9fe81deb38c02e53dbbef891f1acbde07ca831524fd7abbf6eabc63c31dd37f1"
+                        },
+                        "projection": "direction"
+                      }
+                    ],
+                    "topic": "direction",
+                    "value": {
+                      "selected": "lesson"
+                    }
+                  }
+                ],
+                "authorizations": [],
+                "request_source_key": "72a171c1ef5ca2b7eb308eba333939a9069f645c02504f1aec50be889481e837",
+                "effective_decisions": [
+                  {
+                    "ref": {
+                      "path": ".deckmaster/objects/c4/c44566b5eba793e089b8c85d3be64428e496be4034f7da1b52c1d02b5cf90519.json",
+                      "sha256": "c44566b5eba793e089b8c85d3be64428e496be4034f7da1b52c1d02b5cf90519"
+                    },
+                    "record": {
+                      "authority_mode": "direct_user",
+                      "basis": [
+                        {
+                          "identity": "audience",
+                          "kind": "task_fact",
+                          "projection": "value",
+                          "ref": null,
+                          "sha256": "f2c0ff4713b1b5c5307ccc9f23bfd7c85b60b8ca16d07f78540939b82ab9a978"
+                        },
+                        {
+                          "identity": "brief",
+                          "kind": "task_fact",
+                          "projection": "value",
+                          "ref": null,
+                          "sha256": "44aaffd6aa538c18f8a2387a17a89387aae4abd41287918f09ed0ba9dd09cb5f"
+                        }
+                      ],
+                      "created_at": "2026-10-20T11:57:12Z",
+                      "decision_id": "dec-c19a4e7d95bc",
+                      "delegation_ref": null,
+                      "disposition": "accepted",
+                      "evidence": {
+                        "actor_id": null,
+                        "assurance": "host_attested",
+                        "kind": "host_attested_instruction",
+                        "presentation_ref": null,
+                        "source_locator": "cloud:webui:scenario-direction:lesson",
+                        "source_ref": {
+                          "path": ".deckmaster/objects/5c/5c30abffa61739bcd5efaad7b6930322202767a023aa085e80c22c97cdafb2e7.txt",
+                          "sha256": "5c30abffa61739bcd5efaad7b6930322202767a023aa085e80c22c97cdafb2e7"
+                        },
+                        "transport_receipt_ref": null
+                      },
+                      "invalidated_by": null,
+                      "project_id": "project",
+                      "replaces": null,
+                      "request_id": "req-d453241bec93",
+                      "schema_version": "collaboration_decision.v1",
+                      "scope": {
+                        "allow_page_membership_change": false,
+                        "allow_page_order_change": false,
+                        "external_artifact_ref": null,
+                        "layers": [
+                          "narrative"
+                        ],
+                        "page_ids": [],
+                        "page_manifest_ref": null,
+                        "purpose": "working",
+                        "subject": "deck"
+                      },
+                      "status": "active",
+                      "subject_refs": [
+                        {
+                          "artifact_kind": "narrative",
+                          "artifact_ref": {
+                            "path": ".deckmaster/objects/9f/9fe81deb38c02e53dbbef891f1acbde07ca831524fd7abbf6eabc63c31dd37f1.json",
+                            "sha256": "9fe81deb38c02e53dbbef891f1acbde07ca831524fd7abbf6eabc63c31dd37f1"
+                          },
+                          "projection": "direction"
+                        }
+                      ],
+                      "topic": "direction",
+                      "value": {
+                        "selected": "lesson"
+                      }
+                    },
+                    "effective": false,
+                    "reasons": [
+                      "request_closed"
+                    ],
+                    "basis": {
+                      "matched": [
+                        "task_fact:audience:value",
+                        "task_fact:brief:value"
+                      ],
+                      "stale": [],
+                      "unregistered": [],
+                      "current": true
+                    }
+                  }
+                ],
+                "effective_authorizations": [],
+                "blocking_cards": [
+                  {
+                    "action": "dispatch.compose",
+                    "decision": {
+                      "schema_version": "eligibility.v1",
+                      "allowed": false,
+                      "action": "dispatch.compose",
+                      "enforcement": "active",
+                      "scope": {
+                        "allow_page_membership_change": true,
+                        "allow_page_order_change": true,
+                        "external_artifact_ref": null,
+                        "layers": [
+                          "blueprint",
+                          "design",
+                          "narrative",
+                          "output",
+                          "page_copy",
+                          "plan",
+                          "review",
+                          "speech",
+                          "svg"
+                        ],
+                        "page_ids": [],
+                        "page_manifest_ref": null,
+                        "purpose": "working",
+                        "subject": "deck"
+                      },
+                      "required_artifact_refs": [
+                        {
+                          "path": ".deckmaster/objects/03/03269e2a69003ba1272f8b43bfcbb0152be39b6679a82dbb6aab10ce2b3ab900.json",
+                          "sha256": "03269e2a69003ba1272f8b43bfcbb0152be39b6679a82dbb6aab10ce2b3ab900"
+                        },
+                        {
+                          "path": ".deckmaster/objects/94/9448f956da872ed8d74e670738e39dc52b1652bea5b7d24a70ef8ca41cb9a4f0.json",
+                          "sha256": "9448f956da872ed8d74e670738e39dc52b1652bea5b7d24a70ef8ca41cb9a4f0"
+                        }
+                      ],
+                      "required_decision_topics": [],
+                      "missing_decision_topics": [],
+                      "reason_codes": [
+                        "request_closed"
+                      ],
+                      "reasons": [
+                        {
+                          "code": "request_closed",
+                          "detail": "the current request is closed (completed); start a new request for new work"
+                        }
+                      ],
+                      "responsible_role": "user",
+                      "next_action": "start a new work request for the new work",
+                      "decision_card_ref_or_projection": null,
+                      "dependency_slices": [],
+                      "eligibility_digest": "7e3cf1748393e150936e0727a3d20807a5609b65898d55758ff94b6135bcae09",
+                      "authority_assurance": "host_attested",
+                      "request_id": "req-d453241bec93",
+                      "artifact_revision_id": "1a982d9e744948429ad67336f3dab188",
+                      "control_revision_id": "1a982d9e744948429ad67336f3dab188",
+                      "facts_only": false,
+                      "binding": null,
+                      "preproduction": null,
+                      "delivery": null,
+                      "targets": {
+                        "page_ids": null,
+                        "layers": [],
+                        "subject": null
+                      }
+                    }
+                  },
+                  {
+                    "action": "dispatch.blueprint",
+                    "decision": {
+                      "schema_version": "eligibility.v1",
+                      "allowed": false,
+                      "action": "dispatch.blueprint",
+                      "enforcement": "active",
+                      "scope": {
+                        "allow_page_membership_change": true,
+                        "allow_page_order_change": true,
+                        "external_artifact_ref": null,
+                        "layers": [
+                          "blueprint",
+                          "design",
+                          "narrative",
+                          "output",
+                          "page_copy",
+                          "plan",
+                          "review",
+                          "speech",
+                          "svg"
+                        ],
+                        "page_ids": [],
+                        "page_manifest_ref": null,
+                        "purpose": "working",
+                        "subject": "deck"
+                      },
+                      "required_artifact_refs": [
+                        {
+                          "path": ".deckmaster/objects/03/03269e2a69003ba1272f8b43bfcbb0152be39b6679a82dbb6aab10ce2b3ab900.json",
+                          "sha256": "03269e2a69003ba1272f8b43bfcbb0152be39b6679a82dbb6aab10ce2b3ab900"
+                        },
+                        {
+                          "path": ".deckmaster/objects/94/9448f956da872ed8d74e670738e39dc52b1652bea5b7d24a70ef8ca41cb9a4f0.json",
+                          "sha256": "9448f956da872ed8d74e670738e39dc52b1652bea5b7d24a70ef8ca41cb9a4f0"
+                        }
+                      ],
+                      "required_decision_topics": [],
+                      "missing_decision_topics": [],
+                      "reason_codes": [
+                        "request_closed",
+                        "authority_insufficient",
+                        "needs_reviewer"
+                      ],
+                      "reasons": [
+                        {
+                          "code": "request_closed",
+                          "detail": "the current request is closed (completed); start a new request for new work"
+                        },
+                        {
+                          "code": "authority_insufficient",
+                          "detail": "no authorization names 'dispatch.blueprint' within the request scope",
+                          "action": "dispatch.blueprint"
+                        },
+                        {
+                          "code": "needs_reviewer",
+                          "detail": "the required preproduction content review has no acceptable reviewer; a review draft can still be returned, and 'continue' does not waive it",
+                          "requirement": "independent_model_or_human",
+                          "review_status": "missing",
+                          "missing_units": [
+                            "argument",
+                            "page_copy",
+                            "progression"
+                          ],
+                          "open_findings": 0
+                        }
+                      ],
+                      "responsible_role": "user",
+                      "next_action": "start a new work request for the new work",
+                      "decision_card_ref_or_projection": null,
+                      "dependency_slices": [],
+                      "eligibility_digest": "8cdbaf210eb090059d99cca90adc4a7c4064e9ea7c339a450d161a931c28a7f7",
+                      "authority_assurance": "host_attested",
+                      "request_id": "req-d453241bec93",
+                      "artifact_revision_id": "1a982d9e744948429ad67336f3dab188",
+                      "control_revision_id": "1a982d9e744948429ad67336f3dab188",
+                      "facts_only": false,
+                      "binding": null,
+                      "preproduction": {
+                        "requirement": "independent_model_or_human",
+                        "declared_requirement": "independent_model_or_human",
+                        "requirement_origin": "default_new_argument",
+                        "requirement_reasons": [],
+                        "required": true,
+                        "satisfied": false,
+                        "status": "missing",
+                        "units": [
+                          "argument",
+                          "page_copy",
+                          "progression"
+                        ],
+                        "satisfied_units": [],
+                        "missing_units": [
+                          "argument",
+                          "page_copy",
+                          "progression"
+                        ],
+                        "blocking_findings": [],
+                        "review_refs": [],
+                        "needs_reviewer": true,
+                        "via": null,
+                        "reasons": []
+                      },
+                      "delivery": null,
+                      "targets": {
+                        "page_ids": null,
+                        "layers": [],
+                        "subject": null
+                      }
+                    }
+                  },
+                  {
+                    "action": "export.delivery",
+                    "decision": {
+                      "schema_version": "eligibility.v1",
+                      "allowed": false,
+                      "action": "export.delivery",
+                      "enforcement": "active",
+                      "scope": {
+                        "allow_page_membership_change": true,
+                        "allow_page_order_change": true,
+                        "external_artifact_ref": null,
+                        "layers": [
+                          "blueprint",
+                          "design",
+                          "narrative",
+                          "output",
+                          "page_copy",
+                          "plan",
+                          "review",
+                          "speech",
+                          "svg"
+                        ],
+                        "page_ids": [],
+                        "page_manifest_ref": null,
+                        "purpose": "working",
+                        "subject": "deck"
+                      },
+                      "required_artifact_refs": [
+                        {
+                          "path": ".deckmaster/objects/03/03269e2a69003ba1272f8b43bfcbb0152be39b6679a82dbb6aab10ce2b3ab900.json",
+                          "sha256": "03269e2a69003ba1272f8b43bfcbb0152be39b6679a82dbb6aab10ce2b3ab900"
+                        },
+                        {
+                          "path": ".deckmaster/objects/94/9448f956da872ed8d74e670738e39dc52b1652bea5b7d24a70ef8ca41cb9a4f0.json",
+                          "sha256": "9448f956da872ed8d74e670738e39dc52b1652bea5b7d24a70ef8ca41cb9a4f0"
+                        }
+                      ],
+                      "required_decision_topics": [
+                        "delivery_acceptance"
+                      ],
+                      "missing_decision_topics": [
+                        "delivery_acceptance"
+                      ],
+                      "reason_codes": [
+                        "request_closed",
+                        "decision_needed",
+                        "authority_insufficient"
+                      ],
+                      "reasons": [
+                        {
+                          "code": "request_closed",
+                          "detail": "the current request is closed (completed); start a new request for new work"
+                        },
+                        {
+                          "code": "decision_needed",
+                          "detail": "required business decisions are missing or ineffective: delivery_acceptance",
+                          "missing": "decision",
+                          "topics": [
+                            "delivery_acceptance"
+                          ],
+                          "card": {
+                            "kind": "decision_card",
+                            "topics": [
+                              "delivery_acceptance"
+                            ],
+                            "projection": "delivery_acceptance",
+                            "subject_refs": [],
+                            "scope": {
+                              "allow_page_membership_change": true,
+                              "allow_page_order_change": true,
+                              "external_artifact_ref": null,
+                              "layers": [
+                                "narrative",
+                                "plan",
+                                "page_copy",
+                                "speech",
+                                "design",
+                                "blueprint",
+                                "svg",
+                                "review",
+                                "output"
+                              ],
+                              "page_ids": [],
+                              "page_manifest_ref": null,
+                              "purpose": "working",
+                              "subject": "deck"
+                            }
+                          }
+                        },
+                        {
+                          "code": "authority_insufficient",
+                          "detail": "no authorization names 'export.delivery' within the request scope",
+                          "action": "export.delivery"
+                        }
+                      ],
+                      "responsible_role": "user",
+                      "next_action": "start a new work request for the new work",
+                      "decision_card_ref_or_projection": null,
+                      "dependency_slices": [],
+                      "eligibility_digest": "670cd603f9cf6157c005f8867a462c9e3221af8eea32bc74a3307c5f1c9cdd12",
+                      "authority_assurance": "host_attested",
+                      "request_id": "req-d453241bec93",
+                      "artifact_revision_id": "1a982d9e744948429ad67336f3dab188",
+                      "control_revision_id": "1a982d9e744948429ad67336f3dab188",
+                      "facts_only": false,
+                      "binding": null,
+                      "preproduction": null,
+                      "delivery": {
+                        "professional": {
+                          "required": false,
+                          "satisfied": true,
+                          "human_signoff": false,
+                          "evidence": {
+                            "professional_use": "not_evaluated",
+                            "desktop_editing": "not_evaluated"
+                          },
+                          "reviews_considered": 0,
+                          "gap_reasons": [],
+                          "reviews": []
+                        },
+                        "output_pptx": null,
+                        "artifact_revision_id": "1a982d9e744948429ad67336f3dab188",
+                        "control_revision_id": "1a982d9e744948429ad67336f3dab188"
+                      },
+                      "targets": {
+                        "page_ids": null,
+                        "layers": [],
+                        "subject": null
+                      }
+                    }
+                  }
+                ]
+              },
+              "completion": {
+                "state": "completed",
+                "request_id": "req-d453241bec93",
+                "intent": "content_only",
+                "content_intent": "content_full",
+                "artifact_revision_id": "1a982d9e744948429ad67336f3dab188",
+                "effective_scope": {
+                  "allow_page_membership_change": true,
+                  "allow_page_order_change": true,
+                  "external_artifact_ref": null,
+                  "layers": [
+                    "narrative",
+                    "plan",
+                    "page_copy",
+                    "speech",
+                    "design",
+                    "blueprint",
+                    "svg",
+                    "review",
+                    "output"
+                  ],
+                  "page_ids": [],
+                  "page_manifest_ref": null,
+                  "purpose": "working",
+                  "subject": "deck"
+                },
+                "outputs": [
+                  {
+                    "path": ".deckmaster/objects/9f/9fe81deb38c02e53dbbef891f1acbde07ca831524fd7abbf6eabc63c31dd37f1.json",
+                    "sha256": "9fe81deb38c02e53dbbef891f1acbde07ca831524fd7abbf6eabc63c31dd37f1"
+                  },
+                  {
+                    "path": ".deckmaster/objects/6e/6e671e715dd5acab68eb72cbfe2fb1489428eca11e9599fd31c05299980e1192.json",
+                    "sha256": "6e671e715dd5acab68eb72cbfe2fb1489428eca11e9599fd31c05299980e1192"
+                  }
+                ],
+                "checks": [
+                  {
+                    "kind": "requested_content",
+                    "status": "pass",
+                    "basis": "content phases are current"
+                  }
+                ],
+                "missing": [],
+                "responsible_role": "caller",
+                "next_action": "return_requested_content"
+              },
+              "migration": {
+                "project_id": "project",
+                "revision_id": "1a982d9e744948429ad67336f3dab188",
+                "plan": {
+                  "schema_version": "collaboration_migration_plan.v1",
+                  "current_revision": "1a982d9e744948429ad67336f3dab188",
+                  "minimum_writer": "method-catalog.v1",
+                  "target_minimum_writer": "rc3-entry.v1",
+                  "needs_migration": false,
+                  "counts": {
+                    "pages": 2,
+                    "sources": 1,
+                    "reviews": 0,
+                    "tasks": 3,
+                    "runnable_tasks": 0
+                  },
+                  "tasks_to_supersede": [],
+                  "unknown_calls": 0,
+                  "known_unknown_calls": 0,
+                  "unreadable_task_refs": [],
+                  "limitations": [],
+                  "pending_decisions": [],
+                  "reusable": {
+                    "page_refs": [
+                      {
+                        "path": ".deckmaster/objects/03/03269e2a69003ba1272f8b43bfcbb0152be39b6679a82dbb6aab10ce2b3ab900.json",
+                        "sha256": "03269e2a69003ba1272f8b43bfcbb0152be39b6679a82dbb6aab10ce2b3ab900"
+                      },
+                      {
+                        "path": ".deckmaster/objects/94/9448f956da872ed8d74e670738e39dc52b1652bea5b7d24a70ef8ca41cb9a4f0.json",
+                        "sha256": "9448f956da872ed8d74e670738e39dc52b1652bea5b7d24a70ef8ca41cb9a4f0"
+                      }
+                    ],
+                    "output_pptx": false,
+                    "candidates": 0
+                  }
+                },
+                "plan_digest": "9c653fde08eb2f232ddf122420bf5dd1a46ab3b99f15f0a08ee1ab86b6048c09"
+              },
+              "effective_actions": [
+                {
+                  "action": "drafts",
+                  "supported": true,
+                  "writable": true,
+                  "reason_code": null
+                },
+                {
+                  "action": "annotations",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "request_closed"
+                },
+                {
+                  "action": "changes",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "request_closed"
+                },
+                {
+                  "action": "candidates",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "request_closed"
+                },
+                {
+                  "action": "content",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "request_closed"
+                },
+                {
+                  "action": "inputs",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "request_closed"
+                },
+                {
+                  "action": "styles",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "request_closed"
+                },
+                {
+                  "action": "icons",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "request_closed"
+                },
+                {
+                  "action": "run_desk",
+                  "supported": true,
+                  "writable": true,
+                  "reason_code": null
+                },
+                {
+                  "action": "exports",
+                  "supported": true,
+                  "writable": true,
+                  "reason_code": null
+                },
+                {
+                  "action": "restoration",
+                  "supported": true,
+                  "writable": true,
+                  "reason_code": null
+                }
+              ]
+            },
+            "historical_revision": "25c61c192d194b4f87686a0c3535e92a",
+            "task_ids": [
+              "dfc1f6d8d534",
+              "c65be018a055",
+              "7ef35c4ddf2a"
+            ]
+          },
+          "legacy": {
+            "url": "http://127.0.0.1:41017/",
+            "info": {
+              "project_id": "historical-6dd9f1cb",
+              "project_identity": "3eceb812964e2ba2f87bded3aeefde6dd131c4d8fb101cb741ec0868c73b2164",
+              "title": "",
+              "revision_id": "58902af010e346e2bcdd65138d8ec25d",
+              "project_format": "deck_document.v1",
+              "minimum_writer": null,
+              "core_readers": [
+                "deckmaster-current.v1",
+                "deckmaster-current.v2"
+              ],
+              "core_writers": [
+                "generation.v1",
+                "content-plan.v1",
+                "changes.v1",
+                "candidates.v1",
+                "run-desk.v1",
+                "style-recipes.v1",
+                "content-ops.v1",
+                "content-candidates.v1",
+                "icon-quality.v1",
+                "workbench-quality.v1",
+                "collaboration.v1",
+                "rc3.v1",
+                "rc3-entry.v1",
+                "rc4-content.v1",
+                "method-catalog.v1"
+              ],
+              "host_execution": "handoff_required",
+              "draft_journal": "ui_draft.v1",
+              "sample": null,
+              "control_revision_id": "58902af010e346e2bcdd65138d8ec25d",
+              "collaboration": {
+                "project_id": "historical-6dd9f1cb",
+                "revision_id": "58902af010e346e2bcdd65138d8ec25d",
+                "minimum_writer": null,
+                "migrated": false,
+                "authority_policy": null,
+                "quality_profile": null,
+                "request": null,
+                "decisions": [],
+                "authorizations": []
+              },
+              "completion": {
+                "state": "in_progress",
+                "request_id": null,
+                "intent": null,
+                "content_intent": null,
+                "artifact_revision_id": "58902af010e346e2bcdd65138d8ec25d",
+                "effective_scope": null,
+                "outputs": [],
+                "checks": [
+                  {
+                    "kind": "requested_content",
+                    "status": "not_evaluated",
+                    "basis": null
+                  }
+                ],
+                "missing": [],
+                "responsible_role": "content",
+                "next_action": null
+              },
+              "migration": {
+                "project_id": "historical-6dd9f1cb",
+                "revision_id": "58902af010e346e2bcdd65138d8ec25d",
+                "plan": {
+                  "schema_version": "collaboration_migration_plan.v1",
+                  "current_revision": "58902af010e346e2bcdd65138d8ec25d",
+                  "minimum_writer": null,
+                  "target_minimum_writer": "rc3-entry.v1",
+                  "needs_migration": true,
+                  "counts": {
+                    "pages": 1,
+                    "sources": 0,
+                    "reviews": 0,
+                    "tasks": 0,
+                    "runnable_tasks": 0
+                  },
+                  "tasks_to_supersede": [],
+                  "unknown_calls": 0,
+                  "known_unknown_calls": 0,
+                  "unreadable_task_refs": [],
+                  "limitations": [],
+                  "pending_decisions": [
+                    {
+                      "source": "task.presentation_mode_source",
+                      "disposition": "default_not_a_user_choice"
+                    }
+                  ],
+                  "reusable": {
+                    "page_refs": [
+                      {
+                        "path": ".deckmaster/objects/27/27c43807ce8a95ef8ef7e6782343ef768eddb6afc2963868fe05afbb40a2fe18.json",
+                        "sha256": "27c43807ce8a95ef8ef7e6782343ef768eddb6afc2963868fe05afbb40a2fe18"
+                      }
+                    ],
+                    "output_pptx": false,
+                    "candidates": 0
+                  }
+                },
+                "plan_digest": "5b2e0ca64eff13fa402b45af172d2eda3b6e89f15f3db50f55d25d45c06867df"
+              },
+              "effective_actions": [
+                {
+                  "action": "drafts",
+                  "supported": true,
+                  "writable": true,
+                  "reason_code": null
+                },
+                {
+                  "action": "annotations",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "unsupported_project_format"
+                },
+                {
+                  "action": "changes",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "unsupported_project_format"
+                },
+                {
+                  "action": "candidates",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "unsupported_project_format"
+                },
+                {
+                  "action": "content",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "unsupported_project_format"
+                },
+                {
+                  "action": "inputs",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "migration_required"
+                },
+                {
+                  "action": "styles",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "unsupported_project_format"
+                },
+                {
+                  "action": "icons",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "unsupported_project_format"
+                },
+                {
+                  "action": "run_desk",
+                  "supported": true,
+                  "writable": true,
+                  "reason_code": null
+                },
+                {
+                  "action": "exports",
+                  "supported": true,
+                  "writable": true,
+                  "reason_code": null
+                },
+                {
+                  "action": "restoration",
+                  "supported": true,
+                  "writable": true,
+                  "reason_code": null
+                }
+              ]
+            },
+            "write_refusal": "eligibility/content.inputs_update: this project predates the collaboration writer boundary; run collaboration migration apply before this action"
+          },
+          "future": {
+            "url": null,
+            "info": {
+              "project_id": null,
+              "project_identity": null,
+              "title": null,
+              "revision_id": null,
+              "project_format": "deckmaster-current.v2",
+              "minimum_writer": "future-writer.v9",
+              "core_readers": [
+                "deckmaster-current.v1",
+                "deckmaster-current.v2"
+              ],
+              "core_writers": [
+                "generation.v1",
+                "content-plan.v1",
+                "changes.v1",
+                "candidates.v1",
+                "run-desk.v1",
+                "style-recipes.v1",
+                "content-ops.v1",
+                "content-candidates.v1",
+                "icon-quality.v1",
+                "workbench-quality.v1",
+                "collaboration.v1",
+                "rc3.v1",
+                "rc3-entry.v1",
+                "rc4-content.v1",
+                "method-catalog.v1"
+              ],
+              "read_status": {
+                "status": "unreadable",
+                "reason_code": "writer_upgrade_required",
+                "detail": "this core cannot read the project pointer; open it with a matching core"
+              },
+              "host_execution": "handoff_required",
+              "draft_journal": "ui_draft.v1",
+              "sample": null,
+              "effective_actions": [
+                {
+                  "action": "drafts",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                },
+                {
+                  "action": "annotations",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                },
+                {
+                  "action": "changes",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                },
+                {
+                  "action": "candidates",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                },
+                {
+                  "action": "content",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                },
+                {
+                  "action": "inputs",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                },
+                {
+                  "action": "styles",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                },
+                {
+                  "action": "icons",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                },
+                {
+                  "action": "run_desk",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                },
+                {
+                  "action": "exports",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                },
+                {
+                  "action": "restoration",
+                  "supported": true,
+                  "writable": false,
+                  "reason_code": "writer_upgrade_required"
+                }
+              ]
+            },
+            "write_refusal": "operation_id: operation history could not be verified; preserve the original request and inspect the original operation",
+            "writer_guard": "current.json: unsupported minimum writer; use the matching core"
+          }
+        }
+      },
+      "business_bytes_unchanged": true
+    }
+  ],
+  "business_hashes": {
+    "modern": {
+      ".deckmaster/current.json": "ef32bcfa6d61c8b2b8db0db29a74694c96c6e391ae33dcb2ce84229c50b59cd6",
+      ".deckmaster/revisions/88995c0ca611400692710b81e9d84f9d.json": "0b8a1e132d96c59ff874465a72254dd923d72fbbb587cbd8adf4852581f02d94",
+      ".deckmaster/revisions/1ad5fa0e24c54d30a1337fe03151ec2a.json": "4b0b5c407c0ac42ddc98c7e97068f9c30faf83c65e0d592583b7e6583eb39989",
+      ".deckmaster/revisions/5260fa1ac55d498896aa43cd1323b787.json": "12672184bcabf2e9eb91b7dcb40b61a935a88679ff461f3459bfd766145e7c11",
+      ".deckmaster/revisions/25c61c192d194b4f87686a0c3535e92a.json": "187fd06e52e8949bf8ff50a1a5d2cecc86c649ddbcd4325ab8e104c584a70711",
+      ".deckmaster/revisions/ce3811b9e2834e20945ff3e2640988f2.json": "7471e6425e5dfec0d77ee2df1509dba8670919ad34c5249f11db15919373ba57",
+      ".deckmaster/revisions/f3ce631cd3d041269d72409c00369268.json": "fc3c4ac188e317df9f886d3e0168a097cb41327e51ae125150354cb43917dd56",
+      ".deckmaster/revisions/818c0a5bb0dc4d43ab09ab06e0cfb16d.json": "fa6964807c03ed5a43e9c1acc9318a5878be3c829a92b816e0532c9b2f82bcaf",
+      ".deckmaster/revisions/905a626bc24e4dc6966e9b191dd23b37.json": "be35eb86b4dbedb609bcfaa064225572b7f830f758ced837f5d85daae62b169d",
+      ".deckmaster/revisions/1a982d9e744948429ad67336f3dab188.json": "23d4460ef57d25984535695756dcd9f2c96523dd3b91d8b4b3337c327c2baa07",
+      ".deckmaster/revisions/f871beea94c5410ea567081a506acd72.json": "cfa6bee850a9608fe0f685a8c425d7786bc56d95f89ae0682dc82a69647089eb",
+      ".deckmaster/revisions/484ead7b07394a089114c38e179ce2de.json": "7cfc1a199ad3ef0f5508ffc4f11ff340d2416573ada407f51c5e4f790a8f30b5",
+      ".deckmaster/revisions/a8cc85ead7534379bc719aa7651ab794.json": "e7955c99c8672c8506e40a5376a4411d930d8bc7413353fedfc14ac4cf9c09dc",
+      ".deckmaster/revisions/80eb77a72e6c4e0eb24fe5f33f412db0.json": "dd9a79ceb12d1cfdc8b50bbf7296352c44ec099f9d2ab07e987a141d98f80999",
+      ".deckmaster/revisions/71cf1782536e46958a48c68720a3cf33.json": "07826e6ced503ed93214e4ff55af9463980ef9f5ea6fbd323736eca56707cc42",
+      ".deckmaster/objects/5c/5c30abffa61739bcd5efaad7b6930322202767a023aa085e80c22c97cdafb2e7.txt": "5c30abffa61739bcd5efaad7b6930322202767a023aa085e80c22c97cdafb2e7",
+      ".deckmaster/objects/94/9448f956da872ed8d74e670738e39dc52b1652bea5b7d24a70ef8ca41cb9a4f0.json": "9448f956da872ed8d74e670738e39dc52b1652bea5b7d24a70ef8ca41cb9a4f0",
+      ".deckmaster/objects/fd/fdc444b726bc72496613bf5c487c502a885d7a7bc006bb75d81e63b285c51df3.json": "fdc444b726bc72496613bf5c487c502a885d7a7bc006bb75d81e63b285c51df3",
+      ".deckmaster/objects/dd/dd54662c3aae046ed0ec91aa0aa5180ea6bc72b56a2bdaf4aa38ded78da1fcdb.json": "dd54662c3aae046ed0ec91aa0aa5180ea6bc72b56a2bdaf4aa38ded78da1fcdb",
+      ".deckmaster/objects/bc/bc04340a69bcb944f1aefe576c2672170e6560f6f71ebd85d71c441752764549.json": "bc04340a69bcb944f1aefe576c2672170e6560f6f71ebd85d71c441752764549",
+      ".deckmaster/objects/77/7795b7ff8f4b66fb8e3e1043fe7c6d2693a27e69ab5344a938b99ab108bd405d.json": "7795b7ff8f4b66fb8e3e1043fe7c6d2693a27e69ab5344a938b99ab108bd405d",
+      ".deckmaster/objects/6e/6e671e715dd5acab68eb72cbfe2fb1489428eca11e9599fd31c05299980e1192.json": "6e671e715dd5acab68eb72cbfe2fb1489428eca11e9599fd31c05299980e1192",
+      ".deckmaster/objects/8e/8e95826371b40fdd848b17044aa9c04d5be22d4f94de94d788aa251cdff56b4b.json": "8e95826371b40fdd848b17044aa9c04d5be22d4f94de94d788aa251cdff56b4b",
+      ".deckmaster/objects/09/0929d2151d5b31a056b2c576557fcdeabd3eef37b782e19573af1006b949f7f3.json": "0929d2151d5b31a056b2c576557fcdeabd3eef37b782e19573af1006b949f7f3",
+      ".deckmaster/objects/3e/3e9d7dadc962bb6ea843e14eff56b59d5c9b339ff25b97b700bda041a3ef2ab5.json": "3e9d7dadc962bb6ea843e14eff56b59d5c9b339ff25b97b700bda041a3ef2ab5",
+      ".deckmaster/objects/91/91ab1a61c3e2a62d3c71a36fa634540019bb0b6cbaf6bc162fc14f223e35cf68.json": "91ab1a61c3e2a62d3c71a36fa634540019bb0b6cbaf6bc162fc14f223e35cf68",
+      ".deckmaster/objects/ec/ec0ad16aea3f1e2cfbbe20e64f7100dc0d77012a40780b65c36858454400cab6.json": "ec0ad16aea3f1e2cfbbe20e64f7100dc0d77012a40780b65c36858454400cab6",
+      ".deckmaster/objects/c4/c44566b5eba793e089b8c85d3be64428e496be4034f7da1b52c1d02b5cf90519.json": "c44566b5eba793e089b8c85d3be64428e496be4034f7da1b52c1d02b5cf90519",
+      ".deckmaster/objects/ce/ceb7ba35ce8e6eeb89d6e00bc134c73aeaae7858d347ba4c83111325b41daf9f.txt": "ceb7ba35ce8e6eeb89d6e00bc134c73aeaae7858d347ba4c83111325b41daf9f",
+      ".deckmaster/objects/03/03269e2a69003ba1272f8b43bfcbb0152be39b6679a82dbb6aab10ce2b3ab900.json": "03269e2a69003ba1272f8b43bfcbb0152be39b6679a82dbb6aab10ce2b3ab900",
+      ".deckmaster/objects/b8/b8e7c9a3700276315dbf3a990f9b452c1d62a43bcb8374b1456ebeaab4c753f9.json": "b8e7c9a3700276315dbf3a990f9b452c1d62a43bcb8374b1456ebeaab4c753f9",
+      ".deckmaster/objects/9f/9f7a0154226c989d849e252371831c89c1f23c3cb09cb369a51c97c26bb8f13f.txt": "9f7a0154226c989d849e252371831c89c1f23c3cb09cb369a51c97c26bb8f13f",
+      ".deckmaster/objects/9f/9fe81deb38c02e53dbbef891f1acbde07ca831524fd7abbf6eabc63c31dd37f1.json": "9fe81deb38c02e53dbbef891f1acbde07ca831524fd7abbf6eabc63c31dd37f1",
+      ".deckmaster/objects/80/80cdecd55c4d8159be6db2df3aad22e7783b64c90e0631714e82361519afe643.json": "80cdecd55c4d8159be6db2df3aad22e7783b64c90e0631714e82361519afe643",
+      ".deckmaster/objects/4d/4d6892dd88754760f4ffc5e6608506fc152f9cca3b35c694783145dbcb71063c.json": "4d6892dd88754760f4ffc5e6608506fc152f9cca3b35c694783145dbcb71063c",
+      ".deckmaster/objects/40/408f61159e8239160fb16ee3b3a0d98b6ecc81ed934eb2e928529ea0cec32a4d.json": "408f61159e8239160fb16ee3b3a0d98b6ecc81ed934eb2e928529ea0cec32a4d",
+      ".deckmaster/objects/3c/3c0af818aed74b028f1a5ca2e922ee1751ca8be29ccc392cb5158e5f3c8ed4fb.json": "3c0af818aed74b028f1a5ca2e922ee1751ca8be29ccc392cb5158e5f3c8ed4fb",
+      ".deckmaster/objects/c3/c361ee82c11d4a99b0d8ecd6519680108167e7fe5ffc4675617595fd703ba194.json": "c361ee82c11d4a99b0d8ecd6519680108167e7fe5ffc4675617595fd703ba194"
+    },
+    "legacy": {
+      ".deckmaster/current.json": "9c7f5a7eaac896eb7194dffdadd98325d38dfab86c2565d2cdb181eb4b143d05",
+      ".deckmaster/revisions/58902af010e346e2bcdd65138d8ec25d.json": "8b2e52b8e2dcbd8f86876113e0ad40403569d91017ca259f8d42580f2321db27",
+      ".deckmaster/objects/27/27c43807ce8a95ef8ef7e6782343ef768eddb6afc2963868fe05afbb40a2fe18.json": "27c43807ce8a95ef8ef7e6782343ef768eddb6afc2963868fe05afbb40a2fe18"
+    },
+    "future": {
+      ".deckmaster/current.json": "1f38d82c9dd2e2f3135914cc4a0ecdd7e11f1c2dcccf04061d725266c64ed7aa",
+      ".deckmaster/revisions/88995c0ca611400692710b81e9d84f9d.json": "0b8a1e132d96c59ff874465a72254dd923d72fbbb587cbd8adf4852581f02d94",
+      ".deckmaster/revisions/1ad5fa0e24c54d30a1337fe03151ec2a.json": "4b0b5c407c0ac42ddc98c7e97068f9c30faf83c65e0d592583b7e6583eb39989",
+      ".deckmaster/revisions/5260fa1ac55d498896aa43cd1323b787.json": "12672184bcabf2e9eb91b7dcb40b61a935a88679ff461f3459bfd766145e7c11",
+      ".deckmaster/revisions/25c61c192d194b4f87686a0c3535e92a.json": "187fd06e52e8949bf8ff50a1a5d2cecc86c649ddbcd4325ab8e104c584a70711",
+      ".deckmaster/revisions/ce3811b9e2834e20945ff3e2640988f2.json": "7471e6425e5dfec0d77ee2df1509dba8670919ad34c5249f11db15919373ba57",
+      ".deckmaster/revisions/f3ce631cd3d041269d72409c00369268.json": "fc3c4ac188e317df9f886d3e0168a097cb41327e51ae125150354cb43917dd56",
+      ".deckmaster/revisions/818c0a5bb0dc4d43ab09ab06e0cfb16d.json": "fa6964807c03ed5a43e9c1acc9318a5878be3c829a92b816e0532c9b2f82bcaf",
+      ".deckmaster/revisions/905a626bc24e4dc6966e9b191dd23b37.json": "be35eb86b4dbedb609bcfaa064225572b7f830f758ced837f5d85daae62b169d",
+      ".deckmaster/revisions/1a982d9e744948429ad67336f3dab188.json": "23d4460ef57d25984535695756dcd9f2c96523dd3b91d8b4b3337c327c2baa07",
+      ".deckmaster/revisions/f871beea94c5410ea567081a506acd72.json": "cfa6bee850a9608fe0f685a8c425d7786bc56d95f89ae0682dc82a69647089eb",
+      ".deckmaster/revisions/484ead7b07394a089114c38e179ce2de.json": "7cfc1a199ad3ef0f5508ffc4f11ff340d2416573ada407f51c5e4f790a8f30b5",
+      ".deckmaster/revisions/a8cc85ead7534379bc719aa7651ab794.json": "e7955c99c8672c8506e40a5376a4411d930d8bc7413353fedfc14ac4cf9c09dc",
+      ".deckmaster/revisions/80eb77a72e6c4e0eb24fe5f33f412db0.json": "dd9a79ceb12d1cfdc8b50bbf7296352c44ec099f9d2ab07e987a141d98f80999",
+      ".deckmaster/revisions/71cf1782536e46958a48c68720a3cf33.json": "07826e6ced503ed93214e4ff55af9463980ef9f5ea6fbd323736eca56707cc42",
+      ".deckmaster/objects/5c/5c30abffa61739bcd5efaad7b6930322202767a023aa085e80c22c97cdafb2e7.txt": "5c30abffa61739bcd5efaad7b6930322202767a023aa085e80c22c97cdafb2e7",
+      ".deckmaster/objects/94/9448f956da872ed8d74e670738e39dc52b1652bea5b7d24a70ef8ca41cb9a4f0.json": "9448f956da872ed8d74e670738e39dc52b1652bea5b7d24a70ef8ca41cb9a4f0",
+      ".deckmaster/objects/fd/fdc444b726bc72496613bf5c487c502a885d7a7bc006bb75d81e63b285c51df3.json": "fdc444b726bc72496613bf5c487c502a885d7a7bc006bb75d81e63b285c51df3",
+      ".deckmaster/objects/dd/dd54662c3aae046ed0ec91aa0aa5180ea6bc72b56a2bdaf4aa38ded78da1fcdb.json": "dd54662c3aae046ed0ec91aa0aa5180ea6bc72b56a2bdaf4aa38ded78da1fcdb",
+      ".deckmaster/objects/bc/bc04340a69bcb944f1aefe576c2672170e6560f6f71ebd85d71c441752764549.json": "bc04340a69bcb944f1aefe576c2672170e6560f6f71ebd85d71c441752764549",
+      ".deckmaster/objects/77/7795b7ff8f4b66fb8e3e1043fe7c6d2693a27e69ab5344a938b99ab108bd405d.json": "7795b7ff8f4b66fb8e3e1043fe7c6d2693a27e69ab5344a938b99ab108bd405d",
+      ".deckmaster/objects/6e/6e671e715dd5acab68eb72cbfe2fb1489428eca11e9599fd31c05299980e1192.json": "6e671e715dd5acab68eb72cbfe2fb1489428eca11e9599fd31c05299980e1192",
+      ".deckmaster/objects/8e/8e95826371b40fdd848b17044aa9c04d5be22d4f94de94d788aa251cdff56b4b.json": "8e95826371b40fdd848b17044aa9c04d5be22d4f94de94d788aa251cdff56b4b",
+      ".deckmaster/objects/09/0929d2151d5b31a056b2c576557fcdeabd3eef37b782e19573af1006b949f7f3.json": "0929d2151d5b31a056b2c576557fcdeabd3eef37b782e19573af1006b949f7f3",
+      ".deckmaster/objects/3e/3e9d7dadc962bb6ea843e14eff56b59d5c9b339ff25b97b700bda041a3ef2ab5.json": "3e9d7dadc962bb6ea843e14eff56b59d5c9b339ff25b97b700bda041a3ef2ab5",
+      ".deckmaster/objects/91/91ab1a61c3e2a62d3c71a36fa634540019bb0b6cbaf6bc162fc14f223e35cf68.json": "91ab1a61c3e2a62d3c71a36fa634540019bb0b6cbaf6bc162fc14f223e35cf68",
+      ".deckmaster/objects/ec/ec0ad16aea3f1e2cfbbe20e64f7100dc0d77012a40780b65c36858454400cab6.json": "ec0ad16aea3f1e2cfbbe20e64f7100dc0d77012a40780b65c36858454400cab6",
+      ".deckmaster/objects/c4/c44566b5eba793e089b8c85d3be64428e496be4034f7da1b52c1d02b5cf90519.json": "c44566b5eba793e089b8c85d3be64428e496be4034f7da1b52c1d02b5cf90519",
+      ".deckmaster/objects/ce/ceb7ba35ce8e6eeb89d6e00bc134c73aeaae7858d347ba4c83111325b41daf9f.txt": "ceb7ba35ce8e6eeb89d6e00bc134c73aeaae7858d347ba4c83111325b41daf9f",
+      ".deckmaster/objects/03/03269e2a69003ba1272f8b43bfcbb0152be39b6679a82dbb6aab10ce2b3ab900.json": "03269e2a69003ba1272f8b43bfcbb0152be39b6679a82dbb6aab10ce2b3ab900",
+      ".deckmaster/objects/b8/b8e7c9a3700276315dbf3a990f9b452c1d62a43bcb8374b1456ebeaab4c753f9.json": "b8e7c9a3700276315dbf3a990f9b452c1d62a43bcb8374b1456ebeaab4c753f9",
+      ".deckmaster/objects/9f/9f7a0154226c989d849e252371831c89c1f23c3cb09cb369a51c97c26bb8f13f.txt": "9f7a0154226c989d849e252371831c89c1f23c3cb09cb369a51c97c26bb8f13f",
+      ".deckmaster/objects/9f/9fe81deb38c02e53dbbef891f1acbde07ca831524fd7abbf6eabc63c31dd37f1.json": "9fe81deb38c02e53dbbef891f1acbde07ca831524fd7abbf6eabc63c31dd37f1",
+      ".deckmaster/objects/80/80cdecd55c4d8159be6db2df3aad22e7783b64c90e0631714e82361519afe643.json": "80cdecd55c4d8159be6db2df3aad22e7783b64c90e0631714e82361519afe643",
+      ".deckmaster/objects/4d/4d6892dd88754760f4ffc5e6608506fc152f9cca3b35c694783145dbcb71063c.json": "4d6892dd88754760f4ffc5e6608506fc152f9cca3b35c694783145dbcb71063c",
+      ".deckmaster/objects/40/408f61159e8239160fb16ee3b3a0d98b6ecc81ed934eb2e928529ea0cec32a4d.json": "408f61159e8239160fb16ee3b3a0d98b6ecc81ed934eb2e928529ea0cec32a4d",
+      ".deckmaster/objects/3c/3c0af818aed74b028f1a5ca2e922ee1751ca8be29ccc392cb5158e5f3c8ed4fb.json": "3c0af818aed74b028f1a5ca2e922ee1751ca8be29ccc392cb5158e5f3c8ed4fb",
+      ".deckmaster/objects/c3/c361ee82c11d4a99b0d8ecd6519680108167e7fe5ffc4675617595fd703ba194.json": "c361ee82c11d4a99b0d8ecd6519680108167e7fe5ffc4675617595fd703ba194"
+    }
+  }
+}

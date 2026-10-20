@@ -22,7 +22,7 @@
   ],
   "package_evidence_ref": "docs/reports/rc5/package-verification-cloud-review.json",
   "spec_drift_review": "PASS",
-  "implementation_status": "IMPLEMENTED_DRAFT_VERIFICATION_PARTIAL",
+  "implementation_status": "IMPLEMENTED_ENGINEERING_VERIFIED_PENDING_FINAL_CI_AND_DRAFT",
   "acceptance": [
     {
       "ac_id": "AC01",
@@ -57,10 +57,10 @@
       "limitations": "PR metadata GraphQL denied; parent CI confirmation plus local git/code/report correspondence. PR127 remains a declared dependency."
     }
   ],
-  "product_tests": "PASS_SCOPED_REGRESSION",
-  "browser": "PASS_SCOPED_BROWSER_PATHS",
-  "installed": "PASS_CANDIDATE_NOT_ACTIVATED",
-  "actual_host": "PARTIAL_TEACHING_PLAN_ONLY",
+  "product_tests": "PASS_83_PLUS_441_PLUS_1_SCOPED",
+  "browser": "PASS_ENGINEERING_MATRIX",
+  "installed": "PASS_CLEAN_SHA_INSTALL_AND_TEMPORARY_ROLLBACK",
+  "actual_host": "PASS_THREE_CONTENT_FULL_SCENARIOS_CURRENT_AGENT",
   "professional_review": "NOT_RUN",
   "human_acceptance": "NOT_RUN",
   "implementation_acceptance": [
@@ -70,41 +70,47 @@
       "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
       "coverage": "verified",
       "limitations": "Six reader families compared against immutable project bytes; GET/preview no business writes."
     },
     {
       "ac_id": "AC06",
       "owner": "WU01",
-      "result": "NOT_RUN",
+      "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
-      "coverage": "partial_or_not_run",
-      "limitations": "Unreachable and duplicate query covered; exhaustive cross-project/cross-revision malicious-ref matrix not run."
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
+      "coverage": "verified",
+      "limitations": "Cross-project, committed revision, orphan disk object and arbitrary Task input references rejected by real Store readers."
     },
     {
       "ac_id": "AC07",
       "owner": "WU01",
-      "result": "NOT_RUN",
+      "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
-      "coverage": "partial_or_not_run",
-      "limitations": "Fixed revision/query/pagination checks exist; new index pagination under concurrent current changes not exhaustively exercised."
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
+      "coverage": "verified",
+      "limitations": "Pagination pinned across current changes; existing strict duplicate/invalid query tests retained."
     },
     {
       "ac_id": "AC08",
@@ -112,97 +118,111 @@
       "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
       "coverage": "verified",
       "limitations": "Corrupt Narrative, Review, Page requirements and source extraction discriminate unreadable/null/partial; schema rejects invented unreadable fields."
     },
     {
       "ac_id": "AC09",
       "owner": "WU01",
-      "result": "NOT_RUN",
+      "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
-      "coverage": "partial_or_not_run",
-      "limitations": "Imported no-Narrative and Review v1 exercised; all legacy no-manifest and v2-extension combinations not exercised through new UI."
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
+      "coverage": "verified",
+      "limitations": "Old absent method manifest, imported absent Narrative/mapping, v1/v2 Review matrix; installed legacy read and gates."
     },
     {
       "ac_id": "AC10",
       "owner": "WU01",
-      "result": "NOT_RUN",
+      "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
-      "coverage": "partial_or_not_run",
-      "limitations": "Safe text rendering, no unrelated resource body scan, disposed-reader guard implemented; comprehensive XSS/late-response browser matrix not run."
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
+      "coverage": "verified",
+      "limitations": "Untrusted Narrative text rendered without executing image handler; held late HTTP response cannot overwrite new selection; unselected bodies not read."
     },
     {
       "ac_id": "AC11",
       "owner": "WU02",
-      "result": "NOT_RUN",
+      "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
-      "coverage": "partial_or_not_run",
-      "limitations": "Actual frozen manifest readback tested; old-task browser empty state not separately exercised."
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
+      "coverage": "verified",
+      "limitations": "Frozen manifest order/hash retained; no-manifest Task UI explicitly not_recorded; actual Host frozen methods hash readback."
     },
     {
       "ac_id": "AC12",
       "owner": "WU02",
-      "result": "NOT_RUN",
+      "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
-      "coverage": "partial_or_not_run",
-      "limitations": "Historical hash/ID fallback implemented and inspected; old-install metadata UI matrix not run."
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
+      "coverage": "verified",
+      "limitations": "Historical hashes/IDs remain frozen; current missing/hash_mismatch separately displayed; unverified metadata remains ID fallback."
     },
     {
       "ac_id": "AC13",
       "owner": "WU02",
-      "result": "NOT_RUN",
+      "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
-      "coverage": "partial_or_not_run",
-      "limitations": "Core resource-drift regression previously passed; new task-methods UI missing/hash-drift recovery path not fully exercised."
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
+      "coverage": "verified",
+      "limitations": "Missing/hash drift Task UI identifies objects and keeps frozen manifest; selected resource missing/invalid UTF8 is partial and disables copy."
     },
     {
       "ac_id": "AC14",
       "owner": "WU02",
-      "result": "NOT_RUN",
+      "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
-      "coverage": "partial_or_not_run",
-      "limitations": "Existing operation recovery tests pass; method-panel unknown-call scenario not specifically exercised."
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
+      "coverage": "verified",
+      "limitations": "Unknown call ledger + real browser method expansion causes no allocation/retry/cancel/dispatch; original generation unknown guard regression passes."
     },
     {
       "ac_id": "AC15",
@@ -210,11 +230,13 @@
       "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
       "coverage": "verified",
       "limitations": "UI states distinguish readable/prepared/adopted; no professional/human success implied."
     },
@@ -224,27 +246,31 @@
       "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
       "coverage": "verified",
       "limitations": "Zero-Page Narrative plus actual associated Plan tested; distinct pairs do not borrow each other’s Plan; installed actual Host has four planned roles."
     },
     {
       "ac_id": "AC17",
       "owner": "WU03",
-      "result": "NOT_RUN",
+      "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
-      "coverage": "partial_or_not_run",
-      "limitations": "Full raw Narrative preserved and structured nodes/edges/plans read; all alternatives/condition rendering shapes not browser-tested."
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
+      "coverage": "verified",
+      "limitations": "Narrative conditions/issues/alternatives preserve original structure; three actual Host content scenarios read back."
     },
     {
       "ac_id": "AC18",
@@ -252,12 +278,13 @@
       "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json",
-        "../../reports/webui-content-methods/evidence/wu08-followup.log"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "pytest -q tests/rebuild/test_webui_content_insight_browser.py -k 'adoption_lost or adoption_concurrent or fixed_current'",
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
       "coverage": "verified",
       "limitations": "PASS: real browser current+candidate and current+historical fixed comparisons survive background pointer/revision change and refresh; no write controls. Distinct Plan pairing covered by existing service test. Synthetic Runtime projects, not Host quality evidence.",
       "test_definition_sha": "9c493c6e1b0d6b6837dfc2f7f6f3e40651847976"
@@ -268,11 +295,13 @@
       "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
       "coverage": "verified",
       "limitations": "Missing decision vs recordable vs adoptable, reuse and historical read-only verified; existing collaboration policy regression passes."
     },
@@ -282,12 +311,13 @@
       "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json",
-        "../../reports/webui-content-methods/evidence/wu08-followup.log"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "pytest -q tests/rebuild/test_webui_content_insight_browser.py -k 'adoption_lost or adoption_concurrent or fixed_current'",
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
       "coverage": "verified",
       "limitations": "PASS: lost decision ACK prior test plus lost adoption ACK refresh/lookup without second write; intervening concurrent revision preserves old payload/base and decision, requires explicit new request with new UUID before adoption. No duplicate decision or dispatch.",
       "test_definition_sha": "9c493c6e1b0d6b6837dfc2f7f6f3e40651847976"
@@ -298,41 +328,48 @@
       "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
       "coverage": "verified",
       "limitations": "Two independent writes adopt Narrative only; task refs unchanged, no Page/image dispatch."
     },
     {
       "ac_id": "AC22",
       "owner": "WU03",
-      "result": "NOT_RUN",
+      "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
-      "coverage": "partial_or_not_run",
-      "limitations": "Existing compose sub-intent regressions pass; new reading-entry write_only/speech_only browser fixtures outstanding."
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
+      "coverage": "verified",
+      "limitations": "write_only/speech_only browser and admission matrix does not reopen direction; existing compose sub-intent tests pass."
     },
     {
       "ac_id": "AC23",
       "owner": "WU04",
-      "result": "NOT_RUN",
+      "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json",
+        "../../reports/webui-content-methods/evidence/matrix-long.log"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
-      "coverage": "partial_or_not_run",
-      "limitations": "Paragraph atom/source read and deep-link exercised; table cell, item, keyboard/selection matrix outstanding."
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
+      "coverage": "verified",
+      "limitations": "Paragraph, table cell and bullet atoms; native selection, keyboard navigation and original qualifications retained."
     },
     {
       "ac_id": "AC24",
@@ -340,27 +377,31 @@
       "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
       "coverage": "verified",
       "limitations": "Synthetic later current Narrative leaves original Page bound to older Narrative/source; fixed earlier revision remains current alignment."
     },
     {
       "ac_id": "AC25",
       "owner": "WU04",
-      "result": "NOT_RUN",
+      "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
-      "coverage": "partial_or_not_run",
-      "limitations": "Absent mapping, invalid review locator and corrupt source handled; exhaustive Page atom-invalid UI matrix outstanding."
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
+      "coverage": "verified",
+      "limitations": "Explicit legacy absent mapping and invalid atom browser cases; corrupt source/Narrative partial responses and old Page binding retained."
     },
     {
       "ac_id": "AC26",
@@ -368,11 +409,13 @@
       "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
       "coverage": "verified",
       "limitations": "Method preview uses separate resolver/resources, immutable project bytes unchanged; never registers example data as sources."
     },
@@ -382,69 +425,79 @@
       "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
       "coverage": "verified",
       "limitations": "Review Ref/revision/ID/index -> Page atom -> reload -> return tested in source and installed service; no default-first fallback."
     },
     {
       "ac_id": "AC28",
       "owner": "WU05",
-      "result": "NOT_RUN",
+      "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
-      "coverage": "partial_or_not_run",
-      "limitations": "Actual v1 required finding_id/impact/resolution retained, corrupt object rejected; all v2 impact/resolution/browser combinations outstanding."
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
+      "coverage": "verified",
+      "limitations": "v1/v2 needs_review/not_evaluated/not_applicable and raw impact/resolution matrix; fixed finding identity and honest browser states."
     },
     {
       "ac_id": "AC29",
       "owner": "WU05",
-      "result": "NOT_RUN",
+      "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
-      "coverage": "partial_or_not_run",
-      "limitations": "Valid atom exact vs missing atom page_only tested; deck-level and changed-page subject scenarios not fully browser-tested."
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
+      "coverage": "verified",
+      "limitations": "Exact atom, absent atom, deck-level and changed subject Page cases; no guessed newer text; real browser deep links."
     },
     {
       "ac_id": "AC30",
       "owner": "WU05",
-      "result": "NOT_RUN",
+      "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
-      "coverage": "partial_or_not_run",
-      "limitations": "Separate per-finding personal drafts preserve Ref/revision/index; final draft-to-plan/commit exact-scope full browser chain outstanding."
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
+      "coverage": "verified",
+      "limitations": "Per-finding personal draft to existing actual plan/commit exact scope; save-in-flight single click, multi-draft restore/import isolation."
     },
     {
       "ac_id": "AC31",
       "owner": "WU05",
-      "result": "NOT_RUN",
+      "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
-      "coverage": "partial_or_not_run",
-      "limitations": "Source findings remain source layer; existing scope/review-only runtime regression passes; all layer-specific browser handoffs outstanding."
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
+      "coverage": "verified",
+      "limitations": "review_only core boundary plus speech/design/source browser handoffs cannot become body repair."
     },
     {
       "ac_id": "AC32",
@@ -452,27 +505,31 @@
       "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
       "coverage": "verified",
       "limitations": "Draft/reading leaves review and business Document unchanged; adoption does not mutate findings."
     },
     {
       "ac_id": "AC33",
       "owner": "WU05",
-      "result": "NOT_RUN",
+      "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
-      "coverage": "partial_or_not_run",
-      "limitations": "Existing content operation recovery regression passes; newly prepared review-draft stale/scope/network scenarios not all exercised."
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
+      "coverage": "verified",
+      "limitations": "New handoff real plan/commit stale base, scope rejection and lost commit ACK restore original UUID; retain draft and finding metadata."
     },
     {
       "ac_id": "AC34",
@@ -480,55 +537,64 @@
       "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
       "coverage": "verified",
       "limitations": "Neutral purpose/audience wording inspected; actual teaching Plan has no commercial CTA or budget requirement."
     },
     {
       "ac_id": "AC35",
       "owner": "WU06",
-      "result": "NOT_RUN",
+      "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
-      "coverage": "partial_or_not_run",
-      "limitations": "Placeholders only and old browser input regressions preserved; all new purpose examples not separately exercised."
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
+      "coverage": "verified",
+      "limitations": "Neutral purpose editing preserves user input after closing/reopening; business document/intent/speech policy unchanged; existing intake browser regression."
     },
     {
       "ac_id": "AC36",
       "owner": "WU06",
-      "result": "NOT_RUN",
+      "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
-      "coverage": "partial_or_not_run",
-      "limitations": "Frozen exact Page matching and derived fallback implemented; multiple frozen-task selection guard inspected, full scenario matrix outstanding."
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
+      "coverage": "verified",
+      "limitations": "Exact Page frozen requirements vs derived; multiple matching tasks do not arbitrarily select; resolver regressions."
     },
     {
       "ac_id": "AC37",
       "owner": "WU06",
-      "result": "NOT_RUN",
+      "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json",
+        "../../reports/webui-content-methods/evidence/matrix-long.log"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
-      "coverage": "partial_or_not_run",
-      "limitations": "Installed teaching roles/conditions readable; overflow-driven content handoff scenario not exercised."
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
+      "coverage": "verified",
+      "limitations": "Long bullet/qualification content and design requirements readable at 390px; whole Page bytes retained and no automatic trimming/rendering."
     },
     {
       "ac_id": "AC38",
@@ -536,11 +602,13 @@
       "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
       "coverage": "verified",
       "limitations": "Requirements read is byte-preserving; no render/production side effects."
     },
@@ -550,27 +618,31 @@
       "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
       "coverage": "verified",
       "limitations": "Shared resolver selection, strict query/ID boundary and no-new-phase 200 browser state verified."
     },
     {
       "ac_id": "AC40",
       "owner": "WU07",
-      "result": "NOT_RUN",
+      "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
-      "coverage": "partial_or_not_run",
-      "limitations": "M04+E04 exact DAG/default/explicit/dependency bytes tested; role/stage transition browser coverage partial."
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
+      "coverage": "verified",
+      "limitations": "M04/E04 DAG with exact defaults/explicit/dependencies; live role/phase switches revalidate with actual resolver."
     },
     {
       "ac_id": "AC41",
@@ -578,41 +650,47 @@
       "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
       "coverage": "verified",
       "limitations": "Preparation preview and browser selection do not alter original Task manifest or dispatch."
     },
     {
       "ac_id": "AC42",
       "owner": "WU07",
-      "result": "NOT_RUN",
+      "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
-      "coverage": "partial_or_not_run",
-      "limitations": "Raw UTF8 body, DAG before exclusion and no script reads/execution tested; over-limit body and all preview variants not browser-tested."
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
+      "coverage": "verified",
+      "limitations": "All E04 input/after/before/walkthrough/data plus registered script returned as exact text without execution; invalid UTF8, body size and hash limits covered."
     },
     {
       "ac_id": "AC43",
       "owner": "WU07",
-      "result": "NOT_RUN",
+      "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
-      "coverage": "partial_or_not_run",
-      "limitations": "Digest mismatch409 and saved personal IDs implemented; clipboard invalidation across byte/revision changes not fully browser-tested."
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
+      "coverage": "verified",
+      "limitations": "Stored IDs restored across refresh/revision; catalog/body/revision drift blocks old copy; selection retained through partial failures."
     },
     {
       "ac_id": "AC44",
@@ -620,41 +698,50 @@
       "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json",
+        "../../reports/webui-content-methods/evidence/three-scenario-summary.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
       "coverage": "verified",
       "limitations": "Session agent read real frozen methods, claimed actual Host tasks and returned accepted Narrative+Plan with selected M04. Not an independent reviewer."
     },
     {
       "ac_id": "AC45",
       "owner": "WU08",
-      "result": "NOT_RUN",
+      "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json",
+        "../../reports/webui-content-methods/evidence/three-scenario-summary.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
-      "coverage": "partial_or_not_run",
-      "limitations": "Only teaching actual Host plan_only plus synthetic Runtime browser projects; diagnosis and option-choice full scenario chains remain outstanding."
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
+      "coverage": "verified",
+      "limitations": "Three actual current-agent Host Runtime content_full scenarios: framing/argument/decision/adoption/two Pages; browser mainline/source/review locator/handoff on copies. Review records are explicitly synthetic; no independent quality approval."
     },
     {
       "ac_id": "AC46",
       "owner": "WU08",
-      "result": "NOT_RUN",
+      "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json",
+        "../../reports/webui-content-methods/evidence/matrix-long.log"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
-      "coverage": "partial_or_not_run",
-      "limitations": "1280x800/1440x900/390x844 no page overflow, existing keyboard/navigation regression passes; full new control focus/keyboard audit outstanding."
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
+      "coverage": "verified",
+      "limitations": "1280x800/1440x900/390x844 keyboard primary actions, modal focus return, method body focus, Review->atom->return->draft; long/table/bullet content and installed no page overflow."
     },
     {
       "ac_id": "AC47",
@@ -662,27 +749,32 @@
       "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
       "coverage": "verified",
-      "limitations": "Clean exact SHA wheel/sdist, isolated managed candidate, installed service static hash and three-viewport plus adoption browser path; no checkout resources/HOME activation."
+      "limitations": "Clean exact SHA wheel/sdist, isolated managed installation; -I installed service with no checkout sys.path, served static SHA and three viewport/two-write browser paths."
     },
     {
       "ac_id": "AC48",
       "owner": "WU08",
-      "result": "NOT_RUN",
+      "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json",
+        "../../reports/webui-content-methods/evidence/rollback-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
-      "coverage": "partial_or_not_run",
-      "limitations": "Existing package/compose/adapters compatibility regression passes; explicit UI removal/rollback installation exercise not run."
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
+      "coverage": "verified",
+      "limitations": "Real managed baseline -> new -> rollback at temporary prefix, register_host=False; old/new UI read same projects/history/old Task. Legacy write and future writer guards refuse. Business object/current/revision hashes unchanged."
     },
     {
       "ac_id": "AC49",
@@ -690,13 +782,15 @@
       "result": "NOT_RUN",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
-      "coverage": "partial_or_not_run",
-      "limitations": "Exact source/package/local checks recorded; required remote CI for new Draft is pending, no old PR127 CI reused as this PR evidence."
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
+      "coverage": "pending_external_confirmation",
+      "limitations": "PENDING parent connected GitHub final-head CI and independent Draft PR creation; no reuse of PR127 or earlier branch CI."
     },
     {
       "ac_id": "AC50",
@@ -704,63 +798,65 @@
       "result": "PASS",
       "evidence_refs": [
         "../../reports/webui-content-methods/DELIVERY.md",
-        "../../reports/webui-content-methods/evidence/package-verification.json"
+        "../../reports/webui-content-methods/evidence/matrix-final.log",
+        "../../reports/webui-content-methods/evidence/regression-closure.log",
+        "../../reports/webui-content-methods/evidence/package-closure.json"
       ],
-      "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
-      "environment": "cloud Python3.12 / system Chromium; installed server from isolated wheel",
-      "command_or_steps": "See DELIVERY.md verification table and mapped source tests",
+      "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+      "environment": "cloud Python3.12/system Chromium; exact SHA isolated installed server",
+      "command_or_steps": "DELIVERY.md and WU08-FOLLOWUP.md closure commands and per-AC mapping",
       "coverage": "verified",
-      "limitations": "Engineering/browser/installed/actual Host/professional/human statuses separately recorded; no merge, publication or human approval claimed."
+      "limitations": "Engineering, installed, actual Host, synthetic Review, independent professional review and human acceptance are separately recorded; latter two NOT_RUN."
     }
   ],
   "implementation_branch": "codex/webui-content-methods-impl-20261020",
-  "candidate_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
+  "candidate_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
   "evidence_report": "../../reports/webui-content-methods/DELIVERY.md",
   "cards": [
     {
       "id": "WU00",
       "implementation": "BASELINE_PASS",
-      "acceptance": "See per-AC results; implementation status does not close outstanding acceptance"
+      "acceptance": "PASS scoped engineering AC; professional/human approval separate"
     },
     {
       "id": "WU01",
       "implementation": "IMPLEMENTED",
-      "acceptance": "See per-AC results; implementation status does not close outstanding acceptance"
+      "acceptance": "PASS scoped engineering AC; professional/human approval separate"
     },
     {
       "id": "WU02",
       "implementation": "IMPLEMENTED",
-      "acceptance": "See per-AC results; implementation status does not close outstanding acceptance"
+      "acceptance": "PASS scoped engineering AC; professional/human approval separate"
     },
     {
       "id": "WU03",
       "implementation": "IMPLEMENTED",
-      "acceptance": "See per-AC results; implementation status does not close outstanding acceptance"
+      "acceptance": "PASS scoped engineering AC; professional/human approval separate"
     },
     {
       "id": "WU04",
       "implementation": "IMPLEMENTED",
-      "acceptance": "See per-AC results; implementation status does not close outstanding acceptance"
+      "acceptance": "PASS scoped engineering AC; professional/human approval separate"
     },
     {
       "id": "WU05",
       "implementation": "IMPLEMENTED",
-      "acceptance": "See per-AC results; implementation status does not close outstanding acceptance"
+      "acceptance": "PASS scoped engineering AC; professional/human approval separate"
     },
     {
       "id": "WU06",
       "implementation": "IMPLEMENTED",
-      "acceptance": "See per-AC results; implementation status does not close outstanding acceptance"
+      "acceptance": "PASS scoped engineering AC; professional/human approval separate"
     },
     {
       "id": "WU07",
       "implementation": "IMPLEMENTED",
-      "acceptance": "See per-AC results; implementation status does not close outstanding acceptance"
+      "acceptance": "PASS scoped engineering AC; professional/human approval separate"
     },
     {
       "id": "WU08",
-      "implementation": "VALIDATION_PARTIAL",
-      "acceptance": "See per-AC results; implementation status does not close outstanding acceptance"
+      "implementation": "ENGINEERING_VERIFIED_PENDING_FINAL_CI",
+      "acceptance": "AC45/46/47/48/50 PASS; AC49 PENDING parent final-head CI/Draft"
     }
   ],
   "remote_delivery": {
@@ -772,16 +868,18 @@
     "error": "Post \"https://api.github.com/graphql\": Forbidden",
     "pr_url": null,
     "retry": "NO_CREATION_RETRY_OR_CHANNEL_SWITCH",
-    "next_step": "Parent independently checks existing PR with authorized read access; do not recreate until outcome confirmed",
+    "next_step": "Parent owns authorized connected GitHub final-head checks and Draft creation; this task does not repeat forbidden gh access",
     "previous_label": "DENIED (ambiguous shorthand, not a tool approval rejection)",
     "tool_approval_denial": false,
-    "remote_creation_outcome": "UNCERTAIN_NOT_CONFIRMED",
+    "remote_creation_outcome": "PARENT_CONFIRMED_NO_PR_AT_PRIOR_CHECK",
     "read_only_verification": {
       "command": "gh pr list --state all --head codex/webui-content-methods-impl-20261020 --json number,url,state,isDraft,headRefName,headRefOid,baseRefName",
       "exit_code": 1,
       "error": "Post \"https://api.github.com/graphql\": Forbidden",
       "outcome": "ACCESS_ERROR_NO_RESULT"
-    }
+    },
+    "final_head_ci": "PENDING",
+    "parent_prior_branch_ci": "39415132380 at 6ee00b9b; not final candidate evidence"
   },
   "followup": {
     "runtime_source_sha": "3c6d4a4160041cfa11ce88a0e9bea2ae46f872c3",
@@ -790,5 +888,17 @@
     "runtime_code_changed": false,
     "professional_review": "NOT_RUN",
     "human_acceptance": "NOT_RUN"
+  },
+  "closure": {
+    "runtime_source_sha": "3baf6caa060d95b0f59bc2a3b973b7edc122c553",
+    "tests": [
+      "83 passed in 126.17s",
+      "441 passed in 100.58s",
+      "1 passed, 51 deselected in 1.79s"
+    ],
+    "overlap": "Groups may overlap; do not claim a deduplicated total",
+    "independent_professional_review": "NOT_RUN",
+    "human_acceptance": "NOT_RUN",
+    "original_worktree_integrity": "six original uncommitted file hashes unchanged"
   }
 }
