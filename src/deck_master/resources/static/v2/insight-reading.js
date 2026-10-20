@@ -41,13 +41,14 @@ export function argumentDesk(app) {
       app.route.proposal&&el('div',{class:'row wrap'},select,button('固定比较两份主线',()=>{if(select.value)open(app.route.proposal,select.value);})),
       el('div',{class:'row wrap'},button('上一组',()=>{offset=Math.max(0,offset-30);load();},false,{disabled:offset===0}),button('下一组',()=>{offset=value.data.pagination.next_offset;load();},false,{disabled:value.data?.pagination.next_offset==null})),issues(value));
   }));}
-  for(const sha of [app.route.proposal,app.route.compare_proposal].filter(Boolean))reading.append(reader(app,`/api/content/arguments/${sha}`+revisionQuery(revision),value=>el('div',{class:'stack'},narrativeBody(value),value.data&&!app.route.compare_proposal&&!app.readonly&&adoptionControls(app,value))));
+  for(const sha of [app.route.proposal,app.route.compare_proposal].filter(Boolean))reading.append(reader(app,`/api/content/arguments/${sha}`+revisionQuery(revision),value=>el('div',{class:'stack'},narrativeBody(value),value.data&&!app.route.compare_proposal&&adoptionControls(app,value))));
   root.append(list,reading);load();return root;
 }
 function adoptionControls(app,value){
   const d=value.data,a=d.adoption;
   const node=el('div',{class:'stack'},details('采用范围与影响',a));
-  if(!(a.can_adopt||a.can_record_direction_decision)) {node.append(el('p',{},'此对象目前只读。'),details('阻断原因',[...a.decision_reason_codes,...a.adoption_reason_codes]));return node;}
+  try{if(localStorage.getItem(`deck-master:direction:${app.info.project_identity}:${d.item.ref.sha256}`))node.append(button('核实或查看原方向操作',()=>directionDialog(app,value)));}catch{node.append(el('p',{},'方向操作缓冲暂不可读。'));}
+  if(app.readonly||!(a.can_adopt||a.can_record_direction_decision)) {node.append(el('p',{},'此对象目前只读。'),details('阻断原因',[...a.decision_reason_codes,...a.adoption_reason_codes]));return node;}
   node.append(button(a.can_adopt?'核对并采用此方向':'记录方向决定',()=>directionDialog(app,value),true));return node;
 }
 function directionDialog(app,initial){

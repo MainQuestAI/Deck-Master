@@ -313,13 +313,22 @@ def review_reading(project, review_id, *, revision=None, review_sha256=None):
                 exact = bool(finding['element_refs']) and set(finding['element_refs']) <= atoms and entry['page'] in value['subjects']
             except READ_FAILURES:
                 gaps.append(issue(entry['page'], 'page', pid))
-        layer = {'page_copy': 'content', 'content': 'content', 'speech': 'speech', 'blueprint_content': 'design', 'blueprint_fidelity': 'design'}.get(value['kind'])
+        layer = ({'source': 'source', 'design': 'design'}.get(finding['kind'])
+            if finding['kind'] != 'content' else
+            {'page_copy': 'content', 'content': 'content', 'speech': 'speech',
+             'blueprint_content': 'design', 'blueprint_fidelity': 'design'}.get(value['kind']))
         request = (doc.get('collaboration') or {}).get('request') or {}
         scope = request.get('scope') or {}
-        allowed = bool(entry and layer and request.get('intent') != 'review_only'
+        from .eligibility import scope_page_ids
+        try:
+            scope_pages = scope_page_ids(store, scope) or []
+        except READ_FAILURES:
+            scope_pages = []
+        allowed = bool(entry and layer and not request.get('closed') and not request.get('paused')
+            and request.get('intent') != 'review_only'
             and doc['revision_id'] == store.current_revision_id()
-            and pid in scope.get('page_ids', [])
-            and ('page_copy' if layer == 'content' else layer) in scope.get('layers', []))
+            and pid in scope_pages
+            and {'content': 'page_copy', 'speech': 'speech', 'design': 'blueprint'}.get(layer) in scope.get('layers', []))
         # The UI prepares a draft only; existing plan/commit owns live admission.
         targets.append({'finding_id': finding['finding_id'], 'source_index': index, 'page_id': pid,
                         'page_ref': entry['page'] if entry else None, 'element_refs': finding['element_refs'],
@@ -330,23 +339,42 @@ def review_reading(project, review_id, *, revision=None, review_sha256=None):
 
 def requirements(project, page_id, *, revision=None):
     from .design_requirements import resolve_content_requirements
-    store, doc = snapshot(project, revision); entry, _ = page_object(store, doc, page_id)
+    store, doc = snapshot(project, revision)
     try:
-        from .production import stored_blueprint_request
-        for _, task in reversed(records(store, doc, 'tasks')[0]):
-            if task['kind'] != 'blueprint' or task.get('scope_pages') != [page_id]:
-                continue
+        entry, _ = page_object(store, doc, page_id)
+    except InsightError:
+        raise
+    except READ_FAILURES:
+        entry = next(p for p in doc['pages'] if p['page_id'] == page_id)
+        return envelope(doc, 'content_requirements', None, [issue(entry['page'], 'page', page_id)], 'unreadable')
+    from .production import stored_blueprint_request
+    tasks, gaps = records(store, doc, 'tasks')
+    frozen_matches = []
+    for task_ref, task in tasks:
+        if task['kind'] != 'blueprint' or task.get('scope_pages') != [page_id]:
+            continue
+        try:
             prepared, _ = stored_blueprint_request(store, task)
             frozen = (prepared or {}).get('resolved_design_context') or {}
             if frozen.get('content_basis', {}).get('page_ref') == entry['page']:
-                return envelope(doc, 'content_requirements', {'page_id': page_id, 'page_ref': entry['page'],
-                    'origin': 'frozen_task', 'producer_task_id': task['task_id'],
-                    'content_requirements': frozen['content_requirements'], 'content_basis': frozen['content_basis']})
+                frozen_matches.append((task, frozen))
+        except READ_FAILURES:
+            gaps.append(issue(task_ref, 'requirements_task', page_id))
+    if len(frozen_matches) == 1:
+        task, frozen = frozen_matches[0]
+        return envelope(doc, 'content_requirements', {'page_id': page_id, 'page_ref': entry['page'],
+            'origin': 'frozen_task', 'producer_task_id': task['task_id'],
+            'content_requirements': frozen['content_requirements'], 'content_basis': frozen['content_basis']}, gaps)
+    if len(frozen_matches) > 1:
+        gaps.append({'code': 'insight_requirements_multiple_tasks', 'field': 'requirements_task',
+            'message': '同页有多份冻结任务要求；以下只展示快照推导值，不任意代选任务。',
+            'ref': entry['page'], 'page_id': page_id})
+    try:
         data = resolve_content_requirements(store, doc, entry['page'])
         return envelope(doc, 'content_requirements', {'page_id': page_id, 'page_ref': entry['page'],
-            'origin': 'derived_from_snapshot', 'producer_task_id': None, **data})
+            'origin': 'derived_from_snapshot', 'producer_task_id': None, **data}, gaps)
     except READ_FAILURES:
-        return envelope(doc, 'content_requirements', None, [issue(entry['page'], 'requirements', page_id)], 'unreadable')
+        return envelope(doc, 'content_requirements', None, gaps + [issue(entry['page'], 'requirements', page_id)], 'unreadable')
 
 
 def task_methods(project, task_id, *, revision=None, availability=None):

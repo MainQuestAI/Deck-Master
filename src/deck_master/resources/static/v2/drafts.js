@@ -13,17 +13,19 @@ try {
 
 // A personal recovery copy. No edit, task, call, or adoption endpoint is used.
 export class DraftEditor {
-  constructor(info, target, baseRevision, baseRef, {readonly = false, exactRevision = false} = {}) {
+  constructor(info, target, baseRevision, baseRef, {readonly = false, exactRevision = false, contextKey = null} = {}) {
     this.info = info; this.target = target; this.baseRevision = baseRevision; this.baseRef = baseRef;
+    this.contextKey = contextKey;
     this.readonly = readonly; this.exactRevision = exactRevision; this.etag = null; this.status = 'loading'; this.pendingSave = null;
     this.bufferKey = `deck-master:v3:draft:${info.project_identity}:${canonical(target)}:${baseRef?.sha256 || 'none'}:${baseRevision}`;
+    if(contextKey)this.bufferKey += `:context:${contextKey}`;
     this.activeKey = `${this.bufferKey}:window:${windowBufferId}`;
     this.draft = this.fresh(); this.storageError = ''; this.restoreNotice = ''; this.disposed = false;
   }
   fresh() {
     return {schema_version: 'ui_draft.v1', project_id: this.info.project_id, project_identity: this.info.project_identity,
       draft_id: 'draft-' + crypto.randomUUID(), target: this.target, base_revision: this.baseRevision,
-      base_ref: this.baseRef, content: {text: ''}, pending: null};
+      base_ref: this.baseRef, content: {text: '', ...(this.contextKey?{context_key:this.contextKey}:{})}, pending: null};
   }
   mount() {
     this.input = el('textarea', {id: 'personal-draft', rows: 7, 'aria-label': '个人草稿', readOnly: this.readonly,
@@ -73,7 +75,7 @@ export class DraftEditor {
     try {
       const result = await get('/api/drafts');
       if (this.disposed) return;
-      const records = result.records.filter(record => canonical(record.draft.target) === canonical(this.target));
+      const records = result.records.filter(record => canonical(record.draft.target) === canonical(this.target) && (record.draft.content.context_key||null)===this.contextKey);
       const exact = records.filter(record => record.draft.base_ref?.sha256 === this.baseRef?.sha256 && (!this.exactRevision || record.draft.base_revision === this.baseRevision));
       if (!buffered && exact.length === 1) this.adoptRecord(exact[0]);
       else if (!buffered) this.status = 'empty';

@@ -40,11 +40,11 @@ export function reviewReading(app){
   });
 }
 function repairDraft(app,value,target,finding){
-  const ref=target.page_ref||value.data.review_ref;
-  const draft=new DraftEditor(app.info,{scope:target.page_ref?'page':'project',page_id:target.page_ref?target.page_id:null,layer:'notes'},value.revision_id,ref,{exactRevision:true});
-  const node=draft.mount();draft.input.id='review-draft-'+crypto.randomUUID();node.querySelector('label[for=personal-draft]')?.setAttribute('for',draft.input.id);const body=el('div',{class:'stack'},el('p',{},'仅准备个人草稿，不派发、不修稿、不改变审阅结论。正文、口播、设计、来源按原请求分别处理。'),node);
+  const ref=target.page_ref||null;
+  const draft=new DraftEditor(app.info,{scope:target.page_ref?'page':'project',page_id:target.page_ref?target.page_id:null,layer:'notes'},value.revision_id,ref,{exactRevision:true,contextKey:`review:${value.data.review_ref.sha256}:${target.finding_id}:${target.source_index}`});
+  const node=draft.mount();draft.input.id='review-draft-'+crypto.randomUUID();node.querySelector('label[for=personal-draft]')?.setAttribute('for',draft.input.id);draft.input.setAttribute('aria-label','审阅交接备注');draft.stateNode.className='review-draft-state';const body=el('div',{class:'stack'},el('p',{},'仅准备个人草稿，不派发、不修稿、不改变审阅结论。正文、口播、设计、来源按原请求分别处理。'),node);
   // Dynamic import avoids creating a cycle with the existing content editor.
   import('./dom.js').then(({modal})=>{const dialog=modal('准备范围交接',body,[],{protectDraft:true});dialog.addEventListener('close',()=>draft.dispose(),{once:true});});
   draft.ready.then(()=>{if(draft.disposed)return;if(!draft.input.value){draft.input.value=finding.message+'\n预期：'+finding.expected+'\n实际：'+finding.actual;draft.draft.content.review_handoff={review_ref:value.data.review_ref,revision:value.revision_id,finding_id:target.finding_id,source_index:target.source_index,page_ref:target.page_ref,element_refs:target.element_refs,repair_layer:target.repair_layer};draft.changed();}
-    if(target.page_ref&&target.repair_layer==='content'&&target.repair_allowed)body.append(button('保存草稿后进入原正文编辑',async()=>{await draft.save();if(draft.status!=='saved')return;app.go({surface:'page',page_id:target.page_id,layer:'content',revision:value.revision_id,review_id:null,atom:null});}));});
+    if(target.page_ref&&target.repair_layer==='content'&&target.repair_allowed)body.append(button('保存草稿后进入原正文编辑',async()=>{await draft.save();if(draft.status!=='saved')return;app.reviewHandoff={...draft.draft.content.review_handoff,text:draft.input.value};document.querySelector('#modal')?.close();app.go({surface:'page',page_id:target.page_id,layer:'content',revision:value.revision_id,review_id:null,atom:null});}));});
 }

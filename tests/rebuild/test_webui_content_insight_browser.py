@@ -78,3 +78,70 @@ def test_review_deeplink_refresh_and_no_default_first_finding(tmp_path):
             assert store.current_revision_id()==before
             browser.close()
     finally:server.stop()
+
+
+def test_review_drafts_keep_distinct_finding_identity_and_do_not_write_business(tmp_path):
+    from test_webui_content_insight import reviewed_project
+    project,store,ref=reviewed_project(tmp_path);server=WorkbenchServer(project);url=server.start();info=ui_journal.project_info(project);before=store.load_document()
+    try:
+        with sync_playwright() as pw:
+            browser=pw.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox']);page=browser.new_page()
+            base={'project':info['project_identity'],'surface':'runs','layer':'content','revision':before['revision_id'],'review':'reading-review','review_sha256':ref['sha256']}
+            for fid,index,text in [('f1',0,'补充限定条件'),('f2',1,'核实原位置')]:
+                page.goto(url+'studio/#'+urlencode({**base,'finding':fid,'finding_index':index}))
+                page.get_by_role('button',name='准备范围交接草稿',exact=True).click()
+                dialog=page.get_by_role('dialog')
+                expect(dialog.get_by_label('审阅交接备注')).to_have_value(__import__('re').compile(text))
+                dialog.get_by_role('button',name='保存个人草稿',exact=True).click()
+                expect(dialog.locator('.review-draft-state')).to_contain_text('已保存到项目')
+                page.keyboard.press('Escape')
+            records=page.request.get(url+'api/drafts').json()['records']
+            handoffs=[r['draft']['content']['review_handoff'] for r in records if 'review_handoff' in r['draft']['content']]
+            assert {h['finding_id'] for h in handoffs}=={'f1','f2'}
+            assert store.load_document()==before
+            browser.close()
+    finally:server.stop()
+
+
+def test_direction_lost_ack_refresh_lookup_reuses_original_operation(tmp_path):
+    project,store,_,ref=candidate(tmp_path);server=WorkbenchServer(project);url=server.start();info=ui_journal.project_info(project)
+    try:
+        with sync_playwright() as pw:
+            browser=pw.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox']);page=browser.new_page()
+            page.goto(url+'studio/#'+urlencode({'project':info['project_identity'],'surface':'content','layer':'content','revision':store.current_revision_id(),'content_area':'arguments','proposal':ref['sha256']}))
+            def lose_once(route):
+                response=route.fetch();assert response.ok
+                route.abort('failed')
+            page.route('**/collaboration/decisions',lose_once,times=1)
+            page.get_by_role('button',name='记录方向决定',exact=True).click();page.get_by_label('确认这份方向的理由').fill('合成恢复验证，保留两维度判断。')
+            page.get_by_role('button',name='确认记录方向决定',exact=True).click()
+            expect(page.get_by_role('button',name='核实原操作',exact=True)).to_be_enabled()
+            assert len(store.load_document()['collaboration']['decisions'])==1
+            page.reload()
+            page.get_by_role('button',name='核实或查看原方向操作',exact=True).click()
+            page.get_by_role('button',name='核实原操作',exact=True).click()
+            expect(page.get_by_role('button',name='确认采用此方向',exact=True)).to_be_enabled()
+            page.get_by_role('button',name='确认采用此方向',exact=True).click()
+            expect(page.get_by_role('dialog')).to_contain_text('方向已采用')
+            assert len(store.load_document()['collaboration']['decisions'])==1
+            assert store.load_document()['narrative']==ref
+            browser.close()
+    finally:server.stop()
+
+
+def test_review_page_atom_and_return_keep_fixed_finding(tmp_path):
+    from test_webui_content_insight import reviewed_project
+    project,store,ref=reviewed_project(tmp_path);server=WorkbenchServer(project);url=server.start();info=ui_journal.project_info(project);revision=store.current_revision_id()
+    try:
+        with sync_playwright() as pw:
+            browser=pw.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox']);page=browser.new_page()
+            page.goto(url+'studio/#'+urlencode({'project':info['project_identity'],'surface':'runs','layer':'content','revision':revision,'review':'reading-review','review_sha256':ref['sha256'],'finding':'f1','finding_index':0}))
+            page.get_by_role('button',name='定位原页面文字',exact=True).click()
+            expect(page.get_by_role('heading',name='正文与证据',exact=True)).to_be_visible()
+            page.reload()
+            page.get_by_role('button',name='返回原审阅问题',exact=True).click()
+            expect(page.locator('.insight-finding h2')).to_have_text('补充限定条件')
+            assert 'finding_index=0' in page.url and ref['sha256'] in page.url
+            assert store.current_revision_id()==revision
+            browser.close()
+    finally:server.stop()

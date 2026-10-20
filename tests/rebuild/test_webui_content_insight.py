@@ -140,6 +140,24 @@ def test_plan_only_associates_real_plan_without_pages(tmp_path):
     assert value['data']['plans'][0]['data']['planned_roles'][0]['page_ref'] is None
     models.validate_schema('ui_argument',value)
 
+    # A later synthetic current direction has its own Plan, while the completed
+    # task still exposes the earlier pair. Never borrow the current Plan for it.
+    old_narrative, old_plan = out['result_refs']
+    current=store.load_document();n=store.read_object_json(old_narrative);n['narrative_id']='different-direction'
+    n['nodes'][0]['statement']='另一份合法方向';nref=store.put_json_object(n)
+    p=store.read_object_json(old_plan);p['plan_id']='different-plan';p['narrative_ref']=nref
+    p['input']['page_roles'][0]['role']='另一方向的页面职责'
+    models.validate_schema('content_plan',p);pref=store.put_json_object(p)
+    updated=models.bump_revision(current,{'operation_id':'synthetic-plan-pair','kind':'task_update','description':'synthetic distinct pair','read_set':[]})
+    updated['narrative']=nref;updated['content_plan']=pref
+    store.commit_change(base_revision=current['revision_id'],document=updated,operation_id='synthetic-plan-pair')
+    left=ui.argument(project,old_narrative['sha256'])['data']
+    right=ui.argument(project,nref['sha256'])['data']
+    assert [p['ref'] for p in left['plans']]==[old_plan]
+    assert [p['ref'] for p in right['plans']]==[pref]
+    assert left['plans'][0]['data']['planned_roles']!=right['plans'][0]['data']['planned_roles']
+    assert not store.load_document()['pages']
+
 
 def reviewed_project(tmp_path):
     from rc3_fixtures import public_project
@@ -206,3 +224,51 @@ def test_resource_list_does_not_read_unselected_bodies(tmp_path,monkeypatch):
     monkeypatch.setattr(Path,'read_bytes',observed)
     lib.preview(project,{'context':{'mode':'independent','role':'deck-content','phase':'argument','review_units':[]},'selected_resource_ids':['content-m04']})
     assert not any('E06' in p or 'M10' in p or 'check_case_numbers.py' in p for p in read_paths)
+
+
+def test_page_keeps_old_narrative_and_reports_source_damage_locally(tmp_path):
+    from test_compose_v2_phases import _dispatch,_submit,_page,_plan_input
+    from deck_master import models
+    project,store=_project(tmp_path);_request(project,store)
+    _,out=_accept_argument(project,store);old=out['result_refs'][0];_adopt_direction(project,store,old)
+    task=_dispatch(store,phase='page_copy');doc=store.load_document()
+    _submit(project,task,{'pages':[_page(store,doc,'p1')],'page_order':['p1'],'plan_input':_plan_input(doc,['p1'])},'page_copy')
+    old_revision=store.current_revision_id()
+    # Synthetic historical snapshot: the page intentionally remains bound to its
+    # original immutable Narrative. Adoption policy itself is covered separately.
+    doc=store.load_document();n=store.read_object_json(old)
+    n['narrative_id']='nar-second';n['nodes'][0]['statement']='第二份明确不同的论证方向'
+    new=store.put_json_object(n)
+    updated=models.bump_revision(doc,{'operation_id':'synthetic-new-mainline','kind':'task_update',
+        'description':'synthetic later mainline with preserved page binding','read_set':[]})
+    updated['narrative']=new
+    store.commit_change(base_revision=doc['revision_id'],document=updated,operation_id='synthetic-new-mainline')
+    before=bytes_at(project)
+    value=ui.evidence(project,'p1')
+    assert value['data']['narrative_ref']==old and value['data']['alignment']=='bound_to_older_narrative'
+    body=next(e for e in value['data']['elements'] if e['element_ref']=='atom:p1:block:b1:text')
+    assert body['nodes'][0]['statement']!='第二份明确不同的论证方向'
+    assert body['qualifications']
+    assert ui.evidence(project,'p1',revision=old_revision)['data']['alignment']=='current'
+    models.validate_schema('ui_page_evidence',value)
+    assert bytes_at(project)==before
+    source=store.load_document()['sources'][0];(project/source['extract']['path']).write_bytes(b'broken')
+    broken=ui.evidence(project,'p1')
+    assert broken['status']=='partial' and broken['data']['elements']
+    assert any(i['field']=='source' for i in broken['issues'])
+
+
+def test_review_source_issue_never_becomes_body_repair(tmp_path):
+    from deck_master import models
+    project,store,ref=reviewed_project(tmp_path);doc=store.load_document()
+    review=store.read_object_json(ref);review['findings'][0]['kind']='source'
+    new=store.put_json_object(review)
+    updated=models.bump_revision(doc,{'operation_id':'synthetic-source-finding','kind':'task_update','description':'synthetic source issue','read_set':[]})
+    updated['reviews']=[new]
+    store.commit_change(base_revision=doc['revision_id'],document=updated,operation_id='synthetic-source-finding')
+    target=ui.review_reading(project,'reading-review')['data']['targets'][0]
+    assert target['repair_layer']=='source' and not target['repair_allowed']
+    (project/doc['pages'][0]['page']['path']).write_bytes(b'broken')
+    value=ui.requirements(project,'p1')
+    assert value['status']=='unreadable' and value['data'] is None
+    models.validate_schema('ui_content_requirements',value)
