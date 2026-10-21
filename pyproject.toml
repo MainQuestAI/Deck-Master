@@ -21,6 +21,8 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+  "setuptools>=77",
+  "wheel",
   "coverage",
   "playwright",
   "pytest",

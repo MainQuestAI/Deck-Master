@@ -55,8 +55,10 @@ deck-master capabilities
 Missing tools, isolated installed-wheel checks, actual Host application and
 professional acceptance are distinct evidence. A local focused pass does not
 replace final CI on the published candidate, activate user HOME, or publish a
-Release. Follow the [current increment](docs/specs/deck-master-next-iteration-20261019/README.md)
-and its single execution ledger for candidate closure.
+Release. Follow the [RC5 methods](docs/specs/content-methods-rc5/README.md) and
+[integrated WebUI](docs/specs/deck-master-webui-content-methods-20261020/README.md)
+contracts and their dated evidence. The [release preparation record](docs/releases/1.0.0-preparation.md)
+tracks final candidate closure; RC4 records retain their historical scope.
 
 ## DCO
 
@@ -102,7 +104,8 @@ do not commit customer originals.
 
 ## Convenience entry points
 
-After installing development dependencies, `make smoke` inspects the actual
+The dev extra includes `setuptools>=77` and `wheel` for the release builder,
+which runs without build isolation (matching CI). After installing development dependencies, `make smoke` inspects the actual
 CLI and runs package/entry checks. `make test` runs core unit tests; the
 renderer, required-browser and installed/offline gates remain in the workflow.
 `make preview REGISTRY=./deck-master-projects.json` starts the loopback launcher.
