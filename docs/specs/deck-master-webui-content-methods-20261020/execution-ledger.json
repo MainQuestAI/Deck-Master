@@ -1,10 +1,10 @@
 {
   "scope": "WU01-WU08_implementation",
   "pr127_final_head": "3217a65630023244eac5a09b3e7570954cce9188",
-  "integration_base": "3217a65630023244eac5a09b3e7570954cce9188",
+  "integration_base": "40bbc2851eec3932174c6202305fbc2ce5aede49",
   "merge_commit": null,
   "latest_observed_head": "3217a65630023244eac5a09b3e7570954cce9188",
-  "baseline_disposition": "PASS_DEPENDS_ON_UNMERGED_PR127",
+  "baseline_disposition": "MAIN_INTEGRATED_PR127_PR128_PR129",
   "required_checks": [
     {
       "run_id": "39401753812",
@@ -22,7 +22,7 @@
   ],
   "package_evidence_ref": "docs/reports/rc5/package-verification-cloud-review.json",
   "spec_drift_review": "PASS",
-  "implementation_status": "FORMAL_REVIEW_FIXED_ENGINEERING_VERIFIED_PENDING_NEW_HEAD_CI",
+  "implementation_status": "IMAGE_LEASE_FIXED_PENDING_NEW_HEAD_CI",
   "acceptance": [
     {
       "ac_id": "AC01",
@@ -982,5 +982,12 @@
     "professional_review": "NOT_RUN",
     "human_acceptance": "NOT_RUN",
     "runtime_after_build_unchanged": true
+  },
+  "image_lease_fix": {
+    "failed_head": "4582238c50c012b4d1f052235dc5e1b553d5d79f",
+    "failed_run": 39513027174,
+    "product_sha": "7730a3dac39fe1023cf15e10fdebb585c551e18e",
+    "report": "docs/reports/webui-content-methods/IMAGE-LEASE-FIX.md",
+    "remote_ci": "PENDING_NEW_HEAD"
   }
 }

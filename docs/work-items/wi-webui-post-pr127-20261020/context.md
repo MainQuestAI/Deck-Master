@@ -1,10 +1,12 @@
 ---
 work_item_id: wi-webui-post-pr127-20261020
 record_kind: working_context
-observed_at: "2026-10-20"
-status: formal_review_fixed_pending_new_head_ci
+observed_at: "2026-10-21"
+status: image_lease_fixed_pending_new_head_ci
 ---
 # PR127 后续 Web UI 迭代
+
+当前PR130为Ready，base为main@40bbc285，PR127–129已合入。4582238c的PR CI发现完整拆解图关闭时租约释放晚于焦点恢复；产品修复7730a3da及验证见[IMAGE-LEASE-FIX](../../reports/webui-content-methods/IMAGE-LEASE-FIX.md)，等待新head远端检查。本任务不合并或发布。下列为历史工作记录。
 
 完整WU01–WU08/A+B已在同一云端独立分支实现，现有Draft PR130，base为未合并PR127的`3217a65630023244eac5a09b3e7570954cce9188`。不新建PR、不合并、不发布、不改真实HOME或原用户工作树。
 

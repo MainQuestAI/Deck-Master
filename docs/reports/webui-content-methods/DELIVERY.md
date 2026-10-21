@@ -1,5 +1,7 @@
 # PR127 后续独立 WebUI：实现与验证回执
 
+> 最新集成基线图片租约修复见 [IMAGE-LEASE-FIX](IMAGE-LEASE-FIX.md)。旧 head 4582238c 的 PR CI 失败保留；修复产品/包源码为7730a3da，新head远端检查另行确认。以下为历史分轮证据。
+
 > 本轮正式审查五项P2及P3已修复，最新证据见 [FORMAL-REVIEW-FIXES](FORMAL-REVIEW-FIXES.md)。产品/包源码 `50ef4d2e64e2b732bcd7ade7758a9eb86ac2cf6e`，本轮完整unit/render/browser、安装受影响路径及两份CI安装脚本均已执行，具体统计与Frozen A跳过单列。前轮33b2f522的CI已成功，以下历史PENDING不代表该旧head仍未收口；本轮新head CI单独待远端确认。专业效果与人类认可仍NOT_RUN。
 
 ## 历史分轮回执（保留原SHA与当时状态）
