@@ -266,8 +266,8 @@ export function visualStyle(app){
     // §4.3：拆解图在规范核对阶段直接可见并可完整查看（不再默认折叠）。
     const full = button('查看完整拆解图',()=>{
       const image=imageView(app,{file:spec.breakdown},'完整截图拆解图',{kind:'large'});
-      const dialog=modal('完整截图拆解图',el('div',{class:'visual-breakdown-full',tabindex:0},image.node));
-      dialog.addEventListener('close',()=>image.dispose(),{once:true});app.disposables.push(()=>image.dispose());
+      modal('完整截图拆解图',el('div',{class:'visual-breakdown-full',tabindex:0},image.node),[],{beforeClose:()=>image.dispose()});
+      app.disposables.push(()=>image.dispose());
     },false,{'data-visual-read':true});
     rules.append(el('div',{class:'visual-breakdown'},el('div',{class:'row wrap'},el('h3',{},'截图拆解图'),full),view.node));
     // 规范先显示借用/保留摘要；点击"调整借用维度"才出现对应编辑器。
