@@ -988,6 +988,13 @@
     "failed_run": 39513027174,
     "product_sha": "7730a3dac39fe1023cf15e10fdebb585c551e18e",
     "report": "docs/reports/webui-content-methods/IMAGE-LEASE-FIX.md",
-    "remote_ci": "PENDING_NEW_HEAD"
+    "remote_ci": "PENDING_NEW_HEAD",
+    "replacement_followup": {
+      "product_sha": "3a04d9cb066a058ffdd082dbad8d19de5d1c750d",
+      "old_implementation_regression": "6 failed",
+      "source_validation": "29 passed + 1 passed",
+      "package_evidence": "docs/reports/webui-content-methods/evidence/modal-owner-package.json",
+      "remote_ci": "PENDING_NEW_HEAD"
+    }
   }
 }

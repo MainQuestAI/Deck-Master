@@ -1,0 +1,316 @@
+FFFFFF                                                                   [100%]
+=================================== FAILURES ===================================
+___ test_breakdown_stays_with_summary_and_opens_full_image[1440-900-replace] ___
+
+ux03_browser = (<Page url='http://127.0.0.1:38905/#project=5e15290e1f2a08e5b35ba2ee313b2ae05af8ddff61f8c9700bcd3bb4b6491850&surface=s...-of-agent/pytest-85/test_breakdown_stays_with_summ0/ux03-project'), <deck_master.store.Store object at 0x7f4d42a3fb00>)
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-85/test_breakdown_stays_with_summ0')
+width = 1440, height = 900, dismiss = 'replace'
+
+    @pytest.mark.parametrize('dismiss', ['escape', 'button', 'replace', 'late-clipboard'])
+    @pytest.mark.parametrize('width,height', [(1440, 900), (1280, 800), (390, 844)])
+    def test_breakdown_stays_with_summary_and_opens_full_image(ux03_browser, tmp_path, width, height, dismiss):
+        from playwright.sync_api import expect
+        page, server, path, store = ux03_browser
+        page.set_viewport_size({'width': width, 'height': height})
+        detail = {'recipe': v2_recipe(1), 'ref': {'sha256': 'e' * 64}}
+        install_style_mocks(page, recipes=[detail], detail=detail)
+        page.route('**/api/file?*' + BREAKDOWN_SHA + '*', lambda route: route.fulfill(status=200, content_type='image/png', body=PNG_1PX))
+        page.goto(server.start())
+        page.get_by_role('button', name='风格校准', exact=True).click()
+        page.get_by_role('button', name='外部图片', exact=True).click()
+        page.get_by_text('恢复项目中的截图分析与规范', exact=True).click()
+        page.get_by_label('已确认的截图规范').select_option(index=1)
+        expect(page.locator('.visual-style p[role=status]')).to_contain_text('已打开所选确认规范')
+        canvas = page.locator('.visual-breakdown canvas')
+        expect(canvas).to_be_visible()
+        assert canvas.bounding_box()['height'] <= 320
+        expect(page.locator('.visual-keep-summary')).to_be_visible()
+        open_full = page.get_by_role('button', name='查看完整拆解图', exact=True)
+        open_full.focus(); page.keyboard.press('Enter')
+        dialog = page.get_by_role('dialog')
+        expect(dialog.get_by_role('img', name='完整截图拆解图', exact=True)).to_be_visible()
+        assert dialog.locator('canvas').evaluate('(canvas) => canvas.width') == 1
+        if dismiss in ('replace', 'late-clipboard'):
+            # A normal modal replaces an unprotected image dialog. Clipboard fallback
+            # is a real asynchronous production caller, held until the image is open.
+            page.evaluate('''async mode => {
+              const {modal, copyText} = await import('/v2/dom.js');
+              if (mode === 'replace') modal('替换阅读', document.createElement('p'));
+              else {
+                const original = navigator.clipboard.writeText;
+                navigator.clipboard.writeText = () => new Promise((_, reject) => { window.rejectCopy = reject; });
+                const pending = copyText('合成测试交接');
+                window.rejectCopy(new Error('synthetic clipboard rejection'));
+                await pending;
+                navigator.clipboard.writeText = original;
+              }
+            }''', dismiss)
+            pins = page.evaluate("async () => [...(await import('/v2/images.js')).imagePool.entries.values()].filter(e=>e.kind==='large').reduce((n,e)=>n+e.pins,0)")
+>           assert pins == 0, 'replacement must release the old image before the replacement closes'
+E           AssertionError: replacement must release the old image before the replacement closes
+E           assert 1 == 0
+
+tests/rebuild/test_ux03_style_candidate_browser.py:416: AssertionError
+_ test_breakdown_stays_with_summary_and_opens_full_image[1440-900-late-clipboard] _
+
+ux03_browser = (<Page url='http://127.0.0.1:46719/#project=ee002f2c6ae3b0c8fd9080c6889f31bfe5950a5e3dc9769198b28cef518542d4&surface=s...-of-agent/pytest-85/test_breakdown_stays_with_summ1/ux03-project'), <deck_master.store.Store object at 0x7f4d41db0b00>)
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-85/test_breakdown_stays_with_summ1')
+width = 1440, height = 900, dismiss = 'late-clipboard'
+
+    @pytest.mark.parametrize('dismiss', ['escape', 'button', 'replace', 'late-clipboard'])
+    @pytest.mark.parametrize('width,height', [(1440, 900), (1280, 800), (390, 844)])
+    def test_breakdown_stays_with_summary_and_opens_full_image(ux03_browser, tmp_path, width, height, dismiss):
+        from playwright.sync_api import expect
+        page, server, path, store = ux03_browser
+        page.set_viewport_size({'width': width, 'height': height})
+        detail = {'recipe': v2_recipe(1), 'ref': {'sha256': 'e' * 64}}
+        install_style_mocks(page, recipes=[detail], detail=detail)
+        page.route('**/api/file?*' + BREAKDOWN_SHA + '*', lambda route: route.fulfill(status=200, content_type='image/png', body=PNG_1PX))
+        page.goto(server.start())
+        page.get_by_role('button', name='风格校准', exact=True).click()
+        page.get_by_role('button', name='外部图片', exact=True).click()
+        page.get_by_text('恢复项目中的截图分析与规范', exact=True).click()
+        page.get_by_label('已确认的截图规范').select_option(index=1)
+        expect(page.locator('.visual-style p[role=status]')).to_contain_text('已打开所选确认规范')
+        canvas = page.locator('.visual-breakdown canvas')
+        expect(canvas).to_be_visible()
+        assert canvas.bounding_box()['height'] <= 320
+        expect(page.locator('.visual-keep-summary')).to_be_visible()
+        open_full = page.get_by_role('button', name='查看完整拆解图', exact=True)
+        open_full.focus(); page.keyboard.press('Enter')
+        dialog = page.get_by_role('dialog')
+        expect(dialog.get_by_role('img', name='完整截图拆解图', exact=True)).to_be_visible()
+        assert dialog.locator('canvas').evaluate('(canvas) => canvas.width') == 1
+        if dismiss in ('replace', 'late-clipboard'):
+            # A normal modal replaces an unprotected image dialog. Clipboard fallback
+            # is a real asynchronous production caller, held until the image is open.
+            page.evaluate('''async mode => {
+              const {modal, copyText} = await import('/v2/dom.js');
+              if (mode === 'replace') modal('替换阅读', document.createElement('p'));
+              else {
+                const original = navigator.clipboard.writeText;
+                navigator.clipboard.writeText = () => new Promise((_, reject) => { window.rejectCopy = reject; });
+                const pending = copyText('合成测试交接');
+                window.rejectCopy(new Error('synthetic clipboard rejection'));
+                await pending;
+                navigator.clipboard.writeText = original;
+              }
+            }''', dismiss)
+            pins = page.evaluate("async () => [...(await import('/v2/images.js')).imagePool.entries.values()].filter(e=>e.kind==='large').reduce((n,e)=>n+e.pins,0)")
+>           assert pins == 0, 'replacement must release the old image before the replacement closes'
+E           AssertionError: replacement must release the old image before the replacement closes
+E           assert 1 == 0
+
+tests/rebuild/test_ux03_style_candidate_browser.py:416: AssertionError
+___ test_breakdown_stays_with_summary_and_opens_full_image[1280-800-replace] ___
+
+ux03_browser = (<Page url='http://127.0.0.1:39587/#project=2eee7271b8cfe86133d09dc7cf88303a2cae316eb416c60198f30c4a5945bbbc&surface=s...-of-agent/pytest-85/test_breakdown_stays_with_summ2/ux03-project'), <deck_master.store.Store object at 0x7f4d4263c8c0>)
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-85/test_breakdown_stays_with_summ2')
+width = 1280, height = 800, dismiss = 'replace'
+
+    @pytest.mark.parametrize('dismiss', ['escape', 'button', 'replace', 'late-clipboard'])
+    @pytest.mark.parametrize('width,height', [(1440, 900), (1280, 800), (390, 844)])
+    def test_breakdown_stays_with_summary_and_opens_full_image(ux03_browser, tmp_path, width, height, dismiss):
+        from playwright.sync_api import expect
+        page, server, path, store = ux03_browser
+        page.set_viewport_size({'width': width, 'height': height})
+        detail = {'recipe': v2_recipe(1), 'ref': {'sha256': 'e' * 64}}
+        install_style_mocks(page, recipes=[detail], detail=detail)
+        page.route('**/api/file?*' + BREAKDOWN_SHA + '*', lambda route: route.fulfill(status=200, content_type='image/png', body=PNG_1PX))
+        page.goto(server.start())
+        page.get_by_role('button', name='风格校准', exact=True).click()
+        page.get_by_role('button', name='外部图片', exact=True).click()
+        page.get_by_text('恢复项目中的截图分析与规范', exact=True).click()
+        page.get_by_label('已确认的截图规范').select_option(index=1)
+        expect(page.locator('.visual-style p[role=status]')).to_contain_text('已打开所选确认规范')
+        canvas = page.locator('.visual-breakdown canvas')
+        expect(canvas).to_be_visible()
+        assert canvas.bounding_box()['height'] <= 320
+        expect(page.locator('.visual-keep-summary')).to_be_visible()
+        open_full = page.get_by_role('button', name='查看完整拆解图', exact=True)
+        open_full.focus(); page.keyboard.press('Enter')
+        dialog = page.get_by_role('dialog')
+        expect(dialog.get_by_role('img', name='完整截图拆解图', exact=True)).to_be_visible()
+        assert dialog.locator('canvas').evaluate('(canvas) => canvas.width') == 1
+        if dismiss in ('replace', 'late-clipboard'):
+            # A normal modal replaces an unprotected image dialog. Clipboard fallback
+            # is a real asynchronous production caller, held until the image is open.
+            page.evaluate('''async mode => {
+              const {modal, copyText} = await import('/v2/dom.js');
+              if (mode === 'replace') modal('替换阅读', document.createElement('p'));
+              else {
+                const original = navigator.clipboard.writeText;
+                navigator.clipboard.writeText = () => new Promise((_, reject) => { window.rejectCopy = reject; });
+                const pending = copyText('合成测试交接');
+                window.rejectCopy(new Error('synthetic clipboard rejection'));
+                await pending;
+                navigator.clipboard.writeText = original;
+              }
+            }''', dismiss)
+            pins = page.evaluate("async () => [...(await import('/v2/images.js')).imagePool.entries.values()].filter(e=>e.kind==='large').reduce((n,e)=>n+e.pins,0)")
+>           assert pins == 0, 'replacement must release the old image before the replacement closes'
+E           AssertionError: replacement must release the old image before the replacement closes
+E           assert 1 == 0
+
+tests/rebuild/test_ux03_style_candidate_browser.py:416: AssertionError
+_ test_breakdown_stays_with_summary_and_opens_full_image[1280-800-late-clipboard] _
+
+ux03_browser = (<Page url='http://127.0.0.1:46265/#project=6c6d40c8e144c69148ddfc932d0ae65123f659c74d3accdc643a970f4ee1f05c&surface=s...-of-agent/pytest-85/test_breakdown_stays_with_summ3/ux03-project'), <deck_master.store.Store object at 0x7f4d4206b590>)
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-85/test_breakdown_stays_with_summ3')
+width = 1280, height = 800, dismiss = 'late-clipboard'
+
+    @pytest.mark.parametrize('dismiss', ['escape', 'button', 'replace', 'late-clipboard'])
+    @pytest.mark.parametrize('width,height', [(1440, 900), (1280, 800), (390, 844)])
+    def test_breakdown_stays_with_summary_and_opens_full_image(ux03_browser, tmp_path, width, height, dismiss):
+        from playwright.sync_api import expect
+        page, server, path, store = ux03_browser
+        page.set_viewport_size({'width': width, 'height': height})
+        detail = {'recipe': v2_recipe(1), 'ref': {'sha256': 'e' * 64}}
+        install_style_mocks(page, recipes=[detail], detail=detail)
+        page.route('**/api/file?*' + BREAKDOWN_SHA + '*', lambda route: route.fulfill(status=200, content_type='image/png', body=PNG_1PX))
+        page.goto(server.start())
+        page.get_by_role('button', name='风格校准', exact=True).click()
+        page.get_by_role('button', name='外部图片', exact=True).click()
+        page.get_by_text('恢复项目中的截图分析与规范', exact=True).click()
+        page.get_by_label('已确认的截图规范').select_option(index=1)
+        expect(page.locator('.visual-style p[role=status]')).to_contain_text('已打开所选确认规范')
+        canvas = page.locator('.visual-breakdown canvas')
+        expect(canvas).to_be_visible()
+        assert canvas.bounding_box()['height'] <= 320
+        expect(page.locator('.visual-keep-summary')).to_be_visible()
+        open_full = page.get_by_role('button', name='查看完整拆解图', exact=True)
+        open_full.focus(); page.keyboard.press('Enter')
+        dialog = page.get_by_role('dialog')
+        expect(dialog.get_by_role('img', name='完整截图拆解图', exact=True)).to_be_visible()
+        assert dialog.locator('canvas').evaluate('(canvas) => canvas.width') == 1
+        if dismiss in ('replace', 'late-clipboard'):
+            # A normal modal replaces an unprotected image dialog. Clipboard fallback
+            # is a real asynchronous production caller, held until the image is open.
+            page.evaluate('''async mode => {
+              const {modal, copyText} = await import('/v2/dom.js');
+              if (mode === 'replace') modal('替换阅读', document.createElement('p'));
+              else {
+                const original = navigator.clipboard.writeText;
+                navigator.clipboard.writeText = () => new Promise((_, reject) => { window.rejectCopy = reject; });
+                const pending = copyText('合成测试交接');
+                window.rejectCopy(new Error('synthetic clipboard rejection'));
+                await pending;
+                navigator.clipboard.writeText = original;
+              }
+            }''', dismiss)
+            pins = page.evaluate("async () => [...(await import('/v2/images.js')).imagePool.entries.values()].filter(e=>e.kind==='large').reduce((n,e)=>n+e.pins,0)")
+>           assert pins == 0, 'replacement must release the old image before the replacement closes'
+E           AssertionError: replacement must release the old image before the replacement closes
+E           assert 1 == 0
+
+tests/rebuild/test_ux03_style_candidate_browser.py:416: AssertionError
+___ test_breakdown_stays_with_summary_and_opens_full_image[390-844-replace] ____
+
+ux03_browser = (<Page url='http://127.0.0.1:42347/#project=be4f82c5a5c1f5d2f62fd88993a25bc2df8a6b6fa617b9b8801c79a5a9174a56&surface=s...-of-agent/pytest-85/test_breakdown_stays_with_summ4/ux03-project'), <deck_master.store.Store object at 0x7f4d4220e150>)
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-85/test_breakdown_stays_with_summ4')
+width = 390, height = 844, dismiss = 'replace'
+
+    @pytest.mark.parametrize('dismiss', ['escape', 'button', 'replace', 'late-clipboard'])
+    @pytest.mark.parametrize('width,height', [(1440, 900), (1280, 800), (390, 844)])
+    def test_breakdown_stays_with_summary_and_opens_full_image(ux03_browser, tmp_path, width, height, dismiss):
+        from playwright.sync_api import expect
+        page, server, path, store = ux03_browser
+        page.set_viewport_size({'width': width, 'height': height})
+        detail = {'recipe': v2_recipe(1), 'ref': {'sha256': 'e' * 64}}
+        install_style_mocks(page, recipes=[detail], detail=detail)
+        page.route('**/api/file?*' + BREAKDOWN_SHA + '*', lambda route: route.fulfill(status=200, content_type='image/png', body=PNG_1PX))
+        page.goto(server.start())
+        page.get_by_role('button', name='风格校准', exact=True).click()
+        page.get_by_role('button', name='外部图片', exact=True).click()
+        page.get_by_text('恢复项目中的截图分析与规范', exact=True).click()
+        page.get_by_label('已确认的截图规范').select_option(index=1)
+        expect(page.locator('.visual-style p[role=status]')).to_contain_text('已打开所选确认规范')
+        canvas = page.locator('.visual-breakdown canvas')
+        expect(canvas).to_be_visible()
+        assert canvas.bounding_box()['height'] <= 320
+        expect(page.locator('.visual-keep-summary')).to_be_visible()
+        open_full = page.get_by_role('button', name='查看完整拆解图', exact=True)
+        open_full.focus(); page.keyboard.press('Enter')
+        dialog = page.get_by_role('dialog')
+        expect(dialog.get_by_role('img', name='完整截图拆解图', exact=True)).to_be_visible()
+        assert dialog.locator('canvas').evaluate('(canvas) => canvas.width') == 1
+        if dismiss in ('replace', 'late-clipboard'):
+            # A normal modal replaces an unprotected image dialog. Clipboard fallback
+            # is a real asynchronous production caller, held until the image is open.
+            page.evaluate('''async mode => {
+              const {modal, copyText} = await import('/v2/dom.js');
+              if (mode === 'replace') modal('替换阅读', document.createElement('p'));
+              else {
+                const original = navigator.clipboard.writeText;
+                navigator.clipboard.writeText = () => new Promise((_, reject) => { window.rejectCopy = reject; });
+                const pending = copyText('合成测试交接');
+                window.rejectCopy(new Error('synthetic clipboard rejection'));
+                await pending;
+                navigator.clipboard.writeText = original;
+              }
+            }''', dismiss)
+            pins = page.evaluate("async () => [...(await import('/v2/images.js')).imagePool.entries.values()].filter(e=>e.kind==='large').reduce((n,e)=>n+e.pins,0)")
+>           assert pins == 0, 'replacement must release the old image before the replacement closes'
+E           AssertionError: replacement must release the old image before the replacement closes
+E           assert 1 == 0
+
+tests/rebuild/test_ux03_style_candidate_browser.py:416: AssertionError
+_ test_breakdown_stays_with_summary_and_opens_full_image[390-844-late-clipboard] _
+
+ux03_browser = (<Page url='http://127.0.0.1:43175/#project=d02ce3b799c2a0d2775fd0ab1956fb311d710f80e82751c3a6fc0d60f1bb9ba3&surface=s...-of-agent/pytest-85/test_breakdown_stays_with_summ5/ux03-project'), <deck_master.store.Store object at 0x7f4d42722930>)
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-85/test_breakdown_stays_with_summ5')
+width = 390, height = 844, dismiss = 'late-clipboard'
+
+    @pytest.mark.parametrize('dismiss', ['escape', 'button', 'replace', 'late-clipboard'])
+    @pytest.mark.parametrize('width,height', [(1440, 900), (1280, 800), (390, 844)])
+    def test_breakdown_stays_with_summary_and_opens_full_image(ux03_browser, tmp_path, width, height, dismiss):
+        from playwright.sync_api import expect
+        page, server, path, store = ux03_browser
+        page.set_viewport_size({'width': width, 'height': height})
+        detail = {'recipe': v2_recipe(1), 'ref': {'sha256': 'e' * 64}}
+        install_style_mocks(page, recipes=[detail], detail=detail)
+        page.route('**/api/file?*' + BREAKDOWN_SHA + '*', lambda route: route.fulfill(status=200, content_type='image/png', body=PNG_1PX))
+        page.goto(server.start())
+        page.get_by_role('button', name='风格校准', exact=True).click()
+        page.get_by_role('button', name='外部图片', exact=True).click()
+        page.get_by_text('恢复项目中的截图分析与规范', exact=True).click()
+        page.get_by_label('已确认的截图规范').select_option(index=1)
+        expect(page.locator('.visual-style p[role=status]')).to_contain_text('已打开所选确认规范')
+        canvas = page.locator('.visual-breakdown canvas')
+        expect(canvas).to_be_visible()
+        assert canvas.bounding_box()['height'] <= 320
+        expect(page.locator('.visual-keep-summary')).to_be_visible()
+        open_full = page.get_by_role('button', name='查看完整拆解图', exact=True)
+        open_full.focus(); page.keyboard.press('Enter')
+        dialog = page.get_by_role('dialog')
+        expect(dialog.get_by_role('img', name='完整截图拆解图', exact=True)).to_be_visible()
+        assert dialog.locator('canvas').evaluate('(canvas) => canvas.width') == 1
+        if dismiss in ('replace', 'late-clipboard'):
+            # A normal modal replaces an unprotected image dialog. Clipboard fallback
+            # is a real asynchronous production caller, held until the image is open.
+            page.evaluate('''async mode => {
+              const {modal, copyText} = await import('/v2/dom.js');
+              if (mode === 'replace') modal('替换阅读', document.createElement('p'));
+              else {
+                const original = navigator.clipboard.writeText;
+                navigator.clipboard.writeText = () => new Promise((_, reject) => { window.rejectCopy = reject; });
+                const pending = copyText('合成测试交接');
+                window.rejectCopy(new Error('synthetic clipboard rejection'));
+                await pending;
+                navigator.clipboard.writeText = original;
+              }
+            }''', dismiss)
+            pins = page.evaluate("async () => [...(await import('/v2/images.js')).imagePool.entries.values()].filter(e=>e.kind==='large').reduce((n,e)=>n+e.pins,0)")
+>           assert pins == 0, 'replacement must release the old image before the replacement closes'
+E           AssertionError: replacement must release the old image before the replacement closes
+E           assert 1 == 0
+
+tests/rebuild/test_ux03_style_candidate_browser.py:416: AssertionError
+=========================== short test summary info ============================
+FAILED tests/rebuild/test_ux03_style_candidate_browser.py::test_breakdown_stays_with_summary_and_opens_full_image[1440-900-replace]
+FAILED tests/rebuild/test_ux03_style_candidate_browser.py::test_breakdown_stays_with_summary_and_opens_full_image[1440-900-late-clipboard]
+FAILED tests/rebuild/test_ux03_style_candidate_browser.py::test_breakdown_stays_with_summary_and_opens_full_image[1280-800-replace]
+FAILED tests/rebuild/test_ux03_style_candidate_browser.py::test_breakdown_stays_with_summary_and_opens_full_image[1280-800-late-clipboard]
+FAILED tests/rebuild/test_ux03_style_candidate_browser.py::test_breakdown_stays_with_summary_and_opens_full_image[390-844-replace]
+FAILED tests/rebuild/test_ux03_style_candidate_browser.py::test_breakdown_stays_with_summary_and_opens_full_image[390-844-late-clipboard]
+6 failed, 12 deselected in 11.10s
