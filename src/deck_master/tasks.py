@@ -619,7 +619,17 @@ def _adopt_review(store: Store, review: dict) -> dict:
         old_findings = {f.get("finding_id"): f for f in prior.get("findings") or []}
         new_findings = {f.get("finding_id"): f for f in review.get("findings") or []}
         shared = old_findings.keys() & new_findings.keys()
-        if not shared:
+        # A preproduction unit can pass without findings, then be independently
+        # rechecked after another unit changes. There is no finding to close in
+        # that case. Keep the ID requirement for every actual finding and every
+        # other stage/status; do not invent findings or rewrite model output.
+        empty_pass_recheck = (
+            review.get("review_stage") == "preproduction"
+            and prior.get("status") == review.get("status") == "pass"
+            and not old_findings and not new_findings
+            and any(text.strip() for text in review.get("observations") or [])
+        )
+        if not shared and not empty_pass_recheck:
             raise EnvelopeError("review/replaces", "no shared finding_id with the replaced review")
         from .editing import _current_artifact_digests
         from .review import finding_closed
