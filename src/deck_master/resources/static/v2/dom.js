@@ -30,6 +30,7 @@ export function toast(message) {
 }
 export function announce(message) { document.querySelector('#route-status').textContent = message; }
 let modalTail = null;
+const modalCleanup = new WeakMap();
 export function modal(title, body, actions = [], {fallback, protectDraft = false, beforeClose} = {}) {
   const shared = document.querySelector('#modal');
   // An asynchronous service error must never replace a draft conflict or
@@ -37,9 +38,20 @@ export function modal(title, body, actions = [], {fallback, protectDraft = false
   const waiting = Boolean(modalTail || shared.open && shared.dataset.protectDraft === 'true');
   const blocker = modalTail || shared;
   const dialog = waiting ? el('dialog', {class: 'queued-modal'}) : shared;
+  // Replacing shared content ends the previous owner's lifetime without a close
+  // event. A queued dialog has a different owner and must leave its blocker live.
+  modalCleanup.get(dialog)?.();
+  let cleaned = false;
+  const cleanup = () => {
+    if (cleaned) return;
+    cleaned = true;
+    if (modalCleanup.get(dialog) === cleanup) modalCleanup.delete(dialog);
+    beforeClose?.();
+  };
+  modalCleanup.set(dialog, cleanup);
   const trigger = document.activeElement;
   const heading = el('h2', {id: waiting ? 'dialog-title-' + crypto.randomUUID() : 'dialog-title'}, title);
-  const close = () => { beforeClose?.(); dialog.close(); };
+  const close = () => { cleanup(); dialog.close(); };
   // Native close restores focus before its queued close event. Resource-owning
   // dialogs must release their leases before either user dismissal path.
   dialog.oncancel = beforeClose ? event => { event.preventDefault(); close(); } : null;
@@ -54,7 +66,9 @@ export function modal(title, body, actions = [], {fallback, protectDraft = false
     blocker.addEventListener('close', () => { if (dialog.isConnected) dialog.showModal(); }, {once: true});
   } else if (!dialog.open) dialog.showModal();
   dialog.onclose = () => {
-    beforeClose?.(); // Fallback for programmatic close; cleanup must be idempotent.
+    // A queued native close from an earlier use must not clean a reopened modal.
+    if (dialog.open) return;
+    cleanup(); // Fallback for programmatic close, once per content owner.
     if (waiting) { if (modalTail === dialog) modalTail = null; dialog.remove(); }
     if (trigger?.isConnected) { trigger.focus(); return; }
     // UX-06b：触发器在模态期间被卸载（列表刷新、条目移除）：调用方可以在 O2 里

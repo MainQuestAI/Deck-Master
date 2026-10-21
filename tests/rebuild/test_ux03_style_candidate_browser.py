@@ -373,7 +373,7 @@ def test_expansion_plan_carries_adopted_sample_and_explains_core_rejection(ux03_
     assert sent['adopted_candidate_id'] == 'candidate-0000000000000001' and sent['page_ids'] == ['p03']
 
 
-@pytest.mark.parametrize('dismiss', ['escape', 'button'])
+@pytest.mark.parametrize('dismiss', ['escape', 'button', 'replace', 'late-clipboard'])
 @pytest.mark.parametrize('width,height', [(1440, 900), (1280, 800), (390, 844)])
 def test_breakdown_stays_with_summary_and_opens_full_image(ux03_browser, tmp_path, width, height, dismiss):
     from playwright.sync_api import expect
@@ -397,6 +397,27 @@ def test_breakdown_stays_with_summary_and_opens_full_image(ux03_browser, tmp_pat
     dialog = page.get_by_role('dialog')
     expect(dialog.get_by_role('img', name='完整截图拆解图', exact=True)).to_be_visible()
     assert dialog.locator('canvas').evaluate('(canvas) => canvas.width') == 1
+    if dismiss in ('replace', 'late-clipboard'):
+        # A normal modal replaces an unprotected image dialog. Clipboard fallback
+        # is a real asynchronous production caller, held until the image is open.
+        page.evaluate('''async mode => {
+          const {modal, copyText} = await import('/v2/dom.js');
+          if (mode === 'replace') modal('替换阅读', document.createElement('p'));
+          else {
+            const original = navigator.clipboard.writeText;
+            navigator.clipboard.writeText = () => new Promise((_, reject) => { window.rejectCopy = reject; });
+            const pending = copyText('合成测试交接');
+            window.rejectCopy(new Error('synthetic clipboard rejection'));
+            await pending;
+            navigator.clipboard.writeText = original;
+          }
+        }''', dismiss)
+        pins = page.evaluate("async () => [...(await import('/v2/images.js')).imagePool.entries.values()].filter(e=>e.kind==='large').reduce((n,e)=>n+e.pins,0)")
+        assert pins == 0, 'replacement must release the old image before the replacement closes'
+        dialog.get_by_role('button', name='关闭', exact=True).click()
+        expect(dialog).not_to_be_visible()
+        assert page.evaluate("async () => [...(await import('/v2/images.js')).imagePool.entries.values()].filter(e=>e.kind==='large').reduce((n,e)=>n+e.pins,0)") == 0
+        return
     open_full.evaluate('''async button => {
       const {imagePool} = await import('/v2/images.js');
       button.addEventListener('focus', () => {
