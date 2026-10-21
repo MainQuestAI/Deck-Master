@@ -261,7 +261,7 @@ def test_active_guard_preserves_explicit_migration_and_negative_context():
 def test_spec_contracts_match_packaged_contracts_byte_for_byte() -> None:
     """Spec mirrors must match the active packaged contracts (P2 parity guard)."""
     spec_dirs = [REPO_ROOT / "docs" / "specs" / pack / "contracts"
-                 for pack in ("deck-master-rebuild-v1", "deck-master-workbench-v3", "deck-master-webui-usability-v1", "deck-master-v1.0.0-rc3", "deck-master-next-iteration-20261019")]
+                 for pack in ("deck-master-rebuild-v1", "deck-master-workbench-v3", "deck-master-webui-usability-v1", "deck-master-v1.0.0-rc3", "deck-master-next-iteration-20261019", "deck-master-webui-content-methods-20261020")]
     pkg_dir = NEW_PACKAGE / "resources" / "contracts"
     spec_files = [p for folder in spec_dirs for p in folder.glob("*.json")]
     spec_names = {p.name for p in spec_files}

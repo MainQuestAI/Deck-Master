@@ -1,0 +1,275 @@
+FFF
+=================================== FAILURES ===================================
+_ test_selected_resource_damage_is_partial_not_whole_preview_failure[missing] __
+
+project = PosixPath('/tmp/pytest-of-agent/pytest-29/test_selected_resource_damage_0/proj')
+request = {'context': {'mode': 'independent', 'role': 'deck-content', 'phase': 'argument', 'review_units': []}, 'selected_resource_ids': ['content-m04', 'case-e04-walkthrough']}
+
+    def preview(project, request):
+        if not isinstance(request, dict) or set(request) - {'context', 'selected_resource_ids', 'expected_basis'}:
+            fail('Invalid preview fields')
+        ctx = request.get('context'); chosen = request.get('selected_resource_ids')
+        if not isinstance(ctx, dict) or not isinstance(chosen, list) or len(chosen) > 100 or any(not isinstance(i, str) for i in chosen):
+            fail('Provide context and registered resource IDs')
+        root, rows, catalog_digest = catalog()
+        for mid in chosen:
+            if mid not in rows or not rows[mid]['readable']:
+                fail(f'Unknown or unreadable resource: {mid}', code='method_preview_invalid_selection')
+        reasons = []; phase = None; units = None; kind = None; intent = None
+        project_id = revision = None; phase_state = {}; pending = []; gaps = []
+        if ctx.get('mode') == 'independent':
+            if set(ctx) != {'mode', 'role', 'phase', 'review_units'} or ctx['role'] not in PUBLIC_SKILLS:
+                fail('Invalid independent context')
+            role, phase, units = ctx['role'], ctx['phase'], ctx['review_units']
+            if phase is not None and phase not in {'framing', 'argument', 'page_copy', 'speech', 'review', 'production', 'design', 'delivery', 'input_revision'}:
+                fail('Invalid phase')
+            if not isinstance(units, list) or any(not isinstance(u, str) or u not in methods._CONTENT_UNITS | methods._VISUAL_UNITS for u in units):
+                fail('Invalid review units')
+            if role == 'deck-review' and phase is None:
+                phase = 'review'
+            status, dispatch, valid = 'read_only', 'not_applicable', True
+            basis = {'context': ctx}
+        elif ctx.get('mode') == 'project':
+            if set(ctx) != {'mode', 'revision'} or not isinstance(ctx['revision'], str) or not ctx['revision']:
+                fail('Project preparation requires a fixed revision')
+            store, doc = snapshot(project, ctx['revision'])
+            project_id, revision = doc['project_id'], doc['revision_id']
+            work = (doc.get('collaboration') or {}).get('request') or {}
+            role, kind, intent = 'deck-content', 'compose', work.get('content_intent')
+            tasks, gaps = records(store, doc, 'tasks')
+            pending = [ref for ref, t in tasks if t['status'] in ('queued', 'awaiting_host', 'running')]
+            if revision != store.current_revision_id(): reasons.append('historical_revision')
+            if pending: reasons.append('existing_task_frozen')
+            if not work or work.get('closed') or work.get('intent') not in ('full_deck', 'content_only'):
+                reasons.append('no_new_phase')
+            else:
+                try:
+                    phase_state = content_production.content_phase_status(store, doc)
+                    phase = phase_state.get('phase')
+                    if phase_state.get('action') != 'dispatch':
+                        reasons.append('request_completed' if phase_state.get('action') == 'complete' else 'awaiting_decision')
+                except READ_FAILURES:
+                    reasons.append('basis_unreadable')
+            if gaps: reasons.append('basis_unreadable')
+            if phase and not eligibility.evaluate(store, doc, store.load_document(), 'dispatch.compose')['allowed']:
+                reasons.append('policy_blocked')
+            valid = bool(phase) and not reasons
+            status = 'new_content_task' if valid else 'frozen_pending_task' if pending else 'no_new_phase'
+            dispatch = 'new_content_task_possible' if valid else 'cannot_dispatch'
+            basis = {'context': ctx, 'request': work, 'phase': phase_state, 'pending': pending, 'reasons': reasons}
+        else:
+            fail('Unknown preview mode')
+        context_digest = digest(basis)
+        expected = request.get('expected_basis')
+        if expected is not None and expected != {'catalog_digest': catalog_digest, 'context_digest': context_digest}:
+            fail('Preparation basis changed; re-preview retained IDs', code='method_preview_basis_changed', status=409)
+        defaults = []; resolved = []; dependencies = []; titles = {}
+        if valid:
+            try:
+                selected = select(rows, chosen, role=role, kind=kind, phase=phase, review_units=units)
+                defaults = list(methods.method_ids_for(kind, intent=intent, phase=phase)) if kind else list(
+                    ('collaboration-routing', *methods.method_ids_for('review', review_units=units))
+                    if role == 'deck-review' else methods._ROLE_METHODS[role])
+                ids = list(dict.fromkeys([*defaults, *selected]))
+                for mid in ids:
+>                   data = safe_file(root, rows[mid]['relative_path']).read_bytes()
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+src/deck_master/method_library_view.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+root = PosixPath('/tmp/pytest-of-agent/pytest-29/test_selected_resource_damage_0/resources')
+relative = 'references/cases/E04-saas-retention.md'
+
+    def safe_file(root, relative):
+        root = Path(root)
+        relative_path(relative)
+        path = root
+        if root.is_symlink():
+            raise ValueError('catalog root symlink is forbidden')
+        for part in relative.split('/'):
+            path = path / part
+            if path.is_symlink():
+                raise ValueError(f'catalog symlink is forbidden: {relative}')
+        if not path.is_file() or not path.resolve().is_relative_to(root.resolve()):
+>           raise ValueError(f'missing or escaped catalog file: {relative}')
+E           ValueError: missing or escaped catalog file: references/cases/E04-saas-retention.md
+
+src/deck_master/resource_catalog.py:45: ValueError
+
+During handling of the above exception, another exception occurred:
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-29/test_selected_resource_damage_0')
+resource_root = PosixPath('/tmp/pytest-of-agent/pytest-29/test_selected_resource_damage_0/resources')
+damage = 'missing'
+
+    @pytest.mark.parametrize('damage',['missing','utf8'])
+    def test_selected_resource_damage_is_partial_not_whole_preview_failure(tmp_path,resource_root,damage):
+        project,store,_,_=candidate(tmp_path);_,rows,_=library.catalog()
+        mid='case-e04-walkthrough';path=resource_root/rows[mid]['relative_path']
+        if damage=='missing':path.unlink()
+        else:path.write_bytes(b'\xff\xfe')
+        before=bytes_at(project)
+>       value=library.preview(project,{'context':{'mode':'independent','role':'deck-content','phase':'argument','review_units':[]},'selected_resource_ids':['content-m04',mid]})
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_webui_acceptance_matrix.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/method_library_view.py:94: in preview
+    fail(str(exc), code='method_preview_invalid_selection')
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+message = 'missing or escaped catalog file: references/cases/E04-saas-retention.md'
+code = 'method_preview_invalid_selection', status = 400
+
+    def fail(message, *, code='insight_invalid_query', status=400):
+>       raise InsightError('insight', message, code=code, http_status=status)
+E       deck_master.content_insight.InsightError: insight: missing or escaped catalog file: references/cases/E04-saas-retention.md
+
+src/deck_master/content_insight.py:24: InsightError
+___ test_selected_resource_damage_is_partial_not_whole_preview_failure[utf8] ___
+
+project = PosixPath('/tmp/pytest-of-agent/pytest-29/test_selected_resource_damage_1/proj')
+request = {'context': {'mode': 'independent', 'role': 'deck-content', 'phase': 'argument', 'review_units': []}, 'selected_resource_ids': ['content-m04', 'case-e04-walkthrough']}
+
+    def preview(project, request):
+        if not isinstance(request, dict) or set(request) - {'context', 'selected_resource_ids', 'expected_basis'}:
+            fail('Invalid preview fields')
+        ctx = request.get('context'); chosen = request.get('selected_resource_ids')
+        if not isinstance(ctx, dict) or not isinstance(chosen, list) or len(chosen) > 100 or any(not isinstance(i, str) for i in chosen):
+            fail('Provide context and registered resource IDs')
+        root, rows, catalog_digest = catalog()
+        for mid in chosen:
+            if mid not in rows or not rows[mid]['readable']:
+                fail(f'Unknown or unreadable resource: {mid}', code='method_preview_invalid_selection')
+        reasons = []; phase = None; units = None; kind = None; intent = None
+        project_id = revision = None; phase_state = {}; pending = []; gaps = []
+        if ctx.get('mode') == 'independent':
+            if set(ctx) != {'mode', 'role', 'phase', 'review_units'} or ctx['role'] not in PUBLIC_SKILLS:
+                fail('Invalid independent context')
+            role, phase, units = ctx['role'], ctx['phase'], ctx['review_units']
+            if phase is not None and phase not in {'framing', 'argument', 'page_copy', 'speech', 'review', 'production', 'design', 'delivery', 'input_revision'}:
+                fail('Invalid phase')
+            if not isinstance(units, list) or any(not isinstance(u, str) or u not in methods._CONTENT_UNITS | methods._VISUAL_UNITS for u in units):
+                fail('Invalid review units')
+            if role == 'deck-review' and phase is None:
+                phase = 'review'
+            status, dispatch, valid = 'read_only', 'not_applicable', True
+            basis = {'context': ctx}
+        elif ctx.get('mode') == 'project':
+            if set(ctx) != {'mode', 'revision'} or not isinstance(ctx['revision'], str) or not ctx['revision']:
+                fail('Project preparation requires a fixed revision')
+            store, doc = snapshot(project, ctx['revision'])
+            project_id, revision = doc['project_id'], doc['revision_id']
+            work = (doc.get('collaboration') or {}).get('request') or {}
+            role, kind, intent = 'deck-content', 'compose', work.get('content_intent')
+            tasks, gaps = records(store, doc, 'tasks')
+            pending = [ref for ref, t in tasks if t['status'] in ('queued', 'awaiting_host', 'running')]
+            if revision != store.current_revision_id(): reasons.append('historical_revision')
+            if pending: reasons.append('existing_task_frozen')
+            if not work or work.get('closed') or work.get('intent') not in ('full_deck', 'content_only'):
+                reasons.append('no_new_phase')
+            else:
+                try:
+                    phase_state = content_production.content_phase_status(store, doc)
+                    phase = phase_state.get('phase')
+                    if phase_state.get('action') != 'dispatch':
+                        reasons.append('request_completed' if phase_state.get('action') == 'complete' else 'awaiting_decision')
+                except READ_FAILURES:
+                    reasons.append('basis_unreadable')
+            if gaps: reasons.append('basis_unreadable')
+            if phase and not eligibility.evaluate(store, doc, store.load_document(), 'dispatch.compose')['allowed']:
+                reasons.append('policy_blocked')
+            valid = bool(phase) and not reasons
+            status = 'new_content_task' if valid else 'frozen_pending_task' if pending else 'no_new_phase'
+            dispatch = 'new_content_task_possible' if valid else 'cannot_dispatch'
+            basis = {'context': ctx, 'request': work, 'phase': phase_state, 'pending': pending, 'reasons': reasons}
+        else:
+            fail('Unknown preview mode')
+        context_digest = digest(basis)
+        expected = request.get('expected_basis')
+        if expected is not None and expected != {'catalog_digest': catalog_digest, 'context_digest': context_digest}:
+            fail('Preparation basis changed; re-preview retained IDs', code='method_preview_basis_changed', status=409)
+        defaults = []; resolved = []; dependencies = []; titles = {}
+        if valid:
+            try:
+                selected = select(rows, chosen, role=role, kind=kind, phase=phase, review_units=units)
+                defaults = list(methods.method_ids_for(kind, intent=intent, phase=phase)) if kind else list(
+                    ('collaboration-routing', *methods.method_ids_for('review', review_units=units))
+                    if role == 'deck-review' else methods._ROLE_METHODS[role])
+                ids = list(dict.fromkeys([*defaults, *selected]))
+                for mid in ids:
+                    data = safe_file(root, rows[mid]['relative_path']).read_bytes()
+                    if rows[mid]['relative_path'].endswith('.md'):
+>                       text = data.decode('utf-8')
+                               ^^^^^^^^^^^^^^^^^^^^
+E                       UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+
+src/deck_master/method_library_view.py:89: UnicodeDecodeError
+
+During handling of the above exception, another exception occurred:
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-29/test_selected_resource_damage_1')
+resource_root = PosixPath('/tmp/pytest-of-agent/pytest-29/test_selected_resource_damage_1/resources')
+damage = 'utf8'
+
+    @pytest.mark.parametrize('damage',['missing','utf8'])
+    def test_selected_resource_damage_is_partial_not_whole_preview_failure(tmp_path,resource_root,damage):
+        project,store,_,_=candidate(tmp_path);_,rows,_=library.catalog()
+        mid='case-e04-walkthrough';path=resource_root/rows[mid]['relative_path']
+        if damage=='missing':path.unlink()
+        else:path.write_bytes(b'\xff\xfe')
+        before=bytes_at(project)
+>       value=library.preview(project,{'context':{'mode':'independent','role':'deck-content','phase':'argument','review_units':[]},'selected_resource_ids':['content-m04',mid]})
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/rebuild/test_webui_acceptance_matrix.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/deck_master/method_library_view.py:94: in preview
+    fail(str(exc), code='method_preview_invalid_selection')
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+message = "'utf-8' codec can't decode byte 0xff in position 0: invalid start byte"
+code = 'method_preview_invalid_selection', status = 400
+
+    def fail(message, *, code='insight_invalid_query', status=400):
+>       raise InsightError('insight', message, code=code, http_status=status)
+E       deck_master.content_insight.InsightError: insight: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+
+src/deck_master/content_insight.py:24: InsightError
+______ test_method_cross_revision_restore_revalidates_ids_and_keeps_note _______
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-29/test_method_cross_revision_res0')
+
+    @pytest.mark.browser
+    def test_method_cross_revision_restore_revalidates_ids_and_keeps_note(tmp_path):
+        project,store,_,_=candidate(tmp_path);info=ui_journal.project_info(project);old=store.current_revision_id()
+        saved=save_draft(project,store,extra={'method_preparation':{'ids':['content-m04'],'context':{'mode':'independent','role':'deck-content','phase':'argument','review_units':[]}}})
+        commit_fixture(store,lambda doc:None);before=store.load_document()
+        server=WorkbenchServer(project);url=server.start()
+        try:
+            with sync_playwright() as pw:
+                browser=pw.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox']);page=browser.new_page()
+                page.goto(url+'studio/#'+urlencode({'project':info['project_identity'],'revision':store.current_revision_id(),'surface':'content','content_area':'methods','layer':'content'}))
+                page.get_by_text('保存与恢复个人准备稿',exact=True).click()
+                page.get_by_label('恢复项目中的个人草稿',exact=True).select_option(saved['draft']['draft_id'])
+>               expect(page.get_by_label('方法准备备注')).to_have_value('旧版本备注')
+E               AssertionError: Locator expected to have Value '旧版本备注'
+E               Actual value:  
+E               Call log:
+E                 - Expect "to_have_value" get_by_label("方法准备备注") with timeout 5000ms
+E                 - waiting for get_by_label("方法准备备注")
+E                   14 × locator resolved to <textarea rows="7" aria-label="方法准备备注" placeholder="记录这一页、这一层需要继续考虑的事。保存草稿不会提交制作任务。" id="method-draft-e3fbfa1e-adad-4225-a4f9-72c919596d3c"></textarea>
+E                      - unexpected value ""
+E               
+E               Aria snapshot:
+E               - textbox "方法准备备注":
+E                 - /placeholder: 记录这一页、这一层需要继续考虑的事。保存草稿不会提交制作任务。
+
+tests/rebuild/test_webui_acceptance_matrix.py:67: AssertionError
+=========================== short test summary info ============================
+FAILED tests/rebuild/test_webui_acceptance_matrix.py::test_selected_resource_damage_is_partial_not_whole_preview_failure[missing]
+FAILED tests/rebuild/test_webui_acceptance_matrix.py::test_selected_resource_damage_is_partial_not_whole_preview_failure[utf8]
+FAILED tests/rebuild/test_webui_acceptance_matrix.py::test_method_cross_revision_restore_revalidates_ids_and_keeps_note
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 3 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+3 failed in 6.64s

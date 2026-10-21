@@ -10,6 +10,7 @@ health-checked before reuse (spec 09.5.3).
 from __future__ import annotations
 
 import json
+import re
 import hashlib
 import secrets
 import threading
@@ -56,7 +57,7 @@ def _write_state(project_dir: Path, state: dict) -> None:
 
 # Server-side capability names (single source for /api/health and the
 # /api/project effective-action projection).
-UI_CAPABILITIES = ("ui_draft.v1", "ui_gallery.v1", "ui_overview.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1",
+UI_CAPABILITIES = ("content_insight.v1", "method_library_preview.v1", "ui_draft.v1", "ui_gallery.v1", "ui_overview.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1",
                    "page_detail.v1", "annotations.v1", "changes.v1", "operations.v1", "candidates.v1",
                    "stages.v1", "run_desk.v1", "style_recipes.v1", "content_ops.v1", "exports.v1",
                    "restoration.v1", "workbench_actions.v1", "action_targets.v1", "icon_quality.v1", "result_reading.v1", "history_summary.v1", "visual_reference.v1", "material_uploads.v1",
@@ -225,6 +226,10 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 if len(data) != length: visual_styles.fail('body','incomplete image upload')
                 self._send_json(visual_styles.import_reference(self.store.project_root,data=data,**{key:v[0] for key,v in fields.items()}));return
             data=self._read_json_body()
+            if self.path == '/api/method-library/preview':
+                from .method_library_view import preview
+                self._send_json(preview(self.store.project_root, data))
+                return
             from .samples import sample_info
             sample = sample_info(self.store.project_root)
             if sample and sample['readonly'] and self.path not in ('/api/ui-state', '/api/gallery', '/api/overview', '/api/text-ranges/validate'):
@@ -323,6 +328,10 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             else:self._send_json({'error':'not found'},404);return
             self._send_json(result)
         except Exception as exc:
+            if self.path == '/api/method-library/preview':
+                self._send_json({'error': {'code': getattr(exc, 'error_code', 'method_preview_unavailable'),
+                    'message': getattr(exc, 'detail', '方法目录暂不可读。')}}, getattr(exc, 'http_status', 503))
+                return
             if self.path == '/api/inputs/update':
                 payload, status = input_update_error(exc)
                 self._send_json(payload, status)
@@ -357,6 +366,17 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         if self._collaboration_route('GET'):
             return
         parsed = urlparse(self.path)
+        if (parsed.path.startswith(('/api/content/arguments', '/api/content/evidence/', '/api/content/requirements/', '/api/method-library/resources/'))
+                or re.fullmatch(r'/api/(tasks/[^/]+/methods|reviews/[^/]+/reading)', parsed.path)):
+            from .insight_http import route
+            try:
+                payload = route(self.store.project_root, parsed.path, parsed.query)
+                self._send_json(payload if payload is not None else {'error': {'code': 'not_found'}}, 200 if payload is not None else 404)
+            except Exception as exc:
+                self._send_json({'error': {'code': getattr(exc, 'error_code', 'insight_unavailable'),
+                    'message': getattr(exc, 'detail', 'Fixed record unavailable'), 'field': getattr(exc, 'path', None)}},
+                    getattr(exc, 'http_status', 503))
+            return
         if parsed.path.startswith('/api/ui-state/backups'):
             from . import personal_recovery
             try:

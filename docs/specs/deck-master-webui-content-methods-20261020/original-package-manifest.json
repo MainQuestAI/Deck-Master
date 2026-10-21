@@ -1,0 +1,58 @@
+{
+  "docs/specs/deck-master-webui-content-methods-20261020/ACCEPTANCE.md": {
+    "sha256": "0b3244a27cde37236fe8615815f4612805a35e7308a874ec45d8e1f4242cdadf",
+    "bytes": 12060
+  },
+  "docs/specs/deck-master-webui-content-methods-20261020/API-SPEC.md": {
+    "sha256": "f383e97f75a5f599b73ef6ff5f4fb7c433c594b99377b0d3f71a722008f51bb0",
+    "bytes": 16347
+  },
+  "docs/specs/deck-master-webui-content-methods-20261020/BASELINE.md": {
+    "sha256": "23f0426d5dfa9439008d744ff71777018c1d9f76631ec2e56ddd06881b539c55",
+    "bytes": 5372
+  },
+  "docs/specs/deck-master-webui-content-methods-20261020/HANDOFF.md": {
+    "sha256": "4d7ad15fd330a8600133fdc4eb301722309285efc62e709e1d941ac6e8cb94f9",
+    "bytes": 3632
+  },
+  "docs/specs/deck-master-webui-content-methods-20261020/README.md": {
+    "sha256": "86d6100933367dee43305762042ad63f88284f506d841e3735607b9ada4efa35",
+    "bytes": 1713
+  },
+  "docs/specs/deck-master-webui-content-methods-20261020/SPEC.md": {
+    "sha256": "5196b4f75805b0b6c6e74d788633e307a8d284404c75cffcf312bc7a05652ed4",
+    "bytes": 5547
+  },
+  "docs/specs/deck-master-webui-content-methods-20261020/TASKS.md": {
+    "sha256": "be2787c633e5e8435928dd71e8d4d4b078134276ea1b0b219d645de73cfb378d",
+    "bytes": 7704
+  },
+  "docs/specs/deck-master-webui-content-methods-20261020/UI-SPEC.md": {
+    "sha256": "77eb56b8dee81868e14de77f4f8144aca8e9e396492c2405bc662802e1375308",
+    "bytes": 12948
+  },
+  "docs/specs/deck-master-webui-content-methods-20261020/baseline.json": {
+    "sha256": "63d4cf111b470c16c73c1dfcc847caabe5825cccec7e36d67913255c1cbf3f3f",
+    "bytes": 571
+  },
+  "docs/specs/deck-master-webui-content-methods-20261020/inputs/impact-report.md": {
+    "sha256": "0a93d9c0be7debe95b645b4fc53f9f15815a52f1544b80ad1f62ede2dc3493e9",
+    "bytes": 16576
+  },
+  "docs/specs/deck-master-webui-content-methods-20261020/tools/validate_spec.py": {
+    "sha256": "04ef23d33258d4a89e59ee1cd6b2cd292f97abb018836fae41a83c0313782f94",
+    "bytes": 3552
+  },
+  "docs/specs/deck-master-webui-content-methods-20261020/traceability.json": {
+    "sha256": "220577a48c8f6fe5f341fa8528b36b96e3359254da3057aebbadf6a7c65421bc",
+    "bytes": 20694
+  },
+  "docs/specs/deck-master-webui-content-methods-20261020/validation.json": {
+    "sha256": "55f9328f10dc5ab936f6e05946f2de496a9fdfb96b82013a0662808789b72365",
+    "bytes": 466
+  },
+  "docs/work-items/wi-webui-post-pr127-20261020/context.md": {
+    "sha256": "9c02c8d1258bbba60cc1ef20ce09af5157d0b934f384b11f0a238ea3ffba8b15",
+    "bytes": 1248
+  }
+}

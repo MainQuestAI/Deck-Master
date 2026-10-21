@@ -438,3 +438,13 @@ dialog .launcher-create-form {flex:1 1 auto;min-height:0;overflow:auto;overscrol
 dialog .launcher-create-form textarea {min-height:96px}
 dialog:has(> .modal-body > form.launcher-create-form) .modal-actions {flex:none;margin-top:0}
 .gallery-comparison-reason {font-size:12px;line-height:1.5;margin:4px 0 0}
+/* Fixed reading projections share the existing five work surfaces. */
+.insight-reading, .argument-reading, .argument-comparison > *, .insight-finding {min-width:0;max-width:100%;overflow-wrap:anywhere;}
+.argument-comparison {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,24rem),1fr));gap:1.25rem;align-items:start;}
+.insight-node {border-block-start:1px solid var(--border,#ddd);padding:1rem 0;}
+.insight-list-row {display:flex;gap:1rem;justify-content:space-between;align-items:center;flex-wrap:wrap;padding:.75rem 0;border-bottom:1px solid var(--border,#ddd);}
+.method-catalog {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,19rem),1fr));gap:.5rem;}
+.method-entry {display:flex;align-items:start;gap:.5rem;padding:.5rem;overflow-wrap:anywhere;min-width:0;}
+.insight-reading pre,.argument-reading pre {white-space:pre-wrap;overflow-wrap:anywhere;max-width:100%;}
+.insight-finding {padding:1rem;}
+@media(max-width:600px){.argument-comparison{grid-template-columns:minmax(0,1fr);}.studio-content-areas{flex-wrap:wrap;}}

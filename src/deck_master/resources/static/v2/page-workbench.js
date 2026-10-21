@@ -1,3 +1,5 @@
+import {pageEvidence,designRequirements} from './evidence-reading.js';
+import {supportsInsights} from './insight-reading.js';
 import {historyLabel} from './history-labels.js';
 import {sourceReader, pageContentEditor} from './content-edit.js';
 import {get, revisionQuery, readableError} from './api.js';
@@ -76,6 +78,7 @@ function contentView(app, data) {
     (data.page.content_mapping?.speech_segments||[]).length>0&&detail('口播段落与估时依据',
       el('pre', {class:'evidence-json'}, JSON.stringify(data.page.content_mapping.speech_segments,null,2)))));
   if (data.page?.customer_visible && !app.readonly && app.health.ui_capabilities?.includes('content_ops.v1') && data.revision_id === app.route.revision && data.page_id === app.route.page_id) node.append(pageContentEditor(app, data));
+  if(supportsInsights(app))node.append(pageEvidence(app,data),designRequirements(app,data));
   node.append(button('查看本页来源', () => sourceView(app, data))); return node;
 }
 function imageLayer(app, data, layer, title, releases) {
@@ -278,7 +281,7 @@ export function pageDetail(app, data) {
   const detailBasis = layer === 'original_image' || layer === 'prepared_prompt' || layer === 'submitted_prompt'
     ? (() => { const basis = generationBasis(app, data); basis.open = studio; return basis; })() : null;
   const production = layer === 'svg' || layer === 'ppt' ? (studio ? productionView(data, {expanded:true}) : detail('可编辑性与制作检查', productionView(data))) : null;
-  const detailFace = el('div', {class: 'stack'}, detailBasis, production);
+  const detailFace = el('div', {class: 'stack'}, detailBasis, production, supportsInsights(app)&&layer!=='content'&&designRequirements(app,data));
   if (!detailBasis && !production) detailFace.append(el('p', {class: 'muted'}, '本层没有多的制作记录；生成依据与检查在对应图层的详情面。'));
   const faces = [
     ['opinions', '意见', annotations?.node || el('p', {class: 'muted'}, '本页层不提供意见；请选择图像或逐页稿层。')],

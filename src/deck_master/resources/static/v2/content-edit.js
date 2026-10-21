@@ -156,7 +156,9 @@ export function pageContentEditor(app, data) {
   // 2.3（深度复审）：核对状态把「具体差异 + 范围与下游影响 + 确认动作」放在同一块，
   // 预览后滚动到这里就能同屏核对；逐项文本框仍保留在下方随时返回修改。
   const check = el('div', {class:'stack content-check'});
-  const reason = inputField('正文修改说明', '调整本页标题或正文', 2);
+  const handoff=app.reviewHandoff;
+  const handoffText=handoff&&handoff.revision===data.revision_id&&canonical(handoff.page_ref)===canonical(data.stages.content.ref)&&handoff.repair_layer==='content'?handoff.text:null;
+  const reason = inputField('正文修改说明', handoffText||'调整本页标题或正文', 2);
   let operation, rangeDraft = null, rangeDialog = null;
   function openRange(path, label) {
     const pathKey=canonical(path), source=at(value,path);

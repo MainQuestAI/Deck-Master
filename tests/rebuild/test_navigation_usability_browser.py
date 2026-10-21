@@ -118,8 +118,10 @@ def test_mobile_gallery_settings_keep_selection_focus_and_production_targets(wor
     page = workbench_page
     errors = []
     page.on('pageerror', lambda error: errors.append(str(error)))
+    from mobile_gallery_diagnostics import gallery_click_evidence
     page.set_viewport_size({'width':390, 'height':844})
-    page.get_by_role('button', name='整稿画廊', exact=True).click()
+    with gallery_click_evidence(page):
+        page.get_by_role('button', name='整稿画廊', exact=True).click()
     canvas = page.locator('.slide-tile canvas').first
     canvas.wait_for()
     assert page.evaluate('scrollY') == 0

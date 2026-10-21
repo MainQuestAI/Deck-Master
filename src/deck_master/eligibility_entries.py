@@ -102,6 +102,10 @@ COLLABORATION_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "collaboration.start_request": ("request.start",
                                     "collaboration.start_request: T02 write path owns record "
                                     "correctness; T04 consumes the decision", None),
+    # Shared pure decision validation returns an in-memory proposal only. It
+    # checks decision.record eligibility but never stores/commits or issues
+    # authority; record_decision remains the separately gated locked writer.
+    "collaboration.prepare_decision": (None, "-", READ_REASONS["read_plan"]),
     "collaboration.record_decision": ("decision.record",
                                       "collaboration.record_decision: T02 write path owns "
                                       "evidence/delegation correctness", None),
@@ -471,6 +475,17 @@ HTTP_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "/api/check": (None, "-", READ_REASONS["read_model"]),
     "/api/candidate-preview/file": (None, "-", READ_REASONS["read_download"]),
     "/api/candidate-preview/status": (None, "-", READ_REASONS["read_model"]),
+    # Fixed-snapshot insight GETs read reachable objects/installed method bytes.
+    # These are exact discovery literals, not prefix exemptions inherited by
+    # arbitrary descendant writes. The router still validates every query/ref.
+    "/api/(tasks/[^/]+/methods|reviews/[^/]+/reading)": (None, "-", READ_REASONS["read_model"]),
+    "/api/content/arguments": (None, "-", READ_REASONS["read_model"]),
+    "/api/content/evidence/": (None, "-", READ_REASONS["read_model"]),
+    "/api/content/requirements/": (None, "-", READ_REASONS["read_model"]),
+    "/api/method-library/resources/": (None, "-", READ_REASONS["read_model"]),
+    # POST is only transport for a selection/context preview. It resolves the
+    # catalog without saving objects, dispatching, or changing allowance/calls.
+    "/api/method-library/preview": (None, "-", READ_REASONS["read_plan"]),
     "/api/content/lineage/": (None, "-", READ_REASONS["read_model"]),
     "/api/content/sources/": (None, "-", READ_REASONS["read_model"]),
     "/api/content/uploads/": (None, "-", READ_REASONS["read_model"]),

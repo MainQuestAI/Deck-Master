@@ -163,3 +163,58 @@ def test_modal_falls_back_to_the_caller_provided_focus_when_trigger_gone(workben
     }''')
     assert outcome['withoutFallback'] == 'view-title'
     assert outcome['withFallback'] == 'p01-fallback'
+
+
+def test_modal_cleanup_owns_replacement_queue_and_duplicate_close(workbench_page):
+    page = workbench_page
+    result = page.evaluate('''async () => {
+      const {modal} = await import('/v2/dom.js');
+      const counts = {first:0, second:0, protected:0, queued:0};
+      const body = () => document.createElement('p');
+      const closeEvent = dialog => new Promise(resolve => dialog.addEventListener('close', resolve, {once:true}));
+      const first = modal('first', body(), [], {beforeClose:()=>counts.first++});
+      const second = modal('second', body(), [], {beforeClose:()=>counts.second++});
+      const replaced = {...counts};
+      let done = closeEvent(second);
+      second.querySelector('.modal-actions button').click();
+      await done;
+      second.close(); // already closed: cannot release the same owner twice
+      const closed = {...counts};
+      const protectedDialog = modal('protected', body(), [], {protectDraft:true, beforeClose:()=>counts.protected++});
+      const queued = modal('queued', body(), [], {beforeClose:()=>counts.queued++});
+      const waiting = {counts:{...counts}, protectedOpen:protectedDialog.open, queuedOpen:queued.open};
+      done = closeEvent(protectedDialog);
+      protectedDialog.querySelector('.modal-actions button').click();
+      await done;
+      const advanced = {counts:{...counts}, queuedOpen:queued.open};
+      done = closeEvent(queued);
+      queued.close(); // programmatic close keeps fallback cleanup
+      await done;
+      queued.close();
+      return {same:first===second,replaced,closed,waiting,advanced,final:counts};
+    }''')
+    assert result['same']
+    assert result['replaced'] == {'first': 1, 'second': 0, 'protected': 0, 'queued': 0}
+    assert result['closed'] == {'first': 1, 'second': 1, 'protected': 0, 'queued': 0}
+    assert result['waiting'] == {'counts': result['closed'], 'protectedOpen': True, 'queuedOpen': False}
+    assert result['advanced'] == {'counts': {'first': 1, 'second': 1, 'protected': 1, 'queued': 0}, 'queuedOpen': True}
+    assert result['final'] == {'first': 1, 'second': 1, 'protected': 1, 'queued': 1}
+
+
+def test_modal_old_close_event_does_not_release_reopened_owner(workbench_page):
+    result = workbench_page.evaluate('''async () => {
+      const {modal} = await import('/v2/dom.js');
+      let old=0, current=0;
+      const dialog = modal('old', document.createElement('p'), [], {beforeClose:()=>old++});
+      const oldEvent = new Promise(resolve=>dialog.addEventListener('close', resolve, {once:true}));
+      dialog.close();
+      modal('reopened', document.createElement('p'), [], {beforeClose:()=>current++});
+      await oldEvent;
+      const afterOldEvent = {old,current,open:dialog.open};
+      const newEvent = new Promise(resolve=>dialog.addEventListener('close', resolve, {once:true}));
+      dialog.querySelector('.modal-actions button').click();
+      await newEvent;
+      return {afterOldEvent, final:{old,current}};
+    }''')
+    assert result == {'afterOldEvent': {'old': 1, 'current': 0, 'open': True},
+                      'final': {'old': 1, 'current': 1}}

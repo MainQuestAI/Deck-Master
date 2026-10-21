@@ -1,0 +1,32 @@
+{
+  "src/deck_master/collaboration.py": {
+    "expected": "38bb0b52964ff96ad0763ac8649b985608b607dca19543be5ded07a948b23870",
+    "actual": "38bb0b52964ff96ad0763ac8649b985608b607dca19543be5ded07a948b23870",
+    "unchanged": true
+  },
+  "src/deck_master/content_production.py": {
+    "expected": "3b4bad4e0d869488b557deefa5f724e1f3d39286d72a85d8304e42e0646f4f0e",
+    "actual": "3b4bad4e0d869488b557deefa5f724e1f3d39286d72a85d8304e42e0646f4f0e",
+    "unchanged": true
+  },
+  "src/deck_master/web.py": {
+    "expected": "66a63a651be125bcccf2fda8af4ae39de8754f81f8b3c682fb1cbe78aa6b1279",
+    "actual": "66a63a651be125bcccf2fda8af4ae39de8754f81f8b3c682fb1cbe78aa6b1279",
+    "unchanged": true
+  },
+  "src/deck_master/content_insight.py": {
+    "expected": "c03c01a9752ee177a9f53220427a0a263f09a5bd3885f0c08fb8d355492da49b",
+    "actual": "c03c01a9752ee177a9f53220427a0a263f09a5bd3885f0c08fb8d355492da49b",
+    "unchanged": true
+  },
+  "src/deck_master/insight_http.py": {
+    "expected": "0b106b8e0b7ead0a8048baa3c6bbf3f44fde0073805f128e0c47ce42294eab26",
+    "actual": "0b106b8e0b7ead0a8048baa3c6bbf3f44fde0073805f128e0c47ce42294eab26",
+    "unchanged": true
+  },
+  "tests/rebuild/test_webui_content_insight.py": {
+    "expected": "f2b9613e107a42aa93e9fc236f8e032b20b4dfaffd97bfc1accfa5e60eea1f38",
+    "actual": "f2b9613e107a42aa93e9fc236f8e032b20b4dfaffd97bfc1accfa5e60eea1f38",
+    "unchanged": true
+  }
+}

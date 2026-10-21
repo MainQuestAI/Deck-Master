@@ -26,6 +26,13 @@ from jsonschema.exceptions import best_match
 from referencing import Registry, Resource
 
 SCHEMA_FILES = {
+    "ui_arguments": "ui-arguments.v1.schema.json",
+    "ui_argument": "ui-argument.v1.schema.json",
+    "ui_page_evidence": "ui-page-evidence.v1.schema.json",
+    "ui_review_reading": "ui-review-reading.v1.schema.json",
+    "ui_content_requirements": "ui-content-requirements.v1.schema.json",
+    "ui_task_methods": "ui-task-methods.v1.schema.json",
+    "ui_method_preview": "ui-method-preview.v1.schema.json",
     "work_context.v2": "work-context.v2.schema.json",
     "collaboration": "collaboration.v1.schema.json",
     "collaboration_decision": "collaboration-decision.v1.schema.json",

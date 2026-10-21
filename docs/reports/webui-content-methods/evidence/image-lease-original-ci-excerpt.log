@@ -1,0 +1,41 @@
+=================================== FAILURES ===================================
+2026-10-20T23:46:53.0107776Z _______ test_breakdown_stays_with_summary_and_opens_full_image[1280-800] _______
+2026-10-20T23:46:53.0108259Z 
+2026-10-20T23:46:53.0110255Z ux03_browser = (<Page url='http://127.0.0.1:46705/#project=24daf485871c55e03f6440c32c5c5d884b7e955293ab35a188353c7c99636483&surface=s...-of-runner/pytest-0/test_breakdown_stays_with_summ1/ux03-project'), <deck_master.store.Store object at 0x7f4f09428c20>)
+2026-10-20T23:46:53.0112298Z tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-0/test_breakdown_stays_with_summ1')
+2026-10-20T23:46:53.0112987Z width = 1280, height = 800
+2026-10-20T23:46:53.0113218Z 
+2026-10-20T23:46:53.0113635Z     @pytest.mark.parametrize('width,height', [(1440, 900), (1280, 800), (390, 844)])
+2026-10-20T23:46:53.0114665Z     def test_breakdown_stays_with_summary_and_opens_full_image(ux03_browser, tmp_path, width, height):
+2026-10-20T23:46:53.0115474Z         from playwright.sync_api import expect
+2026-10-20T23:46:53.0116006Z         page, server, path, store = ux03_browser
+2026-10-20T23:46:53.0116643Z         page.set_viewport_size({'width': width, 'height': height})
+2026-10-20T23:46:53.0117488Z         detail = {'recipe': v2_recipe(1), 'ref': {'sha256': 'e' * 64}}
+2026-10-20T23:46:53.0118161Z         install_style_mocks(page, recipes=[detail], detail=detail)
+2026-10-20T23:46:53.0119234Z         page.route('**/api/file?*' + BREAKDOWN_SHA + '*', lambda route: route.fulfill(status=200, content_type='image/png', body=PNG_1PX))
+2026-10-20T23:46:53.0120118Z         page.goto(server.start())
+2026-10-20T23:46:53.0121023Z         page.get_by_role('button', name='风格校准', exact=True).click()
+2026-10-20T23:46:53.0121783Z         page.get_by_role('button', name='外部图片', exact=True).click()
+2026-10-20T23:46:53.0122527Z         page.get_by_text('恢复项目中的截图分析与规范', exact=True).click()
+2026-10-20T23:46:53.0123214Z         page.get_by_label('已确认的截图规范').select_option(index=1)
+2026-10-20T23:46:53.0124095Z         expect(page.locator('.visual-style p[role=status]')).to_contain_text('已打开所选确认规范')
+2026-10-20T23:46:53.0124861Z         canvas = page.locator('.visual-breakdown canvas')
+2026-10-20T23:46:53.0125387Z         expect(canvas).to_be_visible()
+2026-10-20T23:46:53.0126481Z         assert canvas.bounding_box()['height'] <= 320
+2026-10-20T23:46:53.0127324Z         expect(page.locator('.visual-keep-summary')).to_be_visible()
+2026-10-20T23:46:53.0128208Z         open_full = page.get_by_role('button', name='查看完整拆解图', exact=True)
+2026-10-20T23:46:53.0128864Z         open_full.focus(); page.keyboard.press('Enter')
+2026-10-20T23:46:53.0129386Z         dialog = page.get_by_role('dialog')
+2026-10-20T23:46:53.0130160Z         expect(dialog.get_by_role('img', name='完整截图拆解图', exact=True)).to_be_visible()
+2026-10-20T23:46:53.0131007Z         assert dialog.locator('canvas').evaluate('(canvas) => canvas.width') == 1
+2026-10-20T23:46:53.0131996Z         page.keyboard.press('Escape'); expect(dialog).not_to_be_visible(); expect(open_full).to_be_focused()
+2026-10-20T23:46:53.0133027Z         # Decoded images remain in the bounded cache; closing must release the live lease.
+2026-10-20T23:46:53.0134789Z         pins = page.evaluate("async () => [...(await import('/v2/images.js')).imagePool.entries.values()].filter(entry => entry.kind==='large').reduce((sum,entry)=>sum+entry.pins,0)")
+2026-10-20T23:46:53.0135863Z >       assert pins == 0
+2026-10-20T23:46:53.0136217Z E       assert 1 == 0
+2026-10-20T23:46:53.0136444Z 
+2026-10-20T23:46:53.0136874Z tests/rebuild/test_ux03_style_candidate_browser.py:402: AssertionError
+2026-10-20T23:46:53.0137850Z =========================== short test summary info ============================
+2026-10-20T23:46:53.0139293Z FAILED tests/rebuild/test_ux03_style_candidate_browser.py::test_breakdown_stays_with_summary_and_opens_full_image[1280-800] - assert 1 == 0
+2026-10-20T23:46:53.0140461Z 1 failed, 554 passed, 3646 deselected in 2217.32s (0:36:57)
+2026-10-20T23:46:53.5307801Z 

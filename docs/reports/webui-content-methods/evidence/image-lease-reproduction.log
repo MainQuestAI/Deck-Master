@@ -1,0 +1,136 @@
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+_______ test_breakdown_stays_with_summary_and_opens_full_image[1440-900] _______
+
+ux03_browser = (<Page url='http://127.0.0.1:39429/#project=134abb54d15531772ffc9a5c68e6070d81792a9f137dca0ae3fbc1e5193fe5c0&surface=s...-of-agent/pytest-81/test_breakdown_stays_with_summ0/ux03-project'), <deck_master.store.Store object at 0x7fd205a665a0>)
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-81/test_breakdown_stays_with_summ0')
+width = 1440, height = 900
+
+    @pytest.mark.parametrize('width,height', [(1440, 900), (1280, 800), (390, 844)])
+    def test_breakdown_stays_with_summary_and_opens_full_image(ux03_browser, tmp_path, width, height):
+        from playwright.sync_api import expect
+        page, server, path, store = ux03_browser
+        page.set_viewport_size({'width': width, 'height': height})
+        detail = {'recipe': v2_recipe(1), 'ref': {'sha256': 'e' * 64}}
+        install_style_mocks(page, recipes=[detail], detail=detail)
+        page.route('**/api/file?*' + BREAKDOWN_SHA + '*', lambda route: route.fulfill(status=200, content_type='image/png', body=PNG_1PX))
+        page.goto(server.start())
+        page.get_by_role('button', name='风格校准', exact=True).click()
+        page.get_by_role('button', name='外部图片', exact=True).click()
+        page.get_by_text('恢复项目中的截图分析与规范', exact=True).click()
+        page.get_by_label('已确认的截图规范').select_option(index=1)
+        expect(page.locator('.visual-style p[role=status]')).to_contain_text('已打开所选确认规范')
+        canvas = page.locator('.visual-breakdown canvas')
+        expect(canvas).to_be_visible()
+        assert canvas.bounding_box()['height'] <= 320
+        expect(page.locator('.visual-keep-summary')).to_be_visible()
+        open_full = page.get_by_role('button', name='查看完整拆解图', exact=True)
+        open_full.focus(); page.keyboard.press('Enter')
+        dialog = page.get_by_role('dialog')
+        expect(dialog.get_by_role('img', name='完整截图拆解图', exact=True)).to_be_visible()
+        assert dialog.locator('canvas').evaluate('(canvas) => canvas.width') == 1
+        open_full.evaluate('''async button => {
+          const {imagePool} = await import('/v2/images.js');
+          button.addEventListener('focus', () => {
+            window.breakdownPinsAtFocus = [...imagePool.entries.values()]
+              .filter(entry => entry.kind === 'large').reduce((sum, entry) => sum + entry.pins, 0);
+          }, {once:true});
+        }''')
+        page.keyboard.press('Escape'); expect(dialog).not_to_be_visible(); expect(open_full).to_be_focused()
+>       assert page.evaluate('window.breakdownPinsAtFocus') == 0
+E       AssertionError: assert 1 == 0
+E        +  where 1 = evaluate('window.breakdownPinsAtFocus')
+E        +    where evaluate = <Page url='http://127.0.0.1:39429/#project=134abb54d15531772ffc9a5c68e6070d81792a9f137dca0ae3fbc1e5193fe5c0&surface=style&layer=original_image&zoom=1&revision=874291ca909943dfaab85da7f652d796'>.evaluate
+
+tests/rebuild/test_ux03_style_candidate_browser.py:407: AssertionError
+_______ test_breakdown_stays_with_summary_and_opens_full_image[1280-800] _______
+
+ux03_browser = (<Page url='http://127.0.0.1:40651/#project=e7fbc65a09065d82a959a22d48a4c503607cf18a8976189873d7d93695be8a24&surface=s...-of-agent/pytest-81/test_breakdown_stays_with_summ1/ux03-project'), <deck_master.store.Store object at 0x7fd205a72d50>)
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-81/test_breakdown_stays_with_summ1')
+width = 1280, height = 800
+
+    @pytest.mark.parametrize('width,height', [(1440, 900), (1280, 800), (390, 844)])
+    def test_breakdown_stays_with_summary_and_opens_full_image(ux03_browser, tmp_path, width, height):
+        from playwright.sync_api import expect
+        page, server, path, store = ux03_browser
+        page.set_viewport_size({'width': width, 'height': height})
+        detail = {'recipe': v2_recipe(1), 'ref': {'sha256': 'e' * 64}}
+        install_style_mocks(page, recipes=[detail], detail=detail)
+        page.route('**/api/file?*' + BREAKDOWN_SHA + '*', lambda route: route.fulfill(status=200, content_type='image/png', body=PNG_1PX))
+        page.goto(server.start())
+        page.get_by_role('button', name='风格校准', exact=True).click()
+        page.get_by_role('button', name='外部图片', exact=True).click()
+        page.get_by_text('恢复项目中的截图分析与规范', exact=True).click()
+        page.get_by_label('已确认的截图规范').select_option(index=1)
+        expect(page.locator('.visual-style p[role=status]')).to_contain_text('已打开所选确认规范')
+        canvas = page.locator('.visual-breakdown canvas')
+        expect(canvas).to_be_visible()
+        assert canvas.bounding_box()['height'] <= 320
+        expect(page.locator('.visual-keep-summary')).to_be_visible()
+        open_full = page.get_by_role('button', name='查看完整拆解图', exact=True)
+        open_full.focus(); page.keyboard.press('Enter')
+        dialog = page.get_by_role('dialog')
+        expect(dialog.get_by_role('img', name='完整截图拆解图', exact=True)).to_be_visible()
+        assert dialog.locator('canvas').evaluate('(canvas) => canvas.width') == 1
+        open_full.evaluate('''async button => {
+          const {imagePool} = await import('/v2/images.js');
+          button.addEventListener('focus', () => {
+            window.breakdownPinsAtFocus = [...imagePool.entries.values()]
+              .filter(entry => entry.kind === 'large').reduce((sum, entry) => sum + entry.pins, 0);
+          }, {once:true});
+        }''')
+        page.keyboard.press('Escape'); expect(dialog).not_to_be_visible(); expect(open_full).to_be_focused()
+>       assert page.evaluate('window.breakdownPinsAtFocus') == 0
+E       AssertionError: assert 1 == 0
+E        +  where 1 = evaluate('window.breakdownPinsAtFocus')
+E        +    where evaluate = <Page url='http://127.0.0.1:40651/#project=e7fbc65a09065d82a959a22d48a4c503607cf18a8976189873d7d93695be8a24&surface=style&layer=original_image&zoom=1&revision=561bd7ed39994236a5e4586e1f1dcfea'>.evaluate
+
+tests/rebuild/test_ux03_style_candidate_browser.py:407: AssertionError
+_______ test_breakdown_stays_with_summary_and_opens_full_image[390-844] ________
+
+ux03_browser = (<Page url='http://127.0.0.1:46489/#project=3cadcfc710646f50422ef09fe54096bd2539678fbb7332d3ffe8434dc5c0db90&surface=s...-of-agent/pytest-81/test_breakdown_stays_with_summ2/ux03-project'), <deck_master.store.Store object at 0x7fd206b3d9a0>)
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-81/test_breakdown_stays_with_summ2')
+width = 390, height = 844
+
+    @pytest.mark.parametrize('width,height', [(1440, 900), (1280, 800), (390, 844)])
+    def test_breakdown_stays_with_summary_and_opens_full_image(ux03_browser, tmp_path, width, height):
+        from playwright.sync_api import expect
+        page, server, path, store = ux03_browser
+        page.set_viewport_size({'width': width, 'height': height})
+        detail = {'recipe': v2_recipe(1), 'ref': {'sha256': 'e' * 64}}
+        install_style_mocks(page, recipes=[detail], detail=detail)
+        page.route('**/api/file?*' + BREAKDOWN_SHA + '*', lambda route: route.fulfill(status=200, content_type='image/png', body=PNG_1PX))
+        page.goto(server.start())
+        page.get_by_role('button', name='风格校准', exact=True).click()
+        page.get_by_role('button', name='外部图片', exact=True).click()
+        page.get_by_text('恢复项目中的截图分析与规范', exact=True).click()
+        page.get_by_label('已确认的截图规范').select_option(index=1)
+        expect(page.locator('.visual-style p[role=status]')).to_contain_text('已打开所选确认规范')
+        canvas = page.locator('.visual-breakdown canvas')
+        expect(canvas).to_be_visible()
+        assert canvas.bounding_box()['height'] <= 320
+        expect(page.locator('.visual-keep-summary')).to_be_visible()
+        open_full = page.get_by_role('button', name='查看完整拆解图', exact=True)
+        open_full.focus(); page.keyboard.press('Enter')
+        dialog = page.get_by_role('dialog')
+        expect(dialog.get_by_role('img', name='完整截图拆解图', exact=True)).to_be_visible()
+        assert dialog.locator('canvas').evaluate('(canvas) => canvas.width') == 1
+        open_full.evaluate('''async button => {
+          const {imagePool} = await import('/v2/images.js');
+          button.addEventListener('focus', () => {
+            window.breakdownPinsAtFocus = [...imagePool.entries.values()]
+              .filter(entry => entry.kind === 'large').reduce((sum, entry) => sum + entry.pins, 0);
+          }, {once:true});
+        }''')
+        page.keyboard.press('Escape'); expect(dialog).not_to_be_visible(); expect(open_full).to_be_focused()
+>       assert page.evaluate('window.breakdownPinsAtFocus') == 0
+E       AssertionError: assert 1 == 0
+E        +  where 1 = evaluate('window.breakdownPinsAtFocus')
+E        +    where evaluate = <Page url='http://127.0.0.1:46489/#project=3cadcfc710646f50422ef09fe54096bd2539678fbb7332d3ffe8434dc5c0db90&surface=style&layer=original_image&zoom=1&revision=831209f86998499686c8f1a91a0390c9'>.evaluate
+
+tests/rebuild/test_ux03_style_candidate_browser.py:407: AssertionError
+=========================== short test summary info ============================
+FAILED tests/rebuild/test_ux03_style_candidate_browser.py::test_breakdown_stays_with_summary_and_opens_full_image[1440-900]
+FAILED tests/rebuild/test_ux03_style_candidate_browser.py::test_breakdown_stays_with_summary_and_opens_full_image[1280-800]
+FAILED tests/rebuild/test_ux03_style_candidate_browser.py::test_breakdown_stays_with_summary_and_opens_full_image[390-844]
+3 failed, 6 deselected in 7.88s
