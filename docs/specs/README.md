@@ -8,6 +8,7 @@
 
 | 目录 | 定位 |
 | --- | --- |
+| [Content WebUI](deck-master-webui-content-methods-20261020/README.md) | PR130 已合入；固定版本读取、方向采用及审阅交接，原记录保留时点 |
 | [RC5 content methods](content-methods-rc5/README.md) | PR127 已合入；资源目录、Host 选择及冻结方法合同，实际证据按 SHA 读取 |
 | [RC4 increment](deck-master-next-iteration-20261019/README.md) | 继承的增量入口；N1–N6台账与方法/恢复合同，报告保持原候选身份 |
 | [rebuild v1](deck-master-rebuild-v1/README.md) | src-layout 和运行核心的继承基线；库存/镜像/示例被测试引用，不移动 |

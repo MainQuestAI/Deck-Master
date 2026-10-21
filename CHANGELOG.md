@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 1.0.0 — release preparation
+## 1.0.0 — release preparation, 2026-10-21
 
 Python package `1.0.0`; intended tag `v1.0.0`. Publication and final candidate
 validation remain separate from this source preparation.
@@ -16,8 +16,13 @@ validation remain separate from this source preparation.
   checks; retire the unvalidated legacy Docker/Dev Container entry and document
   the supported local Python installation instead.
 
-Final WebUI integration, exact-source validation and release assets will be
-recorded after the integration candidate is fixed. Historical observations
+- Integrate PR130's fixed-revision content/method reading, narrative comparison,
+  direction adoption recovery, source evidence and bounded review handoffs.
+- Preserve image request ownership when aborting, replacing or removing queued
+  image work; release active leases synchronously on cancellation.
+
+Exact-source validation and release assets are tracked in the
+[release preparation record](docs/releases/1.0.0-preparation.md). Historical observations
 below retain their original version and scope. Font rendering, professional
 human review and desktop editing limitations remain in the first-run guide.
 

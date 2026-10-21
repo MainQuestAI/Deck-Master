@@ -112,6 +112,7 @@ not publish them. Legacy release and RC targets now stop with a retirement messa
 ## Retired container entry point
 
 The legacy Dockerfile and Dev Container configuration are removed for 1.0.0.
+Their [last mainline versions](https://github.com/MainQuestAI/Deck-Master/tree/44e9dd8bd96b9e52ac0acc4174b87f677d3c9bf6) remain in Git history.
 They referenced the retired preview server and did not install the rebuilt
 src-layout package correctly. A replacement image has not passed an actual
 build and runtime check, so container support is not part of this release.

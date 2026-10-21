@@ -12,6 +12,10 @@ The [RC4 increment](docs/specs/deck-master-next-iteration-20261019/README.md)
 and its [single ledger](docs/reports/rc4/iteration-20261019/execution-ledger.json)
 retain their original candidate evidence. A source version, built wheel,
 active installation and published Release are separate facts.
+The source includes the RC5 content-method catalog and bounded Host selection,
+PR130's content/method/evidence reading and recoverable handoffs, plus support
+and documentation governance. See the [release preparation record](docs/releases/1.0.0-preparation.md)
+for validation scope and remaining publication steps.
 **License:** Apache-2.0.
 
 The core inherits RC4 extensions to the RC3 and Flow Quality contracts with recoverable input

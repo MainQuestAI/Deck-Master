@@ -12,7 +12,9 @@ GitHub Release are separate facts. This roadmap does not announce a release.
 
 PR127 adds the content-method catalog and bounded Host selection; PR128/129
 add feedback governance and current/historical documentation navigation.
-Formal publication is tracked separately from source preparation.
+PR130 adds fixed-revision content/method reading, evidence and bounded review
+handoffs. Formal publication is tracked in the
+[release preparation record](docs/releases/1.0.0-preparation.md).
 
 ## Included RC4 work
 

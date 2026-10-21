@@ -11,7 +11,9 @@ agents working in this repository.
 3. `docs/agent-recovery-playbook.md` for blocked-state repair decisions.
 4. `src/deck_master/resources/contracts/` for runtime JSON contracts and schema truth.
 5. For the RC5 content-method increment, read
-   `docs/specs/content-methods-rc5/README.md`. For inherited RC4 work:
+   `docs/specs/content-methods-rc5/README.md`; for the integrated content WebUI,
+   `docs/specs/deck-master-webui-content-methods-20261020/README.md`.
+   For inherited RC4 work:
    `docs/specs/deck-master-next-iteration-20261019/06-CODEX-HANDOFF.md`,
    then its specified reading order and the assigned N1–N6 card.
    The unique candidate ledger is
