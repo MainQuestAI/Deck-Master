@@ -500,7 +500,11 @@ def show(project, *, candidate_id, revision=None):
             change = store.read_object_json(task['change_binding']['change_ref'])
             change_plan = store.read_object_json(change['plan_ref']); validate_schema('change_plan', change_plan)
             sources = change_plan['input'].get('references', [])
-            files = _reference_files(store, document, sources)
+            # Match dispatch: v3 attaches imported originals; older recipes
+            # attach previews. Derived preview bytes cannot replace originals.
+            recipe_ref = task['stage_request'].get('style_recipe_ref')
+            original = bool(recipe_ref and store.read_object_json(recipe_ref)['schema_version'] == 'style_recipe.v3')
+            files = _reference_files(store, document, sources, original=original)
             target_ref = task['stage_request'].get('target_reference_ref')
             expected_files = files
             if target_ref:
