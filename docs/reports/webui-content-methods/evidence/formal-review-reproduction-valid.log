@@ -1,0 +1,2736 @@
+FFFFFFF                                                                  [100%]
+=================================== FAILURES ===================================
+_________ test_plan_only_method_preview_matches_real_argument_dispatch _________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-61/test_plan_only_method_preview_0')
+
+    def test_plan_only_method_preview_matches_real_argument_dispatch(tmp_path):
+        project, store = _project(tmp_path)
+        _request(project, store, content_intent='plan_only', layers=['narrative', 'plan'])
+        task = _dispatch(store, phase='framing')
+        _submit(project, task, {'narrative': _framing_narrative(store.load_document()['project_id'])}, 'framing')
+        before = bytes_at(project)
+        value = library.preview(project, {'context': {'mode': 'project', 'revision': store.current_revision_id()},
+                                         'selected_resource_ids': ['content-m04']})
+        assert bytes_at(project) == before
+        # Real continuation supplies argument-only targets; preview must agree.
+>       service.continue_project(project, selected_resource_ids=['content-m04'])
+
+tests/rebuild/test_webui_formal_review.py:28:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src/deck_master/work_context.py:230: in wrapped
+    return function(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/service.py:875: in continue_project
+    result = _continue_project(project_dir, selected_resource_ids=selected_resource_ids)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+project_dir = PosixPath('/tmp/pytest-of-agent/pytest-61/test_plan_only_method_preview_0/proj')
+selected_resource_ids = ['content-m04']
+
+    def _continue_project(project_dir: Path | str, *, selected_resource_ids=None) -> dict:
+        """Run runnable local work; return the stable pending Host tasks.
+
+        Reuse pending work. Reconcile changed inputs before producing existing
+        pages; an explicitly resumed cancelled revision gets a new task identity.
+        """
+        store = Store(Path(project_dir).expanduser())
+        initial = store.load_document()
+        if selected_resource_ids is not None:
+            from .resource_catalog import load_catalog
+            from .method_resources import resolve_root
+            resources = load_catalog(resolve_root())
+            if (not isinstance(selected_resource_ids, (list, tuple)) or any(
+                    not isinstance(mid, str) or mid not in resources or not resources[mid]['readable']
+                    for mid in selected_resource_ids)):
+                raise ServiceError("selected_resource_ids", "must name registered readable resource IDs")
+        if initial.get("collaboration") is None:
+            from .collaboration_migration import describe
+            return _response(status="needs_input", document=initial, requested_action="continue",
+                findings=[{"code": "migration_required", "migration": describe(project_dir)}],
+                next_action="describe_and_apply_migration")
+        from .content_production import completion_status
+        initial_completion = completion_status(store, initial)
+        if initial_completion['state'] == 'completed':
+            return {**_response(status='completed', document=initial, requested_action='continue',
+                next_action='return_requested_content', result_refs=initial_completion['outputs']), 'completion': initial_completion}
+        if selected_resource_ids is not None and _pending_host_tasks(initial, store, include_trials=False):
+>           raise ServiceError("selected_resource_ids", "pending Tasks are frozen; finish or formally retire them before selecting resources for a new dispatch")
+E           deck_master.service.ServiceError: selected_resource_ids: pending Tasks are frozen; finish or formally retire them before selecting resources for a new dispatch
+
+src/deck_master/service.py:1010: ServiceError
+_ test_verified_existing_decision_adoption_independent_of_new_decision_channel _
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-61/test_verified_existing_decisio0')
+
+    def test_verified_existing_decision_adoption_independent_of_new_decision_channel(tmp_path):
+        from test_web import _get_json, _post_json
+        project, store, ref, decision_ref = verified_candidate(tmp_path)
+        before = bytes_at(project)
+        admission = ui.argument(project, ref['sha256'])['data']['adoption']
+        assert bytes_at(project) == before
+        server = WorkbenchServer(project); url = server.start().rstrip('/')
+        try:
+            token = _get_json(url+'/api/session')[2]['token']
+            status, result = _post_json(url+f'/api/projects/{store.load_document()["project_id"]}/collaboration/proposal-adoptions',
+                {'base_revision': store.current_revision_id(), 'operation_id': str(uuid.uuid4()),
+                 'proposal_ref': ref, 'decision_ref': decision_ref, 'write_scope': admission['write_scope']}, token=token, origin=url)
+            assert status == 200 and result['status'] == 'accepted'
+        finally:
+            server.stop()
+        assert not admission['can_record_direction_decision']
+        assert admission['decision_reason_codes'] == ['authority_channel_unavailable']
+>       assert admission['can_adopt'] and not admission['needs_decision']
+E       assert (False)
+
+tests/rebuild/test_webui_formal_review.py:75: AssertionError
+________ test_atom_source_damage_is_local_and_matches_single_atom_reads ________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-61/test_atom_source_damage_is_loc0')
+
+    def test_atom_source_damage_is_local_and_matches_single_atom_reads(tmp_path):
+        project, store = _project(tmp_path); _request(project, store)
+        _, out = _accept_argument(project, store); _adopt_direction(project, store, out['result_refs'][0])
+        task = _dispatch(store, phase='page_copy'); doc = store.load_document(); page = _page(store, doc, 'p1')
+        page['customer_visible']['body_blocks'].append({'id': 'b2', 'type': 'paragraph', 'text': '独立的完好原子'})
+        page['content_mapping']['visible_links'].append({'element_ref': 'atom:p1:block:b2:text', 'narrative_node_ids': ['n1'], 'source_links': []})
+        # b3 shares b1's broken source, exercising cached failure attribution too.
+        page['customer_visible']['body_blocks'].append({'id': 'b3', 'type': 'paragraph', 'text': '同一损坏来源'})
+        link = copy.deepcopy(page['content_mapping']['visible_links'][1]); link['element_ref'] = 'atom:p1:block:b3:text'
+        page['content_mapping']['visible_links'].append(link)
+        _submit(project, task, {'pages': [page], 'page_order': ['p1'], 'plan_input': _plan_input(doc, ['p1'])}, 'page_copy')
+        (project/doc['sources'][0]['extract']['path']).write_bytes(b'broken')
+        before = bytes_at(project); full = ui.evidence(project, 'p1')
+        values = {e['element_ref']: e for e in full['data']['elements']}
+        for block, expected in [('b1', 'unreadable'), ('b2', 'recorded'), ('b3', 'unreadable')]:
+            atom = f'atom:p1:block:{block}:text'
+            single = ui.evidence(project, 'p1', element_ref=atom)['data']['elements'][0]
+            assert values[atom] == single
+>           assert single['mapping_status'] == expected
+E           AssertionError: assert 'recorded' == 'unreadable'
+E
+E             - unreadable
+E             + recorded
+
+tests/rebuild/test_webui_formal_review.py:97: AssertionError
+_______ test_unrelated_broken_narrative_does_not_invent_unreadable_plan ________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-61/test_unrelated_broken_narrativ0')
+
+    def test_unrelated_broken_narrative_does_not_invent_unreadable_plan(tmp_path):
+        project, store, _, ref = candidate(tmp_path)
+        _, result = _accept_argument(project, store); other = result['result_refs'][0]
+        # Give B a distinct formal current Ref, without a Plan for A.
+        narrative = store.read_object_json(other); narrative['narrative_id'] = 'broken-B'
+        bad = store.put_json_object(narrative)
+        commit_fixture(store, lambda d: d.update(narrative=bad))
+        (project/bad['path']).write_bytes(b'broken')
+        value = ui.argument(project, ref['sha256'])
+>       assert value['data']['plan_status'] == 'absent' and value['data']['plans'] == []
+E       AssertionError: assert ('unreadable' == 'absent'
+E
+E         - absent
+E         + unreadable)
+
+tests/rebuild/test_webui_formal_review.py:110: AssertionError
+_____ test_method_body_latest_selection_owns_body_status_and_focus[False] ______
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-61/test_method_body_latest_select0')
+late_failure = False
+
+    @pytest.mark.browser
+    @pytest.mark.parametrize('late_failure', [False, True])
+    def test_method_body_latest_selection_owns_body_status_and_focus(tmp_path, late_failure):
+        project, store, _, _ = candidate(tmp_path); server = WorkbenchServer(project); url = server.start()
+        info = ui_journal.project_info(project); held = []
+        try:
+            with sync_playwright() as pw:
+                browser = pw.chromium.launch(executable_path=shutil.which('chromium'), args=['--no-sandbox']); page = browser.new_page()
+                page.goto(url+'studio/#'+urlencode({'project': info['project_identity'], 'revision': store.current_revision_id(),
+                    'surface': 'content', 'content_area': 'methods', 'layer': 'content'}))
+                page.get_by_label('准备上下文').select_option('independent')
+                expect(page.locator('#content-area-methods')).to_contain_text('准备已核对')
+                page.locator('label.method-entry').filter(has_text='content-m04 ·').locator('input').check()
+                expect(page.get_by_role('button', name='阅读 content-m04', exact=True)).to_be_visible()
+                page.locator('label.method-entry').filter(has_text='case-e04-walkthrough ·').locator('input').check()
+                expect(page.get_by_role('button', name='阅读 content-m04', exact=True)).to_be_visible()
+                page.route('**/api/method-library/resources/content-m04?*', lambda route: held.append((route, route.fetch())))
+                page.get_by_role('button', name='阅读 content-m04', exact=True).click()
+                page.get_by_role('button', name='阅读 example-e04-after', exact=True).click()
+                body = page.locator('#content-area-methods > section > pre')
+                expect(body).not_to_be_empty(); expected = body.inner_text()
+                search = page.get_by_role('searchbox', name='筛选方法或案例'); search.focus()
+                assert len(held) == 1
+                route, response = held.pop()
+                if late_failure:
+                    route.fulfill(status=503, content_type='application/json', body=json.dumps({'error': {'code': 'late_resource_error', 'message': '迟到失败不得覆盖'}}))
+                else:
+                    route.fulfill(response=response)
+                # Wait until the browser has processed the released response.
+                page.wait_for_timeout(150)
+>               expect(body).to_have_text(expected); expect(search).to_be_focused()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               AssertionError: Locator expected to have text '# E04｜改进后的完整内容示范
+E
+E               **性质：基于同包输入的编辑示范；不是生产效果、实测收益或唯一标准答案。**
+E
+E
+E               ## P1｜缩席贡献了已报告流失与缩减金额的88.7%，应先聚焦大客席位使用链路
+E               41家大客缩席对应1260万元，占流失与缩减总额1420万元的约88.7%。这一金额口径足以支持将大客缩席列为优先分析对象，而不是把资源平均分给所有客户层级。
+E               88.7%不是NRR下降的贡献比例。重建NRR还需要同一存量客户群的期初ARR、扩张、缩减和流失；新签ARR不在这个存量分母中。
+E
+E               ## P2｜现有对照削弱“全面市场冲击”的简单解释，但没有排除价格、预算与承诺共同作用
+E               竞品活动面向较小企业，而重大金额损失集中在大客；另44家未使用旧AD的大客NRR为108%。这些事实使单一、均匀外部冲击的解释不够充分。
+E               但保留部分席位并不能排除客户部分迁移或削减预算；新签增长也不能证明存量客户不受预算影响。SMB的Logo续约率与中型企业的NRR不是同一指标，不能写成“91%–102%的续约率证明小客户没有问题”。
+E
+E               ## P3｜旧AD相关开户摩擦是可操作的优先机制线索，28%的月活率本身还不能证明原因
+E               41家缩席客户中38家使用旧AD/OA，给定材料同时描述了插件移除后的手工维护困难。可能的作用链为：自动同步中断→部分账号未开通→可用席位不足或使用受阻→采购在续约时减少席位。
+E               要区分“未开通”“开通未激活”“激活后少用”，必须分别查开户、首次使用与月活。MAU/付费席位28%只度量月活，不等于72%的账号无法登录。还应核对升级前后时间顺序和部署成熟度差异，才能判断机制适用到哪些客户。
+E
+E               ## P4｜技术疏通与提前经营可以协同，但各自改善的环节应分开验证
+E               技术侧先识别确实受同步缺口影响的客户，比较恢复连接、批量导入或既有集成办法的可用性与维护代价。CS侧把联系时间前移，查明实际使用场景和账号障碍，而不是仅提前催款。
+E               连接器上线是产出，账号可用是中间变化，持续业务使用是另一变化，席位续约才是商业结果。不能因为完成同步就保证采购不再缩席；客户仍可能存在真实需求缩减或预算压力。
+E
+E               ## P5｜150万元应作为有范围的预算建议，不绑定尚未推导的挽回金额或统一活跃阈值
+E               建议先明确受影响客户范围、数据核查和可执行的技术修复试点，并据结果确定后续投入。负责人分别承担技术适配、客户使用推进和财务口径核对；具体岗位授权与预算分项由实际组织确认。
+E               领先观察可包括开户成功、可用账号覆盖、关键工作场景使用和续约沟通反馈，但60%或62%并不是材料证明的安全线。Q4可保护的ARR需从客户清单和到期金额重新建立，不能直接沿用920万元或6.1倍ROI。
+E
+E               ## P6｜先形成可核对的客户级机制和价值链，再决定扩大修复或改走其他路径
+E               下一轮需要把客户升级时间、开户状态、活跃轨迹和缩席原因连接起来。若账号障碍解除后仍低使用，应转向真实需求、培训或工作流适配；若使用恢复但仍缩席，还要检查预算与采购因素。
+E               本次判断足以支持聚焦调查和针对性改善，不足以给部门“洗清责任”或宣布唯一真因。把争议转为具体观察和可改变动作，才是这份报告对协作的贡献。
+E               '
+E               Actual value: # M04｜因果机制与竞争解释
+E
+E               ## 1. 来源、层次与独特增量
+E               吸收 Heuer 的竞争假设分析中“比较证据的区分力”、Deck Master 的业务机制写法；以轻量机制链与竞争解释表作为本方案综合。[S4][D2] 属于分析与推理论证层。它发现“哪一环节可能产生结果、何种行动可以改变该环节”，不只是增加免责文字。完整 ACH 与严谨因果研究均比本卡复杂，不能把本卡当因果证明程序。
+E
+E               ## 2. 适用与失效场景
+E               适合经营原因、技术故障、流程问题和方案价值说明。仅同步事实或教授定义时不用。5 Whys 可以启发下一问，但不能追问五次就把最后一项认定为根因；有反馈、并行原因或时滞时允许分支和回路。
+E
+E               ## 3. 最低输入与不足时的继续方式
+E               现象、时间或过程背景，以及可用观察。只有前后对比时可说明发生变化并提出候选解释，不能当已识别的效果。缺关键观察时写“当前无法区分A与B；需要X”，同时提出不会依赖唯一原因的可逆动作。对因果效应的识别与对机制的完整理解作区分：有效干预设计可支持效应判断，不以已经知道全部中间机制为必要条件。
+E
+E               ## 4. 具体操作
+E               ① 明确要解释的结果、对象、时间及计量方式。② 将领先解释写成“触发→行动/状态→结果”，每条箭头明确是观察还是推测。③ 至少在确有歧义时构造一个能认真解释同一现象的替代原因，不找明显弱者陪跑。④ 逐条比较证据：A若真会多容易看到它，B若真又如何；两者都容易解释的证据不能区分，但可以保留为共同前提。⑤ 检查证据是否独立，是否只是同一来源多次转述；区分没观察到与可靠确认不存在。⑥ 寻找区分力强的额外观察或干预，注意时间顺序、共同原因、选择偏差及实施是否真实发生。⑦ 形成支持程度相称的解释；对关键证据可靠性改变后的判断做回看，不以负号最少者机械胜出。
+E
+E               ## 5. 内容成果
+E               作用机制、竞争解释、已观察与待验证连接、判别证据，以及可作用的流程节点。价值方案可以输出“能力变化→行为变化→业务结果”的条件链，但不能把每个箭头都当承诺。
+E
+E               ## 6. 转成页间结构与页内正文
+E               定位页先说差异在哪里；解释页说哪些机制能解释它；行动页说明干预哪一步及如何判断有效。不必把整张复杂因果图上屏。重要竞争解释直接改变行动时进主线，其余留说明或附录。
+E
+E               ## 7. 完整正例与失败例
+E               **虚构输入：**付费移动新访客转化下降，同期扩大定向并更换素材；没有渠道分设备性能数据。
+E
+E               **正确解释：**A为新增人群购买意图较低，B为移动页面性能问题。转化下降本身两者都能解释；更宽定向是A的线索，但不能排除B。“在同设备、同页面条件下比较人群”的观察可帮助判断A，“在同人群下随机分配优化页面”的设计可帮助判断B，实际因果判定还依赖分配、执行与测量质量。建议先补漏斗与性能分层，再进行可解释的对照，而非同时改定向、素材与页面后将提升全归于定向。
+E
+E               **失败例：**“老客稳定，证明不是竞争加剧；新素材出现后下降，证明素材导致。”竞争可能仅影响新客；时间共现也不能排除其他变化。另一个失败是把“AI上线→流程优化→效率提升”三个标签当机制，它没说明谁改变了什么行为。
+E
+E               ## 8. 衔接、替代与冲突
+E               承接M02的候选解释，复用M03证据判断；向M05提供可行干预。ACH是多解释情形的比较工具，不要求所有Deck生成矩阵。M06针对未来方案压力，不能替代本方法对已发生事实的判断。
+E
+E               ## 9. 模型执行指令
+E               > 展开可能产生结果的实际过程，并标明观察与推测。比较能解释同一现象的替代原因，优先寻找能区分它们的证据；不要靠反证计数选赢家。给出可行动的机制节点及当前判断边界，不用“可能”二字代替分析。
+E
+E               ## 10. 应用补充｜竞争解释和变化理论各自增加什么
+E               ACH式比较用来区分观察对不同解释的支持，允许多因并存；未排除不等于无分析。ToC式正向链用来说明交付物如何改变行为再影响业务结果，逐箭头记录所需条件。二者都不自动证明效果。SaaS案例中MAU/付费席位不应偷换成账号开通率，新签增长也不排除存量客户预算收缩。
+E
+E               方法是产品综合；来源归属见 method-sources。案例读取遵守当前工作单，示例数字不能当客户证据。
+E
+E               ## 来源链接
+E               [D2]: https://github.com/MainQuestAI/Deck-Master/blob/09f0213d07fc718dc4d41a52bb69c4595fcb1ac8/skills/deck-master/references/content-methods.md "Deck Master｜content-methods.md（固定提交）"
+E               [S4]: https://www.all.net/journal/deception/ciabook2/www.cia.gov/csi/books/19104/art11.html "Richards J. Heuer Jr.｜Psychology of Intelligence Analysis，第8章（原著网页镜像）"
+E
+E               Call log:
+E                 - Expect "to_have_text" locator("#content-area-methods > section > pre") with timeout 5000ms
+E                 - waiting for locator("#content-area-methods > section > pre")
+E                   14 × locator resolved to <pre tabindex="0" class="read-text"># M04｜因果机制与竞争解释↵↵## 1. 来源、层次与独特增量↵吸收 Heuer 的竞争假设分…</pre>
+E                      - unexpected value "# M04｜因果机制与竞争解释
+E
+E               ## 1. 来源、层次与独特增量
+E               吸收 Heuer 的竞争假设分析中“比较证据的区分力”、Deck Master 的业务机制写法；以轻量机制链与竞争解释表作为本方案综合。[S4][D2] 属于分析与推理论证层。它发现“哪一环节可能产生结果、何种行动可以改变该环节”，不只是增加免责文字。完整 ACH 与严谨因果研究均比本卡复杂，不能把本卡当因果证明程序。
+E
+E               ## 2. 适用与失效场景
+E               适合经营原因、技术故障、流程问题和方案价值说明。仅同步事实或教授定义时不用。5 Whys 可以启发下一问，但不能追问五次就把最后一项认定为根因；有反馈、并行原因或时滞时允许分支和回路。
+E
+E               ## 3. 最低输入与不足时的继续方式
+E               现象、时间或过程背景，以及可用观察。只有前后对比时可说明发生变化并提出候选解释，不能当已识别的效果。缺关键观察时写“当前无法区分A与B；需要X”，同时提出不会依赖唯一原因的可逆动作。对因果效应的识别与对机制的完整理解作区分：有效干预设计可支持效应判断，不以已经知道全部中间机制为必要条件。
+E
+E               ## 4. 具体操作
+E               ① 明确要解释的结果、对象、时间及计量方式。② 将领先解释写成“触发→行动/状态→结果”，每条箭头明确是观察还是推测。③ 至少在确有歧义时构造一个能认真解释同一现象的替代原因，不找明显弱者陪跑。④ 逐条比较证据：A若真会多容易看到它，B若真又如何；两者都容易解释的证据不能区分，但可以保留为共同前提。⑤ 检查证据是否独立，是否只是同一来源多次转述；区分没观察到与可靠确认不存在。⑥ 寻找区分力强的额外观察或干预，注意时间顺序、共同原因、选择偏差及实施是否真实发生。⑦ 形成支持程度相称的解释；对关键证据可靠性改变后的判断做回看，不以负号最少者机械胜出。
+E
+E               ## 5. 内容成果
+E               作用机制、竞争解释、已观察与待验证连接、判别证据，以及可作用的流程节点。价值方案可以输出“能力变化→行为变化→业务结果”的条件链，但不能把每个箭头都当承诺。
+E
+E               ## 6. 转成页间结构与页内正文
+E               定位页先说差异在哪里；解释页说哪些机制能解释它；行动页说明干预哪一步及如何判断有效。不必把整张复杂因果图上屏。重要竞争解释直接改变行动时进主线，其余留说明或附录。
+E
+E               ## 7. 完整正例与失败例
+E               **虚构输入：**付费移动新访客转化下降，同期扩大定向并更换素材；没有渠道分设备性能数据。
+E
+E               **正确解释：**A为新增人群购买意图较低，B为移动页面性能问题。转化下降本身两者都能解释；更宽定向是A的线索，但不能排除B。“在同设备、同页面条件下比较人群”的观察可帮助判断A，“在同人群下随机分配优化页面”的设计可帮助判断B，实际因果判定还依赖分配、执行与测量质量。建议先补漏斗与性能分层，再进行可解释的对照，而非同时改定向、素材与页面后将提升全归于定向。
+E
+E               **失败例：**“老客稳定，证明不是竞争加剧；新素材出现后下降，证明素材导致。”竞争可能仅影响新客；时间共现也不能排除其他变化。另一个失败是把“AI上线→流程优化→效率提升”三个标签当机制，它没说明谁改变了什么行为。
+E
+E               ## 8. 衔接、替代与冲突
+E               承接M02的候选解释，复用M03证据判断；向M05提供可行干预。ACH是多解释情形的比较工具，不要求所有Deck生成矩阵。M06针对未来方案压力，不能替代本方法对已发生事实的判断。
+E
+E               ## 9. 模型执行指令
+E               > 展开可能产生结果的实际过程，并标明观察与推测。比较能解释同一现象的替代原因，优先寻找能区分它们的证据；不要靠反证计数选赢家。给出可行动的机制节点及当前判断边界，不用“可能”二字代替分析。
+E
+E               ## 10. 应用补充｜竞争解释和变化理论各自增加什么
+E               ACH式比较用来区分观察对不同解释的支持，允许多因并存；未排除不等于无分析。ToC式正向链用来说明交付物如何改变行为再影响业务结果，逐箭头记录所需条件。二者都不自动证明效果。SaaS案例中MAU/付费席位不应偷换成账号开通率，新签增长也不排除存量客户预算收缩。
+E
+E               方法是产品综合；来源归属见 method-sources。案例读取遵守当前工作单，示例数字不能当客户证据。
+E
+E               ## 来源链接
+E               [D2]: https://github.com/MainQuestAI/Deck-Master/blob/09f0213d07fc718dc4d41a52bb69c4595fcb1ac8/skills/deck-master/references/content-methods.md "Deck Master｜content-methods.md（固定提交）"
+E               [S4]: https://www.all.net/journal/deception/ciabook2/www.cia.gov/csi/books/19104/art11.html "Richards J. Heuer Jr.｜Psychology of Intelligence Analysis，第8章（原著网页镜像）"
+E               "
+E
+E               Aria snapshot:
+E               - text: "# M04｜因果机制与竞争解释 ## 1. 来源、层次与独特增量 吸收 Heuer 的竞争假设分析中“比较证据的区分力”、Deck Master 的业务机制写法；以轻量机制链与竞争解释表作为本方案综合。[S4][D2] 属于分析与推理论证层。它发现“哪一环节可能产生结果、何种行动可以改变该环节”，不只是增加免责文字。完整 ACH 与严谨因果研究均比本卡复杂，不能把本卡当因果证明程序。 ## 2. 适用与失效场景 适合经营原因、技术故障、流程问题和方案价值说明。仅同步事实或教授定义时不用。5 Whys 可以启发下一问，但不能追问五次就把最后一项认定为根因；有反馈、并行原因或时滞时允许分支和回路。 ## 3. 最低输入与不足时的继续方式 现象、时间或过程背景，以及可用观察。只有前后对比时可说明发生变化并提出候选解释，不能当已识别的效果。缺关键观察时写“当前无法区分A与B；需要X”，同时提出不会依赖唯一原因的可逆动作。对因果效应的识别与对机制的完整理解作区分：有效干预设计可支持效应判断，不以已经知道全部中间机制为必要条件。 ## 4. 具体操作 ① 明确要解释的结果、对象、时间及计量方式。② 将领先解释写成“触发→行动/状态→结果”，每条箭头明确是观察还是推测。③ 至少在确有歧义时构造一个能认真解释同一现象的替代原因，不找明显弱者陪跑。④ 逐条比较证据：A若真会多容易看到它，B若真又如何；两者都容易解释的证据不能区分，但可以保留为共同前提。⑤ 检查证据是否独立，是否只是同一来源多次转述；区分没观察到与可靠确认不存在。⑥ 寻找区分力强的额外观察或干预，注意时间顺序、共同原因、选择偏差及实施是否真实发生。⑦ 形成支持程度相称的解释；对关键证据可靠性改变后的判断做回看，不以负号最少者机械胜出。 ## 5. 内容成果 作用机制、竞争解释、已观察与待验证连接、判别证据，以及可作用的流程节点。价值方案可以输出“能力变化→行为变化→业务结果”的条件链，但不能把每个箭头都当承诺。 ## 6. 转成页间结构与页内正文 定位页先说差异在哪里；解释页说哪些机制能解释它；行动页说明干预哪一步及如何判断有效。不必把整张复杂因果图上屏。重要竞争解释直接改变行动时进主线，其余留说明或附录。 ## 7. 完整正例与失败例 **虚构输入：**付费移动新访客转化下降，同期扩大定向并更换素材；没有渠道分设备性能数据。 **正确解释：**A为新增人群购买意图较低，B为移动页面性能问题。转化下降本身两者都能解释；更宽定向是A的线索，但不能排除B。“在同设备、同页面条件下比较人群”的观察可帮助判断A，“在同人群下随机分配优化页面”的设计可帮助判断B，实际因果判定还依赖分配、执行与测量质量。建议先补漏斗与性能分层，再进行可解释的对照，而非同时改定向、素材与页面后将提升全归于定向。 **失败例：**“老客稳定，证明不是竞争加剧；新素材出现后下降，证明素材导致。”竞争可能仅影响新客；时间共现也不能排除其他变化。另一个失败是把“AI上线→流程优化→效率提升”三个标签当机制，它没说明谁改变了什么行为。 ## 8. 衔接、替代与冲突 承接M02的候选解释，复用M03证据判断；向M05提供可行干预。ACH是多解释情形的比较工具，不要求所有Deck生成矩阵。M06针对未来方案压力，不能替代本方法对已发生事实的判断。 ## 9. 模型执行指令 > 展开可能产生结果的实际过程，并标明观察与推测。比较能解释同一现象的替代原因，优先寻找能区分它们的证据；不要靠反证计数选赢家。给出可行动的机制节点及当前判断边界，不用“可能”二字代替分析。 ## 10. 应用补充｜竞争解释和变化理论各自增加什么 ACH式比较用来区分观察对不同解释的支持，允许多因并存；未排除不等于无分析。ToC式正向链用来说明交付物如何改变行为再影响业务结果，逐箭头记录所需条件。二者都不自动证明效果。SaaS案例中MAU/付费席位不应偷换成账号开通率，新签增长也不排除存量客户预算收缩。 方法是产品综合；来源归属见 method-sources。案例读取遵守当前工作单，示例数字不能当客户证据。 ## 来源链接 [D2]: https://github.com/MainQuestAI/Deck-Master/blob/09f0213d07fc718dc4d41a52bb69c4595fcb1ac8/skills/deck-master/references/content-methods.md \"Deck Master｜content-methods.md（固定提交）\" [S4]: https://www.all.net/journal/deception/ciabook2/www.cia.gov/csi/books/19104/art11.html \"Richards J. Heuer Jr.｜Psychology of Intelligence Analysis，第8章（原著网页镜像）\""
+
+tests/rebuild/test_webui_formal_review.py:145: AssertionError
+______ test_method_body_latest_selection_owns_body_status_and_focus[True] ______
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-61/test_method_body_latest_select1')
+late_failure = True
+
+    @pytest.mark.browser
+    @pytest.mark.parametrize('late_failure', [False, True])
+    def test_method_body_latest_selection_owns_body_status_and_focus(tmp_path, late_failure):
+        project, store, _, _ = candidate(tmp_path); server = WorkbenchServer(project); url = server.start()
+        info = ui_journal.project_info(project); held = []
+        try:
+            with sync_playwright() as pw:
+                browser = pw.chromium.launch(executable_path=shutil.which('chromium'), args=['--no-sandbox']); page = browser.new_page()
+                page.goto(url+'studio/#'+urlencode({'project': info['project_identity'], 'revision': store.current_revision_id(),
+                    'surface': 'content', 'content_area': 'methods', 'layer': 'content'}))
+                page.get_by_label('准备上下文').select_option('independent')
+                expect(page.locator('#content-area-methods')).to_contain_text('准备已核对')
+                page.locator('label.method-entry').filter(has_text='content-m04 ·').locator('input').check()
+                expect(page.get_by_role('button', name='阅读 content-m04', exact=True)).to_be_visible()
+                page.locator('label.method-entry').filter(has_text='case-e04-walkthrough ·').locator('input').check()
+                expect(page.get_by_role('button', name='阅读 content-m04', exact=True)).to_be_visible()
+                page.route('**/api/method-library/resources/content-m04?*', lambda route: held.append((route, route.fetch())))
+                page.get_by_role('button', name='阅读 content-m04', exact=True).click()
+                page.get_by_role('button', name='阅读 example-e04-after', exact=True).click()
+                body = page.locator('#content-area-methods > section > pre')
+                expect(body).not_to_be_empty(); expected = body.inner_text()
+                search = page.get_by_role('searchbox', name='筛选方法或案例'); search.focus()
+                assert len(held) == 1
+                route, response = held.pop()
+                if late_failure:
+                    route.fulfill(status=503, content_type='application/json', body=json.dumps({'error': {'code': 'late_resource_error', 'message': '迟到失败不得覆盖'}}))
+                else:
+                    route.fulfill(response=response)
+                # Wait until the browser has processed the released response.
+                page.wait_for_timeout(150)
+                expect(body).to_have_text(expected); expect(search).to_be_focused()
+>               expect(page.locator('#content-area-methods')).not_to_contain_text('迟到失败不得覆盖')
+E               AssertionError: Locator expected not to contain text '迟到失败不得覆盖'
+E               Actual value: 方法与案例准备这里准备阅读与交接，不改变已有任务，也不启动制作。方法案例不是客户来源。本项目的下一内容阶段独立阅读，不产生项目许可deck-contentdeck-reviewdeck-designdeck-master论证策划正文写作口播审阅设计制作重新核对准备迟到失败不得覆盖同一 Runtime 的职责、范围与恢复 · 方法说明physical-units · 方法说明style-calibration · 方法说明candidates-and-stages · 方法说明icon-quality · 方法说明visual-reference · 方法说明材料阅读与使用 · 方法说明公共内容方法｜从任务与资料写成专业完整稿 · 方法说明Content Examples｜自包含合成样例 · 方法说明content-calibration · 方法说明输入变化后的持续修改 · 方法说明blueprint-svg · 方法说明review-and-repair · 方法说明example-e01-after · 案例example-e01-before · 案例example-e01-input · 案例example-e01-numbers · 数据example-e02-after · 案例example-e02-before · 案例example-e02-input · 案例example-e02-numbers · 数据example-e03-after · 案例example-e03-before · 案例example-e03-input · 案例example-e03-numbers · 数据E04｜改进后的完整内容示范 · 案例example-e04-before · 案例E04｜输入材料 · 案例example-e04-numbers · 数据example-e05-after · 案例example-e05-before · 案例example-e05-input · 案例example-e06-after · 案例example-e06-before · 案例example-e06-input · 案例template-options-comparison · 模板template-page-draft · 模板template-teaching-sequence · 模板design-semantic-examples · 案例master-routing-examples · 案例review-calibration-cases · 案例case-e01-walkthrough · 案例case-e02-walkthrough · 案例case-e03-walkthrough · 案例E04｜方法讲解与取舍 · 案例case-e05-walkthrough · 案例case-e06-walkthrough · 案例content-to-visual · 方法说明method-review · 方法说明按任务选择方法与案例 · 方法说明method-sources · 方法说明content-m01 · 方法说明content-m02 · 方法说明content-m03 · 方法说明M04｜因果机制与竞争解释 · 方法说明content-m05 · 方法说明content-m06 · 方法说明content-m07 · 方法说明content-m08 · 方法说明content-m09 · 方法说明content-m10 · 方法说明narrative-patterns · 方法说明page-writing · 方法说明writing-profiles · 方法说明helper-case-numbers · 脚本（只读）默认、显式、依赖与字节{
+E                 "schema_version": "ui_method_preview.v1",
+E                 "project_id": null,
+E                 "revision_id": null,
+E                 "context_status": "read_only",
+E                 "browse_status": "available",
+E                 "dispatch_status": "not_applicable",
+E                 "reason_codes": [],
+E                 "preparation_only": true,
+E                 "selection_status": "validated",
+E                 "context": {
+E                   "mode": "independent",
+E                   "role": "deck-content",
+E                   "phase": "argument",
+E                   "review_units": []
+E                 },
+E                 "catalog_digest": "062737b74ea07d5a963d1f22d4cac284a180a122e128f39d4ebd76701594f20d",
+E                 "context_digest": "d9a4f66edfaa8ade6a12b6aebd1858fa1831f760ff5f8a3e5d734183f691f29d",
+E                 "entries": [
+E                   {
+E                     "id": "collaboration-routing",
+E                     "display_name": "同一 Runtime 的职责、范围与恢复",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11",
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "physical-units",
+E                     "display_name": "physical-units",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "style-calibration",
+E                     "display_name": "style-calibration",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "candidates-and-stages",
+E                     "display_name": "candidates-and-stages",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "icon-quality",
+E                     "display_name": "icon-quality",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "visual-reference",
+E                     "display_name": "visual-reference",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "source-reading",
+E                     "display_name": "材料阅读与使用",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08",
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-methods",
+E                     "display_name": "公共内容方法｜从任务与资料写成专业完整稿",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": "a27f3a0001da20a123ab1926258b052065794c0a7644a270a36d55bc51244142",
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-examples",
+E                     "display_name": "Content Examples｜自包含合成样例",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": "3467462063f10608e5db839dc7118d95391ce2e20d5b849367cdf0570f46e10a",
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-calibration",
+E                     "display_name": "content-calibration",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "input-update",
+E                     "display_name": "输入变化后的持续修改",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": "1f6da62d01532069907f46e29414d65980b61ddd72e9e130541ee49a6a16c756",
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "blueprint-svg",
+E                     "display_name": "blueprint-svg",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "review-and-repair",
+E                     "display_name": "review-and-repair",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "installation",
+E                     "display_name": "installation",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": false,
+E                     "reason_codes": [
+E                       "resource_not_readable"
+E                     ]
+E                   },
+E                   {
+E                     "id": "example-e01-after",
+E                     "display_name": "example-e01-after",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e01-before",
+E                     "display_name": "example-e01-before",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e01-input",
+E                     "display_name": "example-e01-input",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e01-numbers",
+E                     "display_name": "example-e01-numbers",
+E                     "description": "",
+E                     "kind": "data",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e02-after",
+E                     "display_name": "example-e02-after",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e02-before",
+E                     "display_name": "example-e02-before",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e02-input",
+E                     "display_name": "example-e02-input",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e02-numbers",
+E                     "display_name": "example-e02-numbers",
+E                     "description": "",
+E                     "kind": "data",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e03-after",
+E                     "display_name": "example-e03-after",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e03-before",
+E                     "display_name": "example-e03-before",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e03-input",
+E                     "display_name": "example-e03-input",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e03-numbers",
+E                     "display_name": "example-e03-numbers",
+E                     "description": "",
+E                     "kind": "data",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e04-after",
+E                     "display_name": "E04｜改进后的完整内容示范",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": "4580168e23232bcc751218d50ee6bce3164484467b5f2f76cdc92061d80b5f3b",
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e04-before",
+E                     "display_name": "example-e04-before",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e04-input",
+E                     "display_name": "E04｜输入材料",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": "ca0b091045c84fe427ff74f495e3eab15611df2e1277b67239700295dc4fa461",
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e04-numbers",
+E                     "display_name": "example-e04-numbers",
+E                     "description": "",
+E                     "kind": "data",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e05-after",
+E                     "display_name": "example-e05-after",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e05-before",
+E                     "display_name": "example-e05-before",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e05-input",
+E                     "display_name": "example-e05-input",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e06-after",
+E                     "display_name": "example-e06-after",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e06-before",
+E                     "display_name": "example-e06-before",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e06-input",
+E                     "display_name": "example-e06-input",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "template-options-comparison",
+E                     "display_name": "template-options-comparison",
+E                     "description": "",
+E                     "kind": "template",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "template-page-draft",
+E                     "display_name": "template-page-draft",
+E                     "description": "",
+E                     "kind": "template",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "template-teaching-sequence",
+E                     "display_name": "template-teaching-sequence",
+E                     "description": "",
+E                     "kind": "template",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "design-semantic-examples",
+E                     "display_name": "design-semantic-examples",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "master-routing-examples",
+E                     "display_name": "master-routing-examples",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "review-calibration-cases",
+E                     "display_name": "review-calibration-cases",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "case-e01-walkthrough",
+E                     "display_name": "case-e01-walkthrough",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "case-e02-walkthrough",
+E                     "display_name": "case-e02-walkthrough",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "case-e03-walkthrough",
+E                     "display_name": "case-e03-walkthrough",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "case-e04-walkthrough",
+E                     "display_name": "E04｜方法讲解与取舍",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": "c1c8db7ffda29b69caf2cc9a4f05f1435602c24f971ca0996978448158e1a48b",
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "case-e05-walkthrough",
+E                     "display_name": "case-e05-walkthrough",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "case-e06-walkthrough",
+E                     "display_name": "case-e06-walkthrough",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-to-visual",
+E                     "display_name": "content-to-visual",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "method-review",
+E                     "display_name": "method-review",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "method-selection",
+E                     "display_name": "按任务选择方法与案例",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": "626f660edd65245358b9e3e1594131aa74e92c88c9c8574280ff98e35ec56a96",
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "method-sources",
+E                     "display_name": "method-sources",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-m01",
+E                     "display_name": "content-m01",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-m02",
+E                     "display_name": "content-m02",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-m03",
+E                     "display_name": "content-m03",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-m04",
+E                     "display_name": "M04｜因果机制与竞争解释",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": "cd52c74a319cf30ade75fd029c3476636d4b4b6f9db2eadffdc5f746dd815bf9",
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-m05",
+E                     "display_name": "content-m05",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-m06",
+E                     "display_name": "content-m06",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-m07",
+E                     "display_name": "content-m07",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-m08",
+E                     "display_name": "content-m08",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-m09",
+E                     "display_name": "content-m09",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-m10",
+E                     "display_name": "content-m10",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "narrative-patterns",
+E                     "display_name": "narrative-patterns",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "page-writing",
+E                     "display_name": "page-writing",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "writing-profiles",
+E                     "display_name": "writing-profiles",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "helper-case-numbers",
+E                     "display_name": "helper-case-numbers",
+E                     "description": "",
+E                     "kind": "script",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   }
+E                 ],
+E                 "explicit_ids": [
+E                   "content-m04",
+E                   "case-e04-walkthrough"
+E                 ],
+E                 "default_ids": [
+E                   "collaboration-routing",
+E                   "source-reading",
+E                   "content-methods",
+E                   "content-examples",
+E                   "input-update",
+E                   "method-selection"
+E                 ],
+E                 "dependency_ids": [
+E                   "example-e04-input",
+E                   "example-e04-after"
+E                 ],
+E                 "resolved_manifest": [
+E                   {
+E                     "id": "collaboration-routing",
+E                     "relative_path": "references/collaboration-routing.md",
+E                     "sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11"
+E                   },
+E                   {
+E                     "id": "source-reading",
+E                     "relative_path": "references/source-reading.md",
+E                     "sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08"
+E                   },
+E                   {
+E                     "id": "content-methods",
+E                     "relative_path": "references/content-methods.md",
+E                     "sha256": "a27f3a0001da20a123ab1926258b052065794c0a7644a270a36d55bc51244142"
+E                   },
+E                   {
+E                     "id": "content-examples",
+E                     "relative_path": "references/content-examples.md",
+E                     "sha256": "3467462063f10608e5db839dc7118d95391ce2e20d5b849367cdf0570f46e10a"
+E                   },
+E                   {
+E                     "id": "input-update",
+E                     "relative_path": "references/input-update.md",
+E                     "sha256": "1f6da62d01532069907f46e29414d65980b61ddd72e9e130541ee49a6a16c756"
+E                   },
+E                   {
+E                     "id": "method-selection",
+E                     "relative_path": "references/method-selection.md",
+E                     "sha256": "626f660edd65245358b9e3e1594131aa74e92c88c9c8574280ff98e35ec56a96"
+E                   },
+E                   {
+E                     "id": "content-m04",
+E                     "relative_path": "references/methods/M04-causal-explanations.md",
+E                     "sha256": "cd52c74a319cf30ade75fd029c3476636d4b4b6f9db2eadffdc5f746dd815bf9"
+E                   },
+E                   {
+E                     "id": "example-e04-input",
+E                     "relative_path": "assets/content/examples/E04-saas-retention/input.md",
+E                     "sha256": "ca0b091045c84fe427ff74f495e3eab15611df2e1277b67239700295dc4fa461"
+E                   },
+E                   {
+E                     "id": "example-e04-after",
+E                     "relative_path": "assets/content/examples/E04-saas-retention/after.md",
+E                     "sha256": "4580168e23232bcc751218d50ee6bce3164484467b5f2f76cdc92061d80b5f3b"
+E                   },
+E                   {
+E                     "id": "case-e04-walkthrough",
+E                     "relative_path": "references/cases/E04-saas-retention.md",
+E                     "sha256": "c1c8db7ffda29b69caf2cc9a4f05f1435602c24f971ca0996978448158e1a48b"
+E                   }
+E                 ],
+E                 "preview_digest": "9f6f001e24a88cd3381bd335f540ba5d2aff6768601281a3513730b382f70f8e",
+E                 "handoff": {
+E                   "status": "preparation_only",
+E                   "copy_allowed": true,
+E                   "text": "方法准备，尚未应用。请制作工具先重新核对项目版本、请求、范围和资源字节，再按正式流程处理。\n选择的资源 ID：content-m04, case-e04-walkthrough\n固定准备依据：9f6f001e24a88cd3381bd335f540ba5d2aff6768601281a3513730b382f70f8e"
+E                 }
+E               }阅读 collaboration-routing阅读 source-reading阅读 content-methods阅读 content-examples阅读 input-update阅读 method-selection阅读 content-m04阅读 example-e04-input阅读 example-e04-after阅读 case-e04-walkthrough重新核对后复制准备要求# E04｜改进后的完整内容示范
+E
+E               **性质：基于同包输入的编辑示范；不是生产效果、实测收益或唯一标准答案。**
+E
+E
+E               ## P1｜缩席贡献了已报告流失与缩减金额的88.7%，应先聚焦大客席位使用链路
+E               41家大客缩席对应1260万元，占流失与缩减总额1420万元的约88.7%。这一金额口径足以支持将大客缩席列为优先分析对象，而不是把资源平均分给所有客户层级。
+E               88.7%不是NRR下降的贡献比例。重建NRR还需要同一存量客户群的期初ARR、扩张、缩减和流失；新签ARR不在这个存量分母中。
+E
+E               ## P2｜现有对照削弱“全面市场冲击”的简单解释，但没有排除价格、预算与承诺共同作用
+E               竞品活动面向较小企业，而重大金额损失集中在大客；另44家未使用旧AD的大客NRR为108%。这些事实使单一、均匀外部冲击的解释不够充分。
+E               但保留部分席位并不能排除客户部分迁移或削减预算；新签增长也不能证明存量客户不受预算影响。SMB的Logo续约率与中型企业的NRR不是同一指标，不能写成“91%–102%的续约率证明小客户没有问题”。
+E
+E               ## P3｜旧AD相关开户摩擦是可操作的优先机制线索，28%的月活率本身还不能证明原因
+E               41家缩席客户中38家使用旧AD/OA，给定材料同时描述了插件移除后的手工维护困难。可能的作用链为：自动同步中断→部分账号未开通→可用席位不足或使用受阻→采购在续约时减少席位。
+E               要区分“未开通”“开通未激活”“激活后少用”，必须分别查开户、首次使用与月活。MAU/付费席位28%只度量月活，不等于72%的账号无法登录。还应核对升级前后时间顺序和部署成熟度差异，才能判断机制适用到哪些客户。
+E
+E               ## P4｜技术疏通与提前经营可以协同，但各自改善的环节应分开验证
+E               技术侧先识别确实受同步缺口影响的客户，比较恢复连接、批量导入或既有集成办法的可用性与维护代价。CS侧把联系时间前移，查明实际使用场景和账号障碍，而不是仅提前催款。
+E               连接器上线是产出，账号可用是中间变化，持续业务使用是另一变化，席位续约才是商业结果。不能因为完成同步就保证采购不再缩席；客户仍可能存在真实需求缩减或预算压力。
+E
+E               ## P5｜150万元应作为有范围的预算建议，不绑定尚未推导的挽回金额或统一活跃阈值
+E               建议先明确受影响客户范围、数据核查和可执行的技术修复试点，并据结果确定后续投入。负责人分别承担技术适配、客户使用推进和财务口径核对；具体岗位授权与预算分项由实际组织确认。
+E               领先观察可包括开户成功、可用账号覆盖、关键工作场景使用和续约沟通反馈，但60%或62%并不是材料证明的安全线。Q4可保护的ARR需从客户清单和到期金额重新建立，不能直接沿用920万元或6.1倍ROI。
+E
+E               ## P6｜先形成可核对的客户级机制和价值链，再决定扩大修复或改走其他路径
+E               下一轮需要把客户升级时间、开户状态、活跃轨迹和缩席原因连接起来。若账号障碍解除后仍低使用，应转向真实需求、培训或工作流适配；若使用恢复但仍缩席，还要检查预算与采购因素。
+E               本次判断足以支持聚焦调查和针对性改善，不足以给部门“洗清责任”或宣布唯一真因。把争议转为具体观察和可改变动作，才是这份报告对协作的贡献。
+E               保存与恢复个人准备稿个人准备稿不提交制作任务留给自己的内容与意见基准 R 0ac5944b · 整个项目 · 项目笔记已保存到项目，可跨端口恢复保存方法准备稿对当前版本写新意见核实草稿保存比较两份草稿下载草稿恢复文件导入草稿恢复文件恢复文件可能包含内部提示词。已保存到项目的内容可跨端口恢复；未同步内容请下载保管。
+E               Call log:
+E                 - Expect "not_to_contain_text" locator("#content-area-methods") with timeout 5000ms
+E                 - waiting for locator("#content-area-methods")
+E                   4 × locator resolved to <section aria-label="方法与案例" id="content-area-methods" class="studio-content-area stack">…</section>
+E                     - unexpected value "方法与案例准备这里准备阅读与交接，不改变已有任务，也不启动制作。方法案例不是客户来源。本项目的下一内容阶段独立阅读，不产生项目许可deck-contentdeck-reviewdeck-designdeck-master论证策划正文写作口播审阅设计制作重新核对准备迟到失败不得覆盖同一 Runtime 的职责、范围与恢复 · 方法说明physical-units · 方法说明style-calibration · 方法说明candidates-and-stages · 方法说明icon-quality · 方法说明visual-reference · 方法说明材料阅读与使用 · 方法说明公共内容方法｜从任务与资料写成专业完整稿 · 方法说明Content Examples｜自包含合成样例 · 方法说明content-calibration · 方法说明输入变化后的持续修改 · 方法说明blueprint-svg · 方法说明review-and-repair · 方法说明example-e01-after · 案例example-e01-before · 案例example-e01-input · 案例example-e01-numbers · 数据example-e02-after · 案例example-e02-before · 案例example-e02-input · 案例example-e02-numbers · 数据example-e03-after · 案例example-e03-before · 案例example-e03-input · 案例example-e03-numbers · 数据E04｜改进后的完整内容示范 · 案例example-e04-before · 案例E04｜输入材料 · 案例example-e04-numbers · 数据example-e05-after · 案例example-e05-before · 案例example-e05-input · 案例example-e06-after · 案例example-e06-before · 案例example-e06-input · 案例template-options-comparison · 模板template-page-draft · 模板template-teaching-sequence · 模板design-semantic-examples · 案例master-routing-examples · 案例review-calibration-cases · 案例case-e01-walkthrough · 案例case-e02-walkthrough · 案例case-e03-walkthrough · 案例E04｜方法讲解与取舍 · 案例case-e05-walkthrough · 案例case-e06-walkthrough · 案例content-to-visual · 方法说明method-review · 方法说明按任务选择方法与案例 · 方法说明method-sources · 方法说明content-m01 · 方法说明content-m02 · 方法说明content-m03 · 方法说明M04｜因果机制与竞争解释 · 方法说明content-m05 · 方法说明content-m06 · 方法说明content-m07 · 方法说明content-m08 · 方法说明content-m09 · 方法说明content-m10 · 方法说明narrative-patterns · 方法说明page-writing · 方法说明writing-profiles · 方法说明helper-case-numbers · 脚本（只读）默认、显式、依赖与字节{
+E                 "schema_version": "ui_method_preview.v1",
+E                 "project_id": null,
+E                 "revision_id": null,
+E                 "context_status": "read_only",
+E                 "browse_status": "available",
+E                 "dispatch_status": "not_applicable",
+E                 "reason_codes": [],
+E                 "preparation_only": true,
+E                 "selection_status": "validated",
+E                 "context": {
+E                   "mode": "independent",
+E                   "role": "deck-content",
+E                   "phase": "argument",
+E                   "review_units": []
+E                 },
+E                 "catalog_digest": "062737b74ea07d5a963d1f22d4cac284a180a122e128f39d4ebd76701594f20d",
+E                 "context_digest": "d9a4f66edfaa8ade6a12b6aebd1858fa1831f760ff5f8a3e5d734183f691f29d",
+E                 "entries": [
+E                   {
+E                     "id": "collaboration-routing",
+E                     "display_name": "同一 Runtime 的职责、范围与恢复",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11",
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "physical-units",
+E                     "display_name": "physical-units",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "style-calibration",
+E                     "display_name": "style-calibration",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "candidates-and-stages",
+E                     "display_name": "candidates-and-stages",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "icon-quality",
+E                     "display_name": "icon-quality",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "visual-reference",
+E                     "display_name": "visual-reference",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "source-reading",
+E                     "display_name": "材料阅读与使用",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08",
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-methods",
+E                     "display_name": "公共内容方法｜从任务与资料写成专业完整稿",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": "a27f3a0001da20a123ab1926258b052065794c0a7644a270a36d55bc51244142",
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-examples",
+E                     "display_name": "Content Examples｜自包含合成样例",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": "3467462063f10608e5db839dc7118d95391ce2e20d5b849367cdf0570f46e10a",
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-calibration",
+E                     "display_name": "content-calibration",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "input-update",
+E                     "display_name": "输入变化后的持续修改",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": "1f6da62d01532069907f46e29414d65980b61ddd72e9e130541ee49a6a16c756",
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "blueprint-svg",
+E                     "display_name": "blueprint-svg",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "review-and-repair",
+E                     "display_name": "review-and-repair",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "installation",
+E                     "display_name": "installation",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": false,
+E                     "reason_codes": [
+E                       "resource_not_readable"
+E                     ]
+E                   },
+E                   {
+E                     "id": "example-e01-after",
+E                     "display_name": "example-e01-after",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e01-before",
+E                     "display_name": "example-e01-before",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e01-input",
+E                     "display_name": "example-e01-input",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e01-numbers",
+E                     "display_name": "example-e01-numbers",
+E                     "description": "",
+E                     "kind": "data",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e02-after",
+E                     "display_name": "example-e02-after",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e02-before",
+E                     "display_name": "example-e02-before",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e02-input",
+E                     "display_name": "example-e02-input",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e02-numbers",
+E                     "display_name": "example-e02-numbers",
+E                     "description": "",
+E                     "kind": "data",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e03-after",
+E                     "display_name": "example-e03-after",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e03-before",
+E                     "display_name": "example-e03-before",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e03-input",
+E                     "display_name": "example-e03-input",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e03-numbers",
+E                     "display_name": "example-e03-numbers",
+E                     "description": "",
+E                     "kind": "data",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e04-after",
+E                     "display_name": "E04｜改进后的完整内容示范",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": "4580168e23232bcc751218d50ee6bce3164484467b5f2f76cdc92061d80b5f3b",
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e04-before",
+E                     "display_name": "example-e04-before",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e04-input",
+E                     "display_name": "E04｜输入材料",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": "ca0b091045c84fe427ff74f495e3eab15611df2e1277b67239700295dc4fa461",
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e04-numbers",
+E                     "display_name": "example-e04-numbers",
+E                     "description": "",
+E                     "kind": "data",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e05-after",
+E                     "display_name": "example-e05-after",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e05-before",
+E                     "display_name": "example-e05-before",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e05-input",
+E                     "display_name": "example-e05-input",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e06-after",
+E                     "display_name": "example-e06-after",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e06-before",
+E                     "display_name": "example-e06-before",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e06-input",
+E                     "display_name": "example-e06-input",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "template-options-comparison",
+E                     "display_name": "template-options-comparison",
+E                     "description": "",
+E                     "kind": "template",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "template-page-draft",
+E                     "display_name": "template-page-draft",
+E                     "description": "",
+E                     "kind": "template",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "template-teaching-sequence",
+E                     "display_name": "template-teaching-sequence",
+E                     "description": "",
+E                     "kind": "template",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "design-semantic-examples",
+E                     "display_name": "design-semantic-examples",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "master-routing-examples",
+E                     "display_name": "master-routing-examples",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "review-calibration-cases",
+E                     "display_name": "review-calibration-cases",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "case-e01-walkthrough",
+E                     "display_name": "case-e01-walkthrough",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "case-e02-walkthrough",
+E                     "display_name": "case-e02-walkthrough",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "case-e03-walkthrough",
+E                     "display_name": "case-e03-walkthrough",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "case-e04-walkthrough",
+E                     "display_name": "E04｜方法讲解与取舍",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": "c1c8db7ffda29b69caf2cc9a4f05f1435602c24f971ca0996978448158e1a48b",
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "case-e05-walkthrough",
+E                     "display_name": "case-e05-walkthrough",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "case-e06-walkthrough",
+E                     "display_name": "case-e06-walkthrough",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-to-visual",
+E                     "display_name": "content-to-visual",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "method-review",
+E                     "display_name": "method-review",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "method-selection",
+E                     "display_name": "按任务选择方法与案例",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": "626f660edd65245358b9e3e1594131aa74e92c88c9c8574280ff98e35ec56a96",
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "method-sources",
+E                     "display_name": "method-sources",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-m01",
+E                     "display_name": "content-m01",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-m02",
+E                     "display_name": "content-m02",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-m03",
+E                     "display_name": "content-m03",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-m04",
+E                     "display_name": "M04｜因果机制与竞争解释",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": "cd52c74a319cf30ade75fd029c3476636d4b4b6f9db2eadffdc5f746dd815bf9",
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-m05",
+E                     "display_name": "content-m05",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-m06",
+E                     "display_name": "content-m06",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-m07",
+E                     "display_name": "content-m07",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-m08",
+E                     "display_name": "content-m08",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-m09",
+E                     "display_name": "content-m09",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-m10",
+E                     "display_name": "content-m10",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "narrative-patterns",
+E                     "display_name": "narrative-patterns",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "page-writing",
+E                     "display_name": "page-writing",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "writing-profiles",
+E                     "display_name": "writing-profiles",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "helper-case-numbers",
+E                     "display_name": "helper-case-numbers",
+E                     "description": "",
+E                     "kind": "script",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   }
+E                 ],
+E                 "explicit_ids": [
+E                   "content-m04",
+E                   "case-e04-walkthrough"
+E                 ],
+E                 "default_ids": [
+E                   "collaboration-routing",
+E                   "source-reading",
+E                   "content-methods",
+E                   "content-examples",
+E                   "input-update",
+E                   "method-selection"
+E                 ],
+E                 "dependency_ids": [
+E                   "example-e04-input",
+E                   "example-e04-after"
+E                 ],
+E                 "resolved_manifest": [
+E                   {
+E                     "id": "collaboration-routing",
+E                     "relative_path": "references/collaboration-routing.md",
+E                     "sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11"
+E                   },
+E                   {
+E                     "id": "source-reading",
+E                     "relative_path": "references/source-reading.md",
+E                     "sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08"
+E                   },
+E                   {
+E                     "id": "content-methods",
+E                     "relative_path": "references/content-methods.md",
+E                     "sha256": "a27f3a0001da20a123ab1926258b052065794c0a7644a270a36d55bc51244142"
+E                   },
+E                   {
+E                     "id": "content-examples",
+E                     "relative_path": "references/content-examples.md",
+E                     "sha256": "3467462063f10608e5db839dc7118d95391ce2e20d5b849367cdf0570f46e10a"
+E                   },
+E                   {
+E                     "id": "input-update",
+E                     "relative_path": "references/input-update.md",
+E                     "sha256": "1f6da62d01532069907f46e29414d65980b61ddd72e9e130541ee49a6a16c756"
+E                   },
+E                   {
+E                     "id": "method-selection",
+E                     "relative_path": "references/method-selection.md",
+E                     "sha256": "626f660edd65245358b9e3e1594131aa74e92c88c9c8574280ff98e35ec56a96"
+E                   },
+E                   {
+E                     "id": "content-m04",
+E                     "relative_path": "references/methods/M04-causal-explanations.md",
+E                     "sha256": "cd52c74a319cf30ade75fd029c3476636d4b4b6f9db2eadffdc5f746dd815bf9"
+E                   },
+E                   {
+E                     "id": "example-e04-input",
+E                     "relative_path": "assets/content/examples/E04-saas-retention/input.md",
+E                     "sha256": "ca0b091045c84fe427ff74f495e3eab15611df2e1277b67239700295dc4fa461"
+E                   },
+E                   {
+E                     "id": "example-e04-after",
+E                     "relative_path": "assets/content/examples/E04-saas-retention/after.md",
+E                     "sha256": "4580168e23232bcc751218d50ee6bce3164484467b5f2f76cdc92061d80b5f3b"
+E                   },
+E                   {
+E                     "id": "case-e04-walkthrough",
+E                     "relative_path": "references/cases/E04-saas-retention.md",
+E                     "sha256": "c1c8db7ffda29b69caf2cc9a4f05f1435602c24f971ca0996978448158e1a48b"
+E                   }
+E                 ],
+E                 "preview_digest": "9f6f001e24a88cd3381bd335f540ba5d2aff6768601281a3513730b382f70f8e",
+E                 "handoff": {
+E                   "status": "preparation_only",
+E                   "copy_allowed": true,
+E                   "text": "方法准备，尚未应用。请制作工具先重新核对项目版本、请求、范围和资源字节，再按正式流程处理。\n选择的资源 ID：content-m04, case-e04-walkthrough\n固定准备依据：9f6f001e24a88cd3381bd335f540ba5d2aff6768601281a3513730b382f70f8e"
+E                 }
+E               }阅读 collaboration-routing阅读 source-reading阅读 content-methods阅读 content-examples阅读 input-update阅读 method-selection阅读 content-m04阅读 example-e04-input阅读 example-e04-after阅读 case-e04-walkthrough重新核对后复制准备要求# E04｜改进后的完整内容示范
+E
+E               **性质：基于同包输入的编辑示范；不是生产效果、实测收益或唯一标准答案。**
+E
+E
+E               ## P1｜缩席贡献了已报告流失与缩减金额的88.7%，应先聚焦大客席位使用链路
+E               41家大客缩席对应1260万元，占流失与缩减总额1420万元的约88.7%。这一金额口径足以支持将大客缩席列为优先分析对象，而不是把资源平均分给所有客户层级。
+E               88.7%不是NRR下降的贡献比例。重建NRR还需要同一存量客户群的期初ARR、扩张、缩减和流失；新签ARR不在这个存量分母中。
+E
+E               ## P2｜现有对照削弱“全面市场冲击”的简单解释，但没有排除价格、预算与承诺共同作用
+E               竞品活动面向较小企业，而重大金额损失集中在大客；另44家未使用旧AD的大客NRR为108%。这些事实使单一、均匀外部冲击的解释不够充分。
+E               但保留部分席位并不能排除客户部分迁移或削减预算；新签增长也不能证明存量客户不受预算影响。SMB的Logo续约率与中型企业的NRR不是同一指标，不能写成“91%–102%的续约率证明小客户没有问题”。
+E
+E               ## P3｜旧AD相关开户摩擦是可操作的优先机制线索，28%的月活率本身还不能证明原因
+E               41家缩席客户中38家使用旧AD/OA，给定材料同时描述了插件移除后的手工维护困难。可能的作用链为：自动同步中断→部分账号未开通→可用席位不足或使用受阻→采购在续约时减少席位。
+E               要区分“未开通”“开通未激活”“激活后少用”，必须分别查开户、首次使用与月活。MAU/付费席位28%只度量月活，不等于72%的账号无法登录。还应核对升级前后时间顺序和部署成熟度差异，才能判断机制适用到哪些客户。
+E
+E               ## P4｜技术疏通与提前经营可以协同，但各自改善的环节应分开验证
+E               技术侧先识别确实受同步缺口影响的客户，比较恢复连接、批量导入或既有集成办法的可用性与维护代价。CS侧把联系时间前移，查明实际使用场景和账号障碍，而不是仅提前催款。
+E               连接器上线是产出，账号可用是中间变化，持续业务使用是另一变化，席位续约才是商业结果。不能因为完成同步就保证采购不再缩席；客户仍可能存在真实需求缩减或预算压力。
+E
+E               ## P5｜150万元应作为有范围的预算建议，不绑定尚未推导的挽回金额或统一活跃阈值
+E               建议先明确受影响客户范围、数据核查和可执行的技术修复试点，并据结果确定后续投入。负责人分别承担技术适配、客户使用推进和财务口径核对；具体岗位授权与预算分项由实际组织确认。
+E               领先观察可包括开户成功、可用账号覆盖、关键工作场景使用和续约沟通反馈，但60%或62%并不是材料证明的安全线。Q4可保护的ARR需从客户清单和到期金额重新建立，不能直接沿用920万元或6.1倍ROI。
+E
+E               ## P6｜先形成可核对的客户级机制和价值链，再决定扩大修复或改走其他路径
+E               下一轮需要把客户升级时间、开户状态、活跃轨迹和缩席原因连接起来。若账号障碍解除后仍低使用，应转向真实需求、培训或工作流适配；若使用恢复但仍缩席，还要检查预算与采购因素。
+E               本次判断足以支持聚焦调查和针对性改善，不足以给部门“洗清责任”或宣布唯一真因。把争议转为具体观察和可改变动作，才是这份报告对协作的贡献。
+E               保存与恢复个人准备稿个人准备稿不提交制作任务留给自己的内容与意见基准 R 0ac5944b · 整个项目 · 项目笔记仅在本机缓冲，尚未保存到项目保存方法准备稿对当前版本写新意见核实草稿保存比较两份草稿下载草稿恢复文件导入草稿恢复文件恢复文件可能包含内部提示词。已保存到项目的内容可跨端口恢复；未同步内容请下载保管。"
+E                   10 × locator resolved to <section aria-label="方法与案例" id="content-area-methods" class="studio-content-area stack">…</section>
+E                      - unexpected value "方法与案例准备这里准备阅读与交接，不改变已有任务，也不启动制作。方法案例不是客户来源。本项目的下一内容阶段独立阅读，不产生项目许可deck-contentdeck-reviewdeck-designdeck-master论证策划正文写作口播审阅设计制作重新核对准备迟到失败不得覆盖同一 Runtime 的职责、范围与恢复 · 方法说明physical-units · 方法说明style-calibration · 方法说明candidates-and-stages · 方法说明icon-quality · 方法说明visual-reference · 方法说明材料阅读与使用 · 方法说明公共内容方法｜从任务与资料写成专业完整稿 · 方法说明Content Examples｜自包含合成样例 · 方法说明content-calibration · 方法说明输入变化后的持续修改 · 方法说明blueprint-svg · 方法说明review-and-repair · 方法说明example-e01-after · 案例example-e01-before · 案例example-e01-input · 案例example-e01-numbers · 数据example-e02-after · 案例example-e02-before · 案例example-e02-input · 案例example-e02-numbers · 数据example-e03-after · 案例example-e03-before · 案例example-e03-input · 案例example-e03-numbers · 数据E04｜改进后的完整内容示范 · 案例example-e04-before · 案例E04｜输入材料 · 案例example-e04-numbers · 数据example-e05-after · 案例example-e05-before · 案例example-e05-input · 案例example-e06-after · 案例example-e06-before · 案例example-e06-input · 案例template-options-comparison · 模板template-page-draft · 模板template-teaching-sequence · 模板design-semantic-examples · 案例master-routing-examples · 案例review-calibration-cases · 案例case-e01-walkthrough · 案例case-e02-walkthrough · 案例case-e03-walkthrough · 案例E04｜方法讲解与取舍 · 案例case-e05-walkthrough · 案例case-e06-walkthrough · 案例content-to-visual · 方法说明method-review · 方法说明按任务选择方法与案例 · 方法说明method-sources · 方法说明content-m01 · 方法说明content-m02 · 方法说明content-m03 · 方法说明M04｜因果机制与竞争解释 · 方法说明content-m05 · 方法说明content-m06 · 方法说明content-m07 · 方法说明content-m08 · 方法说明content-m09 · 方法说明content-m10 · 方法说明narrative-patterns · 方法说明page-writing · 方法说明writing-profiles · 方法说明helper-case-numbers · 脚本（只读）默认、显式、依赖与字节{
+E                 "schema_version": "ui_method_preview.v1",
+E                 "project_id": null,
+E                 "revision_id": null,
+E                 "context_status": "read_only",
+E                 "browse_status": "available",
+E                 "dispatch_status": "not_applicable",
+E                 "reason_codes": [],
+E                 "preparation_only": true,
+E                 "selection_status": "validated",
+E                 "context": {
+E                   "mode": "independent",
+E                   "role": "deck-content",
+E                   "phase": "argument",
+E                   "review_units": []
+E                 },
+E                 "catalog_digest": "062737b74ea07d5a963d1f22d4cac284a180a122e128f39d4ebd76701594f20d",
+E                 "context_digest": "d9a4f66edfaa8ade6a12b6aebd1858fa1831f760ff5f8a3e5d734183f691f29d",
+E                 "entries": [
+E                   {
+E                     "id": "collaboration-routing",
+E                     "display_name": "同一 Runtime 的职责、范围与恢复",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11",
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "physical-units",
+E                     "display_name": "physical-units",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "style-calibration",
+E                     "display_name": "style-calibration",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "candidates-and-stages",
+E                     "display_name": "candidates-and-stages",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "icon-quality",
+E                     "display_name": "icon-quality",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "visual-reference",
+E                     "display_name": "visual-reference",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "source-reading",
+E                     "display_name": "材料阅读与使用",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08",
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-methods",
+E                     "display_name": "公共内容方法｜从任务与资料写成专业完整稿",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": "a27f3a0001da20a123ab1926258b052065794c0a7644a270a36d55bc51244142",
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-examples",
+E                     "display_name": "Content Examples｜自包含合成样例",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": "3467462063f10608e5db839dc7118d95391ce2e20d5b849367cdf0570f46e10a",
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-calibration",
+E                     "display_name": "content-calibration",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "input-update",
+E                     "display_name": "输入变化后的持续修改",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": "1f6da62d01532069907f46e29414d65980b61ddd72e9e130541ee49a6a16c756",
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "blueprint-svg",
+E                     "display_name": "blueprint-svg",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "review-and-repair",
+E                     "display_name": "review-and-repair",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "installation",
+E                     "display_name": "installation",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": false,
+E                     "reason_codes": [
+E                       "resource_not_readable"
+E                     ]
+E                   },
+E                   {
+E                     "id": "example-e01-after",
+E                     "display_name": "example-e01-after",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e01-before",
+E                     "display_name": "example-e01-before",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e01-input",
+E                     "display_name": "example-e01-input",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e01-numbers",
+E                     "display_name": "example-e01-numbers",
+E                     "description": "",
+E                     "kind": "data",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e02-after",
+E                     "display_name": "example-e02-after",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e02-before",
+E                     "display_name": "example-e02-before",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e02-input",
+E                     "display_name": "example-e02-input",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e02-numbers",
+E                     "display_name": "example-e02-numbers",
+E                     "description": "",
+E                     "kind": "data",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e03-after",
+E                     "display_name": "example-e03-after",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e03-before",
+E                     "display_name": "example-e03-before",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e03-input",
+E                     "display_name": "example-e03-input",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e03-numbers",
+E                     "display_name": "example-e03-numbers",
+E                     "description": "",
+E                     "kind": "data",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e04-after",
+E                     "display_name": "E04｜改进后的完整内容示范",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": "4580168e23232bcc751218d50ee6bce3164484467b5f2f76cdc92061d80b5f3b",
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e04-before",
+E                     "display_name": "example-e04-before",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e04-input",
+E                     "display_name": "E04｜输入材料",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": "ca0b091045c84fe427ff74f495e3eab15611df2e1277b67239700295dc4fa461",
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e04-numbers",
+E                     "display_name": "example-e04-numbers",
+E                     "description": "",
+E                     "kind": "data",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e05-after",
+E                     "display_name": "example-e05-after",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e05-before",
+E                     "display_name": "example-e05-before",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e05-input",
+E                     "display_name": "example-e05-input",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e06-after",
+E                     "display_name": "example-e06-after",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e06-before",
+E                     "display_name": "example-e06-before",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "example-e06-input",
+E                     "display_name": "example-e06-input",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "template-options-comparison",
+E                     "display_name": "template-options-comparison",
+E                     "description": "",
+E                     "kind": "template",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "template-page-draft",
+E                     "display_name": "template-page-draft",
+E                     "description": "",
+E                     "kind": "template",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "template-teaching-sequence",
+E                     "display_name": "template-teaching-sequence",
+E                     "description": "",
+E                     "kind": "template",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "design-semantic-examples",
+E                     "display_name": "design-semantic-examples",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "master-routing-examples",
+E                     "display_name": "master-routing-examples",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "review-calibration-cases",
+E                     "display_name": "review-calibration-cases",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "case-e01-walkthrough",
+E                     "display_name": "case-e01-walkthrough",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "case-e02-walkthrough",
+E                     "display_name": "case-e02-walkthrough",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "case-e03-walkthrough",
+E                     "display_name": "case-e03-walkthrough",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "case-e04-walkthrough",
+E                     "display_name": "E04｜方法讲解与取舍",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": "c1c8db7ffda29b69caf2cc9a4f05f1435602c24f971ca0996978448158e1a48b",
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "case-e05-walkthrough",
+E                     "display_name": "case-e05-walkthrough",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "case-e06-walkthrough",
+E                     "display_name": "case-e06-walkthrough",
+E                     "description": "",
+E                     "kind": "example",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-to-visual",
+E                     "display_name": "content-to-visual",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "method-review",
+E                     "display_name": "method-review",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "method-selection",
+E                     "display_name": "按任务选择方法与案例",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": "626f660edd65245358b9e3e1594131aa74e92c88c9c8574280ff98e35ec56a96",
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "method-sources",
+E                     "display_name": "method-sources",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-m01",
+E                     "display_name": "content-m01",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-m02",
+E                     "display_name": "content-m02",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-m03",
+E                     "display_name": "content-m03",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-m04",
+E                     "display_name": "M04｜因果机制与竞争解释",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": "cd52c74a319cf30ade75fd029c3476636d4b4b6f9db2eadffdc5f746dd815bf9",
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-m05",
+E                     "display_name": "content-m05",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-m06",
+E                     "display_name": "content-m06",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-m07",
+E                     "display_name": "content-m07",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-m08",
+E                     "display_name": "content-m08",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-m09",
+E                     "display_name": "content-m09",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "content-m10",
+E                     "display_name": "content-m10",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "narrative-patterns",
+E                     "display_name": "narrative-patterns",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "page-writing",
+E                     "display_name": "page-writing",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "writing-profiles",
+E                     "display_name": "writing-profiles",
+E                     "description": "",
+E                     "kind": "instruction",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   },
+E                   {
+E                     "id": "helper-case-numbers",
+E                     "display_name": "helper-case-numbers",
+E                     "description": "",
+E                     "kind": "script",
+E                     "sha256": null,
+E                     "selectable": true,
+E                     "reason_codes": []
+E                   }
+E                 ],
+E                 "explicit_ids": [
+E                   "content-m04",
+E                   "case-e04-walkthrough"
+E                 ],
+E                 "default_ids": [
+E                   "collaboration-routing",
+E                   "source-reading",
+E                   "content-methods",
+E                   "content-examples",
+E                   "input-update",
+E                   "method-selection"
+E                 ],
+E                 "dependency_ids": [
+E                   "example-e04-input",
+E                   "example-e04-after"
+E                 ],
+E                 "resolved_manifest": [
+E                   {
+E                     "id": "collaboration-routing",
+E                     "relative_path": "references/collaboration-routing.md",
+E                     "sha256": "4fc72c82f3a54c175dbe0299b6818b30f726c03fdc31542e61bbb7c59c0ecf11"
+E                   },
+E                   {
+E                     "id": "source-reading",
+E                     "relative_path": "references/source-reading.md",
+E                     "sha256": "44eb27513dc6af907484ca0b60d77a0aa211ffe1f6d43339876ab6a904e18f08"
+E                   },
+E                   {
+E                     "id": "content-methods",
+E                     "relative_path": "references/content-methods.md",
+E                     "sha256": "a27f3a0001da20a123ab1926258b052065794c0a7644a270a36d55bc51244142"
+E                   },
+E                   {
+E                     "id": "content-examples",
+E                     "relative_path": "references/content-examples.md",
+E                     "sha256": "3467462063f10608e5db839dc7118d95391ce2e20d5b849367cdf0570f46e10a"
+E                   },
+E                   {
+E                     "id": "input-update",
+E                     "relative_path": "references/input-update.md",
+E                     "sha256": "1f6da62d01532069907f46e29414d65980b61ddd72e9e130541ee49a6a16c756"
+E                   },
+E                   {
+E                     "id": "method-selection",
+E                     "relative_path": "references/method-selection.md",
+E                     "sha256": "626f660edd65245358b9e3e1594131aa74e92c88c9c8574280ff98e35ec56a96"
+E                   },
+E                   {
+E                     "id": "content-m04",
+E                     "relative_path": "references/methods/M04-causal-explanations.md",
+E                     "sha256": "cd52c74a319cf30ade75fd029c3476636d4b4b6f9db2eadffdc5f746dd815bf9"
+E                   },
+E                   {
+E                     "id": "example-e04-input",
+E                     "relative_path": "assets/content/examples/E04-saas-retention/input.md",
+E                     "sha256": "ca0b091045c84fe427ff74f495e3eab15611df2e1277b67239700295dc4fa461"
+E                   },
+E                   {
+E                     "id": "example-e04-after",
+E                     "relative_path": "assets/content/examples/E04-saas-retention/after.md",
+E                     "sha256": "4580168e23232bcc751218d50ee6bce3164484467b5f2f76cdc92061d80b5f3b"
+E                   },
+E                   {
+E                     "id": "case-e04-walkthrough",
+E                     "relative_path": "references/cases/E04-saas-retention.md",
+E                     "sha256": "c1c8db7ffda29b69caf2cc9a4f05f1435602c24f971ca0996978448158e1a48b"
+E                   }
+E                 ],
+E                 "preview_digest": "9f6f001e24a88cd3381bd335f540ba5d2aff6768601281a3513730b382f70f8e",
+E                 "handoff": {
+E                   "status": "preparation_only",
+E                   "copy_allowed": true,
+E                   "text": "方法准备，尚未应用。请制作工具先重新核对项目版本、请求、范围和资源字节，再按正式流程处理。\n选择的资源 ID：content-m04, case-e04-walkthrough\n固定准备依据：9f6f001e24a88cd3381bd335f540ba5d2aff6768601281a3513730b382f70f8e"
+E                 }
+E               }阅读 collaboration-routing阅读 source-reading阅读 content-methods阅读 content-examples阅读 input-update阅读 method-selection阅读 content-m04阅读 example-e04-input阅读 example-e04-after阅读 case-e04-walkthrough重新核对后复制准备要求# E04｜改进后的完整内容示范
+E
+E               **性质：基于同包输入的编辑示范；不是生产效果、实测收益或唯一标准答案。**
+E
+E
+E               ## P1｜缩席贡献了已报告流失与缩减金额的88.7%，应先聚焦大客席位使用链路
+E               41家大客缩席对应1260万元，占流失与缩减总额1420万元的约88.7%。这一金额口径足以支持将大客缩席列为优先分析对象，而不是把资源平均分给所有客户层级。
+E               88.7%不是NRR下降的贡献比例。重建NRR还需要同一存量客户群的期初ARR、扩张、缩减和流失；新签ARR不在这个存量分母中。
+E
+E               ## P2｜现有对照削弱“全面市场冲击”的简单解释，但没有排除价格、预算与承诺共同作用
+E               竞品活动面向较小企业，而重大金额损失集中在大客；另44家未使用旧AD的大客NRR为108%。这些事实使单一、均匀外部冲击的解释不够充分。
+E               但保留部分席位并不能排除客户部分迁移或削减预算；新签增长也不能证明存量客户不受预算影响。SMB的Logo续约率与中型企业的NRR不是同一指标，不能写成“91%–102%的续约率证明小客户没有问题”。
+E
+E               ## P3｜旧AD相关开户摩擦是可操作的优先机制线索，28%的月活率本身还不能证明原因
+E               41家缩席客户中38家使用旧AD/OA，给定材料同时描述了插件移除后的手工维护困难。可能的作用链为：自动同步中断→部分账号未开通→可用席位不足或使用受阻→采购在续约时减少席位。
+E               要区分“未开通”“开通未激活”“激活后少用”，必须分别查开户、首次使用与月活。MAU/付费席位28%只度量月活，不等于72%的账号无法登录。还应核对升级前后时间顺序和部署成熟度差异，才能判断机制适用到哪些客户。
+E
+E               ## P4｜技术疏通与提前经营可以协同，但各自改善的环节应分开验证
+E               技术侧先识别确实受同步缺口影响的客户，比较恢复连接、批量导入或既有集成办法的可用性与维护代价。CS侧把联系时间前移，查明实际使用场景和账号障碍，而不是仅提前催款。
+E               连接器上线是产出，账号可用是中间变化，持续业务使用是另一变化，席位续约才是商业结果。不能因为完成同步就保证采购不再缩席；客户仍可能存在真实需求缩减或预算压力。
+E
+E               ## P5｜150万元应作为有范围的预算建议，不绑定尚未推导的挽回金额或统一活跃阈值
+E               建议先明确受影响客户范围、数据核查和可执行的技术修复试点，并据结果确定后续投入。负责人分别承担技术适配、客户使用推进和财务口径核对；具体岗位授权与预算分项由实际组织确认。
+E               领先观察可包括开户成功、可用账号覆盖、关键工作场景使用和续约沟通反馈，但60%或62%并不是材料证明的安全线。Q4可保护的ARR需从客户清单和到期金额重新建立，不能直接沿用920万元或6.1倍ROI。
+E
+E               ## P6｜先形成可核对的客户级机制和价值链，再决定扩大修复或改走其他路径
+E               下一轮需要把客户升级时间、开户状态、活跃轨迹和缩席原因连接起来。若账号障碍解除后仍低使用，应转向真实需求、培训或工作流适配；若使用恢复但仍缩席，还要检查预算与采购因素。
+E               本次判断足以支持聚焦调查和针对性改善，不足以给部门“洗清责任”或宣布唯一真因。把争议转为具体观察和可改变动作，才是这份报告对协作的贡献。
+E               保存与恢复个人准备稿个人准备稿不提交制作任务留给自己的内容与意见基准 R 0ac5944b · 整个项目 · 项目笔记已保存到项目，可跨端口恢复保存方法准备稿对当前版本写新意见核实草稿保存比较两份草稿下载草稿恢复文件导入草稿恢复文件恢复文件可能包含内部提示词。已保存到项目的内容可跨端口恢复；未同步内容请下载保管。"
+E
+E               Aria snapshot:
+E               - region "方法与案例":
+E                 - heading "方法与案例准备" [level=2]
+E                 - paragraph: 这里准备阅读与交接，不改变已有任务，也不启动制作。方法案例不是客户来源。
+E                 - combobox "准备上下文":
+E                   - option "本项目的下一内容阶段"
+E                   - option "独立阅读，不产生项目许可" [selected]
+E                 - combobox "方法阅读角色":
+E                   - option "deck-content" [selected]
+E                   - option "deck-review"
+E                   - option "deck-design"
+E                   - option "deck-master"
+E                 - combobox "方法阅读阶段":
+E                   - option "论证策划" [selected]
+E                   - option "正文写作"
+E                   - option "口播"
+E                   - option "审阅"
+E                   - option "设计制作"
+E                 - button "重新核对准备"
+E                 - status: 迟到失败不得覆盖
+E                 - searchbox "筛选方法或案例"
+E                 - checkbox "同一 Runtime 的职责、范围与恢复 · 方法说明"
+E                 - text: 同一 Runtime 的职责、范围与恢复 · 方法说明
+E                 - checkbox "physical-units · 方法说明"
+E                 - text: physical-units · 方法说明
+E                 - checkbox "style-calibration · 方法说明"
+E                 - text: style-calibration · 方法说明
+E                 - checkbox "candidates-and-stages · 方法说明"
+E                 - text: candidates-and-stages · 方法说明
+E                 - checkbox "icon-quality · 方法说明"
+E                 - text: icon-quality · 方法说明
+E                 - checkbox "visual-reference · 方法说明"
+E                 - text: visual-reference · 方法说明
+E                 - checkbox "材料阅读与使用 · 方法说明"
+E                 - text: 材料阅读与使用 · 方法说明
+E                 - checkbox "公共内容方法｜从任务与资料写成专业完整稿 · 方法说明"
+E                 - text: 公共内容方法｜从任务与资料写成专业完整稿 · 方法说明
+E                 - checkbox "Content Examples｜自包含合成样例 · 方法说明"
+E                 - text: Content Examples｜自包含合成样例 · 方法说明
+E                 - checkbox "content-calibration · 方法说明"
+E                 - text: content-calibration · 方法说明
+E                 - checkbox "输入变化后的持续修改 · 方法说明"
+E                 - text: 输入变化后的持续修改 · 方法说明
+E                 - checkbox "blueprint-svg · 方法说明"
+E                 - text: blueprint-svg · 方法说明
+E                 - checkbox "review-and-repair · 方法说明"
+E                 - text: review-and-repair · 方法说明
+E                 - checkbox "example-e01-after · 案例"
+E                 - text: example-e01-after · 案例
+E                 - checkbox "example-e01-before · 案例"
+E                 - text: example-e01-before · 案例
+E                 - checkbox "example-e01-input · 案例"
+E                 - text: example-e01-input · 案例
+E                 - checkbox "example-e01-numbers · 数据"
+E                 - text: example-e01-numbers · 数据
+E                 - checkbox "example-e02-after · 案例"
+E                 - text: example-e02-after · 案例
+E                 - checkbox "example-e02-before · 案例"
+E                 - text: example-e02-before · 案例
+E                 - checkbox "example-e02-input · 案例"
+E                 - text: example-e02-input · 案例
+E                 - checkbox "example-e02-numbers · 数据"
+E                 - text: example-e02-numbers · 数据
+E                 - checkbox "example-e03-after · 案例"
+E                 - text: example-e03-after · 案例
+E                 - checkbox "example-e03-before · 案例"
+E                 - text: example-e03-before · 案例
+E                 - checkbox "example-e03-input · 案例"
+E                 - text: example-e03-input · 案例
+E                 - checkbox "example-e03-numbers · 数据"
+E                 - text: example-e03-numbers · 数据
+E                 - checkbox "E04｜改进后的完整内容示范 · 案例"
+E                 - text: E04｜改进后的完整内容示范 · 案例
+E                 - checkbox "example-e04-before · 案例"
+E                 - text: example-e04-before · 案例
+E                 - checkbox "E04｜输入材料 · 案例"
+E                 - text: E04｜输入材料 · 案例
+E                 - checkbox "example-e04-numbers · 数据"
+E                 - text: example-e04-numbers · 数据
+E                 - checkbox "example-e05-after · 案例"
+E                 - text: example-e05-after · 案例
+E                 - checkbox "example-e05-before · 案例"
+E                 - text: example-e05-before · 案例
+E                 - checkbox "example-e05-input · 案例"
+E                 - text: example-e05-input · 案例
+E                 - checkbox "example-e06-after · 案例"
+E                 - text: example-e06-after · 案例
+E                 - checkbox "example-e06-before · 案例"
+E                 - text: example-e06-before · 案例
+E                 - checkbox "example-e06-input · 案例"
+E                 - text: example-e06-input · 案例
+E                 - checkbox "template-options-comparison · 模板"
+E                 - text: template-options-comparison · 模板
+E                 - checkbox "template-page-draft · 模板"
+E                 - text: template-page-draft · 模板
+E                 - checkbox "template-teaching-sequence · 模板"
+E                 - text: template-teaching-sequence · 模板
+E                 - checkbox "design-semantic-examples · 案例"
+E                 - text: design-semantic-examples · 案例
+E                 - checkbox "master-routing-examples · 案例"
+E                 - text: master-routing-examples · 案例
+E                 - checkbox "review-calibration-cases · 案例"
+E                 - text: review-calibration-cases · 案例
+E                 - checkbox "case-e01-walkthrough · 案例"
+E                 - text: case-e01-walkthrough · 案例
+E                 - checkbox "case-e02-walkthrough · 案例"
+E                 - text: case-e02-walkthrough · 案例
+E                 - checkbox "case-e03-walkthrough · 案例"
+E                 - text: case-e03-walkthrough · 案例
+E                 - checkbox "E04｜方法讲解与取舍 · 案例" [checked]
+E                 - text: E04｜方法讲解与取舍 · 案例
+E                 - checkbox "case-e05-walkthrough · 案例"
+E                 - text: case-e05-walkthrough · 案例
+E                 - checkbox "case-e06-walkthrough · 案例"
+E                 - text: case-e06-walkthrough · 案例
+E                 - checkbox "content-to-visual · 方法说明"
+E                 - text: content-to-visual · 方法说明
+E                 - checkbox "method-review · 方法说明"
+E                 - text: method-review · 方法说明
+E                 - checkbox "按任务选择方法与案例 · 方法说明"
+E                 - text: 按任务选择方法与案例 · 方法说明
+E                 - checkbox "method-sources · 方法说明"
+E                 - text: method-sources · 方法说明
+E                 - checkbox "content-m01 · 方法说明"
+E                 - text: content-m01 · 方法说明
+E                 - checkbox "content-m02 · 方法说明"
+E                 - text: content-m02 · 方法说明
+E                 - checkbox "content-m03 · 方法说明"
+E                 - text: content-m03 · 方法说明
+E                 - checkbox "M04｜因果机制与竞争解释 · 方法说明" [checked]
+E                 - text: M04｜因果机制与竞争解释 · 方法说明
+E                 - checkbox "content-m05 · 方法说明"
+E                 - text: content-m05 · 方法说明
+E                 - checkbox "content-m06 · 方法说明"
+E                 - text: content-m06 · 方法说明
+E                 - checkbox "content-m07 · 方法说明"
+E                 - text: content-m07 · 方法说明
+E                 - checkbox "content-m08 · 方法说明"
+E                 - text: content-m08 · 方法说明
+E                 - checkbox "content-m09 · 方法说明"
+E                 - text: content-m09 · 方法说明
+E                 - checkbox "content-m10 · 方法说明"
+E                 - text: content-m10 · 方法说明
+E                 - checkbox "narrative-patterns · 方法说明"
+E                 - text: narrative-patterns · 方法说明
+E                 - checkbox "page-writing · 方法说明"
+E                 - text: page-writing · 方法说明
+E                 - checkbox "writing-profiles · 方法说明"
+E                 - text: writing-profiles · 方法说明
+E                 - checkbox "helper-case-numbers · 脚本（只读）"
+E                 - text: helper-case-numbers · 脚本（只读）
+E                 - group: › 默认、显式、依赖与字节
+E                 - button "阅读 collaboration-routing"
+E                 - button "阅读 source-reading"
+E                 - button "阅读 content-methods"
+E                 - button "阅读 content-examples"
+E                 - button "阅读 input-update"
+E                 - button "阅读 method-selection"
+E                 - button "阅读 content-m04"
+E                 - button "阅读 example-e04-input"
+E                 - button "阅读 example-e04-after"
+E                 - button "阅读 case-e04-walkthrough"
+E                 - button "重新核对后复制准备要求"
+E                 - text: "# E04｜改进后的完整内容示范 **性质：基于同包输入的编辑示范；不是生产效果、实测收益或唯一标准答案。** ## P1｜缩席贡献了已报告流失与缩减金额的88.7%，应先聚焦大客席位使用链路 41家大客缩席对应1260万元，占流失与缩减总额1420万元的约88.7%。这一金额口径足以支持将大客缩席列为优先分析对象，而不是把资源平均分给所有客户层级。 88.7%不是NRR下降的贡献比例。重建NRR还需要同一存量客户群的期初ARR、扩张、缩减和流失；新签ARR不在这个存量分母中。 ## P2｜现有对照削弱“全面市场冲击”的简单解释，但没有排除价格、预算与承诺共同作用 竞品活动面向较小企业，而重大金额损失集中在大客；另44家未使用旧AD的大客NRR为108%。这些事实使单一、均匀外部冲击的解释不够充分。 但保留部分席位并不能排除客户部分迁移或削减预算；新签增长也不能证明存量客户不受预算影响。SMB的Logo续约率与中型企业的NRR不是同一指标，不能写成“91%–102%的续约率证明小客户没有问题”。 ## P3｜旧AD相关开户摩擦是可操作的优先机制线索，28%的月活率本身还不能证明原因 41家缩席客户中38家使用旧AD/OA，给定材料同时描述了插件移除后的手工维护困难。可能的作用链为：自动同步中断→部分账号未开通→可用席位不足或使用受阻→采购在续约时减少席位。 要区分“未开通”“开通未激活”“激活后少用”，必须分别查开户、首次使用与月活。MAU/付费席位28%只度量月活，不等于72%的账号无法登录。还应核对升级前后时间顺序和部署成熟度差异，才能判断机制适用到哪些客户。 ## P4｜技术疏通与提前经营可以协同，但各自改善的环节应分开验证 技术侧先识别确实受同步缺口影响的客户，比较恢复连接、批量导入或既有集成办法的可用性与维护代价。CS侧把联系时间前移，查明实际使用场景和账号障碍，而不是仅提前催款。 连接器上线是产出，账号可用是中间变化，持续业务使用是另一变化，席位续约才是商业结果。不能因为完成同步就保证采购不再缩席；客户仍可能存在真实需求缩减或预算压力。 ## P5｜150万元应作为有范围的预算建议，不绑定尚未推导的挽回金额或统一活跃阈值 建议先明确受影响客户范围、数据核查和可执行的技术修复试点，并据结果确定后续投入。负责人分别承担技术适配、客户使用推进和财务口径核对；具体岗位授权与预算分项由实际组织确认。 领先观察可包括开户成功、可用账号覆盖、关键工作场景使用和续约沟通反馈，但60%或62%并不是材料证明的安全线。Q4可保护的ARR需从客户清单和到期金额重新建立，不能直接沿用920万元或6.1倍ROI。 ## P6｜先形成可核对的客户级机制和价值链，再决定扩大修复或改走其他路径 下一轮需要把客户升级时间、开户状态、活跃轨迹和缩席原因连接起来。若账号障碍解除后仍低使用，应转向真实需求、培训或工作流适配；若使用恢复但仍缩席，还要检查预算与采购因素。 本次判断足以支持聚焦调查和针对性改善，不足以给部门“洗清责任”或宣布唯一真因。把争议转为具体观察和可改变动作，才是这份报告对协作的贡献。"
+E                 - group: › 保存与恢复个人准备稿
+
+tests/rebuild/test_webui_formal_review.py:146: AssertionError
+_ test_adoption_concurrent_revision_keeps_payload_until_explicit_new_request[False] _
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-61/test_adoption_concurrent_revis0')
+reopen = False
+
+    @pytest.mark.parametrize('reopen', [False, True])
+    def test_adoption_concurrent_revision_keeps_payload_until_explicit_new_request(tmp_path, reopen):
+        from deck_master import models
+        project,store,_,ref=candidate(tmp_path);server=WorkbenchServer(project);url=server.start();info=ui_journal.project_info(project);calls=[]
+        try:
+            with sync_playwright() as pw:
+                browser=pw.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox']);page=browser.new_page()
+                _open_direction(page,url,info,store,ref)
+                decision_revision=store.current_revision_id();doc=store.load_document()
+                # An explicit synthetic unrelated revision uses the real Store CAS.
+                updated=models.bump_revision(doc,{'operation_id':'concurrent-fixture','kind':'task_update','description':'synthetic concurrent revision','read_set':[]})
+                store.commit_change(base_revision=doc['revision_id'],document=updated,operation_id='concurrent-fixture')
+                changed_revision=store.current_revision_id()
+                page.on('request',lambda req:calls.append(req.post_data_json) if req.method=='POST' and req.url.endswith('/collaboration/proposal-adoptions') else None)
+                page.get_by_role('button',name='确认采用此方向',exact=True).click()
+                expect(page.get_by_role('button',name='核实原操作',exact=True)).to_be_enabled()
+                assert calls[0]['base_revision']==decision_revision and not store.load_document().get('narrative')
+                if reopen:
+                    page.reload();page.get_by_role('button',name='核实或查看原方向操作',exact=True).click()
+>               page.get_by_role('button',name='明确读取当前准入以另建采用请求',exact=True).click()
+
+tests/rebuild/test_webui_content_insight_browser.py:202:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/sync_api/_generated.py:18032: in click
+    self._sync(
+/tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/_impl/_locator.py:165: in click
+    return await self._frame._click(self._selector, strict=True, **params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/_impl/_frame.py:594: in _click
+    await self._channel.send("click", self._timeout, locals_to_params(locals()))
+/tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/_impl/_connection.py:76: in send
+    return await self._connection.wrap_api_call(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <playwright._impl._connection.Connection object at 0x7f17e124f590>
+cb = <function Channel.send.<locals>.<lambda> at 0x7f17e123ca40>
+is_internal = False, title = None
+
+    async def wrap_api_call(
+        self, cb: Callable[[], Any], is_internal: bool = False, title: str = None
+    ) -> Any:
+        if self._api_zone.get():
+            return await cb()
+        task = asyncio.current_task(self._loop)
+        parsed_st = _attach_api_call_information(
+            getattr(task, "__pw_stack__", None) or _capture_stack_trace(),
+            is_internal,
+            title,
+        )
+        self._api_zone.set(parsed_st)
+        try:
+            return await cb()
+        except Exception as error:
+>           raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+E           playwright._impl._errors.TimeoutError: Locator.click: Timeout 30000ms exceeded.
+E           Call log:
+E             - waiting for get_by_role("button", name="明确读取当前准入以另建采用请求", exact=True)
+
+/tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/_impl/_connection.py:632: TimeoutError
+=========================== short test summary info ============================
+FAILED tests/rebuild/test_webui_formal_review.py::test_plan_only_method_preview_matches_real_argument_dispatch
+FAILED tests/rebuild/test_webui_formal_review.py::test_verified_existing_decision_adoption_independent_of_new_decision_channel
+FAILED tests/rebuild/test_webui_formal_review.py::test_atom_source_damage_is_local_and_matches_single_atom_reads
+FAILED tests/rebuild/test_webui_formal_review.py::test_unrelated_broken_narrative_does_not_invent_unreadable_plan
+FAILED tests/rebuild/test_webui_formal_review.py::test_method_body_latest_selection_owns_body_status_and_focus[False]
+FAILED tests/rebuild/test_webui_formal_review.py::test_method_body_latest_selection_owns_body_status_and_focus[True]
+FAILED tests/rebuild/test_webui_content_insight_browser.py::test_adoption_concurrent_revision_keeps_payload_until_explicit_new_request[False]
+7 failed in 46.72s

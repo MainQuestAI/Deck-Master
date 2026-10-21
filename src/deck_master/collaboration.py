@@ -550,6 +550,73 @@ def start_request(project, *, input: dict, base_revision: str, operation_id: str
     return locked(store)
 
 
+def prepare_decision(store, document, *, input, operation_id, evidence):
+    """Validate a proposed decision without storage, locks, or authority issuance."""
+    from . import eligibility
+    eligibility.guard(store, document, "decision.record")
+    region = _require_region(store, document)
+    request = region.get("request")
+    if request is None or request.get("closed"):
+        raise ModelError("collaboration/request", "a decision requires the current open work request")
+    topic = input.get("topic")
+    delegation_ref = input.get("delegation_ref")
+    authority_mode = input.get("authority_mode")
+    _require_stored_evidence_refs(store, evidence, "collaboration/decision/evidence")
+    basis = dependency_slices.merge_required_basis(
+        store, document, family="decision", key=topic,
+        provided=input.get("basis") or [])
+    subject_refs = list(input.get("subject_refs") or [])
+    # Each entry is a ProposalRef {artifact_kind, artifact_ref, projection};
+    # the stored object to check is its artifact_ref.
+    _require_stored_refs(store, [proposal.get("artifact_ref") for proposal in subject_refs],
+                         "collaboration/decision/subject_refs")
+    decision_id = input.get("decision_id") or _stable_id("dec", operation_id)
+    existing = [(ref, record) for ref, record in _region_records(store, region, "decisions")
+                if record.get("decision_id") == decision_id]
+    replaces_ref = input.get("replaces")
+    replaced_index = -1
+    replaced_record = None
+    if replaces_ref is None:
+        if existing:
+            raise ModelError("decision/replaces",
+                             "this decision identity already exists in the current region; "
+                             "pass replaces to write a new version")
+    else:
+        refs = list(region.get("decisions") or [])
+        replaced_index = _index_of_ref(refs, replaces_ref)
+        replaced_record = next((record for ref, record in existing
+                                if (ref.get("path"), ref.get("sha256")) ==
+                                (replaces_ref.get("path"), replaces_ref.get("sha256"))), None)
+        if replaced_index < 0 or replaced_record is None:
+            raise ModelError("decision/replaces",
+                             "replaces must name a version of this decision identity "
+                             "in the current region")
+    decision = {
+        "schema_version": "collaboration_decision.v1",
+        "decision_id": decision_id,
+        "project_id": document["project_id"],
+        "request_id": request["request_id"],
+        "topic": topic,
+        "subject_refs": subject_refs,
+        "scope": input.get("scope") or request.get("scope"),
+        "value": input.get("value"),
+        "disposition": input.get("disposition"),
+        "authority_mode": authority_mode,
+        "evidence": evidence,
+        "delegation_ref": delegation_ref,
+        "basis": basis,
+        "status": "active",
+        "replaces": replaces_ref,
+        "invalidated_by": None,
+        "created_at": _now_iso(),
+    }
+    models.validate_decision_semantics(decision)
+    _require_scope_refs(store, decision["scope"], "collaboration/decision/scope")
+    if authority_mode == "delegated":
+        _validate_delegation(store, document, region, delegation_ref, decision)
+    return region, decision, replaced_index, replaced_record
+
+
 def record_decision(project, *, input: dict, base_revision: str, operation_id: str,
                     adapter_context=None) -> dict:
     """Record a decision as an immutable object referenced by the region
@@ -570,69 +637,15 @@ def record_decision(project, *, input: dict, base_revision: str, operation_id: s
         if document["revision_id"] != base_revision:
             raise StoreError("base_revision", "base revision is not current; reload and retry")
         region = _require_region(store, document)
-        request = region.get("request")
-        if request is None or request.get("closed"):
+        if region.get("request") is None or region["request"].get("closed"):
             raise ModelError("collaboration/request", "a decision requires the current open work request")
-        topic = input.get("topic")
-        delegation_ref = input.get("delegation_ref")
-        authority_mode = input.get("authority_mode")
         evidence = resolve_evidence(input.get("instruction_evidence"), adapter_context, store=store,
-                                    where="collaboration/decision/evidence",
-                                    action_binding=digest, project_id=document["project_id"],
-                                    request_id=(region.get("request") or {}).get("request_id"))
-        _require_stored_evidence_refs(store, evidence, "collaboration/decision/evidence")
-        basis = dependency_slices.merge_required_basis(
-            store, document, family="decision", key=topic,
-            provided=input.get("basis") or [])
-        subject_refs = list(input.get("subject_refs") or [])
-        # Each entry is a ProposalRef {artifact_kind, artifact_ref, projection};
-        # the stored object to check is its artifact_ref.
-        _require_stored_refs(store, [proposal.get("artifact_ref") for proposal in subject_refs],
-                             "collaboration/decision/subject_refs")
-        decision_id = input.get("decision_id") or _stable_id("dec", operation_id)
-        existing = [(ref, record) for ref, record in _region_records(store, region, "decisions")
-                    if record.get("decision_id") == decision_id]
-        replaces_ref = input.get("replaces")
-        replaced_index = -1
-        replaced_record = None
-        if replaces_ref is None:
-            if existing:
-                raise ModelError("decision/replaces",
-                                 "this decision identity already exists in the current region; "
-                                 "pass replaces to write a new version")
-        else:
-            refs = list(region.get("decisions") or [])
-            replaced_index = _index_of_ref(refs, replaces_ref)
-            replaced_record = next((record for ref, record in existing
-                                    if (ref.get("path"), ref.get("sha256")) ==
-                                    (replaces_ref.get("path"), replaces_ref.get("sha256"))), None)
-            if replaced_index < 0 or replaced_record is None:
-                raise ModelError("decision/replaces",
-                                 "replaces must name a version of this decision identity "
-                                 "in the current region")
-        decision = {
-            "schema_version": "collaboration_decision.v1",
-            "decision_id": decision_id,
-            "project_id": document["project_id"],
-            "request_id": request["request_id"],
-            "topic": topic,
-            "subject_refs": subject_refs,
-            "scope": input.get("scope") or request.get("scope"),
-            "value": input.get("value"),
-            "disposition": input.get("disposition"),
-            "authority_mode": authority_mode,
-            "evidence": evidence,
-            "delegation_ref": delegation_ref,
-            "basis": basis,
-            "status": "active",
-            "replaces": replaces_ref,
-            "invalidated_by": None,
-            "created_at": _now_iso(),
-        }
-        models.validate_decision_semantics(decision)
-        _require_scope_refs(store, decision["scope"], "collaboration/decision/scope")
-        if authority_mode == "delegated":
-            _validate_delegation(store, document, region, delegation_ref, decision)
+            where="collaboration/decision/evidence", action_binding=digest,
+            project_id=document["project_id"], request_id=(region.get("request") or {}).get("request_id"))
+        region, decision, replaced_index, replaced_record = prepare_decision(
+            store, document, input=input, operation_id=operation_id, evidence=evidence)
+        decision_id, topic = decision["decision_id"], decision["topic"]
+        evidence = decision["evidence"]
         decision_ref = store.put_json_object(decision)
         updated_refs = list(region.get("decisions") or [])
         if replaced_record is not None:

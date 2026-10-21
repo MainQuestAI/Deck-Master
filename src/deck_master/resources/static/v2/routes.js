@@ -14,6 +14,15 @@ export function readRoute(info, position, summary, hash = location.hash) {
     page_id: params.get('page'), layer: params.get('layer') || 'original_image', revision: params.get('revision') === 'null' ? null : params.get('revision'),
     candidate_id: params.get('candidate'), zoom: params.has('zoom') ? Number(params.get('zoom')) : 1, task_id: params.get('task'),
     action_id: params.get('action'), review_id: params.get('review'), runs_area: runsAreas.includes(params.get('area')) ? params.get('area') : null};
+  for(const key of ['content_area','proposal','compare_proposal','atom','review_sha256','finding','finding_index']){
+    if(params.getAll(key).length>1)throw Error('阅读链接参数重复。');
+    route[key]=params.get(key);
+  }
+  if(route.content_area&&!['overview','pages','plan','notes','arguments','methods'].includes(route.content_area))throw Error('内容子区无效。');
+  if([route.proposal,route.compare_proposal,route.review_sha256].some(v=>v&&!/^[a-f0-9]{64}$/.test(v)))throw Error('固定引用无效。');
+  if(route.compare_proposal&&(!route.proposal||route.compare_proposal===route.proposal))throw Error('比较需要两份不同主线。');
+  if(route.finding!==null&&(!route.review_id||!route.review_sha256||!route.revision||!/^\d+$/.test(route.finding_index||'')))throw Error('审阅定位必须包含完整固定身份。');
+  if(route.atom&&(!route.atom.startsWith('atom:')||route.atom.length>512||route.surface!=='page'))throw Error('正文定位无效。');
   if (params.has('batch') || params.has('batchPages')) {
     const pageIds=(params.get('batchPages')||'').split(',');
     if(route.surface!=='overview'||!route.revision||route.action_id||route.task_id||route.review_id||route.candidate_id||
@@ -33,7 +42,7 @@ export function readRoute(info, position, summary, hash = location.hash) {
       !Number.isFinite(route.zoom) || route.zoom < .25 || route.zoom > 3 ||
       (route.surface === 'page' && !route.page_id) ||
       (route.action_id && (route.surface !== 'overview' || !/^[a-f0-9]{32}$/.test(route.action_id))) ||
-      (route.review_id && route.surface !== 'runs') ||
+      (route.review_id && !['runs','page'].includes(route.surface)) ||
       (route.candidate_id && !['page', 'content'].includes(route.surface)) ||
       [route.action_id, route.review_id, route.candidate_id, route.task_id].filter(Boolean).length > 1 ||
       ((route.action_id || route.review_id || route.candidate_id) && !route.revision) ||
@@ -43,6 +52,7 @@ export function readRoute(info, position, summary, hash = location.hash) {
 }
 export function routeHash(info, route) {
   const params = new URLSearchParams({project: info.project_identity, surface: route.surface, layer: route.layer, zoom: route.zoom || 1});
+  for(const key of ['content_area','proposal','compare_proposal','atom','review_sha256','finding','finding_index'])if(route[key]!==null&&route[key]!==undefined)params.set(key,route[key]);
   if (route.revision != null) params.set('revision', route.revision);
   if (route.page_id) params.set('page', route.page_id);
   if (route.candidate_id) params.set('candidate', route.candidate_id);

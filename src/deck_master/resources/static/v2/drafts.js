@@ -13,17 +13,19 @@ try {
 
 // A personal recovery copy. No edit, task, call, or adoption endpoint is used.
 export class DraftEditor {
-  constructor(info, target, baseRevision, baseRef, {readonly = false, exactRevision = false} = {}) {
+  constructor(info, target, baseRevision, baseRef, {readonly = false, exactRevision = false, contextKey = null} = {}) {
     this.info = info; this.target = target; this.baseRevision = baseRevision; this.baseRef = baseRef;
+    this.contextKey = contextKey;
     this.readonly = readonly; this.exactRevision = exactRevision; this.etag = null; this.status = 'loading'; this.pendingSave = null;
     this.bufferKey = `deck-master:v3:draft:${info.project_identity}:${canonical(target)}:${baseRef?.sha256 || 'none'}:${baseRevision}`;
+    if(contextKey)this.bufferKey += `:context:${contextKey}`;
     this.activeKey = `${this.bufferKey}:window:${windowBufferId}`;
     this.draft = this.fresh(); this.storageError = ''; this.restoreNotice = ''; this.disposed = false;
   }
   fresh() {
     return {schema_version: 'ui_draft.v1', project_id: this.info.project_id, project_identity: this.info.project_identity,
       draft_id: 'draft-' + crypto.randomUUID(), target: this.target, base_revision: this.baseRevision,
-      base_ref: this.baseRef, content: {text: ''}, pending: null};
+      base_ref: this.baseRef, content: {text: '', ...(this.contextKey?{context_key:this.contextKey}:{})}, pending: null};
   }
   mount() {
     this.input = el('textarea', {id: 'personal-draft', rows: 7, 'aria-label': '个人草稿', readOnly: this.readonly,
@@ -60,8 +62,7 @@ export class DraftEditor {
       const raw = localStorage.getItem(this.activeKey) || (previousWindowBufferId &&
         localStorage.getItem(`${this.bufferKey}:window:${previousWindowBufferId}`));
       buffered = raw ? JSON.parse(raw) : null;
-      if (buffered && (buffered.draft?.project_identity !== this.info.project_identity ||
-          canonical(buffered.draft?.target) !== canonical(this.target))) buffered = null;
+      if (buffered && !this.matchesContext(buffered.draft)) buffered = null;
     } catch { this.storageError = '浏览器缓冲无法读取。项目中已保存的草稿仍可读取。'; }
     if (buffered) {
       this.draft = buffered.draft; this.etag = buffered.etag || null;
@@ -73,7 +74,7 @@ export class DraftEditor {
     try {
       const result = await get('/api/drafts');
       if (this.disposed) return;
-      const records = result.records.filter(record => canonical(record.draft.target) === canonical(this.target));
+      const records = result.records.filter(record => this.matchesContext(record.draft));
       const exact = records.filter(record => record.draft.base_ref?.sha256 === this.baseRef?.sha256 && (!this.exactRevision || record.draft.base_revision === this.baseRevision));
       if (!buffered && exact.length === 1) this.adoptRecord(exact[0]);
       else if (!buffered) this.status = 'empty';
@@ -107,7 +108,7 @@ export class DraftEditor {
         const key = localStorage.key(index);
         if (!key.startsWith(this.bufferKey + ':copy:')) continue;
         const value = JSON.parse(localStorage.getItem(key));
-        if (key !== `${this.bufferKey}:copy:${windowBufferId}:${this.draft.draft_id}` && value.draft?.project_identity === this.info.project_identity && canonical(value.draft.target) === canonical(this.target)) copies.push(value);
+        if (key !== `${this.bufferKey}:copy:${windowBufferId}:${this.draft.draft_id}` && this.matchesContext(value.draft)) copies.push(value);
       }
       if (!copies.length) return;
       const select = el('select', {'aria-label': '恢复本机保留的草稿副本'}, el('option', {value: ''}, '选择本机保留的草稿副本'));
@@ -148,8 +149,26 @@ export class DraftEditor {
     });
     this.restoreNode.append(select);
   }
+  matchesContext(draft) {
+    return draft?.project_identity === this.info.project_identity &&
+      canonical(draft?.target) === canonical(this.target) &&
+      (draft?.content?.context_key || null) === this.contextKey;
+  }
+  // Standalone context editors retain their controls and rehydrate explicitly.
+  restoreInPlace(copy) {
+    if (this.disposed || !this.matchesContext(copy?.draft)) return false;
+    if (this.pendingWrite) { this.note='请等待当前草稿保存回执，再恢复所选副本。'; this.updateStatus(); return false; }
+    if (!this.archiveLocal()) { this.updateStatus(); return false; }
+    clearTimeout(this.timer);
+    this.draft=structuredClone(copy.draft); this.etag=copy.etag||null;
+    this.pendingSave=copy.pendingSave?structuredClone(copy.pendingSave):null;
+    this.status=this.pendingSave?'unknown':copy.status||'dirty';
+    this.input.value=this.draft.content.text||''; this.note=''; this.restoreNotice='';
+    this.restoreConfirm?.remove(); this.persist(); this.showLocalCopies(); this.updateStatus();
+    return true;
+  }
   restoreCopy(copy) {
-    if (this.disposed) return;
+    if (this.disposed || !this.matchesContext(copy?.draft)) return;
     if (!this.onRestore) { this.note = '当前编辑器无法恢复，请保留原稿并重新打开工作面。'; this.updateStatus(); return; }
     return this.onRestore(copy);
   }
@@ -179,14 +198,16 @@ export class DraftEditor {
     if (!this.archiveLocal()) { this.updateStatus(); return; }
     const text = this.input.value;
     const annotation = this.draft.content?.annotation;
+    const previous = this.draft;
     const draft = this.fresh();
     const requirement = this.draft.content?.requirement;
-    draft.content = {text, ...(annotation ? {annotation: {body: annotation.body, scope: 'page', regions: [], intent: '修改建议'}} : {}),
+    draft.content = {...draft.content, text, ...(annotation ? {annotation: {body: annotation.body, scope: 'page', regions: [], intent: '修改建议'}} : {}),
       ...(requirement ? {requirement: {text: requirement.text || '', edited: true, annotation_refs: [], basis: null}} : {})};
+    this.onRebase?.(draft, previous);
     this.draft = draft; this.etag = null; this.pendingSave = null; this.sequence = undefined;
     this.status = [text, annotation?.body, requirement?.text].some(value => typeof value === 'string' && value.trim()) ? 'dirty' : 'empty'; this.note = ''; this.restoreNotice = '';
     this.persist(); this.updateStatus();
-    this.notifyState();
+    this.notifyState(); this.onRebased?.();
   }
   // The text a pending operation was about. An editor that carries an opinion
   // body must show that body in recovery panes, not the personal note that now
@@ -252,10 +273,17 @@ export class DraftEditor {
     this.notifyState();
   }
   async save() {
-    clearTimeout(this.timer);
-    if (this.readonly || this.disposed || !['dirty', 'error'].includes(this.status)) return;
-    this.pendingSave = {draft: structuredClone(this.draft), expected_etag: this.etag};
-    await this.submitPending();
+    do {
+      // Another waiter may start the next save before this continuation runs.
+      // Drain that write too; callers must not mistake saving for completion.
+      while (this.pendingWrite) await this.pendingWrite;
+      clearTimeout(this.timer);
+      if (this.readonly || this.disposed || !['dirty', 'error'].includes(this.status)) return;
+      this.pendingSave = {draft: structuredClone(this.draft), expected_etag: this.etag};
+      await this.submitPending();
+      // Acknowledged older text can leave newer input dirty. Save it before
+      // returning, but never automatically retry unknown/conflict/error.
+    } while (this.status === 'dirty');
   }
   async submitPending() {
     if (this.pendingWrite) return this.pendingWrite;
@@ -339,12 +367,12 @@ export class DraftEditor {
       if (file.size > 2_000_000) throw new Error('恢复文件超过 2 MB，当前输入仍保留。');
       const recovery = JSON.parse(await file.text());
       const result = await post('/api/drafts/import', {recovery});
-      if (canonical(result.record.draft.target) === canonical(this.target) && !['dirty', 'unknown', 'saving', 'conflict'].includes(this.status)) {
+      if (this.matchesContext(result.record.draft) && !['dirty', 'unknown', 'saving', 'conflict'].includes(this.status)) {
         if (this.disposed) return;
-      this.adoptRecord(result.record); this.persist(); this.updateStatus();
+        this.restoreCopy({draft:result.record.draft,etag:result.record.etag,status:'saved',pendingSave:null});
       }
       toast(result.imported_from ? '已另存为独立草稿，项目中的原稿保持。' : '已导入项目，可在对应页面恢复。');
-      const records = (await get('/api/drafts')).records.filter(record => canonical(record.draft.target) === canonical(this.target));
+      const records = (await get('/api/drafts')).records.filter(record => this.matchesContext(record.draft));
       this.showRestore(records, 0);
     } catch (error) { this.note = readableError(error); this.updateStatus(); }
     finally { input.value = ''; }

@@ -1,0 +1,652 @@
+FFFFFFF                                                                  [100%]
+=================================== FAILURES ===================================
+_________ test_plan_only_method_preview_matches_real_argument_dispatch _________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-60/test_plan_only_method_preview_0')
+
+    def test_plan_only_method_preview_matches_real_argument_dispatch(tmp_path):
+        project, store = _project(tmp_path)
+        _request(project, store, content_intent='plan_only', layers=['narrative', 'plan'])
+        task = _dispatch(store, phase='framing')
+>       _submit(project, task, {'narrative': _framing_narrative(store.load_document()['project_id'])}, 'narrative')
+
+tests/rebuild/test_webui_formal_review.py:22:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests/rebuild/test_compose_v2_phases.py:183: in _submit
+    return service.accept_result(project, task_id=task["task_id"],
+src/deck_master/service.py:1924: in accept_result
+    outcome = tasks_mod.accept_result(
+src/deck_master/tasks.py:1118: in accept_result
+    return _accept_result_locked(store, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/tasks.py:1316: in _accept_result_locked
+    return accept_compose_v2(store, document=document, task=task, envelope=envelope,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+store = <deck_master.store.Store object at 0x7fcb6046faa0>
+document = {'change': {'description': 'task claimed', 'kind': 'task_update', 'operation_id': 'task-5b55181b2712', 'read_set': []}...7:02:37.374945+00:00', 'compatibility': {'minimum_writer': 'method-catalog.v1', 'project_format': 'workbench.v3'}, ...}
+task = {'call_allowances': [], 'collaboration_binding': {'adoption_policy': 'proposal_only', 'authorization_ref': None, 'deci...jection': 'value', 'ref': None, ...}], ...}, 'cost_class': 'host_reasoning', 'created_at': '2026-10-20T17:02:37Z', ...}
+envelope = {'schema_version': 'compose_result.v2', 'kind': 'compose', 'variant': 'narrative', 'task_id': '0fed5b1735f1', ...}
+produced_against = '9b4986b16bd7535f81e349014fda5f215bfc583796607a6ab4c40665c858fd39'
+result_digest = 'd97faeeecdccfbaddbfb0f073b3eaf9e0b5552b91c0a71c469c0432c651195df'
+staged = {}
+
+    def accept_compose_v2(store, *, document: dict, task: dict, envelope: dict,
+                          produced_against: str, result_digest: str, staged: dict) -> dict:
+        """Route one compose.v2 result to its variant acceptor (all-or-nothing)."""
+        parse_compose_v2(envelope)
+        if envelope.get("task_id") != task.get("task_id"):
+            raise tasks_mod.EnvelopeError("(result)/task_id", "result must name the dispatched task")
+        if envelope.get("operation_id") != task.get("operation_id"):
+            raise tasks_mod.TaskConflict("(result)/operation_id",
+                                         "operation_id does not match the dispatched task operation")
+        variant = expected_variant(task)
+        if variant is None:
+            raise tasks_mod.EnvelopeError("(result)/variant",
+                                          "this task was not dispatched with a compose.v2 phase")
+        if envelope.get("variant") != variant:
+>           raise tasks_mod.EnvelopeError(
+                "(result)/variant",
+                f"task phase expects variant {variant!r}; got {envelope.get('variant')!r}")
+E           deck_master.tasks.EnvelopeError: (result)/variant: task phase expects variant 'framing'; got 'narrative'
+
+src/deck_master/content_production.py:634: EnvelopeError
+_ test_verified_existing_decision_adoption_independent_of_new_decision_channel _
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-60/test_verified_existing_decisio0')
+
+    def test_verified_existing_decision_adoption_independent_of_new_decision_channel(tmp_path):
+        from test_web import _get_json, _post_json
+        project, store, ref, decision_ref = verified_candidate(tmp_path)
+        before = bytes_at(project)
+        admission = ui.argument(project, ref['sha256'])['data']['adoption']
+        assert bytes_at(project) == before
+        server = WorkbenchServer(project); url = server.start().rstrip('/')
+        try:
+            token = _get_json(url+'/api/session')[2]['token']
+            status, result = _post_json(url+f'/api/projects/{store.load_document()["project_id"]}/collaboration/proposal-adoptions',
+                {'base_revision': store.current_revision_id(), 'operation_id': str(uuid.uuid4()),
+                 'proposal_ref': ref, 'decision_ref': decision_ref, 'write_scope': admission['write_scope']}, token=token, origin=url)
+            assert status == 200 and result['status'] == 'accepted'
+        finally:
+            server.stop()
+        assert not admission['can_record_direction_decision']
+        assert admission['decision_reason_codes'] == ['authority_channel_unavailable']
+>       assert admission['can_adopt'] and not admission['needs_decision']
+E       assert (False)
+
+tests/rebuild/test_webui_formal_review.py:75: AssertionError
+________ test_atom_source_damage_is_local_and_matches_single_atom_reads ________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-60/test_atom_source_damage_is_loc0')
+
+    def test_atom_source_damage_is_local_and_matches_single_atom_reads(tmp_path):
+        project, store = _project(tmp_path); _request(project, store)
+        _, out = _accept_argument(project, store); _adopt_direction(project, store, out['result_refs'][0])
+        task = _dispatch(store, phase='page_copy'); doc = store.load_document(); page = _page(store, doc, 'p1')
+        page['customer_visible']['body_blocks'].append({'id': 'b2', 'type': 'paragraph', 'text': '独立的完好原子'})
+        page['content_mapping']['visible_links'].append({'element_ref': 'atom:p1:block:b2:text', 'narrative_node_ids': ['n1'], 'source_links': []})
+        # b3 shares b1's broken source, exercising cached failure attribution too.
+        page['customer_visible']['body_blocks'].append({'id': 'b3', 'type': 'paragraph', 'text': '同一损坏来源'})
+        link = copy.deepcopy(page['content_mapping']['visible_links'][1]); link['element_ref'] = 'atom:p1:block:b3:text'
+        page['content_mapping']['visible_links'].append(link)
+        _submit(project, task, {'pages': [page], 'page_order': ['p1'], 'plan_input': _plan_input(doc, ['p1'])}, 'page_copy')
+        (project/doc['sources'][0]['extract']['path']).write_bytes(b'broken')
+        before = bytes_at(project); full = ui.evidence(project, 'p1')
+        values = {e['element_ref']: e for e in full['data']['elements']}
+        for block, expected in [('b1', 'unreadable'), ('b2', 'recorded'), ('b3', 'unreadable')]:
+            atom = f'atom:p1:block:{block}:text'
+            single = ui.evidence(project, 'p1', element_ref=atom)['data']['elements'][0]
+            assert values[atom] == single
+>           assert single['mapping_status'] == expected
+E           AssertionError: assert 'recorded' == 'unreadable'
+E
+E             - unreadable
+E             + recorded
+
+tests/rebuild/test_webui_formal_review.py:97: AssertionError
+_______ test_unrelated_broken_narrative_does_not_invent_unreadable_plan ________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-60/test_unrelated_broken_narrativ0')
+
+    def test_unrelated_broken_narrative_does_not_invent_unreadable_plan(tmp_path):
+        project, store, _, ref = candidate(tmp_path)
+        _, result = _accept_argument(project, store); other = result['result_refs'][0]
+        # Give B a distinct formal current Ref, without a Plan for A.
+        narrative = store.read_object_json(other); narrative['narrative_id'] = 'broken-B'
+        bad = store.put_json_object(narrative)
+        commit_fixture(store, lambda d: d.update(narrative=bad))
+        (project/bad['path']).write_bytes(b'broken')
+        value = ui.argument(project, ref['sha256'])
+>       assert value['data']['plan_status'] == 'absent' and value['data']['plans'] == []
+E       AssertionError: assert ('unreadable' == 'absent'
+E
+E         - absent
+E         + unreadable)
+
+tests/rebuild/test_webui_formal_review.py:110: AssertionError
+_____ test_method_body_latest_selection_owns_body_status_and_focus[False] ______
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-60/test_method_body_latest_select0')
+late_failure = False
+
+    @pytest.mark.browser
+    @pytest.mark.parametrize('late_failure', [False, True])
+    def test_method_body_latest_selection_owns_body_status_and_focus(tmp_path, late_failure):
+        project, store, _, _ = candidate(tmp_path); server = WorkbenchServer(project); url = server.start()
+        info = ui_journal.project_info(project); held = []
+        try:
+            with sync_playwright() as pw:
+                browser = pw.chromium.launch(executable_path=shutil.which('chromium'), args=['--no-sandbox']); page = browser.new_page()
+                page.goto(url+'studio/#'+urlencode({'project': info['project_identity'], 'revision': store.current_revision_id(),
+                    'surface': 'content', 'content_area': 'methods', 'layer': 'content'}))
+                page.get_by_label('准备上下文').select_option('independent')
+                expect(page.locator('#content-area-methods')).to_contain_text('准备已核对')
+                page.locator('label.method-entry').filter(has_text='case-e04-walkthrough ·').locator('input').check()
+>               expect(page.get_by_role('button', name='阅读 content-m04', exact=True)).to_be_visible()
+E               AssertionError: Locator expected to be visible
+E               Actual value: None
+E               Error: element(s) not found
+E               Call log:
+E                 - Expect "to_be_visible" get_by_role("button", name="阅读 content-m04", exact=True) with timeout 5000ms
+E                 - waiting for get_by_role("button", name="阅读 content-m04", exact=True)
+E
+E               Aria snapshot:
+E               - link "跳到工作区":
+E                 - /url: "#main"
+E               - complementary:
+E                 - img "Deck Master"
+E                 - navigation "项目工作区":
+E                   - button "制作总览"
+E                   - button "内容与来源"
+E                   - button "整稿画廊"
+E                   - button "风格校准"
+E                   - button "任务与交付"
+E                 - text: 当前项目
+E                 - strong: 记录训练
+E                 - paragraph: 当前为项目独立入口
+E                 - button "连接状态"
+E               - banner:
+E                 - strong: 记录训练
+E                 - text: 当前稿
+E                 - region "本次工作状态":
+E                   - button "查看本次工作与范围": 内容待决定
+E                 - button "查看待交接任务，1 项": 待交接 1
+E               - main:
+E                 - heading "内容与来源" [level=1]
+E                 - paragraph: 先看材料与论证，再改逐页稿。直接改内容和交接制作分别保存。
+E                 - button "添加材料"
+E                 - button "修改任务要求"
+E                 - strong: 输入待协调
+E                 - button "查看输入判断"
+E                 - navigation "内容工作区":
+E                   - button "方案概览"
+E                   - button "逐页编辑与顺序"
+E                   - button "内容计划"
+E                   - button "工作笔记"
+E                   - button "论证主线"
+E                   - button "方法与案例" [pressed]
+E                 - region "方法与案例":
+E                   - heading "方法与案例准备" [level=2]
+E                   - paragraph: 这里准备阅读与交接，不改变已有任务，也不启动制作。方法案例不是客户来源。
+E                   - combobox "准备上下文":
+E                     - option "本项目的下一内容阶段"
+E                     - option "独立阅读，不产生项目许可" [selected]
+E                   - combobox "方法阅读角色":
+E                     - option "deck-content" [selected]
+E                     - option "deck-review"
+E                     - option "deck-design"
+E                     - option "deck-master"
+E                   - combobox "方法阅读阶段":
+E                     - option "论证策划" [selected]
+E                     - option "正文写作"
+E                     - option "口播"
+E                     - option "审阅"
+E                     - option "设计制作"
+E                   - button "重新核对准备"
+E                   - status: 准备已核对，尚未应用。
+E                   - searchbox "筛选方法或案例"
+E                   - checkbox "同一 Runtime 的职责、范围与恢复 · 方法说明"
+E                   - text: 同一 Runtime 的职责、范围与恢复 · 方法说明
+E                   - checkbox "physical-units · 方法说明"
+E                   - text: physical-units · 方法说明
+E                   - checkbox "style-calibration · 方法说明"
+E                   - text: style-calibration · 方法说明
+E                   - checkbox "candidates-and-stages · 方法说明"
+E                   - text: candidates-and-stages · 方法说明
+E                   - checkbox "icon-quality · 方法说明"
+E                   - text: icon-quality · 方法说明
+E                   - checkbox "visual-reference · 方法说明"
+E                   - text: visual-reference · 方法说明
+E                   - checkbox "材料阅读与使用 · 方法说明"
+E                   - text: 材料阅读与使用 · 方法说明
+E                   - checkbox "公共内容方法｜从任务与资料写成专业完整稿 · 方法说明"
+E                   - text: 公共内容方法｜从任务与资料写成专业完整稿 · 方法说明
+E                   - checkbox "Content Examples｜自包含合成样例 · 方法说明"
+E                   - text: Content Examples｜自包含合成样例 · 方法说明
+E                   - checkbox "content-calibration · 方法说明"
+E                   - text: content-calibration · 方法说明
+E                   - checkbox "输入变化后的持续修改 · 方法说明"
+E                   - text: 输入变化后的持续修改 · 方法说明
+E                   - checkbox "blueprint-svg · 方法说明"
+E                   - text: blueprint-svg · 方法说明
+E                   - checkbox "review-and-repair · 方法说明"
+E                   - text: review-and-repair · 方法说明
+E                   - checkbox "example-e01-after · 案例"
+E                   - text: example-e01-after · 案例
+E                   - checkbox "example-e01-before · 案例"
+E                   - text: example-e01-before · 案例
+E                   - checkbox "example-e01-input · 案例"
+E                   - text: example-e01-input · 案例
+E                   - checkbox "example-e01-numbers · 数据"
+E                   - text: example-e01-numbers · 数据
+E                   - checkbox "example-e02-after · 案例"
+E                   - text: example-e02-after · 案例
+E                   - checkbox "example-e02-before · 案例"
+E                   - text: example-e02-before · 案例
+E                   - checkbox "example-e02-input · 案例"
+E                   - text: example-e02-input · 案例
+E                   - checkbox "example-e02-numbers · 数据"
+E                   - text: example-e02-numbers · 数据
+E                   - checkbox "example-e03-after · 案例"
+E                   - text: example-e03-after · 案例
+E                   - checkbox "example-e03-before · 案例"
+E                   - text: example-e03-before · 案例
+E                   - checkbox "example-e03-input · 案例"
+E                   - text: example-e03-input · 案例
+E                   - checkbox "example-e03-numbers · 数据"
+E                   - text: example-e03-numbers · 数据
+E                   - checkbox "E04｜改进后的完整内容示范 · 案例"
+E                   - text: E04｜改进后的完整内容示范 · 案例
+E                   - checkbox "example-e04-before · 案例"
+E                   - text: example-e04-before · 案例
+E                   - checkbox "E04｜输入材料 · 案例"
+E                   - text: E04｜输入材料 · 案例
+E                   - checkbox "example-e04-numbers · 数据"
+E                   - text: example-e04-numbers · 数据
+E                   - checkbox "example-e05-after · 案例"
+E                   - text: example-e05-after · 案例
+E                   - checkbox "example-e05-before · 案例"
+E                   - text: example-e05-before · 案例
+E                   - checkbox "example-e05-input · 案例"
+E                   - text: example-e05-input · 案例
+E                   - checkbox "example-e06-after · 案例"
+E                   - text: example-e06-after · 案例
+E                   - checkbox "example-e06-before · 案例"
+E                   - text: example-e06-before · 案例
+E                   - checkbox "example-e06-input · 案例"
+E                   - text: example-e06-input · 案例
+E                   - checkbox "template-options-comparison · 模板"
+E                   - text: template-options-comparison · 模板
+E                   - checkbox "template-page-draft · 模板"
+E                   - text: template-page-draft · 模板
+E                   - checkbox "template-teaching-sequence · 模板"
+E                   - text: template-teaching-sequence · 模板
+E                   - checkbox "design-semantic-examples · 案例"
+E                   - text: design-semantic-examples · 案例
+E                   - checkbox "master-routing-examples · 案例"
+E                   - text: master-routing-examples · 案例
+E                   - checkbox "review-calibration-cases · 案例"
+E                   - text: review-calibration-cases · 案例
+E                   - checkbox "case-e01-walkthrough · 案例"
+E                   - text: case-e01-walkthrough · 案例
+E                   - checkbox "case-e02-walkthrough · 案例"
+E                   - text: case-e02-walkthrough · 案例
+E                   - checkbox "case-e03-walkthrough · 案例"
+E                   - text: case-e03-walkthrough · 案例
+E                   - checkbox "E04｜方法讲解与取舍 · 案例" [checked]
+E                   - text: E04｜方法讲解与取舍 · 案例
+E                   - checkbox "case-e05-walkthrough · 案例"
+E                   - text: case-e05-walkthrough · 案例
+E                   - checkbox "case-e06-walkthrough · 案例"
+E                   - text: case-e06-walkthrough · 案例
+E                   - checkbox "content-to-visual · 方法说明"
+E                   - text: content-to-visual · 方法说明
+E                   - checkbox "method-review · 方法说明"
+E                   - text: method-review · 方法说明
+E                   - checkbox "按任务选择方法与案例 · 方法说明"
+E                   - text: 按任务选择方法与案例 · 方法说明
+E                   - checkbox "method-sources · 方法说明"
+E                   - text: method-sources · 方法说明
+E                   - checkbox "content-m01 · 方法说明"
+E                   - text: content-m01 · 方法说明
+E                   - checkbox "content-m02 · 方法说明"
+E                   - text: content-m02 · 方法说明
+E                   - checkbox "content-m03 · 方法说明"
+E                   - text: content-m03 · 方法说明
+E                   - checkbox "content-m04 · 方法说明"
+E                   - text: content-m04 · 方法说明
+E                   - checkbox "content-m05 · 方法说明"
+E                   - text: content-m05 · 方法说明
+E                   - checkbox "content-m06 · 方法说明"
+E                   - text: content-m06 · 方法说明
+E                   - checkbox "content-m07 · 方法说明"
+E                   - text: content-m07 · 方法说明
+E                   - checkbox "content-m08 · 方法说明"
+E                   - text: content-m08 · 方法说明
+E                   - checkbox "content-m09 · 方法说明"
+E                   - text: content-m09 · 方法说明
+E                   - checkbox "content-m10 · 方法说明"
+E                   - text: content-m10 · 方法说明
+E                   - checkbox "narrative-patterns · 方法说明"
+E                   - text: narrative-patterns · 方法说明
+E                   - checkbox "page-writing · 方法说明"
+E                   - text: page-writing · 方法说明
+E                   - checkbox "writing-profiles · 方法说明"
+E                   - text: writing-profiles · 方法说明
+E                   - checkbox "helper-case-numbers · 脚本（只读）"
+E                   - text: helper-case-numbers · 脚本（只读）
+E                   - group: › 默认、显式、依赖与字节
+E                   - button "阅读 collaboration-routing"
+E                   - button "阅读 source-reading"
+E                   - button "阅读 content-methods"
+E                   - button "阅读 content-examples"
+E                   - button "阅读 input-update"
+E                   - button "阅读 method-selection"
+E                   - button "阅读 example-e04-input"
+E                   - button "阅读 example-e04-after"
+E                   - button "阅读 case-e04-walkthrough"
+E                   - button "重新核对后复制准备要求"
+E                   - group: › 保存与恢复个人准备稿
+E               - status: 内容与来源，R 44b68f4a
+
+tests/rebuild/test_webui_formal_review.py:128: AssertionError
+______ test_method_body_latest_selection_owns_body_status_and_focus[True] ______
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-60/test_method_body_latest_select1')
+late_failure = True
+
+    @pytest.mark.browser
+    @pytest.mark.parametrize('late_failure', [False, True])
+    def test_method_body_latest_selection_owns_body_status_and_focus(tmp_path, late_failure):
+        project, store, _, _ = candidate(tmp_path); server = WorkbenchServer(project); url = server.start()
+        info = ui_journal.project_info(project); held = []
+        try:
+            with sync_playwright() as pw:
+                browser = pw.chromium.launch(executable_path=shutil.which('chromium'), args=['--no-sandbox']); page = browser.new_page()
+                page.goto(url+'studio/#'+urlencode({'project': info['project_identity'], 'revision': store.current_revision_id(),
+                    'surface': 'content', 'content_area': 'methods', 'layer': 'content'}))
+                page.get_by_label('准备上下文').select_option('independent')
+                expect(page.locator('#content-area-methods')).to_contain_text('准备已核对')
+                page.locator('label.method-entry').filter(has_text='case-e04-walkthrough ·').locator('input').check()
+>               expect(page.get_by_role('button', name='阅读 content-m04', exact=True)).to_be_visible()
+E               AssertionError: Locator expected to be visible
+E               Actual value: None
+E               Error: element(s) not found
+E               Call log:
+E                 - Expect "to_be_visible" get_by_role("button", name="阅读 content-m04", exact=True) with timeout 5000ms
+E                 - waiting for get_by_role("button", name="阅读 content-m04", exact=True)
+E
+E               Aria snapshot:
+E               - link "跳到工作区":
+E                 - /url: "#main"
+E               - complementary:
+E                 - img "Deck Master"
+E                 - navigation "项目工作区":
+E                   - button "制作总览"
+E                   - button "内容与来源"
+E                   - button "整稿画廊"
+E                   - button "风格校准"
+E                   - button "任务与交付"
+E                 - text: 当前项目
+E                 - strong: 记录训练
+E                 - paragraph: 当前为项目独立入口
+E                 - button "连接状态"
+E               - banner:
+E                 - strong: 记录训练
+E                 - text: 当前稿
+E                 - region "本次工作状态":
+E                   - button "查看本次工作与范围": 内容待决定
+E                 - button "查看待交接任务，1 项": 待交接 1
+E               - main:
+E                 - heading "内容与来源" [level=1]
+E                 - paragraph: 先看材料与论证，再改逐页稿。直接改内容和交接制作分别保存。
+E                 - button "添加材料"
+E                 - button "修改任务要求"
+E                 - strong: 输入待协调
+E                 - button "查看输入判断"
+E                 - navigation "内容工作区":
+E                   - button "方案概览"
+E                   - button "逐页编辑与顺序"
+E                   - button "内容计划"
+E                   - button "工作笔记"
+E                   - button "论证主线"
+E                   - button "方法与案例" [pressed]
+E                 - region "方法与案例":
+E                   - heading "方法与案例准备" [level=2]
+E                   - paragraph: 这里准备阅读与交接，不改变已有任务，也不启动制作。方法案例不是客户来源。
+E                   - combobox "准备上下文":
+E                     - option "本项目的下一内容阶段"
+E                     - option "独立阅读，不产生项目许可" [selected]
+E                   - combobox "方法阅读角色":
+E                     - option "deck-content" [selected]
+E                     - option "deck-review"
+E                     - option "deck-design"
+E                     - option "deck-master"
+E                   - combobox "方法阅读阶段":
+E                     - option "论证策划" [selected]
+E                     - option "正文写作"
+E                     - option "口播"
+E                     - option "审阅"
+E                     - option "设计制作"
+E                   - button "重新核对准备"
+E                   - status: 准备已核对，尚未应用。
+E                   - searchbox "筛选方法或案例"
+E                   - checkbox "同一 Runtime 的职责、范围与恢复 · 方法说明"
+E                   - text: 同一 Runtime 的职责、范围与恢复 · 方法说明
+E                   - checkbox "physical-units · 方法说明"
+E                   - text: physical-units · 方法说明
+E                   - checkbox "style-calibration · 方法说明"
+E                   - text: style-calibration · 方法说明
+E                   - checkbox "candidates-and-stages · 方法说明"
+E                   - text: candidates-and-stages · 方法说明
+E                   - checkbox "icon-quality · 方法说明"
+E                   - text: icon-quality · 方法说明
+E                   - checkbox "visual-reference · 方法说明"
+E                   - text: visual-reference · 方法说明
+E                   - checkbox "材料阅读与使用 · 方法说明"
+E                   - text: 材料阅读与使用 · 方法说明
+E                   - checkbox "公共内容方法｜从任务与资料写成专业完整稿 · 方法说明"
+E                   - text: 公共内容方法｜从任务与资料写成专业完整稿 · 方法说明
+E                   - checkbox "Content Examples｜自包含合成样例 · 方法说明"
+E                   - text: Content Examples｜自包含合成样例 · 方法说明
+E                   - checkbox "content-calibration · 方法说明"
+E                   - text: content-calibration · 方法说明
+E                   - checkbox "输入变化后的持续修改 · 方法说明"
+E                   - text: 输入变化后的持续修改 · 方法说明
+E                   - checkbox "blueprint-svg · 方法说明"
+E                   - text: blueprint-svg · 方法说明
+E                   - checkbox "review-and-repair · 方法说明"
+E                   - text: review-and-repair · 方法说明
+E                   - checkbox "example-e01-after · 案例"
+E                   - text: example-e01-after · 案例
+E                   - checkbox "example-e01-before · 案例"
+E                   - text: example-e01-before · 案例
+E                   - checkbox "example-e01-input · 案例"
+E                   - text: example-e01-input · 案例
+E                   - checkbox "example-e01-numbers · 数据"
+E                   - text: example-e01-numbers · 数据
+E                   - checkbox "example-e02-after · 案例"
+E                   - text: example-e02-after · 案例
+E                   - checkbox "example-e02-before · 案例"
+E                   - text: example-e02-before · 案例
+E                   - checkbox "example-e02-input · 案例"
+E                   - text: example-e02-input · 案例
+E                   - checkbox "example-e02-numbers · 数据"
+E                   - text: example-e02-numbers · 数据
+E                   - checkbox "example-e03-after · 案例"
+E                   - text: example-e03-after · 案例
+E                   - checkbox "example-e03-before · 案例"
+E                   - text: example-e03-before · 案例
+E                   - checkbox "example-e03-input · 案例"
+E                   - text: example-e03-input · 案例
+E                   - checkbox "example-e03-numbers · 数据"
+E                   - text: example-e03-numbers · 数据
+E                   - checkbox "E04｜改进后的完整内容示范 · 案例"
+E                   - text: E04｜改进后的完整内容示范 · 案例
+E                   - checkbox "example-e04-before · 案例"
+E                   - text: example-e04-before · 案例
+E                   - checkbox "E04｜输入材料 · 案例"
+E                   - text: E04｜输入材料 · 案例
+E                   - checkbox "example-e04-numbers · 数据"
+E                   - text: example-e04-numbers · 数据
+E                   - checkbox "example-e05-after · 案例"
+E                   - text: example-e05-after · 案例
+E                   - checkbox "example-e05-before · 案例"
+E                   - text: example-e05-before · 案例
+E                   - checkbox "example-e05-input · 案例"
+E                   - text: example-e05-input · 案例
+E                   - checkbox "example-e06-after · 案例"
+E                   - text: example-e06-after · 案例
+E                   - checkbox "example-e06-before · 案例"
+E                   - text: example-e06-before · 案例
+E                   - checkbox "example-e06-input · 案例"
+E                   - text: example-e06-input · 案例
+E                   - checkbox "template-options-comparison · 模板"
+E                   - text: template-options-comparison · 模板
+E                   - checkbox "template-page-draft · 模板"
+E                   - text: template-page-draft · 模板
+E                   - checkbox "template-teaching-sequence · 模板"
+E                   - text: template-teaching-sequence · 模板
+E                   - checkbox "design-semantic-examples · 案例"
+E                   - text: design-semantic-examples · 案例
+E                   - checkbox "master-routing-examples · 案例"
+E                   - text: master-routing-examples · 案例
+E                   - checkbox "review-calibration-cases · 案例"
+E                   - text: review-calibration-cases · 案例
+E                   - checkbox "case-e01-walkthrough · 案例"
+E                   - text: case-e01-walkthrough · 案例
+E                   - checkbox "case-e02-walkthrough · 案例"
+E                   - text: case-e02-walkthrough · 案例
+E                   - checkbox "case-e03-walkthrough · 案例"
+E                   - text: case-e03-walkthrough · 案例
+E                   - checkbox "E04｜方法讲解与取舍 · 案例" [checked]
+E                   - text: E04｜方法讲解与取舍 · 案例
+E                   - checkbox "case-e05-walkthrough · 案例"
+E                   - text: case-e05-walkthrough · 案例
+E                   - checkbox "case-e06-walkthrough · 案例"
+E                   - text: case-e06-walkthrough · 案例
+E                   - checkbox "content-to-visual · 方法说明"
+E                   - text: content-to-visual · 方法说明
+E                   - checkbox "method-review · 方法说明"
+E                   - text: method-review · 方法说明
+E                   - checkbox "按任务选择方法与案例 · 方法说明"
+E                   - text: 按任务选择方法与案例 · 方法说明
+E                   - checkbox "method-sources · 方法说明"
+E                   - text: method-sources · 方法说明
+E                   - checkbox "content-m01 · 方法说明"
+E                   - text: content-m01 · 方法说明
+E                   - checkbox "content-m02 · 方法说明"
+E                   - text: content-m02 · 方法说明
+E                   - checkbox "content-m03 · 方法说明"
+E                   - text: content-m03 · 方法说明
+E                   - checkbox "content-m04 · 方法说明"
+E                   - text: content-m04 · 方法说明
+E                   - checkbox "content-m05 · 方法说明"
+E                   - text: content-m05 · 方法说明
+E                   - checkbox "content-m06 · 方法说明"
+E                   - text: content-m06 · 方法说明
+E                   - checkbox "content-m07 · 方法说明"
+E                   - text: content-m07 · 方法说明
+E                   - checkbox "content-m08 · 方法说明"
+E                   - text: content-m08 · 方法说明
+E                   - checkbox "content-m09 · 方法说明"
+E                   - text: content-m09 · 方法说明
+E                   - checkbox "content-m10 · 方法说明"
+E                   - text: content-m10 · 方法说明
+E                   - checkbox "narrative-patterns · 方法说明"
+E                   - text: narrative-patterns · 方法说明
+E                   - checkbox "page-writing · 方法说明"
+E                   - text: page-writing · 方法说明
+E                   - checkbox "writing-profiles · 方法说明"
+E                   - text: writing-profiles · 方法说明
+E                   - checkbox "helper-case-numbers · 脚本（只读）"
+E                   - text: helper-case-numbers · 脚本（只读）
+E                   - group: › 默认、显式、依赖与字节
+E                   - button "阅读 collaboration-routing"
+E                   - button "阅读 source-reading"
+E                   - button "阅读 content-methods"
+E                   - button "阅读 content-examples"
+E                   - button "阅读 input-update"
+E                   - button "阅读 method-selection"
+E                   - button "阅读 example-e04-input"
+E                   - button "阅读 example-e04-after"
+E                   - button "阅读 case-e04-walkthrough"
+E                   - button "重新核对后复制准备要求"
+E                   - group: › 保存与恢复个人准备稿
+E               - status: 内容与来源，R cc1bd3a6
+
+tests/rebuild/test_webui_formal_review.py:128: AssertionError
+_ test_adoption_concurrent_revision_keeps_payload_until_explicit_new_request[False] _
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-60/test_adoption_concurrent_revis0')
+reopen = False
+
+    @pytest.mark.parametrize('reopen', [False, True])
+    def test_adoption_concurrent_revision_keeps_payload_until_explicit_new_request(tmp_path, reopen):
+        from deck_master import models
+        project,store,_,ref=candidate(tmp_path);server=WorkbenchServer(project);url=server.start();info=ui_journal.project_info(project);calls=[]
+        try:
+            with sync_playwright() as pw:
+                browser=pw.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox']);page=browser.new_page()
+                _open_direction(page,url,info,store,ref)
+                decision_revision=store.current_revision_id();doc=store.load_document()
+                # An explicit synthetic unrelated revision uses the real Store CAS.
+                updated=models.bump_revision(doc,{'operation_id':'concurrent-fixture','kind':'task_update','description':'synthetic concurrent revision','read_set':[]})
+                store.commit_change(base_revision=doc['revision_id'],document=updated,operation_id='concurrent-fixture')
+                changed_revision=store.current_revision_id()
+                page.on('request',lambda req:calls.append(req.post_data_json) if req.method=='POST' and req.url.endswith('/collaboration/proposal-adoptions') else None)
+                page.get_by_role('button',name='确认采用此方向',exact=True).click()
+                expect(page.get_by_role('button',name='核实原操作',exact=True)).to_be_enabled()
+                assert calls[0]['base_revision']==decision_revision and not store.load_document().get('narrative')
+                if reopen:
+                    page.reload();page.get_by_role('button',name='核实或查看原方向操作',exact=True).click()
+>               page.get_by_role('button',name='明确读取当前准入以另建采用请求',exact=True).click()
+
+tests/rebuild/test_webui_content_insight_browser.py:202:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/sync_api/_generated.py:18032: in click
+    self._sync(
+/tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/_impl/_locator.py:165: in click
+    return await self._frame._click(self._selector, strict=True, **params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/_impl/_frame.py:594: in _click
+    await self._channel.send("click", self._timeout, locals_to_params(locals()))
+/tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/_impl/_connection.py:76: in send
+    return await self._connection.wrap_api_call(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <playwright._impl._connection.Connection object at 0x7fcb6035bdd0>
+cb = <function Channel.send.<locals>.<lambda> at 0x7fcb6069bba0>
+is_internal = False, title = None
+
+    async def wrap_api_call(
+        self, cb: Callable[[], Any], is_internal: bool = False, title: str = None
+    ) -> Any:
+        if self._api_zone.get():
+            return await cb()
+        task = asyncio.current_task(self._loop)
+        parsed_st = _attach_api_call_information(
+            getattr(task, "__pw_stack__", None) or _capture_stack_trace(),
+            is_internal,
+            title,
+        )
+        self._api_zone.set(parsed_st)
+        try:
+            return await cb()
+        except Exception as error:
+>           raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+E           playwright._impl._errors.TimeoutError: Locator.click: Timeout 30000ms exceeded.
+E           Call log:
+E             - waiting for get_by_role("button", name="明确读取当前准入以另建采用请求", exact=True)
+
+/tmp/webui-unit-venv/lib/python3.12/site-packages/playwright/_impl/_connection.py:632: TimeoutError
+=========================== short test summary info ============================
+FAILED tests/rebuild/test_webui_formal_review.py::test_plan_only_method_preview_matches_real_argument_dispatch
+FAILED tests/rebuild/test_webui_formal_review.py::test_verified_existing_decision_adoption_independent_of_new_decision_channel
+FAILED tests/rebuild/test_webui_formal_review.py::test_atom_source_damage_is_local_and_matches_single_atom_reads
+FAILED tests/rebuild/test_webui_formal_review.py::test_unrelated_broken_narrative_does_not_invent_unreadable_plan
+FAILED tests/rebuild/test_webui_formal_review.py::test_method_body_latest_selection_owns_body_status_and_focus[False]
+FAILED tests/rebuild/test_webui_formal_review.py::test_method_body_latest_selection_owns_body_status_and_focus[True]
+FAILED tests/rebuild/test_webui_content_insight_browser.py::test_adoption_concurrent_revision_keeps_payload_until_explicit_new_request[False]
+7 failed in 45.95s

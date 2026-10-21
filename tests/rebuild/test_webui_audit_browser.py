@@ -155,13 +155,13 @@ def test_inputs_keep_other_entry_drafts_and_confirm_all_differences(tmp_path, mo
             editor = page.locator('.materials-adjust-form')
             if mode in ('task', 'mixed'):
                 page.get_by_role('button', name='修改任务要求', exact=True).click()
-                expect(editor.get_by_label('汇报用途', exact=True)).to_be_visible()
+                expect(editor.get_by_label('用途与目标', exact=True)).to_be_visible()
                 expect(editor.get_by_label('新增材料完整路径（每行一个）')).to_have_count(0)
-                editor.get_by_label('汇报受众', exact=True).fill('新的明确受众')
+                editor.get_by_label('受众', exact=True).fill('新的明确受众')
                 editor.get_by_role('button', name='关闭编辑并保留草稿', exact=True).click()
             if mode in ('add', 'mixed'):
                 page.get_by_role('button', name='添加材料', exact=True).click()
-                expect(editor.get_by_label('汇报用途', exact=True)).to_have_count(0)
+                expect(editor.get_by_label('用途与目标', exact=True)).to_have_count(0)
                 editor.get_by_label('新增材料完整路径（每行一个）').fill(str(source))
                 if mode == 'mixed':
                     expect(editor.locator('.retained-inputs')).to_contain_text('还保留了要求修改')
@@ -172,7 +172,7 @@ def test_inputs_keep_other_entry_drafts_and_confirm_all_differences(tmp_path, mo
             if mode == 'mixed':
                 expect(editor.locator('.retained-inputs')).to_contain_text('还保留了要求修改')
                 editor.get_by_role('button', name='返回要求修改', exact=True).click()
-                expect(editor.get_by_label('汇报受众', exact=True)).to_have_value('新的明确受众')
+                expect(editor.get_by_label('受众', exact=True)).to_have_value('新的明确受众')
                 expect(editor.locator('.retained-inputs')).to_contain_text('还保留了材料变更')
             editor.get_by_label('本次输入变化说明', exact=True).fill('只确认这次预览列明的输入差异')
             editor.get_by_role('button', name='预览材料与任务变化', exact=True).click()

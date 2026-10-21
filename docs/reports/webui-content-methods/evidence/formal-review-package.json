@@ -1,0 +1,540 @@
+{
+  "release_id": "50ef4d2e64e2-ad5e446ec8b1",
+  "source_sha": "50ef4d2e64e2b732bcd7ade7758a9eb86ac2cf6e",
+  "source_dirty": false,
+  "package_version": "1.0.0rc5",
+  "compiler_version": "python-native-v1",
+  "wheel": "deck_master-1.0.0rc5-py3-none-any.whl",
+  "wheel_sha256": "ad5e446ec8b1c843118a0eba752e3478e981dd4a1bea4a3b4efae1ba2f5541eb",
+  "sdist": "deck_master-1.0.0rc5.tar.gz",
+  "sdist_sha256": "7d95f083d3c7e7290e6b5b6024bffc1e3bc0fbfdf6081ee497f7f0600c80e5e7",
+  "entry": [
+    "python",
+    "-m",
+    "deck_master"
+  ],
+  "professional_evidence": "not_evaluated",
+  "installation": {
+    "status": "candidate_ready",
+    "release_id": "50ef4d2e64e2-ad5e446ec8b1",
+    "release": "/tmp/webui-managed-formal-review/.deck-master/releases/50ef4d2e64e2-ad5e446ec8b1",
+    "activated": false
+  },
+  "installed_module_audit": {
+    "package": "/tmp/webui-managed-formal-review/.deck-master/releases/50ef4d2e64e2-ad5e446ec8b1/venv/lib/python3.12/site-packages/deck_master",
+    "sys_path": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python312.zip",
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12",
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/lib-dynload",
+      "/tmp/webui-managed-formal-review/.deck-master/releases/50ef4d2e64e2-ad5e446ec8b1/venv/lib/python3.12/site-packages"
+    ],
+    "source_sha": "50ef4d2e64e2b732bcd7ade7758a9eb86ac2cf6e",
+    "wheel_sha256": "ad5e446ec8b1c843118a0eba752e3478e981dd4a1bea4a3b4efae1ba2f5541eb",
+    "installed_bytes_match": {
+      "content_insight.py": true,
+      "content_production.py": true,
+      "method_library_view.py": true,
+      "resources/static/v2/insight-reading.js": true,
+      "resources/static/v2/method-library.js": true
+    }
+  },
+  "installed_focused": "12 passed in 24.88s",
+  "installed_offline": {
+    "checks": {
+      "viewport_1440_900_focus_and_overflow": true,
+      "viewport_1280_800_focus_and_overflow": true,
+      "three_fixed_offline_downloads_hash_verified": true,
+      "public_notes_complete_privacy_scrub_and_engineering_original_preserved": true,
+      "every_v2_asset_served_from_installed_package": true,
+      "every_studio_asset_served_from_installed_package": true,
+      "current_entries_and_retired_routes_without_write": true,
+      "installed_brand_license_and_esm_metadata": true,
+      "no_cdn_external_font_or_runtime_request": true
+    },
+    "downloads": [
+      {
+        "purpose": "review",
+        "revision": "d437b4cec24d43ab9cd148f177569470",
+        "sha256": "e3853661e62ba246d06f92b26030a9cc80a7e6f1f6841cc49546447f6efe7c2f",
+        "files": 8
+      },
+      {
+        "purpose": "delivery",
+        "revision": "d437b4cec24d43ab9cd148f177569470",
+        "sha256": "1ad5972551ba464c8d57ff2e16de7f441ac8b88c44392bf5763883df66ce1c1e",
+        "files": 8
+      },
+      {
+        "purpose": "engineering",
+        "revision": "d437b4cec24d43ab9cd148f177569470",
+        "sha256": "889ac22f51a010fc597f9525572cf29e6682655b7624508954ff9a946f5878d3",
+        "files": 33
+      }
+    ],
+    "external_requests": [],
+    "page_errors": [],
+    "font_checks": [
+      {
+        "status": "loaded",
+        "body": "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif"
+      },
+      {
+        "status": "loaded",
+        "body": "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif"
+      }
+    ],
+    "resources": [
+      {
+        "path": "/",
+        "status": 200
+      },
+      {
+        "path": "/v2/tokens.css",
+        "status": 200
+      },
+      {
+        "path": "/v2/style.css",
+        "status": 200
+      },
+      {
+        "path": "/v2/workbench.css",
+        "status": 200
+      },
+      {
+        "path": "/v2/navigation-usability.css",
+        "status": 200
+      },
+      {
+        "path": "/v2/studio.css",
+        "status": 200
+      },
+      {
+        "path": "/studio/workspace.css",
+        "status": 200
+      },
+      {
+        "path": "/studio/overview.css",
+        "status": 200
+      },
+      {
+        "path": "/studio/delivery.css",
+        "status": 200
+      },
+      {
+        "path": "/studio/reading.css",
+        "status": 200
+      },
+      {
+        "path": "/v2/app.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/icons.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/api.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/dom.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/launcher-ui.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/project.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/draft-intake.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/summary-poll.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/drafts.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/routes.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/views.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/collaboration-desk.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/page-text.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/business-operations.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/changeset-desk.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/action-targets.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/gallery.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/insight-reading.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/evidence-reading.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/delivery-desk.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/change-handoff.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/candidate-desk.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/run-desk.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/overview.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/content-sources.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/receipt-verdict.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/text-diff.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/style-calibration.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/annotation-submission.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/page-workbench.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/images.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/gallery-state.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/content-edit.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/batch-policy.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/history-labels.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/run-recovery.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/candidate-cards.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/production-view.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/trial-actions.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/comparison-canvas.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/icon-workbench.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/personal-recovery.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/overview-state.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/batch-actions.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/method-library.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/style-phases.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/material-uploads.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/page-reading.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/text-selection.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/visual-style.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/request-view.js",
+        "status": 200
+      },
+      {
+        "path": "/v2/annotations.js",
+        "status": 200
+      },
+      {
+        "path": "/api/health",
+        "status": 200
+      },
+      {
+        "path": "/v2/assets/deck-master-logo/favicon.svg",
+        "status": 200
+      },
+      {
+        "path": "/api/ui-state",
+        "status": 200
+      },
+      {
+        "path": "/api/project",
+        "status": 200
+      },
+      {
+        "path": "/api/view/summary",
+        "status": 200
+      },
+      {
+        "path": "/api/drafts",
+        "status": 200
+      },
+      {
+        "path": "/api/view/summary",
+        "status": 200
+      },
+      {
+        "path": "/api/project",
+        "status": 200
+      },
+      {
+        "path": "/api/history",
+        "status": 200
+      },
+      {
+        "path": "/api/tasks",
+        "status": 200
+      },
+      {
+        "path": "/v2/assets/deck-master-logo/logo-horizontal-light.svg",
+        "status": 200
+      },
+      {
+        "path": "/api/session",
+        "status": 200
+      },
+      {
+        "path": "/api/tasks",
+        "status": 200
+      },
+      {
+        "path": "/v2/assets/deck-master-logo/favicon.svg",
+        "status": 200
+      },
+      {
+        "path": "/api/drafts",
+        "status": 200
+      },
+      {
+        "path": "/api/candidates",
+        "status": 200
+      },
+      {
+        "path": "/api/projects/synthetic-project/delivery-eligibility",
+        "status": 200
+      },
+      {
+        "path": "/api/result-reading",
+        "status": 200
+      },
+      {
+        "path": "/api/ui-state",
+        "status": 200
+      },
+      {
+        "path": "/api/tasks",
+        "status": 200
+      },
+      {
+        "path": "/api/view/summary",
+        "status": 200
+      },
+      {
+        "path": "/v2/assets/deck-master-logo/favicon.svg",
+        "status": 200
+      },
+      {
+        "path": "/api/project",
+        "status": 200
+      },
+      {
+        "path": "/api/history",
+        "status": 200
+      },
+      {
+        "path": "/api/tasks",
+        "status": 200
+      },
+      {
+        "path": "/api/drafts",
+        "status": 200
+      },
+      {
+        "path": "/api/tasks",
+        "status": 200
+      },
+      {
+        "path": "/v2/assets/deck-master-logo/favicon.svg",
+        "status": 200
+      },
+      {
+        "path": "/api/ui-state",
+        "status": 200
+      },
+      {
+        "path": "/api/candidates",
+        "status": 200
+      },
+      {
+        "path": "/api/result-reading",
+        "status": 200
+      },
+      {
+        "path": "/api/tasks",
+        "status": 200
+      },
+      {
+        "path": "/api/projects/synthetic-project/delivery-eligibility",
+        "status": 200
+      },
+      {
+        "path": "/api/exports",
+        "status": 200
+      },
+      {
+        "path": "/api/exports",
+        "status": 200
+      },
+      {
+        "path": "/api/projects/synthetic-project/delivery-eligibility",
+        "status": 200
+      },
+      {
+        "path": "/api/exports",
+        "status": 200
+      },
+      {
+        "path": "/v2/assets/deck-master-logo/favicon.svg",
+        "status": 200
+      },
+      {
+        "path": "/api/view/summary",
+        "status": 200
+      },
+      {
+        "path": "/api/project",
+        "status": 200
+      },
+      {
+        "path": "/api/overview",
+        "status": 200
+      },
+      {
+        "path": "/api/drafts",
+        "status": 200
+      },
+      {
+        "path": "/v2/assets/deck-master-logo/favicon.svg",
+        "status": 200
+      },
+      {
+        "path": "/api/thumbnails",
+        "status": 202
+      },
+      {
+        "path": "/api/ui-state",
+        "status": 200
+      },
+      {
+        "path": "/api/content-plan",
+        "status": 200
+      }
+    ],
+    "environment": {
+      "module": "/tmp/webui-managed-formal-review/.deck-master/releases/50ef4d2e64e2-ad5e446ec8b1/venv/lib/python3.12/site-packages/deck_master/__init__.py",
+      "python": "3.12.14",
+      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+      "installed": true,
+      "chromium": "151.0.7922.173"
+    },
+    "synthetic": true,
+    "model_calls": 0,
+    "professional_evidence": "not_evaluated"
+  },
+  "real_home_modified": false,
+  "host_registered": false,
+  "activated": false,
+  "actual_host": "NOT_RUN",
+  "professional_review": "NOT_RUN",
+  "human_acceptance": "NOT_RUN",
+  "installed_recovery": "244 passed in 866.95s (0:14:26)",
+  "installed_module_audit_ref": "formal-review-installed-modules.json",
+  "final_test_source_sha": "bd6702fcd3117217116c96254ac9d855acfc7995"
+}

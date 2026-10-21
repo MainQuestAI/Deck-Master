@@ -436,3 +436,7 @@ html[data-workbench-ui=studio] {
  .studio-workspace .studio-style-columns {grid-template-columns:minmax(0,1fr);gap:24px}
  .studio-workspace .studio-style-targets .style-targets {grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
 }
+/* Six content subareas remain within the existing content work surface. */
+.studio-workspace .studio-content-areas {grid-template-columns:repeat(6,minmax(0,1fr));}
+.studio-workspace .studio-content-areas button:last-child {margin-left:0;}
+@media(max-width:767px){.studio-workspace .studio-content-areas {grid-template-columns:repeat(3,minmax(0,1fr));}}
