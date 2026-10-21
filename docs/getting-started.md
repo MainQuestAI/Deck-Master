@@ -1,4 +1,4 @@
-# Install and use Deck Master RC4
+# Install and use Deck Master 1.0.0
 
 Deck Master provides the local CLI, Workbench, project history and four Codex
 Skills. It does not bundle a model, Codex account, image-generation service,
@@ -34,8 +34,8 @@ actual request's authorization and call allowance.
 
 ## Install a release
 
-RC4 maps Python `1.0.0rc4` to proposed tag `v1.0.0-rc4`. Source version alone
-does not establish that these assets are published. Formal 1.0.0 is deferred.
+Python `1.0.0` maps to tag `v1.0.0`. Source version alone does not establish
+that the release or its assets have been published.
 
 Download the wheel and `release.json` from the same
 [GitHub Release](https://github.com/MainQuestAI/Deck-Master/releases).
@@ -47,7 +47,7 @@ Bootstrap the CLI in a separate environment, using the downloaded wheel:
 
 ```bash
 python3.12 -m venv ./deck-master-bootstrap
-./deck-master-bootstrap/bin/python -m pip install ./deck_master-1.0.0rc4-py3-none-any.whl
+./deck-master-bootstrap/bin/python -m pip install ./deck_master-1.0.0-py3-none-any.whl
 ./deck-master-bootstrap/bin/python -m deck_master install candidate \
   --prefix "$HOME" --manifest ./release.json
 ```

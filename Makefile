@@ -1,54 +1,39 @@
-# Deck Master Makefile. Convenience wrappers so contributors do not have to
-# memorize the long CLI invocations. Uses the project venv if present.
-
+# Convenience wrappers for the rebuilt core; install development dependencies first.
 PY ?= python
-SCRIPT ?= scripts/deck_master.py
 VENV ?= .venv
 VENV_PY := $(VENV)/bin/python
-
-# Use the venv interpreter when it exists, else fall back to PY.
-ifeq ($(shell test -x $(VENV_PY) && echo yes),yes)
-  RUN := $(VENV_PY) $(SCRIPT)
+ifneq ($(wildcard $(VENV_PY)),)
   PY := $(VENV_PY)
-else
-  RUN := $(PY) $(SCRIPT)
 endif
+RUN = $(PY) -m deck_master
+OUT ?= dist/release
+REGISTRY ?= ./deck-master-projects.json
 
-.PHONY: help install-dev test smoke release-smoke rc-gate rc-gate-ci preview browser-deps clean
+.PHONY: help install-dev browser-deps test smoke package preview release-build release-smoke rc-gate rc-gate-ci
+help: ## Show supported targets
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-18s %s\n", $$1, $$2}'
 
-help: ## Show available targets
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
-
-install-dev: ## Create .venv (Python 3.12) and install dev dependencies
-	python3.12 -m venv $(VENV) || python3 -m venv $(VENV)
-	$(VENV_PY) -m pip install --upgrade pip
+install-dev: ## Create .venv and install development dependencies
+	$(PY) -m venv $(VENV)
 	$(VENV_PY) -m pip install -e ".[dev]"
 
-browser-deps: ## Install Playwright Chromium browsers
+browser-deps: ## Install Playwright Chromium and its system dependencies
 	$(PY) -m playwright install --with-deps chromium
 
-test: ## Run the full unit test suite (pytest is the single test entry)
-	$(PY) -m pytest -q tests
+test: ## Run core unit tests; renderer and browser gates are separate in CI
+	$(PY) -m pytest -q tests/rebuild -m "not render and not browser"
 
-smoke: ## Run the fixture autoplan + preview gate smoke
-	$(RUN) autoplan \
-		--brief-file examples/briefs/retail_digital_transformation.txt \
-		--industry retail --library-mode fixture --run-mode fixture \
-		--dev-allow-unsetup --run-id make-smoke
-	$(RUN) preview-gate --run-dir runs/make-smoke --expect-unconfigured-backend-ok
+smoke: ## Inspect the installed CLI and package boundaries (no model or approval)
+	$(RUN) --help
+	$(RUN) capabilities
+	$(PY) -m pytest -q tests/rebuild/test_package_boundary.py tests/rebuild/test_entry_capabilities.py
 
-release-smoke: ## Build and smoke a release tree
-	$(RUN) release-build --output /tmp/deck-master-release --force
-	$(RUN) release-smoke --release-root /tmp/deck-master-release
+package: ## Build wheel, sdist and provenance into a NEW OUT directory
+	$(PY) tools/build_release.py --out "$(OUT)"
 
-rc-gate: ## Run the FULL rc-gate (needs local-only benchmark + bound backend)
-	$(RUN) rc-gate --require-browser-smoke --force
+preview: ## Open the current local Workbench launcher; preserves the chosen registry
+	$(RUN) workbench --registry "$(REGISTRY)" --no-open
 
-rc-gate-ci: ## Run the CI-tier rc-gate (reproducible on a fresh clone)
-	$(RUN) rc-gate --tier ci --skip-browser-smoke --force
-
-preview: ## Start the Review Desk on the fixture demo (http://127.0.0.1:5050)
-	$(PY) scripts/preview/server.py examples/preview-run --port 5050
-
-clean: ## Remove transient run/report artifacts
-	rm -rf runs/make-smoke /tmp/deck-master-release
+release-build release-smoke rc-gate rc-gate-ci:
+	@echo 'Retired target. Use make package for artifacts and .github/workflows/rebuild.yml: unit matrix, render, required browser and installed/offline checks.' >&2
+	@exit 2

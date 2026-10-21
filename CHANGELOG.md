@@ -2,17 +2,29 @@
 
 ## Unreleased
 
-RC5 content-method library development (`1.0.0rc5`) follows the RC4 candidate.
-Formal 1.0.0 publication is deferred until RC5 has been reviewed.
+## 1.0.0 — release preparation, 2026-10-21
 
-- Share the static resource catalog across runtime, wheel/sdist and managed
-  installation; preserve pre-catalog releases and all existing resource IDs.
-- Accept bounded explicit resource selection in Python dispatch and independent
-  read APIs, expand dependencies and freeze after final phase/scope binding.
-- Preserve `work_context.v2` transport kinds and old frozen Task hashes; new
-  resource manifests atomically require the `method-catalog.v1` writer boundary.
-- Resource-seed integration, Host-facing selection wiring and actual paired
-  manuscript evidence remain incomplete while original ZIP transfer is blocked.
+Python package `1.0.0`; intended tag `v1.0.0`. Publication and final candidate
+validation remain separate from this source preparation.
+
+- Integrate the RC5 content-method catalog, bounded Host resource selection,
+  dependency expansion and frozen Task methods from PR127.
+- Add structured support/feedback and contribution guidance from PR128.
+- Clarify current documentation and preserve dated evidence through the
+  documentation and archive indexes from PR129.
+- Replace retired Make/script entry points with the rebuilt CLI and current
+  checks; retire the unvalidated legacy Docker/Dev Container entry and document
+  the supported local Python installation instead.
+
+- Integrate PR130's fixed-revision content/method reading, narrative comparison,
+  direction adoption recovery, source evidence and bounded review handoffs.
+- Preserve image request ownership when aborting, replacing or removing queued
+  image work; release active leases synchronously on cancellation.
+
+Exact-source validation and release assets are tracked in the
+[release preparation record](docs/releases/1.0.0-preparation.md). Historical observations
+below retain their original version and scope. Font rendering, professional
+human review and desktop editing limitations remain in the first-run guide.
 
 ## 1.0.0rc4 — candidate, 2026-10-20
 

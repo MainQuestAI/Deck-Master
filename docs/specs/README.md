@@ -8,7 +8,9 @@
 
 | 目录 | 定位 |
 | --- | --- |
-| [RC4 increment](deck-master-next-iteration-20261019/README.md) | 当前 AGENTS 指定增量入口；N1–N6台账与方法/恢复合同，报告保持原候选身份 |
+| [Content WebUI](deck-master-webui-content-methods-20261020/README.md) | PR130 已合入；固定版本读取、方向采用及审阅交接，原记录保留时点 |
+| [RC5 content methods](content-methods-rc5/README.md) | PR127 已合入；资源目录、Host 选择及冻结方法合同，实际证据按 SHA 读取 |
+| [RC4 increment](deck-master-next-iteration-20261019/README.md) | 继承的增量入口；N1–N6台账与方法/恢复合同，报告保持原候选身份 |
 | [rebuild v1](deck-master-rebuild-v1/README.md) | src-layout 和运行核心的继承基线；库存/镜像/示例被测试引用，不移动 |
 | [Flow Quality](deck-master-flow-quality-v1.1/README.md) | 内容/生产链继承合同与兼容样例，内含不可变项目对象 |
 | [Content Collaboration](deck-master-content-collaboration-v1.2/README.md) | 协作/权限/范围与审阅合同，不能因名称版本较旧而废弃 |
@@ -31,7 +33,7 @@
 - [2026-10-18 WebUI audit](deck-master-webui-audit-20261018/README.md)
 
 后续独立 WebUI 工作应使用其实际批准的规格；这里的历史名称或 AC 数量不能代替新任务。
-未合入的 RC5 方法库也不能通过在索引中列出就变成主线已实现能力。
+RC5 方法库已由 PR127 合入；规格及旧报告中的开放状态保留原时点，不等于最终发布验收。
 
 ## 更早的架构
 

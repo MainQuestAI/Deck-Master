@@ -5,18 +5,20 @@ brief and real source material it drives content composition, blueprint
 generation, editable SVG/PPT production, review and repair — all through one
 CLI and a loopback review workbench.
 
-**Version:** RC5 development source, Python package `1.0.0rc5`; not a completed or published RC5 candidate.
-The RC4 correction is preserved independently as `1.0.0rc4` (proposed tag `v1.0.0-rc4`).
-Formal 1.0.0 publication is deferred until after RC5 review. Get published artifacts from
-[GitHub Releases](https://github.com/MainQuestAI/Deck-Master/releases).
+**Version:** Python package `1.0.0`, in release preparation. Published assets
+and publication status are listed in [GitHub Releases](https://github.com/MainQuestAI/Deck-Master/releases).
 Start with the [installation and first-run guide](docs/getting-started.md).
 The [RC4 increment](docs/specs/deck-master-next-iteration-20261019/README.md)
 and its [single ledger](docs/reports/rc4/iteration-20261019/execution-ledger.json)
 retain their original candidate evidence. A source version, built wheel,
 active installation and published Release are separate facts.
+The source includes the RC5 content-method catalog and bounded Host selection,
+PR130's content/method/evidence reading and recoverable handoffs, plus support
+and documentation governance. See the [release preparation record](docs/releases/1.0.0-preparation.md)
+for validation scope and remaining publication steps.
 **License:** Apache-2.0.
 
-RC4 extends the existing RC3 and Flow Quality contracts with recoverable input
+The core inherits RC4 extensions to the RC3 and Flow Quality contracts with recoverable input
 and installation operations, frozen Task methods, scoped content validation
 and negotiated reading contexts. Engineering checks, actual Host application
 and professional/user acceptance are recorded separately.
@@ -203,7 +205,7 @@ the current candidate; see the [archive index](docs/archive/README.md).
 - [Agent Entry](AGENTS.md)
 - [Agent Task Index](docs/agent-task-index.md)
 - [Agent Recovery Playbook](docs/agent-recovery-playbook.md)
-- [Current RC4 Increment](docs/specs/deck-master-next-iteration-20261019/README.md)
+- [Inherited RC4 Increment](docs/specs/deck-master-next-iteration-20261019/README.md)
 - [Migration to the Rebuilt Core](docs/migration-to-rebuilt-core.md)
 - [Support and Feedback](SUPPORT.md)
 - [Issue Maintenance](docs/issue-maintenance.md)

@@ -6,7 +6,8 @@ Legacy v0.9.x commands map onto this surface per spec 09.6; the full table is
 `deck-master legacy-map` and the migration notes live in
 [docs/migration-to-rebuilt-core.md](migration-to-rebuilt-core.md).
 
-The current development entry is the
+The content-method entry is the [RC5 increment](specs/content-methods-rc5/README.md).
+For inherited work, use the
 [RC4 increment](specs/deck-master-next-iteration-20261019/README.md), inherited
 contracts then the assigned N1–N6 card. Its
 [single candidate ledger](reports/rc4/iteration-20261019/execution-ledger.json)

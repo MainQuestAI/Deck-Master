@@ -55,8 +55,10 @@ deck-master capabilities
 Missing tools, isolated installed-wheel checks, actual Host application and
 professional acceptance are distinct evidence. A local focused pass does not
 replace final CI on the published candidate, activate user HOME, or publish a
-Release. Follow the [current increment](docs/specs/deck-master-next-iteration-20261019/README.md)
-and its single execution ledger for candidate closure.
+Release. Follow the [RC5 methods](docs/specs/content-methods-rc5/README.md) and
+[integrated WebUI](docs/specs/deck-master-webui-content-methods-20261020/README.md)
+contracts and their dated evidence. The [release preparation record](docs/releases/1.0.0-preparation.md)
+tracks final candidate closure; RC4 records retain their historical scope.
 
 ## DCO
 
@@ -99,3 +101,26 @@ outputs with version/Host/model settings and professional review reasons.
 Automated checks are supporting evidence, not user acceptance. Reuse existing
 [benchmark guidance](benchmarks/README.md) when promoting a representative case;
 do not commit customer originals.
+
+## Convenience entry points
+
+The dev extra includes `setuptools>=77` and `wheel` for the release builder,
+which runs without build isolation (matching CI). After installing development dependencies, `make smoke` inspects the actual
+CLI and runs package/entry checks. `make test` runs core unit tests; the
+renderer, required-browser and installed/offline gates remain in the workflow.
+`make preview REGISTRY=./deck-master-projects.json` starts the loopback launcher.
+`make package OUT=<new-directory>` creates wheel/sdist/provenance; it does
+not publish them. Legacy release and RC targets now stop with a retirement message.
+
+## Retired container entry point
+
+The legacy Dockerfile and Dev Container configuration are removed for 1.0.0.
+Their [last mainline versions](https://github.com/MainQuestAI/Deck-Master/tree/44e9dd8bd96b9e52ac0acc4174b87f677d3c9bf6) remain in Git history.
+They referenced the retired preview server and did not install the rebuilt
+src-layout package correctly. A replacement image has not passed an actual
+build and runtime check, so container support is not part of this release.
+Use the Python virtual-environment instructions in [README](README.md#install)
+and the [first-run guide](docs/getting-started.md) for the supported local CLI
+and loopback Workbench. CI provisions its own renderer and browser dependencies.
+A future container entry must validate installation, CLI startup and its stated
+renderer/browser scope before it is offered as a supported path.
