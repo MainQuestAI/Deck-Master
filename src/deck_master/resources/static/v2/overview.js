@@ -94,10 +94,13 @@ function todoPanel(app) {
           el('span', {class: 'status'}, kindLabels[first.kind] || first.kind)),
         el('h2', {}, todoTitle(first)), el('p', {}, reasonText(first)),
         el('div', {class: 'todo-bottom'}, el('span', {}, todoMeta(app, first)), todoButton(app, first, true))),
-      el('div', {class: 'todo-secondary'},
-        el('div', {class: 'todo-list-head'}, el('h3', {}, '接下来'), el('span', {}, `${rest.length} 类事项`)),
-        rest.length ? rest.map(action => el('article', {class: 'todo-row'},
-          el('div', {}, el('h3', {}, todoTitle(action)), el('p', {}, reasonText(action)), el('p',{class:'muted'},todoMeta(app,action))), todoButton(app, action)))
+      el('details', {class: 'todo-secondary', open: window.innerWidth > 1100},
+        el('summary', {class: 'todo-list-head'}, el('h3', {}, '接下来'), el('span', {}, `${rest.length} 类事项`)),
+        rest.length ? el('div', {},
+          el('article', {class: 'todo-row'}, el('div', {}, el('h3', {}, todoTitle(rest[0])), el('p', {}, reasonText(rest[0])), el('p',{class:'muted'},todoMeta(app,rest[0]))), todoButton(app, rest[0])),
+          rest.length > 1 && el('details', {class:'todo-more'}, el('summary', {}, `其余 ${rest.length - 1} 类待办`),
+            rest.slice(1).map(action => el('article', {class: 'todo-row'},
+              el('div', {}, el('h3', {}, todoTitle(action)), el('p', {}, reasonText(action)), el('p',{class:'muted'},todoMeta(app,action))), todoButton(app, action)))))
           : el('p', {class: 'muted'}, '处理当前优先事项后，继续核对整稿。')));
     return node;
   }
@@ -142,7 +145,7 @@ const cellView = state => ({ready: {icon: 'check', text: '已就绪'}, missing: 
 export function overview(app, data = {}) {
   const pages = app.summary.pages;
   const studio = document.documentElement.dataset.workbenchUi === 'studio';
-  const root = el('div', {class:studio?'studio-overview':''});
+  const root = el('div', {class:studio?'overview studio-overview':'overview'});
   if (!pages.length) {
     root.append(heading('制作总览', '项目已建立，还没有页面内容。'),
       empty('先把内容整理清楚', '补充材料并交接内容整理后，这里会出现逐页内容与制作状态。',
@@ -153,9 +156,8 @@ export function overview(app, data = {}) {
   const explanation = '依据已变化表示上游内容更新；可先查看已有作品，再决定检查或修改。候选返回后需要比较采用；工程检查和人工认可分别记录。';
   root.append(heading('制作总览',
     `${pages.length} 页内容 · ${blueprintCount} 页已有原图`,
-    el('div', {class:'row wrap'}, studio && button([icon('attention'), '状态说明'], () => modal('如何理解制作状态', el('p', {}, explanation))),
+    el('div', {class:'row wrap'}, button([icon('attention'), '状态说明'], () => modal('如何理解制作状态', el('p', {}, explanation))),
       button([studio && icon('gallery'), '查看整稿'], () => app.go({surface: 'gallery'}), true))));
-  if (!studio) root.append(el('details', {class: 'overview-state-help'}, el('summary', {}, '如何理解制作状态'), el('p', {}, explanation)));
   const todo=todoPanel(app);root.append(todo);
   const todoFacts=()=>canonical([app.latest?.revision_id,app.info.control_revision_id,app.info.completion,app.info.collaboration?.request,app.summary.reading_etag]);
   let shownFacts=todoFacts();
@@ -419,7 +421,7 @@ function matrixPanel(app, saved) {
   const readingTools = el('div', {class: 'row wrap toolbar overview-reading-tools', role: 'group', 'aria-label': '阅读筛选'},
     el('div', {class: 'segmented', role: 'group', 'aria-label': '页面筛选'}, filterAll, filterTodo), searchInput);
   const selectionTools = el('div', {class: 'row wrap matrix-search', role: 'group', 'aria-label': '批量选页动作'},
-    batch.toolbar, selectionNote, clearButton, studio && batch.recoveryButton);
+    batch.toolbar, selectionNote, clearButton, batch.recoveryButton);
   const node = el('section', {class: 'stack', 'aria-label': '逐页制作进展'},
     el('div', {class: 'section-head'}, el('h2', {}, '逐页制作进展'), count),
     // UAC12:阅读筛选(范围+搜索)与批量选页动作分两行、各自成组;选择摘要条
@@ -429,11 +431,11 @@ function matrixPanel(app, saved) {
     // 演进：未选=引导；选后=配置（目标摘要—要求—参考—影响—预览）；
     // 核对通过后=交接主动作出现。
     batch.node,
-    studio && batch.recoveryPanel,
+    batch.recoveryPanel,
     // 选择摘要条紧贴列表：向下滚动选页时它吸附在顶部，配置入口始终够得着。
     selectionBar,
-    el('div', {class:'row wrap overview-preferences'}, preferenceStatus, compareButton, downloadButton),
     el('div', {class: 'matrix-wrap'}, table),
+    el('div', {class:'row wrap overview-preferences'}, preferenceStatus, compareButton, downloadButton),
     studio && pager,
     el('div', {class: 'matrix-caption'},
       el('span', {}, icon('check'), ' 可查看　', icon('attention'), ' 需要处理　', icon('minus'), ' 尚未生成'),

@@ -4,10 +4,10 @@
 .studio-workspace .studio-overview .page-head p {margin-top:8px}
 .studio-workspace .studio-overview .page-head button {display:inline-flex;align-items:center;gap:8px}
 .studio-workspace .studio-overview .overview-todos {display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:12px;border:0;background:transparent;margin:0 0 24px;overflow:visible}
-.studio-workspace .studio-overview .todo-priority {background:var(--fg);border-radius:16px;padding:28px;min-height:240px}
-.studio-workspace .studio-overview .todo-priority h2 {font-size:25px;line-height:1.4;margin-top:20px}
+.studio-workspace .studio-overview .todo-priority {background:var(--surface-warm);color:var(--fg);border-radius:16px;padding:16px 20px;min-height:0}
+.studio-workspace .studio-overview .todo-priority h2 {font-size:22px;line-height:1.4;margin-top:8px}
 .studio-workspace .studio-overview .todo-priority>p {font-size:14px;line-height:1.65;margin-top:12px}
-.studio-workspace .studio-overview .todo-bottom {padding-top:24px;margin-top:auto}
+.studio-workspace .studio-overview .todo-bottom {padding-top:12px;margin-top:0}
 .studio-workspace .studio-overview .todo-secondary {border:0;border-radius:16px;background:var(--surface-warm);padding:20px 24px}
 .studio-workspace .studio-overview .todo-row {padding:10px 0;gap:16px}
 .studio-workspace .studio-overview .todo-row h3 {font-size:14px;font-weight:550}
@@ -63,3 +63,17 @@
  .studio-workspace .banners {padding:12px 16px 0}
  .studio-workspace .runtime-sync-actions {margin-left:30px;flex-wrap:wrap}
 }
+
+.studio-workspace .studio-overview .todo-priority .todo-kicker,
+.studio-workspace .studio-overview .todo-priority>p,
+.studio-workspace .studio-overview .todo-priority .todo-bottom>span{color:var(--muted)}
+.studio-workspace .studio-overview .todo-priority .status{background:#fff;color:var(--fg)}
+.studio-workspace .studio-overview .todo-priority button.primary{background:#171717;color:#fff;border-color:#171717}
+.studio-workspace .studio-overview .todo-priority button.primary:hover{background:#303030;border-color:#303030}
+.studio-workspace .studio-overview .todo-priority :focus-visible{outline-color:#171717}
+
+.studio-workspace .studio-overview .page-head{margin-bottom:16px}
+.studio-workspace .studio-overview .overview-todos{margin-bottom:16px}
+.studio-workspace .studio-overview .todo-secondary{padding:12px 16px}
+.studio-workspace .studio-overview .todo-secondary>summary{padding:0;border:0;background:transparent;min-height:44px}
+.studio-workspace .studio-overview .section-head{margin:0 0 4px}

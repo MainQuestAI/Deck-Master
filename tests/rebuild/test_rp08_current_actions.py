@@ -136,6 +136,7 @@ def test_real_browser_mixed_counts_and_fixed_targets(candidate_store, tmp_path):
             url = server.start()
             identity = page.request.get(url+'api/project').json()['project_identity']
             page.goto(url+'v2/#'+urlencode({'project': identity, 'surface': 'overview'}))
+            page.locator('.todo-more > summary').click()
             expect(page.get_by_role('heading', name='3 个任务 · 失败待查看', exact=True)).to_be_visible()
             expect(page.get_by_role('heading', name='1 个候选 · 候选待决定', exact=True)).to_be_visible()
             route = {'project': identity, 'surface': 'overview', 'action': failed['action_id'], 'revision': before['revision_id']}
