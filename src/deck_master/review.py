@@ -107,7 +107,7 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
         old = [subjects.get(_ref_key(ref)) for ref in owner.get('subjects') or []]
         new = [subjects.get(_ref_key(ref)) for ref in candidate.get('subjects') or []]
         for before in old:
-            if not before or before.get('page_id') != page_id or before.get('role') not in (('page', 'blueprint') if owner.get('review_stage') == 'original_image' else ('page', 'svg', 'ppt_preview')):
+            if not before or before.get('page_id') != page_id or before.get('role') not in (('blueprint',) if owner.get('review_stage') == 'original_image' else ('page', 'svg', 'ppt_preview')):
                 continue
             for after in new:
                 hash_key = ('visual_sha' if owner.get('review_stage') == 'page_visual'

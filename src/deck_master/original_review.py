@@ -146,7 +146,59 @@ def validate_result(store, document, task, envelope, *, adapter_context=None):
         raise tasks.EnvelopeError('original_review/findings', 'known graph/expression errors require fail and a must_fix finding before SVG')
     if any(f.get('page_id') != fixed['page_id'] for f in row['findings']):
         raise tasks.EnvelopeError('original_review/findings', 'findings must target this original-image page')
+    if row['status'] == 'pass' and retained_image_findings(store, document, semantic_packet(store, fixed)):
+        raise tasks.EnvelopeError('original_review/findings', 'the same image retains a known applicable must_fix finding; unrelated Page edits or an ownerless pass cannot erase it')
     return [receipt['receipt_ref']]
+
+
+def accepted_history(store, document):
+    """Only completed original Tasks carrying the existing authenticated proof."""
+    for ref in document.get('tasks') or []:
+        task = store.read_object_json(ref)
+        if task.get('review_stage') != STAGE or task.get('status') != 'completed':
+            continue
+        _, fixed = task_packet(store, task)
+        proofs = [store.read_object_json(r) for r in task.get('result_refs') or [] if r['path'].endswith('.json')]
+        if not any(p.get('schema_version') == 'authenticated_review_receipt.v1' and p['claims'].get('task_id') == task['task_id'] for p in proofs):
+            continue
+        for row in proofs:
+            if row.get('schema_version') == 'deck_review.v2' and row.get('review_stage') == STAGE:
+                yield semantic_packet(store, fixed), row
+
+
+def finding_requirement_unchanged(before, current, finding):
+    """Compare an identified graph requirement, not the Page object version.
+
+    Changed/removed endpoints are genuinely new requirements. Notes and
+    unrelated nodes or edges never erase an identified fixed-edge defect.
+    Unlocalized findings remain conservative: unrelated document changes cannot
+    establish that their requirement was withdrawn.
+    """
+    old, new = before['page'], current['page']
+    targets = finding.get('element_refs') or []
+    comparisons = []
+    for target in targets:
+        for prefix, collection, identity in (('edge:', 'edges', 'edge_id'), ('node:', 'nodes', 'node_id')):
+            if target.startswith(prefix):
+                key = target[len(prefix):]
+                a = next((r for r in old['visual_spec'].get(collection, []) if r[identity] == key), None)
+                b = next((r for r in new['visual_spec'].get(collection, []) if r[identity] == key), None)
+                comparisons.append(a is None or a == b)
+    if comparisons:
+        return any(comparisons)
+    return True
+
+
+def retained_image_findings(store, document, current, *, history=None):
+    result = []
+    for before, row in accepted_history(store, document) if history is None else history:
+        if before['page_id'] != current['page_id'] or before['image_ref']['sha256'] != current['image_ref']['sha256']:
+            continue
+        for finding in row.get('findings') or []:
+            if (finding.get('impact') == 'must_fix' and finding.get('resolution', 'open') == 'open'
+                    and finding_requirement_unchanged(before, current, finding)):
+                result.append({'review_id': row['review_id'], 'finding_id': finding['finding_id']})
+    return result
 
 
 def reference_status(store, document, page_id, *, candidate_id=None, use='expand'):
@@ -154,22 +206,14 @@ def reference_status(store, document, page_id, *, candidate_id=None, use='expand
         raise ValueError('unknown original-image reference use')
     current = semantic_packet(store, packet(store, document, page_id, candidate_id=candidate_id))
     accepted = []
-    for ref in document.get('tasks') or []:
-        task = store.read_object_json(ref)
-        if task.get('review_stage') != STAGE or task.get('status') != 'completed':
-            continue
-        _, fixed = task_packet(store, task)
-        fixed = semantic_packet(store, fixed)
-        # Same current Page/image can be reviewed before or after candidate adoption.
+    history = list(accepted_history(store, document))
+    retained = retained_image_findings(store, document, current, history=history)
+    for fixed, row in history:
         keys = ('page_ref', 'image_ref', 'resolved_design', 'effective_requirements')
-        if any(fixed[key] != current[key] for key in keys):
-            continue
-        proofs = [store.read_object_json(r) for r in task.get('result_refs') or [] if r['path'].endswith('.json')]
-        if not any(p.get('schema_version') == 'authenticated_review_receipt.v1' and p['claims'].get('task_id') == task['task_id'] for p in proofs):
-            continue
-        accepted += [p for p in proofs if p.get('schema_version') == 'deck_review.v2' and p.get('review_stage') == STAGE]
+        if all(fixed[key] == current[key] for key in keys):
+            accepted.append(row)
     # Never let a later pass erase a known error on the exact same image.
-    state = 'fail' if any(r['status'] == 'fail' for r in accepted) else ('pass' if any(r['status'] == 'pass' for r in accepted) else 'not_evaluated')
+    state = 'fail' if retained or any(r['status'] == 'fail' for r in accepted) else ('pass' if any(r['status'] == 'pass' for r in accepted) else 'not_evaluated')
     return {'status': state, 'use': use, 'allowed': state == 'pass' or use != 'expand',
-            'original_ref': current['original_ref'],
+            'original_ref': current['original_ref'], 'retained_findings': retained,
             'limitations': ['Repair references retain their known issues; the next image needs a fresh applicable independent check before expansion.']}

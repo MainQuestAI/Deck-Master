@@ -228,6 +228,51 @@ def test_same_original_pixels_cannot_close_a_known_endpoint_error(tmp_path):
     relabeled = review(fixed2)
     relabeled.update(replaces=prior, findings=[{**finding, 'resolution': 'fixed', 'actual': 'claimed correct',
         'resolution_reason': 'Claim without changed pixels'}])
-    with pytest.raises(tasks.EnvelopeError, match='not closed by a current same-page product'):
+    with pytest.raises(tasks.EnvelopeError, match='same image retains'):
         submit(project, task2, relabeled, context2)
     assert original_review.reference_status(store, store.load_document(), 'p1')['status'] == 'fail'
+
+
+@pytest.mark.parametrize('change', ['notes', 'unrelated_edge', 'required_edge'])
+def test_notes_change_cannot_erase_same_image_endpoint_failure(tmp_path, change):
+    project, store = fixture(tmp_path)
+    task, fixed, context = dispatch(project, store)
+    failed = review(fixed, wrong=True, state='fail')
+    failed['findings'] = [{'finding_id': 'retained-edge', 'kind': 'design', 'impact': 'must_fix', 'page_id': 'p1',
+        'element_refs': ['edge:confirm'], 'message': 'Wrong endpoint', 'expected': 'model→human',
+        'actual': 'model→other', 'evidence': [fixed['image_ref']], 'resolution': 'open'}]
+    assert submit(project, task, failed, context)['status'] == 'accepted'
+    doc = store.load_document()
+    changed = models.bump_revision(doc, {'operation_id': 'notes-only', 'kind': 'task_update', 'description': 'Synthetic notes-only change', 'read_set': []})
+    page = store.read_object_json(doc['pages'][0]['page']); page['speaker_notes'] += ' Unrelated cue.'
+    page['content_mapping']['speech_segments'][-1]['end_codepoint'] = len(page['speaker_notes'])
+    if change == 'required_edge':
+        page['visual_spec']['edges'][0]['to'] = 'other'
+    elif change == 'unrelated_edge':
+        page['visual_spec']['edges'].append({'edge_id': 'new-edge', 'from': 'other', 'to': 'human', 'direction': 'forward', 'relationship': 'New unrelated requirement'})
+    changed['pages'][0]['page'] = store.put_json_object(page)
+    plan = store.read_object_json(doc['content_plan']); plan['page_links'][0]['page_ref'] = changed['pages'][0]['page']
+    changed['content_plan'] = store.put_json_object(plan)
+    store.commit_change(base_revision=doc['revision_id'], document=changed, operation_id='notes-only')
+    task2, fixed2, context2 = dispatch(project, store)
+    assert fixed2['image_ref'] == fixed['image_ref']
+    if change == 'required_edge':
+        assert submit(project, task2, review(fixed2), context2)['status'] == 'accepted'
+        assert original_review.reference_status(store, store.load_document(), 'p1')['allowed'] is True
+    else:
+        with pytest.raises(tasks.EnvelopeError, match='same image retains'):
+            submit(project, task2, review(fixed2), context2)
+        state = original_review.reference_status(store, store.load_document(), 'p1')
+        assert state['allowed'] is False and state['retained_findings'][0]['finding_id'] == 'retained-edge'
+        prior = doc['reviews'][-1]
+        relabeled = review(fixed2)
+        relabeled.update(replaces=prior, findings=[{**failed['findings'][0], 'resolution': 'fixed',
+            'resolution_reason': 'Claim after Page update, without changed pixels'}])
+        with pytest.raises(tasks.EnvelopeError, match='same image retains'):
+            submit(project, task2, relabeled, context2)
+        if change == 'notes':
+            from deck_master.editing import _current_artifact_digests
+            from deck_master.review import finding_closed
+            owner = {**store.read_object_json(prior), 'ref': prior}
+            artifacts = _current_artifact_digests(store, store.load_document(), owner['subjects'] + relabeled['subjects'])
+            assert not finding_closed([owner, relabeled], owner, owner['findings'][0], artifacts)
