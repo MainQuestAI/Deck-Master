@@ -60,3 +60,29 @@ deck-master methods --project <project> --task-id <task-id> --read --read-protoc
 目录选择明确任务后读取。精确重放保留原提交 revision/result_refs，同时报告当前
 revision；不要把旧提交回执当作当前项目或当前审查通过。无效协议在写入前拒绝，
 选择紧凑格式不改变权限、取消、晚到、调用结算或来源校验。
+
+
+## 跨轮恢复与职责接手
+
+发送新工具调用之前，读取当前 request/scope/control、Task.execution_ref 及其冻结
+Request/Attempt；当前 Host 身份不等于旧 Task 身份。不要为了“继续”写一个新身份
+到旧 Task，或把 selector 中的真实 thread/turn 改成旧轮次。按已核实事实处理：
+
+| 已核实事实 | 接续方式 | 必须保留 |
+| --- | --- | --- |
+| 当前执行仍是领取者，调用尚未发出 | 按原工作单继续；只有明确未发的 Attempt 才 settle not_sent | 原 Request/Attempt/额度身份 |
+| 调用是否发送未知 | 先收集真实观察，保持 unknown，不新建调用 | 真实消耗和未知状态，不自动释放 |
+| 已完成输出与原执行及冻结输入一致 | 按原 Task/Attempt 结算并接纳准确原件；精确回执重放不再生图 | 原始输出、观察、费用与采用资格 |
+| 新会话不同于领取者，已确认 not_sent | not_sent 只释放额度，不转移领取身份；用现有正式取消/退役、当前范围的计划或 request replacement/reissue 路径获得新 Task，再声明新身份 | 原任务/调用记录；已有适用授权照常核验，不虚构用户改需求 |
+| 图片已完成，但真实执行与原 Attempt 不匹配 | 保留原件和实际消耗，拒绝旧 Attempt 冒名绑定；报告当前无已验证跨执行重新关联入口 | 不改 selector、不自签 proof、不自动重生成掩盖缺口 |
+| 取消/撤回/过期后迟到 | 仍结算真实已发调用，拒绝采用；让当前责任方处理已有产物 | 停止控制和旧事实都不能回滚 |
+
+只有用户确有范围/需求变动时才用 `start_request` 的 `replace_request_id` 记录该
+真实变动；不能伪造新指令来绕过运行中的执行身份。无变动的重新派发须走现有
+正式取消/计划/退役入口，若当前状态没有适用入口，就报告具体缺口。
+
+实际交接记录固定 request、scope、当前 revision、Task/Request/Attempt ID，交给
+下一执行者的完整 reader、实际产物 Ref、未决调用/审查及下一动作。新会话冷读取
+完整方法与材料，确认 scope/currentness 后才领取；只有 reader 返回不证明执行。
+返回时将真实采用产生的 revision/result_refs 与原依据对照，不把新会话名字当独立
+审查证明。完整会话、实际工具图像和独立接手证据缺失时分别记 NOT_RUN/BLOCKED。
