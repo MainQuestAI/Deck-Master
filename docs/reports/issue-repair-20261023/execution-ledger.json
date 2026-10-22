@@ -107,7 +107,7 @@
         "RP-03",
         "RP-06"
       ],
-      "implementation": "b9a3616e",
+      "implementation": "b9a3616e + ff25f438 + 8bec75f8",
       "evidence": "docs/reports/issue-repair-20261023/RP-08.md",
       "state": "implemented_pending_review",
       "issue_closure": "NOT_RUN"
@@ -157,7 +157,7 @@
       "depends_on": [
         "RP-11"
       ],
-      "implementation": "4ee1afeb",
+      "implementation": "4ee1afeb + 6a0ec367 + d89cf73b",
       "evidence": "docs/reports/issue-repair-20261023/RP-12.md",
       "state": "implemented_pending_review",
       "issue_closure": "NOT_RUN"
@@ -210,9 +210,9 @@
         "RP-14",
         "RP-15"
       ],
-      "implementation": null,
-      "evidence": null,
-      "state": "in_progress",
+      "implementation": "4ebd1159",
+      "evidence": "docs/reports/issue-repair-20261023/RP-16.md",
+      "state": "partial_implementation_special_acceptance_blocked",
       "issue_closure": "NOT_RUN"
     },
     {
@@ -255,9 +255,9 @@
       "depends_on": [
         "RP-17"
       ],
-      "implementation": null,
-      "evidence": null,
-      "state": "in_progress",
+      "implementation": "5740d552",
+      "evidence": "docs/reports/issue-repair-20261023/RP-19.md",
+      "state": "partial_implementation_special_acceptance_blocked",
       "issue_closure": "NOT_RUN"
     },
     {
@@ -289,7 +289,7 @@
       ],
       "implementation": null,
       "evidence": null,
-      "state": "planned",
+      "state": "in_progress",
       "issue_closure": "NOT_RUN"
     },
     {
@@ -328,9 +328,9 @@
         "RP-21",
         "RP-23"
       ],
-      "implementation": null,
-      "evidence": null,
-      "state": "planned",
+      "implementation": "8702e5ac + d4b361ce",
+      "evidence": "docs/reports/issue-repair-20261023/RP-24.md",
+      "state": "partial_implementation_special_acceptance_blocked",
       "issue_closure": "NOT_RUN"
     },
     {
@@ -359,9 +359,9 @@
         "RP-07",
         "RP-08"
       ],
-      "implementation": null,
-      "evidence": null,
-      "state": "in_progress",
+      "implementation": "8bec75f8",
+      "evidence": "docs/work-items/wi-issue-repair-20261023/execution/RP-26.md",
+      "state": "implemented_pending_review",
       "issue_closure": "NOT_RUN"
     },
     {
@@ -374,9 +374,9 @@
       "depends_on": [
         "RP-11"
       ],
-      "implementation": null,
-      "evidence": null,
-      "state": "in_progress",
+      "implementation": "c8b95469 + 8f8d1c6b",
+      "evidence": "docs/reports/issue-repair-20261023/RP-27.md",
+      "state": "implemented_pending_review",
       "issue_closure": "NOT_RUN"
     },
     {
@@ -425,7 +425,7 @@
       ],
       "implementation": null,
       "evidence": null,
-      "state": "planned",
+      "state": "in_progress",
       "issue_closure": "NOT_RUN"
     }
   ],
@@ -499,6 +499,26 @@
       "count": 24,
       "seconds": 2.92,
       "candidate": "3943d9fc"
+    },
+    {
+      "command": "request_read_facts/candidate_freeze/rp19_assets/rp17_policy/review_owner_scope/rp08_current_actions",
+      "candidate": "8bec75f8",
+      "result": "PASS",
+      "count": 64,
+      "seconds": 15.07
+    },
+    {
+      "command": "doctor --step render",
+      "candidate": "83d3851a",
+      "result": "needs_tool",
+      "detail": "soffice and pdftoppm executable; rsvg-convert unavailable; professional/desktop not_evaluated"
+    },
+    {
+      "command": "service_flow render selection",
+      "candidate": "d4b361ce",
+      "result": "BLOCKED",
+      "count_failed": 3,
+      "reason": "continue returns needs_tool rsvg-convert unavailable before pending page_visual task; no assertions removed"
     }
   ],
   "blockers": [
@@ -523,7 +543,7 @@
     "issue closure",
     "release publication"
   ],
-  "updated_utc": "2026-10-22T17:57:00Z",
+  "updated_utc": "2026-10-22T18:11:00Z",
   "implementation_start_utc": "2026-10-22T17:28:58Z",
   "remote_rp00": {
     "branch": "codex/repair-rp00-20261023",
