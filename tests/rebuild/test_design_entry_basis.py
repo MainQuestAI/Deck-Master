@@ -162,3 +162,18 @@ def test_known_wrong_endpoint_is_visible_as_repair_reference_not_expansion_basis
     assert status["status"] == "fail" and status["allowed"] and status["use"] == "repair_reference"
     assert not original_review.reference_status(store, store.load_document(), "p1", use="expand")["allowed"]
     assert store.load_document() == doc
+
+
+def test_retained_initial_preview_cannot_commit_after_authority_changes(flow):
+    from deck_master import collaboration
+    doc = without_original(flow)
+    result = design_entry.initial_plan(flow.project, input={
+        "page_id": "p02", "base_revision": doc["revision_id"], "instruction": "Keep fixed text"})
+    assert result["eligibility"]["allowed"]
+    collaboration.pause_request(flow.project, reason="Synthetic authority change after preview",
+                                base_revision=doc["revision_id"], operation_id=str(uuid.uuid4()))
+    paused = flow.store.load_document()
+    with pytest.raises(OperationError):
+        changes.commit(flow.project, plan_id=result["plan_id"], base_revision=doc["revision_id"],
+                       operation_id=str(uuid.uuid4()))
+    assert flow.store.load_document() == paused

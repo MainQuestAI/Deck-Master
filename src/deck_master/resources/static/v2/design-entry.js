@@ -28,6 +28,10 @@ export function initialDesign(app) {
   const target=el('select',{'aria-label':'无参考初始设计目标'},...pages.map(p=>el('option',{value:p.page_id},p.title||p.page_id)));
   const instruction=el('textarea',{'aria-label':'初始设计要求',rows:2,value:'依据当前正文与设计策略完成首张原图；保留文字、关系方向和责任归属。'});
   const output=el('div',{class:'stack'});
+  const basisRevision=app.route.revision;
+  // Polls refresh control facts even when the immutable document is unchanged.
+  // Keep that fixed preview (and its in-flight response) until its basis changes.
+  const fromSummary=()=>{if(app.route.revision!==basisRevision||app.latest?.revision_id!==basisRevision)invalidate();else controls();};
   const invalidate=()=>{serial++;plan=null;output.replaceChildren();controls();};
   const controls=()=>{const blocked=!loaded||busy||app.readonly||app.editor?.readonly||app.latest?.revision_id!==app.route.revision||app.business.entries.size||app.business.loadWarning;preview.disabled=blocked;submit.disabled=blocked||!plan?.eligibility?.allowed;};
   const preview=button('预览无参考初始试作',async()=>{
@@ -35,7 +39,7 @@ export function initialDesign(app) {
     try{
       const result=await post('/api/design/initial-plan',{input:{page_id:target.value,base_revision:revision,instruction:instruction.value}});
       if(disposed||token!==serial)return;
-      if(app.route.revision!==revision||result.plan.base_revision!==revision)throw new Error('项目已更新，请重新预览当前依据。');
+      if(app.route.revision!==revision||app.latest?.revision_id!==revision||result.plan.base_revision!==revision)throw new Error('项目已更新，请重新预览当前依据。');
       plan=result;output.replaceChildren(el('p',{},'仅此页，最多一次图像调用。先交接任务，不在浏览器调用模型；候选返回后再比较采用。'),designBasis(result,app));
     }catch(error){if(!disposed&&token===serial)output.replaceChildren(el('p',{class:'field-error'},readableError(error)));}
     finally{busy=false;if(!disposed)controls();}
@@ -51,8 +55,8 @@ export function initialDesign(app) {
   target.addEventListener('change',save);instruction.addEventListener('input',save);
   const hydrate=async()=>{loaded=false;invalidate();const editor=app.editor;await editor.ready;if(disposed||editor!==app.editor)return;const saved=editor.draft.content.initial_design;if(saved&&pages.some(p=>p.page_id===saved.page_id)){target.value=saved.page_id;instruction.value=saved.instruction;}loaded=true;controls();};
   app.root.addEventListener('draft-editor-replaced',hydrate);hydrate();
-  app.root.addEventListener('summary-refreshed',invalidate);
+  app.root.addEventListener('summary-refreshed',fromSummary);
   app.root.addEventListener('business-state-changed',controls);
-  app.disposables.push(()=>{disposed=true;serial++;app.root.removeEventListener('summary-refreshed',invalidate);app.root.removeEventListener('draft-editor-replaced',hydrate);app.root.removeEventListener('business-state-changed',controls);});controls();
+  app.disposables.push(()=>{disposed=true;serial++;app.root.removeEventListener('summary-refreshed',fromSummary);app.root.removeEventListener('draft-editor-replaced',hydrate);app.root.removeEventListener('business-state-changed',controls);});controls();
   return el('section',{class:'panel initial-design'},el('div',{class:'panel-body stack'},el('h2',{},'无参考初始设计'),el('p',{},'没有旧原图也可先试一页；读取该页当前正文和策略，不强制上传或套用模板。'),target,instruction,el('div',{class:'row wrap'},preview,submit),output));
 }
