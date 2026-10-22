@@ -270,9 +270,9 @@
         "RP-11",
         "RP-17"
       ],
-      "implementation": null,
-      "evidence": null,
-      "state": "in_progress",
+      "implementation": "dd424554",
+      "evidence": "docs/reports/issue-repair-20261023/RP-20.md",
+      "state": "partial_implementation_special_acceptance_blocked",
       "issue_closure": "NOT_RUN"
     },
     {
@@ -287,9 +287,9 @@
         "RP-19",
         "RP-20"
       ],
-      "implementation": null,
-      "evidence": null,
-      "state": "in_progress",
+      "implementation": "f0feca8b + b9de561e + 1c046ec2 + 21f7b799",
+      "evidence": "docs/reports/issue-repair-20261023/RP-21.md",
+      "state": "partial_implementation_special_acceptance_blocked",
       "issue_closure": "NOT_RUN"
     },
     {
@@ -302,9 +302,9 @@
         "RP-10",
         "RP-18"
       ],
-      "implementation": null,
-      "evidence": null,
-      "state": "in_progress",
+      "implementation": "5e472de8 + eed5e65a + 059e1160",
+      "evidence": "docs/reports/issue-repair-20261023/RP-22.md",
+      "state": "implemented_pending_review",
       "issue_closure": "NOT_RUN"
     },
     {
@@ -389,7 +389,7 @@
       ],
       "implementation": "b483a8be",
       "evidence": "docs/reports/issue-repair-20261023/RP-28.md",
-      "state": "implemented_pending_review",
+      "state": "partial_implementation_special_acceptance_blocked",
       "issue_closure": "NOT_RUN"
     },
     {
@@ -423,9 +423,9 @@
         "RP-28",
         "RP-29"
       ],
-      "implementation": null,
-      "evidence": null,
-      "state": "in_progress",
+      "implementation": "eed5e65a (integrated code candidate; documentation receipt in this report commit)",
+      "evidence": "docs/reports/issue-repair-20261023/RP-30.md",
+      "state": "partial_implementation_special_acceptance_blocked",
       "issue_closure": "NOT_RUN"
     }
   ],
@@ -519,6 +519,28 @@
       "result": "BLOCKED",
       "count_failed": 3,
       "reason": "continue returns needs_tool rsvg-convert unavailable before pending page_visual task; no assertions removed"
+    },
+    {
+      "command": "RP30 C6/original/selective/requirements/audience/graph and all schema mirrors",
+      "candidate": "dd424554284f881a1ce76c0f3323cbcbcc37bace",
+      "result": "PASS",
+      "count": 141,
+      "seconds": 69.93
+    },
+    {
+      "command": "RP30 channel/frozen methods/work_context",
+      "candidate": "dd424554284f881a1ce76c0f3323cbcbcc37bace",
+      "result": "PASS",
+      "count": 85,
+      "seconds": 10.77
+    },
+    {
+      "command": "exact archive wheel installed native_review_recovery/rp19_asset_inputs/rp20_original_review/rp22_reading_browser --require-browser",
+      "candidate": "eed5e65ac6889f00de101539e8dc00da0d3f7f59",
+      "result": "PASS",
+      "count": 55,
+      "seconds": 41.22,
+      "installed_module": "/tmp/deck-final-eed5e65a/site/deck_master/__init__.py"
     }
   ],
   "blockers": [
@@ -543,7 +565,7 @@
     "issue closure",
     "release publication"
   ],
-  "updated_utc": "2026-10-22T18:11:00Z",
+  "updated_utc": "2026-10-22T18:26:33+00:00",
   "implementation_start_utc": "2026-10-22T17:28:58Z",
   "remote_rp00": {
     "branch": "codex/repair-rp00-20261023",
@@ -551,5 +573,15 @@
     "commits": 3,
     "files": 18,
     "pull_request_created": false
-  }
+  },
+  "engineering_completion_utc": "2026-10-22T18:26:33+00:00",
+  "final_code_candidate": "eed5e65ac6889f00de101539e8dc00da0d3f7f59",
+  "matched_installation": {
+    "source_sha": "eed5e65ac6889f00de101539e8dc00da0d3f7f59",
+    "installed_module": "/tmp/deck-final-eed5e65a/site/deck_master/__init__.py",
+    "matched_package_files": 278,
+    "canonical_skill_inventory_verified": true,
+    "wheel_sha256": "1b66c6948da5333cf197357e346bed6d4538e337caa91bedf29f915d7fb73284"
+  },
+  "remote_ci": "Query exact final pushed head in final session receipt; no pass claimed in this ledger."
 }
