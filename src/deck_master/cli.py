@@ -184,6 +184,9 @@ def build_parser() -> argparse.ArgumentParser:
     channels = review_sub.add_parser("channels", help="Discover stage-specific reviewers without starting a model call")
     channels.add_argument("--check-native", action="store_true", help="Check existing Codex login status, without a model call")
     channels.add_argument("--project", help="Also read existing native review execution status")
+    recovery = review_sub.add_parser("recover", help="Recover a committed native review completion without another model call")
+    recovery.add_argument("--project", required=True)
+    recovery.add_argument("--task-id", required=True)
     native = review_sub.add_parser("native", help="Run an actual read-only native independent content review")
     native.add_argument("--project", required=True)
     native.add_argument("--task-id")
@@ -504,10 +507,14 @@ def main(argv: list[str] | None = None) -> int:
         if options.command == "review" and options.review_command == "channels":
             from .review_channels import describe
             return _emit(describe(check_native=options.check_native, project=options.project))
+        if options.command == "review" and options.review_command == "recover":
+            from .native_review import recover
+            result = recover(options.project, task_id=options.task_id)
+            return _emit_and_exit(result, 3) if result['status'] in ('running', 'needs_evidence') else _emit(result)
         if options.command == "review" and options.review_command == "native":
             from .native_review import run
             result = run(options.project, task_id=options.task_id)
-            return _emit_and_exit(result, 3) if result["status"] == "running" else _emit(result)
+            return _emit_and_exit(result, 3) if result["status"] in ("running", "recovery_available") else _emit(result)
         if options.command in ("collaboration", "eligibility", "review"):
             from .collaboration_api import invoke, error_response
             try:

@@ -93,8 +93,11 @@ def _envelope(store, document, task, session, observation, units):
     except (ValueError, ValidationError) as exc:
         raise review_evidence.EvidenceRejected("native_review/output", "native final output is not a valid complete review judgment") from exc
     rows = judgments["reviews"]
-    if len(rows) != len(units) or {row["kind"] for row in rows} != set(units):
-        raise review_evidence.EvidenceRejected("native_review/units", "native output must cover every required unit exactly once")
+    owners = [(row['kind'], json.dumps(row['replaces'], sort_keys=True)) for row in rows]
+    if ({row['kind'] for row in rows} != set(units) or len(owners) != len(set(owners))
+            or any(sum(row['kind'] == unit for row in rows) > 1
+                   and any(row['kind'] == unit and row['replaces'] is None for row in rows) for unit in units)):
+        raise review_evidence.EvidenceRejected("native_review/units", "cover every required unit; repeated units must replace distinct actual owners")
     subjects = [document[key] for key in ("narrative", "content_plan") if document.get(key)]
     pages = [entry for entry in document["pages"] if entry["page_id"] in task["scope_pages"]]
     subjects += [entry["page"] for entry in pages]
@@ -126,14 +129,152 @@ def _envelope(store, document, task, session, observation, units):
             "reviews": reviews, "usage_events": [], "notes": "Actual native independent preproduction review"}
 
 
+def _checkpoint(store, task, session, observation, *, envelope=None, context=None):
+    """Commit owned observation/proof references before adopting any review.
+
+    Only the owned native execution calls this writer. Recovery accepts only
+    records referenced by its exact Task, never a caller's JSON/file/selector.
+    """
+    document = store.load_document()
+    current = tasks._lookup_task(document, task['task_id'], store)
+    if current['status'] != 'running' or current.get('execution_ref') != session.execution_ref:
+        raise tasks.TaskConflict('native_review/checkpoint', 'native execution was cancelled, replaced or changed')
+    record = {'schema_version': 'native_review_checkpoint.v1', 'project_id': document['project_id'],
+        'task_id': current['task_id'], 'execution_ref': session.execution_ref,
+        'operation_id': current['operation_id'], 'produced_against': current['produced_against'],
+        'method_release': current.get('method_release'), 'observation_ref': store.put_json_object(observation),
+        'envelope_ref': None, 'receipt_ref': None, 'state': 'observed'}
+    if context is not None:
+        payload = review_evidence.validate_review_context(context, store, document, current, envelope)
+        receipts = payload.get('independent_review_receipts') or []
+        if len(receipts) != 1 or receipts[0].get('provider_id') != PROVIDER_ID:
+            raise review_evidence.EvidenceRejected('native_review/checkpoint', 'one owned native proof is required')
+        record.update(envelope_ref=store.put_json_object(envelope), receipt_ref=receipts[0]['receipt_ref'], state='ready')
+    models.validate_schema('native_review_checkpoint', record)
+    ref = store.put_json_object(record)
+    updated = {**current, 'result_refs': [*current.get('result_refs', []), ref], 'updated_at': service._utc_now_iso()}
+    service._commit_task_update(store, document, current, updated, 'persist owned native review evidence before acceptance')
+    return ref
+
+
+def _checkpoints(store, task):
+    return [value for ref in task.get('result_refs') or []
+            if (value := store.read_object_json(ref)).get('schema_version') == 'native_review_checkpoint.v1']
+
+
+class _RecoveredProvider:
+    """Replay one already-authenticated, committed native proof, unchanged."""
+    provider_id = PROVIDER_ID
+    adapter_version = 'codex-native-review.v1'
+    authentication = 'protected_transport'
+    channels = ('independent_review_receipts',)
+
+    def __init__(self, raw, claims):
+        self.raw, self.claims = raw, claims
+
+    def health(self):
+        return True
+
+    def fetch(self, event_id):
+        if event_id != self.claims['event_id']:
+            raise ValueError('not the recorded event')
+        return self.raw
+
+    def verify(self, raw):
+        if raw != self.raw:
+            raise ValueError('recorded bytes changed')
+        return deepcopy(self.claims)
+
+
+def recover(project, *, task_id):
+    """Resume acceptance of a Task's committed proof, without a model call.
+
+    Missing/expired proof remains blocked. This does not sign a loose JSON
+    observation, renew a receipt or change the original executor/consumption.
+    """
+    store = Store(Path(project).expanduser())
+    handle = os.open(store.deck_root / 'native-review.lock', os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+    try:
+        if not stat.S_ISREG(os.fstat(handle).st_mode):
+            raise review_evidence.EvidenceRejected('native_review/lock', 'operation lock must be a regular file')
+        try:
+            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            return {'status': 'running', 'task_id': task_id, 'next_action': 'read the active native operation; do not retry concurrently'}
+        return _recover(store, task_id)
+    finally:
+        os.close(handle)
+
+
+def _recover(store, task_id):
+    document = store.load_document()
+    task = tasks._lookup_task(document, task_id, store)
+    if task.get('review_stage') != 'preproduction' or not (task.get('execution_ref') or '').startswith('codex-native:'):
+        raise review_evidence.EvidenceRejected('native_review/task', 'recovery requires the original native preproduction Task')
+    if task['status'] == 'completed':
+        return {'status': 'already_applied', 'task_id': task_id, 'result_refs': task['result_refs'], 'model_called': False}
+    if task['status'] not in ('failed', 'running'):
+        raise tasks.TaskConflict('native_review/task', 'cancelled, superseded or unclaimed Task cannot adopt a recovered review')
+    records = _checkpoints(store, task)
+    ready = [record for record in records if record.get('state') == 'ready']
+    if len(ready) != 1:
+        return {'status': 'needs_evidence', 'task_id': task_id, 'model_called': False,
+                'observation_refs': [record['observation_ref'] for record in records],
+                'next_action': 'No unique committed authenticated completion is available. Inspect the original failure; never import or self-sign loose JSON.'}
+    record = ready[0]
+    models.validate_schema('native_review_checkpoint', record)
+    for key, value in {'project_id': document['project_id'], 'task_id': task_id,
+            'execution_ref': task['execution_ref'], 'operation_id': task['operation_id'],
+            'produced_against': task['produced_against'], 'method_release': task.get('method_release')}.items():
+        if record[key] != value:
+            raise review_evidence.EvidenceRejected('native_review/' + key, 'checkpoint does not bind the original Task')
+    if not tasks.task_inputs_current(store, document, task) or tasks.task_method_contract_changed(task):
+        raise tasks.StaleInputContext('native_review/task', 'the original review basis is no longer current')
+    observation = store.read_object_json(record['observation_ref'])
+    envelope = store.read_object_json(record['envelope_ref'])
+    proof = store.read_object_json(record['receipt_ref'])
+    models.validate_schema('authenticated_review_receipt', proof)
+    raw = store.read_object_bytes(proof['raw_event_ref'])
+    claims = proof['claims']
+    if (proof['provider_id'] != PROVIDER_ID or claims.get('provider_id') != PROVIDER_ID
+            or proof['authentication'] != 'protected_transport'
+            or raw != models.canonical_json_bytes(observation)
+            or observation.get('status') != 'completed'
+            or 'codex-native:' + str(observation.get('thread_id')) != task['execution_ref']
+            or claims.get('observation_kind') != 'owned_native_process_completion'
+            or claims.get('model_output_bytes_sha256') != models.sha256_bytes(observation['raw_final_message'].encode())
+            or claims.get('method_release') != record['method_release']):
+        raise review_evidence.EvidenceRejected('native_review/proof', 'recorded proof does not authenticate this exact observed completion')
+    registry = review_evidence.ProviderRegistry()
+    registry.register(_RecoveredProvider(raw, claims))
+    with review_evidence.ProviderRuntime(registry).bound():
+        # Normal receiver checks exact result/basis/executor/author binding and
+        # original validity interval; no renewed or edited claims are created.
+        context = registry.review_context(store, document, task, envelope,
+            {'provider_id': PROVIDER_ID, 'event_id': claims['event_id']})
+        if task['status'] == 'failed':
+            resumed = {**task, 'status': 'running', 'error': None, 'updated_at': service._utc_now_iso()}
+            service._commit_task_update(store, document, task, resumed, 'resume acceptance of recorded native completion')
+        try:
+            accepted = service.accept_result(store.project_root, task_id=task_id,
+                operation_id=task['operation_id'], produced_against=task['produced_against'],
+                result_payload=envelope, adapter_context=context)
+            return {'status': 'recovered', 'task_id': task_id, 'execution_ref': task['execution_ref'],
+                    'model_called': False, 'acceptance': accepted,
+                    'preproduction': content_review.preproduction_status(store, store.load_document())}
+        except Exception as exc:
+            _failure(store, task, task['execution_ref'], exc)
+            raise
+
+
 def _failure(store, task, executor, exc):
-    """A failed execution is terminal; retry is a new explicit native run."""
+    """Preserve failure and any owned checkpoint; recovery never reruns the model."""
     document = store.load_document()
     current = tasks._lookup_task(document, task["task_id"], store)
     if current["status"] == "running" and current.get("execution_ref") == executor:
         updated = {**current, "status": "failed", "updated_at": service._utc_now_iso(),
                    "error": {"code": "native_review_failed", "message": str(getattr(exc, "detail", type(exc).__name__))[:500],
-                             "next_action": "inspect the failure; explicitly run native review again"}}
+                             "next_action": "inspect task result_refs; use review recover --task-id for a committed proof; missing proof must not be self-signed"}}
         service._commit_task_update(store, document, current, updated, "native independent review failed")
 
 
@@ -175,6 +316,13 @@ def _run(store, *, task_id):
     if task and task["status"] == "running":
         return {"status": "running", "task_id": task["task_id"],
                 "next_action": "inspect the existing execution; cancel it explicitly if interrupted before retrying"}
+    recoverable = [item for ref in document['tasks']
+                   if (item := store.read_object_json(ref)).get('review_stage') == 'preproduction'
+                   and item['status'] == 'failed'
+                   and any(record.get('state') == 'ready' for record in _checkpoints(store, item))]
+    if task is None and recoverable:
+        return {'status': 'recovery_available', 'task_ids': [item['task_id'] for item in recoverable],
+                'next_action': 'Use review recover --project <project> --task-id <id>; do not repeat the native call.'}
     with CodexReviewSession() as session:
         provider = _ObservedProvider(session)
         registry = review_evidence.ProviderRegistry()
@@ -204,7 +352,8 @@ def _run(store, *, task_id):
                 prior = [{"ref": ref, "review": value} for ref in document.get("reviews") or []
                          if (value := store.read_object_json(ref)).get("review_stage") == "preproduction"]
                 prompt = ("Independently review the complete manuscript against the task, materials, and frozen methods below. "
-                          "Return exactly one judgment for each required unit. Do not edit the draft. Cite concrete pages/atoms "
+                          "Return a judgment for every required unit. Multiple judgments of one unit are allowed only to replace distinct "
+                          "actual prior owners that you rechecked; do not merge or omit their finding identities. Do not edit the draft. Cite concrete pages/atoms "
                           "and evidence for findings. Re-check prior findings against the current manuscript; preserve finding IDs "
                           "and use replaces only when actually verifying the corresponding previous review. Never fabricate "
                           "human/professional approval or claim unobserved evidence. JSON input follows:\n" +
@@ -213,6 +362,7 @@ def _run(store, *, task_id):
                 if (observation.get("thread_id") != session.thread_id or observation.get("turn_id") != session.turn_id
                         or observation.get("status") != "completed"):
                     raise review_evidence.EvidenceRejected("native_review/completion", "completion does not match the owned native execution")
+                _checkpoint(store, task, session, observation)
                 # Bind to the dispatched manuscript, never silently rebase a
                 # judgment onto content changed during the native call.
                 envelope = _envelope(store, document, task, session, observation, units)
@@ -232,6 +382,7 @@ def _run(store, *, task_id):
                 claimed = tasks._lookup_task(current, task["task_id"], store)
                 context = registry.review_context(store, current, claimed, envelope,
                     {"provider_id": PROVIDER_ID, "event_id": provider.claims["event_id"]})
+                _checkpoint(store, task, session, observation, envelope=envelope, context=context)
                 accepted = service.accept_result(store.project_root, task_id=task["task_id"],
                     operation_id=task["operation_id"], produced_against=task["produced_against"],
                     result_payload=envelope, adapter_context=context)

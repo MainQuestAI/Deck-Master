@@ -42,6 +42,7 @@ SCHEMA_FILES = {
     "content_plan_v2": "content-plan.v2.schema.json",
     "compose_result_v2": "compose-result.v2.schema.json",
     "review_v2": "review.v2.schema.json",
+    "native_review_checkpoint": "native-review-checkpoint.v1.schema.json",
     "authenticated_review_receipt": "authenticated-review-receipt.v1.schema.json",
     "native_image_receipt": "native-image-receipt.v1.schema.json",
     "content_requirements": "content-requirements.v1.schema.json",

@@ -57,3 +57,16 @@ preproduction 工作单给出 source-reading、content-methods、content-example
 ## 实际物理尺寸与净空
 
 成品审查同时读取 [physical-units](physical-units.md)，核对实际 p:sldSz、逐显式角色可见 run 的有效pt，SVG与原生PPT渲染墨迹两层padding。角色不可判记unverifiable，文字覆盖不能代替关系或可读性。当前报告的模型/工程/人类/桌面证据分别标注；不将历史Desktop记录当本轮人类已验。
+
+### Recover an interrupted native acceptance
+
+If native review failed after its owned completion, inspect the failed Task's
+`result_refs`, then use `review recover --project <dir> --task-id <id>`.
+This resumes acceptance of the exact committed observation, envelope and
+original authenticated receipt without another model call. It keeps the original
+executor, operation and consumption; cancellation, changed inputs/methods and
+expired receipts still reject. A failure before a unique authenticated checkpoint
+is committed returns `needs_evidence`; loose JSON is never a recovery proof and
+must not be re-signed. An uncertain response after acceptance returns
+`already_applied`. `review native` reports `recovery_available` for a failed Task
+with committed proof instead of automatically starting another paid review.
