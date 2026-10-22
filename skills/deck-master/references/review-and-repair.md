@@ -97,3 +97,29 @@ Legacy Tasks without this frozen scope retain their full-unit coverage contract.
 按实际泄露、用途损失和误导程度分级；不把所有制作措辞都等同严重泄密。记录原句、期待的受众表达、实际用途影响、位置和证据；未知事实留缺口，不用“客户化”名义造事实。合法 pass/findings=[] 必须来自实际完成的可信审查；未执行与空回执不得登记 pass。复审沿原 owner 和 finding_id 关闭，已有可信结果用 review recover 接纳，不能重复模型调用掩盖事务失败。
 
 Page 文本、packet 的 page_ref、设计投影的 page_ref、冻结请求及实际图像必须逐级对应同一有效版本。文本审查与 prompt 检查仅证明各自层；没有实际图像及原生观察时标图像检查 BLOCKED，不能声称客户表达闭环完成。
+## Original-image expression check (before SVG)
+
+Use `deck-master review original --project <project> --page-id <id>` (optionally
+`--candidate-id`) for the `original_image` Task. Read its fixed
+`original_expression_packet` and the exact `image_ref` pixels; no SVG/preview is
+required. A supported Host must declare `original_expression_review.v1` and
+return `visual_expression` with an applicable authenticated independent/human
+receipt. Native text review and a channel discovery result do not establish
+image inspection. If the actual image channel is unavailable, keep this check
+`not_evaluated`/`needs_reviewer`.
+
+Record `expression_checks`: observed node IDs, observed edges with edge ID,
+from/to endpoints and direction, plus graph/hierarchy/reading_path judgments
+(`pass`, `fail`, `unknown`). Check the fixed Page graph against actual pixels.
+A required A→B rendered A→C is a `must_fix` design finding now, even when all
+words appear and someone could reinterpret the intended meaning. Unknown is
+not pass. This check is separate from SVG/PPT fidelity and editability.
+
+`review original-status --use expand` reports whether the current original has
+an applicable independent pass. Known-bad or unreviewed originals may still be
+viewed, compared or explicitly selected with `--use repair_reference`; that
+permission does not make them an expansion basis. A repaired original needs a
+new fixed-basis review. Close prior findings with their original finding IDs,
+`replaces`, current changed pixels and explicit evidence; never rewrite the old
+finding or re-label its unchanged image as fixed. A corrected original does not
+by itself prove the subsequent SVG/PPT conversion is faithful.

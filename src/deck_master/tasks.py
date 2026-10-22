@@ -398,6 +398,9 @@ def _lookup_task(document: dict, task_id: str, store: Store) -> dict:
 
 
 def task_inputs_current(store, document, task):
+    if task.get("kind") == "review" and task.get("review_stage") == "original_image":
+        from .original_review import inputs_current
+        return inputs_current(store, document, task)
     if task.get('kind') == 'review' and task.get('review_stage') == 'preproduction':
         from .effective_requirements import task_requirements_current
         if not task_requirements_current(store, document, task):
@@ -808,6 +811,8 @@ def new_task(
     }
     if review_stage is not None:
         task['review_stage'] = review_stage
+        if review_stage == 'original_image':
+            task['required_capabilities'] = ['original_expression_review.v1']
     if intent is not None:
         task['intent'] = intent
     if input_digest is not None:
@@ -1365,6 +1370,12 @@ def _accept_result_locked(
                                                adapter_context=adapter_context)
         preproduction_receipts = [item['receipt']['receipt_ref'] for item in posture['reviewers']
                                   if item.get('receipt')]
+    elif stage == 'original_image':
+        from .original_review import validate_result
+        if review_receipt_selector is not None:
+            from .review_evidence import current_registry
+            adapter_context = current_registry().review_context(store, document, task, envelope, review_receipt_selector)
+        preproduction_receipts = validate_result(store, document, task, envelope, adapter_context=adapter_context)
     elif review_receipt_selector is not None:
         from .review_evidence import EvidenceRejected
         raise EvidenceRejected('review_receipt_selector', 'receipt selectors are only supported for preproduction review')

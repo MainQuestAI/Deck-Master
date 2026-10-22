@@ -315,6 +315,9 @@ def validate_change(store, document, value):
                 or current.get('blueprint') != record['result_ref'] or record['page_id'] in ids
                 or not task or task.get('stage_request', {}).get('style_recipe_ref') != ref):
             fail('style_adopted_candidate_id', 'expand from a currently adopted original-image candidate of this exact recipe')
+        from .original_review import reference_status
+        if not reference_status(store, document, record['page_id'], candidate_id=adopted)['allowed']:
+            fail('style_adopted_candidate_id', 'original expression review is missing or needs repair; view/compare/explicit repair reference remain allowed, expansion requires a current independent pass')
     conflicts = []
     for pid in ids:
         anchor = anchors.get(pid); entry = next((e for e in document['pages'] if e['page_id'] == pid), None)

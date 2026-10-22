@@ -10,6 +10,7 @@ import pytest
 from deck_master import changes, content_ops, generation, service, styles, tasks
 from deck_master.models import bump_revision, content_identity
 from deck_master.operations import OperationError
+from synthetic_review_provider import accept_original_expression_fixture
 
 spec = importlib.util.spec_from_file_location('w08_synthetic_base', Path(__file__).resolve().parents[2] / 'examples/workbench/w07_synthetic.py')
 base = importlib.util.module_from_spec(spec); spec.loader.exec_module(base)
@@ -119,6 +120,9 @@ def test_first_trial_then_adoption_then_explicit_expansion(flow):
     assert flow.store.load_document()['pages'] == original
     with pytest.raises(OperationError, match='currently adopted'): dispatch(flow, recipe, ['p03'], candidate)
     flow.adopt([candidate]); after_first = copy.deepcopy(flow.store.load_document()['pages'])
+    with pytest.raises(OperationError, match='original expression review'):
+        dispatch(flow, recipe, ['p03'], candidate)
+    accept_original_expression_fixture(flow.project, page_id='p02', candidate_id=candidate)
     next_task = dispatch(flow, recipe, ['p03'], candidate)
     second = flow.image(next_task, 2)['candidate_ids'][0]; flow.adopt([second]); end = flow.store.load_document()
     assert end['pages'][0] == original[0] and end['pages'][1] == after_first[1]
@@ -126,12 +130,13 @@ def test_first_trial_then_adoption_then_explicit_expansion(flow):
     assert end['pages'][2]['blueprint'] != original[2]['blueprint'] and end['pages'][2]['svg'] is None
     for t in (task, next_task):
         current = flow.task(t['task_id']); assert len(current['call_allowances']) == 1 and current['call_allowances'][0]['state'] == 'consumed'
-    assert end['compatibility']['minimum_writer'] == 'asset-inputs.v1'
+    assert end['compatibility']['minimum_writer'] == 'original-review.v1'
 
 
 @pytest.mark.parametrize('field', ['content', 'blueprint'])
 def test_changed_expansion_target_is_reported_individually_without_writes(flow, field):
     recipe = confirm(flow); cid = flow.image(dispatch(flow, recipe))['candidate_ids'][0]; flow.adopt([cid])
+    accept_original_expression_fixture(flow.project, page_id='p02', candidate_id=cid)
     mutate(flow, 'p03', field); before = flow.store.load_document()
     with pytest.raises(styles.StyleConflict) as error: dispatch(flow, recipe, ['p03'], cid)
     assert [x['page_id'] for x in error.value.items] == ['p03'] and flow.store.load_document() == before

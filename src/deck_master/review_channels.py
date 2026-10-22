@@ -21,7 +21,7 @@ def describe(*, check_native=False, adapter_context=None, project=None):
 
     stages = []
     for stage in STAGES:
-        implemented = stage != 'original_image_expression'
+        implemented = True
         channels = []
         native_supported = stage == 'content_preproduction'
         channels.append({'mode': 'native_independent', 'supported': native_supported,
@@ -44,9 +44,10 @@ def describe(*, check_native=False, adapter_context=None, project=None):
                     if status == 'provider_unavailable' else
                     'A trusted controller must provide the applicable authenticated receipt channel; do not self-sign JSON.')})
         stages.append({'stage': stage, 'task_stage': {'content_preproduction': 'preproduction',
-            'original_image_expression': None, 'svg_conversion': 'page_visual',
+            'original_image_expression': 'original_image', 'svg_conversion': 'page_visual',
             'final_delivery': 'final'}[stage], 'channels': channels,
-            'execution_verified': False})
+            'execution_verified': False,
+            'required_host_capabilities': ['original_expression_review.v1'] if stage == 'original_image_expression' else []})
     result = {'schema_version': 'review_channel_discovery.v1', 'status': 'described',
         'native_client': native, 'stages': stages,
         'limitations': ['Discovery never proves an independent review occurred or grants permission.',

@@ -111,7 +111,7 @@ def rc3_method_ids_for(kind: str, *, intent: str | None = None,
 _REVIEW_ORDER = ("source-reading", "content-methods", "content-examples",
                  "content-calibration", "review-and-repair", "physical-units")
 _CONTENT_UNITS = {"content", "argument", "page_copy", "progression"}
-_VISUAL_UNITS = {"blueprint_content", "blueprint_fidelity", "conversion", "readability", "privacy"}
+_VISUAL_UNITS = {"visual_expression", "blueprint_content", "blueprint_fidelity", "conversion", "readability", "privacy"}
 
 
 def method_ids_for(kind: str, *, intent: str | None = None,
@@ -137,7 +137,8 @@ def method_ids_for(kind: str, *, intent: str | None = None,
         # An omitted scope is the Runtime's stage default, never an empty review.
         units = ({"argument", "page_copy", "progression"} if intent == "preproduction"
                  else {"blueprint_content", "blueprint_fidelity", "readability"}
-                 if intent == "page_visual" else _CONTENT_UNITS | _VISUAL_UNITS)
+                 if intent == "page_visual" else {"visual_expression"}
+                 if intent == "original_image" else _CONTENT_UNITS | _VISUAL_UNITS)
     else:
         from .models import ModelError
         if not isinstance(review_units, (list, tuple)) or any(
@@ -154,6 +155,9 @@ def method_ids_for(kind: str, *, intent: str | None = None,
         if intent == "preproduction" and not units <= {"argument", "page_copy", "progression", "speech"}:
             from .models import ModelError
             raise ModelError("task/review_units", "preproduction requires content pre-review units")
+    if intent == "original_image" and units != {"visual_expression"}:
+        from .models import ModelError
+        raise ModelError("task/review_units", "original_image requires visual_expression only")
     selected = {"review-and-repair"}
     if units & _CONTENT_UNITS:
         selected |= {"source-reading", "content-methods", "content-calibration"}

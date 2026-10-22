@@ -76,7 +76,12 @@ def test_registered_receipts_are_not_an_observed_reviewer_or_image_support(ready
     for stage in result['stages']:
         for channel in stage['channels'][1:]:
             assert channel['receipt_status'] == expected
-            assert channel['status'] == ('unsupported' if stage['stage'] == 'original_image_expression' else expected)
+            assert channel['status'] == expected
+            if stage['stage'] == 'original_image_expression':
+                assert stage['task_stage'] == 'original_image'
+                assert stage['required_host_capabilities'] == ['original_expression_review.v1']
+                assert stage['channels'][0]['status'] == 'unsupported'
+                assert channel['supported'] is True
             assert not channel['execution_verified']
 
 

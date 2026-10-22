@@ -671,7 +671,16 @@ def _task_summary_v1(store: Store, document: dict, task: dict, *, dispatch_docum
         summary['page_design_contexts'] = {}
         for entry in summary['page_entries']:
             from .production import adopted_blueprint_design, resolve_page_design
-            if task.get('review_stage') == 'preproduction':
+            if task.get('review_stage') == 'original_image':
+                from .original_review import task_packet
+                _, fixed_original = task_packet(store, task)
+                effective = fixed_original['resolved_design']
+                summary['original_expression_packet'] = fixed_original
+                summary['reference_images'] = [{'page_id': fixed_original['page_id'],
+                    'artifact': fixed_original['original_ref'], 'file': fixed_original['image_ref'],
+                    'path': str(store.project_root / fixed_original['image_ref']['path']),
+                    'requirement': fixed_original['review_instructions']}]
+            elif task.get('review_stage') == 'preproduction':
                 # Requalify the current manuscript before regenerating an old
                 # image; content review does not consume its visual recipe.
                 page = store.read_object_json(entry['page'])
@@ -690,7 +699,7 @@ def _task_summary_v1(store: Store, document: dict, task: dict, *, dispatch_docum
             summary['page_design_contexts'][entry['page_id']]=effective
             if len(summary['page_entries']) == 1 and 'content_requirements' in effective:
                 summary['resolved_design_context'] = copy.deepcopy(effective)
-            if entry['blueprint']:
+            if entry['blueprint'] and task.get('review_stage') != 'original_image':
                 from PIL import Image
                 import io
                 original = None
@@ -1358,12 +1367,14 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
         raise ConflictError('page_hash', 'feedback page changed')
     if kind not in ('reconstruct', 'repair', 'review'):
         raise ServiceError('kind', 'unsupported local host task')
-    if review_stage is not None and (review_stage not in ('preproduction', 'page_visual', 'final') or kind not in ('repair', 'review')):
+    if review_stage is not None and (review_stage not in ('preproduction', 'page_visual', 'final', 'original_image') or kind not in ('repair', 'review')):
         raise ServiceError('review_stage', 'only review or repair supports preproduction/page_visual/final')
     if not isinstance(instruction, str) or not instruction.strip():
         raise ServiceError('instruction', 'must not be empty')
     if not page_ids or len(set(page_ids)) != len(page_ids) or not set(page_ids) <= {e['page_id'] for e in document['pages']}:
         raise ServiceError('scope_pages', 'must name existing distinct pages')
+    if review_stage == 'original_image' and (kind != 'review' or len(page_ids) != 1):
+        raise ServiceError('original_review', 'original_image requires one page and a review Task')
     if review_stage == 'page_visual' and len(page_ids) != 1:
         raise ServiceError('scope_pages', 'page_visual must target exactly one page')
     host_layers = {"reconstruct": ["svg", "blueprint"], "repair": ["page_copy", "svg"],
@@ -1372,7 +1383,7 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
                       context={"targets": {"page_ids": list(page_ids), "layers": host_layers}})
     entries = [e for e in document['pages'] if e['page_id'] in page_ids]
     from .production import design_handoff_protocol_fields
-    protocol = design_handoff_protocol_fields(store, document, entries) if review_stage != 'preproduction' else {}
+    protocol = design_handoff_protocol_fields(store, document, entries) if review_stage not in ('preproduction', 'original_image') else {}
     review_scope = (_review_dispatch_scope(store, document, review_stage, page_ids, review_units)
                     if kind == 'review' else None)
     for ref in document['tasks']:
@@ -1381,7 +1392,9 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
             if kind == 'review' and _review_dispatch_scope(
                     store, document, task.get('review_stage'), task['scope_pages'], task.get('review_units')) != review_scope:
                 continue
-            if kind == 'review' and review_stage == 'preproduction' and not tasks_mod.task_inputs_current(store, document, task):
+            if kind == 'review' and review_stage in ('preproduction', 'original_image') and not tasks_mod.task_inputs_current(store, document, task):
+                continue
+            if review_stage == 'original_image' and any(ref not in task.get('inputs', []) for ref in extra_inputs):
                 continue
             if selected_resource_ids is not None:
                 raise ServiceError("selected_resource_ids", "existing Task is frozen; use formal reissue")
@@ -1395,6 +1408,9 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
         scope_pages=page_ids,instruction=instruction,inputs=inputs,dependencies=[{'kind':'content','identity':e['page_id'],'sha256':e['page']['sha256']} for e in entries],
         dispatch_revision=document['revision_id'],produced_against=content_identity(document),
         review_stage=review_stage,review_units=review_units)
+    if review_stage == 'original_image':
+        from .models import require_writer
+        require_writer(document, 'original-review.v1')
     task.update(protocol)
     from . import collaboration_binding
     collaboration_binding.stamp_task(

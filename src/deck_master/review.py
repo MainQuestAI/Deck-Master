@@ -107,7 +107,7 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
         old = [subjects.get(_ref_key(ref)) for ref in owner.get('subjects') or []]
         new = [subjects.get(_ref_key(ref)) for ref in candidate.get('subjects') or []]
         for before in old:
-            if not before or before.get('page_id') != page_id or before.get('role') not in ('page', 'svg', 'ppt_preview'):
+            if not before or before.get('page_id') != page_id or before.get('role') not in (('page', 'blueprint') if owner.get('review_stage') == 'original_image' else ('page', 'svg', 'ppt_preview')):
                 continue
             for after in new:
                 hash_key = ('visual_sha' if owner.get('review_stage') == 'page_visual'
@@ -130,7 +130,7 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
         # Synthetic fixtures have no Store metadata, and owners may cite only
         # the Page. The same page's dependency must still prove an actual
         # digest change to a current product cited by the candidate.
-        if subjects and owner.get('review_stage') in ('page_visual', 'preproduction'):
+        if subjects and owner.get('review_stage') in ('page_visual', 'preproduction', 'original_image'):
             return False
         old_deps = {_dependency_key(d): d.get('sha256') for d in owner.get('dependencies') or []}
         new_deps = {_dependency_key(d): d.get('sha256') for d in candidate.get('dependencies') or []}
@@ -159,7 +159,7 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
                    for ref in candidate.get('subjects') or [])
 
     def current_final_output_changed(owner, candidate):
-        if review.get('review_stage', 'final') in ('page_visual', 'preproduction'):
+        if review.get('review_stage', 'final') in ('page_visual', 'preproduction', 'original_image'):
             # Content is repaired and reviewed before PPTX production. The
             # preproduction endpoint still needs the changed current same-page
             # manuscript, full current dependencies, observations and evidence.

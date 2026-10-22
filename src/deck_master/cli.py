@@ -125,7 +125,7 @@ def build_parser() -> argparse.ArgumentParser:
     methods.add_argument("--kind", choices=("compose", "blueprint", "reconstruct", "review", "repair", "style_analyze"), default="compose")
     methods.add_argument("--intent")
     methods.add_argument("--phase")
-    methods.add_argument("--review-unit", action="append", choices=("content", "argument", "page_copy", "progression", "speech", "blueprint_content", "blueprint_fidelity", "conversion", "readability", "privacy"))
+    methods.add_argument("--review-unit", action="append", choices=("content", "argument", "page_copy", "progression", "speech", "blueprint_content", "blueprint_fidelity", "conversion", "readability", "privacy", "visual_expression"))
     methods.add_argument("--read", action="store_true")
     methods.add_argument("--project")
     methods.add_argument("--task-id")
@@ -187,6 +187,15 @@ def build_parser() -> argparse.ArgumentParser:
     recovery = review_sub.add_parser("recover", help="Recover a committed native review completion without another model call")
     recovery.add_argument("--project", required=True)
     recovery.add_argument("--task-id", required=True)
+    original = review_sub.add_parser('original', help='Dispatch independent expression review on original pixels before SVG')
+    original.add_argument('--project', required=True)
+    original.add_argument('--page-id', required=True)
+    original.add_argument('--candidate-id')
+    original_status = review_sub.add_parser('original-status', help='Read whether an original can be expanded or used as an explicit repair reference')
+    original_status.add_argument('--project', required=True)
+    original_status.add_argument('--page-id', required=True)
+    original_status.add_argument('--candidate-id')
+    original_status.add_argument('--use', choices=('expand', 'view', 'compare', 'repair_reference'), default='expand')
     native = review_sub.add_parser("native", help="Run an actual read-only native independent content review")
     native.add_argument("--project", required=True)
     native.add_argument("--task-id")
@@ -504,6 +513,14 @@ def main(argv: list[str] | None = None) -> int:
                 return _emit(collector.envelope({'methods': collector.methods(entries), 'tasks': []}))
             items = (read_methods if options.read else method_resources)(options.kind, intent=options.intent, phase=options.phase, review_units=options.review_unit, selected_resource_ids=options.selected_resource_ids)
             return _emit({"status": "ready", "methods": items, "method_release": method_release(items)})
+        if options.command == 'review' and options.review_command in ('original', 'original-status'):
+            from . import original_review
+            if options.review_command == 'original':
+                return _emit(original_review.dispatch(options.project, page_id=options.page_id, candidate_id=options.candidate_id))
+            from .store import Store
+            store = Store(Path(options.project).expanduser())
+            return _emit(original_review.reference_status(store, store.load_document(), options.page_id,
+                candidate_id=options.candidate_id, use=options.use))
         if options.command == "review" and options.review_command == "channels":
             from .review_channels import describe
             return _emit(describe(check_native=options.check_native, project=options.project))

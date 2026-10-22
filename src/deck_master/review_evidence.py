@@ -112,6 +112,16 @@ def result_digest(envelope):
 
 def review_binding(store, document, task, envelope):
     from .content_review import _subjects_digest, author_execution_refs
+    if task.get('kind') == 'review' and task.get('review_stage') == 'original_image':
+        from .original_review import task_packet, author_executions
+        packet_ref, fixed = task_packet(store, task)
+        return {'project_id': document['project_id'],
+            'request_id': (task.get('collaboration_binding') or {}).get('request_id'),
+            'task_id': task['task_id'], 'packet_sha256': packet_ref['sha256'],
+            'subjects_sha256': _subjects_digest(fixed['subjects']),
+            'author_execution_refs': sorted(author_executions(store, document, fixed)),
+            'write_scope': {'layers': ['review'], 'page_ids': list(task['scope_pages'])},
+            'result_sha256': result_digest(envelope)}
     if task.get("kind") != "review" or task.get("review_stage") != "preproduction":
         raise EvidenceRejected("receipt/task", "this bridge only accepts preproduction review tasks")
     packets = []
