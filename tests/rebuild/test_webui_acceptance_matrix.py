@@ -690,7 +690,7 @@ def test_imported_page_missing_mapping_and_invalid_atom_remains_readable(tmp_pat
         with sync_playwright() as pw:
             browser=pw.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox']);page=browser.new_page()
             route={'project':info['project_identity'],'surface':'page','page':'p1','revision':store.current_revision_id(),'layer':'content'}
-            page.goto(url+'studio/#'+urlencode(route));expect(page.get_by_text('此页未记录原子映射，仍可通过页面来源阅读。',exact=True)).to_be_visible()
+            page.goto(url+'studio/#'+urlencode(route));expect(page.get_by_text('此页未绑定论证主线；原子映射和来源关联按下方记录分别展示。',exact=True)).to_be_visible()
             expect(page.locator('.insight-node').filter(has_text='明确未知')).to_contain_text('未记录映射')
             page.goto(url+'studio/#'+urlencode({**route,'atom':'atom:p1:invalid'}));expect(page.get_by_role('heading',name='合成教学稿',exact=True)).to_be_visible()
             expect(page.get_by_role('alert').filter(has_text='Text atom is unavailable')).to_be_visible()

@@ -9,7 +9,7 @@ export function pageEvidence(app,data){
   return reader(app,'/api/content/evidence/'+encodeURIComponent(data.page_id)+'?'+query,value=>{
     if(!value.data)return el('p',{},'本页依据暂不可读。');const d=value.data;
     return el('div',{class:'stack'},el('h3',{},'正文与证据'),
-      el('p',{},({current:'页面绑定当前主线。',bound_to_older_narrative:'此页绑定较早主线，以下按原绑定读取。',not_recorded:'此页未记录原子映射，仍可通过页面来源阅读。'})[d.alignment]),
+      el('p',{},({current:'页面绑定当前主线。',bound_to_older_narrative:'此页绑定较早主线，以下按原绑定读取。',not_recorded:'此页未绑定论证主线；原子映射和来源关联按下方记录分别展示。'})[d.alignment]),
       app.route.atom&&button('查看本页全部原子',()=>app.go({atom:null})),
       d.elements.map(atom=>el('section',{class:'insight-node stack',tabindex:'0'},button('定位这段正文',()=>app.go({atom:atom.element_ref})),el('p',{class:'read-text'},atom.text),
         el('p',{class:'muted'},({recorded:'已记录映射',not_recorded:'未记录映射',unreadable:'映射依据暂不可读'})[atom.mapping_status]),
