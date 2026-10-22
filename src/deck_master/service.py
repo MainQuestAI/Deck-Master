@@ -1381,6 +1381,8 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
             if kind == 'review' and _review_dispatch_scope(
                     store, document, task.get('review_stage'), task['scope_pages'], task.get('review_units')) != review_scope:
                 continue
+            if kind == 'review' and review_stage == 'preproduction' and not tasks_mod.task_inputs_current(store, document, task):
+                continue
             if selected_resource_ids is not None:
                 raise ServiceError("selected_resource_ids", "existing Task is frozen; use formal reissue")
             return task

@@ -257,8 +257,11 @@ def build_review_packet(store, document, *, page_ids=None, required=None,
                           "usage_note": source.get("usage_note") or "",
                           "restriction": source.get("restriction") or "",
                           "extract_ref": source.get("extract"), "extract": extract})
+    from .effective_requirements import packet_requirements
+    units = list(required if required is not None else required_units(store, document))
     return {
         "schema_version": "content_review_packet.v1",
+        "effective_requirements": packet_requirements(store, document, page_ids=[p['page_id'] for p in pages], units=units),
         "project_id": document["project_id"],
         "revision_id": document["revision_id"],
         "task": document.get("task") or {},
@@ -696,8 +699,12 @@ def _applicable_reviews(store, document, page_ids, *, records=None, digests=None
     strict_refs = None
     if requirement_state(store, document)["effective"] == "independent_model_or_human":
         strict_refs = _independently_accepted_reviews(store, document, records)
+    from .effective_requirements import review_task_owners, accepted_requirements_current
+    owners = review_task_owners(store, document)
     for item in records:
         review = item["review"]
+        if not accepted_requirements_current(store, document, review, item['review_ref'], owners):
+            continue
         if strict_refs is not None and item["review_ref"]["sha256"] not in strict_refs:
             continue
         notes_aliases = (digests.get('_preproduction_notes_aliases') or {}) if review.get('kind') != 'speech' else {}

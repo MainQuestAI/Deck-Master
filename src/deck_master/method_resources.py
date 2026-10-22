@@ -530,6 +530,7 @@ def read_skill_methods(skill: str, *, entry_mode="named", project=None, task_id=
         context = {"project_id": document["project_id"], "artifact_revision_id": document["revision_id"],
                    "request": request,
                    "completion": content_production.completion_status(store, document)}
+        task = None
         if task_id is not None:
             task = next((item for ref in document["tasks"]
                          if (item := store.read_object_json(ref))["task_id"] == task_id), None)
@@ -542,6 +543,8 @@ def read_skill_methods(skill: str, *, entry_mode="named", project=None, task_id=
             dispatch = {"task_id": task_id, "work_order": order, "status": order["method_basis_status"],
                         "dispatch_method_release": task.get("method_release"),
                         "current_method_release": method_release(dispatch_items), "methods": dispatch_items}
+        from .effective_requirements import reader_requirements
+        context['effective_requirements'] = reader_requirements(store, document, task=task)
     # A Task consumes its actual manifest verbatim, including a declared missing
     # calibration error. Role entry guidance is separate and never adds a
     # calibration file to an A/B content-method control.
@@ -573,6 +576,7 @@ def _read_skill_v2(skill, *, entry_mode, project, task_id, route, review_units, 
         payload['context'] = {'project_id': document['project_id'], 'artifact_revision_id': document['revision_id'],
                               'request': (document.get('collaboration') or {}).get('request'),
                               'completion': content_production.completion_status(store, document)}
+        task = None
         if task_id is not None:
             task = next((item for ref in document['tasks'] if (item := store.read_object_json(ref))['task_id'] == task_id), None)
             if task is None:
@@ -580,6 +584,8 @@ def _read_skill_v2(skill, *, entry_mode, project, task_id, route, review_units, 
             if not role_accepts_task(skill, task):
                 raise ValueError(f'{skill} does not execute {task["kind"]}; hand off to the responsible role')
             payload['tasks'] = [service.task_summary(store, document, task, collector=collector)]
+        from .effective_requirements import reader_requirements
+        payload['context']['effective_requirements'] = reader_requirements(store, document, task=task)
     ids = ('collaboration-routing',) if task_id else (
         ('collaboration-routing', *method_ids_for('review', intent=review_stage, review_units=review_units))
         if skill == 'deck-review' else _ROLE_METHODS[skill])

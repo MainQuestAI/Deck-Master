@@ -398,6 +398,10 @@ def _lookup_task(document: dict, task_id: str, store: Store) -> dict:
 
 
 def task_inputs_current(store, document, task):
+    if task.get('kind') == 'review' and task.get('review_stage') == 'preproduction':
+        from .effective_requirements import task_requirements_current
+        if not task_requirements_current(store, document, task):
+            return False
     from .visual_dependencies import is_visual_task, visual_task_inputs_current
     if is_visual_task(task):
         return visual_task_inputs_current(store, document, task)
