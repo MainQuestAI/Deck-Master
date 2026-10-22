@@ -725,7 +725,18 @@ def test_long_semantics_and_bullet_atoms_survive_narrow_design_handoff(tmp_path)
 
 @pytest.mark.browser
 @pytest.mark.parametrize('second_result',['saved','unknown','conflict'])
-def test_review_single_click_drains_old_and_latest_save(tmp_path,second_result):
+def test_review_single_click_drains_old_and_latest_save(tmp_path,second_result,monkeypatch):
+    from threading import Event
+    second_entered, release_second = Event(), Event()
+    real_save = ui_journal.save
+    def controlled_save(project, *, draft, expected_etag=None):
+        if draft['content'].get('text') == 'P2：最后文字与原范围':
+            # Keep the actual second HTTP save unfinished until the test
+            # releases it. Seeing a browser request is not a fetched response.
+            second_entered.set()
+            assert release_second.wait(10), 'Test did not release the second save response'
+        return real_save(project, draft=draft, expected_etag=expected_etag)
+    monkeypatch.setattr(ui_journal, 'save', controlled_save)
     project,store,ref=reviewed_project(tmp_path);server=WorkbenchServer(project);url=server.start();info=ui_journal.project_info(project);before=store.load_document();held=[];writes=[]
     try:
         with sync_playwright() as pw:
@@ -737,18 +748,27 @@ def test_review_single_click_drains_old_and_latest_save(tmp_path,second_result):
                 if len(writes)==2 and second_result=='conflict':
                     record=ui_journal.list_drafts(project)['records'][0];other=copy.deepcopy(record['draft']);other['content']['text']='另一窗口的明确修改'
                     ui_journal.save(project,draft=other,expected_etag=record['etag'])
+                page.evaluate('(count)=>window.reviewSaveStarted=count',len(writes))
                 held.append((route,route.fetch()))
+                page.evaluate('(count)=>window.reviewSaveReady=count',len(held))
             page.route('**/api/drafts/save',hold)
             note=page.get_by_label('审阅交接备注');note.fill('P1：旧自动保存')
             expect(page.locator('.review-draft-state')).to_contain_text('正在保存到项目')
-            # Pump the route handler without releasing its HTTP response.
-            page.wait_for_timeout(100);assert len(held)==1
+            # Synchronize after route.fetch(), not merely its request event.
+            page.wait_for_function('()=>window.reviewSaveReady===1');assert len(held)==1
             note.fill('P2：最后文字与原范围')
             page.get_by_role('button',name='保存草稿后进入原正文编辑',exact=True).click()
             expect(page.get_by_role('dialog')).to_be_visible();assert len(writes)==1
             with page.expect_request('**/api/drafts/save'):
                 held[0][0].fulfill(response=held[0][1])
-            page.wait_for_timeout(100);assert len(held)==2
+            page.wait_for_function('()=>window.reviewSaveStarted===2')
+            assert second_entered.wait(5)
+            assert len(writes)==2 and len(held)==1
+            expect(page.get_by_role('dialog')).to_be_visible()
+            expect(page.get_by_label('正文修改说明',exact=True)).to_have_count(0)
+            release_second.set()
+            page.wait_for_function('()=>window.reviewSaveReady===2');assert len(held)==2
+            assert held[1][1].status == (409 if second_result=='conflict' else 200)
             expect(page.get_by_role('dialog')).to_be_visible()
             assert writes[1]['draft']['content']['text']=='P2：最后文字与原范围'
             if second_result=='unknown':held[1][0].abort()
@@ -761,8 +781,12 @@ def test_review_single_click_drains_old_and_latest_save(tmp_path,second_result):
                 expect(page.get_by_label('正文修改说明',exact=True)).to_have_count(0)
             page.wait_for_timeout(700)
             assert len(writes)==2 and store.load_document()==before
+            persisted=ui_journal.list_drafts(project)['records'][0]['draft']['content']['text']
+            assert persisted==('另一窗口的明确修改' if second_result=='conflict' else 'P2：最后文字与原范围')
             browser.close()
-    finally:server.stop()
+    finally:
+        release_second.set()
+        server.stop()
 
 
 def test_method_speech_review_uses_existing_resolver_and_rejects_unknown_unit(tmp_path):
