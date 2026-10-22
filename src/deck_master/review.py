@@ -398,6 +398,22 @@ def dependency_problems(review: dict, artifacts: dict) -> list[dict]:
     return problems
 
 
+def task_blocks_current_output(task: dict) -> bool:
+    """An unadopted, zero-call content trial cannot change current artifacts.
+
+    Keep production work and any uncertain/external call blocking. Findings
+    remain evaluated independently; candidate adoption invalidates real slots.
+    """
+    if task.get('status') not in OPEN_TASK_STATUSES:
+        return False
+    from .method_resources import is_content_candidate_task
+    side_branch = (is_content_candidate_task(task)
+                   and task.get('cost_class') == 'host_reasoning'
+                   and not task.get('call_allowances')
+                   and (task.get('usage') or {}).get('external_calls') in (None, 0))
+    return not side_branch
+
+
 def evaluate_current(document: dict, reviews: list[dict], artifacts: dict) -> dict:
     """The one interpretation of the current check state (AC-R01/R02/R03/R10).
 
@@ -422,7 +438,7 @@ def evaluate_current(document: dict, reviews: list[dict], artifacts: dict) -> di
     tasks = document.get('tasks') or []
     suspended_pages = set()
     for task in tasks:
-        if (isinstance(task, dict) and task.get('status') in OPEN_TASK_STATUSES
+        if (isinstance(task, dict) and task_blocks_current_output(task)
                 and task.get('intent') != 'input_revision'):
             suspended_pages.update(task.get('scope_pages') or [])
 
