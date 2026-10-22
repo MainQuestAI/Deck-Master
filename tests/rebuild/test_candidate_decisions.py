@@ -170,7 +170,7 @@ def test_decisions_do_not_cross_candidates_or_projects(store):
 def test_summary_and_details_match_after_reload_and_in_history(store):
     cid, _task = candidate(store)
     assert summary(store) == {'status': 'recorded', 'count': 1, 'pending_count': 1,
-                              'adopted_count': 0, 'kept_count': 0, 'unreadable_count': 0}
+                              'adopted_count': 0, 'kept_count': 0, 'unreadable_count': 0, 'stale_count': 0}
     keep = decide(store, cid, 'keep_current')
     keep_revision = keep['revision_id']
     # 刷新（新 Store 实例）后 summary 与详情吻合
