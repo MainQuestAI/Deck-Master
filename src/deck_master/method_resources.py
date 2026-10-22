@@ -119,10 +119,15 @@ def method_ids_for(kind: str, *, intent: str | None = None,
     """Select new dispatch methods from the actual review scope, in stable order."""
     if kind != "review":
         base = rc3_method_ids_for(kind, intent=intent, phase=phase)
+        if kind == 'blueprint':
+            # New image production consumes visual design guidance. Keep the
+            # RC3 selector above unchanged for historical frozen Tasks.
+            base = ('visual-reference', 'physical-units')
         if kind == 'compose':
             extra = (('writing-profiles',) if phase == 'speech' else
                      ('page-writing',) if phase == 'page_copy' else
-                     () if phase in ('design', 'production', 'delivery') else ('method-selection',))
+                     ('content-to-visual',) if phase in ('design', 'production') else
+                     () if phase == 'delivery' else ('method-selection',))
         elif kind in ('blueprint', 'reconstruct', 'style_analyze'):
             extra = ('content-to-visual',)
         else:
