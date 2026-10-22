@@ -7,7 +7,7 @@ import urllib.request
 
 import pytest
 
-from deck_master import changes, cli, collaboration, generation, run_desk, service, tasks
+from deck_master import changes, cli, collaboration, content_review, generation, run_desk, service, tasks
 from deck_master.models import bump_revision, require_writer
 from deck_master.samples import create_sample
 from deck_master.store import Store, StoreError
@@ -23,12 +23,21 @@ def store(tmp_path):
         scenario='The original complete manuscript before the explicit narrow edit request')
     doc = Store(project).load_document()
     scope = {'subject': 'pages', 'page_ids': ['p01', 'p02'], 'page_manifest_ref': None,
-        'external_artifact_ref': None, 'layers': ['blueprint', 'svg'],
+        'external_artifact_ref': None, 'layers': ['blueprint', 'svg', 'review'],
         'allow_page_membership_change': False, 'allow_page_order_change': False, 'purpose': 'working'}
     collaboration.start_request(project, input={'intent': 'edit', 'content_intent': None,
         'scope': scope, 'replace_request_id': doc['collaboration']['request']['request_id'],
-        'instruction_evidence': evidence_for(project, text='L1 run-desk: bounded production trials only on p01/p02; retain the separately reviewed manuscript.',
+        'instruction_evidence': evidence_for(project, text='L1 run-desk: bounded production trials only on p01/p02; review the current requirements before production.',
             locator='L1:run-desk:request')}, base_revision=doc['revision_id'], operation_id='L1-run-desk-request')
+    # Replacing the request changes review requirements; the earlier full-deck
+    # pass cannot stand in for review of this narrower current request.
+    current_store = Store(project)
+    assert content_review.preproduction_status(current_store, current_store.load_document(),
+        page_ids=['p01', 'p02'])['status'] == 'missing'
+    settle_fidelity_review(project, page_ids=['p01', 'p02'], execution_ref='L1-run-desk-current-fidelity',
+        scenario='Recheck frozen owners under the current narrow request before production')
+    assert content_review.preproduction_status(current_store, current_store.load_document(),
+        page_ids=['p01', 'p02'])['status'] == 'pass'
     authorize_scope(project, actions=['change.commit', 'candidate.adopt', 'dispatch.blueprint',
         'allowance.allocate', 'call.begin'], scope={**scope,'page_ids':['p01','p02'],'layers':['blueprint','svg']}, max_external_calls=2,
         max_candidate_count=4, adoption_policy='within_scope', evidence=evidence_for(project,
@@ -51,7 +60,9 @@ def test_real_claim_time_survives_same_executor_and_unknown_call(store, monkeypa
     start(store, task)
     claimed = run_desk.detail(store.project_root, task_id=task['task_id'])
     assert claimed['task']['execution_started_at'] == '2026-09-30T00:00:00Z'
-    assert store.read_current()['minimum_writer'] == 'method-catalog.v1'
+    # Original-image dispatch now freezes asset inputs (RP-19), whose writer
+    # floor must remain intact across same-executor claims and unknown calls.
+    assert store.read_current()['minimum_writer'] == 'asset-inputs.v1'
     pointer = store.read_current()
     monkeypatch.setattr(service, '_utc_now_iso', lambda: '2026-09-30T00:20:00Z')
     start(store, task)
@@ -72,9 +83,11 @@ def test_real_claim_time_survives_same_executor_and_unknown_call(store, monkeypa
         assert 'verify_unknown_call' in value['task']['human_actions']
         assert value['links']['generation_attempts'][0]['attempt_id'] == attempt['attempt_id']
     assert store.read_current() == before
+    assert store.read_current()['minimum_writer'] == 'asset-inputs.v1'
     service.task_cancel(store.project_root, task_id=task['task_id'])
     value = run_desk.detail(store.project_root, task_id=task['task_id'])
     assert value['task']['status'] == 'cancelled' and value['call_allowances'][0]['state'] == 'unknown'
+    assert store.read_current()['minimum_writer'] == 'asset-inputs.v1'
     assert value['task']['execution_started_at'] == claimed['task']['execution_started_at']
 
 
