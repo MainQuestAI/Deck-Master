@@ -93,18 +93,72 @@ def test_initial_plan_http_requires_session_authority(flow):
         server.stop()
 
 
-@pytest.mark.parametrize('format', ['PNG', 'JPEG', 'WEBP'])
+@pytest.mark.parametrize("format", ["PNG", "JPEG", "WEBP"])
 def test_selected_asset_originals_in_preview_match_prepared_parameters(tmp_path, format):
     from test_rp19_asset_inputs import _flow
+
     project, store, task, source = _flow(tmp_path, format=format)
     doc = store.load_document()
-    result = design_entry.initial_plan(project, input={'page_id': 'p1', 'base_revision': doc['revision_id'],
-                                                     'instruction': 'Use the selected logo original; preserve copy.'})
-    basis = result['production_basis'][0]
+    result = design_entry.initial_plan(
+        project,
+        input={"page_id": "p1", "base_revision": doc["revision_id"], "instruction": "Use the selected logo original; preserve copy."},
+    )
+    basis = result["production_basis"][0]
     prepared = generation.prepared_input(store, doc, task)
-    assert basis['resolved_design_context'] == prepared['design_context']
-    assert basis['references'] == prepared['references']
-    assert len(basis['references']) == 1
-    assert store.read_object_bytes(basis['references'][0]['file']) == source.read_bytes()
+    assert basis["resolved_design_context"] == prepared["design_context"]
+    assert basis["references"] == prepared["references"]
+    assert len(basis["references"]) == 1
+    assert store.read_object_bytes(basis["references"][0]["file"]) == source.read_bytes()
     # Existing dispatch permission is not silently converted into change.commit permission.
-    assert not result['eligibility']['allowed']
+    assert not result["eligibility"]["allowed"]
+
+
+def test_known_wrong_endpoint_is_visible_as_repair_reference_not_expansion_basis(tmp_path):
+    from test_rp20_original_review import fixture, dispatch, review, submit
+    from deck_master import original_review
+
+    project, store = fixture(tmp_path)
+    task, fixed, context = dispatch(project, store)
+    record = review(fixed, wrong=True, state="fail")
+    record["findings"] = [
+        {
+            "finding_id": "wrong-endpoint",
+            "kind": "design",
+            "impact": "must_fix",
+            "page_id": "p1",
+            "element_refs": ["edge:confirm"],
+            "message": "Synthetic model to other instead of human",
+            "expected": "model to human",
+            "actual": "model to other",
+            "evidence": [fixed["image_ref"]],
+            "resolution": "open",
+        }
+    ]
+    submit(project, task, record, context)
+    doc = store.load_document()
+    entry = doc["pages"][0]
+    value = {
+        "schema_version": "change_intent.v1",
+        "project_id": doc["project_id"],
+        "base_revision": doc["revision_id"],
+        "intent": "repair_original",
+        "instruction": "Repair the wrong endpoint; do not expand this image.",
+        "annotation_refs": [],
+        "max_calls": 1,
+        "mode": "trial",
+        "references": [],
+        "targets": [
+            {
+                "page_id": "p1",
+                "page_ref": entry["page"],
+                "layer": "original_image",
+                "stage": "blueprint",
+                "artifact_ref": entry["blueprint"],
+            }
+        ],
+    }
+    shown = design_entry.describe_plan(project, changes.plan(project, input=value))
+    status = shown["production_basis"][0]["original_expression"]
+    assert status["status"] == "fail" and status["allowed"] and status["use"] == "repair_reference"
+    assert not original_review.reference_status(store, store.load_document(), "p1", use="expand")["allowed"]
+    assert store.load_document() == doc

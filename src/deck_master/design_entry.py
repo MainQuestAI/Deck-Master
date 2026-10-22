@@ -27,10 +27,15 @@ def describe_plan(project, result):
         entry = entries[action["page_id"]]
         resolved = resolve_generation_design(store, document, entry, recipe_ref=value.get("style_recipe_ref"))
         references, target_reference = changes._trial_references(store, document, entry, value)
-        for image in resolved.get('asset_inputs', {}).get('images', []):
-            attachment = {'file': image['file'], 'role': 'reference'}
+        for image in resolved.get("asset_inputs", {}).get("images", []):
+            attachment = {"file": image["file"], "role": "reference"}
             if attachment not in references:
                 references.append(attachment)
+        original_status = None
+        if entry.get("blueprint"):
+            from .original_review import reference_status
+
+            original_status = reference_status(store, document, entry["page_id"], use="repair_reference")
         basis.append(
             {
                 "page_id": entry["page_id"],
@@ -40,6 +45,7 @@ def describe_plan(project, result):
                 "references": references,
                 "target_reference_ref": target_reference,
                 "original_image_recorded": bool(entry.get("blueprint")),
+                "original_expression": original_status,
             }
         )
     return {**result, "production_basis": basis, "eligibility": eligibility.evaluate(store, document, control, "change.commit", context)}
