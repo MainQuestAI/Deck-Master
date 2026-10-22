@@ -89,11 +89,19 @@ def test_replaced_bytes_stale_only_consuming_page_and_preserve_old_original(tmp_
 
 def test_revoked_permission_blocks_old_task_and_new_freeze(tmp_path):
     project, store, task, source = _flow(tmp_path)
+    original_ref = next(ref for ref in store.load_document()['tasks']
+                        if store.read_object_json(ref)['task_id'] == task['task_id'])
+    original_bytes = store.read_object_bytes(original_ref)
     service.import_asset(project, asset_id='logo', kind='logo', file_path=source, external_use='restricted')
-    assert not tasks.task_inputs_current(store, store.load_document(), task)
-    with pytest.raises(tasks.TaskConflict, match="superseded"):
+    current = store.load_document()
+    retired = tasks._lookup_task(current, task['task_id'], store)
+    assert retired == {**task, 'status': 'superseded', 'updated_at': retired['updated_at']}
+    assert store.read_object_bytes(original_ref) == original_bytes
+    assert not tasks.task_inputs_current(store, current, task)
+    with pytest.raises(tasks.TaskConflict, match="task already superseded; cannot start"):
         service.task_start(project, task_id=task['task_id'], execution_ref='rp19-revoked',
             supported_protocols=[generation.PROTOCOL], capabilities=task['required_capabilities'])
+    assert store.load_document() == current
 
 
 def test_selected_ids_cannot_expand_page_permissions_or_name_duplicates(tmp_path):
@@ -208,3 +216,20 @@ def test_record_permission_cannot_be_bypassed_by_allowlist_alone(tmp_path):
     page = store.read_object_json(design['content_basis']['page_ref'])
     with pytest.raises(ModelError, match='not permitted for external use'):
         production.resolve_asset_inputs(store, page, design)
+
+
+def test_empty_asset_preparation_promotes_writer_before_render_or_notes_edit(tmp_path):
+    from test_page_visual_gate import _start
+    from test_rc3_notes_files import _project
+    project, store, _ = _project(tmp_path)
+    assert store.load_document()['compatibility']['minimum_writer'] == 'rc3-entry.v1'
+    source_svg = store.read_object_json(store.load_document()['pages'][0]['svg'])['file']
+    _start(project, 'p-a', svg_builder=lambda page: store.read_object_bytes(source_svg))
+    doc = store.load_document()
+    blueprint = next(store.read_object_json(ref) for ref in doc['tasks']
+                     if store.read_object_json(ref)['kind'] == 'blueprint')
+    prepared, _ = production.stored_blueprint_request(store, blueprint)
+    assert prepared['resolved_design_context']['asset_inputs'] == {
+        'schema_version': 'asset_inputs.v1', 'images': []}
+    assert doc['compatibility']['minimum_writer'] == 'asset-inputs.v1'
+    assert all(entry['svg_preview'] is None for entry in doc['pages'])

@@ -417,11 +417,19 @@ def test_page_review_cannot_pass_after_design_asset_change(tmp_path):
     task, svg = _start(project, 'p1')
     _accept(project, task, _svg_envelope('p1'), file_name='page.svg', data=svg)
     visual = service.continue_project(project)['pending_tasks'][0]
+    store = Store(project)
+    original = next(store.read_object_json(ref) for ref in store.load_document()['tasks']
+                    if store.read_object_json(ref)['task_id'] == visual['task_id'])
     image = tmp_path / 'new-asset.png'
     Image.new('RGB', (20, 12), 'green').save(image)
     service.import_asset(project, asset_id='new-asset', kind='image', file_path=image)
-    with pytest.raises(TaskConflict, match='after cancellation|visual inputs changed before claim'):
+    retired = next(store.read_object_json(ref) for ref in store.load_document()['tasks']
+                   if store.read_object_json(ref)['task_id'] == visual['task_id'])
+    assert retired == {**original, 'status': 'superseded', 'updated_at': retired['updated_at']}
+    before_claim = store.load_document()
+    with pytest.raises(TaskConflict, match='task already superseded; cannot start'):
         pass_page_review(project, visual)
+    assert store.load_document() == before_claim
     _authorize_replacement_image(project, page_id='p1', scenario='Explicit adopted-asset replacement image')
     reconstruct, svg = _start(project, 'p1')
     _accept(project, reconstruct, _svg_envelope('p1'), file_name='page.svg', data=svg)
