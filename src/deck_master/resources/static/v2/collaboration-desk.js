@@ -189,7 +189,20 @@ export async function requestForm(app, {source = null, transition = null} = {}) 
       ...(transition==='next_variant'?{variant:{...current?.variant,variant_id:variantId.input.value,label:label.input.value}}:{})}})});
 }
 
-function stateDetails(app) {
+async function stateDetails(app) {
+  const panel = el('div', {class:'stack', role:'status'}, '正在读取本次工作与范围…');
+  const dialog = modal('本次工作与范围', panel);
+  let info;
+  try {
+    info = await get('/api/project?details=1');
+    if (!dialog.open || !panel.isConnected) return;
+    if (info.project_identity !== app.info.project_identity) throw new Error('服务中的项目身份已变化，请重新打开。');
+    app.info = info;
+  } catch (error) {
+    if (dialog.open && panel.isConnected) panel.replaceChildren(el('p', {class:'field-error'}, readableError(error)),
+      button('重试读取', () => { dialog.close(); stateDetails(app); }));
+    return;
+  }
   const state=app.info.collaboration, request=state?.request, completion=app.info.completion;
   const nativeReviewNeeded=(state?.blocking_cards||[]).some(card=>(card.decision?.reason_codes||[])
     .some(code=>['needs_reviewer','preproduction_blocked'].includes(code)));
@@ -218,7 +231,7 @@ function stateDetails(app) {
     !app.info.sample?.readonly&&button('导入确认稿',()=>{document.querySelector('#modal').close();draftImportForm(app);}),
     app.health.ui_capabilities?.includes('external_review.v1')&&button('只读审阅稿件',()=>{document.querySelector('#modal').close();externalReviewForm(app);}),
     details('当前控制与请求身份',{control_revision_id:app.info.control_revision_id,reading_revision_id:app.route.revision,...state}));
-  modal('本次工作与范围',body);
+  panel.replaceChildren(body);
 }
 
 function nativeReviewForm(app) {

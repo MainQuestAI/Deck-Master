@@ -188,7 +188,12 @@ def test_restyle_uses_target_first_then_ordered_original_jpeg_and_png_through_fr
             base_revision=store.current_revision_id(), operation_id=str(uuid.uuid4()))
     assert store.read_current() == before
     original_pages = copy.deepcopy(store.load_document()["pages"])
-    _, sent = candidate(path, store, task)
+    candidate_id, sent = candidate(path, store, task)
+    detail = candidates.show(path, candidate_id=candidate_id)
+    assert detail["references"] == expected
+    assert [row["file"] for row in detail["reference_sources"]] == [row["file"] for row in expected[1:]]
+    assert store.read_object_bytes(detail["reference_sources"][0]["file"]) == jpeg_raw
+    assert store.read_object_bytes(detail["reference_sources"][1]["file"]) == png_raw
     frozen, attempt, controller, _ = sent
     assert frozen["input"] == prepared
     assert controller.claims["arguments"]["referenced_image_paths"] == [str(store.project_root / item["file"]["path"]) for item in expected]
