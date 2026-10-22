@@ -7,6 +7,7 @@ provide their context to the Python boundary; no adapter is invented here.
 
 from __future__ import annotations
 import json
+import re
 from importlib import metadata
 from pathlib import Path
 import subprocess
@@ -40,9 +41,13 @@ def installation_identity():
             def git(*args):
                 return subprocess.run(["git", "-C", str(repo), *args], check=True, capture_output=True,
                                       text=True, timeout=3).stdout.strip()
-            info["source"] = {"sha": git("rev-parse", "HEAD"), "tree": git("rev-parse", "HEAD^{tree}"),
-                              "dirty": bool(git("status", "--porcelain"))}
-        except (OSError, subprocess.SubprocessError):
+            # One fresh observation for both immutable identities; status is
+            # still queried afresh, never inferred from cached source metadata.
+            sha, tree = git("rev-parse", "HEAD", "HEAD^{tree}").splitlines()
+            if not all(re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", value) for value in (sha, tree)):
+                raise ValueError("invalid Git object identity")
+            info["source"] = {"sha": sha, "tree": tree, "dirty": bool(git("status", "--porcelain"))}
+        except (OSError, subprocess.SubprocessError, ValueError):
             pass
     prefix = Path(sys.prefix).resolve()
     manifest = prefix.parent / "release.json"
