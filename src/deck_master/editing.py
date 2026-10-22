@@ -291,13 +291,35 @@ def _output_facts(store, doc):
     return facts
 
 
-def check_summary(store, doc):
+class ReviewReadContext:
+    """Dependency facts for one exact document interpretation, within one call.
+
+    A value copy binds all fields, including policy/reviews/notes/output refs;
+    reusing the context with another interpretation fails instead of going stale.
+    """
+    def __init__(self, store, document):
+        self.store = store
+        self.document = copy.deepcopy(document)
+        self.artifacts = _current_artifact_digests(store, document)
+        self.reviews = [{**store.read_object_json(ref), 'ref': ref}
+                        for ref in document.get('reviews') or []]
+        from .review import replacement_index
+        self.replacements = replacement_index(self.reviews)
+
+    def require(self, store, document):
+        if self.store is not store or self.document != document:
+            raise ValueError('review context belongs to a different snapshot interpretation')
+        return self
+
+
+def check_summary(store, doc, *, read_context=None):
     """The full CheckSummary behind review_status (one interpretation, AC-R03)."""
     from . import review as review_mod
-    reviews = [{**store.read_object_json(ref), 'ref': ref} for ref in doc.get('reviews') or []]
+    context = (read_context or ReviewReadContext(store, doc)).require(store, doc)
+    reviews = context.reviews
     document = {**doc, 'tasks': [store.read_object_json(ref) for ref in doc.get('tasks') or []],
                 '_output_facts': _output_facts(store, doc)}
-    return review_mod.evaluate_current(document, reviews, _current_artifact_digests(store, doc))
+    return review_mod.evaluate_current(document, reviews, context.artifacts, replacements=context.replacements)
 
 
 def review_status(store, doc):
@@ -305,13 +327,13 @@ def review_status(store, doc):
     return check_summary(store, doc)['status']
 
 
-def page_visual_summary(store, doc, entry):
+def page_visual_summary(store, doc, entry, *, read_context=None):
     from .review import evaluate_page_visual
     from .production import resolve_page_rendering_design
     effective = resolve_page_rendering_design(store, doc, entry)
-    reviews = [{**store.read_object_json(ref), 'ref': ref} for ref in doc.get('reviews') or []]
-    return evaluate_page_visual(entry, reviews, _current_artifact_digests(store, doc),
-                                effective.get('allowed_asset_ids') or [])
+    context = (read_context or ReviewReadContext(store, doc)).require(store, doc)
+    return evaluate_page_visual(entry, context.reviews, context.artifacts,
+                                effective.get('allowed_asset_ids') or [], replacements=context.replacements)
 
 
 def _professional_evidence(store, doc):

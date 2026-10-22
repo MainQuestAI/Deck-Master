@@ -8,12 +8,13 @@ from .store import Store
 
 
 def require_assembly_ready(store, document):
-    from .editing import page_visual_summary
+    from .editing import ReviewReadContext, page_visual_summary
     from .tasks import _validate_svg_reference
     if not document['pages']:
         raise operations.OperationError('stage_prerequisite_missing', 'pages', 'assembly requires current pages')
     if input_alignment(document) not in ('current', 'legacy_current'):
         raise operations.OperationError('stage_prerequisite_missing', 'content_basis', 'reconcile current content inputs before assembly')
+    context = ReviewReadContext(store, document)
     for entry in document['pages']:
         objects = {}
         for slot in ('blueprint', 'svg', 'svg_preview'):
@@ -26,7 +27,7 @@ def require_assembly_ready(store, document):
         _validate_svg_reference(store.read_object_bytes(objects['svg']['file']), objects['blueprint']['file']['sha256'])
         if entry['svg'] not in objects['svg_preview'].get('derived_from', []):
             raise operations.OperationError('stage_prerequisite_missing', 'svg_preview', 'preview does not belong to the current SVG')
-        check = page_visual_summary(store, document, entry)
+        check = page_visual_summary(store, document, entry, read_context=context)
         if check['status'] != 'pass':
             raise operations.OperationError('stage_quality_blocked', f"pages/{entry['page_id']}/page_visual", 'current page visual review must pass before assembly')
 
