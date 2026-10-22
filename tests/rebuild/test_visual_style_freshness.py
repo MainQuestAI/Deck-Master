@@ -7,6 +7,7 @@ from test_styles import flow, dispatch, mutate  # noqa: F401
 from test_visual_styles import completed
 from deck_master import candidates, generation, styles, tasks
 from deck_master.operations import OperationError
+from synthetic_review_provider import accept_original_expression_fixture
 
 
 def style_trial(flow):
@@ -70,6 +71,12 @@ def test_self_adoption_permits_expansion_but_later_target_changes_invalidate_sam
     cid = flow.image(task)['candidate_ids'][0]
     flow.adopt([cid])
     assert candidates.show(flow.project, candidate_id=cid)['generation_basis']['status'] == 'current'
+    before_review = flow.store.read_current()
+    with pytest.raises(OperationError, match='original expression review is missing or needs repair'):
+        dispatch(flow, recipe, ['p03'], cid)
+    assert flow.store.read_current() == before_review
+    # Public dispatch/claim/receipt/receiver protocol only; no pixel-quality claim.
+    assert accept_original_expression_fixture(flow.project, page_id='p02', candidate_id=cid)['status'] == 'accepted'
     expansion = dispatch(flow, recipe, ['p03'], cid)
     assert expansion['stage_request']['target_reference_ref'] == flow.store.load_document()['pages'][2]['blueprint']
     mutate(flow, 'p02', 'blueprint')
