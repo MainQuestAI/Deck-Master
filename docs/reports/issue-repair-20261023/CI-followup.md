@@ -48,3 +48,13 @@ RP14's requirement freshness rather than reusing an old request's review.
 Integrated enforcement/scoped/entry-coverage/read-only-diagnostic suite:
 **65 passed in 5.39s**. New regression first reproduced the real failure before
 runtime editing, and includes full-deck, empty/unknown targets and open findings.
+
+After scoped runtime repair, current effective-policy comparison and frozen-owner
+fixture repairs, the combined 13-file diagnostic selection passed:
+**312 passed, 7 deselected in 64.28s** (`/tmp/deck-ci-integrated-contracts.log`).
+Selection: candidates, eligibility enforcement/entry coverage/resolver,
+production, rc3_01_gate_repair, flow_quality, late_results_and_stops,
+rc3_preproduction_semantics, rc3_restyle_workflows, rc3_review_policy_ready,
+review_policy_semantic_identity, scoped_preproduction_eligibility; pytest -q
+-p no:cacheprovider -m 'not render and not browser'. Full src/tests Ruff and
+`git diff --check` passed. This is distinct from the still-running remote full gate.
