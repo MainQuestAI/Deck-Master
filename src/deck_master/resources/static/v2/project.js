@@ -129,6 +129,7 @@ export class Project {
     this.navigationHash = requestedHash;
     this.navigationDestination = requestedRoute ? routeHash(this.info, requestedRoute) : requestedHash;
     this.navigationPending = true;
+    this.navigationRoute = null;
     // Keep the old snapshot visible, but do not accept actions against it while
     // the requested version is loading. Otherwise its handlers can supersede
     // the new read with an old revision or lose a subarea choice on remount.
@@ -139,6 +140,10 @@ export class Project {
     if (this.navigationStatus) this.navigationStatus.hidden = false;
     announce('正在读取工作面');
     try {
+      // Sidebar navigation can supersede this read. Carry its requested
+      // version (including "current"/null), not the still-visible snapshot.
+      // Keep display, permissions and writes on committed state until verified.
+      this.navigationRoute = requestedRoute || readRoute(this.info, null, {...this.latest, revision_id:null}, requestedHash);
       const [info, latest] = await Promise.all([this.readControl(true), get(this.summaryURL())]);
       if (info.project_identity !== this.info.project_identity) throw new Error('项目身份已改变。旧输入仍保留，请从项目列表重新打开。');
       const route = requestedRoute || readRoute(this.info, null, latest, requestedHash);
@@ -203,6 +208,7 @@ export class Project {
     } finally {
       if (serial === this.generation) {
         this.navigationPending = false;
+        this.navigationRoute = null;
         this.navigationHash = null; this.navigationDestination = null;
         if (this.navigationStatus) this.navigationStatus.hidden = true;
         if (this.main) { this.main.inert = false; this.main.removeAttribute('aria-busy'); }
@@ -211,13 +217,14 @@ export class Project {
     }
   }
   go(patch) {
-    const route = {...this.route, ...patch};
+    const base = this.navigationPending && this.navigationRoute ? this.navigationRoute : this.route;
+    const route = {...base, ...patch};
     if(patch.surface&&patch.surface!=='content'){route.proposal=null;route.compare_proposal=null;}
     if(patch.surface&&patch.surface!=='page')route.atom=null;
     if((patch.surface||patch.review_id===null)&&!('review_id' in patch)){route.review_sha256=null;route.finding=null;route.finding_index=null;}
-    if(patch.review_id&&patch.review_id!==this.route.review_id&&!('review_sha256' in patch)){route.review_sha256=null;route.finding=null;route.finding_index=null;}
+    if(patch.review_id&&patch.review_id!==base.review_id&&!('review_sha256' in patch)){route.review_sha256=null;route.finding=null;route.finding_index=null;}
     if(patch.review_id===null){route.review_sha256=null;route.finding=null;route.finding_index=null;}
-    if (patch.surface && patch.surface !== 'overview' || patch.revision && patch.revision !== this.route.revision) route.overview_preferences = null;
+    if (patch.surface && patch.surface !== 'overview' || patch.revision && patch.revision !== base.revision) route.overview_preferences = null;
     // A plain surface switch starts that surface on its own first screen: no task
     // detail from an earlier visit, and no page layer that another surface could
     // mistake for "the user asked for delivery".
