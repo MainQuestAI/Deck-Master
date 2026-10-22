@@ -120,6 +120,8 @@ COLLABORATION_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "collaboration.resume_request": ("request.resume",
                                      "collaboration.resume_request: explicit resume; never widens "
                                      "scope (T02 re-derives from the same request)", None),
+    "collaboration.describe_snapshot": (None, "-", READ_REASONS["read_model"]),
+    "collaboration_migration.describe_snapshot": (None, "-", READ_REASONS["read_model"]),
     "collaboration.describe": (None, "-", READ_REASONS["read_model"]),
     "collaboration.payload_digest": (None, "-", READ_REASONS["internal"]),
     "collaboration.write_digest": (None, "-", READ_REASONS["internal"]),
@@ -164,6 +166,7 @@ COLLABORATION_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
 
 
 PUBLIC_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
+    "native_review.recover": ("task.accept", "native_review.recover resumes its bound execution; service.accept_result → tasks.accept_result evaluates task.accept before adopting reviews; terminal replay is read-only", None),
     "native_review.run": ("dispatch.host_task", "native_review.run → content_review dispatch/service.task_start/service.accept_result; exact scope and current control before execution/adoption", None),
     "legacy.import_legacy": ("create", "legacy.import_legacy: canonical private create/import normalization; inspect_only remains a source read", None),
     "legacy.looks_like_legacy_run": (None, "-", READ_REASONS["read_model"]),
@@ -229,6 +232,7 @@ OPERATIONS_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "visual_styles.import_reference": ("asset.import",
                                        "visual_styles.import_reference: guard before the "
                                        "reference/asset commit", None),
+    "design_entry.initial_plan": (None, "-", READ_REASONS["read_plan"]),
     # -- read-only operations
     "operations.show": (None, "-", READ_REASONS["read_model"]),
     "annotation_service.list_annotations": (None, "-", READ_REASONS["read_model"]),
@@ -274,6 +278,10 @@ CLI_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "eligibility": (None, "-", READ_REASONS["read_analysis"]),
     "review evaluate": (None, "-", READ_REASONS["external_report"]),
     "review import": ("review.import", "review_import.import_report", None),
+    "review channels": (None, "-", READ_REASONS["install"]),
+    "review original-status": (None, "-", READ_REASONS["read_model"]),
+    "review original": ("dispatch.host_task", "original_review.dispatch → service.open_host_task guards dispatch; needs_reviewer only persists immutable packet", None),
+    "review recover": ("task.accept", "native_review.recover → service.accept_result/tasks.accept_result; original proof/basis/execution checks and task.accept before adoption", None),
     "review native": ("dispatch.host_task", "native_review.run → content_review dispatch/service.task_start/service.accept_result", None),
     # -- creation and routing
     "create": ("create", "cli.create → service.create (routing gate)", None),
@@ -390,6 +398,10 @@ CLI_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
 # Legacy prefix rows classify only the literal prefix found in a read handler;
 # they never exempt an arbitrary newly added descendant write route.
 HTTP_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
+    "/api/design/initial-plan": (None, "-", READ_REASONS["read_plan"]),
+    # This literal is an error-routing prefix, not an independently dispatched
+    # wildcard route. Concrete initial-plan remains enumerated separately.
+    "/api/design/": (None, "-", READ_REASONS["internal"]),
     "GET /api/projects/{project_id}/collaboration": (None, "-", READ_REASONS["read_model"]),
     "GET /api/projects/{project_id}/collaboration/migration": (None, "-", READ_REASONS["read_model"]),
     "POST /api/projects/{project_id}/collaboration/requests": ("request.start", "collaboration_api.invoke → collaboration.start_request (start/replace share the locked request service)", None),

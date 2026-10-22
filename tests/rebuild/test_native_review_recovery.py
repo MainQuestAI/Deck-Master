@@ -221,3 +221,31 @@ def test_multiple_finding_owners_close_only_their_own_history():
     complete = [*partial, second_close]
     assert review.finding_closed(complete, first, first['findings'][0], context)
     assert review.finding_closed(complete, second, second['findings'][0], context)
+
+
+def test_recovery_consumes_task_accept_eligibility_before_adoption(tmp_path, native, monkeypatch):
+    from deck_master import eligibility
+    project, store = _deck(tmp_path)
+    fail_acceptance(project, monkeypatch)
+    failed = _review_task(store)
+    evaluate = eligibility.evaluate
+    checked = []
+
+    def refuse_adoption(store, before, after, action, *args, **kwargs):
+        decision = evaluate(store, before, after, action, *args, **kwargs)
+        if action == 'task.accept':
+            checked.append(action)
+            decision = {**decision, 'allowed': False, 'reason_codes': ['synthetic_admission_denied'],
+                        'reasons': [{'detail': 'Synthetic negative admission decision'}]}
+        return decision
+
+    monkeypatch.setattr(eligibility, 'evaluate', refuse_adoption)
+    with pytest.raises(eligibility.EligibilityBlocked, match='Synthetic negative admission'):
+        native_review.recover(project, task_id=failed['task_id'])
+    assert checked == ['task.accept']
+    assert not store.load_document()['reviews']
+    after = _review_task(store)
+    assert after['status'] == 'failed'
+    assert after['execution_ref'] == failed['execution_ref']
+    assert after['call_allowances'] == failed['call_allowances']
+    assert len(native.calls) == 1

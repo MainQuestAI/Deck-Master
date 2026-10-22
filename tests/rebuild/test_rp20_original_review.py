@@ -278,3 +278,16 @@ def test_notes_change_cannot_erase_same_image_endpoint_failure(tmp_path, change)
             owner = {**store.read_object_json(prior), 'ref': prior}
             artifacts = _current_artifact_digests(store, store.load_document(), owner['subjects'] + relabeled['subjects'])
             assert not finding_closed([owner, relabeled], owner, owner['findings'][0], artifacts)
+
+
+def test_original_dispatch_consumes_admission_before_creating_task(tmp_path):
+    from deck_master import collaboration, eligibility
+    project, store = fixture(tmp_path)
+    document = store.load_document()
+    collaboration.pause_request(project, reason='Synthetic admission refusal',
+        base_revision=document['revision_id'], operation_id='pause-original-dispatch')
+    paused = store.load_document()
+    with pytest.raises(eligibility.EligibilityBlocked):
+        synthetic_runtime_call(original_review.dispatch, project, page_id='p1',
+            adapter_context=synthetic_context())
+    assert store.load_document() == paused
