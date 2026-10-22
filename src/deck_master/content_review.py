@@ -518,6 +518,8 @@ def _review_scope_owners(store, document, units, pages):
     replaced = {row['replaces']['sha256'] for row in records if row.get('replaces')}
     artifacts = _current_artifact_digests(store, document)
     owners = []
+    selected_pages = set(pages)
+    has_current_pages = bool(selected_pages & {entry['page_id'] for entry in document['pages']})
     for row in records:
         if row['kind'] not in units:
             continue
@@ -526,11 +528,16 @@ def _review_scope_owners(store, document, units, pages):
         # A whole-manuscript recheck must retain narrower historical owners
         # whose findings still concern this scope. Requiring containment loses
         # them while the aggregate gate correctly keeps their findings open.
-        # Unrelated page owners remain excluded; exact refs are still frozen.
-        if not set(pages) & scoped:
+        # A deck finding blocks every nonempty current scope, even if its
+        # original owner reviewed other pages. Keep that exact owner visible;
+        # inclusion never relaxes the full-manuscript closure requirements.
+        overlaps = bool(selected_pages & scoped)
+        findings = open_findings(row) + pending_judgments(row)
+        if not overlaps:
+            findings = [finding for finding in findings if has_current_pages and finding.get('page_id') is None]
+        unresolved = any(not finding_closed(records, row, finding, artifacts) for finding in findings)
+        if not overlaps and not unresolved:
             continue
-        unresolved = any(not finding_closed(records, row, finding, artifacts)
-                         for finding in open_findings(row) + pending_judgments(row))
         if row['ref']['sha256'] not in replaced or unresolved:
             owners.append({'kind': row['kind'], 'review_ref': row['ref']})
     return owners
