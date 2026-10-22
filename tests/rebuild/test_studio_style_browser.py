@@ -290,3 +290,60 @@ def test_screenshot_plan_freezes_target_and_rejects_late_response(flow, invalida
         finally:
             browser.close()
             server.stop()
+
+
+def test_pending_current_version_sidebar_keeps_reviewed_candidate_revision(flow, tmp_path):
+    """A surface switch carries the explicit current-read intent across late replies."""
+    from urllib.parse import urlencode
+    from playwright.sync_api import expect
+    from deck_master import original_review, ui_journal
+    from synthetic_review_provider import accept_original_expression_fixture
+    from test_pr103_complete_browser import browser_for
+    from test_styles import confirm, dispatch
+
+    recipe = confirm(flow)
+    candidate = flow.image(dispatch(flow, recipe))['candidate_ids'][0]
+    old_revision = flow.store.current_revision_id()
+    flow.adopt([candidate])
+    assert accept_original_expression_fixture(flow.project, page_id='p02', candidate_id=candidate)['status'] == 'accepted'
+    current_revision = flow.store.current_revision_id()
+    assert original_review.reference_status(flow.store, flow.store.load_document(), 'p02', candidate_id=candidate)['allowed']
+    with browser_for(flow.project) as (page, server):
+        identity = ui_journal.project_info(flow.project)['project_identity']
+        page.goto(server.start() + '#' + urlencode({'project': identity, 'surface': 'runs', 'revision': old_revision}))
+        expect(page.get_by_role('button', name='查看当前版本', exact=True)).to_be_visible()
+        held = []
+
+        def hold_current_tasks(route):
+            if 'revision=' + current_revision in route.request.url:
+                held.append((route, route.fetch()))
+                page.evaluate('window.currentTasksHeld=true')
+            else:
+                route.continue_()
+
+        page.route('**/api/tasks?*', hold_current_tasks)
+        page.get_by_role('button', name='查看当前版本', exact=True).click()
+        page.wait_for_function('()=>window.currentTasksHeld===true')
+        expect(page.locator('#main')).to_have_attribute('aria-busy', 'true')
+        page.locator('.sidebar').get_by_role('button', name='风格校准', exact=True).click()
+        expect(page.get_by_role('heading', name='风格校准', exact=True)).to_be_visible()
+        landed = page.url
+        for route, response in held:
+            route.fulfill(response=response)
+        page.unroute('**/api/tasks?*', hold_current_tasks)
+        # A subsequent surface transaction also drains the late response without
+        # letting it restore the obsolete tasks surface or reading revision.
+        page.get_by_role('button', name='项目页面', exact=True).click()
+        stage(page, 'page', 2)
+        page.locator(f'.studio-recipe-card[data-recipe-id="{recipe["recipe_id"]}"]').get_by_role('button').click()
+        stage(page, 'page', 3)
+        state = {'old_revision': old_revision, 'current_revision': current_revision,
+                 'landed_url': landed, 'after_late_url': page.url,
+                 'candidate_id': candidate,
+                 'expand_buttons': page.get_by_role('button', name='从此候选扩展', exact=True).count()}
+        (tmp_path / 'pending-current-sidebar.json').write_text(json.dumps(state, indent=2))
+        page.screenshot(path=str(tmp_path / 'pending-current-sidebar.png'), full_page=True)
+        assert 'revision=' + current_revision in landed, state
+        assert 'revision=' + current_revision in page.url, state
+        expect(page.get_by_role('button', name='从此候选扩展', exact=True)).to_be_visible()
+        assert flow.store.current_revision_id() == current_revision
