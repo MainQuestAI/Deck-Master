@@ -136,7 +136,14 @@ def test_studio_style_two_routes_compare_adopt_expand_and_review(flow, source, t
             adopt(candidate,'04-compare.png')
             after_trial=flow.store.load_document()['pages']
             assert after_trial[0]==initial[0] and after_trial[2]==initial[2]
-            page.get_by_role('button',name='查看任务与交付',exact=True).click()
+            # Adoption is not permission to propagate unreviewed original pixels.
+            from deck_master import original_review
+            from synthetic_review_provider import accept_original_expression_fixture
+            assert not original_review.reference_status(flow.store, flow.store.load_document(), 'p02', candidate_id=candidate)['allowed']
+            accept_original_expression_fixture(flow.project, page_id='p02', candidate_id=candidate)
+            assert original_review.reference_status(flow.store, flow.store.load_document(), 'p02', candidate_id=candidate)['allowed']
+            page.reload(); page.get_by_role('button',name='查看当前版本',exact=True).click()
+            page.locator('.sidebar').get_by_role('button',name='任务与交付',exact=True).click()
             expect(page.get_by_role('heading',name='任务与交付',exact=True)).to_be_visible()
             page.locator('.sidebar').get_by_role('button',name='风格校准',exact=True).click()
             page.get_by_role('button',name='项目页面' if source=='page' else '外部图片',exact=True).click()
@@ -155,6 +162,8 @@ def test_studio_style_two_routes_compare_adopt_expand_and_review(flow, source, t
                 page.get_by_role('button',name='从此候选扩展',exact=True).click()
                 page.get_by_label(re.compile('^扩展到 第 3 页')).check()
                 page.get_by_role('button',name='预览明确选页的扩展',exact=True).click()
+            expect(page.get_by_role('button',name=dispatch_label,exact=True)).to_be_enabled()
+            expect(page.get_by_label('本轮制作依据')).to_be_visible()
             page.screenshot(path=str(out/'05-expansion-review.png'),full_page=True)
             page.get_by_role('button',name=dispatch_label,exact=True).click()
             expect(page.locator('#runs-tasks .task-handoff')).to_be_visible()
