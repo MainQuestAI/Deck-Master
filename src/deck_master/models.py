@@ -302,6 +302,13 @@ def validate_page_semantics(page: dict[str, Any]) -> None:
             raise ModelError(
                 where, f"edge endpoints must exist in nodes, got {edge.get('from')}->{edge.get('to')}"
             )
+    policy = visual.get("design_policy")
+    if policy:
+        table_ids = {block["id"] for block in page["customer_visible"].get("body_blocks", [])
+                     if block["type"] == "table"}
+        roles = [item["block_id"] for item in policy["table_roles"]]
+        if len(roles) != len(set(roles)) or not set(roles) <= table_ids:
+            raise ModelError("page/visual_spec/design_policy/table_roles", "roles must name unique actual tables")
     mapping = page.get("content_mapping")
     if mapping:
         atom_refs = [link.get("element_ref") for link in mapping.get("visible_links") or []]
@@ -586,7 +593,7 @@ def validate_compose_result_semantics(result: dict[str, Any]) -> None:
 WRITER_RANK = {None: 0, "generation.v1": 1, "content-plan.v1": 2,
                "changes.v1": 3, "candidates.v1": 4, "run-desk.v1": 5, "style-recipes.v1": 6, "content-ops.v1": 7,
                "content-candidates.v1": 8, "icon-quality.v1": 9, "workbench-quality.v1": 10,
-               "collaboration.v1": 11, "rc3.v1": 12, "rc3-entry.v1": 13, "rc4-content.v1": 14, "method-catalog.v1": 15}
+               "collaboration.v1": 11, "rc3.v1": 12, "rc3-entry.v1": 13, "rc4-content.v1": 14, "method-catalog.v1": 15, "design-policy.v1": 16}
 
 
 def require_writer(document, minimum):

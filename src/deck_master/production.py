@@ -105,6 +105,11 @@ def resolve_design(page, design, permitted_assets):
         if fid not in fonts:
             raise ModelError(f"visual_spec/design_overrides/{slot}", f"unknown font {fid!r}")
         style["typography"][slot] = fid
+    layout_scope = style.pop("layout_page_ids", None)
+    if "layout_notes" in overrides:
+        style["layout_notes"] = overrides["layout_notes"]
+    elif layout_scope is not None and page["page_id"] not in layout_scope:
+        style["layout_notes"] = ""
     effective["language"] = overrides.get("language", design["language"])
     effective["styles"] = [style]
     effective["default_style_id"] = style["style_id"]
@@ -113,7 +118,7 @@ def resolve_design(page, design, permitted_assets):
     return effective, style
 
 
-def resolve_generation_design(store, document, page_entry, *, recipe_ref=None):
+def resolve_generation_design(store, document, page_entry, *, recipe_ref=None, design_policy=True):
     """Resolve the exact current Page/Plan/recipe consumption before prompting."""
     from .design_requirements import resolve_content_requirements
     page = store.read_object_json(page_entry["page"])
@@ -167,9 +172,34 @@ def resolve_generation_design(store, document, page_entry, *, recipe_ref=None):
                 and page_entry["page_id"] in decision.get("scope", {}).get("page_ids", [])
                 and accepted_decision(store, document, ref)):
             decisions.append(ref)
+    if design_policy:
+        visual = page.get("visual_spec") or {}
+        explicit = visual.get("design_policy")
+        if explicit:
+            from .models import validate_page_semantics
+            validate_page_semantics(page)
+        # This default is created only at new preparation, never on frozen request reads.
+        resolved["design_policy"] = deepcopy(explicit) if explicit else {
+            "version": "design_policy.v1", "strategy": "model_designed",
+            "purpose": visual.get("intent") or page["customer_visible"]["title"],
+            "primary_object": page["customer_visible"]["title"],
+            "free_layout": "Choose spatial composition while preserving all fixed copy, ownership and directed relationships.",
+            "layout_instruction": visual.get("layout_hint") or "", "table_roles": []}
+        if explicit:
+            # A revised page layout replaces inherited layout instructions, including
+            # executable recipe composition. Other recipe dimensions remain fixed.
+            notes = visual.get("design_overrides", {}).get("layout_notes", explicit["layout_instruction"])
+            resolved["styles"][0]["layout_notes"] = notes
+            if "recipe_parameters" in resolved:
+                resolved["recipe_parameters"]["composition"] = explicit["layout_instruction"]
+                resolved["recipe_overrides"] = [item for item in resolved.get("recipe_overrides", [])
+                                                 if item.get("field") != "composition"]
     resolved.update(resolve_content_requirements(
         store, document, page_entry["page"], recipe_ref=recipe_ref,
         decision_refs=decisions, recipe_parameters=resolved.get("recipe_parameters")))
+    # Explicit policy is authoritative over a superseded Page hint and Plan projection.
+    if design_policy:
+        resolved["content_requirements"]["layout_hint"] = resolved["design_policy"]["layout_instruction"]
     return resolved
 
 
@@ -399,9 +429,22 @@ def project_prompt(
             "style_ref": visual.get("style_ref") or resolved_design_context.get("default_style_id"),
         },
     }
-    for key in ("content_requirements", "recipe_parameters", "recipe_overrides"):
+    for key in ("content_requirements", "recipe_parameters", "recipe_overrides", "design_policy"):
         if key in resolved_design_context:
             projection[key] = deepcopy(resolved_design_context[key])
+    policy = resolved_design_context.get("design_policy")
+    policy_instruction = ""
+    if policy:
+        projection["visual_spec"]["layout_hint"] = policy["layout_instruction"]
+        policy_instruction = (
+            "Design policy (design_policy.v1): agreed_layout follows the explicit layout_instruction; "
+            "model_designed chooses composition within free_layout, treating layout_instruction as guidance. "
+            "Purpose and primary_object guide hierarchy, not extra visible copy. Preserve all fixed nodes, "
+            "edges, direction, responsibility and ownership regardless of strategy. No minimum node count "
+            "or nonempty layout hint proves quality. Tables are comparisons by default; preserve their cells, "
+            "units, row/column ownership and comparisons. Only tables explicitly tagged content_inventory "
+            "may be rearranged as non-table composition, retaining every cell and its ownership. "
+            "Page layout notes replace project layout notes; only effective notes below apply.\n")
     requirements = resolved_design_context.get("content_requirements") or {}
     visibility_instruction = ""
     if "text_visibility" in requirements:
@@ -435,7 +478,7 @@ def project_prompt(
         "when the fixed manuscript explicitly requests them and they create no quantitative impression. "
         "Do not omit modules; connect arrows to their actual nodes; "
         "use only permitted assets; no watermark; no internal notes\n"
-        + visibility_instruction + "Structured input:\n" + payload
+        + visibility_instruction + policy_instruction + "Structured input:\n" + payload
     )
     result = {
         "schema_version": "deck_blueprint_request.v1",
