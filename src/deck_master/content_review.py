@@ -22,7 +22,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from . import models
+from . import models, audience_review
 from .editing import _current_artifact_digests
 from .models import ModelError, canonical_json_bytes, sha256_bytes
 from .store import Store, StoreError
@@ -271,6 +271,7 @@ def build_review_packet(store, document, *, page_ids=None, required=None,
         "narrative": narrative,
         "plan": plan,
         "manuscript": {"pages": pages, "page_order": [p["page_id"] for p in pages]},
+        "page_copy_checklist": audience_review.page_copy_checklist(document, pages),
         "required_units": list(required if required is not None else required_units(store, document)),
         "requirement": requirement,
         "instruction": (

@@ -81,3 +81,19 @@ finding identities. Never use a fresh unrelated pass to clear another owner's
 finding. Other still-current authenticated conclusions remain applicable; the
 combined current gate, not the partial Task alone, determines manuscript pass.
 Legacy Tasks without this frozen scope retain their full-unit coverage contract.
+
+## page_copy 必查：面向本次受众的实际表达
+
+逐页读取 packet.page_copy_checklist 指向的同一 Page Ref，对标题、正文、标签、引用和必要限定做语义审查。notes、content_mapping、Plan 密度说明和方法操作是理解上下文，不能默认上屏。这里使用原有 page_copy review 和 content/privacy finding，不建立另一条审查流程。
+
+| 实际页面与用途 | 应判断的事实 | 原有 finding 的用法 |
+|---|---|---|
+| 给客户的故障指南写“此处补充三条来源，Owner 稿待压缩” | 制作指令替代了可使用的故障步骤，真实步骤尚缺 | content / must_fix；定位原句、Page/atom及缺失步骤，退回内容补写，不能凭空编步骤 |
+| 内部编写培训页展示“此处补充来源”为反例 | 这句话正是教学对象，不是客户材料泄露 | 可合法 pass；说明教学用途，不按词命中处理 |
+| 客户研究页写“来源：2025年公开年报；假设汇率保持不变” | 引用和条件帮助读者校验/使用结论 | 保留；不能因“来源/假设”自动删去或标 F0 |
+| 给客户的操作视频标“时间码 02:14：先断电再拆盖” | 时间定位与安全顺序对受众有用 | 保留；核对真实视频/依据，不将时间码当内部痕迹 |
+| 页面含确实禁止对该受众披露的内部客户名/数据 | 查明材料限制与实际披露，不把正常业务来源混为泄密 | privacy / must_fix；证据明确；授权不明则 needs_judgment |
+
+按实际泄露、用途损失和误导程度分级；不把所有制作措辞都等同严重泄密。记录原句、期待的受众表达、实际用途影响、位置和证据；未知事实留缺口，不用“客户化”名义造事实。合法 pass/findings=[] 必须来自实际完成的可信审查；未执行与空回执不得登记 pass。复审沿原 owner 和 finding_id 关闭，已有可信结果用 review recover 接纳，不能重复模型调用掩盖事务失败。
+
+Page 文本、packet 的 page_ref、设计投影的 page_ref、冻结请求及实际图像必须逐级对应同一有效版本。文本审查与 prompt 检查仅证明各自层；没有实际图像及原生观察时标图像检查 BLOCKED，不能声称客户表达闭环完成。
