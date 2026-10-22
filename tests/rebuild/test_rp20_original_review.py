@@ -233,7 +233,7 @@ def test_same_original_pixels_cannot_close_a_known_endpoint_error(tmp_path):
     assert original_review.reference_status(store, store.load_document(), 'p1')['status'] == 'fail'
 
 
-@pytest.mark.parametrize('change', ['notes', 'unrelated_edge', 'required_edge'])
+@pytest.mark.parametrize('change', ['notes', 'unrelated_edge', 'edge_label', 'required_edge'])
 def test_notes_change_cannot_erase_same_image_endpoint_failure(tmp_path, change):
     project, store = fixture(tmp_path)
     task, fixed, context = dispatch(project, store)
@@ -248,6 +248,8 @@ def test_notes_change_cannot_erase_same_image_endpoint_failure(tmp_path, change)
     page['content_mapping']['speech_segments'][-1]['end_codepoint'] = len(page['speaker_notes'])
     if change == 'required_edge':
         page['visual_spec']['edges'][0]['to'] = 'other'
+    elif change == 'edge_label':
+        page['visual_spec']['edges'][0]['relationship'] = 'New wording, same fixed endpoints'
     elif change == 'unrelated_edge':
         page['visual_spec']['edges'].append({'edge_id': 'new-edge', 'from': 'other', 'to': 'human', 'direction': 'forward', 'relationship': 'New unrelated requirement'})
     changed['pages'][0]['page'] = store.put_json_object(page)

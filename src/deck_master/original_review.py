@@ -170,7 +170,7 @@ def finding_requirement_unchanged(before, current, finding):
     """Compare an identified graph requirement, not the Page object version.
 
     Changed/removed endpoints are genuinely new requirements. Notes and
-    unrelated nodes or edges never erase an identified fixed-edge defect.
+    unrelated nodes, edges or relationship labels never erase a fixed-edge defect.
     Unlocalized findings remain conservative: unrelated document changes cannot
     establish that their requirement was withdrawn.
     """
@@ -183,7 +183,8 @@ def finding_requirement_unchanged(before, current, finding):
                 key = target[len(prefix):]
                 a = next((r for r in old['visual_spec'].get(collection, []) if r[identity] == key), None)
                 b = next((r for r in new['visual_spec'].get(collection, []) if r[identity] == key), None)
-                comparisons.append(a is None or a == b)
+                fields = ('from', 'to', 'direction') if collection == 'edges' else ('node_id',)
+                comparisons.append(a is None or (b is not None and all(a.get(field) == b.get(field) for field in fields)))
     if comparisons:
         return any(comparisons)
     return True
