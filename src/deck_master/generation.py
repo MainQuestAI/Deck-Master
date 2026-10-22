@@ -77,6 +77,11 @@ def prepared_input(store, document, task):
             "parameters": {"transparent_background": False} if design.get("content_requirements") else {}, "constraints": {},
             "basis": {"project_id": document["project_id"], "revision_id": dispatched["revision_id"],
                       "produced_against": task["produced_against"]}}
+    if "asset_inputs" in design:
+        for image in design["asset_inputs"]["images"]:
+            attachment = {"file": copy.deepcopy(image["file"]), "role": "reference"}
+            if attachment not in result["references"]:
+                result["references"].append(attachment)
     recipe_ref = task.get("stage_request", {}).get("style_recipe_ref")
     if recipe_ref:
         result["style_recipe_ref"] = copy.deepcopy(recipe_ref)

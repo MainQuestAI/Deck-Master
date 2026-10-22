@@ -80,7 +80,8 @@ def visual_task_inputs_current(store, document, task):
                     # before that fast path, including rejection/withdrawal.
                     if consumed_design(prepared["resolved_design_context"], store=store) != consumed_design(
                             resolve_generation_design(store, document, entry, recipe_ref=recipe_ref,
-                                design_policy="design_policy" in prepared["resolved_design_context"]), store=store):
+                                design_policy="design_policy" in prepared["resolved_design_context"],
+                                asset_inputs="asset_inputs" in prepared["resolved_design_context"]), store=store):
                         return False
         if task.get("kind") != "blueprint":
             for entry in document["pages"]:

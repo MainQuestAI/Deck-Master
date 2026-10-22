@@ -902,7 +902,8 @@
             "rc3-entry.v1",
             "rc4-content.v1",
             "method-catalog.v1",
-            "design-policy.v1"
+            "design-policy.v1",
+            "asset-inputs.v1"
           ]
         }
       },

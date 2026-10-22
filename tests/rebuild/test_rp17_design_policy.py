@@ -140,9 +140,9 @@ def test_persisted_fields_raise_writer_floor_and_old_reader_refuses(tmp_path, mo
     doc['revision_id'] = 'rev-rp17-' + feature
     doc['change']['operation_id'] = 'rp17-writer-' + feature
     store.commit_change(base_revision=old_revision, document=doc, operation_id=doc["change"]["operation_id"])
-    assert store.load_document()['compatibility']['minimum_writer'] == 'design-policy.v1'
+    assert store.load_document()['compatibility']['minimum_writer'] == 'asset-inputs.v1'
     monkeypatch.setattr(store_module, 'SUPPORTED_WRITERS', tuple(w for w in store_module.SUPPORTED_WRITERS
-                                                              if w != 'design-policy.v1'))
+                                                              if models.WRITER_RANK[w] < models.WRITER_RANK['design-policy.v1']))
     with pytest.raises(StoreError, match='writer'):
         store.read_current()
 
@@ -168,7 +168,7 @@ def test_new_task_policy_is_frozen_exactly_and_protected_by_writer_floor(tmp_pat
     from deck_master import generation, service
     project, store, task = _blueprint_with_imported_plan(tmp_path)
     prepared, ref = production.stored_blueprint_request(store, task)
-    assert store.load_document()['compatibility']['minimum_writer'] == 'design-policy.v1'
+    assert store.load_document()['compatibility']['minimum_writer'] == 'asset-inputs.v1'
     service.task_start(project, task_id=task['task_id'], execution_ref='rp17-synthetic',
                        supported_protocols=[generation.PROTOCOL], capabilities=task['required_capabilities'])
     frozen = generation.freeze(project, task_id=task['task_id'],

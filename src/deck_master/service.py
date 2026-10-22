@@ -2132,6 +2132,17 @@ def _apply_rendering_invalidation(store, new_document, old_document, old_design,
         scope = set(task.get('scope_pages') or [])
         if task.get('status') not in ('awaiting_host', 'running'):
             continue
+        if task.get("kind") == "blueprint":
+            from .production import stored_blueprint_request
+            from .tasks import task_inputs_current
+            prepared, _ = stored_blueprint_request(store, task)
+            if prepared and "asset_inputs" in prepared.get("resolved_design_context", {}):
+                # SVG allowance fallback is not this prepared image's actual
+                # attachment dependency. Retire only its consumed inputs.
+                if not task_inputs_current(store, new_document, task):
+                    new_document["tasks"][index] = store.put_json_object(
+                        {**task, "status": "superseded", "updated_at": _utc_now_iso()})
+                continue
         if scope & affected or (task.get('kind') in ('review', 'repair') and scope & review_affected):
             new_document['tasks'][index] = store.put_json_object(
                 {**task, 'status': 'superseded', 'updated_at': _utc_now_iso()})

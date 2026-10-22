@@ -56,6 +56,10 @@ def stored_blueprint_request(store, task):
             if page_ref not in task.get("inputs", []):
                 raise ModelError("task/inputs", "requirements Page is outside actual immutable task inputs")
             page = store.read_object_json(page_ref)
+            if "asset_inputs" in resolved:
+                validate_schema("asset_inputs", resolved["asset_inputs"])
+                if resolved["asset_inputs"] != resolve_asset_inputs(store, page, resolved):
+                    raise ModelError("task/inputs", "selected asset originals differ from the frozen source bindings")
             actual = project_prompt(page, resolved, resolved.get("assets") or [])
             # The immutable policy/instruction prefix is historical evidence;
             # a newer prompt policy must not reinterpret an old Request.
@@ -118,7 +122,7 @@ def resolve_design(page, design, permitted_assets):
     return effective, style
 
 
-def resolve_generation_design(store, document, page_entry, *, recipe_ref=None, design_policy=True):
+def resolve_generation_design(store, document, page_entry, *, recipe_ref=None, design_policy=True, asset_inputs=True):
     """Resolve the exact current Page/Plan/recipe consumption before prompting."""
     from .design_requirements import resolve_content_requirements
     page = store.read_object_json(page_entry["page"])
@@ -200,12 +204,64 @@ def resolve_generation_design(store, document, page_entry, *, recipe_ref=None, d
     # Explicit policy is authoritative over a superseded Page hint and Plan projection.
     if design_policy:
         resolved["content_requirements"]["layout_hint"] = resolved["design_policy"]["layout_instruction"]
+    if asset_inputs:
+        resolved["asset_inputs"] = resolve_asset_inputs(store, page, resolved)
     return resolved
+
+
+def resolve_asset_inputs(store, page, design):
+    """Bind selected raster originals, never permission or a brand name alone."""
+    import io
+    from PIL import Image
+    from .models import validate_artifact_semantics
+    selected = page.get("visual_spec", {}).get("design_overrides", {}).get("selected_asset_ids", [])
+    if len(selected) != len(set(selected)) or not set(selected) <= set(design.get("allowed_asset_ids", [])):
+        raise ModelError("visual_spec/design_overrides/selected_asset_ids", "selected assets must be unique and permitted on this page")
+    assets = {item["asset_id"]: item for item in design.get("assets", [])}
+    images = []
+    for asset_id in selected:
+        asset = assets[asset_id]
+        if asset.get("external_use") != "allowed":
+            raise ModelError("asset_inputs", "selected original is not permitted for external use")
+        artifact = store.read_object_json(asset["artifact"])
+        validate_artifact_semantics(artifact)
+        if asset["kind"] not in ("logo", "image", "icon") or artifact["role"] != "asset":
+            raise ModelError("asset_inputs", "image attachments require an actual logo/image/icon asset")
+        data = store.read_object_bytes(artifact["file"])
+        try:
+            with Image.open(io.BytesIO(data)) as image:
+                media_type = {"PNG": "image/png", "JPEG": "image/jpeg", "WEBP": "image/webp"}.get(image.format)
+                if media_type is None or media_type != artifact["media_type"]:
+                    raise ValueError("only matching PNG/JPEG/WebP originals are supported image attachments")
+                image.verify()
+        except (OSError, ValueError, Image.DecompressionBombError) as exc:
+            raise ModelError("asset_inputs", "selected asset is not a supported verified raster original; SVG/font/template attachment conversion is unsupported") from exc
+        images.append({"asset_id": asset_id, "kind": asset["kind"], "artifact_ref": deepcopy(asset["artifact"]),
+                       "file": deepcopy(artifact["file"]), "media_type": media_type})
+    result = {"schema_version": "asset_inputs.v1", "images": images}
+    from .models import validate_schema
+    validate_schema("asset_inputs", result)
+    return result
 
 
 def consumed_design(resolved, *, store):
     """Audit Refs stay recorded; freshness compares the actual consumed values."""
     result = {key: value for key, value in resolved.items() if key != "content_basis"}
+    if "asset_inputs" in resolved:
+        # Permission is not consumption. Preserve used font assets separately;
+        # image attachments carry exact immutable file bytes and their role.
+        used = {item["asset_id"] for item in resolved["asset_inputs"]["images"]}
+        used.update(font["asset_id"] for font in resolved.get("fonts", []) if font.get("asset_id"))
+        result["assets"] = [asset for asset in resolved.get("assets", []) if asset["asset_id"] in used]
+        # Registration timestamps are not consumed image inputs; provenance is.
+        result["assets"] = [{**asset, "artifact": {key: value for key, value in
+                              store.read_object_json(asset["artifact"]).items()
+                              if key not in ("artifact_id", "created_at")}}
+                            for asset in sorted(result["assets"], key=lambda item: item["asset_id"])]
+        result["asset_inputs"] = {**resolved["asset_inputs"], "images": [
+            {key: value for key, value in image.items() if key != "artifact_ref"}
+            for image in resolved["asset_inputs"]["images"]]}
+        result["allowed_asset_ids"] = sorted(used)
     if resolved.get("content_basis"):
         from .models import validate_decision_semantics
         basis = resolved["content_basis"]
@@ -330,7 +386,8 @@ def resolve_page_design(store, document, page_entry, *, require_current=False):
                               document["design_context"].get("assets") or [])[0]
     resolved = bound["resolved_design_context"]
     if require_current and consumed_design(resolved, store=store) != consumed_design(
-            resolve_generation_design(store, document, page_entry, recipe_ref=bound["recipe_ref"]), store=store):
+            resolve_generation_design(store, document, page_entry, recipe_ref=bound["recipe_ref"],
+                design_policy="design_policy" in resolved, asset_inputs="asset_inputs" in resolved), store=store):
         raise ModelError("blueprint/content_basis", "adopted blueprint's consumed Page/Plan/design inputs changed")
     return resolved
 
@@ -343,7 +400,9 @@ def resolve_page_rendering_design(store, document, page_entry):
     """
     bound = adopted_blueprint_design(store, document, page_entry)
     if bound is not None:
-        return resolve_generation_design(store, document, page_entry, recipe_ref=bound["recipe_ref"])
+        resolved = bound["resolved_design_context"]
+        return resolve_generation_design(store, document, page_entry, recipe_ref=bound["recipe_ref"],
+            design_policy="design_policy" in resolved, asset_inputs="asset_inputs" in resolved)
     return resolve_page_design(store, document, page_entry)
 
 
@@ -429,9 +488,23 @@ def project_prompt(
             "style_ref": visual.get("style_ref") or resolved_design_context.get("default_style_id"),
         },
     }
-    for key in ("content_requirements", "recipe_parameters", "recipe_overrides", "design_policy"):
+    for key in ("content_requirements", "recipe_parameters", "recipe_overrides", "design_policy", "asset_inputs"):
         if key in resolved_design_context:
             projection[key] = deepcopy(resolved_design_context[key])
+    attachment_instruction = ""
+    if "asset_inputs" in resolved_design_context:
+        inputs = resolved_design_context["asset_inputs"]
+        from .models import validate_schema
+        validate_schema("asset_inputs", inputs)
+        used = {item["asset_id"] for item in inputs["images"]}
+        used.update(font["asset_id"] for font in resolved_design_context.get("fonts", []) if font.get("asset_id"))
+        projection["permitted_assets"] = sorted([asset for asset in assets if asset["asset_id"] in used],
+                                                key=lambda item: item["asset_id"])
+        attachment_instruction = (
+            "Assets (asset_inputs.v1): selected original raster files are supplied as image references. "
+            "Use those actual logo/image bytes and identity, not a textual brand-name substitute. "
+            "Do not invent assets or reproduce unselected brand material. Font registrations are typography "
+            "metadata, not font files attached to ImageGen; no exact font embedding or PPTX master reuse is implied.\n")
     policy = resolved_design_context.get("design_policy")
     policy_instruction = ""
     if policy:
@@ -478,7 +551,7 @@ def project_prompt(
         "when the fixed manuscript explicitly requests them and they create no quantitative impression. "
         "Do not omit modules; connect arrows to their actual nodes; "
         "use only permitted assets; no watermark; no internal notes\n"
-        + visibility_instruction + policy_instruction + "Structured input:\n" + payload
+        + visibility_instruction + policy_instruction + attachment_instruction + "Structured input:\n" + payload
     )
     result = {
         "schema_version": "deck_blueprint_request.v1",

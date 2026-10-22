@@ -95,7 +95,7 @@ def test_recipe_revision_has_diff_and_does_not_mutate_old_fixed_input(flow):
     with pytest.raises(generation.GenerationError): generation.freeze(flow.project, task_id=task['task_id'], input=bad, base_revision=flow.store.current_revision_id(), operation_id=str(uuid.uuid4()))
     frozen = generation.freeze(flow.project, task_id=task['task_id'], input=original, base_revision=flow.store.current_revision_id(), operation_id=str(uuid.uuid4()))
     assert frozen['input']['style_recipe_ref'] == first['recipe_ref']
-    assert flow.store.load_document()['compatibility']['minimum_writer'] == 'method-catalog.v1'
+    assert flow.store.load_document()['compatibility']['minimum_writer'] == 'asset-inputs.v1'
 
 
 def test_conflicting_density_requires_explicit_new_proposal(flow):
@@ -126,7 +126,7 @@ def test_first_trial_then_adoption_then_explicit_expansion(flow):
     assert end['pages'][2]['blueprint'] != original[2]['blueprint'] and end['pages'][2]['svg'] is None
     for t in (task, next_task):
         current = flow.task(t['task_id']); assert len(current['call_allowances']) == 1 and current['call_allowances'][0]['state'] == 'consumed'
-    assert end['compatibility']['minimum_writer'] == 'method-catalog.v1'
+    assert end['compatibility']['minimum_writer'] == 'asset-inputs.v1'
 
 
 @pytest.mark.parametrize('field', ['content', 'blueprint'])

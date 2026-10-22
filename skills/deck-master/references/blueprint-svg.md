@@ -65,3 +65,11 @@ reconstruct、repair 和 page_visual 工作单逐页读取 `page_design_contexts
 ## 逻辑与物理单位
 
 实际读取工作单同时给出的 [physical-units 方法](physical-units.md)：从当前 canvas/物理页计算 contain k，核对 SVG_px*k*0.75pt；读取实际 p:sldSz、按明确角色逐run字号及 SVG/PPT 双层净空。固定样式不由外层包装补改，不调 converter 常数。
+
+## 选定品牌原件与冻结附件（asset_inputs.v1）
+
+素材上传只是临时材料，不等于资产登记或选用。通过 `deck-master import asset --project … --asset-id … --kind logo|image|icon|font --file … --external-use allowed` 登记真实原件及来源。权限不代表每页都消费：新页面在 `visual_spec.design_overrides.selected_asset_ids` 写实际选定的图像资产 ID，必须属于该页有效 allowed_asset_ids；缺省/空列表表示不附带图片。注册、改变选用和正式生产继续遵守现有范围及额度，不由此新增授权。
+
+新准备的 `resolved_design_context.asset_inputs` 固定 `asset_inputs.v1`、顺序、asset_id/kind、原件 Artifact Ref、文件 Ref 与 media_type；PNG/JPEG/WebP 必须实际解码检查，来源元数据保留在原件 Artifact。生成 input.references 合并阶段参考和选定原件，角色为 reference，精确重复仅保留一次。Host 用冻结 Ref 对应的本项目对象路径作为 `referenced_image_paths`，保持顺序与真实原件；不能用品牌名字文字代替附件，不能漏传后仍称匹配。生产准备和文件读回不是工具消费证据，实际调用仍按上节原生观察和输出核对结算。
+
+新字段/准备要求 `minimum_writer=asset-inputs.v1`；旧 writer 明确拒绝新事实。历史无此标识的请求保留原 references，不补附件、不原地重写；新正式准备才选用上述规则。选中原件字节、来源或权限变化使相关任务失效；未选资产、仅登记时间变化不使无关新任务失效。SVG 栅格化后另行登记才可选为图片附件，不能假称当前链路自动转换。注册字体不等于 ImageGen 字体附件，PPTX 正文抽取也不等于母版复用。具体支持边界见 RP-19 报告矩阵。

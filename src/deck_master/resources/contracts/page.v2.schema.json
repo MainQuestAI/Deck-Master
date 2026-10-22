@@ -369,6 +369,15 @@
             "layout_notes": {
               "type": "string",
               "description": "Replaces project layout notes for this page, including explicit empty clearing."
+            },
+            "selected_asset_ids": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+              },
+              "description": "Actual image attachments selected for this page; subset of permitted assets. Missing selects none for new preparations."
             }
           },
           "required": [],
