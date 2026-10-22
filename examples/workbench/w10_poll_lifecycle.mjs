@@ -34,4 +34,33 @@ stale.resolve({task_counts: {running: 9}}); await flush(); assert.equal(seen.len
 pending.shift().resolve({task_counts: {running: 1}}); await flush(); assert.equal([...timers.values()][0].delay, 3000);
 poll.stop(); assert.equal(timers.size, 0); window.dispatchEvent(new Event('focus')); assert.equal(pending.length, 0);
 assert.equal(peak, 1); assert.equal(errors.length, 2);
+// A slow follow-up control read is part of the poll, not a detached workload.
+let releaseControl, followed = 0;
+const slow = new SummaryPoll(async () => ({task_counts:{running:1}}),
+  () => { followed++; return new Promise(resolve => { releaseControl = resolve; }); }, () => {}, {task_counts:{running:1}});
+slow.start(); await tick(3000);
+window.dispatchEvent(new Event('focus')); window.dispatchEvent(new Event('focus'));
+assert.equal(followed, 1); assert.equal(timers.size, 0);
+releaseControl(); await flush(); await tick(0);
+assert.equal(followed, 2); slow.stop(); releaseControl(); await flush();
+assert.equal(timers.size, 0);
+
+// Navigation must obtain post-write control facts without overlapping reads.
+const {Project} = await import('../../src/deck_master/resources/static/v2/project.js');
+let reads = [], inFlight = 0, controlPeak = 0;
+globalThis.fetch = path => new Promise(resolve => {
+  assert.equal(path, '/api/project');
+  controlPeak = Math.max(controlPeak, ++inFlight);
+  reads.push(value => { inFlight--; resolve({ok:true, json:async () => value}); });
+});
+const app = new Project({}, {});
+const first = app.readControl(), shared = app.readControl(), afterWrite = app.readControl(true);
+assert.equal(reads.length, 1);
+reads.shift()({revision_id:'before'});
+assert.equal((await first).revision_id, 'before');
+assert.equal((await shared).revision_id, 'before');
+await flush(); assert.equal(reads.length, 1);
+reads.shift()({revision_id:'after'});
+assert.equal((await afterWrite).revision_id, 'after');
+assert.equal(controlPeak, 1);
 console.log(JSON.stringify({passed: true, checks: ['active_3s', 'idle_15s', 'failure_backoff_max_30s', 'single_inflight', 'focus_coalesced', 'hidden_pauses_aborts', 'visible_immediate', 'late_hidden_response_ignored', 'bfcache_old_generation_ignored', 'stop_removes_listeners']}));

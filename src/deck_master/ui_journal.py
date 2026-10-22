@@ -130,7 +130,7 @@ def _pointer_gate(project):
     return None
 
 
-def project_info(project, *, server_capabilities=None):
+def project_info(project, *, server_capabilities=None, include_eligibility=True):
     from . import collaboration, collaboration_migration, content_production
     from .samples import sample_info
     from .store import SUPPORTED_WRITERS
@@ -152,7 +152,7 @@ def project_info(project, *, server_capabilities=None):
     # never publish mixed completion/request/migration bases to the browser.
     for _ in range(3):
         store, doc, identity = context(project)
-        collaboration_state = collaboration.describe(project)
+        collaboration_state = collaboration.describe(project, include_eligibility=include_eligibility)
         migration = collaboration_migration.describe(project)
         if doc["revision_id"] == collaboration_state["revision_id"] == migration["revision_id"]:
             break
