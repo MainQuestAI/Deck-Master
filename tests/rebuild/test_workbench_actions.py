@@ -96,7 +96,7 @@ def test_candidates_block_branches_pass_active_schema(candidate_store):
     cid = svg_candidate(store)
     summary = workbench.workbench_summary(project)
     assert summary["candidates"] == {"status": "recorded", "count": 1, "pending_count": 1,
-                                     "adopted_count": 0, "kept_count": 0, "unreadable_count": 0}
+                                     "adopted_count": 0, "kept_count": 0, "unreadable_count": 0, "stale_count": 0}
     compare = [a for a in summary["next_actions"]["actions"] if a["kind"] == "compare_candidates"]
     assert len(compare) == 1
     assert compare[0]["page_ids"] == ["p01"] and compare[0]["layer"] == "svg"
@@ -278,13 +278,14 @@ def test_next_actions_order_reasons_and_stable_ids(flow, tmp_path):
     assert summary["input_alignment"] == "needs_reconciliation"
     # handoff sits right below recovery: an awaiting task is the primary
     # executable loop step and must not be buried behind rework or reading
-    assert kinds(summary) == ["verify_execution", "handoff", "inspect_failure", "replan",
+    assert kinds(summary) == ["verify_execution", "handoff", "inspect_failure",
                               "compare_candidates", "reconcile_inputs", "prepare_stage",
                               "refresh_stage", "review_quality", "review_results"]
     by_kind = {action["kind"]: action for action in summary["next_actions"]["actions"]}
     assert by_kind["verify_execution"]["reason_code"] == "unknown_calls_recorded"
     assert by_kind["inspect_failure"]["reason_code"] == "task_failed"
-    assert by_kind["replan"]["reason_code"] == "task_superseded"
+    assert "replan" not in by_kind
+    assert any(store.read_object_json(ref)["status"] == "superseded" for ref in store.load_document()["tasks"])
     assert by_kind["compare_candidates"]["reason_code"] == "candidate_pending"
     assert by_kind["reconcile_inputs"]["reason_code"] == "content_needs_reconciliation"
     assert by_kind["prepare_stage"]["reason_code"] == "stage_missing" and by_kind["prepare_stage"]["layer"] == "svg"
@@ -294,7 +295,8 @@ def test_next_actions_order_reasons_and_stable_ids(flow, tmp_path):
     assert by_kind["review_quality"]["reason_code"] == "quality_reviews_recorded"
     assert by_kind["review_quality"]["source_refs"] == summary["quality"]["review_refs"]
     for action in summary["next_actions"]["actions"]:
-        assert action["enabled"] is True and action["state"] == "derived"
+        assert action["enabled"] is True
+        assert action["state"] == ("unknown" if action["kind"] == "compare_candidates" else "derived")
         assert action["revision_id"] == summary["revision_id"]
         # reconcile_inputs is a derived deck fact with no single object ref
         if action["kind"] != "reconcile_inputs":
@@ -302,7 +304,7 @@ def test_next_actions_order_reasons_and_stable_ids(flow, tmp_path):
 
     # attention stays page-scoped; deck-level facts never land on a page
     attention = {item["kind"] for item in summary["pages"][0]["attention"]["items"]}
-    assert attention == {"verify_execution", "inspect_failure", "replan", "compare_candidates",
+    assert attention == {"verify_execution", "inspect_failure", "compare_candidates",
                          "prepare_stage", "refresh_stage", "handoff", "review_results"}
     assert all(item["page_ids"] == ["p1"] for item in summary["pages"][0]["attention"]["items"])
 
@@ -326,7 +328,7 @@ def test_snapshot_level_candidate_damage_is_isolated_not_fatal(project):
     path.write_text(json.dumps(doc), "utf-8")
     summary = workbench.workbench_summary(project)
     assert summary["candidates"] == {"status": "recorded", "count": 2, "pending_count": 2,
-                                     "adopted_count": 0, "kept_count": 0, "unreadable_count": 2}
+                                     "adopted_count": 0, "kept_count": 0, "unreadable_count": 2, "stale_count": 0}
     compare = [a for a in summary["next_actions"]["actions"] if a["kind"] == "compare_candidates"][0]
     assert compare["enabled"] is False and compare["blocked_reason"] == "candidate_unreadable"
     assert compare["state"] == "unknown" and compare["source_refs"] == []
@@ -406,7 +408,7 @@ def test_no_style_deviation_action_without_professional_evidence(tmp_path):
     for forbidden in ("style_deviation", "drift", "风格偏离"):
         assert forbidden not in dumped
     assert summary["quality"]["status"] == "detail_required"
-    allowed = {"verify_execution", "inspect_failure", "replan", "compare_candidates", "reconcile_inputs",
+    allowed = {"verify_execution", "inspect_failure", "compare_candidates", "reconcile_inputs",
                "prepare_stage", "refresh_stage", "handoff", "review_results", "review_quality"}
     assert set(kinds(summary)) <= allowed
     # the rewritten blueprints are facts, not style verdicts: the stale ppt

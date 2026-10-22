@@ -16,7 +16,7 @@ const kindLabels = {verify_execution: '执行待核实', handoff: '制作任务�
 const nextLabels = {verify_execution: '去核实', handoff: '去交接', inspect_failure: '查看失败', replan: '重新计划',
   compare_candidates: '比较候选', reconcile_inputs: '去协调', prepare_stage: '查看待补页', refresh_stage: '查看依据',
   review_results: '去阅读', review_quality: '查看记录'};
-const reasonLabels = {unknown_calls_recorded: '任务记录了未知调用；先核实原执行，未确认前不要重复派发。',
+const reasonLabels = {dependency_basis_changed:'已采用依据变化，重新准备本次任务后再交接。', dependencies_unverifiable:'任务依据暂不可核实，先检查原记录。',unknown_calls_recorded: '任务记录了未知调用；先核实原执行，未确认前不要重复派发。',
   running_task_stale: '任务已运行超过 30 分钟，状态待核实；超时不等于失败。',
   running_task_unclaimed: '运行中的任务缺少执行标识，需核实接手记录。',
   task_failed: '执行失败；当前稿件保留，可调整要求后重试。',
@@ -43,9 +43,12 @@ function todoTitle(action) {
   const layer = {blueprint:'原图',svg:'SVG',svg_preview:'SVG 预览',ppt_preview:'PPT 预览',pptx:'整稿 PPT'}[action.layer] || '产物类型待核实';
   const base = action.kind === 'prepare_stage' ? `${layer}待生成`
     : action.kind === 'refresh_stage' ? `${layer}依据已变化` : kindLabels[action.kind] || '待核实事项';
+  if (['verify_execution','handoff','inspect_failure','replan','review_results'].includes(action.kind) && action.object_count) return `${action.object_count} 个任务 · ${base}`;
+  if (action.kind === 'compare_candidates' && action.object_count) return `${action.object_count} 个候选 · ${action.state === 'unknown' ? '依据待核实' : base}`;
   return action.page_ids?.length ? `${action.page_ids.length} 页${base}` : base;
 }
 function reasonText(action) {
+  if (action.kind === 'compare_candidates' && action.state === 'unknown') return '候选依据或任务关系暂不可核实，先查看原记录。';
   return (reasonLabels[action.reason_code] || action.reason_code || '') +
     (action.blocked_reason === 'candidate_unreadable' ? ' 候选记录损坏，已隔离。' : '');
 }

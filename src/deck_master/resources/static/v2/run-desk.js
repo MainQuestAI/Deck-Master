@@ -107,7 +107,8 @@ export function runDesk(app, data) {
       el('div', {class: 'row wrap run-task-identity'}, el('strong', {}, names[task.kind] || '制作任务'), el('span', {class: 'status'}, statuses[task.status] || task.status)),
       el('p', {class: 'run-requirement'}, `要求：${(task.instruction || '').trim() || '未记录制作要求'}`),
       el('p', {class:'run-task-scope'}, `目标：${scopeLabel(task)}`),
-      el('p', {class: 'muted'}, `接手时间：${clock(task.execution_started_at)}`),
+      el('p', {class: 'muted'}, `${task.task_id} · ${task.operation_id} · 创建 ${clock(task.created_at)} · 接手 ${clock(task.execution_started_at)}`),
+      task.current_relation && el('p', {class:'muted'}, ({current:'当前请求',historical:'历史记录',unknown:'当前关联待核实'})[task.current_relation.state] + ' · ' + task.current_relation.reason),
       task.human_actions?.includes('verify_execution') && el('p', {class: 'field-error'}, '需要核实原执行。不会自动重试或取消；未确认取消前请勿重复派发。'),
       todo(task).length > 0 && el('p', {class: 'run-actions'}, todo(task).map(key => actions[key] || key).join(' · ')),
       task.error && errorBox(typeof task.error === 'object' ? task.error : {message: task.error}),
@@ -132,7 +133,7 @@ export function runDesk(app, data) {
     return el('article',{class:'run-task studio-task-record','data-task-id':task.task_id},
       el('div',{class:'studio-task-main'},el('span',{class:'studio-task-symbol','aria-hidden':'true'},icon(task.kind==='compose'?'content':'runs')),
         el('div',{class:'studio-task-copy'},el('h3',{},label),el('p',{class:'run-task-scope'},`目标：${scopeLabel(task)}`),
-          el('p',{class:'run-requirement'},`要求：${summary}`))),
+          el('p',{class:'run-requirement'},`要求：${summary}`), el('p',{class:'muted'}, `${task.task_id} · ${task.operation_id} · ${clock(task.created_at)} · ${({current:'当前请求',historical:'历史记录',unknown:'当前关联待核实'})[task.current_relation?.state] || '当前关联待核实'}`))),
       el('div',{class:'studio-task-state'},el('span',{class:'status'},icon(statusIcon),statuses[task.status]||'状态待核实'),
         next.length>0 && el('p',{class:task.needs_verification?'field-error':'muted'},next.map(key=>actions[key]||key).join(' · '))),
       task.task_id ? button('查看这项任务',()=>app.go({task_id:task.task_id,revision:page.revision_id}),false,{class:'run-task-open'}) : el('span',{class:'field-error'},'记录无法读取'));

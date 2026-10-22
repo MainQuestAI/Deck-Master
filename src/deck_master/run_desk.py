@@ -11,7 +11,8 @@ from .models import validate_schema
 from .snapshots import IDENTIFIER, READ_FAILURES, ReadModelError, load_snapshot
 from .store import Store
 from .result_reading import key as reading_key
-from .workbench import _ReadContext
+from .workbench import _ReadContext, _candidate_facts
+from .action_currentness import Projection
 
 DOCS = 'docs/agent-recovery-playbook.md#run-desk-recovery'
 
@@ -128,7 +129,7 @@ def task_instruction_summary(task):
     return text
 
 
-def task_row(task, ref=None, *, adopted=(), now=None, live=True):
+def task_row(task, ref=None, *, adopted=(), now=None, live=True, projection=None, pending_shas=None):
     now = now or datetime.now(timezone.utc)
     def timestamp(value):
         try:
@@ -145,6 +146,9 @@ def task_row(task, ref=None, *, adopted=(), now=None, live=True):
     calls = Counter(call['state'] for call in task.get('call_allowances', []))
     unknown = bool(calls['unknown'])
     pending_candidates = [r for r in task.get('candidate_refs', []) if r['sha256'] not in adopted]
+    if pending_shas is not None:
+        pending_candidates = [r for r in pending_candidates if r['sha256'] in pending_shas]
+    relation = projection.task(task) if projection else {'state': 'unknown', 'reason': 'context_not_loaded'}
     actions = []
     if unknown:
         actions.append('verify_unknown_call')
@@ -154,14 +158,18 @@ def task_row(task, ref=None, *, adopted=(), now=None, live=True):
         actions.append('handoff')
     elif task['status'] == 'failed':
         actions.append('inspect_failure')
-    elif task['status'] == 'superseded':
-        actions.append('replan')
     elif task['status'] == 'completed':
         if pending_candidates:
             actions.append('compare_candidates')
         elif not task.get('candidate_refs') and task.get('result_refs'):
             actions.append('review_results')
-    return {'ref': ref, 'task_id': task['task_id'], 'operation_id': task['operation_id'],
+    if 'handoff' in actions and relation['reason'] in ('dependency_basis_changed', 'dependencies_unverifiable'):
+        actions = ['replan' if relation['reason'] == 'dependency_basis_changed' else 'verify_execution']
+    if unknown:
+        actions = [action for action in actions if action in ('verify_unknown_call', 'verify_execution')]
+    if relation['state'] == 'historical':
+        actions = []
+    return {'current_relation': relation, 'ref': ref, 'task_id': task['task_id'], 'operation_id': task['operation_id'],
             'kind': task['kind'], 'status': task['status'], 'scope_pages': task['scope_pages'],
             'instruction': task['instruction'], 'display_instruction': task_instruction_summary(task), 'dispatch_revision': task['dispatch_revision'],
             'created_at': task['created_at'], 'updated_at': task['updated_at'],
@@ -231,6 +239,7 @@ def listing(project, *, revision=None, limit=30, offset=0, change_id=None, statu
                   'check': '工程检查', 'compose': '整理内容', 'blueprint': '制作原图', 'svg': '制作 SVG',
                   'render': '渲染预览', 'repair': '局部修改', 'review': '检查', 'export': '准备文件'}
     records = _records(ctx); groups = _groups(ctx, records)
+    projection, pending_shas = _projection(ctx, records)
     selected_ids = None
     if change_id:
         group = next((g for g in groups if g['change_id'] == change_id), None)
@@ -240,7 +249,7 @@ def listing(project, *, revision=None, limit=30, offset=0, change_id=None, statu
     adopted = {r['candidate_ref']['sha256'] for r in doc.get('candidate_adoptions', [])}
     now = datetime.now(timezone.utc); projected = []
     for ref, task in reversed(records):
-        row = (task_row(task, ref, adopted=adopted, now=now, live=revision is None) if task else
+        row = (task_row(task, ref, adopted=adopted, now=now, live=revision is None, projection=projection, pending_shas=pending_shas) if task else
                {'ref': ref, 'task_id': None, 'status': 'unreadable', 'human_actions': ['inspect_failure'], 'error': _error()})
         if task and reading is not None and reading_key(task) in reading['seen']:
             row['human_actions']=[a for a in row['human_actions'] if a!='review_results']
@@ -271,7 +280,9 @@ def detail(project, *, task_id, revision=None):
     if not isinstance(task_id, str) or not IDENTIFIER.fullmatch(task_id):
         raise RunReadError('invalid_run_query', 'task_id', 'invalid task identifier', http_status=400)
     store = Store(project); doc = load_snapshot(store, revision); ctx = _ReadContext(store, doc)
-    record = next(((ref, t) for ref, t in _records(ctx) if t and t['task_id'] == task_id), None)
+    records = _records(ctx)
+    projection, pending_shas = _projection(ctx, records)
+    record = next(((ref, t) for ref, t in records if t and t['task_id'] == task_id), None)
     if record is None:
         raise RunReadError('task_not_found', 'task_id', 'task is not readable in this committed project version')
     ref, task = record; links = {}; errors = []
@@ -287,5 +298,13 @@ def detail(project, *, task_id, revision=None):
                 errors.append(_error(field))
     adopted = {r['candidate_ref']['sha256'] for r in doc.get('candidate_adoptions', [])}
     return copy.deepcopy({'project_id': doc['project_id'], 'revision_id': doc['revision_id'],
-        'task': task_row(task, ref, adopted=adopted, live=revision is None), 'links': links,
+        'task': task_row(task, ref, adopted=adopted, live=revision is None, projection=projection, pending_shas=pending_shas), 'links': links,
         'call_allowances': task.get('call_allowances', []), 'errors': errors, 'docs_ref': DOCS})
+
+
+def _projection(ctx, records):
+    tasks = {task['task_id']: task for _, task in records if task}
+    ctx.action_projection = Projection(ctx, tasks)
+    _, facts = _candidate_facts(ctx, tasks)
+    pending = {ref['sha256'] for fact in facts for ref in fact['source_refs'][:1]}
+    return ctx.action_projection, pending
