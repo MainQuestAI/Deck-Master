@@ -58,3 +58,37 @@ rc3_preproduction_semantics, rc3_restyle_workflows, rc3_review_policy_ready,
 review_policy_semantic_identity, scoped_preproduction_eligibility; pytest -q
 -p no:cacheprovider -m 'not render and not browser'. Full src/tests Ruff and
 `git diff --check` passed. This is distinct from the still-running remote full gate.
+
+Remote original head terminal unit evidence (2026-10-22):
+Python 3.11/Node22 job 120014697231: 73 failed, 3679 passed, 2 skipped,
+733 deselected in 1137.37s. Python 3.11/Node24 job 120014697826: identical
+73 failing test IDs and totals in 1329.85s. The failure list is tracked locally
+in /tmp/deck-ci-39833146156-unit-failures.json. Most mapped to the fixes above;
+the isolated Q2 child exposed one additional frozen-owner fixture requiring
+explicit replacement with original open findings retained (under correction).
+Other remote jobs remain in progress; these are honest failed gate results.
+
+The later local unit diagnostic segment stopped after 15 failures with
+930 passed, 56 deselected in 193.69s. This also ran during source integration,
+so its two local-runtime health failures were rechecked on a fixed candidate:
+launcher, port-restart recovery and JSON polling receipt all passed (3 in 1.53s).
+No runtime health timeout was changed. The trailing unit files passed separately:
+221 passed, 41 deselected in 59.35s; /tmp/deck-ci-tail-unit-repro.log.
+
+Final code candidate for the first CI-followup push:
+`c9cc33a21b5643be22b3cdd763ffd96c61757187`. Exact git archive wheel, temporary
+installation and canonical Skill inventory matched (278 package files);
+CI-followup-installation.json contains wheel SHA256 and actual import path.
+Installed module was asserted before running archived native review/recovery,
+explicit re-review, RP24 diagnosis, scoped review gate, policy semantic identity,
+original-image review and real preview-poll browser checks:
+**88 passed in 30.31s**, `/tmp/deck-followup-c9cc33a2/installed-tests.log`.
+The corresponding source selection for remaining known contract failures passed
+71 tests in 16.86s. The isolated Q2 wrapper passed8 tests in138.84s, including
+actual `-I -B` child70/70 passed0skip; no HOME or real model call involved.
+
+Python3.12/Node24 original CI job120014696823 also ended with the same73 failed
+IDs,3679 passed,2 skipped in1490.15s. Original browser and final matrix still run.
+Followup is pushed separately as codex/issue-repair-20261023-ci-followup so the
+original requested CI can reach its own terminal state without concurrency
+cancellation. No PR creation or merge is performed.

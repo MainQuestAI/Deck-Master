@@ -465,3 +465,22 @@ remain unchanged. Do not infer controller-fenced not-sent evidence from an empty
 observation list or a Host-reported release, or use a matched image/input to
 rename another execution's event. The unresolved choices and exact missing
 proofs are recorded in [RP-24 evidence model](reports/issue-repair-20261023/RP-24-cross-execution-evidence.md).
+
+
+## Explicit preproduction re-review
+
+Default review remains incremental and returns `already_reviewed` when the current
+required units pass. If an actual user request calls for checking an unchanged
+unit again, `deck-master review native --project <dir> --force-unit page_copy`
+selects that currently required unit explicitly (repeat the flag for additional
+units). The existing HTTP entry accepts `force_units` as a nonempty unique list.
+Do not combine this with a frozen `task_id`; execute that Task by its own identity.
+This is a real native review command, not a read-only diagnostic: it still requires
+the applicable authorization and live reviewer capability. Never invoke it merely
+for environment readiness or substitute a synthetic receipt for actual review.
+
+Explicit selection adds to missing/blocked units; it never drops them or bypasses
+current scope, identity, cancellation, review-owner or acceptance checks. A
+completed earlier pass is not permission to ignore a newly accepted failing
+review. Only semantically unchanged policy bookkeeping can preserve applicability;
+changed sources, actual requirements or authority still invalidate their basis.

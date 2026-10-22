@@ -10,7 +10,7 @@
         139
       ],
       "depends_on": [],
-      "implementation": "ae22ef08 + ebaa7a86 + 61621e58",
+      "implementation": "ae22ef08 + ebaa7a86 + 61621e58 + 8d42a5b5",
       "evidence": "docs/reports/issue-repair-20261023/RP-00.md",
       "state": "implemented_pending_review",
       "issue_closure": "NOT_RUN"
@@ -157,7 +157,7 @@
       "depends_on": [
         "RP-11"
       ],
-      "implementation": "4ee1afeb + 6a0ec367 + d89cf73b",
+      "implementation": "4ee1afeb + 6a0ec367 + d89cf73b + fbcd7c58 + 9d08f79e + c9cc33a2",
       "evidence": "docs/reports/issue-repair-20261023/RP-12.md",
       "state": "implemented_pending_review",
       "issue_closure": "NOT_RUN"
@@ -181,7 +181,7 @@
         178
       ],
       "depends_on": [],
-      "implementation": "48962271",
+      "implementation": "48962271 + 19e043b9",
       "evidence": "docs/reports/issue-repair-20261023/RP-14.md",
       "state": "implemented_pending_review",
       "issue_closure": "NOT_RUN"
@@ -255,7 +255,7 @@
       "depends_on": [
         "RP-17"
       ],
-      "implementation": "5740d552",
+      "implementation": "5740d552 + 59b71b30",
       "evidence": "docs/reports/issue-repair-20261023/RP-19.md",
       "state": "partial_implementation_special_acceptance_blocked",
       "issue_closure": "NOT_RUN"
@@ -304,7 +304,7 @@
         "RP-10",
         "RP-18"
       ],
-      "implementation": "5e472de8 + eed5e65a + 059e1160",
+      "implementation": "5e472de8 + eed5e65a + 059e1160 + 3260c3de",
       "evidence": "docs/reports/issue-repair-20261023/RP-22.md",
       "state": "implemented_pending_review",
       "issue_closure": "NOT_RUN"
@@ -330,7 +330,7 @@
         "RP-21",
         "RP-23"
       ],
-      "implementation": "8702e5ac + d4b361ce + a3fdd4d2",
+      "implementation": "8702e5ac + d4b361ce + a3fdd4d2 + ddeb5722",
       "evidence": "docs/reports/issue-repair-20261023/RP-24.md",
       "state": "partial_implementation_special_acceptance_blocked",
       "issue_closure": "NOT_RUN",
@@ -426,7 +426,7 @@
         "RP-28",
         "RP-29"
       ],
-      "implementation": "eed5e65a (integrated code candidate; documentation receipt in this report commit)",
+      "implementation": "eed5e65a (integrated code candidate; documentation receipt in this report commit) + 9648efaa + a7fc409d + 5fdacf68 + 99b6fd3b",
       "evidence": "docs/reports/issue-repair-20261023/RP-30.md",
       "state": "partial_implementation_special_acceptance_blocked",
       "issue_closure": "NOT_RUN"
@@ -578,16 +578,16 @@
     "pull_request_created": false
   },
   "engineering_completion_utc": "2026-10-22T18:38:16.613158+00:00",
-  "final_code_candidate": "2805bdf40c427c2833315cb04204d5ab40f84955",
+  "final_code_candidate": "c9cc33a21b5643be22b3cdd763ffd96c61757187",
   "matched_installation": {
-    "source_sha": "2805bdf40c427c2833315cb04204d5ab40f84955",
-    "installed_module": "/tmp/deck-followup-2805bdf4/site/deck_master/__init__.py",
+    "source_sha": "c9cc33a21b5643be22b3cdd763ffd96c61757187",
+    "installed_module": "/tmp/deck-followup-c9cc33a2/site/deck_master/__init__.py",
     "matched_package_files": 278,
     "canonical_skill_inventory_verified": true,
-    "wheel_sha256": "18bcd25dce6dfcad604cdc3e2e5ece571af2dad124611f0e649b75497a962245"
+    "wheel_sha256": "15d813538459c6dceb892da13fdf815602668a5ff127eb4ba8b0ac5d5e092271"
   },
-  "remote_ci": "Query exact final pushed head in final session receipt; no pass claimed in this ledger.",
-  "followup_state": "Authorized follow-up integration and matching installation passed; RP24 concrete product decision remains pending.",
+  "remote_ci": "Original head59f4c0fd run39833146156: three unit matrices failed with same73IDs; render3fail; other jobs pending at19:05UTC. New followup branch preserves original run to terminal.",
+  "followup_state": "Original CI failure diagnosis implemented; matching installed regression and new CI followup. No cross-execution adoption mode enabled.",
   "product_decision_pending": {
     "task": "RP-24",
     "evidence": "docs/reports/issue-repair-20261023/RP-24-cross-execution-evidence.md",
@@ -601,5 +601,6 @@
     "seconds": 37.76,
     "command": "Installed 9-file original/review/styles/browser/native recovery suite --require-browser",
     "log": "/tmp/deck-followup-2805bdf4/installed-tests.log"
-  }
+  },
+  "active_branch": "codex/issue-repair-20261023-ci-followup"
 }
