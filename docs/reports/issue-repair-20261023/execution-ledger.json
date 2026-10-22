@@ -157,7 +157,7 @@
       "depends_on": [
         "RP-11"
       ],
-      "implementation": "4ee1afeb + 6a0ec367 + d89cf73b + fbcd7c58 + 9d08f79e + c9cc33a2",
+      "implementation": "4ee1afeb + 6a0ec367 + d89cf73b + fbcd7c58 + 9d08f79e + c9cc33a2 + 666b41a8",
       "evidence": "docs/reports/issue-repair-20261023/RP-12.md",
       "state": "implemented_pending_review",
       "issue_closure": "NOT_RUN"
@@ -288,7 +288,7 @@
         "RP-19",
         "RP-20"
       ],
-      "implementation": "f0feca8b + b9de561e + 1c046ec2 + 21f7b799 + d9ca38b6",
+      "implementation": "f0feca8b + b9de561e + 1c046ec2 + 21f7b799 + d9ca38b6 + 15a4550b + c05c4d96",
       "evidence": "docs/reports/issue-repair-20261023/RP-21.md",
       "state": "partial_implementation_special_acceptance_blocked",
       "issue_closure": "NOT_RUN",
@@ -304,7 +304,7 @@
         "RP-10",
         "RP-18"
       ],
-      "implementation": "5e472de8 + eed5e65a + 059e1160 + 3260c3de",
+      "implementation": "5e472de8 + eed5e65a + 059e1160 + 3260c3de + 9db952bd + ad75e4c4",
       "evidence": "docs/reports/issue-repair-20261023/RP-22.md",
       "state": "implemented_pending_review",
       "issue_closure": "NOT_RUN"
@@ -568,7 +568,7 @@
     "issue closure",
     "release publication"
   ],
-  "updated_utc": "2026-10-22T18:38:16.613158+00:00",
+  "updated_utc": "2026-10-22T19:47:15.730357+00:00",
   "implementation_start_utc": "2026-10-22T17:28:58Z",
   "remote_rp00": {
     "branch": "codex/repair-rp00-20261023",
@@ -578,15 +578,15 @@
     "pull_request_created": false
   },
   "engineering_completion_utc": "2026-10-22T18:38:16.613158+00:00",
-  "final_code_candidate": "c9cc33a21b5643be22b3cdd763ffd96c61757187",
+  "final_code_candidate": "c05c4d96b83ef5186e91a4a20021814f9a0d2928",
   "matched_installation": {
-    "source_sha": "c9cc33a21b5643be22b3cdd763ffd96c61757187",
-    "installed_module": "/tmp/deck-followup-c9cc33a2/site/deck_master/__init__.py",
+    "source_sha": "c05c4d96b83ef5186e91a4a20021814f9a0d2928",
+    "installed_module": "/tmp/deck-followup-c05c4d96/site/deck_master/__init__.py",
     "matched_package_files": 278,
     "canonical_skill_inventory_verified": true,
-    "wheel_sha256": "15d813538459c6dceb892da13fdf815602668a5ff127eb4ba8b0ac5d5e092271"
+    "wheel_sha256": "3cfa0b26e7029479a022779874b676ee425555a80dbf4ed2afed5145fa26d6b4"
   },
-  "remote_ci": "Original head59f4c0fd run39833146156: three unit matrices failed with same73IDs; render3fail; other jobs pending at19:05UTC. New followup branch preserves original run to terminal.",
+  "remote_ci": "Original run39833146156 head59f4c0fd terminalfailure: four unit matrices73fail,render3fail,browser40fail556pass. Followup3b809d3e run39838599321:render136pass1skip;3unitmatrices3787pass2skip;Python3.12Node24 1Q2-child180s timeout3786pass2skip;browserstillrunning. Latest browser fixes await new CI.",
   "followup_state": "Original CI failure diagnosis implemented; matching installed regression and new CI followup. No cross-execution adoption mode enabled.",
   "product_decision_pending": {
     "task": "RP-24",
@@ -595,12 +595,12 @@
     "decision": "Controller-proven bounded association versus separately authorized external artifact reuse preserving A/B accounting; no automatic single-call reassociation."
   },
   "followup_validation": {
-    "candidate": "2805bdf40c427c2833315cb04204d5ab40f84955",
-    "result": "PASS",
-    "count": 142,
-    "seconds": 37.76,
-    "command": "Installed 9-file original/review/styles/browser/native recovery suite --require-browser",
-    "log": "/tmp/deck-followup-2805bdf4/installed-tests.log"
+    "candidate": "c05c4d96b83ef5186e91a4a20021814f9a0d2928",
+    "result": "PASS within installed browser scope",
+    "count": 50,
+    "seconds": 197.96,
+    "command": "Installed original40 failed browser cases plus initial-design and polling suites --require-browser",
+    "log": "/tmp/deck-followup-c05c4d96/installed-browser.log"
   },
   "active_branch": "codex/issue-repair-20261023-ci-followup"
 }

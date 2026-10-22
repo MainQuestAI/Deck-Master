@@ -127,3 +127,34 @@ the project. Isolated reproduction:1 failed/7 passed/3 deselected in38.06s.
 Normal dependency-source resolution must recover before rerunning those checks;
 no source override, credential/security change or assertion relaxation was used.
 Logs: /tmp/deck-followup-3b809d3e/full-unit.log and /tmp/rp02-install-diagnosis.log.
+
+## Browser repair batch
+
+All40 terminal original-CI browser failures passed together on integrated
+15a4550b in208.27s, with real Chromium and --require-browser. Navigation/composer
+tests now operate visible controls; original readonly, keyboard, conflict,
+late-response and authorization assertions remain. Style tests complete the
+public original-image review protocol using explicitly synthetic receipts.
+Those receipts are not real image-quality acceptance. The actual mixed-deck
+first-viewport layout defect is repaired with a wrapping entry toolbar and
+accessible optional initial-design disclosure; pure no-original decks stay open.
+1280/1440 viewport measurements and390px screenshots are in
+navigation-layout-followup.md. No polling/CAS/authorization guard was removed.
+
+An independent four-file browser run passed98 tests without skips in469.91s;
+/tmp/rp09-browser-four-final.log. The initial-design optional-row guard was
+additionally reproduced and corrected to omit absent native DOM append arguments,
+preserving exact pass/fail/not_evaluated text (10 browser checks passed).
+
+Final code c05c4d96b83ef5186e91a4a20021814f9a0d2928 archive wheel matches278 package
+files and canonical Skill inventory. Actual installed package was asserted before
+running the original40 failures plus initial-design/polling tests: **50 passed,
+no skips in197.96s**. /tmp/deck-followup-c05c4d96/installed-browser.log and
+CI-followup-installation.json retain exact code/wheel identity.
+
+Remote run39838599321 on earlier3b809d3e: Python3.11/Node22 and24, Python3.12/Node22
+each passed3787 tests with2 skips. Python3.12/Node24 passed3786 with2 skips and
+failed only the real Q2 child at its unchanged180s timeout. All70 child outcomes
+remain required; no timeout/coverage/assertion relaxation is authorized as a fix.
+The successful matrices cover the five local DNS-blocked installation outcomes.
+Browser fixes above require a new exact-head CI; no complete-green claim is made.
