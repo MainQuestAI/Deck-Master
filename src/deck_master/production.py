@@ -402,6 +402,21 @@ def project_prompt(
     for key in ("content_requirements", "recipe_parameters", "recipe_overrides"):
         if key in resolved_design_context:
             projection[key] = deepcopy(resolved_design_context[key])
+    requirements = resolved_design_context.get("content_requirements") or {}
+    visibility_instruction = ""
+    if "text_visibility" in requirements:
+        from .models import validate_schema
+        validate_schema("content_requirements", requirements)
+        visibility_instruction = (
+            "Text visibility (customer_visible_only.v1): customer_visible is the ONLY source of text to render. "
+            "content_requirements is non-rendering design context: content_profile classifies composition; "
+            "density_rationale explains density; page_role describes purpose; required_qualifications contains "
+            "Narrative node IDs, never copy to print. Do not turn these fields, source locators, provenance or "
+            "author verification into slide text. Preserve every business condition, attribution and qualification "
+            "already authored in customer_visible, even when it contains words such as source or assumption. "
+            "If a required business condition is missing from fixed copy, return the gap to the content stage; "
+            "do not invent or silently remove copy.\n"
+        )
     payload = json.dumps(projection, ensure_ascii=False, indent=2, sort_keys=True)
     prompt = (
         "Use case: productivity-visual\n"
@@ -420,7 +435,7 @@ def project_prompt(
         "when the fixed manuscript explicitly requests them and they create no quantitative impression. "
         "Do not omit modules; connect arrows to their actual nodes; "
         "use only permitted assets; no watermark; no internal notes\n"
-        "Structured input:\n" + payload
+        + visibility_instruction + "Structured input:\n" + payload
     )
     result = {
         "schema_version": "deck_blueprint_request.v1",

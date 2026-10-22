@@ -16,3 +16,13 @@ Design 消费固定Page、确认方向与作用范围。下列规则只决定表
 先识别重复与无贡献装饰，再提出拆页/分组/附录候选。需要修改正文、关键比较项或概念边界时交回Content/用户，不静默裁切。可用总览矩阵＋下一页必要细节；不执行“一律压成一页”的规则。
 
 三种语义示例见 [semantic-layout-examples](../assets/design/semantic-layout-examples.md)。完整案例after稿是内容依据示范，不是排版尺寸标准。字号、画布和渲染仍沿用实际工作单与physical-units；本文件不规定70/20/10面积比例。
+
+## 内容字段与上屏边界
+
+新冻结输入的 `content_requirements.text_visibility=customer_visible_only.v1` 规定：只有固定 Page 的 `customer_visible` 提供上屏文字。`page_role`、`content_profile`、`density_rationale`、来源定位、作者核验和内部追溯是非上屏设计上下文，不逐字排到画面，也不因存在这些字段就追加免责声明。
+
+- `content_profile` 是构成分类：`simple` 单一重点、`evidence` 支持主张的依据、`mechanism` 定性机制/关系、`data_dense` 必要的定量细节、`mixed` 多种用途。它不是证据等级；`evidence` 不要求显示内部来源，`mechanism` 不要求添加“未实测”。
+- `density_rationale` 解释信息密度和应保留的业务关系，供设计判断空间；不是作者自证或待印刷正文。
+- `required_qualifications` 是绑定 Narrative 中实际 `qualification` 节点的 ID；空数组合法，不能填条件句或预设产品节点名。必要业务条件应已写入 `customer_visible`；缺失时回到内容阶段，不在设计阶段擅自拼句。合法公开来源、业务前提和必要限定照原稿保留，不能按“来源/假设”等关键词删除。
+
+没有实际 Plan 页职责的历史/导入稿保留 `null` profile/rationale 和空资格列表，不推断缺失内容。旧冻结输入没有 `text_visibility` 时保留其原投影与规则；不得回写新标识或补改旧任务方法。新策略只随新的正式准备/冻结生效，历史产物不因此被宣称已接受新审查。

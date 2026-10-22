@@ -89,7 +89,8 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "description": "Non-rendering composition classification copied from the selected actual Plan role; null means no declared role/profile (legacy or partial import). It is not an evidence grade or an instruction to print provenance."
     },
     "density_rationale": {
       "anyOf": [
@@ -100,14 +101,16 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "description": "Non-rendering design guidance copied from the actual Plan role; null means unavailable. Do not print its prose or turn author/source verification into slide copy."
     },
     "required_qualifications": {
       "type": "array",
       "items": {
         "type": "string",
         "minLength": 1
-      }
+      },
+      "description": "Actual qualification-node identifiers from the bound Narrative, not sentences to print. Empty is valid. Historical stored values remain readable without reinterpretation; new Plan writes validate node identity and role. Business conditions must be present in customer_visible to be rendered."
     },
     "structure_refs": {
       "type": "object",
@@ -152,6 +155,10 @@
         "string",
         "null"
       ]
+    },
+    "text_visibility": {
+      "const": "customer_visible_only.v1",
+      "description": "Versioned consumption policy for newly resolved requirements. Only Page.customer_visible supplies rendered text. Requirements, profile, density rationale, roles, node IDs and provenance are non-rendering context. Absent on historical frozen objects means retain their original projection and policy; never inject this field into immutable history."
     }
   },
   "required": [
