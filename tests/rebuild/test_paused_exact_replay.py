@@ -150,3 +150,41 @@ def test_reserved_call_is_not_started_while_paused(flow):
         begin(flow, frozen)
     assert denied.value.error_code == 'request_paused'
     assert store.load_document() == before
+
+
+from test_annotations import sample as annotation_sample  # noqa: E402,F401
+from test_visual_styles import flow as style_flow, image_bytes  # noqa: E402,F401
+from deck_master import annotation_service, visual_styles  # noqa: E402
+
+
+@pytest.mark.parametrize('kind', ['annotations', 'reference'])
+def test_opinion_and_reference_exact_replay_precedes_pause_gate(kind, annotation_sample, style_flow, monkeypatch):
+    if kind == 'annotations':
+        store, doc, note = annotation_sample
+        call = annotation_service.save
+        payload = {'input': {'schema_version': 'annotation_batch.v1',
+                            'project_id': doc['project_id'], 'annotations': [note]}}
+        changed = {'input': {**payload['input'], 'annotations': [{**note, 'body': 'Different opinion'}]}}
+    else:
+        store = style_flow.store
+        doc = store.load_document()
+        call = visual_styles.import_reference
+        payload = {'data': image_bytes()}
+        changed = {'data': image_bytes() + b'different bytes'}
+    args = {**payload, 'base_revision': doc['revision_id'], 'operation_id': str(uuid.uuid4())}
+    first = call(store.project_root, **args)
+    pause(store)
+    before = store.load_document()
+    objects = sorted(store.objects_dir.rglob('*'))
+    if kind == 'reference':
+        monkeypatch.setattr(visual_styles.Image, 'open', lambda *a, **kw: pytest.fail('replay decoded image'))
+    second = call(store.project_root, **args)
+    assert second['operation_result'] == first['operation_result']
+    assert second['committed_revision_id'] == first['committed_revision_id']
+    assert second['current_revision_id'] == before['revision_id']
+    with pytest.raises(OperationError, match='different payload'):
+        call(store.project_root, **{**args, **changed})
+    with pytest.raises(eligibility.EligibilityBlocked) as denied:
+        call(store.project_root, **{**args, 'operation_id': str(uuid.uuid4())})
+    assert denied.value.error_code == 'request_paused'
+    assert store.load_document() == before and sorted(store.objects_dir.rglob('*')) == objects
