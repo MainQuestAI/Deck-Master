@@ -277,13 +277,14 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             elif self.path == '/api/overview':
                 from .overview_state import save
                 result = save(self.store.project_root, **data)
-            elif self.path in ('/api/annotations/batch', '/api/changes/plan', '/api/changes/commit', '/api/candidates/plan', '/api/candidates/adopt', '/api/candidates/decision', '/api/stages/assemble', '/api/styles/propose', '/api/styles/confirm', '/api/styles/plan', '/api/styles/analyze', '/api/content/plan', '/api/content/commit', '/api/content/inputs'):
-                from . import annotation_service, changes, candidates, stages, styles, content_ops, visual_styles
+            elif self.path in ('/api/annotations/batch', '/api/changes/plan', '/api/changes/commit', '/api/candidates/plan', '/api/candidates/adopt', '/api/candidates/decision', '/api/stages/assemble', '/api/styles/propose', '/api/styles/confirm', '/api/styles/plan', '/api/styles/analyze', '/api/design/initial-plan', '/api/content/plan', '/api/content/commit', '/api/content/inputs'):
+                from . import annotation_service, changes, candidates, stages, styles, content_ops, visual_styles, design_entry
                 action = {'/api/content/plan': content_ops.plan, '/api/content/commit': content_ops.commit, '/api/content/inputs': content_ops.inputs, '/api/annotations/batch': annotation_service.save,
                           '/api/changes/plan': changes.plan, '/api/changes/commit': changes.commit,
                           '/api/candidates/plan': candidates.plan, '/api/candidates/adopt': candidates.adopt,
                           '/api/candidates/decision': candidates.decide,
                           '/api/stages/assemble': stages.assemble,
+                          '/api/design/initial-plan': design_entry.initial_plan,
                           '/api/styles/analyze': visual_styles.analyze, '/api/styles/propose': styles.propose, '/api/styles/confirm': styles.confirm, '/api/styles/plan': styles.plan}[self.path]
                 result = action(self.store.project_root, **data)
             elif self.path in ('/api/icons/propose', '/api/icons/confirm', '/api/icons/plan', '/api/icons/preview', '/api/candidate-preview/request'):
@@ -341,7 +342,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                                           'field': exc.path, 'next_action': 'inspect current review task and native client status'}},
                                 409 if exc.exit_code == 5 else 422)
                 return
-            if self.path.startswith(('/api/drafts/', '/api/ui-state', '/api/gallery', '/api/overview', '/api/text-ranges/', '/api/annotations/', '/api/changes/', '/api/candidates/', '/api/stages/', '/api/styles/', '/api/icons/', '/api/candidate-preview/', '/api/content/', '/api/export', '/api/history/', '/api/reviews/native')):
+            if self.path.startswith(('/api/drafts/', '/api/ui-state', '/api/gallery', '/api/overview', '/api/text-ranges/', '/api/annotations/', '/api/changes/', '/api/candidates/', '/api/stages/', '/api/styles/', '/api/design/', '/api/icons/', '/api/candidate-preview/', '/api/content/', '/api/export', '/api/history/', '/api/reviews/native')):
                 self._send_error(exc)
                 return
             from .store import ConflictError

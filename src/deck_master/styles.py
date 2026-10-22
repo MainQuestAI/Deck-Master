@@ -368,7 +368,8 @@ def plan(project, *, input):
             fail('page_ids', '目标页需要当前原图才能进入截图风格试作，请先完成原图：' + '、'.join(missing))
     if input.get('adopted_candidate_id'):
         value['style_adopted_candidate_id'] = input['adopted_candidate_id']
-    return changes.plan(project, input=value)
+    from .design_entry import describe_plan
+    return describe_plan(project, changes.plan(project, input=value))
 
 
 def apply_request(store, document, value, request, page_id):
