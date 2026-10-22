@@ -1,0 +1,535 @@
+{
+  "baseline_pr": 184,
+  "implementation_baseline": "55adc97c5bb5f16ae7fcff7c33c43969fae9ce97",
+  "observed_baseline_document_head": "7bbf204658dfc39f53fa34352543168e7eee1e65",
+  "scope": "engineering implementation evidence only; no card closed solely by CI; real image/Host/customer and missing renderer checks remain as each report states",
+  "tasks": [
+    {
+      "task": "RP-00",
+      "issues": [
+        139
+      ],
+      "depends_on": [],
+      "implementation": "ae22ef08 + ebaa7a86 + 61621e58",
+      "evidence": "docs/reports/issue-repair-20261023/RP-00.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-01",
+      "issues": [
+        137
+      ],
+      "depends_on": [],
+      "implementation": "299169ff",
+      "evidence": "docs/reports/issue-repair-20261023/RP-01.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-02",
+      "issues": [
+        148,
+        167
+      ],
+      "depends_on": [],
+      "implementation": "91fc0f85",
+      "evidence": "docs/reports/issue-repair-20261023/RP-02.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-03",
+      "issues": [
+        149
+      ],
+      "depends_on": [
+        "RP-02"
+      ],
+      "implementation": "7ef9c5e0",
+      "evidence": "docs/reports/issue-repair-20261023/RP-03.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-04",
+      "issues": [
+        150
+      ],
+      "depends_on": [
+        "RP-00"
+      ],
+      "implementation": "e71ca6f9 + 95c3ff72 + 3943d9fc",
+      "evidence": "docs/reports/issue-repair-20261023/RP-04.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-05",
+      "issues": [
+        152
+      ],
+      "depends_on": [],
+      "implementation": "7de02e2b",
+      "evidence": "docs/reports/issue-repair-20261023/RP-05.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-06",
+      "issues": [
+        168,
+        169
+      ],
+      "depends_on": [],
+      "implementation": "0a007783",
+      "evidence": "docs/reports/issue-repair-20261023/RP-06.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-07",
+      "issues": [
+        183
+      ],
+      "depends_on": [],
+      "implementation": "53abc89e",
+      "evidence": "docs/reports/issue-repair-20261023/RP-07.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-08",
+      "issues": [
+        182
+      ],
+      "depends_on": [
+        "RP-03",
+        "RP-06"
+      ],
+      "implementation": "b9a3616e",
+      "evidence": "docs/reports/issue-repair-20261023/RP-08.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-09",
+      "issues": [
+        181
+      ],
+      "depends_on": [],
+      "implementation": "2321f429",
+      "evidence": "docs/work-items/wi-issue-repair-20261023/execution/RP-09.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-10",
+      "issues": [
+        133,
+        143
+      ],
+      "depends_on": [],
+      "implementation": "ab34455b",
+      "evidence": "docs/reports/issue-repair-20261023/RP-10.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-11",
+      "issues": [
+        138
+      ],
+      "depends_on": [
+        "RP-00",
+        "RP-01"
+      ],
+      "implementation": "7ffbc88e",
+      "evidence": "docs/reports/issue-repair-20261023/RP-11.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-12",
+      "issues": [
+        144
+      ],
+      "depends_on": [
+        "RP-11"
+      ],
+      "implementation": "4ee1afeb",
+      "evidence": "docs/reports/issue-repair-20261023/RP-12.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-13",
+      "issues": [
+        175,
+        176,
+        177
+      ],
+      "depends_on": [],
+      "implementation": "ae79d4c6",
+      "evidence": "docs/reports/issue-repair-20261023/RP-13.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-14",
+      "issues": [
+        178
+      ],
+      "depends_on": [],
+      "implementation": "48962271",
+      "evidence": "docs/reports/issue-repair-20261023/RP-14.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-15",
+      "issues": [
+        180
+      ],
+      "depends_on": [],
+      "implementation": "85135b67",
+      "evidence": "docs/reports/issue-repair-20261023/RP-15.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-16",
+      "issues": [
+        174,
+        179
+      ],
+      "depends_on": [
+        "RP-11",
+        "RP-12",
+        "RP-13",
+        "RP-14",
+        "RP-15"
+      ],
+      "implementation": null,
+      "evidence": null,
+      "state": "in_progress",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-17",
+      "issues": [
+        162,
+        165,
+        166
+      ],
+      "depends_on": [
+        "RP-15"
+      ],
+      "implementation": "f8482a86",
+      "evidence": "docs/reports/issue-repair-20261023/RP-17.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-18",
+      "issues": [
+        163,
+        170,
+        171,
+        172
+      ],
+      "depends_on": [
+        "RP-02",
+        "RP-06"
+      ],
+      "implementation": "f41cbadb",
+      "evidence": "docs/work-items/wi-issue-repair-20261023/execution/RP-18.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-19",
+      "issues": [
+        173
+      ],
+      "depends_on": [
+        "RP-17"
+      ],
+      "implementation": null,
+      "evidence": null,
+      "state": "in_progress",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-20",
+      "issues": [
+        164
+      ],
+      "depends_on": [
+        "RP-01",
+        "RP-11",
+        "RP-17"
+      ],
+      "implementation": null,
+      "evidence": null,
+      "state": "in_progress",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-21",
+      "issues": [
+        141,
+        136
+      ],
+      "depends_on": [
+        "RP-09",
+        "RP-17",
+        "RP-19",
+        "RP-20"
+      ],
+      "implementation": null,
+      "evidence": null,
+      "state": "planned",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-22",
+      "issues": [
+        132
+      ],
+      "depends_on": [
+        "RP-08",
+        "RP-10",
+        "RP-18"
+      ],
+      "implementation": null,
+      "evidence": null,
+      "state": "in_progress",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-23",
+      "issues": [],
+      "depends_on": [],
+      "implementation": "4b4f8576",
+      "evidence": "docs/reports/issue-repair-20261023/RP-23.md",
+      "state": "diagnosed_safe_existing_paths_residual_owned_by_RP24",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-24",
+      "issues": [
+        134,
+        135
+      ],
+      "depends_on": [
+        "RP-06",
+        "RP-18",
+        "RP-21",
+        "RP-23"
+      ],
+      "implementation": null,
+      "evidence": null,
+      "state": "planned",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-25",
+      "issues": [
+        140,
+        142
+      ],
+      "depends_on": [
+        "RP-00"
+      ],
+      "implementation": "1177c9fb",
+      "evidence": "docs/work-items/wi-issue-repair-20261023/execution/RP-25.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-26",
+      "issues": [
+        159,
+        145,
+        156,
+        161
+      ],
+      "depends_on": [
+        "RP-07",
+        "RP-08"
+      ],
+      "implementation": null,
+      "evidence": null,
+      "state": "in_progress",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-27",
+      "issues": [
+        151,
+        157,
+        155
+      ],
+      "depends_on": [
+        "RP-11"
+      ],
+      "implementation": null,
+      "evidence": null,
+      "state": "in_progress",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-28",
+      "issues": [
+        153
+      ],
+      "depends_on": [
+        "RP-17"
+      ],
+      "implementation": "b483a8be",
+      "evidence": "docs/reports/issue-repair-20261023/RP-28.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-29",
+      "issues": [
+        146,
+        160,
+        158,
+        154
+      ],
+      "depends_on": [],
+      "implementation": "5fdeeef2 + 9a1af799",
+      "evidence": "docs/reports/issue-repair-20261023/RP-29.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-30",
+      "issues": [],
+      "depends_on": [
+        "RP-04",
+        "RP-05",
+        "RP-16",
+        "RP-20",
+        "RP-21",
+        "RP-22",
+        "RP-24",
+        "RP-25",
+        "RP-26",
+        "RP-27",
+        "RP-28",
+        "RP-29"
+      ],
+      "implementation": null,
+      "evidence": null,
+      "state": "planned",
+      "issue_closure": "NOT_RUN"
+    }
+  ],
+  "integration_checks": [
+    {
+      "command": "focused task/eligibility/review/design/preview tests",
+      "result": "PASS",
+      "count": 210,
+      "seconds": 23.83,
+      "candidate": "ab34455b"
+    },
+    {
+      "command": "test_recipe_versions_browser.py test_rp10_content_browser.py --require-browser",
+      "result": "PASS",
+      "count": 13,
+      "seconds": 41.84,
+      "candidate": "ab34455b"
+    },
+    {
+      "command": "test_paused_exact_replay.py test_pipeline_preview_reuse.py test_task_receipt_recovery.py test_generation_protocol.py",
+      "result": "PASS",
+      "count": 39,
+      "seconds": 11.48,
+      "candidate": "e71ca6f9"
+    },
+    {
+      "command": "test_task_compact_receipts.py test_task_receipt_recovery.py test_service_flow.py -m not-render/not-browser",
+      "result": "PASS",
+      "count": 44,
+      "deselected": 3,
+      "seconds": 7.64,
+      "candidate": "53abc89e"
+    },
+    {
+      "command": "review channels/cross-turn/content fields/methods/Content/Design/receipts selection",
+      "result": "PASS",
+      "count": 84,
+      "seconds": 11.11,
+      "candidate": "f41cbadb"
+    },
+    {
+      "command": "real Chromium method clipboard selection",
+      "result": "PASS",
+      "count": 2,
+      "seconds": 6.16,
+      "candidate": "f41cbadb"
+    },
+    {
+      "command": "paused exact replay/annotations/visual styles/native recovery/history",
+      "result": "PASS",
+      "count": 62,
+      "seconds": 19.6,
+      "candidate": "3943d9fc"
+    },
+    {
+      "command": "review recovery/effective requirements/content review/design policy/candidate freeze",
+      "result": "PASS",
+      "count": 62,
+      "seconds": 9.12,
+      "candidate": "4ee1afeb plus subsequently committed RP28"
+    },
+    {
+      "command": "exact git archive wheel build, --target /tmp install, package bytes and Skill inventory",
+      "result": "PASS",
+      "matched_package_files": 270,
+      "candidate": "3943d9fc"
+    },
+    {
+      "command": "installed wheel native recovery and stage discovery tests with verified import path",
+      "result": "PASS",
+      "count": 24,
+      "seconds": 2.92,
+      "candidate": "3943d9fc"
+    }
+  ],
+  "blockers": [
+    {
+      "action": "install official librsvg2-bin",
+      "target": "/var/lib/apt/lists/partial",
+      "status": "BLOCKED",
+      "reason": "user approved; normal apt read-only filesystem, escalated apt permission denied; no installation or security changes"
+    },
+    {
+      "action": "create RP-00 pull request",
+      "target": "MainQuestAI/Deck-Master, codex/repair-rp00-20261023 -> codex/repair-plan-baseline-20261023",
+      "status": "BLOCKED",
+      "reason": "automatic approval rejected public PR submission absent explicit user PR authorization; parent awaiting user confirmation; no PR created"
+    }
+  ],
+  "prohibited_work_not_run": [
+    "paid model calls",
+    "customer production",
+    "HOME activation",
+    "merging",
+    "issue closure",
+    "release publication"
+  ],
+  "updated_utc": "2026-10-22T17:57:00Z",
+  "implementation_start_utc": "2026-10-22T17:28:58Z",
+  "remote_rp00": {
+    "branch": "codex/repair-rp00-20261023",
+    "head": "2c2ee3395ba2a4b5fcadce242fe55709b1c889cd",
+    "commits": 3,
+    "files": 18,
+    "pull_request_created": false
+  }
+}
