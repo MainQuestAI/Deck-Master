@@ -240,6 +240,17 @@ changing the business revision. Commit requires that exact plan and base.
 - `operation_unavailable` (4 / 503): storage or verification could not complete.
   Preserve the pending request and inspect the project before retrying.
 
+Exact committed `icons confirm`, `candidates decide`, and `stages assemble`
+requests remain recoverable while the current request is paused. Retain the
+original project, operation ID, base revision and complete payload. Recovery
+verifies committed ancestry and the request digest before returning the original
+result; it does not grant permission for a new confirmation, decision or compile.
+For `task call begin`, repeating the same in-flight task/allowance/execution and
+frozen request returns its existing Attempt. This is receipt recovery only: do
+not resend the external tool call. Wrong identity/request, missing Attempt,
+settled/unknown calls and terminal tasks remain rejected. Resume only when new
+work is actually authorized, never just to retrieve a committed response.
+
 Read `changes handoff --change-id <id>` to obtain the core-generated plan,
 tasks, required protocols and safely quoted CLI entry. Copying does not start
 work. Only an actual `task start` with an execution reference records a claim.
