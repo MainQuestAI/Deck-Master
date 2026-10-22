@@ -12,4 +12,9 @@ def test_polling_lifecycle_never_overlaps_or_applies_stale_generation():
         pytest.skip('Node is required to exercise the shipped polling module')
     script = Path(__file__).resolve().parents[2] / 'examples/workbench/w10_poll_lifecycle.mjs'
     result = subprocess.run([node, str(script)], capture_output=True, text=True, check=True, timeout=20)
-    assert json.loads(result.stdout)['passed']
+    receipt = json.loads(result.stdout)
+    assert receipt['passed'] is True
+    assert len(receipt['checks']) == 15
+    assert {'deferred_control_route_fenced', 'deferred_control_stop_fenced',
+            'hide_show_retires_old_callback', 'new_visible_refresh_recovers',
+            'new_snapshot_interval_preserved', 'single_inflight'} <= set(receipt['checks'])
