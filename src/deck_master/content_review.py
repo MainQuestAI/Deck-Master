@@ -508,9 +508,13 @@ def _review_scope_owners(store, document, units, pages):
     for row in records:
         if row['kind'] not in units:
             continue
-        scoped = {dep['identity'].split(':', 1)[-1] for dep in row.get('dependencies', [])
-                  if dep['kind'] == 'content'}
-        if not set(pages) <= scoped:
+        scoped = {dep['identity'].split(':', 1)[1] for dep in row.get('dependencies', [])
+                  if dep['kind'] == 'content' and dep['identity'].startswith('page:')}
+        # A whole-manuscript recheck must retain narrower historical owners
+        # whose findings still concern this scope. Requiring containment loses
+        # them while the aggregate gate correctly keeps their findings open.
+        # Unrelated page owners remain excluded; exact refs are still frozen.
+        if not set(pages) & scoped:
             continue
         unresolved = any(not finding_closed(records, row, finding, artifacts)
                          for finding in open_findings(row) + pending_judgments(row))
