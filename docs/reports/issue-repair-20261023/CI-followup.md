@@ -38,3 +38,13 @@ Command: PYTHONPATH=src:tests/rebuild .venv/bin/python -m pytest -q
 Result: **108 passed, 7 deselected in 17.72s**. No production assertions removed,
 no source capability downgrade, no model invocation. CI matrix and browser job
 remain in progress; no final gate pass claimed.
+
+The narrowed-request deadlock is confirmed and repaired in `9d08f79e`:
+actual valid nonempty page-action targets select review coverage; compile/PPT,
+assembly, missing, empty and unknown targets retain full-manuscript coverage.
+Independent scope/authority guards and unresolved deck/target findings remain.
+The two authorization fixtures now review after narrowing the request, preserving
+RP14's requirement freshness rather than reusing an old request's review.
+Integrated enforcement/scoped/entry-coverage/read-only-diagnostic suite:
+**65 passed in 5.39s**. New regression first reproduced the real failure before
+runtime editing, and includes full-deck, empty/unknown targets and open findings.
