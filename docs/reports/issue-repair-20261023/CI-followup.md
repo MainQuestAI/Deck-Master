@@ -158,3 +158,13 @@ failed only the real Q2 child at its unchanged180s timeout. All70 child outcomes
 remain required; no timeout/coverage/assertion relaxation is authorized as a fix.
 The successful matrices cover the five local DNS-blocked installation outcomes.
 Browser fixes above require a new exact-head CI; no complete-green claim is made.
+
+Q2 timeout investigation: the untouched actual -I -B 70-case carrier passed in
+136.28s locally; slowest case7.54s, /tmp/q2-runtime-baseline.log. Profiling found
+real authenticated controller/session/installation checks, not a justified
+shortcut. The remote abbreviated log cannot establish resource contention or a
+particular stalled node. Diagnostic-only wrapper changes retain180s and every
+outcome assertion, add verbose case names/durations and bounded output tails as
+notes on the original timeout exception. Mocked-timeout and existing guard tests
+passed8 checks. This improves next-run evidence and is not claimed as a timeout
+fix. Product package and Skill bytes remain identical to installed c05c4d96.
