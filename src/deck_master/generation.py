@@ -110,11 +110,13 @@ def _read_owned(store, task, field, object_id):
     raise _error("generation_object_not_found", key, "object is not referenced by this task")
 
 
-def show(project_dir, *, request_id=None, attempt_id=None, revision=None):
+def show(project_dir, *, request_id=None, attempt_id=None, revision=None, explain_reassociation=False):
     store = Store(project_dir)
     document = load_snapshot(store, revision)
     if bool(request_id) == bool(attempt_id):
         raise _error("generation_request_invalid", "id", "select one request or attempt")
+    if explain_reassociation and not attempt_id:
+        raise _error("generation_request_invalid", "attempt_id", "reassociation diagnostics require an existing attempt")
     field = "generation_requests" if request_id else "generation_attempts"
     for task_ref in document["tasks"]:
         task = store.read_object_json(task_ref)
@@ -131,8 +133,48 @@ def show(project_dir, *, request_id=None, attempt_id=None, revision=None):
         if attempt_id:
             result["call"] = copy.deepcopy(next(c for c in task["call_allowances"] if c["allowance_id"] == obj["allowance_id"]))
             result["observations"] = [store.read_object_json(r) for r in obj["observations"]]
+            if explain_reassociation:
+                result['cross_execution_diagnostic'] = _reassociation_diagnostic(
+                    task, obj, result['call'], document['revision_id'], historical=revision is not None)
         return result
     raise _error("generation_object_not_found", "id", "object is not in this committed snapshot")
+
+
+def _reassociation_diagnostic(task, attempt, call, revision_id, *, historical):
+    """Explain unsupported transfer from fixed facts; never inspect a B event.
+
+    No collector, provider, current authorization query or persisted object is
+    involved. A successful read is not a successful association/preflight.
+    """
+    return {
+        'status': 'unsupported',
+        'association_ready': False,
+        'adoption_ready': False,
+        'fact_scope': 'historical_snapshot' if historical else 'selected_snapshot',
+        'revision_id': revision_id,
+        'current_authority_checked': False,
+        'current_budget_checked': False,
+        'facts': {'task_id': task['task_id'], 'task_status': task['status'],
+                  'attempt_id': attempt['attempt_id'], 'execution_ref': attempt['execution_ref'],
+                  'request_ref': attempt['request_ref'], 'allowance_id': attempt['allowance_id'],
+                  'call_state': call['state'], 'evidence_level': call.get('evidence_level'),
+                  'registered_invocation_ref': call.get('invocation_ref'),
+                  'observation_count': len(attempt['observations']),
+                  'output_count': len(attempt['output_refs'])},
+        'proof_obligations': [
+            {'code': 'original_execution_send_disposition', 'verification': 'not_established',
+             'detail': 'Recorded call state is retained. No controller-fenced not-sent proof is evaluated; unknown/in_flight is not absence of a send.'},
+            {'code': 'other_execution_original_event', 'verification': 'not_evaluated',
+             'detail': 'No other execution event, original output or exact frozen input comparison was inspected by this read.'},
+            {'code': 'authenticated_job_handoff', 'verification': 'unsupported',
+             'detail': 'The current consumer has no authenticated cross-execution handoff/fence contract.'},
+            {'code': 'single_consumption_ownership', 'verification': 'not_established',
+             'detail': 'Settlement guards stable invocation uniqueness within a project. Registry event digests are in memory; cross-project, aliased or unidentified consumption is not ruled out.'},
+            {'code': 'current_adoption_authority', 'verification': 'not_evaluated',
+             'detail': 'Snapshot task/call facts do not check current authority, target freshness or budget, and never grant adoption.'},
+        ],
+        'next_action': 'Preserve both execution and consumption facts. Obtain the missing authenticated send/handoff/ownership evidence and an explicit product decision before any transfer or independently authorized external-artifact reuse. Do not repeat a call or relabel a selector on the strength of this read.',
+    }
 
 
 def _validate_input(store, document, task, value):

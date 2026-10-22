@@ -438,3 +438,30 @@ A confirmed imported manuscript can use imported_mapping without rebuilding
 Narrative. For an old variant's narrow edit, use start_request variant_transition
 with its exact revision/export and current CAS, not global history restore.
 Actual historical files still use current-control delivery eligibility.
+
+## Completed Image From A Different Execution
+
+Read the existing attempt without transferring or adopting anything:
+
+```sh
+deck-master attempts show --project <dir> --attempt-id <id> --explain-reassociation
+```
+
+The opt-in `cross_execution_diagnostic` adds only derived read facts. Its
+`status` is `unsupported`; `association_ready` and `adoption_ready` are always
+false. `facts` retains the selected snapshot's task status, actual execution,
+request, allowance, call state, registered invocation and observation/output
+counts. `proof_obligations` distinguishes `not_established`, `not_evaluated` and
+`unsupported`: none claims another execution's evidence is absent or verified.
+No event selector/file path is accepted and no collector/provider is invoked.
+Default `attempts show` output is unchanged.
+
+`--revision` reads historical facts and labels `fact_scope=historical_snapshot`.
+Even without that flag these are selected snapshot facts, never a current
+adoption permission or budget check (`current_authority_checked=false`,
+`current_budget_checked=false`). Exit 0 means this read succeeded, not that
+reassociation is supported. Cancelled, unknown, consumed and released call facts
+remain unchanged. Do not infer controller-fenced not-sent evidence from an empty
+observation list or a Host-reported release, or use a matched image/input to
+rename another execution's event. The unresolved choices and exact missing
+proofs are recorded in [RP-24 evidence model](reports/issue-repair-20261023/RP-24-cross-execution-evidence.md).

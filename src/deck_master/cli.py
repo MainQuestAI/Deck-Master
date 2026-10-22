@@ -429,6 +429,8 @@ def build_parser() -> argparse.ArgumentParser:
     attempt_show.add_argument("--project", required=True)
     attempt_show.add_argument("--attempt-id", required=True)
     attempt_show.add_argument("--revision")
+    attempt_show.add_argument("--explain-reassociation", action="store_true",
+        help="Read fixed call facts and unsupported cross-execution proof obligations; never transfer or adopt")
 
     build = sub.add_parser('build')
     build.add_argument('--project', required=True)
@@ -812,7 +814,8 @@ def main(argv: list[str] | None = None) -> int:
                              input=json.loads(Path(options.input).read_text(encoding="utf-8")),
                              base_revision=options.base_revision, operation_id=options.operation_id))
             return _emit(generation.show(options.project, request_id=getattr(options, "request_id", None),
-                                         attempt_id=getattr(options, "attempt_id", None), revision=options.revision))
+                                         attempt_id=getattr(options, "attempt_id", None), revision=options.revision,
+                                         explain_reassociation=getattr(options, "explain_reassociation", False)))
         if options.command == "task":
             return _dispatch_task(options)
     except (EnvelopeError, ModelError, ServiceError, TaskConflict, FileNotFoundError, StoreError) as exc:
