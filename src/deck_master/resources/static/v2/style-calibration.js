@@ -168,7 +168,10 @@ export function style(app) {
   // 自动推进（恢复规范等异步完成后的展开）不抢用户已主动选择的阶段，
   // 否则慢恢复会把刚打开的"试作与采用"合上。changed() 的显式重置不受此限。
   const showPhase = (next, options) => phaseReading.show(next, options);
-  node.insertBefore(button('浏览所有设计规范', () => {source.value='page';switchSource();showPhase(2);loadRecipes();}), notice);
+  const libraryEntry=button('浏览所有设计规范', () => {source.value='page';switchSource();showPhase(2);loadRecipes();});
+  const initialEntry=node.querySelector(':scope > .initial-design');
+  const sourceEntry=node.querySelector(':scope > .studio-style-route, :scope > .style-source-selector');
+  node.insertBefore(el('div',{class:'style-entry-actions'},sourceEntry,libraryEntry,initialEntry),notice);
   function editor() { return app.editor; }
   function state() { return {reference: fixed, targets: [...selected], instruction: instruction.value, dimensions: Object.fromEntries([...dimensions].filter(([,v]) => v.check.checked).map(([k,v]) => [k,v.text.value])), host_suggestion: suggestion.value, prompt_selection: promptSelection, resolutions, parent_recipe_id: parent}; }
   function controls() {

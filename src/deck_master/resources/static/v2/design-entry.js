@@ -8,7 +8,7 @@ export function designBasis(result, app) {
     const d=row.resolved_design_context,policy=d.design_policy||{},requirements=d.content_requirements||{};
     if(app)node.append(el('div',{class:'row wrap'},...[['content','核对正文'],['prepared_prompt','查看提示词'],['original_image','比较原图候选'],['svg','查看 SVG 重建'],['ppt','查看 PPT 记录']].map(([layer,label])=>button(label,()=>app.go({surface:'page',page_id:row.page_id,layer,revision:result.plan.base_revision,candidate_id:null,task_id:null})))));
     node.append(el('p',{},`${row.page_id} · ${strategies[policy.strategy]||policy.strategy||'未记录策略'} · ${row.recipe_ref?'选定的固定规范':'本页当前设计依据'}`),
-      row.original_expression&&el('p',{class:row.original_expression.status==='fail'?'field-error':'muted'},'当前目标原图表达审查：'+({pass:'通过记录',fail:'存在已知问题；仅作修复对照，不作为扩页依据',not_evaluated:'未核实；采用不等于可扩页'}[row.original_expression.status]||'未知')),
+      Boolean(row.original_expression)&&el('p',{class:row.original_expression.status==='fail'?'field-error':'muted'},'当前目标原图表达审查：'+({pass:'通过记录',fail:'存在已知问题；仅作修复对照，不作为扩页依据',not_evaluated:'未核实；采用不等于可扩页'}[row.original_expression.status]||'未知')),
       el('p',{},'必须保留：页面事实、文字、关系方向和责任归属。'),
       el('p',{},'构图要求：'+(policy.layout_instruction||'未额外限定')),el('p',{},'自由范围：'+(policy.free_layout||'按当前固定规范执行')),
       el('p',{},'实际选定图像资产：'+((d.asset_inputs?.images||[]).map(a=>a.asset_id).join('、')||'无')),
@@ -58,5 +58,5 @@ export function initialDesign(app) {
   app.root.addEventListener('summary-refreshed',fromSummary);
   app.root.addEventListener('business-state-changed',controls);
   app.disposables.push(()=>{disposed=true;serial++;app.root.removeEventListener('summary-refreshed',fromSummary);app.root.removeEventListener('draft-editor-replaced',hydrate);app.root.removeEventListener('business-state-changed',controls);});controls();
-  return el('section',{class:'panel initial-design'},el('div',{class:'panel-body stack'},el('h2',{},'无参考初始设计'),el('p',{},'没有旧原图也可先试一页；读取该页当前正文和策略，不强制上传或套用模板。'),target,instruction,el('div',{class:'row wrap'},preview,submit),output));
+  return el('details',{class:'panel initial-design',open:!app.summary.pages.some(p=>p.stages.blueprint.existence==='recorded')},el('summary',{},'无参考初始设计'),el('div',{class:'panel-body stack'},el('p',{},'没有旧原图也可先试一页；读取该页当前正文和策略，不强制上传或套用模板。'),target,instruction,el('div',{class:'row wrap'},preview,submit),output));
 }

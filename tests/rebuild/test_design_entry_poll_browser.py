@@ -22,6 +22,8 @@ def test_initial_preview_survives_same_snapshot_poll(flow, delayed):
             page.goto(server.start() + 'studio/')
             page.locator('.sidebar').get_by_role('button', name='风格校准', exact=True).click()
             panel = page.locator('.initial-design')
+            expect(panel).not_to_have_attribute('open', '')
+            panel.locator('summary').click()
             preview = panel.get_by_role('button', name='预览无参考初始试作', exact=True)
             submit = panel.get_by_role('button', name='保存并交接初始试作', exact=True)
             basis = panel.get_by_label('本轮制作依据')
@@ -67,6 +69,7 @@ def test_initial_preview_survives_same_snapshot_poll(flow, delayed):
                     return
             expect(basis).to_be_visible()
             expect(submit).to_be_enabled()
+            expect(panel).to_have_attribute('open', '')
             assert flow.store.load_document() == before
             # Changed local requirements retire the prior plan immediately.
             panel.get_by_label('初始设计要求').fill('Changed fixed requirements')
