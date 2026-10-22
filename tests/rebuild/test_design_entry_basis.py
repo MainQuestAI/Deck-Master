@@ -59,6 +59,7 @@ def test_selected_recipe_basis_matches_task_and_historical_is_not_implicit(flow,
     )
     prepared = generation.prepared_input(flow.store, flow.store.load_document(), flow.task(outcome["operation_result"]["task_ids"][0]))
     assert prepared["design_context"] == row["resolved_design_context"]
+    assert prepared["references"] == row["references"]
 
 
 def test_preview_eligibility_matches_commit_refusal_and_does_not_grant(flow):
@@ -90,3 +91,20 @@ def test_initial_plan_http_requires_session_authority(flow):
         assert flow.store.load_document() == doc
     finally:
         server.stop()
+
+
+@pytest.mark.parametrize('format', ['PNG', 'JPEG', 'WEBP'])
+def test_selected_asset_originals_in_preview_match_prepared_parameters(tmp_path, format):
+    from test_rp19_asset_inputs import _flow
+    project, store, task, source = _flow(tmp_path, format=format)
+    doc = store.load_document()
+    result = design_entry.initial_plan(project, input={'page_id': 'p1', 'base_revision': doc['revision_id'],
+                                                     'instruction': 'Use the selected logo original; preserve copy.'})
+    basis = result['production_basis'][0]
+    prepared = generation.prepared_input(store, doc, task)
+    assert basis['resolved_design_context'] == prepared['design_context']
+    assert basis['references'] == prepared['references']
+    assert len(basis['references']) == 1
+    assert store.read_object_bytes(basis['references'][0]['file']) == source.read_bytes()
+    # Existing dispatch permission is not silently converted into change.commit permission.
+    assert not result['eligibility']['allowed']

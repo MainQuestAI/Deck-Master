@@ -50,6 +50,21 @@ def _reference_files(store, document, references, *, original=False):
     return files
 
 
+def _trial_references(store, document, entry, value):
+    """Exact ordered reference files shared by the plan view and Task dispatch."""
+    recipe_ref = value.get('style_recipe_ref')
+    recipe = store.read_object_json(recipe_ref) if recipe_ref else None
+    v3 = bool(recipe and recipe['schema_version'] == 'style_recipe.v3')
+    refs = _reference_files(store, document, value.get('references', []), original=v3)
+    target = None
+    if recipe and (recipe['schema_version'] == 'style_recipe.v2' or v3 and recipe['intent'] == 'restyle'):
+        target = entry['blueprint']
+        original = store.read_object_json(target)
+        store.read_object_bytes(original['file'])
+        refs.insert(0, {'file': original['file'], 'role': 'reference'})
+    return refs, target
+
+
 def _plan(store, document, value):
     validate_schema('change_intent', value)
     if not store.workbench_protocol_required(document):
@@ -290,9 +305,9 @@ def _new_task(store, ledger, basis, plan, change_ref, task_id, action, *, author
     task.update(protocol, change_binding={'change_ref': change_ref, 'action_id': action['action_id']})
     if 'mode' in action:
         stage = 'content' if action['write_slots'] == ['page'] and action['mode'] == 'trial' else action['stage']
-        v3 = bool(plan['input'].get('style_recipe_ref') and store.read_object_json(plan['input']['style_recipe_ref'])['schema_version'] == 'style_recipe.v3')
+        references, target_reference = _trial_references(store, basis, entry, plan['input'])
         task['stage_request'] = {'mode': action['mode'], 'stage': stage,
-                                 'references': _reference_files(store, basis, plan['input'].get('references', []), original=v3)}
+                                 'references': references}
         if plan['input'].get('style_recipe_ref'):
             task['stage_request']['style_recipe_ref'] = plan['input']['style_recipe_ref']
             task['inputs'].append(plan['input']['style_recipe_ref'])
@@ -303,9 +318,7 @@ def _new_task(store, ledger, basis, plan, change_ref, task_id, action, *, author
             if selected_recipe['schema_version'] == 'style_recipe.v2' or (selected_recipe['schema_version'] == 'style_recipe.v3' and selected_recipe['intent'] == 'restyle'):
                 task['required_capabilities'].append('visual_reference')
                 # The target image anchors all explicitly preserved dimensions.
-                original = store.read_object_json(entry['blueprint'])
-                task['stage_request']['references'].insert(0, {'file': original['file'], 'role': 'reference'})
-                task['stage_request']['target_reference_ref'] = entry['blueprint']
+                task['stage_request']['target_reference_ref'] = target_reference
         if plan['input'].get('icon_recipe_ref'):
             task['stage_request']['icon_recipe_ref'] = plan['input']['icon_recipe_ref']
             task['inputs'].append(plan['input']['icon_recipe_ref'])

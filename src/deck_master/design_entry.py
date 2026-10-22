@@ -26,13 +26,19 @@ def describe_plan(project, result):
     for action in actions:
         entry = entries[action["page_id"]]
         resolved = resolve_generation_design(store, document, entry, recipe_ref=value.get("style_recipe_ref"))
+        references, target_reference = changes._trial_references(store, document, entry, value)
+        for image in resolved.get('asset_inputs', {}).get('images', []):
+            attachment = {'file': image['file'], 'role': 'reference'}
+            if attachment not in references:
+                references.append(attachment)
         basis.append(
             {
                 "page_id": entry["page_id"],
                 "page_ref": entry["page"],
                 "recipe_ref": value.get("style_recipe_ref"),
                 "resolved_design_context": resolved,
-                "references": value.get("references", []),
+                "references": references,
+                "target_reference_ref": target_reference,
                 "original_image_recorded": bool(entry.get("blueprint")),
             }
         )
