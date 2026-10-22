@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-23",
+  "status": "PASS",
+  "scope": "documentation validation only",
+  "tasks": 31,
+  "issues": 51,
+  "issue_owner_cards": 29,
+  "corrections": 6,
+  "new_issues": 3,
+  "new_comments": 5,
+  "issue_body_updates_planned": 27,
+  "dependency_graph": "acyclic; topological order verified",
+  "entrypoints_and_test_files": "exist",
+  "relative_markdown_links": "resolved",
+  "private_materials": "excluded",
+  "product_tests": "NOT_RUN",
+  "tasks_sha256": "2cbb76bc53b4ab9d9899e234c01f14a5cd9de1b953df70c65b73fad8b7c20f83",
+  "errors": []
+}
