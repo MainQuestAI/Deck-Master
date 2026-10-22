@@ -4,7 +4,7 @@ export class SummaryPoll {
     this.read = read; this.onValue = onValue; this.onError = onError;
     this.delay = this.interval(initial); this.busy = false; this.stopped = true; this.again = false; this.generation = 0;
     this.visible = () => {
-      if (document.hidden) { clearTimeout(this.timer); this.again = false; this.controller?.abort(); }
+      if (document.hidden) { this.generation++; clearTimeout(this.timer); this.again = false; this.controller?.abort(); }
       else this.refresh();
     };
     this.focus = () => this.refresh();
@@ -34,12 +34,15 @@ export class SummaryPoll {
     if (this.busy) { this.again = true; return; }
     clearTimeout(this.timer); this.busy = true; this.controller = new AbortController();
     const generation = this.generation;
+    const isCurrent = () => !this.stopped && !document.hidden && generation === this.generation;
     try {
       const value = await this.read(this.controller.signal);
-      if (this.stopped || document.hidden || generation !== this.generation) return;
-      await this.onValue(value); this.delay = this.interval(value);
+      if (!isCurrent()) return;
+      await this.onValue(value, isCurrent);
+      if (!isCurrent()) return;
+      this.delay = this.interval(value);
     } catch (error) {
-      if (error.name !== 'AbortError' && !this.stopped && generation === this.generation) {
+      if (error.name !== 'AbortError' && isCurrent()) {
         this.delay = Math.min(30000, this.delay * 2); this.onError(error);
       }
     } finally {
