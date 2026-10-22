@@ -248,3 +248,35 @@ attempted. Local librsvg installation remains separately blocked by permissions.
 Exact424cc95e archive wheel matched278 package files and canonical Skill inventory; SHA256 `607877b0b03cd1619ee539ab35615d588c3696723be9395ca17f61a70209d782`. Six new identity regressions passed from the actual temporary installed module in0.10s. The earlier346bb988 installed Studio evidence remains identified separately; new remote full installation checks are still required.
 
 On8c826711 push job120080957125 completed successfully at21:42 UTC:603 browser cases passed (no skips,2166.24s), wheel build/install and offline UI/fixed-version downloads succeeded,255 installed recovery cases passed (923.49s), runtime paths audited and artifact12460203734 uploaded. This verifies the navigation repair on that exact head. Its renderer setup was still running, while the same-head PR renderer had already passed136/1skip. The PR Q2 failure remains a failure requiring the new performance candidate CI.
+
+## f0cf569b duplicate push failure: captured-response synchronization
+
+PR run39860006534 completed success at22:40:44 UTC: four unit jobs each3794
+passed/2 skipped, renderer136 passed/1 skipped, browser603 passed and installed
+recovery255 passed with no browser skips. This does not replace push
+run39859996259, which ended failure: browser job120108189513 completed602
+passed/1 failed in2220.76s. Toolchain and Chromium installation succeeded;
+the failure was not a job timeout. Wheel/offline/installed steps were skipped.
+
+The failing unknown variant of test_review_single_click_drains_old_and_latest_save
+observed the second save request, then assumed route.fetch had completed after
+100ms. Its held list is appended only after fetch completes. A deterministic
+Event gate on the real second ui_journal.save reproduced the exact len(held)=1
+failure in4.49s, with the second request received and dialog still retained.
+This establishes a test synchronization defect, not a missing product write.
+
+27f450af replaces both100ms guesses with signals emitted after actual response
+capture. The test explicitly keeps the second backend save incomplete, asserts
+the dialog remains and navigation has not happened, then releases it. All three
+saved/unknown/conflict cases, original text/count/project assertions and700ms
+no-extra-write observation remain. Real200/409 status and persisted text checks
+were added. No runtime code, authorization, test count or assertion was weakened.
+Final real Chromium regression:3 passed in13.20s; Ruff/diff checks passed;
+independent source review found no concrete P1/P2. Logs:
+/tmp/rp06-save-before.log and /tmp/rp06-save-final.log. New exact-head CI required.
+
+Root additionally ran the three repaired browser cases against the actual
+archive-installed424cc95e package:3 passed in13.12s, all loaded deck_master
+modules audited under /tmp/deck-followup-424cc95e/site/deck_master. Product and
+Skill bytes between424cc95e and this test-only repair are identical. No wheel
+was rebuilt solely to change test synchronization.

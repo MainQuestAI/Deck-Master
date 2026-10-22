@@ -562,7 +562,7 @@
     "issue closure",
     "release publication"
   ],
-  "updated_utc": "2026-10-22T21:30:17.460407+00:00",
+  "updated_utc": "2026-10-22T23:33:10.165962+00:00",
   "implementation_start_utc": "2026-10-22T17:28:58Z",
   "remote_rp00": {
     "branch": "codex/repair-rp00-20261023",
@@ -580,7 +580,7 @@
     "canonical_skill_inventory_verified": true,
     "wheel_sha256": "aa829471271e81db5f08992a9689acd78080c5c73bca102fa8979870a426f55d"
   },
-  "remote_ci": "8c826711 push: four units3788pass2skip each; browser603pass no skips, wheel/offline UI success, installed recovery255pass with runtime path audit; renderer setup pending. PR: renderer136pass1skip, three units3788pass2skip, Python3.12Node22 failed Q2 cumulative180s (3787pass1fail2skip), browser pending. Q2 optimization424cc95e requires new exact-head CI.",
+  "remote_ci": "f0cf569b PR39860006534 success:4units3794pass2skip,render136pass1skip,browser603pass,installed255pass. Duplicatepush39859996259 failure:browser602pass1fail (fixed100ms response-capture synchronization), installed steps skipped; separate success does not replace failure.",
   "followup_state": "Original CI failure diagnosis implemented; matching installed regression and new CI followup. No cross-execution adoption mode enabled.",
   "product_decision_pending": {
     "task": "RP-24",
@@ -628,5 +628,12 @@
       "canonical_skill_inventory_verified": true,
       "wheel_sha256": "607877b0b03cd1619ee539ab35615d588c3696723be9395ca17f61a70209d782"
     }
+  },
+  "autosave_capture_followup": {
+    "commit": "1e87cda8ece6d0fc5d3d08f523b156518ea9011d",
+    "reproduction": "Event-gated real second save; old unknown variant fails len(held)=1 in4.49s",
+    "repair": "actual response-capture signals; no runtime changes; three variants/all original assertions retained and strengthened",
+    "validation": "real Chromium3pass13.20s; Ruff/diff pass; independent review no concreteP1/P2",
+    "new_exact_head_ci": "REQUIRED"
   }
 }
