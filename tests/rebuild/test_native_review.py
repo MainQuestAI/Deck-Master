@@ -178,7 +178,8 @@ def test_workbench_requires_token_and_rejects_claims_or_caller_paths(tmp_path, n
         with pytest.raises(HTTPError) as missing:
             post({}, 'invalid')
         assert missing.value.code == 403
-        for body in ({'raw_final_message': '{}'}, {'project': '/tmp/elsewhere'}, {'claims': {'verified': True}}):
+        for body in ({'raw_final_message': '{}'}, {'project': '/tmp/elsewhere'}, {'claims': {'verified': True}},
+                     *({'force_units': value} for value in ([], ['unknown'], ['argument', 'argument'], 'argument', [None]))):
             with pytest.raises(HTTPError) as rejected:
                 post(body)
             assert rejected.value.code == 422
@@ -187,3 +188,34 @@ def test_workbench_requires_token_and_rejects_claims_or_caller_paths(tmp_path, n
         assert content_review.qualify_for_production(store, store.load_document())['status'] == 'pass'
     finally:
         server.stop()
+
+
+def test_full_forced_review_does_not_reuse_live_single_page_task(tmp_path, native):
+    from synthetic_review_provider import dispatch_with_synthetic_provider
+    from test_content_preproduction_review import _independent_adapter
+    project, store = _deck(tmp_path)
+    narrow = dispatch_with_synthetic_provider(project, page_ids=['p1'],
+        adapter_context=_independent_adapter(store, store.load_document()), force_units=['argument'])['task']
+    assert narrow['scope_pages'] == ['p1']
+    assert native_review.run(project, task_id=narrow['task_id'])['status'] == 'running'
+    assert not native.calls
+    result = native_review.run(project, force_units=['argument'])
+    assert result['status'] == 'reviewed'
+    full = _review_task(store)
+    assert full['task_id'] != narrow['task_id']
+    assert set(full['scope_pages']) == {'p1', 'p2'}
+    assert {page['page_id'] for page in native.calls[0]['packet']['manuscript']['pages']} == {'p1', 'p2'}
+    assert tasks._lookup_task(store.load_document(), narrow['task_id'], store)['status'] == 'running'
+
+
+@pytest.mark.parametrize('selection', [['unknown'], ['argument', 'argument']])
+def test_cli_rejects_invalid_forced_units_before_native_call(tmp_path, native, capsys, selection):
+    project, store = _deck(tmp_path)
+    before = store.read_current()
+    args = ['review', 'native', '--project', str(project)]
+    for unit in selection:
+        args.extend(['--force-unit', unit])
+    assert cli.main(args) != 0
+    assert not native.calls
+    assert store.read_current() == before
+    capsys.readouterr()

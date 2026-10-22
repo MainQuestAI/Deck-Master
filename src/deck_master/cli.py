@@ -199,6 +199,8 @@ def build_parser() -> argparse.ArgumentParser:
     native = review_sub.add_parser("native", help="Run an actual read-only native independent content review")
     native.add_argument("--project", required=True)
     native.add_argument("--task-id")
+    native.add_argument("--force-unit", action="append", dest="force_units",
+                        help="Explicitly re-review a currently required unit; repeat for multiple units")
 
     doctor = sub.add_parser("doctor")
     doctor.add_argument("--step", choices=("compose","blueprint","compile","render","view","export"), default="view")
@@ -532,7 +534,7 @@ def main(argv: list[str] | None = None) -> int:
             return _emit_and_exit(result, 3) if result['status'] in ('running', 'needs_evidence') else _emit(result)
         if options.command == "review" and options.review_command == "native":
             from .native_review import run
-            result = run(options.project, task_id=options.task_id)
+            result = run(options.project, task_id=options.task_id, force_units=options.force_units)
             return _emit_and_exit(result, 3) if result["status"] in ("running", "recovery_available") else _emit(result)
         if options.command in ("collaboration", "eligibility", "review"):
             from .collaboration_api import invoke, error_response

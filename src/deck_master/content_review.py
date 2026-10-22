@@ -436,8 +436,20 @@ def _review_pages(store, document, page_ids=None) -> list[str]:
     return ids
 
 
+def validate_force_units(store, document, force_units):
+    """Explicit re-review selection cannot manufacture a new review dimension."""
+    if force_units is None:
+        return []
+    required = set(required_units(store, document))
+    if (not isinstance(force_units, list) or not force_units
+            or not all(isinstance(unit, str) for unit in force_units)
+            or len(force_units) != len(set(force_units)) or not set(force_units) <= required):
+        raise ModelError("content_review/force_units", "select distinct currently required review units")
+    return sorted(force_units)
+
+
 def dispatch_preproduction_review(project, *, page_ids=None, adapter_context=None,
-                                  instruction=None) -> dict:
+                                  instruction=None, force_units=None) -> dict:
     """Open the preproduction review task, or return an honest needs_reviewer.
 
     ``needs_reviewer`` carries the reviewable draft (the packet) so the caller
@@ -456,7 +468,8 @@ def dispatch_preproduction_review(project, *, page_ids=None, adapter_context=Non
     if not pages:
         raise ModelError("content_review/pages", "there is no manuscript to review yet")
     status = preproduction_status(store, document, page_ids=pages)
-    units = sorted(set(status['missing_units']) | {row['kind'] for row in status['blocking_findings']})
+    forced = validate_force_units(store, document, force_units)
+    units = sorted(set(status['missing_units']) | {row['kind'] for row in status['blocking_findings']} | set(forced))
     if not units:
         return {'status': 'already_reviewed', 'stage': STAGE, 'units': [], 'preproduction': status}
     packet = build_review_packet(store, document, page_ids=pages, required=units,

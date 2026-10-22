@@ -278,8 +278,8 @@ def _failure(store, task, executor, exc):
         service._commit_task_update(store, document, current, updated, "native independent review failed")
 
 
-def run(project, *, task_id=None):
-    """Run actual native review; project and an optional Task ID are the only inputs."""
+def run(project, *, task_id=None, force_units=None):
+    """Run native review, optionally selecting current units for explicit re-review."""
     store = Store(Path(project).expanduser())
     # A derived operation lock prevents double-clicks/reconnects from issuing a
     # second native call. It grants no policy or receipt authority.
@@ -291,20 +291,29 @@ def run(project, *, task_id=None):
             fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
             return {"status": "running", "next_action": "read current task status; do not launch another native review"}
-        return _run(store, task_id=task_id)
+        return _run(store, task_id=task_id, force_units=force_units)
     finally:
         os.close(handle)
 
 
-def _run(store, *, task_id):
+def _run(store, *, task_id, force_units=None):
     document = store.load_document()
+    forced = content_review.validate_force_units(store, document, force_units)
+    if task_id and force_units is not None:
+        raise review_evidence.EvidenceRejected("native_review/force_units", "select a frozen task_id or force_units, not both")
     gate = content_review.preproduction_status(store, document)
-    if gate["status"] == "pass":
+    if gate["status"] == "pass" and not forced and not task_id:
         return {"status": "already_reviewed", "preproduction": gate}
     candidates = [task for ref in document["tasks"] if
                   (task := store.read_object_json(ref)).get("kind") == "review"
                   and task.get("review_stage") == "preproduction"
                   and task["status"] in ("awaiting_host", "running", "queued")]
+    if forced:
+        expected = set(gate["missing_units"]) | {row["kind"] for row in gate["blocking_findings"]} | set(forced)
+        candidates = [task for task in candidates
+                      if {row["kind"] for row in task.get("review_units", [])} == expected
+                      and set(task.get("scope_pages", [])) == {page["page_id"] for page in document["pages"]}
+                      and tasks.task_inputs_current(store, document, task)]
     if task_id:
         task = tasks._lookup_task(document, task_id, store)
         if task not in candidates:
@@ -330,7 +339,7 @@ def _run(store, *, task_id):
         with review_evidence.ProviderRuntime(registry).bound():
             if task is None:
                 dispatched = content_review.dispatch_preproduction_review(store.project_root,
-                    adapter_context=registry.channel_context())
+                    adapter_context=registry.channel_context(), force_units=force_units)
                 task = dispatched["task"]
             document = store.load_document()
             if not tasks.task_inputs_current(store, document, task):
