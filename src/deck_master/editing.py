@@ -449,7 +449,7 @@ def _history_row(document, parent):
 
 def history(project_dir, *, revision=None, page_id=None, layer=None, limit=None, cursor=None, related_only=True):
     """An anchored read projection; legacy calls still return the full ancestry."""
-    from .snapshots import load_snapshot
+    from .snapshots import FixedSnapshotReader
     store = Store(project_dir)
     head = revision or store.current_revision_id()
     start = None
@@ -458,19 +458,19 @@ def history(project_dir, *, revision=None, page_id=None, layer=None, limit=None,
         if len(pieces) != 2 or (revision and revision != pieces[0]):
             raise StoreError('cursor', 'cursor must preserve its original history head')
         head, start = pieces
-    document = load_snapshot(store, head)
+    reader = FixedSnapshotReader(store, head_revision=head)
+    document = reader.load(head)
     if limit is not None and (type(limit) is not int or not 1 <= limit <= 100):
         raise StoreError('limit', 'history page size must be 1–100')
     if start:
-        while document['revision_id'] != start and document.get('parent_revision_id'):
-            document = store.load_document(document['parent_revision_id'])
-        if document['revision_id'] != start:
+        if start not in reader.ancestry(head):
             raise StoreError('cursor', 'cursor is not in the fixed committed ancestry')
+        document = reader.load(start)
     records = []
     next_cursor = None
     while document:
         parent_id = document['parent_revision_id']
-        parent = store.load_document(parent_id) if parent_id else None
+        parent = reader.load(parent_id) if parent_id else None
         row = _history_row(document, parent)
         relevant = [item for item in row['changed_pages'] if (not page_id or item['page_id'] == page_id)
                     and (not layer or layer in item['layers'] or 'basis' in item['layers'])]

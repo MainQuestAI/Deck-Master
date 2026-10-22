@@ -221,11 +221,11 @@ def _base_refs(store, doc, target):
     return refs
 
 
-def _validate(store, current, identity, draft):
+def _validate(store, current, identity, draft, *, snapshot_reader=None):
     validate_schema("ui_draft", draft)
     if draft["project_id"] != current["project_id"] or draft["project_identity"] != identity:
         raise LocalStateError("project_identity", "draft belongs to another project")
-    base = load_snapshot(store, draft["base_revision"])
+    base = snapshot_reader.load(draft["base_revision"]) if snapshot_reader else load_snapshot(store, draft["base_revision"])
     refs = _base_refs(store, base, draft["target"])
     if (refs and draft["base_ref"] not in refs) or (not refs and draft["base_ref"] is not None):
         raise LocalStateError("base_ref", "draft basis does not belong to this page/layer/revision")
