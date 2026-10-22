@@ -98,6 +98,7 @@ class _ReadContext:
         self.clock_tasks = []
         self.revision_signatures = {}
         self.read_failed = False
+        self.cacheable = True
 
     def close(self):
         for fd in self.directory_fds.values():
@@ -182,11 +183,12 @@ class _ReadContext:
         return self.metadata_objects[key]
 
 
-def _task_rows(ctx):
+def _task_rows(ctx, *, task_records=None):
     rows = []
-    for ref in ctx.document.get("tasks") or []:
+    records = task_records if task_records is not None else ((ref, None) for ref in ctx.document.get("tasks") or [])
+    for ref, known in records:
         try:
-            task = ctx.read(ref)
+            task = known if known is not None else ctx.read(ref)
             if task.get("schema_version") != "deck_task.v1":
                 raise ValueError("not a task")
             rows.append({"task_id": task["task_id"], "kind": task["kind"],
@@ -793,7 +795,7 @@ def _workbench_summary(project_dir, *, revision, encoded, reading=None):
         serialized = json.dumps(result, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
         # Never cache partial failures: missing/corrupt objects must be retried
         # so an independent repair is visible without a business revision.
-        if not ctx.read_failed:
+        if not ctx.read_failed and ctx.cacheable:
             entry = {"json": serialized,
                      "signatures": ctx.signatures, "clock_tasks": ctx.clock_tasks,
                      "revision_signatures": ctx.revision_signatures}
@@ -938,13 +940,14 @@ def action_targets(project_dir, action_id, *, revision, limit=30, offset=0, read
     return result
 
 
-def _prompt_records(ctx, entry, artifact):
+def _prompt_records(ctx, entry, artifact, *, task_records=None):
     prepared, errors = [], []
     blueprint_ref = entry.get("blueprint")
     invocation = (artifact.get("provenance") or {}).get("invocation_ref") if artifact else None
-    for task_ref in ctx.document.get("tasks") or []:
+    records = task_records if task_records is not None else ((ref, None) for ref in ctx.document.get("tasks") or [])
+    for task_ref, known in records:
         try:
-            task = ctx.read(task_ref)
+            task = known if known is not None else ctx.read(task_ref)
             if task.get("schema_version") != "deck_task.v1":
                 raise ValueError("not a task")
             if task.get("kind") != "blueprint" or entry["page_id"] not in (task.get("scope_pages") or []):
@@ -1012,8 +1015,28 @@ def page_lineage(project_dir, page_id, *, revision=None):
             blueprint = obj
         except READ_FAILURES:
             pass
-    prompts = _prompt_records(ctx, entry, blueprint)
-    generation = _generation_records(ctx, entry, blueprint)
+    # One full task traversal dispatches facts to the three consumers. Only
+    # page-relevant records are subsequently projected; ctx already prevented
+    # duplicate JSON decoding before this traversal optimization.
+    row_tasks, prompt_tasks, generation_tasks = [], [], []
+    for ref in doc.get('tasks') or []:
+        try:
+            task = ctx.read(ref)
+            if task.get('schema_version') != 'deck_task.v1':
+                prompt_tasks.append((ref, task))
+            elif page_id in (task.get('scope_pages') or []):
+                row_tasks.append((ref, task))
+                if task.get('kind') == 'blueprint':
+                    prompt_tasks.append((ref, task))
+            if task.get('protocol_version') == 'generation.v1' and page_id in task.get('scope_pages', []):
+                generation_tasks.append((ref, task))
+        except READ_FAILURES:
+            # Preserve each consumer's unreadable-object diagnostic; absent
+            # scope never invents a page task row.
+            prompt_tasks.append((ref, None))
+            generation_tasks.append((ref, None))
+    prompts = _prompt_records(ctx, entry, blueprint, task_records=prompt_tasks)
+    generation = _generation_records(ctx, entry, blueprint, task_records=generation_tasks)
     if generation.get("adopted_observation"):
         observed = generation["adopted_observation"]
         if prompts["submitted"]["text"] == observed["submitted"]["prompt"]:
@@ -1025,19 +1048,20 @@ def page_lineage(project_dir, page_id, *, revision=None):
             "sources": {"citations": (page or {}).get("citations") or [], "relation": "known" if (page or {}).get("citations") else "unknown"},
             "content_plan": projection(store, doc, reader=ctx.read, page_id=page_id),
             "prompts": prompts, "generation": generation,
-            "tasks": [t for t in _task_rows(ctx) if page_id in (t.get("scope_pages") or [])],
+            "tasks": [t for t in _task_rows(ctx, task_records=row_tasks) if page_id in (t.get("scope_pages") or [])],
             "deck_output": deck_output, "production": production_detail.projection(ctx, entry, deck_output),
             "text_sources": text_sources.projection(entry, page, prompts, generation), "evidence_level": "engineering"}
 
 
-def _generation_records(ctx, entry, artifact):
+def _generation_records(ctx, entry, artifact, *, task_records=None):
     from .generation import comparison
     requests, attempts, errors = [], [], []
     adopted = None
     provenance = (artifact or {}).get("provenance") or {}
-    for task_ref in ctx.document["tasks"]:
+    records = task_records if task_records is not None else ((ref, None) for ref in ctx.document["tasks"])
+    for task_ref, known in records:
         try:
-            task = ctx.read(task_ref)
+            task = known if known is not None else ctx.read(task_ref)
             if task.get("protocol_version") != "generation.v1" or entry["page_id"] not in task.get("scope_pages", []):
                 continue
             request_map = {}

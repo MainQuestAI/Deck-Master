@@ -13,7 +13,7 @@ from .local_state import project_path
 from .method_resources import method_release, method_resources
 from .models import (bump_revision, canonical_json_bytes, content_identity, sha256_bytes,
                      validate_schema, validate_task_semantics)
-from .snapshots import load_snapshot
+from .snapshots import READ_FAILURES, load_snapshot
 from .store import Store
 from .ui_journal import _base_refs
 
@@ -392,31 +392,68 @@ def handoff(project, *, change_id):
              'plan_ref': change['plan_ref'], 'plan': plan_record,
              'read_command': shlex.join(['deck-master', 'changes', 'handoff', '--project', str(store.project_root), '--change-id', change_id])}
     validate_schema('change_handoff', block)
-    completed = sum(t['status'] == 'completed' for t in selected)
-    state = ('completed' if completed == len(rows) else 'partial' if completed else
-             'running' if any(t['status'] == 'running' and t.get('execution_ref') for t in selected) else
-             'cancelled' if all(t['status'] == 'cancelled' for t in selected) else
-             'failed' if any(t['status'] in ('failed', 'superseded') for t in selected) else 'awaiting_host')
-    needs_verification = any(row['needs_verification'] for row in rows)
-    unknown = any(c['state'] == 'unknown' for t in selected for c in t.get('call_allowances', []))
-    if unknown:
-        state = 'unknown'
-    return {'status': state, 'needs_verification': needs_verification or unknown,
+    state = _status(selected)
+    return {**state,
             'recovery': 'Verify the existing execution or confirm cancellation before a new handoff. Never retry a call automatically.',
-            'completed_count': completed, 'total_count': len(rows), 'handoff': block,
+            'handoff': block,
             'summary': f'{len(rows)} explicit page tasks; copy is not execution. Read the committed plan before starting.',
             'text': 'Read this local change using the official CLI. Copying does not start work.\n' +
                     block['read_command'] + '\n\n```deck-master-handoff.v1\n' +
                     json.dumps(block, ensure_ascii=False, indent=2).replace('`', '\\u0060') + '\n```'}
 
 
+def _status(selected):
+    """Aggregate task state without constructing a handoff or command text."""
+    from .run_desk import task_row
+    completed = sum(t['status'] == 'completed' for t in selected)
+    state = ('completed' if completed == len(selected) else 'partial' if completed else
+             'running' if any(t['status'] == 'running' and t.get('execution_ref') for t in selected) else
+             'cancelled' if all(t['status'] == 'cancelled' for t in selected) else
+             'failed' if any(t['status'] in ('failed', 'superseded') for t in selected) else 'awaiting_host')
+    needs_verification = any(task_row(task)['needs_verification'] for task in selected)
+    unknown = any(c['state'] == 'unknown' for t in selected for c in t.get('call_allowances', []))
+    if unknown:
+        state = 'unknown'
+    return {'status': state, 'needs_verification': needs_verification or unknown,
+            'completed_count': completed, 'total_count': len(selected)}
+
+
 @operations.public
 def list_changes(project):
     store = Store(project_path(project)); document = load_snapshot(store)
+    from .read_facts import ReadFacts
+    store = ReadFacts(store, document)
+    task_map, first_error = {}, None
+    for ref in document.get('tasks', []) if document.get('changes') else []:
+        try:
+            task = store.read_object_json(ref)
+            task_map.setdefault(task['task_id'], (task, first_error))
+        except READ_FAILURES as exc:
+            if first_error is None:
+                first_error = exc
     records = []
     for ref in document.get('changes', []):
         change = store.read_object_json(ref); validate_schema('change_set', change)
-        state = handoff(project, change_id=change['change_id'])
+        selected = []
+        for task_id in change['task_ids']:
+            if task_id not in task_map:
+                if first_error is not None:
+                    raise first_error
+                raise tasks.EnvelopeError(f'(task {task_id})', 'task not found in current Document')
+            task, preceding_error = task_map[task_id]
+            if preceding_error is not None:
+                raise preceding_error
+            validate_task_semantics(task)
+            selected.append(task)
+        # Preserve malformed frozen-plan/call-record refusal without building
+        # the complete handoff schema, command, or text for each group.
+        validate_schema('change_plan', store.read_object_json(change['plan_ref']))
+        for task in selected:
+            for item in task.get('generation_requests', []):
+                store.read_object_json(item)['request_id']
+            for item in task.get('generation_attempts', []):
+                store.read_object_json(item)['attempt_id']
+        state = _status(selected)
         records.append({'change_id': change['change_id'], 'ref': ref, 'status': state['status'],
                         'completed_count': state['completed_count'], 'total_count': state['total_count'],
                         'needs_verification': state['needs_verification']})

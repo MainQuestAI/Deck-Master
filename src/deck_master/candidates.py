@@ -534,8 +534,11 @@ def show(project, *, candidate_id, revision=None):
 @operations.public
 def listing(project, *, page_id=None, revision=None):
     store = Store(project_path(project)); document = load_snapshot(store, revision)
+    from .read_facts import ReadFacts
+    store = ReadFacts(store, document)
+    records = _records(store, document)
     rows = []
-    for candidate, ref, task in _records(store, document).values():
+    for candidate, ref, task in records.values():
         if page_id is not None and candidate.get('page_id') != page_id:
             continue
         state = _state(store, document, candidate, task)
@@ -545,7 +548,7 @@ def listing(project, *, page_id=None, revision=None):
         if not reason and task.get('stage_request', {}).get('icon_recipe_ref'):
             try:
                 # The same actual-PPT and scope gates used by adoption planning.
-                _plan(store, document, [candidate['candidate_id']])
+                _plan(store, document, [candidate['candidate_id']], records=records)
             except operations.OperationError as exc:
                 reason = exc.error_code
         change_ref = task.get('change_binding', {}).get('change_ref')
@@ -581,8 +584,10 @@ class AdoptionConflict(operations.OperationError):
         return value
 
 
-def _plan(store, document, candidate_ids):
-    records = _records(store, document)
+def _plan(store, document, candidate_ids, *, records=None):
+    read_records = records
+    if records is None:
+        records = _records(store, document)
     if len(candidate_ids) != len(set(candidate_ids)):
         raise operations.OperationError('candidate_invalid', 'candidate_ids', 'select each candidate once')
     selected = [_lookup(records, cid) for cid in candidate_ids]
@@ -622,7 +627,10 @@ def _plan(store, document, candidate_ids):
             continue
         if task.get('stage_request', {}).get('icon_recipe_ref'):
             from .candidate_preview import require_ready
-            require_ready(store.project_root, candidate['candidate_id'])
+            if read_records is None:
+                require_ready(store.project_root, candidate['candidate_id'])
+            else:
+                require_ready(store.project_root, candidate['candidate_id'], read_context=(store, document, records))
             recipe_ref = task['stage_request']['icon_recipe_ref']
             from .icons import _owned, _sample
             recipe, _ = _owned(store, document, ref=recipe_ref)

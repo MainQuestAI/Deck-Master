@@ -34,9 +34,13 @@ _FILES=('candidate.png','candidate.svg','candidate.pptx','readback.json')
 def _sha(path):return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def _context(project,candidate_id):
-    store=Store(project_path(project));doc=load_snapshot(store)
-    candidate,ref,task=candidates._lookup(candidates._records(store,doc),candidate_id)
+def _context(project,candidate_id, *, read_context=None):
+    if read_context is None:
+        store=Store(project_path(project));doc=load_snapshot(store)
+        records=candidates._records(store,doc)
+    else:
+        store,doc,records=read_context
+    candidate,ref,task=candidates._lookup(records,candidate_id)
     if candidate.get('stage')!='svg':icons.fail('candidate_id','actual single-page preview requires an SVG candidate')
     base=load_snapshot(store,candidate['base_revision']);entry=icons._entry(base,candidate['page_id'])
     artifact=store.read_object_json(candidate['result_ref']);data=store.read_object_bytes(artifact['file'])
@@ -287,15 +291,16 @@ def request(project, *, candidate_id, retry=False, wait=True):
 
 
 @operations.public
-def status(project, *, candidate_id):
-    try:context=_context(project,candidate_id)
+def status(project, *, candidate_id, _read_context=None):
+    try:context=_context(project,candidate_id) if _read_context is None else _context(project,candidate_id,read_context=_read_context)
     except pipeline.NeedsTool as exc:return {'status':'needs_tool','error':{'code':'needs_tool','message':str(exc)}}
     store=context[0];identity,key=context[-2:]
     with local_lock(_folder(store)/'state.lock'):return _result(store,key,identity)
 
 
-def require_ready(project,candidate_id):
-    result=status(project,candidate_id=candidate_id)
+def require_ready(project,candidate_id, *, read_context=None):
+    result=(status(project,candidate_id=candidate_id) if read_context is None else
+            status(project,candidate_id=candidate_id,_read_context=read_context))
     if result['status']!='ready' or result.get('scope_check',{}).get('status')!='pass' or result.get('native_check')!='pass':
         raise operations.OperationError('icon_preview_required','candidate_id','run actual candidate PPT checks before adopting this icon trial',http_status=409)
     return result

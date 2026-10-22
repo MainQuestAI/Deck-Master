@@ -81,6 +81,12 @@ class Projection:
     def _revision(self, task):
         revision = task.get('dispatch_revision')
         if revision:
+            # Freshness consumes load_snapshot's entire head-to-dispatch
+            # ancestry proof. An endpoint signature cannot guard intermediate
+            # links. Do not persist this derived proof across requests; each
+            # response recomputes it against canonical ancestry. Immutable
+            # object byte caches remain independently signature-checked.
+            self.ctx.cacheable = False
             signature = snapshot_signature(self.ctx.store, revision)
             self.ctx.revision_signatures[revision] = signature
             if signature is None:

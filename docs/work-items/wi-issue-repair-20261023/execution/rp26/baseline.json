@@ -1,0 +1,107 @@
+[
+  {
+    "n": 4,
+    "path": "project",
+    "wall": 0.018710561999796482,
+    "cpu": 0.018682303000000067,
+    "Store": 14,
+    "object_json_reads": 75
+  },
+  {
+    "n": 4,
+    "path": "candidates",
+    "wall": 0.09097921100010353,
+    "cpu": 0.09098392600000005,
+    "Store": 10,
+    "candidate_sets": 9,
+    "object_json_reads": 228
+  },
+  {
+    "n": 4,
+    "path": "changes",
+    "wall": 0.01703766800028461,
+    "cpu": 0.01703984199999997,
+    "Store": 10,
+    "object_json_reads": 32,
+    "handoffs": 4
+  },
+  {
+    "n": 4,
+    "path": "lineage",
+    "wall": 0.00890377499990791,
+    "cpu": 0.00890554499999996,
+    "Store": 10,
+    "object_json_reads": 9,
+    "task_context_lookups": 12
+  },
+  {
+    "n": 8,
+    "path": "project",
+    "wall": 0.014006389999849489,
+    "cpu": 0.01398203099999984,
+    "Store": 14,
+    "object_json_reads": 103
+  },
+  {
+    "n": 8,
+    "path": "candidates",
+    "wall": 0.197811209000065,
+    "cpu": 0.19781963999999985,
+    "Store": 18,
+    "candidate_sets": 17,
+    "object_json_reads": 776
+  },
+  {
+    "n": 8,
+    "path": "changes",
+    "wall": 0.021125190000020666,
+    "cpu": 0.021128333000000055,
+    "Store": 18,
+    "object_json_reads": 96,
+    "handoffs": 8
+  },
+  {
+    "n": 8,
+    "path": "lineage",
+    "wall": 0.025633050999658735,
+    "cpu": 0.0256349520000001,
+    "Store": 14,
+    "object_json_reads": 13,
+    "task_context_lookups": 24
+  },
+  {
+    "n": 16,
+    "path": "project",
+    "wall": 0.01717022699995141,
+    "cpu": 0.017159233999999968,
+    "Store": 14,
+    "object_json_reads": 159
+  },
+  {
+    "n": 16,
+    "path": "candidates",
+    "wall": 0.5301139739999599,
+    "cpu": 0.5301024490000001,
+    "Store": 34,
+    "candidate_sets": 33,
+    "object_json_reads": 2832
+  },
+  {
+    "n": 16,
+    "path": "changes",
+    "wall": 0.046164087999841286,
+    "cpu": 0.04616751000000008,
+    "Store": 34,
+    "object_json_reads": 320,
+    "handoffs": 16
+  },
+  {
+    "n": 16,
+    "path": "lineage",
+    "wall": 0.02089590200012026,
+    "cpu": 0.02089805599999961,
+    "Store": 22,
+    "object_json_reads": 21,
+    "task_context_lookups": 48
+  }
+]

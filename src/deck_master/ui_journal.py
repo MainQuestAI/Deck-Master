@@ -147,17 +147,13 @@ def project_info(project, *, server_capabilities=None, include_eligibility=True)
                 "effective_actions": [{"action": action, "supported": capability in capabilities,
                                        "writable": False, "reason_code": reason}
                                       for action, capability in PROJECT_ACTIONS]}
-    # Immutable snapshots can be read without creating a write lock. Retry if
-    # another window advanced current between the three pure projections;
-    # never publish mixed completion/request/migration bases to the browser.
-    for _ in range(3):
-        store, doc, identity = context(project)
-        collaboration_state = collaboration.describe(project, include_eligibility=include_eligibility)
-        migration = collaboration_migration.describe(project)
-        if doc["revision_id"] == collaboration_state["revision_id"] == migration["revision_id"]:
-            break
-    else:
-        raise LocalStateError("revision_id", "project state changed while reading; reload the current state")
+    # Explicit shared snapshot/object facts for this response only. A later
+    # write never receives this reader and independently reloads current.
+    from .read_facts import ReadFacts
+    store, doc, identity = context(project)
+    store = ReadFacts(store, doc)
+    collaboration_state = collaboration.describe_snapshot(store, doc, include_eligibility=include_eligibility)
+    migration = collaboration_migration.describe_snapshot(store, doc)
     sample = sample_info(store.project_root)
     compatibility = doc.get("compatibility", {})
     project_format = compatibility.get("project_format", "deck_document.v1")
