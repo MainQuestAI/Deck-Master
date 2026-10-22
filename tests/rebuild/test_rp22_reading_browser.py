@@ -86,3 +86,75 @@ def test_mixed_overview_long_prompt_and_handoff(candidate_store, tmp_path, route
             browser.close()
     finally:
         server.stop()
+
+
+@pytest.mark.parametrize('route', ['studio', 'v2'])
+def test_single_verify_survives_deferred_fixed_read(candidate_store, tmp_path, route):
+    store = candidate_store
+    task = dispatch(store, page='p02')
+    other = dispatch(store, page='p01')
+    revision = store.load_document()['revision_id']
+    server = WorkbenchServer(store.project_root)
+    try:
+        with sync_playwright() as runtime:
+            browser = runtime.chromium.launch(executable_path=shutil.which('chromium'), args=['--no-sandbox'])
+            page = browser.new_page()
+            url = server.start()
+            identity = page.request.get(url+'api/project').json()['project_identity']
+            target = url+route+'/#'+urlencode(dict(project=identity, surface='runs', task=task['task_id'], revision=revision))
+            page.goto(target)
+            expect(page.locator('.run-detail')).to_contain_text('尚无接手记录')
+            expect(page.get_by_role('button', name='核实最新执行状态', exact=True)).to_be_enabled()
+            start(store, task)
+            latest = store.load_document()['revision_id']
+            page.reload()
+            expect(page.locator('.run-detail')).to_contain_text('尚无接手记录')
+            expect(page.get_by_role('button', name='核实最新执行状态', exact=True)).to_be_enabled()
+            held = []
+            def hold_fixed(request):
+                response = request.fetch()
+                held.append((request, response))
+            pattern = '**/api/tasks/'+task['task_id']+'?revision=*'
+            page.route(pattern, hold_fixed)
+            page.evaluate("document.querySelector('#app').dispatchEvent(new Event('draft-editor-replaced'))")
+            # Wait on the request itself, not on arbitrary timing or polling cadence.
+            for _ in range(100):
+                if held: break
+                page.wait_for_timeout(10)
+            assert len(held) == 1
+            page.get_by_role('button', name='核实原任务', exact=True).click()
+            expect(page.locator('.run-detail')).to_contain_text('synthetic-test-host')
+            held[0][0].fulfill(response=held[0][1])
+            expect(page.get_by_role('button', name='核实最新执行状态', exact=True)).to_be_enabled()
+            expect(page.locator('.run-detail')).to_contain_text('synthetic-test-host')
+            assert revision in page.url  # Single verification does not change historical navigation.
+            expect(page.locator('.task-verified-revision')).to_have_text('已核实原任务的当前执行状态 · R '+latest[:8])
+            expect(page.get_by_role('button', name='取消原任务', exact=True)).to_be_disabled()
+            page.unroute(pattern, hold_fixed)
+            # A later background fixed-list read must keep the explicit current detail.
+            with page.expect_response(lambda response: response.url == url+'api/tasks/'+task['task_id']) as refreshed:
+                page.evaluate("document.querySelector('#app').dispatchEvent(new Event('draft-editor-replaced'))")
+            refreshed.value.finished()
+            expect(page.get_by_role('button', name='核实最新执行状态', exact=True)).to_be_enabled()
+            expect(page.locator('.run-detail')).to_contain_text('synthetic-test-host')
+            # A late verification from a disposed task must not replace the new selection.
+            pending = []
+            def hold_latest(request):
+                pending.append((request, request.fetch()))
+            page.route('**/api/tasks/'+task['task_id'], hold_latest)
+            page.get_by_role('button', name='核实原任务', exact=True).click()
+            for _ in range(100):
+                if pending: break
+                page.wait_for_timeout(10)
+            assert len(pending) == 1
+            page.evaluate('(hash)=>location.hash=hash', urlencode(dict(project=identity, surface='runs', task=other['task_id'], revision=revision)))
+            expect(page.locator('.run-detail')).to_contain_text(other['task_id'])
+            with page.expect_response(lambda response: response.url == url+'api/tasks/'+task['task_id']) as released:
+                pending[0][0].fulfill(response=pending[0][1])
+            released.value.finished()
+            page.evaluate('()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))')
+            expect(page.locator('.run-detail')).to_contain_text(other['task_id'])
+            expect(page.locator('.run-detail')).not_to_contain_text('synthetic-test-host')
+            browser.close()
+    finally:
+        server.stop()
