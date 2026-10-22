@@ -1140,7 +1140,7 @@ def _reconciles_current_inputs(control: dict, task: dict | None, spec: ActionSpe
 # Preproduction content review (AC-R06)
 
 
-def preproduction_state(store: Store, document: dict) -> dict:
+def preproduction_state(store: Store, document: dict, *, page_ids: list[str] | None = None) -> dict:
     """The one preproduction content-review verdict, consumed from T03.
 
     T03's ``content_review`` owns the units, the currency, the reviewer
@@ -1150,10 +1150,12 @@ def preproduction_state(store: Store, document: dict) -> dict:
     applicable passing review on the current manuscript. An existing delegate
     covering the review topics is reused to arrange that review (AC-R06) — it
     never substitutes the review's result, so it cannot satisfy this state.
+    Explicit action pages narrow coverage only; deck-level unresolved findings
+    still apply. Omitting page_ids retains the full-manuscript verdict.
     """
     from . import content_review
     try:
-        status = content_review.preproduction_status(store, document)
+        status = content_review.preproduction_status(store, document, page_ids=page_ids)
         qualified = content_review._production_qualification(status, document)
     except ModelError as exc:
         # Only the strict adopted-generation lineage reader reports this
@@ -1533,7 +1535,16 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
                           and not context.get("external_call_page_ids")
                           and not context.get("count"))
     if enforced and spec.name in PREPRODUCTION_GATED_ACTIONS and not content_correction:
-        preproduction = preproduction_state(store, control)
+        # Use actual page-action targets, not the request's upper permission
+        # bound. Full-deck operations still require full-manuscript coverage.
+        # Missing/empty/unknown targets never turn a partial pass into a pass
+        # for an unbounded action; independent scope/authority gates remain.
+        action_pages = target_page_ids(store, targets)
+        current_pages = {entry["page_id"] for entry in control.get("pages") or []}
+        review_pages = (action_pages if spec.subject == "pages"
+                        and targets.get("subject") != "deck" and action_pages
+                        and set(action_pages) <= current_pages else None)
+        preproduction = preproduction_state(store, control, page_ids=review_pages)
         if not preproduction["satisfied"]:
             code = "needs_reviewer" if preproduction["needs_reviewer"] \
                 else "preproduction_blocked"
