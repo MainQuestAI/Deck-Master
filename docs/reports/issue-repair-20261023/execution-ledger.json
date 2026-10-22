@@ -270,10 +270,11 @@
         "RP-11",
         "RP-17"
       ],
-      "implementation": "dd424554",
+      "implementation": "dd424554 + f934b046 + 2805bdf4",
       "evidence": "docs/reports/issue-repair-20261023/RP-20.md",
       "state": "partial_implementation_special_acceptance_blocked",
-      "issue_closure": "NOT_RUN"
+      "issue_closure": "NOT_RUN",
+      "followup": "Same-image notes edit loss reproduced through public authenticated synthetic receiver; retained relevant findings."
     },
     {
       "task": "RP-21",
@@ -287,10 +288,11 @@
         "RP-19",
         "RP-20"
       ],
-      "implementation": "f0feca8b + b9de561e + 1c046ec2 + 21f7b799",
+      "implementation": "f0feca8b + b9de561e + 1c046ec2 + 21f7b799 + d9ca38b6",
       "evidence": "docs/reports/issue-repair-20261023/RP-21.md",
       "state": "partial_implementation_special_acceptance_blocked",
-      "issue_closure": "NOT_RUN"
+      "issue_closure": "NOT_RUN",
+      "followup": "Same-snapshot preview race reproduced in real Chromium; 16 integrated passes."
     },
     {
       "task": "RP-22",
@@ -328,10 +330,11 @@
         "RP-21",
         "RP-23"
       ],
-      "implementation": "8702e5ac + d4b361ce",
+      "implementation": "8702e5ac + d4b361ce + a3fdd4d2",
       "evidence": "docs/reports/issue-repair-20261023/RP-24.md",
       "state": "partial_implementation_special_acceptance_blocked",
-      "issue_closure": "NOT_RUN"
+      "issue_closure": "NOT_RUN",
+      "followup": "Concrete proof/accounting product decision pending, not merely external Host acceptance. See RP-24-cross-execution-evidence.md; integrated 34 recovery/native-boundary passes."
     },
     {
       "task": "RP-25",
@@ -565,7 +568,7 @@
     "issue closure",
     "release publication"
   ],
-  "updated_utc": "2026-10-22T18:26:33+00:00",
+  "updated_utc": "2026-10-22T18:38:16.613158+00:00",
   "implementation_start_utc": "2026-10-22T17:28:58Z",
   "remote_rp00": {
     "branch": "codex/repair-rp00-20261023",
@@ -574,14 +577,29 @@
     "files": 18,
     "pull_request_created": false
   },
-  "engineering_completion_utc": "2026-10-22T18:26:33+00:00",
-  "final_code_candidate": "eed5e65ac6889f00de101539e8dc00da0d3f7f59",
+  "engineering_completion_utc": "2026-10-22T18:38:16.613158+00:00",
+  "final_code_candidate": "2805bdf40c427c2833315cb04204d5ab40f84955",
   "matched_installation": {
-    "source_sha": "eed5e65ac6889f00de101539e8dc00da0d3f7f59",
-    "installed_module": "/tmp/deck-final-eed5e65a/site/deck_master/__init__.py",
+    "source_sha": "2805bdf40c427c2833315cb04204d5ab40f84955",
+    "installed_module": "/tmp/deck-followup-2805bdf4/site/deck_master/__init__.py",
     "matched_package_files": 278,
     "canonical_skill_inventory_verified": true,
-    "wheel_sha256": "1b66c6948da5333cf197357e346bed6d4538e337caa91bedf29f915d7fb73284"
+    "wheel_sha256": "18bcd25dce6dfcad604cdc3e2e5ece571af2dad124611f0e649b75497a962245"
   },
-  "remote_ci": "Query exact final pushed head in final session receipt; no pass claimed in this ledger."
+  "remote_ci": "Query exact final pushed head in final session receipt; no pass claimed in this ledger.",
+  "followup_state": "Authorized follow-up integration and matching installation passed; RP24 concrete product decision remains pending.",
+  "product_decision_pending": {
+    "task": "RP-24",
+    "evidence": "docs/reports/issue-repair-20261023/RP-24-cross-execution-evidence.md",
+    "missing": "Authenticated A not-sent fence and A-to-B dispatch correlation; authoritative physical-call ownership beyond known same-project invocation entries.",
+    "decision": "Controller-proven bounded association versus separately authorized external artifact reuse preserving A/B accounting; no automatic single-call reassociation."
+  },
+  "followup_validation": {
+    "candidate": "2805bdf40c427c2833315cb04204d5ab40f84955",
+    "result": "PASS",
+    "count": 142,
+    "seconds": 37.76,
+    "command": "Installed 9-file original/review/styles/browser/native recovery suite --require-browser",
+    "log": "/tmp/deck-followup-2805bdf4/installed-tests.log"
+  }
 }
