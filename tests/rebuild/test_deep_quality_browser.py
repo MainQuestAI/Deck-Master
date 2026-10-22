@@ -28,6 +28,16 @@ def open_note_face(page):
     note_button.first.click()
 
 
+def open_opinion_composer(page):
+    """RP22 keeps reading compact; explicitly open the visible writing disclosure."""
+    composer = page.locator('.opinion-composer')
+    expect(page.locator('#main')).not_to_have_attribute('aria-busy', 'true')
+    expect(composer).to_be_visible()
+    if composer.get_attribute('open') is None:
+        composer.locator('summary').click()
+    expect(page.get_by_role('textbox', name='意见正文', exact=True)).to_be_visible()
+
+
 
 @pytest.fixture
 def workbench(icon_store):
@@ -79,6 +89,7 @@ def test_cloned_window_offline_drafts_both_survive(workbench,width,height):
 def test_old_revision_draft_never_locks_a_new_opinion(workbench):
     page,ctx,store,url,goto,_=workbench
     goto()
+    open_opinion_composer(page)
     body=page.get_by_role('textbox',name='意见正文',exact=True)
     body.fill('第一条意见的文字')
     page.get_by_role('button',name='整页意见',exact=True).click()
@@ -87,7 +98,8 @@ def test_old_revision_draft_never_locks_a_new_opinion(workbench):
     # Saving the opinion advanced the revision. Returning to the current one must
     # not adopt the older draft (which would bind this editor to a stale basis and
     # refuse the next save); the older text stays recoverable and is named on screen.
-    page.goto(goto())
+    goto()
+    open_opinion_composer(page)
     fresh=page.get_by_role('textbox',name='意见正文',exact=True)
     expect(fresh).to_have_value('')
     expect(page.locator('.annotation-notice')).to_contain_text('旧版本草稿可从下方恢复')
@@ -101,7 +113,7 @@ def test_old_revision_draft_never_locks_a_new_opinion(workbench):
     bodies=[note['annotation']['body'] for note in page.request.get(url.rstrip('/')+'/api/annotations').json()['annotations']]
     assert bodies.count('第一条意见的文字')==1 and bodies.count('第二条意见的文字')==1
     # The older text is recoverable, and copying it forward keeps the text only.
-    page.goto(goto())
+    goto()
     open_note_face(page)
     page.get_by_role('button',name='备份与恢复',exact=True).click()
     choices=page.get_by_label('恢复项目中的个人草稿')
@@ -151,6 +163,7 @@ def open_opinion_face(page):
         entry.click()
         expect(page.get_by_role('dialog', name='单页工具面板')).to_be_visible()
     page.get_by_role('button', name='意见', exact=True).click()
+    open_opinion_composer(page)
 
 
 def test_private_note_stays_out_of_opinions_and_repeat_saves(workbench):
