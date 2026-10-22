@@ -51,7 +51,15 @@ def test_confirmed_not_sent_cli_then_scope_replacement_can_claim_new_task(flow, 
     authorize_scope(project, actions=['dispatch.blueprint', 'change.commit', 'candidate.adopt', 'allowance.allocate', 'call.begin'],
         scope=changed_scope, max_external_calls=1, max_candidate_count=1, adoption_policy='within_scope',
         evidence=evidence_for(project, text='L1 explicit bounded authority for the changed request.', locator='L1:RP23:grant'))
-    settle_fidelity_review(project, page_ids=['p1'], execution_ref='L1-RP23-fidelity', scenario='L1 current changed request')
+    old_reviews = {ref['sha256']: store.read_object_json(ref) for ref in store.load_document()['reviews']}
+    recheck = settle_fidelity_review(project, page_ids=['p1'], execution_ref='L1-RP23-fidelity', scenario='L1 current changed request')
+    assert old_reviews  # This is a recheck, not an initial review.
+    for ref in recheck['review_refs']:
+        review = store.read_object_json(ref)
+        if review.get('schema_version') == 'deck_review.v2':
+            owner = old_reviews[review['replaces']['sha256']]
+            assert review['review_id'] == owner['review_id']
+            assert review['kind'] == owner['kind']
     current = service.continue_project(project)['pending_tasks'][0]
     assert current['task_id'] != task['task_id']
     claim(project, current, NEW_EXECUTION)
