@@ -351,6 +351,9 @@ def _run(store, *, task_id):
             try:
                 prior = [{"ref": ref, "review": value} for ref in document.get("reviews") or []
                          if (value := store.read_object_json(ref)).get("review_stage") == "preproduction"]
+                if packet.get('review_scope') is not None:
+                    owner_refs = {row['review_ref']['sha256'] for row in packet['review_scope']['owners']}
+                    prior = [row for row in prior if row['ref']['sha256'] in owner_refs]
                 prompt = ("Independently review the complete manuscript against the task, materials, and frozen methods below. "
                           "Return a judgment for every required unit. Multiple judgments of one unit are allowed only to replace distinct "
                           "actual prior owners that you rechecked; do not merge or omit their finding identities. Do not edit the draft. Cite concrete pages/atoms "

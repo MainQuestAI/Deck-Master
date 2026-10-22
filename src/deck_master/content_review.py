@@ -25,7 +25,7 @@ from pathlib import Path
 from . import models
 from .editing import _current_artifact_digests
 from .models import ModelError, canonical_json_bytes, sha256_bytes
-from .store import Store
+from .store import Store, StoreError
 
 STAGE = "preproduction"
 
@@ -276,7 +276,8 @@ def build_review_packet(store, document, *, page_ids=None, required=None,
         "instruction": (
             "Judge the task fit, the argument, the evidence boundaries, the page coverage, "
             "the progression and the use budgets against the materials and this complete "
-            "candidate manuscript. Return one review record per required unit with subjects "
+            "candidate manuscript. Return a review for every required unit and separately replace "
+            "each frozen historical owner, retaining its finding identities, with subjects "
             "and dependencies binding exactly these objects; do not replace the manuscript "
             "with a summary of the author's conclusion."),
     }
@@ -453,9 +454,13 @@ def dispatch_preproduction_review(project, *, page_ids=None, adapter_context=Non
     pages = _review_pages(store, document, page_ids)
     if not pages:
         raise ModelError("content_review/pages", "there is no manuscript to review yet")
-    units = required_units(store, document)
+    status = preproduction_status(store, document, page_ids=pages)
+    units = sorted(set(status['missing_units']) | {row['kind'] for row in status['blocking_findings']})
+    if not units:
+        return {'status': 'already_reviewed', 'stage': STAGE, 'units': [], 'preproduction': status}
     packet = build_review_packet(store, document, page_ids=pages, required=units,
                                  requirement=state["effective"])
+    packet['review_scope'] = {'units': units, 'owners': _review_scope_owners(store, document, units, pages)}
     packet_ref = store.put_json_object(packet)
     capabilities = reviewer_capabilities(adapter_context)
     if (state["effective"] == "independent_model_or_human"
@@ -475,7 +480,7 @@ def dispatch_preproduction_review(project, *, page_ids=None, adapter_context=Non
         store, kind="review", page_ids=pages, review_stage=STAGE,
         instruction=instruction or (
             "内容前置审查：读取 packet（材料 + 任务事实 + 完整候选稿），按 required units "
-            f"({', '.join(units)}) 各自提交一条 review 记录。"
+            f"({', '.join(units)}) 提交 review；有历史 owner 时逐一复查并明确 replaces，不合并身份。"
             "subjects/dependencies 必须绑定当前 Narrative、ContentPlan 与本次全部 Page 及来源；"
             "发现必须定位到具体节点/页面/atom 与依据。"),
         extra_inputs=[packet_ref], executor_type=executor_type,
@@ -491,17 +496,64 @@ def dispatch_preproduction_review(project, *, page_ids=None, adapter_context=Non
 # Acceptance (called from the review result path)
 
 
-def _require_unit_coverage(store, document, reviews) -> None:
-    units = set(required_units(store, document))
-    submitted = {review.get("kind") for review in reviews}
-    unknown = sorted(submitted - set(ALLOWED_KINDS))
-    if unknown:
-        raise _envelope_error("review/kind",
-                              f"preproduction reviews cover {list(ALLOWED_KINDS)}; got {unknown}")
-    missing = sorted(units - submitted)
-    if missing:
-        raise _envelope_error("review/kind",
-                              f"preproduction review is incomplete; missing units: {missing}")
+def _review_scope_owners(store, document, units, pages):
+    """Freeze historical frontier and still-open owners, never merge identities."""
+    from .review import finding_closed, open_findings, pending_judgments
+    history = _preproduction_reviews(store, document)
+    records = [{**row['review'], 'ref': row['review_ref']} for row in history]
+    replaced = {row['replaces']['sha256'] for row in records if row.get('replaces')}
+    artifacts = _current_artifact_digests(store, document)
+    owners = []
+    for row in records:
+        if row['kind'] not in units:
+            continue
+        scoped = {dep['identity'].split(':', 1)[-1] for dep in row.get('dependencies', [])
+                  if dep['kind'] == 'content'}
+        if not set(pages) <= scoped:
+            continue
+        unresolved = any(not finding_closed(records, row, finding, artifacts)
+                         for finding in open_findings(row) + pending_judgments(row))
+        if row['ref']['sha256'] not in replaced or unresolved:
+            owners.append({'kind': row['kind'], 'review_ref': row['ref']})
+    return owners
+
+
+def _frozen_review_scope(store, document, task):
+    packets = []
+    for ref in task.get('inputs') or []:
+        try:
+            value = store.read_object_json(ref)
+        except (ValueError, UnicodeError, StoreError):
+            continue
+        if isinstance(value, dict) and value.get('schema_version') == 'content_review_packet.v1':
+            packets.append(value)
+    if len(packets) == 1 and packets[0].get('review_scope') is not None:
+        scope = packets[0]['review_scope']
+        units = scope['units']
+        if (units != packets[0]['required_units'] or not units
+                or set(units) != {row['kind'] for row in task.get('review_units') or []}
+                or not set(units) <= set(ALLOWED_KINDS)):
+            raise _envelope_error('scope', 'frozen packet and Task review units disagree')
+        return scope
+    # Legacy Tasks never acquire a narrower contract from a caller's subset.
+    return {'units': required_units(store, document), 'owners': None}
+
+
+def _require_unit_coverage(store, document, reviews, task) -> None:
+    scope = _frozen_review_scope(store, document, task)
+    units = set(scope['units'])
+    submitted = {review.get('kind') for review in reviews}
+    if submitted != units:
+        raise _envelope_error('review/kind',
+                              f'preproduction review must cover exactly frozen units; missing units: {sorted(units - submitted)}; unexpected units: {sorted(submitted - units)}')
+    if scope['owners'] is not None:
+        expected = {(row['kind'], row['review_ref']['sha256']) for row in scope['owners']}
+        actual = [(row['kind'], row['replaces']['sha256']) for row in reviews if row.get('replaces')]
+        unowned = [row['kind'] for row in reviews if not row.get('replaces')]
+        expected_unowned = units - {kind for kind, _ in expected}
+        if (set(actual) != expected or len(actual) != len(set(actual))
+                or set(unowned) != expected_unowned or len(unowned) != len(set(unowned))):
+            raise _envelope_error('review/replaces', 'replace each frozen historical owner exactly once, without unrelated owners')
 
 
 def _envelope_error(where, message):
@@ -567,7 +619,7 @@ def validate_preproduction_result(store, document, task, envelope, *, adapter_co
         if review.get("review_stage") != STAGE:
             raise _envelope_error("review_stage", "preproduction results carry review_stage=preproduction")
     state = requirement_state(store, document)
-    _require_unit_coverage(store, document, reviews)
+    _require_unit_coverage(store, document, reviews, task)
     page_ids = list(task.get("scope_pages") or [])
     capabilities = reviewer_capabilities(adapter_context)
     accepted_reviewers = []

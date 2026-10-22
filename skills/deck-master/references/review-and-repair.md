@@ -70,3 +70,14 @@ is committed returns `needs_evidence`; loose JSON is never a recovery proof and
 must not be re-signed. An uncertain response after acceptance returns
 `already_applied`. `review native` reports `recovery_available` for a failed Task
 with committed proof instead of automatically starting another paid review.
+
+### Recheck only the frozen missing units
+
+Preproduction dispatch freezes `review_scope.units` and historical owner refs in
+the packet. A notes-only change can require only `speech`; the packet still
+contains the complete manuscript, plan, narrative and materials. Submit exactly
+those units and separately recheck/replace each frozen owner while retaining its
+finding identities. Never use a fresh unrelated pass to clear another owner's
+finding. Other still-current authenticated conclusions remain applicable; the
+combined current gate, not the partial Task alone, determines manuscript pass.
+Legacy Tasks without this frozen scope retain their full-unit coverage contract.

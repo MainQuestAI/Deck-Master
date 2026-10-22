@@ -153,7 +153,16 @@ def test_multiple_clean_owners_can_be_rechecked_without_merging_identities(tmp_p
     project, store = _deck(tmp_path)
     native.status = 'fail'
     native_review.run(project)
-    native_review.run(project)
+    # Synthetic legacy history can contain multiple independent owners per unit.
+    document = store.load_document()
+    changed = deepcopy(document)
+    for ref in document['reviews']:
+        historical = store.read_object_json(ref)
+        historical['review_id'] += '-legacy-owner'
+        changed['reviews'].append(store.put_json_object(historical))
+    changed = bump_revision(changed, {'operation_id': 'legacy-owner-fixture', 'kind': 'task_update',
+        'description': 'Synthetic historical multiple owners', 'read_set': []})
+    store.commit_change(base_revision=document['revision_id'], document=changed, operation_id='legacy-owner-fixture')
     prior = {ref['sha256']: store.read_object_json(ref) for ref in store.load_document()['reviews']}
     assert len(prior) == 8
     original = FixtureSession.review
@@ -174,7 +183,7 @@ def test_multiple_clean_owners_can_be_rechecked_without_merging_identities(tmp_p
         owner = prior[row['replaces']['sha256']]
         assert row['review_id'] == owner['review_id']
         assert row['kind'] == owner['kind']
-    assert len(native.calls) == 3
+    assert len(native.calls) == 2
 
 
 def test_expired_original_proof_is_not_renewed(tmp_path, native, monkeypatch):
