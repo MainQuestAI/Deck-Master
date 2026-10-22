@@ -619,7 +619,9 @@ def _adopt_review(store: Store, review: dict) -> dict:
         old_findings = {f.get("finding_id"): f for f in prior.get("findings") or []}
         new_findings = {f.get("finding_id"): f for f in review.get("findings") or []}
         shared = old_findings.keys() & new_findings.keys()
-        if not shared:
+        # A prior clean judgment has no finding identity to carry forward.
+        # Existing findings still require explicit, validated closure below.
+        if old_findings and not shared:
             raise EnvelopeError("review/replaces", "no shared finding_id with the replaced review")
         from .editing import _current_artifact_digests
         from .review import finding_closed

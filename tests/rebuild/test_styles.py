@@ -113,6 +113,9 @@ def test_first_trial_then_adoption_then_explicit_expansion(flow):
     original = copy.deepcopy(flow.store.load_document()['pages']); recipe = confirm(flow)
     with pytest.raises(OperationError, match='exactly one'): dispatch(flow, recipe, ['p02', 'p03'])
     task = dispatch(flow, recipe); candidate = flow.image(task)['candidate_ids'][0]
+    from deck_master import candidates
+    detail = candidates.show(flow.project, candidate_id=candidate)
+    assert detail['references'] == task['stage_request']['references']
     assert flow.store.load_document()['pages'] == original
     with pytest.raises(OperationError, match='currently adopted'): dispatch(flow, recipe, ['p03'], candidate)
     flow.adopt([candidate]); after_first = copy.deepcopy(flow.store.load_document()['pages'])

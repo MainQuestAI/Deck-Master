@@ -561,7 +561,11 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             try:
                 from . import ui_journal, service
                 if parsed.path == '/api/project':
-                    result = ui_journal.project_info(self.store.project_root, server_capabilities=UI_CAPABILITIES)
+                    query = parse_qs(parsed.query, keep_blank_values=True)
+                    if query not in ({}, {'details': ['1']}):
+                        raise ValueError('project reads accept only details=1')
+                    result = ui_journal.project_info(self.store.project_root, server_capabilities=UI_CAPABILITIES,
+                                                   include_eligibility=bool(query))
                 elif parsed.path == '/api/drafts':
                     result = ui_journal.list_drafts(self.store.project_root)
                 elif parsed.path == '/api/ui-state':

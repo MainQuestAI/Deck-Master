@@ -686,9 +686,10 @@ def _unit_dependency_equivalent(store, document, review, key, digest):
     return False
 
 
-def _applicable_reviews(store, document, page_ids, *, records=None) -> list[dict]:
+def _applicable_reviews(store, document, page_ids, *, records=None, digests=None) -> list[dict]:
     """Preproduction reviews that can satisfy a current manuscript unit."""
-    digests = _current_artifact_digests(store, document)
+    if digests is None:
+        digests = _current_artifact_digests(store, document)
     applicable = []
     if records is None:
         records = _preproduction_reviews(store, document)
@@ -826,14 +827,14 @@ def preproduction_status(store, document, *, adapter_context=None, page_ids=None
     if page_ids is None:
         page_ids = ids
     history = _preproduction_reviews(store, document)
-    applicable = _applicable_reviews(store, document, page_ids, records=history)
+    artifacts = _current_artifact_digests(store, document)
+    applicable = _applicable_reviews(store, document, page_ids, records=history, digests=artifacts)
     satisfied = sorted({item["review"].get("kind") for item in applicable
                         if item["review"].get("status") == "pass"})
     missing = sorted(set(units) - set(satisfied))
     blocking = []
     from .review import finding_closed, open_findings, pending_judgments
     records = [{**item["review"], "ref": item["review_ref"]} for item in history]
-    artifacts = _current_artifact_digests(store, document)
     scoped_pages = set(page_ids) & set(ids)
     for item in history:
         if item["review"].get("kind") not in units:
@@ -883,6 +884,11 @@ def qualify_for_production(store, document, *, adapter_context=None, page_ids=No
     """
     status = preproduction_status(store, document, adapter_context=adapter_context,
                                   page_ids=page_ids)
+    return _production_qualification(status, document, adapter_context=adapter_context)
+
+
+def _production_qualification(status, document, *, adapter_context=None):
+    """Project an already computed verdict within the same operation."""
     gaps: list[str] = []
     needs_reviewer = False
     if status["status"] == "missing" and status["requirement"] == "independent_model_or_human":
