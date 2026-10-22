@@ -205,3 +205,11 @@ no skips in54.85s**, /tmp/deck-followup-346bb988/installed-browser.log.
 CI-followup-installation.json records its wheel SHA256. New exact-head CI remains
 required. Local normal-source DNS still failed at20:06 UTC; no network/security
 changes or repeated pip bootstrap were used to bypass this environment blocker.
+
+Public PR approval was explicitly received at2026-10-22 20:45 UTC. Existing PRs
+were checked for all three repair branches before creating integrated draft
+https://github.com/MainQuestAI/Deck-Master/pull/185 against the still-unmerged
+PR184 branch. GitHub confirmed mergeable=true; checks remain pending. RP24's
+separate product decision was not approved. No PR merge, release or automatic
+issue closure was performed. The execution ledger now records the earlier PR
+approval blocker as resolved, preserving its history.

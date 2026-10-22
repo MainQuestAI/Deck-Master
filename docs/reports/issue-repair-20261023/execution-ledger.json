@@ -552,12 +552,6 @@
       "target": "/var/lib/apt/lists/partial",
       "status": "BLOCKED",
       "reason": "user approved; normal apt read-only filesystem, escalated apt permission denied; no installation or security changes"
-    },
-    {
-      "action": "create RP-00 pull request",
-      "target": "MainQuestAI/Deck-Master, codex/repair-rp00-20261023 -> codex/repair-plan-baseline-20261023",
-      "status": "BLOCKED",
-      "reason": "automatic approval rejected public PR submission absent explicit user PR authorization; parent awaiting user confirmation; no PR created"
     }
   ],
   "prohibited_work_not_run": [
@@ -568,7 +562,7 @@
     "issue closure",
     "release publication"
   ],
-  "updated_utc": "2026-10-22T20:41:31.548712+00:00",
+  "updated_utc": "2026-10-22T20:49:00.137056+00:00",
   "implementation_start_utc": "2026-10-22T17:28:58Z",
   "remote_rp00": {
     "branch": "codex/repair-rp00-20261023",
@@ -602,5 +596,22 @@
     "command": "Archived installed complete Studio browser suite --require-browser",
     "log": "/tmp/deck-followup-346bb988/installed-browser.log"
   },
-  "active_branch": "codex/issue-repair-20261023-ci-followup"
+  "active_branch": "codex/issue-repair-20261023-ci-followup",
+  "resolved_blockers": [
+    {
+      "action": "create RP-00 pull request",
+      "target": "MainQuestAI/Deck-Master, codex/repair-rp00-20261023 -> codex/repair-plan-baseline-20261023",
+      "status": "RESOLVED",
+      "reason": "automatic approval rejected public PR submission absent explicit user PR authorization; parent awaiting user confirmation; no PR created",
+      "resolution": "Explicit user approval received 2026-10-22 20:45 UTC; checked all three repair heads had no PR, created integrated draft PR185 containing RP00 and subsequent batches. No duplicate PR, merge, release or issue closure."
+    }
+  ],
+  "pull_request": {
+    "number": 185,
+    "url": "https://github.com/MainQuestAI/Deck-Master/pull/185",
+    "state": "draft",
+    "base": "codex/repair-plan-baseline-20261023",
+    "head": "codex/issue-repair-20261023-ci-followup",
+    "approval": "Explicit public PR creation approval, 2026-10-22 20:45 UTC; not RP24 product approval."
+  }
 }
