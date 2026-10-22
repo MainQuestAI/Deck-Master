@@ -131,7 +131,7 @@ def _publish_report(store,key,check_id,report,files):
         return True
 
 
-def _result(store,key,identity):
+def _result(store,key,identity, *, verified_files=None):
     state=_state(store,key)
     if not state:
         if (_folder(store)/key/'report.json').exists():
@@ -139,7 +139,7 @@ def _result(store,key,identity):
                     'message':'检查记录缺失，旧结果无法核实；请明确重试。'}}
         return {'status':'not_requested','cache_key':key}
     if state.get('error',{}).get('code')=='candidate_preview_state_damaged':return state
-    cached=_cached(store,key,identity)
+    cached=_cached(store,key,identity, verified_files=verified_files)
     if not cached or state['check_id']!=cached.get('check_id') or state['status']!=cached['status']:
         if state['status']=='ready':
             state={**state,'status':'interrupted','error':{'code':'candidate_preview_cache_incomplete','message':'实际检查文件缺失或失效；请明确重试。'}}
@@ -148,7 +148,7 @@ def _result(store,key,identity):
     return _public(cached)
 
 
-def _cached(store,key,identity):
+def _cached(store,key,identity, *, verified_files=None):
     folder=_folder(store)/key;path=folder/'report.json'
     if not path.exists():return None
     try:
@@ -160,9 +160,14 @@ def _cached(store,key,identity):
         if report['status'] not in ('ready','failed') or set(report['files']) != set(_FILES):return None
         if report['candidate_ref']!=identity['candidate_ref']:return None
         if report['status']=='ready' and (report['native_check']!='pass' or report['readback']['status']!='pass'):return None
+        checked = {}
         for name,record in report['files'].items():
             if name not in _FILES:return None
-            if _sha(folder/name)!=record['sha256']:return None
+            raw = (folder/name).read_bytes()
+            if hashlib.sha256(raw).hexdigest()!=record['sha256'] or len(raw)!=record['bytes']:return None
+            checked[name] = raw
+        if verified_files is not None:
+            verified_files.update(checked)
         return report
     except (OSError,ValueError,KeyError,TypeError):return None
 
@@ -298,12 +303,23 @@ def require_ready(project,candidate_id):
 
 def freeze_check(store,candidate_id):
     """Adoption proof survives cache eviction and engineering bundle recovery."""
-    report=require_ready(store.project_root,candidate_id)
-    files={}
-    for name,record in report['files'].items():
-        raw,_=file_bytes(store.project_root,cache_key=report['cache_key'],check_id=report['check_id'],name=name)
-        files[name]={'file':store.put_blob(raw,ext=name.rsplit('.',1)[-1]),'bytes':record['bytes']}
-    return store.put_json_object({**report,'files':files})
+    # The caller holds the project adoption lock. Keep the cache publication
+    # lock through validation and freezing, and persist exactly the bytes hashed
+    # by this check; public file readers would rebuild and re-read the full pack.
+    with local_lock(_folder(store)/'state.lock'):
+        try:
+            context = _context(store.project_root, candidate_id)
+        except pipeline.NeedsTool as exc:
+            raise operations.OperationError('icon_preview_required', 'candidate_id', str(exc), http_status=409) from exc
+        verified = {}
+        report = _result(store, context[-1], context[-2], verified_files=verified)
+        if (report['status'] != 'ready' or report.get('scope_check', {}).get('status') != 'pass'
+                or report.get('native_check') != 'pass'):
+            raise operations.OperationError('icon_preview_required', 'candidate_id',
+                'run actual candidate PPT checks before adopting this icon trial', http_status=409)
+        files = {name: {'file': store.put_blob(verified[name], ext=name.rsplit('.', 1)[-1]),
+                        'bytes': record['bytes']} for name, record in report['files'].items()}
+        return store.put_json_object({**report, 'files': files})
 
 
 @operations.public
