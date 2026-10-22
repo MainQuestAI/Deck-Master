@@ -13,7 +13,7 @@ from test_action_targets import add_handoffs
 from test_candidates import candidate
 from test_content_candidates import dispatch_content_ops_trial, start_task, accept, changeset_envelope
 from test_workbench_actions import commit
-from rc3_fixtures import evidence_for
+from rc3_fixtures import evidence_for, settle_fidelity_review
 from test_service_flow import _prepare_production
 
 pytestmark = pytest.mark.browser
@@ -35,6 +35,11 @@ def _prepare_browser_project(path, *, max_candidate_count=4):
             text='L1 explicitly confirmed editorial direction for these fixed pages and bounded local trials.',
             locator='L1:browser-editorial-direction')},
         base_revision=store.current_revision_id(), operation_id=str(uuid.uuid4()))
+    # The accepted direction is a new effective requirement. Review against it
+    # through the real workorder before dispatching any visual candidate.
+    settle_fidelity_review(path, page_ids=[entry['page_id'] for entry in store.load_document()['pages']],
+        execution_ref='L1-browser-confirmed-direction',
+        scenario='L1 fixed manuscript rechecked against the newly confirmed editorial direction')
 
 
 @pytest.fixture
