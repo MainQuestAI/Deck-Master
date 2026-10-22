@@ -38,7 +38,9 @@ preproduction 工作单给出 source-reading、content-methods、content-example
 
 问题定位到 Page/atom/关系、来源和用途影响；提交具体原句、改句与受影响页，不以加 observation/证据编号代替返修。保留首稿、首次 Owner 稿和后续修订；F0/F1 不能用最后精修覆盖，影响用途的 F2 也须修。
 
-先读 `deck-master capabilities`。默认独立前审没有实际独立执行或可信人类通道就记 needs_reviewer；用户明确接受的 host_self 降级只在所绑定范围/原因内适用，不满足交付人类专业政策，不能换名字、声明已独立或自动降级。方法 identity 漂移（method_basis_status=basis_changed）时重核实际消费版本，旧记录保留原身份；`methods --kind review --intent preproduction --read` 可读当前安装的真实文本。
+先读 `deck-master capabilities` 的 `review_channels`，或执行只读 `deck-master review channels --check-native [--project <dir>]`。旧 `review_channel_status` 只描述当前注册的回执 provider，不代表没有原生审查入口。原生 `review native --project <dir>` 只支持内容前审，并在实际运行时验证独立身份、固定输入与完成事件；`prerequisites_ready` 仅表示本地客户端/已有登录满足前置，不代表审查已运行。原图表达、SVG 转换、最终交付和人类专业认可不能从内容通道推定。`unsupported`、`receipt_not_configured`、`provider_unavailable`、`tool_missing`、`tool_failed`、`login_required` 和 `not_verified` 各按返回动作处理；保留历史失败与未评估，不用自行编写回执解除门禁。
+
+默认独立前审没有实际独立执行或可信人类通道就记 needs_reviewer；用户明确接受的 host_self 降级只在所绑定范围/原因内适用，不满足交付人类专业政策，不能换名字、声明已独立或自动降级。方法 identity 漂移（method_basis_status=basis_changed）时重核实际消费版本，旧记录保留原身份；`methods --kind review --intent preproduction --read` 可读当前安装的真实文本。
 
 ### 实际读取、判断与返修证据
 

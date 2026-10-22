@@ -181,6 +181,9 @@ def build_parser() -> argparse.ArgumentParser:
     report_import.add_argument("--input", required=True)
     report_import.add_argument("--base-revision")
     report_import.add_argument("--operation-id")
+    channels = review_sub.add_parser("channels", help="Discover stage-specific reviewers without starting a model call")
+    channels.add_argument("--check-native", action="store_true", help="Check existing Codex login status, without a model call")
+    channels.add_argument("--project", help="Also read existing native review execution status")
     native = review_sub.add_parser("native", help="Run an actual read-only native independent content review")
     native.add_argument("--project", required=True)
     native.add_argument("--task-id")
@@ -498,6 +501,9 @@ def main(argv: list[str] | None = None) -> int:
                 return _emit(collector.envelope({'methods': collector.methods(entries), 'tasks': []}))
             items = (read_methods if options.read else method_resources)(options.kind, intent=options.intent, phase=options.phase, review_units=options.review_unit, selected_resource_ids=options.selected_resource_ids)
             return _emit({"status": "ready", "methods": items, "method_release": method_release(items)})
+        if options.command == "review" and options.review_command == "channels":
+            from .review_channels import describe
+            return _emit(describe(check_native=options.check_native, project=options.project))
         if options.command == "review" and options.review_command == "native":
             from .native_review import run
             result = run(options.project, task_id=options.task_id)

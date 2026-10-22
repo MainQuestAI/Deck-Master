@@ -74,6 +74,7 @@ def describe(adapter_context=None):
         kinds.append("independent_execution_receipt")
     if available["human_review_receipts"]:
         kinds.append("human_identity_receipt")
+    from .review_channels import describe as review_channels
     registry = current_registry()
     context = context_payload(registry.channel_context() if adapter_context is None else adapter_context)
     return {
@@ -95,6 +96,8 @@ def describe(adapter_context=None):
         "assurance": "host_attested",
         "methods": resources,
         "method_release": method_release(resources),
+        "review_channels": review_channels(adapter_context=adapter_context),
+        "review_channel_status_scope": "registered_receipts_only; see review_channels for native and stage-specific entries",
         "review_channel_status": "available"
         if any(available[k] for k in ("independent_review_receipts", "human_review_receipts"))
         else "needs_reviewer",

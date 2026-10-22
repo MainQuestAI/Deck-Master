@@ -20,6 +20,34 @@ MAX_EVENT_BYTES = 1024 * 1024
 TIMEOUT_SECONDS = 900
 
 
+def probe_native_client(*, check_login=False):
+    """Only inspect the executable/login status; never start a model turn.
+
+    Login output can contain private account details, so return fixed categories
+    rather than raw output. A successful probe is still not a verified session.
+    """
+    executable = shutil.which('codex')
+    result = {'supported_stage': 'content_preproduction', 'model_called': False,
+              'session_verified': False, 'login_checked': check_login}
+    if not executable:
+        return {**result, 'status': 'tool_missing',
+                'next_action': 'Install the supported Codex native client, then run review channels --check-native.'}
+    if not check_login:
+        return {**result, 'status': 'not_verified',
+                'next_action': 'Run deck-master review channels --check-native to check existing native login without a model call.'}
+    try:
+        auth = subprocess.run([executable, 'login', 'status'], capture_output=True,
+                              timeout=3, check=False)
+    except (OSError, subprocess.TimeoutExpired):
+        return {**result, 'status': 'tool_failed',
+                'next_action': 'Diagnose the native client login-status failure; no review was started.'}
+    if auth.returncode or b'chatgpt' not in (auth.stdout + auth.stderr).lower():
+        return {**result, 'status': 'login_required',
+                'next_action': 'Use an existing ChatGPT-authenticated Codex login; Deck Master does not install credentials or select an API provider.'}
+    return {**result, 'status': 'prerequisites_ready',
+            'next_action': 'For an authorized content review, run deck-master review native --project <project>. Runtime still verifies provider, sandbox, author separation and completion.'}
+
+
 class CodexReviewSession:
     def __enter__(self):
         executable = shutil.which("codex")
