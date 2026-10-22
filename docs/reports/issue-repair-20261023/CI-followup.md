@@ -168,3 +168,40 @@ outcome assertion, add verbose case names/durations and bounded output tails as
 notes on the original timeout exception. Mocked-timeout and existing guard tests
 passed8 checks. This improves next-run evidence and is not claimed as a timeout
 fix. Product package and Skill bytes remain identical to installed c05c4d96.
+
+## Exact be181da6 terminal and navigation-intent repair
+
+Run39843537190 on be181da6a37c38eb410440c1889c44f96d7ef5bb ended failure:
+all four unit configurations passed3788 with2 skips, including the complete
+70-case isolated Q2 wrapper under the unchanged180s deadline. Renderer passed136
+with1 skip. Browser passed600 and failed only the Studio page-source expansion
+flow; installed UI steps were consequently skipped. This is not a full-green run.
+
+The remaining failure was reproduced deterministically in real Chromium:
+hold the requested-current task response, then click a sidebar surface. The
+sidebar remained active and go() rebuilt its destination from the committed old
+route, silently cancelling the pending current-version intent. The old snapshot
+had no current original-review proof and correctly did not offer expansion.
+This was an actual navigation race, not grounds to relax the original test.
+
+913cfcae carries the validated pending navigation intent into subsequent surface
+changes, including revision=null meaning freshly read current. Displayed state,
+readonly/auth facts and mutation bases still update only after identity checks
+and latest-generation confirmation. Explicit historical navigation overrides
+the inherited intent; late old responses cannot replace it or clear newer intent.
+Independent source review found no concrete authorization/currentness regression.
+The original failing test gained no wait, retry, skip or timeout increase.
+
+Regression evidence: deterministic current/sidebar case failed on be181da6,
+then passed with the runtime repair; explicit-history/late-response negative
+passed. Studio full9 and four existing navigation protections passed in the
+isolated integration. Root supplemental-navigation/usability/poll selection:
+**39 passed in200.05s**, /tmp/deck-navigation-intent-regression.log.
+
+Exact code346bb9884e516d1243a95fa93804bc74ce40f228 archive wheel matches278 package
+files and canonical Skill inventory. Its actual installed module was preloaded
+and asserted before the archived complete Studio browser suite: **9 passed,
+no skips in54.85s**, /tmp/deck-followup-346bb988/installed-browser.log.
+CI-followup-installation.json records its wheel SHA256. New exact-head CI remains
+required. Local normal-source DNS still failed at20:06 UTC; no network/security
+changes or repeated pip bootstrap were used to bypass this environment blocker.

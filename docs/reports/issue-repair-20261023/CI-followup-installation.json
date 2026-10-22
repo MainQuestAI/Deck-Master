@@ -1,7 +1,7 @@
 {
-  "source_sha": "c05c4d96b83ef5186e91a4a20021814f9a0d2928",
-  "installed_module": "/tmp/deck-followup-c05c4d96/site/deck_master/__init__.py",
+  "source_sha": "346bb9884e516d1243a95fa93804bc74ce40f228",
+  "installed_module": "/tmp/deck-followup-346bb988/site/deck_master/__init__.py",
   "matched_package_files": 278,
   "canonical_skill_inventory_verified": true,
-  "wheel_sha256": "3cfa0b26e7029479a022779874b676ee425555a80dbf4ed2afed5145fa26d6b4"
+  "wheel_sha256": "aa829471271e81db5f08992a9689acd78080c5c73bca102fa8979870a426f55d"
 }

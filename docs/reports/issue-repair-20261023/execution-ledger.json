@@ -10,7 +10,7 @@
         139
       ],
       "depends_on": [],
-      "implementation": "ae22ef08 + ebaa7a86 + 61621e58 + 8d42a5b5",
+      "implementation": "ae22ef08 + ebaa7a86 + 61621e58 + 8d42a5b5 + 913cfcae + 0e062fa7 + 346bb988",
       "evidence": "docs/reports/issue-repair-20261023/RP-00.md",
       "state": "implemented_pending_review",
       "issue_closure": "NOT_RUN"
@@ -568,7 +568,7 @@
     "issue closure",
     "release publication"
   ],
-  "updated_utc": "2026-10-22T19:47:15.730357+00:00",
+  "updated_utc": "2026-10-22T20:41:31.548712+00:00",
   "implementation_start_utc": "2026-10-22T17:28:58Z",
   "remote_rp00": {
     "branch": "codex/repair-rp00-20261023",
@@ -578,15 +578,15 @@
     "pull_request_created": false
   },
   "engineering_completion_utc": "2026-10-22T18:38:16.613158+00:00",
-  "final_code_candidate": "c05c4d96b83ef5186e91a4a20021814f9a0d2928",
+  "final_code_candidate": "346bb9884e516d1243a95fa93804bc74ce40f228",
   "matched_installation": {
-    "source_sha": "c05c4d96b83ef5186e91a4a20021814f9a0d2928",
-    "installed_module": "/tmp/deck-followup-c05c4d96/site/deck_master/__init__.py",
+    "source_sha": "346bb9884e516d1243a95fa93804bc74ce40f228",
+    "installed_module": "/tmp/deck-followup-346bb988/site/deck_master/__init__.py",
     "matched_package_files": 278,
     "canonical_skill_inventory_verified": true,
-    "wheel_sha256": "3cfa0b26e7029479a022779874b676ee425555a80dbf4ed2afed5145fa26d6b4"
+    "wheel_sha256": "aa829471271e81db5f08992a9689acd78080c5c73bca102fa8979870a426f55d"
   },
-  "remote_ci": "Original run39833146156 head59f4c0fd terminalfailure: four unit matrices73fail,render3fail,browser40fail556pass. Followup3b809d3e run39838599321:render136pass1skip;3unitmatrices3787pass2skip;Python3.12Node24 1Q2-child180s timeout3786pass2skip;browserstillrunning. Latest browser fixes await new CI.",
+  "remote_ci": "be181da6 run39843537190 terminalfailure: all4unit3788pass2skip (Q2 deadline unchanged);render136pass1skip;browser600pass1fail,installed steps skipped. Deterministic pending-current sidebar race repaired913cfcae, newCI required.",
   "followup_state": "Original CI failure diagnosis implemented; matching installed regression and new CI followup. No cross-execution adoption mode enabled.",
   "product_decision_pending": {
     "task": "RP-24",
@@ -595,12 +595,12 @@
     "decision": "Controller-proven bounded association versus separately authorized external artifact reuse preserving A/B accounting; no automatic single-call reassociation."
   },
   "followup_validation": {
-    "candidate": "c05c4d96b83ef5186e91a4a20021814f9a0d2928",
-    "result": "PASS within installed browser scope",
-    "count": 50,
-    "seconds": 197.96,
-    "command": "Installed original40 failed browser cases plus initial-design and polling suites --require-browser",
-    "log": "/tmp/deck-followup-c05c4d96/installed-browser.log"
+    "candidate": "346bb9884e516d1243a95fa93804bc74ce40f228",
+    "result": "PASS within installed Studio browser scope",
+    "count": 9,
+    "seconds": 54.85,
+    "command": "Archived installed complete Studio browser suite --require-browser",
+    "log": "/tmp/deck-followup-346bb988/installed-browser.log"
   },
   "active_branch": "codex/issue-repair-20261023-ci-followup"
 }
