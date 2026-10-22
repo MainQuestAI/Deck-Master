@@ -92,3 +92,38 @@ IDs,3679 passed,2 skipped in1490.15s. Original browser and final matrix still ru
 Followup is pushed separately as codex/issue-repair-20261023-ci-followup so the
 original requested CI can reach its own terminal state without concurrency
 cancellation. No PR creation or merge is performed.
+
+## Terminal original run and next exact candidate
+
+Run 39833146156 on 59f4c0fdf6901db15ec1bfb7d8fc749459340e16
+completed **failure**. All four unit configurations had the same 73 failures;
+render had 3 failures. Browser job 120014697184 ended with **40 failed,
+556 passed, 3891 deselected in 3032.19s**. Installed UI stages were not reached.
+The browser failures are being reproduced in independent groups; two deep-quality
+navigation failures were already repaired in 3260c3de. No final gate pass claimed.
+
+Followup source 3b809d3e9d073972dce21f618218f39ca76e3d14 is pushed to
+codex/issue-repair-20261023-ci-followup. Run 39838599321 render job120034119366
+passed **136 tests, 1 skipped, 4385 deselected in 198.13s**. Official runner
+librsvg2-bin installation succeeded; this does not resolve local apt permissions.
+The prior followup run39837132490 was superseded by branch concurrency after
+its render result of 1 failed/135 passed/1 skipped. The remaining fixture wrongly
+requested image regeneration for an unused-asset change: it now checks unchanged
+original/SVG and production tasks, with a new current page-visual review.
+
+The exact 3b809d3e archive wheel matches all278 package files and canonical Skill
+inventory; wheel SHA256 e48e246b2657ae40215233b65a7ea80ca7008a42c760768fb9ca554837df2bff.
+Actual installed import: /tmp/deck-followup-3b809d3e/site/deck_master/__init__.py.
+Installed scoped-owner/gate, explicit-unit re-review and RP24 diagnosis checks:
+**41 passed in7.52s**. The new cross-page deck-finding owner regression retains
+exact frozen identity without permitting partial review to close a deck defect.
+
+Full local unit command on that fixed source:
+`.venv/bin/python -m pytest -q -p no:cacheprovider tests/rebuild -m 'not render and not browser'`.
+Result **2 failed,3782 passed,2 skipped,733 deselected,3 errors in1025.95s**.
+All five failed/setup outcomes belong to test_install.py temporary wheel/sdist
+venvs: pip install setuptools>=77/wheel encounters DNS Errno-3 before installing
+the project. Isolated reproduction:1 failed/7 passed/3 deselected in38.06s.
+Normal dependency-source resolution must recover before rerunning those checks;
+no source override, credential/security change or assertion relaxation was used.
+Logs: /tmp/deck-followup-3b809d3e/full-unit.log and /tmp/rp02-install-diagnosis.log.
