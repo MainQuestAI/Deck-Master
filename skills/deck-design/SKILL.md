@@ -25,7 +25,7 @@ description: 独立设计方案、版式可行性与限定样页试作；消费�
 
 ## 退出条件与下一责任
 
-请求的方案/限定样页候选和覆盖说明已返回即结束本职责。缺内容依据交 Content，缺样页选择交用户决定，获得范围授权后由 Master/Producer 接续。完成/needs_tool/needs_reviewer 按 Runtime 真正状态与产物分列，不自动整套制作。
+请求的方案/限定样页候选和覆盖说明已返回即结束本职责。零调用方案读取 styles.propose 返回的 completion 与 proposal_ref；completed 只表示本次范围的方案产物已返回，不是用户确认或样页生产许可。尚未确认的提案不属于 Document 已提交状态，保留返回的固定 Ref，不要求用户为了结束本职责而确认。已确认规范由 continue 按当前 request、scope 与 basis 回读；历史或局部方案不能冒充新请求的完整结果。缺内容依据交 Content，缺样页选择交用户决定，获得范围授权后由 Master/Producer 接续。完成/needs_tool/needs_reviewer 按 Runtime 真正状态与产物分列，不自动整套制作。
 
 ## 同一发布版与方法
 

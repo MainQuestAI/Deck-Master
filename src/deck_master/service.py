@@ -1005,7 +1005,13 @@ def _continue_project(project_dir: Path | str, *, selected_resource_ids=None) ->
     initial_completion = completion_status(store, initial)
     if initial_completion['state'] == 'completed':
         return {**_response(status='completed', document=initial, requested_action='continue',
-            next_action='return_requested_content', result_refs=initial_completion['outputs']), 'completion': initial_completion}
+            next_action=initial_completion['next_action'], result_refs=initial_completion['outputs']), 'completion': initial_completion}
+    if initial_completion.get('responsible_role') == 'design':
+        # A planning-only request does not authorize content production or a
+        # blueprint. Uncommitted proposals remain available by their returned ref.
+        return {**_response(status='needs_input', document=initial, requested_action='continue',
+            next_action=initial_completion['next_action'], findings=initial_completion['missing']),
+            'completion': initial_completion}
     if selected_resource_ids is not None and _pending_host_tasks(initial, store, include_trials=False):
         raise ServiceError("selected_resource_ids", "pending Tasks are frozen; finish or formally retire them before selecting resources for a new dispatch")
     _recover_input_revision(store, selected_resource_ids=selected_resource_ids)

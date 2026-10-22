@@ -391,8 +391,28 @@ def route_request(text: str) -> dict:
         r'^(?:(?:请|麻烦|帮我|先|只|仅|我想|给我)\s*)*(?:协调|统筹|编排|衔接)', normalized)
         or re.search(r'^(?:(?:please|only|just|can you|could you)\s+)*'
             r'(?:coordinate|orchestrate)\b', normalized))
+    # Distinguish requested actions from subject-matter nouns (e.g. writing a
+    # page about review). Two affirmative responsibilities require coordination.
+    clauses = []
+    for sentence in re.split(r"[,，。；;!！?？\n]", original):
+        affirmative = re.split(
+            r"不要|不需要|无需|勿|不(?=改|写|做|审|制作|生图|执行|修复)|\b(?:do\s+not|don't|without|no)\b",
+            sentence, maxsplit=1)[0]
+        clauses.extend(re.split(r"、|然后|随后|接着|再|并且|并|以及|和|与|\b(?:and then|then|and)\b", affirmative))
+    actions = set()
+    for clause in clauses:
+        clause = clause.strip()
+        clause = re.sub(r"^(?:(?:请|麻烦|帮我|先|只|仅|我想|给我|please|only|just|can you|could you)\s*)+", "", clause)
+        if re.match(r"(?:策划|规划|写(?:稿|内容|正文|逐页稿|讲稿|口播)|改写|撰写|补充正文|(?:plan|write|rewrite|draft)\b)", clause):
+            actions.add("content")
+        if re.match(r"(?:做设计|设计|出(?:视觉|设计|版式)方案|制作样页|(?:design|layout)\b)", clause):
+            actions.add("design")
+        if re.match(r"(?:只审|只读|审查|审稿|审阅|复核|审核|(?:review|audit|critique|inspect)\b)", clause):
+            actions.add("review")
     if explicit:
         skill = explicit[0] if len(set(explicit)) == 1 else "deck-master"
+    elif len(actions) > 1:
+        skill = "deck-master"
     elif review_command:
         skill = "deck-review"
     elif recovery or coordination_command or any(word in normalized for word in ("完整ppt", "整套ppt", "完整作品", "full deck", "complete deck")):

@@ -164,8 +164,13 @@ def propose(project, *, input):
     eligibility.guard(store, document, action, context={"targets": targets})
     proposal = _proposal(store, document, input); validate_schema('style_proposal', proposal)
     ref = store.put_json_object(proposal)
-    return {'status': 'suggestion', 'proposal_id': 'style-proposal-' + ref['sha256'],
-            'proposal_ref': ref, 'proposal': proposal, 'model_calls': 0}
+    result = {'status': 'suggestion', 'proposal_id': 'style-proposal-' + ref['sha256'],
+              'proposal_ref': ref, 'proposal': proposal, 'model_calls': 0}
+    from .design_completion import completion_status
+    completion = completion_status(store, document, proposal=proposal, proposal_ref=ref)
+    if completion is not None:
+        result['completion'] = completion
+    return result
 
 
 def _read_proposal(store, proposal_id):
