@@ -11,6 +11,7 @@
 |新增证据|PASS|#181–183及5条新评论全部映射；公开链接保留|
 |路径与链接|PASS|任务定位路径、现有测试文件、相对 Markdown 链接存在|
 |提交范围|PASS|仅本目录；未带入原工作区已有改动或私有审计材料|
+|Issue 远端同步|PASS|27 个正文逐字回读一致；原文和其他元数据保留，未关闭 Issue|
 |产品测试/真实调用/安装/交付|NOT_RUN|本 PR 无产品改动，不用文档核对宣称修复完成|
 
-机器核对记录见 [validation.json](validation.json)。Issue 同步单独以远端正文回读为准；任务归属已写入 [TASKS.md](TASKS.md)。
+机器核对记录见 [validation.json](validation.json)。Issue 同步见 [回读记录](ISSUE-SYNC.md)；任务归属已写入 [TASKS.md](TASKS.md)。

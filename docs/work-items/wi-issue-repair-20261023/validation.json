@@ -15,5 +15,7 @@
   "private_materials": "excluded",
   "product_tests": "NOT_RUN",
   "tasks_sha256": "2cbb76bc53b4ab9d9899e234c01f14a5cd9de1b953df70c65b73fad8b7c20f83",
-  "errors": []
+  "errors": [],
+  "issue_body_updates_verified": 27,
+  "github_issue_states": "all updated issues remain open"
 }

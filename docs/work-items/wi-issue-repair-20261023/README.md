@@ -1,6 +1,6 @@
 # 修复专用基准：51 个 Issue 的实施方案与任务
 
-版本：2026-10-23 / r2。状态：**方案待实施，产品修复未完成**。
+基准 PR：[#184](https://github.com/MainQuestAI/Deck-Master/pull/184)。版本：2026-10-23 / r2。状态：**方案待实施，产品修复未完成**。
 
 本基准整合原修复方案的六点复核结论，以及第二轮前链路/Web UI 审计新增的 #181–183 与 5 条评论。覆盖 #132–183 中的 51 个 Issue（#147 是现有 PR），拆成 31 张任务卡：29 张承担 Issue 最终关闭责任，1 张跨轮诊断卡，1 张联合验收卡。
 
@@ -14,6 +14,7 @@
 4. [SOURCES.md](SOURCES.md)：固定源码与公开审计证据、已知局限。
 5. [tasks.json](tasks.json)：机器可读任务与唯一 Issue 归属。
 6. [VALIDATION.md](VALIDATION.md)：本基准文档检查结果；不代表产品测试。
+7. [ISSUE-SYNC.md](ISSUE-SYNC.md)：27 个 Issue 正文同步与独立回读记录。
 
 ## 后续修复 PR 如何引用
 
