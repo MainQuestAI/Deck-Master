@@ -365,8 +365,6 @@ def produce(project_dir, *, base_revision=None, operation_id=None):
     from .stages import require_assembly_ready
     store=Store(project_dir)
     from . import eligibility
-    eligibility.guard(store, store.load_document(), "compile.ppt",
-                      context={"targets": {"layers": ["output"]}})
     explicit = base_revision is not None or operation_id is not None
     with store._locked():
         doc=store.load_document()
@@ -380,6 +378,9 @@ def produce(project_dir, *, base_revision=None, operation_id=None):
                 return previous
             if doc['revision_id'] != base_revision:
                 raise operations.OperationError('conflict', 'base_revision', 'assembly basis changed; read current state', exit_code=5)
+        if explicit:
+            eligibility.guard(store, doc, 'stage.assemble', context={'targets': {'layers': ['output']}})
+        eligibility.guard(store, doc, 'compile.ppt', context={'targets': {'layers': ['output']}})
         if explicit or store.workbench_protocol_required(doc):
             require_assembly_ready(store, doc)
     preview_required = {entry['page_id'] for entry in doc['pages']

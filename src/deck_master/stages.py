@@ -33,10 +33,7 @@ def require_assembly_ready(store, document):
 
 @operations.public
 def assemble(project, *, base_revision, operation_id):
-    from . import eligibility
-    gate_store = Store(project_path(project))
-    eligibility.guard(gate_store, gate_store.load_document(), "stage.assemble",
-                      context={"targets": {"layers": ["output"]}})
+    # produce owns exact recovery and both explicit-assembly write gates.
     from .pipeline import produce, NeedsTool, RendererError
     try:
         return produce(project_path(project), base_revision=base_revision, operation_id=operation_id)

@@ -919,8 +919,6 @@ def decide(project, *, input, base_revision, operation_id):
     if not isinstance(input, dict):
         raise operations.OperationError('invalid_input', 'input', 'decision request must be an object')
     from . import eligibility
-    gate_store = Store(project_path(project))
-    eligibility.guard(gate_store, gate_store.load_document(), "candidate.select")
     if input.get('schema_version') != 'candidate_decision.v1':
         raise operations.OperationError('invalid_input', 'input/schema_version',
                                         'decision requests use candidate_decision.v1')
@@ -942,6 +940,7 @@ def decide(project, *, input, base_revision, operation_id):
         previous = operations.recover(store, operation_id, digest)
         if previous:
             return previous
+        eligibility.guard(store, document, "candidate.select")
         if (base_revision != document['revision_id'] or input.get('base_revision') != base_revision
                 or input.get('project_id') != document['project_id']):
             raise operations.OperationError('conflict', 'base_revision',

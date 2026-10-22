@@ -1736,9 +1736,6 @@ def call_begin(store: Store, *, task_id: str, allowance_id: str, execution_ref: 
     if task.get("kind") == "style_analyze":
         raise CallBlocked("call_allowances", "visual analysis permits zero image calls")
     from . import eligibility
-    eligibility.guard(store, document, "call.begin",
-                      context={"task": task, "allowance_id": allowance_id,
-                               "targets": {"page_ids": task.get("scope_pages") or []}})
     from .generation import is_new, check_host, begin_attempt
     check_host(task)
     if task.get("status") in ("cancelled", "superseded", "completed"):
@@ -1758,14 +1755,19 @@ def call_begin(store: Store, *, task_id: str, allowance_id: str, execution_ref: 
     if target.get("state") == "in_flight":
         if target.get("execution_ref") == execution_ref:
             if is_new(task):
-                _, attempt, ref = begin_attempt(store, document, task, allowance_id, execution_ref, request_id)
+                _, attempt, ref = begin_attempt(store, document, task, allowance_id, execution_ref, request_id, replay_only=True)
                 return {"status": "already_started", "task_id": task_id, "allowance_id": allowance_id,
                         "attempt_id": attempt["attempt_id"], "attempt_ref": ref, "request_id": request_id}
+            if request_id is not None:
+                raise EnvelopeError("request_id", "old tasks cannot bind generation requests")
             return {"status": "already_started", "task_id": task_id, "allowance_id": allowance_id}
         raise TaskConflict(
             f"(task {task_id})/{allowance_id}",
             "allowance already in flight under another execution",
         )
+    eligibility.guard(store, document, "call.begin",
+                      context={"task": task, "allowance_id": allowance_id,
+                               "targets": {"page_ids": task.get("scope_pages") or []}})
     if target.get("state") in ("consumed", "released", "unknown"):
         raise TaskConflict(
             f"(task {task_id})/{allowance_id}",

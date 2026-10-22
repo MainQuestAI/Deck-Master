@@ -212,7 +212,7 @@ def _freeze(store, *, task_id, input, base_revision, operation_id):
     return response
 
 
-def begin_attempt(store, document, task, allowance_id, execution_ref, request_id):
+def begin_attempt(store, document, task, allowance_id, execution_ref, request_id, *, replay_only=False):
     check_host(task)
     if not request_id:
         raise _error("generation_request_required", "request_id", "freeze and bind a request before calling the tool")
@@ -221,10 +221,15 @@ def begin_attempt(store, document, task, allowance_id, execution_ref, request_id
         raise _error("generation_binding_conflict", "request_id", "request basis is no longer current", conflict=True)
     for ref in task.get("generation_attempts") or []:
         old = store.read_object_json(ref)
+        validate_schema("generation_attempt", old)
+        if old["project_id"] != document["project_id"] or old["task_id"] != task["task_id"]:
+            raise _error("generation_binding_conflict", "attempt_id", "attempt belongs to another project or task", conflict=True)
         if old["allowance_id"] == allowance_id:
             if old["request_ref"] != request_ref or old["execution_ref"] != execution_ref:
                 raise _error("generation_binding_conflict", "request_id", "this allowance already began a different attempt", conflict=True)
             return task, old, ref
+    if replay_only:
+        raise _error("generation_binding_conflict", "attempt_id", "in-flight allowance has no committed attempt", conflict=True)
     attempt = {"schema_version": "generation_attempt.v1", "attempt_id": "attempt-" + uuid.uuid4().hex,
                "task_id": task["task_id"], "project_id": document["project_id"], "request_ref": request_ref,
                "allowance_id": allowance_id, "execution_ref": execution_ref, "started_at_ms": time.time_ns() // 1000000,
