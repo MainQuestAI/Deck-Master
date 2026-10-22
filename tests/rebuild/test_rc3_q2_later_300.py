@@ -57,7 +57,9 @@ def run_logged(tmp_path, argv):
 def test_all_q2_later_300_cases_run_in_an_actual_isolated_interpreter(tmp_path):
     junit = tmp_path / "isolated-cases.xml"
     case_root = tmp_path / "isolated-cases"
-    argv = [sys.executable, "-I", "-B", "-m", "pytest", "-q", "-p", "no:cacheprovider",
+    # Keep the active node in captured output if the unchanged deadline fires;
+    # durations diagnose completed slow cases without weakening any case checks.
+    argv = [sys.executable, "-I", "-B", "-m", "pytest", "-vv", "--durations=20", "-p", "no:cacheprovider",
             "-o", "addopts=", "--basetemp=" + str(case_root), "--junitxml=" + str(junit), str(CASES)]
     result = run_logged(tmp_path, argv)
     assert result.returncode == 0, (result.stdout + result.stderr).decode(errors="replace")
