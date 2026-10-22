@@ -38,3 +38,25 @@ full_deck 的授权 Producer 使用工作单准确方法及 capability：generat
 顺序双版本只按原声明两版：固定第一份 revision/export 后，start_request.input.variant_transition.kind=next_variant，source 显式指向第一份。第二版创建独立 Plan/Page/output，共享固定 Narrative/来源；不复制预算或用换 label 增第三版。edit_variant 指向要改的版本，限定页/字段，当前 control 生效；其他固定版本原文件保持原样。不能用 history restore 全项目替代窄 edit。
 
 交付核对准备交给用户的实际文件、实际 notes_policy、选定 artifact revision 与 current control。export/handoff/readiness 消费同一 delivery_eligibility；sanitized/notes-excluded 文件需核对自身 hash，不能借原 artifact 批准。工程、协作、专业/人类、native/桌面分列；历史 Desktop 工程记录不是当前人类桌面验收。
+
+## 单任务变更回执与完整输入读取
+
+先通过 `deck-master capabilities` 确认 `task_response_protocols` 支持
+`task_receipt.v1`，再在 `task start`、`task accept` 或 `task cancel` 上指定
+`--response-protocol task_receipt.v1`。Python service 使用同名
+`response_protocol` 参数；HTTP `/api/cancel` 可传同名 JSON 字段。
+未指定时保留旧版回执，不静默改变旧 Host 的输入。
+
+紧凑回执只报告本次 Task 身份、状态、execution、版本和结果引用，不展开其他待办
+的材料或方法正文；`context_ready=false` 不能被解释为已经读取生产输入。
+领取后按回执的 `task_id` 显式读取完整上下文：
+
+```bash
+deck-master methods --project <project> --task-id <task-id> --read --read-protocol work_context.v2 --body-mode full
+```
+
+核对该完整读取中的当前性、冻结方法、scope 和实际 execution，再执行工作。
+接受结果后的回执不等于下一任务派发：需要继续时调用现有 `continue`，或按 Task
+目录选择明确任务后读取。精确重放保留原提交 revision/result_refs，同时报告当前
+revision；不要把旧提交回执当作当前项目或当前审查通过。无效协议在写入前拒绝，
+选择紧凑格式不改变权限、取消、晚到、调用结算或来源校验。

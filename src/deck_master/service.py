@@ -72,6 +72,32 @@ def _response(
     }
 
 
+def _validate_task_response_protocol(response_protocol):
+    if response_protocol not in (None, "task_receipt.v1"):
+        raise ServiceError("response_protocol", "unsupported task response protocol; use task_receipt.v1 or omit for legacy work orders")
+
+
+def _task_receipt(response: dict, task: dict) -> dict:
+    """Negotiated mutation facts, never a work order or proof of input reading.
+
+    The caller supplies the transaction's fixed snapshot/task (the applied
+    snapshot for exact replay). No other pending task or source is expanded.
+    """
+    fields = ("task_id", "operation_id", "kind", "intent", "status", "scope_pages",
+              "dispatch_revision", "produced_against", "execution_ref", "execution_started_at",
+              "protocol_version", "required_capabilities", "host_protocol", "call_allowances",
+              "result_refs", "candidate_refs", "generation_requests", "generation_attempts")
+    response.pop("pending_tasks", None)
+    response.update({
+        "schema_version": "task_receipt.v1",
+        "task": {key: copy.deepcopy(task[key]) for key in fields if key in task},
+        "context_ready": False,
+        "context_read": {"command": "methods", "task_id": task["task_id"],
+                         "read_protocol": "work_context.v2", "body_mode": "full"},
+    })
+    return response
+
+
 def _document_hash(document: dict) -> str:
     return sha256_bytes(canonical_json_bytes(document))
 
@@ -1918,8 +1944,10 @@ def accept_result(
     result_payload: dict | None = None,
     adapter_context: TrustedContext | None = None,
     review_receipt_selector: dict | None = None,
+    response_protocol: str | None = None,
 ) -> dict:
     """Receive one Host result envelope; prevalidation is all-or-nothing."""
+    _validate_task_response_protocol(response_protocol)
     store = Store(Path(project_dir).expanduser())
     if result_payload is not None:
         envelope_raw = result_payload
@@ -1938,6 +1966,9 @@ def accept_result(
     )
     document = store.load_document()
     current_revision = document["revision_id"]
+    if response_protocol and outcome["revision_id"] != current_revision:
+        from .snapshots import load_snapshot
+        document = load_snapshot(store, outcome["revision_id"])
     if outcome["status"] == "already_applied":
         from .snapshots import load_snapshot
         applied = load_snapshot(store, outcome["revision_id"])
@@ -1952,7 +1983,7 @@ def accept_result(
             status="candidate_ready" if outcome["status"] == "candidate_ready" else "accepted",
             document=document,
             requested_action="task accept",
-            pending_tasks=_pending_host_tasks(document, store),
+            pending_tasks=_pending_host_tasks(document, store) if response_protocol is None else None,
             next_action=outcome.get("next_action"),
             result_refs=outcome.get("result_refs") or [],
         )
@@ -1966,6 +1997,10 @@ def accept_result(
                 "authorizes_production"):
         if key in outcome:
             response[key] = outcome[key]
+    if response_protocol:
+        receipt_document = applied if outcome["status"] == "already_applied" else document
+        receipt_task = tasks_mod._lookup_task(receipt_document, task_id, store)
+        return _task_receipt(response, receipt_task)
     return response
 
 
@@ -2233,8 +2268,9 @@ def update_design(
 
 
 def task_start(project_dir: Path | str, *, task_id: str, execution_ref: str,
-               supported_protocols=None, capabilities=None) -> dict:
+               supported_protocols=None, capabilities=None, response_protocol=None) -> dict:
     """Actual claim by a named execution; a second executor conflicts."""
+    _validate_task_response_protocol(response_protocol)
     store = Store(Path(project_dir).expanduser())
     document = store.load_document()
     task = tasks_mod._lookup_task(document, task_id, store)
@@ -2272,12 +2308,17 @@ def task_start(project_dir: Path | str, *, task_id: str, execution_ref: str,
     if task.get("protocol_version"):
         updated_task["host_protocol"] = declaration
         if task.get("status") == "running" and task.get("host_protocol") == declaration:
+            if response_protocol:
+                return _task_receipt(_response(status=task["status"], document=document,
+                                               requested_action="task start"), task)
             return task_status(project_dir, task_id=task_id)
-    return _commit_task_update(store, document, task, updated_task, "task claimed")
+    return _commit_task_update(store, document, task, updated_task, "task claimed",
+                               response_protocol=response_protocol)
 
 
-def task_cancel(project_dir: Path | str, *, task_id: str, reason: str = "") -> dict:
+def task_cancel(project_dir: Path | str, *, task_id: str, reason: str = "", response_protocol=None) -> dict:
     """User stop; later submissions are late results, facts stay."""
+    _validate_task_response_protocol(response_protocol)
     store = Store(Path(project_dir).expanduser())
     document = store.load_document()
     task = tasks_mod._lookup_task(document, task_id, store)
@@ -2287,7 +2328,8 @@ def task_cancel(project_dir: Path | str, *, task_id: str, reason: str = "") -> d
             f"(task {task_id})", f"task already {task.get('status')}; cancel refused"
         )
     updated_task = {**task, "status": "cancelled", "updated_at": _utc_now_iso()}
-    response = _commit_task_update(store, document, task, updated_task, reason or "cancelled by user")
+    response = _commit_task_update(store, document, task, updated_task, reason or "cancelled by user",
+                                   response_protocol=response_protocol)
     response["status"] = "cancelled"
     return response
 
@@ -2305,7 +2347,8 @@ def task_status(project_dir: Path | str, *, task_id: str) -> dict:
 
 
 def _commit_task_update(
-    store: Store, document: dict, old_task: dict, updated_task: dict, description: str
+    store: Store, document: dict, old_task: dict, updated_task: dict, description: str,
+    *, response_protocol=None
 ) -> dict:
     from .models import validate_task_semantics
 
@@ -2328,10 +2371,13 @@ def _commit_task_update(
     store.commit_change(
         base_revision=document["revision_id"], document=bumped, operation_id=operation_id
     )
-    refreshed = store.load_document()
-    return _response(
+    # A negotiated receipt describes this committed write, not a newer head.
+    # Keep legacy work-order projection behavior for unnegotiated consumers.
+    refreshed = bumped if response_protocol else store.load_document()
+    response = _response(
         status=updated_task.get("status") or "updated",
         document=refreshed,
         requested_action="task update",
-        pending_tasks=_pending_host_tasks(refreshed, store),
+        pending_tasks=_pending_host_tasks(refreshed, store) if response_protocol is None else None,
     )
+    return _task_receipt(response, updated_task) if response_protocol else response

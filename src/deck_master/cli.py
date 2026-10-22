@@ -292,6 +292,8 @@ def build_parser() -> argparse.ArgumentParser:
     accept_parser = task_sub.add_parser("accept")
     accept_parser.add_argument("--project", required=True)
     accept_parser.add_argument("--task-id", required=True)
+    accept_parser.add_argument("--response-protocol", choices=["task_receipt.v1"],
+                             help="compact mutation receipt; read full inputs explicitly with methods --read-protocol work_context.v2")
     accept_parser.add_argument("--operation-id", required=True)
     accept_parser.add_argument("--produced-against", required=True)
     accept_parser.add_argument("--result", required=True)
@@ -300,6 +302,8 @@ def build_parser() -> argparse.ArgumentParser:
     start_parser = task_sub.add_parser("start")
     start_parser.add_argument("--project", required=True)
     start_parser.add_argument("--task-id", required=True)
+    start_parser.add_argument("--response-protocol", choices=["task_receipt.v1"],
+                             help="compact mutation receipt; read full inputs explicitly with methods --read-protocol work_context.v2")
     start_parser.add_argument("--execution-ref", required=True)
     start_parser.add_argument("--supported-protocol", action="append", default=None)
     start_parser.add_argument("--capability", action="append", default=None)
@@ -322,6 +326,8 @@ def build_parser() -> argparse.ArgumentParser:
     cancel_parser = task_sub.add_parser("cancel")
     cancel_parser.add_argument("--project", required=True)
     cancel_parser.add_argument("--task-id", required=True)
+    cancel_parser.add_argument("--response-protocol", choices=["task_receipt.v1"],
+                             help="compact mutation receipt; read full inputs explicitly with methods --read-protocol work_context.v2")
     cancel_parser.add_argument("--reason", default="")
 
     call_parser = task_sub.add_parser("call")
@@ -1211,6 +1217,7 @@ def _dispatch_task(options) -> int:
             operation_id=options.operation_id,
             produced_against=options.produced_against,
             result_path=options.result,
+            response_protocol=options.response_protocol,
             review_receipt_selector=(json.loads(Path(options.review_receipt_selector).read_text("utf-8"))
                                      if options.review_receipt_selector else None),
         )
@@ -1222,6 +1229,7 @@ def _dispatch_task(options) -> int:
             service.task_start(
                 options.project, task_id=options.task_id, execution_ref=options.execution_ref,
                 supported_protocols=options.supported_protocol, capabilities=options.capability,
+                response_protocol=options.response_protocol,
             )
         )
     if options.task_command == "list":
@@ -1235,7 +1243,8 @@ def _dispatch_task(options) -> int:
         return _emit(service.task_status(options.project, task_id=options.task_id))
     if options.task_command == "cancel":
         return _emit(
-            service.task_cancel(options.project, task_id=options.task_id, reason=options.reason)
+            service.task_cancel(options.project, task_id=options.task_id, reason=options.reason,
+                                response_protocol=options.response_protocol)
         )
     if options.task_command == "call":
         return _dispatch_call(options)
