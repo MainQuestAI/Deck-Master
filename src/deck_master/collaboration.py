@@ -359,7 +359,7 @@ def _matching_request_source(store, document, candidate):
 # Public service functions
 
 
-def describe(project) -> dict:
+def describe(project, *, include_eligibility=True) -> dict:
     """Read-only collaboration projection (CONTRACT §12 show)."""
     store = Store(Path(project).expanduser())
     document = store.load_document()
@@ -389,6 +389,8 @@ def describe(project) -> dict:
     result["effective_authorizations"] = [{"ref": ref, "record": record,
         **dependency_slices.authorization_effectiveness(store, document, ref)}
         for ref, record in _region_records(store, region, "authorizations")]
+    if not include_eligibility:
+        return result
     from . import eligibility
     result["blocking_cards"] = []
     for action in ("dispatch.compose", "dispatch.blueprint", "export.delivery"):
