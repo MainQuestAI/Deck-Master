@@ -213,3 +213,38 @@ PR184 branch. GitHub confirmed mergeable=true; checks remain pending. RP24's
 separate product decision was not approved. No PR merge, release or automatic
 issue closure was performed. The execution ledger now records the earlier PR
 approval blocker as resolved, preserving its history.
+
+## Q2 cumulative deadline diagnosis on 8c826711
+
+PR run39852103635 job120081490120 ended at21:20 UTC with3787 passed,
+1 failed and2 skipped. The failure is the unchanged180-second isolated Q2
+carrier: its new inline diagnostics show64/70 cases passed, then the plan
+technical-correction case active. The same single case independently passed
+under real -I -B in2.41s; this does not prove the remote runner cause, but does
+not reproduce an individual deadlock. Push run39852095415's four successful
+unit matrices do not replace this failed PR check.
+
+Full70-case profiling passed all cases (249.48s with profiler overhead, not a
+deadline pass). It measured1063 fresh identity observations,3189 Git processes
+and4422 Meter.events scans. Commit424cc95e merges each fresh HEAD/tree query
+and reuses one verified event snapshot only inside five no-write check blocks.
+It retains fresh status/source observations, all identity/author/budget/chain
+checks, the complete70 cases and180-second limit. Frozen controller/scoped
+helpers are unchanged; no module namespace or cross-request proof is cached.
+
+The same complex diagnostic case retained40 identity observations while Git
+calls fell120→80 and event scans245→218. The unchanged outer gate passed9
+tests in115.25s, including70/70 child cases without skips. Six additional real
+temporary-Git freshness/malformed-output tests passed; Ruff and diff checks
+passed. Independent source review found no concrete P1/P2 issue. Timing
+comparisons are load-dependent and do not establish that every CI runner will
+fit; new exact-head CI is required. Evidence: /tmp/q2-runtime-optimized-wrapper.log
+and /tmp/q2-runtime-optimized-wrapper/. No paid/production execution occurred.
+
+At21:18 UTC both pypi.org and files.pythonhosted.org still returned temporary
+DNS resolution failure. No dependency bootstrap retry or network change was
+attempted. Local librsvg installation remains separately blocked by permissions.
+
+Exact424cc95e archive wheel matched278 package files and canonical Skill inventory; SHA256 `607877b0b03cd1619ee539ab35615d588c3696723be9395ca17f61a70209d782`. Six new identity regressions passed from the actual temporary installed module in0.10s. The earlier346bb988 installed Studio evidence remains identified separately; new remote full installation checks are still required.
+
+On8c826711 push job120080957125 completed successfully at21:42 UTC:603 browser cases passed (no skips,2166.24s), wheel build/install and offline UI/fixed-version downloads succeeded,255 installed recovery cases passed (923.49s), runtime paths audited and artifact12460203734 uploaded. This verifies the navigation repair on that exact head. Its renderer setup was still running, while the same-head PR renderer had already passed136/1skip. The PR Q2 failure remains a failure requiring the new performance candidate CI.

@@ -562,7 +562,7 @@
     "issue closure",
     "release publication"
   ],
-  "updated_utc": "2026-10-22T20:49:00.137056+00:00",
+  "updated_utc": "2026-10-22T21:30:17.460407+00:00",
   "implementation_start_utc": "2026-10-22T17:28:58Z",
   "remote_rp00": {
     "branch": "codex/repair-rp00-20261023",
@@ -572,7 +572,7 @@
     "pull_request_created": false
   },
   "engineering_completion_utc": "2026-10-22T18:38:16.613158+00:00",
-  "final_code_candidate": "346bb9884e516d1243a95fa93804bc74ce40f228",
+  "final_code_candidate": "424cc95e2452e91bf2ea8bbf5a69df3a4f749b3e",
   "matched_installation": {
     "source_sha": "346bb9884e516d1243a95fa93804bc74ce40f228",
     "installed_module": "/tmp/deck-followup-346bb988/site/deck_master/__init__.py",
@@ -580,7 +580,7 @@
     "canonical_skill_inventory_verified": true,
     "wheel_sha256": "aa829471271e81db5f08992a9689acd78080c5c73bca102fa8979870a426f55d"
   },
-  "remote_ci": "be181da6 run39843537190 terminalfailure: all4unit3788pass2skip (Q2 deadline unchanged);render136pass1skip;browser600pass1fail,installed steps skipped. Deterministic pending-current sidebar race repaired913cfcae, newCI required.",
+  "remote_ci": "8c826711 push: four units3788pass2skip each; browser603pass no skips, wheel/offline UI success, installed recovery255pass with runtime path audit; renderer setup pending. PR: renderer136pass1skip, three units3788pass2skip, Python3.12Node22 failed Q2 cumulative180s (3787pass1fail2skip), browser pending. Q2 optimization424cc95e requires new exact-head CI.",
   "followup_state": "Original CI failure diagnosis implemented; matching installed regression and new CI followup. No cross-execution adoption mode enabled.",
   "product_decision_pending": {
     "task": "RP-24",
@@ -613,5 +613,20 @@
     "base": "codex/repair-plan-baseline-20261023",
     "head": "codex/issue-repair-20261023-ci-followup",
     "approval": "Explicit public PR creation approval, 2026-10-22 20:45 UTC; not RP24 product approval."
+  },
+  "q2_performance_followup": {
+    "commit": "424cc95e2452e91bf2ea8bbf5a69df3a4f749b3e",
+    "trigger": "8c826711 PR CI39852103635 job120081490120: Q2 cumulative180s timeout after64/70 passed",
+    "unchanged_gate": "9 passed115.25s; child70/70, no skips, unchanged180s",
+    "deterministic_savings": "same40 identity observations: git120->80; ledger scans245->218",
+    "installed_identity_checks": "6 passed0.10s from actual archive wheel; source/hash/dirty/commit and malformed output checks",
+    "new_ci": "REQUIRED; prior other matrix successes do not replace failed PR gate",
+    "installation": {
+      "source_sha": "424cc95e2452e91bf2ea8bbf5a69df3a4f749b3e",
+      "installed_module": "/tmp/deck-followup-424cc95e/site/deck_master/__init__.py",
+      "matched_package_files": 278,
+      "canonical_skill_inventory_verified": true,
+      "wheel_sha256": "607877b0b03cd1619ee539ab35615d588c3696723be9395ca17f61a70209d782"
+    }
   }
 }
