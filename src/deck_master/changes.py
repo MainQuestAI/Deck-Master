@@ -268,8 +268,15 @@ def _new_task(store, ledger, basis, plan, change_ref, task_id, action, *, author
     # (T03 binding writer; T04 refuses unbound production unconditionally).
     # Older projects keep their exact old dispatch (stamp_task is a no-op).
     from . import collaboration_binding
+    content_trial = action.get('mode') == 'trial' and action['write_slots'] == ['page']
+    write_scope = None
+    if content_trial:
+        from .content_production import write_scope_for
+        write_scope = write_scope_for(store, basis, 'page_copy', page_ids=[action['page_id']])
+        write_scope.update(layers=['page_copy'], allow_page_membership_change=False)
     collaboration_binding.stamp_task(
-        store, basis, task, phase="production", executor_type="host",
+        store, basis, task, phase="page_copy" if content_trial else "production", executor_type="host",
+        write_scope=write_scope,
         page_ids=[action["page_id"]],
         adoption_policy="candidate_only" if action.get("mode") == "trial" else "within_scope",
         authorization_ref=authorization_ref,
@@ -310,6 +317,9 @@ def _new_task(store, ledger, basis, plan, change_ref, task_id, action, *, author
                 # old Hosts are refused before they can claim the task.
                 from .candidates import CONTENT_CAPABILITY
                 task['required_capabilities'].append(CONTENT_CAPABILITY)
+    if content_trial:
+        from .method_resources import freeze_task_methods
+        freeze_task_methods(task)
     validate_task_semantics(task)
     return task
 

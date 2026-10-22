@@ -162,6 +162,20 @@ def method_ids_for(kind: str, *, intent: str | None = None,
     return (*result, "method-review") if units & (_CONTENT_UNITS | {"speech"}) else result
 
 
+def is_content_candidate_task(task: dict) -> bool:
+    stage = task.get('stage_request') or {}
+    return (stage.get('mode') == 'trial' and stage.get('stage') == 'content'
+            and task.get('kind') in ('compose', 'repair'))
+
+
+def role_accepts_task(skill: str, task: dict) -> bool:
+    if skill == 'deck-master':
+        return True
+    if is_content_candidate_task(task):
+        return skill == 'deck-content'
+    return task['kind'] in _ROLE_TASKS[skill]
+
+
 def freeze_task_methods(task: dict, *, selected_resource_ids=None) -> dict:
     """Producer-only: freeze the execution contract before the Task is committed."""
     binding = task.get("collaboration_binding") or {}
@@ -169,7 +183,11 @@ def freeze_task_methods(task: dict, *, selected_resource_ids=None) -> dict:
     layers = (binding.get("write_scope") or {}).get("layers") or []
     if task['kind'] == 'compose' and layers and set(layers) <= {'speech'}:
         phase = 'speech'
-    items = method_resources(task["kind"], intent=task.get("intent") or task.get("review_stage"),
+    content_repair = is_content_candidate_task(task) and task["kind"] == "repair"
+    kind = "compose" if content_repair else task["kind"]
+    if content_repair:
+        phase = "page_copy"
+    items = method_resources(kind, intent=task.get("intent") or task.get("review_stage"),
                              phase=phase, review_units=task.get("review_units"),
                              selected_resource_ids=selected_resource_ids)
     task["method_manifest"] = [{key: item[key] for key in ("id", "relative_path", "sha256")} for item in items]
@@ -224,6 +242,14 @@ def resolve_task_methods(task: dict, *, reader=None) -> dict:
         if not issues:
             issues.append({"reason": "aggregate_hash_mismatch", "expected_sha256": release["methods_sha256"],
                            "actual_sha256": methods_sha256(items)})
+    if is_content_candidate_task(task) and task.get('kind') == 'repair':
+        required = set(method_ids_for('compose', phase='page_copy'))
+        binding = task.get('collaboration_binding') or {}
+        if (not required <= {item['id'] for item in items}
+                or binding and (binding.get('phase') != 'page_copy'
+                                or binding.get('write_scope', {}).get('layers') != ['page_copy'])):
+            basis = 'basis_changed'
+            issues.append({'reason': 'content_candidate_contract_changed'})
     available_release = method_release(actual_items) if all(item["sha256"] is not None for item in actual_items) else None
     return {"methods": items, "method_manifest": manifest, "basis_status": basis,
             "current_method_release": available_release,
@@ -484,7 +510,7 @@ def read_skill_methods(skill: str, *, entry_mode="named", project=None, task_id=
                          if (item := store.read_object_json(ref))["task_id"] == task_id), None)
             if task is None:
                 raise MethodResourceMissing("task_id", "task is not referenced by the current project")
-            if skill != "deck-master" and task["kind"] not in _ROLE_TASKS[skill]:
+            if not role_accepts_task(skill, task):
                 raise ValueError(f"{skill} does not execute {task['kind']}; hand off to the responsible role")
             order = service.task_summary(store, document, task)
             dispatch_items = _read_entries(order["method_resources"])
@@ -526,7 +552,7 @@ def _read_skill_v2(skill, *, entry_mode, project, task_id, route, review_units, 
             task = next((item for ref in document['tasks'] if (item := store.read_object_json(ref))['task_id'] == task_id), None)
             if task is None:
                 raise MethodResourceMissing('task_id', 'task is not referenced by the current project')
-            if skill != 'deck-master' and task['kind'] not in _ROLE_TASKS[skill]:
+            if not role_accepts_task(skill, task):
                 raise ValueError(f'{skill} does not execute {task["kind"]}; hand off to the responsible role')
             payload['tasks'] = [service.task_summary(store, document, task, collector=collector)]
     ids = ('collaboration-routing',) if task_id else (

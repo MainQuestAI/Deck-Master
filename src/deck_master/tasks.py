@@ -2076,8 +2076,10 @@ def reissue_changed_method_tasks(store):
         if task.get("change_binding"):
             from .changes import action_for_task, _plan_layers
             layers = _plan_layers({"actions": [action_for_task(store, document, task)]})
-        eligibility.guard(store, prospective, action, context={"targets": {
-            "page_ids": task.get("scope_pages") or [], "layers": layers}})
+        from .method_resources import is_content_candidate_task
+        eligibility.guard(store, prospective, action, context={
+            "candidate_count": int(is_content_candidate_task(task)), "count": 0 if is_content_candidate_task(task) else None,
+            "targets": {"page_ids": task.get("scope_pages") or [], "layers": layers}})
         replacement = copy.deepcopy(task)
         replacement.update(task_id=uuid.uuid4().hex[:12], operation_id=f"methods-{uuid.uuid4().hex[:12]}",
                            status="awaiting_host", execution_ref=None, result_refs=[], error=None,
@@ -2087,6 +2089,13 @@ def reissue_changed_method_tasks(store):
                                             if a.get("state") == "reserved"])
         for key in ("host_protocol", "execution_started_at", "generation_requests", "generation_attempts"):
             replacement.pop(key, None)
+        content_trial = is_content_candidate_task(task) and task['kind'] == 'repair'
+        legacy_content_contract = content_trial and binding.get('phase') != 'page_copy'
+        if binding and content_trial:
+            from .content_production import write_scope_for
+            scope = write_scope_for(store, document, 'page_copy', page_ids=task['scope_pages'])
+            scope.update(layers=['page_copy'], allow_page_membership_change=False)
+            binding = {**binding, 'phase': 'page_copy', 'write_scope': scope}
         if binding:
             replacement["collaboration_binding"] = collaboration_binding.build_binding(
                 store, document, phase=binding["phase"], executor_type=binding["executor_type"],
@@ -2104,6 +2113,12 @@ def reissue_changed_method_tasks(store):
         if (inherited and task['kind'] == 'compose'
                 and binding.get('phase') in ('design', 'production', 'delivery')):
             inherited = [mid for mid in inherited if mid != 'method-selection']
+        if legacy_content_contract and inherited:
+            # Remove obsolete Design defaults only. Preserve explicit resources;
+            # the normal selector must still reject ones outside Content scope.
+            from .method_resources import method_ids_for
+            obsolete_defaults = set(method_ids_for('repair'))
+            inherited = [mid for mid in inherited if mid not in obsolete_defaults]
         freeze_task_methods(replacement, selected_resource_ids=inherited)
         validate_task_semantics(replacement)
         prospective["tasks"].append(store.put_json_object(replacement))

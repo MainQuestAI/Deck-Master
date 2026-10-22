@@ -1524,7 +1524,15 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
 
     # -- preproduction content review (one T03 verdict for every entry) ----
     preproduction = None
-    if enforced and spec.name in PREPRODUCTION_GATED_ACTIONS:
+    # Content-only corrections do not produce a visual artifact. Derive the
+    # exception from the server-validated plan targets, never a caller flag.
+    content_correction = (spec.name == "change.commit"
+                          and set(targets.get("layers") or []) == {"page_copy"}
+                          and bool(targets.get("page_ids"))
+                          and context.get("candidate_count") == len(targets["page_ids"])
+                          and not context.get("external_call_page_ids")
+                          and not context.get("count"))
+    if enforced and spec.name in PREPRODUCTION_GATED_ACTIONS and not content_correction:
         preproduction = preproduction_state(store, control)
         if not preproduction["satisfied"]:
             code = "needs_reviewer" if preproduction["needs_reviewer"] \
