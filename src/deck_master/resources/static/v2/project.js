@@ -49,8 +49,17 @@ export class Project {
   // Bind lists to the supplied projection. A fallback summary without an etag
   // must not inherit the previous work surface's personal-reading snapshot.
   readingQuery(summary=this.summary){const etag=summary?.reading_etag;return this.health.ui_capabilities?.includes('result_reading.v1')&&etag?'&'+new URLSearchParams({personal:'1',reading_etag:etag}):'';}
+  async readControl(fresh = false) {
+    // Navigation after a write waits for the previous read, then reads anew.
+    // Passive refreshes share the in-flight request instead of queuing more.
+    if (fresh && this.controlRequest) await this.controlRequest.catch(() => {});
+    if (!this.controlRequest) {
+      this.controlRequest = get('/api/project').finally(() => { this.controlRequest = null; });
+    }
+    return this.controlRequest;
+  }
   async start() {
-    const [info, summary, state] = await Promise.all([get('/api/project'), get(this.summaryURL()), get('/api/ui-state')]);
+    const [info, summary, state] = await Promise.all([this.readControl(), get(this.summaryURL()), get('/api/ui-state')]);
     this.info = info; this.latest = summary; this.returnTo = state.record?.position;
     if (this.health.ui_capabilities?.includes('operations.v1')) this.business = new BusinessOperations(this);
     this.root.addEventListener('draft-state-changed', () => {
@@ -69,10 +78,10 @@ export class Project {
     addEventListener('online', () => this.setNotice('网络已恢复。可核实草稿保存，或重新读取当前工作面。', true));
     await this.loadRoute(this.route, false);
     if (this.health.ui_capabilities?.includes('run_desk.v1')) {
-      this.summaryPoll = new SummaryPoll(signal => get(this.summaryURL(), {signal}), value => {
+      this.summaryPoll = new SummaryPoll(signal => get(this.summaryURL(), {signal}), async value => {
         if (value.project_id !== this.info.project_id) throw new Error('服务项目已变化，请重新打开项目。');
         this.latest = value;
-        if (this.health.ui_capabilities?.includes('collaboration.v1')) this.refreshControl();
+        if (this.health.ui_capabilities?.includes('collaboration.v1')) await this.refreshControl();
         const count = value.task_counts.awaiting_host || 0;
         if (this.pendingButton) {
           this.pendingButton.textContent = `待交接 ${count}`;
@@ -93,7 +102,7 @@ export class Project {
     if (this.navigationPending) return;
     const serial = this.controlRead = (this.controlRead || 0) + 1;
     try {
-      const info = await get('/api/project');
+      const info = await this.readControl();
       if (serial !== this.controlRead || info.project_identity !== this.info.project_identity) return;
       this.info = info;
       // Refresh only the control facts. Draft editors, fixed canvases and open
@@ -123,7 +132,7 @@ export class Project {
     if (this.navigationStatus) this.navigationStatus.hidden = false;
     announce('正在读取工作面');
     try {
-      const [info, latest] = await Promise.all([get('/api/project'), get(this.summaryURL())]);
+      const [info, latest] = await Promise.all([this.readControl(true), get(this.summaryURL())]);
       if (info.project_identity !== this.info.project_identity) throw new Error('项目身份已改变。旧输入仍保留，请从项目列表重新打开。');
       const route = requestedRoute || readRoute(this.info, null, latest, requestedHash);
       route.revision ||= latest.revision_id;

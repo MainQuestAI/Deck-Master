@@ -1154,7 +1154,7 @@ def preproduction_state(store: Store, document: dict) -> dict:
     from . import content_review
     try:
         status = content_review.preproduction_status(store, document)
-        qualified = content_review.qualify_for_production(store, document)
+        qualified = content_review._production_qualification(status, document)
     except ModelError as exc:
         # Only the strict adopted-generation lineage reader reports this
         # path. A damaged Task must not erase read-only recovery, but asset

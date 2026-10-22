@@ -37,7 +37,7 @@ export class SummaryPoll {
     try {
       const value = await this.read(this.controller.signal);
       if (this.stopped || document.hidden || generation !== this.generation) return;
-      this.onValue(value); this.delay = this.interval(value);
+      await this.onValue(value); this.delay = this.interval(value);
     } catch (error) {
       if (error.name !== 'AbortError' && !this.stopped && generation === this.generation) {
         this.delay = Math.min(30000, this.delay * 2); this.onError(error);
