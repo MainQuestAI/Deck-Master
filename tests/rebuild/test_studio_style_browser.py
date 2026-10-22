@@ -292,7 +292,8 @@ def test_screenshot_plan_freezes_target_and_rejects_late_response(flow, invalida
             server.stop()
 
 
-def test_pending_current_version_sidebar_keeps_reviewed_candidate_revision(flow, tmp_path):
+@pytest.mark.parametrize('explicit_history', [False, True])
+def test_pending_current_version_sidebar_keeps_reviewed_candidate_revision(flow, tmp_path, explicit_history):
     """A surface switch carries the explicit current-read intent across late replies."""
     from urllib.parse import urlencode
     from playwright.sync_api import expect
@@ -325,7 +326,11 @@ def test_pending_current_version_sidebar_keeps_reviewed_candidate_revision(flow,
         page.get_by_role('button', name='查看当前版本', exact=True).click()
         page.wait_for_function('()=>window.currentTasksHeld===true')
         expect(page.locator('#main')).to_have_attribute('aria-busy', 'true')
-        page.locator('.sidebar').get_by_role('button', name='风格校准', exact=True).click()
+        if explicit_history:
+            # An explicit saved historical URL supersedes the current intent.
+            page.goto(server.start() + '#' + urlencode({'project': identity, 'surface': 'style', 'revision': old_revision}))
+        else:
+            page.locator('.sidebar').get_by_role('button', name='风格校准', exact=True).click()
         expect(page.get_by_role('heading', name='风格校准', exact=True)).to_be_visible()
         landed = page.url
         for route, response in held:
@@ -343,7 +348,12 @@ def test_pending_current_version_sidebar_keeps_reviewed_candidate_revision(flow,
                  'expand_buttons': page.get_by_role('button', name='从此候选扩展', exact=True).count()}
         (tmp_path / 'pending-current-sidebar.json').write_text(json.dumps(state, indent=2))
         page.screenshot(path=str(tmp_path / 'pending-current-sidebar.png'), full_page=True)
-        assert 'revision=' + current_revision in landed, state
-        assert 'revision=' + current_revision in page.url, state
-        expect(page.get_by_role('button', name='从此候选扩展', exact=True)).to_be_visible()
+        expected_revision = old_revision if explicit_history else current_revision
+        assert 'revision=' + expected_revision in landed, state
+        assert 'revision=' + expected_revision in page.url, state
+        if explicit_history:
+            expect(page.get_by_role('button', name='从此候选扩展', exact=True)).to_have_count(0)
+            expect(page.get_by_role('button', name='查看当前版本', exact=True)).to_be_visible()
+        else:
+            expect(page.get_by_role('button', name='从此候选扩展', exact=True)).to_be_visible()
         assert flow.store.current_revision_id() == current_revision
