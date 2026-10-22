@@ -96,6 +96,23 @@ def packet_requirements(store, document, *, page_ids, units):
     return {unit: project_requirements(store, document, page_ids=page_ids, unit=unit) for unit in units}
 
 
+def _semantic_requirements(value):
+    """Ignore audit identity only for the same effective review-policy choice.
+
+    Packets/readers retain complete refs, replacement chains and instruction
+    evidence. Applicability still resolves the current accepted record first;
+    scope, value, authority, evidence, expiry and dependency basis stay compared.
+    """
+    rows = []
+    for row in value['decisions']:
+        decision = row['decision']
+        if decision.get('topic') == 'policy' and 'content_review_requirement' in (decision.get('value') or {}):
+            row = {key: item for key, item in row.items() if key != 'ref'}
+            row['decision'] = {key: item for key, item in decision.items() if key not in ('replaces', 'created_at')}
+        rows.append(row)
+    return {**value, 'decisions': rows}
+
+
 def task_requirements_current(store, document, task, *, unit=None, page_ids=None):
     """Compare scoped semantic requirements, never the whole Document revision.
 
@@ -127,7 +144,8 @@ def task_requirements_current(store, document, task, *, unit=None, page_ids=None
             if before is None:
                 before = load_snapshot(store, task['dispatch_revision'])
             prior = project_requirements(store, before, page_ids=ids, unit=kind)
-        if prior != project_requirements(store, document, page_ids=ids, unit=kind):
+        if _semantic_requirements(prior) != _semantic_requirements(
+                project_requirements(store, document, page_ids=ids, unit=kind)):
             return False
     return True
 
@@ -158,9 +176,9 @@ def accepted_requirements_current(store, document, review, ref, owners):
                     introduced = snapshot
                 elif introduced is not None:
                     break
-            return introduced is not None and project_requirements(
-                store, introduced, page_ids=ids, unit=review['kind']) == project_requirements(
-                store, document, page_ids=ids, unit=review['kind'])
+            return introduced is not None and _semantic_requirements(project_requirements(
+                store, introduced, page_ids=ids, unit=review['kind'])) == _semantic_requirements(project_requirements(
+                store, document, page_ids=ids, unit=review['kind']))
         return any(task_requirements_current(store, document, task, unit=review['kind'], page_ids=ids) for task in tasks)
     except (StoreError, OSError, ValueError, KeyError, TypeError):
         return False
