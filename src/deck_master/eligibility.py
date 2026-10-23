@@ -169,6 +169,8 @@ ACTIONS: dict[str, ActionSpec] = {spec.name: spec for spec in (
           production=True, external=True, role="runtime"),
     # -- adoption (row 3)
     _spec("task.accept", "adoption", "pages", writes=True, role="runtime"),
+    _spec("generation.reuse", "adoption", "pages", layers=("blueprint",),
+          authority="execute", production=True, writes=True, role="runtime"),
     _spec("proposal.adopt", "adoption", "deck", writes=True, role="runtime"),
     _spec("call.settle", "execution", "pages", writes=True, role="host"),
     _spec("material.upload", "adoption", "external_artifact", writes=True, role="user"),
@@ -250,7 +252,7 @@ ACTIONS: dict[str, ActionSpec] = {spec.name: spec for spec in (
 
 # Actions that need a preproduction content review before real page production
 # (CONTRACTS §1.9, §6.3: 新论证 full_deck 默认需要独立内容前审).
-PREPRODUCTION_GATED_ACTIONS = ("dispatch.blueprint", "style.trial", "style.expand",
+PREPRODUCTION_GATED_ACTIONS = ("dispatch.blueprint", "generation.reuse", "style.trial", "style.expand",
                                "change.commit", "compile.ppt", "stage.assemble")
 
 # Every delivery entry consumes the same authorization vocabulary: a grant
@@ -298,7 +300,7 @@ ROUTING_ACTIONS = ("create", "continue_project", "change.plan", "export.review",
 # advances what its own intent/content_intent covers; an action outside that
 # boundary is a scope violation, not a missing decision.
 _INTENT_BLOCKED_ACTIONS = {
-    "review_only": ("dispatch.compose", "import_draft", "dispatch.blueprint", "style.trial",
+    "review_only": ("dispatch.compose", "import_draft", "dispatch.blueprint", "generation.reuse", "style.trial",
                     "style.expand", "change.commit", "compile.ppt", "stage.assemble",
                     "page.edit", "content.operation", "candidate.adopt"),
     "design_trial": ("dispatch.compose", "import_draft", "compile.ppt", "stage.assemble",
@@ -306,9 +308,9 @@ _INTENT_BLOCKED_ACTIONS = {
     "edit": ("dispatch.compose", "stage.assemble"),
 }
 _CONTENT_INTENT_BLOCKED_ACTIONS = {
-    "plan_only": ("dispatch.blueprint", "style.trial", "style.expand", "compile.ppt",
+    "plan_only": ("dispatch.blueprint", "generation.reuse", "style.trial", "style.expand", "compile.ppt",
                   "stage.assemble", "page.edit", "import_draft"),
-    "speech_only": ("dispatch.blueprint", "style.trial", "style.expand", "page.edit",
+    "speech_only": ("dispatch.blueprint", "generation.reuse", "style.trial", "style.expand", "page.edit",
                     "import_draft", "dispatch.compose"),
 }
 

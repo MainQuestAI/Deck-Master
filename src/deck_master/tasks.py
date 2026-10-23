@@ -240,6 +240,8 @@ def _validate_usage_events(raw: dict[str, Any]) -> None:
 
 def _validate_content_envelope(raw: dict) -> None:
     """Validate nested product fields after call facts settle, before field access."""
+    if raw.get('generation_result') is not None and raw.get('kind') != 'blueprint':
+        raise EnvelopeError('(result)/generation_result', 'generation binding is only valid for blueprint Tasks')
     file_ids = {item['file_id'] for item in raw.get('files') or []}
     for index, spec in enumerate(raw.get('artifact_specs') or []):
         where = f'(result)/artifact_specs[{index}]'
@@ -252,6 +254,8 @@ def _validate_content_envelope(raw: dict) -> None:
         for slot in ('dependencies', 'derived_from', 'reference_regions', 'limitations'):
             if spec.get(slot) is not None and not isinstance(spec[slot], list):
                 raise EnvelopeError(where + '/' + slot, 'must be an array')
+        if isinstance(spec.get('provenance'), dict) and 'generation_reuse' in spec['provenance']:
+            raise EnvelopeError(where + '/provenance/generation_reuse', 'receiver-owned association cannot be supplied')
         if spec.get('provenance') is not None and not isinstance(spec['provenance'], dict):
             raise EnvelopeError(where + '/provenance', 'must be an object')
     for index, review in enumerate(raw.get('reviews') or []):
@@ -1512,6 +1516,9 @@ def _accept_result_locked(
         {"operation_id": operation_id, "kind": "task_update", "description": "", "read_set": []},
     )
     attach(new_document, plan_ref)
+    if generation_binding and generation_binding.get("reuse"):
+        from .models import require_writer
+        require_writer(new_document, "settled-image-reuse.v1")
     page_slots = {}
     for artifact in artifacts:
         if artifact.get("page_id"):

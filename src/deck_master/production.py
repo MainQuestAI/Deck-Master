@@ -335,9 +335,12 @@ def adopted_blueprint_design(store, document, page_entry):
                 or request["input_hash"] != sha256_bytes(canonical_json_bytes(request["input"]))):
             raise ModelError(where, "generation Request project or frozen hash differs")
         owner = tasks._lookup_task(document, request["task_id"], store)
+        from .generation_reuse import artifact_owner
+        reuse_owner = artifact_owner(store, document, artifact, ref)
+        result_owner = reuse_owner or owner
         if (owner["kind"] != "blueprint" or owner["scope_pages"] != [page_entry["page_id"]]
                 or request_ref not in (owner.get("generation_requests") or [])
-                or ref not in (owner.get("result_refs") or [])):
+                or ref not in (result_owner.get("result_refs") or [])):
             raise ModelError(where, "Request and adopted blueprint are not owned by their actual Task")
         attempt_ref = provenance.get("generation_attempt")
         if attempt_ref is None or attempt_ref not in (owner.get("generation_attempts") or []):

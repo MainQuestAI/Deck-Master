@@ -14,7 +14,7 @@ from .snapshots import load_snapshot
 from .store import ConflictError, Store, _validate_operation_id
 
 PROTOCOL = "generation.v1"
-CAPABILITIES = ["generation_request_freeze", "attempt_binding", "native_tool_observation", "content_requirements_v1"]
+CAPABILITIES = ["generation_request_freeze", "attempt_binding", "native_tool_observation", "content_requirements_v1", "settled_image_reuse_v1"]
 
 
 class GenerationError(TypedServiceError):
@@ -173,7 +173,7 @@ def _reassociation_diagnostic(task, attempt, call, revision_id, *, historical):
             {'code': 'current_adoption_authority', 'verification': 'not_evaluated',
              'detail': 'Snapshot task/call facts do not check current authority, target freshness or budget, and never grant adoption.'},
         ],
-        'next_action': 'Preserve both execution and consumption facts. Obtain the missing authenticated send/handoff/ownership evidence and an explicit product decision before any transfer or independently authorized external-artifact reuse. Do not repeat a call or relabel a selector on the strength of this read.',
+        'next_action': 'Preserve both execution and consumption facts. Single-call handoff and unregistered external B still require the missing authenticated send/handoff/ownership interface. Separately, generation_result.reuse_from supports explicitly authorized same-project settled native-image reuse for new capable non-trial Tasks, retaining both call ledgers; it is not a handoff or a refund. Do not repeat a call or relabel a selector on the strength of this read.',
     }
 
 
@@ -432,12 +432,18 @@ def comparison(request, observation):
 
 
 def adoption_binding(store, document, task, envelope, staged):
+    for spec in envelope.get("artifact_specs") or []:
+        if "generation_reuse" in (spec.get("provenance") or {}):
+            raise _error("generation_binding_conflict", "provenance/generation_reuse", "only the receiver can create a reuse association")
     if not is_new(task):
         if envelope.get("generation_result"):
             raise _error("host_protocol_unsupported", "generation_result", "old tasks cannot claim a new generation binding")
         return None
     check_host(task)
     binding = envelope.get("generation_result")
+    if isinstance(binding, dict) and "reuse_from" in binding:
+        from .generation_reuse import adoption_binding as reuse_binding
+        return reuse_binding(store, document, task, envelope, staged)
     if not isinstance(binding, dict) or set(binding) != {"request_id", "attempt_id"}:
         raise _error("generation_attempt_required", "generation_result", "result must bind one request and attempt")
     attempt, attempt_ref = _read_owned(store, task, "generation_attempts", binding["attempt_id"])
@@ -475,4 +481,8 @@ def bind_artifact(store, artifact, binding):
     artifact["provenance"].update(generation_request=binding["request_ref"], generation_attempt=binding["attempt_ref"],
                                   invocation_ref=observation["invocation_ref"], generated_from_page=binding["request"]["input"]["page"]["page_ref"],
                                   submitted_prompt=store.put_blob(observation["submitted"]["prompt"].encode("utf-8"), ext="txt"))
+    if binding.get("reuse"):
+        if artifact['file'] != binding['reuse']['file'] or artifact['media_type'] != 'image/png':
+            raise _error('generation_reuse_invalid', 'artifact/file', 'reuse must retain the exact original PNG Ref and media type')
+        artifact["provenance"]["generation_reuse"] = store.put_json_object(binding["reuse"])
     return artifact

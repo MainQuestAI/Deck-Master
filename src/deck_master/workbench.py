@@ -1088,7 +1088,7 @@ def _generation_records(ctx, entry, artifact, *, task_records=None):
                             and provenance.get("generation_attempt") is not None
                             and ctx.read(provenance["generation_attempt"]).get("attempt_id") == attempt["attempt_id"]
                             and observation.get("observer") == "tool_observed"
-                            and observation.get("collector") == "codex-session-image.v1"
+                            and observation.get("collector") in ("codex-session-image.v1", "native-host-image.v1")
                             and (observation.get("output") or {}).get("sha256") == (artifact.get("file") or {}).get("sha256")):
                         adopted = _copy_json(observation)
                 call = next((c for c in task["call_allowances"] if c["allowance_id"] == attempt["allowance_id"]), None)
@@ -1101,6 +1101,15 @@ def _generation_records(ctx, entry, artifact, *, task_records=None):
     attempt_ref = provenance.get("generation_attempt")
     bound_request = next((r for r in requests if r["ref"] == request_ref), None)
     bound_attempt = next((a for a in attempts if a["ref"] == attempt_ref and a["request_ref"] == request_ref), None)
+    reuse = None
+    if provenance.get("generation_reuse"):
+        try:
+            from .generation_reuse import artifact_owner
+            artifact_owner(ctx.store, ctx.document, artifact, entry["blueprint"])
+            reuse = ctx.read(provenance["generation_reuse"])
+        except READ_FAILURES:
+            errors.append(object_error())
     return {"requests": requests, "attempts": attempts, "errors": errors, "adopted_observation": adopted,
+            "reuse": reuse,
             "adopted_request_ref": _copy_json(request_ref) if bound_request else None,
             "adopted_attempt_ref": _copy_json(attempt_ref) if bound_request and bound_attempt else None}
