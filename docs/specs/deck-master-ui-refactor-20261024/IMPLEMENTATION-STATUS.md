@@ -18,7 +18,7 @@ User authorized continuous product implementation, isolated branch/worktree, pus
 | E0 | IN_PROGRESS | Live remote baseline recorded; actual code differs from the earlier local inventory. |
 | E1 | IN_PROGRESS | 99 semantic tokens now feed generated CSS; 172 overlapping button rules migrated to controls.css; bounded actions, neutral selected navigation, native row popovers. Forms/status and global menus still pending. |
 | E2 | NOT_RUN | IN PROGRESS: overview priority card and row menus refined; batch actions appear after selecting. Current relationship projection and content/sequence/materials still pending. |
-| E3 | NOT_RUN | Single page reading, nonmodal sources, modal editor with expansion and retained drafts. |
+| E3 | IN_PROGRESS | Single page reading width; nonmodal source inspection; 440/880 modal editor with retained drafts, title validation and keyboard focus loop. Annotation/mode and complete lifecycle checks still pending. |
 | E4 | NOT_RUN | Gallery, pinned candidate comparison, adoption/keep. |
 | E5 | NOT_RUN | Style phases, task/version/export, exact replay and finding continuity. |
 | E6 | NOT_RUN | Full functional inventory, same-candidate regressions, browser evidence and isolated package checks. |
@@ -51,3 +51,11 @@ All product ACs remain NOT_RUN until a concrete test or browser observation is l
 - 45 passed: native review, transport, RC3 style workflows, original candidate references and summary polling. Narrow patches are retrievable in this branch.
 - Exact replay regression first failed on both affected operations. Fix preserves the original committed receipt and immutable operation payload. New writes and changed-payload replays remain rejected.
 - 97 passed: exact replay after pause, annotations, visual styles, eligibility entry coverage, content preproduction review and UI journal.
+
+### E3 single-page editor
+
+- 440px drawer expands to 880px, becomes full width on narrow screens. Same mounted form and DraftEditor keep close/reopen drafts and exact-range dialogs. Inline title validation prevents invalid planning requests.
+- Source inspection and its material reader remain nonmodal and bound to the selected revision. Reader requests abort on replacement or disposal.
+- 24 existing browser cases passed after migrating to the named dialog trigger and explicit close before navigation. New keyboard regression found Tab escaping to browser chrome; explicit boundary handling fixed it.
+- Follow-up 14 passed: exact range, draft retention, narrow/editor geometry, long-copy diff/impact visibility, and UI geometry/keyboard suite.
+- Synthetic screenshots: evidence/single-page-editor/. No customer content or Host generation.

@@ -82,3 +82,9 @@
 
  .studio-workspace .reading-toolbar > .page-tools-switcher .ui-icon {display:none}
 }
+
+/* A bounded manuscript remains separate from contextual inspection tools. */
+.studio-workspace .page-copy.stack {display:flex;flex-direction:column;gap:24px}
+.studio-workspace .page-manuscript {width:100%;max-width:40rem;margin-inline:auto;font-size:var(--dm-type-size-reading);line-height:var(--dm-type-line-reading)}
+.studio-workspace .page-manuscript>*+* {margin-top:16px}
+.studio-workspace .page-manuscript h2 {font-size:var(--dm-type-size-page);line-height:var(--dm-type-line-page)}

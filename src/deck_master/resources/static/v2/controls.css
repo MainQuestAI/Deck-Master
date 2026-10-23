@@ -64,3 +64,31 @@ button:is(.slide-cover,.image-button,.reference-zoom):hover:not(:disabled) {bord
   button:is(.slide-cover,.image-button,.reference-zoom) {min-height:0}
 }
 @media (prefers-reduced-motion:reduce) {button,.download-link {transition:none}}
+
+/* A task drawer owns its geometry independently of the reading canvas. */
+.edit-drawer {inset:0 0 0 auto;margin:0;width:min(440px,100vw);max-width:100vw;height:100dvh;max-height:100dvh;padding:0;border:0;border-left:1px solid var(--dm-color-border);border-radius:0;background:var(--dm-color-canvas);color:var(--dm-color-text);font:var(--dm-type-size-body)/var(--dm-type-line-body) var(--font-body);box-shadow:var(--dm-elevation-menu)}
+.edit-drawer[open] {display:flex;flex-direction:column}
+.edit-drawer.wide {width:min(880px,100vw)}
+.edit-drawer::backdrop {background:var(--dm-color-scrim)}
+.edit-drawer-head {flex:none;padding:20px 24px;border-bottom:1px solid var(--dm-color-border);display:flex;flex-direction:column;gap:12px}
+.edit-drawer-head h2 {margin:0;font-size:var(--dm-type-size-section);line-height:var(--dm-type-line-section)}
+.edit-drawer-head .action-group {justify-content:flex-end}
+.edit-drawer-body {flex:1;overflow:auto;overscroll-behavior:contain;padding:24px;min-height:0}
+.edit-drawer-body>.content-check {padding-top:24px;border-top:1px solid var(--dm-color-border)}
+.edit-drawer-footer {flex:none;padding:16px 24px;border-top:1px solid var(--dm-color-border);background:var(--dm-color-surface)}
+.edit-drawer-footer .content-form-fields {display:flex;justify-content:flex-end}
+.edit-drawer textarea {font:var(--dm-type-size-body)/var(--dm-type-line-body) var(--font-body);min-height:44px;padding:10px 12px;border:1px solid var(--dm-color-border-control);border-radius:var(--dm-shape-radius-control);background:var(--dm-color-canvas);color:var(--dm-color-text)}
+.edit-drawer textarea[aria-invalid=true] {border-color:var(--dm-color-danger)}
+.source-inspector {padding-top:20px;border-top:1px solid var(--dm-color-border)}
+.source-inspector>summary {cursor:pointer;font:500 var(--dm-type-size-body)/var(--dm-type-line-body) var(--font-body);padding:8px 0}
+.source-inspector>.stack {padding-top:16px}
+@media(max-width:560px) {.edit-drawer-head,.edit-drawer-body {padding:20px}.edit-drawer-footer {padding:16px 20px}.edit-drawer-head .action-group {flex-wrap:wrap}}
+
+.edit-drawer-draft-state {margin:0 0 12px;font-size:var(--dm-type-size-caption);line-height:var(--dm-type-line-caption);color:var(--dm-color-text-secondary)}
+
+.edit-drawer .stack {display:flex;flex-direction:column;gap:16px}
+.edit-drawer .stack[hidden] {display:none}
+.edit-drawer .edit-field-list {gap:24px}
+.edit-drawer .edit-field {display:flex;flex-direction:column;gap:8px}
+.edit-drawer label.stack {gap:6px}
+.edit-drawer .edit-field .action-group {margin:0}

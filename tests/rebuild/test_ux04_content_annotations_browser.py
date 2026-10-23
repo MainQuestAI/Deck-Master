@@ -83,7 +83,7 @@ def test_same_text_body_nodes_are_distinguishable_and_editable_separately(ux04_b
     identity = page.request.get(url.rstrip('/') + '/api/project').json()['project_identity']
 
     goto_page(page, url, identity, 'p01', 'content', revision)
-    page.locator('.content-editor summary').click()
+    page.locator('.content-editor > :is(summary,button)').click()
     expect(page.get_by_label('正文块 1 · 文字')).to_be_visible()
     expect(page.get_by_label('正文块 2 · 发布检查单 · 条目 1 · 文字')).to_be_visible()
     expect(page.get_by_label('正文块 2 · 发布检查单 · 条目 2 · 文字')).to_have_value('不同的另一句。')
@@ -109,6 +109,7 @@ def test_same_text_body_nodes_are_distinguishable_and_editable_separately(ux04_b
 
     # 不确认即离开 = 取消：业务版本与已保存内容不变。
     before = store.read_current()
+    page.get_by_role('button', name='关闭编辑', exact=True).click()
     page.get_by_role('button', name='制作总览', exact=True).click()
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()
     assert store.read_current() == before

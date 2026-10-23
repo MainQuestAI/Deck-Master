@@ -51,19 +51,18 @@ function bodyBlocks(blocks) {
 function sourceBody(app, data) {
   const node = el('div', {class: 'stack'}, el('p', {}, `本页来源固定在 ${version(data.revision_id)}。`));
   const links = (data.content_plan?.goals || []).flatMap(g => g.source_links || []);
-  if (app.health.ui_capabilities?.includes('content_ops.v1')) node.append(...links.map(link => button('查看材料 ' + (link.locator || '原文'), () => sourceReader(app, link, data.revision_id))));
+  const reader=el('section',{class:'source-inline-reader','aria-label':'材料原文与定位'});
+  if (app.health.ui_capabilities?.includes('content_ops.v1')) node.append(...links.map(link => button('查看材料 ' + (link.locator || '原文'), () => sourceReader(app, link, data.revision_id, reader))));
+  node.append(reader);
   node.append(data.sources.citations.length ? el('pre', {class: 'evidence-json'}, JSON.stringify(data.sources.citations, null, 2)) : el('p', {class: 'muted'}, '此页未记录材料引用，不能据此补造来源。'),
     button('回到此版本的内容与页序', () => { const dialog = document.querySelector('#modal'); if (dialog.open) dialog.close(); app.go({surface: 'content', revision: data.revision_id}); }));
   return node;
 }
-function sourceView(app, data) {
-  return modal('本页来源', sourceBody(app, data));
-}
 function contentView(app, data) {
   const visible = data.page?.customer_visible;
-  const node = el('article', {class: 'page-copy stack'}, el('h2', {}, visible?.title || '逐页稿暂不可读'),
+  const node = el('article', {class: 'page-copy stack'}, el('div',{class:'page-manuscript'},el('h2', {}, visible?.title || '逐页稿暂不可读'),
     visible?.subtitle && el('p', {}, visible.subtitle), visible?.body_blocks?.length ? bodyBlocks(visible.body_blocks) : el('p', {class: 'muted'}, '此页未记录正文块。'),
-    ['callouts', 'labels', 'footnotes'].flatMap(key => (visible?.[key] || []).map(item => el('p', {class: key}, item.text))));
+    ['callouts', 'labels', 'footnotes'].flatMap(key => (visible?.[key] || []).map(item => el('p', {class: key}, item.text)))));
   const sources = data.text_sources?.content || [];
   if (sources.length) {
     const select = el('select', {'aria-label': '选择原文文本对象'}, sources.map((source, i) => el('option', {value: i}, `${i + 1} · ${source.text.slice(0, 42) || '空文本'}`)));
@@ -79,7 +78,7 @@ function contentView(app, data) {
       el('pre', {class:'evidence-json'}, JSON.stringify(data.page.content_mapping.speech_segments,null,2)))));
   if (data.page?.customer_visible && !app.readonly && app.health.ui_capabilities?.includes('content_ops.v1') && data.revision_id === app.route.revision && data.page_id === app.route.page_id) node.append(pageContentEditor(app, data));
   if(supportsInsights(app))node.append(pageEvidence(app,data),designRequirements(app,data));
-  node.append(button('查看本页来源', () => sourceView(app, data))); return node;
+  node.append(el('details',{class:'source-inspector'},el('summary',{},'查看本页来源'),sourceBody(app,data))); return node;
 }
 function imageLayer(app, data, layer, title, releases) {
   const stage = data.stages[stageKey[layer]];
@@ -310,6 +309,9 @@ export function pageDetail(app, data) {
     for (const [area, node] of faceNode) node.hidden = area !== key;
     for (const [area, control] of faceControl) control.setAttribute('aria-pressed', String(area === key));
   }
+  const pauseAnnotations=()=>annotations?.setMode('read');
+  app.root.addEventListener('page-edit-open',pauseAnnotations);
+  app.disposables.push(()=>app.root.removeEventListener('page-edit-open',pauseAnnotations));
   // 「写新意见」等从笔记面发起、落点在意见面的动作:把活动面交回意见。
   faceZone.addEventListener('activate-opinion-face', () => activateFace('opinions'));
   faceZone.append(...faces.map(([, , node]) => node));
@@ -326,6 +328,9 @@ export function pageDetail(app, data) {
     if (target?.isConnected && !target.hidden) target.focus({preventScroll: true});
   }, false, {class: 'tool-anomaly-chip', hidden: true});
   anomalySlot.append(draftChip);
+  const editDraftRecovery=()=>{activateFace('notes');selectNoteArea('write');lastToolTrigger=faceControl.get('notes');revealTools();draftChip.click();};
+  app.root.addEventListener('page-edit-draft-recovery',editDraftRecovery);
+  app.disposables.push(()=>app.root.removeEventListener('page-edit-draft-recovery',editDraftRecovery));
   const draftAnomaly = () => {
     const status = app.editor?.status;
     const labels = {unknown: '个人草稿保存结果待核实', conflict: '个人草稿保存冲突待比较', error: '个人草稿上次保存未完成'};
