@@ -114,3 +114,53 @@ def test_changed_page_basis_invalidates_plan_but_unrelated_revision_does_not(tmp
     result = content_production.completion_status(store, store.load_document())
     assert result['state'] != 'completed'
     assert any(row['code'] == 'design_basis_changed' for row in result['missing'])
+
+
+@pytest.mark.parametrize(('text', 'skill'), [
+    ('请先写逐页正文，再设计两页样页', 'deck-master'),
+    ('请先写一份正文再设计样页', 'deck-master'),
+    ('先修改正文再设计样页', 'deck-master'),
+    ('请审阅并直接修复这份稿件', 'deck-master'),
+    ('Review the manuscript then fix the issues', 'deck-master'),
+    ('Write the manuscript about design patterns', 'deck-content'),
+    ('Write about design patterns then fix the manuscript', 'deck-master'),
+    ('Write the manuscript about design and review patterns', 'deck-content'),
+    ('只写正文不设计样页', 'deck-content'),
+    ('只审不修', 'deck-review'),
+])
+@pytest.mark.parametrize('protocol', [None, 'work_context.v2'])
+def test_action_topic_and_negation_route_matches_both_readers(text, skill, protocol):
+    route = method_resources.route_request(text)
+    assert route['skill'] == skill
+    assert route['authority'] == 'routing_suggestion_only'
+    result = method_resources.read_skill_methods(skill, entry_mode='natural', text=text, read_protocol=protocol)
+    assert result['skill'] == skill
+
+
+@pytest.mark.parametrize('protocol', [None, 'work_context.v2'])
+def test_natural_suggestion_does_not_deny_coordinator_or_grant_authority(tmp_path, protocol):
+    from rc3_fixtures import source_snapshot
+    project = tmp_path / 'coordination'
+    service.create(project, brief='Synthetic read-only coordination, no production grant')
+    before = source_snapshot(project)
+    result = method_resources.read_skill_methods('deck-master', project=project,
+        entry_mode='natural', text='正文与设计的关系', read_protocol=protocol)
+    assert result['skill'] == 'deck-master'
+    assert result['route']['authority'] == 'routing_suggestion_only'
+    assert source_snapshot(project) == before
+
+    with pytest.raises(ValueError, match='preserve its responsibility'):
+        method_resources.read_skill_methods('deck-master', project=project,
+            entry_mode='natural', text='deck-review 只审不修', read_protocol=protocol)
+    with pytest.raises(ValueError, match='preserve its responsibility'):
+        method_resources.read_skill_methods('deck-design', project=project,
+            entry_mode='natural', text='只审不修', read_protocol=protocol)
+    assert source_snapshot(project) == before
+
+
+@pytest.mark.parametrize('protocol', [None, 'work_context.v2'])
+@pytest.mark.parametrize('text', ['请先写逐页正文，再设计两页样页', '请审阅并直接修复这份稿件'])
+def test_compound_request_does_not_expand_a_single_role(text, protocol):
+    for role in ('deck-content', 'deck-design', 'deck-review'):
+        with pytest.raises(ValueError, match='preserve its responsibility'):
+            method_resources.read_skill_methods(role, entry_mode='natural', text=text, read_protocol=protocol)

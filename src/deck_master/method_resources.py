@@ -381,7 +381,7 @@ def route_request(text: str) -> dict:
     # remains the input/evidence; exclusions such as "不要讲稿" never become a
     # positive speech request merely because their noun appears in the text.
     normalized = ' '.join(re.split(
-        r"不要|不需要|无需|勿|不(?=改|写|做|审|制作|生图|执行|修复)|\b(?:do\s+not|don't|without|no)\b",
+        r"不要|不需要|无需|勿|不(?=改|写|做|审|制作|生图|执行|修|设计)|\b(?:do\s+not|don't|without|no)\b",
         clause, maxsplit=1)[0] for clause in re.split(r'[,，。；;!！?？\n]', original))
     # Recovery is a command about this work session/project, not a substring
     # found inside the user's subject matter (e.g. recovery procedures).
@@ -405,27 +405,37 @@ def route_request(text: str) -> dict:
     clauses = []
     for sentence in re.split(r"[,，。；;!！?？\n]", original):
         affirmative = re.split(
-            r"不要|不需要|无需|勿|不(?=改|写|做|审|制作|生图|执行|修复)|\b(?:do\s+not|don't|without|no)\b",
+            r"不要|不需要|无需|勿|不(?=改|写|做|审|制作|生图|执行|修|设计)|\b(?:do\s+not|don't|without|no)\b",
             sentence, maxsplit=1)[0]
-        clauses.extend(re.split(r"、|然后|随后|接着|再|并且|并|以及|和|与|\b(?:and then|then|and)\b", affirmative))
+        # English about/regarding introduces subject matter, not more actions.
+        action_text = re.sub(r"\b(?:about|regarding)\b.*?(?=\b(?:and then|then)\b|$)", "", affirmative)
+        clauses.extend(re.split(r"、|然后|随后|接着|再|并且|并|以及|和|与|\b(?:and then|then|and)\b", action_text))
     actions = set()
     for clause in clauses:
         clause = clause.strip()
-        clause = re.sub(r"^(?:(?:请|麻烦|帮我|先|只|仅|我想|给我|please|only|just|can you|could you)\s*)+", "", clause)
-        if re.match(r"(?:策划|规划|写(?:稿|内容|正文|逐页稿|讲稿|口播)|改写|撰写|补充正文|(?:plan|write|rewrite|draft)\b)", clause):
+        clause = re.sub(r"^(?:(?:请|麻烦|帮我|先|只|仅|我想|给我|直接|please|only|just|directly|can you|could you)\s*)+", "", clause)
+        if re.match(r"(?:策划|规划|(?:写|修改|改写|撰写|补充)(?=.{0,12}(?:稿|内容|正文|逐页|讲稿|口播))|(?:plan|write|rewrite|draft)\b)", clause):
             actions.add("content")
         if re.match(r"(?:做设计|设计|出(?:视觉|设计|版式)方案|制作样页|(?:design|layout)\b)", clause):
             actions.add("design")
         if re.match(r"(?:只审|只读|审查|审稿|审阅|复核|审核|(?:review|audit|critique|inspect)\b)", clause):
             actions.add("review")
+        if re.match(r"(?:修复|修正|修理|修$|(?:fix|repair|correct)\b)", clause):
+            actions.add("repair")
+        if clause == "审":
+            actions.add("review")
     if explicit:
         skill = explicit[0] if len(set(explicit)) == 1 else "deck-master"
     elif len(actions) > 1:
         skill = "deck-master"
-    elif review_command:
-        skill = "deck-review"
     elif recovery or coordination_command or any(word in normalized for word in ("完整ppt", "整套ppt", "完整作品", "full deck", "complete deck")):
         skill = "deck-master"
+    elif actions:
+        # A clear action outranks nouns in its subject (writing about design).
+        skill = {"content": "deck-content", "design": "deck-design",
+                 "review": "deck-review", "repair": "deck-master"}[next(iter(actions))]
+    elif review_command:
+        skill = "deck-review"
     elif any(word in normalized for word in ("样页", "设计方案", "视觉方案", "版式", "sample page", "design", "layout")):
         skill = "deck-design"
     elif any(word in normalized for word in ("策划", "规划", "大纲", "写稿", "逐页稿", "正文", "口播", "讲稿", "内容包", "plan", "write", "manuscript", "speech", "content")):
@@ -503,7 +513,10 @@ def read_skill_methods(skill: str, *, entry_mode="named", project=None, task_id=
     if entry_mode not in ENTRY_MODES:
         raise ValueError("unknown Skill entry mode")
     route = route_request(text) if entry_mode == "natural" else None
-    if route and route["skill"] != skill:
+    # Natural routing is a suggestion, not permission. The coordinator may
+    # read ambiguous work without borrowing another role's Task/write rights.
+    coordinating = skill == "deck-master" and route and not route["explicit_name"]
+    if route and route["skill"] != skill and not coordinating:
         raise ValueError(f"instruction routes to {route['skill']}; preserve its responsibility")
     if entry_mode in ("master", "recovery") and project is None:
         raise ValueError("Master handoff/recovery requires the existing project")

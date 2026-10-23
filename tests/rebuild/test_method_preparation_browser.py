@@ -5,15 +5,19 @@ from urllib.parse import urlencode
 
 import pytest
 from playwright.sync_api import sync_playwright, expect
-from deck_master import ui_journal, method_library_view as lib
+from deck_master import ui_journal, method_library_view as lib, method_resources
 from deck_master.web import WorkbenchServer
 from test_webui_content_insight import candidate
 
 pytestmark = pytest.mark.browser
 
 
+@pytest.mark.parametrize(('role', 'phase', 'units', 'instruction'), [
+    ('deck-review', 'speech', ['speech'], '只审阅口播，不修复'),
+    ('deck-master', 'argument', [], '请先写逐页正文，再设计两页样页'),
+])
 @pytest.mark.parametrize('route', ['studio/','v2/'])
-def test_speech_clipboard_and_no_phase_catalog(tmp_path, route):
+def test_speech_clipboard_and_no_phase_catalog(tmp_path, route, role, phase, units, instruction):
     project, store, _, _ = candidate(tmp_path)
     before = store.load_document()
     server = WorkbenchServer(project)
@@ -43,19 +47,24 @@ def test_speech_clipboard_and_no_phase_catalog(tmp_path, route):
                 expect(area.locator(':scope > pre')).to_contain_text('内容到设计')
                 expect(page.get_by_role('button',name='重新核对后复制准备要求')).to_be_disabled()
                 page.get_by_label('准备上下文').select_option('independent')
-                page.get_by_label('方法阅读角色').select_option('deck-review')
-                page.get_by_label('方法阅读阶段').select_option('speech')
+                page.get_by_label('方法阅读角色').select_option(role)
+                page.get_by_label('方法阅读阶段').select_option(phase)
                 expect(page.get_by_role('button',name='重新核对后复制准备要求')).to_be_enabled()
                 page.get_by_role('button',name='重新核对后复制准备要求').click()
                 page.wait_for_function('navigator.clipboard.readText().then(t=>t.includes("method_preparation_handoff.v1"))')
                 copied = page.evaluate('navigator.clipboard.readText()')
                 packet = json.loads(copied.split('```json\n')[1].split('\n```')[0])
-                assert sent[-1]['context']['review_units'] == ['speech']
-                assert packet['effective_context']['role'] == 'deck-review'
-                assert packet['effective_context']['phase'] == 'speech'
-                assert packet['effective_context']['review_units'] == ['speech']
+                assert sent[-1]['context']['review_units'] == units
+                assert packet['effective_context']['role'] == role
+                assert packet['effective_context']['phase'] == phase
+                assert packet['effective_context']['review_units'] == units
                 recovered = lib.preview(project,packet['preview_request'])
                 assert recovered['preview_digest'] == packet['preview_digest']
+                reader = method_resources.read_skill_methods(role, entry_mode='natural',
+                    project=project, text=instruction, review_units=units if role=='deck-review' else None)
+                assert reader['skill'] == role
+                assert [(r['id'], r['sha256']) for r in reader['methods']] == [
+                    (r['id'], r['sha256']) for r in recovered['resolved_manifest']]
                 for r in recovered['resolved_manifest']:
                     body = lib.resource(r['id'],catalog_digest=recovered['catalog_digest'],sha256=r['sha256'])
                     assert body['content'] and body['sha256'] == r['sha256']
