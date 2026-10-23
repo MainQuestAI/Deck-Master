@@ -50,9 +50,23 @@ def test_speech_clipboard_and_no_phase_catalog(tmp_path, route, role, phase, uni
                 page.get_by_label('方法阅读角色').select_option(role)
                 page.get_by_label('方法阅读阶段').select_option(phase)
                 expect(page.get_by_role('button',name='重新核对后复制准备要求')).to_be_enabled()
+                # Exercise a slow clipboard provider while still writing/reading
+                # Chromium's real clipboard, not a fixture receipt.
+                page.evaluate("""async () => {
+                    await navigator.clipboard.writeText('');
+                    const write = navigator.clipboard.writeText.bind(navigator.clipboard);
+                    navigator.clipboard.writeText = async text => {
+                        await new Promise(resolve => setTimeout(resolve, 750));
+                        return write(text);
+                    };
+                }""")
                 page.get_by_role('button',name='重新核对后复制准备要求').click()
-                page.wait_for_function('navigator.clipboard.readText().then(t=>t.includes("method_preparation_handoff.v1"))')
+                # copyText announces success only after the real write resolves.
+                # wait_for_function treats a Promise as truthy before its boolean
+                # resolves, so an async clipboard predicate does not poll.
+                expect(page.get_by_text('已复制，尚未开始。请在制作工具中发送。', exact=True)).to_be_visible()
                 copied = page.evaluate('navigator.clipboard.readText()')
+                assert 'method_preparation_handoff.v1' in copied
                 packet = json.loads(copied.split('```json\n')[1].split('\n```')[0])
                 assert sent[-1]['context']['review_units'] == units
                 assert packet['effective_context']['role'] == role
