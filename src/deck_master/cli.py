@@ -174,6 +174,12 @@ def build_parser() -> argparse.ArgumentParser:
     evaluate.add_argument("--revision")
     evaluate.add_argument("--persistence", choices=("none",), default="none")
     evaluate.add_argument("--report-output")
+    for name in ('record', 'repair-handoff'):
+        leaf = review_sub.add_parser(name)
+        leaf.set_defaults(collaboration_action='review.' + name)
+        leaf.add_argument('project_arg', nargs='?')
+        leaf.add_argument('--project')
+        leaf.add_argument('--input', required=True)
     report_import = review_sub.add_parser("import")
     report_import.set_defaults(collaboration_action='review.import')
     report_import.add_argument("project_arg", nargs="?")
@@ -572,7 +578,8 @@ def main(argv: list[str] | None = None) -> int:
                     project, action = None, options.collaboration_action
                 else:
                     project = options.project or options.project_arg
-                    if not project or (options.project and options.project_arg and options.project != options.project_arg):
+                    external_read = options.command == 'review' and options.review_command in ('record', 'repair-handoff')
+                    if (not project and not external_read) or (options.project and options.project_arg and options.project != options.project_arg):
                         raise ModelError('project', 'provide one project path')
                     data = json.loads(Path(options.input).read_text('utf-8')) if getattr(options, 'input', None) else {}
                     if not isinstance(data, dict):

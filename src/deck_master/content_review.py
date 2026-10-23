@@ -258,9 +258,11 @@ def build_review_packet(store, document, *, page_ids=None, required=None,
                           "restriction": source.get("restriction") or "",
                           "extract_ref": source.get("extract"), "extract": extract})
     from .effective_requirements import packet_requirements
+    from .review_handoff import project_findings
     units = list(required if required is not None else required_units(store, document))
     return {
         "schema_version": "content_review_packet.v1",
+        "external_findings": project_findings(store, document, [p["page_id"] for p in pages]),
         "effective_requirements": packet_requirements(store, document, page_ids=[p['page_id'] for p in pages], units=units),
         "project_id": document["project_id"],
         "revision_id": document["revision_id"],

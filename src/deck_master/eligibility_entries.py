@@ -137,6 +137,10 @@ COLLABORATION_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "content_production.adopt_proposal": ("proposal.adopt", "content_production.adopt_proposal: locked exact decision/scope/basis adoption", None),
     "content_production.completion_status": (None, "-", READ_REASONS["read_model"]),
     "external_review.evaluate": (None, "-", READ_REASONS["external_report"]),
+    "review_handoff.record_reviews": (None, "-", READ_REASONS["external_report"]),
+    "review_handoff.repair_handoff": (None, "-", READ_REASONS["read_model"]),
+    "collaboration_api.invoke[review.record]": (None, "-", READ_REASONS["external_report"]),
+    "collaboration_api.invoke[review.repair-handoff]": (None, "-", READ_REASONS["read_model"]),
     "review_import.describe_bindings": (None, "-", READ_REASONS["read_model"]),
     "review_import.import_report": ("review.import", "review_import.import_report: locked source/identity/dependency binding and current-control eligibility before commit", None),
     "delivery_eligibility.describe": (None, "-", READ_REASONS["read_model"]),
@@ -278,6 +282,8 @@ CLI_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "collaboration migration apply": ("migration.apply", "collaboration_migration.apply", None),
     "eligibility": (None, "-", READ_REASONS["read_analysis"]),
     "review evaluate": (None, "-", READ_REASONS["external_report"]),
+    "review record": (None, "-", READ_REASONS["external_report"]),
+    "review repair-handoff": (None, "-", READ_REASONS["read_model"]),
     "review import": ("review.import", "review_import.import_report", None),
     "review channels": (None, "-", READ_REASONS["install"]),
     "review outline-status": (None, "-", READ_REASONS["read_model"]),
@@ -679,7 +685,8 @@ def collaboration_surface() -> set[str]:
             found.add(f"{module_name}.{name}")
     found.update(f'collaboration_api.invoke[{action}]' for action in collaboration_api._FIELDS)
     for module_name, names in {'content_production': ('adopt_proposal', 'completion_status'),
-                               'delivery_eligibility': ('describe',)}.items():
+                               'delivery_eligibility': ('describe',),
+                               'review_handoff': ('record_reviews', 'repair_handoff')}.items():
         module = importlib.import_module(f'deck_master.{module_name}')
         found.update(f'{module_name}.{name}' for name in names if inspect.isfunction(getattr(module, name, None)))
     return found
