@@ -1,4 +1,4 @@
-import {isDesignPlan, completionLabel} from './collaboration-desk.js';
+import {currentWork} from './current-work.js';
 import {get, revisionQuery, canonical} from './api.js';
 import {el, button, heading, empty, version, sortHeading, icon, disabledReason, modal, downloadJSON} from './dom.js';
 import {imageView} from './images.js';
@@ -70,24 +70,8 @@ function todoButton(app, action, primary = false) {
 
 function todoPanel(app) {
   const block = app.summary.next_actions;
-  const completion=app.info.completion,request=app.info.collaboration?.request;
-  const designPlan=isDesignPlan(completion);
-  const currentRevision=app.info.control_revision_id||app.info.revision_id;
-  if(((completion?.state==='completed'&&completion.intent==='content_only')||designPlan)&&completion.request_id===request?.request_id&&
-      !request.paused&&(!request.closed||request.closed_reason==='completed')&&app.route.revision===currentRevision&&
-      (!app.latest||app.latest.revision_id===currentRevision)) {
-    // Unrequested production slots remain factual in the matrix. They are not
-    // the next obligation after the actual requested content is complete.
-    const remaining=(block?.actions||[]).filter(action=>!['prepare_stage','refresh_stage'].includes(action.kind));
-    const content=designPlan?'设计方案':{plan_only:'论证与大纲',write_only:'上屏稿',speech_only:'口播稿',content_full:'完整内容'}[completion.content_intent]||'内容';
-    return el('section',{class:'overview-todos todo-clear','aria-label':designPlan?'本次设计方案':'本次内容产物'},
-      el('h2',{},designPlan?completionLabel(completion):`本次${content}已完成`),
-      el('p',{},designPlan?(completion.state==='completed'?'约定的设计方案已返回，可继续阅读与核对。原图、SVG 和 PPT 不属于本次方案请求。':'本次请求只包含设计方案，尚需准备并核对方案依据。原图、SVG 和 PPT 不属于本次请求。'):'约定的内容已返回，可继续阅读与核对。图稿、SVG 和 PPT 制作需要新的明确请求与范围。'),
-      button(designPlan?(completion.state==='completed'?'查看本次设计方案':'准备本次设计方案'):'阅读本次内容',()=>app.go(designPlan?{surface:'style'}:completion.content_intent==='plan_only'?{surface:'content'}:
-        {surface:'page',page_id:(completion.effective_scope?.page_ids||[]).find(id=>app.summary.pages.some(page=>page.page_id===id))||app.summary.pages[0]?.page_id,layer:'content'}),true),
-      remaining.length>0&&el('div',{class:'todo-secondary'},el('h3',{},'仍需核对的记录'),remaining.map(action=>el('article',{class:'todo-row'},
-        el('div',{},el('h3',{},todoTitle(action)),el('p',{},reasonText(action))),todoButton(app,action)))));
-  }
+  const work = app.summary.current_work;
+  if (work || !block) return currentWork(app);
   if (block?.status === 'recorded' && block.actions?.length) {
     const [first, ...rest] = block.actions;
     const node = el('section', {class: 'overview-todos', 'aria-label': '制作待办'},

@@ -752,12 +752,32 @@ _summary_cache = OrderedDict()
 _summary_cache_lock = threading.Lock()
 
 
-def workbench_summary(project_dir, *, revision=None, reading=None):
-    return _workbench_summary(project_dir, revision=revision, encoded=False, reading=reading)
+def workbench_summary(project_dir, *, revision=None, reading=None, protocol=None):
+    if protocol not in (None, 'workbench_summary.v1', 'workbench_summary.v2'):
+        raise ReadModelError('read_protocol_unsupported', 'protocol', 'unsupported summary protocol', http_status=400)
+    if protocol != 'workbench_summary.v2':
+        return _workbench_summary(project_dir, revision=revision, encoded=False, reading=reading)
+    store = Store(project_dir)
+    control = load_snapshot(store, None)
+    artifact = control if revision is None or revision == control['revision_id'] else load_snapshot(store, revision)
+    ctx = _ReadContext(store, artifact, pin_directories=True)
+    try:
+        result = _summary(ctx, revision=revision, reading=reading)
+        from .current_work import project
+        result['current_work'] = project(store, artifact, control, result, fixed=revision is not None)
+        result['format'] = 'workbench_summary.v2'
+        result['next_actions'] = _next_actions_block(ctx, result['current_work']['next']['actions'])
+        if reading is not None:
+            result['reading_etag'] = reading['etag']
+        return result
+    finally:
+        ctx.close()
 
 
-def workbench_summary_json(project_dir, *, revision=None, reading=None):
+def workbench_summary_json(project_dir, *, revision=None, reading=None, protocol=None):
     """Same guarded snapshot, already encoded for the HTTP transport."""
+    if protocol is not None:
+        return json.dumps(workbench_summary(project_dir, revision=revision, reading=reading, protocol=protocol), ensure_ascii=False).encode("utf-8")
     return _workbench_summary(project_dir, revision=revision, encoded=True, reading=reading)
 
 

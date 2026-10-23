@@ -65,3 +65,19 @@ deck_master_cli = [str(python), "-I", "-m", "deck_master"]
 先读 `capabilities.read_protocols`；支持时可用 `read_protocol="work_context.v2", body_mode="full"`，未协商仍是 v1。v2 full 默认返回完整方法和来源，保留全部 Page/notes/限定、原图 refs/尺寸和物理约束；manifest 的 `context_ready=false` 不能执行为上下文已齐。delta 只省略当前受信适配器实际观察到的同一 Host session/context generation 可取回字节；新会话/压缩后或缺观察按冷 full，CLI cache offer 本身不能证明会话。可随时 full 重新取回。
 
 `runtime_returned_bytes`、body/cache 传输状态只证明 Runtime 返回或省略了哪些字节，不证明 Host 实际阅读、应用、独立审查或批准。实际执行身份、方法 SHA、判断、修改、产物及限制另记。恢复读取当前 scope/决定/撤回和 completion，不重复建项目或补授权。
+
+
+## 当前工作与下一责任（协商读取）
+
+先检查 capabilities.summary_protocols。支持 `workbench_summary.v2` 时，
+使用 `view --summary --summary-protocol workbench_summary.v2`；Python 方法 reader
+在 `read_protocol="work_context.v2"` 外显式传 `summary_protocol="workbench_summary.v2"`。
+四职责都消费同一 `current_work`，区分 delivery、review、next、blockers 和 optional。
+旧核心只返回已有事实与通用阅读入口，不自行补全制作责任。读操作不调用 continue、
+不创建 Task、不花模型预算；真正继续仍走原授权、basis、CAS 与 operation。
+首次有可读产物且当前 Host 支持时呈现一次；后续更新入口。URL、系统接受打开、
+前端加载、用户看见分别报告；没有观察保持未知。云端 loopback 不冒充用户可访问链接。
+
+方法共创先给有依据、有条件的建议，再问会改变推荐的关键问题。用户经验保留原话，
+区分正式要求、经验线索和待验判断；经既有提案、Decision 或 input_revision 一致改变
+Narrative、Plan、Page 及图表关系。报告实际前后引用与 diff；文字修改不等于原图已更新。

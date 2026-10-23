@@ -80,7 +80,11 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
 
     def current_manuscript_subjects(candidate):
         """A null-page preproduction finding belongs to the complete manuscript."""
-        expected = {key for key in artifacts if key.startswith('content:page:')}
+        outline = review.get('review_subject') == 'outline'
+        if outline and candidate.get('review_subject') != 'outline':
+            return False
+        expected = ({'content:narrative', 'content:content_plan'} if outline else
+                    {key for key in artifacts if key.startswith('content:page:')})
         if not expected or 'content:content_plan' not in artifacts:
             return False
         expected.add('content:content_plan')
@@ -89,7 +93,7 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
         declared = {_dependency_key(dep) for dep in candidate.get('dependencies') or []}
         current_refs = {key for key, info in subjects.items()
                         if info.get('current') and info.get('role') in
-                        ('narrative', 'content_plan', 'page')}
+                        (('narrative', 'content_plan') if outline else ('narrative', 'content_plan', 'page'))}
         cited = {_ref_key(ref) for ref in candidate.get('subjects') or []}
         return bool(current_refs) and expected <= declared and current_refs <= cited
 
@@ -189,6 +193,7 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
         for candidate in replacements.get(_ref_key(owner_ref), []):
             if (candidate.get('review_id') != review.get('review_id') or
                     candidate.get('kind') != review.get('kind') or
+                    candidate.get('review_subject') != review.get('review_subject') or
                     candidate.get('review_stage', 'final') != review.get('review_stage', 'final')):
                 continue
             followup = next((f for f in candidate.get('findings') or []

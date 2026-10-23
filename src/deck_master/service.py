@@ -35,6 +35,7 @@ from .store import Store, StoreError, ConflictError
 from .production import project_prompt, resolve_design
 from .review import PAGE_VISUAL_KINDS
 from .work_context import response_projection
+from .current_work import after_action
 
 AUTO_VIEW = "auto_view_then_production"
 CONTINUE_PRODUCTION = "continue_production"
@@ -120,6 +121,7 @@ def _new_source_id(existing_ids: set[str]) -> str:
 
 
 @response_projection
+@after_action
 def create(
     project_dir: Path | str,
     *,
@@ -665,6 +667,8 @@ def _task_summary_v1(store: Store, document: dict, task: dict, *, dispatch_docum
                 if collector is None:
                     raise
                 continue
+    if task.get('review_subject') is not None:
+        summary['review_subject'] = task['review_subject']
     if task.get('kind') in ('reconstruct','repair','review'):
         summary['page_entries'] = [e for e in document['pages'] if e['page_id'] in task['scope_pages']]
         summary['reference_images'] = []
@@ -898,6 +902,7 @@ def _eligibility_report(decision: dict) -> dict:
 
 
 @response_projection
+@after_action
 def continue_project(project_dir: Path | str, *, selected_resource_ids=None) -> dict:
     """Run runnable local work and return the stable pending Host tasks.
 
@@ -1356,7 +1361,7 @@ def _review_dispatch_scope(store, document, stage, page_ids, units):
 
 @tasks_mod._project_transaction
 def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, page_hash=None,
-                   review_stage=None, review_units=None, extra_inputs=(), executor_type=None,
+                   review_stage=None, review_units=None, review_subject=None, extra_inputs=(), executor_type=None,
                    phase=None, selected_resource_ids=None):
     document = store.load_document()
     if base_revision is not None and base_revision != document['revision_id']:
@@ -1371,7 +1376,15 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
         raise ServiceError('review_stage', 'only review or repair supports preproduction/page_visual/final')
     if not isinstance(instruction, str) or not instruction.strip():
         raise ServiceError('instruction', 'must not be empty')
-    if not page_ids or len(set(page_ids)) != len(page_ids) or not set(page_ids) <= {e['page_id'] for e in document['pages']}:
+    if review_subject is not None:
+        from .outline_review import require_outline, UNITS
+        if (review_subject != 'outline' or kind != 'review' or review_stage != 'preproduction'
+                or page_ids or not review_units or
+                not {unit['kind'] for unit in review_units} <= set(UNITS)
+                or any(unit['page_ids'] for unit in review_units)):
+            raise ServiceError('review_subject', 'explicit outline review requires empty pages and argument/progression units')
+        require_outline(store, document)
+    if (not page_ids and review_subject != 'outline') or len(set(page_ids)) != len(page_ids) or not set(page_ids) <= {e['page_id'] for e in document['pages']}:
         raise ServiceError('scope_pages', 'must name existing distinct pages')
     if review_stage == 'original_image' and (kind != 'review' or len(page_ids) != 1):
         raise ServiceError('original_review', 'original_image requires one page and a review Task')
@@ -1388,7 +1401,7 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
                     if kind == 'review' else None)
     for ref in document['tasks']:
         task = store.read_object_json(ref)
-        if task.get('stage_request', {}).get('mode') != 'trial' and task['kind'] == kind and task['scope_pages'] == page_ids and task['instruction'] == instruction and task.get('review_stage', 'final') == (review_stage or 'final') and task['status'] in ('awaiting_host','running') and (task.get('collaboration_binding') or {}).get('executor_type', 'host') == (executor_type or 'host') and all(task.get(key) == value for key, value in protocol.items()):
+        if task.get('review_subject') == review_subject and task.get('stage_request', {}).get('mode') != 'trial' and task['kind'] == kind and task['scope_pages'] == page_ids and task['instruction'] == instruction and task.get('review_stage', 'final') == (review_stage or 'final') and task['status'] in ('awaiting_host','running') and (task.get('collaboration_binding') or {}).get('executor_type', 'host') == (executor_type or 'host') and all(task.get(key) == value for key, value in protocol.items()):
             if kind == 'review' and _review_dispatch_scope(
                     store, document, task.get('review_stage'), task['scope_pages'], task.get('review_units')) != review_scope:
                 continue
@@ -1412,6 +1425,9 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
         from .models import require_writer
         require_writer(document, 'original-review.v1')
     task.update(protocol)
+    if review_subject == 'outline':
+        task['review_subject'] = 'outline'
+        task['required_capabilities'] = [*task.get('required_capabilities', []), 'outline_review.v1']
     from . import collaboration_binding
     collaboration_binding.stamp_task(
         store, document, task,
@@ -1424,6 +1440,9 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
     if protocol:
         from .models import require_writer
         require_writer(updated, 'rc3.v1')
+    if review_subject == 'outline':
+        from .models import require_writer
+        require_writer(updated, 'outline-review.v1')
     updated['tasks'].append(store.put_json_object(task))
     store._commit_locked(base_revision=document['revision_id'],document=updated,operation_id=updated['change']['operation_id'],blobs=[])
     return task
@@ -1952,6 +1971,7 @@ def _entry_from_extract(store: Store, path: Path, extract, source_id: str, *, da
     return entry
 
 
+@after_action
 def accept_result(
     project_dir: Path | str,
     *,

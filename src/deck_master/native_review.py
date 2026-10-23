@@ -121,6 +121,7 @@ def _envelope(store, document, task, session, observation, units):
             review_id = prior["review_id"]
         reviews.append({**row, "schema_version": "deck_review.v2", "review_stage": "preproduction",
                 "review_id": review_id,
+                **({"review_subject": "outline"} if task.get("review_subject") == "outline" else {}),
                 "subjects": subjects, "dependencies": deps,
                 "reviewer": {"type": "independent_host", "id": session.execution_ref,
                              "execution_ref": session.execution_ref, "independence_confirmed": True,
@@ -279,7 +280,7 @@ def _failure(store, task, executor, exc):
         service._commit_task_update(store, document, current, updated, "native independent review failed")
 
 
-def run(project, *, task_id=None, force_units=None):
+def run(project, *, task_id=None, force_units=None, subject=None):
     """Run native review, optionally selecting current units for explicit re-review."""
     store = Store(Path(project).expanduser())
     # A derived operation lock prevents double-clicks/reconnects from issuing a
@@ -292,7 +293,7 @@ def run(project, *, task_id=None, force_units=None):
             fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
             return {"status": "running", "next_action": "read current task status; do not launch another native review"}
-        return _run(store, task_id=task_id, force_units=force_units)
+        return _run(store, task_id=task_id, force_units=force_units, subject=subject)
     finally:
         os.close(handle)
 
@@ -325,23 +326,38 @@ def _session_with_startup_history(store, revision_id):
         session.__exit__(None, None, None)
 
 
-def _run(store, *, task_id, force_units=None):
+def _run(store, *, task_id, force_units=None, subject=None):
     document = store.load_document()
-    forced = content_review.validate_force_units(store, document, force_units)
+    if subject not in (None, 'outline'):
+        raise review_evidence.EvidenceRejected('native_review/subject', 'unsupported review subject')
+    from . import outline_review
+    if task_id:
+        selected = tasks._lookup_task(document, task_id, store)
+        if subject is not None and selected.get('review_subject') != subject:
+            raise review_evidence.EvidenceRejected('native_review/subject', 'subject differs from frozen task')
+        subject = selected.get('review_subject')
+    if subject == 'outline':
+        outline_review.require_outline(store, document)
+        forced = force_units or []
+        if not set(forced) <= set(outline_review.UNITS) or len(forced) != len(set(forced)):
+            raise review_evidence.EvidenceRejected('native_review/force_units', 'invalid outline units')
+    else:
+        forced = content_review.validate_force_units(store, document, force_units)
     if task_id and force_units is not None:
         raise review_evidence.EvidenceRejected("native_review/force_units", "select a frozen task_id or force_units, not both")
-    gate = content_review.preproduction_status(store, document)
+    gate = outline_review.status(store, document) if subject == 'outline' else content_review.preproduction_status(store, document)
     if gate["status"] == "pass" and not forced and not task_id:
         return {"status": "already_reviewed", "preproduction": gate}
     candidates = [task for ref in document["tasks"] if
                   (task := store.read_object_json(ref)).get("kind") == "review"
                   and task.get("review_stage") == "preproduction"
+                  and task.get("review_subject") == subject
                   and task["status"] in ("awaiting_host", "running", "queued")]
     if forced:
         expected = set(gate["missing_units"]) | {row["kind"] for row in gate["blocking_findings"]} | set(forced)
         candidates = [task for task in candidates
                       if {row["kind"] for row in task.get("review_units", [])} == expected
-                      and set(task.get("scope_pages", [])) == {page["page_id"] for page in document["pages"]}
+                      and set(task.get("scope_pages", [])) == (set() if subject == "outline" else {page["page_id"] for page in document["pages"]})
                       and tasks.task_inputs_current(store, document, task)]
     if task_id:
         task = tasks._lookup_task(document, task_id, store)
@@ -356,6 +372,7 @@ def _run(store, *, task_id, force_units=None):
                 "next_action": "inspect the existing execution; cancel it explicitly if interrupted before retrying"}
     recoverable = [item for ref in document['tasks']
                    if (item := store.read_object_json(ref)).get('review_stage') == 'preproduction'
+                   and item.get('review_subject') == subject
                    and item['status'] == 'failed'
                    and any(record.get('state') == 'ready' for record in _checkpoints(store, item))]
     if task is None and recoverable:
@@ -367,8 +384,11 @@ def _run(store, *, task_id, force_units=None):
         registry.register(provider)
         with review_evidence.ProviderRuntime(registry).bound():
             if task is None:
-                dispatched = content_review.dispatch_preproduction_review(store.project_root,
+                dispatch = outline_review.dispatch if subject == 'outline' else content_review.dispatch_preproduction_review
+                dispatched = dispatch(store.project_root,
                     adapter_context=registry.channel_context(), force_units=force_units)
+                if not dispatched.get("task"):
+                    return dispatched
                 task = dispatched["task"]
             document = store.load_document()
             if not tasks.task_inputs_current(store, document, task):

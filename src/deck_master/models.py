@@ -359,6 +359,10 @@ def validate_page_semantics(page: dict[str, Any]) -> None:
 
 def validate_task_semantics(task: dict[str, Any]) -> None:
     validate_schema("task", task)
+    if task.get('review_subject') == 'outline':
+        units = task.get('review_units') or []
+        if not units or not {row['kind'] for row in units} <= {'argument', 'progression'} or any(row['page_ids'] for row in units):
+            raise ModelError('task/review_units', 'outline requires nonempty argument/progression units and empty page sets')
     if "method_manifest" in task:
         manifest = task["method_manifest"]
         from .resource_catalog import relative_path
@@ -595,7 +599,7 @@ def validate_compose_result_semantics(result: dict[str, Any]) -> None:
 WRITER_RANK = {None: 0, "generation.v1": 1, "content-plan.v1": 2,
                "changes.v1": 3, "candidates.v1": 4, "run-desk.v1": 5, "style-recipes.v1": 6, "content-ops.v1": 7,
                "content-candidates.v1": 8, "icon-quality.v1": 9, "workbench-quality.v1": 10,
-               "collaboration.v1": 11, "rc3.v1": 12, "rc3-entry.v1": 13, "rc4-content.v1": 14, "method-catalog.v1": 15, "design-policy.v1": 16, "asset-inputs.v1": 17, "original-review.v1": 18, "settled-image-reuse.v1": 19}
+               "collaboration.v1": 11, "rc3.v1": 12, "rc3-entry.v1": 13, "rc4-content.v1": 14, "method-catalog.v1": 15, "design-policy.v1": 16, "asset-inputs.v1": 17, "original-review.v1": 18, "settled-image-reuse.v1": 19, "outline-review.v1": 20}
 
 
 def require_writer(document, minimum):

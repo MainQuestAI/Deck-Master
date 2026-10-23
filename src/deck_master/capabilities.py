@@ -86,6 +86,8 @@ def describe(adapter_context=None):
         "schema_version": "host_capabilities.v1",
         "package_version": __version__,
         "protocol_capabilities": list(RUNTIME_PROTOCOL_CAPABILITIES),
+        "review_subjects": {"outline": {"capability": "outline_review.v1", "units": ["argument", "progression"]}},
+        "summary_protocols": ["workbench_summary.v1", "workbench_summary.v2"],
         "read_protocols": [{"protocol": "work_context.v2", "body_modes": ["full", "delta", "manifest"],
                             "default_body_mode": "full", "cache_offer_requires_observed_context": True}],
         "task_response_protocols": [{"protocol": "task_receipt.v1",

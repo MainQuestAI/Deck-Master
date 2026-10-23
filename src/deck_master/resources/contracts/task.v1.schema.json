@@ -790,6 +790,12 @@
       "enum": [
         "argument-connectivity.v1"
       ]
+    },
+    "review_subject": {
+      "enum": [
+        "outline"
+      ],
+      "description": "Explicit outline-only subject; absent retains the original manuscript contract."
     }
   },
   "required": [
@@ -842,6 +848,40 @@
           }
         },
         "required": [
+          "required_capabilities"
+        ]
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "review_subject"
+        ],
+        "properties": {
+          "review_subject": {
+            "const": "outline"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "review_stage": {
+            "const": "preproduction"
+          },
+          "kind": {
+            "const": "review"
+          },
+          "scope_pages": {
+            "maxItems": 0
+          },
+          "required_capabilities": {
+            "contains": {
+              "const": "outline_review.v1"
+            }
+          }
+        },
+        "required": [
+          "review_stage",
           "required_capabilities"
         ]
       }

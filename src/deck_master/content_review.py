@@ -513,7 +513,8 @@ def dispatch_preproduction_review(project, *, page_ids=None, adapter_context=Non
 def _review_scope_owners(store, document, units, pages):
     """Freeze historical frontier and still-open owners, never merge identities."""
     from .review import finding_closed, open_findings, pending_judgments
-    history = _preproduction_reviews(store, document)
+    history = [row for row in _preproduction_reviews(store, document)
+               if row['review'].get('review_subject') != 'outline']
     records = [{**row['review'], 'ref': row['review_ref']} for row in history]
     replaced = {row['replaces']['sha256'] for row in records if row.get('replaces')}
     artifacts = _current_artifact_digests(store, document)
@@ -646,6 +647,22 @@ def validate_preproduction_result(store, document, task, envelope, *, adapter_co
     state = requirement_state(store, document)
     _require_unit_coverage(store, document, reviews, task)
     page_ids = list(task.get("scope_pages") or [])
+    if task.get('review_subject') == 'outline':
+        from .outline_review import require_outline, UNITS
+        outline_refs = require_outline(store, document)
+        expected_subjects = {(ref["path"], ref["sha256"]) for ref in outline_refs}
+        if any({(ref["path"], ref["sha256"]) for ref in review.get("subjects", [])} != expected_subjects
+               or any(dep["kind"] == "content" and dep["identity"] not in ("narrative", "content_plan")
+                      for dep in review.get("dependencies", [])) for review in reviews):
+            raise _envelope_error("outline/subjects", "outline binds exactly Narrative and Plan, never Page subjects")
+        if page_ids or any(review.get('kind') not in UNITS for review in reviews):
+            raise _envelope_error('outline', 'outline cannot evaluate pages or production units')
+        if any(f.get('page_id') is not None for review in reviews for f in review.get('findings', [])):
+            raise _envelope_error('outline/findings', 'outline findings use null page and explicit node/role locations')
+    elif not page_ids:
+        raise _envelope_error('scope_pages', 'manuscript review requires explicit nonempty pages')
+    if any(review.get('review_subject') != task.get('review_subject') for review in reviews):
+        raise _envelope_error('review_subject', 'result must retain the frozen subject contract')
     capabilities = reviewer_capabilities(adapter_context)
     accepted_reviewers = []
     if state["effective"] == "independent_model_or_human" and adapter_context is not None:
@@ -910,7 +927,8 @@ def preproduction_status(store, document, *, adapter_context=None, page_ids=None
     ids = [entry["page_id"] for entry in document.get("pages") or []]
     if page_ids is None:
         page_ids = ids
-    history = _preproduction_reviews(store, document)
+    history = [row for row in _preproduction_reviews(store, document)
+               if row['review'].get('review_subject') != 'outline']
     artifacts = _current_artifact_digests(store, document)
     applicable = _applicable_reviews(store, document, page_ids, records=history, digests=artifacts)
     satisfied = sorted({item["review"].get("kind") for item in applicable

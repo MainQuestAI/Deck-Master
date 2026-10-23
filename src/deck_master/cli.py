@@ -187,6 +187,9 @@ def build_parser() -> argparse.ArgumentParser:
     recovery = review_sub.add_parser("recover", help="Recover a committed native review completion without another model call")
     recovery.add_argument("--project", required=True)
     recovery.add_argument("--task-id", required=True)
+    for name in ('outline', 'outline-status', 'outline-packet'):
+        outline = review_sub.add_parser(name)
+        outline.add_argument('--project', required=True)
     original = review_sub.add_parser('original', help='Dispatch independent expression review on original pixels before SVG')
     original.add_argument('--project', required=True)
     original.add_argument('--page-id', required=True)
@@ -199,6 +202,7 @@ def build_parser() -> argparse.ArgumentParser:
     native = review_sub.add_parser("native", help="Run an actual read-only native independent content review")
     native.add_argument("--project", required=True)
     native.add_argument("--task-id")
+    native.add_argument("--subject", choices=("outline",))
     native.add_argument("--force-unit", action="append", dest="force_units",
                         help="Explicitly re-review a currently required unit; repeat for multiple units")
 
@@ -231,6 +235,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     create = sub.add_parser("create")
     create.add_argument("--selected-resource-id", dest="selected_resource_ids", action="append")
+    create.add_argument("--summary-protocol", choices=["workbench_summary.v2"])
     _add_read_options(create)
     create.add_argument("--brief", required=False, help="task brief text (or --brief-file)")
     create.add_argument("--brief-file", required=False)
@@ -258,6 +263,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     continue_cmd = sub.add_parser("continue")
     continue_cmd.add_argument("--selected-resource-id", dest="selected_resource_ids", action="append")
+    continue_cmd.add_argument("--summary-protocol", choices=["workbench_summary.v2"])
     _add_read_options(continue_cmd)
     continue_cmd.add_argument("--project", required=True)
     continue_cmd.add_argument("--no-open", action="store_true")
@@ -281,6 +287,7 @@ def build_parser() -> argparse.ArgumentParser:
     view_cmd.add_argument("--ui", choices=("v2", "studio"), help="select the workbench entry with --open")
     view_cmd.add_argument("--json", dest="as_json", action="store_true")
     view_cmd.add_argument("--revision", help="read a fixed committed Document snapshot")
+    view_cmd.add_argument("--summary-protocol", choices=["workbench_summary.v1", "workbench_summary.v2"])
     view_cmd.add_argument("--summary", action="store_true", help="read the lightweight workbench summary")
     view_cmd.add_argument("--page-id", help="read one page from the selected snapshot")
     view_cmd.add_argument("--lineage", action="store_true", help="include stored lineage for --page-id")
@@ -307,6 +314,7 @@ def build_parser() -> argparse.ArgumentParser:
     task_sub = accept.add_subparsers(dest="task_command", required=True)
 
     accept_parser = task_sub.add_parser("accept")
+    accept_parser.add_argument("--summary-protocol", choices=["workbench_summary.v2"])
     accept_parser.add_argument("--project", required=True)
     accept_parser.add_argument("--task-id", required=True)
     accept_parser.add_argument("--response-protocol", choices=["task_receipt.v1"],
@@ -517,6 +525,14 @@ def main(argv: list[str] | None = None) -> int:
                 return _emit(collector.envelope({'methods': collector.methods(entries), 'tasks': []}))
             items = (read_methods if options.read else method_resources)(options.kind, intent=options.intent, phase=options.phase, review_units=options.review_unit, selected_resource_ids=options.selected_resource_ids)
             return _emit({"status": "ready", "methods": items, "method_release": method_release(items)})
+        if options.command == 'review' and options.review_command in ('outline', 'outline-status', 'outline-packet'):
+            from . import outline_review
+            from .store import Store
+            if options.review_command == 'outline':
+                return _emit(outline_review.dispatch(options.project))
+            store = Store(options.project)
+            operation = outline_review.status if options.review_command == 'outline-status' else outline_review.packet
+            return _emit(operation(store, store.load_document()))
         if options.command == 'review' and options.review_command in ('original', 'original-status'):
             from . import original_review
             if options.review_command == 'original':
@@ -534,7 +550,7 @@ def main(argv: list[str] | None = None) -> int:
             return _emit_and_exit(result, 3) if result['status'] in ('running', 'needs_evidence') else _emit(result)
         if options.command == "review" and options.review_command == "native":
             from .native_review import run
-            result = run(options.project, task_id=options.task_id, force_units=options.force_units)
+            result = run(options.project, task_id=options.task_id, force_units=options.force_units, **({"subject": options.subject} if options.subject else {}))
             return _emit_and_exit(result, 3) if result["status"] in ("running", "recovery_available") else _emit(result)
         if options.command in ("collaboration", "eligibility", "review"):
             from .collaboration_api import invoke, error_response
@@ -690,6 +706,7 @@ def main(argv: list[str] | None = None) -> int:
                 project_format=options.project_format,
                 request_input=_declaration_file(options.request_input, request=True),
                 selected_resource_ids=options.selected_resource_ids,
+                summary_protocol=options.summary_protocol,
                 **read_options,
             )
             if _project_has_pages(options.out):
@@ -699,7 +716,7 @@ def main(argv: list[str] | None = None) -> int:
             rejected = _reject_legacy_run(options.project)
             if rejected is not None:
                 return rejected
-            payload = service.continue_project(options.project, selected_resource_ids=options.selected_resource_ids, **_read_options(options))
+            payload = service.continue_project(options.project, selected_resource_ids=options.selected_resource_ids, summary_protocol=options.summary_protocol, **_read_options(options))
             _emit(payload)
             return 3 if payload["status"] in ("awaiting_host", "needs_tool", "needs_input") else 0
         if options.command == "inputs":
@@ -749,7 +766,7 @@ def main(argv: list[str] | None = None) -> int:
             reading = options.revision is not None or options.summary or options.page_id is not None or options.lineage or options.content_plan
             if options.page_id is not None and not options.page_id:
                 raise workbench.ReadModelError("invalid_input", "page_id", "provide a page identifier", http_status=400)
-            if ((reading and options.open) or (options.lineage and not options.page_id)
+            if ((reading and options.open) or (options.summary_protocol and not options.summary) or (options.lineage and not options.page_id)
                     or (options.summary and (options.page_id or options.lineage or options.content_plan))
                     or (options.content_plan and (options.page_id or options.lineage))
                     or (options.ui and not options.open)):
@@ -761,7 +778,7 @@ def main(argv: list[str] | None = None) -> int:
                 reader = workbench.page_lineage if options.lineage else workbench.page_view
                 return _emit(reader(options.project, options.page_id, revision=options.revision))
             if options.summary:
-                return _emit(workbench.workbench_summary(options.project, revision=options.revision))
+                return _emit(workbench.workbench_summary(options.project, revision=options.revision, protocol=options.summary_protocol))
             if options.revision is not None:
                 from .view import project_view
                 return _emit(project_view(options.project, revision=options.revision))
@@ -1228,6 +1245,8 @@ def _attach_workbench_url(project: Path | str, payload: dict) -> dict:
         info = {"review_url": None, "view_status": "unavailable", "detail": str(exc)}
     payload["review_url"] = info.get("review_url")
     payload["view_status"] = info.get("view_status", "unavailable")
+    if info.get("presentation"):
+        payload["presentation"] = info["presentation"]
     if not info.get("review_url"):
         payload.setdefault("findings", []).append(
             {"code": "workbench_unavailable", "message": info.get("detail", "view service unavailable")}
@@ -1253,6 +1272,7 @@ def _dispatch_task(options) -> int:
             produced_against=options.produced_against,
             result_path=options.result,
             response_protocol=options.response_protocol,
+            summary_protocol=options.summary_protocol,
             review_receipt_selector=(json.loads(Path(options.review_receipt_selector).read_text("utf-8"))
                                      if options.review_receipt_selector else None),
         )

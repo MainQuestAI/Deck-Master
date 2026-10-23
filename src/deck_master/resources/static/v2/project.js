@@ -45,7 +45,7 @@ export class Project {
     this.root.dispatchEvent(new CustomEvent('draft-editor-replaced', {detail: replacement}));
     return true;
   }
-  summaryURL(revision=null){const q=new URLSearchParams();if(revision)q.set('revision',revision);if(this.health.ui_capabilities?.includes('result_reading.v1'))q.set('personal','1');return '/api/view/summary'+(q.size?'?'+q:'');}
+  summaryURL(revision=null){const q=new URLSearchParams();if(this.health.ui_capabilities?.includes('workbench_summary.v2'))q.set('protocol','workbench_summary.v2');if(revision)q.set('revision',revision);if(this.health.ui_capabilities?.includes('result_reading.v1'))q.set('personal','1');return '/api/view/summary'+(q.size?'?'+q:'');}
   // Bind lists to the supplied projection. A fallback summary without an etag
   // must not inherit the previous work surface's personal-reading snapshot.
   readingQuery(summary=this.summary){const etag=summary?.reading_etag;return this.health.ui_capabilities?.includes('result_reading.v1')&&etag?'&'+new URLSearchParams({personal:'1',reading_etag:etag}):'';}
