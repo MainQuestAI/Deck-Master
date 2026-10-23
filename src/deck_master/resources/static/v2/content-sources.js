@@ -4,7 +4,7 @@ import {methodLibrary} from './method-library.js';
 import {studioStyle, styleDisclosure} from './style-phases.js';
 import {materialUploads} from './material-uploads.js';
 import {get, readableError, revisionQuery, canonical} from './api.js';
-import {el, button, heading, empty, version, icon, modal} from './dom.js';
+import {el, button, heading, empty, version, icon, modal, actionMenu} from './dom.js';
 import {DraftEditor} from './drafts.js';
 import {contentOperation, contentPanel as panel, inputField, sourceReader} from './content-edit.js';
 
@@ -53,6 +53,21 @@ export function content(app, data) {
   const studio=studioStyle(),orderReview=el('div',{class:'studio-content-review stack'}),planReview=el('div',{class:'studio-content-review stack'});
   const goalSearch=el('input',{type:'search','aria-label':'搜索页面目标',placeholder:'搜索页码、标题或页面目标'});
   const sourceList = el('div', {class:'stack'}), pageList = el('ol', {class:'content-order', 'aria-label':'调整逐页稿顺序'}), goalList = el('div', {class:'stack'});
+  const pageSearch=el('input',{type:'search','aria-label':'搜索逐页稿',placeholder:'搜索页码或标题'});
+  const selectionStatus=el('span',{role:'status'});
+  const selectVisible=el('input',{type:'checkbox','aria-label':'选定当前筛选结果',disabled:app.readonly});
+  let adjustmentTools;
+  function visiblePageIds(){const q=pageSearch.value.trim().toLocaleLowerCase();return order.filter((id,index)=>!q||`${index+1} ${pageMap.get(id).title||id}`.toLocaleLowerCase().includes(q));}
+  function syncSelection(){
+    const visible=visiblePageIds(),outside=[...selected].filter(id=>!visible.includes(id)).length;
+    selectionStatus.textContent=selected.size?`已选 ${selected.size} 页${outside?' · 筛选外 '+outside+' 页':''}`:`${visible.length} / ${order.length} 页`;
+    selectVisible.checked=visible.length>0&&visible.every(id=>selected.has(id));
+    selectVisible.indeterminate=visible.some(id=>selected.has(id))&&!selectVisible.checked;
+    selectVisible.disabled=app.readonly||!visible.length;
+    if(studio&&adjustmentTools)adjustmentTools.hidden=selected.size===0;
+  }
+  selectVisible.addEventListener('change',()=>{for(const id of visiblePageIds())selectVisible.checked?selected.add(id):selected.delete(id);drawPages();changed();});
+  pageSearch.addEventListener('input',()=>drawPages());
   let operation, completedAction = null;
   const materialEditor = el('div',{class:'stack'});
   const retainedInputs = el('div',{class:'retained-inputs row wrap',role:'status',hidden:true});
@@ -138,19 +153,24 @@ export function content(app, data) {
     pageList.querySelector('[data-page-id="'+CSS.escape(id)+'"] .order-handle')?.focus();
   }
   function drawPages() {
-    pageList.replaceChildren(...order.map((id,index)=>{
+    const visible=new Set(visiblePageIds());
+    pageList.replaceChildren(...order.flatMap((id,index)=>{
+      if(!visible.has(id))return [];
       const page=pageMap.get(id),title=page.title || id;
       const check=el('input',{type:'checkbox',checked:selected.has(id),disabled:app.readonly,'aria-label':'选定内容页 '+title});
-      check.addEventListener('change',()=>{check.checked?selected.add(id):selected.delete(id);changed();});
-      const handle=button((index+1)+' · '+title,()=>app.go({surface:'page',page_id:id,layer:'content'}),false,{class:'order-handle',draggable:!app.readonly,'aria-label':'打开内容页 '+title});
+      check.addEventListener('change',()=>{check.checked?selected.add(id):selected.delete(id);syncSelection();changed();});
+      const handle=el('a',{href:routeHash(app.info,{surface:'page',page_id:id,layer:'content',revision:readingRevision}),class:'order-handle object-link',draggable:!app.readonly,'aria-label':'打开内容页 '+title},(index+1)+' · '+title);
+      handle.addEventListener('click',event=>{if(event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;event.preventDefault();app.go({surface:'page',page_id:id,layer:'content'});});
       handle.addEventListener('keydown',event=>{if(event.altKey && ['ArrowUp','ArrowDown'].includes(event.key)){event.preventDefault();move(id,index+(event.key==='ArrowUp'?-1:1));}});
       handle.addEventListener('dragstart',event=>event.dataTransfer.setData('text/plain',id));
       const row=el('li',{'data-page-id':id,class:'content-order-row'},check,handle,
-        !app.readonly && button('向前移动 '+title,()=>move(id,index-1),false,{disabled:index===0}),
-        !app.readonly && button('向后移动 '+title,()=>move(id,index+1),false,{disabled:index===order.length-1}));
+        !app.readonly && actionMenu('第 '+(index+1)+' 页操作',[
+          button('向前移动 '+title,()=>move(id,index-1),false,{disabled:index===0}),
+          button('向后移动 '+title,()=>move(id,index+1),false,{disabled:index===order.length-1})]));
       row.addEventListener('dragover',event=>event.preventDefault());row.addEventListener('drop',event=>{event.preventDefault();const source=event.dataTransfer.getData('text/plain');if(order.includes(source))move(source,index);});
       return row;
     }));
+    syncSelection();
   }
   function outlineBlocks() {
     // 设计大纲块：章节编号、页范围与来源关联导航；编辑仍在下方内容计划面板。
@@ -386,12 +406,14 @@ export function content(app, data) {
     if(save)changed();
   }
   showAdjustment(adjustmentAction,false);
-  const adjustmentTools=!app.readonly&&el('div',{class:'studio-content-adjust stack'},
+  adjustmentTools=!app.readonly&&el('div',{class:'studio-content-adjust stack'},
     studio?el('div',{role:'group','aria-label':'选页调整方式',class:'row wrap'},adjustmentButtons):null,
     studio?adjustmentHelp:null,studio?mergeTitle.node:null,studio?splitPoint.node:null,instruction.node,studio?adjustmentError:null,
     studio?adjustmentPreview:el('div',{class:'row wrap'},button('预览移除选页',()=>preview('remove')),button('预览选页改写',()=>preview('rewrite')),button('预览合并选页',()=>preview('merge')),button('预览拆分选页',()=>preview('split'))),
     el('p',{class:'muted'},'改写保留页身份；合并/拆分由制作工具返回新页，旧标注仍保留在原基准。'));
+  syncSelection();
   const pageTools=editable(el('div',{class:'stack'},studio?null:orderHelp,
+    studio&&el('div',{class:'content-list-toolbar row wrap'},pageSearch,el('label',{class:'inline-control'},selectVisible,'选择筛选结果'),selectionStatus),
     !studio&&orderAction&&el('div',{class:'studio-content-commandbar row wrap'},orderAction),
     el('div',{class:'content-order-scroll'},pageList),studio?orderHelp:null,adjustmentTools));
   const planEvidence=styleDisclosure('查看完整页面目标与原始依据',el('ol',{},goals.map(g=>el('li',{},g.purpose))),el('pre',{class:'evidence-json'},JSON.stringify({chapters:plan?.chapters,unresolved_facts:plan?.unresolved_facts},null,2)));
@@ -399,7 +421,7 @@ export function content(app, data) {
   const planTools=editable(el('div',{class:'stack'},el('p',{class:'muted'},modernPlan?'这里编辑章节、页面目标与来源关联；已记录的篇幅、时长、口播安排和未决事项保持。正文请进入对应页面修改。':'这里编辑章节、目标与待确认事实；正文请进入对应页面修改。'),summary.node,retainedSummary,studio&&goalSearch,goalList,!studio&&planAction));
   const planPanel=ref?panel('内容计划',planTools,planReview,planEvidence):panel('内容计划',el('p',{},'尚未记录完整内容计划。'));
   if(studio&&ref&&planAction)planPanel.querySelector('.panel-head').append(planAction);
-  const orderPanel=panel('逐页编辑与顺序',pageTools,orderReview);
+  const orderPanel=panel('逐页稿',pageTools,orderReview);
   if(studio&&orderAction)orderPanel.querySelector('.panel-head').append(orderAction);
   const alignmentDetail=el('p',{},aligned?'已有内容结果采用了这一版输入；这不是独立事实核验。':'已保存的稿件仍可阅读。制作工具尚需按最新材料、受众和用途判断影响。');
   const judgment=studio?el('div',{class:'stack studio-input-judgment'},alignmentDetail,integrationSummary,hostImpact):null;
@@ -407,27 +429,29 @@ export function content(app, data) {
   const alignmentView=studio?button('查看输入判断',()=>{judgmentDialog=modal('输入判断与依据',judgment,[],{fallback:document.querySelector('#view-title')});}):null;
   app.disposables.push(()=>{if(judgmentDialog?.open&&judgmentDialog.contains(judgment))judgmentDialog.close();});
   const alignment=el('div',{class:(aligned?'notice':'history-banner')+' content-alignment'},el('strong',{},aligned?'当前输入已由内容结果对齐':'输入待协调'),studio?alignmentView:alignmentDetail);
-  let area='overview';
+  let area='pages';
   const workAreas=studio?[
-    el('section',{class:'studio-content-area stack',id:'content-area-overview','aria-label':'方案概览'},overview),
-    el('section',{class:'studio-content-area',id:'content-area-pages','aria-label':'逐页编辑与顺序',hidden:true},orderPanel),
-    el('section',{class:'studio-content-area',id:'content-area-plan','aria-label':'内容计划',hidden:true},planPanel),
+    el('section',{class:'studio-content-area stack',id:'content-area-overview','aria-label':'材料与来源',hidden:true},materialAside),
+    el('section',{class:'studio-content-area',id:'content-area-pages','aria-label':'逐页稿'},orderPanel),
+    el('section',{class:'studio-content-area',id:'content-area-plan','aria-label':'章节与计划',hidden:true},el('div',{class:'chapter-outline stack'},...outlineBlocks()),planPanel),
     el('section',{class:'studio-content-area',id:'content-area-notes','aria-label':'工作笔记',hidden:true},panel('工作笔记',draftNode))
   ]:[];
   const extraAreas=supportsInsights(app)?[['arguments','论证主线',argumentDesk(app)],...(app.health.ui_capabilities?.includes('method_library_preview.v1')?[['methods','方法与案例',()=>methodLibrary(app)]]:[])]:[];
   for(const [key,title,body] of extraAreas){const section=el('section',{class:'studio-content-area stack',id:'content-area-'+key,'aria-label':title,hidden:true},typeof body==='function'?null:body);if(typeof body==='function')section.loadContent=()=>{section.append(body());section.loadContent=null;};workAreas.push(section);}
-  const areaNames=[['overview','方案概览'],['pages','逐页编辑与顺序'],['plan','内容计划'],['notes','工作笔记'],...extraAreas.map(([key,title])=>[key,title])];
+  const areaNames=[['overview','材料与来源'],['pages','逐页稿'],['plan','章节与计划'],['notes','工作笔记'],...extraAreas.map(([key,title])=>[key,title])];
   const areaButtons=studio?areaNames.map(([key,title])=>button(title,()=>showContentArea(key),false,{'aria-pressed':String(key===area),'aria-controls':'content-area-'+key})):[];
-  const areaNav=studio?el('nav',{class:'studio-content-areas','aria-label':'内容工作区'},areaButtons):null;
+  const auxiliaryState=el('span',{class:'muted',hidden:true});
+  const areaNav=studio?el('nav',{class:'studio-content-areas','aria-label':'内容工作区'},areaButtons[1],areaButtons[2],areaButtons[0],actionMenu('更多内容工具',areaButtons.slice(3)),auxiliaryState):null;
   function showContentArea(next,focus=true){
     if(!studio||!areaNames.some(([key])=>key===next))return;area=next;
     if(focus){app.route.content_area=next;history.replaceState(null,'',routeHash(app.info,app.route));}
     workAreas.find(panel=>panel.id==='content-area-'+next)?.loadContent?.();
     workAreas.forEach((panel,index)=>{panel.hidden=areaNames[index][0]!==next;areaButtons[index].setAttribute('aria-pressed',String(!panel.hidden));});
+    auxiliaryState.hidden=['overview','pages','plan'].includes(next);auxiliaryState.textContent='当前工具：'+areaNames.find(([key])=>key===next)[1];
     if(focus){const title=workAreas.find(p=>!p.hidden)?.querySelector('h2');if(title){title.tabIndex=-1;title.focus();}}
   }
   if(studio)operationHome.hidden=true;
-  const node=el('div',{class:'content-sources stack'},heading('内容与页序','先看材料与论证，再改逐页稿。直接改内容和交接制作分别保存。',!app.readonly&&el('div',{class:'row wrap'},button('添加材料',openAdjustForm,false,{disabled:!inputs}),button('修改任务要求',event=>openMaterialEditor('task',null,event.currentTarget),false,{disabled:!inputs}))),
+  const node=el('div',{class:'content-sources stack'},heading('内容与页序','阅读逐页稿、安排章节与页序，按需核对材料。选页后再调整内容。',!app.readonly&&el('div',{class:'row wrap'},button('添加材料',openAdjustForm,false,{disabled:!inputs}),button('修改任务要求',event=>openMaterialEditor('task',null,event.currentTarget),false,{disabled:!inputs}))),
     alignment,studio?null:hostImpact,adjustDetails,areaNav,
     studio?workAreas:el('div',{class:'stack'},overview,el('details',{class:'panel content-order-panel'},el('summary',{class:'panel-head'},'逐页稿与顺序 · '+pages.length+' 页'),el('div',{class:'panel-body'},pageTools)),
       ref?panel('内容计划与依据',planEvidence,el('details',{},el('summary',{},'编辑内容计划'),planTools)):panel('内容计划',el('p',{},'尚未记录完整内容计划。'))),

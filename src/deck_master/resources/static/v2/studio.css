@@ -34,7 +34,7 @@ h1 { font-size:34px; line-height:1.25; letter-spacing:-.035em; font-weight:650; 
 
 input:not([type=checkbox]),select,textarea { border-color:var(--studio-line); background:#fff; }
 textarea::placeholder,input::placeholder { color:#747b84; }
-input:focus,textarea:focus,select:focus { border-color:var(--studio-ink); }
+input:focus,textarea:focus,select:focus {  }
 :focus-visible { outline:2px solid #334e68; outline-offset:3px; box-shadow:none; }
 .segmented { padding:4px; gap:2px; border:1px solid var(--studio-line); background:#e9ecef; }
 
@@ -42,7 +42,7 @@ input:focus,textarea:focus,select:focus { border-color:var(--studio-ink); }
 .panel,.state-panel { border-color:var(--studio-line); }
 .panel-head { background:#fcfcfd; border-bottom-color:var(--border-soft); padding:16px 20px; }
 .panel-head h2 { font-size:15px; letter-spacing:-.015em; }
-.status,.state-badge { font-size:12px; padding:4px 9px; line-height:1.5; }
+.status,.state-badge {    }
 .notice,.history-banner,.sample-banner { border-bottom-color:var(--studio-line); }
 .sample-banner { padding:8px 32px; font-size:12px; background:#e9ecef; color:#58616c; }
 .history-banner { background:#fff5df; color:#644a18; }
@@ -160,10 +160,10 @@ input:focus,textarea:focus,select:focus { border-color:var(--studio-ink); }
 }
 
 /* Round 3 — readable narrow-screen controls and explicit interaction states. */
-.status.ok { background:#e4efe8; color:#2f6048; }
-.status.warn { background:#f5ebd6; color:#73531e; }
-.status.info { background:#e8edf4; color:#41566e; }
-.status.error { background:#fbe9e8; color:#923b39; }
+.status.ok {   }
+.status.warn {   }
+.status.info {   }
+.status.error {   }
 .gallery-controls>.row:first-child>.segmented { margin-right:auto; }
 .gallery-controls .gallery-search { flex:1; }
 .gallery-controls .gallery-search input { width:100%; max-width:420px; }
@@ -171,7 +171,7 @@ input:focus,textarea:focus,select:focus { border-color:var(--studio-ink); }
 .draft-conflict-pane { display:flex; flex-direction:column; gap:12px; padding:16px; background:var(--studio-ground); border:1px solid var(--studio-line); border-radius:8px; }
 .draft-conflict-pane h3 { padding-bottom:8px; border-bottom:1px solid var(--studio-line); }
 .draft-conflict-pane .field { margin:0; }
-.draft-conflict-pane textarea { background:#fff; font-size:14px; line-height:1.7; }
+.draft-conflict-pane textarea {    }
 .draft-conflict-pane details { font-size:12px; }
 @media(max-width:767px) {
   .page-workbench .toolbar { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }

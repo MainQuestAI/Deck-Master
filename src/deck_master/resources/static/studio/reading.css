@@ -73,7 +73,7 @@
  .studio-workspace .page-workbench .page-head h1 {grid-column:1/-1;margin:0}
  .studio-workspace .page-workbench .page-head p {grid-column:1;grid-row:2;font-size:12px;margin:0}
  .studio-workspace .page-workbench .page-pager {grid-column:2;grid-row:2;justify-self:end;gap:4px;align-self:center}
- .studio-workspace .page-workbench .page-pager select {width:112px;padding:6px;font-size:12px}
+ .studio-workspace .page-workbench .page-pager select {width:112px;}
  .studio-workspace .page-workbench .page-pager button {width:44px;min-width:44px;height:44px;}
  .studio-workspace .page-workbench .page-pager button::after {font-size:16px}
  .studio-workspace .page-workbench .page-pager button:first-of-type::after {content:"←"}

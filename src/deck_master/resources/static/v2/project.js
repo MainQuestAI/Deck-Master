@@ -1,6 +1,7 @@
+import {personalClearPanel} from './personal-maintenance.js';
 import {SummaryPoll} from './summary-poll.js';
 import {get, post, revisionQuery, readableError} from './api.js';
-import {el, button, heading, empty, icon, version, announce, modal} from './dom.js';
+import {el, button, heading, empty, icon, version, announce, modal, actionMenu} from './dom.js';
 import {localURL} from './launcher-ui.js';
 import {readRoute, routeHash, position, surfaces, layers} from './routes.js';
 import {DraftEditor} from './drafts.js';
@@ -10,6 +11,8 @@ import {BusinessOperations} from './business-operations.js';
 import {actionTargets} from './action-targets.js';
 import {changesetDesk} from './changeset-desk.js';
 import {collaborationBanner} from './collaboration-desk.js';
+
+const pendingHandoffs=summary=>(summary.next_actions?.actions||[]).filter(action=>action.kind==='handoff'&&action.enabled).reduce((count,action)=>count+(action.object_count||0),0);
 
 export class Project {
   constructor(root, health) { this.root = root; this.health = health; this.generation = 0; this.positionQueue = Promise.resolve(); this.disposables = []; }
@@ -82,7 +85,7 @@ export class Project {
         if (value.project_id !== this.info.project_id) throw new Error('服务项目已变化，请重新打开项目。');
         this.latest = value;
         if (this.health.ui_capabilities?.includes('collaboration.v1')) await this.refreshControl();
-        const count = value.task_counts.awaiting_host || 0;
+        const count = pendingHandoffs(value);
         if (this.pendingButton) {
           this.pendingButton.textContent = `待交接 ${count}`;
           this.pendingButton.setAttribute('aria-label', `查看待交接任务，${count} 项`);
@@ -363,12 +366,12 @@ export class Project {
         if (next) { event.preventDefault(); this.go({page_id: next.page_id}); }
       }
     });
-    const pending = this.summary.task_counts.awaiting_host || 0;
+    const pending = pendingHandoffs(this.latest || this.summary);
     // 顶栏入口承诺的是"查看待交接任务"：显式落到「正在进行」，不被记住的子区劫持。
     this.pendingButton = button(`待交接 ${pending}`, () => this.go({surface: 'runs', task_id: null, runs_area: 'tasks'}), false, {'aria-label': `查看待交接任务，${pending} 项`});
     this.navigationStatus = el('span', {class: 'status navigation-status', hidden: true}, '正在读取工作面');
     const top = el('header', {class: 'topbar'}, el('div', {class: 'crumb'}, el('strong', {}, this.info.title), el('span', {class: 'version', title: '版本身份可在任务与交付的版本记录中查看'}, this.historical ? '历史稿' : '当前稿'), this.navigationStatus),
-      this.controlSlot, this.pendingButton);
+      this.controlSlot, this.pendingButton, document.documentElement.dataset.workbenchUi === 'studio' && actionMenu('项目菜单',[personalClearPanel(this)]));
     this.root.className = 'shell';
     this.root.replaceChildren(aside, el('div', {class: 'content'}, top, banners, this.main));
   }

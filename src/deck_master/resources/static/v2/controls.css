@@ -92,3 +92,21 @@ button:is(.slide-cover,.image-button,.reference-zoom):hover:not(:disabled) {bord
 .edit-drawer .edit-field {display:flex;flex-direction:column;gap:8px}
 .edit-drawer label.stack {gap:6px}
 .edit-drawer .edit-field .action-group {margin:0}
+
+/* Shared field and status recipes. Checkbox/radio targets belong to their labels. */
+input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]),select,textarea {
+  font:var(--dm-type-size-body)/var(--dm-type-line-body) var(--font-body);
+  min-height:44px;padding:10px 12px;border:1px solid var(--dm-color-border-control);
+  border-radius:var(--dm-shape-radius-control);background:var(--dm-color-canvas);color:var(--dm-color-text);
+}
+:is(input,select,textarea):disabled {background:var(--dm-color-surface);color:var(--dm-color-text-muted);cursor:not-allowed}
+:is(input,textarea)[readonly] {background:var(--dm-color-surface);cursor:text}
+:is(input,select,textarea)[aria-invalid=true] {border-color:var(--dm-color-danger)}
+.field>label {display:block;margin-bottom:8px;font-size:var(--dm-type-size-body);line-height:var(--dm-type-line-body)}
+.field-error,.field-help {font-size:var(--dm-type-size-caption);line-height:var(--dm-type-line-caption);margin:8px 0 0}
+.field-error {color:var(--dm-color-danger)}
+.status,.state-badge {border:0;border-radius:0;padding:0;background:transparent;font:var(--dm-type-size-caption)/var(--dm-type-line-caption) var(--font-body);color:var(--dm-color-text-secondary)}
+.status:before {content:"";display:inline-block;flex:none;width:5px;height:5px;border-radius:50%;background:currentColor}
+:is(.studio-content-areas,.studio-style-stages)>button {background:transparent;border-color:transparent;color:var(--dm-color-text-secondary)}
+:is(.studio-content-areas,.studio-style-stages)>button[aria-pressed=true] {background:var(--dm-color-canvas);border-color:var(--dm-color-border-control);color:var(--dm-color-text)}
+.studio-gallery-production[hidden] {display:none}

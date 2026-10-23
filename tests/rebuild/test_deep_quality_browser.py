@@ -500,6 +500,7 @@ def test_annotation_plan_conflict_keeps_draft_and_opens_recovery(workbench):
 
 def test_clear_plan_network_failure_allows_retry(workbench):
     page,ctx,store,url,goto,_=workbench;goto('runs')
+    page.get_by_role('button',name='项目菜单',exact=True).click()
     page.get_by_role('button',name='个人状态与恢复',exact=True).click()
     page.route('**/api/ui-state/plan-clear',lambda r:r.abort('failed'))
     btn=page.get_by_role('button',name='生成清理计划',exact=True);btn.click()

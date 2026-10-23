@@ -25,7 +25,7 @@
 .studio-workspace .row,.studio-workspace .toolbar,.studio-workspace .action-group {gap:var(--dm-layout-action-gap)}
 .studio-workspace input:not([type=checkbox]):not([type=radio]),.studio-workspace select {min-height:44px;border-radius:8px;padding:10px 14px}
 .studio-workspace select {padding-right:36px}
-.studio-workspace textarea {border-radius:8px;padding:12px 14px;line-height:1.65}
+.studio-workspace textarea {}
 .studio-workspace .panel {border:1px solid var(--border);border-radius:12px;box-shadow:0 2px 4px #17191c03;overflow:visible}
 .studio-workspace .panel-head {padding:18px 20px;min-height:66px;border-bottom:1px solid var(--border-soft)}
 .studio-workspace .panel-head h2,.studio-workspace .panel-head h3 {font-size:16px;line-height:1.5;font-weight:650}
@@ -216,12 +216,12 @@
 .studio-workspace .studio-goal-edit {border-top:1px solid var(--border);padding-top:14px}
 .studio-workspace .studio-chapter-fields {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .studio-workspace .content-sources input[type=search] {max-width:480px}
-.studio-workspace .content-sources .content-order-row {display:grid;grid-template-columns:24px minmax(0,1fr) auto auto;gap:10px;align-items:center}
+.studio-workspace .content-sources .content-order-row {display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:12px;align-items:center}
 .studio-workspace .content-sources .content-order-row .order-handle {text-align:left;white-space:normal}
 @media(max-width:767px){
  .studio-workspace .studio-content-areas {grid-template-columns:1fr}
  .studio-workspace .studio-goal-grid,.studio-workspace .studio-chapter-fields {grid-template-columns:1fr}
- .studio-workspace .content-sources .content-order-row {grid-template-columns:24px minmax(0,1fr)}
+ .studio-workspace .content-sources .content-order-row {grid-template-columns:24px minmax(0,1fr) auto}
  .studio-workspace .content-sources .content-order-row>button:not(.order-handle) {grid-column:2;justify-self:start;max-width:100%;white-space:normal;text-align:left}
 }
 .studio-workspace .studio-content-areas {grid-template-columns:repeat(3,minmax(0,1fr)) auto}
@@ -232,7 +232,7 @@
  .studio-workspace .style-calibration>.page-head {padding-bottom:12px;margin-bottom:0}
  .studio-workspace .style-calibration>.page-head p {margin-top:8px;font-size:12px;line-height:1.5}
  .studio-workspace .style-calibration .style-source-selector {display:grid;grid-template-columns:60px minmax(0,1fr);align-items:center;gap:8px;width:100%;max-width:none;font-size:12px}
- .studio-workspace .style-calibration .style-source-selector select {margin:0;min-height:44px;font-size:12px}
+ .studio-workspace .style-calibration .style-source-selector select {margin:0;min-height:44px;}
  .studio-workspace .studio-style-stages {padding:6px;gap:6px}
 
 }
@@ -267,7 +267,7 @@
 
  .studio-workspace .style-primary-phase .style-working-pair {grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
  .studio-workspace .style-primary-phase .style-working-pair label {font-size:12px}
- .studio-workspace .style-primary-phase .style-working-pair select {font-size:12px;padding-left:8px;padding-right:24px;min-width:0}
+ .studio-workspace .style-primary-phase .style-working-pair select {padding-left:8px;padding-right:24px;min-width:0;}
  .studio-workspace .style-primary-phase .style-reference .pooled-image,.studio-workspace .style-primary-phase .style-primary-target .pooled-image {height:84px;max-height:84px}
  .studio-workspace .style-primary-phase .style-reference canvas,.studio-workspace .style-primary-phase .style-primary-target canvas {max-height:84px}
 }
@@ -410,7 +410,7 @@
  .studio-workspace .gallery-legend span:last-child {width:auto}
  .studio-workspace .studio-gallery-mobile-search {display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px}
  .studio-workspace .studio-gallery-mobile-search .gallery-search,.studio-workspace .studio-gallery-mobile-search input {min-width:0;width:100%}
- .studio-workspace .studio-gallery-mobile-search input {font-size:12px;padding:10px}
+ .studio-workspace .studio-gallery-mobile-search input {}
  .studio-workspace .studio-gallery-mobile-search>button {max-width:160px;white-space:normal;}
  .studio-workspace .studio-gallery-settings .segmented {display:flex;flex-wrap:wrap}
  .studio-workspace .studio-gallery-settings .segmented button {flex:1;min-width:85px;}
@@ -427,7 +427,22 @@
  .studio-workspace .studio-style-columns {grid-template-columns:minmax(0,1fr);gap:24px}
  .studio-workspace .studio-style-targets .style-targets {grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
 }
-/* Six content subareas remain within the existing content work surface. */
-.studio-workspace .studio-content-areas {grid-template-columns:repeat(6,minmax(0,1fr));}
+/* Three primary content areas; low-frequency tools share one contextual menu. */
+.studio-workspace .studio-content-areas {display:flex;flex-wrap:wrap;gap:12px;align-items:center;}
 .studio-workspace .studio-content-areas button:last-child {margin-left:0;}
 @media(max-width:767px){.studio-workspace .studio-content-areas {grid-template-columns:repeat(3,minmax(0,1fr));}}
+
+.studio-workspace .content-list-toolbar {gap:12px;margin-bottom:8px}
+.studio-workspace .content-list-toolbar input[type=search] {flex:1 1 220px;min-width:0}
+.studio-workspace .content-order-row .order-handle {display:block;padding:12px 0;font-size:14px;line-height:22px;overflow-wrap:anywhere}
+.studio-workspace .chapter-outline {margin-bottom:32px}
+.studio-workspace .content-sources .content-order {margin:0;gap:0;background:var(--surface, #fff)}
+.studio-workspace .content-sources .content-order-row {min-height:64px;padding:8px 12px;border:0;border-bottom:1px solid var(--border-soft);border-radius:0}
+.studio-workspace .content-sources .content-order-scroll {padding:0}
+.studio-workspace .content-sources .content-order-row .order-handle {min-width:0;cursor:pointer}
+/* Narrow screens keep the task title and contextual guidance beside the list. */
+@media(max-width:560px){.studio-workspace .content-sources>.page-head p {display:none}}
+.studio-workspace .recipe-rules {display:grid;grid-template-columns:100px minmax(0,1fr);margin:0;gap:0 24px}
+.studio-workspace .recipe-rules dt,.studio-workspace .recipe-rules dd {margin:0;padding:16px 0;border-bottom:1px solid var(--border-soft);overflow-wrap:anywhere;line-height:1.6}
+.studio-workspace .recipe-rules dt {font-weight:600}
+@media(max-width:560px){.studio-workspace .recipe-rules {grid-template-columns:72px minmax(0,1fr);column-gap:12px}}

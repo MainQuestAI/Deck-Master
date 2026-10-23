@@ -98,6 +98,11 @@ def test_review_drafts_keep_distinct_finding_identity_and_do_not_write_business(
             records=page.request.get(url+'api/drafts').json()['records']
             handoffs=[r['draft']['content']['review_handoff'] for r in records if 'review_handoff' in r['draft']['content']]
             assert {h['finding_id'] for h in handoffs}=={'f1','f2'}
+            for handoff in handoffs:
+                acceptance=handoff['acceptance_set']
+                assert acceptance['review_ref']==ref and acceptance['recheck_status']=='not_run'
+                assert {finding['finding_id'] for finding in acceptance['findings']}=={'f1','f2'}
+                assert acceptance['selected_source_indices']==[handoff['source_index']]
             assert store.load_document()==before
             browser.close()
     finally:server.stop()

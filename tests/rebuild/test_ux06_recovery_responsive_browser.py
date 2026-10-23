@@ -201,6 +201,7 @@ def test_modal_close_returns_focus_to_the_surface_heading_when_trigger_is_remove
         page.get_by_role('button', name='刷新项目列表', exact=True).click()
         card = page.locator('.project-card').first
         expect(card).to_be_visible()
+        card.get_by_role('button', name=re.compile('^项目操作 · ')).click()
         card.get_by_role('button', name='从列表移除', exact=True).click()
         dialog = page.locator('dialog[open]')
         dialog.get_by_role('button', name='移除条目', exact=True).click()

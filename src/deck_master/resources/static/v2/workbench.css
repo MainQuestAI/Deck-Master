@@ -2,7 +2,7 @@
    Colors, focus rings, control sizes and fonts resolve to the received product
    overlay tokens in tokens.css/style.css; this layer only adapts layout density. */
 [hidden]{display:none!important}
-input,select,textarea {min-height:44px;border-radius:var(--radius-sm);}
+input,select,textarea {min-height:44px;}
 
 
 button:disabled {cursor:not-allowed;}
@@ -10,7 +10,7 @@ button:disabled {cursor:not-allowed;}
 
 input,select,textarea{max-width:100%}
 input:not([type=checkbox]),select{width:100%}
-textarea{font-size:14px;line-height:1.7}
+textarea{}
 .sr-only{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .skip:focus{left:16px;background:var(--bg);padding:12px;border:2px solid var(--accent-hover)}
 :focus-visible{outline:2px solid var(--accent-hover);outline-offset:3px;box-shadow:var(--focus-ring)}
@@ -73,7 +73,7 @@ textarea{font-size:14px;line-height:1.7}
 .page-copy p{white-space:pre-wrap}.page-copy h2{font-size:22px}.read-text{font:13px/1.7 var(--font-mono);white-space:pre-wrap;overflow-wrap:anywhere;padding:18px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-warm)}
 .table-scroll{overflow:auto}.body-table{border-collapse:collapse;width:100%;font-size:14px}.body-table td,.body-table th{border:1px solid var(--border);padding:10px;text-align:left}.body-table th{background:var(--surface)}
 .personal-draft{font-size:13px}.personal-draft .panel-head{flex-wrap:wrap}.personal-draft .panel-body{padding:16px;gap:12px}.personal-draft h2{font-size:16px}.draft-state{font-weight:600;font-size:13px}.draft-basis{font-size:12px;overflow-wrap:anywhere}
-.personal-draft textarea{min-height:165px;background:var(--bg)}.personal-draft input[type=file]{width:100%;font-size:12px;padding:8px 0;border:0;border-radius:0;background:transparent}
+.personal-draft textarea{min-height:165px;}.personal-draft input[type=file]{width:100%;font-size:12px;padding:8px 0;border:0;border-radius:0;background:transparent}
 .draft-restore{display:flex;flex-direction:column;gap:8px}.recovery-import{font-size:12px}.source-list{margin:0;padding-left:20px}.source-list li{padding:7px 0}.goal-list{margin:0;padding-left:24px}.goal-list li{margin-bottom:16px}.goal-list p{margin-top:6px}
 .task-row{padding:20px;display:flex;align-items:center;justify-content:space-between;gap:16px}.task-row h2{font-size:17px}.path{font:12px/1.6 var(--font-mono);overflow-wrap:anywhere}
 .launcher{max-width:1120px;margin:auto;padding:32px 40px}.launcher-brand{display:flex;gap:20px;align-items:center;border-bottom:1px solid var(--border);padding:0 0 28px;margin-bottom:40px}.launcher-brand strong{font-size:20px}
@@ -102,7 +102,7 @@ textarea{font-size:14px;line-height:1.7}
 .pooled-image{width:100%;min-width:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px}.pooled-image canvas{display:block;width:100%;height:auto;object-fit:contain}.image-loading{font-size:12px;color:var(--muted);padding:16px}.pooled-image[data-image-state=failed]{padding:12px;font-size:12px;min-height:140px}
 .compare-image{height:var(--compare-height,220px);display:block;overflow:auto;background:var(--surface)}.compare-image .pooled-image{display:block}.compare-image .pooled-image canvas{height:100%;object-fit:contain}
 .gallery.is-comparison{align-items:start}.gallery.is-comparison .slide-cover{aspect-ratio:auto;height:var(--compare-height,220px);overflow:auto}
-.gallery.is-comparison .compare-zoom{font-size:12px;margin-top:8px}.gallery.is-comparison select{width:110px;padding:7px}
+.gallery.is-comparison .compare-zoom{font-size:12px;margin-top:8px}.gallery.is-comparison select{width:110px;}
 .page-image-viewport>.pooled-image{min-height:240px}.page-image-viewport canvas.page-image{width:100%;max-width:none;height:auto}.image-retry-slot:not(:empty){padding:6px 12px}
 @media(max-width:1023px){.gallery-controls>.row{align-items:flex-start}.gallery-viewport{height:calc(100vh - 390px)}}
 @media(max-width:767px){.gallery-controls>.row{flex-wrap:wrap}.gallery-controls select{flex:1;max-width:none}.gallery-search input{flex:1;width:auto}.gallery-viewport{height:65vh}.gallery.is-comparison{min-width:680px}}
@@ -119,7 +119,7 @@ textarea{font-size:14px;line-height:1.7}
 .fixed-side-label{font-size:16px}.fixed-compare-controls>p:empty{display:none}.fixed-page-pair.is-comparing>.page-reading{padding:16px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--bg)}.is-comparing .page-image-viewport{height:max(160px,calc(100vh - 600px));min-height:0;display:block}.is-comparing .page-image-viewport>.pooled-image{min-height:0}.is-comparing .page-image-viewport canvas.page-image{width:100%;height:100%;object-fit:contain}
 .fixed-page-pair.is-comparing>.page-trial-entry{grid-column:1/-1}
 /* W06: saved opinions and durable execution facts share the existing panels. */
-.business-pending{padding:16px 24px;background:var(--surface-warm);border-bottom:1px solid var(--border-soft)}.pending-operation{padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg)}.annotations-panel h3{font-size:16px}.annotation-region,.saved-opinion,.handoff-task{padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm);overflow-wrap:anywhere}.annotation-region p,.saved-opinion p{white-space:pre-wrap;font-size:14px}.saved-opinion label{display:flex;gap:10px;align-items:center}.saved-opinion input{width:20px;height:20px}.change-plan-preview:empty{display:none}.change-plan-preview{border-top:1px solid var(--border);padding-top:16px}.opinion-meta>label{display:flex;align-items:center;gap:6px;min-width:0}.opinion-meta>label:first-child{flex:0 0 auto}.opinion-meta>.field{flex:1 1 120px;min-width:110px;margin:0}.opinion-meta .field>label{display:block}.opinion-meta select{width:auto;max-width:140px}.opinion-meta input{width:100%;min-width:0}.page-image-viewport>.pooled-image{position:relative}.annotation-overlay{position:absolute;touch-action:none;overflow:visible}.annotation-mark{position:absolute;pointer-events:none;border:2px solid var(--accent);color:var(--accent-on);background:var(--accent);font-size:12px;line-height:20px;min-width:22px;text-align:center}.annotation-mark.point{border-radius:50%;transform:translate(-50%,-50%)}.annotation-mark.rect{background:color-mix(in oklch,var(--accent) 9%,transparent);color:var(--accent-hover);text-align:left;min-width:0}.annotation-mark.saved{border-style:dashed}.annotating .page-image-viewport{overscroll-behavior:contain}.change-handoffs{margin-bottom:24px}.handoff-detail textarea{width:100%;font-size:14px}.geometry-fields .range-fields{grid-template-columns:1fr 1fr}/* D4/N03：窄屏隐藏拖拽式标注与百分比定位（精确框选属于桌面入口），
+.business-pending{padding:16px 24px;background:var(--surface-warm);border-bottom:1px solid var(--border-soft)}.pending-operation{padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg)}.annotations-panel h3{font-size:16px}.annotation-region,.saved-opinion,.handoff-task{padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm);overflow-wrap:anywhere}.annotation-region p,.saved-opinion p{white-space:pre-wrap;font-size:14px}.saved-opinion label{display:flex;gap:10px;align-items:center}.saved-opinion input{width:20px;height:20px}.change-plan-preview:empty{display:none}.change-plan-preview{border-top:1px solid var(--border);padding-top:16px}.opinion-meta>label{display:flex;align-items:center;gap:6px;min-width:0}.opinion-meta>label:first-child{flex:0 0 auto}.opinion-meta>.field{flex:1 1 120px;min-width:110px;margin:0}.opinion-meta .field>label{display:block}.opinion-meta select{width:auto;max-width:140px}.opinion-meta input{width:100%;min-width:0}.page-image-viewport>.pooled-image{position:relative}.annotation-overlay{position:absolute;touch-action:none;overflow:visible}.annotation-mark{position:absolute;pointer-events:none;border:2px solid var(--accent);color:var(--accent-on);background:var(--accent);font-size:12px;line-height:20px;min-width:22px;text-align:center}.annotation-mark.point{border-radius:50%;transform:translate(-50%,-50%)}.annotation-mark.rect{background:color-mix(in oklch,var(--accent) 9%,transparent);color:var(--accent-hover);text-align:left;min-width:0}.annotation-mark.saved{border-style:dashed}.annotating .page-image-viewport{overscroll-behavior:contain}.change-handoffs{margin-bottom:24px}.handoff-detail textarea{width:100%;}.geometry-fields .range-fields{grid-template-columns:1fr 1fr}/* D4/N03：窄屏隐藏拖拽式标注与百分比定位（精确框选属于桌面入口），
    整页意见与文字路径保持可用；下方注释行仅在窄屏显示，告知桌面入口。 */
 .annotation-regions:empty{display:none}@media(max-width:767px){.annotation-tools button[data-mode=point],.annotation-tools button[data-mode=rect],.geometry-fields{display:none}.business-pending{padding:12px 16px}}
 @media(min-width:768px){.annotation-mobile-note{display:none}}
@@ -203,15 +203,10 @@ textarea{font-size:14px;line-height:1.7}
 .run-pagination, .candidate-pagination { justify-content: space-between; }
 
 .run-rows:not([hidden]), .candidate-batch-rows { max-height: 480px; overflow: auto; overscroll-behavior: contain; }
-/* F16/AC23 剩余：`.stack` 是共同行为里使用最广的类（41 个模块都在用），
-   但当前 CSS 没有任何基础规则——`<label class="stack">` 会退化成 inline 行框压住
-   相邻内容（UX-03b 记录过一次），`hidden` 在 `.stack` 上也会被任何作者规则盖掉。
-   这里补一条最小基础规则：垂直块级流 + hidden 守卫，不改变现有块级布局计算。 */
-.stack { display: block; }
-.stack[hidden] { display: none; }
-/* 早于本文件加载的同类组合（style.css 的横幅族）此前由自身 display 生效——
-   基础规则不得顺带改掉它们的布局。 */
-.notice.stack, .history-banner.stack, .sample-banner.stack { display: flex; }
+/* Shared vertical flow owns spacing; banner rows retain their own direction. */
+.stack {display:flex;flex-direction:column;gap:16px;min-width:0}
+.stack[hidden] {display:none}
+.notice.stack,.history-banner.stack,.sample-banner.stack {flex-direction:row;flex-wrap:wrap}
 
 /* AC06/§2.1：长列表选页时摘要与配置入口吸附在顶部，滚到第 28 页也够得着。 */
 .overview-selection-bar[hidden] { display: none; }

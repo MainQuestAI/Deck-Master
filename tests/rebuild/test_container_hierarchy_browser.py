@@ -36,6 +36,7 @@ def test_layout_sections_and_style_routes(workbench_page, tmp_path, width, heigh
             # The first matrix group contains pages 1–15, spanning two chapters.
             expect(page.locator('.matrix .chapter-row')).to_have_text(['项目与材料','逐页制作'])
         if title=='内容与页序':
+            page.get_by_role('navigation',name='内容工作区').get_by_role('button',name='章节与计划',exact=True).click()
             for index,chapter in enumerate(chapters):
                 outline=page.locator('.outline-block').filter(has=page.get_by_role('heading',name=chapter['title'],exact=True))
                 expect(outline.locator('.outline-source-note')).to_contain_text(f'第 {index*8+1}–{index*8+8} 页')
@@ -88,7 +89,8 @@ def test_single_page_faces_and_content_sections(workbench_page,tmp_path,width,he
         assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),name
         page.screenshot(path=str(out/(name+'.png')),full_page=True)
     page.locator('.sidebar').get_by_role('button',name='内容与页序',exact=True).click()
-    for area in ['方案概览','逐页编辑与顺序','内容计划','工作笔记']:
+    for area in ['材料与来源','逐页稿','章节与计划','工作笔记']:
+        if area=='工作笔记':page.get_by_role('button',name='更多内容工具',exact=True).click()
         page.locator('.studio-content-areas').get_by_role('button',name=area,exact=True).click()
         shot('内容-'+area)
     original=urlsplit(page.url)

@@ -131,7 +131,7 @@ def assess_visual_task_basis(store, document, task, basis):
     if not is_visual_task(task) or not state["stale"]:
         return state
     try:
-        dispatched = (read_snapshot or (lambda rev: load_snapshot(store, rev)))(task["dispatch_revision"])
+        dispatched = load_snapshot(store, task["dispatch_revision"])
         ids = task.get("scope_pages") or []
         old_pages = {entry["page_id"]: entry for entry in dispatched["pages"]}
         new_pages = {entry["page_id"]: entry for entry in document["pages"]}

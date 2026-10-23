@@ -70,3 +70,14 @@ All product ACs remain NOT_RUN until a concrete test or browser observation is l
 - Existing navigation fixtures now carry real current-request bindings. Old unbound synthetic tasks no longer silently qualify as current handoffs.
 - Initial pressure samples: 24 pages / 120 candidates, 99.0ms first read and 6.9/6.2ms warm; 100 pages / 500 candidates, 365.5ms first and 18.4/17.7ms warm. This local read sample is not a before/after CPU benchmark or full #142/#182 closure.
 - RP-03/RP-06 and unresolved finding continuity remain separate dependencies. No issue is declared closed by this slice.
+
+### E1/E2/E4 presentation and E5 mixed recipes
+
+- Three content areas: manuscript, chapters/plan, materials/sources. Notes, arguments and methods remain accessible in the auxiliary menu and existing deep links. Page movement is contextual; batch editing appears only after selection.
+- Thirty-page selection test retains pages 2/28 through filtering, counts outside-filter selections, adds only visible objects with select-all, and restores exact stable IDs after reload. Alt-arrow reorder retains the same focused object.
+- Global project menu owns personal-state recovery; project-list removal uses a named object menu. Existing create/open recovery remains unchanged.
+- Field/status appearance migrated from 33 legacy rules to the shared control recipes; migration inventory is field-status-migration.json. Stack flow now provides real spacing. Gallery production tools are hidden with zero selection.
+- 20 passed initial content/navigation/recovery checks; 9 passed style checks including V3 without original images and mixed V1/V2/V3 immutable records; 50 passed subsequent cross-surface browser checks; 18 passed launcher/intake/recovery checks. These incremental runs precede final E6 evidence.
+- All recipe versions are readable in the confirmed catalog. V3 exposes seven typed dimensions and planning coverage; feasibility stays zero-call. Selected recipe does not claim applied current design. Candidate lists bind the exact recipe ref.
+- Added FINDING-CONTINUITY.md: existing fixed-review handoff preserves the whole finding set; external professional report normalization and unbound repair-ledger continuity remain #186 work. No closure claimed.
+- Full-suite collection initially failed when invoking the pytest executable (repository tools namespace absent). Retried with the CI-equivalent python -m pytest entry. Ruff also found an undefined snapshot callback in the earlier currentness patch's unrelated visual-basis function; restored its original snapshot reader before rerunning.
