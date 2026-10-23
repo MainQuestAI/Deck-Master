@@ -544,8 +544,7 @@ def listing(project, *, page_id=None, revision=None):
         state = _state(store, document, candidate, task)
         reason = ('already_adopted' if state['status'] != 'available' else
                   'kept_current' if state.get('decision', {}).get('state') == 'keep_current' else
-                  'basis_changed' if (state.get('generation_basis') or state.get('content_basis') or {}).get('status') != 'current' else
-                  state['current_relation']['reason'] if state['current_relation']['status'] not in ('current','background') else None)
+                  'basis_changed' if (state.get('generation_basis') or state.get('content_basis') or {}).get('status') != 'current' else None)
         if not reason and task.get('stage_request', {}).get('icon_recipe_ref'):
             try:
                 # The same actual-PPT and scope gates used by adoption planning.

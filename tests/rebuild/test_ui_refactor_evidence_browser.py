@@ -31,11 +31,12 @@ def test_ui_refactor_three_surfaces_and_editor_states(tmp_path):
             base=server.start();info=page.request.get(base+'api/project').json()
             def visit(surface,**extra):
                 page.goto(base+'studio/#'+urlencode({'project':info['project_identity'],'surface':surface,'layer':'content','revision':info['revision_id'],**extra}))
-                expect(page.locator('#view-title')).to_contain_text({'overview':'制作总览','content':'内容与页序','page':'第 2 页'}[surface])
+                expect(page.locator('#view-title')).to_contain_text({'overview':'制作总览','content':'内容与页序','page':'第 2 页','gallery':'整稿画廊','style':'风格校准','runs':'任务与交付'}[surface])
                 expect(page.locator('.navigation-status')).to_be_hidden()
             def record(name,width):
                 page.evaluate('async()=>{await document.fonts.ready;scrollTo(0,0)}')
                 assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),name
+                assert page.locator('main').evaluate('root=>{const walk=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let node;while(node=walk.nextNode())if(["false","true","[object Object]"].includes(node.textContent.trim()))return false;return true}'),name
                 if name=='overview':page.locator('.matrix-thumbnail [data-image-state=ready]').first.wait_for()
                 controls=page.locator('main button:visible').evaluate_all('nodes=>nodes.map(n=>{const s=getComputedStyle(n);return {label:n.getAttribute("aria-label")||n.textContent,font:s.fontSize,line:s.lineHeight,height:n.getBoundingClientRect().height,primary:n.classList.contains("primary")}})')
                 metrics.append({'screen':name,'width':width,'controls':controls})
@@ -57,6 +58,45 @@ def test_ui_refactor_three_surfaces_and_editor_states(tmp_path):
                 page.screenshot(path=str(out/f'editor-{width}.png'))
                 page.keyboard.press('Escape')
                 expect(page.get_by_role('button',name='编辑本页标题与正文',exact=True)).to_be_focused()
+                for surface in ['gallery','style','runs']:
+                    visit(surface);record(surface,width)
             assert not errors
             (out/'computed-controls.json').write_text(json.dumps({'metrics':metrics,'errors':errors},ensure_ascii=False,indent=2)+'\n')
         finally:browser.close();server.stop()
+
+
+def test_launcher_empty_single_thirty_long_names_and_missing_location(tmp_path):
+    import threading
+    from deck_master import local_runtime,registry,service
+    from playwright.sync_api import sync_playwright,expect
+    reg=tmp_path/'projects.json';desc=local_runtime.descriptor(registry=reg)
+    server,state=local_runtime.bind_server(desc);thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
+    out=Path(os.environ.get('UI_REFACTOR_EVIDENCE',str(tmp_path/'evidence')));out.mkdir(parents=True,exist_ok=True)
+    try:
+        with sync_playwright() as runtime:
+            browser=runtime.chromium.launch();page=browser.new_page();projects=[]
+            try:
+                for count in [0,1,30]:
+                    for index in range(len(projects),count):
+                        project=tmp_path/f'project-{index:02}'
+                        service.create(project,brief='Synthetic launcher verification',title=f'{index:02} · '+('跨团队内容规划与固定版本审查 ' * 8),audience='验证者',project_format='workbench.v3')
+                        registry.register(reg,project);projects.append(project)
+                    page.goto(state['url']);expect(page.locator('.project-card')).to_have_count(count)
+                    expect(page.get_by_role('button',name='新建项目',exact=True)).to_be_visible()
+                    if count:
+                        first=page.locator('.project-card').first
+                        expect(first.get_by_role('heading')).to_contain_text('跨团队内容规划')
+                        expect(first.get_by_role('button',name='打开项目',exact=True)).to_be_enabled()
+                        expect(first.get_by_role('button',name='从列表移除',exact=True)).to_have_count(0)
+                    for width,height in [(1440,900),(1280,800),(390,844)]:
+                        page.set_viewport_size({'width':width,'height':height});page.evaluate('scrollTo(0,0)')
+                        assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+                        page.screenshot(path=str(out/f'launcher-{count}-{width}.png'))
+                projects[-1].rename(tmp_path/'relocated-project')
+                page.reload();row=page.locator('.project-card').filter(has_text='位置不可用')
+                expect(row).to_have_count(1)
+                expect(row.get_by_role('button',name='打开项目',exact=True)).to_be_disabled()
+                row.get_by_text('保存位置',exact=True).click()
+                expect(row.locator('.path')).to_contain_text('project-29')
+            finally:browser.close()
+    finally:server.shutdown();server.server_close();thread.join(timeout=3)

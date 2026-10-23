@@ -61,7 +61,9 @@ export function candidateDesk(app, data) {
   function controls() {
     select.disabled = busy;
     const unavailable = !selected || selected.candidate.page_id !== data.page_id;
-    const changed = live?.generation_basis.status === 'changed' || (live?.current_relation && !['current','background'].includes(live.current_relation.status));
+    // Recommendation currentness is not permission: manual preview must expose
+    // the existing request/scope gate, even for a retained historical result.
+    const changed = live?.generation_basis.status === 'changed';
     const alreadyCurrent = selected && canonical(live?.adoption_target.current_ref) === canonical(selected.candidate.result_ref);
     const kept = live?.decision?.state === 'keep_current';
     // 已采用候选与 kept 决定并存时（先保留后经批次采用），决定只读：服务端会以

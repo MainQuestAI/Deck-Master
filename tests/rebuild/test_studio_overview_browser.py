@@ -35,7 +35,12 @@ def test_studio_overview_action_buttons_and_compact_sync_recovery(tmp_path):
             expect(page.get_by_role('region', name='所选页制作', exact=True)).to_be_hidden()
             first_row = page.locator('.matrix tbody tr:not(.chapter-row)').first
             expect(first_row).to_be_visible()
-            assert first_row.bounding_box()['y'] + first_row.bounding_box()['height'] <= 900
+            expect(first_row).to_be_in_viewport()
+            assert first_row.evaluate('n=>n.getBoundingClientRect().bottom') <= 900
+            more=page.locator('.todo-more')
+            if more.count():
+                more.locator('summary').click();expect(more.locator('.todo-row').first).to_be_visible()
+                more.locator('summary').click()
             page.get_by_role('button', name='个人记录与提交恢复', exact=True).click()
             expect(page.get_by_role('textbox', name='个人草稿', exact=True)).to_be_visible()
             page.get_by_role('button', name='个人记录与提交恢复', exact=True).click()

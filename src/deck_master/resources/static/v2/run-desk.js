@@ -37,8 +37,8 @@ export function runDesk(app, data) {
   const refreshButton = button('核实最新执行状态', restart);
   root.append(el('div', {class: 'panel-head'}, el('h2', {}, '运行记录'), refreshButton),
     el('div', {class: 'panel-body stack'}, el('p', {class: 'muted'}, '当前执行状态与顶栏的页面阅读版本分开。正常处理中无需你操作；查看结果不代表采用或质量通过。'),
-      el('div', {class: 'row wrap run-filters'}, studio && el('div',{class:'studio-task-search'}, search, searchButton), group, status, el('label', {}, attention, '只看需我处理')), notice, recoveryReceipt, detail, studio && tableHead, rows, pager),
-    !studio && personalClearPanel(app));
+      el('div', {class: 'row wrap run-filters'}, studio && el('div',{class:'studio-task-search'}, search, searchButton), group, status, el('label', {}, attention, '只看需我处理')), notice, recoveryReceipt, detail, studio && tableHead, rows, pager));
+  if (!studio) root.append(personalClearPanel(app));
   function persist() {
     const editor = app.editor;
     if (!editor || editor.readonly || editor.disposed || !editor.draft) return;

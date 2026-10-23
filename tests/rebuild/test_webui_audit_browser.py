@@ -217,6 +217,7 @@ def test_reading_geometry_keeps_labels_targets_and_same_canvas(workbench_page, s
     page.evaluate('''async()=>{scrollTo(0,0);await new Promise(requestAnimationFrame);await new Promise(requestAnimationFrame);}''')
     box = page.locator('.page-image-viewport').bounding_box()
     assert page.evaluate('scrollY') == 0
+    page.screenshot(path=str(tmp_path/f'reading-{size[0]}.png'))
     assert box['y'] <= (580 if size[0] == 390 else 450)
     if size[0] == 1280:
         assert box['height'] >= 320

@@ -87,6 +87,7 @@ function todoPanel(app) {
   }
   if (block?.status === 'recorded' && block.actions?.length) {
     const [first, ...rest] = block.actions;
+    const secondary=action=>el('article',{class:'todo-row'},el('div',{},el('h3',{},todoTitle(action)),el('p',{},reasonText(action)),el('p',{class:'muted'},todoMeta(app,action))),todoButton(app,action));
     const node = el('section', {class: 'overview-todos', 'aria-label': '制作待办'},
       el('div', {class: 'todo-priority'},
         el('div', {class: 'row between'}, el('span', {class: 'todo-kicker'}, '优先处理'),
@@ -95,9 +96,9 @@ function todoPanel(app) {
         el('div', {class: 'todo-bottom'}, el('span', {}, todoMeta(app, first)), todoButton(app, first, true))),
       el('div', {class: 'todo-secondary'},
         el('div', {class: 'todo-list-head'}, el('h3', {}, '接下来'), el('span', {}, `${rest.length} 类事项`)),
-        rest.length ? rest.map(action => el('article', {class: 'todo-row'},
-          el('div', {}, el('h3', {}, todoTitle(action)), el('p', {}, reasonText(action)), el('p',{class:'muted'},todoMeta(app,action))), todoButton(app, action)))
-          : el('p', {class: 'muted'}, '处理当前优先事项后，继续核对整稿。')));
+        rest.length ? rest.slice(0,2).map(secondary)
+          : el('p', {class: 'muted'}, '处理当前优先事项后，继续核对整稿。'),
+        rest.length>2&&el('details',{class:'todo-more'},el('summary',{},`另有 ${rest.length-2} 类事项`),rest.slice(2).map(secondary))));
     return node;
   }
   if (!block) {
@@ -283,6 +284,7 @@ function matrixPanel(app, saved, overviewRoot) {
     const focusLabel = table.contains(focused) ? focused.getAttribute('aria-label') : null;
     const focusSort = table.contains(focused) && focused.matches('th[aria-sort] button');
     const focusNext = table.contains(focused) ? focused.getAttribute('data-matrix-next') : null;
+    const ownedMenuOpen = table.contains(focused) && Boolean(focused.closest('.object-actions')?.querySelector('.action-popover:popover-open'));
     const list = visiblePages();
     const pageCount = Math.max(1, Math.ceil(list.length / pageSize));
     matrixPage = Math.max(1, Math.min(matrixPage, pageCount));
@@ -383,7 +385,10 @@ function matrixPanel(app, saved, overviewRoot) {
     const replacement = focusSort ? table.querySelector('th[aria-sort] button')
       : focusNext ? table.querySelector(`[data-matrix-next="${CSS.escape(focusNext)}"]`)
       : focusLabel ? table.querySelector(`[aria-label="${CSS.escape(focusLabel)}"]`) : null;
-    if (replacement && !replacement.disabled) replacement.focus({preventScroll:true});
+    if (replacement && !replacement.disabled) {
+      if (ownedMenuOpen) replacement.closest('.object-actions')?.querySelector('.action-popover')?.showPopover();
+      replacement.focus({preventScroll:true});
+    }
   }
   searchInput.addEventListener('input', () => { search = searchInput.value; matrixPage = 1; batch.invalidate({keepErrors: true}); saveReading(); render(); });
   allCheckbox.addEventListener('change', () => {

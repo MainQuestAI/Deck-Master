@@ -121,7 +121,9 @@ def test_replaced_request_is_history_unless_explicitly_retained_as_background(st
     selected = candidates.show(store.project_root,candidate_id=cid)
     assert selected['generation_basis']['status'] == 'current'
     assert selected['current_relation'] == {'status':'historical','reason':'request_replaced'}
-    assert not candidates.listing(store.project_root)['candidates'][0]['selection_allowed']
+    # A retained historical result is not recommended, but explicit selection
+    # must still reach the ordinary request/basis/authorization preview gates.
+    assert candidates.listing(store.project_root)['candidates'][0]['selection_allowed']
     doc = store.load_document()
     doc['collaboration']['request']['background_request_ids'] = [prior['request_id']]
     commit(store,doc,'synthetic-explicit-background')

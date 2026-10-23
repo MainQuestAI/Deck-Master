@@ -141,6 +141,7 @@ def test_material_entry_opens_the_adjust_form_not_the_first_material_card(ux00_b
     page.goto(url)
     page.get_by_role('button', name='内容与页序', exact=True).click()
     page.get_by_role('heading', name='内容与页序', exact=True).wait_for()
+    page.get_by_role('button',name='材料与来源',exact=True).click()
     expect(page.locator('.source-card')).to_have_count(2)
     assert page.locator('.materials-adjust-form').get_attribute('open') is None
 

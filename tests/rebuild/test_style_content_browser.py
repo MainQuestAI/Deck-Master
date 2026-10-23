@@ -287,6 +287,7 @@ def test_material_states_verify_actual_extract_and_preserve_errors(style_content
     expect(page).to_have_url(re.compile('revision=' + store.current_revision_id()))
     page.get_by_role('button', name='内容与页序', exact=True).click()
     page.get_by_role('heading', name='内容与页序', exact=True).wait_for()
+    page.get_by_role('button',name='材料与来源',exact=True).click()
     card = page.locator('.source-card')
     card.get_by_role('button', name='材料状态与依据', exact=True).click()
     expect(card).to_contain_text('提取：记录待核实')
@@ -329,6 +330,7 @@ def test_visual_source_remains_unverified_and_late_reads_leave_new_face_alone(st
     expect(page).to_have_url(re.compile('revision=' + store.current_revision_id()))
     page.get_by_role('button', name='内容与页序', exact=True).click()
     page.get_by_role('heading', name='内容与页序', exact=True).wait_for()
+    page.get_by_role('button',name='材料与来源',exact=True).click()
     page.locator('.source-card').get_by_role('button', name='材料状态与依据', exact=True).click()
     page.get_by_role('button', name='核实提取状态 diagram.png', exact=True).click()
     expect(page.locator('.source-card')).to_contain_text('提取：待制作工具看图')
@@ -348,6 +350,7 @@ def test_visual_source_remains_unverified_and_late_reads_leave_new_face_alone(st
     assert not page.locator('#modal').evaluate('(node) => node.open')
     page.get_by_role('button', name='内容与页序', exact=True).click()
     page.get_by_role('heading', name='内容与页序', exact=True).wait_for()
+    page.get_by_role('button',name='材料与来源',exact=True).click()
     expect(page.locator('.source-card')).to_contain_text('提取：记录待核实')
     assert not page.locator('#modal').evaluate('(node) => node.open')
 

@@ -600,9 +600,21 @@ def test_method_role_stage_change_and_catalog_drift_recheck(tmp_path,resource_ro
         with sync_playwright() as pw:
             browser=pw.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox']);page=browser.new_page()
             page.add_init_script("Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>{window.copies=(window.copies||[]).concat(text)}}})")
+            pending_drafts=[]
+            page.route('**/api/drafts', lambda route: pending_drafts.append(route))
             page.goto(url+'studio/#'+urlencode({'project':info['project_identity'],'surface':'content','revision':store.current_revision_id(),'layer':'content','content_area':'methods'}))
+            expect(page.get_by_label('准备上下文')).to_be_disabled()
+            for route in pending_drafts:
+                route.continue_()
+            page.unroute('**/api/drafts')
+            expect(page.get_by_label('准备上下文')).to_be_enabled()
             page.get_by_label('准备上下文').select_option('independent');expect(page.locator('#content-area-methods')).to_contain_text('准备已核对')
-            page.locator('label.method-entry').filter(has_text='content-m04 ·').locator('input').check();expect(page.get_by_role('button',name='阅读 content-m04',exact=True)).to_be_visible()
+            chosen=page.locator('label.method-entry[data-resource-id="content-m04"] input')
+            chosen.evaluate("node=>node.dataset.identityProbe='retained'")
+            chosen.check()
+            expect(page.get_by_role('button',name='阅读 content-m04',exact=True)).to_be_visible()
+            expect(chosen).to_have_attribute('data-identity-probe','retained')
+            expect(chosen).to_be_checked()
             page.get_by_label('方法阅读阶段').select_option('page_copy');expect(page.locator('#content-area-methods')).to_contain_text('准备已核对')
             page.get_by_label('方法阅读角色').select_option('deck-review');expect(page.locator('#content-area-methods')).to_contain_text('准备已核对')
             page.get_by_label('方法阅读阶段').select_option('review');expect(page.locator('#content-area-methods')).to_contain_text('准备已核对')
