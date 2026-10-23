@@ -67,6 +67,8 @@ def packet(store, document, units=None):
         raise models.ModelError('review/outline/units', 'outline permits argument/progression only')
     value = content_review.build_review_packet(store, document, page_ids=[], required=units,
         requirement=content_review.requirement_state(store, document)['effective'])
+    from .effective_requirements import packet_requirements, outline_page_ids
+    value['effective_requirements'] = packet_requirements(store, document, page_ids=outline_page_ids(store, document), units=units)
     history = records(store, document)
     replaced = {row['review']['replaces']['sha256'] for row in history if row['review'].get('replaces')}
     gate = status(store, document)
@@ -91,10 +93,6 @@ def dispatch(project, *, adapter_context=None, force_units=None):
     if not set(forced) <= set(UNITS) or len(forced) != len(set(forced)):
         raise models.ModelError('review/outline/units', 'outline permits distinct argument/progression only')
     units = sorted(set(gate['missing_units']) | {row['kind'] for row in gate['blocking_findings']} | set(forced))
-    if not units:
-        return {'status': 'already_reviewed', 'outline': gate}
-    eligibility.guard(store, document, 'dispatch.host_task',
-        context={'targets': review_targets(store, document)})
     from .native_review import recovery_task_ids
     recoverable = recovery_task_ids(store, document, subject='outline')
     if recoverable:
@@ -111,6 +109,10 @@ def dispatch(project, *, adapter_context=None, force_units=None):
     if pending:
         return {'status': 'awaiting_recovery', 'task_ids': [task['task_id'] for task in pending],
                 'outline': gate, 'next_action': 'query original execution and operation; retire stale task before reissue'}
+    if not units:
+        return {'status': 'already_reviewed', 'outline': gate}
+    eligibility.guard(store, document, 'dispatch.host_task',
+        context={'targets': review_targets(store, document)})
     value = packet(store, document, units)
     available = content_review.reviewer_capabilities(adapter_context)
     independent = value['requirement'] == 'independent_model_or_human'

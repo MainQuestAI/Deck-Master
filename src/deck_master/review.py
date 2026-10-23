@@ -100,7 +100,8 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
     def changed_manuscript(owner, candidate):
         old = [subjects.get(_ref_key(ref)) for ref in owner.get('subjects') or []]
         new = [subjects.get(_ref_key(ref)) for ref in candidate.get('subjects') or []]
-        semantic_key = 'speech_semantic_sha' if review.get('kind') == 'speech' else 'semantic_sha'
+        semantic_key = ('outline_semantic_sha' if review.get('review_subject') == 'outline' else
+                        'speech_semantic_sha' if review.get('kind') == 'speech' else 'semantic_sha')
         return any(before and before.get(semantic_key) and after and after.get('current') and
                    before.get('role') == after.get('role') and
                    before.get('page_id') == after.get('page_id') and

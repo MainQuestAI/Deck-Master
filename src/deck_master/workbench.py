@@ -665,10 +665,11 @@ def _action_sort_key(action):
             action["layer"] or "", action["page_ids"][0] if action["page_ids"] else "")
 
 
-def _assemble_actions(ctx, facts, member_index=None):
+def _assemble_actions(ctx, facts, member_index=None, *, scope_identity=None):
     """Group per-fact actions by (kind, reason, layer, enabled, blocked, state)
     into the ordered deck list and the per-page attention projections."""
     doc = ctx.document
+    identity_suffix = [scope_identity] if scope_identity is not None else []
     groups = defaultdict(list)
     for fact in facts:
         key = (fact["kind"], fact["reason_code"], fact["layer"], fact["enabled"],
@@ -677,7 +678,7 @@ def _assemble_actions(ctx, facts, member_index=None):
     actions, per_page = [], defaultdict(list)
     for (kind, reason, layer, enabled, blocked, state), members in groups.items():
         actions.append({"action_id": _action_id(doc["project_id"], kind, reason, layer,
-                                                [m["identity"] for m in members]),
+                                                [m["identity"] for m in members] + identity_suffix),
                         "kind": kind, "page_ids": sorted({pid for m in members for pid in m["page_ids"]}),
                         "layer": layer, "reason_code": reason, "object_count": len(members),
                         "source_refs": _merge_refs(m["source_refs"] for m in members),
@@ -692,7 +693,7 @@ def _assemble_actions(ctx, facts, member_index=None):
         for page_id, page_members in by_page.items():
             per_page[page_id].append(
                 {"action_id": _action_id(doc["project_id"], kind, reason, layer,
-                                         [m["identity"] for m in page_members] + ["page:" + page_id]),
+                                         [m["identity"] for m in page_members] + ["page:" + page_id] + identity_suffix),
                  "kind": kind, "page_ids": [page_id], "layer": layer, "reason_code": reason,
                  "source_refs": _merge_refs(m["source_refs"] for m in page_members),
                  "enabled": enabled, "blocked_reason": blocked, "state": state,
@@ -762,7 +763,7 @@ def workbench_summary(project_dir, *, revision=None, reading=None, protocol=None
     artifact = control if revision is None or revision == control['revision_id'] else load_snapshot(store, revision)
     ctx = _ReadContext(store, artifact, pin_directories=True)
     try:
-        result = _summary(ctx, revision=revision, reading=reading)
+        result = _summary(ctx, revision=revision, reading=reading, request_scoped=True)
         from .current_work import project
         result['current_work'] = project(store, artifact, control, result, fixed=revision is not None)
         result['format'] = 'workbench_summary.v2'
@@ -829,7 +830,7 @@ def _workbench_summary(project_dir, *, revision, encoded, reading=None):
         ctx.close()
 
 
-def _summary(ctx, *, revision, member_index=None, reading=None):
+def _summary(ctx, *, revision, member_index=None, reading=None, request_scoped=False):
     from .content_plan import projection
     store, doc = ctx.store, ctx.document
     now = datetime.now(timezone.utc)
@@ -867,6 +868,25 @@ def _summary(ctx, *, revision, member_index=None, reading=None):
                       "prompt_summary": _prompt_summary(ctx, entry, overview["prepared"], overview["frozen"]),
                       "attention": {"status": "not_recorded"}})
     actions, per_page = _assemble_actions(ctx, facts, member_index)
+    # Keep v1 global facts intact, but derive v2 action identities and target
+    # members from the exact request region before grouping.
+    if request_scoped or member_index is not None:
+        from .eligibility import scope_page_ids
+        request = (doc.get('collaboration') or {}).get('request') or {}
+        scope = request.get('scope')
+        ids = scope_page_ids(store, scope) if scope else []
+        scoped = []
+        for fact in facts:
+            if ids is None or not fact['page_ids'] or fact['kind'] == 'verify_execution':
+                scoped.append(fact)
+            else:
+                selected = sorted(set(fact['page_ids']) & set(ids))
+                if selected:
+                    scoped.append({**fact, 'page_ids': selected})
+        scoped_actions, _ = _assemble_actions(ctx, scoped, member_index,
+            scope_identity="request:" + str(request.get("request_id")) + ":" + repr(ids))
+        if request_scoped:
+            actions = scoped_actions
     for page in pages:
         items = per_page.get(page["page_id"])
         if items:

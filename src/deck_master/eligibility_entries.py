@@ -167,6 +167,7 @@ COLLABORATION_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
 
 PUBLIC_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "native_review.recover": ("task.accept", "native_review.recover resumes its bound execution; service.accept_result → tasks.accept_result evaluates task.accept before adopting reviews; terminal replay is read-only", None),
+    "native_review.recovery_task_ids": (None, "-", READ_REASONS["read_model"]),
     "native_review.run": ("dispatch.host_task", "native_review.run → content_review dispatch/service.task_start/service.accept_result; exact scope and current control before execution/adoption", None),
     "legacy.import_legacy": ("create", "legacy.import_legacy: canonical private create/import normalization; inspect_only remains a source read", None),
     "legacy.looks_like_legacy_run": (None, "-", READ_REASONS["read_model"]),
@@ -279,6 +280,9 @@ CLI_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "review evaluate": (None, "-", READ_REASONS["external_report"]),
     "review import": ("review.import", "review_import.import_report", None),
     "review channels": (None, "-", READ_REASONS["install"]),
+    "review outline-status": (None, "-", READ_REASONS["read_model"]),
+    "review outline-packet": (None, "-", READ_REASONS["read_model"]),
+    "review outline": ("dispatch.host_task", "outline_review.dispatch → service.open_host_task revalidates frozen outline scope", None),
     "review original-status": (None, "-", READ_REASONS["read_model"]),
     "review original": ("dispatch.host_task", "original_review.dispatch → service.open_host_task guards dispatch; needs_reviewer only persists immutable packet", None),
     "review recover": ("task.accept", "native_review.recover → service.accept_result/tasks.accept_result; original proof/basis/execution checks and task.accept before adoption", None),

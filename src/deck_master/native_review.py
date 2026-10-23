@@ -361,8 +361,6 @@ def _run(store, *, task_id, force_units=None, subject=None):
     if task_id and force_units is not None:
         raise review_evidence.EvidenceRejected("native_review/force_units", "select a frozen task_id or force_units, not both")
     gate = outline_review.status(store, document) if subject == 'outline' else content_review.preproduction_status(store, document)
-    if gate["status"] == "pass" and not forced and not task_id:
-        return {"status": "already_reviewed", "preproduction": gate}
     candidates = [task for ref in document["tasks"] if
                   (task := store.read_object_json(ref)).get("kind") == "review"
                   and task.get("review_stage") == "preproduction"
@@ -389,6 +387,8 @@ def _run(store, *, task_id, force_units=None, subject=None):
     if recoverable:
         return {'status': 'recovery_available', 'task_ids': recoverable,
                 'next_action': 'Use review recover --project <project> --task-id <id>; do not repeat the native call.'}
+    if gate["status"] == "pass" and not forced and not task_id and task is None:
+        return {"status": "already_reviewed", "preproduction": gate}
     with _session_with_startup_history(store, document["revision_id"]) as session:
         provider = _ObservedProvider(session)
         registry = review_evidence.ProviderRegistry()

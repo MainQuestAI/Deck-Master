@@ -70,8 +70,10 @@ def project(store, artifact, control, summary, *, fixed=False):
     except (StoreError, OSError, ValueError, KeyError, TypeError):
         selected = []
     ids = set(selected if selected is not None else [entry['page_id'] for entry in artifact.get('pages', [])])
+    quality_pending = _quality_pending(store, artifact)
     for action in summary['next_actions'].get('actions', []):
         outside = (historical or not request or
+            (action['kind'] == 'review_quality' and not quality_pending) or
             (action['kind'] != 'verify_execution' and action['page_ids'] and not set(action['page_ids']) & ids) or
             (action['kind'] in ('prepare_stage', 'refresh_stage') and
              (content_only or design_plan or {'svg_preview': 'svg', 'ppt_preview': 'output', 'pptx': 'output'}.get(action['layer'], action['layer']) not in scope.get('layers', []))))
@@ -171,6 +173,25 @@ def from_snapshot(store, document):
     from .workbench import _ReadContext, _summary
     ctx = _ReadContext(store, document)
     try:
-        return project(store, document, document, _summary(ctx, revision=None))
+        return project(store, document, document, _summary(ctx, revision=None, request_scoped=True))
     finally:
         ctx.close()
+
+
+def _quality_pending(store, document):
+    """Recorded passes are history; use existing finding/currentness facts."""
+    from .editing import _current_artifact_digests
+    from .review import finding_closed, open_findings, pending_judgments, dependency_problems
+    try:
+        rows = [{**store.read_object_json(ref), 'ref': ref} for ref in document.get('reviews') or []]
+        artifacts = _current_artifact_digests(store, document)
+        replaced = {row['replaces']['sha256'] for row in rows if row.get('replaces')}
+        for row in rows:
+            if any(not finding_closed(rows, row, finding, artifacts)
+                   for finding in open_findings(row) + pending_judgments(row)):
+                return True
+            if row['ref']['sha256'] not in replaced and (row.get('status') != 'pass' or dependency_problems(row, artifacts)):
+                return True
+        return False
+    except (StoreError, OSError, ValueError, KeyError, TypeError):
+        return True

@@ -102,6 +102,13 @@ def _current_artifact_digests(store, doc, extra_subjects=()):
             else:
                 body = None
             if body is not None:
+                if role in ('narrative', 'content_plan'):
+                    outline_body = copy.deepcopy(body)
+                    if role == 'narrative':
+                        outline_body['nodes'] = obj.get('nodes') or []
+                    else:
+                        outline_body['input']['page_roles'] = (obj.get('input') or {}).get('page_roles') or []
+                    info['outline_semantic_sha'] = sha256_bytes(canonical_json_bytes(outline_body))
                 info['semantic_sha'] = sha256_bytes(canonical_json_bytes(body))
                 speech_body = ({**body, 'speaker_notes': obj.get('speaker_notes'),
                                 'speech_segments': (obj.get('content_mapping') or {}).get('speech_segments')}
