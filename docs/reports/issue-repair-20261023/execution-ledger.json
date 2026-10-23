@@ -334,7 +334,7 @@
       "evidence": "docs/reports/issue-repair-20261023/RP-24.md",
       "state": "partial_implementation_special_acceptance_blocked",
       "issue_closure": "NOT_RUN",
-      "followup": "Concrete proof/accounting product decision pending, not merely external Host acceptance. See RP-24-cross-execution-evidence.md; integrated 34 recovery/native-boundary passes."
+      "followup": "Authorized 2026-10-23; bounded same-project settled native-image reuse implemented in 9b7a22f6f263f217a66c520c8c6ea4a5c08841c1. Both identities and consumption retained. Real Host acceptance remains NOT_RUN; see RP-24-settled-reuse.md."
     },
     {
       "task": "RP-25",
@@ -581,13 +581,8 @@
     "wheel_sha256": "aa829471271e81db5f08992a9689acd78080c5c73bca102fa8979870a426f55d"
   },
   "remote_ci": "f0cf569b PR39860006534 success:4units3794pass2skip,render136pass1skip,browser603pass,installed255pass. Duplicatepush39859996259 failure:browser602pass1fail (fixed100ms response-capture synchronization), installed steps skipped; separate success does not replace failure.",
-  "followup_state": "Original CI failure diagnosis implemented; matching installed regression and new CI followup. No cross-execution adoption mode enabled.",
-  "product_decision_pending": {
-    "task": "RP-24",
-    "evidence": "docs/reports/issue-repair-20261023/RP-24-cross-execution-evidence.md",
-    "missing": "Authenticated A not-sent fence and A-to-B dispatch correlation; authoritative physical-call ownership beyond known same-project invocation entries.",
-    "decision": "Controller-proven bounded association versus separately authorized external artifact reuse preserving A/B accounting; no automatic single-call reassociation."
-  },
+  "followup_state": "RP24 bounded reuse implemented and locally validated; exact new HEAD remote CI pending. Independent 23-card review baseline remains fdb8fca959a40d54e8cc2e4881533473a1838657.",
+  "product_decision_pending": null,
   "followup_validation": {
     "candidate": "346bb9884e516d1243a95fa93804bc74ce40f228",
     "result": "PASS within installed Studio browser scope",
@@ -635,5 +630,16 @@
     "repair": "actual response-capture signals; no runtime changes; three variants/all original assertions retained and strengthened",
     "validation": "real Chromium3pass13.20s; Ruff/diff pass; independent review no concreteP1/P2",
     "new_exact_head_ci": "REQUIRED"
+  },
+  "product_decision_resolved": {
+    "task": "RP-24",
+    "date": "2026-10-23",
+    "decision": "Explicitly authorized bounded settled-image reuse preserving both executions and consumed calls; unknown state, insufficient current authority/budget or missing trusted evidence remain blocked. Single-call handoff remains unsupported."
+  },
+  "prior_baseline_ci": {
+    "head": "fdb8fca959a40d54e8cc2e4881533473a1838657",
+    "push": 39875325615,
+    "pull_request": 39875331972,
+    "conclusion": "success for both runs; not evidence for the new RP24 head"
   }
 }

@@ -1,3 +1,5 @@
+> Historical diagnosis through `fdb8fca9`. See [authorized settled-image reuse](RP-24-settled-reuse.md) for the new bounded adoption path. Missing authenticated single-call handoff evidence remains a blocker for that distinct mode.
+
 # RP-24: cross-execution completed-image association — read-only diagnosis
 
 Inspected source SHA: `dd424554284f881a1ce76c0f3323cbcbcc37bace`.
