@@ -119,3 +119,12 @@ Product ACs link concrete tests in acceptance-matrix.json. A PARTIAL status iden
 - AC ledger is now **25 PASS_AUTOMATED / 5 PARTIAL**. This does not close unrelated RP-18 routing/old-manifest responsibilities.
 - AC02 native picker evidence has a concrete external blocker: the native UI tool reports the Mac locked and automatic unlock unavailable. The user has been asked to unlock; no native dialog was opened or left pending.
 - Full browser result before this narrow follow-up: **570 passed / 3 failed**, all three failures being the documented native select keyboard path across three viewports. Final PR CI for that tree has passed Linux rendering and both Python 3.11 unit jobs; other jobs were still running at this record.
+
+
+### Completion audit: continuous task and retained candidate state
+
+- Product is frozen at `44fc6a23` after two observed regressions were corrected: repeated shared-basis checks in large history, and own candidate decisions reopening their pre-operation revision after reload. No passive refresh changes fixed comparison identity.
+- The exact installed wheel passed **50** targeted checks, with all **78** runtime modules from site-packages, plus **9** offline checks and 243 byte-identical common package/source files. [Installed proof](evidence/installed-completion.json).
+- [One-project continuous trace](evidence/continuous-journey/index.html) covers all five tasks in IMPLEMENTATION §5. The real preproduction gate first rejects the edited manuscript's old review; only an explicitly scripted L1 workorder result permits continuation. All Host returns are synthetic, model calls zero, final review ZIP is real and fixed to the recorded revision.
+- [Four fixed-load comparisons](evidence/NAVIGATION.md) include cold reads, three rounds of five-surface switching and idle polling. The initial 2.90s regression remains in the evidence; the corrected 500-candidate maximum is 0.31s. This does not close the separate CPU repair work.
+- Final ledger: **26 PASS_AUTOMATED / 4 PARTIAL**, with exact remaining boundaries in [COMPLETION-AUDIT](COMPLETION-AUDIT.md). Native picker validation is blocked by the Mac lock; no unlock response has been received. The final remote CI remains pending and is not replaced by historical passes.

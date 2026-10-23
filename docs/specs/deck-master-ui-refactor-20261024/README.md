@@ -8,6 +8,9 @@
 
 ## 交付入口
 
+- [完成度复核](COMPLETION-AUDIT.md)：逐项目标、E0–E6、26 项自动验证与 4 项仍缺证据的边界。
+
+- [连续任务与刷新恢复](evidence/continuous-journey/index.html)、[最新冻结安装证据](evidence/installed-completion.json)。
 - [产品实现截图](evidence/product-screens/index.html)、[实现验证与边界](VERIFICATION.md)、[实施台账](IMPLEMENTATION-STATUS.md)：实际产品与独立安装的证据。
 
 - [可视化方案入口](http://127.0.0.1:60183/api/projects/deck-master-generation-workbench-v3-20260926/raw/plans/20261024/index.html)：总路线、逐页设计、组件规则、实施与验收可连续阅读。

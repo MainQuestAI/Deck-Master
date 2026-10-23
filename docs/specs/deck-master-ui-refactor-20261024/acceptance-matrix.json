@@ -19,7 +19,8 @@
     "status": "PARTIAL",
     "evidence_refs": [
       "test_ui_design_browser.py::test_picker_cancel_and_failure_preserve_path_and_manual_focus",
-      "test_rc3_studio_intake_browser.py"
+      "test_rc3_studio_intake_browser.py",
+      "test_ui_continuous_journey_browser.py"
     ],
     "scope_note": "接口/浏览器恢复已覆盖；2026-10-24 原生界面工具实查 Mac 锁屏、无法自动解锁，等待用户解锁后核验真实系统目录选择器。",
     "verification_report": "VERIFICATION.md"
@@ -97,7 +98,8 @@
     "status": "PASS_AUTOMATED",
     "evidence_refs": [
       "test_studio_content_browser.py",
-      "test_studio_candidate_batch_browser.py"
+      "test_studio_candidate_batch_browser.py",
+      "test_ui_continuous_journey_browser.py"
     ],
     "scope_note": "页序与页身份分开；内容操作与候选仍绑定原对象和固定版本。",
     "verification_report": "VERIFICATION.md"
@@ -205,7 +207,8 @@
     "status": "PASS_AUTOMATED",
     "evidence_refs": [
       "test_pr103_complete_browser.py",
-      "test_ux08_task_walkthrough_browser.py"
+      "test_ux08_task_walkthrough_browser.py",
+      "test_ui_continuous_journey_browser.py"
     ],
     "scope_note": "状态文字按真实 API 记录投影；复制不创建模型调用。",
     "verification_report": "VERIFICATION.md"
@@ -245,7 +248,8 @@
     "evidence_refs": [
       "test_studio_delivery_browser.py",
       "test_candidate_preview_recovery.py",
-      "examples/workbench/w12_offline_browser.py"
+      "examples/workbench/w12_offline_browser.py",
+      "test_ui_continuous_journey_browser.py"
     ],
     "scope_note": "独立 wheel 中真实 ZIP 下载、manifest/每文件 SHA、固定版本；合成审核记录不作专业认可。",
     "verification_report": "VERIFICATION.md"
@@ -354,9 +358,10 @@
     "evidence_refs": [
       "test_candidate_decisions.py",
       "test_rc3_candidate_adoption_browser.py",
-      "test_work_surface_browser.py"
+      "test_work_surface_browser.py",
+      "test_ui_continuous_journey_browser.py"
     ],
-    "scope_note": "采用、保留、重开、回执恢复与下游失效，原图不可变。",
+    "scope_note": "单个保留/重开/采用及批量采用的确认版本随链接保存，刷新仍读到已决定状态；同一项目移动页序后采用原 page_id，未选页不变。正文自己的采用不误标过期；实际图稿依据失效保留。",
     "verification_report": "VERIFICATION.md"
   },
   {
@@ -392,14 +397,18 @@
     "scenario": "同负载冷/热切换、历史量扩大、空闲轮询",
     "expected": "有即时目标反馈、不中断阅读；无新增重复轮询；性能报告独立",
     "evidence": "RP-25/RP-07固定负载 / E6",
-    "status": "PARTIAL",
+    "status": "PASS_AUTOMATED",
     "evidence_refs": [
       "test_summary_poll.py",
       "test_overview_metadata.py",
       "test_navigation_usability_browser.py",
-      "evidence/current-relationship.json"
+      "evidence/current-relationship.json",
+      "evidence/NAVIGATION.md",
+      "evidence/navigation-pr184.json",
+      "evidence/navigation-after-basis-fix.json",
+      "test_ui_current_relationship.py::test_large_candidate_history_checks_shared_basis_once_per_snapshot"
     ],
-    "scope_note": "保留单轮询与即时导航反馈；24/100 页扩展样本仅是本机读取计时，不是 CPU 前后基准或 RP-25 全量关闭。",
+    "scope_note": "同一输入 SHA 的 24/100 页、1/500 历史候选；三轮五工作面切换、46 秒空闲无并发重复轮询。已修复审计抓到的共享依据重复校验退化；本机有限观察不替代 RP-25 全量 CPU 修复或生产 SLA。",
     "verification_report": "VERIFICATION.md"
   }
 ]
