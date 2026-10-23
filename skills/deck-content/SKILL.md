@@ -30,6 +30,8 @@ description: 独立策划、论证、逐页写稿和口播：只做策划、按�
 
 live 默认 cues，明确逐字稿才 verbatim；read_alone 默认 none。未知用途不凭空套 live。条件、单位、来源和行动边界需在上屏稿自包含。来源/方向变动按正式 inputs update；四层 input_revision 只改声明的 Narrative/Plan/Page/speech，保留未受影响对象。不只改投影 Markdown。
 
+可选表达审阅：通过现有 selector 显式选择 `expression-review-humanizer`，按冻结 manifest 读取共享的“表达自然度与保真”参考，辅助 M10 / Review；不按“AI味”识别作者，不强制删标点、列表或必要限定。Review 只返回定位、问题、读者影响、建议改写和需保护的事实限定；Content 沿已有范围授权改后核对事实。纯视觉不扩写文字，大纲不套完整稿件要求，旧 Task 不另添资源。
+
 ## 退出条件与下一责任
 
 以 Runtime `completion.state` 及该子意图的 outputs/checks/missing 判断完成，不用全项目 work_complete；completed 正常返回内容产物和检查，后续 continue 不要求补制作授权。检查缺口返回 needs_reviewer/awaiting_decision 与现有可读稿，不能把 blocked 当成功。下一责任可以是用户决定、Review、Design 或调用者；未请求视觉生产时到此退出。
