@@ -13,7 +13,25 @@
       "implementation": "ae22ef08 + ebaa7a86 + 61621e58 + 8d42a5b5 + 913cfcae + 0e062fa7 + 346bb988",
       "evidence": "docs/reports/issue-repair-20261023/RP-00.md",
       "state": "implemented_pending_review",
-      "issue_closure": "NOT_RUN"
+      "issue_closure": "NOT_RUN",
+      "evidence_version_mapping": {
+        "historical_report_source": "874cdee32c2a1575041166d1884d7e265defc7fb",
+        "historical_baseline": "55adc97c5bb5f16ae7fcff7c33c43969fae9ce97",
+        "integrated_implementation": "ae22ef086369e1ed5904966c79e92097b51fb8ba",
+        "stable_patch_id": "f3ae9f9ab33286761311798968329c2aa2b8a536",
+        "patch_equivalent_verified": true,
+        "integration_snapshot_inspected": "2e1c5ce40622e366a751c89f783fa23174752355",
+        "integrated_commits": [
+          "ae22ef086369e1ed5904966c79e92097b51fb8ba",
+          "ebaa7a862cdca7ae377bf8f030169035aa592f4e",
+          "61621e58f3219e6a963edc5d72ce0c53e236e67a",
+          "8d42a5b5fe40a2fa3ec4e76d6056d1bbdcf35110",
+          "913cfcae62ac4f93afab7e5521f2f3997a302c7f",
+          "0e062fa7f8a98e80e4277cb2d43c92d3a6ea4fdb",
+          "346bb9884e516d1243a95fa93804bc74ce40f228"
+        ],
+        "verification_scope": "Git identity, patch equivalence and ancestry only. Historical test counts and measurements are not rerun results for the integration snapshot. Intermediate working-tree test invocations did not record a separate exact immutable test SHA."
+      }
     },
     {
       "task": "RP-01",
@@ -365,7 +383,23 @@
       "implementation": "8bec75f8",
       "evidence": "docs/work-items/wi-issue-repair-20261023/execution/RP-26.md",
       "state": "implemented_pending_review",
-      "issue_closure": "NOT_RUN"
+      "issue_closure": "NOT_RUN",
+      "repeated_measurement_followup": {
+        "runtime_source_sha": "2e1c5ce40622e366a751c89f783fa23174752355",
+        "evidence": "docs/work-items/wi-issue-repair-20261023/execution/rp26/repeated-measurements.json",
+        "samples": 216,
+        "per_source": 72,
+        "repeats_per_condition": 3,
+        "historical_matched_pair": [
+          "cbd18a41efffca679768c69134663ea4816c7d92",
+          "7ab32976c802c9a5839fd3eb97c37d8c16ff57d4"
+        ],
+        "input_bytes_equal_across_sources": true,
+        "historical_full_results_equal": true,
+        "current_source_changes": "core_writers adds three protocols; generation.reuse null added. Other fields equal; no normalized equality claim.",
+        "regression": "65 passed; existing count/refusal assertions unchanged",
+        "remote_ci": "NOT_RUN; local-only follow-up"
+      }
     },
     {
       "task": "RP-27",
@@ -380,7 +414,20 @@
       "implementation": "c8b95469 + 8f8d1c6b",
       "evidence": "docs/reports/issue-repair-20261023/RP-27.md",
       "state": "implemented_pending_review",
-      "issue_closure": "NOT_RUN"
+      "issue_closure": "NOT_RUN",
+      "evidence_version_mapping": {
+        "historical_report_source": "704f123a5675ab3d1f9262ea8d86ecb472dd421a",
+        "historical_baseline": "f586a7fe01a706fa7bf1a54d8fb991b8d92f7941",
+        "integrated_implementation": "c8b95469425699cde7c2725d4985c58e2856272d",
+        "stable_patch_id": "7c73755772da9578acd87cbca17748097e8a3a2b",
+        "patch_equivalent_verified": true,
+        "integration_snapshot_inspected": "2e1c5ce40622e366a751c89f783fa23174752355",
+        "integrated_commits": [
+          "c8b95469425699cde7c2725d4985c58e2856272d",
+          "8f8d1c6b3b54ba1674840ed460366845a804ba48"
+        ],
+        "verification_scope": "Git identity, patch equivalence and ancestry only. Historical test counts and measurements are not rerun results for the integration snapshot. Intermediate working-tree test invocations did not record a separate exact immutable test SHA."
+      }
     },
     {
       "task": "RP-28",
@@ -407,7 +454,20 @@
       "implementation": "5fdeeef2 + 9a1af799",
       "evidence": "docs/reports/issue-repair-20261023/RP-29.md",
       "state": "implemented_pending_review",
-      "issue_closure": "NOT_RUN"
+      "issue_closure": "NOT_RUN",
+      "evidence_version_mapping": {
+        "historical_report_source": "6b1b243bbf53249b11551761cdc68cebff14b8fb",
+        "historical_baseline": "e71ca6f9c5df6374850f25a8ec857ef9cf6aa4bd",
+        "integrated_implementation": "5fdeeef26520cea5f00e4d23917f5c98cfeb1bf6",
+        "stable_patch_id": "470a7ce8d9bcf94f21cc7a076e401c8ec63ebc1f",
+        "patch_equivalent_verified": true,
+        "integration_snapshot_inspected": "2e1c5ce40622e366a751c89f783fa23174752355",
+        "integrated_commits": [
+          "5fdeeef26520cea5f00e4d23917f5c98cfeb1bf6",
+          "9a1af7994b19547bd0159dbe4370e29913415aad"
+        ],
+        "verification_scope": "Git identity, patch equivalence and ancestry only. Historical test counts and measurements are not rerun results for the integration snapshot. Intermediate working-tree test invocations did not record a separate exact immutable test SHA."
+      }
     },
     {
       "task": "RP-30",
