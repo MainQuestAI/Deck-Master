@@ -25,8 +25,8 @@ User authorized continuous product implementation, isolated branch/worktree, pus
 
 ## Dependencies and ownership
 
-- RP-00 open review: narrow patches 84a63131 / f1ac7a71 must be verified from retrievable sources or repaired with explicit regression evidence; not assumed integrated.
-- RP-04 open review: include annotations.save and styles.references.import in exact replay after pause checks.
+- RP-00: retrieved original Git objects and cherry-picked narrow patches 84a63131 / f1ac7a71 as 1ff3195b / 67c15930, retaining attribution. PR147 lightweight reads and single-flight polling integrated as 6d2023dc.
+- RP-04: annotations.save and styles.references.import now recover the exact committed receipt before new-write eligibility. Changed payloads and new operations remain blocked after pause; other RP-04 scope is not declared closed.
 - RP-08 / #182 owns current relationship projection before UI issue #132 can close.
 - RP-09 / #181 owns mixed style schema reading before #141 closes.
 - #186: this implementation owns investigation and the minimum finding-continuity dependency; it must not close findings from a generic new pass.
@@ -45,3 +45,9 @@ All product ACs remain NOT_RUN until a concrete test or browser observation is l
 - Native popover regression included: 9 passed in UI design suite; narrow scroll containment, keyboard Escape focus return and correct page/layer navigation.
 - A discovered screen-reader label escaped table clipping on narrow screens; positioned its icon trigger locally and reran geometry tests.
 - Token generator --check, CSS parse and git diff --check pass. These are incremental source/browser checks, not the final same-commit AC ledger.
+
+### Required repair dependencies
+
+- 45 passed: native review, transport, RC3 style workflows, original candidate references and summary polling. Narrow patches are retrievable in this branch.
+- Exact replay regression first failed on both affected operations. Fix preserves the original committed receipt and immutable operation payload. New writes and changed-payload replays remain rejected.
+- 97 passed: exact replay after pause, annotations, visual styles, eligibility entry coverage, content preproduction review and UI journal.
