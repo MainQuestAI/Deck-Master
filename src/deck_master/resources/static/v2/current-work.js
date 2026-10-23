@@ -4,14 +4,14 @@ import {el, button} from './dom.js';
 // Both surfaces render the same fixed read projection. Navigation is not a
 // production action; every eventual submission still uses the existing guard.
 export function currentWork(app, work = app.summary.current_work) {
-  if (!work) return el('section', {class:'stack'},
-    el('h2', {}, '当前核心未提供本次工作投影'),
+  if (!work) return el('section', {class:'overview-todos stack', 'data-current-work':'true'},
+    el('h2', {}, '本次工作投影待重新读取'),
     button('阅读已有产物', () => app.go({surface:'content'})));
   const next = work.next;
   const roles = {master:'主协调',content:'内容制作',design:'设计制作',caller:'发起人',user:'用户',reviewer:'审阅者'};
   const actionLabels={verify_execution:'核实执行',inspect_failure:'查看失败',reconcile_inputs:'协调输入',replan:'重新计划',handoff:'查看交接',compare_candidates:'比较候选',review_results:'阅读结果',review_quality:'查看审查',prepare_stage:'查看缺少产物',refresh_stage:'查看过期依据'};
   const checks = {pass:'当前范围已审',missing:'稿件待审',blocked:'存在待修问题',unknown:'审查依据待核实',not_evaluated:'尚未评估',no_manuscript:'尚无逐页稿'};
-  return el('section', {class:'overview-todos todo-clear', 'aria-label':'本次工作'},
+  return el('section', {class:'overview-todos todo-clear', 'aria-label':'本次工作', 'data-current-work':'true'},
     el('h2', {}, next.title),
     el('p', {}, '下一责任：' + (roles[next.responsible_role] || next.responsible_role)),
     el('p', {}, '审查：' + (checks[work.review.status] || work.review.status)),

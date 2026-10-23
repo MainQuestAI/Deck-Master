@@ -1,0 +1,12 @@
+# Independent engineering review corrections
+
+The fresh read-only reviewer examined fixed 1493cc28 and confirmed R1–R6. Its complete original report is retained in 1493cc28-review.md; the prior engineering acceptance statement does not supersede that report. This is an internal independently delegated engineering review, not external environment certification, content-model review, or professional approval.
+
+- R1: Whole-outline dispatch names a deck subject plus every page in its exact Plan. Both public dispatch paths use the existing scope guard. Task start/accept derive the same target from the frozen dispatch snapshot, so later control narrowing cannot exploit empty scope_pages. The empty Task-page representation still grants no Page or visual production rights.
+- R2: Outline applicability requires exact Narrative/Plan versions; manuscript role filtering, semantic equivalence and notes aliases cannot preserve its pass. Existing non-outline equivalence remains unchanged.
+- R3: A common read-only checkpoint query identifies failed Tasks with committed ready receipts. Both outline dispatch paths and native execution defer to the original operation even when another pending Task exists. Old proof is neither re-signed nor recharged. Explicit cancellation/retirement remains available if the original basis is obsolete.
+- R4: Existing final delivery judgement now has a snapshot-taking pure entrypoint, shared by the old describe command and current_work. A ready full-deck output appears in outputs and yields read_delivery/caller. No delivery gate is relaxed; artifact/current-control identity stays pinned.
+- R5: Passive control refresh and the work modal re-read the fixed artifact/current control projection. Only current_work/action panels update. Fixed artifact DOM, draft editor and comparison basis remain; mismatched or failed reads show unavailable rather than reuse old actions with new controls.
+- R6: Native ordinary acceptance and checkpoint recovery share subject-specific gate selection; outline recovery returns outline pass with production_qualified=false and no new model turn.
+
+Permanent regressions were added to test_outline_review.py and test_current_work.py. Original reviewer counterexamples and logs remain in /workspace/reviewer-1493. Source, build and installed identities and the same reviewer's follow-up must be recorded for the corrected candidate. No real Host startup, model calls, paid production, Library upload retries, remote Git mutation, credential/permission/mount changes were performed for this correction.

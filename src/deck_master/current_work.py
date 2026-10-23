@@ -47,6 +47,23 @@ def project(store, artifact, control, summary, *, fixed=False):
     actions, optional = [], []
     content_only = request.get('intent') == 'content_only'
     design_plan = any(c.get('kind') == 'requested_design_plan' for c in completion['checks'])
+    full_delivery = None
+    if request.get('intent') == 'full_deck' and not design_plan:
+        from .delivery_eligibility import describe_snapshots
+        try:
+            full_delivery = describe_snapshots(store, artifact, control)
+            ready = full_delivery['status'] == 'ready'
+            output = full_delivery['selected_output']['artifact_ref']
+            completion = {**completion,
+                'state': 'completed' if ready else completion['state'],
+                'outputs': [*completion['outputs'], *([output] if output else [])],
+                'checks': [*completion['checks'], {'kind': 'requested_delivery',
+                    'status': 'pass' if ready else 'not_evaluated', 'basis': full_delivery}],
+                'responsible_role': 'caller' if ready else completion['responsible_role'],
+                'next_action': 'read_delivery' if ready else completion['next_action']}
+        except (StoreError, OSError, ValueError, KeyError, TypeError):
+            completion = {**completion, 'state': 'needs_recovery',
+                'missing': [*completion['missing'], {'code': 'delivery_facts_unreadable'}]}
     from .eligibility import scope_page_ids
     try:
         selected = scope_page_ids(store, scope) if scope else []
@@ -88,6 +105,8 @@ def project(store, artifact, control, summary, *, fixed=False):
     elif content_only and completion['state'] == 'completed':
         code, role, label, surface = 'return_requested_content', 'caller', '阅读本次内容', 'content'
         title = '本次内容产物已齐备'
+    elif full_delivery and full_delivery['status'] == 'ready':
+        code, role, label, title, surface = 'read_delivery', 'caller', '阅读本次交付', '本次整稿已具备交付资格', 'runs'
     else:
         code, role, label, title, surface = 'continue_project', 'master', '查看下一工作', '本次工作待接续', 'runs'
         from .eligibility import evaluate
@@ -106,7 +125,7 @@ def project(store, artifact, control, summary, *, fixed=False):
     primary = None
     recovery = actions and actions[0]['kind'] in ('verify_execution', 'inspect_failure', 'reconcile_inputs', 'replan')
     if not historical and request and actions and (recovery or (
-            code != 'review_outline' and not design_plan and not (content_only and completion['state'] == 'completed'))):
+            code not in ('review_outline', 'read_delivery') and not design_plan and not (content_only and completion['state'] == 'completed'))):
         primary = actions[0]
         code = primary['kind']
         role = 'master'

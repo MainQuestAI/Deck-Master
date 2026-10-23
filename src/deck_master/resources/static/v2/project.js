@@ -10,6 +10,7 @@ import {BusinessOperations} from './business-operations.js';
 import {actionTargets} from './action-targets.js';
 import {changesetDesk} from './changeset-desk.js';
 import {collaborationBanner} from './collaboration-desk.js';
+import {currentWork} from './current-work.js';
 
 export class Project {
   constructor(root, health) { this.root = root; this.health = health; this.generation = 0; this.positionQueue = Promise.resolve(); this.disposables = []; }
@@ -112,12 +113,32 @@ export class Project {
       const info = await this.readControl();
       if (!isCurrent() || serial !== this.controlRead || info.project_identity !== this.info.project_identity) return;
       this.info = info;
+      await this.refreshCurrentWork(info, () => isCurrent() && serial === this.controlRead);
+      if (!isCurrent() || serial !== this.controlRead) return;
       // Refresh only the control facts. Draft editors, fixed canvases and open
       // decisions keep their DOM and confirmed basis across another window's
       // pause/revoke/CAS update.
       const banner = collaborationBanner(this);
       this.controlSlot?.replaceChildren(...(banner ? [banner] : []));
     } catch { /* Existing fixed reading and the regular sync recovery remain. */ }
+  }
+  async refreshCurrentWork(info, isCurrent = () => true) {
+    if (!this.health.ui_capabilities?.includes('workbench_summary.v2') || !this.summary) return;
+    const revision = this.route.revision, generation = this.generation;
+    let work = null, actions;
+    try {
+      const value = await get(this.summaryURL(revision));
+      const identity = value.current_work?.identity;
+      if (identity?.project_id === this.info.project_id && identity.artifact_revision_id === revision &&
+          identity.control_revision_id === (info.control_revision_id || info.revision_id)) {
+        work = value.current_work; actions = value.next_actions;
+      }
+    } catch { /* Never retain an old action paired with new control facts. */ }
+    if (!isCurrent() || generation !== this.generation || revision !== this.route.revision || this.navigationPending) return;
+    this.summary = {...this.summary, current_work:work, ...(actions ? {next_actions:actions} : {})};
+    // Replace only the derived work panel. Fixed artifacts, comparisons and
+    // draft editors retain their DOM, revision and unsaved content.
+    document.querySelectorAll('[data-current-work]').forEach(node => node.replaceWith(currentWork(this)));
   }
   async loadRoute(initial = null, focus = true) {
     const requestedHash = location.hash, requestedRoute = initial && structuredClone(initial);

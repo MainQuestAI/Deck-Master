@@ -164,6 +164,21 @@ def _checkpoints(store, task):
             if (value := store.read_object_json(ref)).get('schema_version') == 'native_review_checkpoint.v1']
 
 
+def recovery_task_ids(store, document, *, subject=None):
+    """Existing owned completions must be resolved before any new execution."""
+    return [task['task_id'] for ref in document['tasks']
+            if (task := store.read_object_json(ref)).get('review_stage') == 'preproduction'
+            and task.get('review_subject') == subject and task['status'] == 'failed'
+            and any(record.get('state') == 'ready' for record in _checkpoints(store, task))]
+
+
+def _subject_status(store, document, subject):
+    if subject == 'outline':
+        from .outline_review import status
+        return status(store, document)
+    return content_review.preproduction_status(store, document)
+
+
 class _RecoveredProvider:
     """Replay one already-authenticated, committed native proof, unchanged."""
     provider_id = PROVIDER_ID
@@ -263,7 +278,7 @@ def _recover(store, task_id):
                 result_payload=envelope, adapter_context=context)
             return {'status': 'recovered', 'task_id': task_id, 'execution_ref': task['execution_ref'],
                     'model_called': False, 'acceptance': accepted,
-                    'preproduction': content_review.preproduction_status(store, store.load_document())}
+                    'preproduction': _subject_status(store, store.load_document(), task.get('review_subject'))}
         except Exception as exc:
             _failure(store, task, task['execution_ref'], exc)
             raise
@@ -370,13 +385,9 @@ def _run(store, *, task_id, force_units=None, subject=None):
     if task and task["status"] == "running":
         return {"status": "running", "task_id": task["task_id"],
                 "next_action": "inspect the existing execution; cancel it explicitly if interrupted before retrying"}
-    recoverable = [item for ref in document['tasks']
-                   if (item := store.read_object_json(ref)).get('review_stage') == 'preproduction'
-                   and item.get('review_subject') == subject
-                   and item['status'] == 'failed'
-                   and any(record.get('state') == 'ready' for record in _checkpoints(store, item))]
-    if task is None and recoverable:
-        return {'status': 'recovery_available', 'task_ids': [item['task_id'] for item in recoverable],
+    recoverable = recovery_task_ids(store, document, subject=subject)
+    if recoverable:
+        return {'status': 'recovery_available', 'task_ids': recoverable,
                 'next_action': 'Use review recover --project <project> --task-id <id>; do not repeat the native call.'}
     with _session_with_startup_history(store, document["revision_id"]) as session:
         provider = _ObservedProvider(session)
@@ -451,8 +462,7 @@ def _run(store, *, task_id, force_units=None, subject=None):
                     operation_id=task["operation_id"], produced_against=task["produced_against"],
                     result_payload=envelope, adapter_context=context)
                 return {"status": "reviewed", "task_id": task["task_id"], "execution_ref": session.execution_ref,
-                        "acceptance": accepted, "preproduction": (outline_review.status(store, store.load_document())
-                            if subject == 'outline' else content_review.preproduction_status(store, store.load_document()))}
+                        "acceptance": accepted, "preproduction": _subject_status(store, store.load_document(), subject)}
             except Exception as exc:
                 try:
                     _failure(store, task, session.execution_ref, exc)

@@ -742,6 +742,10 @@ def _unit_dependency_equivalent(store, document, review, key, digest):
     This never changes a review or promotes its assurance. Visual bytes and
     speech retain their own checks; design-only layout does not change copy.
     """
+    # Outline reviews bind exact Narrative/Plan versions. Page-scoped editorial
+    # equivalence can omit role facts and must never extend an outline pass.
+    if review.get('review_subject') == 'outline':
+        return False
     import copy
     from .design_requirements import page_semantic_projection, plan_global_projection
     from .models import canonical_json_bytes, sha256_bytes
@@ -801,7 +805,7 @@ def _applicable_reviews(store, document, page_ids, *, records=None, digests=None
             continue
         if strict_refs is not None and item["review_ref"]["sha256"] not in strict_refs:
             continue
-        notes_aliases = (digests.get('_preproduction_notes_aliases') or {}) if review.get('kind') != 'speech' else {}
+        notes_aliases = (digests.get('_preproduction_notes_aliases') or {}) if review.get('kind') != 'speech' and review.get('review_subject') != 'outline' else {}
         deps = {f"{dep['kind']}:{dep['identity']}": dep.get("sha256")
                 for dep in review.get("dependencies") or []}
         stale = [key for key, value in deps.items()

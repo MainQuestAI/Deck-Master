@@ -205,6 +205,8 @@ async function stateDetails(app) {
     if (!dialog.open || !panel.isConnected) return;
     if (info.project_identity !== app.info.project_identity) throw new Error('服务中的项目身份已变化，请重新打开。');
     app.info = info;
+    await app.refreshCurrentWork(info, () => dialog.open && panel.isConnected);
+    if (!dialog.open || !panel.isConnected) return;
   } catch (error) {
     if (dialog.open && panel.isConnected) panel.replaceChildren(el('p', {class:'field-error'}, readableError(error)),
       button('重试读取', () => { dialog.close(); stateDetails(app); }));

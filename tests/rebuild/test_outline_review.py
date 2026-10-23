@@ -134,3 +134,75 @@ def test_native_outline_transport_returns_its_own_gate_and_replay_is_no_call(tmp
     assert native_review.run(project, subject='outline')['status'] == 'already_reviewed'
     assert len(FixtureSession.calls) == 1
     assert FixtureSession.calls[0]['packet']['review_subject'] == 'outline'
+
+
+@pytest.mark.parametrize('field,value', [('required_qualifications', []), ('source_links', []),
+                                        ('narrative_node_ids', ['q1'])])
+def test_outline_pass_expires_on_every_plan_version(tmp_path, monkeypatch, field, value):
+    from deck_master import native_review
+    from test_native_review import FixtureSession
+    FixtureSession.calls, FixtureSession.status, FixtureSession.corrupt, FixtureSession.before_finish = [], 'pass', False, None
+    monkeypatch.setattr(native_review, 'CodexReviewSession', FixtureSession)
+    project, store = outline_project(tmp_path)
+    native_review.run(project, subject='outline')
+    doc = store.load_document()
+    plan = store.read_object_json(doc['content_plan'])
+    assert plan['input']['page_roles'][0][field] != value
+    plan['input']['page_roles'][0][field] = value
+    models.validate_content_plan_semantics(plan)
+    doc['content_plan'] = store.put_json_object(plan)
+    commit(store, doc, 'change-outline-role-fact')
+    assert outline_review.status(store, store.load_document())['status'] == 'missing'
+    assert len(FixtureSession.calls) == 1
+
+
+def test_outline_ready_checkpoint_blocks_dispatch_and_recovers_original(tmp_path, monkeypatch):
+    from deck_master import native_review
+    from test_native_review import FixtureSession, _review_task
+    FixtureSession.calls, FixtureSession.status, FixtureSession.corrupt, FixtureSession.before_finish = [], 'pass', False, None
+    monkeypatch.setattr(native_review, 'CodexReviewSession', FixtureSession)
+    project, store = outline_project(tmp_path)
+    with monkeypatch.context() as patch:
+        def fail_accept(*args, **kwargs):
+            raise OSError('synthetic acceptance fault after ready checkpoint')
+        patch.setattr(service, 'accept_result', fail_accept)
+        with pytest.raises(OSError):
+            native_review.run(project, subject='outline')
+    task = _review_task(store)
+    before = store.load_document()
+    assert synthetic_runtime_call(outline_review.dispatch, project,
+        adapter_context=synthetic_context())['status'] == 'recovery_available'
+    with pytest.raises(tasks.TaskConflict):
+        service.open_host_task(store, kind='review', page_ids=[], review_stage='preproduction',
+            review_subject='outline', instruction='must recover first',
+            review_units=[{'kind': 'argument', 'page_ids': [], 'reason': 'missing'}])
+    assert native_review.run(project, subject='outline')['status'] == 'recovery_available'
+    assert store.load_document() == before
+    result = native_review.recover(project, task_id=task['task_id'])
+    assert result['status'] == 'recovered' and result['model_called'] is False
+    assert result['preproduction']['review_subject'] == 'outline'
+    assert result['preproduction']['status'] == 'pass'
+    assert result['preproduction']['production_qualified'] is False
+    assert len(FixtureSession.calls) == 1
+
+
+@pytest.mark.parametrize('entrypoint', ['dispatch', 'direct'])
+def test_page_scope_cannot_authorize_whole_outline(tmp_path, entrypoint):
+    from deck_master import collaboration, eligibility
+    from test_content_preproduction_review import _instruction, _scope
+    project, store = _deck(tmp_path)
+    doc = store.load_document()
+    collaboration.start_request(project, input={'intent': 'review_only', 'content_intent': None,
+        'instruction_evidence': _instruction(store, 'review-only-page-one'),
+        'scope': _scope(subject='pages', page_ids=['p1'], layers=['review'], allow_page_membership_change=False),
+        'replace_request_id': doc['collaboration']['request']['request_id']},
+        base_revision=doc['revision_id'], operation_id='new-page-review')
+    before = store.load_document()
+    with pytest.raises(eligibility.EligibilityBlocked):
+        if entrypoint == 'dispatch':
+            synthetic_runtime_call(outline_review.dispatch, project, adapter_context=synthetic_context())
+        else:
+            service.open_host_task(store, kind='review', page_ids=[], review_stage='preproduction',
+                review_subject='outline', instruction='whole outline exceeds scope',
+                review_units=[{'kind': 'argument', 'page_ids': [], 'reason': 'missing'}])
+    assert store.load_document() == before

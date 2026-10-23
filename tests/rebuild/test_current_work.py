@@ -182,3 +182,52 @@ def test_unresolved_execution_precedes_delivery_or_early_review(tmp_path, kind):
     assert work['next']['action'] == 'verify_execution'
     assert work['next']['primary_action'] == action
     assert store.load_document() == doc
+
+
+def test_complete_deck_uses_existing_delivery_authority_without_writes(tmp_path):
+    from test_export import _passing_deck
+    from deck_master import delivery_eligibility
+    project, store = _passing_deck(tmp_path)
+    before = {str(p): p.read_bytes() for p in project.rglob('*') if p.is_file()}
+    readiness = delivery_eligibility.describe(project)
+    assert readiness['status'] == 'ready'
+    result = workbench.workbench_summary(project, protocol='workbench_summary.v2')['current_work']
+    assert result['delivery']['state'] == 'completed'
+    assert result['delivery']['responsible_role'] == 'caller'
+    assert result['next']['action'] == 'read_delivery'
+    assert readiness['selected_output']['artifact_ref'] in result['delivery']['outputs']
+    assert {str(p): p.read_bytes() for p in project.rglob('*') if p.is_file()} == before
+
+
+@pytest.mark.browser
+@pytest.mark.parametrize('route', ['studio', 'v2'])
+def test_control_refresh_rebinds_work_without_replacing_fixed_artifact(tmp_path, route):
+    import shutil
+    from playwright.sync_api import sync_playwright, expect
+    from deck_master import collaboration
+    project, store = production_project(tmp_path, 'full_deck')
+    server = WorkbenchServer(project)
+    url = server.start()
+    try:
+        with sync_playwright() as runtime:
+            browser = runtime.chromium.launch(executable_path=shutil.which('chromium'), args=['--no-sandbox'])
+            page = browser.new_page()
+            page.goto(url + route + '/')
+            expect(page.get_by_role('heading', name='2 页原图待生成', exact=True)).to_be_visible()
+            revision = store.current_revision_id()
+            collaboration.pause_request(project, reason='synthetic cross-window pause',
+                base_revision=revision, operation_id='reviewer-pause')
+            with page.expect_response(lambda response: '/api/project' in response.url):
+                page.evaluate("window.dispatchEvent(new Event('focus'))")
+            expected = workbench.workbench_summary(project, revision=revision,
+                protocol='workbench_summary.v2')['current_work']
+            expect(page.get_by_role('heading', name=expected['next']['title'], exact=True)).to_be_visible()
+            page.get_by_role('button', name='查看本次工作与范围', exact=True).click()
+            dialog = page.get_by_role('dialog')
+            expect(dialog.get_by_role('button', name='恢复本次请求', exact=True)).to_be_visible()
+            expect(dialog.get_by_role('heading', name=expected['next']['title'], exact=True)).to_be_visible()
+            expect(dialog.get_by_role('button', name='查看待补页', exact=True)).to_have_count(0)
+            assert 'revision=' + revision in page.url
+            browser.close()
+    finally:
+        server.stop()

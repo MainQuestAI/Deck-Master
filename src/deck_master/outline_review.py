@@ -29,6 +29,13 @@ def records(store, document):
             if row['review'].get('review_subject') == 'outline']
 
 
+def review_targets(store, document):
+    """The whole frozen outline is a deck subject, never an empty-page grant."""
+    require_outline(store, document)
+    plan = store.read_object_json(document['content_plan'])
+    return {'subject': 'deck', 'page_ids': list(plan['input']['page_order']), 'layers': ['review']}
+
+
 def status(store, document):
     require_outline(store, document)
     from .editing import _current_artifact_digests
@@ -87,7 +94,12 @@ def dispatch(project, *, adapter_context=None, force_units=None):
     if not units:
         return {'status': 'already_reviewed', 'outline': gate}
     eligibility.guard(store, document, 'dispatch.host_task',
-        context={'targets': {'page_ids': [], 'layers': ['review']}})
+        context={'targets': review_targets(store, document)})
+    from .native_review import recovery_task_ids
+    recoverable = recovery_task_ids(store, document, subject='outline')
+    if recoverable:
+        return {'status': 'recovery_available', 'task_ids': recoverable, 'outline': gate,
+                'next_action': 'recover the original operation before creating or executing another review'}
     from .tasks import task_inputs_current
     pending = [task for ref in document.get('tasks', [])
                if (task := store.read_object_json(ref)).get('review_subject') == 'outline'

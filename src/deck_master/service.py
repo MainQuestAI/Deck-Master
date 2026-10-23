@@ -1392,8 +1392,15 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
         raise ServiceError('scope_pages', 'page_visual must target exactly one page')
     host_layers = {"reconstruct": ["svg", "blueprint"], "repair": ["page_copy", "svg"],
                    "review": ["review"]}[kind]
+    host_targets = {"page_ids": list(page_ids), "layers": host_layers}
+    if review_subject == 'outline':
+        from .outline_review import review_targets
+        from .native_review import recovery_task_ids
+        host_targets = review_targets(store, document)
+        if recovery_task_ids(store, document, subject='outline'):
+            raise tasks_mod.TaskConflict('review/outline', 'recover the original completion before dispatching another review')
     eligibility.guard(store, document, "dispatch.host_task",
-                      context={"targets": {"page_ids": list(page_ids), "layers": host_layers}})
+                      context={"targets": host_targets})
     entries = [e for e in document['pages'] if e['page_id'] in page_ids]
     from .production import design_handoff_protocol_fields
     protocol = design_handoff_protocol_fields(store, document, entries) if review_stage not in ('preproduction', 'original_image') else {}
