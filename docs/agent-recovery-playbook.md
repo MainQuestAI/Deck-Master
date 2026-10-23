@@ -484,3 +484,30 @@ current scope, identity, cancellation, review-owner or acceptance checks. A
 completed earlier pass is not permission to ignore a newly accepted failing
 review. Only semantically unchanged policy bookkeeping can preserve applicability;
 changed sources, actual requirements or authority still invalidate their basis.
+
+## Native reviewer startup diagnostics
+
+`review channels --check-native` checks executable/login prerequisites only. A
+`prerequisites_ready` response has `session_verified=false`; it does not prove an
+app-server session, model turn, review or receipt succeeded.
+
+After an authorized `review native` fails before entering its session, read
+`review channels --project <dir>`. `native_startup_failures` contains local
+historical diagnostics: fixed category/phase, timestamp, selected revision,
+CLI exit code and observed process exit code (null when not observed). This is
+separate from `native_executions`, which describes actual Task history. A later
+successful execution does not delete earlier startup failures, and old failures
+do not override current prerequisite observations.
+
+The private sidecar `.deckmaster/native-review-startup-history.json` is diagnostic
+history, not a Task, checkpoint, authenticated receipt or permission. It never
+stores raw stderr, login output, configuration or exception strings. Startup
+errors expose `error.details.startup_history_saved`; false means the original
+failure remains but its history could not be saved. Discovery reports
+`native_startup_history.status=unavailable` for unreadable/corrupt history;
+preserve it for diagnosis rather than treating it as an empty history.
+
+Inspect the named phase and the existing native client locally. Do not change
+credentials/security settings or automatically retry a model call. Retry only
+when the review is authorized and the startup issue is resolved. This diagnostic
+entry does not repair native client databases or establish professional approval.

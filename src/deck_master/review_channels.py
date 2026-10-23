@@ -21,7 +21,6 @@ def describe(*, check_native=False, adapter_context=None, project=None):
 
     stages = []
     for stage in STAGES:
-        implemented = True
         channels = []
         native_supported = stage == 'content_preproduction'
         channels.append({'mode': 'native_independent', 'supported': native_supported,
@@ -32,13 +31,11 @@ def describe(*, check_native=False, adapter_context=None, project=None):
                 'Native content review does not implement this stage; use an applicable review Task/channel.'})
         for mode, channel in (('independent_host', 'independent_review_receipts'),
                               ('human', 'human_review_receipts')):
-            status = receipt_channel(channel) if implemented else 'unsupported'
-            channels.append({'mode': mode, 'supported': implemented, 'status': status,
+            status = receipt_channel(channel)
+            channels.append({'mode': mode, 'supported': True, 'status': status,
                 'receipt_requirement': channel, 'receipt_status': receipt_channel(channel),
                 'execution_verified': False,
-                'next_action': ('Original-image expression review has no implemented Task entry yet; keep it not_evaluated.'
-                    if not implemented else
-                    'Read the real review Task with deck-review; perform the scoped review and submit its bound authenticated receipt.'
+                'next_action': ('Read the real review Task with deck-review; perform the scoped review and submit its bound authenticated receipt.'
                     if status == 'receipt_available' else
                     'Inspect the registered provider health; do not treat a failed transport as an absent reviewer.'
                     if status == 'provider_unavailable' else
@@ -59,6 +56,10 @@ def describe(*, check_native=False, adapter_context=None, project=None):
         from .store import Store
         store = Store(Path(project).expanduser())
         document = store.load_document()
+        from .native_review_startup import describe as startup_history
+        history = startup_history(store)
+        result['native_startup_history'] = {key: value for key, value in history.items() if key != 'failures'}
+        result['native_startup_failures'] = history['failures']
         result['project_id'] = document['project_id']
         result['revision_id'] = document['revision_id']
         # Historical failures remain visible, separate from live channel health.

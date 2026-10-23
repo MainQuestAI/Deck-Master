@@ -6,6 +6,7 @@ Committed standard Review/Task/receipt facts remain usable after it exits.
 """
 from __future__ import annotations
 
+from contextlib import contextmanager
 from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 import fcntl
@@ -296,6 +297,34 @@ def run(project, *, task_id=None, force_units=None):
         os.close(handle)
 
 
+@contextmanager
+def _session_with_startup_history(store, revision_id):
+    session = CodexReviewSession()
+    try:
+        entered = session.__enter__()
+    except Exception as exc:
+        from . import native_review_startup
+        try:
+            native_review_startup.record(store, revision_id, getattr(session, 'startup_failure', {}))
+        except (OSError, ValueError, TypeError):
+            # Preserve the startup error; explicitly report unknown persistence.
+            exc.startup_history_saved = False
+        else:
+            exc.startup_history_saved = True
+        exc.error_details = {**native_review_startup.normalize(getattr(session, 'startup_failure', None)),
+                             'startup_history_saved': exc.startup_history_saved,
+                             'next_action': native_review_startup.NEXT_ACTION}
+        raise
+    try:
+        yield entered
+    except BaseException:
+        import sys
+        if not session.__exit__(*sys.exc_info()):
+            raise
+    else:
+        session.__exit__(None, None, None)
+
+
 def _run(store, *, task_id, force_units=None):
     document = store.load_document()
     forced = content_review.validate_force_units(store, document, force_units)
@@ -332,7 +361,7 @@ def _run(store, *, task_id, force_units=None):
     if task is None and recoverable:
         return {'status': 'recovery_available', 'task_ids': [item['task_id'] for item in recoverable],
                 'next_action': 'Use review recover --project <project> --task-id <id>; do not repeat the native call.'}
-    with CodexReviewSession() as session:
+    with _session_with_startup_history(store, document["revision_id"]) as session:
         provider = _ObservedProvider(session)
         registry = review_evidence.ProviderRegistry()
         registry.register(provider)
