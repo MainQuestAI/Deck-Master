@@ -104,7 +104,9 @@ def project(store, artifact, control, summary, *, fixed=False):
         surface = 'style'
     elif content_only and completion['state'] == 'completed':
         code, role, label, surface = 'return_requested_content', 'caller', '阅读本次内容', 'content'
-        title = '本次内容产物已齐备'
+        product_name = {'plan_only': '论证与大纲', 'write_only': '上屏稿',
+                        'speech_only': '口播稿', 'content_full': '完整内容'}.get(request.get('content_intent'), '内容')
+        title = f'本次{product_name}已完成'
     elif full_delivery and full_delivery['status'] == 'ready':
         code, role, label, title, surface = 'read_delivery', 'caller', '阅读本次交付', '本次整稿已具备交付资格', 'runs'
     else:
