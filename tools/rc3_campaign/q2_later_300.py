@@ -237,9 +237,12 @@ def session(control, sha, flow, engineering=False, *, inspect_only=False):
             linked = [e['data']['frontier'] for e in events if e['kind'] == 'origin_linked']
             require(tip(c, origin) == (linked[-1] if linked else row['frontier']), 'origin frontier changed without confirmed later projection')
             require(not origin.unfinished() and not j.unfinished(), 'old union later SDK outcome unresolved; no retry/refund')
-            charges = [e['data']['identity'] for e in resources.journal.events() if e['kind'] == 'resource_charge'
+            # No writes intervene: both projections describe this one verified
+            # ledger snapshot. A later request still reads and checks the chain.
+            resource_events = resources.journal.events()
+            charges = [e['data']['identity'] for e in resource_events if e['kind'] == 'resource_charge'
                        and e['data']['pool'] == s.pool_key(state) and e['data']['resource'] == 'sdk']
-            projections = [e['data'] for e in resources.journal.events() if e['kind'] == 'sdk_projection' and e['data']['pool'] == s.pool_key(state)]
+            projections = [e['data'] for e in resource_events if e['kind'] == 'sdk_projection' and e['data']['pool'] == s.pool_key(state)]
             require(len(charges) == len(projections) and all(sum(p['identity'] == identity for p in projections) == 1 for identity in charges), 'interrupted SDK charge/projection; unknown blocks writes')
             for p in projections:
                 checked(p['intent'])
@@ -299,8 +302,9 @@ def begin(s, c, j, state, reg, row, stage, observation):
             and executor.startswith('/root/') and spawn.get('returned_task_name') == executor, 'actual own project/Task invocation required')
     c.fresh(o['observed_at_utc']); policy = read(reg['exposure_registry']['path']); excluded = set(policy['excluded_identities'])
     inherited = spawn.get('inherited_identities', []); require(executor not in excluded and not excluded.intersection(inherited), 'excluded preparer/private exposure')
-    previous = [e['data'] for e in j.events() if e['kind'] == 'native_begun']
-    historical = next(e['data']['authors'] for e in j.events() if e['kind'] == 'origin_author_lineage')
+    events = j.events()
+    previous = [e['data'] for e in events if e['kind'] == 'native_begun']
+    historical = next(e['data']['authors'] for e in events if e['kind'] == 'origin_author_lineage')
     authors = {e['executor'] for e in historical+previous if e['role'] in c.WRITER_ROLES}
     role = dispatch['role']; require(role in ROLES and ROLES[role], 'finite content/review roles only')
     require(role not in {'feedback', 'verification'} or not ({executor, *inherited} & authors), 'old union later author cannot review')
@@ -337,8 +341,9 @@ def review_accept(c, j, state, stage, ordinal, bootstrap):
     require(not envelope.get('pages') and not envelope.get('page_order') and not envelope.get('artifact_specs')
             and not envelope.get('usage_events'), 'read-only zero-call review envelope required')
     binding = review_evidence.review_binding(store, before, task, envelope)
-    historical = next(e['data']['authors'] for e in j.events() if e['kind'] == 'origin_author_lineage')
-    authors = {e['executor'] for e in historical} | {e['data']['executor'] for e in j.events() if e['kind'] == 'native_begun' and e['data']['role'] in c.WRITER_ROLES}
+    events = j.events()
+    historical = next(e['data']['authors'] for e in events if e['kind'] == 'origin_author_lineage')
+    authors = {e['executor'] for e in historical} | {e['data']['executor'] for e in events if e['kind'] == 'native_begun' and e['data']['role'] in c.WRITER_ROLES}
     require(invocation['executor'] not in authors and set(binding['author_execution_refs']) <= authors, 'protected binding requires all actual old union later authors')
     issued = datetime.now(timezone.utc); raw = checked(proof['observation'])
     claims = {**binding, 'provider_id': c.PROVIDER_ID, 'event_id': 'native-'+c.digest(raw)[:40], 'channel': c.CHANNEL,
@@ -396,13 +401,14 @@ def accepted_repair_layers(j, c=None, state=None):
 
 
 def verification_ready(c, j, state, task=None, *, request_required=True):
-    repairs = [e['data'] for e in j.events() if e['kind'] == 'repair_begun']
+    events = j.events()
+    repairs = [e['data'] for e in events if e['kind'] == 'repair_begun']
     require(len(repairs) == 1 and set(repairs[0]['necessary_layers']) <= accepted_repair_layers(j, c, state),
             'verification needs actual adopted and accepted necessary repair layers')
     if not request_required: return
     doc = c.store_for(state).load_document(); current = (doc.get('collaboration') or {}).get('request') or {}
-    requests = [e['data'] for e in j.events() if e['kind'] == 'later_review_request' and e['data']['role'] == 'verification']
-    instruction = next(e['data']['instruction_evidence'] for e in j.events() if e['kind'] == 'later_instruction')
+    requests = [e['data'] for e in events if e['kind'] == 'later_review_request' and e['data']['role'] == 'verification']
+    instruction = next(e['data']['instruction_evidence'] for e in events if e['kind'] == 'later_instruction')
     expected_scope = {'subject': 'pages', 'page_ids': [x['page_id'] for x in doc['pages']],
         'page_manifest_ref': doc.get('content_plan'), 'external_artifact_ref': None, 'layers': ['review'],
         'allow_page_membership_change': False, 'allow_page_order_change': False, 'purpose': 'review'}
@@ -544,18 +550,19 @@ def manuscript_coverage(c, j, state, native_cut, name):
 
 
 def later_cut_ready(c, j, state, name, native_manifest):
-    updates = [e for e in j.events() if e['kind'] == 'later_inputs_updated']
+    events = j.events()
+    updates = [e for e in events if e['kind'] == 'later_inputs_updated']
     doc = c.store_for(state).load_document()
     require(len(updates) == 1 and doc['task']['brief'] == updates[0]['data']['patch']['task_patch']['brief']
             and '10 分钟' not in doc['task']['brief'] and doc['task']['brief'].count('5 分钟') == 1,
             'later300s cut requires actual current 300s inputs')
-    initial = {e['data']['ordinal'] for e in j.events() if e['kind'] == 'native_begun'
+    initial = {e['data']['ordinal'] for e in events if e['kind'] == 'native_begun'
                and e['data']['role'] == 'initial_writer' and e['sequence'] > updates[0]['sequence']}
     if name == 'original_complete':
         require(native_manifest is not None and set(read(native_manifest).get('raw_stage_ordinals', [])) <= initial,
                 'later300s cut requires actual later initial native originals')
         return  # d0 independently validates completeness and frozen observations; SDK adoption is separate.
-    cuts = [e['data']['snapshot'] for e in j.events() if e['kind'] == 'later300s_cut' and e['data']['name'] == 'original_complete']
+    cuts = [e['data']['snapshot'] for e in events if e['kind'] == 'later300s_cut' and e['data']['name'] == 'original_complete']
     require(len(cuts) == 1, 'later300s cut requires actual later native complete cut')
     require(any(inv['ordinal'] in initial for inv, _, _ in adopted_writers(c, j, state, 'initial_writer')),
             'later300s cut requires actual later native SDK adoption')

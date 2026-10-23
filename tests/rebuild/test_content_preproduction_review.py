@@ -20,6 +20,24 @@ from deck_master.store import Store
 from deck_master.tasks import EnvelopeError
 
 
+def test_eligibility_reuses_one_review_verdict_and_one_digest_set(tmp_path, monkeypatch):
+    from deck_master import eligibility
+    project, store = _deck(tmp_path)
+    document = store.load_document()
+    calls = []
+    original = content_review._current_artifact_digests
+
+    def counted(*args, **kwargs):
+        calls.append(True)
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(content_review, '_current_artifact_digests', counted)
+    result = eligibility.preproduction_state(store, document)
+    assert result['status'] == 'missing'
+    assert not result['satisfied']
+    assert len(calls) == 1
+
+
 def _stored(store, seed: str) -> dict:
     return store.put_json_object({"fixture": seed})
 

@@ -219,15 +219,21 @@ def test_repeated_surface_navigation_shares_its_control_read_and_can_retry(flow,
                 page.wait_for_function('() => window.heldProjectReads >= 1')
                 navigation.click()
             page.wait_for_function('() => window.heldProjectReads >= 1')
-            page.evaluate('''() => {
-                const root = document.querySelector('#app');
-                root.addEventListener('summary-refreshed', () => window.navigationPollObserved = true, {once:true});
-                root.dispatchEvent(new CustomEvent('business-state-changed'));
-            }''')
-            page.wait_for_function('() => window.navigationPollObserved === true')
+            # A poll response during navigation is deliberately not adopted:
+            # summary-refreshed belongs to applied state, not transport completion.
+            with page.expect_request(lambda request: '/api/view/summary' in request.url) as polled:
+                page.evaluate('''() => {
+                    const root = document.querySelector('#app');
+                    root.addEventListener('summary-refreshed', () => window.navigationPollObserved = true, {once:true});
+                    root.dispatchEvent(new CustomEvent('business-state-changed'));
+                }''')
+            response = polled.value.response()
+            assert response.status == 200
+            response.finished()
             # Drain browser event dispatch after the real summary response. A
             # passive control refresh must not add another held project read.
             page.evaluate('() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))')
+            assert page.evaluate('window.navigationPollObserved !== true')
             assert len(held) == 1
             expect(page.locator('.navigation-status')).to_be_visible()
             assert page.locator('#main').evaluate('node => node.inert')

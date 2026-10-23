@@ -1,0 +1,282 @@
+# Integrated CI follow-up
+
+Baseline PR184: 55adc97c5bb5f16ae7fcff7c33c43969fae9ce97. Initial CI head:
+59f4c0fdf6901db15ec1bfb7d8fc749459340e16, run 39833146156.
+
+The render job 120014697159 completed with 3 failed, 133 passed, 1 skipped
+in 200.33s. These are not cloud renderer installation results. The runner
+installed official librsvg/LibreOffice/Poppler successfully. Local installation
+remains blocked by filesystem permissions. RP19 report records exact writer
+promotion and retired-task invariants behind the three corrected expectations.
+
+A targeted local reproduction selected six files from earlier CI progress:
+candidates, eligibility enforcement/entry coverage/resolver, production and
+RC3 gate repair. Result: 51 failed, 133 passed, 3 deselected in 36.62s.
+This is diagnostic evidence, not a passing candidate. Further scope tests
+exposed a real all-manuscript vs page-target review deadlock under a narrowed
+request; separate runtime repair is in progress.
+
+Four isolated fixture updates preserve the intended checks:
+
+- Explicit assembly of old format is refused by pipeline's precise
+  stage_format_required/project error before mutation; current pointer unchanged.
+- New blueprint method selection uses visual-reference, while reconstruction
+  and the historical RC3 selector retain blueprint-svg. Exact tuples checked.
+- The asset attachment positive now explicitly selects a genuine PNG original
+  and verifies exact bytes. Merely permitting an asset is not consumption;
+  existing RP19 negative tests cover no selection and unsupported SVG attachment.
+- Pause refusal is tested against a genuinely allocated second allowance under
+  an explicit two-call grant, rather than a nonexistent call-2. The old call
+  remains in flight and can settle; the reserved call cannot begin while paused,
+  with current pointer and reserved state unchanged.
+
+Command: PYTHONPATH=src:tests/rebuild .venv/bin/python -m pytest -q
+ tests/rebuild/test_candidates.py tests/rebuild/test_production.py
+ tests/rebuild/test_flow_quality.py tests/rebuild/test_late_results_and_stops.py
+ -m 'not render and not browser'
+
+Result: **108 passed, 7 deselected in 17.72s**. No production assertions removed,
+no source capability downgrade, no model invocation. CI matrix and browser job
+remain in progress; no final gate pass claimed.
+
+The narrowed-request deadlock is confirmed and repaired in `9d08f79e`:
+actual valid nonempty page-action targets select review coverage; compile/PPT,
+assembly, missing, empty and unknown targets retain full-manuscript coverage.
+Independent scope/authority guards and unresolved deck/target findings remain.
+The two authorization fixtures now review after narrowing the request, preserving
+RP14's requirement freshness rather than reusing an old request's review.
+Integrated enforcement/scoped/entry-coverage/read-only-diagnostic suite:
+**65 passed in 5.39s**. New regression first reproduced the real failure before
+runtime editing, and includes full-deck, empty/unknown targets and open findings.
+
+After scoped runtime repair, current effective-policy comparison and frozen-owner
+fixture repairs, the combined 13-file diagnostic selection passed:
+**312 passed, 7 deselected in 64.28s** (`/tmp/deck-ci-integrated-contracts.log`).
+Selection: candidates, eligibility enforcement/entry coverage/resolver,
+production, rc3_01_gate_repair, flow_quality, late_results_and_stops,
+rc3_preproduction_semantics, rc3_restyle_workflows, rc3_review_policy_ready,
+review_policy_semantic_identity, scoped_preproduction_eligibility; pytest -q
+-p no:cacheprovider -m 'not render and not browser'. Full src/tests Ruff and
+`git diff --check` passed. This is distinct from the still-running remote full gate.
+
+Remote original head terminal unit evidence (2026-10-22):
+Python 3.11/Node22 job 120014697231: 73 failed, 3679 passed, 2 skipped,
+733 deselected in 1137.37s. Python 3.11/Node24 job 120014697826: identical
+73 failing test IDs and totals in 1329.85s. The failure list is tracked locally
+in /tmp/deck-ci-39833146156-unit-failures.json. Most mapped to the fixes above;
+the isolated Q2 child exposed one additional frozen-owner fixture requiring
+explicit replacement with original open findings retained (under correction).
+Other remote jobs remain in progress; these are honest failed gate results.
+
+The later local unit diagnostic segment stopped after 15 failures with
+930 passed, 56 deselected in 193.69s. This also ran during source integration,
+so its two local-runtime health failures were rechecked on a fixed candidate:
+launcher, port-restart recovery and JSON polling receipt all passed (3 in 1.53s).
+No runtime health timeout was changed. The trailing unit files passed separately:
+221 passed, 41 deselected in 59.35s; /tmp/deck-ci-tail-unit-repro.log.
+
+Final code candidate for the first CI-followup push:
+`c9cc33a21b5643be22b3cdd763ffd96c61757187`. Exact git archive wheel, temporary
+installation and canonical Skill inventory matched (278 package files);
+CI-followup-installation.json contains wheel SHA256 and actual import path.
+Installed module was asserted before running archived native review/recovery,
+explicit re-review, RP24 diagnosis, scoped review gate, policy semantic identity,
+original-image review and real preview-poll browser checks:
+**88 passed in 30.31s**, `/tmp/deck-followup-c9cc33a2/installed-tests.log`.
+The corresponding source selection for remaining known contract failures passed
+71 tests in 16.86s. The isolated Q2 wrapper passed8 tests in138.84s, including
+actual `-I -B` child70/70 passed0skip; no HOME or real model call involved.
+
+Python3.12/Node24 original CI job120014696823 also ended with the same73 failed
+IDs,3679 passed,2 skipped in1490.15s. Original browser and final matrix still run.
+Followup is pushed separately as codex/issue-repair-20261023-ci-followup so the
+original requested CI can reach its own terminal state without concurrency
+cancellation. No PR creation or merge is performed.
+
+## Terminal original run and next exact candidate
+
+Run 39833146156 on 59f4c0fdf6901db15ec1bfb7d8fc749459340e16
+completed **failure**. All four unit configurations had the same 73 failures;
+render had 3 failures. Browser job 120014697184 ended with **40 failed,
+556 passed, 3891 deselected in 3032.19s**. Installed UI stages were not reached.
+The browser failures are being reproduced in independent groups; two deep-quality
+navigation failures were already repaired in 3260c3de. No final gate pass claimed.
+
+Followup source 3b809d3e9d073972dce21f618218f39ca76e3d14 is pushed to
+codex/issue-repair-20261023-ci-followup. Run 39838599321 render job120034119366
+passed **136 tests, 1 skipped, 4385 deselected in 198.13s**. Official runner
+librsvg2-bin installation succeeded; this does not resolve local apt permissions.
+The prior followup run39837132490 was superseded by branch concurrency after
+its render result of 1 failed/135 passed/1 skipped. The remaining fixture wrongly
+requested image regeneration for an unused-asset change: it now checks unchanged
+original/SVG and production tasks, with a new current page-visual review.
+
+The exact 3b809d3e archive wheel matches all278 package files and canonical Skill
+inventory; wheel SHA256 e48e246b2657ae40215233b65a7ea80ca7008a42c760768fb9ca554837df2bff.
+Actual installed import: /tmp/deck-followup-3b809d3e/site/deck_master/__init__.py.
+Installed scoped-owner/gate, explicit-unit re-review and RP24 diagnosis checks:
+**41 passed in7.52s**. The new cross-page deck-finding owner regression retains
+exact frozen identity without permitting partial review to close a deck defect.
+
+Full local unit command on that fixed source:
+`.venv/bin/python -m pytest -q -p no:cacheprovider tests/rebuild -m 'not render and not browser'`.
+Result **2 failed,3782 passed,2 skipped,733 deselected,3 errors in1025.95s**.
+All five failed/setup outcomes belong to test_install.py temporary wheel/sdist
+venvs: pip install setuptools>=77/wheel encounters DNS Errno-3 before installing
+the project. Isolated reproduction:1 failed/7 passed/3 deselected in38.06s.
+Normal dependency-source resolution must recover before rerunning those checks;
+no source override, credential/security change or assertion relaxation was used.
+Logs: /tmp/deck-followup-3b809d3e/full-unit.log and /tmp/rp02-install-diagnosis.log.
+
+## Browser repair batch
+
+All40 terminal original-CI browser failures passed together on integrated
+15a4550b in208.27s, with real Chromium and --require-browser. Navigation/composer
+tests now operate visible controls; original readonly, keyboard, conflict,
+late-response and authorization assertions remain. Style tests complete the
+public original-image review protocol using explicitly synthetic receipts.
+Those receipts are not real image-quality acceptance. The actual mixed-deck
+first-viewport layout defect is repaired with a wrapping entry toolbar and
+accessible optional initial-design disclosure; pure no-original decks stay open.
+1280/1440 viewport measurements and390px screenshots are in
+navigation-layout-followup.md. No polling/CAS/authorization guard was removed.
+
+An independent four-file browser run passed98 tests without skips in469.91s;
+/tmp/rp09-browser-four-final.log. The initial-design optional-row guard was
+additionally reproduced and corrected to omit absent native DOM append arguments,
+preserving exact pass/fail/not_evaluated text (10 browser checks passed).
+
+Final code c05c4d96b83ef5186e91a4a20021814f9a0d2928 archive wheel matches278 package
+files and canonical Skill inventory. Actual installed package was asserted before
+running the original40 failures plus initial-design/polling tests: **50 passed,
+no skips in197.96s**. /tmp/deck-followup-c05c4d96/installed-browser.log and
+CI-followup-installation.json retain exact code/wheel identity.
+
+Remote run39838599321 on earlier3b809d3e: Python3.11/Node22 and24, Python3.12/Node22
+each passed3787 tests with2 skips. Python3.12/Node24 passed3786 with2 skips and
+failed only the real Q2 child at its unchanged180s timeout. All70 child outcomes
+remain required; no timeout/coverage/assertion relaxation is authorized as a fix.
+The successful matrices cover the five local DNS-blocked installation outcomes.
+Browser fixes above require a new exact-head CI; no complete-green claim is made.
+
+Q2 timeout investigation: the untouched actual -I -B 70-case carrier passed in
+136.28s locally; slowest case7.54s, /tmp/q2-runtime-baseline.log. Profiling found
+real authenticated controller/session/installation checks, not a justified
+shortcut. The remote abbreviated log cannot establish resource contention or a
+particular stalled node. Diagnostic-only wrapper changes retain180s and every
+outcome assertion, add verbose case names/durations and bounded output tails as
+notes on the original timeout exception. Mocked-timeout and existing guard tests
+passed8 checks. This improves next-run evidence and is not claimed as a timeout
+fix. Product package and Skill bytes remain identical to installed c05c4d96.
+
+## Exact be181da6 terminal and navigation-intent repair
+
+Run39843537190 on be181da6a37c38eb410440c1889c44f96d7ef5bb ended failure:
+all four unit configurations passed3788 with2 skips, including the complete
+70-case isolated Q2 wrapper under the unchanged180s deadline. Renderer passed136
+with1 skip. Browser passed600 and failed only the Studio page-source expansion
+flow; installed UI steps were consequently skipped. This is not a full-green run.
+
+The remaining failure was reproduced deterministically in real Chromium:
+hold the requested-current task response, then click a sidebar surface. The
+sidebar remained active and go() rebuilt its destination from the committed old
+route, silently cancelling the pending current-version intent. The old snapshot
+had no current original-review proof and correctly did not offer expansion.
+This was an actual navigation race, not grounds to relax the original test.
+
+913cfcae carries the validated pending navigation intent into subsequent surface
+changes, including revision=null meaning freshly read current. Displayed state,
+readonly/auth facts and mutation bases still update only after identity checks
+and latest-generation confirmation. Explicit historical navigation overrides
+the inherited intent; late old responses cannot replace it or clear newer intent.
+Independent source review found no concrete authorization/currentness regression.
+The original failing test gained no wait, retry, skip or timeout increase.
+
+Regression evidence: deterministic current/sidebar case failed on be181da6,
+then passed with the runtime repair; explicit-history/late-response negative
+passed. Studio full9 and four existing navigation protections passed in the
+isolated integration. Root supplemental-navigation/usability/poll selection:
+**39 passed in200.05s**, /tmp/deck-navigation-intent-regression.log.
+
+Exact code346bb9884e516d1243a95fa93804bc74ce40f228 archive wheel matches278 package
+files and canonical Skill inventory. Its actual installed module was preloaded
+and asserted before the archived complete Studio browser suite: **9 passed,
+no skips in54.85s**, /tmp/deck-followup-346bb988/installed-browser.log.
+CI-followup-installation.json records its wheel SHA256. New exact-head CI remains
+required. Local normal-source DNS still failed at20:06 UTC; no network/security
+changes or repeated pip bootstrap were used to bypass this environment blocker.
+
+Public PR approval was explicitly received at2026-10-22 20:45 UTC. Existing PRs
+were checked for all three repair branches before creating integrated draft
+https://github.com/MainQuestAI/Deck-Master/pull/185 against the still-unmerged
+PR184 branch. GitHub confirmed mergeable=true; checks remain pending. RP24's
+separate product decision was not approved. No PR merge, release or automatic
+issue closure was performed. The execution ledger now records the earlier PR
+approval blocker as resolved, preserving its history.
+
+## Q2 cumulative deadline diagnosis on 8c826711
+
+PR run39852103635 job120081490120 ended at21:20 UTC with3787 passed,
+1 failed and2 skipped. The failure is the unchanged180-second isolated Q2
+carrier: its new inline diagnostics show64/70 cases passed, then the plan
+technical-correction case active. The same single case independently passed
+under real -I -B in2.41s; this does not prove the remote runner cause, but does
+not reproduce an individual deadlock. Push run39852095415's four successful
+unit matrices do not replace this failed PR check.
+
+Full70-case profiling passed all cases (249.48s with profiler overhead, not a
+deadline pass). It measured1063 fresh identity observations,3189 Git processes
+and4422 Meter.events scans. Commit424cc95e merges each fresh HEAD/tree query
+and reuses one verified event snapshot only inside five no-write check blocks.
+It retains fresh status/source observations, all identity/author/budget/chain
+checks, the complete70 cases and180-second limit. Frozen controller/scoped
+helpers are unchanged; no module namespace or cross-request proof is cached.
+
+The same complex diagnostic case retained40 identity observations while Git
+calls fell120→80 and event scans245→218. The unchanged outer gate passed9
+tests in115.25s, including70/70 child cases without skips. Six additional real
+temporary-Git freshness/malformed-output tests passed; Ruff and diff checks
+passed. Independent source review found no concrete P1/P2 issue. Timing
+comparisons are load-dependent and do not establish that every CI runner will
+fit; new exact-head CI is required. Evidence: /tmp/q2-runtime-optimized-wrapper.log
+and /tmp/q2-runtime-optimized-wrapper/. No paid/production execution occurred.
+
+At21:18 UTC both pypi.org and files.pythonhosted.org still returned temporary
+DNS resolution failure. No dependency bootstrap retry or network change was
+attempted. Local librsvg installation remains separately blocked by permissions.
+
+Exact424cc95e archive wheel matched278 package files and canonical Skill inventory; SHA256 `607877b0b03cd1619ee539ab35615d588c3696723be9395ca17f61a70209d782`. Six new identity regressions passed from the actual temporary installed module in0.10s. The earlier346bb988 installed Studio evidence remains identified separately; new remote full installation checks are still required.
+
+On8c826711 push job120080957125 completed successfully at21:42 UTC:603 browser cases passed (no skips,2166.24s), wheel build/install and offline UI/fixed-version downloads succeeded,255 installed recovery cases passed (923.49s), runtime paths audited and artifact12460203734 uploaded. This verifies the navigation repair on that exact head. Its renderer setup was still running, while the same-head PR renderer had already passed136/1skip. The PR Q2 failure remains a failure requiring the new performance candidate CI.
+
+## f0cf569b duplicate push failure: captured-response synchronization
+
+PR run39860006534 completed success at22:40:44 UTC: four unit jobs each3794
+passed/2 skipped, renderer136 passed/1 skipped, browser603 passed and installed
+recovery255 passed with no browser skips. This does not replace push
+run39859996259, which ended failure: browser job120108189513 completed602
+passed/1 failed in2220.76s. Toolchain and Chromium installation succeeded;
+the failure was not a job timeout. Wheel/offline/installed steps were skipped.
+
+The failing unknown variant of test_review_single_click_drains_old_and_latest_save
+observed the second save request, then assumed route.fetch had completed after
+100ms. Its held list is appended only after fetch completes. A deterministic
+Event gate on the real second ui_journal.save reproduced the exact len(held)=1
+failure in4.49s, with the second request received and dialog still retained.
+This establishes a test synchronization defect, not a missing product write.
+
+27f450af replaces both100ms guesses with signals emitted after actual response
+capture. The test explicitly keeps the second backend save incomplete, asserts
+the dialog remains and navigation has not happened, then releases it. All three
+saved/unknown/conflict cases, original text/count/project assertions and700ms
+no-extra-write observation remain. Real200/409 status and persisted text checks
+were added. No runtime code, authorization, test count or assertion was weakened.
+Final real Chromium regression:3 passed in13.20s; Ruff/diff checks passed;
+independent source review found no concrete P1/P2. Logs:
+/tmp/rp06-save-before.log and /tmp/rp06-save-final.log. New exact-head CI required.
+
+Root additionally ran the three repaired browser cases against the actual
+archive-installed424cc95e package:3 passed in13.12s, all loaded deck_master
+modules audited under /tmp/deck-followup-424cc95e/site/deck_master. Product and
+Skill bytes between424cc95e and this test-only repair are identical. No wheel
+was rebuilt solely to change test synchronization.

@@ -150,7 +150,9 @@ def test_method_dispatch_mapping_by_kind_and_intent() -> None:
         "source-reading", "content-methods", "content-examples", "method-selection")
     assert method_ids_for("compose", intent="input_revision") == (
         "source-reading", "content-methods", "content-examples", "input-update", "method-selection")
-    assert method_ids_for("blueprint") == method_ids_for("reconstruct") == ("blueprint-svg", "physical-units", "content-to-visual")
+    assert rc3_method_ids_for("blueprint") == rc3_method_ids_for("reconstruct") == ("blueprint-svg", "physical-units")
+    assert method_ids_for("blueprint") == ("visual-reference", "physical-units", "content-to-visual")
+    assert method_ids_for("reconstruct") == ("blueprint-svg", "physical-units", "content-to-visual")
     assert method_ids_for("review") == ("source-reading", "content-methods", "content-calibration", "review-and-repair", "physical-units", "method-review")
     assert method_ids_for("repair") == ("review-and-repair", "content-methods", "blueprint-svg", "physical-units")
     assert method_ids_for("compile") == ()

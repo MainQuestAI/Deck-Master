@@ -72,13 +72,15 @@ export class Annotations {
     this.noteEntry = el('details', {class: 'note-entry', open: true},
       el('summary', {}, '私人笔记（不进入意见与制作）'), draftSlot);
     this.maintenanceNodes = [this.noteEntry, this.draftActions];
+    this.composer = el('details', {class:'opinion-composer'}, el('summary', {}, '撰写意见'),
+      el('div', {class:'stack'}, this.bodyField.node, this.actions, this.error));
     this.node.append(el('div', {class: 'panel-head'}, el('h2', {}, '标注与意见')),
       el('div', {class: 'panel-body stack'}, this.basis, this.notice,
         this.startOpinion,
-        this.bodyField.node,
+        this.composer,
         // The save row sits with the input it saves, before the optional region
         // tools, so writing and saving stay in one screen.
-        this.actions, this.error, this.modeHint,
+        this.modeHint,
         annotationSettings,
         el('p', {class: 'muted field-help'}, '保存意见不启动制作；选入已保存意见后再预览修改计划。'),
         el('h3', {}, '已保存意见'), this.listNotice, this.listRetry, this.savedList,
@@ -139,6 +141,7 @@ export class Annotations {
     this.scope.value = state?.scope || (this.ref ? 'artifact' : 'page'); this.intent.input.value = state?.intent || '修改建议';
     this.chapter.value = state?.chapter_id || this.chapter.options[0]?.value || '';
     this.restoreRequirement();
+    if (this.bodyField.input.value || this.regions.length) this.composer.open = true;
     this.renderRegions();
   }
   basisMatches() { return this.editor && this.editor.draft.base_revision === this.data.revision_id && canonical(this.editor.draft.base_ref) === canonical(this.ref); }
@@ -288,6 +291,7 @@ export class Annotations {
   // page, point/rect/text bind to the current artwork. Programmatic mode changes
   // (selecting 章节/项目, restoring a draft) never move the scope.
   chooseMode(mode) {
+    if (mode !== 'read') this.composer.open = true;
     if (mode === 'whole') this.scope.value = 'page';
     else if (['point', 'rect', 'text'].includes(mode)) this.scope.value = 'artifact';
     this.setMode(mode);
@@ -371,7 +375,7 @@ export class Annotations {
       this.add({kind: this.mode, canvas: {...this.dimensions}, x: value.x, y: value.y, ...(this.mode === 'rect' ? {width: value.width, height: value.height} : {})});
     } catch (error) { this.error.textContent = error.message; }
   }
-  add(location) { if (!this.basisMatches() || this.editor.readonly) return; this.regions.push(location); this.error.textContent = ''; this.changed(); }
+  add(location) { if (!this.basisMatches() || this.editor.readonly) return; this.composer.open = true; this.regions.push(location); this.error.textContent = ''; this.changed(); }
   renderRegions() {
     this.regionList.replaceChildren(...this.regions.map((location, index) => el('div', {class: 'annotation-region'},
       el('p', {}, `${index + 1} · ${location.kind === 'text' ? location.range.excerpt : location.kind === 'rect' ? '框选区域' : '点标注'}`),

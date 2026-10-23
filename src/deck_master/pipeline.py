@@ -124,6 +124,27 @@ def render_deck(pptx_path, output_dir, *, fonts):
     return sorted(output_dir.glob('page-*.png'),key=lambda p:int(p.stem.split('-')[-1]))
 
 
+def _current_svg_preview(store, entry):
+    """Reuse only verified bytes bound to this page's exact SVG object.
+
+    A retained slot alone is not freshness evidence. Invalid legacy previews
+    take the normal render path; explicit assembly still enforces its gates.
+    """
+    if not entry.get('svg_preview') or not entry.get('svg'):
+        return False
+    from .models import ModelError
+    try:
+        preview = store.read_object_json(entry['svg_preview'])
+        validate_artifact_semantics(preview)
+        if (preview['role'] != 'svg_preview' or preview['page_id'] != entry['page_id']
+                or entry['svg'] not in preview.get('derived_from', [])):
+            return False
+        store.read_object_bytes(preview['file'])
+    except (StoreError, ModelError):
+        return False
+    return True
+
+
 def preview_svg_page(project_dir, page_id):
     """Render and atomically attach one current SVG preview before the next page."""
     store = Store(project_dir)
@@ -134,7 +155,7 @@ def preview_svg_page(project_dir, page_id):
     eligibility.guard(store, doc, "render.preview",
                       context={"targets": {"page_ids": [page_id], "layers": ["svg"]}})
     entry = next(e for e in doc['pages'] if e['page_id'] == page_id)
-    if entry.get('svg_preview'):
+    if _current_svg_preview(store, entry):
         return entry['svg_preview']
     svg_artifact = store.read_object_json(entry['svg'])
     data = store.read_object_bytes(svg_artifact['file'])
@@ -344,8 +365,6 @@ def produce(project_dir, *, base_revision=None, operation_id=None):
     from .stages import require_assembly_ready
     store=Store(project_dir)
     from . import eligibility
-    eligibility.guard(store, store.load_document(), "compile.ppt",
-                      context={"targets": {"layers": ["output"]}})
     explicit = base_revision is not None or operation_id is not None
     with store._locked():
         doc=store.load_document()
@@ -359,11 +378,19 @@ def produce(project_dir, *, base_revision=None, operation_id=None):
                 return previous
             if doc['revision_id'] != base_revision:
                 raise operations.OperationError('conflict', 'base_revision', 'assembly basis changed; read current state', exit_code=5)
+        if explicit:
+            eligibility.guard(store, doc, 'stage.assemble', context={'targets': {'layers': ['output']}})
+        eligibility.guard(store, doc, 'compile.ppt', context={'targets': {'layers': ['output']}})
         if explicit or store.workbench_protocol_required(doc):
             require_assembly_ready(store, doc)
-    for tool in ('rsvg-convert','soffice','pdftoppm'):executable(tool)
+    preview_required = {entry['page_id'] for entry in doc['pages']
+                        if not _current_svg_preview(store, entry)}
+    for tool in ('soffice', 'pdftoppm'):
+        executable(tool)
+    if preview_required:
+        executable('rsvg-convert')
     with tempfile.TemporaryDirectory(prefix='production-',dir=store.staging_dir) as temporary:
-        work=Path(temporary);inputs=[];parsed=[];expected=[];approved={};preview_inputs=[]
+        work=Path(temporary);inputs=[];parsed=[];expected=[];approved={};preview_inputs={}
         for index,entry in enumerate(doc['pages']):
             obj=store.read_object_json(entry['svg']);data=store.read_object_bytes(obj['file'])
             page=store.read_object_json(entry['page'])
@@ -371,8 +398,10 @@ def produce(project_dir, *, base_revision=None, operation_id=None):
             approved[entry['page_id']]=mapping
             path=work/f'page-{index+1}.svg';path.write_bytes(data)
             inputs.append(SvgInput(entry['page_id'],path,page.get('speaker_notes', '')));parsed.append(parse_svg(data,page_id=entry['page_id'],assets=mapping))
-            preview_path=work/f'preview-input-{index+1}.svg';preview_path.write_bytes(
-                preview_svg_bytes(data, page_id=entry['page_id'], assets=mapping));preview_inputs.append(preview_path)
+            if entry['page_id'] in preview_required:
+                preview_path = work / f'preview-input-{index+1}.svg'
+                preview_path.write_bytes(preview_svg_bytes(data, page_id=entry['page_id'], assets=mapping))
+                preview_inputs[entry['page_id']] = preview_path
             expected.append(page)
         fonts=resolve_fonts(parsed);canvas=doc['design_context']['canvas']
         options=CompileOptions(width_px=canvas['slide_width_in']*96,height_px=canvas['slide_height_in']*96,fonts=fonts,assets=approved)
@@ -391,8 +420,9 @@ def produce(project_dir, *, base_revision=None, operation_id=None):
         new=bump_revision(doc,{'operation_id':operation_id or 'production-'+uuid.uuid4().hex,'kind':'artifact_adoption','description':'native compile, dual rendering and actual PPT readback','read_set':[]})
         require_writer(new, 'rc3.v1')
         for i,entry in enumerate(new['pages']):
-            preview=work/f'svg-{i+1}.png';run([executable('rsvg-convert'),str(preview_inputs[i]),'-o',str(preview)])
-            if not entry.get('svg_preview'):
+            if entry['page_id'] in preview_required:
+                preview = work / f'svg-{i+1}.png'
+                run([executable('rsvg-convert'), str(preview_inputs[entry['page_id']]), '-o', str(preview)])
                 entry['svg_preview']=artifact(store,preview,'svg_preview',page_id=entry['page_id'],dependencies=svg_deps,derived_from=[entry['svg']])
             entry['ppt_preview']=artifact(store,renders[i],'ppt_preview',page_id=entry['page_id'],dependencies=deps,derived_from=[entry['svg']])
         for i, ref in enumerate(new['tasks']):

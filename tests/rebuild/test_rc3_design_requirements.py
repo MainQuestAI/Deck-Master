@@ -145,6 +145,7 @@ def test_complete_raw_requirements_and_basis_are_readonly(tmp_path):
     req, basis = result["content_requirements"], result["content_basis"]
     role = plan["input"]["page_roles"][0]
     assert req == {"schema_version": "content_requirements.v1", "mode": "planned", "page_id": "p1",
+        "text_visibility": "customer_visible_only.v1",
         "page_role": {key: role[key] for key in ("role", "audience_question", "intended_takeaway", "transition_to_next")},
         "content_profile": role["content_profile"], "density_rationale": role["density_rationale"],
         "required_qualifications": role["required_qualifications"], "visual_intent": "表现实际责任与提交顺序",

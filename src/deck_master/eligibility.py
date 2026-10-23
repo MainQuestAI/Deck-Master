@@ -169,6 +169,8 @@ ACTIONS: dict[str, ActionSpec] = {spec.name: spec for spec in (
           production=True, external=True, role="runtime"),
     # -- adoption (row 3)
     _spec("task.accept", "adoption", "pages", writes=True, role="runtime"),
+    _spec("generation.reuse", "adoption", "pages", layers=("blueprint",),
+          authority="execute", production=True, writes=True, role="runtime"),
     _spec("proposal.adopt", "adoption", "deck", writes=True, role="runtime"),
     _spec("call.settle", "execution", "pages", writes=True, role="host"),
     _spec("material.upload", "adoption", "external_artifact", writes=True, role="user"),
@@ -250,7 +252,7 @@ ACTIONS: dict[str, ActionSpec] = {spec.name: spec for spec in (
 
 # Actions that need a preproduction content review before real page production
 # (CONTRACTS §1.9, §6.3: 新论证 full_deck 默认需要独立内容前审).
-PREPRODUCTION_GATED_ACTIONS = ("dispatch.blueprint", "style.trial", "style.expand",
+PREPRODUCTION_GATED_ACTIONS = ("dispatch.blueprint", "generation.reuse", "style.trial", "style.expand",
                                "change.commit", "compile.ppt", "stage.assemble")
 
 # Every delivery entry consumes the same authorization vocabulary: a grant
@@ -298,7 +300,7 @@ ROUTING_ACTIONS = ("create", "continue_project", "change.plan", "export.review",
 # advances what its own intent/content_intent covers; an action outside that
 # boundary is a scope violation, not a missing decision.
 _INTENT_BLOCKED_ACTIONS = {
-    "review_only": ("dispatch.compose", "import_draft", "dispatch.blueprint", "style.trial",
+    "review_only": ("dispatch.compose", "import_draft", "dispatch.blueprint", "generation.reuse", "style.trial",
                     "style.expand", "change.commit", "compile.ppt", "stage.assemble",
                     "page.edit", "content.operation", "candidate.adopt"),
     "design_trial": ("dispatch.compose", "import_draft", "compile.ppt", "stage.assemble",
@@ -306,9 +308,9 @@ _INTENT_BLOCKED_ACTIONS = {
     "edit": ("dispatch.compose", "stage.assemble"),
 }
 _CONTENT_INTENT_BLOCKED_ACTIONS = {
-    "plan_only": ("dispatch.blueprint", "style.trial", "style.expand", "compile.ppt",
+    "plan_only": ("dispatch.blueprint", "generation.reuse", "style.trial", "style.expand", "compile.ppt",
                   "stage.assemble", "page.edit", "import_draft"),
-    "speech_only": ("dispatch.blueprint", "style.trial", "style.expand", "page.edit",
+    "speech_only": ("dispatch.blueprint", "generation.reuse", "style.trial", "style.expand", "page.edit",
                     "import_draft", "dispatch.compose"),
 }
 
@@ -1140,7 +1142,7 @@ def _reconciles_current_inputs(control: dict, task: dict | None, spec: ActionSpe
 # Preproduction content review (AC-R06)
 
 
-def preproduction_state(store: Store, document: dict) -> dict:
+def preproduction_state(store: Store, document: dict, *, page_ids: list[str] | None = None) -> dict:
     """The one preproduction content-review verdict, consumed from T03.
 
     T03's ``content_review`` owns the units, the currency, the reviewer
@@ -1150,11 +1152,13 @@ def preproduction_state(store: Store, document: dict) -> dict:
     applicable passing review on the current manuscript. An existing delegate
     covering the review topics is reused to arrange that review (AC-R06) — it
     never substitutes the review's result, so it cannot satisfy this state.
+    Explicit action pages narrow coverage only; deck-level unresolved findings
+    still apply. Omitting page_ids retains the full-manuscript verdict.
     """
     from . import content_review
     try:
-        status = content_review.preproduction_status(store, document)
-        qualified = content_review.qualify_for_production(store, document)
+        status = content_review.preproduction_status(store, document, page_ids=page_ids)
+        qualified = content_review._production_qualification(status, document)
     except ModelError as exc:
         # Only the strict adopted-generation lineage reader reports this
         # path. A damaged Task must not erase read-only recovery, but asset
@@ -1524,8 +1528,25 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
 
     # -- preproduction content review (one T03 verdict for every entry) ----
     preproduction = None
-    if enforced and spec.name in PREPRODUCTION_GATED_ACTIONS:
-        preproduction = preproduction_state(store, control)
+    # Content-only corrections do not produce a visual artifact. Derive the
+    # exception from the server-validated plan targets, never a caller flag.
+    content_correction = (spec.name == "change.commit"
+                          and set(targets.get("layers") or []) == {"page_copy"}
+                          and bool(targets.get("page_ids"))
+                          and context.get("candidate_count") == len(targets["page_ids"])
+                          and not context.get("external_call_page_ids")
+                          and not context.get("count"))
+    if enforced and spec.name in PREPRODUCTION_GATED_ACTIONS and not content_correction:
+        # Use actual page-action targets, not the request's upper permission
+        # bound. Full-deck operations still require full-manuscript coverage.
+        # Missing/empty/unknown targets never turn a partial pass into a pass
+        # for an unbounded action; independent scope/authority gates remain.
+        action_pages = target_page_ids(store, targets)
+        current_pages = {entry["page_id"] for entry in control.get("pages") or []}
+        review_pages = (action_pages if spec.subject == "pages"
+                        and targets.get("subject") != "deck" and action_pages
+                        and set(action_pages) <= current_pages else None)
+        preproduction = preproduction_state(store, control, page_ids=review_pages)
         if not preproduction["satisfied"]:
             code = "needs_reviewer" if preproduction["needs_reviewer"] \
                 else "preproduction_blocked"

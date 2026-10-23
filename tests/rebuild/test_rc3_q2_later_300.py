@@ -36,6 +36,12 @@ def run_logged(tmp_path, argv):
     except subprocess.TimeoutExpired as exc:
         stdout, stderr = exc.stdout or b"", exc.stderr or b""
         execution_error = {"type": type(exc).__name__, "message": str(exc)}
+        # Temporary artifacts are not necessarily uploaded by CI. Preserve the
+        # actual exception/deadline while exposing the last active test inline.
+        def output_tail(value):
+            return value[-4096:].decode("utf-8", "replace") if isinstance(value, bytes) else value[-4096:]
+        exc.add_note("Isolated child stdout tail (last 4096 bytes/characters):\n" + output_tail(stdout))
+        exc.add_note("Isolated child stderr tail (last 4096 bytes/characters):\n" + output_tail(stderr))
         raise
     except OSError as exc:
         execution_error = {"type": type(exc).__name__, "message": str(exc)}
@@ -57,7 +63,9 @@ def run_logged(tmp_path, argv):
 def test_all_q2_later_300_cases_run_in_an_actual_isolated_interpreter(tmp_path):
     junit = tmp_path / "isolated-cases.xml"
     case_root = tmp_path / "isolated-cases"
-    argv = [sys.executable, "-I", "-B", "-m", "pytest", "-q", "-p", "no:cacheprovider",
+    # Keep the active node in captured output if the unchanged deadline fires;
+    # durations diagnose completed slow cases without weakening any case checks.
+    argv = [sys.executable, "-I", "-B", "-m", "pytest", "-vv", "--durations=20", "-p", "no:cacheprovider",
             "-o", "addopts=", "--basetemp=" + str(case_root), "--junitxml=" + str(junit), str(CASES)]
     result = run_logged(tmp_path, argv)
     assert result.returncode == 0, (result.stdout + result.stderr).decode(errors="replace")
@@ -98,3 +106,35 @@ def test_companion_and_pinned_helpers_import_without_Runtime(tmp_path):
             "assert not any(n=='deck_master' or n.startswith('deck_master.') for n in sys.modules)")
     result = run_logged(tmp_path, [sys.executable, "-I", "-B", "-c", code, str(TOOL)])
     assert result.returncode == 0, result.stderr.decode()
+
+
+def test_timeout_preserves_deadline_type_artifacts_and_bounded_last_node(tmp_path, monkeypatch):
+    argv = [sys.executable, "-I", "-B", "-m", "pytest", "-vv"]
+    stdout = b"old synthetic progress\n" * 500 + b"last_synthetic_case::test_pending"
+    stderr = b"synthetic diagnostic\n"
+    failure = subprocess.TimeoutExpired(argv, 180, output=stdout, stderr=stderr)
+    calls = []
+
+    def timed_out(actual, **kwargs):
+        calls.append((actual, kwargs))
+        raise failure
+
+    monkeypatch.setattr(subprocess, "run", timed_out)
+    with pytest.raises(subprocess.TimeoutExpired) as caught:
+        run_logged(tmp_path, argv)
+    assert caught.value is failure and caught.value.timeout == 180
+    assert len(calls) == 1 and calls[0][0] == argv
+    assert calls[0][1]["timeout"] == 180 and calls[0][1]["capture_output"] is True
+    assert (tmp_path / "stdout.txt").read_bytes() == stdout
+    assert (tmp_path / "stderr.txt").read_bytes() == stderr
+    record = json.loads((tmp_path / "invocation.json").read_text())
+    assert record["exit"] is None and record["execution_error"]["type"] == "TimeoutExpired"
+    assert record["argv"] == argv
+    notes = caught.value.__notes__
+    assert "last_synthetic_case::test_pending" in notes[0]
+    assert notes[0].split("\n", 1)[1] == stdout[-4096:].decode()
+    assert notes[1].split("\n", 1)[1] == stderr.decode()
+    # Exclusive evidence files must refuse replacement, even on another failure.
+    with pytest.raises(FileExistsError):
+        run_logged(tmp_path, argv)
+    assert (tmp_path / "stdout.txt").read_bytes() == stdout

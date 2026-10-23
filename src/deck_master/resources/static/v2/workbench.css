@@ -448,3 +448,40 @@ dialog:has(> .modal-body > form.launcher-create-form) .modal-actions {flex:none;
 .insight-reading pre,.argument-reading pre {white-space:pre-wrap;overflow-wrap:anywhere;max-width:100%;}
 .insight-finding {padding:1rem;}
 @media(max-width:600px){.argument-comparison{grid-template-columns:minmax(0,1fr);}.studio-content-areas{flex-wrap:wrap;}}
+
+/* RP-22: document reading owns the scroll; immutable prompt bodies stay complete. */
+.page-reading .selectable-text{max-height:none;overflow:visible;min-width:0}
+.overview-todos .todo-priority,.overview-todos .todo-secondary{padding:16px 20px}
+.overview-todos .todo-priority h2{font-size:22px;margin-top:8px}
+.overview-todos .todo-priority>p{margin-top:8px}
+.overview-todos .todo-bottom{padding-top:12px;margin-top:0}
+.overview-todos .todo-row{padding:8px 0}
+.todo-more>summary{cursor:pointer;min-height:44px;display:list-item;padding:12px 0;font-size:14px}
+.handoff-command{white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.6 var(--font-mono)}
+
+.overview>.page-head{margin-bottom:16px;padding-bottom:16px}
+.overview>.overview-state-help{margin:0 0 12px;padding:0}
+.overview>.overview-todos{margin-bottom:20px}
+.overview>.stack{gap:8px}
+.overview-reading-tools{display:grid;grid-template-columns:auto minmax(160px,1fr);align-items:center}
+@media(max-width:680px){.overview-reading-tools{grid-template-columns:minmax(0,1fr)}}
+
+.overview>.stack>.section-head{margin:8px 0}
+.overview .matrix-search>label.row{display:flex;flex-wrap:nowrap;align-items:center;gap:8px}
+.overview .matrix-search>label.row select{width:auto}
+.todo-secondary>summary{cursor:pointer;min-height:44px;margin:0}
+
+.overview .todo-priority{background:var(--surface-warm);color:var(--fg)}
+.overview .todo-priority .todo-kicker,.overview .todo-priority>p,.overview .todo-priority .todo-bottom>span{color:var(--muted)}
+.overview .todo-priority .status{background:#fff;color:var(--fg)}
+.overview .todo-priority button.primary{background:#171717;color:#fff;border-color:#171717}
+.overview .todo-priority button.primary:hover{background:#303030;border-color:#303030}
+.overview .todo-priority :focus-visible{outline-color:#171717}
+
+.opinion-composer>summary{cursor:pointer;min-height:44px;padding:12px 0}
+.opinion-composer[open]>div{padding:8px 0}
+
+.overview-todos details.todo-secondary:not([open]){padding:0 16px}
+
+.overview .matrix thead th{padding:4px 12px}
+.overview .matrix .chapter-row th{padding:4px 12px}

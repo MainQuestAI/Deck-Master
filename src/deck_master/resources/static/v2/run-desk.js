@@ -73,6 +73,7 @@ export function runDesk(app, data) {
   const submitSearch = () => { choiceMade=true; read({state:{search:search.value.trim(),offset:0},refreshReading:true,persist:true}); };
   const searchButton = button('查询任务', submitSearch);
   const tableHead = el('div',{class:'studio-task-table-head','aria-hidden':'true'},el('span',{},'任务与范围'),el('span',{},'当前状态'),el('span',{},'操作'));
+  let detailSerial = 0, detailLive = false;
   let page = data.runPage, selected = data.runDetail, disposed = false, serial = 0, busy = false, loaded = false;
   let state = {offset: 0, group: '', status: '', attention: false, search:''};
   let reading={seen:[],etag:null},readingUnavailable=false;const readingSupported=app.health.ui_capabilities?.includes('result_reading.v1');
@@ -107,7 +108,8 @@ export function runDesk(app, data) {
       el('div', {class: 'row wrap run-task-identity'}, el('strong', {}, names[task.kind] || '制作任务'), el('span', {class: 'status'}, statuses[task.status] || task.status)),
       el('p', {class: 'run-requirement'}, `要求：${(task.instruction || '').trim() || '未记录制作要求'}`),
       el('p', {class:'run-task-scope'}, `目标：${scopeLabel(task)}`),
-      el('p', {class: 'muted'}, `接手时间：${clock(task.execution_started_at)}`),
+      el('p', {class: 'muted'}, `${task.task_id} · ${task.operation_id} · 创建 ${clock(task.created_at)} · 接手 ${clock(task.execution_started_at)}`),
+      task.current_relation && el('p', {class:'muted'}, ({current:'当前请求',historical:'历史记录',unknown:'当前关联待核实'})[task.current_relation.state] + ' · ' + task.current_relation.reason),
       task.human_actions?.includes('verify_execution') && el('p', {class: 'field-error'}, '需要核实原执行。不会自动重试或取消；未确认取消前请勿重复派发。'),
       todo(task).length > 0 && el('p', {class: 'run-actions'}, todo(task).map(key => actions[key] || key).join(' · ')),
       task.error && errorBox(typeof task.error === 'object' ? task.error : {message: task.error}),
@@ -132,7 +134,7 @@ export function runDesk(app, data) {
     return el('article',{class:'run-task studio-task-record','data-task-id':task.task_id},
       el('div',{class:'studio-task-main'},el('span',{class:'studio-task-symbol','aria-hidden':'true'},icon(task.kind==='compose'?'content':'runs')),
         el('div',{class:'studio-task-copy'},el('h3',{},label),el('p',{class:'run-task-scope'},`目标：${scopeLabel(task)}`),
-          el('p',{class:'run-requirement'},`要求：${summary}`))),
+          el('p',{class:'run-requirement'},`要求：${summary}`), el('p',{class:'muted'}, `${task.task_id} · ${task.operation_id} · ${clock(task.created_at)} · ${({current:'当前请求',historical:'历史记录',unknown:'当前关联待核实'})[task.current_relation?.state] || '当前关联待核实'}`))),
       el('div',{class:'studio-task-state'},el('span',{class:'status'},icon(statusIcon),statuses[task.status]||'状态待核实'),
         next.length>0 && el('p',{class:task.needs_verification?'field-error':'muted'},next.map(key=>actions[key]||key).join(' · '))),
       task.task_id ? button('查看这项任务',()=>app.go({task_id:task.task_id,revision:page.revision_id}),false,{class:'run-task-open'}) : el('span',{class:'field-error'},'记录无法读取'));
@@ -150,6 +152,22 @@ export function runDesk(app, data) {
       if (!disposed) modal('调用依据与结果记录', el('pre', {class: 'run-evidence'}, JSON.stringify(value, null, 2)));
     } catch (error) { if (!disposed) detail.append(errorBox({...error.details, message: readableError(error)})); }
   }
+  // Detail verification is a separate read intent from the fixed list cursor.
+  // Its epoch also invalidates fixed reads already in flight (including reads
+  // started while verification was pending), without stopping future refreshes.
+  async function verifyDetail(task, cancel = false) {
+    const token = ++detailSerial;
+    const active = () => !disposed && token === detailSerial && app.route.task_id === task.task_id;
+    try {
+      if (cancel) await recovery.cancel(task, recovery.pending.has(task.task_id));
+      const result = await recovery.verify(task.task_id);
+      if (!active()) return;
+      detailLive = true; detailSerial++; selected = result; renderDetail();
+    } catch (error) {
+      if (active()) detail.append(errorBox({...error.details,
+        message: (cancel ? '取消结果请核实。' : '') + readableError(error)}));
+    }
+  }
   function renderDetail() {
     const task = selected.task, revision = selected.revision_id;
     handoff?.dispose(); handoff = taskHandoff(app, task, page.groups);
@@ -160,6 +178,7 @@ export function runDesk(app, data) {
     });
     detail.replaceChildren(el('div', {class: 'stack'}, el('h3', {}, `${names[task.kind] || '制作任务'} · ${statuses[task.status] || task.status}`),
       el('p', {}, scopeLabel(task)),
+      detailLive && el('p', {class:'muted task-verified-revision'}, `已核实原任务的当前执行状态 · ${version(revision)}`),
       handoff?.node,
       supportsInsights(app)&&taskMethods(app,task.task_id,revision),
       el('details', {}, el('summary',{},'制作要求与执行身份'), el('p',{},task.instruction),el('p',{class:'muted'},`任务 ${task.task_id} · ${version(revision)}`)),
@@ -174,11 +193,9 @@ export function runDesk(app, data) {
       (task.call_counts.unknown || 0) > 0 && el('p', {class: 'field-error'}, '未知调用不等于未执行。请核实原调用；本工作台不会重新分配额度或自动重试。'),
       recovery.pending.has(task.task_id) && el('p', {class: 'field-error'}, '取消结果待核实，未安排替代任务。'),
       el('div', {class: 'row wrap'}, button('核实原任务', async () => {
-        try { selected = await recovery.verify(task.task_id); if (!disposed) renderDetail(); }
-        catch (error) { if (!disposed) detail.append(errorBox({...error.details, message: readableError(error)})); }
+        await verifyDetail(task);
       }), ['queued', 'awaiting_host', 'running'].includes(task.status) && disabledReason(button(recovery.pending.has(task.task_id) ? '再次请求取消原任务' : '取消原任务', async () => {
-        try { await recovery.cancel(task, recovery.pending.has(task.task_id)); if (!disposed) { selected = await recovery.verify(task.task_id); renderDetail(); } }
-        catch (error) { if (!disposed) detail.append(errorBox({...error.details, message: '取消结果请核实。' + readableError(error)})); }
+        await verifyDetail(task, true);
       }, false, {disabled: app.readonly || recovery.sending.has(task.task_id)}),
         app.readonly ? '当前视图只读，不能取消任务。' : recovery.sending.has(task.task_id) ? '取消请求已发送，等待核实结果。' : '')),
       el('div', {class: 'stack'}, resultLinks),
@@ -195,7 +212,8 @@ export function runDesk(app, data) {
   async function read(options={}) {
     if (disposed) return;
     if (busy) { if(Object.keys(options).length||pendingRead===null)pendingRead=options; return; }
-    busy = true; const token = ++serial;
+    busy = true; const token = ++serial, detailToken = detailSerial;
+    const nextDetailLive = detailLive;
     const nextState={...state,...options.state},nextLive=options.live??live,nextPinned=options.pinned??pinned;
     const savedReading=Object.hasOwn(options,'readingEtag');
     const fixedReading=savedReading||(!nextLive&&loaded&&!options.refreshReading);
@@ -222,12 +240,14 @@ export function runDesk(app, data) {
       const etag=savedReading?options.readingEtag:nextReading.etag;
       if(readingSupported&&etag){query.set('personal','1');query.set('reading_etag',etag);}
       const value = await get('/api/tasks?' + query);
-      const nextDetail = app.route.task_id ? await get('/api/tasks/' + encodeURIComponent(app.route.task_id) + revisionQuery(nextLive ? null : nextPinned)) : null;
+      const nextDetail = app.route.task_id ? await get('/api/tasks/' + encodeURIComponent(app.route.task_id) + revisionQuery(nextLive || nextDetailLive ? null : nextPinned)) : null;
       if (disposed || token !== serial) return;
       // Commit the page, its cursor and its reading snapshot together. Failed
       // pagination must leave both the visible rows and their old offset intact.
       state={...nextState,revision:value.revision_id};live=nextLive;pinned=nextPinned;
-      reading=nextReading;readingUnavailable=readingWarning;page = value; selected = nextDetail; loaded = true;readingBlocked=false;recoveryState=null;render();
+      reading=nextReading;readingUnavailable=readingWarning;page = value;
+      if (detailToken === detailSerial) selected = nextDetail;
+      loaded = true;readingBlocked=false;recoveryState=null;render();
       if(options.persist)persist();
       if(readingWarning)notice.append(el('p',{class:'field-error'},'个人已读记录暂不可用，任务按未过滤状态展示；损伤文件保留，标记已读暂停。'));
       if(options.notice)notice.append(el('p',{class:'muted'},options.notice));

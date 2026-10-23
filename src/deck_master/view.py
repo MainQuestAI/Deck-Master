@@ -156,6 +156,11 @@ def _broken_page_entry(entry: dict, detail: str) -> dict[str, Any]:
 
 def _latest_input_update_reason(store: Store, document: dict) -> str | None:
     """Show the user's change reason, never the Host's execution instructions."""
+    from .snapshots import FixedSnapshotReader
+    try:
+        reader = FixedSnapshotReader(store, head_revision=document["revision_id"])
+    except READ_FAILURES:
+        return None
     for ref in document.get("tasks") or []:
         try:
             task = store.read_object_json(ref)
@@ -169,7 +174,7 @@ def _latest_input_update_reason(store: Store, document: dict) -> str | None:
             while revision and revision not in seen:
                 seen.add(revision)
                 try:
-                    dispatched = load_snapshot(store, revision)
+                    dispatched = reader.load(revision)
                 except READ_FAILURES:
                     break
                 change = dispatched.get("change") or {}
@@ -181,7 +186,7 @@ def _latest_input_update_reason(store: Store, document: dict) -> str | None:
     while revision and revision not in visited and len(visited) < 200:
         visited.add(revision)
         try:
-            historic = load_snapshot(store, revision)
+            historic = reader.load(revision)
         except READ_FAILURES:
             break
         change = historic.get("change") or {}

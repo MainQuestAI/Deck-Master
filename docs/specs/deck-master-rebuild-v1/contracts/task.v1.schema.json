@@ -32,7 +32,8 @@
       "enum": [
         "preproduction",
         "page_visual",
-        "final"
+        "final",
+        "original_image"
       ],
       "description": "Content collaboration v1.2 CONTRACTS \u00a76.3/\u00a711.6: a preproduction review is bound to the current Narrative/Plan/Page manuscript and its source dependencies."
     },
@@ -351,7 +352,8 @@
               "argument",
               "page_copy",
               "progression",
-              "speech"
+              "speech",
+              "visual_expression"
             ]
           },
           "page_ids": {
@@ -811,5 +813,38 @@
     "usage",
     "call_allowances"
   ],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "review_stage": {
+            "const": "original_image"
+          }
+        },
+        "required": [
+          "review_stage"
+        ]
+      },
+      "then": {
+        "properties": {
+          "kind": {
+            "const": "review"
+          },
+          "scope_pages": {
+            "minItems": 1,
+            "maxItems": 1
+          },
+          "required_capabilities": {
+            "contains": {
+              "const": "original_expression_review.v1"
+            }
+          }
+        },
+        "required": [
+          "required_capabilities"
+        ]
+      }
+    }
+  ]
 }

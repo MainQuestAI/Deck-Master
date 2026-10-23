@@ -164,8 +164,13 @@ def propose(project, *, input):
     eligibility.guard(store, document, action, context={"targets": targets})
     proposal = _proposal(store, document, input); validate_schema('style_proposal', proposal)
     ref = store.put_json_object(proposal)
-    return {'status': 'suggestion', 'proposal_id': 'style-proposal-' + ref['sha256'],
-            'proposal_ref': ref, 'proposal': proposal, 'model_calls': 0}
+    result = {'status': 'suggestion', 'proposal_id': 'style-proposal-' + ref['sha256'],
+              'proposal_ref': ref, 'proposal': proposal, 'model_calls': 0}
+    from .design_completion import completion_status
+    completion = completion_status(store, document, proposal=proposal, proposal_ref=ref)
+    if completion is not None:
+        result['completion'] = completion
+    return result
 
 
 def _read_proposal(store, proposal_id):
@@ -310,6 +315,9 @@ def validate_change(store, document, value):
                 or current.get('blueprint') != record['result_ref'] or record['page_id'] in ids
                 or not task or task.get('stage_request', {}).get('style_recipe_ref') != ref):
             fail('style_adopted_candidate_id', 'expand from a currently adopted original-image candidate of this exact recipe')
+        from .original_review import reference_status
+        if not reference_status(store, document, record['page_id'], candidate_id=adopted)['allowed']:
+            fail('style_adopted_candidate_id', 'original expression review is missing or needs repair; view/compare/explicit repair reference remain allowed, expansion requires a current independent pass')
     conflicts = []
     for pid in ids:
         anchor = anchors.get(pid); entry = next((e for e in document['pages'] if e['page_id'] == pid), None)
@@ -363,7 +371,8 @@ def plan(project, *, input):
             fail('page_ids', '目标页需要当前原图才能进入截图风格试作，请先完成原图：' + '、'.join(missing))
     if input.get('adopted_candidate_id'):
         value['style_adopted_candidate_id'] = input['adopted_candidate_id']
-    return changes.plan(project, input=value)
+    from .design_entry import describe_plan
+    return describe_plan(project, changes.plan(project, input=value))
 
 
 def apply_request(store, document, value, request, page_id):

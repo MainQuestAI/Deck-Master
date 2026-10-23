@@ -731,6 +731,20 @@ def test_needs_reviewer_until_independent_preproduction_review(tmp_path):
             'identity_receipt': None, 'evidence_ref': evidence, 'assurance': 'host_attested'},
         'observations': ['Synthetic independent review of the full named manuscript.'], 'findings': [],
         'created_at': '2026-10-17T00:00:00Z', 'replaces': None} for kind in units]
+    # The authenticated recheck must explicitly replace the stored, merely
+    # self-declared record. Authentication does not erase its owner identity.
+    packet = next(store.read_object_json(ref) for ref in task['inputs']
+                  if store.read_object_json(ref).get('schema_version') == 'content_review_packet.v1')
+    templates = {row['kind']: row for row in reviews}
+    reviews = []
+    for kind in packet['required_units']:
+        owners = [row['review_ref'] for row in packet['review_scope']['owners'] if row['kind'] == kind]
+        if not owners:
+            reviews.append(templates[kind])
+        for ref in owners:
+            owner = store.read_object_json(ref)
+            assert owner['findings'] == []  # Never silently close a historical finding.
+            reviews.append({**templates[kind], 'review_id': owner['review_id'], 'replaces': ref})
     assert accept_with_synthetic_provider(project,
         **{key: task[key] for key in ('task_id', 'operation_id', 'produced_against')},
         result_payload={'kind': 'review', 'files': [], 'reviews': reviews},

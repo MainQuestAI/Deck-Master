@@ -60,12 +60,19 @@ def _dependency_key(dep: dict) -> str:
     return key
 
 
-def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: dict) -> bool:
-    """Resolve one finding through explicit, current replacement reviews."""
+def replacement_index(reviews):
+    """One interpretation's historical edges; never a cached closure verdict."""
     replacements = {}
     for item in reviews:
         if item.get('replaces'):
             replacements.setdefault(_ref_key(item['replaces']), []).append(item)
+    return replacements
+
+
+def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: dict, *, replacements=None) -> bool:
+    """Resolve one finding through explicit, current replacement reviews."""
+    if replacements is None:
+        replacements = replacement_index(reviews)
     subjects = artifacts.get('_subjects') or {}
     retired_assets = artifacts.get('_retired_assets') or set()
     page_id = finding.get('page_id')
@@ -100,7 +107,7 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
         old = [subjects.get(_ref_key(ref)) for ref in owner.get('subjects') or []]
         new = [subjects.get(_ref_key(ref)) for ref in candidate.get('subjects') or []]
         for before in old:
-            if not before or before.get('page_id') != page_id or before.get('role') not in ('page', 'svg', 'ppt_preview'):
+            if not before or before.get('page_id') != page_id or before.get('role') not in (('blueprint',) if owner.get('review_stage') == 'original_image' else ('page', 'svg', 'ppt_preview')):
                 continue
             for after in new:
                 hash_key = ('visual_sha' if owner.get('review_stage') == 'page_visual'
@@ -123,7 +130,7 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
         # Synthetic fixtures have no Store metadata, and owners may cite only
         # the Page. The same page's dependency must still prove an actual
         # digest change to a current product cited by the candidate.
-        if subjects and owner.get('review_stage') in ('page_visual', 'preproduction'):
+        if subjects and owner.get('review_stage') in ('page_visual', 'preproduction', 'original_image'):
             return False
         old_deps = {_dependency_key(d): d.get('sha256') for d in owner.get('dependencies') or []}
         new_deps = {_dependency_key(d): d.get('sha256') for d in candidate.get('dependencies') or []}
@@ -152,7 +159,7 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
                    for ref in candidate.get('subjects') or [])
 
     def current_final_output_changed(owner, candidate):
-        if review.get('review_stage', 'final') in ('page_visual', 'preproduction'):
+        if review.get('review_stage', 'final') in ('page_visual', 'preproduction', 'original_image'):
             # Content is repaired and reviewed before PPTX production. The
             # preproduction endpoint still needs the changed current same-page
             # manuscript, full current dependencies, observations and evidence.
@@ -310,8 +317,10 @@ def describe_review_units(units: list[dict]) -> str:
 
 
 def evaluate_page_visual(entry: dict, reviews: list[dict], artifacts: dict,
-                         allowed_asset_ids=()) -> dict:
+                         allowed_asset_ids=(), *, replacements=None) -> dict:
     """Evaluate a current page's pre-compile image/SVG review independently of PPT review."""
+    if replacements is None:
+        replacements = replacement_index(reviews)
     page_id = entry['page_id']
     required_subjects = {_ref_key(entry[slot]) for slot in ('page', 'blueprint', 'svg', 'svg_preview')}
     required_dependencies = {f'content:page:{page_id}', f'blueprint:{page_id}',
@@ -341,13 +350,13 @@ def evaluate_page_visual(entry: dict, reviews: list[dict], artifacts: dict,
     for kind, records in current.items():
         for owner in records:
             for finding in open_findings(owner):
-                if finding.get('page_id') == page_id and not finding_closed(reviews, owner, finding, artifacts):
+                if finding.get('page_id') == page_id and not finding_closed(reviews, owner, finding, artifacts, replacements=replacements):
                     outstanding = open_findings_by_kind.setdefault(kind, [])
                     if finding['finding_id'] not in outstanding:
                         outstanding.append(finding['finding_id'])
             for finding in pending_judgments(owner):
                 if (finding.get('page_id') == page_id and
-                        not finding_closed(reviews, owner, finding, artifacts) and
+                        not finding_closed(reviews, owner, finding, artifacts, replacements=replacements) and
                         finding['finding_id'] not in judgments):
                     judgments.append(finding['finding_id'])
     unclosed_prior = []
@@ -358,7 +367,7 @@ def evaluate_page_visual(entry: dict, reviews: list[dict], artifacts: dict,
                    for dep in owner.get('dependencies') or []):
             continue
         for finding in open_findings(owner):
-            if finding.get('page_id') == page_id and not finding_closed(reviews, owner, finding, artifacts):
+            if finding.get('page_id') == page_id and not finding_closed(reviews, owner, finding, artifacts, replacements=replacements):
                 if finding['finding_id'] not in unclosed_prior:
                     unclosed_prior.append(finding['finding_id'])
     if open_findings_by_kind:
@@ -398,7 +407,26 @@ def dependency_problems(review: dict, artifacts: dict) -> list[dict]:
     return problems
 
 
-def evaluate_current(document: dict, reviews: list[dict], artifacts: dict) -> dict:
+def task_blocks_current_output(task: dict, *, store=None, document=None) -> bool:
+    """An isolated zero-call candidate cannot change current artifacts.
+
+    Keep production work and any uncertain/external call blocking. Findings
+    remain evaluated independently; candidate adoption invalidates real slots.
+    """
+    if task.get('status') not in OPEN_TASK_STATUSES:
+        return False
+    from .method_resources import is_content_candidate_task
+    side_branch = (is_content_candidate_task(task)
+                   and task.get('cost_class') == 'host_reasoning'
+                   and not task.get('call_allowances')
+                   and (task.get('usage') or {}).get('external_calls') in (None, 0))
+    if side_branch:
+        return False
+    from .candidates import isolated_svg_trial
+    return not isolated_svg_trial(store, document, task)
+
+
+def evaluate_current(document: dict, reviews: list[dict], artifacts: dict, *, replacements=None, store=None) -> dict:
     """The one interpretation of the current check state (AC-R01/R02/R03/R10).
 
     Reviews are interpreted together with hard output facts (P1-01, injected
@@ -409,6 +437,8 @@ def evaluate_current(document: dict, reviews: list[dict], artifacts: dict) -> di
     dimension and only a validated closing review can fix one (P1-02).
     """
     from .models import page_limit_violation
+    if replacements is None:
+        replacements = replacement_index(reviews)
     limit_violation = page_limit_violation(document)
     pages = document.get('pages') or []
     current = (document.get('outputs') or {}).get('pptx')
@@ -422,7 +452,7 @@ def evaluate_current(document: dict, reviews: list[dict], artifacts: dict) -> di
     tasks = document.get('tasks') or []
     suspended_pages = set()
     for task in tasks:
-        if (isinstance(task, dict) and task.get('status') in OPEN_TASK_STATUSES
+        if (isinstance(task, dict) and task_blocks_current_output(task, store=store, document=document)
                 and task.get('intent') != 'input_revision'):
             suspended_pages.update(task.get('scope_pages') or [])
 
@@ -477,11 +507,11 @@ def evaluate_current(document: dict, reviews: list[dict], artifacts: dict) -> di
                 if finding.get('page_id') == page_id:
                     open_by_id.setdefault(finding['finding_id'], finding)
             for finding in pending_judgments(review):
-                if finding.get('page_id') == page_id and not finding_closed(reviews, review, finding, artifacts):
+                if finding.get('page_id') == page_id and not finding_closed(reviews, review, finding, artifacts, replacements=replacements):
                     if finding['finding_id'] not in judgments:
                         judgments.append(finding['finding_id'])
         remaining = [fid for fid in open_by_id
-                     if any(not finding_closed(reviews, owner, finding, artifacts)
+                     if any(not finding_closed(reviews, owner, finding, artifacts, replacements=replacements)
                             for owner in history_for_dim
                             for finding in open_findings(owner)
                             if finding.get('page_id') == page_id and finding.get('finding_id') == fid)]

@@ -4,7 +4,9 @@
 
 ## 试作
 
-从当前 snapshot 取得 project_id、revision_id、Page/产物引用。按 `change_intent.v1` 构造正常 changes 输入，并加入 `mode: "trial"`，目标 `stage: "blueprint"`（original_image）或 `"reconstruct"/"repair"`（svg/ppt）。每页一次动作；SVG 必须已有原图，Page 内容不支持试作候选。
+从当前 snapshot 取得 project_id、revision_id、Page/产物引用。按 `change_intent.v1` 构造正常 changes 输入，并加入 `mode: "trial"`，目标 `stage: "blueprint"`（original_image）或 `"reconstruct"/"repair"`（svg/ppt）。每页一次动作；SVG 必须已有原图。Page 正文支持 `intent: "content"`、`layer: "content"`、`mode: "trial"` 的零调用候选，`max_calls: 0`；使用 Content 职责读取真实 task_id 的 v1/v2 工作单，声明 `content_candidate` 与 `candidate_result`。接纳候选不改当前稿；明确采用后才更新正文及相关依赖。正文纠正不要求待改旧稿先通过制作前审，生图和编译仍受原有门禁约束。
+
+旧任务若返回 `basis_changed`，先按恢复入口正式退役/重发，解决未知调用后再接手新 task_id；不要改写旧 manifest、职责或 execution。SVG repair 仍属于 Design。
 
 `references` 可携带 `{page_id, revision_id, artifact_ref, role}`，其中 artifact_ref 必须是该已提交版本的原图。原图之后改变不会替换这一固定文件。generation_input 的 prompt 和 references 由计划冻结，不能在 requests freeze 时更换或遗漏。当前原生附件采集只证明 `role=reference`；其它角色不能被推定为已匹配。
 
