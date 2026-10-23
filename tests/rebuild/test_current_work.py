@@ -270,3 +270,20 @@ def test_completed_primary_action_opens_actual_deliverable(tmp_path, route, deli
             browser.close()
     finally:
         server.stop()
+
+
+def test_equal_priority_actions_preserve_existing_layer_order(tmp_path):
+    from deck_master.samples import create_gallery_sample
+    from deck_master.store import Store
+    project = tmp_path / 'layer-order'
+    create_gallery_sample(project, page_count=24, readonly=False)
+    store = Store(project)
+    before = store.load_document()
+    legacy = workbench.workbench_summary(project)
+    work = workbench.workbench_summary(project, protocol='workbench_summary.v2')['current_work']
+    legacy_stages = [a for a in legacy['next_actions']['actions'] if a['kind'] == 'prepare_stage']
+    current_stages = [a for a in work['next']['actions'] if a['kind'] == 'prepare_stage']
+    assert [a['layer'] for a in current_stages] == [a['layer'] for a in legacy_stages]
+    assert current_stages[0]['layer'] == 'blueprint'
+    assert current_stages[0]['page_ids'] == ['p03', 'p14']
+    assert store.load_document() == before

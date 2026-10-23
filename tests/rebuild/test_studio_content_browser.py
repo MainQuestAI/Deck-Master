@@ -390,7 +390,7 @@ def test_old_poll_cannot_invalidate_newly_read_content_plan(tmp_path, old_poll_e
                 else:
                     route.continue_()
 
-            page.route('**/api/view/summary?personal=1', hold_poll)
+            page.route('**/api/view/summary?protocol=workbench_summary.v2&personal=1', hold_poll)
             page.evaluate('() => window.dispatchEvent(new Event("focus"))')
             page.wait_for_function('() => window.__heldContentPoll === true')
             with page.expect_response(lambda response: response.url.endswith('/api/content/commit')) as receipt:
