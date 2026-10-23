@@ -111,3 +111,11 @@ Product ACs link concrete tests in acceptance-matrix.json. A PARTIAL status iden
 - AC ledger: **24 PASS_AUTOMATED / 6 PARTIAL**. These are synthetic product checks, not customer, native OS or professional approval.
 - Final complete local browser sweep: RUNNING. Final remote workflow for product commit: [40010957909](https://github.com/MainQuestAI/Deck-Master/actions/runs/40010957909), RUNNING at this record. The earlier product commit had four Linux unit jobs and Linux render pass; its outdated browser job was cancelled when superseded.
 - Nothing was merged or activated in the default installation. Original checkout and user projects remain untouched.
+
+### Completion audit follow-up: method review scope
+
+- AC10 contained a real remaining UI gap: the phase selector always sent the default three content units, and the copied preparation omitted its context. The selected review phase now carries its actual units, including speech-only, and the handoff includes role, phase, fixed project/revision where applicable, explicit resources, resolved hashes and recovery context. This is preparation, never task dispatch.
+- **4 passed** in the new scope suite (unit + 1440/1280/390 browser cases), with actual navigator.clipboard roundtrip and public CLI reader; scope, resource bytes and draft restoration agree. **40 passed** across scope, installation preparation and Host selection; **21 passed** in adjacent method/resource regressions.
+- AC ledger is now **25 PASS_AUTOMATED / 5 PARTIAL**. This does not close unrelated RP-18 routing/old-manifest responsibilities.
+- AC02 native picker evidence has a concrete external blocker: the native UI tool reports the Mac locked and automatic unlock unavailable. The user has been asked to unlock; no native dialog was opened or left pending.
+- Full browser result before this narrow follow-up: **570 passed / 3 failed**, all three failures being the documented native select keyboard path across three viewports. Final PR CI for that tree has passed Linux rendering and both Python 3.11 unit jobs; other jobs were still running at this record.

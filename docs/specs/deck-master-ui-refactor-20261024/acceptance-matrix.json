@@ -21,7 +21,7 @@
       "test_ui_design_browser.py::test_picker_cancel_and_failure_preserve_path_and_manual_focus",
       "test_rc3_studio_intake_browser.py"
     ],
-    "scope_note": "接口/浏览器恢复已覆盖；真实系统文件选择对话框需现场核验。",
+    "scope_note": "接口/浏览器恢复已覆盖；2026-10-24 原生界面工具实查 Mac 锁屏、无法自动解锁，等待用户解锁后核验真实系统目录选择器。",
     "verification_report": "VERIFICATION.md"
   },
   {
@@ -121,12 +121,13 @@
     "scenario": "方法可读但不可派发；只选口播审阅范围",
     "expected": "目录可浏览，能力原因明确，复制/prepare真实scope含speech且对应选择",
     "evidence": "RP-18剪贴板→reader / E2",
-    "status": "PARTIAL",
+    "status": "PASS_AUTOMATED",
     "evidence_refs": [
       "test_webui_content_insight_browser.py",
-      "test_webui_acceptance_matrix.py"
+      "test_webui_acceptance_matrix.py",
+      "test_ui_method_scope_browser.py"
     ],
-    "scope_note": "方法目录与准备入口保留；仅口播审阅的真实 reader/交接 scope 闭环仍归 RP-18，未声明完成。",
+    "scope_note": "项目无新阶段时准备不冒充派发；独立口播准备通过三视口的真实浏览器剪贴板到公共 CLI reader，固定 speech 与资源哈希并恢复草稿。RP-18 其他职责路由不由本项关闭。",
     "verification_report": "VERIFICATION.md"
   },
   {
