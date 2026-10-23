@@ -118,6 +118,26 @@
             ],
             "maxLength": 128,
             "minLength": 1
+          },
+          "task_kind": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "created_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "current_relation": {
+            "enum": [
+              "current",
+              "background",
+              "historical",
+              "unknown"
+            ]
           }
         }
       }

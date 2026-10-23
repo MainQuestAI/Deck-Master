@@ -43,11 +43,13 @@ function todoTitle(action) {
   const layer = {blueprint:'原图',svg:'SVG',svg_preview:'SVG 预览',ppt_preview:'PPT 预览',pptx:'整稿 PPT'}[action.layer] || '产物类型待核实';
   const base = action.kind === 'prepare_stage' ? `${layer}待生成`
     : action.kind === 'refresh_stage' ? `${layer}依据已变化` : kindLabels[action.kind] || '待核实事项';
+  if(action.object_count && ['verify_execution','handoff','inspect_failure','replan','review_results'].includes(action.kind)) return `${action.object_count} 项${base}`;
+  if(action.object_count && action.kind==='compare_candidates')return `${action.object_count} 个候选待决定`;
   return action.page_ids?.length ? `${action.page_ids.length} 页${base}` : base;
 }
 function reasonText(action) {
-  return (reasonLabels[action.reason_code] || action.reason_code || '') +
-    (action.blocked_reason === 'candidate_unreadable' ? ' 候选记录损坏，已隔离。' : '');
+  if(action.enabled===false)return ({candidate_unreadable:'候选记录暂不可读，已保留并隔离。',candidate_task_unreadable:'候选所属任务无法确认，暂不推荐采用。',candidate_basis_unreadable:'生成依据暂不可读，当前关系待核实。',request_binding_missing:'未记录与当前请求的绑定，保留为待核实记录。',target_identity_mismatch:'对象身份不完整，保留记录但不会猜测目标。'})[action.blocked_reason]||'当前关系待核实，记录仍保留。';
+  return reasonLabels[action.reason_code] || action.reason_code || '';
 }
 function todoMeta(app, action) {
   const pages = (action.page_ids || []).map(id => {

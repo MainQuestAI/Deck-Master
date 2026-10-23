@@ -17,7 +17,7 @@ User authorized continuous product implementation, isolated branch/worktree, pus
 | --- | --- | --- |
 | E0 | IN_PROGRESS | Live remote baseline recorded; actual code differs from the earlier local inventory. |
 | E1 | IN_PROGRESS | 99 semantic tokens now feed generated CSS; 172 overlapping button rules migrated to controls.css; bounded actions, neutral selected navigation, native row popovers. Forms/status and global menus still pending. |
-| E2 | NOT_RUN | IN PROGRESS: overview priority card and row menus refined; batch actions appear after selecting. Current relationship projection and content/sequence/materials still pending. |
+| E2 | IN_PROGRESS | Overview priority, selection-first batch actions, shared current relationship and task identity metadata implemented. Content/sequence/materials refinements still pending. |
 | E3 | IN_PROGRESS | Single page reading width; nonmodal source inspection; 440/880 modal editor with retained drafts, title validation and keyboard focus loop. Annotation/mode and complete lifecycle checks still pending. |
 | E4 | NOT_RUN | Gallery, pinned candidate comparison, adoption/keep. |
 | E5 | NOT_RUN | Style phases, task/version/export, exact replay and finding continuity. |
@@ -59,3 +59,14 @@ All product ACs remain NOT_RUN until a concrete test or browser observation is l
 - 24 existing browser cases passed after migrating to the named dialog trigger and explicit close before navigation. New keyboard regression found Tab escaping to browser chrome; explicit boundary handling fixed it.
 - Follow-up 14 passed: exact range, draft retention, narrow/editor geometry, long-copy diff/impact visibility, and UI geometry/keyboard suite.
 - Synthetic screenshots: evidence/single-page-editor/. No customer content or Host generation.
+
+### E2 current relationship (RP-08 slice)
+
+- Summary, run desk and candidate selection consume the same request/basis relationship. Historical failures remain failed, stale candidates remain undecided; neither is promoted into the current action queue. Unknown calls remain verification obligations.
+- Candidate basis comparison is extracted from the existing candidate reader, preserving visual-equivalence and adopted target semantics. This is not a new permission gate or a replacement for adoption planning.
+- All referenced historical snapshot signatures join the summary cache guard. Corruption invalidates warm results; repairing the snapshot restores eligibility projection without rewriting business state.
+- Current task cards and action targets expose stage, scope, timestamp, identity and current relationship. Object counts and affected-page counts are distinct. Unreadable/unknown actions follow enabled actions.
+- 90 passed across shared-currentness, overview, task/candidate service and action-target Chromium navigation tests. Follow-up 5 passed includes explicit request replacement and retained background scope.
+- Existing navigation fixtures now carry real current-request bindings. Old unbound synthetic tasks no longer silently qualify as current handoffs.
+- Initial pressure samples: 24 pages / 120 candidates, 99.0ms first read and 6.9/6.2ms warm; 100 pages / 500 candidates, 365.5ms first and 18.4/17.7ms warm. This local read sample is not a before/after CPU benchmark or full #142/#182 closure.
+- RP-03/RP-06 and unresolved finding continuity remain separate dependencies. No issue is declared closed by this slice.

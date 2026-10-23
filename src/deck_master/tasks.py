@@ -397,10 +397,11 @@ def _lookup_task(document: dict, task_id: str, store: Store) -> dict:
     raise EnvelopeError(f"(task {task_id})", "task not found in current Document")
 
 
-def task_inputs_current(store, document, task):
+def task_inputs_current(store, document, task, *, read_snapshot=None):
+    read_snapshot = read_snapshot or store.load_document
     from .visual_dependencies import is_visual_task, visual_task_inputs_current
     if is_visual_task(task):
-        return visual_task_inputs_current(store, document, task)
+        return visual_task_inputs_current(store, document, task, read_snapshot=read_snapshot)
     if task.get("kind") == "style_analyze":
         from .visual_styles import inputs_current as analysis_current
         return analysis_current(store, document, task)
@@ -410,10 +411,10 @@ def task_inputs_current(store, document, task):
         # generation basis for image/SVG, the precise content basis for
         # content trials (B03). The generic slot comparison below would
         # wrongly stale an SVG trial whose slot a sibling auto result moved.
-        return inputs_current(store, document, task)
+        return inputs_current(store, document, task, read_snapshot=read_snapshot)
     dispatched = None
     if task.get('kind') in ('review', 'repair'):
-        dispatched = store.load_document(task['dispatch_revision'])
+        dispatched = read_snapshot(task['dispatch_revision'])
         if task.get('review_stage', 'final') == 'final':
             # Output references are real review inputs even when Page/SVG
             # content identity stayed the same after reassembly.
@@ -429,7 +430,7 @@ def task_inputs_current(store, document, task):
                 return False
     if content_identity(document) == task.get('produced_against'):
         return True
-    dispatched = dispatched or store.load_document(task['dispatch_revision'])
+    dispatched = dispatched or read_snapshot(task['dispatch_revision'])
     # Task facts are part of the dispatched input: a task-field change
     # (audience, decisions, ...) invalidates scoped results too, even when
     # pages/design/sources are untouched (spec v1.1 §5.4, c93 defect).

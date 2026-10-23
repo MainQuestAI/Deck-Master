@@ -55,7 +55,7 @@ def is_visual_task(task):
                 and task.get("kind") != "compose"))
 
 
-def visual_task_inputs_current(store, document, task):
+def visual_task_inputs_current(store, document, task, *, read_snapshot=None):
     """Actual dispatched visual inputs; no task.preparation/cache inference."""
     from .production import (consumed_design, resolve_page_design,
                              resolve_page_rendering_design, stored_blueprint_request)
@@ -89,7 +89,7 @@ def visual_task_inputs_current(store, document, task):
                     resolve_page_design(store, document, entry, require_current=True)
         if content_identity(document) == task.get("produced_against"):
             return True
-        dispatched = load_snapshot(store, task["dispatch_revision"])
+        dispatched = (read_snapshot or (lambda rev: load_snapshot(store, rev)))(task["dispatch_revision"])
         if compute_input_digest(dispatched) != compute_input_digest(document):
             return False
         ids = task["scope_pages"]
@@ -131,7 +131,7 @@ def assess_visual_task_basis(store, document, task, basis):
     if not is_visual_task(task) or not state["stale"]:
         return state
     try:
-        dispatched = load_snapshot(store, task["dispatch_revision"])
+        dispatched = (read_snapshot or (lambda rev: load_snapshot(store, rev)))(task["dispatch_revision"])
         ids = task.get("scope_pages") or []
         old_pages = {entry["page_id"]: entry for entry in dispatched["pages"]}
         new_pages = {entry["page_id"]: entry for entry in document["pages"]}

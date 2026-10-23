@@ -6,8 +6,9 @@ import {get, post, readableError, revisionQuery, fileURL} from './api.js';
 import {el, button, empty, version, modal, loading, errorNote, disabledReason, icon} from './dom.js';
 
 const names = {style_analyze:'分析截图规范', reconstruct:'制作可编辑稿', compile:'编译整稿', check:'工程检查', compose: '整理内容', blueprint: '制作原图', svg: '制作 SVG', render: '渲染预览', repair: '局部修改', review: '检查', export: '准备文件'};
-const statuses = {queued: '等待执行', awaiting_host: '待接手', running: '已记录处理中', completed: '结果已记录', failed: '执行失败', cancelled: '已取消', superseded: '由新任务接续', unreadable: '记录无法读取'};
+const statuses = {queued: '等待执行', awaiting_host: '待接手', running: '已记录处理中', completed: '结果已记录', failed: '执行失败', cancelled: '已取消', superseded: '依据已失效', unreadable: '记录无法读取'};
 const actions = {handoff: '交给 Deck Master Agent', verify_unknown_call: '核实未知调用', verify_execution: '核实原执行', inspect_failure: '查看失败原因', replan: '按当前依据重新计划', compare_candidates: '候选待决定', review_results: '结果待阅读'};
+const relationNames={current:'当前请求与依据',background:'已授权后台任务',historical:'历史记录',unknown:'当前关系待核实'};
 const seenKey = task => task.reading_key;
 const clock = value => value ? new Date(value).toLocaleString('zh-CN', {hour12: false}) : '未记录';
 
@@ -132,8 +133,10 @@ export function runDesk(app, data) {
     return el('article',{class:'run-task studio-task-record','data-task-id':task.task_id},
       el('div',{class:'studio-task-main'},el('span',{class:'studio-task-symbol','aria-hidden':'true'},icon(task.kind==='compose'?'content':'runs')),
         el('div',{class:'studio-task-copy'},el('h3',{},label),el('p',{class:'run-task-scope'},`目标：${scopeLabel(task)}`),
-          el('p',{class:'run-requirement'},`要求：${summary}`))),
+          el('p',{class:'run-requirement'},`要求：${summary}`),
+          el('p',{class:'muted'},`${clock(task.created_at)} · ${task.task_id}`))),
       el('div',{class:'studio-task-state'},el('span',{class:'status'},icon(statusIcon),statuses[task.status]||'状态待核实'),
+        el('p',{class:'muted'},relationNames[task.current_relation?.status]||'当前关系待核实'),
         next.length>0 && el('p',{class:task.needs_verification?'field-error':'muted'},next.map(key=>actions[key]||key).join(' · '))),
       task.task_id ? button('查看这项任务',()=>app.go({task_id:task.task_id,revision:page.revision_id}),false,{class:'run-task-open'}) : el('span',{class:'field-error'},'记录无法读取'));
   }
