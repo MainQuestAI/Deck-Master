@@ -52,3 +52,14 @@ bf4f661 to the local repair branch or relabel original 258fc/601 evidence.
 
 Real Host/model review, S3 effect/human evaluation and customer visual quality
 remain not_run; this is engineering navigation and contract evidence only.
+
+## Independent dialog follow-up
+
+The fixed 679b1d1 review reproduced a further UI defect: optional/secondary
+navigation inside the current-work dialog loaded its target behind the still-open
+dialog. The component now closes only its containing dialog for every navigation
+button, retaining the existing openAction/target validation and app.go draft guard.
+Overview navigation does not close unrelated dialogs. A dedicated regression
+clicks both optional and secondary records in both frontends at 390/1280 widths,
+asserts the fixed target membership is visible, and verifies no project mutation.
+UI-state persistence is distinguished from production writes.

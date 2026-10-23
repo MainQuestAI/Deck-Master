@@ -51,10 +51,10 @@ export function todoMeta(app, action) {
   if (!pages.length) return '项目级事项';
   return pages.length > 4 ? `第 ${pages.slice(0, 4).join('、')} 等共 ${pages.length} 页` : `第 ${pages.join('、')} 页`;
 }
-export function todoButton(app, action, primary = false) {
+export function todoButton(app, action, primary = false, beforeNavigate = () => {}) {
   const blocked = action.enabled === false;
   const precise = app.health.ui_capabilities?.includes('action_targets.v1');
-  return disabledReason(button((nextLabels[action.kind] || '查看') + (precise ? '' : ' · 通用入口'), () => openAction(app, action, actionRoute(action)), primary,
+  return disabledReason(button((nextLabels[action.kind] || '查看') + (precise ? '' : ' · 通用入口'), () => {beforeNavigate(); return openAction(app, action, actionRoute(action));}, primary,
     {disabled: blocked}), blocked ? '该项记录暂不可读（已隔离），先处理其它待办。' : '');
 }
 
