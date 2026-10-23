@@ -6,6 +6,9 @@ import {openCandidate} from './trial-actions.js';
 
 const kinds = {blueprint:'原图', svg:'SVG', content:'正文'};
 export function candidateState(row) {
+  // A Page adoption replaces its own original Page reference; this expected
+  // transition is not an obsolete trial requiring another rewrite.
+  if (row.candidate.result_kind === 'page' && row.adoption_target?.current_ref && canonical(row.adoption_target.current_ref) === canonical(row.candidate.result_ref)) return '当前采用';
   if (row.generation_basis?.status === 'changed' || row.content_basis?.status === 'changed') return '依据已变化';
   if (row.adoption_target?.current_ref && canonical(row.adoption_target.current_ref) === canonical(row.candidate.result_ref)) return '当前采用';
   if (row.status === 'adopted') return '曾采用';
