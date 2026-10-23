@@ -319,7 +319,7 @@ def check_summary(store, doc, *, read_context=None):
     reviews = context.reviews
     document = {**doc, 'tasks': [store.read_object_json(ref) for ref in doc.get('tasks') or []],
                 '_output_facts': _output_facts(store, doc)}
-    return review_mod.evaluate_current(document, reviews, context.artifacts, replacements=context.replacements)
+    return review_mod.evaluate_current(document, reviews, context.artifacts, replacements=context.replacements, store=store)
 
 
 def review_status(store, doc):

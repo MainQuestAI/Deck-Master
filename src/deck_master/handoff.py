@@ -81,7 +81,7 @@ def check_handoff(project_dir, *, file_path, purpose="review", notes_policy=None
     pending = []
     for ref in document.get("tasks") or []:
         task = store.read_object_json(ref)
-        if task_blocks_current_output(task):
+        if task_blocks_current_output(task, store=store, document=document):
             pending.append({"task_id": task["task_id"], "kind": task["kind"], "status": task["status"]})
     if pending:
         gaps.append("pending_host_tasks")

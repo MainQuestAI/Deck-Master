@@ -33,6 +33,41 @@ def is_trial(task):
     return task.get('stage_request', {}).get('mode') == 'trial'
 
 
+def isolated_svg_trial(store, document, task):
+    """Prove a pending zero-call candidate branch from its committed plan.
+
+    A caller's trial label is insufficient. The actual writer must be confined
+    to a candidate SVG slot and carry neither call credit nor recorded spend.
+    Missing/corrupt provenance stays blocking; reads never repair it.
+    """
+    if (store is None or document is None or not is_trial(task)
+            or task.get('kind') not in ('reconstruct', 'repair')
+            or task.get('protocol_version') != 'changes.v1'
+            or not {'change_plan', CAPABILITY} <= set(task.get('required_capabilities') or [])
+            or task.get('cost_class') != 'host_reasoning' or task.get('call_allowances')
+            or (task.get('usage') or {}).get('external_calls') not in (None, 0)
+            or task.get('candidate_refs') or task.get('result_refs')
+            or (task.get('collaboration_binding') or {}).get('adoption_policy') != 'candidate_only'):
+        return False
+    try:
+        from .changes import action_for_task
+        action = action_for_task(store, document, task)
+        if (not action or action.get('mode') != 'trial' or action.get('write_slots') != ['svg']
+                or action.get('kind') != task['kind'] or action.get('stage') != task['stage_request'].get('stage')
+                or action.get('max_calls') != 0):
+            return False
+        change = store.read_object_json(task['change_binding']['change_ref'])
+        plan = store.read_object_json(change['plan_ref']); validate_schema('change_plan', plan)
+        return (plan['project_id'] == document['project_id']
+                and plan['base_revision'] == change['base_revision'] == task['dispatch_revision']
+                and plan['actions'] == change['actions'] and plan['max_calls'] == 0
+                and plan['input'].get('mode') == 'trial'
+                and plan['payload_digest'] == change['payload_digest']
+                == sha256_bytes(canonical_json_bytes(plan['input'])))
+    except (StoreError, ModelError, OSError, ValueError, KeyError, TypeError):
+        return False
+
+
 def result_kind(candidate):
     return candidate.get('result_kind', 'artifact')
 

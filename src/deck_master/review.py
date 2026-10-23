@@ -407,8 +407,8 @@ def dependency_problems(review: dict, artifacts: dict) -> list[dict]:
     return problems
 
 
-def task_blocks_current_output(task: dict) -> bool:
-    """An unadopted, zero-call content trial cannot change current artifacts.
+def task_blocks_current_output(task: dict, *, store=None, document=None) -> bool:
+    """An isolated zero-call candidate cannot change current artifacts.
 
     Keep production work and any uncertain/external call blocking. Findings
     remain evaluated independently; candidate adoption invalidates real slots.
@@ -420,10 +420,13 @@ def task_blocks_current_output(task: dict) -> bool:
                    and task.get('cost_class') == 'host_reasoning'
                    and not task.get('call_allowances')
                    and (task.get('usage') or {}).get('external_calls') in (None, 0))
-    return not side_branch
+    if side_branch:
+        return False
+    from .candidates import isolated_svg_trial
+    return not isolated_svg_trial(store, document, task)
 
 
-def evaluate_current(document: dict, reviews: list[dict], artifacts: dict, *, replacements=None) -> dict:
+def evaluate_current(document: dict, reviews: list[dict], artifacts: dict, *, replacements=None, store=None) -> dict:
     """The one interpretation of the current check state (AC-R01/R02/R03/R10).
 
     Reviews are interpreted together with hard output facts (P1-01, injected
@@ -449,7 +452,7 @@ def evaluate_current(document: dict, reviews: list[dict], artifacts: dict, *, re
     tasks = document.get('tasks') or []
     suspended_pages = set()
     for task in tasks:
-        if (isinstance(task, dict) and task_blocks_current_output(task)
+        if (isinstance(task, dict) and task_blocks_current_output(task, store=store, document=document)
                 and task.get('intent') != 'input_revision'):
             suspended_pages.update(task.get('scope_pages') or [])
 
