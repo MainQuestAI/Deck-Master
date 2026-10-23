@@ -829,6 +829,10 @@ def _summary(ctx, *, revision, member_index=None, reading=None):
         for page_id in set(task.get("scope_pages") or []):
             by_page[page_id].append(row)
     deck_output = _deck_output(ctx)
+    from .design_completion import completion_status as design_completion
+    # The same request/basis projection used by continue distinguishes a plan
+    # deliverable from sample production. Missing layers stay in page facts.
+    plan_completion = design_completion(store, doc)
     facts = [*overview["facts"], *candidate_facts, *_deck_facts(ctx)]
     pages = []
     for entry in doc.get("pages") or []:
@@ -836,7 +840,8 @@ def _summary(ctx, *, revision, member_index=None, reading=None):
         title = None
         if stages["content"]["existence"] == "recorded":
             title = (ctx.read(entry["page"]).get("customer_visible") or {}).get("title")
-        facts.extend(_stage_facts(entry, stages, deck_output))
+        if plan_completion is None:
+            facts.extend(_stage_facts(entry, stages, deck_output))
         pages.append({"page_id": entry["page_id"], "title": title, "stages": stages,
                       "execution": _copy_json(by_page[entry["page_id"]]),
                       "prompt_summary": _prompt_summary(ctx, entry, overview["prepared"], overview["frozen"]),
