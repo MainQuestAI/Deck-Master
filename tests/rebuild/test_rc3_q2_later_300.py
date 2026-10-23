@@ -38,10 +38,10 @@ def run_logged(tmp_path, argv):
         execution_error = {"type": type(exc).__name__, "message": str(exc)}
         # Temporary artifacts are not necessarily uploaded by CI. Preserve the
         # actual exception/deadline while exposing the last active test inline.
-        def output_tail(value):
-            return value[-4096:].decode("utf-8", "replace") if isinstance(value, bytes) else value[-4096:]
+        def output_tail(value, limit=4096):
+            return value[-limit:].decode("utf-8", "replace") if isinstance(value, bytes) else value[-limit:]
         exc.add_note("Isolated child stdout tail (last 4096 bytes/characters):\n" + output_tail(stdout))
-        exc.add_note("Isolated child stderr tail (last 4096 bytes/characters):\n" + output_tail(stderr))
+        exc.add_note("Isolated child stderr tail (last 65536 bytes/characters):\n" + output_tail(stderr, 65536))
         raise
     except OSError as exc:
         execution_error = {"type": type(exc).__name__, "message": str(exc)}
@@ -65,7 +65,7 @@ def test_all_q2_later_300_cases_run_in_an_actual_isolated_interpreter(tmp_path):
     case_root = tmp_path / "isolated-cases"
     # Keep the active node in captured output if the unchanged deadline fires;
     # durations diagnose completed slow cases without weakening any case checks.
-    argv = [sys.executable, "-I", "-B", "-m", "pytest", "-vv", "--durations=20", "-p", "no:cacheprovider",
+    argv = [sys.executable, "-I", "-B", "-m", "pytest", "-vv", "--q2-diagnostics", "--durations=20", "-p", "no:cacheprovider",
             "-o", "addopts=", "--basetemp=" + str(case_root), "--junitxml=" + str(junit), str(CASES)]
     result = run_logged(tmp_path, argv)
     assert result.returncode == 0, (result.stdout + result.stderr).decode(errors="replace")
@@ -111,7 +111,7 @@ def test_companion_and_pinned_helpers_import_without_Runtime(tmp_path):
 def test_timeout_preserves_deadline_type_artifacts_and_bounded_last_node(tmp_path, monkeypatch):
     argv = [sys.executable, "-I", "-B", "-m", "pytest", "-vv"]
     stdout = b"old synthetic progress\n" * 500 + b"last_synthetic_case::test_pending"
-    stderr = b"synthetic diagnostic\n"
+    stderr = b"synthetic earlier timing\n" * 4000 + b"synthetic pre_deadline stack\n"
     failure = subprocess.TimeoutExpired(argv, 180, output=stdout, stderr=stderr)
     calls = []
 
@@ -133,7 +133,8 @@ def test_timeout_preserves_deadline_type_artifacts_and_bounded_last_node(tmp_pat
     notes = caught.value.__notes__
     assert "last_synthetic_case::test_pending" in notes[0]
     assert notes[0].split("\n", 1)[1] == stdout[-4096:].decode()
-    assert notes[1].split("\n", 1)[1] == stderr.decode()
+    assert notes[1].split("\n", 1)[1] == stderr[-65536:].decode()
+    assert "synthetic pre_deadline stack" in notes[1]
     # Exclusive evidence files must refuse replacement, even on another failure.
     with pytest.raises(FileExistsError):
         run_logged(tmp_path, argv)
