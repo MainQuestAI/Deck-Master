@@ -1,0 +1,4579 @@
+{
+  "metrics": [
+    {
+      "screen": "overview",
+      "width": 1440,
+      "controls": [
+        {
+          "label": "状态说明",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "查看整稿",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "查看待补页",
+          "font": "13px",
+          "line": "20px",
+          "height": 36,
+          "primary": true
+        },
+        {
+          "label": "查看待补页",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "查看依据",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "全部 30 页",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "只看需要处理 30 页",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "个人记录与提交恢复",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "页面 · 升序",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 01 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 1 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 1 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 1 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 1 页，SVG，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 1 页，PPT，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 01 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 02 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 2 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 2 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 2 页，原图，依据已变化",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 2 页，SVG，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 2 页，PPT，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 02 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 03 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 3 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 3 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 3 页，原图，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 3 页，SVG，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 3 页，PPT，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 03 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 04 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 4 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 4 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 4 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 4 页，SVG，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 4 页，PPT，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 04 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 05 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 5 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 5 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 5 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 5 页，SVG，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 5 页，PPT，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 05 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 06 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 6 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 6 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 6 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 6 页，SVG，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 6 页，PPT，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 06 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 07 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 7 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 7 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 7 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 7 页，SVG，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 7 页，PPT，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 07 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 08 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 8 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 8 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 8 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 8 页，SVG，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 8 页，PPT，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 08 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 09 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 9 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 9 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 9 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 9 页，SVG，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 9 页，PPT，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 09 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 10 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 10 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 10 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 10 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 10 页，SVG，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 10 页，PPT，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 10 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 11 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 11 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 11 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 11 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 11 页，SVG，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 11 页，PPT，依据已变化",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 11 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 12 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 12 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 12 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 12 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 12 页，SVG，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 12 页，PPT，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 12 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 13 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 13 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 13 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 13 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 13 页，SVG，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 13 页，PPT，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 13 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 14 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 14 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 14 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 14 页，原图，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 14 页，SVG，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 14 页，PPT，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 14 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 15 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 15 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 15 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 15 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 15 页，SVG，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 15 页，PPT，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 15 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "上一组页面",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "下一组页面",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "screen": "content",
+      "width": 1440,
+      "controls": [
+        {
+          "label": "添加材料",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "修改任务要求",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "查看输入判断",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "逐页稿",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "章节与计划",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "材料与来源",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "更多内容工具",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "预览页序变更",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 1 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 2 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 3 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 4 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 5 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 6 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 7 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 8 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 9 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 10 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 11 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 12 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 13 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 14 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 15 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 16 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 17 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 18 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 19 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 20 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 21 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 22 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 23 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 24 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 25 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 26 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 27 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 28 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 29 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 30 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "screen": "page",
+      "width": 1440,
+      "controls": [
+        {
+          "label": "上一页，第 1 页 · 项目目标与阅读顺序",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "下一页，第 3 页 · 每页保留原图与来源",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "01 来源，记录缺失",
+          "font": "13px",
+          "line": "20px",
+          "height": 56,
+          "primary": false
+        },
+        {
+          "label": "02 逐页稿，可查看",
+          "font": "13px",
+          "line": "20px",
+          "height": 56,
+          "primary": false
+        },
+        {
+          "label": "03 提示词，记录缺失",
+          "font": "13px",
+          "line": "20px",
+          "height": 56,
+          "primary": false
+        },
+        {
+          "label": "04 原图，制作依据已变化",
+          "font": "13px",
+          "line": "20px",
+          "height": 56,
+          "primary": false
+        },
+        {
+          "label": "05 SVG，尚未生成",
+          "font": "13px",
+          "line": "20px",
+          "height": 56,
+          "primary": false
+        },
+        {
+          "label": "06 PPT 预览，尚未生成",
+          "font": "13px",
+          "line": "20px",
+          "height": 56,
+          "primary": false
+        },
+        {
+          "label": "回到整稿画廊",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "比较此页版本",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "以本页为风格参考",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "意见",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "试作与候选",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "图标优化",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "笔记",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "详情",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "编辑本页标题与正文",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "整页意见",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "保存意见",
+          "font": "13px",
+          "line": "20px",
+          "height": 36,
+          "primary": true
+        }
+      ]
+    },
+    {
+      "screen": "gallery",
+      "width": 1440,
+      "controls": [
+        {
+          "label": "跨页风格校准",
+          "font": "13px",
+          "line": "20px",
+          "height": 36,
+          "primary": true
+        },
+        {
+          "label": "原图 28/30",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "SVG 13/30",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "PPT 10/30",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "联系表",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "连续阅读",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "并排比较",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "2 列",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "3 列",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "4 列",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 1 页 · 项目目标与阅读顺序",
+          "font": "13px",
+          "line": "20px",
+          "height": 206.796875,
+          "primary": false
+        },
+        {
+          "label": "☆ 标记参考",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 2 页 · 材料如何成为内容",
+          "font": "13px",
+          "line": "20px",
+          "height": 206.8125,
+          "primary": false
+        },
+        {
+          "label": "☆ 标记参考",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 3 页 · 每页保留原图与来源",
+          "font": "13px",
+          "line": "20px",
+          "height": 206.796875,
+          "primary": false
+        },
+        {
+          "label": "☆ 标记参考",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 4 页 · 修改后需要重新确认",
+          "font": "13px",
+          "line": "20px",
+          "height": 206.796875,
+          "primary": false
+        },
+        {
+          "label": "☆ 标记参考",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 5 页 · 交付前查看缺口",
+          "font": "13px",
+          "line": "20px",
+          "height": 206.8125,
+          "primary": false
+        },
+        {
+          "label": "☆ 标记参考",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 6 页 · 项目目标与阅读顺序",
+          "font": "13px",
+          "line": "20px",
+          "height": 206.796875,
+          "primary": false
+        },
+        {
+          "label": "☆ 标记参考",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 7 页 · 材料如何成为内容",
+          "font": "13px",
+          "line": "20px",
+          "height": 206.796875,
+          "primary": false
+        },
+        {
+          "label": "☆ 标记参考",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 8 页 · 每页保留原图与来源",
+          "font": "13px",
+          "line": "20px",
+          "height": 206.8125,
+          "primary": false
+        },
+        {
+          "label": "☆ 标记参考",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 9 页 · 修改后需要重新确认",
+          "font": "13px",
+          "line": "20px",
+          "height": 206.796875,
+          "primary": false
+        },
+        {
+          "label": "☆ 标记参考",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "screen": "style",
+      "width": 1440,
+      "controls": [
+        {
+          "label": "项目页面",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "外部图片",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "1 · 参考与目标",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "2 · 确认规范",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "3 · 试作与采用",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "4 · 扩展",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "检查风格要求",
+          "font": "13px",
+          "line": "20px",
+          "height": 36,
+          "primary": true
+        },
+        {
+          "label": "查找其它参考页",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "只看已选目标",
+          "font": "13px",
+          "line": "20px",
+          "height": 31.999969482421875,
+          "primary": false
+        },
+        {
+          "label": "高级：借用维度、原文选段与建议",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "个人草稿与恢复",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "screen": "runs",
+      "width": 1440,
+      "controls": [
+        {
+          "label": "任务记录",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "待决定",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "版本",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "文件",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "核实最新执行状态",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "查询任务",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "阅读内容",
+          "font": "",
+          "line": "",
+          "height": 0,
+          "primary": false
+        },
+        {
+          "label": "查看整稿",
+          "font": "",
+          "line": "",
+          "height": 0,
+          "primary": false
+        },
+        {
+          "label": "其它修改组的交接",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "screen": "overview",
+      "width": 1280,
+      "controls": [
+        {
+          "label": "状态说明",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "查看整稿",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "查看待补页",
+          "font": "13px",
+          "line": "20px",
+          "height": 36,
+          "primary": true
+        },
+        {
+          "label": "查看待补页",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "查看依据",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "全部 30 页",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "只看需要处理 30 页",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "个人记录与提交恢复",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "页面 · 升序",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 01 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 1 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 1 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 1 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 1 页，SVG，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 1 页，PPT，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 01 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 02 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 2 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 2 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 2 页，原图，依据已变化",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 2 页，SVG，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 2 页，PPT，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 02 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 03 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 3 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 3 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 3 页，原图，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 3 页，SVG，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 3 页，PPT，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 03 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 04 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 4 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 4 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 4 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 4 页，SVG，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 4 页，PPT，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 04 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 05 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 5 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 5 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 5 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 5 页，SVG，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 5 页，PPT，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 05 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 06 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 6 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 6 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 6 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 6 页，SVG，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 6 页，PPT，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 06 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 07 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 7 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 7 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 7 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 7 页，SVG，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 7 页，PPT，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 07 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 08 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 8 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 8 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 8 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 8 页，SVG，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 8 页，PPT，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 08 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 09 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 9 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 9 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 9 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 9 页，SVG，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 9 页，PPT，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 09 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 10 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 10 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 10 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 10 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 10 页，SVG，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 10 页，PPT，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 10 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 11 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 11 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 11 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 11 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 11 页，SVG，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 11 页，PPT，依据已变化",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 11 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 12 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 12 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 12 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 12 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 12 页，SVG，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 12 页，PPT，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 12 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 13 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 13 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 13 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 13 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 13 页，SVG，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 13 页，PPT，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 13 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 14 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 14 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 14 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 14 页，原图，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 14 页，SVG，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 14 页，PPT，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 14 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 15 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 15 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 15 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 15 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 15 页，SVG，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 15 页，PPT，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 15 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "上一组页面",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "下一组页面",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "screen": "content",
+      "width": 1280,
+      "controls": [
+        {
+          "label": "添加材料",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "修改任务要求",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "查看输入判断",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "逐页稿",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "章节与计划",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "材料与来源",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "更多内容工具",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "预览页序变更",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 1 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 2 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 3 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 4 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 5 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 6 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 7 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 8 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 9 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 10 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 11 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 12 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 13 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 14 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 15 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 16 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 17 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 18 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 19 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 20 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 21 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 22 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 23 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 24 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 25 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 26 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 31.999755859375,
+          "primary": false
+        },
+        {
+          "label": "第 27 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 28 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 29 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "第 30 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "screen": "page",
+      "width": 1280,
+      "controls": [
+        {
+          "label": "上一页，第 1 页 · 项目目标与阅读顺序",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "下一页，第 3 页 · 每页保留原图与来源",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "01 来源，记录缺失",
+          "font": "13px",
+          "line": "20px",
+          "height": 56,
+          "primary": false
+        },
+        {
+          "label": "02 逐页稿，可查看",
+          "font": "13px",
+          "line": "20px",
+          "height": 56,
+          "primary": false
+        },
+        {
+          "label": "03 提示词，记录缺失",
+          "font": "13px",
+          "line": "20px",
+          "height": 56,
+          "primary": false
+        },
+        {
+          "label": "04 原图，制作依据已变化",
+          "font": "13px",
+          "line": "20px",
+          "height": 56,
+          "primary": false
+        },
+        {
+          "label": "05 SVG，尚未生成",
+          "font": "13px",
+          "line": "20px",
+          "height": 56,
+          "primary": false
+        },
+        {
+          "label": "06 PPT 预览，尚未生成",
+          "font": "13px",
+          "line": "20px",
+          "height": 56,
+          "primary": false
+        },
+        {
+          "label": "回到整稿画廊",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "比较此页版本",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "以本页为风格参考",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "意见",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "试作与候选",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "图标优化",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "笔记",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "详情",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "编辑本页标题与正文",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "整页意见",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "保存意见",
+          "font": "13px",
+          "line": "20px",
+          "height": 36,
+          "primary": true
+        }
+      ]
+    },
+    {
+      "screen": "gallery",
+      "width": 1280,
+      "controls": [
+        {
+          "label": "跨页风格校准",
+          "font": "13px",
+          "line": "20px",
+          "height": 36,
+          "primary": true
+        },
+        {
+          "label": "原图 28/30",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "SVG 13/30",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "PPT 10/30",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "联系表",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "连续阅读",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "并排比较",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "2 列",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "3 列",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "4 列",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 1 页 · 项目目标与阅读顺序",
+          "font": "13px",
+          "line": "20px",
+          "height": 176.796875,
+          "primary": false
+        },
+        {
+          "label": "☆ 标记参考",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 2 页 · 材料如何成为内容",
+          "font": "13px",
+          "line": "20px",
+          "height": 176.796875,
+          "primary": false
+        },
+        {
+          "label": "☆ 标记参考",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 3 页 · 每页保留原图与来源",
+          "font": "13px",
+          "line": "20px",
+          "height": 176.8125,
+          "primary": false
+        },
+        {
+          "label": "☆ 标记参考",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 4 页 · 修改后需要重新确认",
+          "font": "13px",
+          "line": "20px",
+          "height": 176.796875,
+          "primary": false
+        },
+        {
+          "label": "☆ 标记参考",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 5 页 · 交付前查看缺口",
+          "font": "13px",
+          "line": "20px",
+          "height": 176.796875,
+          "primary": false
+        },
+        {
+          "label": "☆ 标记参考",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 6 页 · 项目目标与阅读顺序",
+          "font": "13px",
+          "line": "20px",
+          "height": 176.8125,
+          "primary": false
+        },
+        {
+          "label": "☆ 标记参考",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 7 页 · 材料如何成为内容",
+          "font": "13px",
+          "line": "20px",
+          "height": 176.796875,
+          "primary": false
+        },
+        {
+          "label": "☆ 标记参考",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 8 页 · 每页保留原图与来源",
+          "font": "13px",
+          "line": "20px",
+          "height": 176.796875,
+          "primary": false
+        },
+        {
+          "label": "☆ 标记参考",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "打开第 9 页 · 修改后需要重新确认",
+          "font": "13px",
+          "line": "20px",
+          "height": 176.8125,
+          "primary": false
+        },
+        {
+          "label": "☆ 标记参考",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "screen": "style",
+      "width": 1280,
+      "controls": [
+        {
+          "label": "项目页面",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "外部图片",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "1 · 参考与目标",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "2 · 确认规范",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "3 · 试作与采用",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "4 · 扩展",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "检查风格要求",
+          "font": "13px",
+          "line": "20px",
+          "height": 36,
+          "primary": true
+        },
+        {
+          "label": "查找其它参考页",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "只看已选目标",
+          "font": "13px",
+          "line": "20px",
+          "height": 31.999969482421875,
+          "primary": false
+        },
+        {
+          "label": "高级：借用维度、原文选段与建议",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "个人草稿与恢复",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "screen": "runs",
+      "width": 1280,
+      "controls": [
+        {
+          "label": "任务记录",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "待决定",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "版本",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "文件",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "核实最新执行状态",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "查询任务",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "阅读内容",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "查看整稿",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        },
+        {
+          "label": "其它修改组的交接",
+          "font": "13px",
+          "line": "20px",
+          "height": 32,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "screen": "overview",
+      "width": 390,
+      "controls": [
+        {
+          "label": "状态说明",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "查看整稿",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "查看待补页",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": true
+        },
+        {
+          "label": "查看待补页",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "查看依据",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "全部 30 页",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "只看需要处理 30 页",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "个人记录与提交恢复",
+          "font": "13px",
+          "line": "20px",
+          "height": 44.0001220703125,
+          "primary": false
+        },
+        {
+          "label": "页面 · 升序",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "打开第 01 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 1 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 1 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 1 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 1 页，SVG，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 1 页，PPT，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 01 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "打开第 02 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 2 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 2 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 2 页，原图，依据已变化",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 2 页，SVG，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 2 页，PPT，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 02 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "打开第 03 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 3 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 3 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 3 页，原图，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 3 页，SVG，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 3 页，PPT，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 03 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "打开第 04 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 4 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 4 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 4 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 4 页，SVG，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 4 页，PPT，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 04 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "打开第 05 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 5 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 5 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 5 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 5 页，SVG，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 5 页，PPT，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 05 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "打开第 06 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 6 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 6 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 6 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 6 页，SVG，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 6 页，PPT，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 06 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "打开第 07 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 7 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 7 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 7 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 7 页，SVG，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 7 页，PPT，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 07 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "打开第 08 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 8 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 8 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 8 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 8 页，SVG，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 8 页，PPT，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 08 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "打开第 09 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 9 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 9 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 9 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 9 页，SVG，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 9 页，PPT，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 09 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "打开第 10 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 10 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 10 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 10 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 10 页，SVG，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 10 页，PPT，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 10 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "打开第 11 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 11 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 11 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 11 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 11 页，SVG，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 11 页，PPT，依据已变化",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 11 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "打开第 12 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 12 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 12 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 12 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 12 页，SVG，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 12 页，PPT，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 12 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "打开第 13 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 13 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 13 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 13 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 13 页，SVG，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 13 页，PPT，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 13 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "打开第 14 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 14 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 14 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 14 页，原图，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 14 页，SVG，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 14 页，PPT，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 14 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "打开第 15 页",
+          "font": "14px",
+          "line": "22px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 15 页，逐页稿，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 15 页，预备提示词，记录缺失",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 15 页，原图，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 15 页，SVG，尚未生成",
+          "font": "12px",
+          "line": "18px",
+          "height": 48,
+          "primary": false
+        },
+        {
+          "label": "第 15 页，PPT，已就绪",
+          "font": "12px",
+          "line": "18px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 15 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "上一组页面",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "下一组页面",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "screen": "content",
+      "width": 390,
+      "controls": [
+        {
+          "label": "添加材料",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "修改任务要求",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "查看输入判断",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "逐页稿",
+          "font": "13px",
+          "line": "20px",
+          "height": 44.000030517578125,
+          "primary": false
+        },
+        {
+          "label": "章节与计划",
+          "font": "13px",
+          "line": "20px",
+          "height": 44.000030517578125,
+          "primary": false
+        },
+        {
+          "label": "材料与来源",
+          "font": "13px",
+          "line": "20px",
+          "height": 44.000030517578125,
+          "primary": false
+        },
+        {
+          "label": "更多内容工具",
+          "font": "13px",
+          "line": "20px",
+          "height": 44.000030517578125,
+          "primary": false
+        },
+        {
+          "label": "预览页序变更",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 1 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 43.99993896484375,
+          "primary": false
+        },
+        {
+          "label": "第 2 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 3 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 4 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 5 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 6 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 7 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 8 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 9 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 10 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 11 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 12 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 13 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 14 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 15 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 16 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 17 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 18 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 19 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 20 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 21 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 22 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 23 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 24 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 25 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 26 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 27 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 28 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 29 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "第 30 页操作",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "screen": "page",
+      "width": 390,
+      "controls": [
+        {
+          "label": "上一页，第 1 页 · 项目目标与阅读顺序",
+          "font": "0px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "下一页，第 3 页 · 每页保留原图与来源",
+          "font": "0px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "阅读设置",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "意见",
+          "font": "13px",
+          "line": "20px",
+          "height": 52,
+          "primary": false
+        },
+        {
+          "label": "试作与候选",
+          "font": "13px",
+          "line": "20px",
+          "height": 52,
+          "primary": false
+        },
+        {
+          "label": "图标优化",
+          "font": "13px",
+          "line": "20px",
+          "height": 52,
+          "primary": false
+        },
+        {
+          "label": "笔记",
+          "font": "13px",
+          "line": "20px",
+          "height": 52,
+          "primary": false
+        },
+        {
+          "label": "详情",
+          "font": "13px",
+          "line": "20px",
+          "height": 52,
+          "primary": false
+        },
+        {
+          "label": "编辑本页标题与正文",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "screen": "gallery",
+      "width": 390,
+      "controls": [
+        {
+          "label": "跨页风格校准",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": true
+        },
+        {
+          "label": "原图 28/30",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "SVG 13/30",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "PPT 10/30",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "筛选与阅读设置",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "打开第 1 页 · 项目目标与阅读顺序",
+          "font": "13px",
+          "line": "20px",
+          "height": 201.375,
+          "primary": false
+        },
+        {
+          "label": "☆ 标记参考",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "打开第 2 页 · 材料如何成为内容",
+          "font": "13px",
+          "line": "20px",
+          "height": 201.37493896484375,
+          "primary": false
+        },
+        {
+          "label": "☆ 标记参考",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "打开第 3 页 · 每页保留原图与来源",
+          "font": "13px",
+          "line": "20px",
+          "height": 201.3751220703125,
+          "primary": false
+        },
+        {
+          "label": "☆ 标记参考",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "打开第 4 页 · 修改后需要重新确认",
+          "font": "13px",
+          "line": "20px",
+          "height": 201.375,
+          "primary": false
+        },
+        {
+          "label": "☆ 标记参考",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "screen": "style",
+      "width": 390,
+      "controls": [
+        {
+          "label": "项目页面",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "外部图片",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "1 · 参考与目标",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "2 · 确认规范",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "3 · 试作与采用",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "4 · 扩展",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "检查风格要求",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": true
+        },
+        {
+          "label": "查找其它参考页",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "只看已选目标",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "高级：借用维度、原文选段与建议",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "个人草稿与恢复",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        }
+      ]
+    },
+    {
+      "screen": "runs",
+      "width": 390,
+      "controls": [
+        {
+          "label": "任务记录",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "待决定",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "版本",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "文件",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "核实最新执行状态",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "查询任务",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "阅读内容",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "查看整稿",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        },
+        {
+          "label": "其它修改组的交接",
+          "font": "13px",
+          "line": "20px",
+          "height": 44,
+          "primary": false
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

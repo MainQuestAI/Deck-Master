@@ -15,13 +15,13 @@ User authorized continuous product implementation, isolated branch/worktree, pus
 
 | Phase | Status | Evidence / remaining work |
 | --- | --- | --- |
-| E0 | IN_PROGRESS | Live remote baseline recorded; actual code differs from the earlier local inventory. |
-| E1 | IN_PROGRESS | 99 semantic tokens now feed generated CSS; 172 overlapping button rules migrated to controls.css; bounded actions, neutral selected navigation, native row popovers. Forms/status and global menus still pending. |
-| E2 | IN_PROGRESS | Overview priority, selection-first batch actions, shared current relationship and task identity metadata implemented. Content/sequence/materials refinements still pending. |
-| E3 | IN_PROGRESS | Single page reading width; nonmodal source inspection; 440/880 modal editor with retained drafts, title validation and keyboard focus loop. Annotation/mode and complete lifecycle checks still pending. |
-| E4 | NOT_RUN | Gallery, pinned candidate comparison, adoption/keep. |
-| E5 | NOT_RUN | Style phases, task/version/export, exact replay and finding continuity. |
-| E6 | NOT_RUN | Full functional inventory, same-candidate regressions, browser evidence and isolated package checks. |
+| E0 | IMPLEMENTED | PR184 remote head rechecked unchanged; isolated managed worktree and codex branch, original checkout untouched. |
+| E1 | IMPLEMENTED | 99 semantic tokens; 172 button and 33 field/status appearance rules consolidated. Object menus, project recovery menu and 0/1/30-project launcher geometry verified. |
+| E2 | IMPLEMENTED | Current relationship shared by summary/task/candidate reads; object identity metadata; three content areas; stable selection, contextual movement and selection-first production. |
+| E3 | IMPLEMENTED | Six reading layers; bounded long copy; nonmodal source inspection; 440/880 editor retaining drafts, validation, exact range and keyboard boundary. |
+| E4 | IMPLEMENTED | Selection-first gallery; existing pinned candidate comparison and adoption retained; decision controls fit desktop viewports; shared candidate identities preserved. |
+| E5 | IMPLEMENTED_WITH_DEPENDENCIES | V1/V2/V3 recipe reading, existing two-source/four-phase flow, task subareas and fixed exports; narrow exact-replay fixes and finding-set continuity. RP-18 and external #186 closure remain explicitly outside this UI slice. |
+| E6 | VERIFIED_WITH_LIMITS | Source/installed regression and 30 screenshots are recorded in VERIFICATION.md. Six ACs remain PARTIAL; final full browser sweep and remote CI tracked below. |
 
 ## Dependencies and ownership
 
@@ -34,7 +34,7 @@ User authorized continuous product implementation, isolated branch/worktree, pus
 
 ## Verification
 
-All product ACs remain NOT_RUN until a concrete test or browser observation is linked. Prototype passes are not product passes. No actual Host generation, customer export, default installation activation or user acceptance has been run.
+Product ACs link concrete tests in acceptance-matrix.json. A PARTIAL status identifies a still-unverified dependency or evidence layer; prototype passes are not product passes. No actual Host generation, customer export, default installation activation or user acceptance has been run.
 
 ### E1 initial verification
 
@@ -81,3 +81,33 @@ All product ACs remain NOT_RUN until a concrete test or browser observation is l
 - All recipe versions are readable in the confirmed catalog. V3 exposes seven typed dimensions and planning coverage; feasibility stays zero-call. Selected recipe does not claim applied current design. Candidate lists bind the exact recipe ref.
 - Added FINDING-CONTINUITY.md: existing fixed-review handoff preserves the whole finding set; external professional report normalization and unbound repair-ledger continuity remain #186 work. No closure claimed.
 - Full-suite collection initially failed when invoking the pytest executable (repository tools namespace absent). Retried with the CI-equivalent python -m pytest entry. Ruff also found an undefined snapshot callback in the earlier currentness patch's unrelated visual-basis function; restored its original snapshot reader before rerunning.
+
+
+### Final regression findings and evidence boundaries
+
+- Read context initialization now accepts the minimal document used by pinned-directory integrity checks; runtime/spec schema mirrors are byte-identical again.
+- Reading evidence and design parameters are collapsed by default. Deep links to a fixed review/atom expand their bound source inspection; opening the editor closes source inspection and resets annotation mode.
+- Candidate metadata is compact without dropping stage, stable page identity, return time or request relationship. Both 1440×900 and 1280×800 keep the image and decision actions together.
+- Product screenshots cover five workspaces, page reading and its editor at 1440/1280/390. Launcher screenshots cover 0/1/30 registered synthetic projects, long titles and a missing location. [Screenshot browser](evidence/product-screens/index.html).
+- The initial broad unit run used macOS `/private` temporary paths, triggering the campaign recorder's existing path refusal. The final run uses an isolated non-private basetemp without changing those rules. Source edits during an earlier run also invalidated the captured service BUILD_ID; final service verification uses a frozen product tree.
+- Local native render run: 125 passed, 8 failed, 1 skipped. All 8 failures reproduce on the untouched PR184 head under the same macOS renderer/font environment (parent comparison: 8 failed, 1 passed). They are not relabelled passing or treated as UI regression fixes. Linux CI rendering is recorded separately.
+- Minimal native `<select>` control probe in local macOS Chromium also fails ArrowDown→Enter with no application handlers; the full keyboard-path test remains enabled. Its Linux CI outcome and local limitation are tracked separately; no product key handler or test skip was added to mask it.
+
+- Full source unit regression on frozen 750e19d7: **3526 passed, 2 skipped**. The two skips require the external frozen A installation used by historical-writer compatibility checks; they are not counted as passes. Subsequent final changes are limited to explicit historical-candidate preview eligibility, task empty-state text and secondary-action disclosure; their impacted suites and final installed resources are rechecked separately.
+- Broad browser testing caught a real recommendation/permission conflation. A historical request no longer hides an explicit preview of a still-current candidate. Automatic recommendations still exclude it; adoption remains subject to unchanged request, basis and authorization checks. Stale generation basis remains unselectable.
+- Screenshot regression caught a native DOM append coercing a conditional to the text `false`; the optional legacy panel is now appended conditionally. The seven-surface evidence test rejects standalone booleans/object strings in the rendered work area.
+- Overview initially exposes two secondary matters; the remaining named group is keyboard-expandable. All underlying action targets remain available, while the first matrix row fits the desktop screen.
+
+- Independent installed-wheel recovery suite: **257 passed**. The final subsequent overview-only change is additionally checked against the rebuilt wheel with installed-module path auditing, including natural summary polling, object menus, seven workspaces and launcher geometry.
+- Real timer polling now preserves an open row menu and focus only when its fixed action identity is unchanged. Changed result membership closes the old action instead of transferring Enter to another operation. The focused regression suite passed 16 cases.
+
+### Frozen product delivery
+
+- Product commit: `6d1a6ff0787640a59628f56c0b6a055bc01af20c`. Parent PR184 remains open at its original `7bbf2046` head; the implementation PR targets `codex/repair-plan-baseline-20261023`.
+- Final source service/current-relationship sweep: **83 passed**. This covers every service failure from the run interrupted by a product BUILD_ID change; its other 3512 passes are retained as incremental evidence, not mislabeled a clean final full-suite pass.
+- Final installed-wheel supplemental suite: **62 passed**, all 79 runtime modules loaded from site-packages. Final offline export/resource check: **9 verified**. The 243 shared source/package files match byte-for-byte; the wheel contains nine additional build-hook method files. Evidence: [installed-release.json](evidence/installed-release.json).
+- Candidate permission/material-state follow-up: **20 passed**. Method initialization, stable-checkbox identity, narrow image geometry and version-change editing: **5 passed**.
+- Thirty actual product screenshots regenerated from the final wheel; all 30 views load in the artifact viewer and the 390px viewer has no horizontal overflow.
+- AC ledger: **24 PASS_AUTOMATED / 6 PARTIAL**. These are synthetic product checks, not customer, native OS or professional approval.
+- Final complete local browser sweep: RUNNING. Final remote workflow for product commit: [40010957909](https://github.com/MainQuestAI/Deck-Master/actions/runs/40010957909), RUNNING at this record. The earlier product commit had four Linux unit jobs and Linux render pass; its outdated browser job was cancelled when superseded.
+- Nothing was merged or activated in the default installation. Original checkout and user projects remain untouched.

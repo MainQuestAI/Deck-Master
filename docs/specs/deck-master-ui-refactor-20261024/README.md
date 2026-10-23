@@ -8,6 +8,8 @@
 
 ## 交付入口
 
+- [产品实现截图](evidence/product-screens/index.html)、[实现验证与边界](VERIFICATION.md)、[实施台账](IMPLEMENTATION-STATUS.md)：实际产品与独立安装的证据。
+
 - [可视化方案入口](http://127.0.0.1:60183/api/projects/deck-master-generation-workbench-v3-20260926/raw/plans/20261024/index.html)：总路线、逐页设计、组件规则、实施与验收可连续阅读。
 - [r3 交互精修](http://127.0.0.1:60183/api/projects/deck-master-generation-workbench-v3-20260926/raw/plans/20261024/prototype/index.html)：项目入口、五个工作面、共享单页与正文候选比较，共 8 个场景；含沿用的组件与基础规范。
 - [已认可的 r2](http://127.0.0.1:60183/api/projects/deck-master-generation-workbench-v3-20260926/raw/standards/20261023/index.html)：原文件完整保留。
