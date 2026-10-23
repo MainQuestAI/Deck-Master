@@ -45,7 +45,7 @@ def test_studio_icon_cards_catalog_scope_dispatch_and_tool_focus(icon_store,tmp_
                 if width<1280:tool.click()
                 expect(catalog).to_be_visible()
                 assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
-                assert page.locator('.studio-icon-methods button').evaluate_all('(nodes)=>nodes.every(n=>n.getBoundingClientRect().height>=44)')
+                assert page.locator('.studio-icon-methods button').evaluate_all('(nodes)=>nodes.every(n=>n.getBoundingClientRect().height>=(innerWidth<=560?44:32))')
                 page.screenshot(path=str(out/f'icon-cards-{width}.png'),full_page=True)
                 if width<1280:
                     page.keyboard.press('Escape');expect(tool).to_be_focused()

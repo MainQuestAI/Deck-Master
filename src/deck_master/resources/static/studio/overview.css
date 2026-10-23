@@ -3,7 +3,7 @@
 .studio-workspace .studio-overview .page-head h1 {font-size:var(--dm-type-size-page);line-height:var(--dm-type-line-page);letter-spacing:-.02em}
 .studio-workspace .studio-overview .page-head p {margin-top:8px}
 .studio-workspace .studio-overview .page-head button {display:inline-flex;align-items:center;gap:8px}
-.studio-workspace .studio-overview .overview-todos {display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:24px;border:0;background:transparent;margin:0 0 32px;overflow:visible}
+.studio-workspace .studio-overview .overview-todos {display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:24px;align-items:start;border:0;background:transparent;margin:0 0 32px;overflow:visible}
 .studio-workspace .studio-overview .todo-priority {background:var(--dm-color-canvas);color:var(--dm-color-text);border:1px solid var(--dm-color-border);border-radius:var(--dm-shape-radius-panel);padding:24px;min-height:200px}
 .studio-workspace .studio-overview .todo-priority h2 {font-size:22px;line-height:30px;margin-top:16px}
 .studio-workspace .studio-overview .todo-priority>p {font-size:14px;line-height:1.65;margin-top:12px}

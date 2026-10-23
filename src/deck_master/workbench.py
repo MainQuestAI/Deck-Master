@@ -97,7 +97,7 @@ class _ReadContext:
         self.signatures = {}
         self.clock_tasks = []
         self.snapshot_signatures = {}
-        self.snapshots = {document["revision_id"]: document}
+        self.snapshots = {document["revision_id"]: document} if document.get("revision_id") else {}
         self.relationships = None
         self.read_failed = False
 

@@ -175,6 +175,7 @@ def test_outline_block_reaches_its_pages_and_return_keeps_surface(ux04_browser):
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()
     page.get_by_role('button', name='内容与页序', exact=True).click()
     page.get_by_role('heading', name='内容与页序', exact=True).wait_for()
+    page.get_by_role('navigation',name='内容工作区').get_by_role('button',name='章节与计划',exact=True).click()
     # 大纲块显示章节与页范围（合成样例为单章"第 1–2 页"），并可在章节内指定页直达，
     # 不再固定打开"首个匹配页"。
     outline = page.locator('.outline-block').first

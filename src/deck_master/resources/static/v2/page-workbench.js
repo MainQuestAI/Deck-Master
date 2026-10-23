@@ -77,8 +77,10 @@ function contentView(app, data) {
     (data.page.content_mapping?.speech_segments||[]).length>0&&detail('口播段落与估时依据',
       el('pre', {class:'evidence-json'}, JSON.stringify(data.page.content_mapping.speech_segments,null,2)))));
   if (data.page?.customer_visible && !app.readonly && app.health.ui_capabilities?.includes('content_ops.v1') && data.revision_id === app.route.revision && data.page_id === app.route.page_id) node.append(pageContentEditor(app, data));
-  if(supportsInsights(app))node.append(pageEvidence(app,data),designRequirements(app,data));
-  node.append(el('details',{class:'source-inspector'},el('summary',{},'查看本页来源'),sourceBody(app,data))); return node;
+  const inspector=el('details',{class:'source-inspector',open:Boolean(app.route.atom||app.route.review_id||(app.sourceInspection?.page_id===data.page_id&&app.sourceInspection?.revision===data.revision_id))},el('summary',{},'查看本页来源'),sourceBody(app,data),
+    supportsInsights(app)&&pageEvidence(app,data),supportsInsights(app)&&designRequirements(app,data));
+  inspector.addEventListener('toggle',()=>{if(!inspector.isConnected)return;app.sourceInspection=inspector.open?{page_id:data.page_id,revision:data.revision_id}:null;if(inspector.open)app.root.dispatchEvent(new CustomEvent('page-source-open'));});
+  node.append(inspector); return node;
 }
 function imageLayer(app, data, layer, title, releases) {
   const stage = data.stages[stageKey[layer]];
@@ -309,9 +311,10 @@ export function pageDetail(app, data) {
     for (const [area, node] of faceNode) node.hidden = area !== key;
     for (const [area, control] of faceControl) control.setAttribute('aria-pressed', String(area === key));
   }
-  const pauseAnnotations=()=>annotations?.setMode('read');
+  const pauseAnnotations=event=>{annotations?.setMode('read');if(event.type==='page-edit-open')app.root.querySelectorAll('.source-inspector[open]').forEach(node=>node.open=false);};
   app.root.addEventListener('page-edit-open',pauseAnnotations);
-  app.disposables.push(()=>app.root.removeEventListener('page-edit-open',pauseAnnotations));
+  app.root.addEventListener('page-source-open',pauseAnnotations);
+  app.disposables.push(()=>{app.root.removeEventListener('page-edit-open',pauseAnnotations);app.root.removeEventListener('page-source-open',pauseAnnotations);});
   // 「写新意见」等从笔记面发起、落点在意见面的动作:把活动面交回意见。
   faceZone.addEventListener('activate-opinion-face', () => activateFace('opinions'));
   faceZone.append(...faces.map(([, , node]) => node));

@@ -26,6 +26,7 @@ def test_zero_page_narrative_methods_and_refresh(tmp_path, size):
             expect(page.get_by_role('button',name='记录方向决定',exact=True)).to_be_visible()
             page.reload()
             expect(page.locator('.argument-reading h3')).to_contain_text('版本未知')
+            page.get_by_role('button',name='更多内容工具',exact=True).click()
             page.get_by_role('button',name='方法与案例',exact=True).click()
             expect(page.locator('#content-area-methods')).to_contain_text('当前没有可准备的新阶段')
             page.get_by_label('准备上下文').select_option('independent')

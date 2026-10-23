@@ -447,6 +447,7 @@ def test_table_atom_keyboard_selection_qualifiers_and_missing_mapping(tmp_path):
         with sync_playwright() as pw:
             browser=pw.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox']);page=browser.new_page(viewport={'width':390,'height':844})
             page.goto(url+'studio/#'+urlencode({'project':info['project_identity'],'surface':'page','page':'p1','revision':store.current_revision_id(),'layer':'content'}))
+            page.locator('.source-inspector > summary').click()
             expect(page.get_by_role('heading',name='正文与证据',exact=True)).to_be_visible()
             card=page.locator('.insight-node').filter(has=page.locator('p.read-text',has_text='12')).first
             expect(card).to_contain_text('仅比较指定记录，不外推节约率。')
@@ -474,7 +475,7 @@ def test_review_handoff_real_plan_commit_and_failure_recovery(tmp_path,failure):
             page.goto(url+'studio/#'+urlencode({'project':info['project_identity'],'surface':'runs','revision':store.current_revision_id(),'layer':'content','review':'reading-review','review_sha256':review_ref['sha256'],'finding':'f1','finding_index':0}))
             page.get_by_role('button',name='准备范围交接草稿',exact=True).click();expect(page.locator('.review-draft-state')).to_contain_text('已保存到项目')
             page.get_by_role('button',name='保存草稿后进入原正文编辑',exact=True).click()
-            page.get_by_text('编辑本页标题与正文',exact=True).click()
+            page.get_by_role('button',name='编辑本页标题与正文',exact=True).click()
             expect(page.get_by_label('正文修改说明',exact=True)).to_have_value('补充限定条件\n预期：说明适用范围\n实际：未说明')
             page.get_by_label('页面标题',exact=True).fill('补充了限定条件的标题')
             expect(page.locator('.draft-state')).to_contain_text('已保存到项目')
@@ -575,6 +576,7 @@ def test_insight_primary_paths_keyboard_focus_and_long_content(tmp_path,viewport
             browser=pw.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox']);page=browser.new_page(viewport={'width':viewport[0],'height':viewport[1]})
             page.goto(url+'studio/#'+urlencode({'project':info['project_identity'],'surface':'content','revision':store.current_revision_id(),'layer':'content','content_area':'arguments','proposal':ref['sha256']}))
             control=page.get_by_role('button',name='记录方向决定',exact=True);expect(control).to_be_visible();keyboard_to(page,control);page.keyboard.press('Enter');expect(page.get_by_role('dialog')).to_be_visible();page.keyboard.press('Escape');expect(control).to_be_focused()
+            more=page.get_by_role('button',name='更多内容工具',exact=True);keyboard_to(page,more);page.keyboard.press('Enter')
             nav=page.get_by_role('button',name='方法与案例',exact=True);keyboard_to(page,nav);page.keyboard.press('Enter')
             mode=page.get_by_label('准备上下文');keyboard_to(page,mode);page.keyboard.press('ArrowDown');page.keyboard.press('Enter');expect(page.locator('#content-area-methods')).to_contain_text('准备已核对')
             search=page.get_by_label('筛选方法或案例');keyboard_to(page,search);page.keyboard.type('content-m04')
@@ -690,7 +692,7 @@ def test_imported_page_missing_mapping_and_invalid_atom_remains_readable(tmp_pat
         with sync_playwright() as pw:
             browser=pw.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox']);page=browser.new_page()
             route={'project':info['project_identity'],'surface':'page','page':'p1','revision':store.current_revision_id(),'layer':'content'}
-            page.goto(url+'studio/#'+urlencode(route));expect(page.get_by_text('此页未记录原子映射，仍可通过页面来源阅读。',exact=True)).to_be_visible()
+            page.goto(url+'studio/#'+urlencode(route));page.locator('.source-inspector > summary').click();expect(page.get_by_text('此页未记录原子映射，仍可通过页面来源阅读。',exact=True)).to_be_visible()
             expect(page.locator('.insight-node').filter(has_text='明确未知')).to_contain_text('未记录映射')
             page.goto(url+'studio/#'+urlencode({**route,'atom':'atom:p1:invalid'}));expect(page.get_by_role('heading',name='合成教学稿',exact=True)).to_be_visible()
             expect(page.get_by_role('alert').filter(has_text='Text atom is unavailable')).to_be_visible()

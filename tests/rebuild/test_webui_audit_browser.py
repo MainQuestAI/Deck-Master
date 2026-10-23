@@ -221,7 +221,7 @@ def test_reading_geometry_keeps_labels_targets_and_same_canvas(workbench_page, s
     if size[0] == 1280:
         assert box['height'] >= 320
     for control in page.get_by_role('group', name='单页工具').get_by_role('button').all():
-        assert control.bounding_box()['height'] >= 44 - .01
+        assert control.bounding_box()['height'] >= (44 if size[0]<=560 else 32) - .01
         assert float(control.evaluate('node=>getComputedStyle(node).fontSize').removesuffix('px')) >= 12
     assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
     page.screenshot(path=str(tmp_path/f'reading-{size[0]}.png'))

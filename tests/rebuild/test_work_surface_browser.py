@@ -130,7 +130,7 @@ def test_content_preview_new_version_and_offline_recovery_keep_input(workbench_p
     before = store.read_current()
     page.get_by_role('button', name='打开第 01 页', exact=True).click()
     page.get_by_role('button', name=re.compile('逐页稿')).first.click()
-    page.get_by_text('编辑本页标题与正文', exact=True).click()
+    page.get_by_role('button', name='编辑本页标题与正文', exact=True).click()
     field = page.get_by_role('textbox', name='页面标题', exact=True)
     field.fill('保留这段修改，等待新基准确认')
     page.get_by_role('button', name='预览正文修改影响', exact=True).click()

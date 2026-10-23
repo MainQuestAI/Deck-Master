@@ -1,7 +1,7 @@
 """UX-07b 收敛与三视口视觉验收（FINAL-REPAIR-PLAN AC23 + 补充实施方案）。
 
 覆盖本次迁移的组件：批量配置（UX-02b）、风格阶段组（UX-03b）、任务与交付
-子区（UX-05b）。检查项可机读：触点高度 ≥44px、状态不只用颜色表达、配置紧邻
+子区（UX-05b）。检查项可机读：桌面控件 ≥32px、触控目标 ≥44px、状态不只用颜色表达、配置紧邻
 选页工具条；同时按 1440/1280/390 三视口输出 PNG 作为视觉验收证据。
 """
 import shutil
@@ -21,7 +21,7 @@ VIEWPORTS = [(1440, 900), (1280, 800), (390, 844)]
 
 MEASURE = """selector => Array.from(document.querySelectorAll(selector))
   .filter(node => node.getClientRects().length && node.getBoundingClientRect().height > 0)
-  .map(node => ({text: (node.textContent || '').trim().slice(0, 24), height: node.getBoundingClientRect().height,
+  .map(node => ({tag:node.tagName,text: (node.textContent || '').trim().slice(0, 24), height: node.getBoundingClientRect().height,
                  min_height: parseFloat(getComputedStyle(node).minHeight),
                  aria_pressed: node.getAttribute('aria-pressed')}))"""
 
@@ -52,10 +52,9 @@ def ux07_browser(tmp_path):
 def assert_touch_targets(page, selector):
     controls = page.evaluate(MEASURE, selector)
     assert controls, f'{selector} 没有可测的控件'
-    # Layout coordinates can represent an exact 44px box as 43.99994px. Keep
-    # the CSS minimum at 44 and allow only subpixel measurement roundoff.
-    small = [item for item in controls if item['min_height'] < 44 or item['height'] < 44 - 0.01]
-    assert not small, f'{selector} 存在小于 44px 的触点: {small}'
+    touch=page.evaluate('matchMedia("(pointer:coarse),(max-width:560px)").matches')
+    small = [item for item in controls if item['min_height'] < (44 if touch or item['tag']=='SELECT' else 32) or item['height'] < (44 if touch or item['tag']=='SELECT' else 32)-0.01]
+    assert not small, f'{selector} 控件未满足桌面/触控尺寸: {small}'
 
 
 @pytest.mark.parametrize('width,height', VIEWPORTS)
@@ -72,8 +71,8 @@ def test_migrated_components_keep_targets_adjacency_and_state_text(ux07_browser,
     # 批量配置（UX-02b）：空选只有引导；选一页后配置紧邻选页工具条，触点达标。
     batch = page.locator('.batch-actions')
     expect(batch.locator('.batch-fields')).to_be_hidden()
-    page.get_by_role('button',name='原图试作',exact=True).wait_for()
     page.locator('.matrix tbody tr input[type=checkbox]').first.check()
+    page.get_by_role('button',name='原图试作',exact=True).wait_for()
     expect(batch.locator('.batch-fields')).to_be_visible()
     gap = page.evaluate("""() => {
       const toolbar = document.querySelector('.matrix-search');

@@ -528,6 +528,7 @@ def test_material_editor_keeps_preview_confirmation_and_return_in_context(ux04_b
     expect(editor.locator('.content-operation > button')).to_be_disabled()
     editor.get_by_role('button',name='关闭编辑并保留草稿',exact=True).click()
     if count:
+        page.get_by_role('button',name='材料与来源',exact=True).click()
         name = store.load_document()['sources'][0]['name']
         source_trigger=page.get_by_role('button',name='调整此材料 · '+name,exact=True)
         source_trigger.evaluate('node => node.addEventListener("click", () => window.pr103ReturnY=scrollY, {capture:true,once:true})')

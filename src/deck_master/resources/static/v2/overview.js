@@ -421,9 +421,9 @@ function matrixPanel(app, saved, overviewRoot) {
   })();
 
   const readingTools = el('div', {class: 'row wrap toolbar overview-reading-tools', role: 'group', 'aria-label': '阅读筛选'},
-    el('div', {class: 'segmented', role: 'group', 'aria-label': '页面筛选'}, filterAll, filterTodo), searchInput);
+    el('div', {class: 'segmented', role: 'group', 'aria-label': '页面筛选'}, filterAll, filterTodo), searchInput, studio && batch.recoveryButton);
   const selectionTools = el('div', {class: 'row wrap matrix-search', role: 'group', 'aria-label': '批量选页动作'},
-    batch.toolbar, selectionNote, clearButton, studio && batch.recoveryButton);
+    batch.toolbar, selectionNote, clearButton);
   const node = el('section', {class: 'stack', 'aria-label': '逐页制作进展'},
     el('div', {class: 'section-head'}, el('h2', {}, '逐页制作进展'), count),
     // UAC12:阅读筛选(范围+搜索)与批量选页动作分两行、各自成组;选择摘要条

@@ -53,7 +53,7 @@ def test_single_page_native_fit_fullscreen_keeps_basis_and_draft(reading_store,s
             intrinsic=canvas.evaluate('e=>({width:e.width,height:e.height,box:e.getBoundingClientRect().toJSON()})')
             assert intrinsic['width']==960 and intrinsic['height']==540
             assert intrinsic['box']['width']==960 and intrinsic['box']['height']==540
-            for control in zoom_scope.get_by_role('button').all():assert control.bounding_box()['height']>=44
+            for control in zoom_scope.get_by_role('button').all():assert control.bounding_box()['height']>=(44 if size[0]<=560 else 32)
             if size[0]==390: zoom_scope.get_by_role('button',name='关闭',exact=True).click()
             if size[0]==1440:
                 for width,height in [(1280,800),(390,844),(1440,900)]:

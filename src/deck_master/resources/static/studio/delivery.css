@@ -197,3 +197,7 @@
  .studio-workspace .studio-files-desk .studio-delivery-row {grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:14px 0}
  .studio-workspace .studio-files-desk .studio-delivery-row > .studio-file-symbol {display:none}
 }
+
+.studio-workspace .candidate-state>.stack {gap:8px}
+.studio-workspace .candidate-state .candidate-meta {display:flex;flex-wrap:wrap;gap:8px 16px;font-size:12px;line-height:20px}
+.studio-workspace .candidate-state p {margin:0}
