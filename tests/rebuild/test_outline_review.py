@@ -114,3 +114,23 @@ def test_outline_finding_requires_same_owner_current_outline_and_real_change(tmp
     # Changes to unrelated Page/visual/notes facts cannot substitute for this
     # Narrative/Plan closure and its original finding identity.
     assert not finding_closed([owner, {**repaired, 'review_id': 'unrelated'}], owner, finding, artifacts)
+
+
+def test_native_outline_transport_returns_its_own_gate_and_replay_is_no_call(tmp_path, monkeypatch):
+    from deck_master import native_review
+    from test_native_review import FixtureSession
+    FixtureSession.calls = []
+    FixtureSession.status = 'pass'
+    FixtureSession.corrupt = False
+    FixtureSession.before_finish = None
+    monkeypatch.setattr(native_review, 'CodexReviewSession', FixtureSession)
+    project, store = outline_project(tmp_path)
+    result = native_review.run(project, subject='outline')
+    assert result['status'] == 'reviewed'
+    assert result['preproduction']['review_subject'] == 'outline'
+    assert result['preproduction']['status'] == 'pass'
+    assert result['preproduction']['production_qualified'] is False
+    assert content_review.preproduction_status(store, store.load_document())['status'] == 'no_manuscript'
+    assert native_review.run(project, subject='outline')['status'] == 'already_reviewed'
+    assert len(FixtureSession.calls) == 1
+    assert FixtureSession.calls[0]['packet']['review_subject'] == 'outline'

@@ -412,7 +412,10 @@ def _run(store, *, task_id, force_units=None, subject=None):
                 if packet.get('review_scope') is not None:
                     owner_refs = {row['review_ref']['sha256'] for row in packet['review_scope']['owners']}
                     prior = [row for row in prior if row['ref']['sha256'] in owner_refs]
-                prompt = ("Independently review the complete manuscript against the task, materials, and frozen methods below. "
+                subject_instruction = ("Independently review only the fixed Narrative and ContentPlan outline, argument and progression. "
+                    "There are no page-copy or visual-production judgments; cite outline nodes and evidence. "
+                    if subject == 'outline' else "Independently review the complete manuscript against the task, materials, and frozen methods below. ")
+                prompt = (subject_instruction +
                           "Return a judgment for every required unit. Multiple judgments of one unit are allowed only to replace distinct "
                           "actual prior owners that you rechecked; do not merge or omit their finding identities. Do not edit the draft. Cite concrete pages/atoms "
                           "and evidence for findings. Re-check prior findings against the current manuscript; preserve finding IDs "
@@ -448,7 +451,8 @@ def _run(store, *, task_id, force_units=None, subject=None):
                     operation_id=task["operation_id"], produced_against=task["produced_against"],
                     result_payload=envelope, adapter_context=context)
                 return {"status": "reviewed", "task_id": task["task_id"], "execution_ref": session.execution_ref,
-                        "acceptance": accepted, "preproduction": content_review.preproduction_status(store, store.load_document())}
+                        "acceptance": accepted, "preproduction": (outline_review.status(store, store.load_document())
+                            if subject == 'outline' else content_review.preproduction_status(store, store.load_document()))}
             except Exception as exc:
                 try:
                     _failure(store, task, session.execution_ref, exc)
