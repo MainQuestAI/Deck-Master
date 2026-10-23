@@ -15,7 +15,7 @@ export function currentWork(app, work = app.summary.current_work) {
     el('h2', {}, next.title),
     el('p', {}, '下一责任：' + (roles[next.responsible_role] || next.responsible_role)),
     el('p', {}, '审查：' + (checks[work.review.status] || work.review.status)),
-    button(next.label, () => {document.querySelector('#modal')?.close();if(next.primary_action)openAction(app,next.primary_action,{surface:next.surface});else app.go({surface:next.surface});}, true, {disabled:next.primary_action?.enabled===false}),
+    button(next.label, () => {document.querySelector('#modal')?.close();if(next.primary_action)openAction(app,next.primary_action,{surface:next.surface});else app.go(next.navigation||{surface:next.surface});}, true, {disabled:next.primary_action?.enabled===false}),
     next.actions.filter(action=>action.action_id!==next.primary_action?.action_id).length>0&&el('details',{},el('summary',{},'其他当前动作'),next.actions.filter(action=>action.action_id!==next.primary_action?.action_id).map(action=>button(actionLabels[action.kind]||'查看记录',()=>openAction(app,action,{surface:'runs'}),false,{disabled:action.enabled===false}))),
     work.blockers.length > 0 && el('p', {class:'field-error'}, '接续仍有阻断，请查看具体范围与依据。'),
     el('details', {}, el('summary', {}, '产物、审查与下一步依据'),

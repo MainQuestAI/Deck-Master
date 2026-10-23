@@ -231,3 +231,42 @@ def test_control_refresh_rebinds_work_without_replacing_fixed_artifact(tmp_path,
             browser.close()
     finally:
         server.stop()
+
+
+@pytest.mark.browser
+@pytest.mark.parametrize('route', ['studio', 'v2'])
+@pytest.mark.parametrize('deliverable', ['deck', 'content'])
+def test_completed_primary_action_opens_actual_deliverable(tmp_path, route, deliverable):
+    import shutil
+    from playwright.sync_api import sync_playwright, expect
+    from test_export import _passing_deck
+    if deliverable == 'deck':
+        project, store = _passing_deck(tmp_path)
+    else:
+        from test_rc3_studio_control_browser import manuscript_page
+        from rc3_fixtures import public_project
+        handle = public_project(tmp_path, create_input={'brief': 'Read the requested manuscript', 'title': 'Read output'},
+            request_input={'intent': 'content_only', 'content_intent': 'write_only'},
+            manuscript={'pages': [manuscript_page('p01', '先核对实际稿件')]})
+        project = handle['project']
+        from deck_master.store import Store
+        store = Store(project)
+    before = store.load_document()
+    server = WorkbenchServer(project)
+    url = server.start()
+    try:
+        with sync_playwright() as runtime:
+            browser = runtime.chromium.launch(executable_path=shutil.which('chromium'), args=['--no-sandbox'])
+            page = browser.new_page()
+            page.goto(url + route + '/')
+            page.get_by_role('button', name='阅读本次交付' if deliverable == 'deck' else '阅读本次内容', exact=True).click()
+            if deliverable == 'deck':
+                expect(page.locator('#runs-files')).to_be_visible()
+                expect(page.locator('#runs-tasks')).not_to_be_visible()
+            else:
+                expect(page.get_by_role('region', name='页面内容')).to_contain_text('先核对真实稿件')
+                assert 'page=p01' in page.url and 'layer=content' in page.url
+            assert store.load_document() == before
+            browser.close()
+    finally:
+        server.stop()

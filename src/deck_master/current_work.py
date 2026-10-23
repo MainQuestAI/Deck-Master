@@ -144,6 +144,14 @@ def project(store, artifact, control, summary, *, fixed=False):
         label, surface = labels[code], 'content' if code == 'reconcile_inputs' else 'runs'
     # Reading an output remains legal when production is paused or withdrawn.
     # The UI action is a navigation target; it is never an execution grant.
+    navigation = {'surface': surface}
+    if code == 'read_delivery':
+        navigation['runs_area'] = 'files'
+    elif code == 'return_requested_content' and request.get('content_intent') != 'plan_only':
+        page_id = next((entry['page_id'] for entry in artifact.get('pages', []) if entry['page_id'] in ids), None)
+        if page_id:
+            surface = 'page'
+            navigation = {'surface': surface, 'page_id': page_id, 'layer': 'content'}
     return {'identity': {'project_id': artifact['project_id'], 'request_id': request.get('request_id'),
                 'artifact_revision_id': artifact['revision_id'], 'control_revision_id': control['revision_id'],
                 'control_request_id': current_request.get('request_id'),
@@ -153,6 +161,7 @@ def project(store, artifact, control, summary, *, fixed=False):
             'delivery': completion, 'review': review,
             'next': {'action': code, 'responsible_role': role, 'label': label, 'title': title,
                      'surface': surface, 'navigation_only': True,
+                     'navigation': navigation,
                      'source_refs': completion['outputs'], 'primary_action': primary, 'actions': actions},
             'blockers': blockers, 'optional': optional}
 
