@@ -30,6 +30,7 @@ def main():
     ]
     result = pytest.main(['-q', str(repo / 'tests/rebuild/test_rc_closure_browser.py'),
                          str(repo / 'tests/rebuild/test_settled_image_reuse.py'),
+                         str(repo / 'tests/rebuild/test_native_review.py'),
                          str(repo / 'tests/rebuild/test_workbench_usability_browser.py'),
                          str(repo / 'tests/rebuild/test_pr103_repair_browser.py'),
                          str(repo / 'tests/rebuild/test_pr103_complete_browser.py'),
