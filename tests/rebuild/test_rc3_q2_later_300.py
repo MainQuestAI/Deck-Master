@@ -16,7 +16,8 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 CASES = Path(__file__).with_name("rc3_q2_later_300_cases.py").resolve()
-TOOL = ROOT / "tools/rc3_campaign/q2_later_300.py"
+TOOL = ROOT / "tools/rc3_campaign/q2_later_300_v2.py"
+OLD_TOOL = ROOT / "tools/rc3_campaign/q2_later_300.py"
 EXPECTED_CASES = 70
 
 
@@ -83,28 +84,31 @@ def test_all_q2_later_300_cases_run_in_an_actual_isolated_interpreter(tmp_path):
     }, indent=2) + "\n")
 
 
+@pytest.mark.parametrize("tool", [OLD_TOOL, TOOL])
 @pytest.mark.parametrize("flags", [("-B",), ("-I",)])
-def test_real_CLI_requires_both_flags_before_opening_control_or_ledger(tmp_path, flags):
+def test_real_CLI_requires_both_flags_before_opening_control_or_ledger(tmp_path, flags, tool):
     result = run_logged(tmp_path, [sys.executable, *flags, "-X", "pycache_prefix="+str(tmp_path/"pycache"),
-        str(TOOL), "initialize", "--engineering", "--flow", "r04", "--control", str(tmp_path/"absent.json"),
+        str(tool), "initialize", "--engineering", "--flow", "r04", "--control", str(tmp_path/"absent.json"),
         "--control-sha256", "0"*64])
     assert result.returncode == 2
     assert json.loads(result.stderr)["error"] == "use own absolute Python -I -B"
     assert not (tmp_path/"absent.json").exists()
 
 
+@pytest.mark.parametrize("tool", [OLD_TOOL, TOOL])
 @pytest.mark.parametrize("option", ["--operation", "--adapter-context", "--scope", "--pool"])
-def test_real_CLI_has_no_operation_context_scope_or_pool_override(tmp_path, option):
-    result = run_logged(tmp_path, [sys.executable, "-I", "-B", str(TOOL), "initialize", "--engineering",
+def test_real_CLI_has_no_operation_context_scope_or_pool_override(tmp_path, option, tool):
+    result = run_logged(tmp_path, [sys.executable, "-I", "-B", str(tool), "initialize", "--engineering",
         "--flow", "r04", "--control", str(tmp_path/"absent.json"), "--control-sha256", "0"*64, option, "unauthorized"])
     assert result.returncode == 2 and b"unrecognized arguments" in result.stderr
 
 
-def test_companion_and_pinned_helpers_import_without_Runtime(tmp_path):
+@pytest.mark.parametrize("tool", [OLD_TOOL, TOOL])
+def test_companion_and_pinned_helpers_import_without_Runtime(tmp_path, tool):
     code = ("import importlib.util,sys; s=importlib.util.spec_from_file_location('s09',sys.argv[1]); "
             "m=importlib.util.module_from_spec(s);s.loader.exec_module(m);m.helpers(); "
             "assert not any(n=='deck_master' or n.startswith('deck_master.') for n in sys.modules)")
-    result = run_logged(tmp_path, [sys.executable, "-I", "-B", "-c", code, str(TOOL)])
+    result = run_logged(tmp_path, [sys.executable, "-I", "-B", "-c", code, str(tool)])
     assert result.returncode == 0, result.stderr.decode()
 
 
