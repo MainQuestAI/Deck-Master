@@ -103,3 +103,76 @@ def test_invalid_preview_is_not_reused_or_assembled(store, monkeypatch, damage):
     assert not pipeline._current_svg_preview(store, entry)
     with pytest.raises((OperationError, service.StoreError)):
         stages.require_assembly_ready(store, before)
+
+
+@pytest.mark.render
+@pytest.mark.parametrize('damage', ['missing', 'stale'])
+def test_real_rsvg_rebuild_then_review_and_assembly(store, monkeypatch, damage):
+    """Real renderer only: rebuilding never substitutes for the new page review."""
+    import shutil
+    from io import BytesIO
+    import json
+
+    if shutil.which('rsvg-convert') is None:
+        pytest.skip('real rsvg-convert is unavailable; no replacement renderer or synthetic success')
+    before = prepared(store)
+    damaged = bump_revision(before, {'operation_id': 'damage-preview-' + damage,
+        'kind': 'artifact_adoption', 'description': 'L1 missing/stale preview recovery fixture', 'read_set': []})
+    entry = damaged['pages'][0]
+    if damage == 'missing':
+        entry['svg_preview'] = None
+    else:
+        old = store.read_object_json(entry['svg_preview'])
+        entry['svg_preview'] = store.put_json_object({**old, 'derived_from': [damaged['pages'][1]['svg']]})
+    store.commit_change(base_revision=before['revision_id'], document=damaged,
+                        operation_id=damaged['change']['operation_id'])
+    with pytest.raises(OperationError):
+        stages.require_assembly_ready(store, store.load_document())
+    calls = []
+    real_run = pipeline.run
+
+    def observe(args, **kwargs):
+        calls.append(args)
+        return real_run(args, **kwargs)
+
+    monkeypatch.setattr(pipeline, 'run', observe)
+    rebuilt_ref = pipeline.preview_svg_page(store.project_root, entry['page_id'])
+    rebuilt = store.load_document()
+    actual = rebuilt['pages'][0]
+    assert actual['svg_preview'] == rebuilt_ref != before['pages'][0]['svg_preview']
+    assert pipeline._current_svg_preview(store, actual)
+    artifact = store.read_object_json(rebuilt_ref)
+    assert artifact['derived_from'] == [actual['svg']]
+    with Image.open(BytesIO(store.read_object_bytes(artifact['file']))) as image:
+        assert image.size == (960, 540)
+        low, high = image.convert('L').getextrema()
+        assert high - low > 20  # Real text/geometry pixels, not blank placeholder.
+    assert sum('rsvg-convert' in str(args[0]) for args in calls) == 1
+    # A repeated current-preview request is a no-op and cannot render twice.
+    pointer = store.read_current()
+    assert pipeline.preview_svg_page(store.project_root, entry['page_id']) == rebuilt_ref
+    assert store.read_current() == pointer
+    # Changed preview must be examined under the normal page-visual contract.
+    with pytest.raises(OperationError) as quality:
+        stages.require_assembly_ready(store, store.load_document())
+    assert quality.value.error_code == 'stage_quality_blocked'
+    pending = service.continue_project(store.project_root)['pending_tasks'][0]
+    assert pending['review_stage'] == 'page_visual'
+    assert pending['scope_pages'] == [entry['page_id']]
+    pass_page_review(store.project_root, pending)  # Explicit L1 synthetic reviewer.
+    ready = store.load_document()
+    response = stages.assemble(store.project_root, base_revision=ready['revision_id'], operation_id=str(uuid.uuid4()))
+    assert response['operation_result']['report']['status'] == 'pass'
+    after = store.load_document()
+    assert after['pages'][0]['svg_preview'] == rebuilt_ref
+    assert after['pages'][1]['svg_preview'] == before['pages'][1]['svg_preview']
+    assert sum('rsvg-convert' in str(args[0]) for args in calls) == 1
+    assert any('--convert-to' in args for args in calls)
+    assert any('-png' in args for args in calls)
+    for page in after['pages']:
+        ppt_preview = store.read_object_json(page['ppt_preview'])
+        with Image.open(BytesIO(store.read_object_bytes(ppt_preview['file']))) as image:
+            low, high = image.convert('L').getextrema()
+            assert high - low > 20
+    report = store.read_object_json(after['outputs']['render_report'])
+    assert json.loads(store.read_object_bytes(report['file']))['status'] == 'pass'
