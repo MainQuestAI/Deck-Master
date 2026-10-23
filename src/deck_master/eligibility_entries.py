@@ -137,6 +137,10 @@ COLLABORATION_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "content_production.adopt_proposal": ("proposal.adopt", "content_production.adopt_proposal: locked exact decision/scope/basis adoption", None),
     "content_production.completion_status": (None, "-", READ_REASONS["read_model"]),
     "external_review.evaluate": (None, "-", READ_REASONS["external_report"]),
+    "review_handoff.record_reviews": (None, "-", READ_REASONS["external_report"]),
+    "review_handoff.repair_handoff": (None, "-", READ_REASONS["read_model"]),
+    "collaboration_api.invoke[review.record]": (None, "-", READ_REASONS["external_report"]),
+    "collaboration_api.invoke[review.repair-handoff]": (None, "-", READ_REASONS["read_model"]),
     "review_import.describe_bindings": (None, "-", READ_REASONS["read_model"]),
     "review_import.import_report": ("review.import", "review_import.import_report: locked source/identity/dependency binding and current-control eligibility before commit", None),
     "delivery_eligibility.describe": (None, "-", READ_REASONS["read_model"]),
@@ -167,6 +171,7 @@ COLLABORATION_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
 
 PUBLIC_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "native_review.recover": ("task.accept", "native_review.recover resumes its bound execution; service.accept_result → tasks.accept_result evaluates task.accept before adopting reviews; terminal replay is read-only", None),
+    "native_review.recovery_task_ids": (None, "-", READ_REASONS["read_model"]),
     "native_review.run": ("dispatch.host_task", "native_review.run → content_review dispatch/service.task_start/service.accept_result; exact scope and current control before execution/adoption", None),
     "legacy.import_legacy": ("create", "legacy.import_legacy: canonical private create/import normalization; inspect_only remains a source read", None),
     "legacy.looks_like_legacy_run": (None, "-", READ_REASONS["read_model"]),
@@ -277,8 +282,13 @@ CLI_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "collaboration migration apply": ("migration.apply", "collaboration_migration.apply", None),
     "eligibility": (None, "-", READ_REASONS["read_analysis"]),
     "review evaluate": (None, "-", READ_REASONS["external_report"]),
+    "review record": (None, "-", READ_REASONS["external_report"]),
+    "review repair-handoff": (None, "-", READ_REASONS["read_model"]),
     "review import": ("review.import", "review_import.import_report", None),
     "review channels": (None, "-", READ_REASONS["install"]),
+    "review outline-status": (None, "-", READ_REASONS["read_model"]),
+    "review outline-packet": (None, "-", READ_REASONS["read_model"]),
+    "review outline": ("dispatch.host_task", "outline_review.dispatch → service.open_host_task revalidates frozen outline scope", None),
     "review original-status": (None, "-", READ_REASONS["read_model"]),
     "review original": ("dispatch.host_task", "original_review.dispatch → service.open_host_task guards dispatch; needs_reviewer only persists immutable packet", None),
     "review recover": ("task.accept", "native_review.recover → service.accept_result/tasks.accept_result; original proof/basis/execution checks and task.accept before adoption", None),
@@ -675,7 +685,8 @@ def collaboration_surface() -> set[str]:
             found.add(f"{module_name}.{name}")
     found.update(f'collaboration_api.invoke[{action}]' for action in collaboration_api._FIELDS)
     for module_name, names in {'content_production': ('adopt_proposal', 'completion_status'),
-                               'delivery_eligibility': ('describe',)}.items():
+                               'delivery_eligibility': ('describe',),
+                               'review_handoff': ('record_reviews', 'repair_handoff')}.items():
         module = importlib.import_module(f'deck_master.{module_name}')
         found.update(f'{module_name}.{name}' for name in names if inspect.isfunction(getattr(module, name, None)))
     return found

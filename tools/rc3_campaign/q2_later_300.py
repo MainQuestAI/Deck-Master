@@ -11,6 +11,7 @@ from contextlib import contextmanager
 from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 import fcntl
+from functools import lru_cache
 import hashlib
 import importlib.util
 import json
@@ -77,12 +78,21 @@ def read(path):
     return json.loads(canonical(path).read_bytes(), object_pairs_hook=pairs, parse_constant=finite)
 
 
+@lru_cache(maxsize=1)
+def _scoped_code(source, filename):
+    # Cache only immutable compiled code, never a module or validation result.
+    return compile(source, filename, 'exec', dont_inherit=True)
+
+
 def helpers():
     base = Path(__file__).resolve().parent
     require(reference(base/'controller.py')['sha256'] == COMMON_SHA
             and reference(base/'supplementary_recorder.py')['sha256'] == SCOPED_SHA, 'frozen helpers differ')
     spec = importlib.util.spec_from_file_location('rc3_s09_scoped', base/'supplementary_recorder.py')
-    s = importlib.util.module_from_spec(spec); spec.loader.exec_module(s)
+    source = canonical(base/'supplementary_recorder.py').read_bytes()
+    require(hashlib.sha256(source).hexdigest() == SCOPED_SHA, 'frozen helpers differ')
+    s = importlib.util.module_from_spec(spec)
+    exec(_scoped_code(source, str(base/'supplementary_recorder.py')), s.__dict__)
     return s, s.c
 
 

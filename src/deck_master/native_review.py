@@ -121,6 +121,7 @@ def _envelope(store, document, task, session, observation, units):
             review_id = prior["review_id"]
         reviews.append({**row, "schema_version": "deck_review.v2", "review_stage": "preproduction",
                 "review_id": review_id,
+                **({"review_subject": "outline"} if task.get("review_subject") == "outline" else {}),
                 "subjects": subjects, "dependencies": deps,
                 "reviewer": {"type": "independent_host", "id": session.execution_ref,
                              "execution_ref": session.execution_ref, "independence_confirmed": True,
@@ -161,6 +162,21 @@ def _checkpoint(store, task, session, observation, *, envelope=None, context=Non
 def _checkpoints(store, task):
     return [value for ref in task.get('result_refs') or []
             if (value := store.read_object_json(ref)).get('schema_version') == 'native_review_checkpoint.v1']
+
+
+def recovery_task_ids(store, document, *, subject=None):
+    """Existing owned completions must be resolved before any new execution."""
+    return [task['task_id'] for ref in document['tasks']
+            if (task := store.read_object_json(ref)).get('review_stage') == 'preproduction'
+            and task.get('review_subject') == subject and task['status'] == 'failed'
+            and any(record.get('state') == 'ready' for record in _checkpoints(store, task))]
+
+
+def _subject_status(store, document, subject):
+    if subject == 'outline':
+        from .outline_review import status
+        return status(store, document)
+    return content_review.preproduction_status(store, document)
 
 
 class _RecoveredProvider:
@@ -262,7 +278,7 @@ def _recover(store, task_id):
                 result_payload=envelope, adapter_context=context)
             return {'status': 'recovered', 'task_id': task_id, 'execution_ref': task['execution_ref'],
                     'model_called': False, 'acceptance': accepted,
-                    'preproduction': content_review.preproduction_status(store, store.load_document())}
+                    'preproduction': _subject_status(store, store.load_document(), task.get('review_subject'))}
         except Exception as exc:
             _failure(store, task, task['execution_ref'], exc)
             raise
@@ -279,7 +295,7 @@ def _failure(store, task, executor, exc):
         service._commit_task_update(store, document, current, updated, "native independent review failed")
 
 
-def run(project, *, task_id=None, force_units=None):
+def run(project, *, task_id=None, force_units=None, subject=None):
     """Run native review, optionally selecting current units for explicit re-review."""
     store = Store(Path(project).expanduser())
     # A derived operation lock prevents double-clicks/reconnects from issuing a
@@ -292,7 +308,7 @@ def run(project, *, task_id=None, force_units=None):
             fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
             return {"status": "running", "next_action": "read current task status; do not launch another native review"}
-        return _run(store, task_id=task_id, force_units=force_units)
+        return _run(store, task_id=task_id, force_units=force_units, subject=subject)
     finally:
         os.close(handle)
 
@@ -325,23 +341,36 @@ def _session_with_startup_history(store, revision_id):
         session.__exit__(None, None, None)
 
 
-def _run(store, *, task_id, force_units=None):
+def _run(store, *, task_id, force_units=None, subject=None):
     document = store.load_document()
-    forced = content_review.validate_force_units(store, document, force_units)
+    if subject not in (None, 'outline'):
+        raise review_evidence.EvidenceRejected('native_review/subject', 'unsupported review subject')
+    from . import outline_review
+    if task_id:
+        selected = tasks._lookup_task(document, task_id, store)
+        if subject is not None and selected.get('review_subject') != subject:
+            raise review_evidence.EvidenceRejected('native_review/subject', 'subject differs from frozen task')
+        subject = selected.get('review_subject')
+    if subject == 'outline':
+        outline_review.require_outline(store, document)
+        forced = force_units or []
+        if not set(forced) <= set(outline_review.UNITS) or len(forced) != len(set(forced)):
+            raise review_evidence.EvidenceRejected('native_review/force_units', 'invalid outline units')
+    else:
+        forced = content_review.validate_force_units(store, document, force_units)
     if task_id and force_units is not None:
         raise review_evidence.EvidenceRejected("native_review/force_units", "select a frozen task_id or force_units, not both")
-    gate = content_review.preproduction_status(store, document)
-    if gate["status"] == "pass" and not forced and not task_id:
-        return {"status": "already_reviewed", "preproduction": gate}
+    gate = outline_review.status(store, document) if subject == 'outline' else content_review.preproduction_status(store, document)
     candidates = [task for ref in document["tasks"] if
                   (task := store.read_object_json(ref)).get("kind") == "review"
                   and task.get("review_stage") == "preproduction"
+                  and task.get("review_subject") == subject
                   and task["status"] in ("awaiting_host", "running", "queued")]
     if forced:
         expected = set(gate["missing_units"]) | {row["kind"] for row in gate["blocking_findings"]} | set(forced)
         candidates = [task for task in candidates
                       if {row["kind"] for row in task.get("review_units", [])} == expected
-                      and set(task.get("scope_pages", [])) == {page["page_id"] for page in document["pages"]}
+                      and set(task.get("scope_pages", [])) == (set() if subject == "outline" else {page["page_id"] for page in document["pages"]})
                       and tasks.task_inputs_current(store, document, task)]
     if task_id:
         task = tasks._lookup_task(document, task_id, store)
@@ -354,21 +383,23 @@ def _run(store, *, task_id, force_units=None):
     if task and task["status"] == "running":
         return {"status": "running", "task_id": task["task_id"],
                 "next_action": "inspect the existing execution; cancel it explicitly if interrupted before retrying"}
-    recoverable = [item for ref in document['tasks']
-                   if (item := store.read_object_json(ref)).get('review_stage') == 'preproduction'
-                   and item['status'] == 'failed'
-                   and any(record.get('state') == 'ready' for record in _checkpoints(store, item))]
-    if task is None and recoverable:
-        return {'status': 'recovery_available', 'task_ids': [item['task_id'] for item in recoverable],
+    recoverable = recovery_task_ids(store, document, subject=subject)
+    if recoverable:
+        return {'status': 'recovery_available', 'task_ids': recoverable,
                 'next_action': 'Use review recover --project <project> --task-id <id>; do not repeat the native call.'}
+    if gate["status"] == "pass" and not forced and not task_id and task is None:
+        return {"status": "already_reviewed", "preproduction": gate}
     with _session_with_startup_history(store, document["revision_id"]) as session:
         provider = _ObservedProvider(session)
         registry = review_evidence.ProviderRegistry()
         registry.register(provider)
         with review_evidence.ProviderRuntime(registry).bound():
             if task is None:
-                dispatched = content_review.dispatch_preproduction_review(store.project_root,
+                dispatch = outline_review.dispatch if subject == 'outline' else content_review.dispatch_preproduction_review
+                dispatched = dispatch(store.project_root,
                     adapter_context=registry.channel_context(), force_units=force_units)
+                if not dispatched.get("task"):
+                    return dispatched
                 task = dispatched["task"]
             document = store.load_document()
             if not tasks.task_inputs_current(store, document, task):
@@ -392,7 +423,10 @@ def _run(store, *, task_id, force_units=None):
                 if packet.get('review_scope') is not None:
                     owner_refs = {row['review_ref']['sha256'] for row in packet['review_scope']['owners']}
                     prior = [row for row in prior if row['ref']['sha256'] in owner_refs]
-                prompt = ("Independently review the complete manuscript against the task, materials, and frozen methods below. "
+                subject_instruction = ("Independently review only the fixed Narrative and ContentPlan outline, argument and progression. "
+                    "There are no page-copy or visual-production judgments; cite outline nodes and evidence. "
+                    if subject == 'outline' else "Independently review the complete manuscript against the task, materials, and frozen methods below. ")
+                prompt = (subject_instruction +
                           "Return a judgment for every required unit. Multiple judgments of one unit are allowed only to replace distinct "
                           "actual prior owners that you rechecked; do not merge or omit their finding identities. Do not edit the draft. Cite concrete pages/atoms "
                           "and evidence for findings. Re-check prior findings against the current manuscript; preserve finding IDs "
@@ -428,7 +462,7 @@ def _run(store, *, task_id, force_units=None):
                     operation_id=task["operation_id"], produced_against=task["produced_against"],
                     result_payload=envelope, adapter_context=context)
                 return {"status": "reviewed", "task_id": task["task_id"], "execution_ref": session.execution_ref,
-                        "acceptance": accepted, "preproduction": content_review.preproduction_status(store, store.load_document())}
+                        "acceptance": accepted, "preproduction": _subject_status(store, store.load_document(), subject)}
             except Exception as exc:
                 try:
                     _failure(store, task, session.execution_ref, exc)

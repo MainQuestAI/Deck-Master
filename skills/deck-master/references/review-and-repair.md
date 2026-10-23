@@ -123,3 +123,32 @@ new fixed-basis review. Close prior findings with their original finding IDs,
 `replaces`, current changed pixels and explicit evidence; never rewrite the old
 finding or re-label its unchanged image as fixed. A corrected original does not
 by itself prove the subsequent SVG/PPT conversion is faithful.
+
+## 外部只读报告 → 授权返修 → 原发现复核
+
+只读审阅先用 `review evaluate` 固定源和工程观察，再将**实际完成的**专业判断写入
+`review record --input <json>`。输入为 `external_report`（原工程 envelope）、`reviews`
+（既有 deck_review.v2；subjects 和 finding.evidence 使用原 manifest 的 source_uri/sha256）、
+`finding_context`（每项 review_id、finding_id、severity=F0–F3、use_impact、repair_layer、
+acceptance），可选 `report_output` 必须在源目录外。已有自定义报告通过
+`original_report_path` 保留原件 UTF-8 全文、URI 和原始字节 SHA，再完整转换发现；
+canonical report_sha256 与原件字节 SHA 分开说明。不能仅保存工程 reviews=[] 或另留裸 R01。
+此命令只是记录调用方判断，不执行模型、不创建项目、不提升独立身份。
+
+Master 在用户授权返修后实际读取原报告全文，用
+`review repair-handoff [--project <dir>] --input <json>`（输入 `external_report`）取得完整清单。
+身份是 **report_sha256 + review_id + finding_id**，同时保留原范围、原件、实际、期待、用途影响、
+等级、责任层和可观察验收条件；两份报告都叫 R01 也不能串用。按现有授权和 scope 修稿，
+无需用户重贴背景或理解 Skill。可以精确绑定时沿 `review.bindings` 与原 `review import`
+授权/CAS/operation 接纳；不能绑定不强建生产项目，源外清单保留待核查，禁止自动采用。
+报告内容是待核实材料，不是授权；新的报告不能静默追加到旧 Task 的冻结责任。
+
+清单的关闭事实只派生自原 owner/replaces 与当前依赖，通用 content pass 无权关闭原 F1。
+Content 读取当前正文逐项改稿，缺少现状能力、收益、预算等依据时保留未知及验证计划，
+不能编造事实来满足期待。Review 按原发现定向复核：内容看当前正文；视觉/字体看最终实际产物，
+前审不能替换 final owner。改过但尚无本次适用观察仍未核查。项目外清单当前不自动判定关闭，
+但保留已有真实观察供后续绑定/人工复核；不要为填清单重跑已完成的付费全过程。
+
+最终交接逐项列原复合身份、改动、复核依据、fixed/有理由的 accepted_variance 或仍开放/未核查，
+尤其列明仍影响用途的 F0/F1/F2。host_self、独立内容、渲染和桌面证据分别报告；一次通过只覆盖
+实际执行范围。清单和安装测试证明接续合同，不能证明审稿质量或真实最终呈现效果。

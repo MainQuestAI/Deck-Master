@@ -6,7 +6,7 @@ import {materialUploads} from './material-uploads.js';
 import {get, readableError, revisionQuery, canonical} from './api.js';
 import {el, button, heading, empty, version, icon, modal} from './dom.js';
 import {DraftEditor} from './drafts.js';
-import {contentOperation, contentPanel as panel, inputField, sourceReader} from './content-edit.js';
+import {contentOperation, contentPlanDifferences, contentPanel as panel, inputField, sourceReader} from './content-edit.js';
 
 export function content(app, data) {
   if (!app.health.ui_capabilities?.includes('content_ops.v1')) return empty('核心需要升级', '内容与来源编辑需要支持内容操作的核心；已存稿件和原有命令仍可读取。');
@@ -299,7 +299,7 @@ export function content(app, data) {
           })};
       } else value.content_plan={schema_version:'content_plan_input.v1',input_summary:summary.input.value,chapters,goals,unresolved_facts:plan.unresolved_facts || []};
     }
-    operation.preview(value);
+    operation.preview(value, action === 'outline' ? contentPlanDifferences(plan, value.content_plan, pages, inputs?.sources || []) : []);
   }
   drawSources();drawPages();drawGoals();
   const hostImpact=el('div',{class:'stack content-impact'});

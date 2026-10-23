@@ -49,9 +49,22 @@ export async function launcher(root, health) {
         }, false, {disabled: !entry.available}), button('从列表移除', () => {
           const dialog = modal('从最近项目移除', el('p', {}, `仅取消“${entry.title}”的注册，项目文件和历史继续保留。`),
             [button('移除条目', async () => {
-              try { await post('/api/projects/remove', {entry_id: entry.entry_id}); dialog.close(); await refresh(); }
-              catch (error) { rowError.textContent = readableError(error); dialog.close(); }
+              try {
+                await post('/api/projects/remove', {entry_id: entry.entry_id});
+                // Remove the confirmed entry before close restores focus. Waiting
+                // for the later list read can otherwise detach the restored trigger.
+                entries = entries.filter(item => item.entry_id !== entry.entry_id);
+                renderList();
+                closeRemoval();
+                await refresh();
+              }
+              catch (error) { rowError.textContent = readableError(error); closeRemoval(); }
             })]);
+          const content = dialog.firstElementChild;
+          const closeRemoval = () => {
+            // A late reply belongs to this confirmation, not a subsequently opened form.
+            if (dialog.open && dialog.firstElementChild === content) dialog.close();
+          };
         }, false, {class: 'quiet'}))));
     }
   };

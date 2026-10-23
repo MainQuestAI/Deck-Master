@@ -178,7 +178,9 @@ def test_lost_create_response_offers_register_and_open_without_recreating(ux06_b
         local_runtime.stop(descriptor)
 
 
-def test_modal_close_returns_focus_to_the_surface_heading_when_trigger_is_removed(ux06_browser):
+@pytest.mark.parametrize("result", ["removed", "cancelled", "rejected", "refresh_failed", "late_removed", "late_rejected"])
+@pytest.mark.parametrize("refresh_delay", [0, 0.25])
+def test_modal_close_returns_focus_to_the_surface_heading_when_trigger_is_removed(ux06_browser, refresh_delay, result):
     """UX-06b：模态关闭后触发器已被重绘移除时，焦点回到工作面标题而不是 body。"""
     from playwright.sync_api import expect
     from deck_master import local_runtime
@@ -201,10 +203,53 @@ def test_modal_close_returns_focus_to_the_surface_heading_when_trigger_is_remove
         page.get_by_role('button', name='刷新项目列表', exact=True).click()
         card = page.locator('.project-card').first
         expect(card).to_be_visible()
-        card.get_by_role('button', name='从列表移除', exact=True).click()
+        trigger = card.get_by_role('button', name='从列表移除', exact=True)
+        trigger.click()
         dialog = page.locator('dialog[open]')
-        dialog.get_by_role('button', name='移除条目', exact=True).click()
+        # Exercise both native close-event / list-response orderings. The original
+        # five-second focus assertion remains unchanged; only the network is delayed.
+        pending = []
+        if result.startswith('late_'):
+            def hold_remove(route):
+                pending.append(route)
+                page.evaluate('window.__removePending = true')
+            page.route('**/api/projects/remove', hold_remove)
+        if result == 'rejected':
+            page.route('**/api/projects/remove', lambda route: route.abort())
+        if result == 'refresh_failed':
+            page.route('**/api/projects', lambda route: route.abort())
+        elif refresh_delay:
+            import time
+            def delayed_list(route):
+                response = route.fetch()
+                time.sleep(refresh_delay)
+                route.fulfill(response=response)
+            page.route('**/api/projects', delayed_list)
+        dialog.get_by_role('button', name='关闭' if result == 'cancelled' else '移除条目', exact=True).click()
+        if result.startswith('late_'):
+            expect(dialog.get_by_role('button', name='关闭', exact=True)).to_be_visible()
+            # The pending POST is completed once; opening another form is not a retry.
+            page.wait_for_function("() => window.__removePending === true")
+            assert len(pending) == 1
+            dialog.get_by_role('button', name='关闭', exact=True).click()
+            page.get_by_role('button', name='新建项目', exact=True).click()
+            title = page.locator('dialog[open]').get_by_label('项目名称（必填）')
+            title.fill('保留新的创建草稿')
+            if result == 'late_removed':
+                pending[0].fulfill(response=pending[0].fetch())
+                expect(page.locator('.project-card')).to_have_count(0)
+            else:
+                pending[0].abort()
+                expect(card.locator('[role="alert"]')).not_to_have_text('')
+            expect(page.locator('dialog[open]')).to_have_count(1)
+            expect(title).to_have_value('保留新的创建草稿')
+            expect(title).to_be_focused()
+            return
         expect(page.locator('dialog[open]')).to_have_count(0)
+        if result in ('cancelled', 'rejected'):
+            expect(page.locator('.project-card')).to_have_count(1)
+            expect(trigger).to_be_focused()
+            return
         expect(page.locator('.project-card')).to_have_count(0)
         # 触发器（列表行按钮）已被重绘移除：焦点回退到工作面标题。
         expect(page.locator('#view-title')).to_be_focused()

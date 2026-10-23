@@ -258,9 +258,11 @@ def build_review_packet(store, document, *, page_ids=None, required=None,
                           "restriction": source.get("restriction") or "",
                           "extract_ref": source.get("extract"), "extract": extract})
     from .effective_requirements import packet_requirements
+    from .review_handoff import project_findings
     units = list(required if required is not None else required_units(store, document))
     return {
         "schema_version": "content_review_packet.v1",
+        "external_findings": project_findings(store, document, [p["page_id"] for p in pages]),
         "effective_requirements": packet_requirements(store, document, page_ids=[p['page_id'] for p in pages], units=units),
         "project_id": document["project_id"],
         "revision_id": document["revision_id"],
@@ -513,7 +515,8 @@ def dispatch_preproduction_review(project, *, page_ids=None, adapter_context=Non
 def _review_scope_owners(store, document, units, pages):
     """Freeze historical frontier and still-open owners, never merge identities."""
     from .review import finding_closed, open_findings, pending_judgments
-    history = _preproduction_reviews(store, document)
+    history = [row for row in _preproduction_reviews(store, document)
+               if row['review'].get('review_subject') != 'outline']
     records = [{**row['review'], 'ref': row['review_ref']} for row in history]
     replaced = {row['replaces']['sha256'] for row in records if row.get('replaces')}
     artifacts = _current_artifact_digests(store, document)
@@ -646,6 +649,22 @@ def validate_preproduction_result(store, document, task, envelope, *, adapter_co
     state = requirement_state(store, document)
     _require_unit_coverage(store, document, reviews, task)
     page_ids = list(task.get("scope_pages") or [])
+    if task.get('review_subject') == 'outline':
+        from .outline_review import require_outline, UNITS
+        outline_refs = require_outline(store, document)
+        expected_subjects = {(ref["path"], ref["sha256"]) for ref in outline_refs}
+        if any({(ref["path"], ref["sha256"]) for ref in review.get("subjects", [])} != expected_subjects
+               or any(dep["kind"] == "content" and dep["identity"] not in ("narrative", "content_plan")
+                      for dep in review.get("dependencies", [])) for review in reviews):
+            raise _envelope_error("outline/subjects", "outline binds exactly Narrative and Plan, never Page subjects")
+        if page_ids or any(review.get('kind') not in UNITS for review in reviews):
+            raise _envelope_error('outline', 'outline cannot evaluate pages or production units')
+        if any(f.get('page_id') is not None for review in reviews for f in review.get('findings', [])):
+            raise _envelope_error('outline/findings', 'outline findings use null page and explicit node/role locations')
+    elif not page_ids:
+        raise _envelope_error('scope_pages', 'manuscript review requires explicit nonempty pages')
+    if any(review.get('review_subject') != task.get('review_subject') for review in reviews):
+        raise _envelope_error('review_subject', 'result must retain the frozen subject contract')
     capabilities = reviewer_capabilities(adapter_context)
     accepted_reviewers = []
     if state["effective"] == "independent_model_or_human" and adapter_context is not None:
@@ -725,6 +744,10 @@ def _unit_dependency_equivalent(store, document, review, key, digest):
     This never changes a review or promotes its assurance. Visual bytes and
     speech retain their own checks; design-only layout does not change copy.
     """
+    # Outline reviews bind exact Narrative/Plan versions. Page-scoped editorial
+    # equivalence can omit role facts and must never extend an outline pass.
+    if review.get('review_subject') == 'outline':
+        return False
     import copy
     from .design_requirements import page_semantic_projection, plan_global_projection
     from .models import canonical_json_bytes, sha256_bytes
@@ -784,7 +807,7 @@ def _applicable_reviews(store, document, page_ids, *, records=None, digests=None
             continue
         if strict_refs is not None and item["review_ref"]["sha256"] not in strict_refs:
             continue
-        notes_aliases = (digests.get('_preproduction_notes_aliases') or {}) if review.get('kind') != 'speech' else {}
+        notes_aliases = (digests.get('_preproduction_notes_aliases') or {}) if review.get('kind') != 'speech' and review.get('review_subject') != 'outline' else {}
         deps = {f"{dep['kind']}:{dep['identity']}": dep.get("sha256")
                 for dep in review.get("dependencies") or []}
         stale = [key for key, value in deps.items()
@@ -910,7 +933,8 @@ def preproduction_status(store, document, *, adapter_context=None, page_ids=None
     ids = [entry["page_id"] for entry in document.get("pages") or []]
     if page_ids is None:
         page_ids = ids
-    history = _preproduction_reviews(store, document)
+    history = [row for row in _preproduction_reviews(store, document)
+               if row['review'].get('review_subject') != 'outline']
     artifacts = _current_artifact_digests(store, document)
     applicable = _applicable_reviews(store, document, page_ids, records=history, digests=artifacts)
     satisfied = sorted({item["review"].get("kind") for item in applicable

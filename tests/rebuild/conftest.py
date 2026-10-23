@@ -43,6 +43,7 @@ def _bypass_ambient_proxy_for_loopback_tests():
 
 
 def pytest_addoption(parser):
+    parser.addoption("--q2-diagnostics", action="store_true", help="Finite Q2 child timing and pre-deadline stacks.")
     parser.addoption(
         "--require-browser", action="store_true",
         help="Require selected browser tests to execute; missing tools or skips fail the gate.",
@@ -143,3 +144,9 @@ def resolvable_font_family():
         if candidate.lower() in result.stdout.lower():
             return candidate
     pytest.fail("no resolvable font family on this host")
+
+
+def pytest_configure(config):
+    if config.getoption("--q2-diagnostics"):
+        from q2_timeout_diagnostics import Diagnostics
+        config.pluginmanager.register(Diagnostics(), "q2-timeout-diagnostics")

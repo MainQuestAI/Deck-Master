@@ -500,7 +500,7 @@ def _read_ids(ids) -> list[dict]:
 
 def read_skill_methods(skill: str, *, entry_mode="named", project=None, task_id=None, text=None,
                        review_units=None, review_stage=None, read_protocol=None, body_mode=None,
-                       cache_offer=None, observed_context=None, selected_resource_ids=None) -> dict:
+                       cache_offer=None, observed_context=None, selected_resource_ids=None, summary_protocol=None) -> dict:
     """Read one responsibility's actual bytes plus current, read-only context.
 
     This does not create a project, dispatch a Task, grant scope, claim independent
@@ -508,6 +508,8 @@ def read_skill_methods(skill: str, *, entry_mode="named", project=None, task_id=
     """
     from .work_context import validate_options
     validate_options(read_protocol, body_mode, cache_offer)
+    if summary_protocol not in (None, 'workbench_summary.v2') or (summary_protocol and read_protocol != 'work_context.v2'):
+        raise ValueError('current_work requires explicit workbench_summary.v2 and work_context.v2 negotiation')
     if skill not in PUBLIC_SKILLS:
         raise ValueError("unknown public Skill")
     if entry_mode not in ENTRY_MODES:
@@ -535,7 +537,7 @@ def read_skill_methods(skill: str, *, entry_mode="named", project=None, task_id=
     if read_protocol:
         return _read_skill_v2(skill, entry_mode=entry_mode, project=project, task_id=task_id,
                               route=route, review_units=review_units, review_stage=review_stage,
-                              body_mode=body_mode or 'full', cache_offer=cache_offer, observed_context=observed_context, selected=selected)
+                              body_mode=body_mode or 'full', cache_offer=cache_offer, observed_context=observed_context, selected=selected, summary_protocol=summary_protocol)
     context = None
     dispatch = None
     if project is not None:
@@ -580,7 +582,7 @@ def read_skill_methods(skill: str, *, entry_mode="named", project=None, task_id=
 
 
 def _read_skill_v2(skill, *, entry_mode, project, task_id, route, review_units, review_stage,
-                   body_mode, cache_offer, observed_context, selected=()):
+                   body_mode, cache_offer, observed_context, selected=(), summary_protocol=None):
     from .work_context import ResourceCollector
     from . import service, content_production
     from .store import Store
@@ -593,6 +595,9 @@ def _read_skill_v2(skill, *, entry_mode, project, task_id, route, review_units, 
         payload['context'] = {'project_id': document['project_id'], 'artifact_revision_id': document['revision_id'],
                               'request': (document.get('collaboration') or {}).get('request'),
                               'completion': content_production.completion_status(store, document)}
+        if summary_protocol:
+            from .current_work import from_snapshot
+            payload['context']['current_work'] = from_snapshot(store, document)
         task = None
         if task_id is not None:
             task = next((item for ref in document['tasks'] if (item := store.read_object_json(ref))['task_id'] == task_id), None)

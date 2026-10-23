@@ -80,7 +80,11 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
 
     def current_manuscript_subjects(candidate):
         """A null-page preproduction finding belongs to the complete manuscript."""
-        expected = {key for key in artifacts if key.startswith('content:page:')}
+        outline = review.get('review_subject') == 'outline'
+        if outline and candidate.get('review_subject') != 'outline':
+            return False
+        expected = ({'content:narrative', 'content:content_plan'} if outline else
+                    {key for key in artifacts if key.startswith('content:page:')})
         if not expected or 'content:content_plan' not in artifacts:
             return False
         expected.add('content:content_plan')
@@ -89,14 +93,17 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
         declared = {_dependency_key(dep) for dep in candidate.get('dependencies') or []}
         current_refs = {key for key, info in subjects.items()
                         if info.get('current') and info.get('role') in
-                        ('narrative', 'content_plan', 'page')}
+                        (('narrative', 'content_plan') if outline else ('narrative', 'content_plan', 'page'))}
         cited = {_ref_key(ref) for ref in candidate.get('subjects') or []}
         return bool(current_refs) and expected <= declared and current_refs <= cited
 
     def changed_manuscript(owner, candidate):
         old = [subjects.get(_ref_key(ref)) for ref in owner.get('subjects') or []]
         new = [subjects.get(_ref_key(ref)) for ref in candidate.get('subjects') or []]
-        semantic_key = 'speech_semantic_sha' if review.get('kind') == 'speech' else 'semantic_sha'
+        semantic_key = ('source_speech_semantic_sha' if finding.get('kind') == 'source' and review.get('kind') == 'speech' else
+                        'source_semantic_sha' if finding.get('kind') == 'source' else
+                        'outline_semantic_sha' if review.get('review_subject') == 'outline' else
+                        'speech_semantic_sha' if review.get('kind') == 'speech' else 'semantic_sha')
         return any(before and before.get(semantic_key) and after and after.get('current') and
                    before.get('role') == after.get('role') and
                    before.get('page_id') == after.get('page_id') and
@@ -111,6 +118,8 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
                 continue
             for after in new:
                 hash_key = ('visual_sha' if owner.get('review_stage') == 'page_visual'
+                            else 'source_speech_semantic_sha' if owner.get('review_stage') == 'preproduction' and finding.get('kind') == 'source' and owner.get('kind') == 'speech'
+                            else 'source_semantic_sha' if owner.get('review_stage') == 'preproduction' and finding.get('kind') == 'source'
                             else 'speech_semantic_sha' if owner.get('kind') == 'speech'
                             else 'semantic_sha' if owner.get('review_stage') == 'preproduction'
                             else 'file_sha') if before.get('role') == 'page' else 'file_sha'
@@ -189,6 +198,7 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
         for candidate in replacements.get(_ref_key(owner_ref), []):
             if (candidate.get('review_id') != review.get('review_id') or
                     candidate.get('kind') != review.get('kind') or
+                    candidate.get('review_subject') != review.get('review_subject') or
                     candidate.get('review_stage', 'final') != review.get('review_stage', 'final')):
                 continue
             followup = next((f for f in candidate.get('findings') or []
@@ -223,6 +233,17 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
             current_subject = (current_manuscript_subjects(candidate) if deck_preproduction
                                else current_page_subject(candidate))
             output_changed = current_final_output_changed(review, candidate)
+            if (subjects and finding.get('kind') == 'source' and
+                    followup.get('resolution') == 'fixed' and
+                    review.get('review_stage') == 'preproduction'):
+                # A locator repair must cite its current manuscript, not just
+                # carry forward the original erroneous Page as evidence.
+                evidence_keys = {_ref_key(ref) for ref in followup.get('evidence') or []}
+                if not any(key in evidence_keys and info.get('current') and
+                           info.get('role') in ('page', 'narrative', 'content_plan') and
+                           (page_id is None or info.get('page_id') == page_id)
+                           for key, info in subjects.items()):
+                    continue
             if current and candidate.get('observations') and followup.get('evidence'):
                 resolution = followup.get('resolution')
                 if (resolution == 'accepted_variance' and finding.get('impact') == 'needs_judgment' and

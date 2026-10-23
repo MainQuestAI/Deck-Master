@@ -65,3 +65,45 @@ deck_master_cli = [str(python), "-I", "-m", "deck_master"]
 先读 `capabilities.read_protocols`；支持时可用 `read_protocol="work_context.v2", body_mode="full"`，未协商仍是 v1。v2 full 默认返回完整方法和来源，保留全部 Page/notes/限定、原图 refs/尺寸和物理约束；manifest 的 `context_ready=false` 不能执行为上下文已齐。delta 只省略当前受信适配器实际观察到的同一 Host session/context generation 可取回字节；新会话/压缩后或缺观察按冷 full，CLI cache offer 本身不能证明会话。可随时 full 重新取回。
 
 `runtime_returned_bytes`、body/cache 传输状态只证明 Runtime 返回或省略了哪些字节，不证明 Host 实际阅读、应用、独立审查或批准。实际执行身份、方法 SHA、判断、修改、产物及限制另记。恢复读取当前 scope/决定/撤回和 completion，不重复建项目或补授权。
+
+
+## 当前工作与下一责任（协商读取）
+
+先检查 capabilities.summary_protocols。支持 `workbench_summary.v2` 时，
+使用 `view --summary --summary-protocol workbench_summary.v2`；Python 方法 reader
+在 `read_protocol="work_context.v2"` 外显式传 `summary_protocol="workbench_summary.v2"`。
+四职责都消费同一 `current_work`，区分 delivery、review、next、blockers 和 optional。
+旧核心只返回已有事实与通用阅读入口，不自行补全制作责任。读操作不调用 continue、
+不创建 Task、不花模型预算；真正继续仍走原授权、basis、CAS 与 operation。
+首次有可读产物且当前 Host 支持时呈现一次；后续更新入口。URL、系统接受打开、
+前端加载、用户看见分别报告；没有观察保持未知。云端 loopback 不冒充用户可访问链接。
+
+## 方法共创的接续与证据
+
+先从当前材料定位一个实际问题，例如把缺版本比例写成节时收益；在新 Task 冻结前用
+`selected_resource_ids` 选择最少必要资源，由 Runtime 校验适用范围并冻结 manifest。
+不让用户勾卡，不给旧 Task 临时加方法；basis 改变时沿既有退役/重派流程处理未决调用。
+先给有依据、有条件的建议，再问会改变推荐的关键问题；已知补充不重复询问。
+
+保留用户原话、来源位置/版本及允许使用范围，在既有输入证据或提案说明中区分正式要求、
+经验线索、待验判断和作者建议。经验不是自动生效的要求；与有效正式要求冲突时保留两者，
+明确冲突，交有权者裁决，不用语气强弱替代权威。未采用、被拒绝或过期建议仍保留来源与说明。
+
+先预览受影响对象：方向采用沿既有提案及覆盖该提案的 Decision，任务事实/来源变化沿
+`inputs update` / `input_revision`，限定正文编辑沿 `content plan/commit`。使用各入口真实
+合同，不将三者混成一个自造 payload；已有合法授权和决定不重复审批。正式写入重验当前
+scope、basis、CAS；拒绝或过期提案不覆盖现稿，冲突保留草稿并重新预览；未知结果先查原
+operation，不换 ID 重做。仅讨论建议不等于采用。
+
+接纳后回读实际 Narrative、Plan、Page 引用，核对推荐、正文、流程分支、责任及限定在
+受影响范围内一致。沿既有结果说明报告原话来源→采用依据→前后引用/diff→仍待处理项，
+不增加方法打卡或第二份分析真源。原图、SVG、PPT 沿现有依赖判断受影响，文字采用不是
+视觉实物更新；仅在原授权内安排相应重制或复查，无能力则保持明确缺口。
+
+将实际变更后的固定稿、相关来源、前后差异和原 finding 交 Review，检查意见是否落稿、
+问题是否解决及是否新增失真；不能用“读过方法卡”代替。只交本次主体/单位，outline 通过
+不代替逐页或视觉审查。Review 不可用时返回可读待审稿，不制造 pass 或静默改为自审。
+
+表达沿既有 page-writing、M10 与 method-review，不以短句、少术语或关键词数量判好坏。
+改写仍须保留对象、数字、范围、因果强度、承诺、责任、否定、条件；专业术语、必要回顾和
+限定按用途保留。图内文字与可见正文同样受约束，不能把必要限定移到 notes 后声称保真。

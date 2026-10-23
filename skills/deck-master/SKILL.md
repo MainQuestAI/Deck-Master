@@ -72,3 +72,31 @@ deck_master_cli = [str(python), "-I", "-m", "deck_master"]
 先读 `capabilities.read_protocols`；支持时可用 `read_protocol="work_context.v2", body_mode="full"`，未协商仍是 v1。v2 full 默认返回完整方法和来源，保留全部 Page/notes/限定、原图 refs/尺寸和物理约束；manifest 的 `context_ready=false` 不能执行为上下文已齐。delta 只省略当前受信适配器实际观察到的同一 Host session/context generation 可取回字节；新会话/压缩后或缺观察按冷 full，CLI cache offer 本身不能证明会话。可随时 full 重新取回。
 
 `runtime_returned_bytes`、body/cache 传输状态只证明 Runtime 返回或省略了哪些字节，不证明 Host 实际阅读、应用、独立审查或批准。实际执行身份、方法 SHA、判断、修改、产物及限制另记。恢复读取当前 scope/决定/撤回和 completion，不重复建项目或补授权。
+
+
+## 当前工作与下一责任（协商读取）
+
+先检查 capabilities.summary_protocols。支持 `workbench_summary.v2` 时，
+使用 `view --summary --summary-protocol workbench_summary.v2`；Python 方法 reader
+在 `read_protocol="work_context.v2"` 外显式传 `summary_protocol="workbench_summary.v2"`。
+四职责都消费同一 `current_work`，区分 delivery、review、next、blockers 和 optional。
+旧核心只返回已有事实与通用阅读入口，不自行补全制作责任。读操作不调用 continue、
+不创建 Task、不花模型预算；真正继续仍走原授权、basis、CAS 与 operation。
+首次有可读产物且当前 Host 支持时呈现一次；后续更新入口。URL、系统接受打开、
+前端加载、用户看见分别报告；没有观察保持未知。云端 loopback 不冒充用户可访问链接。
+
+大纲稳定且本次需独立早审时先读取 `review outline-status` / `review outline-packet`。
+只有当前授权、预算和真实通道支持，才经 `review outline` 派发或
+`review native --subject outline` 执行；不能把组包当审阅。
+既有运行/失败 Task 优先查询与 recover，不以新执行重复收费；不可用返回可读待审稿。
+大纲仅覆盖 argument/progression；逐页稿与视觉资格仍分别判断。
+子职责返回后按同一 next 与当前权限实际接续；已有产物不得因呈现失败而重制。
+
+共创接续按 Content 的“方法共创的接续与证据”执行：交接保留用户原话来源、采用依据、
+实际前后产物引用与尚待处理的图表/视觉依赖；不要把讨论、文本采用、视觉更新和 Review
+通过合并成一个完成结论。正式要求冲突只阻塞受影响部分；未采用建议与已完成产物保留。
+
+接续外部审阅返修时，按 review-and-repair 的外部报告合同实际读取固定原报告与
+review repair-handoff 完整清单，再沿已有授权、binding/import 和原 finding 复查。
+不让用户手工复制完整背景，不把同名 R01 或通用前审 pass 当作原报告已全部关闭；
+无法绑定保留源外清单及未核查维度，最终明确原 F1 是否仍影响用途。

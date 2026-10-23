@@ -8,6 +8,37 @@ export const inputField = (label, value = '', rows = 3) => {
   return {input, node:el('label', {class:'stack'}, label, input)};
 };
 
+// Compare with the fixed formal plan, never a restored or later edited draft.
+export function contentPlanDifferences(plan, next, pages, sources = []) {
+  const changes = [], previous = plan?.input || plan || {};
+  const text = value => value === '' || value == null ? '未填写' : String(value);
+  const diff = (label, before, after) => {if (canonical(before) !== canonical(after)) changes.push(`${label}：${text(before)} → ${text(after)}`);};
+  const oldChapters = previous.chapters || [], newChapters = next.chapters || [];
+  newChapters.forEach((chapter, index) => {
+    const old = oldChapters.find(item => item.chapter_id === chapter.chapter_id);
+    diff(`章节 ${index + 1} 名称`, old?.title, chapter.title);
+    const members = ids => (ids || []).map(id => `第 ${pages.findIndex(page => page.page_id === id) + 1} 页`).join('、');
+    if (canonical(old?.page_ids || []) !== canonical(chapter.page_ids || [])) diff(`章节 ${index + 1} 页面`, members(old?.page_ids), members(chapter.page_ids));
+  });
+  oldChapters.filter(old => !newChapters.some(chapter => chapter.chapter_id === old.chapter_id)).forEach(old => changes.push(`移除章节：${old.title}`));
+  const oldGoals = previous.page_roles || previous.goals || plan?.goals || [];
+  const linksText = links => (links || []).map(link => {
+    const name = sources.find(source => source.source_id === link.source_id)?.name || link.source_id;
+    const original = link.source_version?.original_sha256 || '未记录', extracted = link.source_version?.extract?.sha256 || '未记录';
+    return `${name} (${link.source_id}) · ${link.locator || '未记录位置'} · 原件 ${original} · 提取 ${extracted}`;
+  }).join('；') || '未关联';
+  for (const goal of next.page_roles || next.goals || []) {
+    const old = oldGoals.find(item => item.page_id === goal.page_id);
+    const index = pages.findIndex(page => page.page_id === goal.page_id);
+    const label = index >= 0 ? `第 ${index + 1} 页 · ${pages[index].title}` : goal.page_id;
+    diff(`${label} · 页面目标`, old?.intended_takeaway ?? old?.purpose, goal.intended_takeaway ?? goal.purpose);
+    if (canonical(old?.source_links || []) !== canonical(goal.source_links || [])) diff(`${label} · 来源关联`, linksText(old?.source_links), linksText(goal.source_links));
+    if ('unresolved_facts' in goal) diff(`${label} · 待确认事实`, (old?.unresolved_facts || []).join('；'), (goal.unresolved_facts || []).join('；'));
+  }
+  if ('input_summary' in next) diff('内容整合结论', previous.input_summary, next.input_summary);
+  return changes;
+}
+
 // One editor owns the recovery copy; every request freezes the original payload.
 export function contentOperation(app, slot, read, hydrate, ref, onDone) {
   let loaded = false, disposed = false, serial = 0, pending = null; const guards = [];
@@ -52,10 +83,10 @@ export function contentOperation(app, slot, read, hydrate, ref, onDone) {
       controls();
     });
   }
-  async function preview(input) {
+  async function preview(input, differences = []) {
     if (!canWrite()) return;
     if (!currentBasis()) { versionChanged(); return; }
-    const token = ++serial; pending = null; controls();
+    const token = ++serial, frozenDifferences = structuredClone(differences); pending = null; controls();
     try {
       await app.business.available();
       const value = {schema_version:'content_operation_input.v1', project_id:app.info.project_id, base_revision:app.route.revision, ...input};
@@ -68,6 +99,7 @@ export function contentOperation(app, slot, read, hydrate, ref, onDone) {
         el('p', {}, `修改 ${info.changed_pages.length} 页，移除或替换 ${info.removed_pages.length} 个旧页身份；${info.superseded_tasks.length} 项未完任务将失效。`),
         el('p', {}, info.host_required ? '仅交接选定页，制作工具返回后才更新正文。不会在此生成图片。' : '确认后保存内容，未改页及历史对象保留。'),
         el('p', {class:'muted'}, '旧意见保留旧基准，不自动迁移。' + (info.deck_outputs_invalidated ? '实际稿件变更后整稿文件需要更新。' : '') + (info.preserved_originals_need_review ? '旧原图保留，但需要核对新内容适用性。' : '')));
+      if (frozenDifferences.length) impact.append(el('ul', {class:'content-field-differences','aria-label':'具体字段变更'}, frozenDifferences.map(text => el('li', {class:'read-text'}, text))));
       impact.append(el('p', {}, [...new Set([...info.changed_pages,...info.removed_pages])].map(id => app.summary.pages.find(p=>p.page_id===id)?.title || id).join('、')));
       impact.scrollIntoView({block:'center'});
       submit.textContent = info.host_required ? '确认并交接内容调整' : '确认内容变更'; notice.textContent = '';
