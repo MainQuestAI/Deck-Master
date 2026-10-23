@@ -1,4 +1,5 @@
 """Request-scoped plan UI; synthetic fixtures, no production/model calls."""
+import shutil
 import uuid
 
 import pytest
@@ -75,7 +76,8 @@ def test_both_workbenches_share_request_scoped_primary_actions(tmp_path, route, 
     url = server.start()
     try:
         with sync_playwright() as runtime:
-            browser = runtime.chromium.launch()
+            executable = shutil.which('chromium') or shutil.which('chromium-browser')
+            browser = runtime.chromium.launch(executable_path=executable, args=['--no-sandbox'])
             page = browser.new_page(viewport={'width': 1440, 'height': 900})
             errors = []
             page.on('pageerror', lambda error: errors.append(str(error)))
