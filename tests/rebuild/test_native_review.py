@@ -3,6 +3,7 @@ from copy import deepcopy
 import fcntl
 import json
 import os
+from pathlib import Path
 import subprocess
 import sys
 import uuid
@@ -10,6 +11,8 @@ from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 import pytest
+
+import deck_master
 
 from deck_master import cli, content_review, native_review, review_evidence, service, tasks
 from deck_master.store import Store
@@ -66,7 +69,34 @@ def _review_task(store):
                 if (task := store.read_object_json(ref)).get("review_stage") == "preproduction")
 
 
+def _isolated_runtime_identity():
+    # Anchor distribution discovery to this interpreter, not cwd/PYTHONPATH.
+    # -I deliberately ignores both; neither process injects a source path.
+    from importlib.metadata import distributions
+    import sysconfig
+
+    installed = [item.version for item in distributions(path=[sysconfig.get_path("purelib")])
+                 if item.metadata["Name"].lower().replace("_", "-") == "deck-master"]
+    return {"package_root": str(Path(deck_master.__file__).resolve().parent),
+            "code_version": deck_master.__version__, "installed_versions": sorted(installed)}
+
+
+def _assert_isolated_runtime_matches(tmp_path):
+    import inspect
+
+    probe = "import json\nfrom pathlib import Path\nimport deck_master\n" + inspect.getsource(_isolated_runtime_identity)
+    probe += "\nprint(json.dumps(_isolated_runtime_identity()))\n"
+    child = subprocess.run([sys.executable, "-I", "-c", probe],
+                           capture_output=True, text=True, cwd=tmp_path, timeout=30)
+    assert child.returncode == 0, child.stderr
+    parent_identity, child_identity = _isolated_runtime_identity(), json.loads(child.stdout)
+    assert child_identity == parent_identity, {"parent": parent_identity, "child": child_identity}
+    return parent_identity
+
+
 def test_normal_runner_receipt_survives_native_process_and_replay_is_no_call(tmp_path, native):
+    identity = _assert_isolated_runtime_matches(tmp_path)
+    assert identity["installed_versions"], identity
     project, store = _deck(tmp_path)
     assert content_review.qualify_for_production(store, store.load_document())["needs_reviewer"]
     before = deepcopy(store.load_document())
