@@ -641,7 +641,7 @@
     "wheel_sha256": "aa829471271e81db5f08992a9689acd78080c5c73bca102fa8979870a426f55d"
   },
   "remote_ci": "f0cf569b PR39860006534 success:4units3794pass2skip,render136pass1skip,browser603pass,installed255pass. Duplicatepush39859996259 failure:browser602pass1fail (fixed100ms response-capture synchronization), installed steps skipped; separate success does not replace failure.",
-  "followup_state": "RP24 bounded reuse implemented and locally validated; exact new HEAD remote CI pending. Independent 23-card review baseline remains fdb8fca959a40d54e8cc2e4881533473a1838657.",
+  "followup_state": "Second-review confirmed X1-X4 repairs integrated locally with retained RP24. Product snapshot b56cef23; source/installed/browser checks passed. No push/PR update retried after prior denial; remote remains fdb8fca9. See R2-confirmed-fixes.md.",
   "product_decision_pending": null,
   "followup_validation": {
     "candidate": "346bb9884e516d1243a95fa93804bc74ce40f228",
@@ -701,5 +701,34 @@
     "push": 39875325615,
     "pull_request": 39875331972,
     "conclusion": "success for both runs; not evidence for the new RP24 head"
+  },
+  "second_review_followup": {
+    "review_baseline": "fdb8fca959a40d54e8cc2e4881533473a1838657",
+    "product_snapshot": "b56cef23c963cf301057740660e298c1a63b9fed",
+    "report": "docs/reports/issue-repair-20261023/R2-confirmed-fixes.md",
+    "commits": {
+      "X1": "08f0ee9e6bf72f3e0ad80991eaa72208f8e78209",
+      "X2": "1f630f81b68fdca2924d340a517ed944bc4d5629",
+      "X3": "7d6836520f954eda108c3c869b10c7c4e66dfe72",
+      "X4": "b56cef23c963cf301057740660e298c1a63b9fed",
+      "RP05_RP25": "46b062c1adcd0a66171e762215a9ba06f8b91c63",
+      "RP26_evidence_mapping": "2c1ac56c087bb89e47e117f2d5eef27a78cfbec4"
+    },
+    "validation": {
+      "source": "139 passed, 8 browser deselected",
+      "installed": "135 passed, 78 modules audited",
+      "source_browser": "12 passed, 4 non-browser deselected",
+      "installed_browser": "12 passed, 4 non-browser deselected, 64 modules audited",
+      "package_files": 281,
+      "wheel_sha256": "917ab9e5aceb01886055bce897fbaec815fffedb6bb3a367dbfcd0d66e6bc49b"
+    },
+    "remote_write": "NOT_RETRIED: prior approval rejection; no new execution-side push confirmation",
+    "new_remote_ci": "NOT_RUN: local commits unpushed",
+    "remaining": [
+      "RP05 real rsvg positive cases NOT_RUN locally (executable absent)",
+      "RP25 formal target Host/site workload NOT_RUN",
+      "RP24 real Host/specialist acceptance remains separate",
+      "Local CJK blank output still environment diagnosis, no unsupported compiler/font change"
+    ]
   }
 }
