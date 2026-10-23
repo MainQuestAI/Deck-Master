@@ -185,12 +185,17 @@ def _quality_pending(store, document):
     try:
         rows = [{**store.read_object_json(ref), 'ref': ref} for ref in document.get('reviews') or []]
         artifacts = _current_artifact_digests(store, document)
+        from .effective_requirements import review_task_owners, accepted_requirements_current
+        owners = review_task_owners(store, document)
         replaced = {row['replaces']['sha256'] for row in rows if row.get('replaces')}
         for row in rows:
             if any(not finding_closed(rows, row, finding, artifacts)
                    for finding in open_findings(row) + pending_judgments(row)):
                 return True
-            if row['ref']['sha256'] not in replaced and (row.get('status') != 'pass' or dependency_problems(row, artifacts)):
+            if row['ref']['sha256'] not in replaced and (row.get('status') != 'pass'
+                    or dependency_problems(row, artifacts)
+                    or (row.get('review_stage') == 'preproduction' and not accepted_requirements_current(
+                        store, document, row, row['ref'], owners))):
                 return True
         return False
     except (StoreError, OSError, ValueError, KeyError, TypeError):

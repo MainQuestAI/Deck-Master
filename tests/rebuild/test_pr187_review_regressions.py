@@ -252,3 +252,12 @@ def test_outline_reader_and_old_incomplete_packet_are_not_retroactive(tmp_path):
             item = store.put_json_object(value)
         old['inputs'].append(item)
     assert not effective_requirements.task_requirements_current(store, store.load_document(), old)
+
+
+def test_new_effective_requirement_keeps_review_attention(tmp_path, native):
+    project, store, reading = reviewed_production(tmp_path)
+    decision(project, store, 'new-p1-condition', layers=('page_copy',))
+    work = workbench.workbench_summary(project, reading=reading, protocol='workbench_summary.v2')['current_work']
+    assert work['review']['status'] == 'missing'
+    assert work['next']['action'] == 'review_quality'
+    assert any(action['kind'] == 'prepare_stage' for action in work['next']['actions'])
