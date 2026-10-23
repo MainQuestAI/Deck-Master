@@ -207,6 +207,9 @@ export function candidateDesk(app, data) {
       const currentPage = value.candidate.result_kind === 'page' ? base.page : undefined;
       iconReview?.dispose();iconReview=null;
       drawColumns(base.stages[stage], base.revision_id, undefined, currentPage, base.stages.ppt_preview); if(stage==='svg')refreshPreview(id); drawEvidence(attempt, base); impact.replaceChildren(); renderState();
+      const acknowledged = [...app.business.completed.values()].reverse().find(result =>
+        result.revision_id === value.revision_id && result.candidate_ids?.includes(id));
+      if (acknowledged) adoptionReceipt(acknowledged, false);
     } catch (error) { if (!disposed && token === serial) { impact.replaceChildren(el('p', {class: 'field-error'}, readableError(error))); select.value = selected?.candidate_id || ''; } }
     finally { if (token === serial) { busy = false; if (!disposed) controls(); } }
   }
@@ -230,21 +233,27 @@ export function candidateDesk(app, data) {
   }
   async function submitDecision(decision) {
     if (!selected || busy || keepBusy) return; keepBusy = true; busy = true; controls();
+    const id = selected.candidate_id;
     try {
       await app.business.available();
       const latest = await get('/api/candidates/' + encodeURIComponent(selected.candidate_id));
       // 预检：最新状态已满足本次操作（另一窗口刚做过同向决定）时刷新并返回，
       // 不再提交——同向重复只会得到 unchanged，不该进入收据路径（终审补丁 P1）。
       if (latest.decision?.state === decision) {
-        live = latest; renderState();
+        if (!disposed && selected?.candidate_id === id && !app.navigationPending)
+          app.go({revision: latest.revision_id, candidate_id: id});
         return;
       }
       const input = {schema_version: 'candidate_decision.v1', project_id: app.info.project_id,
                      base_revision: latest.revision_id, candidate_id: selected.candidate_id,
                      decision, expected_decision_ref: latest.decision?.decision_ref || null};
-      await app.business.submit(app.editor, 'candidates.decide', {input, base_revision: latest.revision_id}, input, async () => {
-        live = await get('/api/candidates/' + encodeURIComponent(selected.candidate_id));
-        renderState();
+      await app.business.submit(app.editor, 'candidates.decide', {input, base_revision: latest.revision_id}, input, result => {
+        // A confirmed own decision becomes the reading link's version too.
+        // Reload must not silently reopen the pre-decision historical state.
+        // choose() still fixes both comparison sides to the candidate's own
+        // immutable basis/result; passive refresh never advances this route.
+        if (!disposed && selected?.candidate_id === id && !app.navigationPending)
+          app.go({revision: result.revision_id, candidate_id: id});
       });
     } catch (error) { if (!disposed) impact.replaceChildren(el('p', {class: 'field-error'}, readableError(error))); }
     finally { keepBusy = false; busy = false; if (!disposed) controls(); }
@@ -269,14 +278,21 @@ export function candidateDesk(app, data) {
     } catch (error) { currentPlan = null; if (!disposed) impact.replaceChildren(el('div', {class: 'stack'}, el('p', {class: 'field-error'}, readableError(error)), errorItems(error))); }
     finally { busy = false; if (!disposed) controls(); }
   }
+  function adoptionReceipt(result, prior) {
+    impact.replaceChildren(el('p', {class: 'success-note'}, `${prior ? '先前提交的候选' : '这个候选'}已采用到 ${version(result.revision_id)}。${prior ? '当前比较选择未变。' : ''}本页下游与整稿待更新，请继续单页预览、审图和整稿制作。`),
+      button('查看任务与交付', () => app.go({surface: 'runs', revision: result.revision_id, candidate_id: null})));
+  }
   async function adoptSelected() {
     if (busy || !currentPlan || planInvalid) return; busy = true; controls(); const value = structuredClone(currentPlan);
     try {
       await adoptCandidates(app, app.editor, value, async result => {
         currentPlan = null; planInvalid = false;
         const prior = selected?.candidate_id !== value.selections[0].candidate_id;
-        impact.replaceChildren(el('p', {class: 'success-note'}, `${prior ? '先前提交的候选' : '这个候选'}已采用到 ${version(result.revision_id)}。${prior ? '当前比较选择未变。' : ''}本页下游与整稿待更新，请继续单页预览、审图和整稿制作。`),
-          button('查看任务与交付', () => app.go({surface: 'runs', revision: result.revision_id, candidate_id: null})));
+        if (!disposed && !prior && !app.navigationPending) {
+          app.go({revision: result.revision_id, candidate_id: selected.candidate_id});
+          return;
+        }
+        adoptionReceipt(result, prior);
         const id = selected?.candidate_id, state = await get('/api/candidates/' + encodeURIComponent(id));
         if (!disposed && selected?.candidate_id === id) { live = state; renderState(); }
       });
@@ -394,6 +410,9 @@ export function candidateBatch(app) {
     try {
       const value = await get('/api/candidates' + (app.historical ? revisionQuery(app.route.revision) : '')); if (disposed || busy) return;
       records = value.candidates; revision = value.revision_id;
+      const acknowledged = [...app.business.completed.values()].reverse().find(result =>
+        result.revision_id === revision && result.candidate_ids?.length);
+      if (acknowledged && !impact.childNodes.length) batchReceipt(acknowledged);
       const previousGroup=group.value,groups=new Map();
       for(const row of records)if(!groups.has(groupKey(row)))groups.set(groupKey(row),row);
       group.replaceChildren(el('option',{value:''},'全部修改组'),...[...groups].map(([id,row])=>el('option',{value:id},id==='ungrouped'?'独立试作任务':`${row.instruction?.slice(0,36)||'修改组'} · ${id.slice(-6)}`)));
@@ -421,13 +440,17 @@ export function candidateBatch(app) {
     } catch (error) { if (!disposed) impact.replaceChildren(el('div', {class: 'stack'}, el('p', {class: 'field-error'}, readableError(error)), errorItems(error))); }
     finally { busy = false; if (!disposed) controls(); }
   }
+  function batchReceipt(result) {
+    impact.replaceChildren(el('p', {class: 'success-note'}, `已整批采用 ${result.candidate_ids.length} 页到 ${version(result.revision_id)}；其它页保留。下游预览、整稿与审阅待更新。`));
+  }
   async function adoptSelection() {
     if (busy || !currentPlan || currentPlan.base_revision !== revision) return; busy = true; controls(); const value = structuredClone(currentPlan);
     try {
       await adoptCandidates(app, app.editor, value, result => {
         currentPlan = null; revision = result.revision_id;
         for (const id of result.candidate_ids) selected.delete(id);
-        persist(); impact.replaceChildren(el('p', {class: 'success-note'}, `已整批采用 ${result.candidate_ids.length} 页到 ${version(result.revision_id)}；其它页保留。下游预览、整稿与审阅待更新。`));
+        persist(); batchReceipt(result);
+        if (!disposed && !app.navigationPending) app.go({revision: result.revision_id});
       });
     } catch (error) { if (!disposed) impact.replaceChildren(el('p', {class: 'field-error'}, readableError(error))); }
     finally { busy = false; if (!disposed) { controls(); refresh(); } }

@@ -5,6 +5,7 @@ projection only determines whether either belongs in the current action queue.
 Unknown calls are handled separately and must never disappear with old work.
 """
 from .snapshots import READ_FAILURES
+from .models import canonical_json_bytes
 
 
 def relation(status, reason, **facts):
@@ -58,6 +59,7 @@ class CurrentRelationships:
         self.store = _ReaderStore(ctx)
         self.tasks = tasks
         self.task_cache, self.candidate_cache = {}, {}
+        self.basis_cache = {}
         self.kept_ids = None
         self.task_positions = {task_id: i for i, task_id in enumerate(tasks)}
         refs = [ref for entry in self.document.get('pages', []) for ref in
@@ -126,7 +128,18 @@ class CurrentRelationships:
             else:
                 from .candidates import basis_state
                 try:
-                    state = basis_state(self.store, self.document, candidate, task, read_snapshot=self.ctx.read_snapshot)
+                    # Several returned candidates can consume the exact same
+                    # task/Page/Plan inputs. Revalidate that basis once within
+                    # this immutable read, not once per output identity. Keep
+                    # every field consumed by basis_state(adopted=False), and
+                    # never share this cache across snapshots or requests.
+                    basis_key = canonical_json_bytes({field: candidate.get(field) for field in (
+                        'task_id', 'result_kind', 'page_id', 'stage', 'generation_basis',
+                        'content_basis', 'target_ref')})
+                    if basis_key not in self.basis_cache:
+                        self.basis_cache[basis_key] = basis_state(
+                            self.store, self.document, candidate, task, read_snapshot=self.ctx.read_snapshot)
+                    state = self.basis_cache[basis_key]
                     result = candidate_relationship(self.document, task, state)
                 except READ_FAILURES:
                     self.ctx.read_failed = True

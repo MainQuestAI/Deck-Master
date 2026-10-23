@@ -89,6 +89,50 @@ def test_snapshot_damage_invalidates_warm_relationship_projection(store):
         path.write_bytes(original)
 
 
+def test_large_candidate_history_checks_shared_basis_once_per_snapshot(store, monkeypatch):
+    candidate(store, 'p01')
+    doc = store.load_document()
+    original = store.read_object_json(doc['candidates'][0])
+    index = next(i for i, ref in enumerate(doc['tasks'])
+                 if store.read_object_json(ref)['task_id'] == original['task_id'])
+    task = store.read_object_json(doc['tasks'][index])
+    for number in range(499):
+        item = {**copy.deepcopy(original), 'candidate_id': f'history-result-{number}'}
+        ref = store.put_json_object(item)
+        doc['candidates'].append(ref)
+        task['candidate_refs'].append(ref)
+    doc['tasks'][index] = store.put_json_object(task)
+    commit(store, doc, 'synthetic-shared-basis-history')
+    calls = []
+    assess = candidates.basis_state
+
+    def counted(*args, **kwargs):
+        calls.append(args[2]['candidate_id'])
+        return assess(*args, **kwargs)
+
+    monkeypatch.setattr(candidates, 'basis_state', counted)
+    summary = workbench.workbench_summary(store.project_root)
+    assert len(calls) == 1
+    assert summary['candidates']['pending_count'] == 500
+    assert actions(summary, 'compare_candidates')[0]['enabled']
+    calls.clear()
+    row = run_desk.detail(store.project_root, task_id=task['task_id'])['task']
+    assert len(calls) == 1 and len(row['pending_candidate_refs']) == 500
+    # A changed Page creates a new read scope; no previous "current" result
+    # survives. The retained outputs stay unchanged and are still available.
+    doc = store.load_document()
+    page = store.read_object_json(doc['pages'][0]['page'])
+    page['customer_visible']['title'] = 'Changed after shared-basis read'
+    doc['pages'][0]['page'] = store.put_json_object(page)
+    commit(store, doc, 'synthetic-shared-basis-page-change')
+    calls.clear()
+    summary = workbench.workbench_summary(store.project_root)
+    assert len(calls) == 1
+    assert summary['candidates']['historical_count'] == 500
+    assert not actions(summary, 'compare_candidates')
+    assert len(store.load_document()['candidates']) == 500
+
+
 def test_genuine_current_failure_remains_actionable(store):
     task = dispatch(store)
     doc = store.load_document()

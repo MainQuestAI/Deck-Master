@@ -21,7 +21,7 @@ export function methodLibrary(app){
   let disposed=false,serial=0,bodySerial=0,current=null;app.disposables.push(()=>{disposed=true;serial++;bodySerial++;draft.dispose();});
   function context(){return mode.value==='project'?{mode:'project',revision:app.route.revision}:{mode:'independent',role:role.value,phase:phase.value,review_units:role.value==='deck-review'?[...reviewUnits]:[]};}
   function retain(){draft.draft.content.method_preparation={ids:[...select],context:context()};draft.changed();current=null;result.replaceChildren();body.textContent='';}
-  for(const input of [mode,role,phase])input.addEventListener('change',()=>{if(input===phase||input===role)reviewUnits=[...reviewScopes[phase.value]];showScope();retain();load();});
+  for(const input of [mode,role,phase])input.addEventListener('change',()=>{if(input===phase||input===role)reviewUnits=[...(reviewScopes[phase.value]||reviewScopes.review)];showScope();retain();load();});
   async function load(){bodySerial++;body.textContent='';const ticket=++serial;status.textContent='正在核对目录与范围…';try{const value=await post('/api/method-library/preview',{context:context(),selected_resource_ids:[...select]});if(disposed||ticket!==serial)return;current=value;status.textContent=value.browse_status==='partial'?'部分资源暂不可读，选择已保留；核实完备前不可复制。':value.selection_status==='validated'?'准备已核对，尚未应用。':'目录可浏览；当前没有可准备的新阶段。';
     // Keep the clicked checkbox alive while its dependent preview returns.
     const rows=new Map([...list.children].map(row=>[row.dataset.resourceId,row]));
