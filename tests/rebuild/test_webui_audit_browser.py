@@ -151,7 +151,7 @@ def test_inputs_keep_other_entry_drafts_and_confirm_all_differences(tmp_path, mo
         page = browser.new_page()
         try:
             page.goto(server.start()+'studio/')
-            page.get_by_role('button', name='内容与来源', exact=True).click()
+            page.get_by_role('button', name='内容与页序', exact=True).click()
             editor = page.locator('.materials-adjust-form')
             if mode in ('task', 'mixed'):
                 page.get_by_role('button', name='修改任务要求', exact=True).click()

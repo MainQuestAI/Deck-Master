@@ -53,7 +53,7 @@ function sourceBody(app, data) {
   const links = (data.content_plan?.goals || []).flatMap(g => g.source_links || []);
   if (app.health.ui_capabilities?.includes('content_ops.v1')) node.append(...links.map(link => button('查看材料 ' + (link.locator || '原文'), () => sourceReader(app, link, data.revision_id))));
   node.append(data.sources.citations.length ? el('pre', {class: 'evidence-json'}, JSON.stringify(data.sources.citations, null, 2)) : el('p', {class: 'muted'}, '此页未记录材料引用，不能据此补造来源。'),
-    button('回到此版本的内容与来源', () => { const dialog = document.querySelector('#modal'); if (dialog.open) dialog.close(); app.go({surface: 'content', revision: data.revision_id}); }));
+    button('回到此版本的内容与页序', () => { const dialog = document.querySelector('#modal'); if (dialog.open) dialog.close(); app.go({surface: 'content', revision: data.revision_id}); }));
   return node;
 }
 function sourceView(app, data) {

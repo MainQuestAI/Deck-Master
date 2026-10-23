@@ -33,7 +33,7 @@ def test_seven_surfaces_at_all_acceptance_sizes(workbench_page, tmp_path):
     page.on('pageerror', lambda error: errors.append(str(error)))
     checks = []
     try:
-        for surface, title in [('launcher', '项目'), ('overview', '制作总览'), ('content', '内容与来源'),
+        for surface, title in [('launcher', '项目'), ('overview', '制作总览'), ('content', '内容与页序'),
                                ('gallery', '整稿画廊'), ('page', None), ('style', '风格校准'), ('runs', '任务与交付')]:
             if surface == 'launcher':
                 page.goto(launcher['url'])
@@ -170,8 +170,8 @@ def test_readonly_sample_keeps_business_controls_disabled(workbench_page, tmp_pa
         page.get_by_role('button', name='风格校准', exact=True).click()
         expect(page.get_by_role('button', name='检查风格要求', exact=True)).to_be_disabled()
         expect(page.get_by_role('combobox', name='风格参考原图')).to_be_disabled()
-        page.get_by_role('button', name='内容与来源', exact=True).click()
-        expect(page.get_by_role('heading', name='内容与来源', exact=True)).to_be_visible()
+        page.get_by_role('button', name='内容与页序', exact=True).click()
+        expect(page.get_by_role('heading', name='内容与页序', exact=True)).to_be_visible()
         assert page.get_by_role('button', name='添加材料', exact=True).count() == 0
         assert store.read_current() == before
     finally:

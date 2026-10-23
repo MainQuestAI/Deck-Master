@@ -1,4 +1,4 @@
-export const surfaces = {overview: '制作总览', content: '内容与来源', gallery: '整稿画廊', style: '风格校准', runs: '任务与交付'};
+export const surfaces = {overview: '制作总览', content: '内容与页序', gallery: '整稿画廊', style: '风格校准', runs: '任务与交付'};
 export const layers = {source: '来源', content: '逐页稿', original_image: '原图', svg: 'SVG', ppt: 'PPT', prepared_prompt: '预备提示词', submitted_prompt: '实际提示词'};
 // R4（深度复审）：任务与交付的四个子区是工作区上下文，随链接保存与恢复。
 export const runsAreas = ['tasks', 'decisions', 'versions', 'files'];

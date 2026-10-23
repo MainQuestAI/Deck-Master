@@ -204,8 +204,8 @@ def test_style_transfer_preserves_exact_context_and_reference_target_conflict(ba
     from playwright.sync_api import expect
     page, server, path, store = batch_browser
     before = store.read_current()
-    page.get_by_role('group', name='选页制作动作', exact=True).get_by_role('button', name='对选页校准风格', exact=True).click()
     select(page, 2, 3)
+    page.get_by_role('group', name='选页制作动作', exact=True).get_by_role('button', name='对选页校准风格', exact=True).click()
     page.get_by_role('combobox', name='批量固定参考原图', exact=True).select_option('p02')
     expect(page.locator('.batch-actions')).to_contain_text('参考页同时在目标中')
     assert page.get_by_role('checkbox', name='选择第 02 页', exact=True).is_checked()

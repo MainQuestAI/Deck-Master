@@ -112,7 +112,7 @@ def test_migrated_components_keep_targets_adjacency_and_state_text(ux07_browser,
     fonts = page.evaluate('() => getComputedStyle(document.body).fontFamily')
     assert 'PingFang SC' in fonts or 'Noto Sans CJK SC' in fonts or 'Microsoft YaHei' in fonts, fonts
     for surface, slug, selector in [('整稿画廊', 'gallery', '.gallery-controls button'),
-                                    ('内容与来源', 'content', '.content-sources button')]:
+                                    ('内容与页序', 'content', '.content-sources button')]:
         page.get_by_role('button', name=surface, exact=True).click()
         page.get_by_role('heading', name=surface, exact=True).wait_for()
         page.wait_for_timeout(300)

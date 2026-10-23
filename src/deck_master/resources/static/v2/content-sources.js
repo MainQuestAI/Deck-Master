@@ -9,7 +9,7 @@ import {DraftEditor} from './drafts.js';
 import {contentOperation, contentPanel as panel, inputField, sourceReader} from './content-edit.js';
 
 export function content(app, data) {
-  if (!app.health.ui_capabilities?.includes('content_ops.v1')) return empty('核心需要升级', '内容与来源编辑需要支持内容操作的核心；已存稿件和原有命令仍可读取。');
+  if (!app.health.ui_capabilities?.includes('content_ops.v1')) return empty('核心需要升级', '内容与页序编辑需要支持内容操作的核心；已存稿件和原有命令仍可读取。');
   const plan = data.plan, inputs = data.inputs, pages = app.summary.pages, pageMap = new Map(pages.map(p => [p.page_id,p]));
   const modernPlan = plan?.input?.schema_version === 'content_plan_input.v2';
   const ref = plan?.ref || null;
@@ -427,7 +427,7 @@ export function content(app, data) {
     if(focus){const title=workAreas.find(p=>!p.hidden)?.querySelector('h2');if(title){title.tabIndex=-1;title.focus();}}
   }
   if(studio)operationHome.hidden=true;
-  const node=el('div',{class:'content-sources stack'},heading('内容与来源','先看材料与论证，再改逐页稿。直接改内容和交接制作分别保存。',!app.readonly&&el('div',{class:'row wrap'},button('添加材料',openAdjustForm,false,{disabled:!inputs}),button('修改任务要求',event=>openMaterialEditor('task',null,event.currentTarget),false,{disabled:!inputs}))),
+  const node=el('div',{class:'content-sources stack'},heading('内容与页序','先看材料与论证，再改逐页稿。直接改内容和交接制作分别保存。',!app.readonly&&el('div',{class:'row wrap'},button('添加材料',openAdjustForm,false,{disabled:!inputs}),button('修改任务要求',event=>openMaterialEditor('task',null,event.currentTarget),false,{disabled:!inputs}))),
     alignment,studio?null:hostImpact,adjustDetails,areaNav,
     studio?workAreas:el('div',{class:'stack'},overview,el('details',{class:'panel content-order-panel'},el('summary',{class:'panel-head'},'逐页稿与顺序 · '+pages.length+' 页'),el('div',{class:'panel-body'},pageTools)),
       ref?panel('内容计划与依据',planEvidence,el('details',{},el('summary',{},'编辑内容计划'),planTools)):panel('内容计划',el('p',{},'尚未记录完整内容计划。'))),

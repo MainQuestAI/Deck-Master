@@ -57,7 +57,7 @@ def test_main_layer_keeps_business_language_on_every_surface(obligations_browser
     page.goto(server.start())
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()
     seen = {}
-    for name, ready in [('制作总览', '制作总览'), ('内容与来源', '内容与来源'), ('整稿画廊', '整稿画廊'),
+    for name, ready in [('制作总览', '制作总览'), ('内容与页序', '内容与页序'), ('整稿画廊', '整稿画廊'),
                         ('风格校准', '风格校准'), ('任务与交付', '任务与交付')]:
         page.get_by_role('button', name=name, exact=True).click()
         page.get_by_role('heading', name=ready, exact=True).wait_for()

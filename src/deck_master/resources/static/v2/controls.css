@@ -1,0 +1,66 @@
+/* Control recipes own appearance; work surfaces own placement and width.
+   Compatibility classes (quiet/small/text-link) intentionally remain bounded
+   actions until each caller declares navigation or view-selection semantics. */
+button, .download-link {
+  min-height:var(--dm-size-control-default);
+  padding:5px 11px;
+  border:1px solid var(--dm-color-border-control);
+  border-radius:var(--dm-shape-radius-control);
+  background:var(--dm-color-canvas);
+  color:var(--dm-color-text);
+  font-family:var(--font-body);
+  font-size:var(--dm-type-size-control);
+  line-height:var(--dm-type-line-control);
+  font-weight:var(--dm-type-weight-medium);
+  box-shadow:none;
+  cursor:pointer;
+  text-decoration:none;
+  transition:background var(--dm-motion-fast) var(--dm-motion-ease), border-color var(--dm-motion-fast) var(--dm-motion-ease);
+}
+button:hover:not(:disabled), .download-link:hover {background:var(--dm-color-surface-hover);border-color:var(--dm-color-text-secondary)}
+button:active:not(:disabled) {background:var(--dm-color-selected)}
+button.primary {min-height:var(--dm-size-control-comfort);padding:7px 13px;background:var(--dm-color-action);border-color:var(--dm-color-action);color:var(--dm-color-on-action)}
+button.primary:hover:not(:disabled) {background:var(--dm-color-action-hover);border-color:var(--dm-color-action-hover);color:var(--dm-color-on-action)}
+button.primary:active:not(:disabled) {background:var(--dm-color-action-pressed)}
+button:disabled,button.primary:disabled {opacity:1;cursor:not-allowed;background:var(--dm-color-surface);color:var(--dm-color-text-muted);border-color:var(--dm-color-border)}
+button[aria-busy=true] {cursor:progress}
+button.danger {color:var(--dm-color-danger);border-color:var(--dm-color-danger)}
+button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible {
+  outline:var(--dm-shape-focus-width) solid var(--dm-color-focus);
+  outline-offset:var(--dm-shape-focus-offset);box-shadow:none;
+}
+.action-group {gap:var(--dm-layout-action-gap)}
+.row.wrap {gap:var(--dm-layout-action-gap)}
+.icon-button {position:relative;min-width:var(--dm-size-control-default);padding:5px;display:inline-flex;align-items:center;justify-content:center}
+.icon-button .ui-icon {width:var(--dm-size-icon-md);height:var(--dm-size-icon-md)}
+.object-actions {display:flex;justify-content:flex-end}
+.action-popover {inset:auto;margin:0;padding:6px;border:1px solid var(--dm-color-border);border-radius:var(--dm-shape-radius-overlay);background:var(--dm-color-canvas);color:var(--dm-color-text);box-shadow:var(--dm-elevation-menu);max-height:50vh;overflow:auto}
+.action-popover:popover-open {display:flex;flex-direction:column;gap:4px}
+.action-popover button {width:100%;text-align:left;border-color:transparent}
+.matrix .matrix-next .icon-button {width:32px;min-width:32px}
+
+/* Navigation and view selection are not primary business actions. */
+.nav button {min-height:var(--dm-size-nav);padding:7px 12px;border-color:transparent;background:transparent;color:var(--dm-color-text-secondary)}
+.nav button:hover:not(:disabled) {background:var(--dm-color-surface-hover);border-color:transparent}
+.nav button.active,.nav button.active:hover {background:var(--dm-color-selected);border-color:transparent;color:var(--dm-color-text);font-weight:600;box-shadow:none}
+:is(.segmented,.page-tools-switcher,.runs-subareas,.studio-overview-actions) button {min-height:var(--dm-size-control-default);padding:5px 11px;background:transparent;border-color:transparent;color:var(--dm-color-text-secondary)}
+:is(.segmented,.page-tools-switcher,.runs-subareas,.studio-overview-actions) button:is(.active,[aria-pressed=true]) {background:var(--dm-color-canvas);border-color:var(--dm-color-border-control);color:var(--dm-color-text);box-shadow:none}
+.chain button {min-height:var(--dm-size-tab);padding:7px 12px;border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;color:var(--dm-color-text-secondary)}
+.chain button.active {background:var(--dm-color-canvas);border-bottom-color:var(--dm-color-action);color:var(--dm-color-text)}
+
+/* Object entry points stay identifiable and preserve independent selection. */
+.matrix .title-button {padding:5px 0;border:0;background:transparent;color:var(--dm-color-text);font-size:var(--dm-type-size-body);line-height:var(--dm-type-line-body);text-decoration:underline;text-underline-offset:3px;text-align:left}
+.matrix .cell-btn {padding:5px 6px;min-height:var(--dm-size-control-default);border:1px solid var(--dm-color-border);border-radius:var(--dm-shape-radius-control);background:var(--dm-color-canvas);color:var(--dm-color-text-secondary);font-size:var(--dm-type-size-caption);line-height:var(--dm-type-line-caption)}
+button:is(.slide-cover,.image-button,.reference-zoom) {padding:0;min-height:0;border:1px solid var(--dm-color-border);border-radius:var(--dm-shape-radius-control);background:var(--dm-color-canvas);box-shadow:none}
+button:is(.slide-cover,.image-button,.reference-zoom):hover:not(:disabled) {border-color:var(--dm-color-border-control);background:var(--dm-color-canvas);box-shadow:none}
+
+@media (pointer:coarse),(max-width:560px) {
+  button,.download-link,.nav button,.chain button,.matrix .title-button,.matrix .cell-btn,
+  :is(.segmented,.page-tools-switcher,.runs-subareas,.studio-overview-actions) button,
+  button.primary {min-height:var(--dm-size-target-touch)}
+  .icon-button {min-width:var(--dm-size-target-touch)}
+  .matrix .matrix-next .icon-button {width:44px;min-width:44px}
+  .page-pager button {font-size:0;padding:0}
+  button:is(.slide-cover,.image-button,.reference-zoom) {min-height:0}
+}
+@media (prefers-reduced-motion:reduce) {button,.download-link {transition:none}}

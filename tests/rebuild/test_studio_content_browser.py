@@ -43,7 +43,7 @@ def test_studio_content_order_preview_cancel_and_plan_commit(tmp_path):
         page.on('pageerror',lambda error:errors.append(str(error)))
         page.on('request',lambda r:requests.append({'method':r.method,'url':r.url.split('/api/')[-1],'body':r.post_data}) if '/api/' in r.url and r.method=='POST' else None)
         try:
-            page.goto(server.start()+'studio/');page.get_by_role('button',name='内容与来源',exact=True).click()
+            page.goto(server.start()+'studio/');page.get_by_role('button',name='内容与页序',exact=True).click()
             nav=page.get_by_role('navigation',name='内容工作区',exact=True)
             expect(page.locator('.studio-content-area:visible')).to_have_count(1)
             expect(page.locator('#content-area-overview')).to_be_visible()
@@ -188,7 +188,7 @@ def test_studio_content_overview_starts_with_chapters_and_materials(tmp_path):
     with sync_playwright() as runtime:
         browser=runtime.chromium.launch();page=browser.new_page(viewport={'width':1440,'height':900});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
         try:
-            page.goto(server.start()+'studio/');page.get_by_role('button',name='内容与来源',exact=True).click()
+            page.goto(server.start()+'studio/');page.get_by_role('button',name='内容与页序',exact=True).click()
             chapter=page.locator('#content-area-overview .outline-block').first
             material_card=page.locator('.studio-material-card').first
             expect(chapter).to_be_visible();expect(material_card).to_be_visible();expect(page.locator('.content-impact')).to_have_count(0)
@@ -233,7 +233,7 @@ def test_studio_goal_material_links_keep_fixed_source_versions_and_recover(tmp_p
         browser=runtime.chromium.launch();page=browser.new_page(viewport={'width':1440,'height':900});page.on('pageerror',lambda e:errors.append(str(e)))
         page.on('request',lambda r:requests.append({'method':r.method,'url':r.url.split('/api/')[-1],'body':r.post_data}) if '/api/' in r.url and r.method=='POST' else None)
         try:
-            base=server.start();page.goto(base+'studio/');page.get_by_role('button',name='内容与来源',exact=True).click()
+            base=server.start();page.goto(base+'studio/');page.get_by_role('button',name='内容与页序',exact=True).click()
             page.get_by_role('navigation',name='内容工作区').get_by_role('button',name='内容计划',exact=True).click()
             card=page.locator('.studio-goal-card').first
             # A controlled read failure leaves the source unselectable and offers retry.
@@ -315,7 +315,7 @@ def test_studio_split_merge_fields_preview_cancel_refresh_and_dispatch(tmp_path,
         browser=runtime.chromium.launch();page=browser.new_page(viewport={'width':1440,'height':900});page.on('pageerror',lambda e:errors.append(str(e)))
         page.on('request',lambda r:requests.append({'url':r.url.split('/api/')[-1],'body':r.post_data}) if '/api/' in r.url and r.method=='POST' else None)
         try:
-            page.goto(server.start()+'studio/');page.get_by_role('button',name='内容与来源',exact=True).click()
+            page.goto(server.start()+'studio/');page.get_by_role('button',name='内容与页序',exact=True).click()
             nav=page.get_by_role('navigation',name='内容工作区');nav.get_by_role('button',name='逐页编辑与顺序',exact=True).click()
             for index in range(count):page.locator('.content-order-row').nth(index).get_by_role('checkbox').check()
             mode=page.get_by_role('group',name='选页调整方式').get_by_role('button',name=label,exact=True);mode.click();expect(mode).to_have_attribute('aria-pressed','true')
@@ -370,7 +370,7 @@ def test_old_poll_cannot_invalidate_newly_read_content_plan(tmp_path, old_poll_e
         page.on('pageerror', lambda error: errors.append(str(error)))
         try:
             page.goto(server.start())
-            page.get_by_role('button', name='内容与来源', exact=True).click()
+            page.get_by_role('button', name='内容与页序', exact=True).click()
             page.get_by_role('button', name='逐页编辑与顺序', exact=True).click()
             page.locator('.content-order-row').first.get_by_role('button', name=re.compile('^向后移动 ')).click()
             page.get_by_role('button', name='预览页序变更', exact=True).click()

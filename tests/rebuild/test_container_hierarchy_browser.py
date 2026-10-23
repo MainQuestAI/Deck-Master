@@ -29,13 +29,13 @@ def test_layout_sections_and_style_routes(workbench_page, tmp_path, width, heigh
         assert all(s['border']=='0px' and s['shadow']=='none' for s in sections), sections
         page.screenshot(path=str(out/(name+'.png')),full_page=True)
         records.append({'name':name,'sections':sections,'url':page.url})
-    for title in ['制作总览','内容与来源','整稿画廊','任务与交付','风格校准']:
+    for title in ['制作总览','内容与页序','整稿画廊','任务与交付','风格校准']:
         page.locator('.sidebar').get_by_role('button',name=title,exact=True).click()
         expect(page.get_by_role('heading',name=title,exact=True)).to_be_visible()
         if title=='制作总览':
             # The first matrix group contains pages 1–15, spanning two chapters.
             expect(page.locator('.matrix .chapter-row')).to_have_text(['项目与材料','逐页制作'])
-        if title=='内容与来源':
+        if title=='内容与页序':
             for index,chapter in enumerate(chapters):
                 outline=page.locator('.outline-block').filter(has=page.get_by_role('heading',name=chapter['title'],exact=True))
                 expect(outline.locator('.outline-source-note')).to_contain_text(f'第 {index*8+1}–{index*8+8} 页')
@@ -87,7 +87,7 @@ def test_single_page_faces_and_content_sections(workbench_page,tmp_path,width,he
         page.evaluate('async()=>{await document.fonts.ready;scrollTo({top:0,behavior:"instant"})}')
         assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),name
         page.screenshot(path=str(out/(name+'.png')),full_page=True)
-    page.locator('.sidebar').get_by_role('button',name='内容与来源',exact=True).click()
+    page.locator('.sidebar').get_by_role('button',name='内容与页序',exact=True).click()
     for area in ['方案概览','逐页编辑与顺序','内容计划','工作笔记']:
         page.locator('.studio-content-areas').get_by_role('button',name=area,exact=True).click()
         shot('内容-'+area)

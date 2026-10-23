@@ -1,5 +1,5 @@
 import {get, revisionQuery, canonical} from './api.js';
-import {el, button, heading, empty, version, sortHeading, icon, disabledReason, modal, downloadJSON} from './dom.js';
+import {el, button, heading, empty, version, sortHeading, icon, disabledReason, modal, downloadJSON, actionMenu} from './dom.js';
 import {imageView} from './images.js';
 import {layers} from './routes.js';
 import {stageKey} from './gallery.js';
@@ -61,7 +61,7 @@ function todoButton(app, action, primary = false) {
   const blocked = action.enabled === false;
   const precise = app.health.ui_capabilities?.includes('action_targets.v1');
   return disabledReason(button((nextLabels[action.kind] || '查看') + (precise ? '' : ' · 通用入口'), () => openAction(app, action, actionRoute(action)), primary,
-    {disabled: blocked}), blocked ? '该项记录暂不可读（已隔离），先处理其它待办。' : '');
+    {disabled: blocked, 'data-priority-action': primary ? 'true' : null}), blocked ? '该项记录暂不可读（已隔离），先处理其它待办。' : '');
 }
 
 function todoPanel(app) {
@@ -151,19 +151,19 @@ export function overview(app, data = {}) {
   root.append(heading('制作总览',
     `${pages.length} 页内容 · ${blueprintCount} 页已有原图`,
     el('div', {class:'row wrap'}, studio && button([icon('attention'), '状态说明'], () => modal('如何理解制作状态', el('p', {}, explanation))),
-      button([studio && icon('gallery'), '查看整稿'], () => app.go({surface: 'gallery'}), true))));
+      button([studio && icon('gallery'), '查看整稿'], () => app.go({surface: 'gallery'})))));
   if (!studio) root.append(el('details', {class: 'overview-state-help'}, el('summary', {}, '如何理解制作状态'), el('p', {}, explanation)));
   const todo=todoPanel(app);root.append(todo);
   const todoFacts=()=>canonical([app.latest?.revision_id,app.info.control_revision_id,app.info.completion,app.info.collaboration?.request,app.summary.reading_etag]);
   let shownFacts=todoFacts();
   const sync=event=>{const next=event.detail;if(next.revision_id===app.summary.revision_id&&next.reading_etag!==app.summary.reading_etag)app.summary=next;
-    const facts=todoFacts();if(facts!==shownFacts){shownFacts=facts;root.querySelector('.overview-todos')?.replaceWith(todoPanel(app));}};
+    const facts=todoFacts();if(facts!==shownFacts){shownFacts=facts;root.querySelector('.overview-todos')?.replaceWith(todoPanel(app));root.querySelector('[data-priority-action]')?.classList.toggle('primary',!Number(root.dataset.selection));}};
   app.root.addEventListener('summary-refreshed',sync);app.disposables.push(()=>app.root.removeEventListener('summary-refreshed',sync));
-  root.append(matrixPanel(app, data.overview));
+  root.append(matrixPanel(app, data.overview, root));
   return root;
 }
 
-function matrixPanel(app, saved) {
+function matrixPanel(app, saved, overviewRoot) {
   const pages = app.summary.pages;
   const studio = document.documentElement.dataset.workbenchUi === 'studio';
   let matrixPage = 1;
@@ -315,6 +315,9 @@ function matrixPanel(app, saved) {
     // Batch eligibility and preference messages still synchronize on every
     // refresh. Equal matrix facts must not replace keyboard-owned controls.
     batch.render();
+    batch.toolbar.hidden = studio && !selected.size;
+    overviewRoot.dataset.selection = String(selected.size);
+    overviewRoot.querySelector('[data-priority-action]')?.classList.toggle('primary', !selected.size);
     preferenceStatus.textContent = memory.message; compareButton.hidden = !memory.error; downloadButton.hidden = !memory.error;
     if (preferenceStatus.parentElement) preferenceStatus.parentElement.hidden = studio && memory.supported && !memory.error;
     const nextTableState = canonical([filter, search, ascending, matrixPage, list.map(page => [page.page_id,
@@ -327,7 +330,7 @@ function matrixPanel(app, saved) {
       sortHeading('页面', ascending ? 'ascending' : 'descending', () => { ascending = !ascending; batch.invalidate(); saveReading(); render(); }),
       el('th', {scope: 'col'}, layers.content), el('th', {scope: 'col'}, '提示词'),
       el('th', {scope: 'col'}, layers.original_image), el('th', {scope: 'col'}, layers.svg),
-      el('th', {scope: 'col'}, layers.ppt), el('th', {scope: 'col'}, '下一步'));
+      el('th', {scope: 'col'}, layers.ppt), el('th', {scope: 'col'}, '页面操作'));
     const body = el('tbody');
     if (!list.length) {
       body.append(el('tr', {}, el('td', {colspan: 8}, el('div', {class: 'matrix-empty stack'},
@@ -369,7 +372,9 @@ function matrixPanel(app, saved) {
         el('td', {}, cellButton(page, 'original_image', cellView(stageState(page.stages[stageKey.original_image])))),
         el('td', {}, cellButton(page, 'svg', cellView(stageState(page.stages[stageKey.svg])))),
         el('td', {}, cellButton(page, 'ppt', cellView(stageState(page.stages[stageKey.ppt])))),
-        el('td', {class: 'matrix-next'}, nextButton(page)));
+        el('td', {class: 'matrix-next'}, actionMenu(`第 ${number} 页操作`, [nextButton(page),
+          button('阅读正文', () => app.go({surface: 'page', page_id: page.page_id, layer: 'content'})),
+          button('核对来源', () => app.go({surface: 'page', page_id: page.page_id, layer: 'source'}))])));
       body.append(row);
     }
     table.replaceChildren(el('thead', {}, head), body);

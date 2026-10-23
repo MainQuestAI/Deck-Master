@@ -1,34 +1,28 @@
 /* OpenDesign workspace, using the core's real objects and transaction components. */
-html[data-workbench-ui=studio] {
-  --font-body:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
-  --font-display:var(--font-body);--fg:#0d0d0d;--muted:#6e6e6e;
-  --bg:#fff;--surface:#f5f5f5;--surface-warm:#fafafa;--border:#e5e5e5;--border-soft:#ededed;
-  --accent:#17191c;--accent-hover:#30343a;--radius-sm:9px;--radius-md:13px;
-  --studio-ground:#ffffff;--studio-line:#e1e4e8;--studio-ink:#17191c;
-}
-.studio-workspace {background:#ffffff;font-family:var(--font-body);font-size:14px;color:var(--fg)}
+
+.studio-workspace {background:var(--dm-color-workspace);font-family:var(--font-body);font-size:var(--dm-type-size-body);line-height:var(--dm-type-line-body);color:var(--fg)}
 .studio-workspace .shell {grid-template-columns:224px minmax(0,1fr)}
 .studio-workspace .sidebar {width:224px;padding:28px 16px;background:var(--surface-warm);border-right:1px solid var(--border)}
 .studio-workspace .logo {margin:0 6px 30px;padding:0;justify-content:flex-start}
 .studio-workspace .brand-logo {width:162px;height:auto}
 .studio-workspace .side-project {margin:0 8px 24px;padding:0;gap:8px}
 .studio-workspace .side-project strong {font-size:14px;line-height:1.6}
-.studio-workspace .nav {gap:8px}
-.studio-workspace .nav button {min-height:48px;border-radius:9px;padding:12px;gap:12px;font-size:14px;border:1px solid transparent}
-.studio-workspace .nav button.active {background:#fff;color:var(--fg);border-color:var(--border-soft);font-weight:600;box-shadow:0 2px 5px #00000008}
+.studio-workspace .nav {gap:4px}
+.studio-workspace .nav button {gap:12px;}
+
 .studio-workspace .sidebar-footer {padding-top:20px;gap:12px}
 .studio-workspace .sidebar-footer>a {display:flex;align-items:center;min-height:44px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--fg);text-decoration:none}
 .studio-workspace .topbar {height:64px;padding:0 40px;background:#fff;border-bottom:1px solid var(--border)}
-.studio-workspace .workspace {max-width:1520px;padding:40px}
+.studio-workspace .workspace {max-width:1520px;padding:32px}
 .studio-workspace .page-head {margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border)}
-.studio-workspace .page-head h1 {font-size:32px;font-weight:650;letter-spacing:-.035em;line-height:1.3}
+.studio-workspace .page-head h1 {font-size:var(--dm-type-size-page);font-weight:600;letter-spacing:-.02em;line-height:var(--dm-type-line-page)}
 .studio-workspace .page-head p {font-size:14px;line-height:1.65;margin-top:8px;max-width:80ch}
-.studio-workspace button,.studio-workspace .download-link {min-height:44px;border-radius:8px;line-height:1.4;font-weight:550}
-.studio-workspace button.quiet,.studio-workspace button.text-link {border:1px solid var(--border);background:#fff;padding:10px 14px;color:var(--fg);text-decoration:none}
-.studio-workspace button:hover:not(:disabled) {border-color:#aeb5bf}
-.studio-workspace button.primary {background:#17191c;border-color:#17191c;color:#fff}
-.studio-workspace button:disabled {opacity:.6}
-.studio-workspace .row,.studio-workspace .toolbar,.studio-workspace .action-group {gap:10px}
+.studio-workspace .download-link {min-height:44px;border-radius:8px;line-height:1.4;font-weight:550;}
+.studio-workspace button.quiet,.studio-workspace button.text-link {text-decoration:none;}
+
+
+
+.studio-workspace .row,.studio-workspace .toolbar,.studio-workspace .action-group {gap:var(--dm-layout-action-gap)}
 .studio-workspace input:not([type=checkbox]):not([type=radio]),.studio-workspace select {min-height:44px;border-radius:8px;padding:10px 14px}
 .studio-workspace select {padding-right:36px}
 .studio-workspace textarea {border-radius:8px;padding:12px 14px;line-height:1.65}
@@ -39,7 +33,7 @@ html[data-workbench-ui=studio] {
 .studio-workspace .panel-body.stack,.studio-workspace .stack {gap:14px}
 .studio-workspace .production-detail>.panel-body {display:flex;flex-direction:column;gap:16px}
 .studio-workspace details>summary {display:flex;align-items:center;gap:9px;min-height:44px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:#fff;font-size:13px;cursor:pointer;list-style:none}
-.studio-workspace details>summary::before {content:'›';display:block;transform:rotate(0);font-size:19px;color:var(--muted)}
+.studio-workspace details>summary::before {content:"›";display:block;transform:rotate(0);font-size:19px;color:var(--muted)}
 .studio-workspace details[open]>summary::before {transform:rotate(90deg)}
 .studio-workspace details>summary::-webkit-details-marker {display:none}
 .studio-workspace details[open]>summary {margin-bottom:12px;background:var(--surface-warm)}
@@ -51,12 +45,12 @@ html[data-workbench-ui=studio] {
 .studio-workspace .page-actions>summary {margin:0}
 .studio-workspace .page-actions>summary::after {display:none}
 .studio-workspace .page-workbench .chain {border:1px solid var(--border);border-radius:10px;padding:4px;background:#e9ecef;gap:4px}
-.studio-workspace .page-workbench .chain button {border:0;min-height:44px;border-radius:7px;flex:1}
-.studio-workspace .page-workbench .chain button.active {background:#fff;color:#17191c;box-shadow:0 1px 4px #17191c0a}
+.studio-workspace .page-workbench .chain button {flex:1;}
+
 .studio-workspace .page-tools {display:flex;flex-direction:column;padding:16px;border:1px solid var(--border);border-radius:12px;background:#fff;gap:16px}
 .studio-workspace .page-tools-switcher {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.studio-workspace .page-tools-switcher button {padding:9px 7px;white-space:normal;font-size:12px;min-width:0}
-.studio-workspace .page-tools-switcher button[aria-pressed=true] {background:#20252b;color:#fff;border-color:#20252b}
+.studio-workspace .page-tools-switcher button {white-space:normal;min-width:0;}
+
 .studio-workspace .page-tools .panel {box-shadow:none;border:0}
 .studio-workspace .page-tools .panel-head {padding:0 0 12px;min-height:0}
 .studio-workspace .page-tools .panel-body {padding:14px 0 0}
@@ -73,7 +67,7 @@ html[data-workbench-ui=studio] {
 .studio-workspace .run-task-identity {grid-row:1;justify-content:flex-start}
 .studio-workspace .run-task .run-requirement,.studio-workspace .run-task-scope {display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .studio-workspace .studio-note-tabs {display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
-.studio-workspace .studio-note-tabs button[aria-pressed=true] {background:var(--fg);color:#fff;border-color:var(--fg)}
+
 .studio-workspace .studio-note-section>summary {display:none}
 .studio-workspace .studio-note-section {border:0;padding:0}
 .studio-workspace .studio-note-writing .opinion-secondary>div {display:flex;flex-wrap:wrap;gap:10px}
@@ -81,7 +75,7 @@ html[data-workbench-ui=studio] {
 .studio-workspace .run-task p {max-width:85ch;line-height:1.6}
 .studio-workspace .run-task h3 {display:flex;align-items:center;gap:10px;font-size:15px}
 .studio-workspace .runs-nav,.studio-workspace .runs-area-nav {gap:8px}
-.studio-workspace .runs-subareas button[aria-pressed=true] {background:var(--fg);color:#fff;border-color:var(--fg)}
+
 .studio-workspace .candidate-batch>.panel-body {display:flex;flex-direction:column;gap:14px}
 .studio-workspace .candidate-selection-toolbar>select {flex:1 1 220px;max-width:320px;width:auto}
 .studio-workspace .export-downloads {display:flex;gap:10px;flex-wrap:wrap}
@@ -99,10 +93,7 @@ html[data-workbench-ui=studio] {
 .studio-workspace .batch-actions[data-selection=empty]>.panel-body {display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:16px;padding:12px 16px}
 .studio-workspace .batch-actions[data-selection=empty]>.panel-body>p {max-width:65ch;font-size:12px;line-height:1.6}
 .studio-workspace .batch-actions[data-selection=empty]>.panel-body>details {flex:0 0 auto}
-.studio-workspace .todo-priority,.studio-workspace .todo-secondary {padding:20px 24px}
-.studio-workspace .todo-priority h2 {margin-top:18px;font-size:24px}
-.studio-workspace .todo-bottom {margin-top:20px}
-.studio-workspace .todo-priority button.primary {background:#fff;color:var(--fg);border-color:#fff}
+
 .studio-workspace input[type=file] {width:100%;font-size:13px}
 .studio-workspace input[type=file]::file-selector-button {min-height:44px;border:1px solid var(--border);border-radius:8px;padding:8px 14px;background:#fff;margin-right:12px;cursor:pointer}
 @media(min-width:1280px) {
@@ -123,9 +114,9 @@ html[data-workbench-ui=studio] {
  .studio-workspace .logo {margin:0 0 12px}
  .studio-workspace .brand-logo {width:140px}
  .studio-workspace .sidebar .nav {display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
- .studio-workspace .sidebar .nav button {min-width:0;padding:9px 3px;gap:5px}
+ .studio-workspace .sidebar .nav button {min-width:0;gap:5px;}
  .studio-workspace .sidebar-footer {position:static;inset:auto;display:flex;padding:10px 0 0;justify-content:flex-end;margin:0;border:0}
- .studio-workspace .sidebar-footer button {min-height:44px}
+
  .studio-workspace .topbar {height:auto;min-height:58px;padding:10px 16px;gap:12px}
  .studio-workspace .workspace {padding:20px 16px 36px}
  .studio-workspace .page-head h1 {font-size:24px}
@@ -147,8 +138,8 @@ html[data-workbench-ui=studio] {
 /* Style workbench: stages are real sections controlled by buttons. */
 .studio-workspace .studio-style-stages {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:8px;background:var(--surface-warm);border:1px solid var(--border);border-radius:12px}
 .studio-workspace .studio-style-stages[hidden],.studio-workspace .style-phase[hidden],.studio-workspace .style-tool-body[hidden],.studio-workspace .studio-rule-editor[hidden] {display:none}
-.studio-workspace .studio-style-stages button {min-width:0;min-height:48px;padding:10px 12px;white-space:normal;text-align:left;font-weight:600;background:#fff}
-.studio-workspace .studio-style-stages button[aria-pressed=true] {background:var(--fg);border-color:var(--fg);color:#fff}
+.studio-workspace .studio-style-stages button {min-width:0;white-space:normal;text-align:left;}
+
 .studio-workspace .style-source-selector {max-width:400px}
 .studio-workspace section.style-phase {padding:0;border:0;border-radius:0;background:none;box-shadow:none;display:flex;flex-direction:column;gap:24px;container-type:inline-size}
 .studio-workspace section.style-phase.panel {padding:0;gap:0}
@@ -160,7 +151,7 @@ html[data-workbench-ui=studio] {
 .studio-workspace .style-working-pair>div {min-width:0}
 .studio-workspace .style-working-pair select {max-width:100%}
 .studio-workspace .style-reference,.studio-workspace .style-primary-target {border-radius:8px;overflow:hidden}
-.studio-workspace .style-tool>button {align-self:flex-start;text-align:left;min-height:44px}
+.studio-workspace .style-tool>button {align-self:flex-start;text-align:left;}
 .studio-workspace .style-tool-body {padding:16px 0 0;border:0;border-top:1px solid var(--border);border-radius:0;background:none}
 .studio-workspace .style-primary-actions {padding-top:8px}
 .studio-workspace .style-primary-actions button {min-width:160px}
@@ -175,7 +166,7 @@ html[data-workbench-ui=studio] {
 .studio-workspace .studio-rule-reading {margin:0;line-height:1.65;overflow-wrap:anywhere}
 .studio-workspace .studio-rule-actions {display:flex;gap:8px;flex-wrap:wrap;margin-top:auto;align-items:flex-start}
 .studio-workspace .studio-rule-actions>.style-tool {flex:1;min-width:170px}
-.studio-workspace .studio-rule-actions button {font-size:12px}
+
 .studio-workspace .studio-rule-editor {border-top:1px solid var(--border);padding-top:12px}
 .studio-workspace .studio-rule-editor textarea {width:100%;min-height:100px}
 .studio-workspace .visual-plan:not([hidden]),.studio-workspace .style-plan:not([hidden]) {padding:24px 0 0;border:0;border-top:1px solid var(--border);border-radius:0;background:none}
@@ -202,15 +193,15 @@ html[data-workbench-ui=studio] {
 .studio-workspace .studio-recipe-card h3 {font-size:14px;margin:0;overflow-wrap:anywhere}
 .studio-workspace .studio-recipe-card p {margin:0;line-height:1.6}
 .studio-workspace .studio-recipe-card button {align-self:flex-start;margin-top:auto}
-.studio-workspace .studio-recipe-card button[aria-pressed=true] {border-color:var(--fg);box-shadow:inset 0 0 0 1px var(--fg)}
+
 .studio-workspace .studio-recipe-pager {justify-content:space-between}
 .studio-workspace .studio-recipe-pager[hidden] {display:none}
 .studio-workspace .studio-style-confirm-actions {position:sticky;top:12px;z-index:2;padding:12px 0;background:#fff;border:0;border-bottom:1px solid var(--border);border-radius:0}
 @media(max-width:767px){.studio-workspace .studio-recipe-list {grid-template-columns:1fr}.studio-workspace .studio-style-confirm-actions {top:0}}
 /* Content areas reuse the live content-operation controls, without stacked forms. */
 .studio-workspace .studio-content-areas {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:0;border:0;border-radius:0;background:none}
-.studio-workspace .studio-content-areas button {min-height:48px;text-align:left;white-space:normal}
-.studio-workspace .studio-content-areas button[aria-pressed=true] {background:var(--fg);border-color:var(--fg);color:#fff}
+.studio-workspace .studio-content-areas button {text-align:left;white-space:normal;}
+
 .studio-workspace .studio-content-area[hidden],.studio-workspace .studio-goal-edit[hidden],.studio-workspace .studio-goal-card[hidden],.studio-workspace .content-operation-home[hidden] {display:none}
 .studio-workspace .content-sources.stack,.studio-workspace .content-sources .stack {display:flex;flex-direction:column;gap:16px}
 .studio-workspace .content-sources .stack[hidden] {display:none}
@@ -243,37 +234,37 @@ html[data-workbench-ui=studio] {
  .studio-workspace .style-calibration .style-source-selector {display:grid;grid-template-columns:60px minmax(0,1fr);align-items:center;gap:8px;width:100%;max-width:none;font-size:12px}
  .studio-workspace .style-calibration .style-source-selector select {margin:0;min-height:44px;font-size:12px}
  .studio-workspace .studio-style-stages {padding:6px;gap:6px}
- .studio-workspace .studio-style-stages button {min-height:44px;padding:8px;font-size:12px}
+
 }
 
 /* Keep the active work object and its next action ahead of background judgement. */
 .studio-workspace .content-alignment {padding:8px 14px;gap:12px}
 .studio-workspace .content-alignment strong {font-size:12px;line-height:1.5;font-weight:500}
-.studio-workspace .content-alignment button {font-size:12px;padding:8px 12px}
+
 .studio-workspace .content-impact:empty {display:none}
 .studio-workspace #content-area-pages>.panel>.panel-head {display:flex;align-items:center;justify-content:space-between;gap:12px}
-.studio-workspace #content-area-pages>.panel>.panel-head button {font-size:12px;flex:none}
+.studio-workspace #content-area-pages>.panel>.panel-head button {flex:none;}
 .studio-workspace .style-primary-phase>.panel-head {display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 16px}
 .studio-workspace .style-primary-phase>.panel-head .style-phase-state {grid-column:1;font-size:12px;line-height:1.5;margin:0;text-align:left}
-.studio-workspace .style-primary-phase>.panel-head>button {grid-column:2;grid-row:1/3;white-space:nowrap;align-self:center;font-size:13px}
+.studio-workspace .style-primary-phase>.panel-head>button {grid-column:2;grid-row:1/3;white-space:nowrap;align-self:center;}
 .studio-workspace .style-primary-phase .style-reference .pooled-image,.studio-workspace .style-primary-phase .style-primary-target .pooled-image {height:120px;max-height:120px}
 .studio-workspace .style-primary-phase .style-reference canvas,.studio-workspace .style-primary-phase .style-primary-target canvas {max-height:120px}
 @media(max-width:767px){
  .studio-workspace .content-sources>.page-head {gap:10px;padding-bottom:12px;margin-bottom:0}
  .studio-workspace .content-sources>.page-head p {font-size:12px;line-height:1.5}
  .studio-workspace .content-sources>.page-head>.row {display:grid;grid-template-columns:1fr 1fr;width:100%;gap:8px}
- .studio-workspace .content-sources>.page-head>.row button {font-size:12px;padding:8px;white-space:normal}
+ .studio-workspace .content-sources>.page-head>.row button {white-space:normal;}
  .studio-workspace .content-alignment {flex-wrap:nowrap;padding:6px 10px;gap:8px}
  .studio-workspace .content-alignment strong {flex:1;min-width:0}
- .studio-workspace .content-alignment button {flex:none;padding:8px;font-size:11px}
+ .studio-workspace .content-alignment button {flex:none;}
  .studio-workspace .studio-content-areas {padding:6px;gap:6px}
- .studio-workspace .studio-content-areas button {min-height:44px;padding:8px;font-size:12px}
+
  .studio-workspace #content-area-pages>.panel>.panel-head {min-height:60px;padding:10px 12px}
  .studio-workspace #content-area-pages>.panel>.panel-head h2 {font-size:14px}
  .studio-workspace #content-area-pages>.panel>.panel-body {padding:10px}
  .studio-workspace .style-primary-phase>.panel-head {padding:10px 12px;gap:4px 8px}
  .studio-workspace .style-primary-phase>.panel-head .style-phase-state {font-size:11px}
- .studio-workspace .style-primary-phase>.panel-head>button {font-size:12px;padding:8px}
+
  .studio-workspace .style-primary-phase .style-working-pair {grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
  .studio-workspace .style-primary-phase .style-working-pair label {font-size:12px}
  .studio-workspace .style-primary-phase .style-working-pair select {font-size:12px;padding-left:8px;padding-right:24px;min-width:0}
@@ -283,12 +274,12 @@ html[data-workbench-ui=studio] {
 
 /* Current OpenDesign composition: white canvas, discrete cards and explicit tool entries. */
 .studio-workspace .studio-style-route {display:flex;gap:8px;align-items:center}
-.studio-workspace .studio-style-route button {min-width:120px;min-height:44px}
-.studio-workspace .studio-style-route button[aria-pressed=true] {background:var(--fg);color:#fff;border-color:var(--fg)}
+.studio-workspace .studio-style-route button {min-width:120px;}
+
 .studio-workspace .studio-style-route select[hidden] {display:none}
 .studio-workspace .studio-style-stages {padding:0;background:none;border:0;gap:8px}
-.studio-workspace .studio-style-stages button {border:1px solid var(--border);border-radius:10px;min-height:50px;font-size:14px}
-.studio-workspace .studio-style-stages button[aria-pressed=true] {background:var(--surface);color:var(--fg);border-color:var(--fg)}
+
+
 .studio-workspace .style-primary-phase {border:0;background:none;box-shadow:none}
 .studio-workspace .style-primary-phase>.panel-head {padding:0 0 16px;border:0;border-bottom:1px solid var(--border);border-radius:0;position:static;background:none;box-shadow:none;margin-bottom:24px}
 .studio-workspace .style-primary-phase>.panel-body {padding:0}
@@ -300,7 +291,7 @@ html[data-workbench-ui=studio] {
 .studio-workspace .studio-style-reference label {font-size:13px}
 .studio-workspace .studio-target-tools {flex-wrap:nowrap}
 .studio-workspace .studio-target-tools input {min-width:0;width:100%;flex:1}
-.studio-workspace .studio-target-tools button {font-size:12px;padding:8px;flex:none}
+.studio-workspace .studio-target-tools button {flex:none;}
 .studio-workspace .studio-style-targets .style-targets {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;max-height:470px;overflow:auto;padding:2px 5px 2px 2px}
 .studio-workspace .studio-style-targets .style-target-card {padding:10px;border:1px solid var(--border);border-radius:10px;background:#fff;gap:8px;min-width:0;display:flex;flex-direction:column}
 .studio-workspace .studio-style-targets .style-target-card.is-selected {border-color:var(--fg);box-shadow:inset 0 0 0 1px var(--fg)}
@@ -310,11 +301,11 @@ html[data-workbench-ui=studio] {
 .studio-workspace .studio-style-targets .style-target-thumb canvas {width:100%;height:100%;object-fit:contain}
 .studio-workspace .studio-style-targets select {width:100%;max-width:380px}
 .studio-workspace .studio-icon-methods {display:grid;gap:8px}
-.studio-workspace .studio-icon-methods button,.studio-workspace .studio-icon-samples button {display:flex;flex-direction:column;text-align:left;align-items:flex-start;gap:4px;padding:12px;min-height:60px;white-space:normal}
+.studio-workspace .studio-icon-methods button,.studio-workspace .studio-icon-samples button {display:flex;flex-direction:column;text-align:left;align-items:flex-start;gap:4px;white-space:normal;}
 .studio-workspace .studio-icon-methods small,.studio-workspace .studio-icon-samples small {font-size:12px;color:var(--muted);font-weight:400;line-height:1.6}
-.studio-workspace .studio-icon-methods button[aria-pressed=true],.studio-workspace .studio-icon-catalog button[aria-pressed=true],.studio-workspace .studio-icon-samples button[aria-pressed=true] {border-color:var(--fg);background:var(--surface)}
+
 .studio-workspace .studio-icon-catalog {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;max-height:360px;overflow:auto}
-.studio-workspace .studio-icon-catalog button {display:flex;flex-direction:column;gap:6px;align-items:center;min-width:0;padding:10px 5px;white-space:normal;font-size:11px}
+.studio-workspace .studio-icon-catalog button {display:flex;flex-direction:column;gap:6px;align-items:center;min-width:0;white-space:normal;}
 .studio-workspace .studio-icon-catalog img {width:30px;height:30px;object-fit:contain}
 .studio-workspace .studio-icon-samples {display:grid;gap:8px}
 .studio-workspace .icon-workbench .stack {display:flex;flex-direction:column;gap:12px}
@@ -326,14 +317,14 @@ html[data-workbench-ui=studio] {
 .studio-workspace .page-tools {border-radius:16px;padding:20px}
 .studio-workspace .reading-toolbar {display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 20px}
 .studio-workspace .reading-toolbar>.page-tools-switcher {display:flex;gap:8px;flex-wrap:wrap;width:100%;padding-top:12px;margin-top:2px;border-top:1px solid var(--border-soft);position:static;background:#fff}
-.studio-workspace .reading-toolbar>.page-tools-switcher button {display:inline-flex;align-items:center;gap:7px;font-size:13px;padding:10px 14px;min-height:44px}
-.studio-workspace .reading-toolbar>.page-tools-switcher button[aria-pressed=true] {background:var(--surface);color:var(--fg);border-color:var(--fg)}
+.studio-workspace .reading-toolbar>.page-tools-switcher button {display:inline-flex;align-items:center;gap:7px;}
+
 .studio-workspace .studio-page-actions {margin-left:auto}
 .studio-workspace .studio-page-actions label {display:flex;align-items:center;gap:8px;font-size:12px}
 .studio-workspace .studio-page-actions select {width:100px}
 .studio-workspace .page-workbench .chain {background:transparent;padding:0;border:0;border-bottom:1px solid var(--border);border-radius:0;gap:0}
-.studio-workspace .page-workbench .chain button {display:flex;flex-direction:column;align-items:flex-start;border-radius:0;background:transparent;box-shadow:none;border-bottom:2px solid transparent;color:var(--muted);padding:12px 8px;min-height:82px;font-size:14px}
-.studio-workspace .page-workbench .chain button.active {border-bottom-color:var(--fg);color:var(--fg)}
+.studio-workspace .page-workbench .chain button {display:flex;flex-direction:column;align-items:flex-start;border-bottom:2px solid transparent;}
+.studio-workspace .page-workbench .chain button.active {border-bottom-color:var(--fg);}
 .studio-workspace .page-workbench .chain-number {display:block;font-size:11px;margin:0 0 5px;color:var(--muted)}
 .studio-workspace .page-workbench .chain-state {display:block;font-size:11px;margin-top:3px;color:var(--muted)}
 .studio-workspace .page-image-viewport {background:var(--surface-warm);border-color:var(--border-soft);padding:16px;border-radius:12px}
@@ -351,7 +342,7 @@ html[data-workbench-ui=studio] {
 .studio-workspace .materials-aside>.panel-body {padding:0}
 .studio-workspace .studio-material-card {padding:20px;border:1px solid var(--border);border-radius:12px;background:#fff}
 .studio-workspace .studio-material-card h3 {font-size:15px;margin:0;overflow-wrap:anywhere}
-.studio-workspace .studio-material-card button {font-size:12px;padding:8px 10px;text-align:left;white-space:normal}
+.studio-workspace .studio-material-card button {text-align:left;white-space:normal;}
 .studio-workspace .studio-material-symbol {display:grid;place-items:center;width:32px;height:32px;background:var(--surface);border-radius:8px}
 .studio-workspace .studio-material-card .style-tool-body {padding:12px}
 @media(min-width:1280px){.studio-workspace .page-columns:not(.with-fixed-compare) {grid-template-columns:minmax(0,1fr) 352px;gap:24px}}
@@ -359,7 +350,7 @@ html[data-workbench-ui=studio] {
 @media(max-width:767px){
  .studio-workspace .studio-style-columns {grid-template-columns:1fr}
  .studio-workspace .studio-style-targets .style-targets {grid-template-columns:repeat(2,minmax(0,1fr));max-height:400px}
- .studio-workspace .studio-style-stages button {font-size:12px;min-height:44px}
+
  .studio-workspace .studio-style-card {padding:0}
  .studio-workspace .style-primary-phase>.panel-head {padding:12px;top:0}
  .studio-workspace .studio-gallery-main>.row {margin-left:0;width:100%;flex-wrap:wrap}
@@ -367,13 +358,13 @@ html[data-workbench-ui=studio] {
  .studio-workspace .studio-page-actions {margin-left:0}
  .studio-workspace .studio-page-actions>.row {align-items:stretch}
  .studio-workspace .reading-toolbar>.page-tools-switcher {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
- .studio-workspace .reading-toolbar>.page-tools-switcher button {padding:8px 5px;font-size:11px;justify-content:center}
- .studio-workspace .studio-style-route button {min-width:100px;font-size:12px}
+ .studio-workspace .reading-toolbar>.page-tools-switcher button {justify-content:center;}
+ .studio-workspace .studio-style-route button {min-width:100px;}
 }
 
 .studio-workspace .studio-screenshot-first {padding:0!important;border:0!important;background:none;box-shadow:none}
 .studio-workspace .studio-screenshot-first>.style-phase-heading {display:flex;justify-content:flex-end;align-items:center;gap:16px;padding:0 0 16px;border:0;border-bottom:1px solid var(--border);border-radius:0;position:static;background:none}
-.studio-workspace .studio-screenshot-first>.style-phase-heading button {font-size:13px}
+
 .studio-workspace .studio-style-reference .visual-reference-list {grid-template-columns:1fr;max-height:360px;overflow:auto}
 
 @media(max-width:767px){
@@ -396,7 +387,7 @@ html[data-workbench-ui=studio] {
 /* One expanded goal does not stretch its neighbouring reading card. */
 .studio-workspace .studio-goal-grid {align-items:start}
 .studio-workspace #content-area-plan > .panel > .panel-head {position:sticky;top:8px;z-index:2;background:var(--surface);gap:12px;flex-wrap:wrap}
-.studio-workspace .studio-content-adjust [role=group] > button[aria-pressed=true] {background:var(--fg);color:#fff;border-color:var(--fg)}
+
 .studio-workspace .content-request-review {padding:16px;border:1px solid var(--border);border-radius:10px;background:var(--surface-warm)}
 
 /* Keep editable requirements above supporting previews; mobile reading starts with a page. */
@@ -409,20 +400,20 @@ html[data-workbench-ui=studio] {
  .studio-workspace .sidebar {display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px}
  .studio-workspace .sidebar>.logo {grid-column:1;grid-row:1;margin:0}
  .studio-workspace .sidebar>.sidebar-footer {grid-column:2;grid-row:1;padding:0;max-width:210px;gap:6px}
- .studio-workspace .sidebar-footer button,.studio-workspace .sidebar-footer>a {font-size:12px;padding:8px 10px}
+ .studio-workspace .sidebar-footer>a {font-size:12px;padding:8px 10px;}
  .studio-workspace .sidebar>.nav {grid-column:1/-1;grid-row:2}
- .studio-workspace .sidebar>.nav button {font-size:12px}
+
  .studio-workspace .gallery-view>.page-head {display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:16px}
  .studio-workspace .gallery-view>.page-head p {font-size:12px;line-height:1.5}
- .studio-workspace .gallery-view>.page-head>button {width:auto;align-self:flex-start;font-size:12px;padding:8px 12px}
+ .studio-workspace .gallery-view>.page-head>button {width:auto;align-self:flex-start;}
  .studio-workspace .gallery-legend {display:flex;flex-wrap:wrap;gap:4px 10px}
  .studio-workspace .gallery-legend span:last-child {width:auto}
  .studio-workspace .studio-gallery-mobile-search {display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px}
  .studio-workspace .studio-gallery-mobile-search .gallery-search,.studio-workspace .studio-gallery-mobile-search input {min-width:0;width:100%}
  .studio-workspace .studio-gallery-mobile-search input {font-size:12px;padding:10px}
- .studio-workspace .studio-gallery-mobile-search>button {font-size:12px;padding:8px 10px;max-width:160px;white-space:normal}
+ .studio-workspace .studio-gallery-mobile-search>button {max-width:160px;white-space:normal;}
  .studio-workspace .studio-gallery-settings .segmented {display:flex;flex-wrap:wrap}
- .studio-workspace .studio-gallery-settings .segmented button {flex:1;min-width:85px;font-size:12px;padding:8px}
+ .studio-workspace .studio-gallery-settings .segmented button {flex:1;min-width:85px;}
 }
 
 /* Container responsibilities: ordinary sections are not independent objects. */

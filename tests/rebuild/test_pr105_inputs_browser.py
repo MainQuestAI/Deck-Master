@@ -25,7 +25,7 @@ def test_upload_receipt_preserves_material_action(tmp_path, choice, verify):
         held = []
         try:
             page.goto(server.start()+'studio/')
-            page.get_by_role('button',name='内容与来源',exact=True).click()
+            page.get_by_role('button',name='内容与页序',exact=True).click()
             page.get_by_role('button',name='调整此材料 · original.md',exact=True).click()
             if verify:
                 page.route('**/api/content/uploads?*', lambda route: (route.fetch(), route.abort()))

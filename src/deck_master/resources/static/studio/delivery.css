@@ -50,7 +50,7 @@
 .studio-workspace .studio-candidate-footer {display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;width:100%;margin-top:auto}
 .studio-workspace .studio-candidate-footer label {min-width:0;font-size:12px;flex:1 1 140px}
 .studio-workspace .studio-candidate-footer label span {overflow-wrap:anywhere}
-.studio-workspace .studio-candidate-footer button {font-size:12px;padding:9px 12px}
+
 .studio-workspace .studio-tasks-workspace .candidate-selection-toolbar {display:flex;gap:10px;flex-wrap:wrap}
 /* Fixed version is visible before every export purpose and retained by downloads. */
 .studio-workspace .studio-files-desk>.panel-body,.studio-workspace .studio-history-desk>.panel-body {display:flex;flex-direction:column;gap:20px}
@@ -94,14 +94,14 @@
 .studio-workspace .studio-version-sidebar select {width:100%;font-size:12px}
 .studio-workspace .studio-version-sidebar>.inline-control {flex-direction:row;align-items:center;line-height:1.6}
 .studio-workspace .studio-version-list {display:flex;flex-direction:column;gap:8px;max-height:440px;overflow-y:auto}
-.studio-workspace .studio-version-list button {text-align:left;justify-content:flex-start;white-space:normal;font-size:12px;padding:12px;line-height:1.6}
-.studio-workspace .studio-version-list button[aria-pressed=true] {background:var(--surface);border-color:var(--fg);box-shadow:inset 0 0 0 1px var(--fg)}
+.studio-workspace .studio-version-list button {text-align:left;justify-content:flex-start;white-space:normal;}
+
 .studio-workspace .studio-version-reading {display:flex;flex-direction:column;gap:20px;min-width:0}
 .studio-workspace .studio-version-reading-heading {display:flex;align-items:center;justify-content:space-between;gap:12px}
 .studio-workspace .studio-version-reading-heading h3 {font-size:15px;margin:0}
 .studio-workspace .studio-version-reading-heading p {font-size:12px;margin:6px 0 0}
 .studio-workspace .studio-history-desk .history-reading-controls {display:flex;gap:10px;flex-wrap:wrap}
-.studio-workspace .studio-history-desk .history-reading-controls button {font-size:12px}
+
 @media(max-width:1000px){
  .studio-workspace .studio-task-table-head,.studio-workspace .studio-tasks-workspace .studio-task-record {grid-template-columns:minmax(0,1fr) 150px 128px;gap:16px}
  .studio-workspace .studio-tasks-workspace .run-filters>select {flex:1 1 160px;width:auto}
@@ -110,7 +110,7 @@
 }
 @media(max-width:700px){
  .studio-workspace .studio-tasks-workspace .runs-subareas {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
- .studio-workspace .studio-tasks-workspace .runs-subareas button {min-width:0;font-size:12px;padding:8px 4px}
+ .studio-workspace .studio-tasks-workspace .runs-subareas button {min-width:0;}
  .studio-workspace .studio-task-table-head {display:none}
  .studio-workspace .studio-tasks-workspace .studio-task-record {display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;padding:18px 0}
  .studio-workspace .studio-task-main {grid-column:1/-1!important}
@@ -129,7 +129,7 @@
  .studio-workspace .studio-file-summary strong {font-size:17px}
  .studio-workspace .studio-delivery-row {grid-template-columns:36px minmax(0,1fr);gap:12px;padding:16px}
  .studio-workspace .studio-delivery-row .studio-file-symbol {width:36px;height:36px}
- .studio-workspace .studio-delivery-row>button {grid-column:2;justify-self:start;font-size:12px}
+ .studio-workspace .studio-delivery-row>button {grid-column:2;justify-self:start;}
  .studio-workspace .studio-files-desk .export-result {display:flex;flex-direction:column;gap:12px}
  .studio-workspace .studio-files-desk .export-downloads {align-self:flex-start}
  .studio-workspace .studio-history-desk .history-identity {grid-template-columns:1fr;gap:8px}
@@ -153,7 +153,7 @@
 .studio-workspace .studio-gallery-production {display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:14px 16px;border:1px solid var(--border);border-radius:10px;background:var(--surface)}
 .studio-workspace .studio-gallery-production strong {font-size:13px;white-space:nowrap}
 .studio-workspace .studio-gallery-production>.row {gap:8px}
-.studio-workspace .studio-gallery-production button {font-size:12px;padding:9px 12px}
+
 .studio-workspace .studio-gallery-production>.muted {font-size:11px;flex:1 1 260px;line-height:1.6}
 @media(max-width:700px){.studio-workspace .studio-gallery-production>.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}.studio-workspace .studio-gallery-production button{min-width:0}}
 

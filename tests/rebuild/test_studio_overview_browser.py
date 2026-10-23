@@ -29,7 +29,7 @@ def test_studio_overview_action_buttons_and_compact_sync_recovery(tmp_path):
         try:
             page.goto(server.start() + 'studio/')
             modes = page.get_by_role('group', name='选页制作动作', exact=True)
-            expect(modes.get_by_role('button')).to_have_count(4)
+            expect(modes).to_be_hidden()
             expect(page.get_by_label('批量动作', exact=True)).to_have_count(0)
             expect(page.get_by_label('所选页的制作要求', exact=True)).to_be_hidden()
             expect(page.get_by_role('region', name='所选页制作', exact=True)).to_be_hidden()
@@ -46,6 +46,8 @@ def test_studio_overview_action_buttons_and_compact_sync_recovery(tmp_path):
             expect(page.locator('.matrix tbody tr:not(.chapter-row)')).to_have_count(15)
             expect(pager.get_by_role('button', name='上一组页面', exact=True)).to_be_disabled()
             page.locator('.matrix tbody input[type=checkbox]:enabled').first.check()
+            expect(modes).to_be_visible()
+            expect(modes.get_by_role('button')).to_have_count(4)
             selected_id = page.locator('.matrix tbody input[type=checkbox]:checked').get_attribute('aria-label')
             pager.get_by_role('button', name='下一组页面', exact=True).click()
             expect(page.locator('.matrix tbody tr:not(.chapter-row)')).to_have_count(9)
@@ -65,7 +67,6 @@ def test_studio_overview_action_buttons_and_compact_sync_recovery(tmp_path):
             expect(modes.get_by_role('button', name='SVG 重建', exact=True)).to_have_attribute('aria-pressed', 'true')
             expect(page.get_by_role('button', name='保存并交接所选试作', exact=True)).to_be_hidden()
             assert store.load_document() == original
-            page.get_by_role('button', name='清除选择', exact=True).click()
             modes.get_by_role('button', name='原图试作', exact=True).click()
             geometry = []
             for width, height in [(1440,900),(1280,800),(390,844)]:
@@ -73,9 +74,11 @@ def test_studio_overview_action_buttons_and_compact_sync_recovery(tmp_path):
                 page.evaluate('window.scrollTo(0,0)')
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
                 boxes = modes.get_by_role('button').evaluate_all('(items)=>items.map(n=>({width:n.getBoundingClientRect().width,height:n.getBoundingClientRect().height}))')
-                assert all(b['height'] >= 44 and b['width'] >= 44 for b in boxes)
+                assert all(b['height'] >= (44 if width <= 560 else 32) and b['width'] >= 32 for b in boxes)
                 geometry.append({'width':width, 'height':height, 'action_boxes':boxes})
                 page.screenshot(path=str(output / f'overview-{width}.png'), full_page=True)
+            page.get_by_role('button', name='清除选择', exact=True).click()
+            expect(modes).to_be_hidden()
             page.set_viewport_size({'width':1440, 'height':900})
             page.evaluate('window.scrollTo(0,0)')
             route = page.url

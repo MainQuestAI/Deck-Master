@@ -503,7 +503,7 @@ def test_material_editor_keeps_preview_confirmation_and_return_in_context(ux04_b
     page, server, project, store = ux04_browser
     add_materials(project, store, count=count)
     page.set_viewport_size({'width':width,'height':height})
-    page.goto(server.start());page.get_by_role('button',name='内容与来源',exact=True).click()
+    page.goto(server.start());page.get_by_role('button',name='内容与页序',exact=True).click()
     before = store.read_current()
     trigger = page.get_by_role('button', name='修改任务要求', exact=True)
     trigger.evaluate('node => node.addEventListener("click", () => window.pr103ReturnY=scrollY, {capture:true,once:true})')
@@ -604,8 +604,8 @@ def test_candidate_cards_show_real_fixed_images_and_release_on_navigation(flow, 
                 card = page.locator('.candidate-batch [data-candidate-id="'+id+'"]')
                 card.scroll_into_view_if_needed()
                 expect(card.locator('.pooled-image')).to_have_attribute('data-image-state','ready')
-            page.get_by_role('button',name='内容与来源',exact=True).click()
-            page.get_by_role('heading',name='内容与来源',exact=True).wait_for()
+            page.get_by_role('button',name='内容与页序',exact=True).click()
+            page.get_by_role('heading',name='内容与页序',exact=True).wait_for()
             assert page.evaluate("async () => (await import('/v2/images.js')).imagePool.snapshot().pinned") == 0
         finally:
             browser.close();server.stop()

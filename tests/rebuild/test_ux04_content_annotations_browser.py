@@ -172,8 +172,8 @@ def test_outline_block_reaches_its_pages_and_return_keeps_surface(ux04_browser):
     url = server.start()
     page.goto(url)
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()
-    page.get_by_role('button', name='内容与来源', exact=True).click()
-    page.get_by_role('heading', name='内容与来源', exact=True).wait_for()
+    page.get_by_role('button', name='内容与页序', exact=True).click()
+    page.get_by_role('heading', name='内容与页序', exact=True).wait_for()
     # 大纲块显示章节与页范围（合成样例为单章"第 1–2 页"），并可在章节内指定页直达，
     # 不再固定打开"首个匹配页"。
     outline = page.locator('.outline-block').first
@@ -184,9 +184,9 @@ def test_outline_block_reaches_its_pages_and_return_keeps_surface(ux04_browser):
     outline.get_by_role('button', name='打开所选页', exact=True).click()
     expect(page.locator('#view-title')).to_contain_text('第 2 页')
     assert 'surface=page' in page.url and 'layer=content' in page.url
-    # 返回内容与来源：工作面可达，大纲仍在。
-    page.get_by_role('button', name='内容与来源', exact=True).click()
-    page.get_by_role('heading', name='内容与来源', exact=True).wait_for()
+    # 返回内容与页序：工作面可达，大纲仍在。
+    page.get_by_role('button', name='内容与页序', exact=True).click()
+    page.get_by_role('heading', name='内容与页序', exact=True).wait_for()
     expect(page.locator('.outline-block').first).to_be_visible()
 
 

@@ -303,7 +303,7 @@ def test_method_and_plain_notes_import_do_not_claim_each_other(tmp_path):
             # A small real module host mounts the ordinary notes editor with its
             # real API and recovery behavior, without conflating outline notes.
             page.goto(url+'studio/')
-            expect(page.get_by_role('heading',name='内容与来源',exact=True)).to_be_visible()
+            expect(page.get_by_role('heading',name='内容与页序',exact=True)).to_be_visible()
             page.evaluate("""async info=>{const {DraftEditor}=await import('/v2/drafts.js');const d=new DraftEditor(info,{scope:'project',page_id:null,layer:'notes'},info.revision_id,null,{exactRevision:true});d.onRestore=c=>d.restoreInPlace(c);document.querySelector('main').replaceChildren(d.mount());await d.ready;}""",{**info,'revision_id':store.current_revision_id()})
             expect(page.get_by_label('个人草稿',exact=True)).to_have_value('普通笔记')
             with page.expect_response('**/api/drafts/import'):page.get_by_label('导入草稿恢复文件',exact=True).set_input_files(method_file)
