@@ -16,6 +16,8 @@ def test_content_rows_restore_chapter_and_status(ui):
     expect(row.locator('.content-row-chapter')).not_to_be_empty()
     expect(row.locator('.content-row-status')).not_to_be_empty()
     expect(row.locator('.content-row-preview')).to_be_visible()
+    expect(row.locator('.content-row-status')).to_have_text('未记录正文块')
+    expect(row.locator('.content-row-preview')).to_have_text('未记录正文块')
 
 
 def test_mobile_content_shows_three_rows(manuscript_url, tmp_path):

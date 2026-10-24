@@ -357,6 +357,7 @@ export function pageDetail(app, data) {
     el('div', {class: 'page-tools-panel-head'}, el('strong', {}, '工具面板'),
       button('回到画面', () => {toolsPanel.close();activateFace('reading');})));
   const toolsEntry = button('工具', () => {
+    if(activeFace==='reading')activateFace('opinions');
     if (narrowTools.matches) toolsPanel.showModal(); else toolsPanel.open = true;
   }, false, {class: 'quiet page-tools-entry', 'aria-haspopup': 'dialog'});
   toolsPanel.addEventListener('close', () => {

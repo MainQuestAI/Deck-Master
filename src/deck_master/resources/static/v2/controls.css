@@ -117,3 +117,8 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]),
 :is(.studio-content-areas,.studio-style-stages)>button {background:transparent;border-color:transparent;color:var(--dm-color-text-secondary)}
 :is(.studio-content-areas,.studio-style-stages)>button[aria-pressed=true] {background:var(--dm-color-canvas);border-color:var(--dm-color-border-control);color:var(--dm-color-text)}
 .studio-gallery-production[hidden] {display:none}
+
+/* Reading recipes apply equally to both entry points. */
+.page-manuscript {font-size:var(--dm-type-size-reading,16px);line-height:var(--dm-type-line-reading,28px)}
+.page-manuscript p,.page-manuscript li {line-height:inherit}
+.page-pager select {min-width:150px}

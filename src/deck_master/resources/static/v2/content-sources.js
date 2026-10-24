@@ -75,6 +75,8 @@ export function content(app, data) {
         if(disposed||!node.isConnected)return;
         node.textContent=result.error?'预览暂不可读':result.text||(result.hasBody?'正文包含结构化内容':'未记录正文块');
         node.title=node.textContent;
+        const status=node.closest('.content-row-body')?.querySelector('.content-row-status');
+        if(status)status.textContent=result.error?'正文暂不可读':result.hasBody?'正文可读 · 核对状态见详情':'未记录正文块';
       });
     }
   },{rootMargin:'80px'});
@@ -197,7 +199,7 @@ export function content(app, data) {
       handle.addEventListener('click',event=>{if(event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;event.preventDefault();app.go({surface:'page',from:'content',page_id:id,layer:'content'});});
       handle.addEventListener('keydown',event=>{if(event.altKey && ['ArrowUp','ArrowDown'].includes(event.key)){event.preventDefault();move(id,index+(event.key==='ArrowUp'?-1:1));}});
       handle.addEventListener('dragstart',event=>event.dataTransfer.setData('text/plain',id));
-      const row=el('li',{'data-page-id':id,class:'content-order-row'},check,el('div',{class:'content-row-body'},handle,el('div',{class:'content-row-meta'},el('span',{class:'content-row-chapter'},chapters.filter(chapter=>chapterPages(chapter).has(id)).map(chapter=>chapter.title).join(' / ')||'未归入章节'),el('span',{class:'content-row-status'},page.stages?.content?.existence==='recorded'?'正文已记录 · 核对状态见详情':'正文未记录')),el('p',{class:'content-row-preview','data-preview-page':id},'正在读取正文预览…')),
+      const row=el('li',{'data-page-id':id,class:'content-order-row'},check,el('div',{class:'content-row-body'},handle,el('div',{class:'content-row-meta'},el('span',{class:'content-row-chapter'},chapters.filter(chapter=>chapterPages(chapter).has(id)).map(chapter=>chapter.title).join(' / ')||'未归入章节'),el('span',{class:'content-row-status'},page.stages?.content?.existence==='recorded'?'页面已记录 · 正文待读取':'正文未记录')),el('p',{class:'content-row-preview','data-preview-page':id},'正在读取正文预览…')),
         !app.readonly && actionMenu('第 '+(index+1)+' 页操作',[
           button('向前移动 '+title,()=>move(id,index-1),false,{disabled:index===0}),
           button('向后移动 '+title,()=>move(id,index+1),false,{disabled:index===order.length-1})]));
