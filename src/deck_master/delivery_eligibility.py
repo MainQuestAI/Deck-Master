@@ -317,11 +317,16 @@ def describe(project, *, revision=None, file_path=None, notes_policy=None):
     """Read-only shared final judgement: selected actual file plus current control."""
     from .store import Store
     from .snapshots import load_snapshot
-    from . import eligibility
-    from .exports import _facts, _engineering_ready
     store = Store(project)
     control = store.load_document()
     artifact = load_snapshot(store, revision) if revision else control
+    return describe_snapshots(store, artifact, control, file_path=file_path, notes_policy=notes_policy)
+
+
+def describe_snapshots(store, artifact, control, *, file_path=None, notes_policy=None):
+    """The same delivery judgement over snapshots already pinned by a reader."""
+    from . import eligibility
+    from .exports import _facts, _engineering_ready
     selected = selected_output(store, artifact, notes_policy=notes_policy, file_path=file_path)
     facts = _facts(store, artifact, selected_output=selected, control=control)
     summary = facts['check_summary']

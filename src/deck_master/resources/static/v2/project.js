@@ -11,6 +11,7 @@ import {BusinessOperations} from './business-operations.js';
 import {actionTargets} from './action-targets.js';
 import {changesetDesk} from './changeset-desk.js';
 import {collaborationBanner} from './collaboration-desk.js';
+import {currentWork} from './current-work.js';
 
 const pendingHandoffs=summary=>(summary.next_actions?.actions||[]).filter(action=>action.kind==='handoff'&&action.enabled).reduce((count,action)=>count+(action.object_count||0),0);
 
@@ -48,7 +49,7 @@ export class Project {
     this.root.dispatchEvent(new CustomEvent('draft-editor-replaced', {detail: replacement}));
     return true;
   }
-  summaryURL(revision=null){const q=new URLSearchParams();if(revision)q.set('revision',revision);if(this.health.ui_capabilities?.includes('result_reading.v1'))q.set('personal','1');return '/api/view/summary'+(q.size?'?'+q:'');}
+  summaryURL(revision=null){const q=new URLSearchParams();if(this.health.ui_capabilities?.includes('workbench_summary.v2'))q.set('protocol','workbench_summary.v2');if(revision)q.set('revision',revision);if(this.health.ui_capabilities?.includes('result_reading.v1'))q.set('personal','1');return '/api/view/summary'+(q.size?'?'+q:'');}
   // Bind lists to the supplied projection. A fallback summary without an etag
   // must not inherit the previous work surface's personal-reading snapshot.
   readingQuery(summary=this.summary){const etag=summary?.reading_etag;return this.health.ui_capabilities?.includes('result_reading.v1')&&etag?'&'+new URLSearchParams({personal:'1',reading_etag:etag}):'';}
@@ -93,7 +94,7 @@ export class Project {
     const valid = () => pollValid() && generation === this.generation && !this.navigationPending;
     if (!valid()) return;
     if (value.project_id !== this.info.project_id) throw new Error('服务项目已变化，请重新打开项目。');
-    if (this.health.ui_capabilities?.includes('collaboration.v1')) await this.refreshControl(valid);
+    if (this.health.ui_capabilities?.includes('collaboration.v1')) await this.refreshControl(valid, value);
     if (!valid()) return;
     this.latest = value;
     const count = pendingHandoffs(value);
@@ -104,7 +105,7 @@ export class Project {
     this.syncState(value.revision_id !== this.route.revision ? '项目有新状态。当前页面仍按顶栏版本阅读。' : '');
     this.root.dispatchEvent(new CustomEvent('summary-refreshed', {detail: value}));
   }
-  async refreshControl(valid = () => true) {
+  async refreshControl(valid = () => true, observedSummary = null) {
     // Navigation already reads the same control facts. Do not queue passive
     // reads behind it while the previous work surface is still displayed.
     if (this.navigationPending || !valid()) return;
@@ -113,12 +114,38 @@ export class Project {
       const info = await this.readControl();
       if (!valid() || serial !== this.controlRead || info.project_identity !== this.info.project_identity) return;
       this.info = info;
+      await this.refreshCurrentWork(info, () => isCurrent() && serial === this.controlRead, observedSummary);
+      if (!isCurrent() || serial !== this.controlRead) return;
       // Refresh only the control facts. Draft editors, fixed canvases and open
       // decisions keep their DOM and confirmed basis across another window's
       // pause/revoke/CAS update.
       const banner = collaborationBanner(this);
       this.controlSlot?.replaceChildren(...(banner ? [banner] : []));
     } catch { /* Existing fixed reading and the regular sync recovery remain. */ }
+  }
+  async refreshCurrentWork(info, isCurrent = () => true, observedSummary = null) {
+    if (!this.health.ui_capabilities?.includes('workbench_summary.v2') || !this.summary) return;
+    const revision = this.route.revision, generation = this.generation;
+    let work = null, actions;
+    try {
+      // The poll just read current facts. Reuse only that exact artifact/control
+      // pair; historical routes or a concurrent control write need a fresh read.
+      const matches = value => value?.project_id === info.project_id &&
+        value.current_work?.identity?.project_id === info.project_id &&
+        value.current_work.identity.artifact_revision_id === revision &&
+        value.current_work.identity.control_revision_id === (info.control_revision_id || info.revision_id);
+      const value = matches(observedSummary) ? observedSummary : await get(this.summaryURL(revision));
+      const identity = value.current_work?.identity;
+      if (identity?.project_id === this.info.project_id && identity.artifact_revision_id === revision &&
+          identity.control_revision_id === (info.control_revision_id || info.revision_id)) {
+        work = value.current_work; actions = value.next_actions;
+      }
+    } catch { /* Never retain an old action paired with new control facts. */ }
+    if (!isCurrent() || generation !== this.generation || revision !== this.route.revision || this.navigationPending) return;
+    this.summary = {...this.summary, current_work:work, ...(actions ? {next_actions:actions} : {})};
+    // Replace only the derived work panel. Fixed artifacts, comparisons and
+    // draft editors retain their DOM, revision and unsaved content.
+    document.querySelectorAll('[data-current-work]').forEach(node => node.replaceWith(currentWork(this)));
   }
   async loadRoute(initial = null, focus = true) {
     const requestedHash = location.hash, requestedRoute = initial && structuredClone(initial);

@@ -60,7 +60,7 @@ def _write_state(project_dir: Path, state: dict) -> None:
 UI_CAPABILITIES = ("project_control_light.v1", "content_insight.v1", "method_library_preview.v1", "ui_draft.v1", "ui_gallery.v1", "ui_overview.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1",
                    "page_detail.v1", "annotations.v1", "changes.v1", "operations.v1", "candidates.v1",
                    "stages.v1", "run_desk.v1", "style_recipes.v1", "content_ops.v1", "exports.v1",
-                   "restoration.v1", "workbench_actions.v1", "action_targets.v1", "icon_quality.v1", "result_reading.v1", "history_summary.v1", "visual_reference.v1", "material_uploads.v1",
+                   "workbench_summary.v2", "restoration.v1", "workbench_actions.v1", "action_targets.v1", "icon_quality.v1", "result_reading.v1", "history_summary.v1", "visual_reference.v1", "material_uploads.v1",
                    "external_review.v1", "delivery_eligibility.v1") + RUNTIME_PROTOCOL_CAPABILITIES
 
 
@@ -670,7 +670,10 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             if parsed.path == "/api/view":
                 payload = view_mod.project_view(project, revision=revision)
             elif parsed.path in ("/api/view/summary", "/api/workbench"):
-                result=workbench_mod.workbench_summary_json(project, revision=revision, reading=reading)
+                protocols = query.get('protocol', [])
+                if len(protocols) > 1:
+                    raise ValueError('provide one summary protocol')
+                result=workbench_mod.workbench_summary_json(project, revision=revision, reading=reading, protocol=protocols[0] if protocols else None)
                 if reading_unavailable:
                     payload=json.loads(result);payload['reading_unavailable']=True;self._send_json(payload)
                 else:self._send_json_bytes(result)
@@ -830,14 +833,19 @@ def open_view(project_dir: Path | str, *, open_browser: bool = True, ui: str | N
                 "port": state["port"], "pid": state.get("pid"),
                 "reused": state.get("reused", False), "ui": ui}
     url = state["url"] + ui + "/"
+    presentation = {'address_available': True, 'open_attempted': bool(open_browser),
+                    'system_accepted': None, 'frontend_loaded': None, 'user_seen': None,
+                    'address_scope': 'host_loopback'}
     if open_browser:
         opened = False
         try:
             opened = bool(webbrowser.open(url, new=2))
         except Exception:  # noqa: BLE001 - no browser on this host
             opened = False
+        presentation["system_accepted"] = opened
         if not opened:
             return {
+                "presentation": presentation,
                 "review_url": url,
                 "view_status": "available",
                 "detail": "no browser could be opened; use the local URL above",
@@ -848,7 +856,8 @@ def open_view(project_dir: Path | str, *, open_browser: bool = True, ui: str | N
             }
     return {
         "review_url": url,
-        "view_status": "opened" if open_browser else "available",
+        "view_status": "opened" if open_browser else "available",  # legacy transport observation
+        "presentation": presentation,
         "port": state["port"],
         "pid": state.get("pid"),
         "reused": state.get("reused", False),

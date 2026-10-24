@@ -102,6 +102,25 @@ def _current_artifact_digests(store, doc, extra_subjects=()):
             else:
                 body = None
             if body is not None:
+                if role in ('narrative', 'content_plan'):
+                    outline_body = copy.deepcopy(body)
+                    if role == 'narrative':
+                        outline_body['nodes'] = obj.get('nodes') or []
+                    else:
+                        outline_body['input']['page_roles'] = (obj.get('input') or {}).get('page_roles') or []
+                    info['outline_semantic_sha'] = sha256_bytes(canonical_json_bytes(outline_body))
+                source_body = copy.deepcopy(body)
+                if role in ('narrative', 'content_plan'):
+                    source_body = outline_body
+                elif role == 'page':
+                    source_body['visible_mapping'] = mapping.get('visible_links') or []
+                # Source associations, versions and locators are substantive for
+                # source findings, but do not stand in for unrelated prose fixes.
+                info['source_semantic_sha'] = sha256_bytes(canonical_json_bytes(source_body))
+                source_speech_body = ({**source_body, 'speaker_notes': obj.get('speaker_notes'),
+                                       'speech_segments': mapping.get('speech_segments')}
+                                      if role == 'page' else source_body)
+                info['source_speech_semantic_sha'] = sha256_bytes(canonical_json_bytes(source_speech_body))
                 info['semantic_sha'] = sha256_bytes(canonical_json_bytes(body))
                 speech_body = ({**body, 'speaker_notes': obj.get('speaker_notes'),
                                 'speech_segments': (obj.get('content_mapping') or {}).get('speech_segments')}

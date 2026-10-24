@@ -1238,6 +1238,12 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
     targets = dict(context.get("targets") or {})
     task = context.get("task")
     reasons: list[dict] = []
+    if task and task.get('review_subject') == 'outline' and action in ('task.start', 'task.accept'):
+        from .outline_review import review_targets
+        try:
+            targets = review_targets(store, store.load_document(task['dispatch_revision']))
+        except (StoreError, OSError, ValueError, KeyError, TypeError):
+            reasons.append({'code': 'scope_exceeded', 'detail': 'frozen outline scope cannot be verified'})
     fixed_candidates = (_authority_candidates(store, control, spec, targets, task,
         artifact=artifact, selected_output=context.get('selected_output')) if spec.delivery else [])
     fixed_delivery = any(c['effective'] and c['covers'] and c.get('fixed_file_only') for c in fixed_candidates)

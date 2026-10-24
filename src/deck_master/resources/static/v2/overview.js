@@ -1,9 +1,10 @@
-import {isDesignPlan, completionLabel} from './collaboration-desk.js';
+import {currentWork} from './current-work.js';
 import {get, revisionQuery, canonical} from './api.js';
 import {el, button, heading, empty, version, sortHeading, icon, disabledReason, modal, downloadJSON, actionMenu} from './dom.js';
 import {imageView} from './images.js';
 import {layers} from './routes.js';
 import {stageKey} from './gallery.js';
+import {kindLabels, nextLabels, actionRoute, todoTitle, reasonText, todoMeta, todoButton} from './action-summary.js';
 import {openAction} from './action-targets.js';
 import {batchActions} from './batch-actions.js';
 import {OverviewMemory} from './overview-state.js';
@@ -11,82 +12,12 @@ import {routeHash} from './routes.js';
 
 // A03 总览：待办与矩阵全部来自 B01 的实时投影（next_actions/attention/prompt_summary），
 // 不硬编码页数、不出现无证据的风格结论；矩阵保持普通 Tab 顺序（设计系统第 07 节）。
-const kindLabels = {verify_execution: '执行待核实', handoff: '制作任务待交接', inspect_failure: '失败待查看',
-  replan: '需重新计划', compare_candidates: '候选待决定', reconcile_inputs: '输入待协调',
-  prepare_stage: '产物待补齐', refresh_stage: '产物依据已变化', review_results: '结果待阅读', review_quality: '质量记录待查看'};
-const nextLabels = {verify_execution: '去核实', handoff: '去交接', inspect_failure: '查看失败', replan: '重新计划',
-  compare_candidates: '比较候选', reconcile_inputs: '去协调', prepare_stage: '查看待补页', refresh_stage: '查看依据',
-  review_results: '去阅读', review_quality: '查看记录'};
-const reasonLabels = {dependency_basis_changed:'已采用依据变化，重新准备本次任务后再交接。', dependencies_unverifiable:'任务依据暂不可核实，先检查原记录。',unknown_calls_recorded: '任务记录了未知调用；先核实原执行，未确认前不要重复派发。',
-  running_task_stale: '任务已运行超过 30 分钟，状态待核实；超时不等于失败。',
-  running_task_unclaimed: '运行中的任务缺少执行标识，需核实接手记录。',
-  task_failed: '执行失败；当前稿件保留，可调整要求后重试。',
-  task_superseded: '任务已由新任务接续；查看当前任务后再操作。',
-  task_awaiting_host: '要求已保存，尚未开始；复制制作要求到制作工具执行。',
-  task_unreadable: '任务记录损坏，已隔离；其余记录不受影响。',
-  candidate_pending: '候选已返回，当前版本保留；比较后再决定是否采用。',
-  candidate_unreadable: '候选记录损坏，已隔离；仍计入待决定。',
-  content_needs_reconciliation: '新输入与当前内容尚未对齐；先看影响再决定。',
-  stage_missing: '上游内容已就绪，该层尚未生成。',
-  stage_basis_changed: '该层的生成依据与当前上游版本不同。已有产物仍可阅读，请查看依据后决定是否重新试作。',
-  quality_reviews_recorded: '已记录质量检查；查看结论与范围。',
-  task_results_ready: '结果已返回待阅读；查看不代表采用。'};
-const routeLayer = {blueprint: 'original_image', svg: 'svg', svg_preview: 'svg', ppt_preview: 'ppt', pptx: 'ppt'};
 const layerKeys = ['content', 'original_image', 'svg', 'ppt'];
-
-function actionRoute(action) {
-  if (['prepare_stage', 'refresh_stage'].includes(action.kind) && action.page_ids?.length === 1 && routeLayer[action.layer])
-    return {surface: 'page', page_id: action.page_ids[0], layer: routeLayer[action.layer]};
-  if (action.kind === 'reconcile_inputs') return {surface: 'content'};
-  return {surface: 'runs'};
-}
-function todoTitle(action) {
-  const layer = {blueprint:'原图',svg:'SVG',svg_preview:'SVG 预览',ppt_preview:'PPT 预览',pptx:'整稿 PPT'}[action.layer] || '产物类型待核实';
-  const base = action.kind === 'prepare_stage' ? `${layer}待生成`
-    : action.kind === 'refresh_stage' ? `${layer}依据已变化` : kindLabels[action.kind] || '待核实事项';
-  if(action.object_count && ['verify_execution','handoff','inspect_failure','replan','review_results'].includes(action.kind)) return `${action.object_count} 项${base}`;
-  if(action.object_count && action.kind==='compare_candidates')return `${action.object_count} 个候选待决定`;
-  return action.page_ids?.length ? `${action.page_ids.length} 页${base}` : base;
-}
-function reasonText(action) {
-  if(action.enabled===false)return ({candidate_unreadable:'候选记录暂不可读，已保留并隔离。',candidate_task_unreadable:'候选所属任务无法确认，暂不推荐采用。',candidate_basis_unreadable:'生成依据暂不可读，当前关系待核实。',request_binding_missing:'未记录与当前请求的绑定，保留为待核实记录。',target_identity_mismatch:'对象身份不完整，保留记录但不会猜测目标。'})[action.blocked_reason]||'当前关系待核实，记录仍保留。';
-  return reasonLabels[action.reason_code] || action.reason_code || '';
-}
-function todoMeta(app, action) {
-  const pages = (action.page_ids || []).map(id => {
-    const index = app.summary.pages.findIndex(page => page.page_id === id);
-    return index < 0 ? id : index + 1;
-  });
-  if (!pages.length) return '项目级事项';
-  return pages.length > 4 ? `第 ${pages.slice(0, 4).join('、')} 等共 ${pages.length} 页` : `第 ${pages.join('、')} 页`;
-}
-function todoButton(app, action, primary = false) {
-  const blocked = action.enabled === false;
-  const precise = app.health.ui_capabilities?.includes('action_targets.v1');
-  return disabledReason(button((nextLabels[action.kind] || '查看') + (precise ? '' : ' · 通用入口'), () => openAction(app, action, actionRoute(action)), primary,
-    {disabled: blocked, 'data-priority-action': primary ? 'true' : null}), blocked ? '该项记录暂不可读（已隔离），先处理其它待办。' : '');
-}
 
 function todoPanel(app) {
   const block = app.summary.next_actions;
-  const completion=app.info.completion,request=app.info.collaboration?.request;
-  const designPlan=isDesignPlan(completion);
-  const currentRevision=app.info.control_revision_id||app.info.revision_id;
-  if(((completion?.state==='completed'&&completion.intent==='content_only')||designPlan)&&completion.request_id===request?.request_id&&
-      !request.paused&&(!request.closed||request.closed_reason==='completed')&&app.route.revision===currentRevision&&
-      (!app.latest||app.latest.revision_id===currentRevision)) {
-    // Unrequested production slots remain factual in the matrix. They are not
-    // the next obligation after the actual requested content is complete.
-    const remaining=(block?.actions||[]).filter(action=>!['prepare_stage','refresh_stage'].includes(action.kind));
-    const content=designPlan?'设计方案':{plan_only:'论证与大纲',write_only:'上屏稿',speech_only:'口播稿',content_full:'完整内容'}[completion.content_intent]||'内容';
-    return el('section',{class:'overview-todos todo-clear','aria-label':designPlan?'本次设计方案':'本次内容产物'},
-      el('h2',{},designPlan?completionLabel(completion):`本次${content}已完成`),
-      el('p',{},designPlan?(completion.state==='completed'?'约定的设计方案已返回，可继续阅读与核对。原图、SVG 和 PPT 不属于本次方案请求。':'本次请求只包含设计方案，尚需准备并核对方案依据。原图、SVG 和 PPT 不属于本次请求。'):'约定的内容已返回，可继续阅读与核对。图稿、SVG 和 PPT 制作需要新的明确请求与范围。'),
-      button(designPlan?(completion.state==='completed'?'查看本次设计方案':'准备本次设计方案'):'阅读本次内容',()=>app.go(designPlan?{surface:'style'}:completion.content_intent==='plan_only'?{surface:'content'}:
-        {surface:'page',page_id:(completion.effective_scope?.page_ids||[]).find(id=>app.summary.pages.some(page=>page.page_id===id))||app.summary.pages[0]?.page_id,layer:'content'}),true),
-      remaining.length>0&&el('div',{class:'todo-secondary'},el('h3',{},'仍需核对的记录'),remaining.map(action=>el('article',{class:'todo-row'},
-        el('div',{},el('h3',{},todoTitle(action)),el('p',{},reasonText(action))),todoButton(app,action)))));
-  }
+  const work = app.summary.current_work;
+  if (work || !block) return currentWork(app);
   if (block?.status === 'recorded' && block.actions?.length) {
     const [first, ...rest] = block.actions;
     const secondary=action=>el('article',{class:'todo-row'},el('div',{},el('h3',{},todoTitle(action)),el('p',{},reasonText(action)),el('p',{class:'muted'},todoMeta(app,action))),todoButton(app,action));

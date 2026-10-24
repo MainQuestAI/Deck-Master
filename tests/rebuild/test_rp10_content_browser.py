@@ -45,16 +45,21 @@ def test_plan_editor_mount_save_reopen_and_conflict(tmp_path, route):
             expect(chapter).to_be_visible()
             chapter.fill('RP-10 修改后的章节')
             if route == 'studio':
-                page.locator('.studio-goal-card').first.get_by_role('button', name='编辑页面目标', exact=True).click()
-            goal = page.get_by_label(re.compile('^页面目标 ')).first
+                page.locator('.studio-goal-card').last.get_by_role('button', name='编辑页面目标', exact=True).click()
+            goal = page.get_by_label(re.compile('^页面目标 ')).last
             goal.fill('RP-10 保留原事实的新目标')
             page.get_by_role('button', name='预览内容计划变更', exact=True).click()
             submit = page.get_by_role('button', name='确认内容变更', exact=True)
             expect(submit).to_be_enabled()
+            differences = page.get_by_role('list', name='具体字段变更', exact=True)
+            expect(differences).to_contain_text(original['chapters'][0]['title'] + ' → RP-10 修改后的章节')
+            expect(differences).to_contain_text('第 24 页')
+            expect(differences).to_contain_text(original['page_roles'][-1]['intended_takeaway'] + ' → RP-10 保留原事实的新目标')
             assert store.load_document() == before
             # Editing after preview cancels that pending plan in either route.
             chapter.fill('RP-10 修改后的章节（二）')
             expect(submit).to_be_disabled()
+            expect(page.get_by_role('list', name='具体字段变更', exact=True)).to_have_count(0)
             assert store.load_document() == before
             page.get_by_role('button', name='预览内容计划变更', exact=True).click()
             expect(submit).to_be_enabled()
@@ -64,10 +69,10 @@ def test_plan_editor_mount_save_reopen_and_conflict(tmp_path, route):
             saved = store.load_document()
             current = store.read_object_json(saved['content_plan'])['input']
             assert current['chapters'][0]['title'] == 'RP-10 修改后的章节（二）'
-            assert current['page_roles'][0]['intended_takeaway'] == 'RP-10 保留原事实的新目标'
+            assert current['page_roles'][-1]['intended_takeaway'] == 'RP-10 保留原事实的新目标'
             for key in ['page_budget', 'time_budget', 'speech_policy', 'issues', 'tradeoff_issue_ids', 'page_order']:
                 assert current[key] == original[key]
-            assert current['page_roles'][1:] == original['page_roles'][1:]
+            assert current['page_roles'][:-1] == original['page_roles'][:-1]
             assert saved['pages'] == before['pages'] and saved['tasks'] == before['tasks']
             open_plan(page, server.start(), route)
             expect(page.get_by_label('章节名称 1', exact=True)).to_have_value('RP-10 修改后的章节（二）')

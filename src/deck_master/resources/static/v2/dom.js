@@ -73,7 +73,11 @@ export function modal(title, body, actions = [], {fallback, protectDraft = false
     if (dialog.open) return;
     cleanup(); // Fallback for programmatic close, once per content owner.
     if (waiting) { if (modalTail === dialog) modalTail = null; dialog.remove(); }
-    if (trigger?.isConnected) { trigger.focus(); return; }
+    // Native close already restored a surviving trigger synchronously. Its queued
+    // event must not undo keyboard navigation or a newer focus choice made since.
+    if (trigger?.isConnected) return;
+    const active = document.activeElement;
+    if (active && active !== document.body && active !== document.documentElement && !dialog.contains(active)) return;
     // UX-06b：触发器在模态期间被卸载（列表刷新、条目移除）：调用方可以在 O2 里
     // 指定工具内的回退目标（如工具标题）；没有指定则回退到工作面标题。
     (fallback?.isConnected ? fallback : document.querySelector('#view-title') || document.querySelector('main h1, main h2'))?.focus({preventScroll: true});

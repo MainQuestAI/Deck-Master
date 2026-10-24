@@ -446,6 +446,12 @@
           }
         }
       }
+    },
+    "review_subject": {
+      "enum": [
+        "outline"
+      ],
+      "description": "Explicit outline-only subject; absent retains the original manuscript contract."
     }
   },
   "required": [
@@ -490,6 +496,34 @@
             "expression_checks"
           ]
         }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "review_subject"
+        ],
+        "properties": {
+          "review_subject": {
+            "const": "outline"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "review_stage": {
+            "const": "preproduction"
+          },
+          "kind": {
+            "enum": [
+              "argument",
+              "progression"
+            ]
+          }
+        },
+        "required": [
+          "review_stage"
+        ]
       }
     }
   ]
