@@ -38,7 +38,17 @@
       "test_action_targets_browser.py"
     ],
     "scope_note": "21 stale + 1 current、历史失败/当前采用接续、未知读取、请求替换与后台关系。",
-    "verification_report": "VERIFICATION.md"
+    "verification_report": "VERIFICATION.md",
+    "review_revalidation": {
+      "baseline": "e2bccee8",
+      "findings": [
+        "R1"
+      ],
+      "report": "REVIEW-REPAIRS.md",
+      "evidence": "evidence/pr188-repairs/review-repairs.json",
+      "status": "PASS_TARGETED",
+      "boundary": "Original evidence retained; complete local and final SHA CI results are reported separately."
+    }
   },
   {
     "id": "AC04",
@@ -51,7 +61,17 @@
       "test_ui_current_relationship.py"
     ],
     "scope_note": "任务列表对象暴露阶段、页范围、时间、身份与当前关系。",
-    "verification_report": "VERIFICATION.md"
+    "verification_report": "VERIFICATION.md",
+    "review_revalidation": {
+      "baseline": "e2bccee8",
+      "findings": [
+        "R1"
+      ],
+      "report": "REVIEW-REPAIRS.md",
+      "evidence": "evidence/pr188-repairs/review-repairs.json",
+      "status": "PASS_TARGETED",
+      "boundary": "Original evidence retained; complete local and final SHA CI results are reported separately."
+    }
   },
   {
     "id": "AC05",
@@ -65,7 +85,17 @@
       "test_ui_refactor_evidence_browser.py"
     ],
     "scope_note": "逐层正确路由、对象菜单键盘返回及 30 页矩阵；来源通过对象菜单进入。",
-    "verification_report": "VERIFICATION.md"
+    "verification_report": "VERIFICATION.md",
+    "review_revalidation": {
+      "baseline": "e2bccee8",
+      "findings": [
+        "R7"
+      ],
+      "report": "REVIEW-REPAIRS.md",
+      "evidence": "evidence/pr188-repairs/review-repairs.json",
+      "status": "PASS_TARGETED",
+      "boundary": "Original evidence retained; complete local and final SHA CI results are reported separately."
+    }
   },
   {
     "id": "AC06",
@@ -77,7 +107,18 @@
       "test_studio_content_browser.py::test_content_selection_survives_filter_and_select_all_is_visible_only"
     ],
     "scope_note": "第 2/28 页选择、筛选外数量、当前可见全选、刷新恢复稳定 ID。",
-    "verification_report": "VERIFICATION.md"
+    "verification_report": "VERIFICATION.md",
+    "review_revalidation": {
+      "baseline": "e2bccee8",
+      "findings": [
+        "R6",
+        "R8"
+      ],
+      "report": "REVIEW-REPAIRS.md",
+      "evidence": "evidence/pr188-repairs/review-repairs.json",
+      "status": "PASS_TARGETED",
+      "boundary": "Original evidence retained; complete local and final SHA CI results are reported separately."
+    }
   },
   {
     "id": "AC07",
@@ -104,7 +145,18 @@
       "test_ui_continuous_journey_browser.py"
     ],
     "scope_note": "页序与页身份分开；内容操作与候选仍绑定原对象和固定版本。",
-    "verification_report": "VERIFICATION.md"
+    "verification_report": "VERIFICATION.md",
+    "review_revalidation": {
+      "baseline": "e2bccee8",
+      "findings": [
+        "R6",
+        "R8"
+      ],
+      "report": "REVIEW-REPAIRS.md",
+      "evidence": "evidence/pr188-repairs/review-repairs.json",
+      "status": "PASS_TARGETED",
+      "boundary": "Original evidence retained; complete local and final SHA CI results are reported separately."
+    }
   },
   {
     "id": "AC09",
@@ -172,7 +224,17 @@
       "test_studio_style_browser.py::test_v3_initial_design_without_original_images_is_readable_and_plans_exact_page"
     ],
     "scope_note": "V1/V2/V3 全部可读，保留固定规范引用；V3 无旧原图可按真实接口规划一页。",
-    "verification_report": "VERIFICATION.md"
+    "verification_report": "VERIFICATION.md",
+    "review_revalidation": {
+      "baseline": "e2bccee8",
+      "findings": [
+        "R5"
+      ],
+      "report": "REVIEW-REPAIRS.md",
+      "evidence": "evidence/pr188-repairs/review-repairs.json",
+      "status": "PASS_TARGETED",
+      "boundary": "Original evidence retained; complete local and final SHA CI results are reported separately."
+    }
   },
   {
     "id": "AC14",
@@ -199,7 +261,17 @@
       "examples/workbench/w12_offline_browser.py"
     ],
     "scope_note": "任务四分区、固定阅读/当前执行/已读身份和三个用途下载。",
-    "verification_report": "VERIFICATION.md"
+    "verification_report": "VERIFICATION.md",
+    "review_revalidation": {
+      "baseline": "e2bccee8",
+      "findings": [
+        "R5"
+      ],
+      "report": "REVIEW-REPAIRS.md",
+      "evidence": "evidence/pr188-repairs/review-repairs.json",
+      "status": "PASS_TARGETED",
+      "boundary": "Original evidence retained; complete local and final SHA CI results are reported separately."
+    }
   },
   {
     "id": "AC16",
@@ -213,7 +285,17 @@
       "test_ui_continuous_journey_browser.py"
     ],
     "scope_note": "状态文字按真实 API 记录投影；复制不创建模型调用。",
-    "verification_report": "VERIFICATION.md"
+    "verification_report": "VERIFICATION.md",
+    "review_revalidation": {
+      "baseline": "e2bccee8",
+      "findings": [
+        "R1"
+      ],
+      "report": "REVIEW-REPAIRS.md",
+      "evidence": "evidence/pr188-repairs/review-repairs.json",
+      "status": "PASS_TARGETED",
+      "boundary": "Original evidence retained; complete local and final SHA CI results are reported separately."
+    }
   },
   {
     "id": "AC17",
@@ -268,7 +350,17 @@
       "test_webui_acceptance_matrix.py"
     ],
     "scope_note": "六层阅读、完整长正文、预备/实际提示词及来源身份。",
-    "verification_report": "VERIFICATION.md"
+    "verification_report": "VERIFICATION.md",
+    "review_revalidation": {
+      "baseline": "e2bccee8",
+      "findings": [
+        "R2"
+      ],
+      "report": "REVIEW-REPAIRS.md",
+      "evidence": "evidence/pr188-repairs/review-repairs.json",
+      "status": "PASS_TARGETED",
+      "boundary": "Original evidence retained; complete local and final SHA CI results are reported separately."
+    }
   },
   {
     "id": "AC21",
@@ -282,7 +374,18 @@
       "test_webui_content_insight_browser.py"
     ],
     "scope_note": "来源非模态，正文抽屉焦点循环/Escape 返回，检查与编辑切换清除图稿标注模式。",
-    "verification_report": "VERIFICATION.md"
+    "verification_report": "VERIFICATION.md",
+    "review_revalidation": {
+      "baseline": "e2bccee8",
+      "findings": [
+        "R7",
+        "R8"
+      ],
+      "report": "REVIEW-REPAIRS.md",
+      "evidence": "evidence/pr188-repairs/review-repairs.json",
+      "status": "PASS_TARGETED",
+      "boundary": "Original evidence retained; complete local and final SHA CI results are reported separately."
+    }
   },
   {
     "id": "AC22",
@@ -309,7 +412,17 @@
       "test_personal_recovery_browser.py"
     ],
     "scope_note": "并发、丢响应、后写、切层、原请求核实；旧权限与晚结果守卫继续执行。",
-    "verification_report": "VERIFICATION.md"
+    "verification_report": "VERIFICATION.md",
+    "review_revalidation": {
+      "baseline": "e2bccee8",
+      "findings": [
+        "R4"
+      ],
+      "report": "REVIEW-REPAIRS.md",
+      "evidence": "evidence/pr188-repairs/review-repairs.json",
+      "status": "PASS_TARGETED",
+      "boundary": "Original evidence retained; complete local and final SHA CI results are reported separately."
+    }
   },
   {
     "id": "AC24",
@@ -349,7 +462,17 @@
       "test_pr103_complete_browser.py"
     ],
     "scope_note": "异步版本前进不换比较两端；原采用计划失效。",
-    "verification_report": "VERIFICATION.md"
+    "verification_report": "VERIFICATION.md",
+    "review_revalidation": {
+      "baseline": "e2bccee8",
+      "findings": [
+        "R4"
+      ],
+      "report": "REVIEW-REPAIRS.md",
+      "evidence": "evidence/pr188-repairs/review-repairs.json",
+      "status": "PASS_TARGETED",
+      "boundary": "Original evidence retained; complete local and final SHA CI results are reported separately."
+    }
   },
   {
     "id": "AC27",
@@ -394,7 +517,19 @@
       "evidence/native-acceptance.json"
     ],
     "scope_note": "三视口截图/计算样式/主行动/焦点回归与 Linux 577 项浏览器通过；Mac 桌面实际 Tab→Space→Down→Enter 选择和阅读焦点补证通过。单桌面操作不冒充 Mac 三视口自动化重跑；用户视觉认可独立。",
-    "verification_report": "VERIFICATION.md"
+    "verification_report": "VERIFICATION.md",
+    "review_revalidation": {
+      "baseline": "e2bccee8",
+      "findings": [
+        "R2",
+        "R5",
+        "R7"
+      ],
+      "report": "REVIEW-REPAIRS.md",
+      "evidence": "evidence/pr188-repairs/review-repairs.json",
+      "status": "PASS_TARGETED",
+      "boundary": "Original evidence retained; complete local and final SHA CI results are reported separately."
+    }
   },
   {
     "id": "AC30",
@@ -413,6 +548,17 @@
       "test_ui_current_relationship.py::test_large_candidate_history_checks_shared_basis_once_per_snapshot"
     ],
     "scope_note": "同一输入 SHA 的 24/100 页、1/500 历史候选；三轮五工作面切换、46 秒空闲无并发重复轮询。已修复审计抓到的共享依据重复校验退化；本机有限观察不替代 RP-25 全量 CPU 修复或生产 SLA。",
-    "verification_report": "VERIFICATION.md"
+    "verification_report": "VERIFICATION.md",
+    "review_revalidation": {
+      "baseline": "e2bccee8",
+      "findings": [
+        "R3",
+        "R4"
+      ],
+      "report": "REVIEW-REPAIRS.md",
+      "evidence": "evidence/pr188-repairs/review-repairs.json",
+      "status": "PASS_TARGETED",
+      "boundary": "Original evidence retained; complete local and final SHA CI results are reported separately."
+    }
   }
 ]

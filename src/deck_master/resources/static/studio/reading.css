@@ -68,11 +68,11 @@
  .studio-workspace .reading-toolbar > .studio-page-actions {order:2;margin-left:auto}
 }
 @media(max-width:767px){
- .studio-workspace .page-workbench .page-head {display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 8px;padding-bottom:8px;margin-bottom:8px}
+ .studio-workspace .page-workbench .page-head {display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 8px;padding-bottom:8px;margin-bottom:8px}
  .studio-workspace .page-workbench .page-head > div:first-child {display:contents}
- .studio-workspace .page-workbench .page-head h1 {grid-column:1/-1;margin:0}
- .studio-workspace .page-workbench .page-head p {grid-column:1;grid-row:2;font-size:12px;margin:0}
- .studio-workspace .page-workbench .page-pager {grid-column:1/-1;grid-row:3;justify-self:stretch;gap:8px;align-self:center}
+ .studio-workspace .page-workbench .page-head h1 {grid-column:1;margin:0}
+ .studio-workspace .page-workbench .page-head p {grid-column:2;grid-row:1;align-self:center;font-size:12px;margin:0}
+ .studio-workspace .page-workbench .page-pager {grid-column:1/-1;grid-row:2;justify-self:stretch;gap:8px;align-self:center}
  .studio-workspace .page-workbench .page-pager select {width:112px;}
  .studio-workspace .page-workbench .page-pager button {width:auto;min-width:44px;min-height:44px;}
  .studio-workspace .reading-toolbar > .page-tools-switcher {padding-top:0;border:0}

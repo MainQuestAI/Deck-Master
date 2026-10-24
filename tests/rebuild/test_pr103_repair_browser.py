@@ -194,7 +194,7 @@ def test_navigation_uses_url_at_start_not_passive_overview_events(ux04_browser):
     def delay(route):
         held.append((route, route.fetch()))
         page.evaluate('() => window.pr103ProjectHeld = true')
-    page.route('**/api/project', delay)
+    page.route('**/api/project?light=1', delay)
     page.evaluate('() => {const p=new URLSearchParams(location.hash.slice(1));p.set("filter","broken");location.hash="#"+p;}')
     page.wait_for_function('() => location.hash.includes("filter=broken")')
     page.wait_for_function('() => window.pr103ProjectHeld === true')

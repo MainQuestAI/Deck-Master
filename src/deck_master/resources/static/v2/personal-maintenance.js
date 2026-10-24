@@ -45,4 +45,3 @@ export function personalClearPanel(app) {
   }
   return el('details', {'data-container':'section', class: 'panel personal-clear'}, el('summary', {}, '清理本机个人状态（草稿与阅读设置）'), body);
 }
-

@@ -1,5 +1,7 @@
 # 完成度复核
 
+> PR188 两轮审查后的当前修复与重新验收见 [REVIEW-REPAIRS.md](REVIEW-REPAIRS.md)。以下原验收计数按原提交保留，不覆盖新增的 8 项反例；原生目录取消和 AC14/AC18 专业依赖边界不变。
+
 2026-10-24 · 产品提交 `44fc6a23` · PR [#188](https://github.com/MainQuestAI/Deck-Master/pull/188)
 
 本表按原方案逐项核对，不以已写代码反推缩小范围。本轮 UI 实现、原生补验及既定提交的完整远端检查已完成，可转正式待审；专业依赖与用户认可仍单列。最新收口见 [原生验收](NATIVE-ACCEPTANCE.md)。

@@ -49,7 +49,7 @@ def test_pager_text_target_and_disabled_endpoints(server_url, entry, width, touc
         browser.close()
 
 
-def test_pressed_controls_have_distinct_paint(server_url):
+def test_pressed_controls_have_distinct_paint(server_url, tmp_path):
     from playwright.sync_api import sync_playwright, expect
     with sync_playwright() as pw:
         browser = pw.chromium.launch()
@@ -68,7 +68,7 @@ def test_pressed_controls_have_distinct_paint(server_url):
         assert len(colors) > 1 and all(colors[0] != item for item in colors[1:]), colors
         # Shared recipe covers every retained container, including disabled and hover.
         result = page.evaluate('''() => {
-          const selectors=['batch-actions','versions','reading-mode','style-source','icon-mode','content-adjustment','segmented','page-tools-switcher','runs-subareas','studio-overview-actions'];
+          const selectors=['studio-batch-modes','studio-version-list','studio-reading-controls','studio-style-route','studio-icon-methods','studio-icon-catalog','studio-icon-samples','row wrap','segmented','page-tools-switcher','runs-subareas','studio-overview-actions','studio-content-areas','studio-style-stages'];
           return selectors.map(name=>{
             const group=document.createElement('div');group.className=name;
             group.innerHTML='<button aria-pressed="false">普通</button><button aria-pressed="true">选中</button><button aria-pressed="false" disabled>禁用</button><button aria-pressed="true" disabled>禁用选中</button>';
@@ -82,4 +82,5 @@ def test_pressed_controls_have_distinct_paint(server_url):
         reconstruct.hover()
         colors = reconstruct.evaluate('e=>[e,...e.parentElement.querySelectorAll("button[aria-pressed=false]")].map(b=>{const s=getComputedStyle(b);return [s.backgroundColor,s.borderColor,s.color,s.boxShadow]})')
         assert all(colors[0] != item for item in colors[1:]), colors
+        page.screenshot(path=str(tmp_path / 'pressed-controls.png'))
         browser.close()

@@ -269,7 +269,7 @@ function matrixPanel(app, saved, overviewRoot) {
   }
   function nextButton(page) {
     const item = page.attention?.items?.[0];
-    const identity = canonical([page.page_id, item ? item.action_id || item : 'view_page']);
+    const identity = canonical([page.page_id, item ? [item.kind,item.action_id,item.layer,item.object_id,item.task_id,item.candidate_id] : 'view_page']);
     if (!item) return button('查看页面', () => app.go({surface: 'page', page_id: page.page_id, layer: 'content'}), false,
       {class: 'quiet', 'data-matrix-next': identity});
     const blocked = item.enabled === false;
@@ -281,6 +281,9 @@ function matrixPanel(app, saved, overviewRoot) {
     // restore focus owned by this table; asynchronous reads must not steal it
     // from the search field, navigation or a dialog.
     const focused = document.activeElement;
+    const ownedFocus = table.contains(focused);
+    const focusKey = ownedFocus ? focused.getAttribute('data-focus-key') : null;
+    const focusPage = ownedFocus ? focused.closest('tr[data-page-id]')?.dataset.pageId : null;
     const focusLabel = table.contains(focused) ? focused.getAttribute('aria-label') : null;
     const focusSort = table.contains(focused) && focused.matches('th[aria-sort] button');
     const focusNext = table.contains(focused) ? focused.getAttribute('data-matrix-next') : null;
@@ -361,7 +364,7 @@ function matrixPanel(app, saved, overviewRoot) {
         }
         thumb.append(view.node);
       } else thumb.append(icon('minus'));
-      const row = el('tr', {},
+      const row = el('tr', {'data-page-id':page.page_id},
         el('td', {}, el('label', {class: 'check-target'}, el('input', {type: 'checkbox',
           checked: selected.has(page.page_id), disabled: !batch.eligible(page) && !selected.has(page.page_id),
           'aria-label': `选择第 ${number} 页`, onchange: event => {
@@ -377,17 +380,21 @@ function matrixPanel(app, saved, overviewRoot) {
         el('td', {}, cellButton(page, 'svg', cellView(stageState(page.stages[stageKey.svg])))),
         el('td', {}, cellButton(page, 'ppt', cellView(stageState(page.stages[stageKey.ppt])))),
         el('td', {class: 'matrix-next'}, actionMenu(`第 ${number} 页操作`, [nextButton(page),
-          button('阅读正文', () => app.go({surface: 'page', page_id: page.page_id, layer: 'content'})),
-          button('核对来源', () => app.go({surface: 'page', page_id: page.page_id, layer: 'source'}))])));
+          button('阅读正文', () => app.go({surface: 'page', page_id: page.page_id, layer: 'content'}), false, {'data-focus-key':canonical([page.page_id,'read','content',page.page_id])}),
+          button('核对来源', () => app.go({surface: 'page', page_id: page.page_id, layer: 'source'}), false, {'data-focus-key':canonical([page.page_id,'read','source',page.page_id])})])));
       body.append(row);
     }
     table.replaceChildren(el('thead', {}, head), body);
-    const replacement = focusSort ? table.querySelector('th[aria-sort] button')
+    let replacement = focusKey ? table.querySelector(`[data-focus-key="${CSS.escape(focusKey)}"]`) : focusSort ? table.querySelector('th[aria-sort] button')
       : focusNext ? table.querySelector(`[data-matrix-next="${CSS.escape(focusNext)}"]`)
       : focusLabel ? table.querySelector(`[aria-label="${CSS.escape(focusLabel)}"]`) : null;
     if (replacement && !replacement.disabled) {
       if (ownedMenuOpen) replacement.closest('.object-actions')?.querySelector('.action-popover')?.showPopover();
       replacement.focus({preventScroll:true});
+    } else if (ownedFocus) {
+      // Never transfer focus to a new action with a different meaning.
+      replacement = focusPage ? table.querySelector(`tr[data-page-id="${CSS.escape(focusPage)}"] .object-actions > button`) : null;
+      (replacement || overviewRoot.querySelector('#view-title'))?.focus({preventScroll:true});
     }
   }
   searchInput.addEventListener('input', () => { search = searchInput.value; matrixPage = 1; batch.invalidate({keepErrors: true}); saveReading(); render(); });

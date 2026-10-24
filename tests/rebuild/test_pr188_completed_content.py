@@ -30,7 +30,7 @@ def test_adopted_compose_is_current_in_all_readers(tmp_path):
     assert store.load_document() == before
 
 
-@pytest.mark.parametrize('change', ['page', 'inputs', 'metadata', 'request'])
+@pytest.mark.parametrize('change', ['page', 'inputs', 'source', 'metadata', 'request'])
 def test_adopted_compose_tracks_only_real_subsequent_changes(tmp_path, change):
     project, store, task = completed_content(tmp_path)
     doc = copy.deepcopy(store.load_document())
@@ -40,6 +40,8 @@ def test_adopted_compose_tracks_only_real_subsequent_changes(tmp_path, change):
         doc['pages'][0]['page'] = store.put_json_object(page)
     elif change == 'inputs':
         doc['task']['audience'] += ' 新受众'
+    elif change == 'source':
+        doc['sources'][0]['usage_note'] = 'Changed source usage constraint'
     elif change == 'request':
         doc['collaboration']['request']['request_id'] = 'replacement-request'
     else:

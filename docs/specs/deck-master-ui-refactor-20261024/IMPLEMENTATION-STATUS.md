@@ -1,5 +1,7 @@
 # UI implementation status · 2026-10-24
 
+> PR188 两轮审查后的当前修复与重新验收见 [REVIEW-REPAIRS.md](REVIEW-REPAIRS.md)。以下原验收计数按原提交保留，不覆盖新增的 8 项反例；原生目录取消和 AC14/AC18 专业依赖边界不变。
+
 User authorized continuous product implementation, isolated branch/worktree, push and PR on 2026-10-24. This supersedes the planning-only boundary in the archived plan; it does not authorize modifying customer projects or merging the resulting PR.
 
 ## Baseline

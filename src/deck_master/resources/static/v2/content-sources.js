@@ -4,7 +4,7 @@ import {methodLibrary} from './method-library.js';
 import {studioStyle, styleDisclosure} from './style-phases.js';
 import {materialUploads} from './material-uploads.js';
 import {get, readableError, revisionQuery, canonical} from './api.js';
-import {el, button, heading, empty, version, icon, modal, actionMenu} from './dom.js';
+import {el, button, heading, empty, version, icon, modal, actionMenu, announce} from './dom.js';
 import {DraftEditor} from './drafts.js';
 import {contentOperation, contentPanel as panel, inputField, sourceReader} from './content-edit.js';
 
@@ -53,7 +53,7 @@ export function content(app, data) {
   const studio=studioStyle(),orderReview=el('div',{class:'studio-content-review stack'}),planReview=el('div',{class:'studio-content-review stack'});
   const goalSearch=el('input',{type:'search','aria-label':'搜索页面目标',placeholder:'搜索页码、标题或页面目标'});
   const sourceList = el('div', {class:'stack'}), pageList = el('ol', {class:'content-order', 'aria-label':'调整逐页稿顺序'}), goalList = el('div', {class:'stack'});
-  const pageSearch=el('input',{type:'search','aria-label':'搜索逐页稿',placeholder:'搜索页码或标题'});
+  const pageSearch=el('input',{type:'search',value:app.route.content_q||'',maxlength:200,'aria-label':'搜索逐页稿',placeholder:'搜索页码或标题'});
   const selectionStatus=el('span',{role:'status'});
   const selectVisible=el('input',{type:'checkbox','aria-label':'选定当前筛选结果',disabled:app.readonly});
   let adjustmentTools;
@@ -67,7 +67,12 @@ export function content(app, data) {
     if(studio&&adjustmentTools)adjustmentTools.hidden=selected.size===0;
   }
   selectVisible.addEventListener('change',()=>{for(const id of visiblePageIds())selectVisible.checked?selected.add(id):selected.delete(id);drawPages();changed();});
-  pageSearch.addEventListener('input',()=>drawPages());
+  pageSearch.addEventListener('input',()=>{
+    if(disposed||app.navigationPending)return;
+    app.route.content_q=pageSearch.value;
+    history.replaceState(null,'',routeHash(app.info,app.route));
+    drawPages();
+  });
   let operation, completedAction = null;
   const materialEditor = el('div',{class:'stack'});
   const retainedInputs = el('div',{class:'retained-inputs row wrap',role:'status',hidden:true});
@@ -150,7 +155,9 @@ export function content(app, data) {
   function move(id, next) {
     const from=order.indexOf(id);if (next<0 || next>=order.length || from<0 || app.readonly) return;
     order.splice(from,1);order.splice(next,0,id);app.contentFocusPage=id;drawPages();changed();
-    pageList.querySelector('[data-page-id="'+CSS.escape(id)+'"] .order-handle')?.focus();
+    const target=pageList.querySelector('[data-page-id="'+CSS.escape(id)+'"] .order-handle');
+    if(target)target.focus();
+    else {delete app.contentFocusPage;pageSearch.focus();announce('页面已移动，已离开当前筛选结果');}
   }
   function drawPages() {
     const visible=new Set(visiblePageIds());
@@ -159,7 +166,7 @@ export function content(app, data) {
       const page=pageMap.get(id),title=page.title || id;
       const check=el('input',{type:'checkbox',checked:selected.has(id),disabled:app.readonly,'aria-label':'选定内容页 '+title});
       check.addEventListener('change',()=>{check.checked?selected.add(id):selected.delete(id);syncSelection();changed();});
-      const handle=el('a',{href:routeHash(app.info,{surface:'page',page_id:id,layer:'content',revision:readingRevision}),class:'order-handle object-link',draggable:!app.readonly,'aria-label':'打开内容页 '+title},(index+1)+' · '+title);
+      const handle=el('a',{href:routeHash(app.info,{surface:'page',page_id:id,layer:'content',revision:readingRevision,content_q:pageSearch.value}),class:'order-handle object-link',draggable:!app.readonly,'aria-label':'打开内容页 '+title},(index+1)+' · '+title);
       handle.addEventListener('click',event=>{if(event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;event.preventDefault();app.go({surface:'page',page_id:id,layer:'content'});});
       handle.addEventListener('keydown',event=>{if(event.altKey && ['ArrowUp','ArrowDown'].includes(event.key)){event.preventDefault();move(id,index+(event.key==='ArrowUp'?-1:1));}});
       handle.addEventListener('dragstart',event=>event.dataTransfer.setData('text/plain',id));

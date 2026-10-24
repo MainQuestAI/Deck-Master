@@ -110,4 +110,3 @@
 - [PR184 文档基准](https://github.com/MainQuestAI/Deck-Master/pull/184)、[固定任务数据](https://github.com/MainQuestAI/Deck-Master/blob/7bbf204658dfc39f53fa34352543168e7eee1e65/docs/work-items/wi-issue-repair-20261023/tasks.json)、[共同兼容与验收](https://github.com/MainQuestAI/Deck-Master/blob/7bbf204658dfc39f53fa34352543168e7eee1e65/docs/work-items/wi-issue-repair-20261023/ACCEPTANCE.md)。
 - 当前仓库 `DESIGN.md`、`docs/specs/deck-master-webui-v4-20260930/A-UI-SPEC.md`、`B-CAPABILITIES-SPEC.md`、`CONSOLIDATION.md`。仅读取；历史进度数字不用于断言当前状态。
 - 上表每项 Issue 及固定任务卡；机器清单保留逐项核验时间。除 28 项选定问题外，其余 #132–#183 性能/Skill 专项继续由 PR184 原卡负责，未硬套为本轮 UI 需求，也未声称全部逐项实时核验。
-

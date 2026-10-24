@@ -102,7 +102,9 @@ def test_real_attention_change_preserves_only_same_page_and_action_focus(action_
         _mark_read(store, tasks[0])
     expect(first).to_have_text('去阅读')
     expect(first).not_to_be_focused()
-    assert page.evaluate('document.activeElement === document.body')
+    expect(page.get_by_role('button', name='第 01 页操作', exact=True)).to_be_focused()
+    expect(page.locator('.action-popover:popover-open')).to_have_count(0)
+    assert page.evaluate('document.activeElement !== document.body')
 
 
 def test_dispatch_unknown_explains_preservation_without_redispatch(icon_browser):
