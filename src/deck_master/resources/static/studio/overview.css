@@ -65,3 +65,12 @@
 }
 
 .studio-batch-modes[hidden] {display:none}
+
+/* A stacked current-work card must leave the first page visible at 1024x800.
+   Preserve both action groups and text; remove only excess card whitespace. */
+@media(min-width:768px) and (max-width:1100px) {
+ .studio-workspace .studio-overview .todo-priority {padding:20px}
+ .studio-workspace .studio-overview .todo-priority h2 {margin-top:8px}
+ .studio-workspace .studio-overview .todo-priority>p {margin-top:8px}
+ .studio-workspace .studio-overview .todo-bottom {padding-top:16px}
+}

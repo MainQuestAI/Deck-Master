@@ -148,7 +148,13 @@ def test_same_project_create_material_edit_handoff_candidate_and_fixed_export(la
                 context={'external_call_page_ids':['p01'], 'count':1, 'candidate_count':1,
                          'targets':{'page_ids':['p01'],'layers':['blueprint']}})
             assert 'preproduction_blocked' not in decision['reason_codes']
-            assert not decision['allowed']  # Editorial authority still grants zero image calls.
+            # The UI-created full_deck request already has its own explicit
+            # bounded template. Reviewing must not add authority or call facts.
+            assert reviewed['collaboration']['authorizations'] == before_gate['collaboration']['authorizations']
+            def call_facts(document):
+                records = [store.read_object_json(ref) for ref in document['tasks']]
+                return {t['task_id']:t['call_allowances'] for t in records if t.get('call_allowances')}
+            assert call_facts(reviewed) == call_facts(before_gate)
             task = dispatch_content_trial(project, store, page='p01')
             goto('runs', task=task['task_id'])
             handoff = page.locator('.task-handoff')
