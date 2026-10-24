@@ -93,3 +93,5 @@
 @media(max-width:767px){
  .studio-workspace .reading-toolbar>.page-tools-switcher {grid-template-columns:repeat(6,minmax(0,1fr))}
 }
+.studio-workspace .page-manuscript p,.studio-workspace .page-manuscript li {line-height:var(--dm-type-line-reading)}
+.studio-workspace .page-workbench .page-pager select {width:160px;min-width:150px;flex-shrink:0}
