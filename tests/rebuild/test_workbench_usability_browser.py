@@ -50,6 +50,7 @@ def test_optional_tools_do_not_arm_annotation_and_keep_keyboard_return(workbench
     assert page.url == fixed_url
     assert 'surface=page' in page.url
     page.get_by_role('button', name='意见', exact=True).click()
+    open_opinion_composer(page)
     save = page.get_by_role('button', name='保存意见', exact=True)
     expect(save).to_be_disabled()
     page.get_by_text('范围与标注工具', exact=True).click()
