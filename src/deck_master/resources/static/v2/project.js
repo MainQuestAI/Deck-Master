@@ -213,6 +213,8 @@ export class Project {
   }
   go(patch) {
     const route = {...this.route, ...patch};
+    if (patch.surface === 'page' && this.route.surface !== 'page' && !patch.from) route.from = this.route.surface;
+    if (patch.surface && patch.surface !== 'page') route.from = null;
     if(patch.surface&&patch.surface!=='content'){route.proposal=null;route.compare_proposal=null;}
     if(patch.surface&&patch.surface!=='page')route.atom=null;
     if((patch.surface||patch.review_id===null)&&!('review_id' in patch)){route.review_sha256=null;route.finding=null;route.finding_index=null;}
@@ -329,8 +331,8 @@ export class Project {
   render(data) {
     const nav = el('nav', {class: 'nav', 'aria-label': '项目工作区'});
     for (const [key, label] of Object.entries(surfaces)) nav.append(button([icon(key), el('span', {class: 'nav-label'}, label)], () => this.go({surface: key}), false,
-      {class: (this.route.surface === key || this.route.surface === 'page' && key === 'gallery') ? 'active' : '',
-        'aria-current': (this.route.surface === key || this.route.surface === 'page' && key === 'gallery') ? 'page' : null, title: label}));
+      {class: (this.route.surface === key || this.route.surface === 'page' && key === (this.route.from || 'gallery')) ? 'active' : '',
+        'aria-current': (this.route.surface === key || this.route.surface === 'page' && key === (this.route.from || 'gallery')) ? 'page' : null, title: label}));
     const launcher = localURL(new URLSearchParams(location.search).get('launcher'));
     const aside = el('aside', {class: 'sidebar'}, el('div', {class: 'logo'}, el('img', {class: 'brand-logo', src: '/v2/assets/deck-master-logo/logo-horizontal-light.svg', alt: 'Deck Master', width: 176, height: 46})),
       nav, el('div', {class: 'side-project'}, el('span', {class: 'muted'}, '当前项目'), el('strong', {}, this.info.title),
@@ -363,7 +365,7 @@ export class Project {
       if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || document.querySelector('dialog[open]')) return;
       // An element in fullscreen consumes Escape to leave fullscreen: the same
       // keypress must not also navigate the work surface away.
-      if (event.key === 'Escape' && !typing && !document.fullscreenElement) { event.preventDefault(); this.go({surface: 'gallery'}); return; }
+      if (event.key === 'Escape' && !typing && !document.fullscreenElement) { event.preventDefault(); this.go({surface: this.route.from || 'gallery'}); return; }
       // ←/→ 切换页（输入与可滚动阅读区除外），与单页制作链的上一页/下一页一致。
       if ((event.key === 'ArrowLeft' || event.key === 'ArrowRight') && !typing && !event.target.closest('.page-image-viewport,.icon-crop-scroll,.selectable-text,.evidence-json,.diff-lines')) {
         const index = this.summary.pages.findIndex(p => p.page_id === this.route.page_id);

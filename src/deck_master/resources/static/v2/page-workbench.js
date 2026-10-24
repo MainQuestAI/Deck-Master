@@ -479,7 +479,9 @@ export function pageDetail(app, data) {
     event.preventDefault(); event.stopPropagation(); pageActions.open = false;
     (studio?(innerWidth<=767?readingMenu:openCompare):pageActions.querySelector('summary')).focus();
   });
-  const backToGallery = button('回到整稿画廊', () => app.go({surface: 'gallery'}), false, {class: 'quiet studio-reading-return'});
+  const returnSurface = app.route.from || 'gallery';
+  const returnNames = {content:'内容与页序',gallery:'整稿画廊',overview:'制作总览',style:'风格校准',runs:'任务与交付'};
+  const backToGallery = button('返回' + returnNames[returnSurface], () => {if(returnSurface==='content')app.contentFocusPage=app.route.page_id;app.go({surface: returnSurface});}, false, {class: 'quiet studio-reading-return'});
   let readingMenuBody = null;
   const restoreReadingActions = () => {
     toolbar.prepend(backToGallery);

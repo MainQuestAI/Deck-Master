@@ -166,8 +166,8 @@ export function content(app, data) {
       const page=pageMap.get(id),title=page.title || id;
       const check=el('input',{type:'checkbox',checked:selected.has(id),disabled:app.readonly,'aria-label':'选定内容页 '+title});
       check.addEventListener('change',()=>{check.checked?selected.add(id):selected.delete(id);syncSelection();changed();});
-      const handle=el('a',{href:routeHash(app.info,{surface:'page',page_id:id,layer:'content',revision:readingRevision,content_q:pageSearch.value}),class:'order-handle object-link',draggable:!app.readonly,'aria-label':'打开内容页 '+title},(index+1)+' · '+title);
-      handle.addEventListener('click',event=>{if(event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;event.preventDefault();app.go({surface:'page',page_id:id,layer:'content'});});
+      const handle=el('a',{href:routeHash(app.info,{surface:'page',from:'content',page_id:id,layer:'content',revision:readingRevision,content_q:pageSearch.value}),class:'order-handle object-link',draggable:!app.readonly,'aria-label':'打开内容页 '+title},(index+1)+' · '+title);
+      handle.addEventListener('click',event=>{if(event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;event.preventDefault();app.go({surface:'page',from:'content',page_id:id,layer:'content'});});
       handle.addEventListener('keydown',event=>{if(event.altKey && ['ArrowUp','ArrowDown'].includes(event.key)){event.preventDefault();move(id,index+(event.key==='ArrowUp'?-1:1));}});
       handle.addEventListener('dragstart',event=>event.dataTransfer.setData('text/plain',id));
       const row=el('li',{'data-page-id':id,class:'content-order-row'},check,handle,

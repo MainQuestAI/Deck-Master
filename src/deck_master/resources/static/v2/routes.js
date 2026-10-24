@@ -14,6 +14,8 @@ export function readRoute(info, position, summary, hash = location.hash) {
     page_id: params.get('page'), layer: params.get('layer') || 'original_image', revision: params.get('revision') === 'null' ? null : params.get('revision'),
     candidate_id: params.get('candidate'), zoom: params.has('zoom') ? Number(params.get('zoom')) : 1, task_id: params.get('task'),
     action_id: params.get('action'), review_id: params.get('review'), runs_area: runsAreas.includes(params.get('area')) ? params.get('area') : null};
+  route.from = params.get('from');
+  if (params.getAll('from').length > 1 || (route.from && !Object.hasOwn(surfaces, route.from))) throw Error('来源工作面无效。');
   route.content_q = params.get('content_q') || '';
   if (params.getAll('content_q').length > 1 || route.content_q.length > 200 || /[\u0000-\u001f\u007f]/.test(route.content_q))
     throw new Error('逐页稿搜索链接无效，当前内容保留。');
@@ -56,6 +58,7 @@ export function readRoute(info, position, summary, hash = location.hash) {
 export function routeHash(info, route) {
   const params = new URLSearchParams({project: info.project_identity, surface: route.surface, layer: route.layer, zoom: route.zoom || 1});
   for(const key of ['content_area','proposal','compare_proposal','atom','review_sha256','finding','finding_index'])if(route[key]!==null&&route[key]!==undefined)params.set(key,route[key]);
+  if (route.surface === 'page' && route.from) params.set('from', route.from);
   if (route.content_q) params.set('content_q', route.content_q);
   if (route.revision != null) params.set('revision', route.revision);
   if (route.page_id) params.set('page', route.page_id);
