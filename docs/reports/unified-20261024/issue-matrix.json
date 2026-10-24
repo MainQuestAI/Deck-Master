@@ -1,0 +1,2058 @@
+{
+  "baseline_count": 51,
+  "known_total": 52,
+  "unknown_additional_issue": "Unresolved: GitHub issue read Forbidden; do not guess number",
+  "issues": [
+    {
+      "number": 132,
+      "title": "[WebUI 整改] 内容工作面瀑布堆叠、操作入口过载及完成/空状态误导",
+      "state": "open",
+      "updated_at": "2026-10-22T16:59:09Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/132",
+      "owner": "RP-22",
+      "body_update_planned": true,
+      "comments": 8,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "7d6836520f954eda108c3c869b10c7c4e66dfe72 fix(RP-08/RP-22): scope design plan actions to requested deliverable",
+        "ad75e4c48e3171cee918024f3730dc76c51d7614 test(workbench): open opinion composer through visible controls",
+        "3260c3deea1003a5da8c648b5666f1117bd7eb78 test(RP-22): open opinion composer before exercising draft flows",
+        "5e472de8052b0559343b2a7928ae917e443cce79 fix(ui): prioritize current work and preserve readable handoffs (RP-22)"
+      ],
+      "final_files": [
+        "src/deck_master/resources/static/studio/overview.css",
+        "src/deck_master/resources/static/v2/annotations.js",
+        "src/deck_master/resources/static/v2/batch-actions.js",
+        "src/deck_master/resources/static/v2/change-handoff.js",
+        "src/deck_master/resources/static/v2/collaboration-desk.js",
+        "src/deck_master/resources/static/v2/content-sources.js",
+        "src/deck_master/resources/static/v2/overview.js",
+        "src/deck_master/resources/static/v2/page-workbench.js",
+        "src/deck_master/resources/static/v2/workbench.css",
+        "src/deck_master/workbench.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_action_targets_browser.py",
+        "tests/rebuild/test_deep_quality_browser.py",
+        "tests/rebuild/test_page_tools_panel_browser.py",
+        "tests/rebuild/test_pr104_review_browser.py",
+        "tests/rebuild/test_rc_closure_browser.py",
+        "tests/rebuild/test_rp08_current_actions.py",
+        "tests/rebuild/test_rp10_content_browser.py",
+        "tests/rebuild/test_rp22_reading_browser.py",
+        "tests/rebuild/test_studio_integration.py",
+        "tests/rebuild/test_ui_state_clear.py",
+        "tests/rebuild/test_ux05_runs_delivery_browser.py",
+        "tests/rebuild/test_ux06_recovery_responsive_browser.py",
+        "tests/rebuild/test_x3_design_plan_actions.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-22.md",
+        "docs/reports/issue-repair-20261023/RP-22-deep-quality-browser-followup.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 133,
+      "title": "[WebUI Bug] 内容计划缺少可视化编辑，表单直接显示 [object HTMLElement]",
+      "state": "open",
+      "updated_at": "2026-10-22T00:43:49Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/133",
+      "owner": "RP-10",
+      "body_update_planned": false,
+      "comments": 2,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "ab34455be8568832866ece199e67937eeda0278a fix: restore content plan editors and separate mapping evidence (RP-10)",
+        "235d03ff9cd31bda480cf0b81972e9969f527123 fix(ui): show concrete plan field changes before commit (#133)",
+        "ab34455be8568832866ece199e67937eeda0278a fix: restore content plan editors and separate mapping evidence (RP-10)"
+      ],
+      "final_files": [
+        "src/deck_master/content_plan.py",
+        "src/deck_master/resources/static/v2/content-edit.js",
+        "src/deck_master/resources/static/v2/content-sources.js",
+        "src/deck_master/resources/static/v2/evidence-reading.js",
+        "src/deck_master/text_sources.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_content_mapping_claims.py",
+        "tests/rebuild/test_rp10_content_browser.py",
+        "tests/rebuild/test_studio_content_browser.py",
+        "tests/rebuild/test_studio_integration.py",
+        "tests/rebuild/test_webui_acceptance_matrix.py",
+        "tests/rebuild/test_webui_content_insight.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-10.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 134,
+      "title": "[Skill UX] deck-master 退出时未明确当前状态，缺少 deck-content 下一步交接与决策引导",
+      "state": "open",
+      "updated_at": "2026-10-22T16:59:15Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/134",
+      "owner": "RP-24",
+      "body_update_planned": true,
+      "comments": 7,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "9b7a22f6f263f217a66c520c8c6ea4a5c08841c1 fix(RP-24): adopt explicitly authorized settled native images without reassigning calls",
+        "ddeb5722f4666ba7ae29651604ec09ee988d7f4b feat(RP-24): explain unsupported reassociation on read-only attempt view",
+        "a3fdd4d257d059ae7331cb47c8634509ef4f1824 test(RP-24): document cross-execution proof and accounting limits",
+        "d4b361ce655c2ed1e5d21dcb55319e0e2c83d470 docs(RP-24): record corrected owner-bound recovery regression",
+        "8702e5acffec6c1b94409beab2a0e3a9d97acb92 docs(RP-24): define factual stage exits and safe cross-turn handoff"
+      ],
+      "final_files": [
+        "skills/deck-master/SKILL.md",
+        "skills/deck-master/references/blueprint-svg.md",
+        "skills/deck-master/references/collaboration-routing.md",
+        "src/deck_master/cli.py",
+        "src/deck_master/collaboration.py",
+        "src/deck_master/eligibility.py",
+        "src/deck_master/generation.py",
+        "src/deck_master/generation_reuse.py",
+        "src/deck_master/models.py",
+        "src/deck_master/production.py",
+        "src/deck_master/resources/contracts/artifact.v1.schema.json",
+        "src/deck_master/resources/contracts/document.v1.schema.json",
+        "src/deck_master/resources/contracts/generation-reuse.v1.schema.json",
+        "src/deck_master/resources/contracts/page-lineage.v1.schema.json",
+        "src/deck_master/tasks.py",
+        "src/deck_master/workbench.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_collaboration_contracts.py",
+        "tests/rebuild/test_generation_protocol.py",
+        "tests/rebuild/test_rc3_resource_inventory.py",
+        "tests/rebuild/test_rc5_host_selection.py",
+        "tests/rebuild/test_rp06_design_completion.py",
+        "tests/rebuild/test_rp23_cross_turn_recovery.py",
+        "tests/rebuild/test_rp24_cross_execution_evidence.py",
+        "tests/rebuild/test_rp24_readonly_diagnostic.py",
+        "tests/rebuild/test_settled_image_reuse.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-24-cross-execution-evidence.md",
+        "docs/reports/issue-repair-20261023/RP-24-settled-reuse.md",
+        "docs/reports/issue-repair-20261023/RP-24.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 135,
+      "title": "[Content UX] 规划交付缺少决策协作：方法应用说明、方案取舍、审阅问题与可选追问未闭环",
+      "state": "open",
+      "updated_at": "2026-10-21T13:02:31Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/135",
+      "owner": "RP-24",
+      "body_update_planned": false,
+      "comments": 2,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "9b7a22f6f263f217a66c520c8c6ea4a5c08841c1 fix(RP-24): adopt explicitly authorized settled native images without reassigning calls",
+        "ddeb5722f4666ba7ae29651604ec09ee988d7f4b feat(RP-24): explain unsupported reassociation on read-only attempt view",
+        "a3fdd4d257d059ae7331cb47c8634509ef4f1824 test(RP-24): document cross-execution proof and accounting limits",
+        "d4b361ce655c2ed1e5d21dcb55319e0e2c83d470 docs(RP-24): record corrected owner-bound recovery regression",
+        "8702e5acffec6c1b94409beab2a0e3a9d97acb92 docs(RP-24): define factual stage exits and safe cross-turn handoff"
+      ],
+      "final_files": [
+        "skills/deck-master/SKILL.md",
+        "skills/deck-master/references/blueprint-svg.md",
+        "skills/deck-master/references/collaboration-routing.md",
+        "src/deck_master/cli.py",
+        "src/deck_master/collaboration.py",
+        "src/deck_master/eligibility.py",
+        "src/deck_master/generation.py",
+        "src/deck_master/generation_reuse.py",
+        "src/deck_master/models.py",
+        "src/deck_master/production.py",
+        "src/deck_master/resources/contracts/artifact.v1.schema.json",
+        "src/deck_master/resources/contracts/document.v1.schema.json",
+        "src/deck_master/resources/contracts/generation-reuse.v1.schema.json",
+        "src/deck_master/resources/contracts/page-lineage.v1.schema.json",
+        "src/deck_master/tasks.py",
+        "src/deck_master/workbench.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_collaboration_contracts.py",
+        "tests/rebuild/test_generation_protocol.py",
+        "tests/rebuild/test_rc3_resource_inventory.py",
+        "tests/rebuild/test_rc5_host_selection.py",
+        "tests/rebuild/test_rp06_design_completion.py",
+        "tests/rebuild/test_rp23_cross_turn_recovery.py",
+        "tests/rebuild/test_rp24_cross_execution_evidence.py",
+        "tests/rebuild/test_rp24_readonly_diagnostic.py",
+        "tests/rebuild/test_settled_image_reuse.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-24-cross-execution-evidence.md",
+        "docs/reports/issue-repair-20261023/RP-24-settled-reuse.md",
+        "docs/reports/issue-repair-20261023/RP-24.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 136,
+      "title": "[WebUI UX] 正文完成后缺少可发现的制作推进入口，提示词/原图/SVG 工作链停留在结果查看",
+      "state": "open",
+      "updated_at": "2026-10-22T00:40:29Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/136",
+      "owner": "RP-21",
+      "body_update_planned": true,
+      "comments": 1,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "d9ca38b69f5bb10492447e071507d1025db70c46 fix(RP-21): retain initial design preview across unchanged polls",
+        "21f7b7994fafcf826bf64d22eb45b28802a8f173 test(RP-21): verify original-review-qualified expansion in Studio",
+        "1c046ec22232a2a24589dc1476c88c42dc82d200 fix(RP-21): distinguish known original faults from expansion authority",
+        "b9de561e052132921cb41efa0ba01d1ac562e857 fix(RP-21): preview exact ordered references and selected asset originals",
+        "f0feca8b388cef18bef57d1a204bcd0dcb0f6661 feat(RP-21): expose fixed design basis and no-reference trial entry",
+        "679c0c2d1696f8daafaf32b559c877d8b3d535e0 test: preserve frozen review owners in synthetic style fixtures (RP-12 RP-21)"
+      ],
+      "final_files": [
+        "src/deck_master/changes.py",
+        "src/deck_master/design_entry.py",
+        "src/deck_master/production.py",
+        "src/deck_master/resources/static/v2/design-entry.js",
+        "src/deck_master/resources/static/v2/style-calibration.js",
+        "src/deck_master/resources/static/v2/visual-style.js",
+        "src/deck_master/styles.py",
+        "src/deck_master/web.py",
+        "src/deck_master/workbench.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_design_entry_basis.py",
+        "tests/rebuild/test_design_entry_browser.py",
+        "tests/rebuild/test_design_entry_poll_browser.py",
+        "tests/rebuild/test_rc3_adopted_design_handoff.py",
+        "tests/rebuild/test_rc3_design_recipes.py",
+        "tests/rebuild/test_rc3_design_workflows.py",
+        "tests/rebuild/test_rc3_initial_direction_boundary.py",
+        "tests/rebuild/test_recipe_versions_browser.py",
+        "tests/rebuild/test_rp20_original_review.py",
+        "tests/rebuild/test_studio_style_browser.py",
+        "tests/rebuild/test_styles.py",
+        "tests/rebuild/test_workbench_actions.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-21.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 137,
+      "title": "[Agent UX] 独立审查能力发现不清，Host 将回执能力未配置误判为没有审查通道",
+      "state": "open",
+      "updated_at": "2026-10-21T09:18:12Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/137",
+      "owner": "RP-01",
+      "body_update_planned": true,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "b56cef23c963cf301057740660e298c1a63b9fed fix(review): retain sanitized native startup failure diagnostics",
+        "299169ff7618996132ce03b243114ee5d078cb7c feat: discover reviewer channels by actual review stage (RP-01)"
+      ],
+      "final_files": [
+        "skills/deck-master/references/review-and-repair.md",
+        "src/deck_master/capabilities.py",
+        "src/deck_master/cli.py",
+        "src/deck_master/content_review.py",
+        "src/deck_master/native_review.py",
+        "src/deck_master/native_review_startup.py",
+        "src/deck_master/native_review_transport.py",
+        "src/deck_master/review_channels.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_content_preproduction_review.py",
+        "tests/rebuild/test_native_review.py",
+        "tests/rebuild/test_native_review_recovery.py",
+        "tests/rebuild/test_native_review_startup.py",
+        "tests/rebuild/test_native_review_transport.py",
+        "tests/rebuild/test_rc3_entry_transactions.py",
+        "tests/rebuild/test_review_channel_discovery.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-01.md",
+        "docs/reports/issue-repair-20261023/RP-01-startup-diagnostics.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 138,
+      "title": "[Bug] 原生独立复审结果接纳失败：无 finding 的通过记录无法替换，重试重复执行审查",
+      "state": "open",
+      "updated_at": "2026-10-22T07:47:53Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/138",
+      "owner": "RP-11",
+      "body_update_planned": true,
+      "comments": 5,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "c8b95469425699cde7c2725d4985c58e2856272d perf(RP-27): reuse snapshot review graphs and replacement indexes",
+        "7ffbc88e0960038c1deb58a551da75c82248f8e8 fix: recover bound native review proofs without reexecution (RP-11)",
+        "29c9d8a9f3018a7fb10b7674b862fc45dd926f09 fix(review): recognize ordinary manuscript source repairs (#138)",
+        "ae22ef086369e1ed5904966c79e92097b51fb8ba fix: restore candidate originals and clean review replacement (RP-00)"
+      ],
+      "final_files": [
+        "skills/deck-master/references/review-and-repair.md",
+        "src/deck_master/candidates.py",
+        "src/deck_master/cli.py",
+        "src/deck_master/collaboration.py",
+        "src/deck_master/content_review.py",
+        "src/deck_master/delivery_eligibility.py",
+        "src/deck_master/editing.py",
+        "src/deck_master/eligibility.py",
+        "src/deck_master/exports.py",
+        "src/deck_master/models.py",
+        "src/deck_master/native_review.py",
+        "src/deck_master/resources/contracts/native-review-checkpoint.v1.schema.json",
+        "src/deck_master/resources/static/v2/collaboration-desk.js",
+        "src/deck_master/resources/static/v2/project.js",
+        "src/deck_master/resources/static/v2/summary-poll.js",
+        "src/deck_master/review.py",
+        "src/deck_master/service.py",
+        "src/deck_master/stages.py",
+        "src/deck_master/tasks.py",
+        "src/deck_master/ui_journal.py",
+        "src/deck_master/web.py",
+        "tools/benchmark_review_reuse.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/review_reuse_helpers.py",
+        "tests/rebuild/test_content_preproduction_review.py",
+        "tests/rebuild/test_native_review.py",
+        "tests/rebuild/test_native_review_recovery.py",
+        "tests/rebuild/test_native_review_transport.py",
+        "tests/rebuild/test_rc3_restyle_workflows.py",
+        "tests/rebuild/test_rc4_content_review.py",
+        "tests/rebuild/test_review.py",
+        "tests/rebuild/test_review_channel_discovery.py",
+        "tests/rebuild/test_review_graph_reuse.py",
+        "tests/rebuild/test_source_finding_repair.py",
+        "tests/rebuild/test_styles.py",
+        "tests/rebuild/test_ui_journal.py",
+        "tests/rebuild/test_visual_styles.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-11.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 139,
+      "title": "[Bug] V3 样页候选已生成，但详情读取错误使用参考预览，导致比较入口拒绝显示",
+      "state": "open",
+      "updated_at": "2026-10-21T10:47:33Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/139",
+      "owner": "RP-00",
+      "body_update_planned": false,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "61621e58f3219e6a963edc5d72ce0c53e236e67a fix: fence deferred polling consumers across navigation (RP-00)",
+        "ebaa7a862cdca7ae377bf8f030169035aa592f4e docs: record RP-00 reproduction and matched wheel evidence",
+        "ae22ef086369e1ed5904966c79e92097b51fb8ba fix: restore candidate originals and clean review replacement (RP-00)"
+      ],
+      "final_files": [
+        "src/deck_master/candidates.py",
+        "src/deck_master/collaboration.py",
+        "src/deck_master/content_review.py",
+        "src/deck_master/eligibility.py",
+        "src/deck_master/native_review.py",
+        "src/deck_master/resources/static/v2/collaboration-desk.js",
+        "src/deck_master/resources/static/v2/project.js",
+        "src/deck_master/resources/static/v2/summary-poll.js",
+        "src/deck_master/service.py",
+        "src/deck_master/tasks.py",
+        "src/deck_master/ui_journal.py",
+        "src/deck_master/web.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_content_preproduction_review.py",
+        "tests/rebuild/test_native_review.py",
+        "tests/rebuild/test_native_review_transport.py",
+        "tests/rebuild/test_pr105_candidate_metadata.py",
+        "tests/rebuild/test_rc3_restyle_workflows.py",
+        "tests/rebuild/test_review.py",
+        "tests/rebuild/test_styles.py",
+        "tests/rebuild/test_ui_journal.py",
+        "tests/rebuild/test_visual_styles.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-00.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 140,
+      "title": "[P1][WebUI] 项目读取耗时约19秒，切换工作面长期保留旧页且缺少就近恢复",
+      "state": "open",
+      "updated_at": "2026-10-22T00:30:54Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/140",
+      "owner": "RP-25",
+      "body_update_planned": false,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "1177c9fb2664fc1d373f70f712a3b5245db45bb3 fix(reading): share thumbnail reads across synchronous remounts (RP-25)"
+      ],
+      "final_files": [
+        "src/deck_master/resources/static/v2/images.js",
+        "src/deck_master/workbench.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_image_pool_remount_browser.py",
+        "tests/rebuild/test_local_runtime_burst.py",
+        "tests/rebuild/test_ui_state_clear.py"
+      ],
+      "historical_evidence": [],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 141,
+      "title": "[P1][Design UX] 首次原图试作入口未呈现视觉方向依据与确认状态，和风格规划流程脱节",
+      "state": "open",
+      "updated_at": "2026-10-22T16:59:10Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/141",
+      "owner": "RP-21",
+      "body_update_planned": true,
+      "comments": 1,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "d9ca38b69f5bb10492447e071507d1025db70c46 fix(RP-21): retain initial design preview across unchanged polls",
+        "21f7b7994fafcf826bf64d22eb45b28802a8f173 test(RP-21): verify original-review-qualified expansion in Studio",
+        "1c046ec22232a2a24589dc1476c88c42dc82d200 fix(RP-21): distinguish known original faults from expansion authority",
+        "b9de561e052132921cb41efa0ba01d1ac562e857 fix(RP-21): preview exact ordered references and selected asset originals",
+        "f0feca8b388cef18bef57d1a204bcd0dcb0f6661 feat(RP-21): expose fixed design basis and no-reference trial entry",
+        "679c0c2d1696f8daafaf32b559c877d8b3d535e0 test: preserve frozen review owners in synthetic style fixtures (RP-12 RP-21)"
+      ],
+      "final_files": [
+        "src/deck_master/changes.py",
+        "src/deck_master/design_entry.py",
+        "src/deck_master/production.py",
+        "src/deck_master/resources/static/v2/design-entry.js",
+        "src/deck_master/resources/static/v2/style-calibration.js",
+        "src/deck_master/resources/static/v2/visual-style.js",
+        "src/deck_master/styles.py",
+        "src/deck_master/web.py",
+        "src/deck_master/workbench.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_design_entry_basis.py",
+        "tests/rebuild/test_design_entry_browser.py",
+        "tests/rebuild/test_design_entry_poll_browser.py",
+        "tests/rebuild/test_rc3_adopted_design_handoff.py",
+        "tests/rebuild/test_rc3_design_recipes.py",
+        "tests/rebuild/test_rc3_design_workflows.py",
+        "tests/rebuild/test_rc3_initial_direction_boundary.py",
+        "tests/rebuild/test_recipe_versions_browser.py",
+        "tests/rebuild/test_rp20_original_review.py",
+        "tests/rebuild/test_studio_style_browser.py",
+        "tests/rebuild/test_styles.py",
+        "tests/rebuild/test_workbench_actions.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-21.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 142,
+      "title": "[P1][Performance] 控制状态轮询重复读取项目且请求重叠，巡检空闲期两个服务持续占用约2个CPU核心",
+      "state": "open",
+      "updated_at": "2026-10-22T02:48:28Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/142",
+      "owner": "RP-25",
+      "body_update_planned": false,
+      "comments": 5,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "1177c9fb2664fc1d373f70f712a3b5245db45bb3 fix(reading): share thumbnail reads across synchronous remounts (RP-25)",
+        "e4b1d1515a461064a59e86d8c4835b0c3d1df773 perf(ui): reuse matching polled current-work facts (#142)",
+        "ae22ef086369e1ed5904966c79e92097b51fb8ba fix: restore candidate originals and clean review replacement (RP-00)"
+      ],
+      "final_files": [
+        "src/deck_master/candidates.py",
+        "src/deck_master/collaboration.py",
+        "src/deck_master/content_review.py",
+        "src/deck_master/eligibility.py",
+        "src/deck_master/resources/static/v2/collaboration-desk.js",
+        "src/deck_master/resources/static/v2/images.js",
+        "src/deck_master/resources/static/v2/project.js",
+        "src/deck_master/resources/static/v2/summary-poll.js",
+        "src/deck_master/tasks.py",
+        "src/deck_master/ui_journal.py",
+        "src/deck_master/web.py",
+        "src/deck_master/workbench.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_content_preproduction_review.py",
+        "tests/rebuild/test_image_pool_remount_browser.py",
+        "tests/rebuild/test_local_runtime_burst.py",
+        "tests/rebuild/test_pr187_summary_reuse_browser.py",
+        "tests/rebuild/test_rc3_restyle_workflows.py",
+        "tests/rebuild/test_review.py",
+        "tests/rebuild/test_styles.py",
+        "tests/rebuild/test_ui_journal.py",
+        "tests/rebuild/test_ui_state_clear.py",
+        "tests/rebuild/test_visual_styles.py"
+      ],
+      "historical_evidence": [],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 143,
+      "title": "[P2][WebUI] 无主线导入稿的证据区将主线绑定缺失写成原子映射缺失，与逐项“已记录映射”冲突",
+      "state": "open",
+      "updated_at": "2026-10-22T00:43:47Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/143",
+      "owner": "RP-10",
+      "body_update_planned": false,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "ab34455be8568832866ece199e67937eeda0278a fix: restore content plan editors and separate mapping evidence (RP-10)"
+      ],
+      "final_files": [
+        "src/deck_master/content_plan.py",
+        "src/deck_master/resources/static/v2/content-sources.js",
+        "src/deck_master/resources/static/v2/evidence-reading.js",
+        "src/deck_master/text_sources.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_content_mapping_claims.py",
+        "tests/rebuild/test_rp10_content_browser.py",
+        "tests/rebuild/test_studio_integration.py",
+        "tests/rebuild/test_webui_acceptance_matrix.py",
+        "tests/rebuild/test_webui_content_insight.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-10.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 144,
+      "title": "[P2][Review] 仅口播审查失效仍强制重做全部前审单元，已有有效结论不能复用",
+      "state": "open",
+      "updated_at": "2026-10-22T01:52:10Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/144",
+      "owner": "RP-12",
+      "body_update_planned": true,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "fbcd7c5867208b29c38cfbd5ee5c8dc8dae1eb48 test(RP-12): bind gate regressions to frozen review owners and units",
+        "679c0c2d1696f8daafaf32b559c877d8b3d535e0 test: preserve frozen review owners in synthetic style fixtures (RP-12 RP-21)",
+        "d89cf73b158e7a8879e413c0aeb47a1b5885d9ac fix: retain intersecting historical owners in expanded reviews (RP-12)",
+        "6a0ec367a02d15677eabb5431ae7a85798502069 test: honor frozen historical owners in fidelity rechecks (RP-12 RP-23)",
+        "4ee1afeb01fae9470527d5f1c958ea5b0fea9ad4 fix: freeze selective preproduction review units and owners (RP-12)"
+      ],
+      "final_files": [
+        "skills/deck-master/references/review-and-repair.md",
+        "src/deck_master/content_review.py",
+        "src/deck_master/native_review.py",
+        "src/deck_master/review.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/rc3_fixtures.py",
+        "tests/rebuild/test_content_preproduction_review.py",
+        "tests/rebuild/test_eligibility_resolver.py",
+        "tests/rebuild/test_native_review.py",
+        "tests/rebuild/test_native_review_recovery.py",
+        "tests/rebuild/test_native_review_transport.py",
+        "tests/rebuild/test_rc3_01_gate_repair.py",
+        "tests/rebuild/test_rc4_content_review.py",
+        "tests/rebuild/test_review.py",
+        "tests/rebuild/test_review_channel_discovery.py",
+        "tests/rebuild/test_review_owner_scope.py",
+        "tests/rebuild/test_rp23_cross_turn_recovery.py",
+        "tests/rebuild/test_selective_content_review.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-12.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 145,
+      "title": "[P2][Performance] 图标候选列表逐项重跑全体候选验证，单次读取形成二次增长",
+      "state": "open",
+      "updated_at": "2026-10-22T02:48:44Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/145",
+      "owner": "RP-26",
+      "body_update_planned": false,
+      "comments": 1,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "2c1ac56c087bb89e47e117f2d5eef27a78cfbec4 test(RP-26): repeat matched cold and warm reads and map historical evidence",
+        "8bec75f8df0909457b2de46c45690dda7212def4 fix(reading): share response facts and revalidate ancestry freshness (RP-26)"
+      ],
+      "final_files": [
+        "src/deck_master/action_currentness.py",
+        "src/deck_master/candidate_preview.py",
+        "src/deck_master/candidates.py",
+        "src/deck_master/changes.py",
+        "src/deck_master/collaboration.py",
+        "src/deck_master/collaboration_migration.py",
+        "src/deck_master/content_production.py",
+        "src/deck_master/read_facts.py",
+        "src/deck_master/ui_journal.py",
+        "src/deck_master/web.py",
+        "src/deck_master/workbench.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_candidate_decisions.py",
+        "tests/rebuild/test_page_detail.py",
+        "tests/rebuild/test_request_read_facts.py",
+        "tests/rebuild/test_workbench_actions.py"
+      ],
+      "historical_evidence": [],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 146,
+      "title": "[P2][Performance] 待协调输入说明循环重新验证历史可达性，热读仍为二次遍历",
+      "state": "open",
+      "updated_at": "2026-10-22T01:52:13Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/146",
+      "owner": "RP-29",
+      "body_update_planned": false,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "9a1af7994b19547bd0159dbe4370e29913415aad docs(RP-29): record repeated history and recovery performance evidence",
+        "5fdeeef26520cea5f00e4d23917f5c98cfeb1bf6 fix(RP-29): reuse fixed ancestry and avoid redundant recovery writes"
+      ],
+      "final_files": [
+        "src/deck_master/editing.py",
+        "src/deck_master/gallery_state.py",
+        "src/deck_master/operations.py",
+        "src/deck_master/personal_recovery.py",
+        "src/deck_master/snapshots.py",
+        "src/deck_master/ui_journal.py",
+        "src/deck_master/view.py",
+        "tools/benchmark_history_recovery.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_gallery_core.py",
+        "tests/rebuild/test_history_read_reuse.py",
+        "tests/rebuild/test_operation_coverage.py",
+        "tests/rebuild/test_personal_recovery.py",
+        "tests/rebuild/test_planned_input_revision.py",
+        "tests/rebuild/test_snapshot_headers.py",
+        "tests/rebuild/test_store_transactions.py",
+        "tests/rebuild/test_task_receipt_recovery.py",
+        "tests/rebuild/test_ui_journal.py",
+        "tests/rebuild/test_ui_state_clear.py",
+        "tests/rebuild/test_usability_history.py",
+        "tests/rebuild/test_workbench_operations.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-29.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 148,
+      "title": "[P2][Eligibility] 零调用正文候选被制作前审门禁阻断，待纠正稿必须先通过旧稿前审",
+      "state": "open",
+      "updated_at": "2026-10-22T02:13:04Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/148",
+      "owner": "RP-02",
+      "body_update_planned": true,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "91fc0f854c4d90e7087472ec5137f76ccb78aa1c fix: route zero-call Page trials through Content contracts (RP-02)"
+      ],
+      "final_files": [
+        "skills/deck-master/references/candidates-and-stages.md",
+        "src/deck_master/changes.py",
+        "src/deck_master/eligibility.py",
+        "src/deck_master/method_resources.py",
+        "src/deck_master/resources/static/v2/annotations.js",
+        "src/deck_master/service.py",
+        "src/deck_master/tasks.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_content_candidates.py",
+        "tests/rebuild/test_eligibility_enforcement.py",
+        "tests/rebuild/test_rc3_content_methods.py",
+        "tests/rebuild/test_rc3_early_methods.py",
+        "tests/rebuild/test_rc4_work_context.py",
+        "tests/rebuild/test_review.py",
+        "tests/rebuild/test_rp02_content_responsibility.py",
+        "tests/rebuild/test_rp03_trial_isolation.py",
+        "tests/rebuild/test_task_receipt_recovery.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-02.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 149,
+      "title": "[P2][Delivery] 未采用的零调用试作使当前成稿审查失效并阻断交接",
+      "state": "open",
+      "updated_at": "2026-10-22T02:13:06Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/149",
+      "owner": "RP-03",
+      "body_update_planned": false,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "08f0ee9e6bf72f3e0ad80991eaa72208f8e78209 fix(RP-03): isolate proven zero-call SVG candidate tasks from current output gates",
+        "7ef9c5e052ea9c3c96372df28af47a3b619a6b3f fix: preserve current handoff during unadopted Content trials (RP-03)"
+      ],
+      "final_files": [
+        "src/deck_master/candidates.py",
+        "src/deck_master/editing.py",
+        "src/deck_master/handoff.py",
+        "src/deck_master/review.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_content_candidates.py",
+        "tests/rebuild/test_review.py",
+        "tests/rebuild/test_rp03_svg_trial_isolation.py",
+        "tests/rebuild/test_rp03_trial_isolation.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-03.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 150,
+      "title": "[P2][Recovery] 已提交操作的精确恢复先被当前暂停门禁拒绝，要求无意义地恢复写权限",
+      "state": "open",
+      "updated_at": "2026-10-22T02:13:07Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/150",
+      "owner": "RP-04",
+      "body_update_planned": true,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "3943d9fcee91c8d151d6e07b8b51e172bf800275 fix(RP-04): recover opinion and reference receipts before pause guard",
+        "95c3ff726e9428928e33339b28dcb4fde5efcd9e docs: explain paused recovery and record RP-04 evidence",
+        "e71ca6f9c5df6374850f25a8ec857ef9cf6aa4bd fix: recover exact committed operations before pause gates (RP-04)"
+      ],
+      "final_files": [
+        "src/deck_master/annotation_service.py",
+        "src/deck_master/candidates.py",
+        "src/deck_master/generation.py",
+        "src/deck_master/icons.py",
+        "src/deck_master/operations.py",
+        "src/deck_master/pipeline.py",
+        "src/deck_master/stages.py",
+        "src/deck_master/tasks.py",
+        "src/deck_master/visual_styles.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_annotations.py",
+        "tests/rebuild/test_candidate_decisions.py",
+        "tests/rebuild/test_generation_protocol.py",
+        "tests/rebuild/test_history_read_reuse.py",
+        "tests/rebuild/test_icon_quality.py",
+        "tests/rebuild/test_native_review_recovery.py",
+        "tests/rebuild/test_paused_exact_replay.py",
+        "tests/rebuild/test_task_receipt_recovery.py",
+        "tests/rebuild/test_visual_styles.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-04.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 151,
+      "title": "[P2][Performance] 逐页组装门禁为同一快照重复构建全稿依赖与历史摘要",
+      "state": "open",
+      "updated_at": "2026-10-22T02:13:08Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/151",
+      "owner": "RP-27",
+      "body_update_planned": false,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "8f8d1c6b3b54ba1674840ed460366845a804ba48 docs(RP-27): record graph reuse parity and performance evidence",
+        "c8b95469425699cde7c2725d4985c58e2856272d perf(RP-27): reuse snapshot review graphs and replacement indexes"
+      ],
+      "final_files": [
+        "src/deck_master/delivery_eligibility.py",
+        "src/deck_master/editing.py",
+        "src/deck_master/exports.py",
+        "src/deck_master/review.py",
+        "src/deck_master/stages.py",
+        "src/deck_master/visual_dependencies.py",
+        "tools/benchmark_review_reuse.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/review_reuse_helpers.py",
+        "tests/rebuild/test_delivery_control_snapshot.py",
+        "tests/rebuild/test_delivery_professional_gate.py",
+        "tests/rebuild/test_eligibility_enforcement.py",
+        "tests/rebuild/test_native_review_recovery.py",
+        "tests/rebuild/test_page_visual_gate.py",
+        "tests/rebuild/test_rc3_notes_visual_inputs.py",
+        "tests/rebuild/test_rc3_selected_delivery.py",
+        "tests/rebuild/test_review.py",
+        "tests/rebuild/test_review_graph_reuse.py",
+        "tests/rebuild/test_service_flow.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-27.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 152,
+      "title": "[P2][Pipeline] 已有有效SVG预览仍逐页重渲染并丢弃输出，无用渲染失败可阻断组装",
+      "state": "open",
+      "updated_at": "2026-10-22T02:13:10Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/152",
+      "owner": "RP-05",
+      "body_update_planned": false,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "7de02e2b2ce30edc885b1a68157a11caa4ed91f4 fix: reuse verified SVG previews during assembly (RP-05)"
+      ],
+      "final_files": [
+        "src/deck_master/pipeline.py",
+        "src/deck_master/stages.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_candidates.py",
+        "tests/rebuild/test_local_runtime_burst.py",
+        "tests/rebuild/test_pipeline_preview_reuse.py",
+        "tests/rebuild/test_service_flow.py",
+        "tests/rebuild/test_summary_poll.py",
+        "tests/rebuild/test_svg_compiler.py",
+        "tests/rebuild/test_ui_state_clear.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-05.md",
+        "docs/reports/issue-repair-20261023/RP-05-RP-25-followup.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 153,
+      "title": "[P2][Performance] 冻结单个候选检查经四次公共文件读取重建上下文与整包哈希五轮",
+      "state": "open",
+      "updated_at": "2026-10-22T02:13:11Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/153",
+      "owner": "RP-28",
+      "body_update_planned": false,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "b483a8be39d785623d2ef68148f148a3fc7cdda5 fix(RP-28): freeze the once-validated candidate byte snapshot"
+      ],
+      "final_files": [
+        "src/deck_master/candidate_preview.py",
+        "tools/benchmark_candidate_freeze.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_candidate_freeze_reuse.py",
+        "tests/rebuild/test_candidate_preview_recovery.py",
+        "tests/rebuild/test_pr105_candidate_metadata.py",
+        "tests/rebuild/test_rc3_materialized_candidate_slots.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-28.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 154,
+      "title": "[P3][Recovery] 个人备份列表逐项重读同一清理日志并重复遍历项目祖先",
+      "state": "open",
+      "updated_at": "2026-10-22T02:13:13Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/154",
+      "owner": "RP-29",
+      "body_update_planned": false,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "9a1af7994b19547bd0159dbe4370e29913415aad docs(RP-29): record repeated history and recovery performance evidence",
+        "5fdeeef26520cea5f00e4d23917f5c98cfeb1bf6 fix(RP-29): reuse fixed ancestry and avoid redundant recovery writes"
+      ],
+      "final_files": [
+        "src/deck_master/editing.py",
+        "src/deck_master/gallery_state.py",
+        "src/deck_master/operations.py",
+        "src/deck_master/personal_recovery.py",
+        "src/deck_master/snapshots.py",
+        "src/deck_master/ui_journal.py",
+        "src/deck_master/view.py",
+        "tools/benchmark_history_recovery.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_gallery_core.py",
+        "tests/rebuild/test_history_read_reuse.py",
+        "tests/rebuild/test_operation_coverage.py",
+        "tests/rebuild/test_personal_recovery.py",
+        "tests/rebuild/test_planned_input_revision.py",
+        "tests/rebuild/test_snapshot_headers.py",
+        "tests/rebuild/test_store_transactions.py",
+        "tests/rebuild/test_task_receipt_recovery.py",
+        "tests/rebuild/test_ui_journal.py",
+        "tests/rebuild/test_ui_state_clear.py",
+        "tests/rebuild/test_usability_history.py",
+        "tests/rebuild/test_workbench_operations.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-29.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 155,
+      "title": "[P3][Review] 同一页同一finding闭合判断重复两遍，每次重建相同历史替换索引",
+      "state": "open",
+      "updated_at": "2026-10-22T02:13:15Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/155",
+      "owner": "RP-27",
+      "body_update_planned": false,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "8f8d1c6b3b54ba1674840ed460366845a804ba48 docs(RP-27): record graph reuse parity and performance evidence",
+        "c8b95469425699cde7c2725d4985c58e2856272d perf(RP-27): reuse snapshot review graphs and replacement indexes"
+      ],
+      "final_files": [
+        "src/deck_master/delivery_eligibility.py",
+        "src/deck_master/editing.py",
+        "src/deck_master/exports.py",
+        "src/deck_master/review.py",
+        "src/deck_master/stages.py",
+        "src/deck_master/visual_dependencies.py",
+        "tools/benchmark_review_reuse.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/review_reuse_helpers.py",
+        "tests/rebuild/test_delivery_control_snapshot.py",
+        "tests/rebuild/test_delivery_professional_gate.py",
+        "tests/rebuild/test_eligibility_enforcement.py",
+        "tests/rebuild/test_native_review_recovery.py",
+        "tests/rebuild/test_page_visual_gate.py",
+        "tests/rebuild/test_rc3_notes_visual_inputs.py",
+        "tests/rebuild/test_rc3_selected_delivery.py",
+        "tests/rebuild/test_review.py",
+        "tests/rebuild/test_review_graph_reuse.py",
+        "tests/rebuild/test_service_flow.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-27.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 156,
+      "title": "[P2][Performance] 变更列表逐项生成完整交接并重新扫描同一变更/任务集合",
+      "state": "open",
+      "updated_at": "2026-10-22T02:28:11Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/156",
+      "owner": "RP-26",
+      "body_update_planned": false,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "2c1ac56c087bb89e47e117f2d5eef27a78cfbec4 test(RP-26): repeat matched cold and warm reads and map historical evidence",
+        "8bec75f8df0909457b2de46c45690dda7212def4 fix(reading): share response facts and revalidate ancestry freshness (RP-26)"
+      ],
+      "final_files": [
+        "src/deck_master/action_currentness.py",
+        "src/deck_master/candidate_preview.py",
+        "src/deck_master/candidates.py",
+        "src/deck_master/changes.py",
+        "src/deck_master/collaboration.py",
+        "src/deck_master/collaboration_migration.py",
+        "src/deck_master/content_production.py",
+        "src/deck_master/read_facts.py",
+        "src/deck_master/ui_journal.py",
+        "src/deck_master/web.py",
+        "src/deck_master/workbench.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_candidate_decisions.py",
+        "tests/rebuild/test_page_detail.py",
+        "tests/rebuild/test_request_read_facts.py",
+        "tests/rebuild/test_workbench_actions.py"
+      ],
+      "historical_evidence": [],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 157,
+      "title": "[P2][Performance] 严格专业策略的交付资格读取重复构建同一快照依赖图三次",
+      "state": "open",
+      "updated_at": "2026-10-22T02:49:02Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/157",
+      "owner": "RP-27",
+      "body_update_planned": false,
+      "comments": 1,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "8f8d1c6b3b54ba1674840ed460366845a804ba48 docs(RP-27): record graph reuse parity and performance evidence",
+        "c8b95469425699cde7c2725d4985c58e2856272d perf(RP-27): reuse snapshot review graphs and replacement indexes"
+      ],
+      "final_files": [
+        "src/deck_master/delivery_eligibility.py",
+        "src/deck_master/editing.py",
+        "src/deck_master/exports.py",
+        "src/deck_master/review.py",
+        "src/deck_master/stages.py",
+        "src/deck_master/visual_dependencies.py",
+        "tools/benchmark_review_reuse.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/review_reuse_helpers.py",
+        "tests/rebuild/test_delivery_control_snapshot.py",
+        "tests/rebuild/test_delivery_professional_gate.py",
+        "tests/rebuild/test_eligibility_enforcement.py",
+        "tests/rebuild/test_native_review_recovery.py",
+        "tests/rebuild/test_page_visual_gate.py",
+        "tests/rebuild/test_rc3_notes_visual_inputs.py",
+        "tests/rebuild/test_rc3_selected_delivery.py",
+        "tests/rebuild/test_review.py",
+        "tests/rebuild/test_review_graph_reuse.py",
+        "tests/rebuild/test_service_flow.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-27.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 158,
+      "title": "[P3][Recovery] 已存在正确索引的操作查询仍每次原子重写并fsync同一回执索引",
+      "state": "open",
+      "updated_at": "2026-10-22T02:28:16Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/158",
+      "owner": "RP-29",
+      "body_update_planned": false,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "9a1af7994b19547bd0159dbe4370e29913415aad docs(RP-29): record repeated history and recovery performance evidence",
+        "5fdeeef26520cea5f00e4d23917f5c98cfeb1bf6 fix(RP-29): reuse fixed ancestry and avoid redundant recovery writes"
+      ],
+      "final_files": [
+        "src/deck_master/editing.py",
+        "src/deck_master/gallery_state.py",
+        "src/deck_master/operations.py",
+        "src/deck_master/personal_recovery.py",
+        "src/deck_master/snapshots.py",
+        "src/deck_master/ui_journal.py",
+        "src/deck_master/view.py",
+        "tools/benchmark_history_recovery.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_gallery_core.py",
+        "tests/rebuild/test_history_read_reuse.py",
+        "tests/rebuild/test_operation_coverage.py",
+        "tests/rebuild/test_personal_recovery.py",
+        "tests/rebuild/test_planned_input_revision.py",
+        "tests/rebuild/test_snapshot_headers.py",
+        "tests/rebuild/test_store_transactions.py",
+        "tests/rebuild/test_task_receipt_recovery.py",
+        "tests/rebuild/test_ui_journal.py",
+        "tests/rebuild/test_ui_state_clear.py",
+        "tests/rebuild/test_usability_history.py",
+        "tests/rebuild/test_workbench_operations.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-29.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 159,
+      "title": "[P2][Performance] 轮询读取未共享快照与任务事实：轻量控制四次加载、个人摘要三次加载",
+      "state": "open",
+      "updated_at": "2026-10-22T02:46:33Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/159",
+      "owner": "RP-26",
+      "body_update_planned": false,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "2c1ac56c087bb89e47e117f2d5eef27a78cfbec4 test(RP-26): repeat matched cold and warm reads and map historical evidence",
+        "8bec75f8df0909457b2de46c45690dda7212def4 fix(reading): share response facts and revalidate ancestry freshness (RP-26)"
+      ],
+      "final_files": [
+        "src/deck_master/action_currentness.py",
+        "src/deck_master/candidate_preview.py",
+        "src/deck_master/candidates.py",
+        "src/deck_master/changes.py",
+        "src/deck_master/collaboration.py",
+        "src/deck_master/collaboration_migration.py",
+        "src/deck_master/content_production.py",
+        "src/deck_master/read_facts.py",
+        "src/deck_master/ui_journal.py",
+        "src/deck_master/web.py",
+        "src/deck_master/workbench.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_candidate_decisions.py",
+        "tests/rebuild/test_page_detail.py",
+        "tests/rebuild/test_request_read_facts.py",
+        "tests/rebuild/test_workbench_actions.py"
+      ],
+      "historical_evidence": [],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 160,
+      "title": "[P2][Performance] 历史分页每页完整解析 head 到 cursor 的前缀，遍历全史形成二次工作",
+      "state": "open",
+      "updated_at": "2026-10-22T02:47:03Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/160",
+      "owner": "RP-29",
+      "body_update_planned": false,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "9a1af7994b19547bd0159dbe4370e29913415aad docs(RP-29): record repeated history and recovery performance evidence",
+        "5fdeeef26520cea5f00e4d23917f5c98cfeb1bf6 fix(RP-29): reuse fixed ancestry and avoid redundant recovery writes"
+      ],
+      "final_files": [
+        "src/deck_master/editing.py",
+        "src/deck_master/gallery_state.py",
+        "src/deck_master/operations.py",
+        "src/deck_master/personal_recovery.py",
+        "src/deck_master/snapshots.py",
+        "src/deck_master/ui_journal.py",
+        "src/deck_master/view.py",
+        "tools/benchmark_history_recovery.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_gallery_core.py",
+        "tests/rebuild/test_history_read_reuse.py",
+        "tests/rebuild/test_operation_coverage.py",
+        "tests/rebuild/test_personal_recovery.py",
+        "tests/rebuild/test_planned_input_revision.py",
+        "tests/rebuild/test_snapshot_headers.py",
+        "tests/rebuild/test_store_transactions.py",
+        "tests/rebuild/test_task_receipt_recovery.py",
+        "tests/rebuild/test_ui_journal.py",
+        "tests/rebuild/test_ui_state_clear.py",
+        "tests/rebuild/test_usability_history.py",
+        "tests/rebuild/test_workbench_operations.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-29.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 161,
+      "title": "[P3][Performance] 单页 lineage 的三个子投影重复扫描同一任务集合",
+      "state": "open",
+      "updated_at": "2026-10-22T02:47:30Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/161",
+      "owner": "RP-26",
+      "body_update_planned": false,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "2c1ac56c087bb89e47e117f2d5eef27a78cfbec4 test(RP-26): repeat matched cold and warm reads and map historical evidence",
+        "8bec75f8df0909457b2de46c45690dda7212def4 fix(reading): share response facts and revalidate ancestry freshness (RP-26)"
+      ],
+      "final_files": [
+        "src/deck_master/action_currentness.py",
+        "src/deck_master/candidate_preview.py",
+        "src/deck_master/candidates.py",
+        "src/deck_master/changes.py",
+        "src/deck_master/collaboration.py",
+        "src/deck_master/collaboration_migration.py",
+        "src/deck_master/content_production.py",
+        "src/deck_master/read_facts.py",
+        "src/deck_master/ui_journal.py",
+        "src/deck_master/web.py",
+        "src/deck_master/workbench.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_candidate_decisions.py",
+        "tests/rebuild/test_page_detail.py",
+        "tests/rebuild/test_request_read_facts.py",
+        "tests/rebuild/test_workbench_actions.py"
+      ],
+      "historical_evidence": [],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 162,
+      "title": "[P1][Design] 内容表格被固化为成品版式，设计交接未区分约定排版与模型自主设计",
+      "state": "open",
+      "updated_at": "2026-10-22T05:56:43Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/162",
+      "owner": "RP-17",
+      "body_update_planned": true,
+      "comments": 3,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "f8482a862b71aba5c0d5158335476fa03637dbc0 fix(RP-17): freeze effective page design policy and scoped layout"
+      ],
+      "final_files": [
+        "skills/deck-design/SKILL.md",
+        "skills/deck-master/references/content-to-visual.md",
+        "src/deck_master/design_requirements.py",
+        "src/deck_master/models.py",
+        "src/deck_master/production.py",
+        "src/deck_master/resources/contracts/document.v1.schema.json",
+        "src/deck_master/resources/contracts/page.v2.schema.json",
+        "src/deck_master/store.py",
+        "src/deck_master/visual_dependencies.py",
+        "src/deck_master/visual_styles.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_rc3_design_requirements.py",
+        "tests/rebuild/test_rp17_design_policy.py",
+        "tests/rebuild/test_visual_style_freshness.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-17.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 163,
+      "title": "[P2][Skill] 设计方法派发三套口径不一致：blueprint 3 项、design 角色 7 项、design phase 缺 content-to-visual",
+      "state": "open",
+      "updated_at": "2026-10-22T04:16:43Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/163",
+      "owner": "RP-18",
+      "body_update_planned": true,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "f41cbadbf4f151e70928eaea5437860b49961560 fix: preserve method preparation scope and readable catalog (RP-18)"
+      ],
+      "final_files": [
+        "src/deck_master/insight_http.py",
+        "src/deck_master/method_library_view.py",
+        "src/deck_master/method_resources.py",
+        "src/deck_master/resources/static/v2/method-library.js"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_install_preparation_coverage.py",
+        "tests/rebuild/test_method_preparation_browser.py",
+        "tests/rebuild/test_method_preparation_handoff.py",
+        "tests/rebuild/test_rc5_host_selection.py"
+      ],
+      "historical_evidence": [],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 164,
+      "title": "[P2][Review] 视觉审查缺表达质量维度：visual_expression 已入合同但不可选/未实现，page_visual 仍只复用三维",
+      "state": "open",
+      "updated_at": "2026-10-22T16:59:13Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/164",
+      "owner": "RP-20",
+      "body_update_planned": true,
+      "comments": 1,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "f934b04658b813c886225c7a288d881603dd8c0a fix(review): retain same-image defects across unrelated Page edits (RP-20)",
+        "1c046ec22232a2a24589dc1476c88c42dc82d200 fix(RP-21): distinguish known original faults from expansion authority",
+        "dd424554284f881a1ce76c0f3323cbcbcc37bace fix(review): review original image expression before SVG and expansion (RP-20)"
+      ],
+      "final_files": [
+        "skills/deck-master/references/review-and-repair.md",
+        "src/deck_master/cli.py",
+        "src/deck_master/content_review.py",
+        "src/deck_master/design_entry.py",
+        "src/deck_master/method_resources.py",
+        "src/deck_master/models.py",
+        "src/deck_master/original_review.py",
+        "src/deck_master/production.py",
+        "src/deck_master/resources/contracts/document.v1.schema.json",
+        "src/deck_master/resources/contracts/review.v2.schema.json",
+        "src/deck_master/resources/contracts/task.v1.schema.json",
+        "src/deck_master/resources/static/v2/design-entry.js",
+        "src/deck_master/review.py",
+        "src/deck_master/review_channels.py",
+        "src/deck_master/review_evidence.py",
+        "src/deck_master/service.py",
+        "src/deck_master/styles.py",
+        "src/deck_master/tasks.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/synthetic_review_provider.py",
+        "tests/rebuild/test_design_entry_basis.py",
+        "tests/rebuild/test_native_review.py",
+        "tests/rebuild/test_rc3_design_workflows.py",
+        "tests/rebuild/test_rc3_native_visual_reuse.py",
+        "tests/rebuild/test_review.py",
+        "tests/rebuild/test_review_channel_discovery.py",
+        "tests/rebuild/test_rp17_design_policy.py",
+        "tests/rebuild/test_rp19_asset_inputs.py",
+        "tests/rebuild/test_rp20_original_review.py",
+        "tests/rebuild/test_styles.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-20.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 165,
+      "title": "[P2][Design] 项目级 layout_notes 与逐页设计指令冲突无检测：新样页 prompt 同时要求“不用表格”和“完整保留表格归属”",
+      "state": "open",
+      "updated_at": "2026-10-22T16:59:12Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/165",
+      "owner": "RP-17",
+      "body_update_planned": true,
+      "comments": 1,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "f8482a862b71aba5c0d5158335476fa03637dbc0 fix(RP-17): freeze effective page design policy and scoped layout"
+      ],
+      "final_files": [
+        "skills/deck-design/SKILL.md",
+        "skills/deck-master/references/content-to-visual.md",
+        "src/deck_master/design_requirements.py",
+        "src/deck_master/models.py",
+        "src/deck_master/production.py",
+        "src/deck_master/resources/contracts/document.v1.schema.json",
+        "src/deck_master/resources/contracts/page.v2.schema.json",
+        "src/deck_master/store.py",
+        "src/deck_master/visual_dependencies.py",
+        "src/deck_master/visual_styles.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_rc3_design_requirements.py",
+        "tests/rebuild/test_rp17_design_policy.py",
+        "tests/rebuild/test_visual_style_freshness.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-17.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 166,
+      "title": "[P2][Contract] new_design 允许零视觉结构：visual_spec/layout_hint 无最小完整性校验，表格正文仍可派发生图",
+      "state": "open",
+      "updated_at": "2026-10-22T04:38:35Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/166",
+      "owner": "RP-17",
+      "body_update_planned": true,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "f8482a862b71aba5c0d5158335476fa03637dbc0 fix(RP-17): freeze effective page design policy and scoped layout"
+      ],
+      "final_files": [
+        "skills/deck-design/SKILL.md",
+        "skills/deck-master/references/content-to-visual.md",
+        "src/deck_master/design_requirements.py",
+        "src/deck_master/models.py",
+        "src/deck_master/production.py",
+        "src/deck_master/resources/contracts/document.v1.schema.json",
+        "src/deck_master/resources/contracts/page.v2.schema.json",
+        "src/deck_master/store.py",
+        "src/deck_master/visual_dependencies.py",
+        "src/deck_master/visual_styles.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_rc3_design_requirements.py",
+        "tests/rebuild/test_rp17_design_policy.py",
+        "tests/rebuild/test_visual_style_freshness.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-17.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 167,
+      "title": "[P2][Skill] 合法 Page 正文候选任务被 Content reader 错拒，Design 却接受",
+      "state": "open",
+      "updated_at": "2026-10-22T04:50:58Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/167",
+      "owner": "RP-02",
+      "body_update_planned": true,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "91fc0f854c4d90e7087472ec5137f76ccb78aa1c fix: route zero-call Page trials through Content contracts (RP-02)"
+      ],
+      "final_files": [
+        "skills/deck-master/references/candidates-and-stages.md",
+        "src/deck_master/changes.py",
+        "src/deck_master/eligibility.py",
+        "src/deck_master/method_resources.py",
+        "src/deck_master/resources/static/v2/annotations.js",
+        "src/deck_master/service.py",
+        "src/deck_master/tasks.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_content_candidates.py",
+        "tests/rebuild/test_eligibility_enforcement.py",
+        "tests/rebuild/test_rc3_content_methods.py",
+        "tests/rebuild/test_rc3_early_methods.py",
+        "tests/rebuild/test_rc4_work_context.py",
+        "tests/rebuild/test_review.py",
+        "tests/rebuild/test_rp02_content_responsibility.py",
+        "tests/rebuild/test_rp03_trial_isolation.py",
+        "tests/rebuild/test_task_receipt_recovery.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-02.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 168,
+      "title": "[P2][Skill] 自然复合请求误选单一职责后，拒绝正确的 Master 协调入口",
+      "state": "open",
+      "updated_at": "2026-10-22T04:50:59Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/168",
+      "owner": "RP-06",
+      "body_update_planned": false,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "0a0077836e6925a7ec12ebe6b92dc5cc22dcef56 fix(RP-06): route compound work and finish bounded design plans"
+      ],
+      "final_files": [
+        "skills/deck-design/SKILL.md",
+        "skills/deck-master/SKILL.md",
+        "src/deck_master/collaboration.py",
+        "src/deck_master/content_production.py",
+        "src/deck_master/design_completion.py",
+        "src/deck_master/method_resources.py",
+        "src/deck_master/service.py",
+        "src/deck_master/styles.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_collaboration_contracts.py",
+        "tests/rebuild/test_install_preparation_coverage.py",
+        "tests/rebuild/test_method_preparation_browser.py",
+        "tests/rebuild/test_rc3_design_feasibility.py",
+        "tests/rebuild/test_rc3_four_skills.py",
+        "tests/rebuild/test_rc5_host_selection.py",
+        "tests/rebuild/test_rp06_design_completion.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-06-X2.md",
+        "docs/reports/issue-repair-20261023/RP-06.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 169,
+      "title": "[P2][Workflow] 纯设计方案已完成仍无职责终态，continue 误索要正文或蓝图生产权限",
+      "state": "open",
+      "updated_at": "2026-10-22T04:51:01Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/169",
+      "owner": "RP-06",
+      "body_update_planned": true,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "0a0077836e6925a7ec12ebe6b92dc5cc22dcef56 fix(RP-06): route compound work and finish bounded design plans"
+      ],
+      "final_files": [
+        "skills/deck-design/SKILL.md",
+        "skills/deck-master/SKILL.md",
+        "src/deck_master/collaboration.py",
+        "src/deck_master/content_production.py",
+        "src/deck_master/design_completion.py",
+        "src/deck_master/method_resources.py",
+        "src/deck_master/service.py",
+        "src/deck_master/styles.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_collaboration_contracts.py",
+        "tests/rebuild/test_install_preparation_coverage.py",
+        "tests/rebuild/test_method_preparation_browser.py",
+        "tests/rebuild/test_rc3_design_feasibility.py",
+        "tests/rebuild/test_rc3_four_skills.py",
+        "tests/rebuild/test_rc5_host_selection.py",
+        "tests/rebuild/test_rp06_design_completion.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-06-X2.md",
+        "docs/reports/issue-repair-20261023/RP-06.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 170,
+      "title": "[P2][WebUI] 方法准备选择口播审阅，实际发送不含 speech 的三项正文审查范围",
+      "state": "open",
+      "updated_at": "2026-10-22T04:51:02Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/170",
+      "owner": "RP-18",
+      "body_update_planned": false,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "f41cbadbf4f151e70928eaea5437860b49961560 fix: preserve method preparation scope and readable catalog (RP-18)"
+      ],
+      "final_files": [
+        "src/deck_master/insight_http.py",
+        "src/deck_master/method_library_view.py",
+        "src/deck_master/method_resources.py",
+        "src/deck_master/resources/static/v2/method-library.js"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_install_preparation_coverage.py",
+        "tests/rebuild/test_method_preparation_browser.py",
+        "tests/rebuild/test_method_preparation_handoff.py",
+        "tests/rebuild/test_rc5_host_selection.py"
+      ],
+      "historical_evidence": [],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 171,
+      "title": "[P2][Skill UX] 方法准备交接只复制显式ID和不可恢复摘要，丢失角色阶段与范围",
+      "state": "open",
+      "updated_at": "2026-10-22T04:51:03Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/171",
+      "owner": "RP-18",
+      "body_update_planned": false,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "f41cbadbf4f151e70928eaea5437860b49961560 fix: preserve method preparation scope and readable catalog (RP-18)"
+      ],
+      "final_files": [
+        "src/deck_master/insight_http.py",
+        "src/deck_master/method_library_view.py",
+        "src/deck_master/method_resources.py",
+        "src/deck_master/resources/static/v2/method-library.js"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_install_preparation_coverage.py",
+        "tests/rebuild/test_method_preparation_browser.py",
+        "tests/rebuild/test_method_preparation_handoff.py",
+        "tests/rebuild/test_rc5_host_selection.py"
+      ],
+      "historical_evidence": [],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 172,
+      "title": "[P3][WebUI] 项目模式无新阶段时隐藏31项只读方法，混用浏览与派发条件",
+      "state": "open",
+      "updated_at": "2026-10-22T04:51:06Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/172",
+      "owner": "RP-18",
+      "body_update_planned": false,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "f41cbadbf4f151e70928eaea5437860b49961560 fix: preserve method preparation scope and readable catalog (RP-18)"
+      ],
+      "final_files": [
+        "src/deck_master/insight_http.py",
+        "src/deck_master/method_library_view.py",
+        "src/deck_master/method_resources.py",
+        "src/deck_master/resources/static/v2/method-library.js"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_install_preparation_coverage.py",
+        "tests/rebuild/test_method_preparation_browser.py",
+        "tests/rebuild/test_method_preparation_handoff.py",
+        "tests/rebuild/test_rc5_host_selection.py"
+      ],
+      "historical_evidence": [],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 173,
+      "title": "[P1][Pipeline] 上传、设计资产与生产消费未贯通，Logo和模板缺少可用的制作链路",
+      "state": "open",
+      "updated_at": "2026-10-22T06:34:14Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/173",
+      "owner": "RP-19",
+      "body_update_planned": true,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "5740d552bee00b845ae8c7ec8cafdf70a2fddbb2 fix(RP-19): bind selected asset originals into frozen image references"
+      ],
+      "final_files": [
+        "skills/deck-master/references/blueprint-svg.md",
+        "src/deck_master/candidates.py",
+        "src/deck_master/design_recipe.py",
+        "src/deck_master/generation.py",
+        "src/deck_master/models.py",
+        "src/deck_master/production.py",
+        "src/deck_master/resources/contracts/asset-inputs.v1.schema.json",
+        "src/deck_master/resources/contracts/document.v1.schema.json",
+        "src/deck_master/resources/contracts/page.v2.schema.json",
+        "src/deck_master/service.py",
+        "src/deck_master/source_uploads.py",
+        "src/deck_master/store.py",
+        "src/deck_master/visual_dependencies.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_page_visual_gate.py",
+        "tests/rebuild/test_rc3_design_requirements.py",
+        "tests/rebuild/test_rc3_notes_files.py",
+        "tests/rebuild/test_rc3_notes_transactions.py",
+        "tests/rebuild/test_rp17_design_policy.py",
+        "tests/rebuild/test_rp19_asset_inputs.py",
+        "tests/rebuild/test_styles.py",
+        "tests/rebuild/test_visual_styles.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-19.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 174,
+      "title": "[P1][Content] 内部来源误作上屏默认，客户表达与证据追溯未分层",
+      "state": "open",
+      "updated_at": "2026-10-22T08:19:59Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/174",
+      "owner": "RP-16",
+      "body_update_planned": true,
+      "comments": 1,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "4ebd1159e7be82bb6cca5a8f5984cfb660d7a896 fix: anchor audience semantics in page-copy review (RP-16)"
+      ],
+      "final_files": [
+        "skills/deck-content/SKILL.md",
+        "skills/deck-master/references/methods/M10-compression.md",
+        "skills/deck-master/references/page-writing.md",
+        "skills/deck-master/references/review-and-repair.md",
+        "skills/deck-master/references/source-reading.md",
+        "src/deck_master/audience_review.py",
+        "src/deck_master/content_review.py",
+        "src/deck_master/review.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_audience_register_review.py",
+        "tests/rebuild/test_content_preproduction_review.py",
+        "tests/rebuild/test_native_review.py",
+        "tests/rebuild/test_native_review_recovery.py",
+        "tests/rebuild/test_native_review_transport.py",
+        "tests/rebuild/test_rc4_content_review.py",
+        "tests/rebuild/test_rp14_effective_requirements.py",
+        "tests/rebuild/test_rp15_content_visibility.py",
+        "tests/rebuild/test_selective_content_review.py",
+        "tests/rebuild/test_selective_requirements_integration.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-16.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 175,
+      "title": "[P2][Skill] 改进后完整稿保留作者自证和坏稿错误数字，正例污染客户表达",
+      "state": "open",
+      "updated_at": "2026-10-22T08:20:02Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/175",
+      "owner": "RP-13",
+      "body_update_planned": true,
+      "comments": 1,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "ae79d4c6beccb694cc648675ab16e9e2767c2faf fix(skills): scope customer expression guidance and clean examples (RP-13)"
+      ],
+      "final_files": [
+        "skills/deck-master/assets/content/examples/E02-technical-choice/after.md",
+        "skills/deck-master/assets/content/examples/E03-policy-training/after.md",
+        "skills/deck-master/assets/content/examples/E04-saas-retention/after.md",
+        "skills/deck-master/assets/content/examples/E06-rag-teaching/after.md",
+        "skills/deck-master/references/content-examples.md",
+        "skills/deck-master/references/content-methods.md",
+        "skills/deck-master/references/method-review.md",
+        "skills/deck-master/references/method-selection.md",
+        "skills/deck-master/references/methods/M05-options-and-value.md",
+        "skills/deck-master/references/page-writing.md"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_install.py",
+        "tests/rebuild/test_install_host_skill.py",
+        "tests/rebuild/test_rc5_resource_catalog.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-13.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 176,
+      "title": "[P2][Skill] 无收益数据规则未按主张和用途限定，泛化要求假设与测量办法",
+      "state": "open",
+      "updated_at": "2026-10-22T07:51:07Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/176",
+      "owner": "RP-13",
+      "body_update_planned": true,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "ae79d4c6beccb694cc648675ab16e9e2767c2faf fix(skills): scope customer expression guidance and clean examples (RP-13)"
+      ],
+      "final_files": [
+        "skills/deck-master/assets/content/examples/E02-technical-choice/after.md",
+        "skills/deck-master/assets/content/examples/E03-policy-training/after.md",
+        "skills/deck-master/assets/content/examples/E04-saas-retention/after.md",
+        "skills/deck-master/assets/content/examples/E06-rag-teaching/after.md",
+        "skills/deck-master/references/content-examples.md",
+        "skills/deck-master/references/content-methods.md",
+        "skills/deck-master/references/method-review.md",
+        "skills/deck-master/references/method-selection.md",
+        "skills/deck-master/references/methods/M05-options-and-value.md",
+        "skills/deck-master/references/page-writing.md"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_install.py",
+        "tests/rebuild/test_install_host_skill.py",
+        "tests/rebuild/test_rc5_resource_catalog.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-13.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 177,
+      "title": "[P3][Skill] “删字不是修复”与M10删冗方法矛盾，完整性指导缺少语义边界",
+      "state": "open",
+      "updated_at": "2026-10-22T07:47:49Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/177",
+      "owner": "RP-13",
+      "body_update_planned": true,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "ae79d4c6beccb694cc648675ab16e9e2767c2faf fix(skills): scope customer expression guidance and clean examples (RP-13)"
+      ],
+      "final_files": [
+        "skills/deck-master/assets/content/examples/E02-technical-choice/after.md",
+        "skills/deck-master/assets/content/examples/E03-policy-training/after.md",
+        "skills/deck-master/assets/content/examples/E04-saas-retention/after.md",
+        "skills/deck-master/assets/content/examples/E06-rag-teaching/after.md",
+        "skills/deck-master/references/content-examples.md",
+        "skills/deck-master/references/content-methods.md",
+        "skills/deck-master/references/method-review.md",
+        "skills/deck-master/references/method-selection.md",
+        "skills/deck-master/references/methods/M05-options-and-value.md",
+        "skills/deck-master/references/page-writing.md"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_install.py",
+        "tests/rebuild/test_install_host_skill.py",
+        "tests/rebuild/test_rc5_resource_catalog.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-13.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 178,
+      "title": "[P2][Review] 独立内容前审包未展开当前请求与适用协作决定",
+      "state": "open",
+      "updated_at": "2026-10-22T07:51:18Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/178",
+      "owner": "RP-14",
+      "body_update_planned": true,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "19e043b9a6decab89027b0becf8fa83357f0f317 fix(review): preserve tasks for unchanged effective policy (RP-14)",
+        "48962271d676a1e0be6bfffed15812ac8fa59b63 fix(review): bind scoped effective requirements to review freshness (RP-14)"
+      ],
+      "final_files": [
+        "src/deck_master/collaboration.py",
+        "src/deck_master/content_review.py",
+        "src/deck_master/effective_requirements.py",
+        "src/deck_master/method_resources.py",
+        "src/deck_master/native_review.py",
+        "src/deck_master/service.py",
+        "src/deck_master/tasks.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_collaboration_contracts.py",
+        "tests/rebuild/test_content_preproduction_review.py",
+        "tests/rebuild/test_external_review_lifecycle.py",
+        "tests/rebuild/test_native_review.py",
+        "tests/rebuild/test_native_review_transport.py",
+        "tests/rebuild/test_rc3_content_methods.py",
+        "tests/rebuild/test_rc3_restyle_workflows.py",
+        "tests/rebuild/test_rc4_content_review.py",
+        "tests/rebuild/test_rc4_work_context.py",
+        "tests/rebuild/test_review_policy_semantic_identity.py",
+        "tests/rebuild/test_rp14_effective_requirements.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-14.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 179,
+      "title": "[P2][Review] 内容前审缺客户可见语域维度，失败项只罚藏限定不罚内部证据上屏",
+      "state": "open",
+      "updated_at": "2026-10-22T08:19:08Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/179",
+      "owner": "RP-16",
+      "body_update_planned": true,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "4ebd1159e7be82bb6cca5a8f5984cfb660d7a896 fix: anchor audience semantics in page-copy review (RP-16)"
+      ],
+      "final_files": [
+        "skills/deck-content/SKILL.md",
+        "skills/deck-master/references/methods/M10-compression.md",
+        "skills/deck-master/references/page-writing.md",
+        "skills/deck-master/references/review-and-repair.md",
+        "skills/deck-master/references/source-reading.md",
+        "src/deck_master/audience_review.py",
+        "src/deck_master/content_review.py",
+        "src/deck_master/review.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_audience_register_review.py",
+        "tests/rebuild/test_content_preproduction_review.py",
+        "tests/rebuild/test_native_review.py",
+        "tests/rebuild/test_native_review_recovery.py",
+        "tests/rebuild/test_native_review_transport.py",
+        "tests/rebuild/test_rc4_content_review.py",
+        "tests/rebuild/test_rp14_effective_requirements.py",
+        "tests/rebuild/test_rp15_content_visibility.py",
+        "tests/rebuild/test_selective_content_review.py",
+        "tests/rebuild/test_selective_requirements_integration.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-16.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 180,
+      "title": "[P2][Contract] content_profile / required_qualifications 无定义语义却被投影为设计上屏要求",
+      "state": "open",
+      "updated_at": "2026-10-22T08:19:27Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/180",
+      "owner": "RP-15",
+      "body_update_planned": true,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "85135b67d0b3957085bb72deb71608d8f0536868 fix: define versioned customer-visible content consumption (RP-15)"
+      ],
+      "final_files": [
+        "skills/deck-master/references/content-to-visual.md",
+        "src/deck_master/content_plan.py",
+        "src/deck_master/design_requirements.py",
+        "src/deck_master/production.py",
+        "src/deck_master/resources/contracts/content-plan-input.v2.schema.json",
+        "src/deck_master/resources/contracts/content-requirements.v1.schema.json"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_collaboration_contracts.py",
+        "tests/rebuild/test_generation_protocol.py",
+        "tests/rebuild/test_rc3_design_requirements.py",
+        "tests/rebuild/test_rc3_notes_visual_inputs.py",
+        "tests/rebuild/test_rc3_preproduction_semantics.py",
+        "tests/rebuild/test_rc3_review_repairs.py",
+        "tests/rebuild/test_rc4_content_review.py",
+        "tests/rebuild/test_rc4_work_context.py",
+        "tests/rebuild/test_rp15_content_visibility.py",
+        "tests/rebuild/test_visual_style_freshness.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-15.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 181,
+      "title": "[P2][WebUI] 已记录的 v3 初始设计规范被风格工作面静默过滤",
+      "state": "open",
+      "updated_at": "2026-10-22T16:49:16Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/181",
+      "owner": "RP-09",
+      "body_update_planned": true,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "2321f429e3b076e6a0f443659cc7a225bb1331a9 fix: expose versioned design recipes in style catalog (RP-09)"
+      ],
+      "final_files": [
+        "src/deck_master/resources/static/v2/style-calibration.js",
+        "src/deck_master/resources/static/v2/visual-style.js"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_recipe_versions_browser.py",
+        "tests/rebuild/test_studio_style_browser.py",
+        "tests/rebuild/test_visual_styles.py"
+      ],
+      "historical_evidence": [],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 182,
+      "title": "[P2][WebUI] 总览把历史失败与被接续任务作为当前优先待办，目标列表缺少辨识信息",
+      "state": "open",
+      "updated_at": "2026-10-22T16:49:17Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/182",
+      "owner": "RP-08",
+      "body_update_planned": true,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "7d6836520f954eda108c3c869b10c7c4e66dfe72 fix(RP-08/RP-22): scope design plan actions to requested deliverable",
+        "ff25f438155d37d481ea4b9485a8ca713a69108d test(workbench): retain exact candidate counts with stale projection (RP-08)",
+        "b9a3616eae54261cdaf0b848fbcdfd52629493c3 fix(workbench): project current actionable tasks and candidates (RP-08)"
+      ],
+      "final_files": [
+        "src/deck_master/action_currentness.py",
+        "src/deck_master/resources/contracts/action-targets.v1.schema.json",
+        "src/deck_master/resources/contracts/workbench-summary.v1.schema.json",
+        "src/deck_master/resources/static/v2/action-targets.js",
+        "src/deck_master/resources/static/v2/collaboration-desk.js",
+        "src/deck_master/resources/static/v2/overview.js",
+        "src/deck_master/resources/static/v2/run-desk.js",
+        "src/deck_master/run_desk.py",
+        "src/deck_master/workbench.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_action_targets.py",
+        "tests/rebuild/test_action_targets_browser.py",
+        "tests/rebuild/test_candidate_decisions.py",
+        "tests/rebuild/test_overview_state.py",
+        "tests/rebuild/test_rp08_current_actions.py",
+        "tests/rebuild/test_run_desk.py",
+        "tests/rebuild/test_workbench_actions.py",
+        "tests/rebuild/test_workbench_reads.py",
+        "tests/rebuild/test_x3_design_plan_actions.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-08.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 183,
+      "title": "[P2] 单任务领取/接纳回执展开全部待办工作正文，重复携带完整材料",
+      "state": "open",
+      "updated_at": "2026-10-22T16:49:19Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/183",
+      "owner": "RP-07",
+      "body_update_planned": true,
+      "comments": 0,
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "53abc89e3949d3377acb04016b9551f9a38f9291 fix(tasks): negotiate compact single-task mutation receipts (RP-07)"
+      ],
+      "final_files": [
+        "skills/deck-master/references/collaboration-routing.md",
+        "src/deck_master/capabilities.py",
+        "src/deck_master/cli.py",
+        "src/deck_master/service.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_cli.py",
+        "tests/rebuild/test_service_flow.py",
+        "tests/rebuild/test_task_compact_receipts.py",
+        "tests/rebuild/test_task_receipt_recovery.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/issue-repair-20261023/RP-07.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    },
+    {
+      "number": 186,
+      "title": "外部报告 finding 接续返修",
+      "owner": "PR187-186",
+      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "repair_commits": [
+        "37c9b1a3f83a4db4607f967725b33e80b7b068cf fix(review): preserve external report findings across repair (#186)"
+      ],
+      "final_files": [
+        "skills/deck-master/SKILL.md",
+        "skills/deck-master/references/review-and-repair.md",
+        "skills/deck-review/SKILL.md",
+        "src/deck_master/cli.py",
+        "src/deck_master/collaboration_api.py",
+        "src/deck_master/content_review.py",
+        "src/deck_master/eligibility_entries.py",
+        "src/deck_master/review_handoff.py",
+        "src/deck_master/review_import.py"
+      ],
+      "verification_tests": [
+        "tests/rebuild/test_external_review_handoff.py"
+      ],
+      "historical_evidence": [
+        "docs/reports/pr187-followups/issue-186.md"
+      ],
+      "integration_status": "REQUIRES_FINAL_VERIFICATION",
+      "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized."
+    }
+  ]
+}
