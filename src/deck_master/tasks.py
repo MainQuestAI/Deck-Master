@@ -652,12 +652,15 @@ def _adopt_review(store: Store, review: dict) -> dict:
         shared = old_findings.keys() & new_findings.keys()
         # A preproduction unit can pass without findings, then be independently
         # rechecked after another unit changes. There is no finding to close in
-        # that case. Keep the ID requirement for every actual finding and every
-        # other stage/status; do not invent findings or rewrite model output.
+        # that case. A recheck can also discover a new defect after a clean
+        # judgment: retain it instead of forcing the old pass to mask it.
+        # Existing findings still require identity continuity and closure;
+        # failed empty priors and other stages do not receive this exception.
         empty_pass_recheck = (
             review.get("review_stage") == "preproduction"
-            and prior.get("status") == review.get("status") == "pass"
-            and not old_findings and not new_findings
+            and prior.get("status") == "pass"
+            and not old_findings
+            and (review.get("status") == "pass" or bool(new_findings))
             and any(text.strip() for text in review.get("observations") or [])
         )
         if not shared and not empty_pass_recheck:

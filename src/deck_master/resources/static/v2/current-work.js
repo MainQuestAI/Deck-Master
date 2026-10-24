@@ -36,7 +36,7 @@ export function currentWork(app, work = app.summary.current_work) {
         ' · 审查：' + (checks[work.review.status] || work.review.status)),
       el('div', {class:'todo-bottom'},
         next.primary_action && el('span', {}, todoMeta(app, next.primary_action)),
-        button(next.label, () => {closePanel();if(next.primary_action)openAction(app,next.primary_action,{surface:next.surface});else app.go(next.navigation||{surface:next.surface});}, true, {disabled:next.primary_action?.enabled===false}))),
+        button(next.label, () => {closePanel();if(next.primary_action)openAction(app,next.primary_action,{surface:next.surface});else app.go(next.navigation||{surface:next.surface});}, true, {disabled:next.primary_action?.enabled===false, 'data-priority-action':'true'}))),
     el('div', {class:'stack'}, secondary, optional,
       work.blockers.length > 0 && el('p', {class:'field-error'}, '接续仍有阻断，请查看具体范围与依据。'),
       !rest.length && evidence));

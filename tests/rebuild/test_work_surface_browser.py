@@ -114,7 +114,13 @@ def test_cancel_via_task_desk_rejects_repeated_late_result(action_browser):
     page.goto(server.start())
     page.get_by_role('button', name='任务与交付', exact=True).click()
     page.locator(f'.run-task[data-task-id="{task["task_id"]}"]').get_by_role('button', name='查看这项任务').click()
-    page.get_by_role('button', name='取消原任务', exact=True).click()
+    with page.expect_response(lambda response: response.url.endswith('/api/cancel')) as cancelled:
+        page.get_by_role('button', name='取消原任务', exact=True).click()
+    receipt = cancelled.value.json()
+    assert cancelled.value.request.post_data_json['response_protocol'] == 'task_receipt.v1'
+    assert receipt['schema_version'] == 'task_receipt.v1'
+    assert receipt['task']['task_id'] == task['task_id']
+    assert receipt['task']['status'] == 'cancelled' and 'pending_tasks' not in receipt
     expect(page.locator('.run-detail')).to_contain_text('已取消')
     for _ in range(2):
         with pytest.raises(tasks.TaskConflict):
