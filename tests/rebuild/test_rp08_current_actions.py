@@ -73,15 +73,15 @@ def test_mixed_actions_and_history_are_consistent(candidate_store, monkeypatch):
         pytest.fail('action projection invoked production eligibility')
     monkeypatch.setattr(eligibility, 'guard', forbidden)
     basis_reads = []
-    original_state = candidates._state
+    original_state = candidates.basis_state
     def counted(*args, **kwargs):
         basis_reads.append(1)
         return original_state(*args, **kwargs)
-    monkeypatch.setattr(candidates, '_state', counted)
+    monkeypatch.setattr(candidates, 'basis_state', counted)
     summary = workbench.workbench_summary(store.project_root)
     assert len(basis_reads) == 2  # 22 candidates, only two distinct immutable bases
-    assert summary['candidates'] == {'status': 'recorded', 'count': 22, 'pending_count': 1,
-        'adopted_count': 0, 'kept_count': 0, 'unreadable_count': 0, 'stale_count': 21}
+    assert summary['candidates'] == {'status': 'recorded', 'count': 22, 'pending_count': 22,
+        'adopted_count': 0, 'kept_count': 0, 'unreadable_count': 0, 'stale_count': 21, 'historical_count': 21, 'actionable_count': 1}
     by_kind = {a['kind']: a for a in summary['next_actions']['actions']}
     assert 'replan' not in by_kind
     failed = by_kind['inspect_failure']
@@ -95,9 +95,9 @@ def test_mixed_actions_and_history_are_consistent(candidate_store, monkeypatch):
     rows = {r['task_id']: r for r in run_desk.listing(store.project_root, limit=100)['tasks']}
     for tid in ['old-failed', 'followed-failed', 'retired']:
         assert rows[tid]['human_actions'] == []
-        assert rows[tid]['current_relation']['state'] == 'historical'
-    assert rows['followed-failed']['current_relation']['successor_id'] == 'adopted-successor'
-    assert rows[unknown_id]['current_relation']['state'] == 'unknown'
+        assert rows[tid]['current_relation']['status'] == 'historical'
+    assert rows['followed-failed']['current_relation']['successor_task_id'] == 'adopted-successor'
+    assert rows[unknown_id]['current_relation']['status'] == 'historical'
     assert rows[unknown_id]['human_actions'] == ['verify_unknown_call']
     assert rows[candidate_task]['pending_candidate_refs'] == [before['candidates'][0]]
     assert rows['old-failed']['status'] == 'failed'
@@ -171,7 +171,7 @@ def test_current_request_with_changed_dependencies_requires_replan(candidate_sto
     assert [t['object_id'] for t in targets['targets']] == [task['task_id']]
     row = run_desk.detail(store.project_root, task_id=task['task_id'])['task']
     assert row['status'] == 'awaiting_host' and row['human_actions'] == ['replan']
-    assert row['current_relation'] == {'state':'current', 'reason':'dependency_basis_changed'}
+    assert row['current_relation'] == {'status':'current', 'reason':'dependency_basis_changed'}
     assert store.load_document() == before
 
 

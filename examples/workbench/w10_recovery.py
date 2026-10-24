@@ -62,7 +62,7 @@ def main():
     with patch.object(run_desk, 'datetime', SimulatedClock):
         delayed = run_desk.detail(fixture.project, task_id=first['task_id'])
     assert delayed['task']['needs_verification'] and delayed['task']['status'] == 'running'
-    service.task_cancel(fixture.project, task_id=first['task_id'], reason='Explicit synthetic cancellation before replacement')
+    service.task_cancel(fixture.project, task_id=first['task_id'], reason='Explicit synthetic cancellation before replacement', response_protocol="task_receipt.v1")
     stopped = store.load_document()
     try:
         with patch.object(fixture, 'start', lambda task: None):
@@ -109,7 +109,7 @@ def main():
         checks['unknown_read_never_replays_or_allocates'] = True
     finally:
         server.stop()
-    service.task_cancel(fixture.project, task_id=unknown_task['task_id'])
+    service.task_cancel(fixture.project, task_id=unknown_task['task_id'], response_protocol="task_receipt.v1")
     assert fixture.task(unknown_task['task_id'])['call_allowances'][0]['state'] == 'unknown'
     checks['unknown_survives_cancellation'] = True
     cli_project = args.out / 'awaiting-project'; created = service.create(cli_project, brief='Synthetic no-model run-status example')

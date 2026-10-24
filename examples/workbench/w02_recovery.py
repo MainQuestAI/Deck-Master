@@ -30,7 +30,7 @@ def crash_child(project, task_file, result_file):
     # the child process without unwinding Python frames or returning a response.
     tasks.write_operation_journal = lambda *args, **kwargs: os._exit(77)
     service.accept_result(project, result_payload=json.loads(result_file.read_bytes()),
-                          **{key: task[key] for key in ("task_id", "operation_id", "produced_against")})
+                          **{key: task[key] for key in ("task_id", "operation_id", "produced_against")}, response_protocol="task_receipt.v1")
     raise AssertionError("the child did not reach the injected crash")
 
 

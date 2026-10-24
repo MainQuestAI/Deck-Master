@@ -293,6 +293,14 @@
               "type": "integer",
               "minimum": 0
             },
+            "historical_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "actionable_count": {
+              "type": "integer",
+              "minimum": 0
+            },
             "adopted_count": {
               "type": "integer",
               "minimum": 0

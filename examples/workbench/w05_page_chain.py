@@ -48,7 +48,7 @@ def fixture(root):
     # labeled. It tests UI evidence semantics, not a real model call.
     thread = '11111111-1111-7111-8111-111111111111'; turn = '22222222-2222-7222-8222-222222222222'
     execution = f'codex:{thread}:{turn}'
-    service.task_start(project, task_id=task['task_id'], execution_ref=execution, supported_protocols=[generation.PROTOCOL], capabilities=generation.CAPABILITIES)
+    service.task_start(project, task_id=task['task_id'], execution_ref=execution, supported_protocols=[generation.PROTOCOL], capabilities=generation.CAPABILITIES, response_protocol="task_receipt.v1")
     value = generation.prepared_input(store, store.load_document(), task)
     value['prompt'] = TEXT; value['parameters'] = {'transparent_background': False}
     frozen = generation.freeze(project, task_id=task['task_id'], input=value, base_revision=store.current_revision_id(), operation_id='synthetic-freeze')
@@ -75,7 +75,7 @@ def fixture(root):
     service.accept_result(project, result_payload={'kind': 'blueprint', 'files': [{'file_id': 'output', 'path': 'result.png', 'media_type': 'image/png'}],
         'generation_result': {'request_id': frozen['request_id'], 'attempt_id': attempt['attempt_id']},
         'artifact_specs': [{'role': 'blueprint', 'page_id': 'p01', 'file_id': 'output', 'provenance': {'source_type': 'host_generated', 'tool': 'synthetic-ui-fixture'}, 'limitations': ['Synthetic collector replay, not a real Host call']}]},
-        **{k: task[k] for k in ('task_id', 'operation_id', 'produced_against')})
+        **{k: task[k] for k in ('task_id', 'operation_id', 'produced_against')}, response_protocol="task_receipt.v1")
     doc = store.load_document()
     host = store.read_object_json(doc['pages'][1]['blueprint']); host['provenance']['submitted_prompt'] = store.put_blob(b'Host reported text only', ext='txt')
     doc['pages'][1]['blueprint'] = store.put_json_object(host)

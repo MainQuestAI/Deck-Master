@@ -155,7 +155,7 @@ def _checkpoint(store, task, session, observation, *, envelope=None, context=Non
     models.validate_schema('native_review_checkpoint', record)
     ref = store.put_json_object(record)
     updated = {**current, 'result_refs': [*current.get('result_refs', []), ref], 'updated_at': service._utc_now_iso()}
-    service._commit_task_update(store, document, current, updated, 'persist owned native review evidence before acceptance')
+    service._commit_task_update(store, document, current, updated, 'persist owned native review evidence before acceptance', response_protocol="task_receipt.v1")
     return ref
 
 
@@ -271,11 +271,11 @@ def _recover(store, task_id):
             {'provider_id': PROVIDER_ID, 'event_id': claims['event_id']})
         if task['status'] == 'failed':
             resumed = {**task, 'status': 'running', 'error': None, 'updated_at': service._utc_now_iso()}
-            service._commit_task_update(store, document, task, resumed, 'resume acceptance of recorded native completion')
+            service._commit_task_update(store, document, task, resumed, 'resume acceptance of recorded native completion', response_protocol="task_receipt.v1")
         try:
             accepted = service.accept_result(store.project_root, task_id=task_id,
                 operation_id=task['operation_id'], produced_against=task['produced_against'],
-                result_payload=envelope, adapter_context=context)
+                result_payload=envelope, adapter_context=context, response_protocol="task_receipt.v1")
             return {'status': 'recovered', 'task_id': task_id, 'execution_ref': task['execution_ref'],
                     'model_called': False, 'acceptance': accepted,
                     'preproduction': _subject_status(store, store.load_document(), task.get('review_subject'))}
@@ -292,7 +292,7 @@ def _failure(store, task, executor, exc):
         updated = {**current, "status": "failed", "updated_at": service._utc_now_iso(),
                    "error": {"code": "native_review_failed", "message": str(getattr(exc, "detail", type(exc).__name__))[:500],
                              "next_action": "inspect task result_refs; use review recover --task-id for a committed proof; missing proof must not be self-signed"}}
-        service._commit_task_update(store, document, current, updated, "native independent review failed")
+        service._commit_task_update(store, document, current, updated, "native independent review failed", response_protocol="task_receipt.v1")
 
 
 def run(project, *, task_id=None, force_units=None, subject=None):
@@ -416,7 +416,7 @@ def _run(store, *, task_id, force_units=None, subject=None):
                 raise review_evidence.EvidenceRejected("native_review/executor", "reviewer is an author of this manuscript")
             service.task_start(store.project_root, task_id=task["task_id"], execution_ref=session.execution_ref,
                 supported_protocols=[task["protocol_version"]] if task.get("protocol_version") else [],
-                capabilities=task.get("required_capabilities") or [])
+                capabilities=task.get("required_capabilities") or [], response_protocol="task_receipt.v1")
             try:
                 prior = [{"ref": ref, "review": value} for ref in document.get("reviews") or []
                          if (value := store.read_object_json(ref)).get("review_stage") == "preproduction"]
@@ -460,7 +460,7 @@ def _run(store, *, task_id, force_units=None, subject=None):
                 _checkpoint(store, task, session, observation, envelope=envelope, context=context)
                 accepted = service.accept_result(store.project_root, task_id=task["task_id"],
                     operation_id=task["operation_id"], produced_against=task["produced_against"],
-                    result_payload=envelope, adapter_context=context)
+                    result_payload=envelope, adapter_context=context, response_protocol="task_receipt.v1")
                 return {"status": "reviewed", "task_id": task["task_id"], "execution_ref": session.execution_ref,
                         "acceptance": accepted, "preproduction": _subject_status(store, store.load_document(), subject)}
             except Exception as exc:

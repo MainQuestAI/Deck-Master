@@ -232,3 +232,18 @@ def test_stale_result_binding_unchanged_by_response_protocol(tmp_path, protocol)
     with pytest.raises(tasks.TaskConflict):
         submit(project, task, payload, produced_against='0' * 64, response_protocol=protocol)
     assert store.current_revision_id() == before
+
+
+
+from test_native_review import native  # noqa: F401
+
+
+def test_native_consumer_never_expands_mutation_work_orders(tmp_path, monkeypatch, native):
+    from test_native_review import _deck
+    from deck_master import native_review
+    project, store = _deck(tmp_path)
+    monkeypatch.setattr(service, '_pending_host_tasks', lambda *a, **k: pytest.fail('native mutation expanded work orders'))
+    result = native_review.run(project)
+    assert result['acceptance']['schema_version'] == PROTOCOL
+    assert result['acceptance']['task']['task_id'] == result['task_id']
+    assert result['acceptance']['context_ready'] is False

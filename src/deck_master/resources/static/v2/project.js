@@ -114,8 +114,8 @@ export class Project {
       const info = await this.readControl();
       if (!valid() || serial !== this.controlRead || info.project_identity !== this.info.project_identity) return;
       this.info = info;
-      await this.refreshCurrentWork(info, () => isCurrent() && serial === this.controlRead, observedSummary);
-      if (!isCurrent() || serial !== this.controlRead) return;
+      await this.refreshCurrentWork(info, () => valid() && serial === this.controlRead, observedSummary);
+      if (!valid() || serial !== this.controlRead) return;
       // Refresh only the control facts. Draft editors, fixed canvases and open
       // decisions keep their DOM and confirmed basis across another window's
       // pause/revoke/CAS update.

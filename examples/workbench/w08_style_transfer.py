@@ -18,7 +18,7 @@ from w07_synthetic import EXECUTION, SyntheticW07
 class SyntheticStyle(SyntheticW07):
     def start(self, task):
         return service.task_start(self.project, task_id=task['task_id'], execution_ref=EXECUTION,
-                                  supported_protocols=['generation.v1', 'changes.v1'], capabilities=task['required_capabilities'])
+                                  supported_protocols=['generation.v1', 'changes.v1'], capabilities=task['required_capabilities'], response_protocol="task_receipt.v1")
 
 
 def main():

@@ -42,7 +42,7 @@ full_deck 的授权 Producer 使用工作单准确方法及 capability：generat
 ## 单任务变更回执与完整输入读取
 
 先通过 `deck-master capabilities` 确认 `task_response_protocols` 支持
-`task_receipt.v1`，再在 `task start`、`task accept` 或 `task cancel` 上指定
+`task_receipt.v1`，受控 Host 必须在 `task start`、`task accept` 或 `task cancel` 上指定
 `--response-protocol task_receipt.v1`。Python service 使用同名
 `response_protocol` 参数；HTTP `/api/cancel` 可传同名 JSON 字段。
 未指定时保留旧版回执，不静默改变旧 Host 的输入。

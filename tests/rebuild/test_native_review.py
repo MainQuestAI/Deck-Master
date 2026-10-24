@@ -153,9 +153,7 @@ def test_empty_pass_recheck_preserves_native_output_and_accepts_receipt(tmp_path
     def recheck(self, prompt, schema):
         observed = original(self, prompt, schema)
         rows = json.loads(observed["raw_final_message"])["reviews"]
-        if len(self.calls) == 1:
-            next(row for row in rows if row["kind"] == "argument")["status"] = "fail"
-        else:
+        if len(self.calls) > 1:
             prior = next(row for row in self.calls[-1]["prior_reviews"]
                          if row["review"]["kind"] == "progression")
             next(row for row in rows if row["kind"] == "progression")["replaces"] = prior["ref"]
@@ -163,9 +161,11 @@ def test_empty_pass_recheck_preserves_native_output_and_accepts_receipt(tmp_path
         return observed
 
     monkeypatch.setattr(native, "review", recheck)
-    assert native_review.run(project)["preproduction"]["status"] != "pass"
-    before = deepcopy(store.load_document())
     assert native_review.run(project)["preproduction"]["status"] == "pass"
+    before = deepcopy(store.load_document())
+    # Recheck the clean unit explicitly under the merged frozen-owner contract.
+    # Failed empty prior reviews remain rejected by the separate negative case.
+    assert native_review.run(project, force_units=["progression"])["preproduction"]["status"] == "pass"
     after = store.load_document()
     for key in ("narrative", "content_plan", "pages", "outputs", "design_context"):
         assert after.get(key) == before.get(key)

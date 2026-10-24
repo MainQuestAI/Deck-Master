@@ -43,6 +43,7 @@ def _bypass_ambient_proxy_for_loopback_tests():
 
 
 def pytest_addoption(parser):
+    parser.addoption("--browser-executable", default=None, help="Explicit existing Chromium executable for local browser evidence.")
     parser.addoption("--q2-diagnostics", action="store_true", help="Finite Q2 child timing and pre-deadline stacks.")
     parser.addoption(
         "--require-browser", action="store_true",
@@ -150,3 +151,17 @@ def pytest_configure(config):
     if config.getoption("--q2-diagnostics"):
         from q2_timeout_diagnostics import Diagnostics
         config.pluginmanager.register(Diagnostics(), "q2-timeout-diagnostics")
+
+
+@pytest.fixture(autouse=True)
+def _explicit_browser_executable(request, monkeypatch):
+    executable = request.config.getoption('--browser-executable')
+    if executable and request.node.get_closest_marker('browser'):
+        from playwright.sync_api import BrowserType
+        path = Path(executable).resolve(strict=True)
+        original = BrowserType.launch
+        def launch(self, *args, **kwargs):
+            if self.name == 'chromium':
+                kwargs.setdefault('executable_path', str(path))
+            return original(self, *args, **kwargs)
+        monkeypatch.setattr(BrowserType, 'launch', launch)

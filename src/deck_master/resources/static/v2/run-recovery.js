@@ -40,7 +40,7 @@ export function cancelRecovery(app) {
           pending.delete(task.task_id); persist(); throw new Error('取消恢复记录未保存，尚未发送取消请求。请恢复本机存储或保存个人记录后重试。');
         }
       }
-      await post('/api/cancel', {task_id: task.task_id, reason: '用户在运行台取消'});
+      await post('/api/cancel', {task_id: task.task_id, reason: '用户在运行台取消', ...(app.health.ui_capabilities?.includes('task_receipt.v1') ? {response_protocol:'task_receipt.v1'} : {})});
       // Do not infer a final task status from a transport acknowledgement.
       await recovery.verify(task.task_id);
       app.root.dispatchEvent(new CustomEvent('business-state-changed'));

@@ -100,9 +100,9 @@ def submit(project, payload_path, execution_ref, out):
     save(str(out) + '.envelope.json', envelope)
     try:
         service.task_start(project, task_id=task['task_id'], execution_ref=execution_ref,
-                           supported_protocols=[task['protocol_version']], capabilities=task['required_capabilities'])
+                           supported_protocols=[task['protocol_version']], capabilities=task['required_capabilities'], response_protocol="task_receipt.v1")
         result = service.accept_result(project, task_id=task['task_id'], operation_id=task['operation_id'],
-                                        produced_against=task['produced_against'], result_payload=envelope)
+                                        produced_against=task['produced_against'], result_payload=envelope, response_protocol="task_receipt.v1")
     except Exception as exc:
         save(out, {'status': 'actual_runtime_failure', 'workorder': order, 'method_read': methods,
                    'execution_ref': execution_ref, 'authored_payload': str(Path(payload_path).resolve()),

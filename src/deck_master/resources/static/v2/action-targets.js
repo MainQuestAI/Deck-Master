@@ -54,7 +54,7 @@ export function actionTargets(app, data) {
       const scope = pages.length ? pages.every(n => n > 0) ? '第 ' + pages.join('、') + ' 页' : '页面未在此版本记录' : '项目级';
       return el('article', {class: 'panel action-target', 'data-target-id': target.target_id},
         el('div', {class: 'panel-body stack'}, el('h2', {}, taskNames[target.task_kind] || names[target.kind]),
-          el('p',{class:'muted'},[target.object_id,target.created_at?new Date(target.created_at).toLocaleString('zh-CN',{hour12:false}):null,relationNames[target.current_relation]].filter(Boolean).join(' · ')),
+          el('p',{class:'muted'},[target.object_id,target.display?.operation_id,target.created_at?new Date(target.created_at).toLocaleString('zh-CN',{hour12:false}):null,relationNames[target.current_relation]].filter(Boolean).join(' · ')),
           el('p', {}, scope + (target.layer ? ' · ' + (layerNames[target.layer] || target.layer) : '')),
           el('p', {class: 'muted'}, target.enabled ? '按此版本查看对象；阅读不改变当前稿件。' : target.blocked_reason === 'target_identity_mismatch'
             ? '对象身份或页面范围不匹配，未跳转；其它对象仍可查看。' : '记录暂不可读，已隔离；其它对象仍可查看。'),

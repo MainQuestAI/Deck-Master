@@ -62,7 +62,7 @@ def main():
                                                    ("evidence", "成效需要另行测量", "当前材料没有节省时间或提升产出的实测数据。")]]}
     save(out / "result-envelope.json", envelope)
     accepted = service.accept_result(project, result_payload=envelope,
-                                     **{k: task[k] for k in ("task_id", "operation_id", "produced_against")})
+                                     **{k: task[k] for k in ("task_id", "operation_id", "produced_against")}, response_protocol="task_receipt.v1")
     save(out / "accepted.json", accepted)
     store = Store(project)
     doc = store.load_document()

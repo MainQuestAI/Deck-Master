@@ -86,9 +86,9 @@ class SyntheticW07:
                 owned_reviews.append({**review, 'review_id': previous['review_id'], 'replaces': owner['review_ref']})
         reviews = owned_reviews
         service.task_start(self.project, task_id=task['task_id'], execution_ref='L1-synthetic-w07-fidelity',
-            supported_protocols=[task['protocol_version']], capabilities=task['required_capabilities'])
+            supported_protocols=[task['protocol_version']], capabilities=task['required_capabilities'], response_protocol="task_receipt.v1")
         return service.accept_result(self.project, task_id=task['task_id'], operation_id=task['operation_id'],
-            produced_against=task['produced_against'], result_payload={'kind': 'review', 'reviews': reviews})
+            produced_against=task['produced_against'], result_payload={'kind': 'review', 'reviews': reviews}, response_protocol="task_receipt.v1")
 
     def dispatch(self, page_id='p01', *, mode='trial', stage='blueprint', reference_page=None, instruction='Synthetic browser flow'):
         doc = self.store.load_document(); entry = next(p for p in doc['pages'] if p['page_id'] == page_id)
@@ -111,7 +111,7 @@ class SyntheticW07:
         service.task_start(self.project, task_id=task['task_id'], execution_ref=EXECUTION,
                            supported_protocols=['generation.v1', 'changes.v1'],
                            capabilities=[*generation.CAPABILITIES, 'change_plan', 'candidate_result',
-                               'collaboration.v1', 'rc3-entry.v1'])
+                               'collaboration.v1', 'rc3-entry.v1'], response_protocol="task_receipt.v1")
 
     def image(self, task, variant=1):
         self.start(task)
@@ -160,7 +160,7 @@ class SyntheticW07:
             'kind': 'blueprint', 'files': [{'file_id': 'png', 'path': 'candidate.png', 'media_type': 'image/png'}],
             'generation_result': {'request_id': frozen['request_id'], 'attempt_id': attempt['attempt_id']},
             'artifact_specs': [{'file_id': 'png', 'role': 'blueprint', 'page_id': task['scope_pages'][0],
-                                'provenance': {'source_type': 'host_generated', 'tool': 'synthetic-runtime-adapter'}}]})
+                                'provenance': {'source_type': 'host_generated', 'tool': 'synthetic-runtime-adapter'}}]}, response_protocol="task_receipt.v1")
         return result
 
     def svg(self, task, variant=1):
@@ -176,7 +176,7 @@ class SyntheticW07:
         return service.accept_result(self.project, **{k: task[k] for k in ('task_id', 'operation_id', 'produced_against')}, result_payload={
             'kind': task['kind'], 'files': [{'file_id': 'svg', 'path': 'page.svg', 'media_type': 'image/svg+xml'}],
             'artifact_specs': [{'file_id': 'svg', 'role': 'svg', 'page_id': entry['page_id'],
-                                'provenance': {'source_type': 'unknown', 'tool': 'synthetic-svg-test'}}]})
+                                'provenance': {'source_type': 'unknown', 'tool': 'synthetic-svg-test'}}]}, response_protocol="task_receipt.v1")
 
     def adopt(self, ids):
         doc = self.store.load_document(); plan = candidates.plan(self.project, input={'schema_version': 'candidate_selection.v1',

@@ -16,7 +16,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 CASES = Path(__file__).with_name("rc3_q2_later_300_cases.py").resolve()
-TOOL = ROOT / "tools/rc3_campaign/q2_later_300_v2.py"
+TOOL = ROOT / "tools/rc3_campaign/q2_later_300_v3.py"
 OLD_TOOL = ROOT / "tools/rc3_campaign/q2_later_300.py"
 EXPECTED_CASES = 70
 

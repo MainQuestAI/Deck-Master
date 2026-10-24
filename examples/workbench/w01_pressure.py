@@ -181,12 +181,12 @@ def sample(project, out, manifest, *, source_commit=None, server_mode='detached'
                 if tid not in available:
                     continue
                 started = time.perf_counter()
-                result = service.task_start(project, task_id=tid, execution_ref='synthetic-pressure-background')
+                result = service.task_start(project, task_id=tid, execution_ref='synthetic-pressure-background', response_protocol="task_receipt.v1")
                 updates.append({'task_id': tid, 'action': 'start', 'result': {k: result[k] for k in ('status', 'revision_id')}, 'elapsed_ms': (time.perf_counter() - started) * 1000})
                 if stop.wait(.25):
                     break
                 started = time.perf_counter()
-                result = service.task_cancel(project, task_id=tid, reason='Synthetic background pressure transition')
+                result = service.task_cancel(project, task_id=tid, reason='Synthetic background pressure transition', response_protocol="task_receipt.v1")
                 updates.append({'task_id': tid, 'action': 'cancel', 'result': {k: result[k] for k in ('status', 'revision_id')}, 'elapsed_ms': (time.perf_counter() - started) * 1000})
                 if stop.wait(.25):
                     break

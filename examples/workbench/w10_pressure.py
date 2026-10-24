@@ -43,7 +43,7 @@ def prepare_usability_fixture(project, *, history_count=45):
         base_revision=store.current_revision_id(), operation_id=str(uuid.uuid4()))['operation_result']
     task = tasks._lookup_task(store.load_document(), analysis['task_id'], store)
     service.task_start(project, task_id=task['task_id'], execution_ref='synthetic-pressure-analysis',
-        supported_protocols=[task['protocol_version']], capabilities=task['required_capabilities'])
+        supported_protocols=[task['protocol_version']], capabilities=task['required_capabilities'], response_protocol="task_receipt.v1")
     result = {'kind':'style_analyze', 'style_analysis':{
         'dimensions':{key:{'summary':'SYNTHETIC read-pressure '+key,
             'evidence':[{'reference_id':imported['reference_id'], 'region':[0,0,1,1],
@@ -254,9 +254,9 @@ def main():
                         gallery()
                     if step % 2 == 0:
                         if pending:
-                            value = service.task_cancel(project, task_id=pending, reason='W10 synthetic pressure cancellation'); updates.append({'step': step, 'task_id': pending, 'kind': 'cancel'}); pending = None
+                            value = service.task_cancel(project, task_id=pending, reason='W10 synthetic pressure cancellation', response_protocol="task_receipt.v1"); updates.append({'step': step, 'task_id': pending, 'kind': 'cancel'}); pending = None
                         elif available:
-                            pending = available.pop(0); service.task_start(project, task_id=pending, execution_ref='synthetic-pressure-background')
+                            pending = available.pop(0); service.task_start(project, task_id=pending, execution_ref='synthetic-pressure-background', response_protocol="task_receipt.v1")
                             updates.append({'step': step, 'task_id': pending, 'kind': 'start'})
                     metrics = {row['name']: row['value'] for row in cdp.send('Performance.getMetrics')['metrics']}
                     pool = page.evaluate('async () => (await import("/v2/images.js")).imagePool.snapshot()')
