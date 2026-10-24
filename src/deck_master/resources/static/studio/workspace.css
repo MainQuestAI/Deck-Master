@@ -446,3 +446,21 @@
 .studio-workspace .recipe-rules dt,.studio-workspace .recipe-rules dd {margin:0;padding:16px 0;border-bottom:1px solid var(--border-soft);overflow-wrap:anywhere;line-height:1.6}
 .studio-workspace .recipe-rules dt {font-weight:600}
 @media(max-width:560px){.studio-workspace .recipe-rules {grid-template-columns:72px minmax(0,1fr);column-gap:12px}}
+
+/* The manuscript list owns one toolbar, with facts attached to each page. */
+.studio-workspace #content-area-pages>.content-pages-panel>.panel-head {display:none}
+.studio-workspace .content-row-body {min-width:0;padding:8px 0}
+.studio-workspace .content-order-row .content-row-body .order-handle {padding:0;font-weight:600;color:var(--dm-color-text-primary,#1b1f24)}
+.studio-workspace .content-row-meta {display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--text-secondary,#505760)}
+.studio-workspace .content-row-preview {font-size:12px;line-height:18px;margin:6px 0 0;color:var(--text-secondary,#505760);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+@media(max-width:767px){
+ .studio-workspace .content-sources>.page-head {display:flex;flex-direction:row;align-items:center;gap:8px}
+ .studio-workspace .content-sources>.page-head>.content-input-actions {display:block;width:auto;flex:none}
+ .studio-workspace .content-sources>.page-head h1 {font-size:20px}
+ .studio-workspace .content-alignment.is-aligned {display:none}
+ .studio-workspace .content-row-preview {display:none}
+ .studio-workspace .content-row-meta {gap:4px 8px;font-size:12px}
+ .studio-workspace .content-row-status {font-size:11px}
+ .studio-workspace .content-sources .content-list-toolbar {gap:8px}
+ .studio-workspace .content-sources .content-order-row {padding:8px;gap:8px}
+}
