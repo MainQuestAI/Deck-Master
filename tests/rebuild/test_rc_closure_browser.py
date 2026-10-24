@@ -679,7 +679,7 @@ def test_loading_draft_is_readonly_and_old_pending_shows_exact_request(workbench
 def test_buffered_draft_remains_readonly_until_project_recovery_loads(workbench):
     page, _, _, _, goto, _ = workbench
     goto()
-    open_opinion_face(page)
+    open_opinion_composer(page)
     body = page.get_by_label('意见正文', exact=True)
     expect(body).to_be_editable()
     body.fill('已有浏览器缓冲')
@@ -689,7 +689,7 @@ def test_buffered_draft_remains_readonly_until_project_recovery_loads(workbench)
     held = []
     page.route('**/api/drafts', lambda route: held.append(route))
     page.reload()
-    open_opinion_face(page)
+    open_opinion_composer(page)
     expect(body).not_to_be_editable()
     expect(page.locator('.annotation-notice')).to_contain_text('正在读取草稿')
     for route in list(held):

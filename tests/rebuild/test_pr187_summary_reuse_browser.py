@@ -30,6 +30,13 @@ def test_thirty_page_idle_keeps_three_summary_reads(tmp_path, route):
             page.goto(server.start() + route + '/')
             expect(page.locator('#view-title')).to_be_visible()
             page.wait_for_timeout(16000)
+            # Keep the original cadence/count boundary. The third summary can
+            # still be in flight at 16s; its dependent control read follows the
+            # response, so wait for that read rather than sample between them.
+            assert counts['summary'] == 3, counts
+            if counts['project'] == 2:
+                with page.expect_response(lambda r: r.url.split('?')[0].endswith('/api/project'), timeout=5000):
+                    pass
             assert counts == {'summary': 3, 'project': 3}, counts
             browser.close()
     finally:

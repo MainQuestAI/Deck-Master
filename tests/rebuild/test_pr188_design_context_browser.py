@@ -27,6 +27,8 @@ def test_v2_mobile_tools_mount_actual_controls(ui):
     panel=page.get_by_role('dialog',name='单页工具面板',exact=True)
     expect(panel).to_be_visible()
     expect(panel.get_by_role('button',name='意见',exact=True)).to_be_visible()
+    panel.get_by_role('button',name='意见',exact=True).click()
+    panel.get_by_role('button',name='整页意见',exact=True).click()
     expect(panel.get_by_role('textbox',name='意见正文',exact=True)).to_be_visible()
     panel.get_by_role('button',name='回到画面',exact=True).click()
     expect(panel).not_to_be_visible()

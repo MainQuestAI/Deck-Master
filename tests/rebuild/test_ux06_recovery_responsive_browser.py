@@ -249,7 +249,13 @@ def test_modal_close_returns_focus_to_the_surface_heading_when_trigger_is_remove
         expect(page.locator('dialog[open]')).to_have_count(0)
         if result in ('cancelled', 'rejected'):
             expect(page.locator('.project-card')).to_have_count(1)
-            expect(trigger).to_be_focused()
+            # PR188 closes the native action popover before opening the modal.
+            # Native close restores its visible disclosure button; the hidden
+            # menu item is no longer a reachable focus destination.
+            opener = card.get_by_role('button', name=re.compile('^项目操作 · '))
+            expect(opener).to_be_visible()
+            expect(opener).to_have_attribute('aria-expanded', 'false')
+            expect(opener).to_be_focused()
             return
         expect(page.locator('.project-card')).to_have_count(0)
         # 触发器（列表行按钮）已被重绘移除：焦点回退到工作面标题。

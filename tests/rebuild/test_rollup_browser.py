@@ -140,6 +140,7 @@ def test_dispatch_unknown_explains_preservation_without_redispatch(icon_browser)
     assert requests == []
 
 
+@pytest.mark.render
 def test_damaged_preview_busy_polls_without_automatic_retry(icon_browser):
     import fcntl
     from playwright.sync_api import expect

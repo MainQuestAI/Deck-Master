@@ -480,3 +480,7 @@ dialog:has(> .modal-body > form.launcher-create-form) .modal-actions {flex:none;
 
 .overview .matrix thead th{padding:4px 12px}
 .overview .matrix .chapter-row th{padding:4px 12px}
+
+/* Keep the current work card and first page in the initial viewport. The
+   overview stack supplies spacing; the generic toolbar's 40px margins do not. */
+.overview .overview-reading-tools{margin:0}

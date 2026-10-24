@@ -326,12 +326,12 @@ export function style(app) {
     showPhase(2, {auto: restore});
     recipeView.append(el('h3', {}, `V${recipe.version} · ${recipeOrigin(recipe,label)}`), el('p', {}, recipe.input.instruction),
       el('p',{class:'muted'},`${recipe.schema_version} · 固定依据 ${version(recipe.base_revision)} · 范围 ${recipe.input.target_page_ids.map(label).join('、')}`),
-      el('p',{class:'muted'},'这里选中的是本次试作依据，不代表已应用到当前全稿。未确认的修改不会进入试作。'),
+      el('p',{class:'muted'},'这里选中的是本次试作依据，不代表当前全稿方向或生产许可，也不代表已应用到当前全稿。未确认的修改不会进入试作。'),
       recipeDetails(recipe,label),
       recipe.schema_version==='style_recipe.v1'?button('以此版本修改要求', () => {
         if (app.readonly) return; hydrateState({...recipe.input, reference: recipe.input.reference, targets:recipe.input.target_page_ids, parent_recipe_id:recipe.recipe_id}); changed();
       }):el('p',{class:'muted'},recipe.schema_version==='style_recipe.v2'?'修改图片规范请使用外部图片的已保存规范入口；本处按完整固定版本试作。':'修改这份结构化设计需由 Deck Master Agent 沿用固定规范与明确页范围产生新版本；本处保留完整参数，不降级为跨页借用。'),
-      recipe.intent==='feasibility'&&el('p',{class:'notice'},'这是零调用的版式可行性方案，不能直接派发图像制作。先基于它确认生产设计方案。'),
+      ...(recipe.intent==='feasibility'?[el('p',{class:'notice'},'这是零调用的版式可行性方案，不能直接派发图像制作。先基于它确认生产设计方案。')]:[]),
       detail('固定版本差异与约束', json(recipe.diff), json(recipe.conflicts)));
     const saved = restore && editor().draft.content.style_trial?.recipe_id === recipe.recipe_id ? editor().draft.content.style_trial : null;
     if (saved) { adoptedCandidate.value = saved.adopted_candidate_id || ''; calls.value = saved.max_calls || 1; for (const id of saved.expansion || []) if (recipe.input.target_page_ids.includes(id)) expansion.add(id); }

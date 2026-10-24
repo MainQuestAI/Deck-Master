@@ -16,7 +16,7 @@ from urllib.parse import urlencode, urlsplit
 import pytest
 from playwright.sync_api import expect, sync_playwright
 
-from deck_master import exports, local_runtime, tasks
+from deck_master import changes, eligibility, exports, local_runtime, tasks
 from deck_master.store import Store
 from deck_master.eligibility import EligibilityBlocked
 from rc3_fixtures import settle_fidelity_review
@@ -124,11 +124,31 @@ def test_same_project_create_material_edit_handoff_candidate_and_fixed_export(la
             # Editing invalidates the earlier manuscript review. Observe the
             # real refusal, then return a fresh explicitly scripted L1 review
             # through its real workorder; do not disable the production gate.
-            with pytest.raises(EligibilityBlocked):
-                dispatch_content_trial(project, store, page='p01')
+            # PR185 permits zero-call page-copy corrections so a failed review
+            # can be repaired. Exercise the visual production gate instead.
+            entry = next(e for e in doc['pages'] if e['page_id'] == 'p01')
+            visual = {'schema_version':'change_intent.v1', 'project_id':doc['project_id'],
+                'base_revision':doc['revision_id'], 'intent':'visual',
+                'instruction':'L1 gate probe only; do not dispatch an image call',
+                'annotation_refs':[], 'max_calls':1, 'mode':'trial',
+                'targets':[{'page_id':'p01','page_ref':entry['page'],
+                            'layer':'original_image','artifact_ref':entry.get('blueprint')}]}
+            planned = changes.plan(project, input=visual)
+            before_gate = store.load_document()
+            with pytest.raises(EligibilityBlocked) as blocked:
+                changes.commit(project, plan_id=planned['plan_id'],
+                    base_revision=doc['revision_id'], operation_id=str(uuid.uuid4()))
+            assert 'preproduction_blocked' in blocked.value.decision['reason_codes']
+            assert store.load_document() == before_gate
             settle_fidelity_review(project, page_ids=['p02','p01'],
                 execution_ref='L1-continuous-after-edit',
                 scenario='Synthetic current manuscript check; no professional acceptance')
+            reviewed = store.load_document()
+            decision = eligibility.evaluate(store, reviewed, reviewed, 'change.commit',
+                context={'external_call_page_ids':['p01'], 'count':1, 'candidate_count':1,
+                         'targets':{'page_ids':['p01'],'layers':['blueprint']}})
+            assert 'preproduction_blocked' not in decision['reason_codes']
+            assert not decision['allowed']  # Editorial authority still grants zero image calls.
             task = dispatch_content_trial(project, store, page='p01')
             goto('runs', task=task['task_id'])
             handoff = page.locator('.task-handoff')
