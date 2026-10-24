@@ -1,0 +1,34 @@
+{
+  "observed_at": "2026-10-24T15:43:47.481345+00:00",
+  "candidate": "f384a7eddd4337b5bd70a5632ae4c7dbc2c46bd7",
+  "user_permission": "Explicit approval to install rsvg-convert from official system package sources for cloud validation; no credential/security changes",
+  "os": "Debian GNU/Linux 13 (trixie), VERSION_ID=13",
+  "execution_identity": "uid=1000(agent) gid=1000(agent)",
+  "source_configuration": "deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg check-valid-until=no] https://snapshot.debian.org/archive/debian/20260828T000000Z/ trixie main\ndeb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg check-valid-until=no] https://snapshot.debian.org/archive/debian/20260828T000000Z/ trixie-updates main\ndeb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg check-valid-until=no] https://snapshot.debian.org/archive/debian-security/20260828T000000Z/ trixie-security main\n",
+  "package": "librsvg2-bin",
+  "before_install": {
+    "installed": false,
+    "apt_candidate": "none (indexes not available)",
+    "sudo_available": false
+  },
+  "attempt": {
+    "command": "apt-get update",
+    "tool_permission_mode": "require_escalated",
+    "exit_code": 100,
+    "stderr": [
+      "W: Unable to read /etc/apt/apt.conf.d/80-applied-apt-retries - open (13: Permission denied)",
+      "E: List directory /var/lib/apt/lists/partial is missing. - Acquire (13: Permission denied)"
+    ],
+    "classification": "OS_FILESYSTEM_PERMISSION_DENIED",
+    "automatic_approval_rejection": false
+  },
+  "install_executed": false,
+  "package_version_obtained": null,
+  "retried_or_bypassed": false,
+  "new_test_runs": 0,
+  "still_not_run_rsvg_cases": 60,
+  "previous_install_preflight_failure_retried": false,
+  "frozen_a_gap": "Original external immutable installation still unavailable; not reconstructed",
+  "wheel_sha256": "fbe010395aa53f5c1e69bb86b55ed47c40fa2cd92541eb5195ab2b9e20b4b2dd",
+  "minimal_unblock": "Environment operator must provide an authorized system package installation capability or pre-provision official librsvg2-bin in this saved validation environment. User consent is already present; current tool escalation did not grant OS filesystem access. Do not change credentials/security settings or substitute a renderer."
+}

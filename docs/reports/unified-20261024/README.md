@@ -56,3 +56,5 @@ The stability archive includes the complete binary main-to-code-candidate patch 
 [Remaining gates](remaining-gates.json) individually lists unexecuted cases, original unit skips and the attempted installation refusal. [Contract mirrors](contract-mirrors.json) records byte identity for the 14 changed runtime schemas.
 
 Read-only refresh follow-up: [method reload investigation](METHOD-RELOAD-INVESTIGATION.md) narrows the failure to the post-initial-read, pre-mount phase, corrects response-header timing limits, and specifies the missing evidence and next capture. Root cause remains unresolved; no new test or code change. This supplement postdates the unchanged evidence archive.
+
+Authorized renderer follow-up: [installation permission block](RENDERER-INSTALL-BLOCK.md). Official package index update was denied by OS filesystem permissions despite require_escalated execution. No installation or dependent rerun occurred; user consent is already present.
