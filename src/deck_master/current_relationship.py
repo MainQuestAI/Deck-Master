@@ -87,6 +87,54 @@ class CurrentRelationships:
                 return task_id
         return None
 
+    def _completed_content(self, task, request_status):
+        """Compare the adopted result, not the inputs that adoption replaced."""
+        from .models import compute_input_digest
+        receipt = self.store.operation_receipt(task['operation_id'])
+        if not receipt:
+            return relation('unknown', 'adoption_receipt_missing')
+        response = receipt.get('response') or {}
+        adopted = self.ctx.read_snapshot(response['revision_id'])
+        completed = next((self.ctx.read(ref) for ref in adopted.get('tasks', [])
+                          if self.ctx.read(ref).get('task_id') == task['task_id']), None)
+        if (not completed or completed.get('status') != 'completed'
+                or completed.get('operation_id') != task['operation_id']
+                or completed.get('result_refs') != task.get('result_refs')
+                or (adopted.get('change') or {}).get('operation_id') != task['operation_id']):
+            return relation('unknown', 'adoption_identity_unverified')
+        if response.get('adopted') is False:
+            # Proposal-only content has not replaced its dispatch inputs.
+            from .tasks import task_inputs_current
+            return relation(request_status if task_inputs_current(
+                self.store, self.document, task, read_snapshot=self.ctx.read_snapshot)
+                else 'historical', 'content_proposal_basis')
+
+        def slots(document):
+            values = {('page', entry['page_id']): entry['page']
+                      for entry in document.get('pages', [])}
+            values.update({(name, ''): document[name] for name in ('narrative', 'content_plan')
+                           if document.get(name)})
+            return values
+
+        before, now = slots(adopted), slots(self.document)
+        results = task.get('result_refs') or []
+        locations = [key for key, ref in before.items() if ref in results]
+        if not results or any(ref not in before.values() for ref in results):
+            return relation('unknown', 'adopted_result_location_missing')
+        if any(now.get(key) != before[key] for key in locations):
+            return relation('historical', 'adopted_content_replaced')
+        # The whole content context includes membership/order and the adopted
+        # narrative/plan. Unrelated rendering and display metadata do not.
+        if (compute_input_digest(adopted) != compute_input_digest(self.document)
+                or adopted.get('design_context') != self.document.get('design_context')
+                or before != now
+                or [p['page_id'] for p in adopted.get('pages', [])] !=
+                   [p['page_id'] for p in self.document.get('pages', [])]
+                or (adopted.get('collaboration') or {}).get('request') !=
+                   (self.document.get('collaboration') or {}).get('request')):
+            return relation('historical', 'adopted_content_context_changed')
+        return relation(request_status, 'adopted_content_current')
+
     def task(self, task):
         key = task['task_id']
         if key in self.task_cache:
@@ -105,6 +153,12 @@ class CurrentRelationships:
                     except READ_FAILURES: statuses.append('unknown')
                 if not any(status in ('current','background') for status in statuses):
                     result = relation('unknown' if 'unknown' in statuses else 'historical', 'candidate_basis_not_current')
+            elif task['status'] == 'completed' and task.get('kind') == 'compose':
+                try:
+                    result = self._completed_content(task, result['status'])
+                except READ_FAILURES:
+                    self.ctx.read_failed = True
+                    result = relation('unknown', 'adoption_basis_unreadable')
             else:
                 from .tasks import task_inputs_current
                 try:
