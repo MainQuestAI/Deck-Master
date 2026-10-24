@@ -580,7 +580,9 @@
     "first_failure": "dbd7133b full sweep bootstrap shell exceeded original5s field assertion",
     "later_result": "Original assertion passes in4-case diagnostic,77-case complete affected modules and final708-case sweep",
     "original_cause": "UNRESOLVED_NOT_REPRODUCED",
-    "waived": false
+    "waived": false,
+    "read_only_followup": "METHOD-RELOAD-INVESTIGATION.md",
+    "phase_narrowed": "Initial health/project/summary/ui-state completed; loadRoute announced, first workspace not yet mounted; specific pending operation unknown"
   },
   "real_acceptance_conditions": [
     {

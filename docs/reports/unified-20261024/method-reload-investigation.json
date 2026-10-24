@@ -1,0 +1,212 @@
+{
+  "candidate_inspected": "129ad2c729f07e3c2342d295cf5622a53c1dae4e",
+  "runtime": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf",
+  "original_failure_candidate": "dbd7133baac36ba366e3f46cb0b02f542c8c2d89",
+  "original_failure_node": "tests/rebuild/test_ui_method_scope_browser.py::test_speech_preparation_real_clipboard_reader_and_draft_restore[1280]",
+  "evidence_sha256": {
+    "installed-final3-browser.log": "b0160684aba0470e0455fa3f51e5bf51ba7afd439808e9cea8be2542247743fa",
+    "installed-final3-browser.events.jsonl": "47cb986f61e1d39972e5a0d27a0ccb4b120911e710544114aba41baf315abc19",
+    "method-reload-network.json": "1e935fcd041dbf42cc2423907e6a1a70af7f5f0ada323c2e5e5682a1c8b38671",
+    "method-diagnostic-plugin.py": "94efdb27bbb70f4f1004269c1a93cd70d76e3b2fded9b37d3b905f2ba8387dcc",
+    "method-reload-diagnostic-summary.json": "902be772e18db5e3361dce73cd8d56d5373644ab1562dd37f75158b9d8c53cdd"
+  },
+  "original_project_directory_still_exists": false,
+  "new_test_runs": 0,
+  "code_or_test_changes": false,
+  "cause": "UNRESOLVED",
+  "diagnostic_timeline_scope": "Second browser context in unchanged parametrized module order (1440,1280,390); port not independently tagged with width. Response event is headers received, not body completion or server duration.",
+  "later_passing_reload_api_timeline": [
+    {
+      "seconds_since_reload_request": 0.232113,
+      "kind": "request",
+      "path": "/api/health",
+      "status": null
+    },
+    {
+      "seconds_since_reload_request": 0.252813,
+      "kind": "response",
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "seconds_since_reload_request": 0.253527,
+      "kind": "request",
+      "path": "/api/project",
+      "status": null
+    },
+    {
+      "seconds_since_reload_request": 0.257113,
+      "kind": "request",
+      "path": "/api/view/summary",
+      "status": null
+    },
+    {
+      "seconds_since_reload_request": 0.2573,
+      "kind": "request",
+      "path": "/api/ui-state",
+      "status": null
+    },
+    {
+      "seconds_since_reload_request": 0.263112,
+      "kind": "response",
+      "path": "/api/project",
+      "status": 200
+    },
+    {
+      "seconds_since_reload_request": 0.276633,
+      "kind": "response",
+      "path": "/api/view/summary",
+      "status": 200
+    },
+    {
+      "seconds_since_reload_request": 0.278105,
+      "kind": "response",
+      "path": "/api/ui-state",
+      "status": 200
+    },
+    {
+      "seconds_since_reload_request": 0.28291,
+      "kind": "request",
+      "path": "/api/drafts",
+      "status": null
+    },
+    {
+      "seconds_since_reload_request": 0.283256,
+      "kind": "request",
+      "path": "/api/project",
+      "status": null
+    },
+    {
+      "seconds_since_reload_request": 0.283425,
+      "kind": "request",
+      "path": "/api/view/summary",
+      "status": null
+    },
+    {
+      "seconds_since_reload_request": 0.299741,
+      "kind": "response",
+      "path": "/api/drafts",
+      "status": 200
+    },
+    {
+      "seconds_since_reload_request": 0.299951,
+      "kind": "response",
+      "path": "/api/project",
+      "status": 200
+    },
+    {
+      "seconds_since_reload_request": 0.305271,
+      "kind": "response",
+      "path": "/api/view/summary",
+      "status": 200
+    },
+    {
+      "seconds_since_reload_request": 0.305542,
+      "kind": "request",
+      "path": "/api/content-plan",
+      "status": null
+    },
+    {
+      "seconds_since_reload_request": 0.309352,
+      "kind": "response",
+      "path": "/api/content-plan",
+      "status": 200
+    },
+    {
+      "seconds_since_reload_request": 0.311071,
+      "kind": "request",
+      "path": "/api/inputs",
+      "status": null
+    },
+    {
+      "seconds_since_reload_request": 0.314791,
+      "kind": "response",
+      "path": "/api/inputs",
+      "status": 200
+    },
+    {
+      "seconds_since_reload_request": 0.340958,
+      "kind": "request",
+      "path": "/api/drafts",
+      "status": null
+    },
+    {
+      "seconds_since_reload_request": 0.341391,
+      "kind": "request",
+      "path": "/api/content/arguments",
+      "status": null
+    },
+    {
+      "seconds_since_reload_request": 0.341569,
+      "kind": "request",
+      "path": "/api/drafts",
+      "status": null
+    },
+    {
+      "seconds_since_reload_request": 0.341806,
+      "kind": "request",
+      "path": "/api/session",
+      "status": null
+    },
+    {
+      "seconds_since_reload_request": 0.350449,
+      "kind": "response",
+      "path": "/api/drafts",
+      "status": 200
+    },
+    {
+      "seconds_since_reload_request": 0.366381,
+      "kind": "response",
+      "path": "/api/content/arguments",
+      "status": 200
+    },
+    {
+      "seconds_since_reload_request": 0.366647,
+      "kind": "response",
+      "path": "/api/drafts",
+      "status": 200
+    },
+    {
+      "seconds_since_reload_request": 0.36679,
+      "kind": "response",
+      "path": "/api/session",
+      "status": 200
+    },
+    {
+      "seconds_since_reload_request": 0.370691,
+      "kind": "request",
+      "path": "/api/session",
+      "status": null
+    },
+    {
+      "seconds_since_reload_request": 0.372346,
+      "kind": "request",
+      "path": "/api/ui-state",
+      "status": null
+    },
+    {
+      "seconds_since_reload_request": 0.38097,
+      "kind": "response",
+      "path": "/api/session",
+      "status": 200
+    },
+    {
+      "seconds_since_reload_request": 0.381524,
+      "kind": "request",
+      "path": "/api/method-library/preview",
+      "status": null
+    },
+    {
+      "seconds_since_reload_request": 0.3819,
+      "kind": "response",
+      "path": "/api/ui-state",
+      "status": 200
+    },
+    {
+      "seconds_since_reload_request": 0.389384,
+      "kind": "response",
+      "path": "/api/method-library/preview",
+      "status": 200
+    }
+  ]
+}

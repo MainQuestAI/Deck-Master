@@ -33,3 +33,5 @@ PR 创建 POST 已 Forbidden，当前提供分支/比较页及准备好的 PR-BO
 可用完整差异材料：证据包内 `review-main-to-code-candidate.patch`、`review-diff-identity.json`、`review-commit-graph.txt`。`acceptance-focus.json` 为30个整改归属/52项提供工程边界索引。最终报告提交可位于已验证代码SHA之后，但必须证明新增差异仅在本报告目录；任何代码/测试/CI变动都不能沿用旧验证。
 
 本轮最终完整安装浏览器：7947b25a上708通过、0失败/错误/跳过，4336.99秒；完整源码和wheel非浏览器各4062通过/2外部Frozen A跳过。请保留前一轮刷新启动异常根因未定的风险判断，不因本次全过而把旧失败抹去。新CI、真实验收和PR创建权限状态仍以最终交付为准。
+
+Read-only refresh follow-up: [method reload investigation](METHOD-RELOAD-INVESTIGATION.md) narrows the failure to the post-initial-read, pre-mount phase, corrects response-header timing limits, and specifies the missing evidence and next capture. Root cause remains unresolved; no new test or code change. This supplement postdates the unchanged evidence archive.
