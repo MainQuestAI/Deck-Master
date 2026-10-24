@@ -323,7 +323,7 @@ export function pageDetail(app, data) {
   // 「写新意见」等从笔记面发起、落点在意见面的动作:把活动面交回意见。
   faceZone.addEventListener('activate-opinion-face', () => activateFace('opinions'));
   faceZone.append(...faces.map(([, , node]) => node));
-  // 默认活动面:意见可用则进意见,否则笔记(异常就近)。
+  // 普通入口从阅读开始；明确的审阅深链接保留意见定位。
   activateFace(app.route.review_id&&annotations ? 'opinions' : 'reading');
   // 个人草稿异常就近入口(D2-A):只在真实未解决状态出现;点击打开笔记面并聚焦对应恢复动作。
   const draftChip = button('个人草稿待处理', () => {
@@ -355,7 +355,12 @@ export function pageDetail(app, data) {
   // 不重建、不 remount(E01:DOM 始终在 #app 子树内,恢复冒泡路径不变)。
   const toolsPanel = el('dialog', {class: 'page-tools-panel', 'aria-label': '单页工具面板'},
     el('div', {class: 'page-tools-panel-head'}, el('strong', {}, '工具面板'),
-      button('回到画面', () => {toolsPanel.close();activateFace('reading');})));
+      button('回到画面', () => {
+        toolsPanel.close();
+        // Explicit canvas annotation must survive hiding its controls. Ordinary
+        // tool dismissal returns to reading without destroying the draft.
+        if(!['point','rect','text'].includes(annotations?.mode))activateFace('reading');
+      })));
   const toolsEntry = button('工具', () => {
     if(activeFace==='reading')activateFace('opinions');
     if (narrowTools.matches) toolsPanel.showModal(); else toolsPanel.open = true;
