@@ -922,8 +922,11 @@ def _summary(ctx, *, revision, member_index=None, reading=None, request_scoped=F
                     scoped.append({**fact, 'page_ids': selected})
         scoped_actions, _ = _assemble_actions(ctx, scoped, member_index,
             scope_identity="request:" + str(request.get("request_id")) + ":" + repr(ids))
-        if request_scoped:
+        if request_scoped and request:
             actions = scoped_actions
+        # Without a request there is no selected region to filter against.
+        # Keep legacy read facts for current_work.optional; project() still
+        # exposes no current action or production permission for unknown scope.
     for page in pages:
         items = per_page.get(page["page_id"])
         if items:
