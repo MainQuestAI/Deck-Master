@@ -57,7 +57,7 @@ export class Project {
     // Passive refreshes share the in-flight request instead of queuing more.
     if (fresh && this.controlRequest) await this.controlRequest.catch(() => {});
     if (!this.controlRequest) {
-      this.controlRequest = get('/api/project').finally(() => { this.controlRequest = null; });
+      this.controlRequest = get('/api/project' + (this.health.ui_capabilities?.includes('project_control_light.v1') ? '?light=1' : '')).finally(() => { this.controlRequest = null; });
     }
     return this.controlRequest;
   }
@@ -81,32 +81,37 @@ export class Project {
     addEventListener('online', () => this.setNotice('网络已恢复。可核实草稿保存，或重新读取当前工作面。', true));
     await this.loadRoute(this.route, false);
     if (this.health.ui_capabilities?.includes('run_desk.v1')) {
-      this.summaryPoll = new SummaryPoll(signal => get(this.summaryURL(), {signal}), async value => {
-        if (value.project_id !== this.info.project_id) throw new Error('服务项目已变化，请重新打开项目。');
-        this.latest = value;
-        if (this.health.ui_capabilities?.includes('collaboration.v1')) await this.refreshControl();
-        const count = pendingHandoffs(value);
-        if (this.pendingButton) {
-          this.pendingButton.textContent = `待交接 ${count}`;
-          this.pendingButton.setAttribute('aria-label', `查看待交接任务，${count} 项`);
-        }
-        this.syncState(value.revision_id !== this.route.revision ? '项目有新状态。当前页面仍按顶栏版本阅读。' : '');
-        this.root.dispatchEvent(new CustomEvent('summary-refreshed', {detail: value}));
-      }, error => this.syncState('运行状态同步中断。' + readableError(error) + ' 固定阅读与草稿仍保留。', {error:true}), this.latest);
+      this.summaryPoll = new SummaryPoll(signal => get(this.summaryURL(), {signal}), (value, valid) => this.applySummary(value, valid), error => this.syncState('运行状态同步中断。' + readableError(error) + ' 固定阅读与草稿仍保留。', {error:true}), this.latest);
       this.summaryPoll.start();
       this.root.addEventListener('business-state-changed', () => this.summaryPoll.refresh());
       addEventListener('pagehide', () => this.summaryPoll.stop());
       addEventListener('pageshow', event => { if (event.persisted) { this.summaryPoll.start(); this.summaryPoll.refresh(); } });
     }
   }
-  async refreshControl() {
+  async applySummary(value, pollValid = () => true) {
+    const generation = this.generation;
+    const valid = () => pollValid() && generation === this.generation && !this.navigationPending;
+    if (!valid()) return;
+    if (value.project_id !== this.info.project_id) throw new Error('服务项目已变化，请重新打开项目。');
+    if (this.health.ui_capabilities?.includes('collaboration.v1')) await this.refreshControl(valid);
+    if (!valid()) return;
+    this.latest = value;
+    const count = pendingHandoffs(value);
+    if (this.pendingButton) {
+      this.pendingButton.textContent = `待交接 ${count}`;
+      this.pendingButton.setAttribute('aria-label', `查看待交接任务，${count} 项`);
+    }
+    this.syncState(value.revision_id !== this.route.revision ? '项目有新状态。当前页面仍按顶栏版本阅读。' : '');
+    this.root.dispatchEvent(new CustomEvent('summary-refreshed', {detail: value}));
+  }
+  async refreshControl(valid = () => true) {
     // Navigation already reads the same control facts. Do not queue passive
     // reads behind it while the previous work surface is still displayed.
-    if (this.navigationPending) return;
+    if (this.navigationPending || !valid()) return;
     const serial = this.controlRead = (this.controlRead || 0) + 1;
     try {
       const info = await this.readControl();
-      if (serial !== this.controlRead || info.project_identity !== this.info.project_identity) return;
+      if (!valid() || serial !== this.controlRead || info.project_identity !== this.info.project_identity) return;
       this.info = info;
       // Refresh only the control facts. Draft editors, fixed canvases and open
       // decisions keep their DOM and confirmed basis across another window's
