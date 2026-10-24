@@ -138,7 +138,8 @@ def test_same_project_create_material_edit_handoff_candidate_and_fixed_export(la
             held_handoffs, holding_handoff = [], True
             def hold_handoff(route):
                 if holding_handoff:
-                    held_handoffs.append((route, route.fetch()))
+                    held_handoffs.append(route)
+                    page.evaluate('window.pr188HeldHandoff = true')
                 else:
                     route.continue_()
             page.route('**/api/changes/*/handoff', hold_handoff)
@@ -146,11 +147,12 @@ def test_same_project_create_material_edit_handoff_candidate_and_fixed_export(la
                 page.locator('.run-detail').get_by_role('button', name='核实原任务', exact=True).click()
                 expect(handoff.get_by_role('button', name='复制交接说明', exact=True)).to_be_disabled()
                 assert handoff.get_by_label('本任务完整交接说明').input_value() == ''
+                page.wait_for_function('window.pr188HeldHandoff === true', timeout=5000)
                 assert held_handoffs
             finally:
                 holding_handoff = False
-                for route, response in held_handoffs:
-                    route.fulfill(response=response)
+                for route in held_handoffs:
+                    route.fulfill(response=route.fetch())
                 page.unroute('**/api/changes/*/handoff', hold_handoff)
             text = page.wait_for_function('''taskId => {
                 const value = document.querySelector('.task-handoff textarea')?.value;

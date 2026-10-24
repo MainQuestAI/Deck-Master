@@ -639,7 +639,33 @@
         "skipped": 0,
         "seconds": 4.879,
         "junit_sha256": "4a255880f5be5a5fc4b7f7814cff6a0e4ae7eae16ec11af7d0cdd4bc40846fc6"
+      },
+      "handoff-controlled": {
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "seconds": 11.685,
+        "junit_sha256": "90c66184f4024a9f7cfb9f692bdb9c9f736a8d8787d867dc0647635ba5e384aa"
+      },
+      "installed-handoff-controlled": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "seconds": 4.672,
+        "junit_sha256": "a5f7537167bf03bc16368deb8a90b143433d6ce8a0c1f89973587df7a8ed6465"
       }
+    },
+    "controlled_request_order": "Register held request before fetching; explicitly await the registration signal, then release real responses.",
+    "slow_response_proof": {
+      "delay_ms": 300,
+      "initial_status": "FAIL_TEST_HARNESS_RACE",
+      "initial_log_sha256": "67d9c0912ed868e2d973b6bee98cfc9e7839890a0df4e64a05d3c3614eb14ddb",
+      "final_status": "PASS",
+      "final_log_sha256": "ebeaa55d7187c824fc28b298e200434901784192afc6ef394f1128489dc59f88",
+      "production_changes": false,
+      "sleep_added_to_committed_test": false
     }
   }
 }
