@@ -202,7 +202,10 @@ def test_summary_freshness_does_not_reuse_partial_ancestry_proof(tmp_path, damag
     after_action = next(a for a in warm["next_actions"]["actions"] if a["kind"] == "compare_candidates")
     assert before_action["state"] == "derived"
     assert after_action["state"] == "unknown"
-    assert warm["pages"][0]["attention"]["items"][0]["state"] == "unknown"
+    page_candidate = next(item for item in warm["pages"][0]["attention"]["items"]
+                          if item["kind"] == "compare_candidates")
+    assert page_candidate["state"] == "unknown"
+    assert page_candidate["enabled"] is False
     assert warm != before
     path.write_bytes(saved)
     assert workbench.workbench_summary(store.project_root) == before

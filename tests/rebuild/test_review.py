@@ -957,3 +957,19 @@ def test_receiver_empty_findings_recheck_does_not_erase_old_findings(tmp_path, p
             _adopt_review(store, replacement)
     else:
         assert _adopt_review(store, replacement) == replacement
+
+
+@pytest.mark.parametrize('damage', ['failed_prior', 'blank_observation'])
+def test_legacy_clean_recheck_compatibility_does_not_hide_failure(tmp_path, damage):
+    from deck_master.tasks import EnvelopeError, _adopt_review
+    project = tmp_path / 'legacy-review'
+    service.create(project, brief='Synthetic legacy recheck boundary')
+    store = Store(project)
+    previous = make_review('content', seed='legacy-boundary', findings=[],
+                           subjects=[store.put_json_object({'synthetic': 'legacy review subject'})],
+                           status='fail' if damage == 'failed_prior' else 'pass')
+    replacement = deepcopy(previous)
+    replacement.update(replaces=store.put_json_object(previous), status='pass',
+                       observations=[' ' if damage == 'blank_observation' else 'Synthetic recheck.'])
+    with pytest.raises(EnvelopeError, match='no shared finding_id'):
+        _adopt_review(store, replacement)

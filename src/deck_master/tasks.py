@@ -655,9 +655,12 @@ def _adopt_review(store: Store, review: dict) -> dict:
         # that case. A recheck can also discover a new defect after a clean
         # judgment: retain it instead of forcing the old pass to mask it.
         # Existing findings still require identity continuity and closure;
-        # failed empty priors and other stages do not receive this exception.
+        # failed empty priors and v2 final stages do not receive this exception.
+        # Legacy v1 has no preproduction stage; preserve its clean-review
+        # recheck compatibility without relaxing v2 stage boundaries.
         empty_pass_recheck = (
-            review.get("review_stage") == "preproduction"
+            (review.get("review_stage") == "preproduction"
+             or review.get("schema_version") == "deck_review.v1")
             and prior.get("status") == "pass"
             and not old_findings
             and (review.get("status") == "pass" or bool(new_findings))
