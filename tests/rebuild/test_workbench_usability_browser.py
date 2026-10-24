@@ -49,6 +49,7 @@ def test_optional_tools_do_not_arm_annotation_and_keep_keyboard_return(workbench
     expect(reading.get_by_role('button', name='全屏阅读', exact=True)).to_be_focused()
     assert page.url == fixed_url
     assert 'surface=page' in page.url
+    page.get_by_role('button', name='意见', exact=True).click()
     save = page.get_by_role('button', name='保存意见', exact=True)
     expect(save).to_be_disabled()
     page.get_by_text('范围与标注工具', exact=True).click()
@@ -89,6 +90,7 @@ def test_readonly_workbench_does_not_offer_a_live_opinion_entry(workbench, tmp_p
         info = page.request.get(url + 'api/project').json()
         page.goto(url + '#' + urlencode({'project': info['project_identity'], 'surface': 'page',
                                         'page': 'p01', 'layer': 'original_image'}))
+        page.get_by_role('button',name='意见',exact=True).click()
         expect(page.locator('.annotations-panel')).to_be_visible()
         expect(page.get_by_role('button', name='整页意见', exact=True)).to_be_disabled()
         expect(page.get_by_label('意见正文', exact=True)).not_to_be_editable()
@@ -115,7 +117,7 @@ def test_mobile_reading_actions_keep_fixed_comparison_and_resize_focus(workbench
     entry.click()
     page.set_viewport_size({'width':1440, 'height':900})
     expect(menu).not_to_be_visible()
-    expect(page.get_by_role('button', name='回到整稿画廊', exact=True)).to_be_focused()
+    expect(page.get_by_role('button', name='返回整稿画廊', exact=True)).to_be_focused()
     expect(page.get_by_role('button', name='比较此页版本', exact=True)).to_be_visible()
     page.set_viewport_size({'width':390, 'height':844})
     entry.click()

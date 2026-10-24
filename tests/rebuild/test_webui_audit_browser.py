@@ -154,12 +154,14 @@ def test_inputs_keep_other_entry_drafts_and_confirm_all_differences(tmp_path, mo
             page.get_by_role('button', name='内容与页序', exact=True).click()
             editor = page.locator('.materials-adjust-form')
             if mode in ('task', 'mixed'):
+                page.get_by_role('button', name='材料与要求', exact=True).click()
                 page.get_by_role('button', name='修改任务要求', exact=True).click()
                 expect(editor.get_by_label('用途与目标', exact=True)).to_be_visible()
                 expect(editor.get_by_label('新增材料完整路径（每行一个）')).to_have_count(0)
                 editor.get_by_label('受众', exact=True).fill('新的明确受众')
                 editor.get_by_role('button', name='关闭编辑并保留草稿', exact=True).click()
             if mode in ('add', 'mixed'):
+                page.get_by_role('button', name='材料与要求', exact=True).click()
                 page.get_by_role('button', name='添加材料', exact=True).click()
                 expect(editor.get_by_label('用途与目标', exact=True)).to_have_count(0)
                 editor.get_by_label('新增材料完整路径（每行一个）').fill(str(source))
@@ -168,6 +170,7 @@ def test_inputs_keep_other_entry_drafts_and_confirm_all_differences(tmp_path, mo
                 editor.get_by_role('button', name='关闭编辑并保留草稿', exact=True).click()
             expect(page.locator('.draft-state')).to_contain_text('已保存到项目')
             page.reload()
+            page.get_by_role('button', name='材料与要求', exact=True).click()
             page.get_by_role('button', name='修改任务要求' if mode == 'task' else '添加材料', exact=True).click()
             if mode == 'mixed':
                 expect(editor.locator('.retained-inputs')).to_contain_text('还保留了要求修改')

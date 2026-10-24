@@ -684,10 +684,12 @@ def test_neutral_purpose_keeps_user_input_intent_and_speech_policy(tmp_path):
         with sync_playwright() as pw:
             browser=pw.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox']);page=browser.new_page()
             page.goto(url+'studio/#'+urlencode({'project':info['project_identity'],'surface':'content','revision':store.current_revision_id(),'layer':'content'}))
+            page.get_by_role('button',name='材料与要求',exact=True).click()
             page.get_by_role('button',name='修改任务要求',exact=True).click()
             field=page.get_by_label('用途与目标',exact=True);expect(field).not_to_have_value('')
             field.fill('教学、研究与工程评审：不要求商业CTA，保留原口播规则')
             page.get_by_role('button',name='关闭编辑并保留草稿',exact=True).click()
+            page.get_by_role('button',name='材料与要求',exact=True).click()
             page.get_by_role('button',name='修改任务要求',exact=True).click();expect(field).to_have_value('教学、研究与工程评审：不要求商业CTA，保留原口播规则')
             assert store.load_document()==before;browser.close()
     finally:server.stop()

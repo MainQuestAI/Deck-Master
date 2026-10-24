@@ -146,6 +146,7 @@ def test_point_overlay_follows_artifact_identity_across_snapshots(ux04_browser, 
 
     goto_page(page, url, identity, 'p01', 'original_image', revision)
     page.locator('[data-image-state="ready"] canvas:visible').first.wait_for()
+    page.get_by_role('button', name='意见', exact=True).click()
     panel = page.locator('.annotations-panel')
     expect(panel).to_contain_text('跨版本点意见：徽标位置')
     # 同产物跨快照：画布叠层仍然绘制（旧实现要求 revision 相等，画布消失）。
@@ -281,7 +282,8 @@ def test_same_text_ranges_validate_per_node_and_feed_text_annotation(ux04_browse
     expect(page.get_by_role('button', name='校验原文选段', exact=True).first).to_be_enabled()
     # 记录到达阅读区的校验结果:两个同文对象的 locator 必须不同。
     page.evaluate("() => {window.__ranges = []; document.querySelector('[aria-label=\"页面内容\"]').addEventListener('text-range-validated', e => window.__ranges.push({ref: e.detail.selection.ref.sha256, locator: e.detail.selection.locator, start: e.detail.selection.start, end: e.detail.selection.end}));}")
-    # 文本意见模式先就位:标注工具在折叠区内,先展开再切换。
+    # 文本意见模式先就位：明确进入意见工具再展开标注。
+    page.get_by_role('button', name='意见', exact=True).click()
     page.get_by_text('范围与标注工具', exact=True).click()
     page.get_by_role('button', name='文本意见', exact=True).click()
     # 文本源含标题等更短对象:按选项文本定位两个同文对象,而不是数组序号。

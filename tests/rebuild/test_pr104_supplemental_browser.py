@@ -37,6 +37,7 @@ def open_page(page, server, store, layer='original_image'):
     page.goto(base + '#' + urlencode({'project': identity, 'surface': 'page', 'page': 'p01',
         'layer': layer, 'revision': store.current_revision_id()}))
     page.locator('.page-tools').wait_for()
+    page.get_by_role('button', name='意见', exact=True).click()
 
 
 def test_page_history_offers_the_direct_before_snapshot_and_deduplicates_paging(page_fixture):

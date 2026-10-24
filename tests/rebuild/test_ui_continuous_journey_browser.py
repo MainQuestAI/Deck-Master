@@ -75,6 +75,7 @@ def test_same_project_create_material_edit_handoff_candidate_and_fixed_export(la
             record('create', source='explicit manuscript', method='browser')
             _prepare_browser_project(project, max_candidate_count=2)
             goto('content')
+            page.get_by_role('button', name='材料与要求', exact=True).click()
             page.get_by_role('button', name='添加材料', exact=True).click()
             page.get_by_label('新增材料完整路径（每行一个）', exact=True).fill(str(supplement))
             page.get_by_label('本次输入变化说明', exact=True).fill('加入同范围的合成核对依据，保留原稿。')

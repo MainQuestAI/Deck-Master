@@ -4,6 +4,7 @@ Synthetic projects/images and controlled transport faults are explicit; these
 checks are not Host generation or professional visual acceptance.
 """
 import pytest
+from test_rc_closure_browser import open_opinion_face
 import os
 import re
 from pathlib import Path
@@ -34,6 +35,7 @@ def test_saved_opinion_is_still_saved_after_reload(ux04_browser, next_opinion):
     info = page.request.get(urljoin(page.url, '/api/project')).json()
     page.goto(page.url.split('#')[0] + '#' + urlencode({'project': info['project_identity'], 'surface': 'page',
         'page': 'p01', 'layer': 'original_image', 'revision': store.current_revision_id()}))
+    open_opinion_face(page)
     page.get_by_role('button', name='整页意见', exact=True).click()
     body = page.get_by_role('textbox', name='意见正文', exact=True)
     body.fill('PR103 同一草稿保存后刷新，不重复新增')
@@ -44,7 +46,9 @@ def test_saved_opinion_is_still_saved_after_reload(ux04_browser, next_opinion):
     expect(page.locator('.draft-state')).to_have_text('已保存到项目，可跨端口恢复')
     expect(save).to_be_disabled()
     page.reload()
+    open_opinion_face(page)
     expect(body).to_have_value('PR103 同一草稿保存后刷新，不重复新增')
+    open_opinion_face(page)
     page.get_by_role('button', name='整页意见', exact=True).click()
     expect(save).to_be_disabled()
     assert len(store.load_document()['annotations']) == 1
@@ -80,14 +84,17 @@ def test_unknown_opinion_receipt_recovers_marker_without_original_callback(ux04_
         route.fetch()
         route.abort()
     page.route('**/api/annotations/batch', lose_response)
+    open_opinion_face(page)
     page.get_by_role('button', name='整页意见', exact=True).click()
     page.get_by_role('textbox', name='意见正文', exact=True).fill('原请求已保存，回包丢失后恢复')
     page.get_by_role('button', name='保存意见', exact=True).click()
     expect(page.get_by_role('button', name='核实保存结果', exact=True)).to_be_enabled()
     page.reload()
+    open_opinion_face(page)
     page.get_by_role('button', name='核实保存结果', exact=True).click()
     expect(page.locator('.business-pending')).to_be_hidden()
     expect(page.locator('.draft-state')).to_have_text('已保存到项目，可跨端口恢复')
+    open_opinion_face(page)
     page.get_by_role('button', name='整页意见', exact=True).click()
     expect(page.get_by_role('button', name='保存意见', exact=True)).to_be_disabled()
     assert len(store.load_document()['annotations']) == 1
@@ -106,6 +113,7 @@ def test_opinion_marker_keeps_text_written_after_the_frozen_request(ux04_browser
         held.append((route,route.fetch()))
         page.evaluate('() => window.pr103OpinionHeld = true')
     page.route('**/api/annotations/batch',delay)
+    open_opinion_face(page)
     page.get_by_role('button',name='整页意见',exact=True).click()
     body = page.get_by_role('textbox',name='意见正文',exact=True)
     body.fill('冻结并已提交的意见 A')
@@ -117,7 +125,9 @@ def test_opinion_marker_keeps_text_written_after_the_frozen_request(ux04_browser
     expect(page.locator('.business-pending')).to_be_hidden()
     expect(page.locator('.draft-state')).to_have_text('已保存到项目，可跨端口恢复')
     page.reload()
+    open_opinion_face(page)
     expect(body).to_have_value('等待业务回执时继续写的意见 B')
+    open_opinion_face(page)
     page.get_by_role('button',name='整页意见',exact=True).click()
     expect(page.get_by_role('button',name='保存意见',exact=True)).to_be_enabled()
     assert len(store.load_document()['annotations']) == 1
@@ -165,6 +175,7 @@ def test_opinion_receipt_draft_conflict_preserves_the_original_request(ux04_brow
         held.append((route,route.fetch(),route.request.post_data_json['operation_id']))
         page.evaluate('() => window.pr103ConflictHeld = true')
     page.route('**/api/annotations/batch',delay)
+    open_opinion_face(page)
     page.get_by_role('button',name='整页意见',exact=True).click()
     page.get_by_role('textbox',name='意见正文',exact=True).fill('草稿冲突时仍能恢复的原意见')
     page.get_by_role('button',name='保存意见',exact=True).click()
@@ -505,6 +516,8 @@ def test_material_editor_keeps_preview_confirmation_and_return_in_context(ux04_b
     page.set_viewport_size({'width':width,'height':height})
     page.goto(server.start());page.get_by_role('button',name='内容与页序',exact=True).click()
     before = store.read_current()
+    management = page.get_by_role('button', name='材料与要求', exact=True)
+    management.click()
     trigger = page.get_by_role('button', name='修改任务要求', exact=True)
     trigger.evaluate('node => node.addEventListener("click", () => window.pr103ReturnY=scrollY, {capture:true,once:true})')
     trigger.click()
@@ -519,11 +532,11 @@ def test_material_editor_keeps_preview_confirmation_and_return_in_context(ux04_b
     editor.get_by_role('button',name='返回编辑',exact=True).click()
     expect(editor.get_by_role('textbox',name='用途与目标',exact=True)).to_have_value('PR103 材料上下文中的新用途')
     editor.get_by_role('button',name='关闭编辑并保留草稿',exact=True).click()
-    expect(trigger).to_be_focused()
+    expect(management).to_be_focused()
     page.wait_for_function('() => Math.abs(scrollY-window.pr103ReturnY)<2')
     assert store.read_current() == before
     expect(page.locator('.draft-state')).to_have_text('已保存到项目，可跨端口恢复')
-    page.reload(); trigger.click()
+    page.reload(); management.click(); trigger.click()
     expect(editor.get_by_role('textbox',name='用途与目标',exact=True)).to_have_value('PR103 材料上下文中的新用途')
     expect(editor.locator('.content-operation > button')).to_be_disabled()
     editor.get_by_role('button',name='关闭编辑并保留草稿',exact=True).click()
@@ -543,6 +556,7 @@ def test_material_editor_keeps_preview_confirmation_and_return_in_context(ux04_b
     else:
         material = project.parent / 'new-material.txt'
         material.write_text('Synthetic PR103 input, not customer material.',encoding='utf-8')
+        page.get_by_role('button', name='材料与要求', exact=True).click()
         page.get_by_role('button',name='添加材料',exact=True).click()
         expect(editor.get_by_role('heading',name='添加材料',exact=True)).to_be_visible()
         expect(editor.get_by_label('新增材料完整路径（每行一个）')).to_be_focused()
@@ -656,6 +670,7 @@ def test_restoring_a_saved_draft_by_real_selection_replaces_the_editor(ux04_brow
             expect(page.get_by_role('dialog', name='单页工具面板')).to_be_visible()
         page.get_by_role('button', name='意见', exact=True).click()
         expect(page.get_by_role('textbox', name='意见正文', exact=True)).to_be_visible()
+        open_opinion_face(page)
         page.get_by_role('button', name='整页意见', exact=True).click()
         page.get_by_role('textbox', name='意见正文', exact=True).fill(body)
         save = page.get_by_role('button', name='保存意见', exact=True)

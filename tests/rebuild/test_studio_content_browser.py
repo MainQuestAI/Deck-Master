@@ -67,20 +67,22 @@ def test_studio_content_order_preview_cancel_and_plan_commit(tmp_path):
             for width,height in [(1440,900),(1280,800),(390,844)]:
                 page.set_viewport_size({'width':width,'height':height});page.evaluate('window.scrollTo(0,0)')
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
-                row=order.first.bounding_box();action=page.get_by_role('button',name='预览页序变更',exact=True).bounding_box()
+                row=order.first.bounding_box();action=None
+                expect(page.get_by_role('button',name='预览页序变更',exact=True)).to_be_hidden()
                 handle=order.first.locator('.order-handle').bounding_box();check=order.first.get_by_role('checkbox').bounding_box()
-                assert handle['y']+handle['height']<=height and check['y']+check['height']<=height and action['y']+action['height']<=height
+                assert handle['y']+handle['height']<=height and check['y']+check['height']<=height
                 expect(page.locator('.content-impact')).to_be_hidden()
                 geometry.append({'width':width,'height':height,'first_row':row,'first_page_button':handle,'first_checkbox':check,'main_action':action})
                 page.screenshot(path=str(out/f'00-order-first-viewport-{width}.png'))
             (out/'first-viewport.json').write_text(json.dumps(geometry,indent=2))
             page.set_viewport_size({'width':1440,'height':900})
+            page.get_by_role('button', name='材料与要求', exact=True).click()
             page.get_by_role('button',name='查看输入判断',exact=True).click()
             expect(page.get_by_role('dialog',name='输入判断与依据',exact=True)).to_be_visible()
             expect(page.get_by_role('dialog')).to_contain_text('内容整合')
             expect(page.locator('#content-area-pages')).to_be_visible()
             page.get_by_role('dialog').get_by_role('button',name='关闭',exact=True).click()
-            expect(page.get_by_role('button',name='查看输入判断',exact=True)).to_be_focused()
+            expect(page.get_by_role('button',name='材料与要求',exact=True)).to_be_focused()
             old_ids=order.evaluate_all('(rows)=>rows.map(r=>r.dataset.pageId)')
             first=order.first
             first.get_by_role('button',name='第 1 页操作',exact=True).click()
@@ -210,13 +212,14 @@ def test_studio_content_chapters_and_materials_have_separate_primary_areas(tmp_p
                 assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
                 page.screenshot(path=str(out/f'overview-first-{width}.png'),full_page=True)
                 geometry.append({'width':width,'height':height,'chapter':chapter_box,'material':material_box})
+            page.get_by_role('button', name='材料与要求', exact=True).click()
             button=page.get_by_role('button',name='查看输入判断',exact=True);button.click()
             dialog=page.get_by_role('dialog',name='输入判断与依据',exact=True)
             expect(dialog).to_contain_text(impact)
             expect(dialog).to_contain_text('无正文变化依据：新增材料仅用于核对原事实，不需要重写页面。')
             expect(dialog).to_contain_text('内容整合')
             page.screenshot(path=str(out/'overview-input-judgment.png'),full_page=True)
-            dialog.get_by_role('button',name='关闭',exact=True).click();expect(button).to_be_focused();expect(material_card).to_be_visible()
+            dialog.get_by_role('button',name='关闭',exact=True).click();expect(page.get_by_role('button',name='材料与要求',exact=True)).to_be_focused();expect(material_card).to_be_visible()
             assert store.load_document()==before and errors==[]
             (out/'overview-first.json').write_text(json.dumps({'geometry':geometry,'errors':errors,'unchanged_revision':store.current_revision_id()},ensure_ascii=False,indent=2))
         finally:browser.close();server.stop()
