@@ -257,7 +257,16 @@ def test_reference_preview_and_same_file_retry_after_not_found(flow):
             page.on('request', lambda req: requests.append(req.url)
                     if '/api/styles/references/import?' in req.url else None)
             upload.set_input_files(file)
-            expect(page.locator('.visual-reference-choice .pooled-image')).to_have_attribute('data-image-state', 'ready')
+            preview = page.locator('.visual-reference-choice .pooled-image')
+            recovery = page.get_by_role('button', name='打开已保存的结果', exact=True)
+            # Upload receipt and private-draft persistence are separate. If the
+            # draft cannot settle before continuation, use the retained-result
+            # action, never submit a second upload or skip preview verification.
+            expect(preview.or_(recovery).first).to_be_visible()
+            if recovery.is_visible():
+                expect(recovery).to_be_enabled()
+                recovery.click()
+            expect(preview).to_have_attribute('data-image-state', 'ready')
             canvas = page.get_by_role('img', name='参考截图 1', exact=True)
             assert canvas.evaluate('node => node.getContext("2d").getImageData(0,0,1,1).data[3]') == 255
             assert requests[0] == requests[1]
