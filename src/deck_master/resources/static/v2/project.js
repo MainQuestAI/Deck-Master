@@ -13,7 +13,17 @@ import {changesetDesk} from './changeset-desk.js';
 import {collaborationBanner} from './collaboration-desk.js';
 import {currentWork} from './current-work.js';
 
-const pendingHandoffs=summary=>(summary.next_actions?.actions||[]).filter(action=>action.kind==='handoff'&&action.enabled).reduce((count,action)=>count+(action.object_count||0),0);
+const pendingHandoffs = summary => {
+  // A legacy project has no request scope, so v2 keeps its existing work in
+  // optional read facts. Counting those records restores the task-list link;
+  // it does not promote them into current_work.next or grant dispatch rights.
+  const work = summary.current_work;
+  const legacyCurrent = work?.scope?.known === false &&
+    work.identity.artifact_revision_id === work.identity.control_revision_id;
+  const actions = legacyCurrent ? work.optional : summary.next_actions?.actions;
+  return (actions || []).filter(action => action.kind === 'handoff' && action.enabled)
+    .reduce((count, action) => count + (action.object_count || 0), 0);
+};
 
 export class Project {
   constructor(root, health) { this.root = root; this.health = health; this.generation = 0; this.positionQueue = Promise.resolve(); this.disposables = []; }

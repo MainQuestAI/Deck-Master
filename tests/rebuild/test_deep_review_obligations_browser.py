@@ -148,6 +148,11 @@ def test_topbar_pending_entry_matches_the_latest_list_and_returns_to_history(his
     add_task(store, 'done-task-1', 'compose', 'completed', '第一版整理已完成。', historical=True)
     historical = store.current_revision_id()
     add_task(store, 'todo-task-1', 'reconstruct', 'awaiting_host', '新版本待交接的 SVG 重建。', historical=True)
+    from deck_master.workbench import workbench_summary
+    current = workbench_summary(path, protocol='workbench_summary.v2')['current_work']
+    assert not current['scope']['known']
+    assert not any(a['kind'] == 'handoff' for a in current['next']['actions'])
+    assert sum(a['object_count'] for a in current['optional'] if a['kind'] == 'handoff') == 1
     page.goto(server.start())
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()
     topbar = page.get_by_role('button', name=re.compile(r'^查看待交接任务，(\d+) 项$'))

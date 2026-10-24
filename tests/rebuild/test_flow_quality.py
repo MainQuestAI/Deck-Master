@@ -401,12 +401,16 @@ def test_resolve_root_ignores_cwd_and_fake_files(tmp_path: Path, monkeypatch) ->
     (tmp_path / "references" / "content-methods.md").write_text("fake", encoding="utf-8")
     monkeypatch.chdir(tmp_path)
     root = resolve_root()
-    assert root.name == "deck-master"
+    canonical = Path(__file__).resolve().parents[2] / "skills" / "deck-master"
+    package = Path(service.__file__).resolve().parent
+    expected = canonical if package.parent.name == "src" else package / "resources" / "skill"
+    assert root == expected
+    assert (root / "SKILL.md").read_bytes() == (canonical / "SKILL.md").read_bytes()
     assert "fake" not in (root / "SKILL.md").read_text(encoding="utf-8")
 
 
 def test_canonical_methods_have_no_legacy_terms_or_paired_d1d2() -> None:
-    root = Path(service.__file__).resolve().parents[2] / "skills" / "deck-master"
+    root = Path(__file__).resolve().parents[2] / "skills" / "deck-master"
     assert root.is_dir(), "canonical skill must live in the repo"
     for path in [root / "SKILL.md", *(root / "references").glob("*.md")]:
         text = path.read_text(encoding="utf-8")
@@ -433,7 +437,7 @@ def test_package_configuration_omits_retired_method_resources() -> None:
 
     Cleanup code must be allowed to name the retired output directory.
     """
-    repo = Path(service.__file__).resolve().parents[2]
+    repo = Path(__file__).resolve().parents[2]
     data = (repo / "pyproject.toml").read_text(encoding="utf-8")
     assert "skills-references" not in data
 
@@ -1302,7 +1306,7 @@ def test_open_final_review_task_carries_review_plan(tmp_path: Path) -> None:
 
 
 def test_skills_tree_reduced_to_deck_master_and_resolver() -> None:
-    repo = Path(service.__file__).resolve().parents[2]
+    repo = Path(__file__).resolve().parents[2]
     skills = repo / "skills"
     entries = sorted(p.name for p in skills.iterdir())
     assert entries == ["RESOLVER.md", "deck-content", "deck-design", "deck-master", "deck-review"]
@@ -1316,7 +1320,7 @@ def test_old_skill_names_gone_from_living_surfaces(monkeypatch) -> None:
 
     monkeypatch.setenv("PATH", "")  # This check needs no system search executable.
 
-    repo = Path(service.__file__).resolve().parents[2]
+    repo = Path(__file__).resolve().parents[2]
     pattern = ("deck-autopilot|deck-brief|deck-builder|deck-doctor|deck-init|deck-learn|"
                "deck-planner|deck-producer|deck-quality|deck-setup|"
                "deck-sourcing|deck-upgrade|ppt-deck-pro-max|ppt-quality-gate|ppt-master")

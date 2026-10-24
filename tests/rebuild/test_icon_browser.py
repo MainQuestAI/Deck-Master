@@ -97,6 +97,7 @@ def test_icon_http_cli_parity_and_origin(icon_store,tmp_path,capsys):
     finally:server.stop()
 
 
+@pytest.mark.render
 def test_actual_icon_candidate_ppt_comparison_retry_and_adoption(icon_browser,tmp_path):
     from playwright.sync_api import expect
     from deck_master import candidate_preview,candidates
@@ -270,6 +271,7 @@ def test_layer_switch_entry_requires_saved_local_draft(icon_browser):
     # 明确进入意见工具制造 dirty 草稿，再切到图标面走换层门控。
     page.locator('.page-manuscript').wait_for()
     page.get_by_role('button',name='意见',exact=True).click()
+    page.get_by_role('button',name='整页意见',exact=True).click()
     body=page.get_by_label('意见正文',exact=True)
     expect(body).to_be_visible(timeout=15000)
     body.fill('换层门控测试意见')
