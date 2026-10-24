@@ -41,12 +41,25 @@
     "ancestor_of_runtime_candidate": true
   },
   "runtime_candidate": {
-    "head": "75551e7d06dd3c7a78e05e9188ac032bbd064da0",
-    "tree": "8ba3825cb84994da9905064674317300bbd1f6e1",
+    "head": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf",
+    "tree": "31b45fa320d0e9f0fa6acadd0233a2c4c3f61016",
     "parents": [
-      "83cdfecbe26ddd013e0aabe89d3ad12fac43a5a3"
+      "b5238214c45c5c82d1ba1c06355c7f29f657521e"
     ],
     "ancestor_of_runtime_candidate": true
   },
-  "common_base_185_187": "601f5ec68ae994fb42d933f672f0f495eb6d557b"
+  "common_base_185_187": "601f5ec68ae994fb42d933f672f0f495eb6d557b",
+  "remote_readback": {
+    "file": "remote-heads-before-final-review.txt",
+    "proof": "source-ancestry-final-check.json",
+    "main_and_source_heads_unchanged": true,
+    "integration_at_read": "8dc3021053495633ed6d85444b81a70721224d24",
+    "scope": "Pre-push source lock readback, not final push confirmation"
+  },
+  "humanizer": "Explicitly deferred by user; not included",
+  "review_code_candidate": {
+    "head": "7947b25a08dfcc13c4a5b166bd189e9aef7b85ac",
+    "tree": "3fb8b53cde93edcb7d9fcee192e33e13393b4b47",
+    "runtime_files_identical_to": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+  }
 }

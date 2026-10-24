@@ -1,0 +1,274 @@
+{
+  "merges": [
+    {
+      "commit": "a308be5adbb2c20144c1c5bb315690ae7a0c3b46",
+      "parents": [
+        "159cfd63e9bcf71c10d98dad45a1a2567eb52136",
+        "bf4f661bfec4aa28db2869aaf43494d6cf0f4b8d"
+      ],
+      "combined_diff_paths": [
+        "docs/specs/deck-master-workbench-v3/contracts/action-targets.v1.schema.json",
+        "docs/specs/deck-master-workbench-v3/contracts/workbench-summary.v1.schema.json",
+        "examples/workbench/w10_poll_lifecycle.mjs",
+        "examples/workbench/w12_installed_regressions.py",
+        "src/deck_master/candidates.py",
+        "src/deck_master/current_relationship.py",
+        "src/deck_master/method_library_view.py",
+        "src/deck_master/resources/contracts/action-targets.v1.schema.json",
+        "src/deck_master/resources/contracts/workbench-summary.v1.schema.json",
+        "src/deck_master/resources/static/v2/batch-actions.js",
+        "src/deck_master/resources/static/v2/content-sources.js",
+        "src/deck_master/resources/static/v2/evidence-reading.js",
+        "src/deck_master/resources/static/v2/method-library.js",
+        "src/deck_master/resources/static/v2/navigation-usability.css",
+        "src/deck_master/resources/static/v2/overview.js",
+        "src/deck_master/resources/static/v2/project.js",
+        "src/deck_master/resources/static/v2/run-desk.js",
+        "src/deck_master/resources/static/v2/style-calibration.js",
+        "src/deck_master/resources/static/v2/summary-poll.js",
+        "src/deck_master/resources/static/v2/workbench.css",
+        "src/deck_master/run_desk.py",
+        "src/deck_master/tasks.py",
+        "src/deck_master/visual_dependencies.py",
+        "src/deck_master/web.py",
+        "src/deck_master/workbench.py",
+        "tests/rebuild/test_action_targets_browser.py",
+        "tests/rebuild/test_deep_quality_browser.py",
+        "tests/rebuild/test_native_review.py",
+        "tests/rebuild/test_navigation_usability_browser.py",
+        "tests/rebuild/test_pr103_complete_browser.py",
+        "tests/rebuild/test_pr103_repair_browser.py",
+        "tests/rebuild/test_pr104_review_browser.py",
+        "tests/rebuild/test_pr104_supplemental_browser.py",
+        "tests/rebuild/test_rc3_restyle_workflows.py",
+        "tests/rebuild/test_rc_closure_browser.py",
+        "tests/rebuild/test_studio_style_browser.py",
+        "tests/rebuild/test_ux06_recovery_responsive_browser.py",
+        "tests/rebuild/test_webui_acceptance_matrix.py",
+        "tests/rebuild/test_workbench_actions.py",
+        "tests/rebuild/test_workbench_usability_browser.py"
+      ],
+      "path_rule": "Paths modified relative to both merge parents; not a claim that every path had a textual conflict. Business decisions are in README.md."
+    },
+    {
+      "commit": "c4e925d3843c0693200e5e264a5fd9666f34c931",
+      "parents": [
+        "a308be5adbb2c20144c1c5bb315690ae7a0c3b46",
+        "870db06e7067c935b2331ade7f39e6bc20b8393d"
+      ],
+      "combined_diff_paths": [
+        "src/deck_master/resources/static/v2/content-edit.js",
+        "src/deck_master/resources/static/v2/content-sources.js",
+        "src/deck_master/resources/static/v2/dom.js",
+        "src/deck_master/resources/static/v2/launcher-ui.js",
+        "src/deck_master/resources/static/v2/overview.js",
+        "src/deck_master/resources/static/v2/project.js",
+        "src/deck_master/tasks.py",
+        "src/deck_master/web.py",
+        "src/deck_master/workbench.py",
+        "tests/rebuild/test_action_targets_browser.py",
+        "tests/rebuild/test_studio_content_browser.py",
+        "tests/rebuild/test_ux06_recovery_responsive_browser.py"
+      ],
+      "path_rule": "Paths modified relative to both merge parents; not a claim that every path had a textual conflict. Business decisions are in README.md."
+    }
+  ],
+  "first_parent_integration_commits": [
+    {
+      "commit": "7947b25a08dfcc13c4a5b166bd189e9aef7b85ac",
+      "subject": "test: retain RP10 mapping semantics and explicit integrated UI disclosures",
+      "paths": [
+        "tests/rebuild/test_studio_overview_browser.py",
+        "tests/rebuild/test_webui_acceptance_matrix.py",
+        "tests/rebuild/test_workbench_usability_browser.py"
+      ]
+    },
+    {
+      "commit": "dbd7133baac36ba366e3f46cb0b02f542c8c2d89",
+      "subject": "Keep renderer-dependent browser cases in the fully provisioned browser gate",
+      "paths": [
+        ".github/workflows/rebuild.yml"
+      ]
+    },
+    {
+      "commit": "a811d828339823f93b555b4b79421601c48d7238",
+      "subject": "Assert completed preview when automatic continuation retires its button",
+      "paths": [
+        "tests/rebuild/test_pr103_repair_browser.py"
+      ]
+    },
+    {
+      "commit": "9f18dd59ffecee86e082b27aba7519a57f2136d2",
+      "subject": "Exercise retained upload result when private draft continuation is pending",
+      "paths": [
+        "tests/rebuild/test_pr103_repair_browser.py"
+      ]
+    },
+    {
+      "commit": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf",
+      "subject": "Fit stacked current work and verify production refusal without changing authority",
+      "paths": [
+        "src/deck_master/resources/static/studio/overview.css",
+        "tests/rebuild/test_ui_continuous_journey_browser.py"
+      ]
+    },
+    {
+      "commit": "b5238214c45c5c82d1ba1c06355c7f29f657521e",
+      "subject": "Preserve trial permission boundaries and visible integrated browser workflows",
+      "paths": [
+        "src/deck_master/resources/static/v2/style-calibration.js",
+        "src/deck_master/resources/static/v2/workbench.css",
+        "tests/rebuild/test_pr103_repair_browser.py",
+        "tests/rebuild/test_pr187_summary_reuse_browser.py",
+        "tests/rebuild/test_pr188_design_context_browser.py",
+        "tests/rebuild/test_rc_closure_browser.py",
+        "tests/rebuild/test_recipe_versions_browser.py",
+        "tests/rebuild/test_rollup_browser.py",
+        "tests/rebuild/test_studio_overview_browser.py",
+        "tests/rebuild/test_ui_continuous_journey_browser.py",
+        "tests/rebuild/test_ux06_recovery_responsive_browser.py"
+      ]
+    },
+    {
+      "commit": "2040ca6d346a0bf93d41caf8e257d2cd0bebefd0",
+      "subject": "fix: keep unscoped legacy read facts outside current action authority",
+      "paths": [
+        "src/deck_master/workbench.py"
+      ]
+    },
+    {
+      "commit": "6c822e2db274e1a6f74bb968b4f7310f125e0f6f",
+      "subject": "fix: preserve legacy task reading counts and validate installed layouts",
+      "paths": [
+        "src/deck_master/resources/static/v2/project.js",
+        "tests/rebuild/test_deep_review_obligations_browser.py",
+        "tests/rebuild/test_flow_quality.py",
+        "tests/rebuild/test_icon_browser.py"
+      ]
+    },
+    {
+      "commit": "8dc3021053495633ed6d85444b81a70721224d24",
+      "subject": "docs: freeze integrated verification issue map and Pro review handoff",
+      "paths": [
+        "docs/reports/unified-20261024/EVIDENCE.md",
+        "docs/reports/unified-20261024/ISSUES.md",
+        "docs/reports/unified-20261024/PR-BODY.md",
+        "docs/reports/unified-20261024/PRO-REVIEW.md",
+        "docs/reports/unified-20261024/README.md",
+        "docs/reports/unified-20261024/REPRODUCE.md",
+        "docs/reports/unified-20261024/VALIDATION.md",
+        "docs/reports/unified-20261024/evidence-manifest.json",
+        "docs/reports/unified-20261024/issue-matrix.json",
+        "docs/reports/unified-20261024/receipt-consumers.json",
+        "docs/reports/unified-20261024/sources.json",
+        "docs/reports/unified-20261024/validation.json"
+      ]
+    },
+    {
+      "commit": "1c9d92318d0eb86e03154e2ec555fe9b5895a026",
+      "subject": "test: verify method autosave without clicking already saved drafts",
+      "paths": [
+        "tests/rebuild/test_ui_method_scope_browser.py"
+      ]
+    },
+    {
+      "commit": "75551e7d06dd3c7a78e05e9188ac032bbd064da0",
+      "subject": "fix: retain UI recovery context alongside pinned method handoff",
+      "paths": [
+        "src/deck_master/method_library_view.py"
+      ]
+    },
+    {
+      "commit": "83cdfecbe26ddd013e0aabe89d3ad12fac43a5a3",
+      "subject": "fix: preserve legacy clean review compatibility and precise candidate assertions",
+      "paths": [
+        "src/deck_master/tasks.py",
+        "tests/rebuild/test_request_read_facts.py",
+        "tests/rebuild/test_review.py"
+      ]
+    },
+    {
+      "commit": "b7523c99883915ad782928ee5143c1f02d502fc4",
+      "subject": "fix: retain pending current navigation and adapt regression fixtures to combined UI",
+      "paths": [
+        "src/deck_master/resources/static/v2/project.js",
+        "tests/rebuild/test_method_preparation_browser.py",
+        "tests/rebuild/test_native_review_recovery.py",
+        "tests/rebuild/test_rp10_content_browser.py"
+      ]
+    },
+    {
+      "commit": "b8e6ec4f125b1662d8117e67054041af10297453",
+      "subject": "fix: retain newly discovered review findings and integrated action priorities",
+      "paths": [
+        "src/deck_master/resources/static/v2/action-summary.js",
+        "src/deck_master/resources/static/v2/current-work.js",
+        "src/deck_master/resources/static/v2/overview.js",
+        "src/deck_master/tasks.py",
+        "tests/rebuild/test_work_surface_browser.py"
+      ]
+    },
+    {
+      "commit": "5a354afdb1e3fc03b51ece81b994acf7a8fd9697",
+      "subject": "docs: map unified sources conflicts and issue acceptance boundaries",
+      "paths": [
+        "docs/reports/unified-20261024/ISSUES.md",
+        "docs/reports/unified-20261024/PRO-REVIEW.md",
+        "docs/reports/unified-20261024/README.md",
+        "docs/reports/unified-20261024/issue-matrix.json"
+      ]
+    },
+    {
+      "commit": "1ea3ad22787af49b59f73b14f7f4eb9b4d427f02",
+      "subject": "fix: reconcile integrated contracts and migrate owned receipt consumers",
+      "paths": [
+        "docs/specs/deck-master-workbench-v3/contracts/workbench-summary.v2.schema.json",
+        "examples/workbench/rc3_content_intents_diagnostic.py",
+        "examples/workbench/w01_pressure.py",
+        "examples/workbench/w02_content_plan.py",
+        "examples/workbench/w02_recovery.py",
+        "examples/workbench/w05_page_chain.py",
+        "examples/workbench/w07_synthetic.py",
+        "examples/workbench/w08_style_transfer.py",
+        "examples/workbench/w09_browser_edges.py",
+        "examples/workbench/w10_pressure.py",
+        "examples/workbench/w10_recovery.py",
+        "skills/deck-master/references/collaboration-routing.md",
+        "src/deck_master/native_review.py",
+        "src/deck_master/resources/contracts/workbench-summary.v2.schema.json",
+        "src/deck_master/resources/static/v2/action-targets.js",
+        "src/deck_master/resources/static/v2/project.js",
+        "src/deck_master/resources/static/v2/run-recovery.js",
+        "src/deck_master/web.py",
+        "tests/rebuild/conftest.py",
+        "tests/rebuild/rc3_q2_later_300_cases.py",
+        "tests/rebuild/test_current_work.py",
+        "tests/rebuild/test_native_review.py",
+        "tests/rebuild/test_q2_installation_v3.py",
+        "tests/rebuild/test_rc3_q2_later_300.py",
+        "tests/rebuild/test_rp08_current_actions.py",
+        "tests/rebuild/test_task_compact_receipts.py",
+        "tools/rc3_campaign/controller_v3.py",
+        "tools/rc3_campaign/q2_later_300_v3.py",
+        "tools/rc3_campaign/supplementary_recorder_v3.py"
+      ]
+    },
+    {
+      "commit": "c4e925d3843c0693200e5e264a5fd9666f34c931",
+      "subject": "merge: integrate PR187 outline review current work and finding repair flows",
+      "paths": []
+    },
+    {
+      "commit": "a308be5adbb2c20144c1c5bb315690ae7a0c3b46",
+      "subject": "merge: integrate PR185 repairs with PR188 workbench on PR184 baseline",
+      "paths": []
+    }
+  ],
+  "scope": "Retained source histories; integration-only repairs and evidence. No source rewrite/main merge/Humanizer integration.",
+  "full_review_patch": {
+    "evidence": "review-main-to-code-candidate.patch",
+    "identity": "review-diff-identity.json",
+    "commit_graph": "review-commit-graph.txt",
+    "scope": "Complete fixed main-to-code-candidate; final report-only diff follows separately."
+  }
+}

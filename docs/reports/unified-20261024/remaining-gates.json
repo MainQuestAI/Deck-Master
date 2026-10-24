@@ -1,0 +1,648 @@
+{
+  "not_run_test_cases": [
+    {
+      "nodeid": "tests/rebuild/test_candidate_preview_recovery.py::test_damaged_state_retries_actual_compile_render_and_readback",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_candidates.py::test_explicit_assembly_uses_real_pipeline_after_page_gate_and_replays[False]",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_candidates.py::test_explicit_assembly_uses_real_pipeline_after_page_gate_and_replays[True]",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_compiler_geometry.py::test_document_canvas_is_prompt_and_compile_authority",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[rgba-fill]",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[split-hidden]",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[tspan-opacity]",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[tspan-style]",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_deep_quality_state.py::test_adopted_svg_continue_rebuilds_existing_ppt[False]",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_deep_quality_state.py::test_adopted_svg_continue_rebuilds_existing_ppt[True]",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_external_review_lifecycle.py::test_historical_stale_final_recovers_without_retiring_valid_trial_or_other_page",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_external_review_lifecycle.py::test_old_final_is_retired_atomically_and_normal_continue_rebuilds[False]",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_external_review_lifecycle.py::test_old_final_is_retired_atomically_and_normal_continue_rebuilds[True]",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_external_review_render.py::test_actual_render_and_persisted_produce_report[duplicate-hidden-fail]",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_external_review_render.py::test_actual_render_and_persisted_produce_report[duplicate-visible-pass]",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_external_review_render.py::test_actual_render_and_persisted_produce_report[no-fill-fail]",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_external_review_render.py::test_actual_render_and_persisted_produce_report[partial-gradient-pass]",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_external_review_render.py::test_actual_render_and_persisted_produce_report[solid-pass]",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_external_review_render.py::test_readback_implementation_change_cannot_reuse_old_candidate_check",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_flow_quality.py::test_revised_deck_recompiles_real_slide_order[add]",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_flow_quality.py::test_revised_deck_recompiles_real_slide_order[edit]",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_flow_quality.py::test_revised_deck_recompiles_real_slide_order[remove]",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_flow_quality.py::test_revised_deck_recompiles_real_slide_order[reorder]",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_gradient_readability.py::test_real_gradient_svg_ppt_and_persisted_check[end-zero]",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_gradient_readability.py::test_real_gradient_svg_ppt_and_persisted_check[partial]",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_gradient_readability.py::test_real_gradient_svg_ppt_and_persisted_check[start-zero]",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_icon_browser.py::test_actual_icon_candidate_ppt_comparison_retry_and_adoption",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_icon_quality.py::test_actual_candidate_preview_and_cross_page_reuse",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_icon_quality.py::test_preview_failure_retry_and_corrupt_files",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_install.py::test_isolated_full_chain_and_local_edit",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_native_table_geometry.py::test_actual_mixed_alignment_and_same_text_swap_renders_are_retained",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_page_visual_gate.py::test_accepted_variance_on_same_page_advances_to_next_blueprint",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_page_visual_gate.py::test_failed_visual_review_requires_page_repair_and_evidenced_closure",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_page_visual_gate.py::test_page_review_blocks_next_blueprint_until_current_three_checks_pass",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_page_visual_gate.py::test_page_review_cannot_pass_after_design_asset_change",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_page_visual_gate.py::test_preflight_and_preview_share_approved_image_assets",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_page_visual_gate.py::test_preview_renderer_execution_error_is_reported_separately_from_missing_tool",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_page_visual_gate.py::test_repeated_visual_review_without_resolution_stops_with_actionable_finding",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_page_visual_gate.py::test_stored_invalid_svg_reconstructs_then_resumes_page_review",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_page_visual_gate.py::test_style_change_retires_open_review_and_rebuilds_only_current_page",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_page_visual_gate.py::test_unchanged_page_visual_repair_stops_without_another_repair_loop",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_pipeline_preview_reuse.py::test_real_rsvg_rebuild_then_review_and_assembly[missing]",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_pipeline_preview_reuse.py::test_real_rsvg_rebuild_then_review_and_assembly[stale]",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_production.py::test_new_design_mode_and_failed_review_is_preserved",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_rc3_design_native.py::test_actual_svg_and_native_renders_retain_the_sample_and_hashes",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_rc3_design_native.py::test_negative_source_and_native_renders_are_retained_with_located_readback[options0-table_cell_ownership_mismatch]",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_rc3_design_native.py::test_negative_source_and_native_renders_are_retained_with_located_readback[options1-reversed_arrow]",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_rc3_design_native.py::test_negative_source_and_native_renders_are_retained_with_located_readback[options2-node_atom_ownership_mismatch]",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_rc3_notes_files.py::test_real_pipeline_to_export_preserves_full_notes_and_dependencies",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_rc3_notes_transactions.py::test_actual_completed_visual_notes_assembly_export_zero_image_ledger",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_rc3_notes_transactions.py::test_frozen_a_real_sdk_refuses_protected_notes_write_boundaries",
+      "status": "NOT_RUN",
+      "primary_condition": "Original immutable external Frozen A installation unavailable",
+      "required_before_execution": [
+        "Original immutable Frozen A interpreter at /workspace/work/rc3/baseline-a/venv/bin/python; do not substitute current core or patch writer sets",
+        "Complete renderer for the current completed-visual fixture"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_rc3_notes_transactions.py::test_notes_edit_preserves_completed_visual_and_actual_review_bytes",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_rc3_notes_transactions.py::test_visual_open_finding_not_fixed_by_notes",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_render.py::test_renderers_available_on_this_machine",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_render.py::test_svg_renders_with_rsvg_convert",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_rollup_browser.py::test_damaged_preview_busy_polls_without_automatic_retry",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_service_flow.py::test_page_reorder_and_removal_keep_ids_and_history_out_of_current_ppt",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_service_flow.py::test_reconstruct_after_style_change_uses_new_effective_style",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_service_flow.py::test_single_page_edit_keeps_unrelated_page_artifacts_and_reassembles",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_tasks.py::test_no_progress_repair_stops_instead_of_looping",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    },
+    {
+      "nodeid": "tests/rebuild/test_tasks.py::test_svg_only_fix_is_progress_not_no_progress",
+      "status": "NOT_RUN",
+      "primary_condition": "rsvg-convert unavailable in this environment",
+      "required_before_execution": [
+        "Real supported rsvg-convert alongside already-present soffice/pdftoppm; no replacement renderer or success stub"
+      ],
+      "scope": "Existing original assertions and markers remain; these cases remain in full CI."
+    }
+  ],
+  "unchanged_unit_skips": [
+    {
+      "test": "tests.rebuild.test_rc3_notes_visual_inputs::test_content_candidate_notes_adoption_protects_current_same_cas_and_old_core_refuses[page]",
+      "reason": "Frozen A installation is an external engineering resource",
+      "condition": "Original immutable external Frozen A installation; existing guard unchanged",
+      "evidence": "Same two cases skipped in full source and installed unit sweeps; not passes"
+    },
+    {
+      "test": "tests.rebuild.test_rc3_notes_visual_inputs::test_content_candidate_notes_adoption_protects_current_same_cas_and_old_core_refuses[content_update]",
+      "reason": "Frozen A installation is an external engineering resource",
+      "condition": "Original immutable external Frozen A installation; existing guard unchanged",
+      "evidence": "Same two cases skipped in full source and installed unit sweeps; not passes"
+    }
+  ],
+  "attempted_blocked_test": {
+    "nodeid": "tests/rebuild/test_install.py::test_candidate_install_activate_and_run_doctor",
+    "status": "FAILED_BLOCKED_MISSING_RENDERER",
+    "evidence": "installed-available-render-extended.xml; temporary-install-render-block.json",
+    "reason": "Exact temporary candidate render doctor returned exit3/needs_tool for rsvg-convert",
+    "activation_current_exists": false,
+    "retried_or_bypassed": false,
+    "repair_assessment": "Environment prerequisite, not demonstrated product/script defect. Existing preflight correctly refuses activation. No safe code fix can supply the missing real renderer; do not remove or fake the doctor gate.",
+    "minimum_unblock": "Run the unchanged exact node on the same candidate/wheel in an authorized environment with a supported real rsvg-convert on PATH, plus existing soffice/pdftoppm, and preserve doctor and activation evidence. Current AGENTS Stop And Report applies to needs_tool; no system install attempted."
+  },
+  "stability_risk": {
+    "nodeid": "tests/rebuild/test_ui_method_scope_browser.py::test_speech_preparation_real_clipboard_reader_and_draft_restore[1280]",
+    "first_failure": "dbd7133b full sweep bootstrap shell exceeded original5s field assertion",
+    "later_result": "Original assertion passes in4-case diagnostic,77-case complete affected modules and final708-case sweep",
+    "original_cause": "UNRESOLVED_NOT_REPRODUCED",
+    "waived": false
+  },
+  "real_acceptance_conditions": [
+    {
+      "scope": "Actual Host / independent review",
+      "required": "Current fixed installation, real supported authenticated Host/channel, actual frozen workorder reading and resulting artifacts; default installed capability flags do not advertise verified-user, independent-review or human-review receipts. No internal-agent review substitutes for user-selected Pro."
+    },
+    {
+      "scope": "Final image/PPT semantics and user visual judgment",
+      "required": "Anonymized representative outputs, actual rendered comparisons and appropriate professional/user observations; synthetic foreground/geometry checks are not acceptance."
+    },
+    {
+      "scope": "#186 real external-report repair",
+      "required": "Actual anonymized caller report and original observations/source bindings; preserve report bytes/SHA/reviewID/findingID and complete repair/recheck of original findings. Synthetic record/handoff tests alone do not satisfy this."
+    },
+    {
+      "scope": "End-to-end CPU / project latency",
+      "required": "Fixed representative workload and actual Host/UI execution with wall-time/CPU/request/thumbnail observations; compact-response construction samples do not establish device temperature or end-to-end improvement."
+    },
+    {
+      "scope": "Additional new issue",
+      "required": "Identify the second reported new issue by an authorized source or parent-provided number/content; no guessed number. Known scope remains51+#186=52."
+    },
+    {
+      "scope": "Final CI and user-selected Pro",
+      "required": "Verify final-identity Rebuilt Core Gate (all unit/render/browser/wheel/offline/UI/recovery stages), then complete user-selected ChatGPT Pro whole-diff review and resolve blockers before parent coordinates merge."
+    }
+  ],
+  "permission_blocks": [
+    {
+      "action": "POST /repos/MainQuestAI/Deck-Master/pulls",
+      "status": "DENIED",
+      "reason": "Forbidden",
+      "request_attempted": true,
+      "creation_executed": false,
+      "retried": false,
+      "pr_url_obtained": null
+    },
+    {
+      "action": "Open PR enumeration on MainQuestAI/Deck-Master",
+      "status": "DENIED",
+      "reason": "Forbidden",
+      "retried": false
+    },
+    {
+      "action": "GET issue183 on MainQuestAI/Deck-Master",
+      "status": "DENIED",
+      "reason": "Forbidden",
+      "retried": false
+    },
+    {
+      "action": "GET /repos/MainQuestAI/Deck-Master/actions/jobs/120853007419/logs",
+      "status": "DENIED",
+      "reason": "Forbidden",
+      "retried": false
+    }
+  ],
+  "only_explicitly_deferred_scope": "Humanizer; independent branch unchanged and not included",
+  "no_acceptance_waiver": true,
+  "classification_summary": {
+    "rsvg_missing": 60,
+    "external_frozen_a_missing": 1,
+    "additional_distinct_unit_skips": 2,
+    "additional_attempted_install_failure": 1
+  }
+}

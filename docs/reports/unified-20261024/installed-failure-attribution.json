@@ -1,0 +1,146 @@
+[
+  {
+    "test": "tests.rebuild.test_deep_review_obligations_browser::test_topbar_pending_entry_matches_the_latest_list_and_returns_to_history",
+    "classification": "integration_product_regression",
+    "original_message": "AssertionError: Locator expected to have attribute '查看待交接任务，1 项'\nActual value: 查看待交接任务，0 项 \nCall log:\n  - Expect \"to_have_attribute\" get_by_role(\"button\", name=re.compile(r\"^查看待交接任务，(\\d+) 项$\")) with timeout 5000ms\n  - waiting for get_by_role(\"button\", name=re.compile(r\"^查看待交接任务，(\\d+) 项$\"))\n    14 × locator resolved to <button class=\"\" type=\"button\" aria-label=\"查看待交接任务，0 项\">待交接 0</button>\n       - unexpected value \"查看待交接任务，0 项\"\n\nAria snapshot:\n- button \"查看待交接任务，0 项\": 待交接 0",
+    "resolution": "6c822e2d + 2040ca6d: legacy read facts retained in optional; count read-only legacy records, current actions stay empty",
+    "final_full_suite": {
+      "status": "PASSED",
+      "results": [
+        {
+          "file": "installed-final4-browser.xml",
+          "nodeid": "tests/rebuild/test_deep_review_obligations_browser.py::test_topbar_pending_entry_matches_the_latest_list_and_returns_to_history",
+          "status": "passed",
+          "source_sha": "7947b25a08dfcc13c4a5b166bd189e9aef7b85ac"
+        }
+      ]
+    },
+    "original_trace": "historical_obligations_browser = (<Page url='http://127.0.0.1:44283/#project=243866aa8c51d0b2708fd66040019dc9c2614f58a1f5bde4e86256656e982cba&surface=o...nt/pytest-39/test_topbar_pending_entry_matc0/historical-f9b4fd8f'), <deck_master.store.Store object at 0x7f8dedaa49e0>)\n\n    def test_topbar_pending_entry_matches_the_latest_list_and_returns_to_history(historical_obligations_browser):\n        \"\"\"N13/AC18：历史 A 无待办、最新 B 有待办；顶栏入口到最新记录，历史仍可返回。\"\"\"\n        from playwright.sync_api import expect\n        page, server, path, store = historical_obligations_browser\n        add_task(store, 'done-task-1', 'compose', 'completed', '第一版整理已完成。', historical=True)\n        historical = store.current_revision_id()\n        add_task(store, 'todo-task-1', 'reconstruct', 'awaiting_host', '新版本待交接的 SVG 重建。', historical=True)\n        page.goto(server.start())\n        page.get_by_role('heading', name='制作总览', exact=True).wait_for()\n        topbar = page.get_by_role('button', name=re.compile(r'^查看待交接任务，(\\d+) 项$'))\n>       expect(topbar).to_have_attribute('aria-label', '查看待交接任务，1 项')\nE       AssertionError: Locator expected to have attribute '查看待交接任务，1 项'\nE       Actual value: 查看待交接任务，0 项 \nE       Call log:\nE         - Expect \"to_have_attribute\" get_by_role(\"button\", name=re.compile(r\"^查看待交接任务，(\\d+) 项$\")) with timeout 5000ms\nE         - waiting for get_by_role(\"button\", name=re.compile(r\"^查看待交接任务，(\\d+) 项$\"))\nE           14 × locator resolved to <button class=\"\" type=\"button\" aria-label=\"查看待交接任务，0 项\">待交接 0</button>\nE              - unexpected value \"查看待交接任务，0 项\"\nE       \nE       Aria snapshot:\nE       - button \"查看待交接任务，0 项\": 待交接 0\n\ntests/rebuild/test_deep_review_obligations_browser.py:154: AssertionError"
+  },
+  {
+    "test": "tests.rebuild.test_flow_quality::test_resolve_root_ignores_cwd_and_fake_files",
+    "classification": "source_layout_assumption_in_installed_test",
+    "original_message": "AssertionError: assert 'skill' == 'deck-master'\n  \n  - deck-master\n  + skill",
+    "resolution": "6c822e2d: locate canonical repository by test path, assert exact installed/canonical resolution and identical Skill bytes",
+    "final_full_suite": {
+      "status": "PASSED",
+      "results": [
+        {
+          "file": "source-final-frozen.xml",
+          "nodeid": "tests/rebuild/test_flow_quality.py::test_resolve_root_ignores_cwd_and_fake_files",
+          "status": "passed",
+          "source_sha": "dbd7133baac36ba366e3f46cb0b02f542c8c2d89"
+        },
+        {
+          "file": "installed-final-unit.xml",
+          "nodeid": "tests/rebuild/test_flow_quality.py::test_resolve_root_ignores_cwd_and_fake_files",
+          "status": "passed",
+          "source_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+        }
+      ]
+    },
+    "original_trace": "tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-39/test_resolve_root_ignores_cwd_0')\nmonkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f8dd74dfec0>\n\n    def test_resolve_root_ignores_cwd_and_fake_files(tmp_path: Path, monkeypatch) -> None:\n        \"\"\"A fake SKILL.md in the working directory must never be adopted.\"\"\"\n        (tmp_path / \"SKILL.md\").write_text(\"fake\", encoding=\"utf-8\")\n        (tmp_path / \"references\").mkdir()\n        (tmp_path / \"references\" / \"content-methods.md\").write_text(\"fake\", encoding=\"utf-8\")\n        monkeypatch.chdir(tmp_path)\n        root = resolve_root()\n>       assert root.name == \"deck-master\"\nE       AssertionError: assert 'skill' == 'deck-master'\nE         \nE         - deck-master\nE         + skill\n\n/workspace/Deck-Master-integrated/tests/rebuild/test_flow_quality.py:404: AssertionError"
+  },
+  {
+    "test": "tests.rebuild.test_flow_quality::test_canonical_methods_have_no_legacy_terms_or_paired_d1d2",
+    "classification": "source_layout_assumption_in_installed_test",
+    "original_message": "AssertionError: canonical skill must live in the repo\nassert False\n +  where False = is_dir()\n +    where is_dir = PosixPath('/workspace/deck-wheel-venv/lib/python3.12/skills/deck-master').is_dir",
+    "resolution": "6c822e2d: locate canonical repository by test path, assert exact installed/canonical resolution and identical Skill bytes",
+    "final_full_suite": {
+      "status": "PASSED",
+      "results": [
+        {
+          "file": "source-final-frozen.xml",
+          "nodeid": "tests/rebuild/test_flow_quality.py::test_canonical_methods_have_no_legacy_terms_or_paired_d1d2",
+          "status": "passed",
+          "source_sha": "dbd7133baac36ba366e3f46cb0b02f542c8c2d89"
+        },
+        {
+          "file": "installed-final-unit.xml",
+          "nodeid": "tests/rebuild/test_flow_quality.py::test_canonical_methods_have_no_legacy_terms_or_paired_d1d2",
+          "status": "passed",
+          "source_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+        }
+      ]
+    },
+    "original_trace": "def test_canonical_methods_have_no_legacy_terms_or_paired_d1d2() -> None:\n        root = Path(service.__file__).resolve().parents[2] / \"skills\" / \"deck-master\"\n>       assert root.is_dir(), \"canonical skill must live in the repo\"\nE       AssertionError: canonical skill must live in the repo\nE       assert False\nE        +  where False = is_dir()\nE        +    where is_dir = PosixPath('/workspace/deck-wheel-venv/lib/python3.12/skills/deck-master').is_dir\n\ntests/rebuild/test_flow_quality.py:410: AssertionError"
+  },
+  {
+    "test": "tests.rebuild.test_flow_quality::test_package_configuration_omits_retired_method_resources",
+    "classification": "source_layout_assumption_in_installed_test",
+    "original_message": "FileNotFoundError: [Errno 2] No such file or directory: '/workspace/deck-wheel-venv/lib/python3.12/pyproject.toml'",
+    "resolution": "6c822e2d: locate canonical repository by test path, assert exact installed/canonical resolution and identical Skill bytes",
+    "final_full_suite": {
+      "status": "PASSED",
+      "results": [
+        {
+          "file": "source-final-frozen.xml",
+          "nodeid": "tests/rebuild/test_flow_quality.py::test_package_configuration_omits_retired_method_resources",
+          "status": "passed",
+          "source_sha": "dbd7133baac36ba366e3f46cb0b02f542c8c2d89"
+        },
+        {
+          "file": "installed-final-unit.xml",
+          "nodeid": "tests/rebuild/test_flow_quality.py::test_package_configuration_omits_retired_method_resources",
+          "status": "passed",
+          "source_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+        }
+      ]
+    },
+    "original_trace": "def test_package_configuration_omits_retired_method_resources() -> None:\n        \"\"\"Artifact contents and warm rebuilds are exercised by test_install.\n    \n        Cleanup code must be allowed to name the retired output directory.\n        \"\"\"\n        repo = Path(service.__file__).resolve().parents[2]\n>       data = (repo / \"pyproject.toml\").read_text(encoding=\"utf-8\")\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\ntests/rebuild/test_flow_quality.py:437: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1027: in read_text\n    with self.open(mode='r', encoding=encoding, errors=errors) as f:\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nself = PosixPath('/workspace/deck-wheel-venv/lib/python3.12/pyproject.toml')\nmode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None\n\n    def open(self, mode='r', buffering=-1, encoding=None,\n             errors=None, newline=None):\n        \"\"\"\n        Open the file pointed to by this path and return a file object, as\n        the built-in open() function does.\n        \"\"\"\n        if \"b\" not in mode:\n            encoding = io.text_encoding(encoding)\n>       return io.open(self, mode, buffering, encoding, errors, newline)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       FileNotFoundError: [Errno 2] No such file or directory: '/workspace/deck-wheel-venv/lib/python3.12/pyproject.toml'\n\n/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1013: FileNotFoundError"
+  },
+  {
+    "test": "tests.rebuild.test_flow_quality::test_skills_tree_reduced_to_deck_master_and_resolver",
+    "classification": "source_layout_assumption_in_installed_test",
+    "original_message": "FileNotFoundError: [Errno 2] No such file or directory: '/workspace/deck-wheel-venv/lib/python3.12/skills'",
+    "resolution": "6c822e2d: locate canonical repository by test path, assert exact installed/canonical resolution and identical Skill bytes",
+    "final_full_suite": {
+      "status": "PASSED",
+      "results": [
+        {
+          "file": "source-final-frozen.xml",
+          "nodeid": "tests/rebuild/test_flow_quality.py::test_skills_tree_reduced_to_deck_master_and_resolver",
+          "status": "passed",
+          "source_sha": "dbd7133baac36ba366e3f46cb0b02f542c8c2d89"
+        },
+        {
+          "file": "installed-final-unit.xml",
+          "nodeid": "tests/rebuild/test_flow_quality.py::test_skills_tree_reduced_to_deck_master_and_resolver",
+          "status": "passed",
+          "source_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+        }
+      ]
+    },
+    "original_trace": "def test_skills_tree_reduced_to_deck_master_and_resolver() -> None:\n        repo = Path(service.__file__).resolve().parents[2]\n        skills = repo / \"skills\"\n>       entries = sorted(p.name for p in skills.iterdir())\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\ntests/rebuild/test_flow_quality.py:1307: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \ntests/rebuild/test_flow_quality.py:1307: in <genexpr>\n    entries = sorted(p.name for p in skills.iterdir())\n                                     ^^^^^^^^^^^^^^^^\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nself = PosixPath('/workspace/deck-wheel-venv/lib/python3.12/skills')\n\n    def iterdir(self):\n        \"\"\"Yield path objects of the directory contents.\n    \n        The children are yielded in arbitrary order, and the\n        special entries '.' and '..' are not included.\n        \"\"\"\n>       for name in os.listdir(self):\n                    ^^^^^^^^^^^^^^^^\nE       FileNotFoundError: [Errno 2] No such file or directory: '/workspace/deck-wheel-venv/lib/python3.12/skills'\n\n/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1056: FileNotFoundError"
+  },
+  {
+    "test": "tests.rebuild.test_icon_browser::test_actual_icon_candidate_ppt_comparison_retry_and_adoption",
+    "classification": "environment_missing_renderer",
+    "original_message": "AssertionError: Locator expected to contain text '工程检查通过'\nActual value: 缺少实际渲染工具 · rsvg-convert unavailable; configure DECK_MASTER_RSVG_CONVERT \nCall log:\n  - Expect \"to_contain_text\" locator(\".candidate-icon-review [role=status]\") with timeout 60000ms\n  - waiting for locator(\".candidate-icon-review [role=status]\")\n    - locator resolved to <p role=\"status\">准备实际检查…</p>\n    - unexpected value \"准备实际检查…\"\n    122 × locator resolved to <p role=\"status\">缺少实际渲染工具 · rsvg-convert unavailable; configure DE…</p>\n        - unexpected value \"缺少实际渲染工具 · rsvg-convert unavailable; configure DECK_MASTER_RSVG_CONVERT\"\n\nAria snapshot:\n- status: 缺少实际渲染工具 · rsvg-convert unavailable; configure DECK_MASTER_RSVG_CONVERT",
+    "resolution": "NOT_RUN: rsvg-convert absent; add actual-render marker; preserve initial failure and all original assertions",
+    "final_full_suite": {
+      "status": "NOT_RUN_MISSING_RSVG",
+      "original_failure_preserved": true,
+      "CI_case_retained": true
+    },
+    "original_trace": "icon_browser = (<Page url='http://127.0.0.1:43125/#project=7a311fbf663cd15a2e72deea2af8026f0d3c7b7d6a8e86142bdf737e56cd0ecb&surface=p...age=p01&candidate=candidate-b30ccd23ec8440b2940a1e821a8299c5'>, <deck_master.store.Store object at 0x7f8dedc9c980>, [])\ntmp_path = PosixPath('/tmp/pytest-of-agent/pytest-39/test_actual_icon_candidate_ppt0')\n\n    def test_actual_icon_candidate_ppt_comparison_retry_and_adoption(icon_browser,tmp_path):\n        from playwright.sync_api import expect\n        from deck_master import candidate_preview,candidates\n        from test_icon_quality import confirm,dispatch,start,accept\n        page,store,errors=icon_browser\n        recipe=confirm(store,input_for(store,method='standard'));task=dispatch(store,recipe)[0];start(store,task)\n        cid=accept(store,task,icons.draft(store.project_root,recipe_id=recipe['recipe_id'],page_id='p01')['svg'].encode())['candidate_ids'][0]\n        url=page.url.split('#')[0];info=page.request.get(url.rstrip('/')+'/api/project').json()\n        page.goto(url+'#'+urlencode({'project':info['project_identity'],'surface':'page','page':'p01','layer':'svg','revision':store.current_revision_id(),'candidate':cid}))\n        page.get_by_role('heading',name='候选图标实际检查',exact=True).wait_for()\n        page.get_by_role('button',name='打开局部对照',exact=True).click();page.get_by_label('图标比较产物').select_option('ppt')\n        expect(page.get_by_text('此固定基准没有有效的实际 PPT 预览',exact=True)).to_be_visible()\n        assert page.locator('.candidate-icon-review canvas').count()==1\n        page.get_by_role('button',name='生成或重试实际 PPT 检查',exact=True).click()\n>       expect(page.locator('.candidate-icon-review [role=status]')).to_contain_text('工程检查通过',timeout=60000)\nE       AssertionError: Locator expected to contain text '工程检查通过'\nE       Actual value: 缺少实际渲染工具 · rsvg-convert unavailable; configure DECK_MASTER_RSVG_CONVERT \nE       Call log:\nE         - Expect \"to_contain_text\" locator(\".candidate-icon-review [role=status]\") with timeout 60000ms\nE         - waiting for locator(\".candidate-icon-review [role=status]\")\nE           - locator resolved to <p role=\"status\">准备实际检查…</p>\nE           - unexpected value \"准备实际检查…\"\nE           122 × locator resolved to <p role=\"status\">缺少实际渲染工具 · rsvg-convert unavailable; configure DE…</p>\nE               - unexpected value \"缺少实际渲染工具 · rsvg-convert unavailable; configure DECK_MASTER_RSVG_CONVERT\"\nE       \nE       Aria snapshot:\nE       - status: 缺少实际渲染工具 · rsvg-convert unavailable; configure DECK_MASTER_RSVG_CONVERT\n\ntests/rebuild/test_icon_browser.py:114: AssertionError"
+  },
+  {
+    "test": "tests.rebuild.test_icon_browser::test_layer_switch_entry_requires_saved_local_draft",
+    "classification": "test_visible_interaction_sync",
+    "original_message": "AssertionError: Locator expected to be visible\nActual value: hidden \nCall log:\n  - Expect \"to_be_visible\" get_by_label(\"意见正文\", exact=True) with timeout 15000ms\n  - waiting for get_by_label(\"意见正文\", exact=True)\n    33 × locator resolved to <textarea rows=\"3\" id=\"opinion-body\" aria-label=\"意见正文\" placeholder=\"写下这条意见要改什么。输入会自动保留；保存后进入正式记录。\" aria-describedby=\"opinion-body-help opinion-body-error\"></textarea>\n       - unexpected value \"hidden\"\n\nAria snapshot:\n- link \"跳到工作区\":\n  - /url: \"#main\"\n- complementary:\n  - img \"Deck Master\"\n  - navigation \"项目工作区\":\n    - button \"制作总览\"\n    - button \"内容与页序\"\n    - button \"整稿画廊\"\n    - button \"风格校准\"\n    - button \"任务与交付\"\n  - text: 当前项目\n  - strong: 工作台合成示例\n  - text: 合成验证项目\n  - paragraph: 当前为项目独立入口\n  - button \"连接状态\"\n- banner:\n  - strong: 工作台合成示例\n  - text: 当前稿\n  - region \"本次工作状态\":\n    - button \"查看本次工作与范围\": 内容进行中\n  - button \"查看待交接任务，0 项\": 待交接 0\n  - button \"项目菜单\"\n- text: 这是可编辑的合成验证项目，未调用模型，也未进行专业质量验收。\n- main:\n  - heading \"第 1 页 · 项目目标与阅读顺序\" [level=1]\n  - paragraph: 逐页稿 · 当前稿\n  - combobox \"转到页面\":\n    - option \"第 1 / 3 页\" [selected]\n    - option \"第 2 / 3 页\"\n    - option \"第 3 / 3 页\"\n  - button \"上一页，没有上一页\" [disabled]: ← 上一页\n  - button \"下一页，第 2 页 · 材料如何成为内容\": 下一页 →\n  - navigation \"本页生成链路\":\n    - button \"01 来源，记录缺失\": 01 来源 记录缺失\n    - button \"02 逐页稿，可查看\": 02 逐页稿 可查看\n    - button \"03 提示词，记录缺失\": 03 提示词 记录缺失\n    - button \"04 原图，可查看\": 04 原图 可查看\n    - button \"05 SVG，可查看\": 05 SVG 可查看\n    - button \"06 PPT 预览，尚未生成\": 06 PPT 预览 尚未生成\n  - button \"返回整稿画廊\"\n  - button \"比较此页版本\"\n  - button \"以本页为风格参考\"\n  - group \"单页工具\":\n    - button \"阅读\"\n    - button \"意见\" [pressed]\n    - button \"试作与候选\": 试作候选\n    - button \"图标优化\"\n    - button \"笔记\"\n    - button \"详情\"\n  - region \"页面内容\":\n    - article:\n      - heading \"项目目标与阅读顺序\" [level=2]\n      - button \"编辑本页标题与正文\"\n      - paragraph: 此页未记录正文块。\n      - group: › 正文原文与精确选段\n      - group: › 查看本页来源\n  - complementary:\n    - paragraph: 第 1 页 · 逐页稿 · 当前版本 R df7f2ce3\n    - region \"版本绑定意见\":\n      - heading \"标注与意见\" [level=2]\n      - paragraph: 当前图稿（逐页稿） · 底稿 R df7f2ce3 · 草稿区域 0 个\n      - button \"整页意见\"\n      - group: › 撰写意见\n      - paragraph: 先选「整页意见」，或打开标注工具，再保存意见。\n      - group: › 范围与标注工具\n      - paragraph: 保存意见不启动制作；选入已保存意见后再预览修改计划。\n      - heading \"已保存意见\" [level=3]\n      - heading \"本页整页意见（0）\" [level=4]\n      - paragraph: 此范围暂无意见。\n      - heading \"当前图稿意见 · 逐页稿（0）\" [level=4]\n      - paragraph: 此范围暂无意见。\n      - paragraph: 尚无已保存意见。\n- status: 单页 · 逐页稿，R df7f2ce3",
+    "resolution": "6c822e2d: use visible whole-page opinion action before editing; preserve original dirty/409/navigation assertions",
+    "final_full_suite": {
+      "status": "PASSED",
+      "results": [
+        {
+          "file": "installed-final4-browser.xml",
+          "nodeid": "tests/rebuild/test_icon_browser.py::test_layer_switch_entry_requires_saved_local_draft",
+          "status": "passed",
+          "source_sha": "7947b25a08dfcc13c4a5b166bd189e9aef7b85ac"
+        }
+      ]
+    },
+    "original_trace": "icon_browser = (<Page url='http://127.0.0.1:45761/#project=453f2be6d01c5b3b17ac936e748e0cb3c781a74f8d8daaef1b49a1a405e9300e&surface=p...nt&zoom=1&revision=df7f2ce326ce49f790dc07f5407af191&page=p01'>, <deck_master.store.Store object at 0x7f8dee2e3110>, [])\n\n    def test_layer_switch_entry_requires_saved_local_draft(icon_browser):\n        \"\"\"P03b/D8-A:内容层点「打开SVG层处理图标」先等真实保存;409 则暂停换层,解决后用户再点。\"\"\"\n        from playwright.sync_api import expect\n        page,store,_=icon_browser\n        base=page.url.split('#')[0]\n        identity=page.request.get(base+'api/project').json()['project_identity']\n        page.evaluate(\"args => {location.hash = new URLSearchParams(args)}\",\n            {'project':identity,'surface':'page','page':'p01','layer':'content','revision':store.current_revision_id()})\n        # 明确进入意见工具制造 dirty 草稿，再切到图标面走换层门控。\n        page.locator('.page-manuscript').wait_for()\n        page.get_by_role('button',name='意见',exact=True).click()\n        body=page.get_by_label('意见正文',exact=True)\n>       expect(body).to_be_visible(timeout=15000)\nE       AssertionError: Locator expected to be visible\nE       Actual value: hidden \nE       Call log:\nE         - Expect \"to_be_visible\" get_by_label(\"意见正文\", exact=True) with timeout 15000ms\nE         - waiting for get_by_label(\"意见正文\", exact=True)\nE           33 × locator resolved to <textarea rows=\"3\" id=\"opinion-body\" aria-label=\"意见正文\" placeholder=\"写下这条意见要改什么。输入会自动保留；保存后进入正式记录。\" aria-describedby=\"opinion-body-help opinion-body-error\"></textarea>\nE              - unexpected value \"hidden\"\nE       \nE       Aria snapshot:\nE       - link \"跳到工作区\":\nE         - /url: \"#main\"\nE       - complementary:\nE         - img \"Deck Master\"\nE         - navigation \"项目工作区\":\nE           - button \"制作总览\"\nE           - button \"内容与页序\"\nE           - button \"整稿画廊\"\nE           - button \"风格校准\"\nE           - button \"任务与交付\"\nE         - text: 当前项目\nE         - strong: 工作台合成示例\nE         - text: 合成验证项目\nE         - paragraph: 当前为项目独立入口\nE         - button \"连接状态\"\nE       - banner:\nE         - strong: 工作台合成示例\nE         - text: 当前稿\nE         - region \"本次工作状态\":\nE           - button \"查看本次工作与范围\": 内容进行中\nE         - button \"查看待交接任务，0 项\": 待交接 0\nE         - button \"项目菜单\"\nE       - text: 这是可编辑的合成验证项目，未调用模型，也未进行专业质量验收。\nE       - main:\nE         - heading \"第 1 页 · 项目目标与阅读顺序\" [level=1]\nE         - paragraph: 逐页稿 · 当前稿\nE         - combobox \"转到页面\":\nE           - option \"第 1 / 3 页\" [selected]\nE           - option \"第 2 / 3 页\"\nE           - option \"第 3 / 3 页\"\nE         - button \"上一页，没有上一页\" [disabled]: ← 上一页\nE         - button \"下一页，第 2 页 · 材料如何成为内容\": 下一页 →\nE         - navigation \"本页生成链路\":\nE           - button \"01 来源，记录缺失\": 01 来源 记录缺失\nE           - button \"02 逐页稿，可查看\": 02 逐页稿 可查看\nE           - button \"03 提示词，记录缺失\": 03 提示词 记录缺失\nE           - button \"04 原图，可查看\": 04 原图 可查看\nE           - button \"05 SVG，可查看\": 05 SVG 可查看\nE           - button \"06 PPT 预览，尚未生成\": 06 PPT 预览 尚未生成\nE         - button \"返回整稿画廊\"\nE         - button \"比较此页版本\"\nE         - button \"以本页为风格参考\"\nE         - group \"单页工具\":\nE           - button \"阅读\"\nE           - button \"意见\" [pressed]\nE           - button \"试作与候选\": 试作候选\nE           - button \"图标优化\"\nE           - button \"笔记\"\nE           - button \"详情\"\nE         - region \"页面内容\":\nE           - article:\nE             - heading \"项目目标与阅读顺序\" [level=2]\nE             - button \"编辑本页标题与正文\"\nE             - paragraph: 此页未记录正文块。\nE             - group: › 正文原文与精确选段\nE             - group: › 查看本页来源\nE         - complementary:\nE           - paragraph: 第 1 页 · 逐页稿 · 当前版本 R df7f2ce3\nE           - region \"版本绑定意见\":\nE             - heading \"标注与意见\" [level=2]\nE             - paragraph: 当前图稿（逐页稿） · 底稿 R df7f2ce3 · 草稿区域 0 个\nE             - button \"整页意见\"\nE             - group: › 撰写意见\nE             - paragraph: 先选「整页意见」，或打开标注工具，再保存意见。\nE             - group: › 范围与标注工具\nE             - paragraph: 保存意见不启动制作；选入已保存意见后再预览修改计划。\nE             - heading \"已保存意见\" [level=3]\nE             - heading \"本页整页意见（0）\" [level=4]\nE             - paragraph: 此范围暂无意见。\nE             - heading \"当前图稿意见 · 逐页稿（0）\" [level=4]\nE             - paragraph: 此范围暂无意见。\nE             - paragraph: 尚无已保存意见。\nE       - status: 单页 · 逐页稿，R df7f2ce3\n\ntests/rebuild/test_icon_browser.py:274: AssertionError"
+  }
+]

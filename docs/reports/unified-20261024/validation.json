@@ -1,9 +1,14 @@
 {
+  "review_code_candidate": {
+    "head": "7947b25a08dfcc13c4a5b166bd189e9aef7b85ac",
+    "tree": "3fb8b53cde93edcb7d9fcee192e33e13393b4b47",
+    "runtime_files_identical_to": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+  },
   "runtime_candidate": {
-    "head": "75551e7d06dd3c7a78e05e9188ac032bbd064da0",
-    "tree": "8ba3825cb84994da9905064674317300bbd1f6e1",
+    "head": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf",
+    "tree": "31b45fa320d0e9f0fa6acadd0233a2c4c3f61016",
     "parents": [
-      "83cdfecbe26ddd013e0aabe89d3ad12fac43a5a3"
+      "b5238214c45c5c82d1ba1c06355c7f29f657521e"
     ],
     "ancestor_of_runtime_candidate": true
   },
@@ -16,7 +21,9 @@
     ],
     "ancestor_of_runtime_candidate": true
   },
-  "pr_created": false,
+  "report_only_descendants_allowed": true,
+  "created_pr_by_this_task": false,
+  "pr_url_obtained": null,
   "pr_creation": {
     "action": "POST /repos/MainQuestAI/Deck-Master/pulls",
     "status": "DENIED",
@@ -27,119 +34,477 @@
   "merge": "NOT_EXECUTED",
   "humanizer": "DEFERRED_BY_USER_NOT_INCLUDED",
   "wheel": {
-    "source_sha": "75551e7d06dd3c7a78e05e9188ac032bbd064da0",
-    "tree": "8ba3825cb84994da9905064674317300bbd1f6e1",
-    "wheel_sha256": "1059ddce8ce3f51622eae72a18d1e40833c591e22aea45a67632bdc421a1b7d9",
+    "source_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf",
+    "tree": "31b45fa320d0e9f0fa6acadd0233a2c4c3f61016",
+    "wheel_sha256": "fbe010395aa53f5c1e69bb86b55ed47c40fa2cd92541eb5195ab2b9e20b4b2dd",
     "wheel_files": 369,
     "git_tracked_runtime_files": 292
   },
+  "installation": {
+    "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+    "executable": "/workspace/deck-wheel-venv/bin/python",
+    "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+    "distribution": "deck-master",
+    "version": "1.0.0",
+    "direct_url": {
+      "archive_info": {
+        "hash": "sha256=fbe010395aa53f5c1e69bb86b55ed47c40fa2cd92541eb5195ab2b9e20b4b2dd",
+        "hashes": {
+          "sha256": "fbe010395aa53f5c1e69bb86b55ed47c40fa2cd92541eb5195ab2b9e20b4b2dd"
+        }
+      },
+      "url": "file:///tmp/deck-integration-stability/wheels-browser-fixed/deck_master-1.0.0-py3-none-any.whl"
+    },
+    "module": "/workspace/deck-wheel-venv/lib/python3.12/site-packages/deck_master/__init__.py",
+    "static": "/workspace/deck-wheel-venv/lib/python3.12/site-packages/deck_master/resources/static",
+    "wheel_sha256": "fbe010395aa53f5c1e69bb86b55ed47c40fa2cd92541eb5195ab2b9e20b4b2dd"
+  },
+  "renderer_browser_versions": [
+    {
+      "command": [
+        "/usr/bin/chromium",
+        "--version"
+      ],
+      "exit": 0,
+      "stdout": "Chromium 151.0.7922.173 built on Debian GNU/Linux 13 (trixie)",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "soffice",
+        "--version"
+      ],
+      "exit": 0,
+      "stdout": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "pdftoppm",
+        "-v"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": "pdftoppm version 26.05.0\nCopyright 2005-2026 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011, 2022 Glyph & Cog, LLC"
+    }
+  ],
+  "receipt_scaling": {
+    "test_sha": "7947b25a08dfcc13c4a5b166bd189e9aef7b85ac",
+    "runtime_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf",
+    "wheel_sha256": "fbe010395aa53f5c1e69bb86b55ed47c40fa2cd92541eb5195ab2b9e20b4b2dd",
+    "evidence": "installed-receipt-measurements.xml",
+    "raw_measurements": "final-receipt-measurements/",
+    "scope": "Same real claimed synthetic task; response construction only, one warm-up plus three samples per protocol; run after browser finished. No end-to-end Host latency, machine-temperature cause, or external machine-load control claimed.",
+    "rows": [
+      {
+        "pending_tasks": 1,
+        "source_count": 6,
+        "source_characters_each": 17754,
+        "scope": "response construction only; warm-up then 3 samples, not end-to-end latency",
+        "protocols": {
+          "legacy": {
+            "cpu_median_ms": 3.738627,
+            "response_bytes": [
+              230759
+            ],
+            "object_json_reads": [
+              9
+            ]
+          },
+          "task_receipt.v1": {
+            "cpu_median_ms": 0.056237,
+            "response_bytes": [
+              1226
+            ],
+            "object_json_reads": [
+              0
+            ]
+          }
+        }
+      },
+      {
+        "pending_tasks": 13,
+        "source_count": 6,
+        "source_characters_each": 17754,
+        "scope": "response construction only; warm-up then 3 samples, not end-to-end latency",
+        "protocols": {
+          "legacy": {
+            "cpu_median_ms": 36.811266,
+            "response_bytes": [
+              2993372
+            ],
+            "object_json_reads": [
+              105
+            ]
+          },
+          "task_receipt.v1": {
+            "cpu_median_ms": 0.048177,
+            "response_bytes": [
+              1226
+            ],
+            "object_json_reads": [
+              0
+            ]
+          }
+        }
+      },
+      {
+        "pending_tasks": 30,
+        "source_count": 6,
+        "source_characters_each": 17754,
+        "scope": "response construction only; warm-up then 3 samples, not end-to-end latency",
+        "protocols": {
+          "legacy": {
+            "cpu_median_ms": 75.847958,
+            "response_bytes": [
+              6907112
+            ],
+            "object_json_reads": [
+              241
+            ]
+          },
+          "task_receipt.v1": {
+            "cpu_median_ms": 0.190684,
+            "response_bytes": [
+              1226
+            ],
+            "object_json_reads": [
+              0
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "installed_capabilities_evidence": "installed-capabilities-final.json",
+  "remaining_gate_details": "remaining-gates.json",
+  "contract_mirrors": "contract-mirrors.json",
   "results": [
     {
-      "file": "full-unit-final.xml",
-      "source": "b8e6ec4f start",
+      "file": "source-final-frozen.xml",
+      "kind": "source",
+      "source": "dbd7133b",
+      "sha256": "243cc4d8b4fdae40d25c02c178f8f0f94ab565a9a71975d452daf65201aefbc3",
       "name": "pytest",
-      "errors": "3",
-      "failures": "12",
+      "errors": "0",
+      "failures": "0",
       "skipped": "2",
-      "tests": "4049",
-      "time": "1522.200",
-      "timestamp": "2026-10-24T10:16:48.341681+00:00",
+      "tests": "4064",
+      "time": "1921.258",
+      "timestamp": "2026-10-24T12:48:20.678266+00:00",
       "hostname": "1f871fca1878"
     },
     {
-      "file": "installed-b7523c99.xml",
-      "source": "b7523c99",
+      "file": "installed-final-unit.xml",
+      "kind": "installed_unit",
+      "source": "b66cec18",
+      "sha256": "540c5d9972f96d0b113b2324e82346e92efdb90561abd97ad3d31e6a48113705",
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "2",
+      "tests": "4064",
+      "time": "1696.469",
+      "timestamp": "2026-10-24T12:18:50.476616+00:00",
+      "hostname": "1f871fca1878"
+    },
+    {
+      "file": "installed-final4-browser.xml",
+      "kind": "installed_browser",
+      "source": "7947b25a",
+      "sha256": "44265a6064827d43e9660636b67974ec05b168d70949280e452bef215748acfd",
       "name": "pytest",
       "errors": "0",
       "failures": "0",
       "skipped": "0",
-      "tests": "190",
-      "time": "262.663",
-      "timestamp": "2026-10-24T10:24:36.824810+00:00",
+      "tests": "708",
+      "time": "4336.987",
+      "timestamp": "2026-10-24T13:53:51.958725+00:00",
       "hostname": "1f871fca1878"
     },
     {
-      "file": "compat-corrected.xml",
-      "source": "83cdfecb payload",
+      "file": "installed-available-ppt-render.xml",
+      "kind": "installed_render",
+      "source": "b66cec18",
+      "sha256": "15ef9850d4f12129ae46f460f4a28284a234030dbca8fae4aee4b518fce30671",
       "name": "pytest",
       "errors": "0",
       "failures": "0",
       "skipped": "0",
-      "tests": "98",
-      "time": "17.863",
-      "timestamp": "2026-10-24T10:39:07.758526+00:00",
+      "tests": "1",
+      "time": "6.213",
+      "timestamp": "2026-10-24T12:20:05.134368+00:00",
       "hostname": "1f871fca1878"
     },
     {
-      "file": "services-rerun.xml",
-      "source": "75551e7d",
-      "name": "pytest",
-      "errors": "0",
-      "failures": "0",
-      "skipped": "0",
-      "tests": "19",
-      "time": "8.254",
-      "timestamp": "2026-10-24T10:42:19.553766+00:00",
-      "hostname": "1f871fca1878"
-    },
-    {
-      "file": "q2-75551e7d.xml",
-      "source": "75551e7d",
-      "name": "pytest",
-      "errors": "0",
-      "failures": "0",
-      "skipped": "0",
-      "tests": "43",
-      "time": "165.054",
-      "timestamp": "2026-10-24T10:41:00.412675+00:00",
-      "hostname": "1f871fca1878"
-    },
-    {
-      "file": "installed-75551e7d.xml",
-      "source": "75551e7d",
+      "file": "installed-available-render-extended.xml",
+      "kind": "installed_render_available",
+      "source": "dbd7133b",
+      "sha256": "c9b52983dc396d9775a50d54cf6433acd6977f6399bd5e007f9361217573d99b",
       "name": "pytest",
       "errors": "0",
       "failures": "1",
       "skipped": "0",
-      "tests": "262",
-      "time": "318.255",
-      "timestamp": "2026-10-24T10:41:05.301832+00:00",
+      "tests": "75",
+      "time": "104.188",
+      "timestamp": "2026-10-24T13:11:52.024081+00:00",
       "hostname": "1f871fca1878"
     },
     {
-      "file": "installed-handoff-rerun.xml",
-      "source": "75551e7d installed runtime + 1c9d9231 test",
-      "description": "corrected autosave assertions",
+      "file": "installed-assembly-replay.xml",
+      "kind": "installed_assembly_replay",
+      "source": "7947b25a",
+      "sha256": "df30c246921b062ec1e300700bb1447f24fb81d7de86c5342ee5d79bae81cec3",
       "name": "pytest",
       "errors": "0",
       "failures": "0",
       "skipped": "0",
-      "tests": "4",
-      "time": "14.411",
-      "timestamp": "2026-10-24T10:47:11.787903+00:00",
+      "tests": "3",
+      "time": "11.052",
+      "timestamp": "2026-10-24T13:50:29.879423+00:00",
+      "hostname": "1f871fca1878"
+    },
+    {
+      "file": "installed-missing-renderer-contract.xml",
+      "kind": "installed_renderer_negative",
+      "source": "7947b25a",
+      "sha256": "8f987022dcbe05366c8595d88f18b1cb2a2798af66451b76f34dd930e4ecbc90",
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "1",
+      "time": "2.572",
+      "timestamp": "2026-10-24T13:56:29.712678+00:00",
+      "hostname": "1f871fca1878"
+    },
+    {
+      "file": "installed-receipt-measurements.xml",
+      "kind": "installed_receipt_measurements",
+      "source": "7947b25a",
+      "sha256": "4fd25c5fcf17116198a5b965ad0bfd2c402182469ac95610f78f105c35f45abd",
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "3",
+      "time": "1.726",
+      "timestamp": "2026-10-24T15:06:52.681876+00:00",
       "hostname": "1f871fca1878"
     }
   ],
-  "blockers": [
-    "PR creation Forbidden",
-    "Second added issue number unidentified",
-    "Broad-run service startup stability unproven",
-    "No final complete browser sweep",
-    "Remote CI integration and PR187 unverified",
-    "rsvg-convert missing; rendering/final image/PPT semantics unverified",
-    "Actual Host/external report repair/user visual/end-to-end CPU acceptance incomplete"
-  ],
-  "broad_source_runtime": "started b8e6ec4f; later scoped repairs reverified; not a final fixed-SHA whole-suite pass",
-  "q2_inner": {
-    "case_carrier": "/workspace/Deck-Master-integrated/tests/rebuild/rc3_q2_later_300_cases.py",
-    "expected": 70,
-    "executed": 70,
-    "passed": 70,
-    "failed": 0,
-    "errors": 0,
-    "skipped": 0,
-    "actual_runtime_identity_observations": 61
+  "identities": {
+    "installed-final-unit-identity.json": {
+      "checkout_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf",
+      "runtime_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf",
+      "wheel_sha256": "fbe010395aa53f5c1e69bb86b55ed47c40fa2cd92541eb5195ab2b9e20b4b2dd",
+      "version": "1.0.0",
+      "module": "/workspace/deck-wheel-venv/lib/python3.12/site-packages/deck_master/__init__.py",
+      "all_modules_installed": true,
+      "package_unchanged": true,
+      "pytest_exit": 0,
+      "evidence_sha256": "cf162c948c3e1804583b331e4b6380c46006fdfea9e70279cc06a9c84efb0bc9"
+    },
+    "source-final-frozen-identity.json": {
+      "checkout_sha": "dbd7133baac36ba366e3f46cb0b02f542c8c2d89",
+      "runtime_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf",
+      "module": "/workspace/Deck-Master-integrated/src/deck_master/__init__.py",
+      "version": "1.0.0",
+      "code_and_tests_unchanged": true,
+      "pytest_exit": 0,
+      "evidence_sha256": "5a8930cf98b1f301aae4c21d67bab17558026721ee489afb819c2443a1bfed27"
+    },
+    "installed-final4-browser.identity.json": {
+      "checkout_sha": "7947b25a08dfcc13c4a5b166bd189e9aef7b85ac",
+      "tree": "3fb8b53cde93edcb7d9fcee192e33e13393b4b47",
+      "wheel_sha256": "fbe010395aa53f5c1e69bb86b55ed47c40fa2cd92541eb5195ab2b9e20b4b2dd",
+      "wheel_files": 369,
+      "tracked_runtime_files": 292,
+      "version": "1.0.0",
+      "module": "/workspace/deck-wheel-venv/lib/python3.12/site-packages/deck_master/__init__.py",
+      "all_modules_installed": true,
+      "package_unchanged": true,
+      "pytest_exit": 0,
+      "evidence_sha256": "4092b38e3156581c0f2914eb662eeadbe06a6065a466bba26961331feca72a1c"
+    },
+    "installed-available-ppt-render-identity.json": {
+      "checkout_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf",
+      "runtime_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf",
+      "wheel_sha256": "fbe010395aa53f5c1e69bb86b55ed47c40fa2cd92541eb5195ab2b9e20b4b2dd",
+      "version": "1.0.0",
+      "module": "/workspace/deck-wheel-venv/lib/python3.12/site-packages/deck_master/__init__.py",
+      "all_modules_installed": true,
+      "package_unchanged": true,
+      "pytest_exit": 0,
+      "evidence_sha256": "999b78d74c68083c90cc0b3d95765c92fd6e00cb5c095c4c2020836f11ab1529"
+    },
+    "installed-available-render-extended.identity.json": {
+      "checkout_sha": "dbd7133baac36ba366e3f46cb0b02f542c8c2d89",
+      "tree": "7786344f965d184c0d24de4926d7b7e9dcb72f81",
+      "wheel_sha256": "fbe010395aa53f5c1e69bb86b55ed47c40fa2cd92541eb5195ab2b9e20b4b2dd",
+      "wheel_files": 369,
+      "tracked_runtime_files": 292,
+      "version": "1.0.0",
+      "module": "/workspace/deck-wheel-venv/lib/python3.12/site-packages/deck_master/__init__.py",
+      "all_modules_installed": true,
+      "package_unchanged": true,
+      "pytest_exit": 1,
+      "evidence_sha256": "efea1851bf1e2a4306221c06ad63e1fe2e07f78c6f78282f266af1b1c186b052"
+    },
+    "installed-assembly-replay.identity.json": {
+      "checkout_sha": "7947b25a08dfcc13c4a5b166bd189e9aef7b85ac",
+      "tree": "3fb8b53cde93edcb7d9fcee192e33e13393b4b47",
+      "wheel_sha256": "fbe010395aa53f5c1e69bb86b55ed47c40fa2cd92541eb5195ab2b9e20b4b2dd",
+      "wheel_files": 369,
+      "tracked_runtime_files": 292,
+      "version": "1.0.0",
+      "module": "/workspace/deck-wheel-venv/lib/python3.12/site-packages/deck_master/__init__.py",
+      "all_modules_installed": true,
+      "package_unchanged": true,
+      "pytest_exit": 0,
+      "evidence_sha256": "37f7eb5ad2e5b56f791d350eac191862877ab41043df43c26f980aa193f9fcb1"
+    },
+    "installed-missing-renderer-contract.identity.json": {
+      "checkout_sha": "7947b25a08dfcc13c4a5b166bd189e9aef7b85ac",
+      "tree": "3fb8b53cde93edcb7d9fcee192e33e13393b4b47",
+      "wheel_sha256": "fbe010395aa53f5c1e69bb86b55ed47c40fa2cd92541eb5195ab2b9e20b4b2dd",
+      "wheel_files": 369,
+      "tracked_runtime_files": 292,
+      "version": "1.0.0",
+      "module": "/workspace/deck-wheel-venv/lib/python3.12/site-packages/deck_master/__init__.py",
+      "all_modules_installed": true,
+      "package_unchanged": true,
+      "pytest_exit": 0,
+      "evidence_sha256": "43d46ba870c0e1dba52a1b3bead44597c0d397d27105d69dd78be4e5855ee2fe"
+    },
+    "installed-receipt-measurements.identity.json": {
+      "checkout_sha": "7947b25a08dfcc13c4a5b166bd189e9aef7b85ac",
+      "tree": "3fb8b53cde93edcb7d9fcee192e33e13393b4b47",
+      "wheel_sha256": "fbe010395aa53f5c1e69bb86b55ed47c40fa2cd92541eb5195ab2b9e20b4b2dd",
+      "wheel_files": 369,
+      "tracked_runtime_files": 292,
+      "version": "1.0.0",
+      "module": "/workspace/deck-wheel-venv/lib/python3.12/site-packages/deck_master/__init__.py",
+      "all_modules_installed": true,
+      "package_unchanged": true,
+      "pytest_exit": 0,
+      "evidence_sha256": "9684261e87b0fb1ac75798abb331507a74d3be4d746c9d5595c515479062c171"
+    }
   },
-  "installed_module_audit_count": 98,
-  "test_followup": "1c9d9231: method autosave assertion; runtime unchanged from 75551e7d"
+  "q2": [
+    {
+      "directory": "source-final-q2",
+      "expected": 70,
+      "passed": 70,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 165.902,
+      "hard_timeout_seconds": 180,
+      "runtime_identity_observations": 61
+    },
+    {
+      "directory": "installed-final-q2",
+      "expected": 70,
+      "passed": 70,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 167.069,
+      "hard_timeout_seconds": 180,
+      "runtime_identity_observations": 61
+    }
+  ],
+  "old_remote_ci": {
+    "sha": "8dc3021053495633ed6d85444b81a70721224d24",
+    "run": "40087360087",
+    "job": "120853007419",
+    "url": "https://github.com/MainQuestAI/Deck-Master/actions/runs/40087360087/job/120853007419",
+    "result": "failure",
+    "finished": "2026-10-24T11:33:06Z",
+    "browser": "689 passed / 21 failed",
+    "other": "Four unit jobs and render passed; installed UI/recovery and wheel/offline skipped",
+    "evidence": "Parent-provided exact node summary; precise job-log request Forbidden, stopped. Full 21 node traces unavailable; do not equate this run with local 2040 or later candidates."
+  },
+  "new_remote_ci": "UNVERIFIED",
+  "historical_validation": "historical-validation.json",
+  "stability_history": "stability-test-history.json",
+  "original_failure_attribution": "failure-attribution.json",
+  "browser_failure_attribution": "browser-failure-attribution.json",
+  "installed_failure_attribution": "installed-failure-attribution.json",
+  "renderer_boundary": "renderer-boundaries.json",
+  "not_run_test_cases": [
+    "tests/rebuild/test_candidate_preview_recovery.py::test_damaged_state_retries_actual_compile_render_and_readback",
+    "tests/rebuild/test_candidates.py::test_explicit_assembly_uses_real_pipeline_after_page_gate_and_replays[False]",
+    "tests/rebuild/test_candidates.py::test_explicit_assembly_uses_real_pipeline_after_page_gate_and_replays[True]",
+    "tests/rebuild/test_compiler_geometry.py::test_document_canvas_is_prompt_and_compile_authority",
+    "tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[rgba-fill]",
+    "tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[split-hidden]",
+    "tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[tspan-opacity]",
+    "tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[tspan-style]",
+    "tests/rebuild/test_deep_quality_state.py::test_adopted_svg_continue_rebuilds_existing_ppt[False]",
+    "tests/rebuild/test_deep_quality_state.py::test_adopted_svg_continue_rebuilds_existing_ppt[True]",
+    "tests/rebuild/test_external_review_lifecycle.py::test_historical_stale_final_recovers_without_retiring_valid_trial_or_other_page",
+    "tests/rebuild/test_external_review_lifecycle.py::test_old_final_is_retired_atomically_and_normal_continue_rebuilds[False]",
+    "tests/rebuild/test_external_review_lifecycle.py::test_old_final_is_retired_atomically_and_normal_continue_rebuilds[True]",
+    "tests/rebuild/test_external_review_render.py::test_actual_render_and_persisted_produce_report[duplicate-hidden-fail]",
+    "tests/rebuild/test_external_review_render.py::test_actual_render_and_persisted_produce_report[duplicate-visible-pass]",
+    "tests/rebuild/test_external_review_render.py::test_actual_render_and_persisted_produce_report[no-fill-fail]",
+    "tests/rebuild/test_external_review_render.py::test_actual_render_and_persisted_produce_report[partial-gradient-pass]",
+    "tests/rebuild/test_external_review_render.py::test_actual_render_and_persisted_produce_report[solid-pass]",
+    "tests/rebuild/test_external_review_render.py::test_readback_implementation_change_cannot_reuse_old_candidate_check",
+    "tests/rebuild/test_flow_quality.py::test_revised_deck_recompiles_real_slide_order[add]",
+    "tests/rebuild/test_flow_quality.py::test_revised_deck_recompiles_real_slide_order[edit]",
+    "tests/rebuild/test_flow_quality.py::test_revised_deck_recompiles_real_slide_order[remove]",
+    "tests/rebuild/test_flow_quality.py::test_revised_deck_recompiles_real_slide_order[reorder]",
+    "tests/rebuild/test_gradient_readability.py::test_real_gradient_svg_ppt_and_persisted_check[end-zero]",
+    "tests/rebuild/test_gradient_readability.py::test_real_gradient_svg_ppt_and_persisted_check[partial]",
+    "tests/rebuild/test_gradient_readability.py::test_real_gradient_svg_ppt_and_persisted_check[start-zero]",
+    "tests/rebuild/test_icon_browser.py::test_actual_icon_candidate_ppt_comparison_retry_and_adoption",
+    "tests/rebuild/test_icon_quality.py::test_actual_candidate_preview_and_cross_page_reuse",
+    "tests/rebuild/test_icon_quality.py::test_preview_failure_retry_and_corrupt_files",
+    "tests/rebuild/test_install.py::test_isolated_full_chain_and_local_edit",
+    "tests/rebuild/test_native_table_geometry.py::test_actual_mixed_alignment_and_same_text_swap_renders_are_retained",
+    "tests/rebuild/test_page_visual_gate.py::test_accepted_variance_on_same_page_advances_to_next_blueprint",
+    "tests/rebuild/test_page_visual_gate.py::test_failed_visual_review_requires_page_repair_and_evidenced_closure",
+    "tests/rebuild/test_page_visual_gate.py::test_page_review_blocks_next_blueprint_until_current_three_checks_pass",
+    "tests/rebuild/test_page_visual_gate.py::test_page_review_cannot_pass_after_design_asset_change",
+    "tests/rebuild/test_page_visual_gate.py::test_preflight_and_preview_share_approved_image_assets",
+    "tests/rebuild/test_page_visual_gate.py::test_preview_renderer_execution_error_is_reported_separately_from_missing_tool",
+    "tests/rebuild/test_page_visual_gate.py::test_repeated_visual_review_without_resolution_stops_with_actionable_finding",
+    "tests/rebuild/test_page_visual_gate.py::test_stored_invalid_svg_reconstructs_then_resumes_page_review",
+    "tests/rebuild/test_page_visual_gate.py::test_style_change_retires_open_review_and_rebuilds_only_current_page",
+    "tests/rebuild/test_page_visual_gate.py::test_unchanged_page_visual_repair_stops_without_another_repair_loop",
+    "tests/rebuild/test_pipeline_preview_reuse.py::test_real_rsvg_rebuild_then_review_and_assembly[missing]",
+    "tests/rebuild/test_pipeline_preview_reuse.py::test_real_rsvg_rebuild_then_review_and_assembly[stale]",
+    "tests/rebuild/test_production.py::test_new_design_mode_and_failed_review_is_preserved",
+    "tests/rebuild/test_rc3_design_native.py::test_actual_svg_and_native_renders_retain_the_sample_and_hashes",
+    "tests/rebuild/test_rc3_design_native.py::test_negative_source_and_native_renders_are_retained_with_located_readback[options0-table_cell_ownership_mismatch]",
+    "tests/rebuild/test_rc3_design_native.py::test_negative_source_and_native_renders_are_retained_with_located_readback[options1-reversed_arrow]",
+    "tests/rebuild/test_rc3_design_native.py::test_negative_source_and_native_renders_are_retained_with_located_readback[options2-node_atom_ownership_mismatch]",
+    "tests/rebuild/test_rc3_notes_files.py::test_real_pipeline_to_export_preserves_full_notes_and_dependencies",
+    "tests/rebuild/test_rc3_notes_transactions.py::test_actual_completed_visual_notes_assembly_export_zero_image_ledger",
+    "tests/rebuild/test_rc3_notes_transactions.py::test_frozen_a_real_sdk_refuses_protected_notes_write_boundaries",
+    "tests/rebuild/test_rc3_notes_transactions.py::test_notes_edit_preserves_completed_visual_and_actual_review_bytes",
+    "tests/rebuild/test_rc3_notes_transactions.py::test_visual_open_finding_not_fixed_by_notes",
+    "tests/rebuild/test_render.py::test_renderers_available_on_this_machine",
+    "tests/rebuild/test_render.py::test_svg_renders_with_rsvg_convert",
+    "tests/rebuild/test_rollup_browser.py::test_damaged_preview_busy_polls_without_automatic_retry",
+    "tests/rebuild/test_service_flow.py::test_page_reorder_and_removal_keep_ids_and_history_out_of_current_ppt",
+    "tests/rebuild/test_service_flow.py::test_reconstruct_after_style_change_uses_new_effective_style",
+    "tests/rebuild/test_service_flow.py::test_single_page_edit_keeps_unrelated_page_artifacts_and_reassembles",
+    "tests/rebuild/test_tasks.py::test_no_progress_repair_stops_instead_of_looping",
+    "tests/rebuild/test_tasks.py::test_svg_only_fix_is_progress_not_no_progress"
+  ],
+  "remaining_acceptance": [
+    "External Frozen A: two unchanged non-render unit skips, plus any dependent renderer criteria remain unmet",
+    "Temporary installation activation refused by mandatory render preflight: rsvg-convert missing; no bypass/retry",
+    "Missing renderer-dependent cases listed individually; successful available native/PPT paths do not prove final image/PPT meaning",
+    "Second reported additional issue unidentified; known baseline51+#186=52",
+    "Earlier dbd7133b method1280 reload remained in bootstrap past original5s; subsequent complete module/full passes do not establish original cause",
+    "Actual Host execution, real external-report repair, user visual judgment and applicable end-to-end CPU evidence incomplete",
+    "Latest PR187 and new integration CI not verified; no substitution from PR188 results",
+    "User-selected ChatGPT Pro whole-integration review not yet run"
+  ],
+  "acceptance": "NOT_MERGE_READY_NO_BLANKET_ISSUE_CLOSURE"
 }

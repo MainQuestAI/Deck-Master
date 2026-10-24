@@ -1,0 +1,658 @@
+[
+  {
+    "test": "tests.rebuild.test_native_review_recovery::test_multiple_clean_owners_can_be_rechecked_without_merging_identities",
+    "original_result": "failed",
+    "classification": "fixture_conflict",
+    "original_message": "deck_master.tasks.EnvelopeError: review/replaces: no shared finding_id with the replaced review",
+    "repair_or_execution_correction": "b7523c99: true clean prior owners plus explicit force_units; identity/owner counts retained",
+    "evidence": [
+      "old fixture assigned fail with empty findings to provoke a recheck",
+      "v2 receiver requires failed findings continuity; exact 8 owner/16 records checks preserved"
+    ],
+    "complete_frozen_suite": {
+      "sha": "2040ca6d346a0bf93d41caf8e257d2cd0bebefd0",
+      "source": "4062 passed, 2 skipped, 849 deselected; 1569.02s",
+      "installed": "4062 passed, 2 skipped, 849 deselected; 1550.17s",
+      "logs": [
+        "source-stable.log",
+        "source-stable.xml",
+        "installed-stable-unit.log",
+        "installed-stable-unit.xml"
+      ],
+      "scope": "Original failures covered; two external FrozenA skips remain not_run."
+    },
+    "final_fixed_verification": {
+      "status": "PASSED_IN_COMPLETE_SELECTED_SUITE",
+      "results": [
+        {
+          "file": "source-final-frozen.xml",
+          "nodeid": "tests/rebuild/test_native_review_recovery.py::test_multiple_clean_owners_can_be_rechecked_without_merging_identities",
+          "status": "passed",
+          "source_sha": "dbd7133baac36ba366e3f46cb0b02f542c8c2d89"
+        },
+        {
+          "file": "installed-final-unit.xml",
+          "nodeid": "tests/rebuild/test_native_review_recovery.py::test_multiple_clean_owners_can_be_rechecked_without_merging_identities",
+          "status": "passed",
+          "source_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+        }
+      ],
+      "runtime_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+    }
+  },
+  {
+    "test": "tests.rebuild.test_request_read_facts::test_summary_freshness_does_not_reuse_partial_ancestry_proof[foreign_project]",
+    "original_result": "failed",
+    "classification": "test_projection_order",
+    "original_message": "AssertionError: assert 'derived' == 'unknown'\n  \n  - unknown\n  + derived",
+    "repair_or_execution_correction": "83cdfecb: select compare_candidates by kind and assert unknown plus disabled",
+    "evidence": [
+      "warm and cold summaries equal and candidate action unknown already passed",
+      "prepare_stage now sorts first; old test read attention.items[0] incorrectly"
+    ],
+    "complete_frozen_suite": {
+      "sha": "2040ca6d346a0bf93d41caf8e257d2cd0bebefd0",
+      "source": "4062 passed, 2 skipped, 849 deselected; 1569.02s",
+      "installed": "4062 passed, 2 skipped, 849 deselected; 1550.17s",
+      "logs": [
+        "source-stable.log",
+        "source-stable.xml",
+        "installed-stable-unit.log",
+        "installed-stable-unit.xml"
+      ],
+      "scope": "Original failures covered; two external FrozenA skips remain not_run."
+    },
+    "final_fixed_verification": {
+      "status": "PASSED_IN_COMPLETE_SELECTED_SUITE",
+      "results": [
+        {
+          "file": "source-final-frozen.xml",
+          "nodeid": "tests/rebuild/test_request_read_facts.py::test_summary_freshness_does_not_reuse_partial_ancestry_proof[foreign_project]",
+          "status": "passed",
+          "source_sha": "dbd7133baac36ba366e3f46cb0b02f542c8c2d89"
+        },
+        {
+          "file": "installed-final-unit.xml",
+          "nodeid": "tests/rebuild/test_request_read_facts.py::test_summary_freshness_does_not_reuse_partial_ancestry_proof[foreign_project]",
+          "status": "passed",
+          "source_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+        }
+      ],
+      "runtime_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+    }
+  },
+  {
+    "test": "tests.rebuild.test_request_read_facts::test_summary_freshness_does_not_reuse_partial_ancestry_proof[missing]",
+    "original_result": "failed",
+    "classification": "test_projection_order",
+    "original_message": "AssertionError: assert 'derived' == 'unknown'\n  \n  - unknown\n  + derived",
+    "repair_or_execution_correction": "83cdfecb: select compare_candidates by kind and assert unknown plus disabled",
+    "evidence": [
+      "warm and cold summaries equal and candidate action unknown already passed",
+      "prepare_stage now sorts first; old test read attention.items[0] incorrectly"
+    ],
+    "complete_frozen_suite": {
+      "sha": "2040ca6d346a0bf93d41caf8e257d2cd0bebefd0",
+      "source": "4062 passed, 2 skipped, 849 deselected; 1569.02s",
+      "installed": "4062 passed, 2 skipped, 849 deselected; 1550.17s",
+      "logs": [
+        "source-stable.log",
+        "source-stable.xml",
+        "installed-stable-unit.log",
+        "installed-stable-unit.xml"
+      ],
+      "scope": "Original failures covered; two external FrozenA skips remain not_run."
+    },
+    "final_fixed_verification": {
+      "status": "PASSED_IN_COMPLETE_SELECTED_SUITE",
+      "results": [
+        {
+          "file": "source-final-frozen.xml",
+          "nodeid": "tests/rebuild/test_request_read_facts.py::test_summary_freshness_does_not_reuse_partial_ancestry_proof[missing]",
+          "status": "passed",
+          "source_sha": "dbd7133baac36ba366e3f46cb0b02f542c8c2d89"
+        },
+        {
+          "file": "installed-final-unit.xml",
+          "nodeid": "tests/rebuild/test_request_read_facts.py::test_summary_freshness_does_not_reuse_partial_ancestry_proof[missing]",
+          "status": "passed",
+          "source_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+        }
+      ],
+      "runtime_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+    }
+  },
+  {
+    "test": "tests.rebuild.test_review::test_receiver_empty_findings_recheck_does_not_erase_old_findings[1-False]",
+    "original_result": "failed",
+    "classification": "integration_product_regression",
+    "original_message": "deck_master.tasks.EnvelopeError: review/replaces: no shared finding_id with the replaced review",
+    "repair_or_execution_correction": "83cdfecb: preserve v1 clean review compatibility without relaxing v2 final stage",
+    "evidence": [
+      "185/187 allow prior clean review replacement",
+      "188 preproduction-only exception inadvertently denied legacy v1, which lacks that stage",
+      "negative failed-prior/blank-observation and v2 final checks retained"
+    ],
+    "complete_frozen_suite": {
+      "sha": "2040ca6d346a0bf93d41caf8e257d2cd0bebefd0",
+      "source": "4062 passed, 2 skipped, 849 deselected; 1569.02s",
+      "installed": "4062 passed, 2 skipped, 849 deselected; 1550.17s",
+      "logs": [
+        "source-stable.log",
+        "source-stable.xml",
+        "installed-stable-unit.log",
+        "installed-stable-unit.xml"
+      ],
+      "scope": "Original failures covered; two external FrozenA skips remain not_run."
+    },
+    "final_fixed_verification": {
+      "status": "PASSED_IN_COMPLETE_SELECTED_SUITE",
+      "results": [
+        {
+          "file": "source-final-frozen.xml",
+          "nodeid": "tests/rebuild/test_review.py::test_receiver_empty_findings_recheck_does_not_erase_old_findings[1-False]",
+          "status": "passed",
+          "source_sha": "dbd7133baac36ba366e3f46cb0b02f542c8c2d89"
+        },
+        {
+          "file": "installed-final-unit.xml",
+          "nodeid": "tests/rebuild/test_review.py::test_receiver_empty_findings_recheck_does_not_erase_old_findings[1-False]",
+          "status": "passed",
+          "source_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+        }
+      ],
+      "runtime_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+    }
+  },
+  {
+    "test": "tests.rebuild.test_studio_integration::test_studio_launcher_returns_studio_project_and_launcher_urls",
+    "original_result": "failed",
+    "classification": "execution_contamination",
+    "original_message": "deck_master.local_runtime.ServiceUnavailable: service: service did not become healthy within 8 seconds; retry or inspect its local log",
+    "repair_or_execution_correction": "freeze complete runtime bytes throughout full suite",
+    "evidence": [
+      "local_runtime.py BUILD_ID computed at import and healthy checks exact identity",
+      "build-identity-reproduction.json",
+      "b7523c99 committed 10:23:50 UTC after suite began 10:16:48 UTC, before service failures"
+    ],
+    "complete_frozen_suite": {
+      "sha": "2040ca6d346a0bf93d41caf8e257d2cd0bebefd0",
+      "source": "4062 passed, 2 skipped, 849 deselected; 1569.02s",
+      "installed": "4062 passed, 2 skipped, 849 deselected; 1550.17s",
+      "logs": [
+        "source-stable.log",
+        "source-stable.xml",
+        "installed-stable-unit.log",
+        "installed-stable-unit.xml"
+      ],
+      "scope": "Original failures covered; two external FrozenA skips remain not_run."
+    },
+    "final_fixed_verification": {
+      "status": "PASSED_IN_COMPLETE_SELECTED_SUITE",
+      "results": [
+        {
+          "file": "source-final-frozen.xml",
+          "nodeid": "tests/rebuild/test_studio_integration.py::test_studio_launcher_returns_studio_project_and_launcher_urls",
+          "status": "passed",
+          "source_sha": "dbd7133baac36ba366e3f46cb0b02f542c8c2d89"
+        },
+        {
+          "file": "installed-final-unit.xml",
+          "nodeid": "tests/rebuild/test_studio_integration.py::test_studio_launcher_returns_studio_project_and_launcher_urls",
+          "status": "passed",
+          "source_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+        }
+      ],
+      "runtime_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+    }
+  },
+  {
+    "test": "tests.rebuild.test_ui_journal::test_actual_port_restart_restores_ack_but_not_unsent_and_can_import",
+    "original_result": "failed",
+    "classification": "execution_contamination",
+    "original_message": "deck_master.local_runtime.ServiceUnavailable: service: service did not become healthy within 8 seconds; retry or inspect its local log",
+    "repair_or_execution_correction": "freeze complete runtime bytes throughout full suite",
+    "evidence": [
+      "local_runtime.py BUILD_ID computed at import and healthy checks exact identity",
+      "build-identity-reproduction.json",
+      "b7523c99 committed 10:23:50 UTC after suite began 10:16:48 UTC, before service failures"
+    ],
+    "complete_frozen_suite": {
+      "sha": "2040ca6d346a0bf93d41caf8e257d2cd0bebefd0",
+      "source": "4062 passed, 2 skipped, 849 deselected; 1569.02s",
+      "installed": "4062 passed, 2 skipped, 849 deselected; 1550.17s",
+      "logs": [
+        "source-stable.log",
+        "source-stable.xml",
+        "installed-stable-unit.log",
+        "installed-stable-unit.xml"
+      ],
+      "scope": "Original failures covered; two external FrozenA skips remain not_run."
+    },
+    "final_fixed_verification": {
+      "status": "PASSED_IN_COMPLETE_SELECTED_SUITE",
+      "results": [
+        {
+          "file": "source-final-frozen.xml",
+          "nodeid": "tests/rebuild/test_ui_journal.py::test_actual_port_restart_restores_ack_but_not_unsent_and_can_import",
+          "status": "passed",
+          "source_sha": "dbd7133baac36ba366e3f46cb0b02f542c8c2d89"
+        },
+        {
+          "file": "installed-final-unit.xml",
+          "nodeid": "tests/rebuild/test_ui_journal.py::test_actual_port_restart_restores_ack_but_not_unsent_and_can_import",
+          "status": "passed",
+          "source_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+        }
+      ],
+      "runtime_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+    }
+  },
+  {
+    "test": "tests.rebuild.test_ui_method_scope_browser::test_preparation_handoff_keeps_complete_context_and_resource_basis",
+    "original_result": "failed",
+    "classification": "integration_product_regression",
+    "original_message": "KeyError: 'context'",
+    "repair_or_execution_correction": "75551e7d: merge UI recovery fields with fixed preview/manifest",
+    "evidence": [
+      "188 context/role/review_units/recovery and 185 structured preview both present in final payload",
+      "previous merged payload omitted 188 context, producing KeyError"
+    ],
+    "complete_frozen_suite": {
+      "sha": "2040ca6d346a0bf93d41caf8e257d2cd0bebefd0",
+      "source": "4062 passed, 2 skipped, 849 deselected; 1569.02s",
+      "installed": "4062 passed, 2 skipped, 849 deselected; 1550.17s",
+      "logs": [
+        "source-stable.log",
+        "source-stable.xml",
+        "installed-stable-unit.log",
+        "installed-stable-unit.xml"
+      ],
+      "scope": "Original failures covered; two external FrozenA skips remain not_run."
+    },
+    "final_fixed_verification": {
+      "status": "PASSED_IN_COMPLETE_SELECTED_SUITE",
+      "results": [
+        {
+          "file": "source-final-frozen.xml",
+          "nodeid": "tests/rebuild/test_ui_method_scope_browser.py::test_preparation_handoff_keeps_complete_context_and_resource_basis",
+          "status": "passed",
+          "source_sha": "dbd7133baac36ba366e3f46cb0b02f542c8c2d89"
+        },
+        {
+          "file": "installed-final-unit.xml",
+          "nodeid": "tests/rebuild/test_ui_method_scope_browser.py::test_preparation_handoff_keeps_complete_context_and_resource_basis",
+          "status": "passed",
+          "source_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+        }
+      ],
+      "runtime_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+    }
+  },
+  {
+    "test": "tests.rebuild.test_web::test_cli_import_auto_opens_workbench_after_first_content",
+    "original_result": "failed",
+    "classification": "execution_contamination",
+    "original_message": "AssertionError: first content triggers the automatic workbench URL\nassert None",
+    "repair_or_execution_correction": "freeze complete runtime bytes throughout full suite",
+    "evidence": [
+      "local_runtime.py BUILD_ID computed at import and healthy checks exact identity",
+      "build-identity-reproduction.json",
+      "b7523c99 committed 10:23:50 UTC after suite began 10:16:48 UTC, before service failures"
+    ],
+    "complete_frozen_suite": {
+      "sha": "2040ca6d346a0bf93d41caf8e257d2cd0bebefd0",
+      "source": "4062 passed, 2 skipped, 849 deselected; 1569.02s",
+      "installed": "4062 passed, 2 skipped, 849 deselected; 1550.17s",
+      "logs": [
+        "source-stable.log",
+        "source-stable.xml",
+        "installed-stable-unit.log",
+        "installed-stable-unit.xml"
+      ],
+      "scope": "Original failures covered; two external FrozenA skips remain not_run."
+    },
+    "final_fixed_verification": {
+      "status": "PASSED_IN_COMPLETE_SELECTED_SUITE",
+      "results": [
+        {
+          "file": "source-final-frozen.xml",
+          "nodeid": "tests/rebuild/test_web.py::test_cli_import_auto_opens_workbench_after_first_content",
+          "status": "passed",
+          "source_sha": "dbd7133baac36ba366e3f46cb0b02f542c8c2d89"
+        },
+        {
+          "file": "installed-final-unit.xml",
+          "nodeid": "tests/rebuild/test_web.py::test_cli_import_auto_opens_workbench_after_first_content",
+          "status": "passed",
+          "source_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+        }
+      ],
+      "runtime_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+    }
+  },
+  {
+    "test": "tests.rebuild.test_web::test_open_view_returns_real_url_without_browser",
+    "original_result": "failed",
+    "classification": "execution_contamination",
+    "original_message": "AssertionError: a missing browser must not lose the real local URL\nassert None",
+    "repair_or_execution_correction": "freeze complete runtime bytes throughout full suite",
+    "evidence": [
+      "local_runtime.py BUILD_ID computed at import and healthy checks exact identity",
+      "build-identity-reproduction.json",
+      "b7523c99 committed 10:23:50 UTC after suite began 10:16:48 UTC, before service failures"
+    ],
+    "complete_frozen_suite": {
+      "sha": "2040ca6d346a0bf93d41caf8e257d2cd0bebefd0",
+      "source": "4062 passed, 2 skipped, 849 deselected; 1569.02s",
+      "installed": "4062 passed, 2 skipped, 849 deselected; 1550.17s",
+      "logs": [
+        "source-stable.log",
+        "source-stable.xml",
+        "installed-stable-unit.log",
+        "installed-stable-unit.xml"
+      ],
+      "scope": "Original failures covered; two external FrozenA skips remain not_run."
+    },
+    "final_fixed_verification": {
+      "status": "PASSED_IN_COMPLETE_SELECTED_SUITE",
+      "results": [
+        {
+          "file": "source-final-frozen.xml",
+          "nodeid": "tests/rebuild/test_web.py::test_open_view_returns_real_url_without_browser",
+          "status": "passed",
+          "source_sha": "dbd7133baac36ba366e3f46cb0b02f542c8c2d89"
+        },
+        {
+          "file": "installed-final-unit.xml",
+          "nodeid": "tests/rebuild/test_web.py::test_open_view_returns_real_url_without_browser",
+          "status": "passed",
+          "source_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+        }
+      ],
+      "runtime_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+    }
+  },
+  {
+    "test": "tests.rebuild.test_web::test_open_view_browser_refusal_reports_available",
+    "original_result": "failed",
+    "classification": "execution_contamination",
+    "original_message": "assert None",
+    "repair_or_execution_correction": "freeze complete runtime bytes throughout full suite",
+    "evidence": [
+      "local_runtime.py BUILD_ID computed at import and healthy checks exact identity",
+      "build-identity-reproduction.json",
+      "b7523c99 committed 10:23:50 UTC after suite began 10:16:48 UTC, before service failures"
+    ],
+    "complete_frozen_suite": {
+      "sha": "2040ca6d346a0bf93d41caf8e257d2cd0bebefd0",
+      "source": "4062 passed, 2 skipped, 849 deselected; 1569.02s",
+      "installed": "4062 passed, 2 skipped, 849 deselected; 1550.17s",
+      "logs": [
+        "source-stable.log",
+        "source-stable.xml",
+        "installed-stable-unit.log",
+        "installed-stable-unit.xml"
+      ],
+      "scope": "Original failures covered; two external FrozenA skips remain not_run."
+    },
+    "final_fixed_verification": {
+      "status": "PASSED_IN_COMPLETE_SELECTED_SUITE",
+      "results": [
+        {
+          "file": "source-final-frozen.xml",
+          "nodeid": "tests/rebuild/test_web.py::test_open_view_browser_refusal_reports_available",
+          "status": "passed",
+          "source_sha": "dbd7133baac36ba366e3f46cb0b02f542c8c2d89"
+        },
+        {
+          "file": "installed-final-unit.xml",
+          "nodeid": "tests/rebuild/test_web.py::test_open_view_browser_refusal_reports_available",
+          "status": "passed",
+          "source_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+        }
+      ],
+      "runtime_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+    }
+  },
+  {
+    "test": "tests.rebuild.test_workbench_e2e::test_service_reuse_returns_same_url",
+    "original_result": "failed",
+    "classification": "execution_contamination",
+    "original_message": "assert None",
+    "repair_or_execution_correction": "freeze complete runtime bytes throughout full suite",
+    "evidence": [
+      "local_runtime.py BUILD_ID computed at import and healthy checks exact identity",
+      "build-identity-reproduction.json",
+      "b7523c99 committed 10:23:50 UTC after suite began 10:16:48 UTC, before service failures"
+    ],
+    "complete_frozen_suite": {
+      "sha": "2040ca6d346a0bf93d41caf8e257d2cd0bebefd0",
+      "source": "4062 passed, 2 skipped, 849 deselected; 1569.02s",
+      "installed": "4062 passed, 2 skipped, 849 deselected; 1550.17s",
+      "logs": [
+        "source-stable.log",
+        "source-stable.xml",
+        "installed-stable-unit.log",
+        "installed-stable-unit.xml"
+      ],
+      "scope": "Original failures covered; two external FrozenA skips remain not_run."
+    },
+    "final_fixed_verification": {
+      "status": "PASSED_IN_COMPLETE_SELECTED_SUITE",
+      "results": [
+        {
+          "file": "source-final-frozen.xml",
+          "nodeid": "tests/rebuild/test_workbench_e2e.py::test_service_reuse_returns_same_url",
+          "status": "passed",
+          "source_sha": "dbd7133baac36ba366e3f46cb0b02f542c8c2d89"
+        },
+        {
+          "file": "installed-final-unit.xml",
+          "nodeid": "tests/rebuild/test_workbench_e2e.py::test_service_reuse_returns_same_url",
+          "status": "passed",
+          "source_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+        }
+      ],
+      "runtime_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+    }
+  },
+  {
+    "test": "tests.rebuild.test_workbench_services::test_empty_launcher_is_not_a_fake_project_and_does_not_scan",
+    "original_result": "error",
+    "classification": "execution_contamination",
+    "original_message": "failed on setup with \"deck_master.local_runtime.ServiceUnavailable: service: service did not become healthy within 8 seconds; retry or inspect its local log\"",
+    "repair_or_execution_correction": "freeze complete runtime bytes throughout full suite",
+    "evidence": [
+      "local_runtime.py BUILD_ID computed at import and healthy checks exact identity",
+      "build-identity-reproduction.json",
+      "b7523c99 committed 10:23:50 UTC after suite began 10:16:48 UTC, before service failures"
+    ],
+    "complete_frozen_suite": {
+      "sha": "2040ca6d346a0bf93d41caf8e257d2cd0bebefd0",
+      "source": "4062 passed, 2 skipped, 849 deselected; 1569.02s",
+      "installed": "4062 passed, 2 skipped, 849 deselected; 1550.17s",
+      "logs": [
+        "source-stable.log",
+        "source-stable.xml",
+        "installed-stable-unit.log",
+        "installed-stable-unit.xml"
+      ],
+      "scope": "Original failures covered; two external FrozenA skips remain not_run."
+    },
+    "final_fixed_verification": {
+      "status": "PASSED_IN_COMPLETE_SELECTED_SUITE",
+      "results": [
+        {
+          "file": "source-final-frozen.xml",
+          "nodeid": "tests/rebuild/test_workbench_services.py::test_empty_launcher_is_not_a_fake_project_and_does_not_scan",
+          "status": "passed",
+          "source_sha": "dbd7133baac36ba366e3f46cb0b02f542c8c2d89"
+        },
+        {
+          "file": "installed-final-unit.xml",
+          "nodeid": "tests/rebuild/test_workbench_services.py::test_empty_launcher_is_not_a_fake_project_and_does_not_scan",
+          "status": "passed",
+          "source_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+        }
+      ],
+      "runtime_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+    }
+  },
+  {
+    "test": "tests.rebuild.test_workbench_services::test_concurrent_starts_share_one_detached_instance",
+    "original_result": "failed",
+    "classification": "execution_contamination",
+    "original_message": "deck_master.local_runtime.ServiceUnavailable: service: service did not become healthy within 8 seconds; retry or inspect its local log",
+    "repair_or_execution_correction": "freeze complete runtime bytes throughout full suite",
+    "evidence": [
+      "local_runtime.py BUILD_ID computed at import and healthy checks exact identity",
+      "build-identity-reproduction.json",
+      "b7523c99 committed 10:23:50 UTC after suite began 10:16:48 UTC, before service failures"
+    ],
+    "complete_frozen_suite": {
+      "sha": "2040ca6d346a0bf93d41caf8e257d2cd0bebefd0",
+      "source": "4062 passed, 2 skipped, 849 deselected; 1569.02s",
+      "installed": "4062 passed, 2 skipped, 849 deselected; 1550.17s",
+      "logs": [
+        "source-stable.log",
+        "source-stable.xml",
+        "installed-stable-unit.log",
+        "installed-stable-unit.xml"
+      ],
+      "scope": "Original failures covered; two external FrozenA skips remain not_run."
+    },
+    "final_fixed_verification": {
+      "status": "PASSED_IN_COMPLETE_SELECTED_SUITE",
+      "results": [
+        {
+          "file": "source-final-frozen.xml",
+          "nodeid": "tests/rebuild/test_workbench_services.py::test_concurrent_starts_share_one_detached_instance",
+          "status": "passed",
+          "source_sha": "dbd7133baac36ba366e3f46cb0b02f542c8c2d89"
+        },
+        {
+          "file": "installed-final-unit.xml",
+          "nodeid": "tests/rebuild/test_workbench_services.py::test_concurrent_starts_share_one_detached_instance",
+          "status": "passed",
+          "source_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+        }
+      ],
+      "runtime_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+    }
+  },
+  {
+    "test": "tests.rebuild.test_workbench_services::test_launcher_and_project_shutdown_are_independent",
+    "original_result": "error",
+    "classification": "execution_contamination",
+    "original_message": "failed on setup with \"deck_master.local_runtime.ServiceUnavailable: service: service did not become healthy within 8 seconds; retry or inspect its local log\"",
+    "repair_or_execution_correction": "freeze complete runtime bytes throughout full suite",
+    "evidence": [
+      "local_runtime.py BUILD_ID computed at import and healthy checks exact identity",
+      "build-identity-reproduction.json",
+      "b7523c99 committed 10:23:50 UTC after suite began 10:16:48 UTC, before service failures"
+    ],
+    "complete_frozen_suite": {
+      "sha": "2040ca6d346a0bf93d41caf8e257d2cd0bebefd0",
+      "source": "4062 passed, 2 skipped, 849 deselected; 1569.02s",
+      "installed": "4062 passed, 2 skipped, 849 deselected; 1550.17s",
+      "logs": [
+        "source-stable.log",
+        "source-stable.xml",
+        "installed-stable-unit.log",
+        "installed-stable-unit.xml"
+      ],
+      "scope": "Original failures covered; two external FrozenA skips remain not_run."
+    },
+    "final_fixed_verification": {
+      "status": "PASSED_IN_COMPLETE_SELECTED_SUITE",
+      "results": [
+        {
+          "file": "source-final-frozen.xml",
+          "nodeid": "tests/rebuild/test_workbench_services.py::test_launcher_and_project_shutdown_are_independent",
+          "status": "passed",
+          "source_sha": "dbd7133baac36ba366e3f46cb0b02f542c8c2d89"
+        },
+        {
+          "file": "installed-final-unit.xml",
+          "nodeid": "tests/rebuild/test_workbench_services.py::test_launcher_and_project_shutdown_are_independent",
+          "status": "passed",
+          "source_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+        }
+      ],
+      "runtime_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+    }
+  },
+  {
+    "test": "tests.rebuild.test_workbench_services::test_wrong_identity_pid_and_build_are_never_reused",
+    "original_result": "error",
+    "classification": "execution_contamination",
+    "original_message": "failed on setup with \"deck_master.local_runtime.ServiceUnavailable: service: service did not become healthy within 8 seconds; retry or inspect its local log\"",
+    "repair_or_execution_correction": "freeze complete runtime bytes throughout full suite",
+    "evidence": [
+      "local_runtime.py BUILD_ID computed at import and healthy checks exact identity",
+      "build-identity-reproduction.json",
+      "b7523c99 committed 10:23:50 UTC after suite began 10:16:48 UTC, before service failures"
+    ],
+    "complete_frozen_suite": {
+      "sha": "2040ca6d346a0bf93d41caf8e257d2cd0bebefd0",
+      "source": "4062 passed, 2 skipped, 849 deselected; 1569.02s",
+      "installed": "4062 passed, 2 skipped, 849 deselected; 1550.17s",
+      "logs": [
+        "source-stable.log",
+        "source-stable.xml",
+        "installed-stable-unit.log",
+        "installed-stable-unit.xml"
+      ],
+      "scope": "Original failures covered; two external FrozenA skips remain not_run."
+    },
+    "final_fixed_verification": {
+      "status": "PASSED_IN_COMPLETE_SELECTED_SUITE",
+      "results": [
+        {
+          "file": "source-final-frozen.xml",
+          "nodeid": "tests/rebuild/test_workbench_services.py::test_wrong_identity_pid_and_build_are_never_reused",
+          "status": "passed",
+          "source_sha": "dbd7133baac36ba366e3f46cb0b02f542c8c2d89"
+        },
+        {
+          "file": "installed-final-unit.xml",
+          "nodeid": "tests/rebuild/test_workbench_services.py::test_wrong_identity_pid_and_build_are_never_reused",
+          "status": "passed",
+          "source_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+        }
+      ],
+      "runtime_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+    }
+  },
+  {
+    "test": "test_speech_preparation_real_clipboard_reader_and_draft_restore[1440]",
+    "original_result": "failed",
+    "classification": "baseline_test_synchronization_race",
+    "evidence": [
+      "PR188 test clicks save after long clipboard/CLI verification",
+      "drafts.js identical to PR188, autosave after 600ms; saved state deliberately disables save",
+      "actual failure: disabled button, not lost handoff/persistence",
+      "unchanged module rerun 4 passed before correction"
+    ],
+    "repair_or_execution_correction": "1c9d9231 asserts saved status and disabled button then original reload/context/resource/scope assertions; no timeout change",
+    "complete_frozen_suite": {
+      "sha": "7947b25a08dfcc13c4a5b166bd189e9aef7b85ac",
+      "installed_browser": "708 passed, no failures/errors/skips",
+      "log": "installed-final4-browser.xml",
+      "scope": "Original1440 disabled-save race covered by full browser; later1280 startup-shell timeout is a distinct preserved event with unresolved original cause."
+    },
+    "final_fixed_verification": {
+      "status": "PASSED_IN_COMPLETE_SELECTED_SUITE",
+      "results": [
+        {
+          "file": "installed-final4-browser.xml",
+          "nodeid": "tests/rebuild/test_ui_method_scope_browser.py::test_speech_preparation_real_clipboard_reader_and_draft_restore[1440]",
+          "status": "passed",
+          "source_sha": "7947b25a08dfcc13c4a5b166bd189e9aef7b85ac"
+        }
+      ],
+      "runtime_sha": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf"
+    }
+  }
+]

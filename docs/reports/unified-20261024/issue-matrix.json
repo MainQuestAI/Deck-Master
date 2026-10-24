@@ -44,13 +44,18 @@
         "tests/rebuild/test_ui_state_clear.py",
         "tests/rebuild/test_ux05_runs_delivery_browser.py",
         "tests/rebuild/test_ux06_recovery_responsive_browser.py",
-        "tests/rebuild/test_x3_design_plan_actions.py"
+        "tests/rebuild/test_x3_design_plan_actions.py",
+        "tests/rebuild/test_current_work.py",
+        "tests/rebuild/test_current_work_dialog_browser.py",
+        "tests/rebuild/test_modal_close_focus_browser.py",
+        "tests/rebuild/test_studio_overview_browser.py",
+        "tests/rebuild/test_workbench_usability_browser.py"
       ],
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-22.md",
         "docs/reports/issue-repair-20261023/RP-22-deep-quality-browser-followup.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -134,6 +139,55 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
+      ],
+      "additional_integration_mapping": "Explicit PR187/current-work/focus/summary or integrated method/UI evidence; selected test outcomes remain bounded to assertions.",
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-22",
+        "remaining_boundary": "图像与几何证据可核，用户视觉认可仍未给出；真实生产与只读截图分账。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 47,
+          "installed_unit:passed": 47,
+          "installed_browser:passed": 198
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": [
+        {
+          "commit": "2040ca6d",
+          "mapped_files": [
+            "src/deck_master/workbench.py"
+          ]
+        },
+        {
+          "commit": "b5238214",
+          "mapped_files": [
+            "src/deck_master/resources/static/v2/workbench.css",
+            "tests/rebuild/test_rc_closure_browser.py",
+            "tests/rebuild/test_studio_overview_browser.py",
+            "tests/rebuild/test_ux06_recovery_responsive_browser.py"
+          ]
+        },
+        {
+          "commit": "b66cec18",
+          "mapped_files": [
+            "src/deck_master/resources/static/studio/overview.css"
+          ]
+        },
+        {
+          "commit": "7947b25a",
+          "mapped_files": [
+            "tests/rebuild/test_studio_overview_browser.py",
+            "tests/rebuild/test_workbench_usability_browser.py"
+          ]
+        }
       ]
     },
     {
@@ -169,7 +223,7 @@
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-10.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -253,6 +307,32 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-10",
+        "remaining_boundary": "7947b25a恢复RP10原断言语义，另保留两段未映射、无效原子报错与文档不变。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "installed_browser:passed": 56,
+          "source:passed": 50,
+          "installed_unit:passed": 50
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": [
+        {
+          "commit": "7947b25a",
+          "mapped_files": [
+            "tests/rebuild/test_webui_acceptance_matrix.py"
+          ]
+        }
       ]
     },
     {
@@ -299,14 +379,16 @@
         "tests/rebuild/test_rp23_cross_turn_recovery.py",
         "tests/rebuild/test_rp24_cross_execution_evidence.py",
         "tests/rebuild/test_rp24_readonly_diagnostic.py",
-        "tests/rebuild/test_settled_image_reuse.py"
+        "tests/rebuild/test_settled_image_reuse.py",
+        "tests/rebuild/test_current_work.py",
+        "tests/rebuild/test_outline_review.py"
       ],
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-24-cross-execution-evidence.md",
         "docs/reports/issue-repair-20261023/RP-24-settled-reuse.md",
         "docs/reports/issue-repair-20261023/RP-24.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -430,6 +512,33 @@
             "passed": 161
           },
           "limit": "Mapped tests are not individual acceptance-criterion closure."
+        }
+      ],
+      "additional_integration_mapping": "Explicit PR187/current-work/focus/summary or integrated method/UI evidence; selected test outcomes remain bounded to assertions.",
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-24",
+        "remaining_boundary": "真实完整Host首答与方法产物应用未完成；结束语或packet字段不冒充会话闭环。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 191,
+          "installed_unit:passed": 191,
+          "installed_browser:passed": 18
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": [
+        {
+          "commit": "2040ca6d",
+          "mapped_files": [
+            "src/deck_master/workbench.py"
+          ]
         }
       ]
     },
@@ -477,14 +586,17 @@
         "tests/rebuild/test_rp23_cross_turn_recovery.py",
         "tests/rebuild/test_rp24_cross_execution_evidence.py",
         "tests/rebuild/test_rp24_readonly_diagnostic.py",
-        "tests/rebuild/test_settled_image_reuse.py"
+        "tests/rebuild/test_settled_image_reuse.py",
+        "tests/rebuild/test_current_work.py",
+        "tests/rebuild/test_outline_review.py",
+        "tests/rebuild/test_current_work_dialog_browser.py"
       ],
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-24-cross-execution-evidence.md",
         "docs/reports/issue-repair-20261023/RP-24-settled-reuse.md",
         "docs/reports/issue-repair-20261023/RP-24.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -609,6 +721,33 @@
           },
           "limit": "Mapped tests are not individual acceptance-criterion closure."
         }
+      ],
+      "additional_integration_mapping": "Explicit PR187/current-work/focus/summary or integrated method/UI evidence; selected test outcomes remain bounded to assertions.",
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-24",
+        "remaining_boundary": "真实完整Host首答与方法产物应用未完成；结束语或packet字段不冒充会话闭环。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 191,
+          "installed_unit:passed": 191,
+          "installed_browser:passed": 26
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": [
+        {
+          "commit": "2040ca6d",
+          "mapped_files": [
+            "src/deck_master/workbench.py"
+          ]
+        }
       ]
     },
     {
@@ -652,12 +791,14 @@
         "tests/rebuild/test_rp20_original_review.py",
         "tests/rebuild/test_studio_style_browser.py",
         "tests/rebuild/test_styles.py",
-        "tests/rebuild/test_workbench_actions.py"
+        "tests/rebuild/test_workbench_actions.py",
+        "tests/rebuild/test_current_work.py",
+        "tests/rebuild/test_current_work_dialog_browser.py"
       ],
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-21.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -774,6 +915,40 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
+      ],
+      "additional_integration_mapping": "Explicit PR187/current-work/focus/summary or integrated method/UI evidence; selected test outcomes remain bounded to assertions.",
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-21",
+        "remaining_boundary": "实际模型参数/产物语义仍需真实证据；UI候选/采用/产物槽位不冒充外部交付。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 172,
+          "installed_unit:passed": 172,
+          "installed_browser:passed": 52
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": [
+        {
+          "commit": "2040ca6d",
+          "mapped_files": [
+            "src/deck_master/workbench.py"
+          ]
+        },
+        {
+          "commit": "b5238214",
+          "mapped_files": [
+            "src/deck_master/resources/static/v2/style-calibration.js",
+            "tests/rebuild/test_recipe_versions_browser.py"
+          ]
+        }
       ]
     },
     {
@@ -813,7 +988,7 @@
         "docs/reports/issue-repair-20261023/RP-01.md",
         "docs/reports/issue-repair-20261023/RP-01-startup-diagnostics.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -904,7 +1079,25 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
-      ]
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-01",
+        "remaining_boundary": "通道发现不证明真实Host执行，也不把内容能力扩展为视觉审查能力。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 97,
+          "installed_unit:passed": 97
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 138,
@@ -947,7 +1140,6 @@
         "tools/benchmark_review_reuse.py"
       ],
       "verification_tests": [
-        "tests/rebuild/review_reuse_helpers.py",
         "tests/rebuild/test_content_preproduction_review.py",
         "tests/rebuild/test_native_review.py",
         "tests/rebuild/test_native_review_recovery.py",
@@ -966,7 +1158,7 @@
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-11.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -1072,6 +1264,35 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
+      ],
+      "verification_support_files": [
+        "tests/rebuild/review_reuse_helpers.py"
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-11",
+        "remaining_boundary": "恢复不等于新审查；不以任意JSON自签可信。真实付费/独立Host执行未进行。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 300,
+          "installed_unit:passed": 300,
+          "installed_browser:passed": 4
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": [
+        {
+          "commit": "6c822e2d",
+          "mapped_files": [
+            "src/deck_master/resources/static/v2/project.js"
+          ]
+        }
       ]
     },
     {
@@ -1117,7 +1338,7 @@
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-00.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -1234,6 +1455,32 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-00",
+        "remaining_boundary": "候选元数据与冻结原件证明不等于视觉质量；#138/#142分别看其专项证据。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 181,
+          "installed_unit:passed": 181,
+          "installed_browser:passed": 2
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": [
+        {
+          "commit": "6c822e2d",
+          "mapped_files": [
+            "src/deck_master/resources/static/v2/project.js"
+          ]
+        }
       ]
     },
     {
@@ -1256,12 +1503,14 @@
       "verification_tests": [
         "tests/rebuild/test_image_pool_remount_browser.py",
         "tests/rebuild/test_local_runtime_burst.py",
-        "tests/rebuild/test_ui_state_clear.py"
+        "tests/rebuild/test_ui_state_clear.py",
+        "tests/rebuild/test_pr187_summary_reuse_browser.py",
+        "tests/rebuild/test_summary_poll.py"
       ],
       "historical_evidence": [
         "docs/work-items/wi-issue-repair-20261023/execution/RP-25.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -1330,6 +1579,39 @@
           },
           "limit": "Mapped tests are not individual acceptance-criterion closure."
         }
+      ],
+      "additional_integration_mapping": "Explicit PR187/current-work/focus/summary or integrated method/UI evidence; selected test outcomes remain bounded to assertions.",
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-25",
+        "remaining_boundary": "旧19秒不是当前实测；全流程CPU/缩略图/真实项目时延未完整验收。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "installed_browser:passed": 4,
+          "source:passed": 16,
+          "installed_unit:passed": 16
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": [
+        {
+          "commit": "2040ca6d",
+          "mapped_files": [
+            "src/deck_master/workbench.py"
+          ]
+        },
+        {
+          "commit": "b5238214",
+          "mapped_files": [
+            "tests/rebuild/test_pr187_summary_reuse_browser.py"
+          ]
+        }
       ]
     },
     {
@@ -1373,12 +1655,13 @@
         "tests/rebuild/test_rp20_original_review.py",
         "tests/rebuild/test_studio_style_browser.py",
         "tests/rebuild/test_styles.py",
-        "tests/rebuild/test_workbench_actions.py"
+        "tests/rebuild/test_workbench_actions.py",
+        "tests/rebuild/test_current_work.py"
       ],
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-21.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -1495,6 +1778,40 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
+      ],
+      "additional_integration_mapping": "Explicit PR187/current-work/focus/summary or integrated method/UI evidence; selected test outcomes remain bounded to assertions.",
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-21",
+        "remaining_boundary": "实际模型参数/产物语义仍需真实证据；UI候选/采用/产物槽位不冒充外部交付。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 172,
+          "installed_unit:passed": 172,
+          "installed_browser:passed": 44
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": [
+        {
+          "commit": "2040ca6d",
+          "mapped_files": [
+            "src/deck_master/workbench.py"
+          ]
+        },
+        {
+          "commit": "b5238214",
+          "mapped_files": [
+            "src/deck_master/resources/static/v2/style-calibration.js",
+            "tests/rebuild/test_recipe_versions_browser.py"
+          ]
+        }
       ]
     },
     {
@@ -1536,12 +1853,13 @@
         "tests/rebuild/test_styles.py",
         "tests/rebuild/test_ui_journal.py",
         "tests/rebuild/test_ui_state_clear.py",
-        "tests/rebuild/test_visual_styles.py"
+        "tests/rebuild/test_visual_styles.py",
+        "tests/rebuild/test_summary_poll.py"
       ],
       "historical_evidence": [
         "docs/work-items/wi-issue-repair-20261023/execution/RP-25.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -1635,6 +1953,45 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
+      ],
+      "additional_integration_mapping": "Explicit PR187/current-work/focus/summary or integrated method/UI evidence; selected test outcomes remain bounded to assertions.",
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-25",
+        "remaining_boundary": "旧19秒不是当前实测；全流程CPU/缩略图/真实项目时延未完整验收。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 166,
+          "installed_unit:passed": 166,
+          "installed_browser:passed": 4
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": [
+        {
+          "commit": "6c822e2d",
+          "mapped_files": [
+            "src/deck_master/resources/static/v2/project.js"
+          ]
+        },
+        {
+          "commit": "2040ca6d",
+          "mapped_files": [
+            "src/deck_master/workbench.py"
+          ]
+        },
+        {
+          "commit": "b5238214",
+          "mapped_files": [
+            "tests/rebuild/test_pr187_summary_reuse_browser.py"
+          ]
+        }
       ]
     },
     {
@@ -1666,7 +2023,7 @@
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-10.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -1750,6 +2107,32 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-10",
+        "remaining_boundary": "7947b25a恢复RP10原断言语义，另保留两段未映射、无效原子报错与文档不变。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 50,
+          "installed_unit:passed": 50,
+          "installed_browser:passed": 48
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": [
+        {
+          "commit": "7947b25a",
+          "mapped_files": [
+            "tests/rebuild/test_webui_acceptance_matrix.py"
+          ]
+        }
       ]
     },
     {
@@ -1776,7 +2159,6 @@
         "src/deck_master/review.py"
       ],
       "verification_tests": [
-        "tests/rebuild/rc3_fixtures.py",
         "tests/rebuild/test_content_preproduction_review.py",
         "tests/rebuild/test_eligibility_resolver.py",
         "tests/rebuild/test_native_review.py",
@@ -1793,7 +2175,7 @@
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-12.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -1885,7 +2267,28 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
-      ]
+      ],
+      "verification_support_files": [
+        "tests/rebuild/rc3_fixtures.py"
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-12",
+        "remaining_boundary": "局部单元复用不证明整稿重新专业通过；所有资格仍按有效要求判断。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 294,
+          "installed_unit:passed": 294
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 145,
@@ -1923,7 +2326,7 @@
       "historical_evidence": [
         "docs/work-items/wi-issue-repair-20261023/execution/RP-26.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -2036,6 +2439,31 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-26",
+        "remaining_boundary": "计数与功能断言有当前全套证据；历史CPU数值保留原SHA，不外推整体复杂度。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 65,
+          "installed_unit:passed": 65
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": [
+        {
+          "commit": "2040ca6d",
+          "mapped_files": [
+            "src/deck_master/workbench.py"
+          ]
+        }
       ]
     },
     {
@@ -2079,7 +2507,7 @@
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-29.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -2162,7 +2590,25 @@
           },
           "limit": "Mapped tests are not individual acceptance-criterion closure."
         }
-      ]
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-29",
+        "remaining_boundary": "不承诺全历史O(1)，不跨请求缓存资格；历史CPU观察不冒充最终端到端数据。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 221,
+          "installed_unit:passed": 221
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 148,
@@ -2200,7 +2646,7 @@
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-02.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -2276,7 +2722,25 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
-      ]
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-02",
+        "remaining_boundary": "不把正文修正例外解释为图像/编译许可；实际Host接手未验证。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 162,
+          "installed_unit:passed": 162
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 149,
@@ -2307,7 +2771,7 @@
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-03.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -2391,7 +2855,25 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
-      ]
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-03",
+        "remaining_boundary": "合成旁支与真实当前依赖有区分，不能据单个试作标签推定零调用。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 104,
+          "installed_unit:passed": 104
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 150,
@@ -2433,7 +2915,7 @@
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-04.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -2530,7 +3012,29 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
-      ]
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-04",
+        "remaining_boundary": "installed-assembly-replay的两种入口补足实际PPT链；真实SVG重新生成仍缺工具。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 135,
+          "installed_unit:passed": 135,
+          "installed_assembly_replay:passed": 2
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [
+          "tests/rebuild/test_icon_quality.py::test_actual_candidate_preview_and_cross_page_reuse",
+          "tests/rebuild/test_icon_quality.py::test_preview_failure_retry_and_corrupt_files"
+        ],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 151,
@@ -2556,7 +3060,6 @@
         "tools/benchmark_review_reuse.py"
       ],
       "verification_tests": [
-        "tests/rebuild/review_reuse_helpers.py",
         "tests/rebuild/test_delivery_control_snapshot.py",
         "tests/rebuild/test_delivery_professional_gate.py",
         "tests/rebuild/test_eligibility_enforcement.py",
@@ -2571,7 +3074,7 @@
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-27.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -2679,7 +3182,48 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
-      ]
+      ],
+      "verification_support_files": [
+        "tests/rebuild/review_reuse_helpers.py"
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-27",
+        "remaining_boundary": "合成计数与历史固定样本性能不等于实际客户整稿CPU验收。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 198,
+          "installed_unit:passed": 198,
+          "installed_renderer_negative:passed": 1,
+          "source:skipped": 2,
+          "installed_unit:skipped": 2
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [
+          "tests/rebuild/test_rc3_notes_visual_inputs.py::test_content_candidate_notes_adoption_protects_current_same_cas_and_old_core_refuses[content_update]",
+          "tests/rebuild/test_rc3_notes_visual_inputs.py::test_content_candidate_notes_adoption_protects_current_same_cas_and_old_core_refuses[page]"
+        ],
+        "blocked_cases": [],
+        "not_run_cases": [
+          "tests/rebuild/test_page_visual_gate.py::test_accepted_variance_on_same_page_advances_to_next_blueprint",
+          "tests/rebuild/test_page_visual_gate.py::test_failed_visual_review_requires_page_repair_and_evidenced_closure",
+          "tests/rebuild/test_page_visual_gate.py::test_page_review_blocks_next_blueprint_until_current_three_checks_pass",
+          "tests/rebuild/test_page_visual_gate.py::test_page_review_cannot_pass_after_design_asset_change",
+          "tests/rebuild/test_page_visual_gate.py::test_preflight_and_preview_share_approved_image_assets",
+          "tests/rebuild/test_page_visual_gate.py::test_preview_renderer_execution_error_is_reported_separately_from_missing_tool",
+          "tests/rebuild/test_page_visual_gate.py::test_repeated_visual_review_without_resolution_stops_with_actionable_finding",
+          "tests/rebuild/test_page_visual_gate.py::test_stored_invalid_svg_reconstructs_then_resumes_page_review",
+          "tests/rebuild/test_page_visual_gate.py::test_style_change_retires_open_review_and_rebuilds_only_current_page",
+          "tests/rebuild/test_page_visual_gate.py::test_unchanged_page_visual_repair_stops_without_another_repair_loop",
+          "tests/rebuild/test_service_flow.py::test_page_reorder_and_removal_keep_ids_and_history_out_of_current_ppt",
+          "tests/rebuild/test_service_flow.py::test_reconstruct_after_style_change_uses_new_effective_style",
+          "tests/rebuild/test_service_flow.py::test_single_page_edit_keeps_unrelated_page_artifacts_and_reassembles"
+        ],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 152,
@@ -2711,7 +3255,7 @@
         "docs/reports/issue-repair-20261023/RP-05.md",
         "docs/reports/issue-repair-20261023/RP-05-RP-25-followup.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -2804,7 +3348,34 @@
           },
           "limit": "Mapped tests are not individual acceptance-criterion closure."
         }
-      ]
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-05",
+        "remaining_boundary": "installed-assembly-replay的一项实际PPT验证可用；两项真实rsvg重建仍NOT_RUN。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 60,
+          "installed_unit:passed": 60,
+          "installed_assembly_replay:passed": 1
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [
+          "tests/rebuild/test_candidates.py::test_explicit_assembly_uses_real_pipeline_after_page_gate_and_replays[False]",
+          "tests/rebuild/test_candidates.py::test_explicit_assembly_uses_real_pipeline_after_page_gate_and_replays[True]",
+          "tests/rebuild/test_pipeline_preview_reuse.py::test_real_rsvg_rebuild_then_review_and_assembly[missing]",
+          "tests/rebuild/test_pipeline_preview_reuse.py::test_real_rsvg_rebuild_then_review_and_assembly[stale]",
+          "tests/rebuild/test_service_flow.py::test_page_reorder_and_removal_keep_ids_and_history_out_of_current_ppt",
+          "tests/rebuild/test_service_flow.py::test_reconstruct_after_style_change_uses_new_effective_style",
+          "tests/rebuild/test_service_flow.py::test_single_page_edit_keeps_unrelated_page_artifacts_and_reassembles"
+        ],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 153,
@@ -2832,7 +3403,7 @@
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-28.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -2899,7 +3470,28 @@
           },
           "limit": "Mapped tests are not individual acceptance-criterion closure."
         }
-      ]
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-28",
+        "remaining_boundary": "缓存微测不是真实渲染验收；缺rsvg的预览重试路径仍NOT_RUN。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 46,
+          "installed_unit:passed": 46,
+          "installed_browser:passed": 2
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [
+          "tests/rebuild/test_candidate_preview_recovery.py::test_damaged_state_retries_actual_compile_render_and_readback"
+        ],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 154,
@@ -2942,7 +3534,7 @@
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-29.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -3025,7 +3617,25 @@
           },
           "limit": "Mapped tests are not individual acceptance-criterion closure."
         }
-      ]
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-29",
+        "remaining_boundary": "不承诺全历史O(1)，不跨请求缓存资格；历史CPU观察不冒充最终端到端数据。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 221,
+          "installed_unit:passed": 221
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 155,
@@ -3051,7 +3661,6 @@
         "tools/benchmark_review_reuse.py"
       ],
       "verification_tests": [
-        "tests/rebuild/review_reuse_helpers.py",
         "tests/rebuild/test_delivery_control_snapshot.py",
         "tests/rebuild/test_delivery_professional_gate.py",
         "tests/rebuild/test_eligibility_enforcement.py",
@@ -3066,7 +3675,7 @@
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-27.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -3174,7 +3783,48 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
-      ]
+      ],
+      "verification_support_files": [
+        "tests/rebuild/review_reuse_helpers.py"
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-27",
+        "remaining_boundary": "合成计数与历史固定样本性能不等于实际客户整稿CPU验收。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 198,
+          "installed_unit:passed": 198,
+          "installed_renderer_negative:passed": 1,
+          "source:skipped": 2,
+          "installed_unit:skipped": 2
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [
+          "tests/rebuild/test_rc3_notes_visual_inputs.py::test_content_candidate_notes_adoption_protects_current_same_cas_and_old_core_refuses[content_update]",
+          "tests/rebuild/test_rc3_notes_visual_inputs.py::test_content_candidate_notes_adoption_protects_current_same_cas_and_old_core_refuses[page]"
+        ],
+        "blocked_cases": [],
+        "not_run_cases": [
+          "tests/rebuild/test_page_visual_gate.py::test_accepted_variance_on_same_page_advances_to_next_blueprint",
+          "tests/rebuild/test_page_visual_gate.py::test_failed_visual_review_requires_page_repair_and_evidenced_closure",
+          "tests/rebuild/test_page_visual_gate.py::test_page_review_blocks_next_blueprint_until_current_three_checks_pass",
+          "tests/rebuild/test_page_visual_gate.py::test_page_review_cannot_pass_after_design_asset_change",
+          "tests/rebuild/test_page_visual_gate.py::test_preflight_and_preview_share_approved_image_assets",
+          "tests/rebuild/test_page_visual_gate.py::test_preview_renderer_execution_error_is_reported_separately_from_missing_tool",
+          "tests/rebuild/test_page_visual_gate.py::test_repeated_visual_review_without_resolution_stops_with_actionable_finding",
+          "tests/rebuild/test_page_visual_gate.py::test_stored_invalid_svg_reconstructs_then_resumes_page_review",
+          "tests/rebuild/test_page_visual_gate.py::test_style_change_retires_open_review_and_rebuilds_only_current_page",
+          "tests/rebuild/test_page_visual_gate.py::test_unchanged_page_visual_repair_stops_without_another_repair_loop",
+          "tests/rebuild/test_service_flow.py::test_page_reorder_and_removal_keep_ids_and_history_out_of_current_ppt",
+          "tests/rebuild/test_service_flow.py::test_reconstruct_after_style_change_uses_new_effective_style",
+          "tests/rebuild/test_service_flow.py::test_single_page_edit_keeps_unrelated_page_artifacts_and_reassembles"
+        ],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 156,
@@ -3212,7 +3862,7 @@
       "historical_evidence": [
         "docs/work-items/wi-issue-repair-20261023/execution/RP-26.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -3325,6 +3975,31 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-26",
+        "remaining_boundary": "计数与功能断言有当前全套证据；历史CPU数值保留原SHA，不外推整体复杂度。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 65,
+          "installed_unit:passed": 65
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": [
+        {
+          "commit": "2040ca6d",
+          "mapped_files": [
+            "src/deck_master/workbench.py"
+          ]
+        }
       ]
     },
     {
@@ -3351,7 +4026,6 @@
         "tools/benchmark_review_reuse.py"
       ],
       "verification_tests": [
-        "tests/rebuild/review_reuse_helpers.py",
         "tests/rebuild/test_delivery_control_snapshot.py",
         "tests/rebuild/test_delivery_professional_gate.py",
         "tests/rebuild/test_eligibility_enforcement.py",
@@ -3366,7 +4040,7 @@
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-27.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -3474,7 +4148,48 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
-      ]
+      ],
+      "verification_support_files": [
+        "tests/rebuild/review_reuse_helpers.py"
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-27",
+        "remaining_boundary": "合成计数与历史固定样本性能不等于实际客户整稿CPU验收。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 198,
+          "installed_unit:passed": 198,
+          "installed_renderer_negative:passed": 1,
+          "source:skipped": 2,
+          "installed_unit:skipped": 2
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [
+          "tests/rebuild/test_rc3_notes_visual_inputs.py::test_content_candidate_notes_adoption_protects_current_same_cas_and_old_core_refuses[content_update]",
+          "tests/rebuild/test_rc3_notes_visual_inputs.py::test_content_candidate_notes_adoption_protects_current_same_cas_and_old_core_refuses[page]"
+        ],
+        "blocked_cases": [],
+        "not_run_cases": [
+          "tests/rebuild/test_page_visual_gate.py::test_accepted_variance_on_same_page_advances_to_next_blueprint",
+          "tests/rebuild/test_page_visual_gate.py::test_failed_visual_review_requires_page_repair_and_evidenced_closure",
+          "tests/rebuild/test_page_visual_gate.py::test_page_review_blocks_next_blueprint_until_current_three_checks_pass",
+          "tests/rebuild/test_page_visual_gate.py::test_page_review_cannot_pass_after_design_asset_change",
+          "tests/rebuild/test_page_visual_gate.py::test_preflight_and_preview_share_approved_image_assets",
+          "tests/rebuild/test_page_visual_gate.py::test_preview_renderer_execution_error_is_reported_separately_from_missing_tool",
+          "tests/rebuild/test_page_visual_gate.py::test_repeated_visual_review_without_resolution_stops_with_actionable_finding",
+          "tests/rebuild/test_page_visual_gate.py::test_stored_invalid_svg_reconstructs_then_resumes_page_review",
+          "tests/rebuild/test_page_visual_gate.py::test_style_change_retires_open_review_and_rebuilds_only_current_page",
+          "tests/rebuild/test_page_visual_gate.py::test_unchanged_page_visual_repair_stops_without_another_repair_loop",
+          "tests/rebuild/test_service_flow.py::test_page_reorder_and_removal_keep_ids_and_history_out_of_current_ppt",
+          "tests/rebuild/test_service_flow.py::test_reconstruct_after_style_change_uses_new_effective_style",
+          "tests/rebuild/test_service_flow.py::test_single_page_edit_keeps_unrelated_page_artifacts_and_reassembles"
+        ],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 158,
@@ -3517,7 +4232,7 @@
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-29.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -3600,7 +4315,25 @@
           },
           "limit": "Mapped tests are not individual acceptance-criterion closure."
         }
-      ]
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-29",
+        "remaining_boundary": "不承诺全历史O(1)，不跨请求缓存资格；历史CPU观察不冒充最终端到端数据。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 221,
+          "installed_unit:passed": 221
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 159,
@@ -3638,7 +4371,7 @@
       "historical_evidence": [
         "docs/work-items/wi-issue-repair-20261023/execution/RP-26.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -3750,6 +4483,31 @@
             "passed": 11
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
+        }
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-26",
+        "remaining_boundary": "计数与功能断言有当前全套证据；历史CPU数值保留原SHA，不外推整体复杂度。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 65,
+          "installed_unit:passed": 65
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": [
+        {
+          "commit": "2040ca6d",
+          "mapped_files": [
+            "src/deck_master/workbench.py"
+          ]
         }
       ]
     },
@@ -3794,7 +4552,7 @@
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-29.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -3877,7 +4635,25 @@
           },
           "limit": "Mapped tests are not individual acceptance-criterion closure."
         }
-      ]
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-29",
+        "remaining_boundary": "不承诺全历史O(1)，不跨请求缓存资格；历史CPU观察不冒充最终端到端数据。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 221,
+          "installed_unit:passed": 221
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 161,
@@ -3915,7 +4691,7 @@
       "historical_evidence": [
         "docs/work-items/wi-issue-repair-20261023/execution/RP-26.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -4028,6 +4804,31 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-26",
+        "remaining_boundary": "计数与功能断言有当前全套证据；历史CPU数值保留原SHA，不外推整体复杂度。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 65,
+          "installed_unit:passed": 65
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": [
+        {
+          "commit": "2040ca6d",
+          "mapped_files": [
+            "src/deck_master/workbench.py"
+          ]
+        }
       ]
     },
     {
@@ -4063,7 +4864,7 @@
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-17.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -4129,7 +4930,25 @@
           },
           "limit": "Mapped tests are not individual acceptance-criterion closure."
         }
-      ]
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-17",
+        "remaining_boundary": "冻结输入约束是合成合同验证，不能代替最终图像是否正确实现结构。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 85,
+          "installed_unit:passed": 85
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 163,
@@ -4159,7 +4978,7 @@
       "historical_evidence": [
         "docs/work-items/wi-issue-repair-20261023/execution/RP-18.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -4243,7 +5062,26 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
-      ]
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-18",
+        "remaining_boundary": "1280px刷新一次启动停留原因未定；原5秒断言未改，完整方法模块两次通过，仍交Pro评估。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 40,
+          "installed_unit:passed": 40,
+          "installed_browser:passed": 4
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 164,
@@ -4281,7 +5119,6 @@
         "src/deck_master/tasks.py"
       ],
       "verification_tests": [
-        "tests/rebuild/synthetic_review_provider.py",
         "tests/rebuild/test_design_entry_basis.py",
         "tests/rebuild/test_native_review.py",
         "tests/rebuild/test_rc3_design_workflows.py",
@@ -4296,7 +5133,7 @@
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-20.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -4424,7 +5261,28 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
-      ]
+      ],
+      "verification_support_files": [
+        "tests/rebuild/synthetic_review_provider.py"
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-20",
+        "remaining_boundary": "合成finding不能代替真实A→B图像关系观察；独立视觉能力与最终PPT语义仍单列。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 208,
+          "installed_unit:passed": 208
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 165,
@@ -4459,7 +5317,7 @@
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-17.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -4525,7 +5383,25 @@
           },
           "limit": "Mapped tests are not individual acceptance-criterion closure."
         }
-      ]
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-17",
+        "remaining_boundary": "冻结输入约束是合成合同验证，不能代替最终图像是否正确实现结构。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 85,
+          "installed_unit:passed": 85
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 166,
@@ -4560,7 +5436,7 @@
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-17.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -4626,7 +5502,25 @@
           },
           "limit": "Mapped tests are not individual acceptance-criterion closure."
         }
-      ]
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-17",
+        "remaining_boundary": "冻结输入约束是合成合同验证，不能代替最终图像是否正确实现结构。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 85,
+          "installed_unit:passed": 85
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 167,
@@ -4664,7 +5558,7 @@
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-02.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -4740,7 +5634,25 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
-      ]
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-02",
+        "remaining_boundary": "不把正文修正例外解释为图像/编译许可；实际Host接手未验证。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 162,
+          "installed_unit:passed": 162
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 168,
@@ -4778,7 +5690,7 @@
         "docs/reports/issue-repair-20261023/RP-06-X2.md",
         "docs/reports/issue-repair-20261023/RP-06.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -4865,7 +5777,26 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
-      ]
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-06",
+        "remaining_boundary": "受控合成选择器验证不等于真实跨轮Host自然语言会话。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 173,
+          "installed_unit:passed": 173,
+          "installed_browser:passed": 4
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 169,
@@ -4903,7 +5834,7 @@
         "docs/reports/issue-repair-20261023/RP-06-X2.md",
         "docs/reports/issue-repair-20261023/RP-06.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -4990,7 +5921,26 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
-      ]
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-06",
+        "remaining_boundary": "受控合成选择器验证不等于真实跨轮Host自然语言会话。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 173,
+          "installed_unit:passed": 173,
+          "installed_browser:passed": 4
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 170,
@@ -5015,12 +5965,13 @@
         "tests/rebuild/test_install_preparation_coverage.py",
         "tests/rebuild/test_method_preparation_browser.py",
         "tests/rebuild/test_method_preparation_handoff.py",
-        "tests/rebuild/test_rc5_host_selection.py"
+        "tests/rebuild/test_rc5_host_selection.py",
+        "tests/rebuild/test_ui_method_scope_browser.py"
       ],
       "historical_evidence": [
         "docs/work-items/wi-issue-repair-20261023/execution/RP-18.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -5104,7 +6055,27 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
-      ]
+      ],
+      "additional_integration_mapping": "Explicit PR187/current-work/focus/summary or integrated method/UI evidence; selected test outcomes remain bounded to assertions.",
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-18",
+        "remaining_boundary": "1280px刷新一次启动停留原因未定；原5秒断言未改，完整方法模块两次通过，仍交Pro评估。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 41,
+          "installed_unit:passed": 41,
+          "installed_browser:passed": 7
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 171,
@@ -5129,12 +6100,13 @@
         "tests/rebuild/test_install_preparation_coverage.py",
         "tests/rebuild/test_method_preparation_browser.py",
         "tests/rebuild/test_method_preparation_handoff.py",
-        "tests/rebuild/test_rc5_host_selection.py"
+        "tests/rebuild/test_rc5_host_selection.py",
+        "tests/rebuild/test_ui_method_scope_browser.py"
       ],
       "historical_evidence": [
         "docs/work-items/wi-issue-repair-20261023/execution/RP-18.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -5218,7 +6190,27 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
-      ]
+      ],
+      "additional_integration_mapping": "Explicit PR187/current-work/focus/summary or integrated method/UI evidence; selected test outcomes remain bounded to assertions.",
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-18",
+        "remaining_boundary": "1280px刷新一次启动停留原因未定；原5秒断言未改，完整方法模块两次通过，仍交Pro评估。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 41,
+          "installed_unit:passed": 41,
+          "installed_browser:passed": 7
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 172,
@@ -5243,12 +6235,13 @@
         "tests/rebuild/test_install_preparation_coverage.py",
         "tests/rebuild/test_method_preparation_browser.py",
         "tests/rebuild/test_method_preparation_handoff.py",
-        "tests/rebuild/test_rc5_host_selection.py"
+        "tests/rebuild/test_rc5_host_selection.py",
+        "tests/rebuild/test_ui_method_scope_browser.py"
       ],
       "historical_evidence": [
         "docs/work-items/wi-issue-repair-20261023/execution/RP-18.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -5332,7 +6325,27 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
-      ]
+      ],
+      "additional_integration_mapping": "Explicit PR187/current-work/focus/summary or integrated method/UI evidence; selected test outcomes remain bounded to assertions.",
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-18",
+        "remaining_boundary": "1280px刷新一次启动停留原因未定；原5秒断言未改，完整方法模块两次通过，仍交Pro评估。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 41,
+          "installed_unit:passed": 41,
+          "installed_browser:passed": 7
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 173,
@@ -5375,7 +6388,7 @@
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-19.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -5463,7 +6476,42 @@
           },
           "limit": "Mapped tests are not individual acceptance-criterion closure."
         }
-      ]
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-19",
+        "remaining_boundary": "登记或冻结参数不等于所有格式已被真实工具消费；Logo/模板最终效果仍未验。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 205,
+          "installed_unit:passed": 205,
+          "installed_renderer_negative:passed": 1
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [
+          "tests/rebuild/test_page_visual_gate.py::test_accepted_variance_on_same_page_advances_to_next_blueprint",
+          "tests/rebuild/test_page_visual_gate.py::test_failed_visual_review_requires_page_repair_and_evidenced_closure",
+          "tests/rebuild/test_page_visual_gate.py::test_page_review_blocks_next_blueprint_until_current_three_checks_pass",
+          "tests/rebuild/test_page_visual_gate.py::test_page_review_cannot_pass_after_design_asset_change",
+          "tests/rebuild/test_page_visual_gate.py::test_preflight_and_preview_share_approved_image_assets",
+          "tests/rebuild/test_page_visual_gate.py::test_preview_renderer_execution_error_is_reported_separately_from_missing_tool",
+          "tests/rebuild/test_page_visual_gate.py::test_repeated_visual_review_without_resolution_stops_with_actionable_finding",
+          "tests/rebuild/test_page_visual_gate.py::test_stored_invalid_svg_reconstructs_then_resumes_page_review",
+          "tests/rebuild/test_page_visual_gate.py::test_style_change_retires_open_review_and_rebuilds_only_current_page",
+          "tests/rebuild/test_page_visual_gate.py::test_unchanged_page_visual_repair_stops_without_another_repair_loop",
+          "tests/rebuild/test_rc3_notes_files.py::test_real_pipeline_to_export_preserves_full_notes_and_dependencies",
+          "tests/rebuild/test_rc3_notes_transactions.py::test_actual_completed_visual_notes_assembly_export_zero_image_ledger",
+          "tests/rebuild/test_rc3_notes_transactions.py::test_frozen_a_real_sdk_refuses_protected_notes_write_boundaries",
+          "tests/rebuild/test_rc3_notes_transactions.py::test_notes_edit_preserves_completed_visual_and_actual_review_bytes",
+          "tests/rebuild/test_rc3_notes_transactions.py::test_visual_open_finding_not_fixed_by_notes"
+        ],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 174,
@@ -5503,7 +6551,7 @@
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-16.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -5613,7 +6661,25 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
-      ]
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-16",
+        "remaining_boundary": "#174/#179真实代表稿图像和原生观察仍未完成，不因静态或合成通过关闭。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 138,
+          "installed_unit:passed": 138
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 175,
@@ -5648,7 +6714,7 @@
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-13.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -5703,7 +6769,31 @@
           },
           "limit": "Mapped tests are not individual acceptance-criterion closure."
         }
-      ]
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-13",
+        "remaining_boundary": "文档规则不证明客户表达已改善；#174仍待真实图像/受众验收，Humanizer本轮未纳入。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 61,
+          "installed_unit:passed": 61,
+          "installed_render_available:passed": 1,
+          "installed_render_available:blocked_missing_renderer": 1
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [
+          "tests/rebuild/test_install.py::test_candidate_install_activate_and_run_doctor"
+        ],
+        "not_run_cases": [
+          "tests/rebuild/test_install.py::test_isolated_full_chain_and_local_edit"
+        ],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 176,
@@ -5738,7 +6828,7 @@
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-13.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -5793,7 +6883,31 @@
           },
           "limit": "Mapped tests are not individual acceptance-criterion closure."
         }
-      ]
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-13",
+        "remaining_boundary": "文档规则不证明客户表达已改善；#174仍待真实图像/受众验收，Humanizer本轮未纳入。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 61,
+          "installed_unit:passed": 61,
+          "installed_render_available:passed": 1,
+          "installed_render_available:blocked_missing_renderer": 1
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [
+          "tests/rebuild/test_install.py::test_candidate_install_activate_and_run_doctor"
+        ],
+        "not_run_cases": [
+          "tests/rebuild/test_install.py::test_isolated_full_chain_and_local_edit"
+        ],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 177,
@@ -5828,7 +6942,7 @@
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-13.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -5883,7 +6997,31 @@
           },
           "limit": "Mapped tests are not individual acceptance-criterion closure."
         }
-      ]
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-13",
+        "remaining_boundary": "文档规则不证明客户表达已改善；#174仍待真实图像/受众验收，Humanizer本轮未纳入。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 61,
+          "installed_unit:passed": 61,
+          "installed_render_available:passed": 1,
+          "installed_render_available:blocked_missing_renderer": 1
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [
+          "tests/rebuild/test_install.py::test_candidate_install_activate_and_run_doctor"
+        ],
+        "not_run_cases": [
+          "tests/rebuild/test_install.py::test_isolated_full_chain_and_local_edit"
+        ],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 178,
@@ -5924,7 +7062,7 @@
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-14.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -6005,7 +7143,29 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
-      ]
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-14",
+        "remaining_boundary": "包内容与选择性失效是工程证据，不能当作独立审阅者确实读完或应用方法。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 169,
+          "installed_unit:passed": 169
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [
+          "tests/rebuild/test_external_review_lifecycle.py::test_historical_stale_final_recovers_without_retiring_valid_trial_or_other_page",
+          "tests/rebuild/test_external_review_lifecycle.py::test_old_final_is_retired_atomically_and_normal_continue_rebuilds[False]",
+          "tests/rebuild/test_external_review_lifecycle.py::test_old_final_is_retired_atomically_and_normal_continue_rebuilds[True]"
+        ],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 179,
@@ -6045,7 +7205,7 @@
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-16.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -6155,7 +7315,25 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
-      ]
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-16",
+        "remaining_boundary": "#174/#179真实代表稿图像和原生观察仍未完成，不因静态或合成通过关闭。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 138,
+          "installed_unit:passed": 138
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 180,
@@ -6193,7 +7371,7 @@
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-15.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -6255,7 +7433,30 @@
           },
           "limit": "Mapped tests are not individual acceptance-criterion closure."
         }
-      ]
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-15",
+        "remaining_boundary": "不以关键词删条件；合成投影一致性不等于最终图像内容正确。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 251,
+          "installed_unit:passed": 251,
+          "source:skipped": 2,
+          "installed_unit:skipped": 2
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [
+          "tests/rebuild/test_rc3_notes_visual_inputs.py::test_content_candidate_notes_adoption_protects_current_same_cas_and_old_core_refuses[content_update]",
+          "tests/rebuild/test_rc3_notes_visual_inputs.py::test_content_candidate_notes_adoption_protects_current_same_cas_and_old_core_refuses[page]"
+        ],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 181,
@@ -6282,7 +7483,7 @@
       "historical_evidence": [
         "docs/work-items/wi-issue-repair-20261023/execution/RP-09.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -6368,6 +7569,33 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-09",
+        "remaining_boundary": "修复了试作不代表全稿方向/生产许可的说明；不能仅凭方案存在推定当前授权。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "installed_browser:passed": 16,
+          "source:passed": 21,
+          "installed_unit:passed": 21
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": [
+        {
+          "commit": "b5238214",
+          "mapped_files": [
+            "src/deck_master/resources/static/v2/style-calibration.js",
+            "tests/rebuild/test_recipe_versions_browser.py"
+          ]
+        }
       ]
     },
     {
@@ -6410,7 +7638,7 @@
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-08.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -6482,6 +7710,32 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-08",
+        "remaining_boundary": "pending总数与actionable/current统计不同；不自动关闭旧候选，不在读取时新增生产许可。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 108,
+          "installed_unit:passed": 108,
+          "installed_browser:passed": 15
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": [
+        {
+          "commit": "2040ca6d",
+          "mapped_files": [
+            "src/deck_master/workbench.py"
+          ]
+        }
       ]
     },
     {
@@ -6531,7 +7785,7 @@
       "historical_evidence": [
         "docs/reports/issue-repair-20261023/RP-07.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -6621,13 +7875,54 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
-      ]
+      ],
+      "owned_consumer_files": [
+        "examples/workbench/rc3_content_intents_diagnostic.py",
+        "examples/workbench/w01_pressure.py",
+        "examples/workbench/w02_content_plan.py",
+        "examples/workbench/w02_recovery.py",
+        "examples/workbench/w05_page_chain.py",
+        "examples/workbench/w07_synthetic.py",
+        "examples/workbench/w08_style_transfer.py",
+        "examples/workbench/w09_browser_edges.py",
+        "examples/workbench/w10_pressure.py",
+        "examples/workbench/w10_recovery.py",
+        "src/deck_master/native_review.py",
+        "src/deck_master/resources/static/v2/run-recovery.js",
+        "tools/rc3_campaign/controller_v3.py",
+        "tools/rc3_campaign/q2_later_300_v3.py",
+        "tools/rc3_campaign/supplementary_recorder_v3.py"
+      ],
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "RP-07",
+        "remaining_boundary": "历史campaign保留原hash；v3不继承旧control授权。CPU仅响应构造，不是端到端或温升归因。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 131,
+          "installed_unit:passed": 131,
+          "installed_receipt_measurements:passed": 3,
+          "installed_browser:passed": 5
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [
+          "tests/rebuild/test_service_flow.py::test_page_reorder_and_removal_keep_ids_and_history_out_of_current_ppt",
+          "tests/rebuild/test_service_flow.py::test_reconstruct_after_style_change_uses_new_effective_style",
+          "tests/rebuild/test_service_flow.py::test_single_page_edit_keeps_unrelated_page_artifacts_and_reassembles"
+        ],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     },
     {
       "number": 186,
       "title": "外部报告 finding 接续返修",
       "owner": "PR187-186",
-      "source_ledger": "184@7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "source_ledger": "PR187@870db06e7067c935b2331ade7f39e6bc20b8393d; followup37c9b1a3",
       "repair_commits": [
         "37c9b1a3f83a4db4607f967725b33e80b7b068cf fix(review): preserve external report findings across repair (#186)"
       ],
@@ -6648,7 +7943,7 @@
       "historical_evidence": [
         "docs/reports/pr187-followups/issue-186.md"
       ],
-      "integration_status": "MAPPED_WITH_BOUNDED_TEST_EVIDENCE_NOT_ACCEPTED",
+      "integration_status": "FIXED_CANDIDATE_ENGINEERING_EVIDENCE_MAPPED_CRITERIA_NOT_BLANKET_CLOSED",
       "remaining": "Historical evidence is scoped to each report SHA; real Host/visual/render/CPU and external report acceptance remain unproven where required. No issue closure authorized.",
       "integration_commits": [
         "a308be5a",
@@ -6685,8 +7980,63 @@
           },
           "limit": "Not criterion closure; preserve initial failure and scoped rerun."
         }
-      ]
+      ],
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/186",
+      "acceptance_criteria": [
+        {
+          "criterion": "AC1: `review record` packages actual caller judgments and complete finding context. Canonical report SHA + original review ID + finding ID distinguish two reports both called R01. Optional original_report_path retains original UTF-8 bytes and their separate SHA. Only newly marked imports receive deterministic namespaced IDs; historical imports/replay remain unchanged.",
+          "status": "NOT_INDIVIDUALLY_CLOSED",
+          "evidence_rule": "Imported from docs/reports/pr187-followups/issue-186.md at PR187 source SHA, not a fresh GitHub issue read; final JUnit maps synthetic preservation assertions only."
+        },
+        {
+          "criterion": "AC2: `review repair-handoff` derives the complete original set and current explicit replacement closures. A synthetic six-finding test closes five while leaving F1 unresolved despite a generic pass. Final response guidance requires listing that unresolved impact.",
+          "status": "NOT_INDIVIDUALLY_CLOSED",
+          "evidence_rule": "Imported from docs/reports/pr187-followups/issue-186.md at PR187 source SHA, not a fresh GitHub issue read; final JUnit maps synthetic preservation assertions only."
+        },
+        {
+          "criterion": "AC3: current manuscript and final observation stages remain distinct. Missing observations or a content-stage pass cannot close final visual findings. This is a contract regression, not actual rendered-PPT validation.",
+          "status": "NOT_INDIVIDUALLY_CLOSED",
+          "evidence_rule": "Imported from docs/reports/pr187-followups/issue-186.md at PR187 source SHA, not a fresh GitHub issue read; final JUnit maps synthetic preservation assertions only."
+        },
+        {
+          "criterion": "AC4: recording/listing do not write projects; output must be outside source directories. Unavailable source/project still permits the fixed report's list; import retains actual source verification and authorization. Malformed finding context is rejected before evidence writes.",
+          "status": "NOT_INDIVIDUALLY_CLOSED",
+          "evidence_rule": "Imported from docs/reports/pr187-followups/issue-186.md at PR187 source SHA, not a fresh GitHub issue read; final JUnit maps synthetic preservation assertions only."
+        },
+        {
+          "criterion": "AC5: engineering provenance, caller reviewer identity, existing independent proof, render and desktop observations remain separate. No model call is made. An unbound external finding is not automatically closed; existing observations remain in the report for subsequent binding/review.",
+          "status": "NOT_INDIVIDUALLY_CLOSED",
+          "evidence_rule": "Imported from docs/reports/pr187-followups/issue-186.md at PR187 source SHA, not a fresh GitHub issue read; final JUnit maps synthetic preservation assertions only."
+        },
+        {
+          "criterion": "AC6: complete original expectations, unknowns, acceptance conditions, use impact and F severity travel to Master/Review. Guidance prohibits inventing capability, benefit or budget to close a finding. Deterministic preservation tests do not establish professional judgment quality.",
+          "status": "NOT_INDIVIDUALLY_CLOSED",
+          "evidence_rule": "Imported from docs/reports/pr187-followups/issue-186.md at PR187 source SHA, not a fresh GitHub issue read; final JUnit maps synthetic preservation assertions only."
+        }
+      ],
+      "acceptance_source": "docs/reports/pr187-followups/issue-186.md",
+      "integration_acceptance_focus": {
+        "file": "acceptance-focus.json",
+        "owner": "PR187-186",
+        "remaining_boundary": "两份同名R01和六finding只闭合五项等为合成保存/接续合同测试；真实外部报告返修未做。"
+      },
+      "final_fixed_verification": {
+        "counts": {
+          "source:passed": 14,
+          "installed_unit:passed": 14
+        },
+        "index": "test-results-by-module.json",
+        "unobserved_mapped_test_files": [],
+        "skipped_cases": [],
+        "blocked_cases": [],
+        "not_run_cases": [],
+        "acceptance_limit": "Related passing tests prove only their synthetic assertions. Original per-criterion remaining evidence and real Host/visual/external-report/CPU gates are not waived."
+      },
+      "integration_followup_commits": []
     }
   ],
-  "runtime_candidate": "75551e7d06dd3c7a78e05e9188ac032bbd064da0"
+  "runtime_candidate": "b66cec184e20bbfb34a133980e9ca92bbeb7e9bf",
+  "issue_metadata_provenance": "Issue state, updated_at and body_update_planned are historical source-ledger fields, not fresh GitHub reads or authorization to edit issue bodies. No issue edits/closures performed. #186 criteria come from its PR187 follow-up report.",
+  "test_ci_candidate": "7947b25a08dfcc13c4a5b166bd189e9aef7b85ac",
+  "final_evidence_index": "test-results-by-module.json"
 }

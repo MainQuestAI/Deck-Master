@@ -1,0 +1,77 @@
+{
+  "source": "7947b25a08dfcc13c4a5b166bd189e9aef7b85ac",
+  "runtime_schema_truth": "src/deck_master/resources/contracts/",
+  "changed_contracts": [
+    {
+      "runtime": "src/deck_master/resources/contracts/action-targets.v1.schema.json",
+      "sole_spec_mirror": "docs/specs/deck-master-workbench-v3/contracts/action-targets.v1.schema.json",
+      "sha256": "b13cdd02cf2cdf86609ed6e14e26f6a8fc2c22e45fb729f18662c2789685f092"
+    },
+    {
+      "runtime": "src/deck_master/resources/contracts/artifact.v1.schema.json",
+      "sole_spec_mirror": "docs/specs/deck-master-rebuild-v1/contracts/artifact.v1.schema.json",
+      "sha256": "e573e0051a692fe8c8ad3760b2c19eda0eba060174d1e555b588ba13c22c1b6d"
+    },
+    {
+      "runtime": "src/deck_master/resources/contracts/asset-inputs.v1.schema.json",
+      "sole_spec_mirror": "docs/specs/deck-master-rebuild-v1/contracts/asset-inputs.v1.schema.json",
+      "sha256": "39a9781745399c142c3b338205d4b4d617ef5cfe4a7c11909c1bbba0b20f52d0"
+    },
+    {
+      "runtime": "src/deck_master/resources/contracts/content-plan-input.v2.schema.json",
+      "sole_spec_mirror": "docs/specs/deck-master-rebuild-v1/contracts/content-plan-input.v2.schema.json",
+      "sha256": "7fa313087f059ba4b41b8378b4ccb00eb992910b5d8eddec9d7a9a552013b839"
+    },
+    {
+      "runtime": "src/deck_master/resources/contracts/content-requirements.v1.schema.json",
+      "sole_spec_mirror": "docs/specs/deck-master-v1.0.0-rc3/contracts/content-requirements.v1.schema.json",
+      "sha256": "577a8148313229b4f542ec9db957b10e3bfeffc79f8b8b21011b5a8ca02dcf37"
+    },
+    {
+      "runtime": "src/deck_master/resources/contracts/document.v1.schema.json",
+      "sole_spec_mirror": "docs/specs/deck-master-rebuild-v1/contracts/document.v1.schema.json",
+      "sha256": "652f124d18244943ba4be54d57be26037af0ac04b6194abf91c2141120492fb5"
+    },
+    {
+      "runtime": "src/deck_master/resources/contracts/generation-reuse.v1.schema.json",
+      "sole_spec_mirror": "docs/specs/deck-master-v1.0.0-rc3/contracts/generation-reuse.v1.schema.json",
+      "sha256": "dbeb196102f9cd2dc967a2032d2571f10a52066266846ddd7dc1dd1abb0029ae"
+    },
+    {
+      "runtime": "src/deck_master/resources/contracts/native-review-checkpoint.v1.schema.json",
+      "sole_spec_mirror": "docs/specs/deck-master-rebuild-v1/contracts/native-review-checkpoint.v1.schema.json",
+      "sha256": "273e9f0750c78782f627bc201e5b653fb913ceff537f3d990bb308bea88698df"
+    },
+    {
+      "runtime": "src/deck_master/resources/contracts/page-lineage.v1.schema.json",
+      "sole_spec_mirror": "docs/specs/deck-master-workbench-v3/contracts/page-lineage.v1.schema.json",
+      "sha256": "de22b1ac233e8109dd01846379403bcfe350620717a89ba6b880969efee547ff"
+    },
+    {
+      "runtime": "src/deck_master/resources/contracts/page.v2.schema.json",
+      "sole_spec_mirror": "docs/specs/deck-master-rebuild-v1/contracts/page.v2.schema.json",
+      "sha256": "10d350721ce49c574de642e64cca862f6720173c7edb061246153f50aefaf192"
+    },
+    {
+      "runtime": "src/deck_master/resources/contracts/review.v2.schema.json",
+      "sole_spec_mirror": "docs/specs/deck-master-rebuild-v1/contracts/review.v2.schema.json",
+      "sha256": "d9579ce8eba72f0702de53ab0fb4a88165afdbbe60264b69b962b61a31be0bdd"
+    },
+    {
+      "runtime": "src/deck_master/resources/contracts/task.v1.schema.json",
+      "sole_spec_mirror": "docs/specs/deck-master-rebuild-v1/contracts/task.v1.schema.json",
+      "sha256": "b2b42d3fafd52e95a6a72b7a3ea1213be5d8f0fdbc0924b74fa56660815c092c"
+    },
+    {
+      "runtime": "src/deck_master/resources/contracts/workbench-summary.v1.schema.json",
+      "sole_spec_mirror": "docs/specs/deck-master-workbench-v3/contracts/workbench-summary.v1.schema.json",
+      "sha256": "003082518c8eeca8a6b27a883a8598db3d9157a60171c32297a39a9ce9dbf369"
+    },
+    {
+      "runtime": "src/deck_master/resources/contracts/workbench-summary.v2.schema.json",
+      "sole_spec_mirror": "docs/specs/deck-master-workbench-v3/contracts/workbench-summary.v2.schema.json",
+      "sha256": "f424be4468ff0fe2df638ffc2f3c90ff2399ff90751cad80746d3583a4954931"
+    }
+  ],
+  "additional_checks": "test_package_boundary.py completed in both full source and installed nonbrowser suites; no runtime/spec contract discrepancy allowed."
+}

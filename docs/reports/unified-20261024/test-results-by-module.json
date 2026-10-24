@@ -1,0 +1,3115 @@
+{
+  "dynamic_parameter_identity": {
+    "scope": "Only test_workbench_operations::test_new_operation_ids_are_uuid4 has collection-time UUID parameters",
+    "aliases": [
+      "generated-uuid4-hex",
+      "generated-uuid1"
+    ],
+    "verification": "UUID class/version and exact format verified; cardinality unchanged. Raw collected node IDs and exact JUnit remain archived. No product/test assertion changed."
+  },
+  "suites": [
+    {
+      "file": "source-final-frozen.xml",
+      "kind": "source",
+      "source": "dbd7133b",
+      "sha256": "243cc4d8b4fdae40d25c02c178f8f0f94ab565a9a71975d452daf65201aefbc3",
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "2",
+      "tests": "4064",
+      "time": "1921.258",
+      "timestamp": "2026-10-24T12:48:20.678266+00:00",
+      "hostname": "1f871fca1878"
+    },
+    {
+      "file": "installed-final-unit.xml",
+      "kind": "installed_unit",
+      "source": "b66cec18",
+      "sha256": "540c5d9972f96d0b113b2324e82346e92efdb90561abd97ad3d31e6a48113705",
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "2",
+      "tests": "4064",
+      "time": "1696.469",
+      "timestamp": "2026-10-24T12:18:50.476616+00:00",
+      "hostname": "1f871fca1878"
+    },
+    {
+      "file": "installed-final4-browser.xml",
+      "kind": "installed_browser",
+      "source": "7947b25a",
+      "sha256": "44265a6064827d43e9660636b67974ec05b168d70949280e452bef215748acfd",
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "708",
+      "time": "4336.987",
+      "timestamp": "2026-10-24T13:53:51.958725+00:00",
+      "hostname": "1f871fca1878"
+    },
+    {
+      "file": "installed-available-ppt-render.xml",
+      "kind": "installed_render",
+      "source": "b66cec18",
+      "sha256": "15ef9850d4f12129ae46f460f4a28284a234030dbca8fae4aee4b518fce30671",
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "1",
+      "time": "6.213",
+      "timestamp": "2026-10-24T12:20:05.134368+00:00",
+      "hostname": "1f871fca1878"
+    },
+    {
+      "file": "installed-available-render-extended.xml",
+      "kind": "installed_render_available",
+      "source": "dbd7133b",
+      "sha256": "c9b52983dc396d9775a50d54cf6433acd6977f6399bd5e007f9361217573d99b",
+      "name": "pytest",
+      "errors": "0",
+      "failures": "1",
+      "skipped": "0",
+      "tests": "75",
+      "time": "104.188",
+      "timestamp": "2026-10-24T13:11:52.024081+00:00",
+      "hostname": "1f871fca1878"
+    },
+    {
+      "file": "installed-assembly-replay.xml",
+      "kind": "installed_assembly_replay",
+      "source": "7947b25a",
+      "sha256": "df30c246921b062ec1e300700bb1447f24fb81d7de86c5342ee5d79bae81cec3",
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "3",
+      "time": "11.052",
+      "timestamp": "2026-10-24T13:50:29.879423+00:00",
+      "hostname": "1f871fca1878"
+    },
+    {
+      "file": "installed-missing-renderer-contract.xml",
+      "kind": "installed_renderer_negative",
+      "source": "7947b25a",
+      "sha256": "8f987022dcbe05366c8595d88f18b1cb2a2798af66451b76f34dd930e4ecbc90",
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "1",
+      "time": "2.572",
+      "timestamp": "2026-10-24T13:56:29.712678+00:00",
+      "hostname": "1f871fca1878"
+    },
+    {
+      "file": "installed-receipt-measurements.xml",
+      "kind": "installed_receipt_measurements",
+      "source": "7947b25a",
+      "sha256": "4fd25c5fcf17116198a5b965ad0bfd2c402182469ac95610f78f105c35f45abd",
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "3",
+      "time": "1.726",
+      "timestamp": "2026-10-24T15:06:52.681876+00:00",
+      "hostname": "1f871fca1878"
+    }
+  ],
+  "modules": {
+    "tests/rebuild/test_action_target_preparation.py": {
+      "outcomes": {
+        "source:passed": 1,
+        "installed_unit:passed": 1
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_action_targets.py": {
+      "outcomes": {
+        "source:passed": 17,
+        "installed_unit:passed": 17
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_annotations.py": {
+      "outcomes": {
+        "source:passed": 10,
+        "installed_unit:passed": 10
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_audience_register_review.py": {
+      "outcomes": {
+        "source:passed": 5,
+        "installed_unit:passed": 5
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_batch_policy.py": {
+      "outcomes": {
+        "source:passed": 14,
+        "installed_unit:passed": 14
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_browser_gate_policy.py": {
+      "outcomes": {
+        "source:passed": 4,
+        "installed_unit:passed": 4
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_browser_wire_digest.py": {
+      "outcomes": {
+        "source:passed": 1,
+        "installed_unit:passed": 1
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_budget.py": {
+      "outcomes": {
+        "source:passed": 10,
+        "installed_unit:passed": 10
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_budget_templates.py": {
+      "outcomes": {
+        "source:passed": 12,
+        "installed_unit:passed": 12
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_candidate_decisions.py": {
+      "outcomes": {
+        "source:passed": 13,
+        "installed_unit:passed": 13
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_candidate_freeze_reuse.py": {
+      "outcomes": {
+        "source:passed": 7,
+        "installed_unit:passed": 7
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_candidate_preview_recovery.py": {
+      "outcomes": {
+        "source:passed": 23,
+        "installed_unit:passed": 23
+      },
+      "not_run_cases": [
+        "tests/rebuild/test_candidate_preview_recovery.py::test_damaged_state_retries_actual_compile_render_and_readback"
+      ],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_candidates.py": {
+      "outcomes": {
+        "source:passed": 17,
+        "installed_unit:passed": 17
+      },
+      "not_run_cases": [
+        "tests/rebuild/test_candidates.py::test_explicit_assembly_uses_real_pipeline_after_page_gate_and_replays[False]",
+        "tests/rebuild/test_candidates.py::test_explicit_assembly_uses_real_pipeline_after_page_gate_and_replays[True]"
+      ],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_change_http.py": {
+      "outcomes": {
+        "source:passed": 3,
+        "installed_unit:passed": 3
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_changes.py": {
+      "outcomes": {
+        "source:passed": 6,
+        "installed_unit:passed": 6
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_cli.py": {
+      "outcomes": {
+        "source:passed": 26,
+        "installed_unit:passed": 26
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_cli_chain.py": {
+      "outcomes": {
+        "source:passed": 4,
+        "installed_unit:passed": 4
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_collaboration_binding.py": {
+      "outcomes": {
+        "source:passed": 16,
+        "installed_unit:passed": 16
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_collaboration_contracts.py": {
+      "outcomes": {
+        "source:passed": 23,
+        "installed_unit:passed": 23
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_collaboration_migration.py": {
+      "outcomes": {
+        "source:passed": 4,
+        "installed_unit:passed": 4
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_collaboration_pr108_regressions.py": {
+      "outcomes": {
+        "source:passed": 47,
+        "installed_unit:passed": 47
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_collaboration_restore.py": {
+      "outcomes": {
+        "source:passed": 2,
+        "installed_unit:passed": 2
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_collaboration_review_fixes.py": {
+      "outcomes": {
+        "source:passed": 12,
+        "installed_unit:passed": 12
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_collaboration_service.py": {
+      "outcomes": {
+        "source:passed": 11,
+        "installed_unit:passed": 11
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_compiler_api.py": {
+      "outcomes": {
+        "source:passed": 4,
+        "installed_unit:passed": 4
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_compiler_geometry.py": {
+      "outcomes": {
+        "source:passed": 1,
+        "installed_unit:passed": 1
+      },
+      "not_run_cases": [
+        "tests/rebuild/test_compiler_geometry.py::test_document_canvas_is_prompt_and_compile_authority"
+      ],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_compose_v2_phases.py": {
+      "outcomes": {
+        "source:passed": 20,
+        "installed_unit:passed": 20
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_content.py": {
+      "outcomes": {
+        "source:passed": 17,
+        "installed_unit:passed": 17
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_content_candidates.py": {
+      "outcomes": {
+        "source:passed": 24,
+        "installed_unit:passed": 24
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_content_contracts.py": {
+      "outcomes": {
+        "source:passed": 17,
+        "installed_unit:passed": 17
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_content_mapping_claims.py": {
+      "outcomes": {
+        "source:passed": 9,
+        "installed_unit:passed": 9
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_content_ops.py": {
+      "outcomes": {
+        "source:passed": 19,
+        "installed_unit:passed": 19
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_content_plan.py": {
+      "outcomes": {
+        "source:passed": 18,
+        "installed_unit:passed": 18
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_content_preproduction_review.py": {
+      "outcomes": {
+        "source:passed": 13,
+        "installed_unit:passed": 13
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_contracts.py": {
+      "outcomes": {
+        "source:passed": 2,
+        "installed_unit:passed": 2
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_current_work.py": {
+      "outcomes": {
+        "source:passed": 19,
+        "installed_unit:passed": 19,
+        "installed_browser:passed": 18
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_decision_receipts.py": {
+      "outcomes": {
+        "source:passed": 2,
+        "installed_unit:passed": 2
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_deep_quality_compiler.py": {
+      "outcomes": {
+        "source:passed": 27,
+        "installed_unit:passed": 27
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_deep_quality_state.py": {
+      "outcomes": {
+        "source:passed": 3,
+        "installed_unit:passed": 3
+      },
+      "not_run_cases": [
+        "tests/rebuild/test_deep_quality_state.py::test_adopted_svg_continue_rebuilds_existing_ppt[False]",
+        "tests/rebuild/test_deep_quality_state.py::test_adopted_svg_continue_rebuilds_existing_ppt[True]"
+      ],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_delivery_control_snapshot.py": {
+      "outcomes": {
+        "source:passed": 7,
+        "installed_unit:passed": 7
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_delivery_professional_gate.py": {
+      "outcomes": {
+        "source:passed": 27,
+        "installed_unit:passed": 27
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_dependency_slices.py": {
+      "outcomes": {
+        "source:passed": 6,
+        "installed_unit:passed": 6
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_design_entry_basis.py": {
+      "outcomes": {
+        "source:passed": 11,
+        "installed_unit:passed": 11
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_drawingml.py": {
+      "outcomes": {
+        "source:passed": 6,
+        "installed_unit:passed": 6
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_eligibility_enforcement.py": {
+      "outcomes": {
+        "source:passed": 28,
+        "installed_unit:passed": 28
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_eligibility_entry_coverage.py": {
+      "outcomes": {
+        "source:passed": 23,
+        "installed_unit:passed": 23
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_eligibility_resolver.py": {
+      "outcomes": {
+        "source:passed": 37,
+        "installed_unit:passed": 37
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_eligibility_snapshot_boundary.py": {
+      "outcomes": {
+        "source:passed": 17,
+        "installed_unit:passed": 17
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_entry_capabilities.py": {
+      "outcomes": {
+        "source:passed": 12,
+        "installed_unit:passed": 12
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_export.py": {
+      "outcomes": {
+        "source:passed": 10,
+        "installed_unit:passed": 10,
+        "installed_render_available:passed": 1
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_external_review_handoff.py": {
+      "outcomes": {
+        "source:passed": 14,
+        "installed_unit:passed": 14
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_external_review_lifecycle.py": {
+      "outcomes": {
+        "source:passed": 4,
+        "installed_unit:passed": 4
+      },
+      "not_run_cases": [
+        "tests/rebuild/test_external_review_lifecycle.py::test_historical_stale_final_recovers_without_retiring_valid_trial_or_other_page",
+        "tests/rebuild/test_external_review_lifecycle.py::test_old_final_is_retired_atomically_and_normal_continue_rebuilds[False]",
+        "tests/rebuild/test_external_review_lifecycle.py::test_old_final_is_retired_atomically_and_normal_continue_rebuilds[True]"
+      ],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_external_review_readback.py": {
+      "outcomes": {
+        "source:passed": 20,
+        "installed_unit:passed": 20
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_flow_quality.py": {
+      "outcomes": {
+        "source:passed": 68,
+        "installed_unit:passed": 68
+      },
+      "not_run_cases": [
+        "tests/rebuild/test_flow_quality.py::test_revised_deck_recompiles_real_slide_order[add]",
+        "tests/rebuild/test_flow_quality.py::test_revised_deck_recompiles_real_slide_order[edit]",
+        "tests/rebuild/test_flow_quality.py::test_revised_deck_recompiles_real_slide_order[remove]",
+        "tests/rebuild/test_flow_quality.py::test_revised_deck_recompiles_real_slide_order[reorder]"
+      ],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_gallery_core.py": {
+      "outcomes": {
+        "source:passed": 22,
+        "installed_unit:passed": 22
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_generation_protocol.py": {
+      "outcomes": {
+        "source:passed": 15,
+        "installed_unit:passed": 15
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_geometry.py": {
+      "outcomes": {
+        "source:passed": 12,
+        "installed_unit:passed": 12
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_gradient_readability.py": {
+      "outcomes": {
+        "source:passed": 21,
+        "installed_unit:passed": 21
+      },
+      "not_run_cases": [
+        "tests/rebuild/test_gradient_readability.py::test_real_gradient_svg_ppt_and_persisted_check[end-zero]",
+        "tests/rebuild/test_gradient_readability.py::test_real_gradient_svg_ppt_and_persisted_check[partial]",
+        "tests/rebuild/test_gradient_readability.py::test_real_gradient_svg_ppt_and_persisted_check[start-zero]"
+      ],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_history_read_reuse.py": {
+      "outcomes": {
+        "source:passed": 10,
+        "installed_unit:passed": 10
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_icon_fill_geometry.py": {
+      "outcomes": {
+        "source:passed": 21,
+        "installed_unit:passed": 21
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_icon_quality.py": {
+      "outcomes": {
+        "source:passed": 34,
+        "installed_unit:passed": 34
+      },
+      "not_run_cases": [
+        "tests/rebuild/test_icon_quality.py::test_actual_candidate_preview_and_cross_page_reuse",
+        "tests/rebuild/test_icon_quality.py::test_preview_failure_retry_and_corrupt_files"
+      ],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_input_receipt_recovery.py": {
+      "outcomes": {
+        "source:passed": 51,
+        "installed_unit:passed": 51
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_install.py": {
+      "outcomes": {
+        "source:passed": 14,
+        "installed_unit:passed": 14,
+        "installed_render_available:passed": 1,
+        "installed_render_available:blocked_missing_renderer": 1
+      },
+      "not_run_cases": [
+        "tests/rebuild/test_install.py::test_isolated_full_chain_and_local_edit"
+      ],
+      "skipped_cases": [],
+      "blocked_cases": [
+        "tests/rebuild/test_install.py::test_candidate_install_activate_and_run_doctor"
+      ]
+    },
+    "tests/rebuild/test_install_host_skill.py": {
+      "outcomes": {
+        "source:passed": 23,
+        "installed_unit:passed": 23
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_install_preparation_compatibility.py": {
+      "outcomes": {
+        "source:passed": 27,
+        "installed_unit:passed": 27
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_install_preparation_coverage.py": {
+      "outcomes": {
+        "source:passed": 12,
+        "installed_unit:passed": 12
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_install_transaction_recovery.py": {
+      "outcomes": {
+        "source:passed": 169,
+        "installed_unit:passed": 169
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_iteration_ledger.py": {
+      "outcomes": {
+        "source:passed": 9,
+        "installed_unit:passed": 9
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_late_results_and_stops.py": {
+      "outcomes": {
+        "source:passed": 13,
+        "installed_unit:passed": 13
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_legacy.py": {
+      "outcomes": {
+        "source:passed": 25,
+        "installed_unit:passed": 25
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_local_runtime_burst.py": {
+      "outcomes": {
+        "source:passed": 1,
+        "installed_unit:passed": 1
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_method_preparation_handoff.py": {
+      "outcomes": {
+        "source:passed": 4,
+        "installed_unit:passed": 4
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_native_pipeline.py": {
+      "outcomes": {
+        "source:passed": 14,
+        "installed_unit:passed": 14
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_native_review.py": {
+      "outcomes": {
+        "source:passed": 17,
+        "installed_unit:passed": 17
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_native_review_recovery.py": {
+      "outcomes": {
+        "source:passed": 13,
+        "installed_unit:passed": 13
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_native_review_startup.py": {
+      "outcomes": {
+        "source:passed": 14,
+        "installed_unit:passed": 14
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_native_review_transport.py": {
+      "outcomes": {
+        "source:passed": 10,
+        "installed_unit:passed": 10
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_operation_coverage.py": {
+      "outcomes": {
+        "source:passed": 41,
+        "installed_unit:passed": 41
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_outline_review.py": {
+      "outcomes": {
+        "source:passed": 11,
+        "installed_unit:passed": 11
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_overview_metadata.py": {
+      "outcomes": {
+        "source:passed": 6,
+        "installed_unit:passed": 6
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_overview_state.py": {
+      "outcomes": {
+        "source:passed": 23,
+        "installed_unit:passed": 23
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_package_boundary.py": {
+      "outcomes": {
+        "source:passed": 7,
+        "installed_unit:passed": 7
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_page_detail.py": {
+      "outcomes": {
+        "source:passed": 28,
+        "installed_unit:passed": 28
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_page_text.py": {
+      "outcomes": {
+        "source:passed": 2,
+        "installed_unit:passed": 2
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_page_visual_gate.py": {
+      "outcomes": {
+        "source:passed": 5,
+        "installed_unit:passed": 5,
+        "installed_renderer_negative:passed": 1
+      },
+      "not_run_cases": [
+        "tests/rebuild/test_page_visual_gate.py::test_accepted_variance_on_same_page_advances_to_next_blueprint",
+        "tests/rebuild/test_page_visual_gate.py::test_failed_visual_review_requires_page_repair_and_evidenced_closure",
+        "tests/rebuild/test_page_visual_gate.py::test_page_review_blocks_next_blueprint_until_current_three_checks_pass",
+        "tests/rebuild/test_page_visual_gate.py::test_page_review_cannot_pass_after_design_asset_change",
+        "tests/rebuild/test_page_visual_gate.py::test_preflight_and_preview_share_approved_image_assets",
+        "tests/rebuild/test_page_visual_gate.py::test_preview_renderer_execution_error_is_reported_separately_from_missing_tool",
+        "tests/rebuild/test_page_visual_gate.py::test_repeated_visual_review_without_resolution_stops_with_actionable_finding",
+        "tests/rebuild/test_page_visual_gate.py::test_stored_invalid_svg_reconstructs_then_resumes_page_review",
+        "tests/rebuild/test_page_visual_gate.py::test_style_change_retires_open_review_and_rebuilds_only_current_page",
+        "tests/rebuild/test_page_visual_gate.py::test_unchanged_page_visual_repair_stops_without_another_repair_loop"
+      ],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_paint.py": {
+      "outcomes": {
+        "source:passed": 3,
+        "installed_unit:passed": 3
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_paused_exact_replay.py": {
+      "outcomes": {
+        "source:passed": 7,
+        "installed_unit:passed": 7,
+        "installed_assembly_replay:passed": 2
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_personal_recovery.py": {
+      "outcomes": {
+        "source:passed": 11,
+        "installed_unit:passed": 11
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_pipeline_preview_reuse.py": {
+      "outcomes": {
+        "source:passed": 4,
+        "installed_unit:passed": 4,
+        "installed_assembly_replay:passed": 1
+      },
+      "not_run_cases": [
+        "tests/rebuild/test_pipeline_preview_reuse.py::test_real_rsvg_rebuild_then_review_and_assembly[missing]",
+        "tests/rebuild/test_pipeline_preview_reuse.py::test_real_rsvg_rebuild_then_review_and_assembly[stale]"
+      ],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_planned_input_revision.py": {
+      "outcomes": {
+        "source:passed": 31,
+        "installed_unit:passed": 31
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_pr105_candidate_metadata.py": {
+      "outcomes": {
+        "source:passed": 4,
+        "installed_unit:passed": 4,
+        "installed_browser:passed": 2
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_pr187_review_regressions.py": {
+      "outcomes": {
+        "source:passed": 13,
+        "installed_unit:passed": 13,
+        "installed_browser:passed": 4
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_pr188_completed_content.py": {
+      "outcomes": {
+        "source:passed": 8,
+        "installed_unit:passed": 8
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_production.py": {
+      "outcomes": {
+        "source:passed": 10,
+        "installed_unit:passed": 10
+      },
+      "not_run_cases": [
+        "tests/rebuild/test_production.py::test_new_design_mode_and_failed_review_is_preserved"
+      ],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_q2_helper_compilation.py": {
+      "outcomes": {
+        "source:passed": 3,
+        "installed_unit:passed": 3
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_q2_installation_identity.py": {
+      "outcomes": {
+        "source:passed": 6,
+        "installed_unit:passed": 6
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_q2_installation_v2.py": {
+      "outcomes": {
+        "source:passed": 27,
+        "installed_unit:passed": 27
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_q2_installation_v3.py": {
+      "outcomes": {
+        "source:passed": 27,
+        "installed_unit:passed": 27
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_q2_timeout_diagnostics.py": {
+      "outcomes": {
+        "source:passed": 2,
+        "installed_unit:passed": 2
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_01_gate_repair.py": {
+      "outcomes": {
+        "source:passed": 70,
+        "installed_unit:passed": 70
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_adopted_design_handoff.py": {
+      "outcomes": {
+        "source:passed": 41,
+        "installed_unit:passed": 41
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_adoption_authority.py": {
+      "outcomes": {
+        "source:passed": 5,
+        "installed_unit:passed": 5
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_budget_ancestors.py": {
+      "outcomes": {
+        "source:passed": 14,
+        "installed_unit:passed": 14
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_budget_selection.py": {
+      "outcomes": {
+        "source:passed": 4,
+        "installed_unit:passed": 4
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_budget_workflow.py": {
+      "outcomes": {
+        "source:passed": 29,
+        "installed_unit:passed": 29
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_campaign_controller.py": {
+      "outcomes": {
+        "source:passed": 45,
+        "installed_unit:passed": 45
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_candidate_adoption_handoff.py": {
+      "outcomes": {
+        "source:passed": 2,
+        "installed_unit:passed": 2
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_candidate_quota.py": {
+      "outcomes": {
+        "source:passed": 7,
+        "installed_unit:passed": 7
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_collaboration_adapters.py": {
+      "outcomes": {
+        "source:passed": 39,
+        "installed_unit:passed": 39
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_completion_copy_binding.py": {
+      "outcomes": {
+        "source:passed": 113,
+        "installed_unit:passed": 113
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_content_methods.py": {
+      "outcomes": {
+        "source:passed": 4,
+        "installed_unit:passed": 4
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_corrupt_task_reading.py": {
+      "outcomes": {
+        "source:passed": 1,
+        "installed_unit:passed": 1
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_decision_visual_consumption.py": {
+      "outcomes": {
+        "source:passed": 24,
+        "installed_unit:passed": 24
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_delivery_serialization.py": {
+      "outcomes": {
+        "source:passed": 3,
+        "installed_unit:passed": 3
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_design_feasibility.py": {
+      "outcomes": {
+        "source:passed": 27,
+        "installed_unit:passed": 27
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_design_recipes.py": {
+      "outcomes": {
+        "source:passed": 34,
+        "installed_unit:passed": 34
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_design_requirements.py": {
+      "outcomes": {
+        "source:passed": 58,
+        "installed_unit:passed": 58
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_design_workflows.py": {
+      "outcomes": {
+        "source:passed": 2,
+        "installed_unit:passed": 2
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_early_collaboration_cli.py": {
+      "outcomes": {
+        "source:passed": 4,
+        "installed_unit:passed": 4
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_early_methods.py": {
+      "outcomes": {
+        "source:passed": 5,
+        "installed_unit:passed": 5
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_entry_transactions.py": {
+      "outcomes": {
+        "source:passed": 18,
+        "installed_unit:passed": 18
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_external_report.py": {
+      "outcomes": {
+        "source:passed": 17,
+        "installed_unit:passed": 17
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_four_skills.py": {
+      "outcomes": {
+        "source:passed": 43,
+        "installed_unit:passed": 43
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_generation_settlement.py": {
+      "outcomes": {
+        "source:passed": 16,
+        "installed_unit:passed": 16
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_generic_page_plan_links.py": {
+      "outcomes": {
+        "source:passed": 24,
+        "installed_unit:passed": 24
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_host_path_driver.py": {
+      "outcomes": {
+        "source:passed": 2,
+        "installed_unit:passed": 2
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_image_events.py": {
+      "outcomes": {
+        "source:passed": 28,
+        "installed_unit:passed": 28
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_import_scope.py": {
+      "outcomes": {
+        "source:passed": 12,
+        "installed_unit:passed": 12
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_initial_direction_boundary.py": {
+      "outcomes": {
+        "source:passed": 14,
+        "installed_unit:passed": 14
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_install_four_links.py": {
+      "outcomes": {
+        "source:passed": 23,
+        "installed_unit:passed": 23
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_legacy_speech_continuation.py": {
+      "outcomes": {
+        "source:passed": 2,
+        "installed_unit:passed": 2
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_m02_image_profile.py": {
+      "outcomes": {
+        "source:passed": 21,
+        "installed_unit:passed": 21
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_m02_image_transition.py": {
+      "outcomes": {
+        "source:passed": 12,
+        "installed_unit:passed": 12
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_m02_recorder.py": {
+      "outcomes": {
+        "source:passed": 27,
+        "installed_unit:passed": 27
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_m02_runtime.py": {
+      "outcomes": {
+        "source:passed": 8,
+        "installed_unit:passed": 8
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_materialized_candidate_slots.py": {
+      "outcomes": {
+        "source:passed": 12,
+        "installed_unit:passed": 12
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_mixed_budget_credits.py": {
+      "outcomes": {
+        "source:passed": 3,
+        "installed_unit:passed": 3
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_native_image_bridge.py": {
+      "outcomes": {
+        "source:passed": 24,
+        "installed_unit:passed": 24
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_native_preconfirmation.py": {
+      "outcomes": {
+        "source:passed": 7,
+        "installed_unit:passed": 7
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_native_visual_reuse.py": {
+      "outcomes": {
+        "source:passed": 32,
+        "installed_unit:passed": 32
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_notes_files.py": {
+      "outcomes": {
+        "source:passed": 51,
+        "installed_unit:passed": 51
+      },
+      "not_run_cases": [
+        "tests/rebuild/test_rc3_notes_files.py::test_real_pipeline_to_export_preserves_full_notes_and_dependencies"
+      ],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_notes_transactions.py": {
+      "outcomes": {
+        "source:passed": 15,
+        "installed_unit:passed": 15
+      },
+      "not_run_cases": [
+        "tests/rebuild/test_rc3_notes_transactions.py::test_actual_completed_visual_notes_assembly_export_zero_image_ledger",
+        "tests/rebuild/test_rc3_notes_transactions.py::test_frozen_a_real_sdk_refuses_protected_notes_write_boundaries",
+        "tests/rebuild/test_rc3_notes_transactions.py::test_notes_edit_preserves_completed_visual_and_actual_review_bytes",
+        "tests/rebuild/test_rc3_notes_transactions.py::test_visual_open_finding_not_fixed_by_notes"
+      ],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_notes_visual_inputs.py": {
+      "outcomes": {
+        "source:passed": 32,
+        "source:skipped": 2,
+        "installed_unit:passed": 32,
+        "installed_unit:skipped": 2
+      },
+      "not_run_cases": [],
+      "skipped_cases": [
+        "tests/rebuild/test_rc3_notes_visual_inputs.py::test_content_candidate_notes_adoption_protects_current_same_cas_and_old_core_refuses[content_update]",
+        "tests/rebuild/test_rc3_notes_visual_inputs.py::test_content_candidate_notes_adoption_protects_current_same_cas_and_old_core_refuses[page]"
+      ],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_plan_visual_consumption.py": {
+      "outcomes": {
+        "source:passed": 4,
+        "installed_unit:passed": 4
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_precommit_recovery.py": {
+      "outcomes": {
+        "source:passed": 27,
+        "installed_unit:passed": 27
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_preproduction_semantics.py": {
+      "outcomes": {
+        "source:passed": 23,
+        "installed_unit:passed": 23
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_q2_later_300.py": {
+      "outcomes": {
+        "source:passed": 16,
+        "installed_unit:passed": 16
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_receipt_provider.py": {
+      "outcomes": {
+        "source:passed": 25,
+        "installed_unit:passed": 25
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_reconciliation_reasons.py": {
+      "outcomes": {
+        "source:passed": 6,
+        "installed_unit:passed": 6
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_reconciliation_sources.py": {
+      "outcomes": {
+        "source:passed": 14,
+        "installed_unit:passed": 14
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_request_source_identity.py": {
+      "outcomes": {
+        "source:passed": 3,
+        "installed_unit:passed": 3
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_resource_inventory.py": {
+      "outcomes": {
+        "source:passed": 10,
+        "installed_unit:passed": 10
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_restyle_workflows.py": {
+      "outcomes": {
+        "source:passed": 14,
+        "installed_unit:passed": 14
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_review_policy_ready.py": {
+      "outcomes": {
+        "source:passed": 2,
+        "installed_unit:passed": 2
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_review_policy_workflow.py": {
+      "outcomes": {
+        "source:passed": 25,
+        "installed_unit:passed": 25
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_review_repairs.py": {
+      "outcomes": {
+        "source:passed": 6,
+        "installed_unit:passed": 6
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_run_summary.py": {
+      "outcomes": {
+        "source:passed": 2,
+        "installed_unit:passed": 2
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_scoped_terminal_reconciliation.py": {
+      "outcomes": {
+        "source:passed": 3,
+        "installed_unit:passed": 3
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_selected_delivery.py": {
+      "outcomes": {
+        "source:passed": 8,
+        "installed_unit:passed": 8
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_supplementary_recorder.py": {
+      "outcomes": {
+        "source:passed": 55,
+        "installed_unit:passed": 55
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_supplied_p5_fidelity.py": {
+      "outcomes": {
+        "source:passed": 8,
+        "installed_unit:passed": 8
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_unseen_native_only.py": {
+      "outcomes": {
+        "source:passed": 27,
+        "installed_unit:passed": 27
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc4_content_review.py": {
+      "outcomes": {
+        "source:passed": 51,
+        "installed_unit:passed": 51
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc4_work_context.py": {
+      "outcomes": {
+        "source:passed": 22,
+        "installed_unit:passed": 22
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc5_host_selection.py": {
+      "outcomes": {
+        "source:passed": 24,
+        "installed_unit:passed": 24
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc5_library_acceptance.py": {
+      "outcomes": {
+        "source:passed": 26,
+        "installed_unit:passed": 26
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc5_resource_catalog.py": {
+      "outcomes": {
+        "source:passed": 24,
+        "installed_unit:passed": 24
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_readback.py": {
+      "outcomes": {
+        "source:passed": 11,
+        "installed_unit:passed": 11
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_render.py": {
+      "outcomes": {
+        "source:passed": 1,
+        "installed_unit:passed": 1,
+        "installed_render:passed": 1
+      },
+      "not_run_cases": [
+        "tests/rebuild/test_render.py::test_renderers_available_on_this_machine",
+        "tests/rebuild/test_render.py::test_svg_renders_with_rsvg_convert"
+      ],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_request_read_facts.py": {
+      "outcomes": {
+        "source:passed": 11,
+        "installed_unit:passed": 11
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_result_reading.py": {
+      "outcomes": {
+        "source:passed": 14,
+        "installed_unit:passed": 14
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_review.py": {
+      "outcomes": {
+        "source:passed": 57,
+        "installed_unit:passed": 57
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_review_channel_discovery.py": {
+      "outcomes": {
+        "source:passed": 12,
+        "installed_unit:passed": 12
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_review_graph_reuse.py": {
+      "outcomes": {
+        "source:passed": 4,
+        "installed_unit:passed": 4
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_review_owner_scope.py": {
+      "outcomes": {
+        "source:passed": 4,
+        "installed_unit:passed": 4
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_review_policy_semantic_identity.py": {
+      "outcomes": {
+        "source:passed": 1,
+        "installed_unit:passed": 1
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_review_round2.py": {
+      "outcomes": {
+        "source:passed": 15,
+        "installed_unit:passed": 15
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_review_round3.py": {
+      "outcomes": {
+        "source:passed": 33,
+        "installed_unit:passed": 33
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_review_round4.py": {
+      "outcomes": {
+        "source:passed": 11,
+        "installed_unit:passed": 11
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rp02_content_responsibility.py": {
+      "outcomes": {
+        "source:passed": 3,
+        "installed_unit:passed": 3
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rp03_svg_trial_isolation.py": {
+      "outcomes": {
+        "source:passed": 16,
+        "installed_unit:passed": 16
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rp03_trial_isolation.py": {
+      "outcomes": {
+        "source:passed": 7,
+        "installed_unit:passed": 7
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rp06_design_completion.py": {
+      "outcomes": {
+        "source:passed": 44,
+        "installed_unit:passed": 44
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rp08_current_actions.py": {
+      "outcomes": {
+        "source:passed": 3,
+        "installed_unit:passed": 3,
+        "installed_browser:passed": 1
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rp14_effective_requirements.py": {
+      "outcomes": {
+        "source:passed": 10,
+        "installed_unit:passed": 10
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rp15_content_visibility.py": {
+      "outcomes": {
+        "source:passed": 14,
+        "installed_unit:passed": 14
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rp17_design_policy.py": {
+      "outcomes": {
+        "source:passed": 20,
+        "installed_unit:passed": 20
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rp19_asset_inputs.py": {
+      "outcomes": {
+        "source:passed": 19,
+        "installed_unit:passed": 19
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rp20_original_review.py": {
+      "outcomes": {
+        "source:passed": 22,
+        "installed_unit:passed": 22
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rp23_cross_turn_recovery.py": {
+      "outcomes": {
+        "source:passed": 6,
+        "installed_unit:passed": 6
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rp24_cross_execution_evidence.py": {
+      "outcomes": {
+        "source:passed": 4,
+        "installed_unit:passed": 4
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rp24_readonly_diagnostic.py": {
+      "outcomes": {
+        "source:passed": 7,
+        "installed_unit:passed": 7
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_run_desk.py": {
+      "outcomes": {
+        "source:passed": 8,
+        "installed_unit:passed": 8
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_scope_and_delegation.py": {
+      "outcomes": {
+        "source:passed": 10,
+        "installed_unit:passed": 10
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_scoped_deck_finding_owner.py": {
+      "outcomes": {
+        "source:passed": 4,
+        "installed_unit:passed": 4
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_scoped_preproduction_eligibility.py": {
+      "outcomes": {
+        "source:passed": 7,
+        "installed_unit:passed": 7
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_selective_content_review.py": {
+      "outcomes": {
+        "source:passed": 4,
+        "installed_unit:passed": 4
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_selective_requirements_integration.py": {
+      "outcomes": {
+        "source:passed": 1,
+        "installed_unit:passed": 1
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_service_flow.py": {
+      "outcomes": {
+        "source:passed": 17,
+        "installed_unit:passed": 17
+      },
+      "not_run_cases": [
+        "tests/rebuild/test_service_flow.py::test_page_reorder_and_removal_keep_ids_and_history_out_of_current_ppt",
+        "tests/rebuild/test_service_flow.py::test_reconstruct_after_style_change_uses_new_effective_style",
+        "tests/rebuild/test_service_flow.py::test_single_page_edit_keeps_unrelated_page_artifacts_and_reassembles"
+      ],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_settled_image_reuse.py": {
+      "outcomes": {
+        "source:passed": 28,
+        "installed_unit:passed": 28
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_snapshot_headers.py": {
+      "outcomes": {
+        "source:passed": 5,
+        "installed_unit:passed": 5
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_source_finding_repair.py": {
+      "outcomes": {
+        "source:passed": 30,
+        "installed_unit:passed": 30
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_sources.py": {
+      "outcomes": {
+        "source:passed": 24,
+        "installed_unit:passed": 24
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_speech_projection.py": {
+      "outcomes": {
+        "source:passed": 7,
+        "installed_unit:passed": 7
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_static_modules.py": {
+      "outcomes": {
+        "source:passed": 1,
+        "installed_unit:passed": 1
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_store_transactions.py": {
+      "outcomes": {
+        "source:passed": 23,
+        "installed_unit:passed": 23
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_studio_delivery_browser.py": {
+      "outcomes": {
+        "source:passed": 3,
+        "installed_unit:passed": 3,
+        "installed_browser:passed": 1
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_studio_integration.py": {
+      "outcomes": {
+        "source:passed": 7,
+        "installed_unit:passed": 7,
+        "installed_browser:passed": 5
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_styles.py": {
+      "outcomes": {
+        "source:passed": 16,
+        "installed_unit:passed": 16
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_summary_poll.py": {
+      "outcomes": {
+        "source:passed": 1,
+        "installed_unit:passed": 1
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_svg_compiler.py": {
+      "outcomes": {
+        "source:passed": 6,
+        "installed_unit:passed": 6
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_svg_parser.py": {
+      "outcomes": {
+        "source:passed": 47,
+        "installed_unit:passed": 47
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_t03_review_fixes.py": {
+      "outcomes": {
+        "source:passed": 9,
+        "installed_unit:passed": 9
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_t03_t04_integration.py": {
+      "outcomes": {
+        "source:passed": 23,
+        "installed_unit:passed": 23
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_t06_boundaries.py": {
+      "outcomes": {
+        "source:passed": 21,
+        "installed_unit:passed": 21
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_task_compact_receipts.py": {
+      "outcomes": {
+        "source:passed": 16,
+        "installed_unit:passed": 16,
+        "installed_receipt_measurements:passed": 3
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_task_receipt_recovery.py": {
+      "outcomes": {
+        "source:passed": 12,
+        "installed_unit:passed": 12
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_tasks.py": {
+      "outcomes": {
+        "source:passed": 31,
+        "installed_unit:passed": 31
+      },
+      "not_run_cases": [
+        "tests/rebuild/test_tasks.py::test_no_progress_repair_stops_instead_of_looping",
+        "tests/rebuild/test_tasks.py::test_svg_only_fix_is_progress_not_no_progress"
+      ],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_text.py": {
+      "outcomes": {
+        "source:passed": 7,
+        "installed_unit:passed": 7
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_tool_observations.py": {
+      "outcomes": {
+        "source:passed": 29,
+        "installed_unit:passed": 29
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_ui_current_relationship.py": {
+      "outcomes": {
+        "source:passed": 6,
+        "installed_unit:passed": 6
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_ui_exact_replay_after_pause.py": {
+      "outcomes": {
+        "source:passed": 2,
+        "installed_unit:passed": 2
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_ui_font_tokens.py": {
+      "outcomes": {
+        "source:passed": 3,
+        "installed_unit:passed": 3
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_ui_journal.py": {
+      "outcomes": {
+        "source:passed": 29,
+        "installed_unit:passed": 29
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_ui_method_scope_browser.py": {
+      "outcomes": {
+        "source:passed": 1,
+        "installed_unit:passed": 1,
+        "installed_browser:passed": 3
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_ui_state_clear.py": {
+      "outcomes": {
+        "source:passed": 14,
+        "installed_unit:passed": 14
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_usability_history.py": {
+      "outcomes": {
+        "source:passed": 2,
+        "installed_unit:passed": 2
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_usability_pressure.py": {
+      "outcomes": {
+        "source:passed": 1,
+        "installed_unit:passed": 1
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_ux00_object_identity.py": {
+      "outcomes": {
+        "source:passed": 1,
+        "installed_unit:passed": 1
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_variant_requests.py": {
+      "outcomes": {
+        "source:passed": 6,
+        "installed_unit:passed": 6
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_versioned_exports.py": {
+      "outcomes": {
+        "source:passed": 17,
+        "installed_unit:passed": 17
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_visual_style_freshness.py": {
+      "outcomes": {
+        "source:passed": 7,
+        "installed_unit:passed": 7
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_visual_styles.py": {
+      "outcomes": {
+        "source:passed": 21,
+        "installed_unit:passed": 21
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_visual_styles_web.py": {
+      "outcomes": {
+        "source:passed": 9,
+        "installed_unit:passed": 9
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_web.py": {
+      "outcomes": {
+        "source:passed": 13,
+        "installed_unit:passed": 13
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_webui_acceptance_matrix.py": {
+      "outcomes": {
+        "source:passed": 22,
+        "installed_unit:passed": 22,
+        "installed_browser:passed": 35
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_webui_content_insight.py": {
+      "outcomes": {
+        "source:passed": 12,
+        "installed_unit:passed": 12
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_webui_delivery_parity.py": {
+      "outcomes": {
+        "source:passed": 50,
+        "installed_unit:passed": 50
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_webui_formal_review.py": {
+      "outcomes": {
+        "source:passed": 4,
+        "installed_unit:passed": 4,
+        "installed_browser:passed": 6
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_workbench_actions.py": {
+      "outcomes": {
+        "source:passed": 13,
+        "installed_unit:passed": 13
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_workbench_e2e.py": {
+      "outcomes": {
+        "source:passed": 10,
+        "installed_unit:passed": 10
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_workbench_operations.py": {
+      "outcomes": {
+        "source:passed": 21,
+        "installed_unit:passed": 21
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_workbench_reads.py": {
+      "outcomes": {
+        "source:passed": 27,
+        "installed_unit:passed": 27
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_workbench_services.py": {
+      "outcomes": {
+        "source:passed": 19,
+        "installed_unit:passed": 19
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_x3_design_plan_actions.py": {
+      "outcomes": {
+        "source:passed": 4,
+        "installed_unit:passed": 4,
+        "installed_browser:passed": 8
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_action_targets_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 6
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_batch_actions_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 5
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_comparison_canvas_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 9
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_container_hierarchy_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 10
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_current_work_dialog_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 8
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_deep_quality_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 19
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_deep_review_fixes_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 8
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_deep_review_obligations_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 7
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_design_entry_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 6
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_design_entry_poll_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 4
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_gallery_reading_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 2
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_icon_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 9
+      },
+      "not_run_cases": [
+        "tests/rebuild/test_icon_browser.py::test_actual_icon_candidate_ppt_comparison_retry_and_adoption"
+      ],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_image_pool_remount_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 1
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_method_preparation_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 4
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_modal_close_focus_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 6
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_native_review_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 2
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_navigation_usability_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 21
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_overview_preferences_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 7
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_page_tools_panel_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 7
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_personal_recovery_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 1
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_pr103_complete_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 20
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_pr103_repair_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 35
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_pr104_review_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 43
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_pr104_supplemental_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 17
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_pr105_draft_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 8
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_pr105_inputs_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 5
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_pr187_summary_reuse_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 3
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_pr188_controls_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 17
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_pr188_design_content_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 2
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_pr188_design_context_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 2
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_pr188_design_repairs_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 1
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_pr188_design_type_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 6
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_pr188_reading_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 8
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_adoption_scope_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 8
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_budget_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 9
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_candidate_adoption_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 7
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_notes_export_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 5
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_review_policy_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 6
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_studio_control_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 21
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_studio_intake_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 11
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc_closure_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 28
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_recipe_versions_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 5
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rollup_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 15
+      },
+      "not_run_cases": [
+        "tests/rebuild/test_rollup_browser.py::test_damaged_preview_busy_polls_without_automatic_retry"
+      ],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rp10_content_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 8
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rp22_reading_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 8
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_studio_candidate_batch_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 1
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_studio_connection_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 1
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_studio_content_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 8
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_studio_gallery_batch_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 6
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_studio_overview_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 1
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_studio_page_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 3
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_studio_range_edit_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 4
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_studio_reading_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 4
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_studio_style_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 11
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_style_content_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 7
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_ui_continuous_journey_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 1
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_ui_design_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 9
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_ui_refactor_evidence_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 2
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_ux00_fixes_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 4
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_ux02_batch_slice_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 5
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_ux03_style_candidate_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 18
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_ux04_content_annotations_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 8
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_ux05_runs_delivery_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 8
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_ux06_gallery_conflict_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 1
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_ux06_recovery_responsive_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 17
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_ux07_style_convergence_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 4
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_ux08_task_walkthrough_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 5
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_visual_styles_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 7
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_webui_audit_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 21
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_webui_content_insight_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 13
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_webui_decision_error_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 4
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_work_surface_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 5
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_workbench_usability_browser.py": {
+      "outcomes": {
+        "installed_browser:passed": 7
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_native_notes_view.py": {
+      "outcomes": {
+        "installed_render_available:passed": 3
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_native_table_geometry.py": {
+      "outcomes": {
+        "installed_render_available:passed": 16
+      },
+      "not_run_cases": [
+        "tests/rebuild/test_native_table_geometry.py::test_actual_mixed_alignment_and_same_text_swap_renders_are_retained"
+      ],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_native_table_path_evidence.py": {
+      "outcomes": {
+        "installed_render_available:passed": 26
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_table_text_slack.py": {
+      "outcomes": {
+        "installed_render_available:passed": 17
+      },
+      "not_run_cases": [],
+      "skipped_cases": [],
+      "blocked_cases": []
+    },
+    "tests/rebuild/test_rc3_design_native.py": {
+      "outcomes": {
+        "installed_render_available:passed": 10
+      },
+      "not_run_cases": [
+        "tests/rebuild/test_rc3_design_native.py::test_actual_svg_and_native_renders_retain_the_sample_and_hashes",
+        "tests/rebuild/test_rc3_design_native.py::test_negative_source_and_native_renders_are_retained_with_located_readback[options0-table_cell_ownership_mismatch]",
+        "tests/rebuild/test_rc3_design_native.py::test_negative_source_and_native_renders_are_retained_with_located_readback[options1-reversed_arrow]",
+        "tests/rebuild/test_rc3_design_native.py::test_negative_source_and_native_renders_are_retained_with_located_readback[options2-node_atom_ownership_mismatch]"
+      ],
+      "skipped_cases": [],
+      "blocked_cases": []
+    }
+  },
+  "not_run_cases": [
+    "tests/rebuild/test_candidate_preview_recovery.py::test_damaged_state_retries_actual_compile_render_and_readback",
+    "tests/rebuild/test_candidates.py::test_explicit_assembly_uses_real_pipeline_after_page_gate_and_replays[False]",
+    "tests/rebuild/test_candidates.py::test_explicit_assembly_uses_real_pipeline_after_page_gate_and_replays[True]",
+    "tests/rebuild/test_compiler_geometry.py::test_document_canvas_is_prompt_and_compile_authority",
+    "tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[rgba-fill]",
+    "tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[split-hidden]",
+    "tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[tspan-opacity]",
+    "tests/rebuild/test_deep_quality_render.py::test_local_svg_and_actual_ppt_quality[tspan-style]",
+    "tests/rebuild/test_deep_quality_state.py::test_adopted_svg_continue_rebuilds_existing_ppt[False]",
+    "tests/rebuild/test_deep_quality_state.py::test_adopted_svg_continue_rebuilds_existing_ppt[True]",
+    "tests/rebuild/test_external_review_lifecycle.py::test_historical_stale_final_recovers_without_retiring_valid_trial_or_other_page",
+    "tests/rebuild/test_external_review_lifecycle.py::test_old_final_is_retired_atomically_and_normal_continue_rebuilds[False]",
+    "tests/rebuild/test_external_review_lifecycle.py::test_old_final_is_retired_atomically_and_normal_continue_rebuilds[True]",
+    "tests/rebuild/test_external_review_render.py::test_actual_render_and_persisted_produce_report[duplicate-hidden-fail]",
+    "tests/rebuild/test_external_review_render.py::test_actual_render_and_persisted_produce_report[duplicate-visible-pass]",
+    "tests/rebuild/test_external_review_render.py::test_actual_render_and_persisted_produce_report[no-fill-fail]",
+    "tests/rebuild/test_external_review_render.py::test_actual_render_and_persisted_produce_report[partial-gradient-pass]",
+    "tests/rebuild/test_external_review_render.py::test_actual_render_and_persisted_produce_report[solid-pass]",
+    "tests/rebuild/test_external_review_render.py::test_readback_implementation_change_cannot_reuse_old_candidate_check",
+    "tests/rebuild/test_flow_quality.py::test_revised_deck_recompiles_real_slide_order[add]",
+    "tests/rebuild/test_flow_quality.py::test_revised_deck_recompiles_real_slide_order[edit]",
+    "tests/rebuild/test_flow_quality.py::test_revised_deck_recompiles_real_slide_order[remove]",
+    "tests/rebuild/test_flow_quality.py::test_revised_deck_recompiles_real_slide_order[reorder]",
+    "tests/rebuild/test_gradient_readability.py::test_real_gradient_svg_ppt_and_persisted_check[end-zero]",
+    "tests/rebuild/test_gradient_readability.py::test_real_gradient_svg_ppt_and_persisted_check[partial]",
+    "tests/rebuild/test_gradient_readability.py::test_real_gradient_svg_ppt_and_persisted_check[start-zero]",
+    "tests/rebuild/test_icon_browser.py::test_actual_icon_candidate_ppt_comparison_retry_and_adoption",
+    "tests/rebuild/test_icon_quality.py::test_actual_candidate_preview_and_cross_page_reuse",
+    "tests/rebuild/test_icon_quality.py::test_preview_failure_retry_and_corrupt_files",
+    "tests/rebuild/test_install.py::test_isolated_full_chain_and_local_edit",
+    "tests/rebuild/test_native_table_geometry.py::test_actual_mixed_alignment_and_same_text_swap_renders_are_retained",
+    "tests/rebuild/test_page_visual_gate.py::test_accepted_variance_on_same_page_advances_to_next_blueprint",
+    "tests/rebuild/test_page_visual_gate.py::test_failed_visual_review_requires_page_repair_and_evidenced_closure",
+    "tests/rebuild/test_page_visual_gate.py::test_page_review_blocks_next_blueprint_until_current_three_checks_pass",
+    "tests/rebuild/test_page_visual_gate.py::test_page_review_cannot_pass_after_design_asset_change",
+    "tests/rebuild/test_page_visual_gate.py::test_preflight_and_preview_share_approved_image_assets",
+    "tests/rebuild/test_page_visual_gate.py::test_preview_renderer_execution_error_is_reported_separately_from_missing_tool",
+    "tests/rebuild/test_page_visual_gate.py::test_repeated_visual_review_without_resolution_stops_with_actionable_finding",
+    "tests/rebuild/test_page_visual_gate.py::test_stored_invalid_svg_reconstructs_then_resumes_page_review",
+    "tests/rebuild/test_page_visual_gate.py::test_style_change_retires_open_review_and_rebuilds_only_current_page",
+    "tests/rebuild/test_page_visual_gate.py::test_unchanged_page_visual_repair_stops_without_another_repair_loop",
+    "tests/rebuild/test_pipeline_preview_reuse.py::test_real_rsvg_rebuild_then_review_and_assembly[missing]",
+    "tests/rebuild/test_pipeline_preview_reuse.py::test_real_rsvg_rebuild_then_review_and_assembly[stale]",
+    "tests/rebuild/test_production.py::test_new_design_mode_and_failed_review_is_preserved",
+    "tests/rebuild/test_rc3_design_native.py::test_actual_svg_and_native_renders_retain_the_sample_and_hashes",
+    "tests/rebuild/test_rc3_design_native.py::test_negative_source_and_native_renders_are_retained_with_located_readback[options0-table_cell_ownership_mismatch]",
+    "tests/rebuild/test_rc3_design_native.py::test_negative_source_and_native_renders_are_retained_with_located_readback[options1-reversed_arrow]",
+    "tests/rebuild/test_rc3_design_native.py::test_negative_source_and_native_renders_are_retained_with_located_readback[options2-node_atom_ownership_mismatch]",
+    "tests/rebuild/test_rc3_notes_files.py::test_real_pipeline_to_export_preserves_full_notes_and_dependencies",
+    "tests/rebuild/test_rc3_notes_transactions.py::test_actual_completed_visual_notes_assembly_export_zero_image_ledger",
+    "tests/rebuild/test_rc3_notes_transactions.py::test_frozen_a_real_sdk_refuses_protected_notes_write_boundaries",
+    "tests/rebuild/test_rc3_notes_transactions.py::test_notes_edit_preserves_completed_visual_and_actual_review_bytes",
+    "tests/rebuild/test_rc3_notes_transactions.py::test_visual_open_finding_not_fixed_by_notes",
+    "tests/rebuild/test_render.py::test_renderers_available_on_this_machine",
+    "tests/rebuild/test_render.py::test_svg_renders_with_rsvg_convert",
+    "tests/rebuild/test_rollup_browser.py::test_damaged_preview_busy_polls_without_automatic_retry",
+    "tests/rebuild/test_service_flow.py::test_page_reorder_and_removal_keep_ids_and_history_out_of_current_ppt",
+    "tests/rebuild/test_service_flow.py::test_reconstruct_after_style_change_uses_new_effective_style",
+    "tests/rebuild/test_service_flow.py::test_single_page_edit_keeps_unrelated_page_artifacts_and_reassembles",
+    "tests/rebuild/test_tasks.py::test_no_progress_repair_stops_instead_of_looping",
+    "tests/rebuild/test_tasks.py::test_svg_only_fix_is_progress_not_no_progress"
+  ]
+}
