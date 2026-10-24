@@ -1,4 +1,4 @@
-"""Browser counterexamples from the three design reviewers."""
+"""Browser navigation counterexample from the design review."""
 import pytest
 from test_pr188_reading_browser import ui  # noqa: F401
 
