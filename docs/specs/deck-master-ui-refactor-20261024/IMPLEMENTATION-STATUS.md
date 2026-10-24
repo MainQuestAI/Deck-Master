@@ -21,7 +21,7 @@ User authorized continuous product implementation, isolated branch/worktree, pus
 | E3 | IMPLEMENTED | Six reading layers; bounded long copy; nonmodal source inspection; 440/880 editor retaining drafts, validation, exact range and keyboard boundary. |
 | E4 | IMPLEMENTED | Selection-first gallery; existing pinned candidate comparison and adoption retained; decision controls fit desktop viewports; shared candidate identities preserved. |
 | E5 | IMPLEMENTED_WITH_DEPENDENCIES | V1/V2/V3 recipe reading, existing two-source/four-phase flow, task subareas and fixed exports; narrow exact-replay fixes and finding-set continuity. RP-18 and external #186 closure remain explicitly outside this UI slice. |
-| E6 | VERIFIED_WITH_LIMITS | Source/installed regression and 30 screenshots are recorded in VERIFICATION.md. Six ACs remain PARTIAL; final full browser sweep and remote CI tracked below. |
+| E6 | VERIFIED_WITH_LIMITS | Source/installed regression and 30 screenshots are recorded in VERIFICATION.md. Current closure: 26 PASS_AUTOMATED + 1 PASS_NATIVE_ASSISTED + 1 PASS_ENGINEERING; AC14/AC18 retain external professional dependencies. See NATIVE-ACCEPTANCE.md. |
 
 ## Dependencies and ownership
 
@@ -128,3 +128,7 @@ Product ACs link concrete tests in acceptance-matrix.json. A PARTIAL status iden
 - [One-project continuous trace](evidence/continuous-journey/index.html) covers all five tasks in IMPLEMENTATION §5. The real preproduction gate first rejects the edited manuscript's old review; only an explicitly scripted L1 workorder result permits continuation. All Host returns are synthetic, model calls zero, final review ZIP is real and fixed to the recorded revision.
 - [Four fixed-load comparisons](evidence/NAVIGATION.md) include cold reads, three rounds of five-surface switching and idle polling. The initial 2.90s regression remains in the evidence; the corrected 500-candidate maximum is 0.31s. This does not close the separate CPU repair work.
 - Final ledger: **26 PASS_AUTOMATED / 4 PARTIAL**, with exact remaining boundaries in [COMPLETION-AUDIT](COMPLETION-AUDIT.md). Native picker validation is blocked by the Mac lock; no unlock response has been received. The final remote CI remains pending and is not replaced by historical passes.
+
+### Final native acceptance and review readiness
+
+See [NATIVE-ACCEPTANCE.md](NATIVE-ACCEPTANCE.md), which supersedes earlier lock-screen and running-CI observations. User-assisted native cancel plus independent field/empty-registry readback passed; actual Mac keyboard selection and reading-focus path passed. All 14 checks on 12fd87f9 passed. This documentation-only closure does not alter product code, tests or workflows. PR may enter formal review; no merge or professional acceptance is asserted.

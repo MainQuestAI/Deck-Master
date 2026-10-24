@@ -16,13 +16,15 @@
     "scenario": "新建选择目录取消；创建成功但打开响应失败",
     "expected": "表单保留；核对并打开原项目，不重复创建",
     "evidence": "真实本机对话框+API回读 / E1",
-    "status": "PARTIAL",
+    "status": "PASS_NATIVE_ASSISTED",
     "evidence_refs": [
       "test_ui_design_browser.py::test_picker_cancel_and_failure_preserve_path_and_manual_focus",
       "test_rc3_studio_intake_browser.py",
-      "test_ui_continuous_journey_browser.py"
+      "test_ui_continuous_journey_browser.py",
+      "NATIVE-ACCEPTANCE.md",
+      "evidence/native-acceptance.json"
     ],
-    "scope_note": "接口/浏览器恢复已覆盖；2026-10-24 原生界面工具实查 Mac 锁屏、无法自动解锁，等待用户解锁后核验真实系统目录选择器。",
+    "scope_note": "真实系统目录选中回填；用户确认取消，Agent 独立回读五项字段保留、按钮恢复、registry 为空且未创建目录。创建丢响应恢复由最终浏览器回归覆盖。详见 NATIVE-ACCEPTANCE.md。",
     "verification_report": "VERIFICATION.md"
   },
   {
@@ -383,13 +385,15 @@
     "scenario": "所有页正常/选中/编辑/错误三视口以上",
     "expected": "动作语义可辨；非编辑页最多1主行动；文本无遮挡，控件命中合规",
     "evidence": "computed style+截图+键盘 / E1–E6",
-    "status": "PARTIAL",
+    "status": "PASS_ENGINEERING",
     "evidence_refs": [
       "test_ui_refactor_evidence_browser.py",
       "test_ui_design_browser.py",
-      "test_work_surface_browser.py"
+      "test_work_surface_browser.py",
+      "NATIVE-ACCEPTANCE.md",
+      "evidence/native-acceptance.json"
     ],
-    "scope_note": "实际截图、控件计算样式、主行动数量、布局与焦点；本机原生 select 键盘自动化限制与现场用户验收分列。",
+    "scope_note": "三视口截图/计算样式/主行动/焦点回归与 Linux 577 项浏览器通过；Mac 桌面实际 Tab→Space→Down→Enter 选择和阅读焦点补证通过。单桌面操作不冒充 Mac 三视口自动化重跑；用户视觉认可独立。",
     "verification_report": "VERIFICATION.md"
   },
   {
