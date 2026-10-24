@@ -1,0 +1,145 @@
+{
+  "runtime_candidate": {
+    "head": "75551e7d06dd3c7a78e05e9188ac032bbd064da0",
+    "tree": "8ba3825cb84994da9905064674317300bbd1f6e1",
+    "parents": [
+      "83cdfecbe26ddd013e0aabe89d3ad12fac43a5a3"
+    ],
+    "ancestor_of_runtime_candidate": true
+  },
+  "base": {
+    "head": "afcc23d1654a6ce24583677c4de9d4a80f0f89bd",
+    "tree": "a4a7d45e6a673133565e6545970aa6b3fadfab71",
+    "parents": [
+      "44e9dd8bd96b9e52ac0acc4174b87f677d3c9bf6",
+      "1c87787ee9d5b6a0dd692b731374474c85e94af1"
+    ],
+    "ancestor_of_runtime_candidate": true
+  },
+  "pr_created": false,
+  "pr_creation": {
+    "action": "POST /repos/MainQuestAI/Deck-Master/pulls",
+    "status": "DENIED",
+    "reason": "Forbidden",
+    "retried": false
+  },
+  "pro_review": "NOT_RUN",
+  "merge": "NOT_EXECUTED",
+  "humanizer": "DEFERRED_BY_USER_NOT_INCLUDED",
+  "wheel": {
+    "source_sha": "75551e7d06dd3c7a78e05e9188ac032bbd064da0",
+    "tree": "8ba3825cb84994da9905064674317300bbd1f6e1",
+    "wheel_sha256": "1059ddce8ce3f51622eae72a18d1e40833c591e22aea45a67632bdc421a1b7d9",
+    "wheel_files": 369,
+    "git_tracked_runtime_files": 292
+  },
+  "results": [
+    {
+      "file": "full-unit-final.xml",
+      "source": "b8e6ec4f start",
+      "name": "pytest",
+      "errors": "3",
+      "failures": "12",
+      "skipped": "2",
+      "tests": "4049",
+      "time": "1522.200",
+      "timestamp": "2026-10-24T10:16:48.341681+00:00",
+      "hostname": "1f871fca1878"
+    },
+    {
+      "file": "installed-b7523c99.xml",
+      "source": "b7523c99",
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "190",
+      "time": "262.663",
+      "timestamp": "2026-10-24T10:24:36.824810+00:00",
+      "hostname": "1f871fca1878"
+    },
+    {
+      "file": "compat-corrected.xml",
+      "source": "83cdfecb payload",
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "98",
+      "time": "17.863",
+      "timestamp": "2026-10-24T10:39:07.758526+00:00",
+      "hostname": "1f871fca1878"
+    },
+    {
+      "file": "services-rerun.xml",
+      "source": "75551e7d",
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "19",
+      "time": "8.254",
+      "timestamp": "2026-10-24T10:42:19.553766+00:00",
+      "hostname": "1f871fca1878"
+    },
+    {
+      "file": "q2-75551e7d.xml",
+      "source": "75551e7d",
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "43",
+      "time": "165.054",
+      "timestamp": "2026-10-24T10:41:00.412675+00:00",
+      "hostname": "1f871fca1878"
+    },
+    {
+      "file": "installed-75551e7d.xml",
+      "source": "75551e7d",
+      "name": "pytest",
+      "errors": "0",
+      "failures": "1",
+      "skipped": "0",
+      "tests": "262",
+      "time": "318.255",
+      "timestamp": "2026-10-24T10:41:05.301832+00:00",
+      "hostname": "1f871fca1878"
+    },
+    {
+      "file": "installed-handoff-rerun.xml",
+      "source": "75551e7d installed runtime + 1c9d9231 test",
+      "description": "corrected autosave assertions",
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "4",
+      "time": "14.411",
+      "timestamp": "2026-10-24T10:47:11.787903+00:00",
+      "hostname": "1f871fca1878"
+    }
+  ],
+  "blockers": [
+    "PR creation Forbidden",
+    "Second added issue number unidentified",
+    "Broad-run service startup stability unproven",
+    "No final complete browser sweep",
+    "Remote CI integration and PR187 unverified",
+    "rsvg-convert missing; rendering/final image/PPT semantics unverified",
+    "Actual Host/external report repair/user visual/end-to-end CPU acceptance incomplete"
+  ],
+  "broad_source_runtime": "started b8e6ec4f; later scoped repairs reverified; not a final fixed-SHA whole-suite pass",
+  "q2_inner": {
+    "case_carrier": "/workspace/Deck-Master-integrated/tests/rebuild/rc3_q2_later_300_cases.py",
+    "expected": 70,
+    "executed": 70,
+    "passed": 70,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "actual_runtime_identity_observations": 61
+  },
+  "installed_module_audit_count": 98,
+  "test_followup": "1c9d9231: method autosave assertion; runtime unchanged from 75551e7d"
+}

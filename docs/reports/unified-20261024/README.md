@@ -12,7 +12,7 @@ Status: **draft integration, not accepted, not merge-ready**. No Pro review or f
 | PR187 workflow | `870db06e7067c935b2331ade7f39e6bc20b8393d` |
 | PR188 UI | `159cfd63e9bcf71c10d98dad45a1a2567eb52136` |
 
-`git ls-remote --heads origin` confirmed these heads and no existing integration branch. PR185 and PR187 diverge at `601f5ec6`; PR188 descends from PR184 and does not contain their full increments. The integration starts at PR188, merges PR185 (`a308be5a`), then PR187 (`c4e925d3`), retaining both parents and all source history. Integration fixes/consumer migration are `1ea3ad22`. No source branch was rewritten or merged to main.
+`git ls-remote --heads origin` confirmed these heads and no existing integration branch. PR185 and PR187 diverge at `601f5ec6`; PR188 descends from PR184 and does not contain their full increments. The integration starts at PR188, merges PR185 (`a308be5a`), then PR187 (`c4e925d3`), retaining both parents and all source history. Integration fixes/consumer migration are `1ea3ad22`; new-finding recovery and action priority repair are `b8e6ec4f`; pending-current navigation and combined-contract fixture repairs are `b7523c99`. No source branch was rewritten or merged to main.
 
 ## Conflict decisions
 
@@ -20,7 +20,7 @@ Status: **draft integration, not accepted, not merge-ready**. No Pro review or f
 - Use PR188 snapshot-scoped CurrentRelationships as the active UI relationship projection, retaining its adopted-content receipt verification. Add PR185 changed-dependency replan, full-scope successor proof and unknown-call-only recovery. Preserve source task status and immutable candidate history. `pending_count` retains undecided history; `historical_count`/`actionable_count` distinguish current work. `stale_count` is a compatibility count of historical candidates. Source RP08 assertions were ported to this explicit combined contract, retaining the 22-record/one-action and two-distinct-basis checks.
 - Keep action-target display facts from PR185 plus PR188 current relation and kind/creation fields. Keep exact original recipe/reference bytes and all v1/v2/v3 design records; preserve feasibility and production eligibility boundaries.
 - Combine PR188 poll cancellation/control-light compatibility with PR187 exact summary reuse. Preserve modal content ownership, removed-trigger fallback and queued-close focus protection.
-- Keep PR187 scoped original-finding/source repair and external-report handoff. Keep PR188 strict clean-pass replacement exception: no invented findings or dropping failed findings. The synthetic clean-pass regression now explicitly requests the clean progression unit; separate failed-prior/drop/disjoint/empty-observation/final-stage rejection cases remain.
+- Keep PR187 scoped original-finding/source repair and external-report handoff. Extend PR188 clean-prior replacement handling to retain genuinely new findings on a later recheck, as required by PR187 recovery; no invented findings or dropping failed findings. The synthetic clean-pass and multi-owner regressions now explicitly request rechecking clean units/owners; separate failed-prior/drop/disjoint/empty-observation/final-stage rejection cases remain.
 - Keep full review-owner, outline, source, authorization/adoption, asynchronous recovery and writer boundaries. These require integrated tests, not trust in a clean textual merge.
 
 ## #183 consumer migration
@@ -31,14 +31,18 @@ Historical campaign executables are hash-bound evidence and remain byte-for-byte
 
 ## Acceptance and blockers
 
-See [issue index](ISSUES.md) and [machine-readable mapping](issue-matrix.json). The original 51 plus #186 are mapped separately, with source commits, final paths, tests and historical evidence. This does not convert the historical 30 bounded/22 partial assessment into 22 bugs or integrated acceptance.
+See [reproduction and installation notes](REPRODUCE.md), [consumer inventory](receipt-consumers.json), [issue index](ISSUES.md) and [machine-readable mapping](issue-matrix.json). The original 51 plus #186 are mapped separately, with source commits, final paths, tests and historical evidence. This does not convert the historical 30 bounded/22 partial assessment into 22 bugs or integrated acceptance.
 
-- GitHub open-PR enumeration and direct issue #183 read returned `Forbidden`. These operations stopped; no alternate identity/channel was used. The reported second new issue remains unidentified. PR187 current CI remains unverified; PR188 success is not substituted.
+- GitHub open-PR enumeration and direct issue #183 read returned `Forbidden`. These operations stopped; no alternate identity/channel was used. The reported second new issue remains unidentified. PR187 current CI remains unverified; PR188 success is not substituted. User-provided historical observations were PR188 push run `40075042367` success and PR run `40075046021` attempt 3 success (09:56 UTC); they were not independently queried in this task. Their first Q2 timeout/browser failures remain historical evidence and are not asserted to share PR187's cause.
 - Render doctor returned `needs_tool`: `rsvg-convert` absent. No render pass or final image/PPT semantics is claimed.
 - Browser download was denied (`403 Domain forbidden`); existing `/usr/bin/chromium` is used through explicit test configuration. Browser assertions and skip-failure rules remain intact.
 - Actual Host execution, user visual judgment, final image/PPT semantics, external-report real repair and outstanding CPU evidence remain separate gates. No real customer deck, paid model batch, monitoring installation, credential change, publication, issue closure or merge was performed.
-- Final source/wheel validation is in progress. First failures and reruns are retained under `/tmp/deck-integration-evidence`; a final evidence manifest will identify exact source/tree/wheel and results. Do not use earlier source-branch CI as final validation.
+- Source/wheel validation is recorded separately in the final validation manifest. First failures and reruns are retained under `/tmp/deck-integration-evidence`; the final evidence manifest identifies exact source/tree/wheel and results. Do not use earlier source-branch CI as final validation.
 
 ## Pro review handoff
 
 Review the full main-to-head diff and source ancestry, then use [PRO-REVIEW.md](PRO-REVIEW.md). The user-selected ChatGPT Pro review must occur on the final fixed SHA after regression corrections. This integration task does not substitute an internal agent for Pro or authorize final merge.
+
+Final compatibility repair `83cdfecb` preserves legacy v1 clean-review receipts while keeping v2 final-stage refusal, failed-prior and finding-closure checks. Final runtime `75551e7d` combines PR188 method preparation recovery context with PR185 fixed manifest/preview endpoint contracts. It does not add Humanizer. See [validation](VALIDATION.md), [reproduction](REPRODUCE.md), [prepared PR body](PR-BODY.md), and [consumer inventory](receipt-consumers.json).
+
+Raw evidence and wheel archive: [manifest and archive hash](EVIDENCE.md). Final test-only follow-up `1c9d9231` verifies the automatic-save state and real refresh restoration; corrected installed module: 4 passed. Broad-suite service startup stability remains unproven.

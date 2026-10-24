@@ -1,0 +1,393 @@
+{
+  "consumers": [
+    {
+      "path": "src/deck_master/native_review.py",
+      "line": 158,
+      "operation": "_commit_task_update",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "src/deck_master/native_review.py",
+      "line": 295,
+      "operation": "_commit_task_update",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "src/deck_master/native_review.py",
+      "line": 274,
+      "operation": "_commit_task_update",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "src/deck_master/native_review.py",
+      "line": 276,
+      "operation": "accept_result",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "src/deck_master/native_review.py",
+      "line": 417,
+      "operation": "task_start",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "src/deck_master/native_review.py",
+      "line": 461,
+      "operation": "accept_result",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "src/deck_master/web.py",
+      "line": 307,
+      "operation": "task_cancel",
+      "explicit_compact": false,
+      "classification": "public negotiated compatibility boundary"
+    },
+    {
+      "path": "src/deck_master/cli.py",
+      "line": 1275,
+      "operation": "accept_result",
+      "explicit_compact": false,
+      "classification": "public negotiated compatibility boundary"
+    },
+    {
+      "path": "src/deck_master/cli.py",
+      "line": 1291,
+      "operation": "task_start",
+      "explicit_compact": false,
+      "classification": "public negotiated compatibility boundary"
+    },
+    {
+      "path": "src/deck_master/cli.py",
+      "line": 1308,
+      "operation": "task_cancel",
+      "explicit_compact": false,
+      "classification": "public negotiated compatibility boundary"
+    },
+    {
+      "path": "tools/rc3_campaign/controller_v2.py",
+      "line": 572,
+      "operation": "task_start",
+      "explicit_compact": false,
+      "classification": "historical campaign tool; exact old identity retained, not migrated"
+    },
+    {
+      "path": "tools/rc3_campaign/controller_v2.py",
+      "line": 680,
+      "operation": "accept_result",
+      "explicit_compact": false,
+      "classification": "historical campaign tool; exact old identity retained, not migrated"
+    },
+    {
+      "path": "tools/rc3_campaign/controller_v2.py",
+      "line": 900,
+      "operation": "accept_result",
+      "explicit_compact": false,
+      "classification": "historical campaign tool; exact old identity retained, not migrated"
+    },
+    {
+      "path": "tools/rc3_campaign/m02_runtime_continuation.py",
+      "line": 365,
+      "operation": "task_start",
+      "explicit_compact": false,
+      "classification": "historical campaign tool; exact old identity retained, not migrated"
+    },
+    {
+      "path": "tools/rc3_campaign/m02_runtime_continuation.py",
+      "line": 404,
+      "operation": "task_cancel",
+      "explicit_compact": false,
+      "classification": "historical campaign tool; exact old identity retained, not migrated"
+    },
+    {
+      "path": "tools/rc3_campaign/supplementary_recorder_v3.py",
+      "line": 793,
+      "operation": "task_start",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "tools/rc3_campaign/q2_later_300_v2.py",
+      "line": 369,
+      "operation": "accept_result",
+      "explicit_compact": false,
+      "classification": "historical campaign tool; exact old identity retained, not migrated"
+    },
+    {
+      "path": "tools/rc3_campaign/q2_later_300_v2.py",
+      "line": 746,
+      "operation": "task_start",
+      "explicit_compact": false,
+      "classification": "historical campaign tool; exact old identity retained, not migrated"
+    },
+    {
+      "path": "tools/rc3_campaign/supplementary_recorder_v2.py",
+      "line": 793,
+      "operation": "task_start",
+      "explicit_compact": false,
+      "classification": "historical campaign tool; exact old identity retained, not migrated"
+    },
+    {
+      "path": "tools/rc3_campaign/m02_image_transition.py",
+      "line": 740,
+      "operation": "task_start",
+      "explicit_compact": false,
+      "classification": "historical campaign tool; exact old identity retained, not migrated"
+    },
+    {
+      "path": "tools/rc3_campaign/q2_later_300.py",
+      "line": 369,
+      "operation": "accept_result",
+      "explicit_compact": false,
+      "classification": "historical campaign tool; exact old identity retained, not migrated"
+    },
+    {
+      "path": "tools/rc3_campaign/q2_later_300.py",
+      "line": 746,
+      "operation": "task_start",
+      "explicit_compact": false,
+      "classification": "historical campaign tool; exact old identity retained, not migrated"
+    },
+    {
+      "path": "tools/rc3_campaign/supplementary_recorder.py",
+      "line": 793,
+      "operation": "task_start",
+      "explicit_compact": false,
+      "classification": "historical campaign tool; exact old identity retained, not migrated"
+    },
+    {
+      "path": "tools/rc3_campaign/controller_v3.py",
+      "line": 572,
+      "operation": "task_start",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "tools/rc3_campaign/controller_v3.py",
+      "line": 680,
+      "operation": "accept_result",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "tools/rc3_campaign/controller_v3.py",
+      "line": 900,
+      "operation": "accept_result",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "tools/rc3_campaign/q2_later_300_v3.py",
+      "line": 369,
+      "operation": "accept_result",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "tools/rc3_campaign/q2_later_300_v3.py",
+      "line": 746,
+      "operation": "task_start",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "tools/rc3_campaign/supplied_p5_fidelity.py",
+      "line": 383,
+      "operation": "task_start",
+      "explicit_compact": false,
+      "classification": "historical campaign tool; exact old identity retained, not migrated"
+    },
+    {
+      "path": "tools/rc3_campaign/controller.py",
+      "line": 569,
+      "operation": "task_start",
+      "explicit_compact": false,
+      "classification": "historical campaign tool; exact old identity retained, not migrated"
+    },
+    {
+      "path": "tools/rc3_campaign/controller.py",
+      "line": 677,
+      "operation": "accept_result",
+      "explicit_compact": false,
+      "classification": "historical campaign tool; exact old identity retained, not migrated"
+    },
+    {
+      "path": "tools/rc3_campaign/controller.py",
+      "line": 897,
+      "operation": "accept_result",
+      "explicit_compact": false,
+      "classification": "historical campaign tool; exact old identity retained, not migrated"
+    },
+    {
+      "path": "examples/workbench/w02_content_plan.py",
+      "line": 64,
+      "operation": "accept_result",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "examples/workbench/w10_pressure.py",
+      "line": 45,
+      "operation": "task_start",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "examples/workbench/w10_pressure.py",
+      "line": 257,
+      "operation": "task_cancel",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "examples/workbench/w10_pressure.py",
+      "line": 259,
+      "operation": "task_start",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "examples/workbench/w07_synthetic.py",
+      "line": 88,
+      "operation": "task_start",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "examples/workbench/w07_synthetic.py",
+      "line": 90,
+      "operation": "accept_result",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "examples/workbench/w07_synthetic.py",
+      "line": 111,
+      "operation": "task_start",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "examples/workbench/w07_synthetic.py",
+      "line": 159,
+      "operation": "accept_result",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "examples/workbench/w07_synthetic.py",
+      "line": 176,
+      "operation": "accept_result",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "examples/workbench/w01_pressure.py",
+      "line": 184,
+      "operation": "task_start",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "examples/workbench/w01_pressure.py",
+      "line": 189,
+      "operation": "task_cancel",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "examples/workbench/w08_style_transfer.py",
+      "line": 20,
+      "operation": "task_start",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "examples/workbench/w10_recovery.py",
+      "line": 65,
+      "operation": "task_cancel",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "examples/workbench/w10_recovery.py",
+      "line": 112,
+      "operation": "task_cancel",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "examples/workbench/rc3_content_intents_diagnostic.py",
+      "line": 102,
+      "operation": "task_start",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "examples/workbench/rc3_content_intents_diagnostic.py",
+      "line": 104,
+      "operation": "accept_result",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "examples/workbench/w02_recovery.py",
+      "line": 32,
+      "operation": "accept_result",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "examples/workbench/w09_browser_edges.py",
+      "line": 71,
+      "operation": "task_start",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "examples/workbench/w09_browser_edges.py",
+      "line": 73,
+      "operation": "accept_result",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "examples/workbench/w09_browser_edges.py",
+      "line": 54,
+      "operation": "task_start",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "examples/workbench/w09_browser_edges.py",
+      "line": 55,
+      "operation": "accept_result",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "examples/workbench/w05_page_chain.py",
+      "line": 51,
+      "operation": "task_start",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    },
+    {
+      "path": "examples/workbench/w05_page_chain.py",
+      "line": 75,
+      "operation": "accept_result",
+      "explicit_compact": true,
+      "classification": "migrated owned consumer"
+    }
+  ],
+  "browser": "run-recovery.js negotiates task_receipt.v1; real browser test asserts sent protocol, task identity and cancellation result",
+  "managed_host": "four managed Skill entries share canonical collaboration-routing.md; capability-supported task mutations require explicit compact flag",
+  "external": "CLI/service omitted protocol remains legacy; unowned external consumers cannot be forced",
+  "limitation": "Historical campaign callers remain on original executable versions; active Q2 carrier uses migrated v3. Do not claim old admitted controls migrated."
+}
