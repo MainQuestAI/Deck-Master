@@ -123,6 +123,9 @@ def preview(project, request):
                         'sha256': hashes.get(mid), 'selectable': allowed, 'reason_codes': why})
     preview_digest = digest({'basis': context_digest, 'catalog': catalog_digest, 'selected': chosen, 'manifest': resolved, 'damaged': damaged})
     handoff = {'schema_version': 'method_preparation_handoff.v1',
+        'context': ctx, 'role': role, 'phase': phase, 'review_units': units or [],
+        'explicit_ids': chosen, 'catalog_digest': catalog_digest,
+        'context_digest': context_digest, 'preparation_only': True,
         'project_id': project_id, 'revision_id': revision,
         'effective_context': {'role': role, 'kind': kind, 'intent': intent, 'phase': phase,
                               'review_units': units or [], 'request_scope': (work.get('scope') if ctx['mode'] == 'project' else None)},
@@ -130,7 +133,9 @@ def preview(project, request):
                             'expected_basis': {'catalog_digest': catalog_digest, 'context_digest': context_digest}},
         'preview_digest': preview_digest, 'resolved_manifest': resolved,
         'default_ids': defaults, 'dependency_ids': dependencies, 'phase_state': phase_state,
-        'recovery': {'preview_endpoint': '/api/method-library/preview',
+        'recovery': {'surface': 'content', 'content_area': 'methods',
+                     'context': ctx, 'selected_resource_ids': chosen,
+                     'preview_endpoint': '/api/method-library/preview',
                      'resource_endpoint': '/api/method-library/resources/{id}',
                      'instructions': '重新执行 preview_request 并核对 preview_digest，再按返回 catalog_digest/sha256 读取每个资源。已有 Task 必须读其冻结工作单，不得用此准备覆盖 manifest。'}}
     text = ('方法准备，尚未应用；不是任务派发或生产许可。职责、阶段、范围与资源如下。'
