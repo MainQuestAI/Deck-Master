@@ -133,7 +133,29 @@ def test_same_project_create_material_edit_handoff_candidate_and_fixed_export(la
             handoff = page.locator('.task-handoff')
             expect(handoff).to_be_visible()
             expect(handoff.get_by_role('button', name='复制交接说明', exact=True)).to_be_enabled()
-            text = handoff.get_by_label('本任务完整交接说明').input_value()
+            # A verified task refresh remounts the handoff asynchronously. An
+            # enabled old button does not mean the replacement text has loaded.
+            held_handoffs, holding_handoff = [], True
+            def hold_handoff(route):
+                if holding_handoff:
+                    held_handoffs.append((route, route.fetch()))
+                else:
+                    route.continue_()
+            page.route('**/api/changes/*/handoff', hold_handoff)
+            try:
+                page.locator('.run-detail').get_by_role('button', name='核实原任务', exact=True).click()
+                expect(handoff.get_by_role('button', name='复制交接说明', exact=True)).to_be_disabled()
+                assert handoff.get_by_label('本任务完整交接说明').input_value() == ''
+                assert held_handoffs
+            finally:
+                holding_handoff = False
+                for route, response in held_handoffs:
+                    route.fulfill(response=response)
+                page.unroute('**/api/changes/*/handoff', hold_handoff)
+            text = page.wait_for_function('''taskId => {
+                const value = document.querySelector('.task-handoff textarea')?.value;
+                return value?.includes(taskId) && value.includes('p01') ? value : false;
+            }''', arg=task['task_id'], timeout=5000).json_value()
             assert task['task_id'] in text and 'p01' in text
             assert task['scope_pages'] == ['p01'] and not task.get('call_allowances')
             record('selected_page_handoff', task_id=task['task_id'], method='public trial API and browser handoff',

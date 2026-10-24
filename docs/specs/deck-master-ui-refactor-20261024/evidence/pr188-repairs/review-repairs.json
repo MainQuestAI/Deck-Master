@@ -611,5 +611,35 @@
     "src/deck_master/resources/static/v2/routes.js": "fbe0f984a00d1433537428266d3f2a8e776cc5f1011eff8024aed8a292e70e7a",
     "src/deck_master/resources/static/v2/summary-poll.js": "d6f47e63d91a3911717db5be0ab94c38e1789a8c42e67d1dd28ebc5e96f8d2b3",
     "src/deck_master/web.py": "0e8c997a20b9dd47e460016dfd1089672eacd0391e6895d9faa4062cca31ca43"
+  },
+  "ci_handoff_test_followup": {
+    "origin_sha": "bfd76073ee3335b7c4e64484af2b3a7193db972b",
+    "pr_run": 40061529093,
+    "original_browser": {
+      "passed": 601,
+      "failed": 1,
+      "case": "test_ui_continuous_journey_browser.py::test_same_project_create_material_edit_handoff_candidate_and_fixed_export"
+    },
+    "reason": "Immediate textarea read raced task handoff remount after the old copy button became enabled; no clipboard write occurred at the failing step.",
+    "fix": "Hold and release a real handoff response after verifying the task; assert loading disables copy and take an atomic matching text snapshot within the existing 5-second expect budget. Original task/page/scope assertions retained.",
+    "product_files_changed": false,
+    "checks": {
+      "handoff-fixed": {
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "seconds": 12.036,
+        "junit_sha256": "b54e75609e030a7c900b6b992c1dad639b178bdfc5b8105257024ff9677bdbc7"
+      },
+      "installed-handoff": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "seconds": 4.879,
+        "junit_sha256": "4a255880f5be5a5fc4b7f7814cff6a0e4ae7eae16ec11af7d0cdd4bc40846fc6"
+      }
+    }
   }
 }
