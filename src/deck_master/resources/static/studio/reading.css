@@ -72,12 +72,9 @@
  .studio-workspace .page-workbench .page-head > div:first-child {display:contents}
  .studio-workspace .page-workbench .page-head h1 {grid-column:1/-1;margin:0}
  .studio-workspace .page-workbench .page-head p {grid-column:1;grid-row:2;font-size:12px;margin:0}
- .studio-workspace .page-workbench .page-pager {grid-column:2;grid-row:2;justify-self:end;gap:4px;align-self:center}
+ .studio-workspace .page-workbench .page-pager {grid-column:1/-1;grid-row:3;justify-self:stretch;gap:8px;align-self:center}
  .studio-workspace .page-workbench .page-pager select {width:112px;}
- .studio-workspace .page-workbench .page-pager button {width:44px;min-width:44px;height:44px;}
- .studio-workspace .page-workbench .page-pager button::after {font-size:16px}
- .studio-workspace .page-workbench .page-pager button:first-of-type::after {content:"←"}
- .studio-workspace .page-workbench .page-pager button:last-of-type::after {content:"→"}
+ .studio-workspace .page-workbench .page-pager button {width:auto;min-width:44px;min-height:44px;}
  .studio-workspace .reading-toolbar > .page-tools-switcher {padding-top:0;border:0}
 
  .studio-workspace .reading-toolbar > .page-tools-switcher .ui-icon {display:none}
