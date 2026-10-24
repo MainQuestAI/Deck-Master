@@ -1,0 +1,84 @@
+{
+  "source_commit": "44fc6a23824d3e8f9a9aa6e80fcd1cc6ef791ecb",
+  "pytest_exit": 0,
+  "build_id": "745e976e9dd808ab208188ec11dc2dfdcf7a1e00bf0c6ee343fb15face1e1a3d",
+  "audited_modules": 78,
+  "all_from_installed_package": true,
+  "model_calls": 0,
+  "tests": [
+    "test_ui_method_scope_browser.py",
+    "test_ui_current_relationship.py",
+    "test_ui_continuous_journey_browser.py",
+    "test_rc3_candidate_adoption_browser.py",
+    "test_pr105_draft_browser.py",
+    "test_work_surface_browser.py",
+    "test_ux03_style_candidate_browser.py",
+    "test_ux06_gallery_conflict_browser.py"
+  ],
+  "passed": 50,
+  "wheel_sha256": "e22ab40635e47653014103b1368cdc4394ac0aa023234ab30483e78ce215662b",
+  "offline": {
+    "checks": {
+      "viewport_1440_900_focus_and_overflow": true,
+      "viewport_1280_800_focus_and_overflow": true,
+      "three_fixed_offline_downloads_hash_verified": true,
+      "public_notes_complete_privacy_scrub_and_engineering_original_preserved": true,
+      "every_v2_asset_served_from_installed_package": true,
+      "every_studio_asset_served_from_installed_package": true,
+      "current_entries_and_retired_routes_without_write": true,
+      "installed_brand_license_and_esm_metadata": true,
+      "no_cdn_external_font_or_runtime_request": true
+    },
+    "downloads": [
+      {
+        "purpose": "review",
+        "revision": "af2959ee11ab4fe5974b7a3e874e907f",
+        "sha256": "2d692fb62eba3519e56a22495560a20093c55f6e1385f02a9bc8b12bd0636a7b",
+        "files": 8
+      },
+      {
+        "purpose": "delivery",
+        "revision": "af2959ee11ab4fe5974b7a3e874e907f",
+        "sha256": "9cd05bc188f85a545a560c58b65ea7c1e6799c9e4eb4eccd8dd1c3a36ec1ee11",
+        "files": 8
+      },
+      {
+        "purpose": "engineering",
+        "revision": "af2959ee11ab4fe5974b7a3e874e907f",
+        "sha256": "17a89b181c172659320120310b7ae91faf71ce08e6e7e7eb974e8eb5b8566035",
+        "files": 33
+      }
+    ],
+    "external_requests": [],
+    "page_errors": [],
+    "font_checks": [
+      {
+        "status": "loaded",
+        "body": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans CJK SC\", sans-serif"
+      },
+      {
+        "status": "loaded",
+        "body": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans CJK SC\", sans-serif"
+      }
+    ]
+  },
+  "source_vs_wheel": {
+    "shared_files": 243,
+    "different_shared_files": [],
+    "source_only_files": [],
+    "wheel_only_packaged_method_files": [
+      "resources/method-inventory.json",
+      "resources/skill/assets/content/examples/E01-marketing/numbers.json",
+      "resources/skill/assets/content/examples/E02-technical-choice/numbers.json",
+      "resources/skill/assets/content/examples/E03-policy-training/numbers.json",
+      "resources/skill/assets/content/examples/E04-saas-retention/numbers.json",
+      "resources/skill/assets/master/routing-examples.json",
+      "resources/skill/assets/review/calibration-cases.json",
+      "resources/skill/resource-catalog.json",
+      "resources/skill/scripts/check_case_numbers.py"
+    ]
+  },
+  "fixture": "synthetic",
+  "professional_acceptance": "NOT_RUN",
+  "default_installation_activation": "NOT_RUN"
+}

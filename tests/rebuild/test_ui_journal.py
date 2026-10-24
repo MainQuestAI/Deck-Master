@@ -39,6 +39,39 @@ def business_state(project):
             sorted(p.name for p in store.revisions_dir.glob('*.json')))
 
 
+def test_passive_project_read_defers_eligibility_until_details_are_opened(project, monkeypatch):
+    from deck_master import eligibility
+    calls = []
+    original = eligibility.evaluate
+
+    def counted(*args, **kwargs):
+        calls.append(args[3])
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(eligibility, 'evaluate', counted)
+    server = WorkbenchServer(project)
+    url = server.start()
+    try:
+        status, passive = http(url, '/api/project?light=1')
+        assert status == 200
+        assert calls == []
+        assert 'blocking_cards' not in passive['collaboration']
+        status, detailed = http(url, '/api/project?details=1')
+        assert status == 200
+        assert calls == ['dispatch.compose', 'dispatch.blueprint', 'export.delivery']
+        assert detailed['revision_id'] == passive['revision_id']
+        assert detailed['completion'] == passive['completion']
+        assert 'blocking_cards' in detailed['collaboration']
+        calls.clear()
+        status, default = http(url, '/api/project')
+        assert status == 200 and default['collaboration'] == detailed['collaboration']
+        assert calls == ['dispatch.compose', 'dispatch.blueprint', 'export.delivery']
+        for query in ('light=1&details=1', 'light=0', 'light=1&light=1', 'details=0'):
+            assert http(url, '/api/project?' + query)[0] == 400
+    finally:
+        server.stop()
+
+
 def test_ack_idempotency_cas_pending_payload_and_business_state(project):
     before = business_state(project)
     value = draft(project)

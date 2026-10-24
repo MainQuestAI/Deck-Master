@@ -1,0 +1,78 @@
+[
+  {
+    "fixture": "empty",
+    "width": 1440,
+    "row": "1 · 项目目标与阅读顺序\n项目与材料\n未记录正文块\n\n未记录正文块\n\n第 1 页操作",
+    "first": {
+      "x": 256,
+      "y": 441.09375,
+      "width": 1152,
+      "height": 101
+    },
+    "third": {
+      "x": 256,
+      "y": 643.09375,
+      "width": 1152,
+      "height": 101
+    },
+    "overflow": false,
+    "visibleRows": 4
+  },
+  {
+    "fixture": "empty",
+    "width": 390,
+    "row": "1 · 项目目标与阅读顺序\n项目与材料\n未记录正文块\n第 1 页操作",
+    "first": {
+      "x": 26,
+      "y": 561,
+      "width": 338,
+      "height": 77
+    },
+    "third": {
+      "x": 26,
+      "y": 715,
+      "width": 338,
+      "height": 77
+    },
+    "overflow": false,
+    "visibleRows": 3
+  },
+  {
+    "fixture": "body",
+    "width": 1440,
+    "row": "1 · 先核对范围，再决定行动\n未归入章节\n正文可读 · 核对状态见详情\n\n先核对真实稿件，再确认范围与下一步。\n\n第 1 页操作",
+    "first": {
+      "x": 256,
+      "y": 386.09375,
+      "width": 1152,
+      "height": 101
+    },
+    "third": {
+      "x": 256,
+      "y": 588.09375,
+      "width": 1152,
+      "height": 101
+    },
+    "overflow": false,
+    "visibleRows": 5
+  },
+  {
+    "fixture": "body",
+    "width": 390,
+    "row": "1 · 先核对范围，再决定行动\n未归入章节\n正文可读 · 核对状态见详情\n第 1 页操作",
+    "first": {
+      "x": 26,
+      "y": 488,
+      "width": 338,
+      "height": 77
+    },
+    "third": {
+      "x": 26,
+      "y": 642,
+      "width": 338,
+      "height": 77
+    },
+    "overflow": false,
+    "visibleRows": 4
+  }
+]

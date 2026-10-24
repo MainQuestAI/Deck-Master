@@ -89,7 +89,7 @@ def test_pending_work_surface_read_blocks_control_dialog_and_restores(tmp_path, 
                 held.append((route, response))
                 page.locator('html').evaluate("node => {node.dataset.heldControlRead = 'ready';}")
 
-            page.route('**/api/project', hold_current_control)
+            page.route('**/api/project?light=1', hold_current_control)
             page.get_by_role('button', name='制作总览', exact=True).click()
             expect(page.locator('html')).to_have_attribute('data-held-control-read', 'ready')
             slot = page.locator('.current-control-facts')
@@ -110,7 +110,7 @@ def test_pending_work_surface_read_blocks_control_dialog_and_restores(tmp_path, 
                 else:
                     route.fulfill(response=response)
             expect(page.locator('.navigation-status')).to_be_hidden()
-            page.unroute('**/api/project', hold_current_control)
+            page.unroute('**/api/project?light=1', hold_current_control)
             expect(slot).not_to_have_attribute('aria-busy', 'true')
             assert not slot.evaluate('node => node.inert')
             if read_error:

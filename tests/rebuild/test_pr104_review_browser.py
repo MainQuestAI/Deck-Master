@@ -76,6 +76,7 @@ def open_page(page, server, store, *, layer='svg'):
     identity = page.request.get(base + 'api/project').json()['project_identity']
     page.goto(base + '#' + urlencode({'project': identity, 'surface': 'page', 'page': 'p01', 'layer': layer}))
     page.locator('.page-tools').wait_for()
+    page.get_by_role('button', name='意见', exact=True).click()
 
 
 def opinions(store):

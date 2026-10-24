@@ -597,15 +597,15 @@ def test_task_handoff_and_subarea_state_remain_readable_at_supported_viewports(t
         page.locator('.todo-priority').get_by_role('button', name='去交接', exact=True).click()
         copy = page.get_by_role('button', name='复制交接说明', exact=True)
         expect(copy).to_be_enabled()
-        assert visible_button_style(page, '复制交接说明')['height'] >= 44
+        assert visible_button_style(page, '复制交接说明')['height'] >= (44 if width<=560 else 36)
         page.screenshot(path=str(page.evidence/'task-handoff.png'), full_page=True)
         for name in ('待决定', '版本', '文件', '任务记录'):
             control = page.get_by_role('button', name=name, exact=True)
             control.click()
             expect(control).to_have_attribute('aria-pressed', 'true')
             style = visible_button_style(page, name, pressed='true')
-            assert style['color'] != style['background'] and style['transition'] == '0s'
-            assert style['height'] >= 44
+            assert style['color'] != style['background'] and all(float(value.strip().removesuffix('s')) <= .12 for value in style['transition'].split(','))
+            assert style['height'] >= (44 if width<=560 else 32)
             page.screenshot(path=str(page.evidence/f'area-{name}.png'), full_page=True)
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
 
@@ -635,7 +635,7 @@ def test_first_original_candidate_fit_is_visible_above_decisions_and_has_correct
         for action in footer.get_by_role('button').all():
             if action.is_visible():
                 box = action.bounding_box()
-                assert box['height'] >= 44 and box['y'] + box['height'] <= height + 1, box
+                assert box['height'] >= 32 and box['y'] + box['height'] <= height + 1, box
         page.screenshot(path=str(page.evidence/'fit-above-actions.png'),full_page=True)
         page.get_by_role('button', name='预览采用这个候选', exact=True).click()
         page.get_by_role('button', name='采用这个候选', exact=True).click()

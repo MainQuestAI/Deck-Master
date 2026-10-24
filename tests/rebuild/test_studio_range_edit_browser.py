@@ -28,7 +28,7 @@ def exact_editor(tmp_path):
         page.on('pageerror',lambda e:errors.append(str(e)))
         identity=page.request.get(base+'api/project').json()['project_identity']
         url=base+'studio/#'+urlencode({'project':identity,'surface':'page','page':'p01','layer':'content','revision':store.current_revision_id()})
-        page.goto(url);page.locator('.content-editor > summary').click()
+        page.goto(url);page.locator('.content-editor > :is(summary,button)').click()
         try:yield page,store,project,url,out;assert errors==[]
         finally:browser.close();server.stop()
 
@@ -63,7 +63,7 @@ def test_exact_unicode_range_cancel_restore_replace_delete_and_history(exact_edi
     dialog.get_by_role('button',name='取消并保留范围草稿',exact=True).click()
     assert store.load_document()==before
     expect(page.locator('.draft-state')).to_contain_text('已保存到项目')
-    page.reload();page.locator('.content-editor > summary').click();dialog=open_range(page)
+    page.reload();page.locator('.content-editor > :is(summary,button)').click();dialog=open_range(page)
     expect(dialog.get_by_label('替换文字（留空删除选段）')).to_have_value('新')
     expect(dialog.get_by_label('起始字符（从 1 计）')).to_have_value('7')
     choose(dialog,'新');page.screenshot(path=str(out/'01-range-review-1440.png'))
@@ -77,7 +77,7 @@ def test_exact_unicode_range_cancel_restore_replace_delete_and_history(exact_edi
     with page.expect_response('**/api/content/commit') as receipt:page.get_by_role('button',name='确认内容变更',exact=True).click()
     assert receipt.value.ok
     expect(page).to_have_url(re.compile('revision='+receipt.value.json()['operation_result']['revision_id']))
-    page.locator('.content-editor > summary').click()
+    page.locator('.content-editor > :is(summary,button)').click()
     after=store.load_document();updated=store.read_object_json(after['pages'][0]['page'])['customer_visible']
     assert updated['body_blocks'][1]['items'][0]['text']=='A😀重复e\u0301新Z'
     assert updated['body_blocks'][0]['text']==SAME and after['pages'][1]==before['pages'][1]
@@ -88,7 +88,7 @@ def test_exact_unicode_range_cancel_restore_replace_delete_and_history(exact_edi
     with page.expect_response('**/api/content/commit') as receipt:page.get_by_role('button',name='确认内容变更',exact=True).click()
     assert receipt.value.ok
     expect(page).to_have_url(re.compile('revision='+receipt.value.json()['operation_result']['revision_id']))
-    expect(page.locator('.content-editor > summary')).to_be_visible()
+    expect(page.locator('.content-editor > :is(summary,button)')).to_be_visible()
     final=store.load_document();assert store.read_object_json(final['pages'][0]['page'])['customer_visible']['body_blocks'][1]['items'][0]['text']=='A重复e\u0301新Z'
     page.goto(url);expect(page.locator('.history-banner')).to_be_visible()
     expect(page.get_by_role('button',name='精确修改选段 · '+LEAF.replace(' · ','/'),exact=True)).to_have_count(0)
@@ -101,7 +101,7 @@ def test_exact_range_later_write_and_stale_plan_are_preserved(exact_editor):
     dialog=open_range(page);choose(dialog,'新');dialog.get_by_role('button',name='应用到正文草稿并查看影响',exact=True).click()
     confirm=page.get_by_role('button',name='确认内容变更',exact=True);expect(confirm).to_be_enabled()
     field=page.get_by_label(LEAF,exact=True);field.fill('核对后另写，旧计划失效')
-    expect(confirm).to_be_disabled();assert store.load_document()==before
+    expect(confirm).to_be_hidden();assert store.load_document()==before
     page.get_by_role('button',name='预览正文修改影响',exact=True).click();expect(confirm).to_be_enabled()
     held=[];page.route('**/api/content/commit',lambda route:held.append(route))
     with page.expect_request('**/api/content/commit'):confirm.click()
@@ -113,7 +113,7 @@ def test_exact_range_later_write_and_stale_plan_are_preserved(exact_editor):
     current=store.load_document();assert store.read_object_json(current['pages'][0]['page'])['customer_visible']['body_blocks'][1]['items'][0]['text']=='核对后另写，旧计划失效'
     assert current['pages'][1]==before['pages'][1]
     page.get_by_role('button',name='预览正文修改影响',exact=True).click()
-    expect(confirm).to_be_disabled()
+    expect(confirm).to_be_hidden()
     expect(page.locator('.content-operation-note')).to_contain_text('项目已有新版本')
 
 
@@ -132,7 +132,48 @@ def test_old_range_preview_does_not_close_reopened_dialog(exact_editor):
     expect(dialog).to_be_visible();expect(field).to_have_value('重开的新范围草稿');expect(field).to_be_focused()
     assert store.load_document()==before
     dialog.get_by_role('button',name='取消并保留范围草稿',exact=True).click()
-    expect(page.get_by_role('button',name='确认内容变更',exact=True)).to_be_disabled()
+    expect(page.get_by_role('button',name='确认内容变更',exact=True)).to_be_hidden()
     expect(page.locator('.draft-state')).to_contain_text('已保存到项目')
-    page.reload();page.locator('.content-editor > summary').click();dialog=open_range(page)
+    page.reload();page.locator('.content-editor > :is(summary,button)').click();dialog=open_range(page)
     expect(dialog.get_by_label('替换文字（留空删除选段）')).to_have_value('重开的新范围草稿')
+
+
+def test_drawer_retains_draft_expands_validates_and_traps_focus(exact_editor):
+    from playwright.sync_api import expect
+    page,store,project,url,out=exact_editor
+    before=store.load_document()
+    drawer=page.get_by_role('dialog',name='编辑本页标题与正文',exact=True)
+    expect(drawer).to_be_visible()
+    assert round(drawer.bounding_box()['width'])==440
+    page.screenshot(path=str(out/'drawer-440.png'))
+    page.get_by_label('页面标题',exact=True).fill('保留在抽屉中的标题草稿')
+    drawer.get_by_role('button',name='展开编辑区',exact=True).click()
+    assert round(drawer.bounding_box()['width'])==880
+    page.screenshot(path=str(out/'drawer-880.png'))
+    for _ in range(14):
+        page.keyboard.press('Tab')
+        assert page.evaluate('document.activeElement.closest(".edit-drawer")!==null')
+    page.keyboard.press('Escape')
+    expect(drawer).not_to_be_visible()
+    trigger=page.get_by_role('button',name='编辑本页标题与正文',exact=True)
+    expect(trigger).to_be_focused()
+    trigger.click()
+    expect(page.get_by_label('页面标题',exact=True)).to_have_value('保留在抽屉中的标题草稿')
+    requests=[]
+    page.on('request',lambda r: requests.append(r.url) if '/api/content/plan' in r.url else None)
+    page.get_by_label('页面标题',exact=True).fill('  ')
+    drawer.get_by_role('button',name='预览正文修改影响',exact=True).click()
+    expect(page.get_by_label('页面标题',exact=True)).to_be_focused()
+    expect(page.get_by_label('页面标题',exact=True)).to_have_attribute('aria-invalid','true')
+    assert requests==[] and store.load_document()==before
+    page.screenshot(path=str(out/'drawer-validation.png'))
+    page.set_viewport_size({'width':390,'height':844})
+    bounds=drawer.bounding_box()
+    assert bounds['x']>=0 and bounds['width']<=390
+    assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+    page.screenshot(path=str(out/'drawer-390.png'))
+    drawer.get_by_role('button',name='关闭编辑',exact=True).click()
+    page.locator('.source-inspector > summary').click()
+    expect(page.locator('.source-inspector')).to_contain_text('本页来源固定在')
+    assert page.locator('dialog[open]').count()==0
+    assert store.load_document()==before

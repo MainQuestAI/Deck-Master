@@ -31,7 +31,7 @@
   .gallery-view > .page-head { margin-bottom: 12px; }
   .gallery-controls { gap: 8px; margin-bottom: 8px; }
   .gallery-controls > .segmented { width: 100%; }
-  .gallery-controls > .segmented button { flex: 1; padding-inline: 8px; }
+  .gallery-controls > .segmented button { flex: 1;  }
   .gallery-filter-fields > select, .gallery-filter-fields .gallery-search { width: 100%; }
   .gallery-legend { padding: 8px 0; gap: 6px; font-size: 13px; }
   .gallery-legend span:last-child { width: 100%; }

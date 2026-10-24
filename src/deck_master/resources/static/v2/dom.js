@@ -14,9 +14,12 @@ export function el(tag, attributes = {}, ...children) {
   }
   return node;
 }
-export const button = (text, action, primary = false, props = {}) => el('button', {
-  type: 'button', class: primary ? 'primary' : '', onclick: action, ...props,
-}, text);
+export function button(text, action, primary = false, props = {}) {
+  const {class: className = '', ...attributes} = props;
+  return el('button', {type: 'button', onclick: action, ...attributes,
+    class: [primary && 'primary', className].filter(Boolean).join(' ')}, text);
+}
+
 export function icon(name) {
   const svg = new DOMParser().parseFromString(window.uiIcon(name).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" '), 'image/svg+xml').documentElement;
   return document.importNode(svg, true);
@@ -80,6 +83,29 @@ export function modal(title, body, actions = [], {fallback, protectDraft = false
 // 独立动作分组（§6）：一次一组动作容器承载间距与触点规则；只服务于独立按钮
 // 组，分段共享边缘控件继续用各自的局部容器。
 export const actionGroup = (...controls) => el('div', {class: 'row wrap action-group'}, controls);
+// Native popover escapes scrollable table clipping. This is a disclosure with
+// ordinary Tab stops, not an incomplete ARIA menu/roving-tabindex widget.
+export function actionMenu(label, controls) {
+  const id = `actions-${crypto.randomUUID()}`;
+  const trigger = button([icon('more'), el('span', {class: 'sr-only'}, label)], null, false,
+    {class: 'icon-button', popovertarget: id, 'aria-label': label, 'aria-expanded': 'false'});
+  const panel = el('div', {id, popover: 'auto', class: 'action-popover', role: 'group', 'aria-label': label}, controls);
+  panel.addEventListener('beforetoggle', event => {
+    if (event.newState !== 'open') return;
+    const rect = trigger.getBoundingClientRect();
+    const width = Math.min(280, innerWidth - 32);
+    panel.style.width = `${width}px`;
+    panel.style.left = `${Math.max(16, Math.min(rect.right - width, innerWidth - width - 16))}px`;
+    const below = innerHeight - rect.bottom >= 180;
+    panel.style.top = below ? `${rect.bottom + 8}px` : 'auto';
+    panel.style.bottom = below ? 'auto' : `${innerHeight - rect.top + 8}px`;
+  });
+  panel.addEventListener('toggle', event => trigger.setAttribute('aria-expanded', String(event.newState === 'open')));
+  panel.addEventListener('click', event => {
+    if (event.target.closest('button:not(:disabled),a[href]')) panel.hidePopover();
+  }, {capture: true});
+  return el('div', {class: 'object-actions'}, trigger, panel);
+}
 export async function copyText(text) {
   try { await navigator.clipboard.writeText(text); toast('已复制，尚未开始。请在制作工具中发送。'); }
   catch { modal('复制制作要求', el('textarea', {'aria-label': '制作要求', readOnly: true, rows: 10, value: text})); }

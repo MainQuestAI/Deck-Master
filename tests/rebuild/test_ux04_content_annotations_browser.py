@@ -83,7 +83,7 @@ def test_same_text_body_nodes_are_distinguishable_and_editable_separately(ux04_b
     identity = page.request.get(url.rstrip('/') + '/api/project').json()['project_identity']
 
     goto_page(page, url, identity, 'p01', 'content', revision)
-    page.locator('.content-editor summary').click()
+    page.locator('.content-editor > :is(summary,button)').click()
     expect(page.get_by_label('正文块 1 · 文字')).to_be_visible()
     expect(page.get_by_label('正文块 2 · 发布检查单 · 条目 1 · 文字')).to_be_visible()
     expect(page.get_by_label('正文块 2 · 发布检查单 · 条目 2 · 文字')).to_have_value('不同的另一句。')
@@ -109,6 +109,7 @@ def test_same_text_body_nodes_are_distinguishable_and_editable_separately(ux04_b
 
     # 不确认即离开 = 取消：业务版本与已保存内容不变。
     before = store.read_current()
+    page.get_by_role('button', name='关闭编辑', exact=True).click()
     page.get_by_role('button', name='制作总览', exact=True).click()
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()
     assert store.read_current() == before
@@ -145,6 +146,7 @@ def test_point_overlay_follows_artifact_identity_across_snapshots(ux04_browser, 
 
     goto_page(page, url, identity, 'p01', 'original_image', revision)
     page.locator('[data-image-state="ready"] canvas:visible').first.wait_for()
+    page.get_by_role('button', name='意见', exact=True).click()
     panel = page.locator('.annotations-panel')
     expect(panel).to_contain_text('跨版本点意见：徽标位置')
     # 同产物跨快照：画布叠层仍然绘制（旧实现要求 revision 相等，画布消失）。
@@ -172,8 +174,9 @@ def test_outline_block_reaches_its_pages_and_return_keeps_surface(ux04_browser):
     url = server.start()
     page.goto(url)
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()
-    page.get_by_role('button', name='内容与来源', exact=True).click()
-    page.get_by_role('heading', name='内容与来源', exact=True).wait_for()
+    page.get_by_role('button', name='内容与页序', exact=True).click()
+    page.get_by_role('heading', name='内容与页序', exact=True).wait_for()
+    page.get_by_role('navigation',name='内容工作区').get_by_role('button',name='章节与计划',exact=True).click()
     # 大纲块显示章节与页范围（合成样例为单章"第 1–2 页"），并可在章节内指定页直达，
     # 不再固定打开"首个匹配页"。
     outline = page.locator('.outline-block').first
@@ -184,9 +187,9 @@ def test_outline_block_reaches_its_pages_and_return_keeps_surface(ux04_browser):
     outline.get_by_role('button', name='打开所选页', exact=True).click()
     expect(page.locator('#view-title')).to_contain_text('第 2 页')
     assert 'surface=page' in page.url and 'layer=content' in page.url
-    # 返回内容与来源：工作面可达，大纲仍在。
-    page.get_by_role('button', name='内容与来源', exact=True).click()
-    page.get_by_role('heading', name='内容与来源', exact=True).wait_for()
+    # 返回内容与页序：工作面可达，大纲仍在。
+    page.get_by_role('button', name='内容与页序', exact=True).click()
+    page.get_by_role('heading', name='内容与页序', exact=True).wait_for()
     expect(page.locator('.outline-block').first).to_be_visible()
 
 
@@ -279,7 +282,8 @@ def test_same_text_ranges_validate_per_node_and_feed_text_annotation(ux04_browse
     expect(page.get_by_role('button', name='校验原文选段', exact=True).first).to_be_enabled()
     # 记录到达阅读区的校验结果:两个同文对象的 locator 必须不同。
     page.evaluate("() => {window.__ranges = []; document.querySelector('[aria-label=\"页面内容\"]').addEventListener('text-range-validated', e => window.__ranges.push({ref: e.detail.selection.ref.sha256, locator: e.detail.selection.locator, start: e.detail.selection.start, end: e.detail.selection.end}));}")
-    # 文本意见模式先就位:标注工具在折叠区内,先展开再切换。
+    # 文本意见模式先就位：明确进入意见工具再展开标注。
+    page.get_by_role('button', name='意见', exact=True).click()
     page.get_by_text('范围与标注工具', exact=True).click()
     page.get_by_role('button', name='文本意见', exact=True).click()
     # 文本源含标题等更短对象:按选项文本定位两个同文对象,而不是数组序号。

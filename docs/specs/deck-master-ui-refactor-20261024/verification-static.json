@@ -1,0 +1,18 @@
+{
+  "scope": "plan-and-isolated-prototype",
+  "product_tests": "NOT_RUN",
+  "preserved_files_count": 74,
+  "preserved_files_changed": [],
+  "acceptance_count": 30,
+  "research_source_count": 7,
+  "issue_count": 28,
+  "syntax": "PASS: three JavaScript sources",
+  "product_code_modified": false,
+  "local_links_checked": 40,
+  "missing_local_links": [],
+  "reference_hashes": "PASS",
+  "reader_layout_checks": 27,
+  "prototype_default_layout_checks": 32,
+  "prototype_final_affected_layout_checks": 8,
+  "touch_pager_targets": "44x44 confirmed at actual 390 CSS px"
+}

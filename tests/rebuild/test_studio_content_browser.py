@@ -43,43 +43,49 @@ def test_studio_content_order_preview_cancel_and_plan_commit(tmp_path):
         page.on('pageerror',lambda error:errors.append(str(error)))
         page.on('request',lambda r:requests.append({'method':r.method,'url':r.url.split('/api/')[-1],'body':r.post_data}) if '/api/' in r.url and r.method=='POST' else None)
         try:
-            page.goto(server.start()+'studio/');page.get_by_role('button',name='内容与来源',exact=True).click()
+            page.goto(server.start()+'studio/');page.get_by_role('button',name='内容与页序',exact=True).click()
             nav=page.get_by_role('navigation',name='内容工作区',exact=True)
             expect(page.locator('.studio-content-area:visible')).to_have_count(1)
-            expect(page.locator('#content-area-overview')).to_be_visible()
+            expect(page.locator('#content-area-pages')).to_be_visible()
+            nav.get_by_role('button',name='更多内容工具',exact=True).click()
             nav.get_by_role('button',name='工作笔记',exact=True).click()
             expect(page.get_by_label('个人草稿',exact=True)).to_be_visible()
             page.get_by_label('个人草稿',exact=True).fill('Studio 工作笔记：切换工作区后保留')
             expect(page.locator('.draft-state')).to_contain_text('已保存到项目')
-            nav.get_by_role('button',name='逐页编辑与顺序',exact=True).click()
+            nav.get_by_role('button',name='逐页稿',exact=True).click()
             expect(page.get_by_label('个人草稿',exact=True)).to_be_hidden()
+            nav.get_by_role('button',name='更多内容工具',exact=True).click()
             nav.get_by_role('button',name='工作笔记',exact=True).click()
             expect(page.get_by_label('个人草稿',exact=True)).to_have_value('Studio 工作笔记：切换工作区后保留')
             page.reload()
+            nav.get_by_role('button',name='更多内容工具',exact=True).click()
             nav.get_by_role('button',name='工作笔记',exact=True).click()
             expect(page.get_by_label('个人草稿',exact=True)).to_have_value('Studio 工作笔记：切换工作区后保留')
-            nav.get_by_role('button',name='逐页编辑与顺序',exact=True).click()
+            nav.get_by_role('button',name='逐页稿',exact=True).click()
             order=page.locator('.content-order-row')
             geometry=[]
             for width,height in [(1440,900),(1280,800),(390,844)]:
                 page.set_viewport_size({'width':width,'height':height});page.evaluate('window.scrollTo(0,0)')
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
-                row=order.first.bounding_box();action=page.get_by_role('button',name='预览页序变更',exact=True).bounding_box()
+                row=order.first.bounding_box();action=None
+                expect(page.get_by_role('button',name='预览页序变更',exact=True)).to_be_hidden()
                 handle=order.first.locator('.order-handle').bounding_box();check=order.first.get_by_role('checkbox').bounding_box()
-                assert handle['y']+handle['height']<=height and check['y']+check['height']<=height and action['y']+action['height']<=height
+                assert handle['y']+handle['height']<=height and check['y']+check['height']<=height
                 expect(page.locator('.content-impact')).to_be_hidden()
                 geometry.append({'width':width,'height':height,'first_row':row,'first_page_button':handle,'first_checkbox':check,'main_action':action})
                 page.screenshot(path=str(out/f'00-order-first-viewport-{width}.png'))
             (out/'first-viewport.json').write_text(json.dumps(geometry,indent=2))
             page.set_viewport_size({'width':1440,'height':900})
+            page.get_by_role('button', name='材料与要求', exact=True).click()
             page.get_by_role('button',name='查看输入判断',exact=True).click()
             expect(page.get_by_role('dialog',name='输入判断与依据',exact=True)).to_be_visible()
             expect(page.get_by_role('dialog')).to_contain_text('内容整合')
             expect(page.locator('#content-area-pages')).to_be_visible()
             page.get_by_role('dialog').get_by_role('button',name='关闭',exact=True).click()
-            expect(page.get_by_role('button',name='查看输入判断',exact=True)).to_be_focused()
+            expect(page.get_by_role('button',name='材料与要求',exact=True)).to_be_focused()
             old_ids=order.evaluate_all('(rows)=>rows.map(r=>r.dataset.pageId)')
             first=order.first
+            first.get_by_role('button',name='第 1 页操作',exact=True).click()
             first.get_by_role('button',name=re.compile('^向后移动 ')).click()
             reordered=order.evaluate_all('(rows)=>rows.map(r=>r.dataset.pageId)')
             assert reordered==[old_ids[1],old_ids[0],*old_ids[2:]]
@@ -120,7 +126,7 @@ def test_studio_content_order_preview_cancel_and_plan_commit(tmp_path):
             requirement.fill('核对后又修改要求，旧计划不能提交')
             expect(page.get_by_role('button',name='确认并交接内容调整',exact=True)).to_be_disabled()
             assert store.load_document()['tasks']==before_tasks
-            nav.get_by_role('button',name='内容计划',exact=True).click()
+            nav.get_by_role('button',name='章节与计划',exact=True).click()
             expect(page.get_by_label('内容整合结论',exact=True)).to_have_attribute('readonly','')
             chapter_name=page.get_by_label('章节名称 1',exact=True);chapter_name.fill('完整内容计划验证：保持全部稳定页面身份')
             card=page.locator('.studio-goal-card').first
@@ -155,12 +161,13 @@ def test_studio_content_order_preview_cancel_and_plan_commit(tmp_path):
             identity=page.request.get(server.start()+'api/project').json()['project_identity']
             page.goto(server.start()+'studio/#'+urlencode({'project':identity,'surface':'content','revision':initial['revision_id'],'layer':'content'}))
             expect(page.get_by_text('此处只读固定版本的内容目标与来源，不混入当前任务要求。',exact=True)).to_be_visible()
-            nav.get_by_role('button',name='逐页编辑与顺序',exact=True).click()
+            nav.get_by_role('button',name='逐页稿',exact=True).click()
             expect(page.locator('.content-order-row').first.get_by_role('checkbox')).to_be_disabled()
             expect(page.get_by_role('button',name='预览页序变更',exact=True)).to_have_count(0)
-            nav.get_by_role('button',name='内容计划',exact=True).click()
+            nav.get_by_role('button',name='章节与计划',exact=True).click()
             expect(page.get_by_label('章节名称 1',exact=True)).to_have_attribute('readonly','')
             expect(page.get_by_role('button',name='预览内容计划变更',exact=True)).to_have_count(0)
+            nav.get_by_role('button',name='更多内容工具',exact=True).click()
             nav.get_by_role('button',name='工作笔记',exact=True).click()
             expect(page.get_by_label('个人草稿',exact=True)).to_have_attribute('readonly','')
             assert store.load_document()==final and not errors
@@ -171,7 +178,7 @@ def test_studio_content_order_preview_cancel_and_plan_commit(tmp_path):
             browser.close();server.stop()
 
 
-def test_studio_content_overview_starts_with_chapters_and_materials(tmp_path):
+def test_studio_content_chapters_and_materials_have_separate_primary_areas(tmp_path):
     from playwright.sync_api import sync_playwright,expect
     from deck_master import content_ops,tasks
     from test_content_candidates import start_task,accept
@@ -188,25 +195,31 @@ def test_studio_content_overview_starts_with_chapters_and_materials(tmp_path):
     with sync_playwright() as runtime:
         browser=runtime.chromium.launch();page=browser.new_page(viewport={'width':1440,'height':900});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
         try:
-            page.goto(server.start()+'studio/');page.get_by_role('button',name='内容与来源',exact=True).click()
-            chapter=page.locator('#content-area-overview .outline-block').first
+            page.goto(server.start()+'studio/');page.get_by_role('button',name='内容与页序',exact=True).click()
+            nav=page.get_by_role('navigation',name='内容工作区',exact=True)
+            nav.get_by_role('button',name='章节与计划',exact=True).click()
+            chapter=page.locator('#content-area-plan .outline-block').first
             material_card=page.locator('.studio-material-card').first
-            expect(chapter).to_be_visible();expect(material_card).to_be_visible();expect(page.locator('.content-impact')).to_have_count(0)
+            expect(chapter).to_be_visible();expect(material_card).to_be_hidden();expect(page.locator('.content-impact')).to_have_count(0)
             for width,height in [(1440,900),(1280,800),(390,844)]:
                 page.set_viewport_size({'width':width,'height':height});page.evaluate('scrollTo(0,0)')
-                chapter_box=chapter.bounding_box();material_box=material_card.bounding_box()
+                nav.get_by_role('button',name='章节与计划',exact=True).click();page.evaluate('scrollTo(0,0)')
+                chapter_box=chapter.bounding_box()
                 assert chapter_box['y']+44<=height
-                if width>=768:assert material_box['y']+44<=height
+                nav.get_by_role('button',name='材料与来源',exact=True).click();page.evaluate('scrollTo(0,0)')
+                material_box=material_card.bounding_box()
+                assert material_box['y']+44<=height
                 assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
                 page.screenshot(path=str(out/f'overview-first-{width}.png'),full_page=True)
                 geometry.append({'width':width,'height':height,'chapter':chapter_box,'material':material_box})
+            page.get_by_role('button', name='材料与要求', exact=True).click()
             button=page.get_by_role('button',name='查看输入判断',exact=True);button.click()
             dialog=page.get_by_role('dialog',name='输入判断与依据',exact=True)
             expect(dialog).to_contain_text(impact)
             expect(dialog).to_contain_text('无正文变化依据：新增材料仅用于核对原事实，不需要重写页面。')
             expect(dialog).to_contain_text('内容整合')
             page.screenshot(path=str(out/'overview-input-judgment.png'),full_page=True)
-            dialog.get_by_role('button',name='关闭',exact=True).click();expect(button).to_be_focused();expect(chapter).to_be_visible()
+            dialog.get_by_role('button',name='关闭',exact=True).click();expect(page.get_by_role('button',name='材料与要求',exact=True)).to_be_focused();expect(material_card).to_be_visible()
             assert store.load_document()==before and errors==[]
             (out/'overview-first.json').write_text(json.dumps({'geometry':geometry,'errors':errors,'unchanged_revision':store.current_revision_id()},ensure_ascii=False,indent=2))
         finally:browser.close();server.stop()
@@ -233,8 +246,8 @@ def test_studio_goal_material_links_keep_fixed_source_versions_and_recover(tmp_p
         browser=runtime.chromium.launch();page=browser.new_page(viewport={'width':1440,'height':900});page.on('pageerror',lambda e:errors.append(str(e)))
         page.on('request',lambda r:requests.append({'method':r.method,'url':r.url.split('/api/')[-1],'body':r.post_data}) if '/api/' in r.url and r.method=='POST' else None)
         try:
-            base=server.start();page.goto(base+'studio/');page.get_by_role('button',name='内容与来源',exact=True).click()
-            page.get_by_role('navigation',name='内容工作区').get_by_role('button',name='内容计划',exact=True).click()
+            base=server.start();page.goto(base+'studio/');page.get_by_role('button',name='内容与页序',exact=True).click()
+            page.get_by_role('navigation',name='内容工作区').get_by_role('button',name='章节与计划',exact=True).click()
             card=page.locator('.studio-goal-card').first
             # A controlled read failure leaves the source unselectable and offers retry.
             def fail_read(route):
@@ -262,7 +275,7 @@ def test_studio_goal_material_links_keep_fixed_source_versions_and_recover(tmp_p
                 extracted=store.read_object_json(source['extract']);assert link['locator'] in {r['locator'] for r in extracted['locators']}
             page.get_by_role('button',name='取消本次核对，保留编辑',exact=True).click();expect(submit).to_be_disabled();assert store.load_document()==before
             expect(page.locator('.draft-state')).to_contain_text('已保存到项目')
-            page.reload();page.get_by_role('navigation',name='内容工作区').get_by_role('button',name='内容计划',exact=True).click()
+            page.reload();page.get_by_role('navigation',name='内容工作区').get_by_role('button',name='章节与计划',exact=True).click()
             card=page.locator('.studio-goal-card').first;card.get_by_role('button',name='编辑页面目标',exact=True).click()
             expect(card.get_by_label('关联材料 业务事实.md 到第 1 页',exact=True)).to_be_checked();expect(card.get_by_label('关联材料 范围约束.md 到第 1 页',exact=True)).to_be_checked()
             expect(card.get_by_label('材料位置 业务事实.md · 第 1 页',exact=True)).to_have_value(values[1])
@@ -315,8 +328,8 @@ def test_studio_split_merge_fields_preview_cancel_refresh_and_dispatch(tmp_path,
         browser=runtime.chromium.launch();page=browser.new_page(viewport={'width':1440,'height':900});page.on('pageerror',lambda e:errors.append(str(e)))
         page.on('request',lambda r:requests.append({'url':r.url.split('/api/')[-1],'body':r.post_data}) if '/api/' in r.url and r.method=='POST' else None)
         try:
-            page.goto(server.start()+'studio/');page.get_by_role('button',name='内容与来源',exact=True).click()
-            nav=page.get_by_role('navigation',name='内容工作区');nav.get_by_role('button',name='逐页编辑与顺序',exact=True).click()
+            page.goto(server.start()+'studio/');page.get_by_role('button',name='内容与页序',exact=True).click()
+            nav=page.get_by_role('navigation',name='内容工作区');nav.get_by_role('button',name='逐页稿',exact=True).click()
             for index in range(count):page.locator('.content-order-row').nth(index).get_by_role('checkbox').check()
             mode=page.get_by_role('group',name='选页调整方式').get_by_role('button',name=label,exact=True);mode.click();expect(mode).to_have_attribute('aria-pressed','true')
             preview=page.get_by_role('button',name='预览'+label+'选页',exact=True);field_input=page.get_by_label(field,exact=True)
@@ -330,7 +343,7 @@ def test_studio_split_merge_fields_preview_cancel_refresh_and_dispatch(tmp_path,
             assert posted['targets']==[{'page_id':p['page_id'],'page_ref':p['page']} for p in before['pages'][:count]]
             page.get_by_role('button',name='取消本次核对，保留编辑',exact=True).click();expect(submit).to_be_disabled();expect(page.locator('.content-request-review')).to_have_count(0)
             assert store.load_document()==before;expect(page.locator('.draft-state')).to_contain_text('已保存到项目')
-            page.reload();nav.get_by_role('button',name='逐页编辑与顺序',exact=True).click()
+            page.reload();nav.get_by_role('button',name='逐页稿',exact=True).click()
             expect(mode).to_have_attribute('aria-pressed','true');expect(field_input).to_have_value(value)
             for index in range(count):expect(page.locator('.content-order-row').nth(index).get_by_role('checkbox')).to_be_checked()
             preview.click();expect(submit).to_be_enabled()
@@ -370,8 +383,9 @@ def test_old_poll_cannot_invalidate_newly_read_content_plan(tmp_path, old_poll_e
         page.on('pageerror', lambda error: errors.append(str(error)))
         try:
             page.goto(server.start())
-            page.get_by_role('button', name='内容与来源', exact=True).click()
-            page.get_by_role('button', name='逐页编辑与顺序', exact=True).click()
+            page.get_by_role('button', name='内容与页序', exact=True).click()
+            page.get_by_role('button', name='逐页稿', exact=True).click()
+            page.locator('.content-order-row').first.get_by_role('button',name='第 1 页操作',exact=True).click()
             page.locator('.content-order-row').first.get_by_role('button', name=re.compile('^向后移动 ')).click()
             page.get_by_role('button', name='预览页序变更', exact=True).click()
             commit = page.get_by_role('button', name='确认内容变更', exact=True)
@@ -415,3 +429,42 @@ def test_old_poll_cannot_invalidate_newly_read_content_plan(tmp_path, old_poll_e
             page.unroute_all(behavior='ignoreErrors')
             browser.close()
             server.stop()
+
+
+def test_content_selection_survives_filter_and_select_all_is_visible_only(tmp_path):
+    from playwright.sync_api import sync_playwright, expect
+    project=tmp_path/'selection';create_gallery_sample(project,page_count=30,readonly=False)
+    authorize_content_edits(project)
+    server=WorkbenchServer(project)
+    with sync_playwright() as runtime:
+        browser=runtime.chromium.launch();page=browser.new_page(viewport={'width':1440,'height':900})
+        errors=[];page.on('pageerror',lambda error:errors.append(str(error)))
+        try:
+            page.goto(server.start()+'studio/');page.get_by_role('button',name='内容与页序',exact=True).click()
+            nav=page.get_by_role('navigation',name='内容工作区')
+            expect(nav.locator(':scope > button')).to_have_count(3)
+            expect(page.locator('.studio-content-adjust')).to_be_hidden()
+            rows=page.locator('.content-order-row')
+            identities=rows.evaluate_all('(rows)=>rows.map(r=>r.dataset.pageId)')
+            rows.nth(1).get_by_role('checkbox').check();rows.nth(27).get_by_role('checkbox').check()
+            expect(page.locator('.studio-content-adjust')).to_be_visible()
+            search=page.get_by_role('searchbox',name='搜索逐页稿')
+            search.fill('28 ')
+            expect(rows).to_have_count(1)
+            expect(page.locator('.content-list-toolbar')).to_contain_text('已选 2 页 · 筛选外 1 页')
+            search.fill('29 ')
+            page.get_by_role('checkbox',name='选定当前筛选结果',exact=True).check()
+            expect(page.locator('.content-list-toolbar')).to_contain_text('已选 3 页 · 筛选外 2 页')
+            search.fill('')
+            actual=rows.filter(has=page.locator('input:checked')).evaluate_all('(rows)=>rows.map(r=>r.dataset.pageId)')
+            assert actual==[identities[1],identities[27],identities[28]]
+            expect(page.locator('.draft-state')).to_contain_text('已保存到项目')
+            page.reload()
+            expect(rows).to_have_count(30)
+            actual=rows.filter(has=page.locator('input:checked')).evaluate_all('(rows)=>rows.map(r=>r.dataset.pageId)')
+            assert actual==[identities[1],identities[27],identities[28]]
+            rows.first.locator('.order-handle').focus();page.keyboard.press('Alt+ArrowDown')
+            assert rows.nth(1).get_attribute('data-page-id')==identities[0]
+            expect(rows.nth(1).locator('.order-handle')).to_be_focused()
+            assert not errors
+        finally:browser.close();server.stop()

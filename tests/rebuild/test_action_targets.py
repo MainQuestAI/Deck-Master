@@ -26,11 +26,23 @@ def action_project(tmp_path):
     return path, Store(path)
 
 
+def current_read_task(store, doc, task_id, status, *, page_ids, result_refs=()):
+    """Synthetic read fixture with a real current-request binding, no dispatch."""
+    from deck_master.collaboration_binding import build_binding
+    task = synthetic_task(doc, task_id, status, result_refs=result_refs)
+    task['scope_pages'] = page_ids
+    scope = {**doc['collaboration']['request']['scope'], 'subject':'pages', 'page_ids':page_ids,
+             'layers':['review'], 'allow_page_membership_change':False, 'allow_page_order_change':False}
+    task['collaboration_binding'] = build_binding(store, doc, phase='review', executor_type='host',
+                                                  write_scope=scope, adoption_policy='proposal_only')
+    validate_schema('task', task)
+    return task
+
+
 def add_handoffs(store):
     doc = store.load_document()
     for index, page in enumerate(doc['pages'][:2]):
-        task = synthetic_task(doc, 'handoff-' + str(index), 'awaiting_host')
-        task['scope_pages'] = [page['page_id']]
+        task = current_read_task(store, doc, 'handoff-' + str(index), 'awaiting_host', page_ids=[page['page_id']])
         doc['tasks'].append(store.put_json_object(task))
     return commit(store, doc, str(uuid.uuid4()))
 

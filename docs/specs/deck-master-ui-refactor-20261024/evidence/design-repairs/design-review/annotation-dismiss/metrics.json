@@ -1,0 +1,52 @@
+{
+  "source_file_sha256": "0474d3c0ae78f432a40a0aa46e6e495fc21ad7b2a74d32e788fc0c29a2e7fcc3",
+  "results": [
+    {
+      "entry": "studio",
+      "mode": "点标注",
+      "afterClose": "auto",
+      "marks": 1,
+      "textPreserved": true,
+      "afterDetails": "none"
+    },
+    {
+      "entry": "studio",
+      "mode": "框选模式",
+      "afterClose": "auto",
+      "marks": 1,
+      "textPreserved": true,
+      "afterDetails": "none"
+    },
+    {
+      "entry": "v2",
+      "mode": "点标注",
+      "afterClose": "auto",
+      "marks": 1,
+      "textPreserved": true,
+      "afterDetails": "none"
+    },
+    {
+      "entry": "v2",
+      "mode": "框选模式",
+      "afterClose": "auto",
+      "marks": 1,
+      "textPreserved": true,
+      "afterDetails": "none"
+    },
+    {
+      "entry": "studio",
+      "width": 390,
+      "defaultReading": true,
+      "normalCloseReading": true,
+      "overlay": "none"
+    },
+    {
+      "entry": "v2",
+      "width": 390,
+      "defaultReading": true,
+      "normalCloseReading": true,
+      "overlay": "none"
+    }
+  ],
+  "errors": []
+}

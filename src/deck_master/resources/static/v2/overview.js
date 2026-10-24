@@ -1,5 +1,5 @@
 import {get, revisionQuery, canonical} from './api.js';
-import {el, button, heading, empty, version, sortHeading, icon, disabledReason, modal, downloadJSON} from './dom.js';
+import {el, button, heading, empty, version, sortHeading, icon, disabledReason, modal, downloadJSON, actionMenu} from './dom.js';
 import {imageView} from './images.js';
 import {layers} from './routes.js';
 import {stageKey} from './gallery.js';
@@ -43,11 +43,13 @@ function todoTitle(action) {
   const layer = {blueprint:'原图',svg:'SVG',svg_preview:'SVG 预览',ppt_preview:'PPT 预览',pptx:'整稿 PPT'}[action.layer] || '产物类型待核实';
   const base = action.kind === 'prepare_stage' ? `${layer}待生成`
     : action.kind === 'refresh_stage' ? `${layer}依据已变化` : kindLabels[action.kind] || '待核实事项';
+  if(action.object_count && ['verify_execution','handoff','inspect_failure','replan','review_results'].includes(action.kind)) return `${action.object_count} 项${base}`;
+  if(action.object_count && action.kind==='compare_candidates')return `${action.object_count} 个候选待决定`;
   return action.page_ids?.length ? `${action.page_ids.length} 页${base}` : base;
 }
 function reasonText(action) {
-  return (reasonLabels[action.reason_code] || action.reason_code || '') +
-    (action.blocked_reason === 'candidate_unreadable' ? ' 候选记录损坏，已隔离。' : '');
+  if(action.enabled===false)return ({candidate_unreadable:'候选记录暂不可读，已保留并隔离。',candidate_task_unreadable:'候选所属任务无法确认，暂不推荐采用。',candidate_basis_unreadable:'生成依据暂不可读，当前关系待核实。',request_binding_missing:'未记录与当前请求的绑定，保留为待核实记录。',target_identity_mismatch:'对象身份不完整，保留记录但不会猜测目标。'})[action.blocked_reason]||'当前关系待核实，记录仍保留。';
+  return reasonLabels[action.reason_code] || action.reason_code || '';
 }
 function todoMeta(app, action) {
   const pages = (action.page_ids || []).map(id => {
@@ -61,7 +63,7 @@ function todoButton(app, action, primary = false) {
   const blocked = action.enabled === false;
   const precise = app.health.ui_capabilities?.includes('action_targets.v1');
   return disabledReason(button((nextLabels[action.kind] || '查看') + (precise ? '' : ' · 通用入口'), () => openAction(app, action, actionRoute(action)), primary,
-    {disabled: blocked}), blocked ? '该项记录暂不可读（已隔离），先处理其它待办。' : '');
+    {disabled: blocked, 'data-priority-action': primary ? 'true' : null}), blocked ? '该项记录暂不可读（已隔离），先处理其它待办。' : '');
 }
 
 function todoPanel(app) {
@@ -85,6 +87,7 @@ function todoPanel(app) {
   }
   if (block?.status === 'recorded' && block.actions?.length) {
     const [first, ...rest] = block.actions;
+    const secondary=action=>el('article',{class:'todo-row'},el('div',{},el('h3',{},todoTitle(action)),el('p',{},reasonText(action)),el('p',{class:'muted'},todoMeta(app,action))),todoButton(app,action));
     const node = el('section', {class: 'overview-todos', 'aria-label': '制作待办'},
       el('div', {class: 'todo-priority'},
         el('div', {class: 'row between'}, el('span', {class: 'todo-kicker'}, '优先处理'),
@@ -93,9 +96,9 @@ function todoPanel(app) {
         el('div', {class: 'todo-bottom'}, el('span', {}, todoMeta(app, first)), todoButton(app, first, true))),
       el('div', {class: 'todo-secondary'},
         el('div', {class: 'todo-list-head'}, el('h3', {}, '接下来'), el('span', {}, `${rest.length} 类事项`)),
-        rest.length ? rest.map(action => el('article', {class: 'todo-row'},
-          el('div', {}, el('h3', {}, todoTitle(action)), el('p', {}, reasonText(action)), el('p',{class:'muted'},todoMeta(app,action))), todoButton(app, action)))
-          : el('p', {class: 'muted'}, '处理当前优先事项后，继续核对整稿。')));
+        rest.length ? rest.slice(0,2).map(secondary)
+          : el('p', {class: 'muted'}, '处理当前优先事项后，继续核对整稿。'),
+        rest.length>2&&el('details',{class:'todo-more'},el('summary',{},`另有 ${rest.length-2} 类事项`),rest.slice(2).map(secondary))));
     return node;
   }
   if (!block) {
@@ -151,19 +154,19 @@ export function overview(app, data = {}) {
   root.append(heading('制作总览',
     `${pages.length} 页内容 · ${blueprintCount} 页已有原图`,
     el('div', {class:'row wrap'}, studio && button([icon('attention'), '状态说明'], () => modal('如何理解制作状态', el('p', {}, explanation))),
-      button([studio && icon('gallery'), '查看整稿'], () => app.go({surface: 'gallery'}), true))));
+      button([studio && icon('gallery'), '查看整稿'], () => app.go({surface: 'gallery'})))));
   if (!studio) root.append(el('details', {class: 'overview-state-help'}, el('summary', {}, '如何理解制作状态'), el('p', {}, explanation)));
   const todo=todoPanel(app);root.append(todo);
   const todoFacts=()=>canonical([app.latest?.revision_id,app.info.control_revision_id,app.info.completion,app.info.collaboration?.request,app.summary.reading_etag]);
   let shownFacts=todoFacts();
   const sync=event=>{const next=event.detail;if(next.revision_id===app.summary.revision_id&&next.reading_etag!==app.summary.reading_etag)app.summary=next;
-    const facts=todoFacts();if(facts!==shownFacts){shownFacts=facts;root.querySelector('.overview-todos')?.replaceWith(todoPanel(app));}};
+    const facts=todoFacts();if(facts!==shownFacts){shownFacts=facts;root.querySelector('.overview-todos')?.replaceWith(todoPanel(app));root.querySelector('[data-priority-action]')?.classList.toggle('primary',!Number(root.dataset.selection));}};
   app.root.addEventListener('summary-refreshed',sync);app.disposables.push(()=>app.root.removeEventListener('summary-refreshed',sync));
-  root.append(matrixPanel(app, data.overview));
+  root.append(matrixPanel(app, data.overview, root));
   return root;
 }
 
-function matrixPanel(app, saved) {
+function matrixPanel(app, saved, overviewRoot) {
   const pages = app.summary.pages;
   const studio = document.documentElement.dataset.workbenchUi === 'studio';
   let matrixPage = 1;
@@ -266,7 +269,7 @@ function matrixPanel(app, saved) {
   }
   function nextButton(page) {
     const item = page.attention?.items?.[0];
-    const identity = canonical([page.page_id, item ? item.action_id || item : 'view_page']);
+    const identity = canonical([page.page_id, item ? [item.kind,item.action_id,item.layer,item.object_id,item.task_id,item.candidate_id] : 'view_page']);
     if (!item) return button('查看页面', () => app.go({surface: 'page', page_id: page.page_id, layer: 'content'}), false,
       {class: 'quiet', 'data-matrix-next': identity});
     const blocked = item.enabled === false;
@@ -278,9 +281,13 @@ function matrixPanel(app, saved) {
     // restore focus owned by this table; asynchronous reads must not steal it
     // from the search field, navigation or a dialog.
     const focused = document.activeElement;
+    const ownedFocus = table.contains(focused);
+    const focusKey = ownedFocus ? focused.getAttribute('data-focus-key') : null;
+    const focusPage = ownedFocus ? focused.closest('tr[data-page-id]')?.dataset.pageId : null;
     const focusLabel = table.contains(focused) ? focused.getAttribute('aria-label') : null;
     const focusSort = table.contains(focused) && focused.matches('th[aria-sort] button');
     const focusNext = table.contains(focused) ? focused.getAttribute('data-matrix-next') : null;
+    const ownedMenuOpen = table.contains(focused) && Boolean(focused.closest('.object-actions')?.querySelector('.action-popover:popover-open'));
     const list = visiblePages();
     const pageCount = Math.max(1, Math.ceil(list.length / pageSize));
     matrixPage = Math.max(1, Math.min(matrixPage, pageCount));
@@ -315,6 +322,9 @@ function matrixPanel(app, saved) {
     // Batch eligibility and preference messages still synchronize on every
     // refresh. Equal matrix facts must not replace keyboard-owned controls.
     batch.render();
+    batch.toolbar.hidden = studio && !selected.size;
+    overviewRoot.dataset.selection = String(selected.size);
+    overviewRoot.querySelector('[data-priority-action]')?.classList.toggle('primary', !selected.size);
     preferenceStatus.textContent = memory.message; compareButton.hidden = !memory.error; downloadButton.hidden = !memory.error;
     if (preferenceStatus.parentElement) preferenceStatus.parentElement.hidden = studio && memory.supported && !memory.error;
     const nextTableState = canonical([filter, search, ascending, matrixPage, list.map(page => [page.page_id,
@@ -327,7 +337,7 @@ function matrixPanel(app, saved) {
       sortHeading('页面', ascending ? 'ascending' : 'descending', () => { ascending = !ascending; batch.invalidate(); saveReading(); render(); }),
       el('th', {scope: 'col'}, layers.content), el('th', {scope: 'col'}, '提示词'),
       el('th', {scope: 'col'}, layers.original_image), el('th', {scope: 'col'}, layers.svg),
-      el('th', {scope: 'col'}, layers.ppt), el('th', {scope: 'col'}, '下一步'));
+      el('th', {scope: 'col'}, layers.ppt), el('th', {scope: 'col'}, '页面操作'));
     const body = el('tbody');
     if (!list.length) {
       body.append(el('tr', {}, el('td', {colspan: 8}, el('div', {class: 'matrix-empty stack'},
@@ -354,7 +364,7 @@ function matrixPanel(app, saved) {
         }
         thumb.append(view.node);
       } else thumb.append(icon('minus'));
-      const row = el('tr', {},
+      const row = el('tr', {'data-page-id':page.page_id},
         el('td', {}, el('label', {class: 'check-target'}, el('input', {type: 'checkbox',
           checked: selected.has(page.page_id), disabled: !batch.eligible(page) && !selected.has(page.page_id),
           'aria-label': `选择第 ${number} 页`, onchange: event => {
@@ -369,14 +379,23 @@ function matrixPanel(app, saved) {
         el('td', {}, cellButton(page, 'original_image', cellView(stageState(page.stages[stageKey.original_image])))),
         el('td', {}, cellButton(page, 'svg', cellView(stageState(page.stages[stageKey.svg])))),
         el('td', {}, cellButton(page, 'ppt', cellView(stageState(page.stages[stageKey.ppt])))),
-        el('td', {class: 'matrix-next'}, nextButton(page)));
+        el('td', {class: 'matrix-next'}, actionMenu(`第 ${number} 页操作`, [nextButton(page),
+          button('阅读正文', () => app.go({surface: 'page', page_id: page.page_id, layer: 'content'}), false, {'data-focus-key':canonical([page.page_id,'read','content',page.page_id])}),
+          button('核对来源', () => app.go({surface: 'page', page_id: page.page_id, layer: 'source'}), false, {'data-focus-key':canonical([page.page_id,'read','source',page.page_id])})])));
       body.append(row);
     }
     table.replaceChildren(el('thead', {}, head), body);
-    const replacement = focusSort ? table.querySelector('th[aria-sort] button')
+    let replacement = focusKey ? table.querySelector(`[data-focus-key="${CSS.escape(focusKey)}"]`) : focusSort ? table.querySelector('th[aria-sort] button')
       : focusNext ? table.querySelector(`[data-matrix-next="${CSS.escape(focusNext)}"]`)
       : focusLabel ? table.querySelector(`[aria-label="${CSS.escape(focusLabel)}"]`) : null;
-    if (replacement && !replacement.disabled) replacement.focus({preventScroll:true});
+    if (replacement && !replacement.disabled) {
+      if (ownedMenuOpen) replacement.closest('.object-actions')?.querySelector('.action-popover')?.showPopover();
+      replacement.focus({preventScroll:true});
+    } else if (ownedFocus) {
+      // Never transfer focus to a new action with a different meaning.
+      replacement = focusPage ? table.querySelector(`tr[data-page-id="${CSS.escape(focusPage)}"] .object-actions > button`) : null;
+      (replacement || overviewRoot.querySelector('#view-title'))?.focus({preventScroll:true});
+    }
   }
   searchInput.addEventListener('input', () => { search = searchInput.value; matrixPage = 1; batch.invalidate({keepErrors: true}); saveReading(); render(); });
   allCheckbox.addEventListener('change', () => {
@@ -414,9 +433,9 @@ function matrixPanel(app, saved) {
   })();
 
   const readingTools = el('div', {class: 'row wrap toolbar overview-reading-tools', role: 'group', 'aria-label': '阅读筛选'},
-    el('div', {class: 'segmented', role: 'group', 'aria-label': '页面筛选'}, filterAll, filterTodo), searchInput);
+    el('div', {class: 'segmented', role: 'group', 'aria-label': '页面筛选'}, filterAll, filterTodo), searchInput, studio && batch.recoveryButton);
   const selectionTools = el('div', {class: 'row wrap matrix-search', role: 'group', 'aria-label': '批量选页动作'},
-    batch.toolbar, selectionNote, clearButton, studio && batch.recoveryButton);
+    batch.toolbar, selectionNote, clearButton);
   const node = el('section', {class: 'stack', 'aria-label': '逐页制作进展'},
     el('div', {class: 'section-head'}, el('h2', {}, '逐页制作进展'), count),
     // UAC12:阅读筛选(范围+搜索)与批量选页动作分两行、各自成组;选择摘要条

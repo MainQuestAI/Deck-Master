@@ -111,7 +111,7 @@ def test_candidates_block_branches_pass_active_schema(candidate_store):
     assert summary["candidates"]["count"] == 1 and summary["candidates"]["pending_count"] == 0
     assert summary["candidates"]["adopted_count"] == 1 and summary["candidates"]["unreadable_count"] == 0
     assert "compare_candidates" not in kinds(summary)
-    assert {i["kind"] for i in summary["pages"][0]["attention"]["items"]} == {"review_results"}
+    assert summary["pages"][0]["attention"] == {"status":"not_recorded"}
     validate(summary)
 
 
@@ -276,25 +276,22 @@ def test_next_actions_order_reasons_and_stable_ids(flow, tmp_path):
 
     summary = workbench.workbench_summary(path)
     assert summary["input_alignment"] == "needs_reconciliation"
-    # handoff sits right below recovery: an awaiting task is the primary
-    # executable loop step and must not be buried behind rework or reading
-    assert kinds(summary) == ["verify_execution", "handoff", "inspect_failure", "replan",
-                              "compare_candidates", "reconcile_inputs", "prepare_stage",
-                              "refresh_stage", "review_quality", "review_results"]
+    # Old unbound tasks and superseded work do not become current commands.
+    # The actual unknown call still requires verification; its invalid candidate
+    # stays visible as an unknown relationship, never an enabled adoption route.
+    assert kinds(summary) == ["verify_execution", "reconcile_inputs", "prepare_stage",
+                              "refresh_stage", "review_quality", "compare_candidates"]
     by_kind = {action["kind"]: action for action in summary["next_actions"]["actions"]}
     assert by_kind["verify_execution"]["reason_code"] == "unknown_calls_recorded"
-    assert by_kind["inspect_failure"]["reason_code"] == "task_failed"
-    assert by_kind["replan"]["reason_code"] == "task_superseded"
     assert by_kind["compare_candidates"]["reason_code"] == "candidate_pending"
     assert by_kind["reconcile_inputs"]["reason_code"] == "content_needs_reconciliation"
     assert by_kind["prepare_stage"]["reason_code"] == "stage_missing" and by_kind["prepare_stage"]["layer"] == "svg"
     assert by_kind["refresh_stage"]["reason_code"] == "stage_basis_changed" and by_kind["refresh_stage"]["layer"] == "blueprint"
-    assert by_kind["handoff"]["reason_code"] == "task_awaiting_host"
-    assert by_kind["review_results"]["reason_code"] == "task_results_ready"
     assert by_kind["review_quality"]["reason_code"] == "quality_reviews_recorded"
     assert by_kind["review_quality"]["source_refs"] == summary["quality"]["review_refs"]
     for action in summary["next_actions"]["actions"]:
-        assert action["enabled"] is True and action["state"] == "derived"
+        assert action["enabled"] is (action["kind"] != "compare_candidates")
+        assert action["state"] == ("unknown" if action["kind"] == "compare_candidates" else "derived")
         assert action["revision_id"] == summary["revision_id"]
         # reconcile_inputs is a derived deck fact with no single object ref
         if action["kind"] != "reconcile_inputs":
@@ -302,8 +299,7 @@ def test_next_actions_order_reasons_and_stable_ids(flow, tmp_path):
 
     # attention stays page-scoped; deck-level facts never land on a page
     attention = {item["kind"] for item in summary["pages"][0]["attention"]["items"]}
-    assert attention == {"verify_execution", "inspect_failure", "replan", "compare_candidates",
-                         "prepare_stage", "refresh_stage", "handoff", "review_results"}
+    assert attention == {"verify_execution", "compare_candidates", "prepare_stage", "refresh_stage"}
     assert all(item["page_ids"] == ["p1"] for item in summary["pages"][0]["attention"]["items"])
 
     # stable payload for the same current revision, and a fixed revision read

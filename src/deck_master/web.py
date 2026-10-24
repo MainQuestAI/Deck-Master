@@ -57,7 +57,7 @@ def _write_state(project_dir: Path, state: dict) -> None:
 
 # Server-side capability names (single source for /api/health and the
 # /api/project effective-action projection).
-UI_CAPABILITIES = ("content_insight.v1", "method_library_preview.v1", "ui_draft.v1", "ui_gallery.v1", "ui_overview.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1",
+UI_CAPABILITIES = ("project_control_light.v1", "content_insight.v1", "method_library_preview.v1", "ui_draft.v1", "ui_gallery.v1", "ui_overview.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1",
                    "page_detail.v1", "annotations.v1", "changes.v1", "operations.v1", "candidates.v1",
                    "stages.v1", "run_desk.v1", "style_recipes.v1", "content_ops.v1", "exports.v1",
                    "restoration.v1", "workbench_actions.v1", "action_targets.v1", "icon_quality.v1", "result_reading.v1", "history_summary.v1", "visual_reference.v1", "material_uploads.v1",
@@ -561,7 +561,11 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             try:
                 from . import ui_journal, service
                 if parsed.path == '/api/project':
-                    result = ui_journal.project_info(self.store.project_root, server_capabilities=UI_CAPABILITIES)
+                    query = parse_qs(parsed.query, keep_blank_values=True)
+                    if query not in ({}, {'details': ['1']}, {'light': ['1']}):
+                        raise ValueError('project reads accept either details=1 or light=1')
+                    result = ui_journal.project_info(self.store.project_root, server_capabilities=UI_CAPABILITIES,
+                                                   include_eligibility='light' not in query)
                 elif parsed.path == '/api/drafts':
                     result = ui_journal.list_drafts(self.store.project_root)
                 elif parsed.path == '/api/ui-state':

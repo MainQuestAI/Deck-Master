@@ -1,0 +1,77 @@
+{
+  "source_commit": "6d1a6ff0787640a59628f56c0b6a055bc01af20c",
+  "build_id": "3fa249efc72d9d05251db279cce8c83fa332d04afca9f692bef0ada3fbf2893f",
+  "wheel_sha256": "d42d374c46eab5b20a4af26c623d7ec18869fac96a57590ac9309b18adc5504e",
+  "installed_modules": 79,
+  "all_runtime_modules_from_installed_package": true,
+  "installed_targeted_regression": {
+    "passed": 62,
+    "pytest_exit": 0
+  },
+  "offline": {
+    "checks": {
+      "viewport_1440_900_focus_and_overflow": true,
+      "viewport_1280_800_focus_and_overflow": true,
+      "three_fixed_offline_downloads_hash_verified": true,
+      "public_notes_complete_privacy_scrub_and_engineering_original_preserved": true,
+      "every_v2_asset_served_from_installed_package": true,
+      "every_studio_asset_served_from_installed_package": true,
+      "current_entries_and_retired_routes_without_write": true,
+      "installed_brand_license_and_esm_metadata": true,
+      "no_cdn_external_font_or_runtime_request": true
+    },
+    "downloads": [
+      {
+        "purpose": "review",
+        "revision": "42a6bc5818a74b5ebc0a8a620134f086",
+        "sha256": "d5f663f79518d9ae836759b8f267a18b2f100c88dd323a7a865400031e2d81e6",
+        "files": 8
+      },
+      {
+        "purpose": "delivery",
+        "revision": "42a6bc5818a74b5ebc0a8a620134f086",
+        "sha256": "2577c40f69fbe6484a89d1f73ca7895ae1a90b46a3291858a6a5d0d1304b7a0e",
+        "files": 8
+      },
+      {
+        "purpose": "engineering",
+        "revision": "42a6bc5818a74b5ebc0a8a620134f086",
+        "sha256": "00952f49608c949c52974f51ba4c56228fb8b571c152531b9cd3d263f84cc46f",
+        "files": 33
+      }
+    ],
+    "external_requests": [],
+    "page_errors": [],
+    "font_checks": [
+      {
+        "status": "loaded",
+        "body": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans CJK SC\", sans-serif"
+      },
+      {
+        "status": "loaded",
+        "body": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans CJK SC\", sans-serif"
+      }
+    ]
+  },
+  "fixture": "synthetic",
+  "model_invocations": 0,
+  "professional_acceptance": "NOT_RUN",
+  "default_installation_activation": "NOT_RUN",
+  "source_vs_wheel": {
+    "shared_files": 243,
+    "different_shared_files": [],
+    "source_only_files": [],
+    "wheel_only_packaged_method_files": [
+      "resources/method-inventory.json",
+      "resources/skill/assets/content/examples/E01-marketing/numbers.json",
+      "resources/skill/assets/content/examples/E02-technical-choice/numbers.json",
+      "resources/skill/assets/content/examples/E03-policy-training/numbers.json",
+      "resources/skill/assets/content/examples/E04-saas-retention/numbers.json",
+      "resources/skill/assets/master/routing-examples.json",
+      "resources/skill/assets/review/calibration-cases.json",
+      "resources/skill/resource-catalog.json",
+      "resources/skill/scripts/check_case_numbers.py"
+    ],
+    "note": "Wheel additionally contains the build-hook packaged Skill resources; process BUILD_ID includes those bytes and is expected to differ from an editable checkout."
+  }
+}

@@ -27,6 +27,8 @@ def main():
         'test_studio_page_browser.py', 'test_studio_reading_browser.py', 'test_studio_gallery_batch_browser.py',
         'test_studio_candidate_batch_browser.py', 'test_studio_delivery_browser.py',
         'test_personal_recovery_browser.py',
+        'test_pr188_design_repairs_browser.py', 'test_pr188_design_content_browser.py',
+        'test_pr188_design_context_browser.py', 'test_pr188_design_type_browser.py',
     ]
     result = pytest.main(['-q', str(repo / 'tests/rebuild/test_rc_closure_browser.py'),
                          str(repo / 'tests/rebuild/test_workbench_usability_browser.py'),

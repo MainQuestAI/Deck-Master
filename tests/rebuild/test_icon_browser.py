@@ -267,7 +267,9 @@ def test_layer_switch_entry_requires_saved_local_draft(icon_browser):
     identity=page.request.get(base+'api/project').json()['project_identity']
     page.evaluate("args => {location.hash = new URLSearchParams(args)}",
         {'project':identity,'surface':'page','page':'p01','layer':'content','revision':store.current_revision_id()})
-    # 先在意见面(默认面)制造 dirty 草稿,再切到图标面走换层门控。
+    # 明确进入意见工具制造 dirty 草稿，再切到图标面走换层门控。
+    page.locator('.page-manuscript').wait_for()
+    page.get_by_role('button',name='意见',exact=True).click()
     body=page.get_by_label('意见正文',exact=True)
     expect(body).to_be_visible(timeout=15000)
     body.fill('换层门控测试意见')

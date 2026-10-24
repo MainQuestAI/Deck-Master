@@ -34,4 +34,67 @@ stale.resolve({task_counts: {running: 9}}); await flush(); assert.equal(seen.len
 pending.shift().resolve({task_counts: {running: 1}}); await flush(); assert.equal([...timers.values()][0].delay, 3000);
 poll.stop(); assert.equal(timers.size, 0); window.dispatchEvent(new Event('focus')); assert.equal(pending.length, 0);
 assert.equal(peak, 1); assert.equal(errors.length, 2);
+// A slow follow-up control read is part of the poll, not a detached workload.
+let releaseControl, followed = 0;
+const slow = new SummaryPoll(async () => ({task_counts:{running:1}}),
+  () => { followed++; return new Promise(resolve => { releaseControl = resolve; }); }, () => {}, {task_counts:{running:1}});
+slow.start(); await tick(3000);
+window.dispatchEvent(new Event('focus')); window.dispatchEvent(new Event('focus'));
+assert.equal(followed, 1); assert.equal(timers.size, 0);
+releaseControl(); await flush(); await tick(0);
+assert.equal(followed, 2); slow.stop(); releaseControl(); await flush();
+assert.equal(timers.size, 0);
+
+// A route can change while onValue awaits control. Retire both writes and timing.
+let releaseOld, acceptedOld = false;
+const guarded = new SummaryPoll(async () => ({task_counts:{completed:1}}), async (value, valid) => {
+  await new Promise(resolve => { releaseOld = resolve; });
+  if (valid?.()) acceptedOld = true;
+}, () => {}, {task_counts:{running:1}});
+guarded.start(); await tick(3000);
+guarded.useSnapshot({task_counts:{running:1}});
+releaseOld(); await flush();
+assert.equal(acceptedOld, false);
+assert.equal(guarded.delay, 3000, 'obsolete callback cannot reset the new route interval');
+guarded.stop();
+
+// Navigation must obtain post-write control facts without overlapping reads.
+const {Project} = await import('../../src/deck_master/resources/static/v2/project.js');
+let reads = [], inFlight = 0, controlPeak = 0;
+globalThis.fetch = path => new Promise(resolve => {
+  assert.equal(path, '/api/project');
+  controlPeak = Math.max(controlPeak, ++inFlight);
+  reads.push(value => { inFlight--; resolve({ok:true, json:async () => value}); });
+});
+const app = new Project({}, {});
+const first = app.readControl(), shared = app.readControl(), afterWrite = app.readControl(true);
+assert.equal(reads.length, 1);
+reads.shift()({revision_id:'before'});
+assert.equal((await first).revision_id, 'before');
+assert.equal((await shared).revision_id, 'before');
+await flush(); assert.equal(reads.length, 1);
+reads.shift()({revision_id:'after'});
+assert.equal((await afterWrite).revision_id, 'after');
+assert.equal(controlPeak, 1);
+// The Project callback must not write after a route has replaced its scope.
+app.health = {ui_capabilities:['collaboration.v1']};
+app.info = {project_id:'same',project_identity:'identity',revision_id:'B'};
+app.route = {revision:'B'}; app.latest = {revision_id:'B'};
+app.root = new EventTarget(); let events = 0, notices = 0;
+app.root.addEventListener('summary-refreshed', () => events++);
+app.syncState = () => notices++;
+app.pendingButton = {textContent:'待交接 2',setAttribute(){throw new Error('stale count write');}};
+const old = app.applySummary({project_id:'same',revision_id:'A'});
+await flush(); assert.equal(reads.length, 1);
+app.generation++; app.controlRead++; // B navigation wins while A awaits control.
+reads.shift()({project_id:'same',project_identity:'identity',revision_id:'A'});
+await old;
+assert.equal(app.info.revision_id,'B'); assert.equal(app.latest.revision_id,'B');
+assert.equal(app.pendingButton.textContent,'待交接 2'); assert.equal(events,0); assert.equal(notices,0);
+app.health.ui_capabilities.push('project_control_light.v1');
+globalThis.fetch = async path => {
+  assert.equal(path,'/api/project?light=1');
+  return {ok:true,json:async()=>({revision_id:'light'})};
+};
+assert.equal((await app.readControl()).revision_id,'light');
 console.log(JSON.stringify({passed: true, checks: ['active_3s', 'idle_15s', 'failure_backoff_max_30s', 'single_inflight', 'focus_coalesced', 'hidden_pauses_aborts', 'visible_immediate', 'late_hidden_response_ignored', 'bfcache_old_generation_ignored', 'stop_removes_listeners']}));

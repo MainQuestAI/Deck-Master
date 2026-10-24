@@ -139,11 +139,13 @@ def test_material_entry_opens_the_adjust_form_not_the_first_material_card(ux00_b
     identity = page.request.get(url.rstrip('/') + '/api/project').json()['project_identity']
     add_materials(path, store)
     page.goto(url)
-    page.get_by_role('button', name='内容与来源', exact=True).click()
-    page.get_by_role('heading', name='内容与来源', exact=True).wait_for()
+    page.get_by_role('button', name='内容与页序', exact=True).click()
+    page.get_by_role('heading', name='内容与页序', exact=True).wait_for()
+    page.get_by_role('button',name='材料与来源',exact=True).click()
     expect(page.locator('.source-card')).to_have_count(2)
     assert page.locator('.materials-adjust-form').get_attribute('open') is None
 
+    page.get_by_role('button', name='材料与要求', exact=True).click()
     page.get_by_role('button', name='添加材料', exact=True).click()
     assert page.locator('.materials-adjust-form').get_attribute('open') == ''
     assert page.evaluate('() => document.activeElement && document.activeElement.getAttribute("aria-label")') \
@@ -233,6 +235,8 @@ def test_project_scope_reads_as_opinion_and_decision_ref_is_not_a_revision(ux00_
     identity = page.request.get(server.start().rstrip('/') + '/api/project').json()['project_identity']
     page.evaluate("id => {location.hash = new URLSearchParams({project: id, surface: 'page', page: 'p01', layer: 'content'})}",
                   identity)
+    page.locator('.annotations-panel').wait_for(state='attached')
+    page.get_by_role('button', name='意见', exact=True).click()
     page.locator('.annotations-panel').wait_for()
     page.get_by_role('button', name='整页意见', exact=True).click()
     body = page.get_by_role('textbox', name='意见正文', exact=True)

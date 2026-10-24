@@ -75,7 +75,7 @@ export function batchActions(app, selected, onSelectionChange, {initialAction} =
     fields.hidden = !selected.size;
     const saving = !editor || editor.disposed || editor.readonly || ['loading', 'unknown', 'conflict', 'saving'].includes(editor.status);
     const calls = Number(budget.value), budgetInvalid = image && (!Number.isInteger(calls) || calls < selected.size || calls > 300);
-    notice.textContent = selected.size ? `${selected.size} 页用于${batchNames[action.value]}${unavailable.length ? `，其中 ${unavailable.length} 页需要调整范围` : ''}。` : '先选择动作，再勾选此动作允许处理的页面。选页不会自动执行；已选范围随个人阅读状态保留，计划仍需重新预览。';
+    notice.textContent = selected.size ? `${selected.size} 页用于${batchNames[action.value]}${unavailable.length ? `，其中 ${unavailable.length} 页需要调整范围` : ''}。` : '先勾选页面，再选择制作动作。选页不会自动执行；已选范围随个人阅读状态保留，计划仍需重新预览。';
     excluded.replaceChildren(...(unavailable.length ? [el('p', {class: 'field-error'}, '未自动忽略任何页。明确调整范围后才可预览：'),
       el('ul', {}, unavailable.map(item => el('li', {}, label(item.id) + '：' + item.reason))),
       button('移除列出的受限页', () => { unavailable.forEach(item => selected.delete(item.id)); invalidate(); onSelectionChange({selectionChanged:true}); })] : []));
@@ -166,7 +166,9 @@ export function batchActions(app, selected, onSelectionChange, {initialAction} =
   app.disposables.push(() => { disposed = true; serial++; referenceView?.dispose(); app.root.removeEventListener('summary-refreshed', sync); app.root.removeEventListener('business-state-changed', sync); app.root.removeEventListener('draft-state-changed', sync); app.root.removeEventListener('draft-editor-replaced', replaced); });
   editor?.ready.then(() => { if (!disposed) { render(); onSelectionChange(); } });
   render();
-  return {node, toolbar, recoveryButton, recoveryPanel, render, invalidate, saveWorking, eligible: page => !batchExclusion(app, page, action.value, fixed),
+  return {node, toolbar, recoveryButton, recoveryPanel, render, invalidate, saveWorking, eligible: page => studio
+    ? Object.keys(batchNames).some(kind => !batchExclusion(app, page, kind, kind === action.value ? fixed : null))
+    : !batchExclusion(app, page, action.value, fixed),
     // AC06/§2.1（深度复审）：长列表里选择摘要与配置入口必须持续可达——
     // 概览用这两个方法渲染常驻选择条，并让「配置要求」把用户带回配置区。
     selectionSummary: hidden => selected.size ? `已选 ${selected.size} 页用于${batchNames[action.value]}${hidden ? ` · 筛选外 ${hidden} 页` : ''}` : '',

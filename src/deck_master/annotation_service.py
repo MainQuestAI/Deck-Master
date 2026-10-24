@@ -86,12 +86,14 @@ def save(project, *, input, base_revision, operation_id):
     with store._locked():
         document = store.load_document()
         from . import eligibility
-        eligibility.guard(store, document, "annotation.save",
-                          context={"targets": {"layers": ["review"]}})
         digest = operations.request_digest(document, 'annotations.save', base_revision, input)
         previous = operations.recover(store, operation_id, digest)
         if previous:
             return previous
+        # Recovery returns a committed receipt; only a new write needs today's
+        # eligibility. The exact operation ID, basis and payload still match.
+        eligibility.guard(store, document, "annotation.save",
+                          context={"targets": {"layers": ["review"]}})
         if not store.workbench_protocol_required(document):
             invalid('project', 'new opinion writes require an explicit workbench.v3 project')
         if document['revision_id'] != base_revision:

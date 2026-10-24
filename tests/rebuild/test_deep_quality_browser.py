@@ -20,7 +20,9 @@ def open_note_face(page):
     from playwright.sync_api import expect
     entry = page.get_by_role('button', name='工具', exact=True)
     page.locator('.page-tools').first.wait_for(state='attached', timeout=15000)
-    if entry.count() and entry.first.is_visible():
+    if page.locator('html[data-workbench-ui=studio] dialog.page-tools-panel[open]').count():
+        page.get_by_role('dialog', name='单页工具面板').get_by_role('button', name='回到画面', exact=True).click()
+    if entry.count() and entry.first.is_visible() and not page.locator('dialog.page-tools-panel[open]').count():
         entry.click()
         expect(page.get_by_role('dialog', name='单页工具面板')).to_be_visible()
     note_button = page.get_by_role('button', name='笔记', exact=True)
@@ -79,8 +81,10 @@ def test_cloned_window_offline_drafts_both_survive(workbench,width,height):
 def test_old_revision_draft_never_locks_a_new_opinion(workbench):
     page,ctx,store,url,goto,_=workbench
     goto()
+    open_opinion_face(page)
     body=page.get_by_role('textbox',name='意见正文',exact=True)
     body.fill('第一条意见的文字')
+    open_opinion_face(page)
     page.get_by_role('button',name='整页意见',exact=True).click()
     page.get_by_role('button',name='保存意见',exact=True).click()
     expect(page.locator('.field-error[data-success]')).to_be_visible()
@@ -88,9 +92,11 @@ def test_old_revision_draft_never_locks_a_new_opinion(workbench):
     # not adopt the older draft (which would bind this editor to a stale basis and
     # refuse the next save); the older text stays recoverable and is named on screen.
     page.goto(goto())
+    open_opinion_face(page)
     fresh=page.get_by_role('textbox',name='意见正文',exact=True)
     expect(fresh).to_have_value('')
     expect(page.locator('.annotation-notice')).to_contain_text('旧版本草稿可从下方恢复')
+    open_opinion_face(page)
     page.get_by_role('button',name='整页意见',exact=True).click()
     fresh.fill('第二条意见的文字')
     # A stale basis would keep this disabled no matter what the user types.
@@ -127,7 +133,9 @@ def open_trials_face(page):
     """P02:试作与候选面。"""
     entry = page.get_by_role('button', name='工具', exact=True)
     page.locator('.page-tools').first.wait_for(state='attached', timeout=15000)
-    if entry.count() and entry.first.is_visible():
+    if page.locator('html[data-workbench-ui=studio] dialog.page-tools-panel[open]').count():
+        page.get_by_role('dialog', name='单页工具面板').get_by_role('button', name='回到画面', exact=True).click()
+    if entry.count() and entry.first.is_visible() and not page.locator('dialog.page-tools-panel[open]').count():
         entry.click()
         expect(page.get_by_role('dialog', name='单页工具面板')).to_be_visible()
     page.get_by_role('button', name='试作与候选', exact=True).click()
@@ -137,7 +145,9 @@ def open_icon_face(page):
     """P02:图标优化面。"""
     entry = page.get_by_role('button', name='工具', exact=True)
     page.locator('.page-tools').first.wait_for(state='attached', timeout=15000)
-    if entry.count() and entry.first.is_visible():
+    if page.locator('html[data-workbench-ui=studio] dialog.page-tools-panel[open]').count():
+        page.get_by_role('dialog', name='单页工具面板').get_by_role('button', name='回到画面', exact=True).click()
+    if entry.count() and entry.first.is_visible() and not page.locator('dialog.page-tools-panel[open]').count():
         entry.click()
         expect(page.get_by_role('dialog', name='单页工具面板')).to_be_visible()
     page.get_by_role('button', name='图标优化', exact=True).click()
@@ -147,7 +157,9 @@ def open_opinion_face(page):
     """P02:回到意见面(与 open_note_face 对称)。"""
     entry = page.get_by_role('button', name='工具', exact=True)
     page.locator('.page-tools').first.wait_for(state='attached', timeout=15000)
-    if entry.count() and entry.first.is_visible():
+    if page.locator('html[data-workbench-ui=studio] dialog.page-tools-panel[open]').count():
+        page.get_by_role('dialog', name='单页工具面板').get_by_role('button', name='回到画面', exact=True).click()
+    if entry.count() and entry.first.is_visible() and not page.locator('dialog.page-tools-panel[open]').count():
         entry.click()
         expect(page.get_by_role('dialog', name='单页工具面板')).to_be_visible()
     page.get_by_role('button', name='意见', exact=True).click()
@@ -165,6 +177,7 @@ def test_private_note_stays_out_of_opinions_and_repeat_saves(workbench):
     # The note never becomes the opinion body: the opinion form starts empty and
     # refuses to save until the user writes or explicitly copies something.
     expect(body).to_have_value('')
+    open_opinion_face(page)
     page.get_by_role('button',name='整页意见',exact=True).click()
     # An empty body is refused with a Chinese reason on click, not with a dead
     # button that explains nothing.
@@ -201,17 +214,20 @@ def test_private_note_stays_out_of_opinions_and_repeat_saves(workbench):
 
 def test_saved_opinions_group_by_scope_and_never_mix_pages(workbench):
     page,ctx,store,url,goto,_=workbench;goto()
+    open_opinion_face(page)
     body=page.get_by_role('textbox',name='意见正文',exact=True)
     def write_opinion(text):
         page.get_by_role('button',name='保存意见',exact=True).click()
         expect(page.locator('.field-error[data-success]')).to_be_visible()
         assert text in page.request.get(url.rstrip('/')+'/api/annotations').json()['annotations'][-1]['annotation']['body']
+    open_opinion_face(page)
     page.get_by_role('button',name='整页意见',exact=True).click()
     body.fill('这一页要改标题')
     write_opinion('这一页要改标题')
     expect(page.get_by_role('heading',name='本页整页意见（1）',exact=True)).to_be_visible()
     open_note_face(page)
     page.get_by_role('button',name='写新意见',exact=True).click()
+    open_opinion_face(page)
     page.get_by_role('button',name='整页意见',exact=True).click()
     if not page.get_by_label('意见作用范围').is_visible():
         page.get_by_text('范围与标注工具', exact=True).click()
@@ -241,6 +257,7 @@ def test_saved_opinions_group_by_scope_and_never_mix_pages(workbench):
     link=url+'#'+urlencode({'project':page.request.get(url.rstrip('/')+'/api/project').json()['project_identity'],
                             'surface':'page','page':'p02','layer':'svg','revision':store.current_revision_id()})
     page.goto(link)
+    open_opinion_face(page)
     expect(page.get_by_role('heading',name='本页整页意见（0）',exact=True)).to_be_visible()
     other=page.locator('details.saved-group').filter(has_text='其它页面的局部意见')
     expect(other.locator('summary')).to_contain_text('（2）')
@@ -253,6 +270,7 @@ def test_saved_opinions_group_by_scope_and_never_mix_pages(workbench):
 def test_requirement_is_explicit_and_plans_default_to_trial(workbench):
     import json
     page,ctx,store,url,goto,_=workbench;goto()
+    open_opinion_face(page)
     page.get_by_role('button',name='整页意见',exact=True).click()
     page.get_by_role('textbox',name='意见正文',exact=True).fill('标题要更短')
     page.get_by_role('button',name='保存意见',exact=True).click()
@@ -483,6 +501,7 @@ def test_historical_candidate_list_never_acquires_future_candidate(workbench):
 
 def test_annotation_plan_conflict_keeps_draft_and_opens_recovery(workbench):
     page,ctx,store,url,goto,_=workbench;goto()
+    open_opinion_face(page)
     page.get_by_role('button',name='整页意见',exact=True).click()
     text='修正图标间距，保持其它对象。';page.get_by_role('textbox',name='意见正文',exact=True).fill(text)
     page.get_by_role('button',name='保存意见',exact=True).click();page.get_by_label('选入意见 1').check()
@@ -500,6 +519,7 @@ def test_annotation_plan_conflict_keeps_draft_and_opens_recovery(workbench):
 
 def test_clear_plan_network_failure_allows_retry(workbench):
     page,ctx,store,url,goto,_=workbench;goto('runs')
+    page.get_by_role('button',name='项目菜单',exact=True).click()
     page.get_by_role('button',name='个人状态与恢复',exact=True).click()
     page.route('**/api/ui-state/plan-clear',lambda r:r.abort('failed'))
     btn=page.get_by_role('button',name='生成清理计划',exact=True);btn.click()

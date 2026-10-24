@@ -1,0 +1,1775 @@
+[
+  {
+    "file": "src/deck_master/resources/static/v2/navigation-usability.css",
+    "selectors": [
+      ".gallery-controls > .segmented button"
+    ],
+    "properties": [
+      "padding-inline"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/studio.css",
+    "selectors": [
+      ".nav button"
+    ],
+    "properties": [
+      "color",
+      "padding",
+      "font-size",
+      "min-height"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/studio.css",
+    "selectors": [
+      ".nav button:hover"
+    ],
+    "properties": [
+      "background"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/studio.css",
+    "selectors": [
+      ".nav button.active",
+      ".nav button.active:hover"
+    ],
+    "properties": [
+      "color",
+      "background",
+      "border-color",
+      "box-shadow"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/studio.css",
+    "selectors": [
+      ".topbar>button"
+    ],
+    "properties": [
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/studio.css",
+    "selectors": [
+      "button"
+    ],
+    "properties": [
+      "box-shadow"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/studio.css",
+    "selectors": [
+      "button.quiet",
+      ".nav button:not(.active)",
+      ".text-link",
+      ".cell-btn"
+    ],
+    "properties": [
+      "box-shadow"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/studio.css",
+    "selectors": [
+      "button:not(:disabled):hover"
+    ],
+    "properties": [
+      "border-color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/studio.css",
+    "selectors": [
+      "button.primary"
+    ],
+    "properties": [
+      "background",
+      "border-color",
+      "box-shadow"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/studio.css",
+    "selectors": [
+      "button.primary:hover"
+    ],
+    "properties": [
+      "background",
+      "border-color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/studio.css",
+    "selectors": [
+      "button:disabled"
+    ],
+    "properties": [
+      "box-shadow"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/studio.css",
+    "selectors": [
+      ".segmented button"
+    ],
+    "properties": [
+      "box-shadow",
+      "font-weight",
+      "border-radius"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/studio.css",
+    "selectors": [
+      ".segmented button.active"
+    ],
+    "properties": [
+      "background",
+      "box-shadow"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/studio.css",
+    "selectors": [
+      ".nav button"
+    ],
+    "properties": [
+      "padding",
+      "min-height",
+      "font-size",
+      "line-height"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/studio.css",
+    "selectors": [
+      ".sidebar-footer .text-link"
+    ],
+    "properties": [
+      "font-size",
+      "padding"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/studio.css",
+    "selectors": [
+      ".todo-priority button.primary"
+    ],
+    "properties": [
+      "background",
+      "color",
+      "border-color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/studio.css",
+    "selectors": [
+      ".todo-priority button.primary:hover"
+    ],
+    "properties": [
+      "background",
+      "border-color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/studio.css",
+    "selectors": [
+      ".todo-row button"
+    ],
+    "properties": [
+      "border-color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/studio.css",
+    "selectors": [
+      ".page-workbench .chain button"
+    ],
+    "properties": [
+      "border",
+      "border-radius",
+      "min-height",
+      "padding",
+      "background"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/studio.css",
+    "selectors": [
+      ".page-workbench .chain button.active"
+    ],
+    "properties": [
+      "background",
+      "box-shadow",
+      "color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/studio.css",
+    "selectors": [
+      ".annotation-tools button[aria-pressed=true]"
+    ],
+    "properties": [
+      "background",
+      "border-color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/studio.css",
+    "selectors": [
+      ".page-workbench .chain button"
+    ],
+    "properties": [
+      "padding",
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/studio.css",
+    "selectors": [
+      ".page-workbench .toolbar>button"
+    ],
+    "properties": [
+      "padding",
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/studio.css",
+    "selectors": [
+      ".page-pager button"
+    ],
+    "properties": [
+      "padding-inline",
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/studio.css",
+    "selectors": [
+      ".page-workbench .chain button"
+    ],
+    "properties": [
+      "min-height",
+      "padding"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/studio.css",
+    "selectors": [
+      ".page-workbench .reading-toolbar>button"
+    ],
+    "properties": [
+      "padding-inline"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/comparison-canvas.css",
+    "selectors": [
+      ".candidate-desk:fullscreen .candidate-decisions button"
+    ],
+    "properties": [
+      "padding",
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/comparison-canvas.css",
+    "selectors": [
+      ".candidate-desk:fullscreen .canvas-tools button"
+    ],
+    "properties": [
+      "padding",
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      "button"
+    ],
+    "properties": [
+      "font"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      "button"
+    ],
+    "properties": [
+      "border"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      "button"
+    ],
+    "properties": [
+      "font-weight"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      "button:active"
+    ],
+    "properties": [
+      "transform"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      "button:disabled"
+    ],
+    "properties": [
+      "opacity"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      "button.quiet"
+    ],
+    "properties": [
+      "background",
+      "border-color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      "button.small"
+    ],
+    "properties": [
+      "padding",
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      ".nav button"
+    ],
+    "properties": [
+      "background",
+      "border",
+      "font-weight",
+      "min-height"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      ".nav button:hover"
+    ],
+    "properties": [
+      "background",
+      "color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      ".action-group>button"
+    ],
+    "properties": [
+      "min-height"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      ".segmented button"
+    ],
+    "properties": [
+      "border-color",
+      "background",
+      "padding",
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      ".cell-btn"
+    ],
+    "properties": [
+      "border",
+      "padding",
+      "background",
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      ".chain button"
+    ],
+    "properties": [
+      "border",
+      "border-radius",
+      "background",
+      "padding",
+      "color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      ".chain button.active"
+    ],
+    "properties": [
+      "color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      ".text-link"
+    ],
+    "properties": [
+      "padding",
+      "border",
+      "background",
+      "min-height",
+      "font-size",
+      "font-weight"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      ".chain button"
+    ],
+    "properties": [
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      ".nav button"
+    ],
+    "properties": [
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      "button.primary"
+    ],
+    "properties": [
+      "min-height"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      "button"
+    ],
+    "properties": [
+      "border-radius",
+      "background",
+      "color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      "button"
+    ],
+    "properties": [
+      "transition",
+      "min-height",
+      "padding"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      "button:hover"
+    ],
+    "properties": [
+      "background",
+      "color",
+      "border-color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      "button.primary"
+    ],
+    "properties": [
+      "background",
+      "color",
+      "border-color",
+      "font-weight"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      "button.primary:hover"
+    ],
+    "properties": [
+      "background",
+      "color",
+      "border-color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      "button.quiet"
+    ],
+    "properties": [
+      "color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      "button.quiet:hover"
+    ],
+    "properties": [
+      "color",
+      "background"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      "button.small",
+      ".segmented button"
+    ],
+    "properties": [
+      "min-height"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      ".text-link"
+    ],
+    "properties": [
+      "color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      ".nav button"
+    ],
+    "properties": [
+      "border-radius",
+      "color",
+      "padding"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      ".nav button.active",
+      ".nav button.active:hover"
+    ],
+    "properties": [
+      "background",
+      "border-color",
+      "color",
+      "font-weight"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      ".cell-btn"
+    ],
+    "properties": [
+      "color",
+      "min-height"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      ".segmented button"
+    ],
+    "properties": [
+      "color",
+      "border-radius"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      ".segmented button.active"
+    ],
+    "properties": [
+      "background",
+      "color",
+      "box-shadow"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      ".segmented button:hover"
+    ],
+    "properties": [
+      "background",
+      "color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      ".chain button:hover"
+    ],
+    "properties": [
+      "background",
+      "color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      ".nav button"
+    ],
+    "properties": [
+      "min-height"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      ".matrix .cell-btn"
+    ],
+    "properties": [
+      "min-height",
+      "padding",
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      ".matrix .matrix-next button"
+    ],
+    "properties": [
+      "min-height",
+      "padding",
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      ".todo-row button"
+    ],
+    "properties": [
+      "font-size",
+      "padding",
+      "min-height"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      "button"
+    ],
+    "properties": [
+      "min-height",
+      "border-radius"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      "button.primary"
+    ],
+    "properties": [
+      "background",
+      "border-color",
+      "color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      "button.primary:hover"
+    ],
+    "properties": [
+      "background",
+      "border-color",
+      "color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      "button:disabled"
+    ],
+    "properties": [
+      "opacity",
+      "color",
+      "background"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      "button.primary:disabled"
+    ],
+    "properties": [
+      "background",
+      "border-color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      "button.quiet"
+    ],
+    "properties": [
+      "background"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      ".nav button"
+    ],
+    "properties": [
+      "border-radius"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      ".nav button.active"
+    ],
+    "properties": [
+      "background",
+      "border-color",
+      "color",
+      "font-weight"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      ".nav button:hover"
+    ],
+    "properties": [
+      "background"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      ".cell-btn"
+    ],
+    "properties": [
+      "min-height"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      ".page-tools-switcher button"
+    ],
+    "properties": [
+      "min-height",
+      "padding",
+      "font-size",
+      "background",
+      "border",
+      "border-radius"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      ".page-tools-switcher button[aria-pressed=true]"
+    ],
+    "properties": [
+      "background",
+      "color",
+      "border-color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      ".page-tools-panel-head button"
+    ],
+    "properties": [
+      "min-height"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      ".nav button"
+    ],
+    "properties": [
+      "padding"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      ".nav button"
+    ],
+    "properties": [
+      "padding"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      ".gallery-save button"
+    ],
+    "properties": [
+      "font-size",
+      "padding"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      ".reference-button"
+    ],
+    "properties": [
+      "font-size",
+      "padding",
+      "background",
+      "border"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      ".tile-actions button"
+    ],
+    "properties": [
+      "font-size",
+      "padding"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      ".image-retry-slot button"
+    ],
+    "properties": [
+      "font-size",
+      "padding"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      ".page-head .page-pager button"
+    ],
+    "properties": [
+      "padding"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      ".annotation-tools button[aria-pressed=true]"
+    ],
+    "properties": [
+      "background",
+      "border-color",
+      "color",
+      "font-weight"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      ".annotation-tools button"
+    ],
+    "properties": [
+      "min-height"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      ".page-workbench .chain button"
+    ],
+    "properties": [
+      "padding"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      ".candidate-desk button",
+      ".candidate-batch button",
+      ".trial-actions button"
+    ],
+    "properties": [
+      "min-height"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      ".runs-subareas button"
+    ],
+    "properties": [
+      "min-height",
+      "transition"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      ".runs-subareas button[aria-pressed=true]"
+    ],
+    "properties": [
+      "background",
+      "border-color",
+      "color",
+      "font-weight"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      ".gap-list button"
+    ],
+    "properties": [
+      "font-size",
+      "padding"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      ".nav button"
+    ],
+    "properties": [
+      "padding"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      ".nav button"
+    ],
+    "properties": [
+      "padding"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      ".style-target-thumb button"
+    ],
+    "properties": [
+      "min-height"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      ".collaboration-control>button"
+    ],
+    "properties": [
+      "font-size",
+      "min-height"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      ".collaboration-control>button"
+    ],
+    "properties": [
+      "padding-inline",
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/delivery.css",
+    "selectors": [
+      ".studio-workspace .studio-candidate-footer button"
+    ],
+    "properties": [
+      "font-size",
+      "padding"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/delivery.css",
+    "selectors": [
+      ".studio-workspace .studio-version-list button"
+    ],
+    "properties": [
+      "font-size",
+      "padding",
+      "line-height"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/delivery.css",
+    "selectors": [
+      ".studio-workspace .studio-version-list button[aria-pressed=true]"
+    ],
+    "properties": [
+      "background",
+      "border-color",
+      "box-shadow"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/delivery.css",
+    "selectors": [
+      ".studio-workspace .studio-history-desk .history-reading-controls button"
+    ],
+    "properties": [
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/delivery.css",
+    "selectors": [
+      ".studio-workspace .studio-tasks-workspace .runs-subareas button"
+    ],
+    "properties": [
+      "font-size",
+      "padding"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/delivery.css",
+    "selectors": [
+      ".studio-workspace .studio-delivery-row>button"
+    ],
+    "properties": [
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/delivery.css",
+    "selectors": [
+      ".studio-workspace .studio-gallery-production button"
+    ],
+    "properties": [
+      "font-size",
+      "padding"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/overview.css",
+    "selectors": [
+      ".studio-workspace .studio-overview-commandbar .matrix-search>button[aria-expanded]"
+    ],
+    "properties": [
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/overview.css",
+    "selectors": [
+      ".studio-workspace .studio-batch-modes button"
+    ],
+    "properties": [
+      "min-height",
+      "background",
+      "padding"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/overview.css",
+    "selectors": [
+      ".studio-workspace .studio-batch-modes button[aria-pressed=true]"
+    ],
+    "properties": [
+      "background",
+      "color",
+      "border-color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/overview.css",
+    "selectors": [
+      ".studio-workspace .studio-overview .matrix .cell-btn"
+    ],
+    "properties": [
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/overview.css",
+    "selectors": [
+      ".studio-workspace .runtime-sync-actions button"
+    ],
+    "properties": [
+      "font-size",
+      "padding"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/reading.css",
+    "selectors": [
+      ".studio-workspace .studio-reading-controls button"
+    ],
+    "properties": [
+      "min-height"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/reading.css",
+    "selectors": [
+      ".studio-workspace .studio-reading-controls button[aria-pressed=true]"
+    ],
+    "properties": [
+      "border-color",
+      "background"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/reading.css",
+    "selectors": [
+      ".studio-workspace .page-workbench .chain button"
+    ],
+    "properties": [
+      "padding",
+      "min-height"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/reading.css",
+    "selectors": [
+      ".studio-workspace .reading-toolbar>.page-tools-switcher button"
+    ],
+    "properties": [
+      "padding",
+      "min-height",
+      "font-size",
+      "line-height"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/reading.css",
+    "selectors": [
+      ".studio-workspace .studio-reading-controls>button"
+    ],
+    "properties": [
+      "padding",
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/reading.css",
+    "selectors": [
+      ".studio-zoom-dialog button"
+    ],
+    "properties": [
+      "min-height"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/reading.css",
+    "selectors": [
+      ".studio-workspace .page-workbench .page-pager button"
+    ],
+    "properties": [
+      "padding",
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/reading.css",
+    "selectors": [
+      ".studio-workspace .reading-toolbar > .page-tools-switcher button"
+    ],
+    "properties": [
+      "min-height",
+      "font-size",
+      "line-height",
+      "padding"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .nav button"
+    ],
+    "properties": [
+      "min-height",
+      "border-radius",
+      "padding",
+      "font-size",
+      "border"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .nav button.active"
+    ],
+    "properties": [
+      "background",
+      "color",
+      "border-color",
+      "font-weight",
+      "box-shadow"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace button"
+    ],
+    "properties": [
+      "min-height",
+      "border-radius",
+      "line-height",
+      "font-weight"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace button.quiet",
+      ".studio-workspace button.text-link"
+    ],
+    "properties": [
+      "border",
+      "background",
+      "padding",
+      "color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace button:hover:not(:disabled)"
+    ],
+    "properties": [
+      "border-color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace button.primary"
+    ],
+    "properties": [
+      "background",
+      "border-color",
+      "color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace button:disabled"
+    ],
+    "properties": [
+      "opacity"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .page-workbench .chain button"
+    ],
+    "properties": [
+      "border",
+      "min-height",
+      "border-radius"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .page-workbench .chain button.active"
+    ],
+    "properties": [
+      "background",
+      "color",
+      "box-shadow"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .page-tools-switcher button"
+    ],
+    "properties": [
+      "padding",
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .page-tools-switcher button[aria-pressed=true]"
+    ],
+    "properties": [
+      "background",
+      "color",
+      "border-color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .studio-note-tabs button[aria-pressed=true]"
+    ],
+    "properties": [
+      "background",
+      "color",
+      "border-color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .runs-subareas button[aria-pressed=true]"
+    ],
+    "properties": [
+      "background",
+      "color",
+      "border-color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .todo-priority button.primary"
+    ],
+    "properties": [
+      "background",
+      "color",
+      "border-color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .sidebar .nav button"
+    ],
+    "properties": [
+      "padding"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .sidebar-footer button"
+    ],
+    "properties": [
+      "min-height"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .studio-style-stages button"
+    ],
+    "properties": [
+      "min-height",
+      "padding",
+      "font-weight",
+      "background"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .studio-style-stages button[aria-pressed=true]"
+    ],
+    "properties": [
+      "background",
+      "border-color",
+      "color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .style-tool>button"
+    ],
+    "properties": [
+      "min-height"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .studio-rule-actions button"
+    ],
+    "properties": [
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .studio-recipe-card button[aria-pressed=true]"
+    ],
+    "properties": [
+      "border-color",
+      "box-shadow"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .studio-content-areas button"
+    ],
+    "properties": [
+      "min-height"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .studio-content-areas button[aria-pressed=true]"
+    ],
+    "properties": [
+      "background",
+      "border-color",
+      "color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .studio-style-stages button"
+    ],
+    "properties": [
+      "min-height",
+      "padding",
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .content-alignment button"
+    ],
+    "properties": [
+      "font-size",
+      "padding"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace #content-area-pages>.panel>.panel-head button"
+    ],
+    "properties": [
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .style-primary-phase>.panel-head>button"
+    ],
+    "properties": [
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .content-sources>.page-head>.row button"
+    ],
+    "properties": [
+      "font-size",
+      "padding"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .content-alignment button"
+    ],
+    "properties": [
+      "padding",
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .studio-content-areas button"
+    ],
+    "properties": [
+      "min-height",
+      "padding",
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .style-primary-phase>.panel-head>button"
+    ],
+    "properties": [
+      "font-size",
+      "padding"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .studio-style-route button"
+    ],
+    "properties": [
+      "min-height"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .studio-style-route button[aria-pressed=true]"
+    ],
+    "properties": [
+      "background",
+      "color",
+      "border-color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .studio-style-stages button"
+    ],
+    "properties": [
+      "border",
+      "border-radius",
+      "min-height",
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .studio-style-stages button[aria-pressed=true]"
+    ],
+    "properties": [
+      "background",
+      "color",
+      "border-color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .studio-target-tools button"
+    ],
+    "properties": [
+      "font-size",
+      "padding"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .studio-icon-methods button",
+      ".studio-workspace .studio-icon-samples button"
+    ],
+    "properties": [
+      "padding",
+      "min-height"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .studio-icon-methods button[aria-pressed=true]",
+      ".studio-workspace .studio-icon-catalog button[aria-pressed=true]",
+      ".studio-workspace .studio-icon-samples button[aria-pressed=true]"
+    ],
+    "properties": [
+      "border-color",
+      "background"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .studio-icon-catalog button"
+    ],
+    "properties": [
+      "padding",
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .reading-toolbar>.page-tools-switcher button"
+    ],
+    "properties": [
+      "font-size",
+      "padding",
+      "min-height"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .reading-toolbar>.page-tools-switcher button[aria-pressed=true]"
+    ],
+    "properties": [
+      "background",
+      "color",
+      "border-color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .page-workbench .chain button"
+    ],
+    "properties": [
+      "border-radius",
+      "background",
+      "box-shadow",
+      "color",
+      "padding",
+      "min-height",
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .page-workbench .chain button.active"
+    ],
+    "properties": [
+      "color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .studio-material-card button"
+    ],
+    "properties": [
+      "font-size",
+      "padding"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .studio-style-stages button"
+    ],
+    "properties": [
+      "font-size",
+      "min-height"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .reading-toolbar>.page-tools-switcher button"
+    ],
+    "properties": [
+      "padding",
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .studio-style-route button"
+    ],
+    "properties": [
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .studio-screenshot-first>.style-phase-heading button"
+    ],
+    "properties": [
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .studio-content-adjust [role=group] > button[aria-pressed=true]"
+    ],
+    "properties": [
+      "background",
+      "color",
+      "border-color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .sidebar-footer button"
+    ],
+    "properties": [
+      "font-size",
+      "padding"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .sidebar>.nav button"
+    ],
+    "properties": [
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .gallery-view>.page-head>button"
+    ],
+    "properties": [
+      "font-size",
+      "padding"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .studio-gallery-mobile-search>button"
+    ],
+    "properties": [
+      "font-size",
+      "padding"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .studio-gallery-settings .segmented button"
+    ],
+    "properties": [
+      "font-size",
+      "padding"
+    ]
+  }
+]

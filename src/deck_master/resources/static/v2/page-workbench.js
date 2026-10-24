@@ -51,19 +51,18 @@ function bodyBlocks(blocks) {
 function sourceBody(app, data) {
   const node = el('div', {class: 'stack'}, el('p', {}, `本页来源固定在 ${version(data.revision_id)}。`));
   const links = (data.content_plan?.goals || []).flatMap(g => g.source_links || []);
-  if (app.health.ui_capabilities?.includes('content_ops.v1')) node.append(...links.map(link => button('查看材料 ' + (link.locator || '原文'), () => sourceReader(app, link, data.revision_id))));
+  const reader=el('section',{class:'source-inline-reader','aria-label':'材料原文与定位'});
+  if (app.health.ui_capabilities?.includes('content_ops.v1')) node.append(...links.map(link => button('查看材料 ' + (link.locator || '原文'), () => sourceReader(app, link, data.revision_id, reader))));
+  node.append(reader);
   node.append(data.sources.citations.length ? el('pre', {class: 'evidence-json'}, JSON.stringify(data.sources.citations, null, 2)) : el('p', {class: 'muted'}, '此页未记录材料引用，不能据此补造来源。'),
-    button('回到此版本的内容与来源', () => { const dialog = document.querySelector('#modal'); if (dialog.open) dialog.close(); app.go({surface: 'content', revision: data.revision_id}); }));
+    button('回到此版本的内容与页序', () => { const dialog = document.querySelector('#modal'); if (dialog.open) dialog.close(); app.go({surface: 'content', revision: data.revision_id}); }));
   return node;
-}
-function sourceView(app, data) {
-  return modal('本页来源', sourceBody(app, data));
 }
 function contentView(app, data) {
   const visible = data.page?.customer_visible;
-  const node = el('article', {class: 'page-copy stack'}, el('h2', {}, visible?.title || '逐页稿暂不可读'),
+  const node = el('article', {class: 'page-copy stack'}, el('div',{class:'page-manuscript'},el('h2', {}, visible?.title || '逐页稿暂不可读'),
     visible?.subtitle && el('p', {}, visible.subtitle), visible?.body_blocks?.length ? bodyBlocks(visible.body_blocks) : el('p', {class: 'muted'}, '此页未记录正文块。'),
-    ['callouts', 'labels', 'footnotes'].flatMap(key => (visible?.[key] || []).map(item => el('p', {class: key}, item.text))));
+    ['callouts', 'labels', 'footnotes'].flatMap(key => (visible?.[key] || []).map(item => el('p', {class: key}, item.text)))));
   const sources = data.text_sources?.content || [];
   if (sources.length) {
     const select = el('select', {'aria-label': '选择原文文本对象'}, sources.map((source, i) => el('option', {value: i}, `${i + 1} · ${source.text.slice(0, 42) || '空文本'}`)));
@@ -77,9 +76,11 @@ function contentView(app, data) {
     el('pre', {class:'read-text', tabindex:'0', 'aria-label':'本页正式口播稿'}, data.page.speaker_notes),
     (data.page.content_mapping?.speech_segments||[]).length>0&&detail('口播段落与估时依据',
       el('pre', {class:'evidence-json'}, JSON.stringify(data.page.content_mapping.speech_segments,null,2)))));
-  if (data.page?.customer_visible && !app.readonly && app.health.ui_capabilities?.includes('content_ops.v1') && data.revision_id === app.route.revision && data.page_id === app.route.page_id) node.append(pageContentEditor(app, data));
-  if(supportsInsights(app))node.append(pageEvidence(app,data),designRequirements(app,data));
-  node.append(button('查看本页来源', () => sourceView(app, data))); return node;
+  if (data.page?.customer_visible && !app.readonly && app.health.ui_capabilities?.includes('content_ops.v1') && data.revision_id === app.route.revision && data.page_id === app.route.page_id) {const editor=pageContentEditor(app,data);node.querySelector('.page-manuscript').insertBefore(editor,node.querySelector('.page-manuscript').children[1]||null);}
+  const inspector=el('details',{class:'source-inspector',open:Boolean(app.route.atom||app.route.review_id||(app.sourceInspection?.page_id===data.page_id&&app.sourceInspection?.revision===data.revision_id))},el('summary',{},'查看本页来源'),sourceBody(app,data),
+    supportsInsights(app)&&pageEvidence(app,data),supportsInsights(app)&&designRequirements(app,data));
+  inspector.addEventListener('toggle',()=>{if(!inspector.isConnected)return;app.sourceInspection=inspector.open?{page_id:data.page_id,revision:data.revision_id}:null;if(inspector.open)app.root.dispatchEvent(new CustomEvent('page-source-open'));});
+  node.append(inspector); return node;
 }
 function imageLayer(app, data, layer, title, releases) {
   const stage = data.stages[stageKey[layer]];
@@ -283,7 +284,10 @@ export function pageDetail(app, data) {
   const production = layer === 'svg' || layer === 'ppt' ? (studio ? productionView(data, {expanded:true}) : detail('可编辑性与制作检查', productionView(data))) : null;
   const detailFace = el('div', {class: 'stack'}, detailBasis, production, supportsInsights(app)&&layer!=='content'&&designRequirements(app,data));
   if (!detailBasis && !production) detailFace.append(el('p', {class: 'muted'}, '本层没有多的制作记录；生成依据与检查在对应图层的详情面。'));
+  const contextFacts=el('section',{class:'page-context-facts stack','aria-label':'本页依据与制作事实'},el('h3',{},'本页依据'),el('p',{class:'muted'},'来源关联不等于事实核验。'),el('p',{},layers[layer]+' · '+stageLabel(data.stages[stageKey[layer]||layer])),sourceBody(app,data));
+  let activeFace='reading', syncTools=()=>{};
   const faces = [
+    ['reading','阅读',contextFacts],
     ['opinions', '意见', annotations?.node || el('p', {class: 'muted'}, '本页层不提供意见；请选择图像或逐页稿层。')],
     ['trials', '试作与候选', trials],
     ['icons', '图标优化', iconNode],
@@ -297,11 +301,12 @@ export function pageDetail(app, data) {
   let lastToolTrigger=null;
   const toolTitle=el('strong',{class:'studio-tool-title'},'意见');
   const faceControl = new Map(faces.map(([key, name]) => {
-    const control = button(studio?[icon(({opinions:'content',trials:'runs',icons:'gallery',notes:'content',details:'attention'})[key]),name]:name, () => {activateFace(key);if(studio){lastToolTrigger=control;revealTools();}}, false, {'aria-pressed': 'false'});
+    const control = button(studio?[icon(({reading:'content',opinions:'content',trials:'runs',icons:'gallery',notes:'content',details:'attention'})[key]),el('span',{},key==='trials'?'试作候选':name)]:name, () => {activateFace(key);if(studio){lastToolTrigger=control;revealTools();}}, false, {'aria-pressed': 'false','aria-label':name});
     switchRow.append(control);
     return [key, control];
   }));
   function activateFace(key) {
+    activeFace=key;
     toolTitle.textContent=faces.find(([id])=>id===key)?.[1]||'页面工具';
     // The selected tool already names the opinion editor. Keep its object and
     // scope metadata, without a duplicate heading consuming the first view.
@@ -309,12 +314,17 @@ export function pageDetail(app, data) {
     if(key!=='opinions'&&annotations&&['point','rect','text'].includes(annotations.mode))annotations.setMode('read');
     for (const [area, node] of faceNode) node.hidden = area !== key;
     for (const [area, control] of faceControl) control.setAttribute('aria-pressed', String(area === key));
+    syncTools();
   }
+  const pauseAnnotations=event=>{annotations?.setMode('read');if(event.type==='page-edit-open')activateFace('reading');if(event.type==='page-edit-open')app.root.querySelectorAll('.source-inspector[open]').forEach(node=>node.open=false);};
+  app.root.addEventListener('page-edit-open',pauseAnnotations);
+  app.root.addEventListener('page-source-open',pauseAnnotations);
+  app.disposables.push(()=>{app.root.removeEventListener('page-edit-open',pauseAnnotations);app.root.removeEventListener('page-source-open',pauseAnnotations);});
   // 「写新意见」等从笔记面发起、落点在意见面的动作:把活动面交回意见。
   faceZone.addEventListener('activate-opinion-face', () => activateFace('opinions'));
   faceZone.append(...faces.map(([, , node]) => node));
-  // 默认活动面:意见可用则进意见,否则笔记(异常就近)。
-  activateFace(annotations ? 'opinions' : 'notes');
+  // 普通入口从阅读开始；明确的审阅深链接保留意见定位。
+  activateFace(app.route.review_id&&annotations ? 'opinions' : 'reading');
   // 个人草稿异常就近入口(D2-A):只在真实未解决状态出现;点击打开笔记面并聚焦对应恢复动作。
   const draftChip = button('个人草稿待处理', () => {
     activateFace('notes');
@@ -326,6 +336,9 @@ export function pageDetail(app, data) {
     if (target?.isConnected && !target.hidden) target.focus({preventScroll: true});
   }, false, {class: 'tool-anomaly-chip', hidden: true});
   anomalySlot.append(draftChip);
+  const editDraftRecovery=()=>{activateFace('notes');selectNoteArea('write');lastToolTrigger=faceControl.get('notes');revealTools();draftChip.click();};
+  app.root.addEventListener('page-edit-draft-recovery',editDraftRecovery);
+  app.disposables.push(()=>app.root.removeEventListener('page-edit-draft-recovery',editDraftRecovery));
   const draftAnomaly = () => {
     const status = app.editor?.status;
     const labels = {unknown: '个人草稿保存结果待核实', conflict: '个人草稿保存冲突待比较', error: '个人草稿上次保存未完成'};
@@ -342,8 +355,14 @@ export function pageDetail(app, data) {
   // 不重建、不 remount(E01:DOM 始终在 #app 子树内,恢复冒泡路径不变)。
   const toolsPanel = el('dialog', {class: 'page-tools-panel', 'aria-label': '单页工具面板'},
     el('div', {class: 'page-tools-panel-head'}, el('strong', {}, '工具面板'),
-      button('回到画面', () => toolsPanel.close())));
+      button('回到画面', () => {
+        toolsPanel.close();
+        // Explicit canvas annotation must survive hiding its controls. Ordinary
+        // tool dismissal returns to reading without destroying the draft.
+        if(!['point','rect','text'].includes(annotations?.mode))activateFace('reading');
+      })));
   const toolsEntry = button('工具', () => {
+    if(activeFace==='reading')activateFace('opinions');
     if (narrowTools.matches) toolsPanel.showModal(); else toolsPanel.open = true;
   }, false, {class: 'quiet page-tools-entry', 'aria-haspopup': 'dialog'});
   toolsPanel.addEventListener('close', () => {
@@ -352,7 +371,7 @@ export function pageDetail(app, data) {
   });
   const narrowTools = matchMedia('(max-width:1279px)');
   const placeTools = () => {
-    if (narrowTools.matches) {
+    if (narrowTools.matches && activeFace !== 'reading') {
       if (toolsPanel.parentElement !== aside || toolsRoot.parentElement !== toolsPanel) {
         toolsPanel.append(toolsRoot); aside.append(toolsPanel);
       }
@@ -362,10 +381,11 @@ export function pageDetail(app, data) {
       if (toolsRoot.parentElement !== aside) aside.append(toolsRoot);
     }
   };
+  syncTools=placeTools;
   const onNarrowTools = () => placeTools();
   narrowTools.addEventListener?.('change', onNarrowTools);
   app.disposables.push(() => narrowTools.removeEventListener?.('change', onNarrowTools));
-  revealTools=()=>{if(narrowTools.matches&&!toolsPanel.open)toolsPanel.showModal();};
+  revealTools=()=>{if(narrowTools.matches&&activeFace!=='reading'&&!toolsPanel.open)toolsPanel.showModal();};
   const toolsRoot = el('div', {class: 'page-tools stack'}, studio?toolTitle:null,objectSummary, anomalySlot, studio?null:switchRow, faceZone);
   aside.append(toolsRoot);
   placeTools();
@@ -471,7 +491,9 @@ export function pageDetail(app, data) {
     event.preventDefault(); event.stopPropagation(); pageActions.open = false;
     (studio?(innerWidth<=767?readingMenu:openCompare):pageActions.querySelector('summary')).focus();
   });
-  const backToGallery = button('回到整稿画廊', () => app.go({surface: 'gallery'}), false, {class: 'quiet studio-reading-return'});
+  const returnSurface = app.route.from || 'gallery';
+  const returnNames = {content:'内容与页序',gallery:'整稿画廊',overview:'制作总览',style:'风格校准',runs:'任务与交付'};
+  const backToGallery = button('返回' + returnNames[returnSurface], () => {if(returnSurface==='content')app.contentFocusPage=app.route.page_id;app.go({surface: returnSurface});}, false, {class: 'quiet studio-reading-return'});
   let readingMenuBody = null;
   const restoreReadingActions = () => {
     toolbar.prepend(backToGallery);

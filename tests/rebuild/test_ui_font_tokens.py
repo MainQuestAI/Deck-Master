@@ -20,6 +20,9 @@ def test_font_tokens_carry_generic_and_cjk_fallbacks():
     for name in ('--font-body', '--font-mono'):
         line = next((row for row in text.splitlines() if row.strip().startswith(name)), None)
         assert line, f'{name} 未定义'
+        match = re.search(r'var\((--[\w-]+)\)', line)
+        if match:
+            line = next(row for row in text.splitlines() if row.strip().startswith(match[1] + ':'))
         assert any(family in line for family in GENERIC), f'{name} 缺少通用回退：{line.strip()}'
         assert any(family in line for family in CJK), f'{name} 缺少中文字族回退：{line.strip()}'
 

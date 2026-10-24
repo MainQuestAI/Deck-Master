@@ -37,6 +37,7 @@ def open_page(page, server, store, layer='original_image'):
     page.goto(base + '#' + urlencode({'project': identity, 'surface': 'page', 'page': 'p01',
         'layer': layer, 'revision': store.current_revision_id()}))
     page.locator('.page-tools').wait_for()
+    page.get_by_role('button', name='意见', exact=True).click()
 
 
 def test_page_history_offers_the_direct_before_snapshot_and_deduplicates_paging(page_fixture):
@@ -208,7 +209,7 @@ def test_repeated_surface_navigation_shares_its_control_read_and_can_retry(flow,
         def hold_project(route):
             held.append((route, route.fetch()))
             page.evaluate('count => window.heldProjectReads = count', len(held))
-        page.route('**/api/project', hold_project)
+        page.route('**/api/project?light=1', hold_project)
         navigation = page.get_by_role('button', name='任务与交付', exact=True)
         try:
             if click_timing == 'queued':
@@ -219,12 +220,14 @@ def test_repeated_surface_navigation_shares_its_control_read_and_can_retry(flow,
                 page.wait_for_function('() => window.heldProjectReads >= 1')
                 navigation.click()
             page.wait_for_function('() => window.heldProjectReads >= 1')
-            page.evaluate('''() => {
+            with page.expect_response(lambda response: '/api/view/summary?' in response.url and 'revision=' not in response.url) as passive:
+                page.evaluate('''() => {
                 const root = document.querySelector('#app');
                 root.addEventListener('summary-refreshed', () => window.navigationPollObserved = true, {once:true});
                 root.dispatchEvent(new CustomEvent('business-state-changed'));
             }''')
-            page.wait_for_function('() => window.navigationPollObserved === true')
+            passive.value.finished()
+            assert page.evaluate('window.navigationPollObserved !== true')
             # Drain browser event dispatch after the real summary response. A
             # passive control refresh must not add another held project read.
             page.evaluate('() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))')
@@ -250,9 +253,9 @@ def test_repeated_surface_navigation_shares_its_control_read_and_can_retry(flow,
             route.fulfill(response=response)
             page.get_by_role('button', name='待决定', exact=True).click()
             expect(page.locator('#runs-decisions')).to_be_visible()
-            page.unroute('**/api/project', hold_project)
+            page.unroute('**/api/project?light=1', hold_project)
             # Subsequent passive control refreshes resume after navigation.
-            with page.expect_request(lambda request: request.url.endswith('/api/project')):
+            with page.expect_request(lambda request: request.url.endswith('/api/project?light=1')):
                 page.evaluate("document.querySelector('#app').dispatchEvent(new CustomEvent('business-state-changed'))")
         finally:
             for route, response in held:

@@ -1,4 +1,5 @@
 """Read-only preparation using the same catalog and selector as dispatch."""
+import json
 from . import content_production, eligibility, method_resources as methods, models
 from .content_insight import fail, records, snapshot
 from .resource_catalog import CATALOG_PATH, PUBLIC_SKILLS, validate_catalog, safe_file, select
@@ -120,8 +121,22 @@ def preview(project, request):
         entries.append({'id': mid, 'display_name': titles.get(mid, mid), 'description': '', 'kind': row['kind'],
                         'sha256': hashes.get(mid), 'selectable': allowed, 'reason_codes': why})
     preview_digest = digest({'basis': context_digest, 'catalog': catalog_digest, 'selected': chosen, 'manifest': resolved, 'damaged': damaged})
+    handoff_context = {
+        'context': ctx, 'role': role, 'phase': phase, 'review_units': units or [],
+        'project_id': project_id, 'revision_id': revision,
+        'explicit_ids': chosen, 'resolved_manifest': resolved,
+        'catalog_digest': catalog_digest, 'context_digest': context_digest,
+        'preview_digest': preview_digest, 'preparation_only': True,
+        'recovery': {'surface': 'content', 'content_area': 'methods',
+                     'context': ctx, 'selected_resource_ids': chosen},
+    }
     text = ('方法准备，尚未应用。请制作工具先重新核对项目版本、请求、范围和资源字节，再按正式流程处理。\n'
-            + '选择的资源 ID：' + ', '.join(chosen) + '\n固定准备依据：' + preview_digest)
+            + f'职责：{role}；阶段：{phase or "未确定"}；审阅范围：{", ".join(units or []) or "不适用"}。\n'
+            + ('独立阅读，不绑定项目，不产生派发许可。\n' if ctx['mode'] == 'independent'
+               else f'固定项目：{project_id}；版本：{revision}。\n')
+            + '选择的资源 ID：' + ', '.join(chosen) + '\n固定准备依据：' + preview_digest
+            + '\n恢复入口：内容与页序 → 更多 → 方法与案例；按下列上下文重新核对。'
+            + '\n```json\n' + json.dumps(handoff_context, ensure_ascii=False, indent=2) + '\n```')
     return {'schema_version': 'ui_method_preview.v1', 'project_id': project_id, 'revision_id': revision,
         'context_status': status, 'browse_status': 'partial' if gaps or damaged else 'available', 'dispatch_status': dispatch,
         'reason_codes': reasons, 'preparation_only': True, 'selection_status': 'validated' if valid and not damaged else 'not_evaluated',

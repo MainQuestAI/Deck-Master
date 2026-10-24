@@ -9,7 +9,7 @@ import pytest
 from deck_master.samples import create_sample
 from deck_master.store import Store
 from deck_master.web import WorkbenchServer
-from test_action_targets import add_handoffs
+from test_action_targets import add_handoffs, current_read_task
 from test_candidates import candidate
 from test_content_candidates import dispatch_content_ops_trial, start_task, accept, changeset_envelope
 from test_workbench_actions import commit
@@ -140,7 +140,7 @@ def test_read_result_removes_same_overview_target_and_survives_reload(action_bro
     page,server,path,store=action_browser
     doc=copy.deepcopy(store.load_document());doc['tasks']=[]
     for i in range(2):
-        task=synthetic_task(doc,f'reading-{i}','completed',result_refs=[doc['pages'][0]['page']]);task['scope_pages']=['p01'];doc['tasks'].append(store.put_json_object(task))
+        task=current_read_task(store,doc,f'reading-{i}','completed',page_ids=['p01'],result_refs=[doc['pages'][0]['page']]);doc['tasks'].append(store.put_json_object(task))
     commit(store,doc,'reading-browser');before=store.load_document()
     errors=[];page.on('console',lambda m:errors.append(m.text) if m.type=='error' else None)
     page.add_init_script("window.cspErrors=[];document.addEventListener('securitypolicyviolation',e=>window.cspErrors.push(e.violatedDirective))")
@@ -168,8 +168,8 @@ def test_target_paging_failure_retries_exact_page_and_ignores_departed_response(
     page,server,path,store=action_browser
     doc=copy.deepcopy(store.load_document());doc['tasks']=[]
     for index in range(65):
-        task=synthetic_task(doc,f'pageable-handoff-{index:02d}','awaiting_host')
-        task['scope_pages']=['p01'];doc['tasks'].append(store.put_json_object(task))
+        task=current_read_task(store,doc,f'pageable-handoff-{index:02d}','awaiting_host',page_ids=['p01'])
+        doc['tasks'].append(store.put_json_object(task))
     commit(store,doc,'pageable-action-targets');before=store.read_current()
     page.goto(server.start()+'studio/')
     page.locator('.todo-priority').get_by_role('button',name='去交接',exact=True).click()

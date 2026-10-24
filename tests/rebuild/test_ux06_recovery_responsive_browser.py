@@ -131,8 +131,8 @@ def await_recovery(page, root, parent_dir):
     recovery.click()
     page.wait_for_url(lambda pattern: '#project=' in page.url, timeout=20000)
     assert created_entry is not None and not opened_entry, '恢复路径不得再次创建'
-    # 新建项目 0 页：初始工作面是"内容与来源"。
-    page.get_by_role('heading', name='内容与来源', exact=True).wait_for(timeout=20000)
+    # 新建项目 0 页：初始工作面是"内容与页序"。
+    page.get_by_role('heading', name='内容与页序', exact=True).wait_for(timeout=20000)
 
 
 def test_lost_create_response_offers_register_and_open_without_recreating(ux06_browser):
@@ -201,6 +201,7 @@ def test_modal_close_returns_focus_to_the_surface_heading_when_trigger_is_remove
         page.get_by_role('button', name='刷新项目列表', exact=True).click()
         card = page.locator('.project-card').first
         expect(card).to_be_visible()
+        card.get_by_role('button', name=re.compile('^项目操作 · ')).click()
         card.get_by_role('button', name='从列表移除', exact=True).click()
         dialog = page.locator('dialog[open]')
         dialog.get_by_role('button', name='移除条目', exact=True).click()

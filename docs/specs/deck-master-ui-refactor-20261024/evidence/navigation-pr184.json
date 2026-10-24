@@ -1,0 +1,385 @@
+{
+  "label": "pr184",
+  "build_id": "ccdab5255fdd7e158b77e17c726a42f3547db3f0ed4a297bc4b9ce3f96e39435",
+  "results": [
+    {
+      "case": "gallery-24",
+      "path": "gallery-24",
+      "pages": 24,
+      "candidates": 0,
+      "document_sha256": "338c44818b32a3c43420e8e700f5290e5e55a608180476249c3e4c8311f36676",
+      "cold_matrix_ms": 261.7,
+      "switches": [
+        {
+          "round": 1,
+          "surface": "content",
+          "visible_action_ms": 227.32
+        },
+        {
+          "round": 1,
+          "surface": "gallery",
+          "visible_action_ms": 109.51
+        },
+        {
+          "round": 1,
+          "surface": "style",
+          "visible_action_ms": 105.09
+        },
+        {
+          "round": 1,
+          "surface": "runs",
+          "visible_action_ms": 109.21
+        },
+        {
+          "round": 1,
+          "surface": "overview",
+          "visible_action_ms": 209.83
+        },
+        {
+          "round": 2,
+          "surface": "content",
+          "visible_action_ms": 92.39
+        },
+        {
+          "round": 2,
+          "surface": "gallery",
+          "visible_action_ms": 92.46
+        },
+        {
+          "round": 2,
+          "surface": "style",
+          "visible_action_ms": 92.75
+        },
+        {
+          "round": 2,
+          "surface": "runs",
+          "visible_action_ms": 101.17
+        },
+        {
+          "round": 2,
+          "surface": "overview",
+          "visible_action_ms": 98.74
+        },
+        {
+          "round": 3,
+          "surface": "content",
+          "visible_action_ms": 101.76
+        },
+        {
+          "round": 3,
+          "surface": "gallery",
+          "visible_action_ms": 96.71
+        },
+        {
+          "round": 3,
+          "surface": "style",
+          "visible_action_ms": 105.57
+        },
+        {
+          "round": 3,
+          "surface": "runs",
+          "visible_action_ms": 101.72
+        },
+        {
+          "round": 3,
+          "surface": "overview",
+          "visible_action_ms": 115.65
+        }
+      ],
+      "idle": null,
+      "page_errors": [],
+      "business_document_unchanged": true
+    },
+    {
+      "case": "gallery-100",
+      "path": "gallery-100",
+      "pages": 100,
+      "candidates": 0,
+      "document_sha256": "f684460c44dfbb1f402587bc7b22fc2b2062ded6285d5ded91e078f085488d12",
+      "cold_matrix_ms": 823.37,
+      "switches": [
+        {
+          "round": 1,
+          "surface": "content",
+          "visible_action_ms": 301.16
+        },
+        {
+          "round": 1,
+          "surface": "gallery",
+          "visible_action_ms": 304.13
+        },
+        {
+          "round": 1,
+          "surface": "style",
+          "visible_action_ms": 309.56
+        },
+        {
+          "round": 1,
+          "surface": "runs",
+          "visible_action_ms": 309.0
+        },
+        {
+          "round": 1,
+          "surface": "overview",
+          "visible_action_ms": 305.75
+        },
+        {
+          "round": 2,
+          "surface": "content",
+          "visible_action_ms": 303.12
+        },
+        {
+          "round": 2,
+          "surface": "gallery",
+          "visible_action_ms": 306.29
+        },
+        {
+          "round": 2,
+          "surface": "style",
+          "visible_action_ms": 305.95
+        },
+        {
+          "round": 2,
+          "surface": "runs",
+          "visible_action_ms": 307.46
+        },
+        {
+          "round": 2,
+          "surface": "overview",
+          "visible_action_ms": 300.21
+        },
+        {
+          "round": 3,
+          "surface": "content",
+          "visible_action_ms": 305.17
+        },
+        {
+          "round": 3,
+          "surface": "gallery",
+          "visible_action_ms": 305.43
+        },
+        {
+          "round": 3,
+          "surface": "style",
+          "visible_action_ms": 309.0
+        },
+        {
+          "round": 3,
+          "surface": "runs",
+          "visible_action_ms": 312.91
+        },
+        {
+          "round": 3,
+          "surface": "overview",
+          "visible_action_ms": 302.09
+        }
+      ],
+      "idle": {
+        "seconds": 46.0,
+        "server_process_cpu_percent": 1.732,
+        "renderer_task_time_percent": 0.11,
+        "requests": {
+          "/api/view/summary": 3,
+          "/api/project": 3
+        },
+        "max_concurrent_by_path": {
+          "/api/view/summary": 1,
+          "/api/project": 1
+        }
+      },
+      "page_errors": [],
+      "business_document_unchanged": true
+    },
+    {
+      "case": "history-1",
+      "path": "history-1/candidate-project",
+      "pages": 2,
+      "candidates": 1,
+      "document_sha256": "74479b9a9ccdb775b911e7f455ce0a52458426d76c097551611100a354c434b2",
+      "cold_matrix_ms": 117.97,
+      "switches": [
+        {
+          "round": 1,
+          "surface": "content",
+          "visible_action_ms": 96.8
+        },
+        {
+          "round": 1,
+          "surface": "gallery",
+          "visible_action_ms": 55.99
+        },
+        {
+          "round": 1,
+          "surface": "style",
+          "visible_action_ms": 42.58
+        },
+        {
+          "round": 1,
+          "surface": "runs",
+          "visible_action_ms": 50.06
+        },
+        {
+          "round": 1,
+          "surface": "overview",
+          "visible_action_ms": 48.75
+        },
+        {
+          "round": 2,
+          "surface": "content",
+          "visible_action_ms": 41.21
+        },
+        {
+          "round": 2,
+          "surface": "gallery",
+          "visible_action_ms": 43.79
+        },
+        {
+          "round": 2,
+          "surface": "style",
+          "visible_action_ms": 48.79
+        },
+        {
+          "round": 2,
+          "surface": "runs",
+          "visible_action_ms": 41.89
+        },
+        {
+          "round": 2,
+          "surface": "overview",
+          "visible_action_ms": 47.69
+        },
+        {
+          "round": 3,
+          "surface": "content",
+          "visible_action_ms": 41.32
+        },
+        {
+          "round": 3,
+          "surface": "gallery",
+          "visible_action_ms": 42.76
+        },
+        {
+          "round": 3,
+          "surface": "style",
+          "visible_action_ms": 41.65
+        },
+        {
+          "round": 3,
+          "surface": "runs",
+          "visible_action_ms": 44.03
+        },
+        {
+          "round": 3,
+          "surface": "overview",
+          "visible_action_ms": 47.37
+        }
+      ],
+      "idle": null,
+      "page_errors": [],
+      "business_document_unchanged": true
+    },
+    {
+      "case": "history-500",
+      "path": "history-500/candidate-project",
+      "pages": 2,
+      "candidates": 500,
+      "document_sha256": "1c358c77a880cd8d383b208b8b7f27744775cf9fdc9085e21e4c3d78494dcbea",
+      "cold_matrix_ms": 219.8,
+      "switches": [
+        {
+          "round": 1,
+          "surface": "content",
+          "visible_action_ms": 102.93
+        },
+        {
+          "round": 1,
+          "surface": "gallery",
+          "visible_action_ms": 95.9
+        },
+        {
+          "round": 1,
+          "surface": "style",
+          "visible_action_ms": 100.37
+        },
+        {
+          "round": 1,
+          "surface": "runs",
+          "visible_action_ms": 103.78
+        },
+        {
+          "round": 1,
+          "surface": "overview",
+          "visible_action_ms": 202.89
+        },
+        {
+          "round": 2,
+          "surface": "content",
+          "visible_action_ms": 198.11
+        },
+        {
+          "round": 2,
+          "surface": "gallery",
+          "visible_action_ms": 198.12
+        },
+        {
+          "round": 2,
+          "surface": "style",
+          "visible_action_ms": 104.51
+        },
+        {
+          "round": 2,
+          "surface": "runs",
+          "visible_action_ms": 209.28
+        },
+        {
+          "round": 2,
+          "surface": "overview",
+          "visible_action_ms": 204.21
+        },
+        {
+          "round": 3,
+          "surface": "content",
+          "visible_action_ms": 205.12
+        },
+        {
+          "round": 3,
+          "surface": "gallery",
+          "visible_action_ms": 210.19
+        },
+        {
+          "round": 3,
+          "surface": "style",
+          "visible_action_ms": 205.48
+        },
+        {
+          "round": 3,
+          "surface": "runs",
+          "visible_action_ms": 206.21
+        },
+        {
+          "round": 3,
+          "surface": "overview",
+          "visible_action_ms": 314.95
+        }
+      ],
+      "idle": {
+        "seconds": 46.0,
+        "server_process_cpu_percent": 9.732,
+        "renderer_task_time_percent": 0.087,
+        "requests": {
+          "/api/view/summary": 3,
+          "/api/project": 3
+        },
+        "max_concurrent_by_path": {
+          "/api/view/summary": 1,
+          "/api/project": 1
+        }
+      },
+      "page_errors": [],
+      "business_document_unchanged": true
+    }
+  ],
+  "module_root_kind": "source checkout",
+  "fixture": "synthetic",
+  "model_calls": 0
+}

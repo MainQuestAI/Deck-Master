@@ -25,12 +25,11 @@ def test_gallery_selected_pages_enter_real_batch_without_reselection(tmp_path,ac
         page.on('request',lambda request:calls.append(request.post_data_json) if request.method=='POST' and '/api/changes/' in request.url else None)
         try:
             page.goto(server.start());page.get_by_role('button',name='整稿画廊',exact=True).click()
-            tool=page.get_by_role('group',name='画廊选页制作');expect(tool.locator('button')).to_have_count(4)
-            expect(tool.locator('button').first).to_be_disabled()
+            tool=page.locator('.studio-gallery-production');expect(tool).to_be_hidden()
             search=page.get_by_role('textbox',name='搜索页面',exact=True)
             for page_id in ('p02','p06','p12','p22','p28'):
                 search.fill(page_id[1:]);page.locator(f'.slide-tile[data-page-id="{page_id}"]').get_by_role('checkbox').check()
-            expect(tool).to_contain_text('已选 5 页');expect(page.locator('.gallery-legend')).to_contain_text('筛选外选中 4 页')
+            expect(tool.locator('button')).to_have_count(4);expect(tool).to_contain_text('已选 5 页');expect(page.locator('.gallery-legend')).to_contain_text('筛选外选中 4 页')
             expect(page.get_by_role('button',name='并排比较',exact=True)).to_be_disabled()
             if action=='blueprint':page.screenshot(path=str(out/'gallery-selection-1440.png'),full_page=True)
             tool.locator(f'[data-gallery-action="{action}"]').click()

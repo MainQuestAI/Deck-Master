@@ -65,8 +65,8 @@ def test_cross_chapter_selection_reaches_config_and_survives_return(overview30):
     expect(scope).to_contain_text('2 页 · 原图试作 · 图像调用 2 次')
 
     # 返回：进入其它工作面再回来，选择与要求保留，且预览未改动任何业务事实。
-    page.get_by_role('button', name='内容与来源', exact=True).click()
-    page.get_by_role('heading', name='内容与来源', exact=True).wait_for()
+    page.get_by_role('button', name='内容与页序', exact=True).click()
+    page.get_by_role('heading', name='内容与页序', exact=True).wait_for()
     page.get_by_role('button', name='制作总览', exact=True).click()
     expect(page.get_by_role('checkbox', name='选择第 02 页', exact=True)).to_be_checked()
     page.get_by_role('button', name='下一组页面', exact=True).click()
@@ -203,8 +203,8 @@ def test_reading_and_batch_tools_distinct_and_recovery_survives_empty_filter(ove
     reading = page.locator('.overview-reading-tools')
     batchRow = page.locator('.matrix-search')
     expect(reading.get_by_role('searchbox', name='搜索页码或标题')).to_be_visible()
-    expect(batchRow.get_by_role('group', name='选页制作动作', exact=True)).to_be_visible()
-    expect(batchRow.get_by_role('group', name='选页制作动作', exact=True).locator('button')).to_have_count(4)
+    expect(batchRow.get_by_role('group', name='选页制作动作', exact=True)).to_be_hidden()
+    expect(batchRow.locator('[aria-label="选页制作动作"] button')).to_have_count(4)
     # 两行各成一组、互不含对方控件;批量选择摘要条是第三个独立容器。
     assert reading.locator('[aria-label="选页制作动作"], .overview-selection-bar').count() == 0
     assert batchRow.evaluate('(n) => n.querySelectorAll("input[type=search], .overview-selection-bar").length') == 0
