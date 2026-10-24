@@ -265,7 +265,15 @@ def test_reference_preview_and_same_file_retry_after_not_found(flow):
             expect(preview.or_(recovery).first).to_be_visible()
             if recovery.is_visible():
                 expect(recovery).to_be_enabled()
-                recovery.click()
+                from playwright.sync_api import TimeoutError as PlaywrightTimeout
+                try:
+                    recovery.click(timeout=5000)
+                except PlaywrightTimeout:
+                    # A draft-save receipt can auto-open the same result between
+                    # the enabled check and pointer action. Accept only that
+                    # completed navigation, never a still-present failed control.
+                    expect(recovery).to_have_count(0)
+                    expect(preview).to_have_attribute('data-image-state', 'ready')
             expect(preview).to_have_attribute('data-image-state', 'ready')
             canvas = page.get_by_role('img', name='参考截图 1', exact=True)
             assert canvas.evaluate('node => node.getContext("2d").getImageData(0,0,1,1).data[3]') == 255
