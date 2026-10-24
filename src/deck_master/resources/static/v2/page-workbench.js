@@ -301,7 +301,7 @@ export function pageDetail(app, data) {
   let lastToolTrigger=null;
   const toolTitle=el('strong',{class:'studio-tool-title'},'意见');
   const faceControl = new Map(faces.map(([key, name]) => {
-    const control = button(studio?[icon(({reading:'content',opinions:'content',trials:'runs',icons:'gallery',notes:'content',details:'attention'})[key]),name]:name, () => {activateFace(key);if(studio){lastToolTrigger=control;revealTools();}}, false, {'aria-pressed': 'false'});
+    const control = button(studio?[icon(({reading:'content',opinions:'content',trials:'runs',icons:'gallery',notes:'content',details:'attention'})[key]),el('span',{},key==='trials'?'试作候选':name)]:name, () => {activateFace(key);if(studio){lastToolTrigger=control;revealTools();}}, false, {'aria-pressed': 'false','aria-label':name});
     switchRow.append(control);
     return [key, control];
   }));

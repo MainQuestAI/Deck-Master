@@ -69,7 +69,7 @@ export function content(app, data) {
   const previewObserver=new IntersectionObserver(entries=>{
     for(const entry of entries){
       if(!entry.isIntersecting)continue;
-      const node=entry.target,id=node.dataset.previewPage;previewObserver.unobserve(node);
+      const row=entry.target,node=row.querySelector('.content-row-preview'),id=node.dataset.previewPage;previewObserver.unobserve(row);
       if(!previewCache.has(id))previewCache.set(id,new Promise(resolve=>{previewQueue.push({id,resolve});runPreviews();}));
       previewCache.get(id).then(result=>{
         if(disposed||!node.isConnected)return;
@@ -203,7 +203,7 @@ export function content(app, data) {
         !app.readonly && actionMenu('第 '+(index+1)+' 页操作',[
           button('向前移动 '+title,()=>move(id,index-1),false,{disabled:index===0}),
           button('向后移动 '+title,()=>move(id,index+1),false,{disabled:index===order.length-1})]));
-      previewObserver.observe(row.querySelector('.content-row-preview'));
+      previewObserver.observe(row);
       row.addEventListener('dragover',event=>event.preventDefault());row.addEventListener('drop',event=>{event.preventDefault();const source=event.dataTransfer.getData('text/plain');if(order.includes(source))move(source,index);});
       return row;
     }));
@@ -388,7 +388,7 @@ export function content(app, data) {
   function openMaterialEditor(kind,sourceId=null,trigger=document.activeElement) {
     if(!adjustDetails)return;
     if(adjustDetails.hidden)editReturnScroll={x:window.scrollX,y:window.scrollY};
-    editTrigger=trigger;editKind=kind;editSourceId=sourceId;
+    editTrigger=trigger?.closest('.object-actions')?.querySelector('[popovertarget]')||trigger;editKind=kind;editSourceId=sourceId;
     changed();returnEdit.hidden=true;adjustDetails.dataset.step='edit';
     const source=sourceRows.find(s=>s.source_id===sourceId);
     materialEditor.replaceChildren();
@@ -463,7 +463,7 @@ export function content(app, data) {
   const alignmentDetail=el('p',{},aligned?'已有内容结果采用了这一版输入；这不是独立事实核验。':'已保存的稿件仍可阅读。制作工具尚需按最新材料、受众和用途判断影响。');
   const judgment=studio?el('div',{class:'stack studio-input-judgment'},alignmentDetail,integrationSummary,hostImpact):null;
   let judgmentDialog;
-  const alignmentView=studio?button('查看输入判断',()=>{judgmentDialog=modal('输入判断与依据',judgment,[],{fallback:document.querySelector('#view-title')});}):null;
+  const alignmentView=studio?button('查看输入判断',()=>{judgmentDialog=modal('输入判断与依据',judgment,[],{fallback:materialTrigger});}):null;
   app.disposables.push(()=>{if(judgmentDialog?.open&&judgmentDialog.contains(judgment))judgmentDialog.close();});
   const alignment=el('div',{class:(aligned?'notice is-aligned':'history-banner')+' content-alignment'},el('strong',{},aligned?'当前输入已由内容结果对齐':'输入待协调'),studio?alignmentView:alignmentDetail);
   let area='pages';

@@ -18,6 +18,9 @@ def test_content_rows_restore_chapter_and_status(ui):
     expect(row.locator('.content-row-preview')).to_be_visible()
     expect(row.locator('.content-row-status')).to_have_text('未记录正文块')
     expect(row.locator('.content-row-preview')).to_have_text('未记录正文块')
+    page.set_viewport_size({'width':390,'height':844})
+    page.reload()
+    expect(row.locator('.content-row-status')).to_have_text('未记录正文块')
 
 
 def test_mobile_content_shows_three_rows(manuscript_url, tmp_path):
