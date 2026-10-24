@@ -82,8 +82,11 @@ def test_speech_preparation_real_clipboard_reader_and_draft_restore(tmp_path, wi
                 manifest = {item['id']: item['sha256'] for item in copied['resolved_manifest']}
                 assert all(item['sha256'] == manifest[item['id']] and item['content'] for item in actual)
                 page.get_by_text('保存与恢复个人准备稿', exact=True).click()
-                page.get_by_role('button', name='保存方法准备稿', exact=True).click()
+                # DraftEditor autosaves after 600ms. Clipboard/CLI verification
+                # may already have completed that save; a saved draft correctly
+                # disables its button. Assert persistence instead of racing it.
                 expect(page.locator('.method-draft-state')).to_contain_text('已保存')
+                expect(page.get_by_role('button', name='保存方法准备稿', exact=True)).to_be_disabled()
                 page.reload()
                 expect(page.get_by_label('方法阅读阶段')).to_have_value('speech')
                 expect(page.locator('#content-area-methods')).to_contain_text('审阅范围：口播。')
