@@ -52,11 +52,12 @@ def _context(project, revision):
 def _facts(store, doc, *, selected_output=None, control=None):
     control = store.load_document() if control is None else control
     doc = {**doc, "policy": control["policy"], "reviews": control.get("reviews", [])}
-    from .editing import check_summary
+    from .editing import ReviewReadContext, check_summary
     from .production_detail import projection
     from .workbench import _ReadContext, _deck_output
 
-    summary = check_summary(store, doc)
+    review_context = ReviewReadContext(store, doc)
+    summary = check_summary(store, doc, read_context=review_context)
     ctx = _ReadContext(store, doc)
     output = _deck_output(ctx)
     production = [projection(ctx, page, output) for page in doc["pages"]]
@@ -91,7 +92,7 @@ def _facts(store, doc, *, selected_output=None, control=None):
     for key, reason in (summary.get("dimension_reasons") or {}).items():
         gaps.append(quality_gap(key, reason))
     from .delivery_eligibility import professional_policy
-    professional = professional_policy(store, doc, selected_output=selected_output)
+    professional = professional_policy(store, doc, selected_output=selected_output, read_context=review_context)
     if professional["required"] and not professional["satisfied"]:
         # Report the named professional gaps wherever this snapshot's gaps are
         # listed, including when the engineering gate refuses first.

@@ -38,3 +38,51 @@ full_deck 的授权 Producer 使用工作单准确方法及 capability：generat
 顺序双版本只按原声明两版：固定第一份 revision/export 后，start_request.input.variant_transition.kind=next_variant，source 显式指向第一份。第二版创建独立 Plan/Page/output，共享固定 Narrative/来源；不复制预算或用换 label 增第三版。edit_variant 指向要改的版本，限定页/字段，当前 control 生效；其他固定版本原文件保持原样。不能用 history restore 全项目替代窄 edit。
 
 交付核对准备交给用户的实际文件、实际 notes_policy、选定 artifact revision 与 current control。export/handoff/readiness 消费同一 delivery_eligibility；sanitized/notes-excluded 文件需核对自身 hash，不能借原 artifact 批准。工程、协作、专业/人类、native/桌面分列；历史 Desktop 工程记录不是当前人类桌面验收。
+
+## 单任务变更回执与完整输入读取
+
+先通过 `deck-master capabilities` 确认 `task_response_protocols` 支持
+`task_receipt.v1`，再在 `task start`、`task accept` 或 `task cancel` 上指定
+`--response-protocol task_receipt.v1`。Python service 使用同名
+`response_protocol` 参数；HTTP `/api/cancel` 可传同名 JSON 字段。
+未指定时保留旧版回执，不静默改变旧 Host 的输入。
+
+紧凑回执只报告本次 Task 身份、状态、execution、版本和结果引用，不展开其他待办
+的材料或方法正文；`context_ready=false` 不能被解释为已经读取生产输入。
+领取后按回执的 `task_id` 显式读取完整上下文：
+
+```bash
+deck-master methods --project <project> --task-id <task-id> --read --read-protocol work_context.v2 --body-mode full
+```
+
+核对该完整读取中的当前性、冻结方法、scope 和实际 execution，再执行工作。
+接受结果后的回执不等于下一任务派发：需要继续时调用现有 `continue`，或按 Task
+目录选择明确任务后读取。精确重放保留原提交 revision/result_refs，同时报告当前
+revision；不要把旧提交回执当作当前项目或当前审查通过。无效协议在写入前拒绝，
+选择紧凑格式不改变权限、取消、晚到、调用结算或来源校验。
+
+
+## 跨轮恢复与职责接手
+
+发送新工具调用之前，读取当前 request/scope/control、Task.execution_ref 及其冻结
+Request/Attempt；当前 Host 身份不等于旧 Task 身份。不要为了“继续”写一个新身份
+到旧 Task，或把 selector 中的真实 thread/turn 改成旧轮次。按已核实事实处理：
+
+| 已核实事实 | 接续方式 | 必须保留 |
+| --- | --- | --- |
+| 当前执行仍是领取者，调用尚未发出 | 按原工作单继续；只有明确未发的 Attempt 才 settle not_sent | 原 Request/Attempt/额度身份 |
+| 调用是否发送未知 | 先收集真实观察，保持 unknown，不新建调用 | 真实消耗和未知状态，不自动释放 |
+| 已完成输出与原执行及冻结输入一致 | 按原 Task/Attempt 结算并接纳准确原件；精确回执重放不再生图 | 原始输出、观察、费用与采用资格 |
+| 新会话不同于领取者，已确认 not_sent | not_sent 只释放额度，不转移领取身份；用现有正式取消/退役、当前范围的计划或 request replacement/reissue 路径获得新 Task，再声明新身份 | 原任务/调用记录；已有适用授权照常核验，不虚构用户改需求 |
+| 图片已完成，但真实执行与原 Attempt 不匹配 | 保留原件和实际消耗，拒绝旧 Attempt 冒名绑定；报告当前无已验证跨执行重新关联入口 | 不改 selector、不自签 proof、不自动重生成掩盖缺口 |
+| 取消/撤回/过期后迟到 | 仍结算真实已发调用，拒绝采用；让当前责任方处理已有产物 | 停止控制和旧事实都不能回滚 |
+
+只有用户确有范围/需求变动时才用 `start_request` 的 `replace_request_id` 记录该
+真实变动；不能伪造新指令来绕过运行中的执行身份。无变动的重新派发须走现有
+正式取消/计划/退役入口，若当前状态没有适用入口，就报告具体缺口。
+
+实际交接记录固定 request、scope、当前 revision、Task/Request/Attempt ID，交给
+下一执行者的完整 reader、实际产物 Ref、未决调用/审查及下一动作。新会话冷读取
+完整方法与材料，确认 scope/currentness 后才领取；只有 reader 返回不证明执行。
+返回时将真实采用产生的 revision/result_refs 与原依据对照，不把新会话名字当独立
+审查证明。完整会话、实际工具图像和独立接手证据缺失时分别记 NOT_RUN/BLOCKED。

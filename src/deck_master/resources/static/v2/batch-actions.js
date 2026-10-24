@@ -52,7 +52,7 @@ export function batchActions(app, selected, onSelectionChange, {initialAction} =
   let recoveryButton = null, recoveryPanel = null;
   if (app.business && app.health.ui_capabilities?.includes('ui_draft.v1')) {
     app.editor = new DraftEditor(app.info, {scope: 'project', page_id: null, layer: 'notes'}, app.route.revision, null, {readonly: app.readonly});
-    if (studio) {
+    {
       recoveryPanel = el('section', {'data-container':'section',class:'panel studio-batch-recovery-body', hidden:true},
         el('div', {class:'panel-head'}, el('h2', {}, '个人记录与提交恢复')),
         el('div', {class:'panel-body'}, app.editor.mount()));
@@ -60,7 +60,7 @@ export function batchActions(app, selected, onSelectionChange, {initialAction} =
         recoveryPanel.hidden = !recoveryPanel.hidden;
         recoveryButton.setAttribute('aria-expanded', String(!recoveryPanel.hidden));
       }, false, {'aria-expanded':'false'});
-    } else node.lastChild.append(el('details', {}, el('summary', {}, '个人记录与提交恢复'), app.editor.mount()));
+    }
   }
   let editor = app.editor;
   function exclusions() { return [...selected].map(id => ({id, reason: batchExclusion(app, pages.find(page => page.page_id === id), action.value, fixed)})).filter(item => item.reason); }
@@ -71,7 +71,7 @@ export function batchActions(app, selected, onSelectionChange, {initialAction} =
     const unavailable = exclusions(), image = action.value === 'blueprint', style = action.value === 'style';
     actionButtons.forEach(control => control.setAttribute('aria-pressed', String(control.dataset.batchAction === action.value)));
     node.dataset.selection = selected.size ? 'selected' : 'empty';
-    node.hidden = studio && !selected.size;
+    node.hidden = !selected.size;
     fields.hidden = !selected.size;
     const saving = !editor || editor.disposed || editor.readonly || ['loading', 'unknown', 'conflict', 'saving'].includes(editor.status);
     const calls = Number(budget.value), budgetInvalid = image && (!Number.isInteger(calls) || calls < selected.size || calls > 300);

@@ -672,6 +672,7 @@ def test_restoring_a_saved_draft_by_real_selection_replaces_the_editor(ux04_brow
         expect(page.get_by_role('textbox', name='意见正文', exact=True)).to_be_visible()
         open_opinion_face(page)
         page.get_by_role('button', name='整页意见', exact=True).click()
+        expect(page.get_by_role('textbox', name='意见正文', exact=True)).to_be_visible()
         page.get_by_role('textbox', name='意见正文', exact=True).fill(body)
         save = page.get_by_role('button', name='保存意见', exact=True)
         expect(save).to_be_enabled()

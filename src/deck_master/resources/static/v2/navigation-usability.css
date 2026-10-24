@@ -43,3 +43,9 @@
   .history-reading-controls select { min-width: 0; width: 100%; }
   .fixed-compare-controls .row > select { max-width: 100%; }
 }
+
+.initial-design > summary { min-height: 44px; padding: 10px 16px; cursor: pointer; font-weight: 600; }
+.style-entry-actions { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px; }
+.style-entry-actions > .initial-design { flex: 1 1 240px; margin: 0; }
+.style-entry-actions > .initial-design[open] { flex-basis: 100%; }
+.style-entry-actions > .studio-style-route { margin: 0; }

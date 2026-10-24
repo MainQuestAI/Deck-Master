@@ -221,12 +221,14 @@ def committed_headers(store, *, head=None):
     if revision is None:
         raise ReadModelError("project_unavailable", "project", "project snapshot is not readable")
     project_id = None; visited = set()
-    while revision and revision not in visited:
+    while revision:
+        if revision in visited:
+            raise ReadModelError("revision_unavailable", "revision", "snapshot ancestry contains a cycle")
         visited.add(revision)
         identity, parent = _header(store, revision)
         project_id = identity if project_id is None else project_id
         if identity != project_id:
-            break
+            raise ReadModelError("revision_unavailable", "revision", "snapshot ancestry crosses projects")
         yield revision, identity, parent
         revision = parent
 
@@ -244,3 +246,47 @@ def load_snapshot(store, revision=None):
                 raise ReadModelError("revision_unavailable", "revision", "snapshot identity changed while reading")
             return document
     raise ReadModelError("revision_not_found", "revision", "revision is not committed in this project")
+
+
+class FixedSnapshotReader:
+    """One read's fixed ancestry proof and selected Documents; never global.
+
+    Every new reader walks canonical signature-checked headers. Only Documents actually
+    requested by consumers are retained, and each repeated read rechecks its
+    file signature. No permission or eligibility decision is cached here.
+    """
+
+    def __init__(self, store, *, head_revision=None):
+        self.store = store
+        if head_revision is not None and (not isinstance(head_revision, str) or not IDENTIFIER.fullmatch(head_revision)):
+            raise ReadModelError('invalid_revision', 'revision', 'invalid revision identifier', http_status=400)
+        control = capture_head(store)
+        rows = list(committed_headers(store, head=control['revision_id']))
+        self.head = head_revision or control['revision_id']
+        indexes = {row[0]: index for index, row in enumerate(rows)}
+        if self.head not in indexes:
+            raise ReadModelError('revision_not_found', 'revision', 'head is not committed in this project')
+        self.headers = {revision: (identity, parent) for revision, identity, parent in rows[indexes[self.head]:]}
+        self.documents = {}
+
+    def load(self, revision):
+        if not isinstance(revision, str) or not IDENTIFIER.fullmatch(revision):
+            raise ReadModelError('invalid_revision', 'revision', 'invalid revision identifier', http_status=400)
+        if revision not in self.headers:
+            raise ReadModelError('revision_not_found', 'revision', 'revision is not committed in this project')
+        signature = snapshot_signature(self.store, revision)
+        cached = self.documents.get(revision)
+        if cached is None or signature is None or cached[1] != signature:
+            document, signature, _ = snapshot_evidence(self.store, revision)
+            if (document['project_id'], document['parent_revision_id']) != self.headers[revision]:
+                raise ReadModelError('revision_unavailable', 'revision', 'snapshot ancestry changed while reading')
+            self.documents[revision] = document, signature
+        return copy.deepcopy(self.documents[revision][0])
+
+    def ancestry(self, head=None):
+        revision = head or self.head
+        if revision not in self.headers:
+            raise ReadModelError('revision_not_found', 'revision', 'head is not committed in this project')
+        while revision:
+            yield revision
+            revision = self.headers[revision][1]

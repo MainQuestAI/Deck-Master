@@ -1,7 +1,7 @@
 """Task-first controls remain discoverable on a real workbench service."""
 import pytest
 from playwright.sync_api import expect
-from test_deep_quality_browser import workbench  # noqa: F401
+from test_deep_quality_browser import workbench, open_opinion_composer  # noqa: F401
 from test_icon_quality import icon_store  # noqa: F401
 
 pytestmark = pytest.mark.browser
@@ -93,6 +93,7 @@ def test_readonly_workbench_does_not_offer_a_live_opinion_entry(workbench, tmp_p
         page.get_by_role('button',name='意见',exact=True).click()
         expect(page.locator('.annotations-panel')).to_be_visible()
         expect(page.get_by_role('button', name='整页意见', exact=True)).to_be_disabled()
+        open_opinion_composer(page)
         expect(page.get_by_label('意见正文', exact=True)).not_to_be_editable()
         expect(page.get_by_role('button', name='保存意见', exact=True)).to_be_disabled()
     finally:

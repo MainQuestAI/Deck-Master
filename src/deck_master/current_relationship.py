@@ -77,13 +77,17 @@ class CurrentRelationships:
                 continue
             if successor.get('review_stage') != task.get('review_stage'):
                 continue
-            if successor['kind'] != task['kind'] or set(successor.get('scope_pages', [])) != set(task.get('scope_pages', [])):
+            if (successor['kind'] != task['kind'] or successor.get('instruction') != task.get('instruction')
+                    or set(successor.get('scope_pages', [])) != set(task.get('scope_pages', []))):
                 continue
             if request_relationship(self.document, successor)['status'] not in ('current', 'background'):
                 continue
             # A later label alone is insufficient: its real result must be an
             # adopted current object. Candidate returns do not satisfy this.
-            if any(ref.get('sha256') in self.adopted_refs for ref in successor.get('result_refs', [])):
+            if (any(ref.get('sha256') in self.adopted_refs for ref in successor.get('result_refs', []))
+                    and all(any(entry.get(slot) in successor.get('result_refs', []) for slot in
+                        ('page', 'blueprint', 'svg', 'svg_preview', 'ppt_preview'))
+                        for entry in self.document.get('pages', []) if entry['page_id'] in task.get('scope_pages', []))):
                 return task_id
         return None
 
@@ -163,7 +167,8 @@ class CurrentRelationships:
                 from .tasks import task_inputs_current
                 try:
                     if not task_inputs_current(self.store, self.document, task, read_snapshot=self.ctx.read_snapshot):
-                        result = relation('historical', 'task_inputs_changed')
+                        result = (relation(result['status'], 'dependency_basis_changed')
+                                  if task['status'] == 'awaiting_host' else relation('historical', 'task_inputs_changed'))
                 except READ_FAILURES:
                     self.ctx.read_failed = True
                     result = relation('unknown', 'task_basis_unreadable')

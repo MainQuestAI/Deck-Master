@@ -125,7 +125,7 @@ def build_parser() -> argparse.ArgumentParser:
     methods.add_argument("--kind", choices=("compose", "blueprint", "reconstruct", "review", "repair", "style_analyze"), default="compose")
     methods.add_argument("--intent")
     methods.add_argument("--phase")
-    methods.add_argument("--review-unit", action="append", choices=("content", "argument", "page_copy", "progression", "speech", "blueprint_content", "blueprint_fidelity", "conversion", "readability", "privacy"))
+    methods.add_argument("--review-unit", action="append", choices=("content", "argument", "page_copy", "progression", "speech", "blueprint_content", "blueprint_fidelity", "conversion", "readability", "privacy", "visual_expression"))
     methods.add_argument("--read", action="store_true")
     methods.add_argument("--project")
     methods.add_argument("--task-id")
@@ -181,9 +181,26 @@ def build_parser() -> argparse.ArgumentParser:
     report_import.add_argument("--input", required=True)
     report_import.add_argument("--base-revision")
     report_import.add_argument("--operation-id")
+    channels = review_sub.add_parser("channels", help="Discover stage-specific reviewers without starting a model call")
+    channels.add_argument("--check-native", action="store_true", help="Check existing Codex login status, without a model call")
+    channels.add_argument("--project", help="Also read existing native review execution status")
+    recovery = review_sub.add_parser("recover", help="Recover a committed native review completion without another model call")
+    recovery.add_argument("--project", required=True)
+    recovery.add_argument("--task-id", required=True)
+    original = review_sub.add_parser('original', help='Dispatch independent expression review on original pixels before SVG')
+    original.add_argument('--project', required=True)
+    original.add_argument('--page-id', required=True)
+    original.add_argument('--candidate-id')
+    original_status = review_sub.add_parser('original-status', help='Read whether an original can be expanded or used as an explicit repair reference')
+    original_status.add_argument('--project', required=True)
+    original_status.add_argument('--page-id', required=True)
+    original_status.add_argument('--candidate-id')
+    original_status.add_argument('--use', choices=('expand', 'view', 'compare', 'repair_reference'), default='expand')
     native = review_sub.add_parser("native", help="Run an actual read-only native independent content review")
     native.add_argument("--project", required=True)
     native.add_argument("--task-id")
+    native.add_argument("--force-unit", action="append", dest="force_units",
+                        help="Explicitly re-review a currently required unit; repeat for multiple units")
 
     doctor = sub.add_parser("doctor")
     doctor.add_argument("--step", choices=("compose","blueprint","compile","render","view","export"), default="view")
@@ -292,6 +309,8 @@ def build_parser() -> argparse.ArgumentParser:
     accept_parser = task_sub.add_parser("accept")
     accept_parser.add_argument("--project", required=True)
     accept_parser.add_argument("--task-id", required=True)
+    accept_parser.add_argument("--response-protocol", choices=["task_receipt.v1"],
+                             help="compact mutation receipt; read full inputs explicitly with methods --read-protocol work_context.v2")
     accept_parser.add_argument("--operation-id", required=True)
     accept_parser.add_argument("--produced-against", required=True)
     accept_parser.add_argument("--result", required=True)
@@ -300,6 +319,8 @@ def build_parser() -> argparse.ArgumentParser:
     start_parser = task_sub.add_parser("start")
     start_parser.add_argument("--project", required=True)
     start_parser.add_argument("--task-id", required=True)
+    start_parser.add_argument("--response-protocol", choices=["task_receipt.v1"],
+                             help="compact mutation receipt; read full inputs explicitly with methods --read-protocol work_context.v2")
     start_parser.add_argument("--execution-ref", required=True)
     start_parser.add_argument("--supported-protocol", action="append", default=None)
     start_parser.add_argument("--capability", action="append", default=None)
@@ -322,6 +343,8 @@ def build_parser() -> argparse.ArgumentParser:
     cancel_parser = task_sub.add_parser("cancel")
     cancel_parser.add_argument("--project", required=True)
     cancel_parser.add_argument("--task-id", required=True)
+    cancel_parser.add_argument("--response-protocol", choices=["task_receipt.v1"],
+                             help="compact mutation receipt; read full inputs explicitly with methods --read-protocol work_context.v2")
     cancel_parser.add_argument("--reason", default="")
 
     call_parser = task_sub.add_parser("call")
@@ -408,6 +431,8 @@ def build_parser() -> argparse.ArgumentParser:
     attempt_show.add_argument("--project", required=True)
     attempt_show.add_argument("--attempt-id", required=True)
     attempt_show.add_argument("--revision")
+    attempt_show.add_argument("--explain-reassociation", action="store_true",
+        help="Read fixed call facts and unsupported cross-execution proof obligations; never transfer or adopt")
 
     build = sub.add_parser('build')
     build.add_argument('--project', required=True)
@@ -492,10 +517,25 @@ def main(argv: list[str] | None = None) -> int:
                 return _emit(collector.envelope({'methods': collector.methods(entries), 'tasks': []}))
             items = (read_methods if options.read else method_resources)(options.kind, intent=options.intent, phase=options.phase, review_units=options.review_unit, selected_resource_ids=options.selected_resource_ids)
             return _emit({"status": "ready", "methods": items, "method_release": method_release(items)})
+        if options.command == 'review' and options.review_command in ('original', 'original-status'):
+            from . import original_review
+            if options.review_command == 'original':
+                return _emit(original_review.dispatch(options.project, page_id=options.page_id, candidate_id=options.candidate_id))
+            from .store import Store
+            store = Store(Path(options.project).expanduser())
+            return _emit(original_review.reference_status(store, store.load_document(), options.page_id,
+                candidate_id=options.candidate_id, use=options.use))
+        if options.command == "review" and options.review_command == "channels":
+            from .review_channels import describe
+            return _emit(describe(check_native=options.check_native, project=options.project))
+        if options.command == "review" and options.review_command == "recover":
+            from .native_review import recover
+            result = recover(options.project, task_id=options.task_id)
+            return _emit_and_exit(result, 3) if result['status'] in ('running', 'needs_evidence') else _emit(result)
         if options.command == "review" and options.review_command == "native":
             from .native_review import run
-            result = run(options.project, task_id=options.task_id)
-            return _emit_and_exit(result, 3) if result["status"] == "running" else _emit(result)
+            result = run(options.project, task_id=options.task_id, force_units=options.force_units)
+            return _emit_and_exit(result, 3) if result["status"] in ("running", "recovery_available") else _emit(result)
         if options.command in ("collaboration", "eligibility", "review"):
             from .collaboration_api import invoke, error_response
             try:
@@ -776,7 +816,8 @@ def main(argv: list[str] | None = None) -> int:
                              input=json.loads(Path(options.input).read_text(encoding="utf-8")),
                              base_revision=options.base_revision, operation_id=options.operation_id))
             return _emit(generation.show(options.project, request_id=getattr(options, "request_id", None),
-                                         attempt_id=getattr(options, "attempt_id", None), revision=options.revision))
+                                         attempt_id=getattr(options, "attempt_id", None), revision=options.revision,
+                                         explain_reassociation=getattr(options, "explain_reassociation", False)))
         if options.command == "task":
             return _dispatch_task(options)
     except (EnvelopeError, ModelError, ServiceError, TaskConflict, FileNotFoundError, StoreError) as exc:
@@ -1211,6 +1252,7 @@ def _dispatch_task(options) -> int:
             operation_id=options.operation_id,
             produced_against=options.produced_against,
             result_path=options.result,
+            response_protocol=options.response_protocol,
             review_receipt_selector=(json.loads(Path(options.review_receipt_selector).read_text("utf-8"))
                                      if options.review_receipt_selector else None),
         )
@@ -1222,6 +1264,7 @@ def _dispatch_task(options) -> int:
             service.task_start(
                 options.project, task_id=options.task_id, execution_ref=options.execution_ref,
                 supported_protocols=options.supported_protocol, capabilities=options.capability,
+                response_protocol=options.response_protocol,
             )
         )
     if options.task_command == "list":
@@ -1235,7 +1278,8 @@ def _dispatch_task(options) -> int:
         return _emit(service.task_status(options.project, task_id=options.task_id))
     if options.task_command == "cancel":
         return _emit(
-            service.task_cancel(options.project, task_id=options.task_id, reason=options.reason)
+            service.task_cancel(options.project, task_id=options.task_id, reason=options.reason,
+                                response_protocol=options.response_protocol)
         )
     if options.task_command == "call":
         return _dispatch_call(options)

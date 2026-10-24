@@ -115,3 +115,28 @@ def synthetic_user_context(store, document, *, action_binding, declared, actor_i
                                       receipt_ref=declared["transport_receipt_ref"], selector=selector)
     _FIXTURES[ctx] = (registry, provider, {})
     return ctx
+
+
+def accept_original_expression_fixture(project, *, page_id, candidate_id=None):
+    """L1 receipt/graph protocol fixture, never actual independent pixel evidence."""
+    from deck_master import original_review
+    from rc3_fixtures import claim_fixture_task
+    context = synthetic_context()
+    outcome = synthetic_runtime_call(original_review.dispatch, project, page_id=page_id,
+        candidate_id=candidate_id, adapter_context=context)
+    task, fixed = outcome['task'], outcome['packet']
+    claim_fixture_task(project, task, execution_ref='exec-independent')
+    spec = fixed['page']['visual_spec']
+    row = {'schema_version': 'deck_review.v2', 'review_id': task['task_id'] + '-expression',
+        'kind': 'visual_expression', 'review_stage': 'original_image', 'status': 'pass',
+        'subjects': fixed['subjects'], 'dependencies': fixed['dependencies'],
+        'reviewer': {'type': 'independent_host', 'id': 'synthetic-independent', 'execution_ref': 'exec-independent',
+            'independence_confirmed': True, 'evidence_ref': None, 'identity_receipt': None, 'assurance': 'host_attested'},
+        'expression_checks': {'graph': 'pass', 'hierarchy': 'pass', 'reading_path': 'pass',
+            'observed_nodes': [node['node_id'] for node in spec.get('nodes') or []],
+            'observed_edges': [{key: edge[key] for key in ('edge_id', 'from', 'to', 'direction')} for edge in spec.get('edges') or []]},
+        'observations': ['Synthetic protocol fixture; no independent model/pixel inspection occurred.'],
+        'findings': [], 'created_at': '2026-10-22T00:00:00Z', 'replaces': None}
+    return accept_with_synthetic_provider(project, **{key: task[key] for key in ('task_id', 'operation_id', 'produced_against')},
+        result_payload={'kind': 'review', 'pages': [], 'page_order': [], 'artifact_specs': [], 'reviews': [row],
+            'usage_events': [], 'notes': 'Synthetic original expression protocol only'}, adapter_context=context)

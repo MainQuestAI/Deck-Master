@@ -31,6 +31,11 @@ def main():
         'test_pr188_design_context_browser.py', 'test_pr188_design_type_browser.py',
     ]
     result = pytest.main(['-q', str(repo / 'tests/rebuild/test_rc_closure_browser.py'),
+                         str(repo / 'tests/rebuild/test_settled_image_reuse.py'),
+                         str(repo / 'tests/rebuild/test_native_review.py'),
+                         str(repo / 'tests/rebuild/test_native_review_startup.py'),
+                         str(repo / 'tests/rebuild/test_rp03_svg_trial_isolation.py'),
+                         str(repo / 'tests/rebuild/test_x3_design_plan_actions.py'),
                          str(repo / 'tests/rebuild/test_workbench_usability_browser.py'),
                          str(repo / 'tests/rebuild/test_pr103_repair_browser.py'),
                          str(repo / 'tests/rebuild/test_pr103_complete_browser.py'),

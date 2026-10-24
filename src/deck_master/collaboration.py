@@ -363,6 +363,11 @@ def describe(project, *, include_eligibility=True) -> dict:
     """Read-only collaboration projection (CONTRACT §12 show)."""
     store = Store(Path(project).expanduser())
     document = store.load_document()
+    return describe_snapshot(store, document, include_eligibility=include_eligibility)
+
+
+def describe_snapshot(store, document, *, include_eligibility=True):
+    """Project one explicitly supplied read snapshot; no new Store/current read."""
     region = document.get("collaboration")
     result = {
         "project_id": document["project_id"],

@@ -68,6 +68,11 @@ def test_analysis_result_is_bound_has_safe_breakdown_and_no_slide_scope(flow):
     assert prepared['references'][1]['file'] == visual_styles.listing(flow.project)['references'][0]['preview']['file']
     assert 'visual_reference' in trial['required_capabilities']
     assert 'Observed palette' in prepared['prompt']
+    from deck_master import candidates
+    candidate_id = flow.image(trial)['candidate_ids'][0]
+    detail = candidates.show(flow.project, candidate_id=candidate_id)
+    assert detail['references'] == prepared['references']
+    assert detail['reference_sources'][0]['file'] == visual_styles.listing(flow.project)['references'][0]['preview']['file']
 
 
 def test_analysis_remains_current_after_unrelated_page_edit(flow):

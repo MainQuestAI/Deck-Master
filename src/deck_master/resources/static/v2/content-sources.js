@@ -243,6 +243,9 @@ export function content(app, data) {
     return new Set(goals.filter(goal => chapterGoals.has(goal.goal_id)).map(goal => goal.page_id));
   }
   function drawGoals() {
+    // Planned pages can exist before any Page objects have been produced.
+    const plannedOrder=plan?.input?.page_order || goals.map(goal=>goal.page_id);
+    const goalNumber=id=>(pages.some(page=>page.page_id===id)?pages.findIndex(page=>page.page_id===id):plannedOrder.indexOf(id))+1;
     const chapterFields=chapters.map(chapter=>{
       const name=inputField('章节名称 '+(chapters.indexOf(chapter)+1),chapter.title,2);
       name.input.addEventListener('input',()=>{chapter.title=name.input.value;changed();});return name.node;
@@ -271,7 +274,7 @@ export function content(app, data) {
             try{
               const record=await sourceForGoal(source);if(disposed||!sourceChoices.isConnected)return;
               const locations=[...new Map((record.locators||[]).filter(r=>typeof r.locator==='string'&&r.locator).map(r=>[r.locator,r])).values()];
-              const existing=goal.source_links.filter(l=>l.source_id===source.source_id),pageLabel='第 '+(pages.findIndex(p=>p.page_id===goal.page_id)+1)+' 页';
+              const existing=goal.source_links.filter(l=>l.source_id===source.source_id),pageLabel='第 '+goalNumber(goal.page_id)+' 页';
               const check=el('input',{type:'checkbox',checked:existing.length>0,disabled:!locations.length,'aria-label':'关联材料 '+source.name+' 到'+pageLabel});
               const picker=el('select',{'aria-label':'材料位置 '+source.name+' · '+pageLabel,disabled:!locations.length},locations.map(r=>el('option',{value:r.locator},r.locator+(r.text?' · '+String(r.text).replaceAll('\n',' ').slice(0,60):''))));
               if(existing.length===1&&canonical(existing[0].source_version)===canonical(record.source_version)&&locations.some(r=>r.locator===existing[0].locator))picker.value=existing[0].locator;
@@ -289,9 +292,9 @@ export function content(app, data) {
         edit.hidden=!edit.hidden;trigger.setAttribute('aria-expanded',String(!edit.hidden));openEditor=edit.hidden?null:edit;
         if(!edit.hidden){loadChoices();purpose.input.focus();}
       },false,{'aria-expanded':'false'});edit.trigger=trigger;
-      return el('article',{class:'studio-goal-card stack','data-goal-page':goal.page_id},el('h3',{},`第 ${pages.findIndex(p=>p.page_id===goal.page_id)+1} 页 · ${page?.title||goal.page_id}`),reading,facts,el('div',{class:'row wrap'},!app.readonly&&trigger),sourceLinks,edit);
+      return el('article',{class:'studio-goal-card stack','data-goal-page':goal.page_id},el('h3',{},`第 ${goalNumber(goal.page_id)} 页 · ${page?.title||goal.page_id}`),reading,facts,el('div',{class:'row wrap'},!app.readonly&&trigger),sourceLinks,edit);
     });
-    goalList.replaceChildren(studio?el('div',{class:'studio-chapter-fields'},chapterFields):chapterFields,studio?el('div',{class:'studio-goal-grid'},cards):cards);
+    goalList.replaceChildren(...(studio ? [el('div',{class:'studio-chapter-fields'},chapterFields),el('div',{class:'studio-goal-grid'},cards)] : [...chapterFields,...cards]));
     if(app.readonly) for(const input of goalList.querySelectorAll('textarea'))input.readOnly=true;
     filterGoals();
   }

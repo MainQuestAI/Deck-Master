@@ -147,17 +147,13 @@ def project_info(project, *, server_capabilities=None, include_eligibility=True)
                 "effective_actions": [{"action": action, "supported": capability in capabilities,
                                        "writable": False, "reason_code": reason}
                                       for action, capability in PROJECT_ACTIONS]}
-    # Immutable snapshots can be read without creating a write lock. Retry if
-    # another window advanced current between the three pure projections;
-    # never publish mixed completion/request/migration bases to the browser.
-    for _ in range(3):
-        store, doc, identity = context(project)
-        collaboration_state = collaboration.describe(project, include_eligibility=include_eligibility)
-        migration = collaboration_migration.describe(project)
-        if doc["revision_id"] == collaboration_state["revision_id"] == migration["revision_id"]:
-            break
-    else:
-        raise LocalStateError("revision_id", "project state changed while reading; reload the current state")
+    # Explicit shared snapshot/object facts for this response only. A later
+    # write never receives this reader and independently reloads current.
+    from .read_facts import ReadFacts
+    store, doc, identity = context(project)
+    store = ReadFacts(store, doc)
+    collaboration_state = collaboration.describe_snapshot(store, doc, include_eligibility=include_eligibility)
+    migration = collaboration_migration.describe_snapshot(store, doc)
     sample = sample_info(store.project_root)
     compatibility = doc.get("compatibility", {})
     project_format = compatibility.get("project_format", "deck_document.v1")
@@ -221,11 +217,11 @@ def _base_refs(store, doc, target):
     return refs
 
 
-def _validate(store, current, identity, draft):
+def _validate(store, current, identity, draft, *, snapshot_reader=None):
     validate_schema("ui_draft", draft)
     if draft["project_id"] != current["project_id"] or draft["project_identity"] != identity:
         raise LocalStateError("project_identity", "draft belongs to another project")
-    base = load_snapshot(store, draft["base_revision"])
+    base = snapshot_reader.load(draft["base_revision"]) if snapshot_reader else load_snapshot(store, draft["base_revision"])
     refs = _base_refs(store, base, draft["target"])
     if (refs and draft["base_ref"] not in refs) or (not refs and draft["base_ref"] is not None):
         raise LocalStateError("base_ref", "draft basis does not belong to this page/layer/revision")

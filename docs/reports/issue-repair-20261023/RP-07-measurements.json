@@ -1,0 +1,150 @@
+{
+  "baseline": "55adc97c5bb5f16ae7fcff7c33c43969fae9ce97",
+  "evidence": "L1 synthetic response construction, same snapshot per protocol; no model calls",
+  "measurements": [
+    {
+      "pending_tasks": 1,
+      "source_count": 6,
+      "source_characters_each": 17754,
+      "scope": "response construction only; warm-up then 3 samples, not end-to-end latency",
+      "rows": [
+        {
+          "protocol": "legacy",
+          "samples": [
+            {
+              "cpu_ns": 2155966,
+              "object_json_reads": 9,
+              "response_bytes": 230199
+            },
+            {
+              "cpu_ns": 1953574,
+              "object_json_reads": 9,
+              "response_bytes": 230199
+            },
+            {
+              "cpu_ns": 1954040,
+              "object_json_reads": 9,
+              "response_bytes": 230199
+            }
+          ]
+        },
+        {
+          "protocol": "task_receipt.v1",
+          "samples": [
+            {
+              "cpu_ns": 46787,
+              "object_json_reads": 0,
+              "response_bytes": 1226
+            },
+            {
+              "cpu_ns": 34233,
+              "object_json_reads": 0,
+              "response_bytes": 1226
+            },
+            {
+              "cpu_ns": 29278,
+              "object_json_reads": 0,
+              "response_bytes": 1226
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pending_tasks": 13,
+      "source_count": 6,
+      "source_characters_each": 17754,
+      "scope": "response construction only; warm-up then 3 samples, not end-to-end latency",
+      "rows": [
+        {
+          "protocol": "legacy",
+          "samples": [
+            {
+              "cpu_ns": 27137330,
+              "object_json_reads": 105,
+              "response_bytes": 2986092
+            },
+            {
+              "cpu_ns": 29488738,
+              "object_json_reads": 105,
+              "response_bytes": 2986092
+            },
+            {
+              "cpu_ns": 25705562,
+              "object_json_reads": 105,
+              "response_bytes": 2986092
+            }
+          ]
+        },
+        {
+          "protocol": "task_receipt.v1",
+          "samples": [
+            {
+              "cpu_ns": 926671,
+              "object_json_reads": 0,
+              "response_bytes": 1226
+            },
+            {
+              "cpu_ns": 81118,
+              "object_json_reads": 0,
+              "response_bytes": 1226
+            },
+            {
+              "cpu_ns": 55167,
+              "object_json_reads": 0,
+              "response_bytes": 1226
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "pending_tasks": 30,
+      "source_count": 6,
+      "source_characters_each": 17754,
+      "scope": "response construction only; warm-up then 3 samples, not end-to-end latency",
+      "rows": [
+        {
+          "protocol": "legacy",
+          "samples": [
+            {
+              "cpu_ns": 62310257,
+              "object_json_reads": 241,
+              "response_bytes": 6890312
+            },
+            {
+              "cpu_ns": 67918020,
+              "object_json_reads": 241,
+              "response_bytes": 6890312
+            },
+            {
+              "cpu_ns": 53797191,
+              "object_json_reads": 241,
+              "response_bytes": 6890312
+            }
+          ]
+        },
+        {
+          "protocol": "task_receipt.v1",
+          "samples": [
+            {
+              "cpu_ns": 318549,
+              "object_json_reads": 0,
+              "response_bytes": 1226
+            },
+            {
+              "cpu_ns": 47517,
+              "object_json_reads": 0,
+              "response_bytes": 1226
+            },
+            {
+              "cpu_ns": 32763,
+              "object_json_reads": 0,
+              "response_bytes": 1226
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

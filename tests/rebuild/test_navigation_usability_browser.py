@@ -329,6 +329,7 @@ def test_page_opinion_editor_stays_with_artwork_before_trial_form(workbench_page
     page.get_by_role('button', name='意见', exact=True).click()
     if width < 1280:
         expect(page.get_by_role('dialog', name='单页工具面板')).to_be_visible()
+    page.locator('.opinion-composer > summary').click()
     editor = page.get_by_role('textbox', name='意见正文', exact=True)
     expect(editor).to_be_editable()
     expect(page.locator('.page-trial-entry')).to_be_hidden()

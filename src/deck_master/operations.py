@@ -211,14 +211,17 @@ def publish_index(store, record):
     """Best effort: failure cannot make an already committed operation repeat."""
     try:
         path = safe_path(store.deck_root, 'operations', record['operation_id'] + '.json')
+        expected = {'format': 'operation_index.v1', **record}
         if path.exists():
             try:
                 previous = json.loads(path.read_bytes())
             except (ValueError, OSError):
                 previous = None
+            if previous == expected:
+                return None
             if isinstance(previous, dict) and previous.get('kind') == 'input_update' and 'request_sha256' in previous:
                 return None
-        _atomic_write_bytes(path, canonical_json_bytes({'format': 'operation_index.v1', **record}))
+        _atomic_write_bytes(path, canonical_json_bytes(expected))
     except (OSError, TypedServiceError):
         return {'code': 'receipt_cache_unavailable', 'message': 'committed result is recoverable from project history'}
     return None

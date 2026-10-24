@@ -132,7 +132,8 @@ def test_method_body_latest_selection_owns_body_status_and_focus(tmp_path, late_
             page.locator('label.method-entry').filter(has_text='content-m04 ·').locator('input').click()
             expect(page.get_by_role('button', name='阅读 content-m04', exact=True)).to_be_visible()
             page.locator('label.method-entry').filter(has_text='case-e04-walkthrough ·').locator('input').click()
-            expect(page.get_by_role('checkbox', name='E04｜方法讲解与取舍 · 案例', exact=True)).to_be_checked()
+            # The catalog's browse control contributes to the label's accessible name.
+            expect(page.get_by_role('checkbox', name='E04｜方法讲解与取舍 · 案例 浏览 case-e04-walkthrough', exact=True)).to_be_checked()
             expect(page.get_by_role('button', name='阅读 content-m04', exact=True)).to_be_visible()
             page.route('**/api/method-library/resources/content-m04?*', lambda route: held.append((route, route.fetch())))
             page.get_by_role('button', name='阅读 content-m04', exact=True).click()

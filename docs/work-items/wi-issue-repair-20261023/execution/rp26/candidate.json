@@ -1,0 +1,104 @@
+[
+  {
+    "n": 4,
+    "path": "project",
+    "wall": 0.015489288000026136,
+    "cpu": 0.015436004000000003,
+    "Store": 12,
+    "object_json_reads": 12
+  },
+  {
+    "n": 4,
+    "path": "candidates",
+    "wall": 0.0672893840001052,
+    "cpu": 0.066206867,
+    "Store": 2,
+    "candidate_sets": 1,
+    "object_json_reads": 12
+  },
+  {
+    "n": 4,
+    "path": "changes",
+    "wall": 0.012422309000157838,
+    "cpu": 0.01242426799999996,
+    "Store": 2,
+    "object_json_reads": 9
+  },
+  {
+    "n": 4,
+    "path": "lineage",
+    "wall": 0.008046454000123049,
+    "cpu": 0.008036996000000074,
+    "Store": 10,
+    "object_json_reads": 9,
+    "task_context_lookups": 4
+  },
+  {
+    "n": 8,
+    "path": "project",
+    "wall": 0.011468192999927851,
+    "cpu": 0.011204554000000089,
+    "Store": 12,
+    "object_json_reads": 16
+  },
+  {
+    "n": 8,
+    "path": "candidates",
+    "wall": 0.1492213759997867,
+    "cpu": 0.12252666400000001,
+    "Store": 2,
+    "candidate_sets": 1,
+    "object_json_reads": 20
+  },
+  {
+    "n": 8,
+    "path": "changes",
+    "wall": 0.0335849389998657,
+    "cpu": 0.015584020000000143,
+    "Store": 2,
+    "object_json_reads": 17
+  },
+  {
+    "n": 8,
+    "path": "lineage",
+    "wall": 0.018954787999973632,
+    "cpu": 0.013261876000000061,
+    "Store": 14,
+    "object_json_reads": 13,
+    "task_context_lookups": 8
+  },
+  {
+    "n": 16,
+    "path": "project",
+    "wall": 0.015931083999930706,
+    "cpu": 0.013215871000000101,
+    "Store": 12,
+    "object_json_reads": 24
+  },
+  {
+    "n": 16,
+    "path": "candidates",
+    "wall": 0.3991022059999523,
+    "cpu": 0.24817081899999982,
+    "Store": 2,
+    "candidate_sets": 1,
+    "object_json_reads": 36
+  },
+  {
+    "n": 16,
+    "path": "changes",
+    "wall": 0.06576414200026193,
+    "cpu": 0.027307559000000037,
+    "Store": 2,
+    "object_json_reads": 33
+  },
+  {
+    "n": 16,
+    "path": "lineage",
+    "wall": 0.04011837500002002,
+    "cpu": 0.02014444400000004,
+    "Store": 22,
+    "object_json_reads": 21,
+    "task_context_lookups": 16
+  }
+]

@@ -373,6 +373,34 @@ class Store:
             from .models import require_writer
             document = copy.deepcopy(document)
             require_writer(document, "method-catalog.v1")
+        from .production import stored_blueprint_request
+        policy_prepared = False
+        assets_prepared = False
+        if WRITER_RANK.get(document.get("compatibility", {}).get("minimum_writer"), -1) < WRITER_RANK["asset-inputs.v1"]:
+            for task_ref in document.get("tasks", []):
+                task = self.read_object_json(task_ref)
+                if task.get("kind") == "blueprint":
+                    request, _ = stored_blueprint_request(self, task)
+                    if request and "design_policy" in request.get("resolved_design_context", {}):
+                        policy_prepared = True
+                    if request and "asset_inputs" in request.get("resolved_design_context", {}):
+                        assets_prepared = True
+                        break
+        # Persisting these fields requires a writer that preserves their consumption.
+        # Reads and legacy commits do not manufacture a new policy or writer floor.
+        if (policy_prepared or any("layout_page_ids" in style for style in
+                document.get("design_context", {}).get("styles", [])) or
+                any("design_policy" in (visual := self.read_object_json(entry["page"]).get("visual_spec", {}))
+                    or "layout_notes" in visual.get("design_overrides", {})
+                    for entry in document.get("pages", []))):
+            from .models import require_writer
+            document = copy.deepcopy(document)
+            require_writer(document, "design-policy.v1")
+        if assets_prepared or any("selected_asset_ids" in self.read_object_json(entry["page"]).get(
+                "visual_spec", {}).get("design_overrides", {}) for entry in document.get("pages", [])):
+            from .models import require_writer
+            document = copy.deepcopy(document)
+            require_writer(document, "asset-inputs.v1")
         validate_document_semantics(document)
         change = document.get("change") or {}
         change_operation = operation_id or change.get("operation_id") or ""

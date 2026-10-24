@@ -231,6 +231,7 @@ def test_repeated_surface_navigation_shares_its_control_read_and_can_retry(flow,
             # Drain browser event dispatch after the real summary response. A
             # passive control refresh must not add another held project read.
             page.evaluate('() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))')
+            assert page.evaluate('window.navigationPollObserved !== true')
             assert len(held) == 1
             expect(page.locator('.navigation-status')).to_be_visible()
             assert page.locator('#main').evaluate('node => node.inert')

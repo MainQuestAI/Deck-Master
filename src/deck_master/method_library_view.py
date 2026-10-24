@@ -92,7 +92,8 @@ def preview(project, request):
             selected = select(rows, chosen, role=role, kind=kind, phase=phase, review_units=units)
             defaults = list(methods.method_ids_for(kind, intent=intent, phase=phase)) if kind else list(
                 ('collaboration-routing', *methods.method_ids_for('review', review_units=units))
-                if role == 'deck-review' else methods._ROLE_METHODS[role])
+                if role == 'deck-review' else ('collaboration-routing', *methods.method_ids_for('compose', phase=phase))
+                if role == 'deck-content' and phase else methods._ROLE_METHODS[role])
             ids = list(dict.fromkeys([*defaults, *selected]))
             dependencies = [i for i in selected if i not in chosen and i not in defaults]
         except ValueError as exc:
@@ -121,22 +122,20 @@ def preview(project, request):
         entries.append({'id': mid, 'display_name': titles.get(mid, mid), 'description': '', 'kind': row['kind'],
                         'sha256': hashes.get(mid), 'selectable': allowed, 'reason_codes': why})
     preview_digest = digest({'basis': context_digest, 'catalog': catalog_digest, 'selected': chosen, 'manifest': resolved, 'damaged': damaged})
-    handoff_context = {
-        'context': ctx, 'role': role, 'phase': phase, 'review_units': units or [],
+    handoff = {'schema_version': 'method_preparation_handoff.v1',
         'project_id': project_id, 'revision_id': revision,
-        'explicit_ids': chosen, 'resolved_manifest': resolved,
-        'catalog_digest': catalog_digest, 'context_digest': context_digest,
-        'preview_digest': preview_digest, 'preparation_only': True,
-        'recovery': {'surface': 'content', 'content_area': 'methods',
-                     'context': ctx, 'selected_resource_ids': chosen},
-    }
-    text = ('方法准备，尚未应用。请制作工具先重新核对项目版本、请求、范围和资源字节，再按正式流程处理。\n'
-            + f'职责：{role}；阶段：{phase or "未确定"}；审阅范围：{", ".join(units or []) or "不适用"}。\n'
-            + ('独立阅读，不绑定项目，不产生派发许可。\n' if ctx['mode'] == 'independent'
-               else f'固定项目：{project_id}；版本：{revision}。\n')
-            + '选择的资源 ID：' + ', '.join(chosen) + '\n固定准备依据：' + preview_digest
-            + '\n恢复入口：内容与页序 → 更多 → 方法与案例；按下列上下文重新核对。'
-            + '\n```json\n' + json.dumps(handoff_context, ensure_ascii=False, indent=2) + '\n```')
+        'effective_context': {'role': role, 'kind': kind, 'intent': intent, 'phase': phase,
+                              'review_units': units or [], 'request_scope': (work.get('scope') if ctx['mode'] == 'project' else None)},
+        'preview_request': {'context': ctx, 'selected_resource_ids': chosen,
+                            'expected_basis': {'catalog_digest': catalog_digest, 'context_digest': context_digest}},
+        'preview_digest': preview_digest, 'resolved_manifest': resolved,
+        'default_ids': defaults, 'dependency_ids': dependencies, 'phase_state': phase_state,
+        'recovery': {'preview_endpoint': '/api/method-library/preview',
+                     'resource_endpoint': '/api/method-library/resources/{id}',
+                     'instructions': '重新执行 preview_request 并核对 preview_digest，再按返回 catalog_digest/sha256 读取每个资源。已有 Task 必须读其冻结工作单，不得用此准备覆盖 manifest。'}}
+    text = ('方法准备，尚未应用；不是任务派发或生产许可。职责、阶段、范围与资源如下。'
+            '接手时先按恢复入口重新核对；依据或字节变化则重新准备。\n```json\n'
+            + json.dumps(handoff, ensure_ascii=False, indent=2) + '\n```')
     return {'schema_version': 'ui_method_preview.v1', 'project_id': project_id, 'revision_id': revision,
         'context_status': status, 'browse_status': 'partial' if gaps or damaged else 'available', 'dispatch_status': dispatch,
         'reason_codes': reasons, 'preparation_only': True, 'selection_status': 'validated' if valid and not damaged else 'not_evaluated',
@@ -145,7 +144,7 @@ def preview(project, request):
         'preview_digest': preview_digest, 'handoff': {'status': 'preparation_only', 'copy_allowed': valid and not damaged, 'text': text if valid and not damaged else ''}}
 
 
-def resource(mid, *, catalog_digest, sha256):
+def resource(mid, *, catalog_digest, sha256=None):
     root, rows, current = catalog()
     row = rows.get(mid)
     if not row or not row['readable']:
@@ -160,11 +159,12 @@ def resource(mid, *, catalog_digest, sha256):
         fail('Resource exceeds 1 MiB preview limit', code='method_preview_body_too_large', status=413)
     raw = path.read_bytes()
     if len(raw) > 1024 * 1024: fail('Resource exceeds preview limit', status=413)
-    if models.sha256_bytes(raw) != sha256:
+    actual_sha256 = models.sha256_bytes(raw)
+    if sha256 is not None and actual_sha256 != sha256:
         fail('Resource bytes changed', code='method_preview_basis_changed', status=409)
     try:
         text = raw.decode('utf-8')
     except UnicodeError:
         fail('Resource is not valid UTF-8', code='method_resource_unreadable', status=422)
-    return {'id': mid, 'kind': row['kind'], 'sha256': sha256, 'catalog_digest': current,
+    return {'id': mid, 'kind': row['kind'], 'sha256': actual_sha256, 'catalog_digest': current,
             'content': text, 'preparation_only': True}

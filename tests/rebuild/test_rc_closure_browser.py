@@ -32,6 +32,13 @@ def open_opinion_face(page):
     open_face(page, '意见')
 
 
+def open_opinion_composer(page):
+    open_opinion_face(page)
+    composer = page.locator('.opinion-composer')
+    if not composer.evaluate('(node) => node.open'):
+        composer.locator('summary').click()
+
+
 def open_note_face(page):
     """个人笔记(默认展开的 maintenance 节点)与恢复详情都在笔记面。"""
     open_face(page, '笔记')
@@ -213,7 +220,7 @@ def test_requirement_only_copy_is_saved_to_project_and_recovers(workbench):
         open_note_face(other)
         other.get_by_role('button', name='备份与恢复', exact=True).click()
         other.get_by_label('恢复项目中的个人草稿').select_option(draft['draft_id'])
-        open_opinion_face(other)
+        open_opinion_composer(other)
         other.get_by_role('button', name='对当前版本写新意见', exact=True).click()
         open_note_face(other)
         other.get_by_role('button', name='写笔记', exact=True).click()
@@ -293,7 +300,9 @@ def test_real_draft_conflict_compares_downloads_and_saves_all_texts(workbench, t
         labels = ['个人草稿', '意见正文', '修改要求']
         def edit(window, texts):
             for label, value in zip(labels, texts, strict=True):
-                if label in ('意见正文', '修改要求'):
+                if label == '意见正文':
+                    open_opinion_composer(window)
+                elif label == '修改要求':
                     open_opinion_face(window)
                 elif label == '个人草稿':
                     open_note_face(window)

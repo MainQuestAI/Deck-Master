@@ -130,6 +130,7 @@ export class Project {
     this.navigationHash = requestedHash;
     this.navigationDestination = requestedRoute ? routeHash(this.info, requestedRoute) : requestedHash;
     this.navigationPending = true;
+    this.navigationRoute = null;
     // Keep the old snapshot visible, but do not accept actions against it while
     // the requested version is loading. Otherwise its handlers can supersede
     // the new read with an old revision or lose a subarea choice on remount.
@@ -204,6 +205,7 @@ export class Project {
     } finally {
       if (serial === this.generation) {
         this.navigationPending = false;
+        this.navigationRoute = null;
         this.navigationHash = null; this.navigationDestination = null;
         if (this.navigationStatus) this.navigationStatus.hidden = true;
         if (this.main) { this.main.inert = false; this.main.removeAttribute('aria-busy'); }
@@ -212,15 +214,16 @@ export class Project {
     }
   }
   go(patch) {
-    const route = {...this.route, ...patch};
+    const base = this.navigationPending && this.navigationRoute ? this.navigationRoute : this.route;
+    const route = {...base, ...patch};
     if (patch.surface === 'page' && this.route.surface !== 'page' && !patch.from) route.from = this.route.surface;
     if (patch.surface && patch.surface !== 'page') route.from = null;
     if(patch.surface&&patch.surface!=='content'){route.proposal=null;route.compare_proposal=null;}
     if(patch.surface&&patch.surface!=='page')route.atom=null;
     if((patch.surface||patch.review_id===null)&&!('review_id' in patch)){route.review_sha256=null;route.finding=null;route.finding_index=null;}
-    if(patch.review_id&&patch.review_id!==this.route.review_id&&!('review_sha256' in patch)){route.review_sha256=null;route.finding=null;route.finding_index=null;}
+    if(patch.review_id&&patch.review_id!==base.review_id&&!('review_sha256' in patch)){route.review_sha256=null;route.finding=null;route.finding_index=null;}
     if(patch.review_id===null){route.review_sha256=null;route.finding=null;route.finding_index=null;}
-    if (patch.surface && patch.surface !== 'overview' || patch.revision && patch.revision !== this.route.revision) route.overview_preferences = null;
+    if (patch.surface && patch.surface !== 'overview' || patch.revision && patch.revision !== base.revision) route.overview_preferences = null;
     // A plain surface switch starts that surface on its own first screen: no task
     // detail from an earlier visit, and no page layer that another surface could
     // mistake for "the user asked for delivery".

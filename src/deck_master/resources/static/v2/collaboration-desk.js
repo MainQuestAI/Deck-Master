@@ -11,7 +11,13 @@ const states = {in_progress: '内容进行中', awaiting_decision: '内容待决
 const roles = {user: '用户', content: '内容制作', reviewer: '审阅者', host: '制作工具', design: '设计制作', owner: '项目负责人', caller: '发起人', runtime: '工作台'};
 const topics = {direction:'论证方向',manuscript:'确认稿',speech:'口播要求',style:'风格要求',tradeoff:'取舍',delivery_acceptance:'交付接受',policy:'工作政策'};
 const dispositions = {accepted:'已接受',rejected:'已拒绝',deferred:'暂缓',active:'当前记录',withdrawn:'已撤回',superseded:'已由新记录接续'};
+export const isDesignPlan = completion => completion?.checks?.some(check => check.kind === 'requested_design_plan') === true;
+export const completionLabel = completion => isDesignPlan(completion)
+  ? ({completed:'本次设计方案已完成',in_progress:'设计方案准备中',awaiting_decision:'设计方案待决定',needs_recovery:'设计方案依据待核实'}[completion.state] || '设计方案状态待核实')
+  : states[completion?.state] || '内容状态未分类';
 function nextAction(value, codes=[]) {
+  if(value==='return_requested_design')return '查看约定设计方案；图稿制作需要新的明确请求与范围。';
+  if(value==='prepare_requested_design')return '准备并确认本次设计方案，保留当前页面；本请求不包含图稿制作。';
   if(value==='return_requested_content')return '阅读约定内容。本次内容工作已正常结束。';
   if(codes.includes('needs_reviewer'))return '安排符合要求的审阅者，继续阅读保留的稿件与报告。';
   if(codes.includes('decision_needed'))return '核对实际稿件与取舍后，记录对应范围的明确决定。';
@@ -209,7 +215,7 @@ async function stateDetails(app) {
   const body=el('div',{class:'stack'},el('p',{},'下面显示当前控制事实。正在阅读的历史稿和固定比较不会随控制变化而替换。'),
     scopeView(app,request?.scope),
     request?.pause_reason&&el('p',{class:'field-error'},'暂停原因：'+request.pause_reason),
-    completion&&el('section',{class:'stack'},el('h3',{},states[completion.state]||'内容状态未分类'),
+    completion&&el('section',{class:'stack'},el('h3',{},completionLabel(completion)),
       el('p',{},'约定产物：'+(contentIntents[completion.content_intent]||intents[completion.intent]||'见当前请求')),
       completion.responsible_role&&el('p',{},'下一责任：'+(roles[completion.responsible_role]||completion.responsible_role)),
       completion.next_action&&el('p',{},'下一步：'+nextAction(completion.next_action,completion.state==='needs_reviewer'?['needs_reviewer']:[])),details('产物、检查与缺口',completion)),
@@ -391,13 +397,14 @@ export function collaborationBanner(app) {
   if(!app.info.collaboration)return null;
   const state=app.info.collaboration,request=state.request,completion=app.info.completion;
   const revoked=(state.authorizations||[]).some(auth=>auth.status==='revoked');
-  const label=!state.migrated?'需要升级控制记录':request?.paused?'本次请求已暂停':completion?.state==='completed'&&(!request?.closed||request.closed_reason==='completed')?'本次内容已完成':request?.closed?'本次请求已结束':completion?states[completion.state]||'本次内容状态待核实':request?'本次请求已记录':'尚无本次请求';
+  const label=!state.migrated?'需要升级控制记录':request?.paused?'本次请求已暂停':completion?.state==='completed'&&(!request?.closed||request.closed_reason==='completed')?completionLabel(completion):request?.closed?'本次请求已结束':completion?completionLabel(completion):request?'本次请求已记录':'尚无本次请求';
   return el('section',{class:'collaboration-control','aria-label':'本次工作状态'},
     button(label+(revoked?' · 存在已撤回授权':''),()=>stateDetails(app),false,{'aria-label':'查看本次工作与范围',title:'查看本次工作与范围 · '+label}));
 }
 
 function requestControls(app) {
-  const state=app.info.collaboration,request=state?.request;
+  const state=app.info.collaboration,request=state?.request,completion=app.info.completion;
+  const plan=isDesignPlan(completion)&&completion.request_id===request?.request_id;
   const open=run=>{document.querySelector('#modal')?.close();run();};
   return el('div',{class:'row wrap'},
       !state?.migrated?button('查看升级影响',()=>open(()=>migrationForm(app)),false,{disabled:Boolean(app.info.sample?.readonly)}):
@@ -405,7 +412,7 @@ function requestControls(app) {
         title:request.paused?'恢复本次请求':'暂停本次请求',action:request.paused?'resume':'pause',path:'/collaboration/request/'+(request.paused?'resume':'pause'),
         body:scopeView(app,request.scope),explanation:request.paused?'恢复只继续原请求的有效范围，撤回、费用和缺口均保留。':'暂停将阻止新的制作与采用；读取、取消和已发生调用结算仍可进行。',
         build:evidence=>({request_id:request.request_id,evidence,...(!request.paused?{reason:evidence.text}:{})})})),false,{disabled:Boolean(app.info.sample?.readonly)}),
-      request&&button('读取下一工作单',()=>open(()=>continueWork(app)),false,{disabled:Boolean(app.info.sample?.readonly)}),
+      request&&(plan?button(completion.state==='completed'?'查看本次设计方案':'准备本次设计方案',()=>open(()=>app.go({surface:'style'})),true):button('读取下一工作单',()=>open(()=>continueWork(app)),false,{disabled:Boolean(app.info.sample?.readonly)})),
       button('开始新的明确请求',()=>open(()=>requestForm(app)),false,{disabled:Boolean(app.info.sample?.readonly)})]);
 }
 
@@ -420,8 +427,8 @@ function continueWork(app) {
     try{
       const envelope=await post(projectAPI(app)+'/continue',{}),result=resultOf(envelope),completion=result.completion;
       const pending=result.pending_tasks||[];
-      status.replaceChildren(el('div',{class:'stack'},el('h3',{},completion?.state==='completed'?'本次内容已完成':pending.length?`有 ${pending.length} 项工作单待处理`:'当前工作仍需处理缺口'),
-        completion?.state==='completed'&&el('p',{},'约定内容已正常返回；本次读取没有继续派发原图制作。'),
+      status.replaceChildren(el('div',{class:'stack'},el('h3',{},completion?.state==='completed'?completionLabel(completion):pending.length?`有 ${pending.length} 项工作单待处理`:'当前工作仍需处理缺口'),
+        completion?.state==='completed'&&el('p',{},isDesignPlan(completion)?'约定设计方案已返回；本次请求不包含原图制作。':'约定内容已正常返回；本次读取没有继续派发原图制作。'),
         pending.map(task=>el('article',{class:'collaboration-record'},el('strong',{},({compose:'内容整理',blueprint:'原图制作',reconstruct:'SVG 重建',review:'稿件审阅'})[task.kind]||'待处理工作单'),
           el('p',{},`明确范围 ${task.scope_pages?.length||0} 页；尚未由这次读取开始制作。`),details('工作单要求、范围与依据',task),
           button('查看工作单',()=>{dialog.close();app.go({surface:'runs',runs_area:'tasks',task_id:task.task_id,revision:result.revision_id||envelope.artifact_revision_id});}))),

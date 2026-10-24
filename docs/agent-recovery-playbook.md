@@ -240,6 +240,17 @@ changing the business revision. Commit requires that exact plan and base.
 - `operation_unavailable` (4 / 503): storage or verification could not complete.
   Preserve the pending request and inspect the project before retrying.
 
+Exact committed `icons confirm`, `candidates decide`, and `stages assemble`
+requests remain recoverable while the current request is paused. Retain the
+original project, operation ID, base revision and complete payload. Recovery
+verifies committed ancestry and the request digest before returning the original
+result; it does not grant permission for a new confirmation, decision or compile.
+For `task call begin`, repeating the same in-flight task/allowance/execution and
+frozen request returns its existing Attempt. This is receipt recovery only: do
+not resend the external tool call. Wrong identity/request, missing Attempt,
+settled/unknown calls and terminal tasks remain rejected. Resume only when new
+work is actually authorized, never just to retrieve a committed response.
+
 Read `changes handoff --change-id <id>` to obtain the core-generated plan,
 tasks, required protocols and safely quoted CLI entry. Copying does not start
 work. Only an actual `task start` with an execution reference records a claim.
@@ -427,3 +438,76 @@ A confirmed imported manuscript can use imported_mapping without rebuilding
 Narrative. For an old variant's narrow edit, use start_request variant_transition
 with its exact revision/export and current CAS, not global history restore.
 Actual historical files still use current-control delivery eligibility.
+
+## Completed Image From A Different Execution
+
+Read the existing attempt without transferring or adopting anything:
+
+```sh
+deck-master attempts show --project <dir> --attempt-id <id> --explain-reassociation
+```
+
+The opt-in `cross_execution_diagnostic` adds only derived read facts. Its
+`status` is `unsupported`; `association_ready` and `adoption_ready` are always
+false. `facts` retains the selected snapshot's task status, actual execution,
+request, allowance, call state, registered invocation and observation/output
+counts. `proof_obligations` distinguishes `not_established`, `not_evaluated` and
+`unsupported`: none claims another execution's evidence is absent or verified.
+No event selector/file path is accepted and no collector/provider is invoked.
+Default `attempts show` output is unchanged.
+
+`--revision` reads historical facts and labels `fact_scope=historical_snapshot`.
+Even without that flag these are selected snapshot facts, never a current
+adoption permission or budget check (`current_authority_checked=false`,
+`current_budget_checked=false`). Exit 0 means this read succeeded, not that
+reassociation is supported. Cancelled, unknown, consumed and released call facts
+remain unchanged. Do not infer controller-fenced not-sent evidence from an empty
+observation list or a Host-reported release, or use a matched image/input to
+rename another execution's event. The unresolved choices and exact missing
+proofs are recorded in [RP-24 evidence model](reports/issue-repair-20261023/RP-24-cross-execution-evidence.md).
+
+
+## Explicit preproduction re-review
+
+Default review remains incremental and returns `already_reviewed` when the current
+required units pass. If an actual user request calls for checking an unchanged
+unit again, `deck-master review native --project <dir> --force-unit page_copy`
+selects that currently required unit explicitly (repeat the flag for additional
+units). The existing HTTP entry accepts `force_units` as a nonempty unique list.
+Do not combine this with a frozen `task_id`; execute that Task by its own identity.
+This is a real native review command, not a read-only diagnostic: it still requires
+the applicable authorization and live reviewer capability. Never invoke it merely
+for environment readiness or substitute a synthetic receipt for actual review.
+
+Explicit selection adds to missing/blocked units; it never drops them or bypasses
+current scope, identity, cancellation, review-owner or acceptance checks. A
+completed earlier pass is not permission to ignore a newly accepted failing
+review. Only semantically unchanged policy bookkeeping can preserve applicability;
+changed sources, actual requirements or authority still invalidate their basis.
+
+## Native reviewer startup diagnostics
+
+`review channels --check-native` checks executable/login prerequisites only. A
+`prerequisites_ready` response has `session_verified=false`; it does not prove an
+app-server session, model turn, review or receipt succeeded.
+
+After an authorized `review native` fails before entering its session, read
+`review channels --project <dir>`. `native_startup_failures` contains local
+historical diagnostics: fixed category/phase, timestamp, selected revision,
+CLI exit code and observed process exit code (null when not observed). This is
+separate from `native_executions`, which describes actual Task history. A later
+successful execution does not delete earlier startup failures, and old failures
+do not override current prerequisite observations.
+
+The private sidecar `.deckmaster/native-review-startup-history.json` is diagnostic
+history, not a Task, checkpoint, authenticated receipt or permission. It never
+stores raw stderr, login output, configuration or exception strings. Startup
+errors expose `error.details.startup_history_saved`; false means the original
+failure remains but its history could not be saved. Discovery reports
+`native_startup_history.status=unavailable` for unreadable/corrupt history;
+preserve it for diagnosis rather than treating it as an empty history.
+
+Inspect the named phase and the existing native client locally. Do not change
+credentials/security settings or automatically retry a model call. Retry only
+when the review is authorized and the startup issue is resolved. This diagnostic
+entry does not repair native client databases or establish professional approval.

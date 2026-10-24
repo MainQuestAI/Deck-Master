@@ -376,14 +376,12 @@ def listing(project, *, revision=None, include_stale=False):
 def confirm(project, *, proposal_id, base_revision, operation_id):
     operations.validate_id(operation_id,new=True);store=Store(project_path(project));pr=_proposal_ref(proposal_id);proposal=store.read_object_json(pr)
     from . import eligibility
-    gate_store = Store(project_path(project))
-    eligibility.guard(gate_store, gate_store.load_document(), "candidate.select",
-                      context={"targets": {"layers": ["design"]}})
     validate_schema('icon_recipe',proposal)
     with store._locked():
         doc=store.load_document();rd=operations.request_digest(doc,'icons.confirm',base_revision,{'proposal_ref':pr})
         previous=operations.recover(store,operation_id,rd)
         if previous:return previous
+        eligibility.guard(store, doc, "candidate.select", context={"targets": {"layers": ["design"]}})
         if doc['revision_id']!=base_revision or proposal['base_revision']!=base_revision:fail('base_revision','proposal is stale',True)
         if _proposal(store,doc,proposal['input'])!=proposal:fail('proposal','proposal does not match its frozen inputs')
         recipe={**proposal,'schema_version':'icon_recipe.v1','recipe_id':'icon-'+uuid.uuid4().hex,'proposal_ref':pr}

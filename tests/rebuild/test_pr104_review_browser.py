@@ -539,6 +539,7 @@ def test_hidden_opinion_tool_stops_canvas_mutation_and_keeps_existing_regions(pa
     page, server, _path, store = page_fixture
     page.goto(server.start()); page.get_by_role('heading', name='制作总览', exact=True).wait_for()
     open_page(page, server, store, layer='original_image')
+    page.get_by_text('撰写意见', exact=True).click()
     page.get_by_label('意见正文', exact=True).fill('保留已有正文与范围')
     page.get_by_text('范围与标注工具', exact=True).click()
     page.get_by_role('button', name=mode, exact=True).click()

@@ -929,3 +929,31 @@ def test_page_visual_ignores_historical_findings_without_the_page():
     summary = review_mod.evaluate_page_visual(entry, [*reviews, orphan], artifacts)
     assert summary['unclosed_prior_findings'] == []
     assert summary['status'] == 'pass'
+
+
+@pytest.mark.parametrize("prior_has_findings", [False, True])
+@pytest.mark.parametrize("version", [1, 2])
+def test_receiver_empty_findings_recheck_does_not_erase_old_findings(tmp_path, prior_has_findings, version):
+    from deck_master.tasks import EnvelopeError, _adopt_review
+    project = tmp_path / 'empty-review'
+    service.create(project, brief='Synthetic empty finding recheck', draft={'pages': [{
+        'schema_version': 'deck_page_package.v2', 'page_id': 'p1',
+        'customer_visible': {'title': 'Neutral fixture', 'body_blocks': []},
+        'visual_spec': {'intent': 'neutral', 'reference_mode': 'new_design'}}]})
+    store = Store(project)
+    page_ref = store.load_document()['pages'][0]['page']
+    previous = make_review('content', seed='empty-recheck', subjects=[page_ref],
+        dependencies=[{'kind': 'content', 'identity': 'page:p1', 'sha256': page_ref['sha256']}],
+        findings=[finding('still-open')] if prior_has_findings else [],
+        status='fail' if prior_has_findings else 'pass')
+    if version == 2:
+        previous.update(schema_version="deck_review.v2", review_stage="preproduction", kind="page_copy")
+        previous["reviewer"].update(identity_receipt=None, assurance="host_attested", evidence_ref=None)
+    replacement = deepcopy(previous)
+    replacement.update(replaces=store.put_json_object(previous), findings=[], status='pass',
+                       observations=['Synthetic second review of the same complete page.'])
+    if prior_has_findings:
+        with pytest.raises(EnvelopeError, match='no shared finding_id'):
+            _adopt_review(store, replacement)
+    else:
+        assert _adopt_review(store, replacement) == replacement

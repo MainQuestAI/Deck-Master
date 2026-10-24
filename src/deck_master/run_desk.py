@@ -11,7 +11,8 @@ from .models import validate_schema
 from .snapshots import IDENTIFIER, READ_FAILURES, ReadModelError, load_snapshot
 from .store import Store
 from .result_reading import key as reading_key
-from .workbench import _ReadContext
+from .workbench import _ReadContext, _candidate_facts
+from .action_currentness import Projection
 
 DOCS = 'docs/agent-recovery-playbook.md#run-desk-recovery'
 
@@ -158,13 +159,15 @@ def task_row(task, ref=None, *, adopted=(), now=None, live=True, relationships=N
         actions.append('handoff')
     elif task['status'] == 'failed':
         actions.append('inspect_failure')
-    elif task['status'] == 'superseded':
-        actions.append('replan')
     elif task['status'] == 'completed':
         if pending_candidates:
             actions.append('compare_candidates')
         elif not task.get('candidate_refs') and task.get('result_refs'):
             actions.append('review_results')
+    if 'handoff' in actions and current_relation['reason'] == 'dependency_basis_changed':
+        actions = ['replan']
+    if unknown:
+        actions = [action for action in actions if action in ('verify_unknown_call', 'verify_execution')]
     return {'ref': ref, 'task_id': task['task_id'], 'operation_id': task['operation_id'],
             'kind': task['kind'], 'status': task['status'], 'current_relation':current_relation, 'scope_pages': task['scope_pages'],
             'instruction': task['instruction'], 'display_instruction': task_instruction_summary(task), 'dispatch_revision': task['dispatch_revision'],
@@ -298,3 +301,11 @@ def detail(project, *, task_id, revision=None):
     return copy.deepcopy({'project_id': doc['project_id'], 'revision_id': doc['revision_id'],
         'task': task_row(task, ref, adopted=adopted, live=revision is None, relationships=relationships), 'links': links,
         'call_allowances': task.get('call_allowances', []), 'errors': errors, 'docs_ref': DOCS})
+
+
+def _projection(ctx, records):
+    tasks = {task['task_id']: task for _, task in records if task}
+    ctx.action_projection = Projection(ctx, tasks)
+    _, facts = _candidate_facts(ctx, tasks)
+    pending = {ref['sha256'] for fact in facts for ref in fact['source_refs'][:1]}
+    return ctx.action_projection, pending

@@ -72,6 +72,32 @@ def _response(
     }
 
 
+def _validate_task_response_protocol(response_protocol):
+    if response_protocol not in (None, "task_receipt.v1"):
+        raise ServiceError("response_protocol", "unsupported task response protocol; use task_receipt.v1 or omit for legacy work orders")
+
+
+def _task_receipt(response: dict, task: dict) -> dict:
+    """Negotiated mutation facts, never a work order or proof of input reading.
+
+    The caller supplies the transaction's fixed snapshot/task (the applied
+    snapshot for exact replay). No other pending task or source is expanded.
+    """
+    fields = ("task_id", "operation_id", "kind", "intent", "status", "scope_pages",
+              "dispatch_revision", "produced_against", "execution_ref", "execution_started_at",
+              "protocol_version", "required_capabilities", "host_protocol", "call_allowances",
+              "result_refs", "candidate_refs", "generation_requests", "generation_attempts")
+    response.pop("pending_tasks", None)
+    response.update({
+        "schema_version": "task_receipt.v1",
+        "task": {key: copy.deepcopy(task[key]) for key in fields if key in task},
+        "context_ready": False,
+        "context_read": {"command": "methods", "task_id": task["task_id"],
+                         "read_protocol": "work_context.v2", "body_mode": "full"},
+    })
+    return response
+
+
 def _document_hash(document: dict) -> str:
     return sha256_bytes(canonical_json_bytes(document))
 
@@ -645,7 +671,16 @@ def _task_summary_v1(store: Store, document: dict, task: dict, *, dispatch_docum
         summary['page_design_contexts'] = {}
         for entry in summary['page_entries']:
             from .production import adopted_blueprint_design, resolve_page_design
-            if task.get('review_stage') == 'preproduction':
+            if task.get('review_stage') == 'original_image':
+                from .original_review import task_packet
+                _, fixed_original = task_packet(store, task)
+                effective = fixed_original['resolved_design']
+                summary['original_expression_packet'] = fixed_original
+                summary['reference_images'] = [{'page_id': fixed_original['page_id'],
+                    'artifact': fixed_original['original_ref'], 'file': fixed_original['image_ref'],
+                    'path': str(store.project_root / fixed_original['image_ref']['path']),
+                    'requirement': fixed_original['review_instructions']}]
+            elif task.get('review_stage') == 'preproduction':
                 # Requalify the current manuscript before regenerating an old
                 # image; content review does not consume its visual recipe.
                 page = store.read_object_json(entry['page'])
@@ -664,7 +699,7 @@ def _task_summary_v1(store: Store, document: dict, task: dict, *, dispatch_docum
             summary['page_design_contexts'][entry['page_id']]=effective
             if len(summary['page_entries']) == 1 and 'content_requirements' in effective:
                 summary['resolved_design_context'] = copy.deepcopy(effective)
-            if entry['blueprint']:
+            if entry['blueprint'] and task.get('review_stage') != 'original_image':
                 from PIL import Image
                 import io
                 original = None
@@ -1005,7 +1040,13 @@ def _continue_project(project_dir: Path | str, *, selected_resource_ids=None) ->
     initial_completion = completion_status(store, initial)
     if initial_completion['state'] == 'completed':
         return {**_response(status='completed', document=initial, requested_action='continue',
-            next_action='return_requested_content', result_refs=initial_completion['outputs']), 'completion': initial_completion}
+            next_action=initial_completion['next_action'], result_refs=initial_completion['outputs']), 'completion': initial_completion}
+    if initial_completion.get('responsible_role') == 'design':
+        # A planning-only request does not authorize content production or a
+        # blueprint. Uncommitted proposals remain available by their returned ref.
+        return {**_response(status='needs_input', document=initial, requested_action='continue',
+            next_action=initial_completion['next_action'], findings=initial_completion['missing']),
+            'completion': initial_completion}
     if selected_resource_ids is not None and _pending_host_tasks(initial, store, include_trials=False):
         raise ServiceError("selected_resource_ids", "pending Tasks are frozen; finish or formally retire them before selecting resources for a new dispatch")
     _recover_input_revision(store, selected_resource_ids=selected_resource_ids)
@@ -1326,12 +1367,14 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
         raise ConflictError('page_hash', 'feedback page changed')
     if kind not in ('reconstruct', 'repair', 'review'):
         raise ServiceError('kind', 'unsupported local host task')
-    if review_stage is not None and (review_stage not in ('preproduction', 'page_visual', 'final') or kind not in ('repair', 'review')):
+    if review_stage is not None and (review_stage not in ('preproduction', 'page_visual', 'final', 'original_image') or kind not in ('repair', 'review')):
         raise ServiceError('review_stage', 'only review or repair supports preproduction/page_visual/final')
     if not isinstance(instruction, str) or not instruction.strip():
         raise ServiceError('instruction', 'must not be empty')
     if not page_ids or len(set(page_ids)) != len(page_ids) or not set(page_ids) <= {e['page_id'] for e in document['pages']}:
         raise ServiceError('scope_pages', 'must name existing distinct pages')
+    if review_stage == 'original_image' and (kind != 'review' or len(page_ids) != 1):
+        raise ServiceError('original_review', 'original_image requires one page and a review Task')
     if review_stage == 'page_visual' and len(page_ids) != 1:
         raise ServiceError('scope_pages', 'page_visual must target exactly one page')
     host_layers = {"reconstruct": ["svg", "blueprint"], "repair": ["page_copy", "svg"],
@@ -1340,7 +1383,7 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
                       context={"targets": {"page_ids": list(page_ids), "layers": host_layers}})
     entries = [e for e in document['pages'] if e['page_id'] in page_ids]
     from .production import design_handoff_protocol_fields
-    protocol = design_handoff_protocol_fields(store, document, entries) if review_stage != 'preproduction' else {}
+    protocol = design_handoff_protocol_fields(store, document, entries) if review_stage not in ('preproduction', 'original_image') else {}
     review_scope = (_review_dispatch_scope(store, document, review_stage, page_ids, review_units)
                     if kind == 'review' else None)
     for ref in document['tasks']:
@@ -1348,6 +1391,10 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
         if task.get('stage_request', {}).get('mode') != 'trial' and task['kind'] == kind and task['scope_pages'] == page_ids and task['instruction'] == instruction and task.get('review_stage', 'final') == (review_stage or 'final') and task['status'] in ('awaiting_host','running') and (task.get('collaboration_binding') or {}).get('executor_type', 'host') == (executor_type or 'host') and all(task.get(key) == value for key, value in protocol.items()):
             if kind == 'review' and _review_dispatch_scope(
                     store, document, task.get('review_stage'), task['scope_pages'], task.get('review_units')) != review_scope:
+                continue
+            if kind == 'review' and review_stage in ('preproduction', 'original_image') and not tasks_mod.task_inputs_current(store, document, task):
+                continue
+            if review_stage == 'original_image' and any(ref not in task.get('inputs', []) for ref in extra_inputs):
                 continue
             if selected_resource_ids is not None:
                 raise ServiceError("selected_resource_ids", "existing Task is frozen; use formal reissue")
@@ -1361,6 +1408,9 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
         scope_pages=page_ids,instruction=instruction,inputs=inputs,dependencies=[{'kind':'content','identity':e['page_id'],'sha256':e['page']['sha256']} for e in entries],
         dispatch_revision=document['revision_id'],produced_against=content_identity(document),
         review_stage=review_stage,review_units=review_units)
+    if review_stage == 'original_image':
+        from .models import require_writer
+        require_writer(document, 'original-review.v1')
     task.update(protocol)
     from . import collaboration_binding
     collaboration_binding.stamp_task(
@@ -1912,8 +1962,10 @@ def accept_result(
     result_payload: dict | None = None,
     adapter_context: TrustedContext | None = None,
     review_receipt_selector: dict | None = None,
+    response_protocol: str | None = None,
 ) -> dict:
     """Receive one Host result envelope; prevalidation is all-or-nothing."""
+    _validate_task_response_protocol(response_protocol)
     store = Store(Path(project_dir).expanduser())
     if result_payload is not None:
         envelope_raw = result_payload
@@ -1932,6 +1984,9 @@ def accept_result(
     )
     document = store.load_document()
     current_revision = document["revision_id"]
+    if response_protocol and outcome["revision_id"] != current_revision:
+        from .snapshots import load_snapshot
+        document = load_snapshot(store, outcome["revision_id"])
     if outcome["status"] == "already_applied":
         from .snapshots import load_snapshot
         applied = load_snapshot(store, outcome["revision_id"])
@@ -1946,7 +2001,7 @@ def accept_result(
             status="candidate_ready" if outcome["status"] == "candidate_ready" else "accepted",
             document=document,
             requested_action="task accept",
-            pending_tasks=_pending_host_tasks(document, store),
+            pending_tasks=_pending_host_tasks(document, store) if response_protocol is None else None,
             next_action=outcome.get("next_action"),
             result_refs=outcome.get("result_refs") or [],
         )
@@ -1960,6 +2015,10 @@ def accept_result(
                 "authorizes_production"):
         if key in outcome:
             response[key] = outcome[key]
+    if response_protocol:
+        receipt_document = applied if outcome["status"] == "already_applied" else document
+        receipt_task = tasks_mod._lookup_task(receipt_document, task_id, store)
+        return _task_receipt(response, receipt_task)
     return response
 
 
@@ -2089,6 +2148,17 @@ def _apply_rendering_invalidation(store, new_document, old_document, old_design,
         scope = set(task.get('scope_pages') or [])
         if task.get('status') not in ('awaiting_host', 'running'):
             continue
+        if task.get("kind") == "blueprint":
+            from .production import stored_blueprint_request
+            from .tasks import task_inputs_current
+            prepared, _ = stored_blueprint_request(store, task)
+            if prepared and "asset_inputs" in prepared.get("resolved_design_context", {}):
+                # SVG allowance fallback is not this prepared image's actual
+                # attachment dependency. Retire only its consumed inputs.
+                if not task_inputs_current(store, new_document, task):
+                    new_document["tasks"][index] = store.put_json_object(
+                        {**task, "status": "superseded", "updated_at": _utc_now_iso()})
+                continue
         if scope & affected or (task.get('kind') in ('review', 'repair') and scope & review_affected):
             new_document['tasks'][index] = store.put_json_object(
                 {**task, 'status': 'superseded', 'updated_at': _utc_now_iso()})
@@ -2227,8 +2297,9 @@ def update_design(
 
 
 def task_start(project_dir: Path | str, *, task_id: str, execution_ref: str,
-               supported_protocols=None, capabilities=None) -> dict:
+               supported_protocols=None, capabilities=None, response_protocol=None) -> dict:
     """Actual claim by a named execution; a second executor conflicts."""
+    _validate_task_response_protocol(response_protocol)
     store = Store(Path(project_dir).expanduser())
     document = store.load_document()
     task = tasks_mod._lookup_task(document, task_id, store)
@@ -2266,12 +2337,17 @@ def task_start(project_dir: Path | str, *, task_id: str, execution_ref: str,
     if task.get("protocol_version"):
         updated_task["host_protocol"] = declaration
         if task.get("status") == "running" and task.get("host_protocol") == declaration:
+            if response_protocol:
+                return _task_receipt(_response(status=task["status"], document=document,
+                                               requested_action="task start"), task)
             return task_status(project_dir, task_id=task_id)
-    return _commit_task_update(store, document, task, updated_task, "task claimed")
+    return _commit_task_update(store, document, task, updated_task, "task claimed",
+                               response_protocol=response_protocol)
 
 
-def task_cancel(project_dir: Path | str, *, task_id: str, reason: str = "") -> dict:
+def task_cancel(project_dir: Path | str, *, task_id: str, reason: str = "", response_protocol=None) -> dict:
     """User stop; later submissions are late results, facts stay."""
+    _validate_task_response_protocol(response_protocol)
     store = Store(Path(project_dir).expanduser())
     document = store.load_document()
     task = tasks_mod._lookup_task(document, task_id, store)
@@ -2281,7 +2357,8 @@ def task_cancel(project_dir: Path | str, *, task_id: str, reason: str = "") -> d
             f"(task {task_id})", f"task already {task.get('status')}; cancel refused"
         )
     updated_task = {**task, "status": "cancelled", "updated_at": _utc_now_iso()}
-    response = _commit_task_update(store, document, task, updated_task, reason or "cancelled by user")
+    response = _commit_task_update(store, document, task, updated_task, reason or "cancelled by user",
+                                   response_protocol=response_protocol)
     response["status"] = "cancelled"
     return response
 
@@ -2299,7 +2376,8 @@ def task_status(project_dir: Path | str, *, task_id: str) -> dict:
 
 
 def _commit_task_update(
-    store: Store, document: dict, old_task: dict, updated_task: dict, description: str
+    store: Store, document: dict, old_task: dict, updated_task: dict, description: str,
+    *, response_protocol=None
 ) -> dict:
     from .models import validate_task_semantics
 
@@ -2322,10 +2400,13 @@ def _commit_task_update(
     store.commit_change(
         base_revision=document["revision_id"], document=bumped, operation_id=operation_id
     )
-    refreshed = store.load_document()
-    return _response(
+    # A negotiated receipt describes this committed write, not a newer head.
+    # Keep legacy work-order projection behavior for unnegotiated consumers.
+    refreshed = bumped if response_protocol else store.load_document()
+    response = _response(
         status=updated_task.get("status") or "updated",
         document=refreshed,
         requested_action="task update",
-        pending_tasks=_pending_host_tasks(refreshed, store),
+        pending_tasks=_pending_host_tasks(refreshed, store) if response_protocol is None else None,
     )
+    return _task_receipt(response, updated_task) if response_protocol else response

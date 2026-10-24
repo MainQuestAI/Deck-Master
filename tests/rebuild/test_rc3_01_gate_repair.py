@@ -13,7 +13,7 @@ from deck_master.tasks import EnvelopeError
 
 from synthetic_review_provider import accept_with_synthetic_provider
 from test_content_preproduction_review import (
-    _deck, _dispatch_and_reviews, _independent_adapter, _plan_input, _source_link, _stored,
+    _deck, _dispatch_and_reviews as _full_reviews, _independent_adapter, _plan_input, _source_link, _stored,
 )
 from test_t03_review_fixes import _deck_with_default_verbatim_plan, _submit
 
@@ -115,6 +115,33 @@ def _finding(store, finding_id, *, impact="needs_judgment", resolution="open"):
             "actual": "待审", "evidence": [_stored(store, f"evidence-{finding_id}")]}
 
 
+def _dispatch_and_reviews(store, document, adapter):
+    """Recheck exactly the dispatched units and actual historical owners.
+
+    Current subjects/dependencies come from the existing review factory; owner
+    identities and findings remain explicit; a fresh pass never closes an open
+    finding merely by its status. Only test-specific evidence claims closure.
+    """
+    task, templates = _full_reviews(store, document, adapter)
+    packet = next(store.read_object_json(ref) for ref in task["inputs"]
+                  if store.read_object_json(ref).get("schema_version") == "content_review_packet.v1")
+    scope = packet["review_scope"]
+    reviews = []
+    for kind in packet["required_units"]:
+        template = next(row for row in templates if row["kind"] == kind)
+        owners = [row["review_ref"] for row in scope["owners"] if row["kind"] == kind]
+        if not owners:
+            reviews.append(template)
+        for ref in owners:
+            owner = store.read_object_json(ref)
+            reviews.append({**deepcopy(template), "review_id": owner["review_id"],
+                            "replaces": ref, "findings": deepcopy(owner["findings"])})
+    assert {row["kind"] for row in reviews} == set(packet["required_units"])
+    assert {(row["kind"], row["replaces"]["sha256"]) for row in reviews if row["replaces"]} == {
+        (row["kind"], row["review_ref"]["sha256"]) for row in scope["owners"]}
+    return task, reviews
+
+
 def _publish(project, store, mutate=None, *, authenticated=True):
     document = store.load_document()
     adapter = _independent_adapter(store, document)
@@ -145,7 +172,8 @@ def _initial_judgment(project, store, *, impact="needs_judgment", count=1, kind=
 
 def _variance(store, old_ref, old_review, *, count=None):
     def mutate(reviews):
-        target = next(r for r in reviews if r["kind"] == "page_copy")
+        target = next(r for r in reviews if r["replaces"] == old_ref)
+        target["status"] = "pass"
         target["replaces"] = old_ref
         target["review_id"] = old_review["review_id"]
         target["findings"] = [{**deepcopy(f), "resolution": "accepted_variance",
@@ -172,9 +200,17 @@ def test_explicit_evidenced_variance_closes_only_its_original_finding(tmp_path):
 def test_new_pass_without_replaces_cannot_erase_an_open_finding(tmp_path, impact):
     project, store = _deck(tmp_path)
     old_ref, old_review = _initial_judgment(project, store, impact=impact)
-    assert _publish(project, store)["status"] == "accepted"
+    def erase_owner(reviews):
+        target = next(row for row in reviews if row["replaces"] == old_ref)
+        target.update(replaces=None, findings=[], status="pass")
+    before = store.load_document()["reviews"]
+    before_status = content_review.preproduction_status(store, store.load_document())
+    with pytest.raises(EnvelopeError, match="each frozen historical owner"):
+        _publish(project, store, erase_owner)
+    assert store.load_document()["reviews"] == before
     status = content_review.preproduction_status(store, store.load_document())
-    assert status["status"] == "blocked"
+    assert status == before_status
+    assert status["status"] == "missing" and status["missing_units"] == ["page_copy"]
     assert status["blocking_findings"][0]["finding_id"] == "f0"
     assert store.read_object_json(old_ref) == old_review
 
@@ -211,8 +247,11 @@ def test_replacement_does_not_bypass_logical_review_basis_evidence_or_identity(t
         elif defect == "subject":
             target["subjects"] = []
     before = store.load_document()
-    with pytest.raises(EnvelopeError):
+    with pytest.raises(EnvelopeError) as rejected:
         _publish(project, store, mutate, authenticated=defect != "unauthenticated")
+    if defect != "kind":
+        assert "exactly frozen units" not in str(rejected.value)
+        assert "each frozen historical owner" not in str(rejected.value)
     after = store.load_document()
     assert after["reviews"] == before["reviews"]
     assert after["pages"] == before["pages"]
@@ -237,7 +276,8 @@ def test_fixed_preproduction_recheck_accepts_changed_manuscript_without_pptx(tmp
     assert store.load_document()["outputs"].get("pptx") is None
 
     def fixed(reviews):
-        target = next(r for r in reviews if r["kind"] == "page_copy")
+        target = next(r for r in reviews if r["replaces"] == old_ref)
+        target["status"] = "pass"
         target["replaces"] = old_ref
         target["review_id"] = old_review["review_id"]
         target["findings"] = [{**old_review["findings"][0], "resolution": "fixed",
@@ -252,7 +292,8 @@ def test_fixed_without_actual_manuscript_change_is_refused(tmp_path):
     old_ref, old_review = _initial_judgment(project, store, impact="must_fix")
 
     def fixed(reviews):
-        target = next(r for r in reviews if r["kind"] == "page_copy")
+        target = next(r for r in reviews if r["replaces"] == old_ref)
+        target["status"] = "pass"
         target["replaces"] = old_ref
         target["review_id"] = old_review["review_id"]
         target["findings"] = [{**old_review["findings"][0], "resolution": "fixed"}]
@@ -292,11 +333,16 @@ def test_manuscript_changes_and_new_pass_cannot_erase_an_unclosed_current_findin
     project, store = _deck(tmp_path)
     old_ref, old_review = _initial_judgment(project, store, impact=impact)
     _revise_page(project, store, page_id, layer=layer)
-    # This fresh review is accepted, but it declares no replaces or closure.
+    # Bind the real frozen owner; a fresh pass supplies no closure for its old finding.
     assert _publish(project, store)["status"] == "accepted"
     status = content_review.preproduction_status(store, store.load_document())
     assert status["status"] == "blocked" and status["missing_units"] == []
-    assert [f["finding_id"] for f in status["blocking_findings"]] == ["f0"]
+    # Original and explicit recheck each retain the open finding; neither is
+    # implicitly closed or collapsed merely because their logical IDs agree.
+    assert [f["finding_id"] for f in status["blocking_findings"]] == ["f0", "f0"]
+    latest = next(store.read_object_json(ref) for ref in reversed(store.load_document()["reviews"])
+                  if store.read_object_json(ref)["kind"] == "page_copy")
+    assert latest["replaces"] == old_ref and latest["findings"] == old_review["findings"]
     assert store.read_object_json(old_ref) == old_review
 
 
@@ -318,11 +364,15 @@ def test_historical_finding_closes_through_explicit_current_replacement_chain(tm
     _revise_page(project, store, "p1")
 
     def fixed(reviews):
-        target = next(r for r in reviews if r["kind"] == "page_copy")
-        target["replaces"] = intermediate_ref
-        target["review_id"] = original["review_id"]
-        target["findings"] = [{**original["findings"][0], "resolution": "fixed",
-                               "evidence": [_stored(store, "same-page-current-recheck")]}]
+        targets = [row for row in reviews if row["kind"] == "page_copy"]
+        assert {row["replaces"]["sha256"] for row in targets} == {
+            original_ref["sha256"], intermediate_ref["sha256"]}
+        for target in targets:
+            owner = store.read_object_json(target["replaces"])
+            assert target["review_id"] == owner["review_id"] == original["review_id"]
+            target["status"] = "pass"
+            target["findings"] = [{**owner["findings"][0], "resolution": "fixed",
+                                   "evidence": [_stored(store, "same-page-current-recheck")]}]
     assert _publish(project, store, fixed)["status"] == "accepted"
     status = content_review.preproduction_status(store, store.load_document())
     assert status["status"] == "pass" and status["blocking_findings"] == []
@@ -391,7 +441,8 @@ def _null_initial(project, store, *, impact="needs_judgment", kind="argument"):
 
 def _null_closure(old_ref, old_review, *, resolution="accepted_variance"):
     def mutate(reviews):
-        target = next(r for r in reviews if r["kind"] == old_review["kind"])
+        target = next(r for r in reviews if r["replaces"] == old_ref)
+        target["status"] = "pass"
         target["review_id"] = old_review["review_id"]
         target["replaces"] = old_ref
         target["findings"] = [{**deepcopy(old_review["findings"][0]), "resolution": resolution,
@@ -404,7 +455,14 @@ def test_deck_level_preproduction_judgment_has_a_full_manuscript_variance_exit(t
     old_ref, old_review = _null_initial(project, store)
     _publish(project, store)
     assert content_review.preproduction_status(store, store.load_document())["status"] == "blocked"
-    assert _publish(project, store, _null_closure(old_ref, old_review))["status"] == "accepted"
+    def close_each_owner(reviews):
+        targets = [row for row in reviews if row["kind"] == "argument"]
+        assert len(targets) == 2
+        assert old_ref in [row["replaces"] for row in targets]
+        for target in targets:
+            ref = target["replaces"]
+            _null_closure(ref, store.read_object_json(ref))([target])
+    assert _publish(project, store, close_each_owner)["status"] == "accepted"
     assert content_review.preproduction_status(store, store.load_document())["status"] == "pass"
     assert store.read_object_json(old_ref) == old_review
 
@@ -434,8 +492,10 @@ def test_deck_level_variance_keeps_complete_binding_and_evidence_floors(tmp_path
         elif defect == "stale_dependency":
             target["dependencies"][0]["sha256"] = "0" * 64
     before = store.load_document()["reviews"]
-    with pytest.raises(EnvelopeError):
+    with pytest.raises(EnvelopeError) as rejected:
         _publish(project, store, mutate)
+    assert "exactly frozen units" not in str(rejected.value)
+    assert "each frozen historical owner" not in str(rejected.value)
     assert store.load_document()["reviews"] == before
     assert content_review.preproduction_status(store, store.load_document())["status"] != "pass"
 

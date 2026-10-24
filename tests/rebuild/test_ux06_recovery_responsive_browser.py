@@ -364,6 +364,7 @@ def test_complete_draft_restore_reaches_icon_consumer_through_real_entry(ux06_br
         page.get_by_role('button', name=name, exact=True).click()
     # ① 意见面:填意见正文(入草稿)、选入预置意见,填修改要求。
     face('意见')
+    page.get_by_text('撰写意见', exact=True).click()
     page.get_by_label('意见正文', exact=True).fill('恢复完整草稿的原始意见')
     page.get_by_label('选入意见 1', exact=True).check()
     page.get_by_label('修改要求', exact=True).fill('完整恢复的要求：保留数字')

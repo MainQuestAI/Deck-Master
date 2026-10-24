@@ -4,7 +4,7 @@ export class SummaryPoll {
     this.read = read; this.onValue = onValue; this.onError = onError;
     this.delay = this.interval(initial); this.busy = false; this.stopped = true; this.again = false; this.generation = 0;
     this.visible = () => {
-      if (document.hidden) { clearTimeout(this.timer); this.again = false; this.controller?.abort(); }
+      if (document.hidden) { this.generation++; clearTimeout(this.timer); this.again = false; this.controller?.abort(); }
       else this.refresh();
     };
     this.focus = () => this.refresh();

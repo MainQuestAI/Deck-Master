@@ -96,7 +96,7 @@ def test_candidates_block_branches_pass_active_schema(candidate_store):
     cid = svg_candidate(store)
     summary = workbench.workbench_summary(project)
     assert summary["candidates"] == {"status": "recorded", "count": 1, "pending_count": 1,
-                                     "adopted_count": 0, "kept_count": 0, "unreadable_count": 0}
+                                     "adopted_count": 0, "kept_count": 0, "unreadable_count": 0, "stale_count": 0}
     compare = [a for a in summary["next_actions"]["actions"] if a["kind"] == "compare_candidates"]
     assert len(compare) == 1
     assert compare[0]["page_ids"] == ["p01"] and compare[0]["layer"] == "svg"
@@ -322,7 +322,7 @@ def test_snapshot_level_candidate_damage_is_isolated_not_fatal(project):
     path.write_text(json.dumps(doc), "utf-8")
     summary = workbench.workbench_summary(project)
     assert summary["candidates"] == {"status": "recorded", "count": 2, "pending_count": 2,
-                                     "adopted_count": 0, "kept_count": 0, "unreadable_count": 2}
+                                     "adopted_count": 0, "kept_count": 0, "unreadable_count": 2, "stale_count": 0}
     compare = [a for a in summary["next_actions"]["actions"] if a["kind"] == "compare_candidates"][0]
     assert compare["enabled"] is False and compare["blocked_reason"] == "candidate_unreadable"
     assert compare["state"] == "unknown" and compare["source_refs"] == []
@@ -402,7 +402,7 @@ def test_no_style_deviation_action_without_professional_evidence(tmp_path):
     for forbidden in ("style_deviation", "drift", "风格偏离"):
         assert forbidden not in dumped
     assert summary["quality"]["status"] == "detail_required"
-    allowed = {"verify_execution", "inspect_failure", "replan", "compare_candidates", "reconcile_inputs",
+    allowed = {"verify_execution", "inspect_failure", "compare_candidates", "reconcile_inputs",
                "prepare_stage", "refresh_stage", "handoff", "review_results", "review_quality"}
     assert set(kinds(summary)) <= allowed
     # the rewritten blueprints are facts, not style verdicts: the stale ppt

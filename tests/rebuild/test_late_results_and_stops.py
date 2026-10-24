@@ -324,19 +324,21 @@ def test_pause_stops_new_calls_but_not_settlement(tmp_path):
     project, store = _project(tmp_path)
     _start(project, store, scope=_scope(page_ids=["p1"]))
     grant = _grant(project, store, actions=("dispatch.host_task", "call.begin", "allowance.allocate"),
-                   scope=_scope(page_ids=["p1"]), max_external_calls=1)
+                   scope=_scope(page_ids=["p1"]), max_external_calls=2)
     task = _running_call(store, project, grant=grant)
+    from deck_master import tasks as tasks_mod
+    tasks_mod.allocate_call_allowances(store, task_id=task["task_id"], count=1)
     collaboration.pause_request(project, reason="先停一下",
                                 base_revision=store.load_document()["revision_id"],
                                 operation_id="op-pause")
     document = store.load_document()
-    from deck_master import tasks as tasks_mod
-    document = store.load_document()
-    document["tasks"]  # keep the read explicit for the assertion below
+    before = store.read_current()
     with pytest.raises(eligibility.EligibilityBlocked) as excinfo:
         tasks_mod.call_begin(Store(project), task_id=task["task_id"], allowance_id="call-2",
                              execution_ref="host-1")
     assert "request_paused" in excinfo.value.payload()["error"]["reason_codes"]
+    assert store.read_current() == before
+    assert tasks_mod._lookup_task(store.load_document(), task["task_id"], store)["call_allowances"][1]["state"] == "reserved"
     settle = eligibility.evaluate(store, document, document, "call.settle", {"task": task})
     assert settle["allowed"] is True and settle["facts_only"] is True
     tasks_mod.call_settle(store, task_id=task["task_id"], allowance_id="call-1", outcome="consumed",
