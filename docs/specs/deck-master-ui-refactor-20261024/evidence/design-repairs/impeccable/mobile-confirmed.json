@@ -1,0 +1,49 @@
+[
+  {
+    "width": 390,
+    "first": {
+      "x": 26,
+      "y": 488,
+      "width": 338,
+      "height": 77
+    },
+    "third": {
+      "x": 26,
+      "y": 642,
+      "width": 338,
+      "height": 77
+    },
+    "overflow": false,
+    "rowText": "1 · 先核对范围，再决定行动\n未归入章节\n正文已记录 · 核对状态见详情\n第 1 页操作"
+  },
+  {
+    "width": 390,
+    "url": "http://127.0.0.1:56870/studio/#project=914cdc26f2ef0ae9a430d4631992f8567b4f279002083d3d5d0304d5429f3381&surface=page&layer=content&zoom=1&from=content&content_q=28+&revision=49476882af4242a59fe6eaa8ade22c73&page=p28",
+    "activeNav": "内容与页序",
+    "opinionsVisible": false,
+    "reading": {
+      "font": "16px",
+      "line": "28px",
+      "width": 316
+    }
+  },
+  {
+    "width": 390,
+    "returnQuery": "28 ",
+    "returnFocus": "<a href=\"#project=914cdc26f2ef0ae9a430d4631992f8567b4f279002083d3d5d0304d5429f3381&amp;surface=page&amp;layer=content&amp;zoom=1&amp;from=content&amp;content_q=28+&amp;revision=49476882af4242a59fe6eaa8ade22c73&amp;page=p28\" class=\"order-handle object-link\" draggable=\"\" aria-label=\"打开内容页 先核对范围，再决定行动\">28 · 先核对范围，再决定行动</a>"
+  },
+  {
+    "width": 390,
+    "drawer": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844
+    }
+  },
+  {
+    "width": 390,
+    "opinionsDraftRetained": true,
+    "editFocusRestored": true
+  }
+]

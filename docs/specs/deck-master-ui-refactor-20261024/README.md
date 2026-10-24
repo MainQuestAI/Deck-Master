@@ -1,5 +1,7 @@
 # Deck Master · 完整 UI 重构方案
 
+当前三方设计复审修复：[6 项设计问题与验证](DESIGN-REPAIRS.md)。
+
 当前 PR188 两轮审查修复：[8 项问题与重新验收](REVIEW-REPAIRS.md)。
 
 2026-10-24 · 方案 v1 / 场景精修 r3 · 已授权实施

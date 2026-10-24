@@ -1,0 +1,132 @@
+{
+  "head": "c10f706bb1bf6e539013771eedd5a50f828d7058",
+  "metrics": [
+    {
+      "entry": "v2",
+      "width": 390,
+      "type": {
+        "size": "16px",
+        "line": "28px"
+      },
+      "defaultOpinionVisible": false,
+      "pager": [
+        {
+          "text": "← 上一页",
+          "w": 78,
+          "h": 44,
+          "disabled": false
+        },
+        {
+          "text": "下一页 →",
+          "w": 78,
+          "h": 44,
+          "disabled": true
+        }
+      ],
+      "select": {
+        "text": "第 30 / 30 页",
+        "available": 124,
+        "textWidth": 81.853515625
+      },
+      "overflow": false,
+      "tools": {
+        "opinionVisible": true,
+        "inputReadback": "合成复查：确认意见可输入，不提交。",
+        "saveEnabled": true
+      },
+      "afterExit": {
+        "dialogVisible": false,
+        "opinionVisible": false
+      },
+      "reopenOperable": true
+    },
+    {
+      "entry": "studio",
+      "width": 390,
+      "type": {
+        "size": "16px",
+        "line": "28px"
+      },
+      "defaultOpinionVisible": false,
+      "pager": [
+        {
+          "text": "← 上一页",
+          "w": 78,
+          "h": 44,
+          "disabled": false
+        },
+        {
+          "text": "下一页 →",
+          "w": 78,
+          "h": 44,
+          "disabled": true
+        }
+      ],
+      "select": {
+        "text": "第 30 / 30 页",
+        "available": 98,
+        "textWidth": 81.853515625
+      },
+      "overflow": false
+    },
+    {
+      "entry": "studio",
+      "width": 1280,
+      "type": {
+        "size": "16px",
+        "line": "28px"
+      },
+      "defaultOpinionVisible": false,
+      "pager": [
+        {
+          "text": "← 上一页",
+          "w": 78,
+          "h": 44,
+          "disabled": false
+        },
+        {
+          "text": "下一页 →",
+          "w": 78,
+          "h": 44,
+          "disabled": true
+        }
+      ],
+      "select": {
+        "text": "第 30 / 30 页",
+        "available": 108,
+        "textWidth": 81.853515625
+      },
+      "overflow": false
+    },
+    {
+      "entry": "studio",
+      "width": 1440,
+      "type": {
+        "size": "16px",
+        "line": "28px"
+      },
+      "defaultOpinionVisible": false,
+      "pager": [
+        {
+          "text": "← 上一页",
+          "w": 78,
+          "h": 32,
+          "disabled": false
+        },
+        {
+          "text": "下一页 →",
+          "w": 78,
+          "h": 32,
+          "disabled": true
+        }
+      ],
+      "select": {
+        "text": "第 30 / 30 页",
+        "available": 108,
+        "textWidth": 81.853515625
+      },
+      "overflow": false
+    }
+  ],
+  "pageerrors": []
+}

@@ -1,0 +1,217 @@
+{
+  "metrics": [
+    {
+      "case": "content-studio-390-30",
+      "rows": [
+        {
+          "y": 488,
+          "h": 77,
+          "text": "1 · 先核对范围，再决定行动\n未归入章节\n正文已记录 · 核对状态见详情\n第 1 页操作"
+        },
+        {
+          "y": 565,
+          "h": 77,
+          "text": "2 · 先核对范围，再决定行动\n未归入章节\n正文已记录 · 核对状态见详情\n第 2 页操作"
+        },
+        {
+          "y": 642,
+          "h": 77,
+          "text": "3 · 先核对范围，再决定行动\n未归入章节\n正文已记录 · 核对状态见详情\n第 3 页操作"
+        }
+      ],
+      "overflow": false
+    },
+    {
+      "case": "page-studio-390-30",
+      "select": {
+        "text": "第 30 / 30 页",
+        "width": 150,
+        "available": 98,
+        "textWidth": 81.853515625
+      },
+      "type": {
+        "font": "16px",
+        "line": "28px"
+      },
+      "pager": [
+        {
+          "text": "← 上一页",
+          "w": 78,
+          "h": 44,
+          "disabled": false
+        },
+        {
+          "text": "下一页 →",
+          "w": 78,
+          "h": 44,
+          "disabled": true
+        }
+      ],
+      "overflow": false,
+      "opinionVisible": false
+    },
+    {
+      "case": "content-studio-1280-30",
+      "rows": [
+        {
+          "y": 398.09375,
+          "h": 101,
+          "text": "1 · 先核对范围，再决定行动\n未归入章节\n正文已记录 · 核对状态见详情\n\n先核对真实稿件，再确认范围与下一步。\n\n第 1 页操作"
+        },
+        {
+          "y": 499.09375,
+          "h": 101,
+          "text": "2 · 先核对范围，再决定行动\n未归入章节\n正文已记录 · 核对状态见详情\n\n先核对真实稿件，再确认范围与下一步。\n\n第 2 页操作"
+        },
+        {
+          "y": 600.09375,
+          "h": 101,
+          "text": "3 · 先核对范围，再决定行动\n未归入章节\n正文已记录 · 核对状态见详情\n\n先核对真实稿件，再确认范围与下一步。\n\n第 3 页操作"
+        }
+      ],
+      "overflow": false
+    },
+    {
+      "case": "page-studio-1280-30",
+      "select": {
+        "text": "第 30 / 30 页",
+        "width": 160,
+        "available": 108,
+        "textWidth": 81.853515625
+      },
+      "type": {
+        "font": "16px",
+        "line": "28px"
+      },
+      "pager": [
+        {
+          "text": "← 上一页",
+          "w": 78,
+          "h": 44,
+          "disabled": false
+        },
+        {
+          "text": "下一页 →",
+          "w": 78,
+          "h": 44,
+          "disabled": true
+        }
+      ],
+      "overflow": false,
+      "opinionVisible": false
+    },
+    {
+      "case": "content-studio-1440-30",
+      "rows": [
+        {
+          "y": 386.09375,
+          "h": 101,
+          "text": "1 · 先核对范围，再决定行动\n未归入章节\n正文已记录 · 核对状态见详情\n\n先核对真实稿件，再确认范围与下一步。\n\n第 1 页操作"
+        },
+        {
+          "y": 487.09375,
+          "h": 101,
+          "text": "2 · 先核对范围，再决定行动\n未归入章节\n正文已记录 · 核对状态见详情\n\n先核对真实稿件，再确认范围与下一步。\n\n第 2 页操作"
+        },
+        {
+          "y": 588.09375,
+          "h": 101,
+          "text": "3 · 先核对范围，再决定行动\n未归入章节\n正文已记录 · 核对状态见详情\n\n先核对真实稿件，再确认范围与下一步。\n\n第 3 页操作"
+        }
+      ],
+      "overflow": false
+    },
+    {
+      "case": "page-studio-1440-30",
+      "select": {
+        "text": "第 30 / 30 页",
+        "width": 160,
+        "available": 108,
+        "textWidth": 81.853515625
+      },
+      "type": {
+        "font": "16px",
+        "line": "28px"
+      },
+      "pager": [
+        {
+          "text": "← 上一页",
+          "w": 78,
+          "h": 32,
+          "disabled": false
+        },
+        {
+          "text": "下一页 →",
+          "w": 78,
+          "h": 32,
+          "disabled": true
+        }
+      ],
+      "overflow": false,
+      "opinionVisible": false
+    },
+    {
+      "case": "opinion-open",
+      "pressed": "true"
+    },
+    {
+      "case": "page-v2-390-30",
+      "select": {
+        "text": "第 30 / 30 页",
+        "width": 150,
+        "available": 124,
+        "textWidth": 81.853515625
+      },
+      "type": {
+        "font": "16px",
+        "line": "26.4px"
+      },
+      "pager": [
+        {
+          "text": "← 上一页",
+          "w": 78,
+          "h": 44,
+          "disabled": false
+        },
+        {
+          "text": "下一页 →",
+          "w": 78,
+          "h": 44,
+          "disabled": true
+        }
+      ],
+      "overflow": false,
+      "opinionVisible": false
+    },
+    {
+      "case": "page-studio-1440-100",
+      "select": {
+        "text": "第 100 / 100 页",
+        "width": 160,
+        "available": 108,
+        "textWidth": 94.623046875
+      },
+      "type": {
+        "font": "16px",
+        "line": "28px"
+      },
+      "pager": [
+        {
+          "text": "← 上一页",
+          "w": 78,
+          "h": 32,
+          "disabled": false
+        },
+        {
+          "text": "下一页 →",
+          "w": 78,
+          "h": 32,
+          "disabled": true
+        }
+      ],
+      "overflow": false,
+      "opinionVisible": false
+    }
+  ],
+  "pageerrors": []
+}
