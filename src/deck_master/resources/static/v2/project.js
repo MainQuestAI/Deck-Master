@@ -168,6 +168,9 @@ export class Project {
     if (this.navigationStatus) this.navigationStatus.hidden = false;
     announce('正在读取工作面');
     try {
+      // Carry the requested current/history version across an intervening sidebar click.
+      // Visible content and write permissions remain on their committed snapshot.
+      this.navigationRoute = requestedRoute || readRoute(this.info, null, {...this.latest, revision_id:null}, requestedHash);
       const [info, latest] = await Promise.all([this.readControl(true), get(this.summaryURL())]);
       if (info.project_identity !== this.info.project_identity) throw new Error('项目身份已改变。旧输入仍保留，请从项目列表重新打开。');
       const route = requestedRoute || readRoute(this.info, null, latest, requestedHash);

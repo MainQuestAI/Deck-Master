@@ -151,7 +151,9 @@ def test_stale_manuscript_recovery_is_refused(tmp_path, native, monkeypatch):
 
 def test_multiple_clean_owners_can_be_rechecked_without_merging_identities(tmp_path, native, monkeypatch):
     project, store = _deck(tmp_path)
-    native.status = 'fail'
+    native.status = 'pass'
+    # Clean owners are explicitly rechecked; a synthetic fail without findings
+    # is not permission to erase an unresolved failed judgment.
     native_review.run(project)
     # Synthetic legacy history can contain multiple independent owners per unit.
     document = store.load_document()
@@ -174,7 +176,7 @@ def test_multiple_clean_owners_can_be_rechecked_without_merging_identities(tmp_p
         observation['raw_final_message'] = json.dumps({'reviews': rows})
         return observation
     monkeypatch.setattr(FixtureSession, 'review', recheck)
-    result = native_review.run(project)
+    result = native_review.run(project, force_units=sorted({row["kind"] for row in prior.values()}))
     assert result['preproduction']['status'] == 'pass'
     after = store.load_document()
     assert len(after['reviews']) == 16

@@ -19,7 +19,7 @@ def open_plan(page, url, route):
     identity = page.request.get(url + 'api/project').json()['project_identity']
     page.goto(url + route + '/#' + urlencode({'project': identity, 'surface': 'content', 'layer': 'content'}))
     if route == 'studio':
-        page.get_by_role('navigation', name='内容工作区').get_by_role('button', name='内容计划', exact=True).click()
+        page.get_by_role('navigation', name='内容工作区').get_by_role('button', name='章节与计划', exact=True).click()
     else:
         page.get_by_text('编辑内容计划', exact=True).click()
 
@@ -109,6 +109,7 @@ def test_imported_mapping_without_narrative_is_not_missing_mapping(tmp_path, rou
             identity = ui_journal.project_info(project)['project_identity']
             target = {'project': identity, 'surface': 'page', 'page': page_id, 'layer': 'content', 'revision': before['revision_id']}
             page.goto(server.start() + route + '/#' + urlencode(target))
+            page.locator('.source-inspector > summary').click()
             expect(page.get_by_role('heading', name='正文与证据', exact=True)).to_be_visible()
             expect(page.get_by_text('此页未绑定论证主线；原子映射和来源关联按下方记录分别展示。', exact=True)).to_be_visible()
             expect(page.locator('.insight-node').first).to_contain_text('已记录映射')
@@ -140,9 +141,9 @@ def test_empty_pages_with_or_without_plan_remain_readable(tmp_path, route, has_p
             errors = []
             page.on('pageerror', lambda error: errors.append(str(error)))
             page.goto(server.start() + route + '/')
-            page.get_by_role('button', name='内容与来源', exact=True).click()
+            page.get_by_role('button', name='内容与页序', exact=True).click()
             if route == 'studio':
-                page.get_by_role('navigation', name='内容工作区').get_by_role('button', name='内容计划', exact=True).click()
+                page.get_by_role('navigation', name='内容工作区').get_by_role('button', name='章节与计划', exact=True).click()
             elif has_plan:
                 page.get_by_text('编辑内容计划', exact=True).click()
             expect(page.locator('body')).not_to_contain_text('[object HTML')
