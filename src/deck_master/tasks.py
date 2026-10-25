@@ -2108,6 +2108,15 @@ def reissue_changed_method_tasks(store):
                 or not task_inputs_current(store, document, task)
                 or not task_method_contract_changed(task)):
             continue
+        binding = task.get("collaboration_binding") or {}
+        request = (document.get("collaboration") or {}).get("request") or {}
+        bound_request = binding.get("request_id")
+        if (bound_request and request.get("request_id")
+                and bound_request != request["request_id"]
+                and bound_request not in (request.get("background_request_ids") or [])):
+            # Replaced requests retain their immutable Task/call history. They
+            # do not participate in the current request's method refresh.
+            continue
         if any(a.get("state") in ("in_flight", "unknown") for a in task.get("call_allowances") or []):
             raise MethodBasisChanged(f"(task {task['task_id']})/call_allowances",
                                      "settle in-flight/unknown calls before replacing this method contract")
@@ -2116,7 +2125,6 @@ def reissue_changed_method_tasks(store):
         # another currently covering grant cannot revive this old Task.
         eligibility.guard(store, document, 'task.start', context={
             'task': task, 'targets': {'page_ids': task.get('scope_pages') or []}})
-        binding = task.get("collaboration_binding") or {}
         action = ("change.commit" if task.get("change_binding") else "dispatch.compose" if task["kind"] == "compose"
                   else "dispatch.blueprint" if task["kind"] == "blueprint" else "dispatch.host_task")
         retired = {**task, "status": "superseded", "updated_at": _utc_now_iso()}

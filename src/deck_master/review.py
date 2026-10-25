@@ -124,7 +124,8 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
                 continue
             for after in new:
                 hash_key = ('visual_sha' if owner.get('review_stage') == 'page_visual'
-                            else content_semantic_key(owner, finding) if owner.get('review_stage') == 'preproduction' or owner.get('kind') == 'speech'
+                            else content_semantic_key(owner, finding) if owner.get('review_stage') == 'preproduction'
+                            else 'speech_semantic_sha' if owner.get('kind') == 'speech'
                             else 'file_sha') if before.get('role') == 'page' else 'file_sha'
                 if (after and after.get('current') and after.get('page_id') == page_id and
                         after.get('role') == before.get('role') and

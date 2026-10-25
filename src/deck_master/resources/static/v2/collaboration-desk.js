@@ -263,7 +263,7 @@ async function stateDetails(app) {
       auth.status!=='revoked'&&button('撤回此授权',()=>{
         document.querySelector('#modal').close();
         controlForm(app,{title:'撤回此授权',action:'revoke',path:'/collaboration/authorizations/'+encodeURIComponent(auth.authorization_id)+'/revoke',
-          body:scopeView(app,auth.scope),explanation:'撤回后停止该授权及其下级的后续采用和制作。已发生调用与费用保留；其它授权不能接管原任务。',build:instruction_evidence=>({evidence:instruction_evidence,reason:instruction_evidence.text})});
+          body:scopeView(app,auth.scope),explanation:'撤回后停止该授权及其下级的后续采用和制作。已发生调用与费用保留；其它授权不能接管原任务。仍有效的本次请求可继续范围内的零调用修稿；如需停止整个请求，请使用“暂停本次请求”。',build:instruction_evidence=>({evidence:instruction_evidence,reason:instruction_evidence.text})});
       },false,{disabled:Boolean(app.info.sample?.readonly)})))),
     controlRecovery(app),requestControls(app),
     request&&!request.closed&&!app.info.sample?.readonly&&button('选择内容审阅方式',()=>{document.querySelector('#modal').close();reviewPolicyForm(app);}),
@@ -444,7 +444,7 @@ function requestControls(app) {
       !state?.migrated?button('查看升级影响',()=>open(()=>migrationForm(app)),false,{disabled:Boolean(app.info.sample?.readonly)}):
       [request&&!request.closed&&button(request.paused?'恢复本次请求':'暂停本次请求',()=>open(()=>controlForm(app,{
         title:request.paused?'恢复本次请求':'暂停本次请求',action:request.paused?'resume':'pause',path:'/collaboration/request/'+(request.paused?'resume':'pause'),
-        body:scopeView(app,request.scope),explanation:request.paused?'恢复只继续原请求的有效范围，撤回、费用和缺口均保留。':'暂停将阻止新的制作与采用；读取、取消和已发生调用结算仍可进行。',
+        body:scopeView(app,request.scope),explanation:request.paused?'恢复只继续原请求的有效范围，撤回、费用和缺口均保留。':'暂停将阻止新的制作、采用与正式交付，包括已固定的旧文件；读取、取消和已发生调用结算仍可进行。',
         build:evidence=>({request_id:request.request_id,evidence,...(!request.paused?{reason:evidence.text}:{})})})),false,{disabled:Boolean(app.info.sample?.readonly)}),
       request&&!plan&&app.summary.current_work&&button('读取下一工作单',()=>open(()=>continueWork(app)),false,{disabled:Boolean(app.info.sample?.readonly)}),
       button('开始新的明确请求',()=>open(()=>requestForm(app)),false,{disabled:Boolean(app.info.sample?.readonly)})]);
