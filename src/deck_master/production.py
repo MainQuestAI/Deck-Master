@@ -122,7 +122,7 @@ def resolve_design(page, design, permitted_assets):
     return effective, style
 
 
-def resolve_generation_design(store, document, page_entry, *, recipe_ref=None, design_policy=True, asset_inputs=True):
+def resolve_generation_design(store, document, page_entry, *, recipe_ref=None, design_policy=True, asset_inputs=True, text_visibility=True):
     """Resolve the exact current Page/Plan/recipe consumption before prompting."""
     from .design_requirements import resolve_content_requirements
     page = store.read_object_json(page_entry["page"])
@@ -201,6 +201,8 @@ def resolve_generation_design(store, document, page_entry, *, recipe_ref=None, d
     resolved.update(resolve_content_requirements(
         store, document, page_entry["page"], recipe_ref=recipe_ref,
         decision_refs=decisions, recipe_parameters=resolved.get("recipe_parameters")))
+    if not text_visibility:
+        resolved["content_requirements"].pop("text_visibility", None)
     # Explicit policy is authoritative over a superseded Page hint and Plan projection.
     if design_policy:
         resolved["content_requirements"]["layout_hint"] = resolved["design_policy"]["layout_instruction"]
@@ -380,6 +382,16 @@ def adopted_blueprint_design(store, document, page_entry):
         raise ModelError(where, "unreadable or invalid adopted generation lineage") from exc
 
 
+def frozen_design_options(resolved):
+    """Negotiate only fields present in immutable historical production inputs."""
+    requirements = resolved.get('content_requirements') or {}
+    visibility = requirements.get('text_visibility')
+    if 'text_visibility' in requirements and visibility != 'customer_visible_only.v1':
+        raise ModelError('content_requirements/text_visibility', 'unsupported frozen visibility contract')
+    return {'design_policy': 'design_policy' in resolved, 'asset_inputs': 'asset_inputs' in resolved,
+            'text_visibility': 'text_visibility' in requirements}
+
+
 def resolve_page_design(store, document, page_entry, *, require_current=False):
     """Full immutable adopted design for writers; legacy Pages keep old behavior."""
     bound = adopted_blueprint_design(store, document, page_entry)
@@ -390,7 +402,7 @@ def resolve_page_design(store, document, page_entry, *, require_current=False):
     resolved = bound["resolved_design_context"]
     if require_current and consumed_design(resolved, store=store) != consumed_design(
             resolve_generation_design(store, document, page_entry, recipe_ref=bound["recipe_ref"],
-                design_policy="design_policy" in resolved, asset_inputs="asset_inputs" in resolved), store=store):
+                **frozen_design_options(resolved)), store=store):
         raise ModelError("blueprint/content_basis", "adopted blueprint's consumed Page/Plan/design inputs changed")
     return resolved
 
@@ -405,7 +417,7 @@ def resolve_page_rendering_design(store, document, page_entry):
     if bound is not None:
         resolved = bound["resolved_design_context"]
         return resolve_generation_design(store, document, page_entry, recipe_ref=bound["recipe_ref"],
-            design_policy="design_policy" in resolved, asset_inputs="asset_inputs" in resolved)
+            **frozen_design_options(resolved))
     return resolve_page_design(store, document, page_entry)
 
 

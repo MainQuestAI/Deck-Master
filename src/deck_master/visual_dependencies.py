@@ -71,7 +71,7 @@ def visual_task_inputs_current(store, document, task, *, read_snapshot=None):
         if target is not None and any(entry.get("blueprint") != target for entry in document["pages"] if entry["page_id"] in task["scope_pages"]):
             return False
         if prepared and prepared.get("resolved_design_context"):
-            from .production import resolve_generation_design
+            from .production import resolve_generation_design, frozen_design_options
             recipe_ref = task.get("stage_request", {}).get("style_recipe_ref")
             for entry in document["pages"]:
                 if entry["page_id"] in task["scope_pages"]:
@@ -80,8 +80,7 @@ def visual_task_inputs_current(store, document, task, *, read_snapshot=None):
                     # before that fast path, including rejection/withdrawal.
                     if consumed_design(prepared["resolved_design_context"], store=store) != consumed_design(
                             resolve_generation_design(store, document, entry, recipe_ref=recipe_ref,
-                                design_policy="design_policy" in prepared["resolved_design_context"],
-                                asset_inputs="asset_inputs" in prepared["resolved_design_context"]), store=store):
+                                **frozen_design_options(prepared["resolved_design_context"])), store=store):
                         return False
         if task.get("kind") != "blueprint":
             for entry in document["pages"]:
