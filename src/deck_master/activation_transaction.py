@@ -375,53 +375,107 @@ def read(root, ident):
         raise _unavailable(f'cannot verify preserved transaction {path}: {exc}', ident) from exc
 
 
-def discover(root, *, repair_pointer=True):
-    """Inspect the bounded activation journal, including prepared-before-pointer."""
-    pointer = root / 'activation-pending.json'
-    _check_journal_directory(root)
-    # Captures survive cleanup crashes. An unrecognized captured replacement
-    # remains evidence and must not be silently treated as an absent pointer.
-    for captured in root.glob('.deck-master-pending-*.before'):
+def collect(root):
+    """Collect readable receipts and unreadable evidence without changing either.
+
+    Partial discovery never establishes that no request is pending. Consumers
+    may display trusted neighbours, but only strict discover authorizes recovery.
+    """
+    records, diagnostics = [], []
+    complete = True
+
+    def problem(path, reason, ident=None, *, incomplete=True):
+        nonlocal complete
+        complete = complete and not incomplete
+        diagnostics.append({'path': str(path), 'transaction_id': ident,
+                            'error_code': 'installation_recovery_unavailable', 'reason': reason})
+
+    def entries(path):
         try:
-            if not stat.S_ISREG(captured.lstat().st_mode):
-                raise ValueError('captured pending pointer is not regular')
-            value = json.loads(read_regular(captured)[0])
-            if value['schema_version'] not in VERSIONS:
-                raise ValueError('unknown captured pending version')
-            historical = read(root, transaction_id(value['transaction_id']))
-            if historical['state'] not in TERMINAL:
+            return sorted(path.iterdir())
+        except FileNotFoundError:
+            return []
+        except OSError as exc:
+            problem(path, 'cannot enumerate installation evidence: ' + str(exc))
+            return []
+
+    try:
+        _check_journal_directory(root)
+    except Failure as exc:
+        problem(root, str(exc))
+        return {'records': [], 'diagnostics': diagnostics, 'discovery_complete': False,
+                'recovery_blocked': True, 'unfinished_transaction_ids': [],
+                'pending': {'state': 'unknown', 'transaction_id': None, 'pointer_transaction_id': None}}
+    for path in entries(root / 'transactions/activation'):
+        if not path.name.endswith('.json'):
+            continue
+        try:
+            records.append(read(root, path.stem))
+        except Failure as exc:
+            problem(path, str(exc), path.stem)
+    by_id = {record['transaction_id']: record for record in records}
+
+    def pointer_id(path):
+        value = json.loads(read_regular(path)[0])
+        if value['schema_version'] not in VERSIONS:
+            raise ValueError('unknown pending version')
+        ident = transaction_id(value['transaction_id'])
+        if ident not in by_id:
+            raise ValueError('pending pointer references an unverifiable journal: ' + ident)
+        return ident
+
+    # Captures are retained evidence, including after a pending-clear crash.
+    for captured in entries(root):
+        if not (captured.name.startswith('.deck-master-pending-') and captured.name.endswith('.before')):
+            continue
+        try:
+            ident = pointer_id(captured)
+            if by_id[ident]['state'] not in TERMINAL:
                 raise ValueError('captured pending pointer lacks a terminal receipt')
-        except (OSError, ValueError, KeyError, TypeError, Failure) as exc:
-            raise _unavailable(f'cannot verify preserved pending capture {captured}: {exc}') from exc
+        except (OSError, ValueError, KeyError, TypeError, AttributeError, Failure) as exc:
+            problem(captured, f'cannot verify preserved pending capture {captured}: {exc}')
     selected = None
-    if pointer.exists() or pointer.is_symlink():
+    pointer = root / 'activation-pending.json'
+    try:
+        pointer.lstat()
+    except FileNotFoundError:
+        pass
+    except OSError as exc:
+        problem(pointer, 'cannot verify preserved pending pointer: ' + str(exc))
+    else:
         try:
-            if pointer.is_symlink():
-                raise ValueError('pending pointer is a symlink')
-            value = json.loads(read_regular(pointer)[0])
-            if value['schema_version'] not in VERSIONS:
-                raise ValueError('unknown pending version')
-            selected = transaction_id(value['transaction_id'])
-        except (OSError, ValueError, KeyError, TypeError, Failure) as exc:
-            raise _unavailable(f'cannot verify preserved pending pointer: {exc}') from exc
-    active = []
-    for path in sorted((root / 'transactions/activation').glob('*.json')):
-        record = read(root, path.stem)
-        if record['state'] not in TERMINAL:
-            active.append(record)
+            selected = pointer_id(pointer)
+        except (OSError, ValueError, KeyError, TypeError, AttributeError, Failure) as exc:
+            problem(pointer, 'cannot verify preserved pending pointer: ' + str(exc))
+    active = [record['transaction_id'] for record in records if record['state'] not in TERMINAL]
     if len(active) > 1:
-        raise _unavailable('multiple unfinished installation records; preserve journals and inspect')
-    if selected:
-        original = read(root, selected)
-        if original['state'] in TERMINAL and repair_pointer:
-            # Completed JSON is authoritative even if pointer deletion failed.
-            try:
-                clear_pending(root, original)
-            except (OSError, ValueError):
-                pass
-        elif original['state'] not in TERMINAL and (not active or active[0]['transaction_id'] != selected):
-            raise _unavailable('pending pointer disagrees with installation journal', selected)
-    return active[0] if active else None
+        problem(root / 'transactions/activation', 'multiple unfinished installation records; preserve journals and inspect',
+                incomplete=False)
+    if selected and by_id[selected]['state'] not in TERMINAL and active != [selected]:
+        problem(pointer, 'pending pointer disagrees with installation journal', selected, incomplete=False)
+    pending = {'state': ('unknown' if diagnostics else 'verified' if active else 'terminal' if selected else 'none'),
+               'transaction_id': active[0] if len(active) == 1 else selected,
+               'pointer_transaction_id': selected}
+    return {'records': records, 'diagnostics': diagnostics, 'discovery_complete': complete,
+            'recovery_blocked': bool(diagnostics), 'unfinished_transaction_ids': active, 'pending': pending}
+
+
+def discover(root, *, repair_pointer=True):
+    """Require complete trusted discovery before any installation recovery."""
+    result = collect(root)
+    if result['recovery_blocked']:
+        first = result['diagnostics'][0]
+        raise _unavailable(first['reason'], first['transaction_id'])
+    by_id = {record['transaction_id']: record for record in result['records']}
+    selected = result['pending']['pointer_transaction_id']
+    if selected and by_id[selected]['state'] in TERMINAL and repair_pointer:
+        # Completed JSON is authoritative even if pointer deletion failed.
+        try:
+            clear_pending(root, by_id[selected])
+        except (OSError, ValueError):
+            pass
+    active = result['unfinished_transaction_ids']
+    return by_id[active[0]] if active else None
 
 
 def preserved_paths(record):
@@ -568,6 +622,124 @@ class Plan:
         return self.record
 
 
+def _ownership_problem(record, step):
+    """Read the same parent and inode-witness proof for status and recovery."""
+    try:
+        if parent_identity(Path(step['path'])) != step['parent_identity']:
+            return 'managed parent identity changed externally'
+        sources = [step['path']]
+        if step['prepared']:
+            sources.append(step['prepared']['path'])
+        if any(snapshot(Path(anchor['path'])) != anchor['identity']
+               for anchor in record.get('inode_anchors', []) if anchor['source'] in sources):
+            return 'persistent inode witness changed or disappeared'
+    except (OSError, ValueError) as exc:
+        return 'parent or inode witness cannot be verified: ' + str(exc)
+    return None
+
+
+def observe_step(record, step, *, direction='apply', projection=None):
+    """Pure phase observation; never update a step, journal, pointer or path.
+
+    A repeated path may currently belong to another action. Its projected phase
+    still verifies this action's own backup/preparation and ownership witnesses.
+    """
+    row = {'path': step['path'], 'state': 'conflict'}
+    try:
+        reason = _ownership_problem(record, step)
+        if reason:
+            return {**row, 'reason': reason}
+        actual = snapshot(Path(step['path']))
+        saved = snapshot(Path(step['backup']))
+        ready = snapshot(Path(step['prepared']['path'])) if step['prepared'] else None
+        row.update(actual=actual, backup=saved, prepared=ready)
+        before, after = step['before'], step['expected_after']
+        if projection == 'waiting':
+            if saved is None and ready == after:
+                return {**row, 'state': 'waiting'}
+        elif projection in ('superseded', 'deferred'):
+            if saved == before and ready is None:
+                return {**row, 'state': projection}
+        elif projection == 'restored':
+            if saved is None and ready in (None, after):
+                return {**row, 'state': 'restored'}
+        elif direction == 'restore':
+            if actual == before and saved is None and ready in (None, after):
+                return {**row, 'state': 'restored'}
+            if step['kind'] in ('remove', 'move') and actual is None and saved == before:
+                return {**row, 'state': 'applied'}
+            if step['prepared'] and saved == before and ready in (None, after):
+                if actual == after and ready is None:
+                    return {**row, 'state': 'applied'}
+                if actual is None:
+                    return {**row, 'state': 'backed_up'}
+        elif step['kind'] in ('remove', 'move'):
+            if actual is None and saved == before:
+                return {**row, 'state': 'applied'}
+            if actual == before and saved is None:
+                return {**row, 'state': 'ready'}
+        else:
+            if actual == after and ready is None and saved == before:
+                return {**row, 'state': 'applied'}
+            if actual == before and saved is None and ready == after:
+                return {**row, 'state': 'ready'}
+            if before is not None and actual is None and saved == before and ready == after:
+                return {**row, 'state': 'backed_up'}
+    except (OSError, ValueError) as exc:
+        return {**row, 'reason': 'current ownership cannot be verified: ' + str(exc)}
+    return {**row, 'reason': 'path/preparation/backup does not match a provable transaction state'}
+
+
+def observe_transaction(record):
+    """Observe the live action frontier, including reverse and repeated paths."""
+    if record['state'] in TERMINAL:
+        return [{'path': step['path'], 'state': 'historical'} for step in record['steps']], []
+    direction = 'restore' if record['state'] in ('compensating', 'recovery_conflict') else 'apply'
+    cursor = record.get('apply_cursor', -1)
+    groups = {}
+    for index, step in enumerate(record['steps']):
+        groups.setdefault(step['path'], []).append(index)
+    phases = []
+    for index, step in enumerate(record['steps']):
+        indices = groups[step['path']]
+        reached = [item for item in indices if item <= cursor]
+        projection = None
+        if direction == 'apply':
+            frontier = max(reached) if reached else indices[0]
+            if index < frontier:
+                projection = 'superseded'
+            elif index > frontier:
+                projection = 'waiting'
+        else:
+            remaining = [item for item in reached if record['steps'][item]['step_state'] != 'restored']
+            frontier = max(remaining) if remaining else min(reached) if reached else indices[0]
+            if index > cursor:
+                projection = 'waiting' if index != frontier else None
+                phase_direction = 'apply'
+            else:
+                phase_direction = 'restore'
+                if index < frontier:
+                    projection = 'deferred'
+                elif index > frontier:
+                    projection = 'restored'
+            phases.append(observe_step(record, step, direction=phase_direction, projection=projection))
+            continue
+        phases.append(observe_step(record, step, direction=direction, projection=projection))
+    conflicts = [phase for phase in phases if phase['state'] == 'conflict']
+    for watched in record.get('watched', []):
+        if watched['path'] in groups:
+            continue
+        try:
+            reason = _ownership_problem(record, {**watched, 'prepared': None})
+            if reason or snapshot(Path(watched['path'])) != watched['before']:
+                conflicts.append({'path': watched['path'], 'state': 'conflict',
+                                  'reason': reason or 'watched path differs from the frozen transaction'})
+        except (OSError, ValueError) as exc:
+            conflicts.append({'path': watched['path'], 'state': 'conflict',
+                              'reason': 'watched ownership cannot be verified: ' + str(exc)})
+    return phases, conflicts
+
+
 class Transaction:
     def __init__(self, root, record):
         self.root, self.record = root, record
@@ -585,17 +757,9 @@ class Transaction:
                                'backup': step['backup']})
 
     def check_parent(self, step):
-        try:
-            actual = parent_identity(Path(step['path']))
-        except OSError:
-            actual = None
-        if actual != step['parent_identity']:
-            self.conflict(step, 'managed parent identity changed externally')
-        sources = [step['path']]
-        if step['prepared']:
-            sources.append(step['prepared']['path'])
-        if not self.anchors_intact(*sources):
-            self.conflict(step, 'persistent inode witness changed or disappeared')
+        reason = _ownership_problem(self.record, step)
+        if reason:
+            self.conflict(step, reason)
 
     def anchors_intact(self, *sources):
         return all(snapshot(Path(anchor['path'])) == anchor['identity']
@@ -611,26 +775,10 @@ class Transaction:
             raise
 
     def inspect(self, step):
-        self.check_parent(step)
-        path, backup = Path(step['path']), Path(step['backup'])
-        actual, saved = snapshot(path), snapshot(backup)
-        before, after = step['before'], step['expected_after']
-        prepared = step['prepared']
-        ready = snapshot(Path(prepared['path'])) if prepared else None
-        # Ordering handles absent-before remove/move and completed rename windows.
-        if step['kind'] in ('remove', 'move'):
-            if actual is None and saved == before:
-                return 'applied'
-            if actual == before and saved is None:
-                return 'ready'
-        else:
-            if actual == after and ready is None and saved == before:
-                return 'applied'
-            if actual == before and saved is None and ready == after:
-                return 'ready'
-            if before is not None and actual is None and saved == before and ready == after:
-                return 'backed_up'
-        self.conflict(step, 'path/preparation/backup does not match a provable transaction state')
+        phase = observe_step(self.record, step)
+        if phase['state'] == 'conflict':
+            self.conflict(step, phase['reason'])
+        return phase['state']
 
     def apply(self, step):
         state = self.inspect(step)
@@ -654,12 +802,14 @@ class Transaction:
         checkpoint('applied', self.record, step)
 
     def restore(self, step):
-        self.check_parent(step)
+        phase = observe_step(self.record, step, direction='restore')
+        if phase['state'] == 'conflict':
+            self.conflict(step, phase['reason'])
         path, backup = Path(step['path']), Path(step['backup'])
-        actual, saved = snapshot(path), snapshot(backup)
+        actual, saved = phase['actual'], phase['backup']
         before, after = step['before'], step['expected_after']
         prepared = step['prepared']
-        ready = snapshot(Path(prepared['path'])) if prepared else None
+        ready = phase['prepared']
         # Restored path is the original inode; never accept equal bytes alone.
         if actual == before and saved is None:
             if prepared and ready not in (None, after):

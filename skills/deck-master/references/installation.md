@@ -106,6 +106,37 @@ available recovery choices, cleanup results and current installation observation
 It does not create locks, repair a pending pointer, dispatch an installation or
 turn a historical success receipt into a current health claim.
 
+Status collects each journal independently. An unreadable/corrupt/unsupported
+neighbour is returned in `diagnostics` and as an `unverifiable` transaction row;
+it does not hide a readable selected ID. A selected missing journal also returns
+an `unverifiable` row with its reason. `verification=verified` describes only that
+journal's structure, not permission to recover the installation.
+
+The additive `discovery_complete` field states whether all evidence was read;
+`recovery_blocked` also covers inconsistent pointers or multiple unfinished IDs.
+Any global uncertainty removes `available_actions` from all transaction rows.
+An absent selected ID does not make a completed directory scan incomplete, but
+its row is unverifiable and that selected status returns `recovery_blocked=true`.
+`pending.state=unknown` never means no pending request, even if the legacy
+`pending_transaction_id` is null. `verified` identifies one unfinished request
+from verified evidence; `terminal` identifies a stale pointer to a valid terminal
+receipt; only `none` establishes that complete discovery found no unfinished
+request or pending pointer. `pending.pointer_transaction_id` preserves the
+verified pointer identity separately from a journal-derived unfinished ID.
+
+Each action's additive `phase` is a pure observation shared with recovery:
+`ready`, `backed_up` or `applied`, plus reverse recovery and repeated-path
+frontiers (`restored`, `deferred`, `waiting`, `superseded`). A missing target after
+backup is valid only with the required backup, preparation, parent and witnesses.
+Missing proof or external replacement reports `conflict`; historical terminal
+actions report `historical` without comparing old paths to a later installation.
+Current ownership conflicts remove `resume`; `rollback` and `abandon` remain
+subject to the executor's full proof checks. A valid `backed_up` phase retains
+`resume` when discovery is trusted.
+Status is diagnostic even when it returns exit 0. Activate and every recover
+action still require complete globally trusted discovery; no force unlock is
+introduced by partial status results.
+
 `resume` uses the original frozen verb, release and Host root, even when the
 current `CODEX_HOME` differs. `rollback` reverses only this interrupted
 transaction's provably owned actions, in the original lock order. It is distinct

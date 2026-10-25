@@ -883,64 +883,64 @@ def rollback(prefix, *, register_host=True, transaction_id=None):
     return _activation(prefix, 'rollback', register_host=register_host, transaction_id=transaction_id)
 
 
-def _recovery_result(root, record):
+def _recovery_result(root, record, *, discovery=None):
     host = Path(record['request']['host_root']) if record['request']['register_host'] else None
     observed = _installation_observation(root, host)
-    abandoned = _abandoned_transactions(root)
+    abandoned = (_abandoned_transactions(root) if discovery is None else
+                 [item['transaction_id'] for item in discovery['records'] if item['state'] == 'abandoned'])
     if abandoned:
         observed.update(current_install_state='conflict', installation_requires_attention=True,
                         abandoned_transactions=abandoned)
     actions = ([] if record['state'] in journal.TERMINAL else
                ['rollback', 'abandon'] if record['state'] == 'recovery_conflict' else ['resume', 'rollback', 'abandon'])
+    if discovery is not None and discovery['recovery_blocked']:
+        actions = []
+    phases, current_conflicts = journal.observe_transaction(record)
+    if host is not None and record['state'] not in journal.TERMINAL:
+        try:
+            unchanged = _same_host_parent(record)
+        except (OSError, ValueError):
+            unchanged = False
+        if not unchanged:
+            current_conflicts.append({'path': str(host), 'reason': 'frozen Host parent or access chain changed'})
+    if current_conflicts and 'resume' in actions:
+        actions.remove('resume')
     return {'schema_version': 'installation_transaction_status.v1',
             'transaction_id': record['transaction_id'], 'transaction_state': record['state'],
-            'request': record['request'], 'conflicts': [*record.get('conflicts', []), *_current_conflicts(record)],
-            'actions': [{key: step[key] for key in ('step_id', 'kind', 'path', 'step_state', 'observed')}
-                        for step in record['steps']],
+            'verification': 'verified',
+            'request': record['request'], 'conflicts': [*record.get('conflicts', []), *current_conflicts],
+            'actions': [{**{key: step[key] for key in ('step_id', 'kind', 'path', 'step_state', 'observed')}, 'phase': phase}
+                        for step, phase in zip(record['steps'], phases)],
             'available_actions': actions, 'restoration_verified': record.get('restoration_verified', False),
             'abandonment': record.get('abandonment'), 'cleanup': record.get('cleanup', []), **observed}
 
 
-def _current_conflicts(record):
-    """Read finite ownership facts without changing the journal's phase."""
-    if record['state'] in journal.TERMINAL:
-        return []  # Later installations may legitimately replace historical paths.
-    expected = {}
-    parents = {}
-    for row in record.get('watched', []):
-        expected.setdefault(row['path'], []).append(row['before'])
-        parents[row['path']] = row['parent_identity']
-    for step in record['steps']:
-        expected.setdefault(step['path'], []).extend([step['before'], step['expected_after']])
-        parents[step['path']] = step['parent_identity']
-        expected.setdefault(step['backup'], []).extend([None, step['before']])
-        if step['prepared']:
-            expected.setdefault(step['prepared']['path'], []).extend([None, step['expected_after']])
-    for anchor in record.get('inode_anchors', []):
-        expected[anchor['path']] = [anchor['identity']]
-    conflicts = []
-    for name, identities in expected.items():
-        path = Path(name)
-        try:
-            actual = journal.snapshot(path)
-            if actual not in identities:
-                conflicts.append({'path': name, 'reason': 'current inode is outside the frozen transaction', 'actual': actual})
-            if name in parents and journal.parent_identity(path) != parents[name]:
-                conflicts.append({'path': name, 'reason': 'current parent differs from the frozen transaction'})
-        except (OSError, ValueError) as exc:
-            conflicts.append({'path': name, 'reason': 'current ownership cannot be verified: ' + str(exc)})
-    return conflicts
-
-
 def transaction_status(prefix, *, transaction_id=None):
-    """Read journal phases and conflicts without locks, cleanup or dispatch."""
+    """Read each journal independently; partial discovery never permits writes."""
     root = Path(prefix).resolve() / '.deck-master'
-    active = journal.discover(root, repair_pointer=False)
-    records = [journal.read(root, journal.transaction_id(transaction_id))] if transaction_id else [
-        journal.read(root, path.stem) for path in sorted((root / 'transactions/activation').glob('*.json'))]
+    discovery = journal.collect(root)
+    by_id = {record['transaction_id']: record for record in discovery['records']}
+    errors = {item['transaction_id']: item for item in discovery['diagnostics'] if item['transaction_id'] is not None}
+    selected = journal.transaction_id(transaction_id) if transaction_id else None
+    identities = [selected] if selected else sorted(by_id.keys() | errors.keys())
+    rows = []
+    for ident in identities:
+        if ident in by_id:
+            rows.append(_recovery_result(root, by_id[ident], discovery=discovery))
+        else:
+            problem = errors.get(ident) or {'transaction_id': ident, 'path': str(journal.record_path(root, ident)),
+                'error_code': 'installation_recovery_unavailable', 'reason': 'selected installation journal is absent or unverifiable'}
+            if ident not in errors:
+                discovery['diagnostics'].append(problem)
+            rows.append({'schema_version': 'installation_transaction_status.v1', 'transaction_id': ident,
+                         'transaction_state': 'unknown', 'verification': 'unverifiable',
+                         'reason': problem['reason'], 'conflicts': [], 'actions': [], 'available_actions': []})
     return {'schema_version': 'installation_transactions.v1', 'status': 'read_only',
-            'pending_transaction_id': active['transaction_id'] if active else None,
-            'transactions': [_recovery_result(root, record) for record in records]}
+            'pending_transaction_id': (discovery['unfinished_transaction_ids'][0]
+                                       if len(discovery['unfinished_transaction_ids']) == 1 else None),
+            'pending': discovery['pending'], 'discovery_complete': discovery['discovery_complete'],
+            'recovery_blocked': discovery['recovery_blocked'] or any(row['verification'] != 'verified' for row in rows),
+            'diagnostics': discovery['diagnostics'], 'transactions': rows}
 
 
 def recover_transaction(prefix, *, transaction_id, action, reason=None):

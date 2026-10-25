@@ -439,6 +439,18 @@ abandoned or force-unlocked. Confirmed temporary inode cleanup is limited to
 new transactions after durable completion/verified rollback; earlier namespaces,
 unconfirmed objects, replaced paths and backups remain preserved.
 
+Installation status collects readable journals and per-path unreadable
+diagnostics separately. A corrupt neighbour does not hide a readable selected
+ID; selecting the corrupt/missing record returns `verification=unverifiable`
+with its reason. Check `discovery_complete`, `recovery_blocked`, and
+`pending.state` before interpreting the old nullable `pending_transaction_id`.
+Unknown pending is not absence. Global uncertainty or multiple unfinished IDs
+removes every recovery choice; actual activation and recovery still require
+strict complete discovery. Action `phase` uses the recovery engine's pure
+parent/witness/backup/prepared observation, including legitimate `backed_up`
+and compensation windows. Old terminal actions remain historical after a later
+valid install. Reading status never repairs pointers or modifies the scene.
+
 Read the current request, scope, decisions, pause/revoke and completion before
 resuming Content/Design/Review. Do not restart an already completed sub-intent,
 refresh budget under a new operation ID, or restore old permissions with old

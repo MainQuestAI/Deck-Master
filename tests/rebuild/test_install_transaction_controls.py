@@ -232,8 +232,12 @@ def test_abandoned_record_requires_the_new_explicit_version(layout):
     record = load(prefix, ident)
     record['schema_version'] = 'activation_transaction.v1'
     path.write_text(json.dumps(record))
+    status = install.transaction_status(prefix, transaction_id=ident)
+    assert status['recovery_blocked'] and not status['discovery_complete']
+    row, = status['transactions']
+    assert row['verification'] == 'unverifiable' and 'invalid abandonment' in row['reason']
     with pytest.raises(InstallationTransactionError, match='invalid abandonment'):
-        install.transaction_status(prefix, transaction_id=ident)
+        install.recover_transaction(prefix, transaction_id=ident, action='abandon', reason='Version boundary')
 
 
 def test_new_install_after_abandon_still_exposes_unresolved_health(layout):
