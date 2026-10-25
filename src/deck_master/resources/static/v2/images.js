@@ -59,7 +59,12 @@ export class ImagePool {
     let released = false;
     return {ready: entry.ready, release: () => {
       if (released) return; released = true; entry.pins--; entry.touched = performance.now();
-      if (!entry.pins && (!entry.bitmap || entry.failed)) this.remove(entry);
+      // A gallery layout pass can synchronously release and reacquire the
+      // same immutable image. Retire after that pass, so its in-flight read
+      // remains shared; a real departure still cancels before the next task.
+      if (!entry.pins && (!entry.bitmap || entry.failed)) queueMicrotask(() => {
+        if (!entry.pins && (!entry.bitmap || entry.failed)) this.remove(entry);
+      });
     }};
   }
   async fetch(entry, url, asJSON, priority) {

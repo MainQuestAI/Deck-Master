@@ -371,5 +371,6 @@ def test_explicit_assembly_does_not_migrate_legacy_project(tmp_path):
     store = Store(project); before = store.read_current()
     with pytest.raises(OperationError) as error:
         stages.assemble(project, base_revision=store.current_revision_id(), operation_id=str(uuid.uuid4()))
-    assert error.value.error_code == 'migration_required'
+    assert error.value.error_code == 'stage_format_required'
+    assert error.value.payload()['error']['field'] == 'project'
     assert store.read_current() == before

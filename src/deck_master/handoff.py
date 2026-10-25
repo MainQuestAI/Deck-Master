@@ -77,10 +77,11 @@ def check_handoff(project_dir, *, file_path, purpose="review", notes_policy=None
             if not entry.get(slot):
                 gaps.append(f"{entry['page_id']}:missing_{slot}")
 
+    from .review import task_blocks_current_output
     pending = []
     for ref in document.get("tasks") or []:
         task = store.read_object_json(ref)
-        if task.get("status") in ("awaiting_host", "running"):
+        if task_blocks_current_output(task, store=store, document=document):
             pending.append({"task_id": task["task_id"], "kind": task["kind"], "status": task["status"]})
     if pending:
         gaps.append("pending_host_tasks")

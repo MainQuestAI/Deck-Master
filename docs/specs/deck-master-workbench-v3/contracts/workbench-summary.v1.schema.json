@@ -49,6 +49,7 @@
            "pending_count": {"type": "integer", "minimum": 0},
            "adopted_count": {"type": "integer", "minimum": 0},
            "kept_count": {"type": "integer", "minimum": 0},
+           "stale_count": {"type": "integer", "minimum": 0},
            "unreadable_count": {"type": "integer", "minimum": 0}
          }}
       ]
@@ -58,11 +59,12 @@
       "required": ["action_id", "kind", "page_ids", "layer", "reason_code", "source_refs", "enabled", "blocked_reason", "state", "revision_id"],
       "additionalProperties": false,
       "properties": {
+        "object_count": {"type": "integer", "minimum": 1},
         "action_id": {"type": "string", "pattern": "^[a-f0-9]{32}$"},
         "kind": {"enum": ["verify_execution", "inspect_failure", "replan", "compare_candidates", "reconcile_inputs", "prepare_stage", "refresh_stage", "handoff", "review_results", "review_quality"]},
         "page_ids": {"type": "array", "items": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"}, "uniqueItems": true},
         "layer": {"enum": ["blueprint", "svg", "svg_preview", "ppt_preview", "pptx", null]},
-        "reason_code": {"enum": ["unknown_calls_recorded", "running_task_stale", "running_task_unclaimed", "task_failed", "task_unreadable", "task_superseded", "candidate_pending", "content_needs_reconciliation", "stage_missing", "stage_basis_changed", "task_awaiting_host", "task_results_ready", "quality_reviews_recorded"]},
+        "reason_code": {"enum": ["dependency_basis_changed", "dependencies_unverifiable", "unknown_calls_recorded", "running_task_stale", "running_task_unclaimed", "task_failed", "task_unreadable", "task_superseded", "candidate_pending", "content_needs_reconciliation", "stage_missing", "stage_basis_changed", "task_awaiting_host", "task_results_ready", "quality_reviews_recorded"]},
         "source_refs": {"type": "array", "items": {"$ref": "#/$defs/ref"}},
         "enabled": {"type": "boolean"},
         "blocked_reason": {"enum": [null, "candidate_unreadable"]},

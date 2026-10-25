@@ -14,7 +14,7 @@ from .snapshots import load_snapshot
 from .store import ConflictError, Store, _validate_operation_id
 
 PROTOCOL = "generation.v1"
-CAPABILITIES = ["generation_request_freeze", "attempt_binding", "native_tool_observation", "content_requirements_v1"]
+CAPABILITIES = ["generation_request_freeze", "attempt_binding", "native_tool_observation", "content_requirements_v1", "settled_image_reuse_v1"]
 
 
 class GenerationError(TypedServiceError):
@@ -77,6 +77,11 @@ def prepared_input(store, document, task):
             "parameters": {"transparent_background": False} if design.get("content_requirements") else {}, "constraints": {},
             "basis": {"project_id": document["project_id"], "revision_id": dispatched["revision_id"],
                       "produced_against": task["produced_against"]}}
+    if "asset_inputs" in design:
+        for image in design["asset_inputs"]["images"]:
+            attachment = {"file": copy.deepcopy(image["file"]), "role": "reference"}
+            if attachment not in result["references"]:
+                result["references"].append(attachment)
     recipe_ref = task.get("stage_request", {}).get("style_recipe_ref")
     if recipe_ref:
         result["style_recipe_ref"] = copy.deepcopy(recipe_ref)
@@ -105,11 +110,13 @@ def _read_owned(store, task, field, object_id):
     raise _error("generation_object_not_found", key, "object is not referenced by this task")
 
 
-def show(project_dir, *, request_id=None, attempt_id=None, revision=None):
+def show(project_dir, *, request_id=None, attempt_id=None, revision=None, explain_reassociation=False):
     store = Store(project_dir)
     document = load_snapshot(store, revision)
     if bool(request_id) == bool(attempt_id):
         raise _error("generation_request_invalid", "id", "select one request or attempt")
+    if explain_reassociation and not attempt_id:
+        raise _error("generation_request_invalid", "attempt_id", "reassociation diagnostics require an existing attempt")
     field = "generation_requests" if request_id else "generation_attempts"
     for task_ref in document["tasks"]:
         task = store.read_object_json(task_ref)
@@ -126,8 +133,48 @@ def show(project_dir, *, request_id=None, attempt_id=None, revision=None):
         if attempt_id:
             result["call"] = copy.deepcopy(next(c for c in task["call_allowances"] if c["allowance_id"] == obj["allowance_id"]))
             result["observations"] = [store.read_object_json(r) for r in obj["observations"]]
+            if explain_reassociation:
+                result['cross_execution_diagnostic'] = _reassociation_diagnostic(
+                    task, obj, result['call'], document['revision_id'], historical=revision is not None)
         return result
     raise _error("generation_object_not_found", "id", "object is not in this committed snapshot")
+
+
+def _reassociation_diagnostic(task, attempt, call, revision_id, *, historical):
+    """Explain unsupported transfer from fixed facts; never inspect a B event.
+
+    No collector, provider, current authorization query or persisted object is
+    involved. A successful read is not a successful association/preflight.
+    """
+    return {
+        'status': 'unsupported',
+        'association_ready': False,
+        'adoption_ready': False,
+        'fact_scope': 'historical_snapshot' if historical else 'selected_snapshot',
+        'revision_id': revision_id,
+        'current_authority_checked': False,
+        'current_budget_checked': False,
+        'facts': {'task_id': task['task_id'], 'task_status': task['status'],
+                  'attempt_id': attempt['attempt_id'], 'execution_ref': attempt['execution_ref'],
+                  'request_ref': attempt['request_ref'], 'allowance_id': attempt['allowance_id'],
+                  'call_state': call['state'], 'evidence_level': call.get('evidence_level'),
+                  'registered_invocation_ref': call.get('invocation_ref'),
+                  'observation_count': len(attempt['observations']),
+                  'output_count': len(attempt['output_refs'])},
+        'proof_obligations': [
+            {'code': 'original_execution_send_disposition', 'verification': 'not_established',
+             'detail': 'Recorded call state is retained. No controller-fenced not-sent proof is evaluated; unknown/in_flight is not absence of a send.'},
+            {'code': 'other_execution_original_event', 'verification': 'not_evaluated',
+             'detail': 'No other execution event, original output or exact frozen input comparison was inspected by this read.'},
+            {'code': 'authenticated_job_handoff', 'verification': 'unsupported',
+             'detail': 'The current consumer has no authenticated cross-execution handoff/fence contract.'},
+            {'code': 'single_consumption_ownership', 'verification': 'not_established',
+             'detail': 'Settlement guards stable invocation uniqueness within a project. Registry event digests are in memory; cross-project, aliased or unidentified consumption is not ruled out.'},
+            {'code': 'current_adoption_authority', 'verification': 'not_evaluated',
+             'detail': 'Snapshot task/call facts do not check current authority, target freshness or budget, and never grant adoption.'},
+        ],
+        'next_action': 'Preserve both execution and consumption facts. Single-call handoff and unregistered external B still require the missing authenticated send/handoff/ownership interface. Separately, generation_result.reuse_from supports explicitly authorized same-project settled native-image reuse for new capable non-trial Tasks, retaining both call ledgers; it is not a handoff or a refund. Do not repeat a call or relabel a selector on the strength of this read.',
+    }
 
 
 def _validate_input(store, document, task, value):
@@ -212,7 +259,7 @@ def _freeze(store, *, task_id, input, base_revision, operation_id):
     return response
 
 
-def begin_attempt(store, document, task, allowance_id, execution_ref, request_id):
+def begin_attempt(store, document, task, allowance_id, execution_ref, request_id, *, replay_only=False):
     check_host(task)
     if not request_id:
         raise _error("generation_request_required", "request_id", "freeze and bind a request before calling the tool")
@@ -221,10 +268,15 @@ def begin_attempt(store, document, task, allowance_id, execution_ref, request_id
         raise _error("generation_binding_conflict", "request_id", "request basis is no longer current", conflict=True)
     for ref in task.get("generation_attempts") or []:
         old = store.read_object_json(ref)
+        validate_schema("generation_attempt", old)
+        if old["project_id"] != document["project_id"] or old["task_id"] != task["task_id"]:
+            raise _error("generation_binding_conflict", "attempt_id", "attempt belongs to another project or task", conflict=True)
         if old["allowance_id"] == allowance_id:
             if old["request_ref"] != request_ref or old["execution_ref"] != execution_ref:
                 raise _error("generation_binding_conflict", "request_id", "this allowance already began a different attempt", conflict=True)
             return task, old, ref
+    if replay_only:
+        raise _error("generation_binding_conflict", "attempt_id", "in-flight allowance has no committed attempt", conflict=True)
     attempt = {"schema_version": "generation_attempt.v1", "attempt_id": "attempt-" + uuid.uuid4().hex,
                "task_id": task["task_id"], "project_id": document["project_id"], "request_ref": request_ref,
                "allowance_id": allowance_id, "execution_ref": execution_ref, "started_at_ms": time.time_ns() // 1000000,
@@ -380,12 +432,18 @@ def comparison(request, observation):
 
 
 def adoption_binding(store, document, task, envelope, staged):
+    for spec in envelope.get("artifact_specs") or []:
+        if "generation_reuse" in (spec.get("provenance") or {}):
+            raise _error("generation_binding_conflict", "provenance/generation_reuse", "only the receiver can create a reuse association")
     if not is_new(task):
         if envelope.get("generation_result"):
             raise _error("host_protocol_unsupported", "generation_result", "old tasks cannot claim a new generation binding")
         return None
     check_host(task)
     binding = envelope.get("generation_result")
+    if isinstance(binding, dict) and "reuse_from" in binding:
+        from .generation_reuse import adoption_binding as reuse_binding
+        return reuse_binding(store, document, task, envelope, staged)
     if not isinstance(binding, dict) or set(binding) != {"request_id", "attempt_id"}:
         raise _error("generation_attempt_required", "generation_result", "result must bind one request and attempt")
     attempt, attempt_ref = _read_owned(store, task, "generation_attempts", binding["attempt_id"])
@@ -423,4 +481,8 @@ def bind_artifact(store, artifact, binding):
     artifact["provenance"].update(generation_request=binding["request_ref"], generation_attempt=binding["attempt_ref"],
                                   invocation_ref=observation["invocation_ref"], generated_from_page=binding["request"]["input"]["page"]["page_ref"],
                                   submitted_prompt=store.put_blob(observation["submitted"]["prompt"].encode("utf-8"), ext="txt"))
+    if binding.get("reuse"):
+        if artifact['file'] != binding['reuse']['file'] or artifact['media_type'] != 'image/png':
+            raise _error('generation_reuse_invalid', 'artifact/file', 'reuse must retain the exact original PNG Ref and media type')
+        artifact["provenance"]["generation_reuse"] = store.put_json_object(binding["reuse"])
     return artifact

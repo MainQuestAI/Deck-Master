@@ -68,9 +68,6 @@ def _artifact(store, data, ext, media, *, original=None):
 def import_reference(project, *, data=None, file=None, base_revision, operation_id):
     operations.validate_id(operation_id, new=True)
     from . import eligibility
-    gate_store = Store(project)
-    eligibility.guard(gate_store, gate_store.load_document(), "asset.import",
-                      context={"targets": {"layers": ["design"]}})
     if data is None:
         source = Path(file).expanduser()
         if not source.is_file() or source.stat().st_size > MAX_BYTES:
@@ -85,6 +82,8 @@ def import_reference(project, *, data=None, file=None, base_revision, operation_
         recovered = operations.recover(store, operation_id, digest)
         if recovered:
             return recovered
+        eligibility.guard(store, doc, "asset.import",
+                          context={"targets": {"layers": ["design"]}})
         if doc['revision_id'] != base_revision:
             fail('base_revision', 'project changed; preserve selected file and reload', conflict=True)
         if not store.workbench_protocol_required(doc):

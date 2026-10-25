@@ -22,11 +22,29 @@ from test_rc3_native_image_bridge import SyntheticController
 from test_rc3_notes_visual_inputs import enf, _seed_imported_plan
 
 
+def settle_preproduction(store, *, seed):
+    """Reuse applicable fidelity evidence; actual rechecks retain frozen owners."""
+    from deck_master import content_review
+    from rc3_fixtures import settle_fidelity_review
+    document = store.load_document()
+    page_ids = document['collaboration']['request']['scope']['page_ids']
+    pointer = store.read_current()
+    status = content_review.preproduction_status(store, document, page_ids=page_ids)
+    assert store.read_current() == pointer
+    assert status['requirement'] == 'fidelity_only'
+    if status['status'] != 'pass':
+        settle_fidelity_review(store.project_root, page_ids=page_ids,
+            execution_ref='L1-synthetic-fidelity-' + seed, scenario=seed)
+    result = content_review.preproduction_status(store, store.load_document(), page_ids=page_ids)
+    assert result['status'] == 'pass'
+    assert not result['missing_units'] and not result['blocking_findings']
+
+
 def project(tmp_path):
     path, store = enf._project(tmp_path)
     _seed_imported_plan(store)
     enf._start(path, store)
-    enf._settle_preproduction(store, seed="rc3-restyle-l1")
+    settle_preproduction(store, seed="rc3-restyle-l1")
     grant = enf._grant(path, store, actions=("style.propose", "design.update", "asset.import", "page.edit",
         "change.commit", "task.start", "task.cancel", "call.begin", "result.accept", "candidate.adopt", "allowance.allocate"),
         max_external_calls=2, max_candidate_count=2)
@@ -188,7 +206,12 @@ def test_restyle_uses_target_first_then_ordered_original_jpeg_and_png_through_fr
             base_revision=store.current_revision_id(), operation_id=str(uuid.uuid4()))
     assert store.read_current() == before
     original_pages = copy.deepcopy(store.load_document()["pages"])
-    _, sent = candidate(path, store, task)
+    candidate_id, sent = candidate(path, store, task)
+    detail = candidates.show(path, candidate_id=candidate_id)
+    assert detail["references"] == expected
+    assert [row["file"] for row in detail["reference_sources"]] == [row["file"] for row in expected[1:]]
+    assert store.read_object_bytes(detail["reference_sources"][0]["file"]) == jpeg_raw
+    assert store.read_object_bytes(detail["reference_sources"][1]["file"]) == png_raw
     frozen, attempt, controller, _ = sent
     assert frozen["input"] == prepared
     assert controller.claims["arguments"]["referenced_image_paths"] == [str(store.project_root / item["file"]["path"]) for item in expected]
@@ -247,7 +270,7 @@ def test_consumed_font_and_page_parameters_alone_control_task_freshness(tmp_path
     assert generation.prepared_input(store, doc, current) == frozen_before
     assert allowance_states(store) == ["reserved"]
     if expected:
-        enf._settle_preproduction(store, seed="rc3-restyle-current-snapshot-" + mutation)
+        settle_preproduction(store, seed="rc3-restyle-current-snapshot-" + mutation)
         service.task_start(path, task_id=task["task_id"], execution_ref="synthetic-current-style",
             supported_protocols=[generation.PROTOCOL], capabilities=task["required_capabilities"])
     else:
@@ -279,7 +302,7 @@ def test_scope_replacement_refuses_outside_page_dispatch_without_reservations(tm
     doc = store.load_document()
     enf._start(path, store, operation_id="restyle-scope-replace", replace_request_id=doc["collaboration"]["request"]["request_id"],
                scope=enf._scope(page_ids=["p1"]))
-    enf._settle_preproduction(store, seed="restyle-scope-current")
+    settle_preproduction(store, seed="restyle-scope-current")
     enf._grant(path, store, actions=("change.commit", "task.start", "call.begin", "result.accept"),
                scope=enf._scope(page_ids=["p1"]), operation_id="restyle-scope-grant", max_external_calls=1)
     before = store.read_current()

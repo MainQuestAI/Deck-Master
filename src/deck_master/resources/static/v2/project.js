@@ -49,8 +49,17 @@ export class Project {
   // Bind lists to the supplied projection. A fallback summary without an etag
   // must not inherit the previous work surface's personal-reading snapshot.
   readingQuery(summary=this.summary){const etag=summary?.reading_etag;return this.health.ui_capabilities?.includes('result_reading.v1')&&etag?'&'+new URLSearchParams({personal:'1',reading_etag:etag}):'';}
+  async readControl(fresh = false) {
+    // Navigation after a write waits for the previous read, then reads anew.
+    // Passive refreshes share the in-flight request instead of queuing more.
+    if (fresh && this.controlRequest) await this.controlRequest.catch(() => {});
+    if (!this.controlRequest) {
+      this.controlRequest = get('/api/project').finally(() => { this.controlRequest = null; });
+    }
+    return this.controlRequest;
+  }
   async start() {
-    const [info, summary, state] = await Promise.all([get('/api/project'), get(this.summaryURL()), get('/api/ui-state')]);
+    const [info, summary, state] = await Promise.all([this.readControl(), get(this.summaryURL()), get('/api/ui-state')]);
     this.info = info; this.latest = summary; this.returnTo = state.record?.position;
     if (this.health.ui_capabilities?.includes('operations.v1')) this.business = new BusinessOperations(this);
     this.root.addEventListener('draft-state-changed', () => {
@@ -69,32 +78,39 @@ export class Project {
     addEventListener('online', () => this.setNotice('网络已恢复。可核实草稿保存，或重新读取当前工作面。', true));
     await this.loadRoute(this.route, false);
     if (this.health.ui_capabilities?.includes('run_desk.v1')) {
-      this.summaryPoll = new SummaryPoll(signal => get(this.summaryURL(), {signal}), value => {
-        if (value.project_id !== this.info.project_id) throw new Error('服务项目已变化，请重新打开项目。');
-        this.latest = value;
-        if (this.health.ui_capabilities?.includes('collaboration.v1')) this.refreshControl();
-        const count = value.task_counts.awaiting_host || 0;
-        if (this.pendingButton) {
-          this.pendingButton.textContent = `待交接 ${count}`;
-          this.pendingButton.setAttribute('aria-label', `查看待交接任务，${count} 项`);
-        }
-        this.syncState(value.revision_id !== this.route.revision ? '项目有新状态。当前页面仍按顶栏版本阅读。' : '');
-        this.root.dispatchEvent(new CustomEvent('summary-refreshed', {detail: value}));
-      }, error => this.syncState('运行状态同步中断。' + readableError(error) + ' 固定阅读与草稿仍保留。', {error:true}), this.latest);
+      this.summaryPoll = new SummaryPoll(signal => get(this.summaryURL(), {signal}),
+        (value, isCurrent) => this.applySummary(value, isCurrent),
+        error => this.syncState('运行状态同步中断。' + readableError(error) + ' 固定阅读与草稿仍保留。', {error:true}), this.latest);
       this.summaryPoll.start();
       this.root.addEventListener('business-state-changed', () => this.summaryPoll.refresh());
       addEventListener('pagehide', () => this.summaryPoll.stop());
       addEventListener('pageshow', event => { if (event.persisted) { this.summaryPoll.start(); this.summaryPoll.refresh(); } });
     }
   }
-  async refreshControl() {
+  async applySummary(value, isCurrent) {
+    const routeGeneration = this.generation;
+    const current = () => isCurrent() && routeGeneration === this.generation && !this.navigationPending;
+    if (!current()) return;
+    if (value.project_id !== this.info.project_id) throw new Error('服务项目已变化，请重新打开项目。');
+    if (this.health.ui_capabilities?.includes('collaboration.v1')) await this.refreshControl(current);
+    if (!current()) return;
+    this.latest = value;
+    const count = value.task_counts.awaiting_host || 0;
+    if (this.pendingButton) {
+      this.pendingButton.textContent = `待交接 ${count}`;
+      this.pendingButton.setAttribute('aria-label', `查看待交接任务，${count} 项`);
+    }
+    this.syncState(value.revision_id !== this.route.revision ? '项目有新状态。当前页面仍按顶栏版本阅读。' : '');
+    this.root.dispatchEvent(new CustomEvent('summary-refreshed', {detail: value}));
+  }
+  async refreshControl(isCurrent = () => true) {
     // Navigation already reads the same control facts. Do not queue passive
     // reads behind it while the previous work surface is still displayed.
-    if (this.navigationPending) return;
+    if (this.navigationPending || !isCurrent()) return;
     const serial = this.controlRead = (this.controlRead || 0) + 1;
     try {
-      const info = await get('/api/project');
-      if (serial !== this.controlRead || info.project_identity !== this.info.project_identity) return;
+      const info = await this.readControl();
+      if (!isCurrent() || serial !== this.controlRead || info.project_identity !== this.info.project_identity) return;
       this.info = info;
       // Refresh only the control facts. Draft editors, fixed canvases and open
       // decisions keep their DOM and confirmed basis across another window's
@@ -113,6 +129,7 @@ export class Project {
     this.navigationHash = requestedHash;
     this.navigationDestination = requestedRoute ? routeHash(this.info, requestedRoute) : requestedHash;
     this.navigationPending = true;
+    this.navigationRoute = null;
     // Keep the old snapshot visible, but do not accept actions against it while
     // the requested version is loading. Otherwise its handlers can supersede
     // the new read with an old revision or lose a subarea choice on remount.
@@ -123,7 +140,11 @@ export class Project {
     if (this.navigationStatus) this.navigationStatus.hidden = false;
     announce('正在读取工作面');
     try {
-      const [info, latest] = await Promise.all([get('/api/project'), get(this.summaryURL())]);
+      // Sidebar navigation can supersede this read. Carry its requested
+      // version (including "current"/null), not the still-visible snapshot.
+      // Keep display, permissions and writes on committed state until verified.
+      this.navigationRoute = requestedRoute || readRoute(this.info, null, {...this.latest, revision_id:null}, requestedHash);
+      const [info, latest] = await Promise.all([this.readControl(true), get(this.summaryURL())]);
       if (info.project_identity !== this.info.project_identity) throw new Error('项目身份已改变。旧输入仍保留，请从项目列表重新打开。');
       const route = requestedRoute || readRoute(this.info, null, latest, requestedHash);
       route.revision ||= latest.revision_id;
@@ -187,6 +208,7 @@ export class Project {
     } finally {
       if (serial === this.generation) {
         this.navigationPending = false;
+        this.navigationRoute = null;
         this.navigationHash = null; this.navigationDestination = null;
         if (this.navigationStatus) this.navigationStatus.hidden = true;
         if (this.main) { this.main.inert = false; this.main.removeAttribute('aria-busy'); }
@@ -195,13 +217,14 @@ export class Project {
     }
   }
   go(patch) {
-    const route = {...this.route, ...patch};
+    const base = this.navigationPending && this.navigationRoute ? this.navigationRoute : this.route;
+    const route = {...base, ...patch};
     if(patch.surface&&patch.surface!=='content'){route.proposal=null;route.compare_proposal=null;}
     if(patch.surface&&patch.surface!=='page')route.atom=null;
     if((patch.surface||patch.review_id===null)&&!('review_id' in patch)){route.review_sha256=null;route.finding=null;route.finding_index=null;}
-    if(patch.review_id&&patch.review_id!==this.route.review_id&&!('review_sha256' in patch)){route.review_sha256=null;route.finding=null;route.finding_index=null;}
+    if(patch.review_id&&patch.review_id!==base.review_id&&!('review_sha256' in patch)){route.review_sha256=null;route.finding=null;route.finding_index=null;}
     if(patch.review_id===null){route.review_sha256=null;route.finding=null;route.finding_index=null;}
-    if (patch.surface && patch.surface !== 'overview' || patch.revision && patch.revision !== this.route.revision) route.overview_preferences = null;
+    if (patch.surface && patch.surface !== 'overview' || patch.revision && patch.revision !== base.revision) route.overview_preferences = null;
     // A plain surface switch starts that surface on its own first screen: no task
     // detail from an earlier visit, and no page layer that another surface could
     // mistake for "the user asked for delivery".

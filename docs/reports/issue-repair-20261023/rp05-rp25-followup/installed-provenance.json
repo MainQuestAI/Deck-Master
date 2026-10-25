@@ -1,0 +1,9 @@
+{
+  "module": "/tmp/rp25-2e1c5ce4-match/installed/deck_master/__init__.py",
+  "started_utc": "2026-10-23T04:31:40.078368+00:00",
+  "completed_utc": "2026-10-23T04:32:03.785645+00:00",
+  "images_sha256": "561028e66e5633926c83e97ab2c76469826912d4bd055629cdb0cd9669a09032",
+  "synthetic_pages": 30,
+  "model_calls": 0,
+  "errors": []
+}

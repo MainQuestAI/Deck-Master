@@ -15,6 +15,7 @@ from w07_synthetic import SyntheticW07
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__); parser.add_argument('--out', type=Path, required=True)
+    parser.add_argument('--chromium-executable', default=None)
     args = parser.parse_args(); args.out.mkdir(parents=True, exist_ok=False)
     flow = SyntheticW07(args.out); flow.dispatch(stage='reconstruct')
     server = WorkbenchServer(flow.project); requests = []; active = set(); peaks = []; errors = []; checks = []
@@ -24,16 +25,16 @@ def main():
     try:
         url = server.start()
         with sync_playwright() as pw:
-            browser = pw.chromium.launch(); context = browser.new_context()
+            browser = pw.chromium.launch(executable_path=args.chromium_executable); context = browser.new_context()
             context.add_init_script("Object.defineProperty(document, 'hidden', {get:()=>window.__testHidden===true});")
             page = context.new_page(); page.on('pageerror', lambda error: errors.append(str(error)))
             def started(request):
-                if request.url.endswith('/api/view/summary'):
+                if request.url.split('?', 1)[0].endswith('/api/view/summary'):
                     requests.append({'time': time.monotonic(), 'url': request.url}); active.add(request); peaks.append(len(active))
             page.on('request', started); page.on('requestfinished', lambda request: active.discard(request)); page.on('requestfailed', lambda request: active.discard(request))
             page.goto(url + 'v2/'); page.get_by_role('button', name='整稿画廊', exact=True).click()
-            page.wait_for_function('()=>Boolean(document.querySelector(".gallery-card"))').dispose()
-            page.locator('.gallery-open').first.click(); page.wait_for_function('()=>Boolean(document.querySelector(".page-workbench"))').dispose()
+            page.wait_for_function('()=>Boolean(document.querySelector(".slide-tile"))').dispose()
+            page.locator('.slide-cover').first.click(); page.wait_for_function('()=>Boolean(document.querySelector(".page-workbench"))').dispose()
             for surface in ['page', 'runs']:
                 if surface == 'runs':
                     page.get_by_role('button', name='任务与交付', exact=True).click()
@@ -48,11 +49,11 @@ def main():
             # Delay the response to keep one poll in flight across many focus events.
             def delay(route):
                 response = route.fetch(); time.sleep(.8); route.fulfill(response=response)
-            page.route('**/api/view/summary', delay)
+            page.route('**/api/view/summary*', delay)
             page.evaluate("for(let i=0;i<8;i++)window.dispatchEvent(new Event('focus'))")
             page.wait_for_timeout(2500)
-            check('focus_burst_keeps_one_summary_inflight', max(peaks or [0]) <= 1)
-            page.unroute('**/api/view/summary', delay)
+            check('focus_burst_keeps_one_summary_inflight', bool(peaks) and max(peaks) == 1)
+            page.unroute('**/api/view/summary*', delay)
             check('no_browser_errors', not errors)
             (args.out / 'checks.json').write_text(json.dumps({'checks': checks, 'visibility': 'injected document.hidden flag with real DOM events', 'model_calls': 0, 'errors': errors, 'peak': max(peaks or [0])}, indent=2) + '\n')
             context.close(); browser.close()

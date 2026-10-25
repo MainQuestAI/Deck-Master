@@ -240,6 +240,8 @@ def _validate_usage_events(raw: dict[str, Any]) -> None:
 
 def _validate_content_envelope(raw: dict) -> None:
     """Validate nested product fields after call facts settle, before field access."""
+    if raw.get('generation_result') is not None and raw.get('kind') != 'blueprint':
+        raise EnvelopeError('(result)/generation_result', 'generation binding is only valid for blueprint Tasks')
     file_ids = {item['file_id'] for item in raw.get('files') or []}
     for index, spec in enumerate(raw.get('artifact_specs') or []):
         where = f'(result)/artifact_specs[{index}]'
@@ -252,6 +254,8 @@ def _validate_content_envelope(raw: dict) -> None:
         for slot in ('dependencies', 'derived_from', 'reference_regions', 'limitations'):
             if spec.get(slot) is not None and not isinstance(spec[slot], list):
                 raise EnvelopeError(where + '/' + slot, 'must be an array')
+        if isinstance(spec.get('provenance'), dict) and 'generation_reuse' in spec['provenance']:
+            raise EnvelopeError(where + '/provenance/generation_reuse', 'receiver-owned association cannot be supplied')
         if spec.get('provenance') is not None and not isinstance(spec['provenance'], dict):
             raise EnvelopeError(where + '/provenance', 'must be an object')
     for index, review in enumerate(raw.get('reviews') or []):
@@ -398,6 +402,13 @@ def _lookup_task(document: dict, task_id: str, store: Store) -> dict:
 
 
 def task_inputs_current(store, document, task):
+    if task.get("kind") == "review" and task.get("review_stage") == "original_image":
+        from .original_review import inputs_current
+        return inputs_current(store, document, task)
+    if task.get('kind') == 'review' and task.get('review_stage') == 'preproduction':
+        from .effective_requirements import task_requirements_current
+        if not task_requirements_current(store, document, task):
+            return False
     from .visual_dependencies import is_visual_task, visual_task_inputs_current
     if is_visual_task(task):
         return visual_task_inputs_current(store, document, task)
@@ -619,7 +630,9 @@ def _adopt_review(store: Store, review: dict) -> dict:
         old_findings = {f.get("finding_id"): f for f in prior.get("findings") or []}
         new_findings = {f.get("finding_id"): f for f in review.get("findings") or []}
         shared = old_findings.keys() & new_findings.keys()
-        if not shared:
+        # A prior clean judgment has no finding identity to carry forward.
+        # Existing findings still require explicit, validated closure below.
+        if old_findings and not shared:
             raise EnvelopeError("review/replaces", "no shared finding_id with the replaced review")
         from .editing import _current_artifact_digests
         from .review import finding_closed
@@ -802,6 +815,8 @@ def new_task(
     }
     if review_stage is not None:
         task['review_stage'] = review_stage
+        if review_stage == 'original_image':
+            task['required_capabilities'] = ['original_expression_review.v1']
     if intent is not None:
         task['intent'] = intent
     if input_digest is not None:
@@ -1359,6 +1374,12 @@ def _accept_result_locked(
                                                adapter_context=adapter_context)
         preproduction_receipts = [item['receipt']['receipt_ref'] for item in posture['reviewers']
                                   if item.get('receipt')]
+    elif stage == 'original_image':
+        from .original_review import validate_result
+        if review_receipt_selector is not None:
+            from .review_evidence import current_registry
+            adapter_context = current_registry().review_context(store, document, task, envelope, review_receipt_selector)
+        preproduction_receipts = validate_result(store, document, task, envelope, adapter_context=adapter_context)
     elif review_receipt_selector is not None:
         from .review_evidence import EvidenceRejected
         raise EvidenceRejected('review_receipt_selector', 'receipt selectors are only supported for preproduction review')
@@ -1495,6 +1516,9 @@ def _accept_result_locked(
         {"operation_id": operation_id, "kind": "task_update", "description": "", "read_set": []},
     )
     attach(new_document, plan_ref)
+    if generation_binding and generation_binding.get("reuse"):
+        from .models import require_writer
+        require_writer(new_document, "settled-image-reuse.v1")
     page_slots = {}
     for artifact in artifacts:
         if artifact.get("page_id"):
@@ -1734,9 +1758,6 @@ def call_begin(store: Store, *, task_id: str, allowance_id: str, execution_ref: 
     if task.get("kind") == "style_analyze":
         raise CallBlocked("call_allowances", "visual analysis permits zero image calls")
     from . import eligibility
-    eligibility.guard(store, document, "call.begin",
-                      context={"task": task, "allowance_id": allowance_id,
-                               "targets": {"page_ids": task.get("scope_pages") or []}})
     from .generation import is_new, check_host, begin_attempt
     check_host(task)
     if task.get("status") in ("cancelled", "superseded", "completed"):
@@ -1756,14 +1777,19 @@ def call_begin(store: Store, *, task_id: str, allowance_id: str, execution_ref: 
     if target.get("state") == "in_flight":
         if target.get("execution_ref") == execution_ref:
             if is_new(task):
-                _, attempt, ref = begin_attempt(store, document, task, allowance_id, execution_ref, request_id)
+                _, attempt, ref = begin_attempt(store, document, task, allowance_id, execution_ref, request_id, replay_only=True)
                 return {"status": "already_started", "task_id": task_id, "allowance_id": allowance_id,
                         "attempt_id": attempt["attempt_id"], "attempt_ref": ref, "request_id": request_id}
+            if request_id is not None:
+                raise EnvelopeError("request_id", "old tasks cannot bind generation requests")
             return {"status": "already_started", "task_id": task_id, "allowance_id": allowance_id}
         raise TaskConflict(
             f"(task {task_id})/{allowance_id}",
             "allowance already in flight under another execution",
         )
+    eligibility.guard(store, document, "call.begin",
+                      context={"task": task, "allowance_id": allowance_id,
+                               "targets": {"page_ids": task.get("scope_pages") or []}})
     if target.get("state") in ("consumed", "released", "unknown"):
         raise TaskConflict(
             f"(task {task_id})/{allowance_id}",
@@ -2074,8 +2100,10 @@ def reissue_changed_method_tasks(store):
         if task.get("change_binding"):
             from .changes import action_for_task, _plan_layers
             layers = _plan_layers({"actions": [action_for_task(store, document, task)]})
-        eligibility.guard(store, prospective, action, context={"targets": {
-            "page_ids": task.get("scope_pages") or [], "layers": layers}})
+        from .method_resources import is_content_candidate_task
+        eligibility.guard(store, prospective, action, context={
+            "candidate_count": int(is_content_candidate_task(task)), "count": 0 if is_content_candidate_task(task) else None,
+            "targets": {"page_ids": task.get("scope_pages") or [], "layers": layers}})
         replacement = copy.deepcopy(task)
         replacement.update(task_id=uuid.uuid4().hex[:12], operation_id=f"methods-{uuid.uuid4().hex[:12]}",
                            status="awaiting_host", execution_ref=None, result_refs=[], error=None,
@@ -2085,6 +2113,13 @@ def reissue_changed_method_tasks(store):
                                             if a.get("state") == "reserved"])
         for key in ("host_protocol", "execution_started_at", "generation_requests", "generation_attempts"):
             replacement.pop(key, None)
+        content_trial = is_content_candidate_task(task) and task['kind'] == 'repair'
+        legacy_content_contract = content_trial and binding.get('phase') != 'page_copy'
+        if binding and content_trial:
+            from .content_production import write_scope_for
+            scope = write_scope_for(store, document, 'page_copy', page_ids=task['scope_pages'])
+            scope.update(layers=['page_copy'], allow_page_membership_change=False)
+            binding = {**binding, 'phase': 'page_copy', 'write_scope': scope}
         if binding:
             replacement["collaboration_binding"] = collaboration_binding.build_binding(
                 store, document, phase=binding["phase"], executor_type=binding["executor_type"],
@@ -2102,6 +2137,12 @@ def reissue_changed_method_tasks(store):
         if (inherited and task['kind'] == 'compose'
                 and binding.get('phase') in ('design', 'production', 'delivery')):
             inherited = [mid for mid in inherited if mid != 'method-selection']
+        if legacy_content_contract and inherited:
+            # Remove obsolete Design defaults only. Preserve explicit resources;
+            # the normal selector must still reject ones outside Content scope.
+            from .method_resources import method_ids_for
+            obsolete_defaults = set(method_ids_for('repair'))
+            inherited = [mid for mid in inherited if mid not in obsolete_defaults]
         freeze_task_methods(replacement, selected_resource_ids=inherited)
         validate_task_semantics(replacement)
         prospective["tasks"].append(store.put_json_object(replacement))

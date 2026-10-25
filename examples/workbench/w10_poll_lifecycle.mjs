@@ -34,4 +34,86 @@ stale.resolve({task_counts: {running: 9}}); await flush(); assert.equal(seen.len
 pending.shift().resolve({task_counts: {running: 1}}); await flush(); assert.equal([...timers.values()][0].delay, 3000);
 poll.stop(); assert.equal(timers.size, 0); window.dispatchEvent(new Event('focus')); assert.equal(pending.length, 0);
 assert.equal(peak, 1); assert.equal(errors.length, 2);
-console.log(JSON.stringify({passed: true, checks: ['active_3s', 'idle_15s', 'failure_backoff_max_30s', 'single_inflight', 'focus_coalesced', 'hidden_pauses_aborts', 'visible_immediate', 'late_hidden_response_ignored', 'bfcache_old_generation_ignored', 'stop_removes_listeners']}));
+// A slow follow-up control read is part of the poll, not a detached workload.
+let releaseControl, followed = 0;
+const slow = new SummaryPoll(async () => ({task_counts:{running:1}}),
+  () => { followed++; return new Promise(resolve => { releaseControl = resolve; }); }, () => {}, {task_counts:{running:1}});
+slow.start(); await tick(3000);
+window.dispatchEvent(new Event('focus')); window.dispatchEvent(new Event('focus'));
+assert.equal(followed, 1); assert.equal(timers.size, 0);
+releaseControl(); await flush(); await tick(0);
+assert.equal(followed, 2); slow.stop(); releaseControl(); await flush();
+assert.equal(timers.size, 0);
+
+// Navigation must obtain post-write control facts without overlapping reads.
+const {Project} = await import('../../src/deck_master/resources/static/v2/project.js');
+let reads = [], inFlight = 0, controlPeak = 0;
+globalThis.fetch = path => new Promise(resolve => {
+  assert.equal(path, '/api/project');
+  controlPeak = Math.max(controlPeak, ++inFlight);
+  reads.push(value => { inFlight--; resolve({ok:true, json:async () => value}); });
+});
+const app = new Project({}, {});
+const first = app.readControl(), shared = app.readControl(), afterWrite = app.readControl(true);
+assert.equal(reads.length, 1);
+reads.shift()({revision_id:'before'});
+assert.equal((await first).revision_id, 'before');
+assert.equal((await shared).revision_id, 'before');
+await flush(); assert.equal(reads.length, 1);
+reads.shift()({revision_id:'after'});
+assert.equal((await afterWrite).revision_id, 'after');
+assert.equal(controlPeak, 1);
+const lifecycleResult = {passed: true, checks: ['active_3s', 'idle_15s', 'failure_backoff_max_30s', 'single_inflight', 'focus_coalesced', 'hidden_pauses_aborts', 'visible_immediate', 'late_hidden_response_ignored', 'bfcache_old_generation_ignored', 'stop_removes_listeners']};
+
+// RP-00 follow-up: route snapshots must fence the awaited control phase too.
+let releaseDeferred;
+const delayed = new SummaryPoll(async () => ({task_counts:{running:1}}),
+  () => new Promise(resolve => { releaseDeferred = resolve; }), () => {}, {task_counts:{running:1}});
+delayed.start(); await tick(3000);
+delayed.useSnapshot({task_counts:{completed:1}});
+releaseDeferred(); await flush();
+assert.equal(delayed.delay, 15000, 'late onValue must not replace the newer route interval');
+assert.equal([...timers.values()][0].delay, 15000);
+delayed.stop();
+
+// Exercise Project's actual async consumer, including its control assignment.
+for (const interrupt of ['route', 'stop', 'hide_resume']) {
+  document.hidden = false;
+  const root = new EventTarget(); const events = [], sync = [], banners = [];
+  root.addEventListener('summary-refreshed', event => events.push(event.detail));
+  const project = new Project(root, {ui_capabilities:['collaboration.v1']});
+  const initial = {project_id:'p', project_identity:'identity', revision_id:'initial'};
+  project.info = initial; project.route = {revision:'newer'}; project.latest = {revision_id:'initial'};
+  project.pendingButton = {textContent:'current pending', setAttribute() { throw new Error('stale pending update'); }};
+  project.syncState = value => sync.push(value);
+  project.controlSlot = {replaceChildren(...values) { banners.push(values); }};
+  let release;
+  project.readControl = () => new Promise(resolve => { release = resolve; });
+  const old = {project_id:'p', revision_id:'old', task_counts:{awaiting_host:9}};
+  const currentPoll = new SummaryPoll(async () => old,
+    (value, isCurrent) => project.applySummary(value, isCurrent), error => { throw error; }, old);
+  currentPoll.start(); await tick(3000); assert.equal(typeof release, 'function');
+  if (interrupt === 'route') {
+    project.generation++;
+    project.latest = {revision_id:'newer', task_counts:{completed:1}};
+    currentPoll.useSnapshot(project.latest);
+  } else if (interrupt === 'stop') currentPoll.stop();
+  else {
+    document.hidden = true; document.dispatchEvent(new Event('visibilitychange'));
+    document.hidden = false; document.dispatchEvent(new Event('visibilitychange'));
+  }
+  release({...initial, revision_id:'old-control'}); await flush();
+  assert.equal(project.info, initial, `${interrupt}: stale control must not publish`);
+  assert.equal(project.latest.revision_id, interrupt === 'route' ? 'newer' : 'initial');
+  assert.equal(project.pendingButton.textContent, 'current pending');
+  assert.equal(events.length, 0); assert.equal(sync.length, 0); assert.equal(banners.length, 0);
+  if (interrupt === 'hide_resume') {
+    // A visible refresh is still queued and can publish its own current facts.
+    project.pendingButton.setAttribute = () => {};
+    await tick(0);
+    release({...initial, revision_id:'fresh-control'}); await flush();
+    assert.equal(events.length, 1); assert.equal(project.info.revision_id, 'fresh-control');
+  }
+  currentPoll.stop(); assert.equal(timers.size, 0);
+}
+console.log(JSON.stringify({passed:true, checks:[...lifecycleResult.checks,'deferred_control_route_fenced','deferred_control_stop_fenced','hide_show_retires_old_callback','new_visible_refresh_recovers','new_snapshot_interval_preserved']}));

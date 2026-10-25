@@ -112,13 +112,15 @@ def _ref_pair(ref) -> tuple | None:
     return None
 
 
-def professional_policy(store, doc, *, selected_output=None) -> dict:
+def professional_policy(store, doc, *, selected_output=None, read_context=None) -> dict:
     """The single professional-evidence interpretation for delivery.
 
     Returns required/satisfied/human_signoff plus per-review diagnosis. When
     the policy switch is false, satisfied is trivially true and human_signoff
     false: delivery is not blocked, and no human endorsement is claimed.
     """
+    if read_context is not None:
+        read_context.require(store, doc)
     policy = doc.get('policy') or {}
     required = bool(policy.get('professional_review_required_for_delivery'))
     result = {
@@ -152,7 +154,7 @@ def professional_policy(store, doc, *, selected_output=None) -> dict:
     # The same artifact map the shared check summary uses: declared review
     # dependencies are validated against one currentness rule, never two.
     from .editing import _current_artifact_digests
-    artifacts = _current_artifact_digests(store, doc)
+    artifacts = dict(read_context.artifacts) if read_context is not None else _current_artifact_digests(store, doc)
     if selected_output and selected_output.get("file_sha256"):
         artifacts["artifact:pptx"] = selected_output["file_sha256"]
     # Replacement effectiveness (F02, PR107 round 2): recording a replacement

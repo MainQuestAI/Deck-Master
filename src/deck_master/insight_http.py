@@ -8,8 +8,8 @@ def route(project, path, query):
     from .method_library_view import resource
     if path.startswith('/api/method-library/resources/'):
         query_values = parse_qs(query, keep_blank_values=True)
-        if set(query_values) != {'catalog_digest', 'sha256'} or any(len(v) != 1 or not re.fullmatch('[a-f0-9]{64}', v[0]) for v in query_values.values()):
-            insight.fail('One catalog digest and resource hash required')
+        if set(query_values) not in ({'catalog_digest'}, {'catalog_digest', 'sha256'}) or any(len(v) != 1 or not re.fullmatch('[a-f0-9]{64}', v[0]) for v in query_values.values()):
+            insight.fail('One catalog digest and optional fixed resource hash required')
         return resource(unquote(path.removeprefix('/api/method-library/resources/')), **{k: v[0] for k, v in query_values.items()})
     routes = [
         (r'/api/tasks/([^/]+)/methods', insight.task_methods, {'revision', 'availability'}),

@@ -748,6 +748,15 @@
               },
               "layout_notes": {
                 "type": "string"
+              },
+              "layout_page_ids": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "description": "Scope of layout_notes only. Absent applies to all pages; empty applies to none."
               }
             },
             "required": [
@@ -892,7 +901,11 @@
             "rc3.v1",
             "rc3-entry.v1",
             "rc4-content.v1",
-            "method-catalog.v1"
+            "method-catalog.v1",
+            "design-policy.v1",
+            "asset-inputs.v1",
+            "original-review.v1",
+            "settled-image-reuse.v1"
           ]
         }
       },

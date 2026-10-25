@@ -334,8 +334,9 @@ def test_blueprint_dispatch_requires_scope_and_authorization(tmp_path):
     from test_rc3_notes_visual_inputs import _seed_imported_plan
     _seed_imported_plan(store)
     _start(project, store)
-    _settle_preproduction(store, seed="blueprint-scope")
     _start(project, store, operation_id="op-narrow-blueprint", scope=_scope(page_ids=["p1"]))
+    # RP14 freezes effective request requirements: review the narrowed scope.
+    _settle_preproduction(store, seed="blueprint-scope")
     entry = next(e for e in store.load_document()["pages"] if e["page_id"] == "p1")
     with pytest.raises(eligibility.EligibilityBlocked) as excinfo:
         service.open_blueprint_task(store, store.load_document(), entry)
@@ -586,8 +587,9 @@ def test_p1_only_generic_compose_cannot_silently_drop_p2_from_existing_plan(tmp_
 def test_change_commit_refuses_pages_outside_the_request(tmp_path):
     project, store = _project(tmp_path)
     _start(project, store)
-    _settle_preproduction(store, seed="change-scope")
     _start(project, store, operation_id="op-narrow-change", scope=_scope(page_ids=["p1"]))
+    # RP14 freezes effective request requirements: review the narrowed scope.
+    _settle_preproduction(store, seed="change-scope")
     _grant(project, store, actions=("change.commit",), scope=_scope(page_ids=["p1"]))
     document = store.load_document()
     entry = next(e for e in document["pages"] if e["page_id"] == "p2")

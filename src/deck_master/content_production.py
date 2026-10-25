@@ -528,6 +528,10 @@ def content_phase_status(store, document, *, explicit_speech_mode=None):
 
 def completion_status(store, document):
     """Pure request-scoped completion; unreadable facts remain explicit gaps."""
+    from .design_completion import completion_status as design_completion
+    design = design_completion(store, document)
+    if design is not None:
+        return design
     request = (document.get("collaboration") or {}).get("request") or {}
     missing = []
     try:

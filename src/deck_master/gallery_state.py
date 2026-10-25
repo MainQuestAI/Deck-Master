@@ -11,11 +11,12 @@ def _file(store):
     return safe_path(store.deck_root, 'workbench', 'gallery.json')
 
 
-def _validate(store, current, identity, state):
+def _validate(store, current, identity, state, *, snapshot_reader=None):
+    read = snapshot_reader.load if snapshot_reader else lambda revision: load_snapshot(store, revision)
     validate_schema('ui_gallery', state)
     if state['project_id'] != current['project_id'] or state['project_identity'] != identity:
         raise LocalStateError('project_identity', 'gallery state belongs to another project')
-    base = load_snapshot(store, state['revision_id'])
+    base = read(state['revision_id'])
     ids = {entry['page_id'] for entry in base['pages']}
     selected = set(state['selected_page_ids'])
     if not selected <= ids:
@@ -35,7 +36,7 @@ def _validate(store, current, identity, state):
         if page_id in seen:
             raise LocalStateError('references', 'each personal reference page is listed once')
         seen.add(page_id)
-        doc = load_snapshot(store, reference['revision_id'])
+        doc = read(reference['revision_id'])
         refs = _base_refs(store, doc, {'scope': 'page', 'page_id': page_id, 'layer': 'original_image'})
         if reference['original_ref'] not in refs:
             raise LocalStateError('references/original_ref', 'reference is not that page original at its fixed version')

@@ -118,6 +118,59 @@
             ],
             "maxLength": 128,
             "minLength": 1
+          },
+          "display": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "operation_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "created_at": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "status": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "relation": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "state",
+                  "reason"
+                ],
+                "properties": {
+                  "state": {
+                    "enum": [
+                      "current",
+                      "historical",
+                      "unknown"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string"
+                  },
+                  "successor_id": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
           }
         }
       }

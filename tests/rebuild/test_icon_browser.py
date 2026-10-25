@@ -268,6 +268,8 @@ def test_layer_switch_entry_requires_saved_local_draft(icon_browser):
     page.evaluate("args => {location.hash = new URLSearchParams(args)}",
         {'project':identity,'surface':'page','page':'p01','layer':'content','revision':store.current_revision_id()})
     # 先在意见面(默认面)制造 dirty 草稿,再切到图标面走换层门控。
+    from test_deep_quality_browser import open_opinion_composer
+    open_opinion_composer(page)
     body=page.get_by_label('意见正文',exact=True)
     expect(body).to_be_visible(timeout=15000)
     body.fill('换层门控测试意见')

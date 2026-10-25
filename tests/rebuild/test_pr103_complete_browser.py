@@ -232,7 +232,18 @@ def test_style_ui_trial_adoption_and_successful_expansion(tmp_path, source):
         expect(page.locator('.candidate-state')).to_contain_text('当前采用')
         after_trial = flow.store.load_document()['pages']
         assert after_trial[0] == initial[0] and after_trial[2] == initial[2]
-        page.get_by_role('button', name='查看任务与交付', exact=True).click()
+        # Adoption does not approve propagation of unreviewed original pixels.
+        from deck_master import original_review
+        from synthetic_review_provider import accept_original_expression_fixture
+        assert not original_review.reference_status(flow.store, flow.store.load_document(), 'p02', candidate_id=candidate)['allowed']
+        assert accept_original_expression_fixture(flow.project, page_id='p02', candidate_id=candidate)['status'] == 'accepted'
+        assert original_review.reference_status(flow.store, flow.store.load_document(), 'p02', candidate_id=candidate)['allowed']
+        # Load the accepted review revision before the next UI transaction.
+        page.reload()
+        page.get_by_role('button', name='查看当前版本', exact=True).click()
+        expect(page).to_have_url(re.compile('revision=' + flow.store.current_revision_id()))
+        expect(page.get_by_role('button', name='查看当前版本', exact=True)).to_have_count(0)
+        page.locator('.sidebar').get_by_role('button', name='任务与交付', exact=True).click()
         expect(page.get_by_role('heading', name='任务与交付', exact=True)).to_be_visible()
         page.get_by_role('button', name='风格校准', exact=True).click()
         if source == 'screenshot':
