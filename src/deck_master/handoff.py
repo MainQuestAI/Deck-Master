@@ -54,13 +54,31 @@ def check_handoff(project_dir, *, file_path, purpose="review", notes_policy=None
             pass
     from .store import ConflictError
     candidate_bytes, actual_hash = b'', None
-    if sizes:
-        try:
+    try:
+        if sizes:
             candidate_bytes, actual_hash = read_selected_file(candidate, sizes=sizes)
-        except ConflictError:
-            # A nonmatching file is a blocked review report, not permission to
-            # read an arbitrary length. Delivery already refused above.
-            pass
+    except ConflictError as exc:
+        if 'candidate_not_selected_output' not in str(exc):
+            raise
+    if actual_hash is None and purpose == 'review':
+        # Diagnostics must still identify a previously produced file after a
+        # revision invalidates current output. Bound reads by committed output
+        # lengths, never by the caller's file size or an arbitrary path.
+        from .snapshots import committed_snapshots
+        seen = set()
+        for snapshot in committed_snapshots(store):
+            prior = (snapshot.get('outputs') or {}).get('pptx')
+            if not prior or prior['sha256'] in seen:
+                continue
+            seen.add(prior['sha256'])
+            raw = store.read_object_bytes(store.read_object_json(prior)['file'])
+            sizes.add(len(raw))
+        if sizes:
+            try:
+                candidate_bytes, actual_hash = read_selected_file(candidate, sizes=sizes)
+            except ConflictError as exc:
+                if 'candidate_not_selected_output' not in str(exc):
+                    raise
     gaps = []
     if not output_ref:
         gaps.append("missing_current_pptx")
