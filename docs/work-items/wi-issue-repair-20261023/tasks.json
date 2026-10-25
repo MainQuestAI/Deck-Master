@@ -526,7 +526,7 @@
       "phase": "0 已有修复正规化",
       "status": "planned",
       "steps": [
-        "逐项核对 #138 空 findings 补丁 84a63131、#139 原件引用补丁 f1ac7a71 和 PR #147；只集成对应变更，不整枝覆盖。",
+        "逐项核对 #138 空 findings、#139 原件引用和 PR #147；只集成对应变更，不整枝覆盖。原本地定位 84a63131 / f1ac7a71 不是可供新执行者依赖的远端前置提交；不得要求先取得它们。当前可获取的实现为 [ae22ef08](https://github.com/MainQuestAI/Deck-Master/commit/ae22ef086369e1ed5904966c79e92097b51fb8ba)，经 [PR185](https://github.com/MainQuestAI/Deck-Master/pull/185) 分支可获取；两项本地修复按缺陷独立重实现，不冒充取回原提交。PR147 的原补丁固定为 [ad2f278c](https://github.com/MainQuestAI/Deck-Master/commit/ad2f278cd637f29b5665fcf71d7064098faf617b)。来源、后续修复和历史实现到集成提交的映射见 [RP-00 证据](../../../reports/issue-repair-20261023/RP-00.md)及[执行台账](../../../reports/issue-repair-20261023/execution-ledger.json)。",
         "记录合并后源码 SHA、安装包来源及资源摘要；保留各原 PR/补丁归属。"
       ],
       "acceptance": [
@@ -644,13 +644,14 @@
       "phase": "1 主链恢复",
       "status": "planned",
       "steps": [
-        "覆盖 icons.confirm、candidates.decide、tasks.call_begin 及新增核对的 stages.assemble / pipeline.produce 外内两层。",
+        "覆盖 icons.confirm、candidates.decide、tasks.call_begin、annotations.save、styles.references.import 及 stages.assemble / pipeline.produce 外内两层；以实际公开的可恢复写入口核对完整矩阵，不把此列举当作可以遗漏其他入口的白名单。",
         "可信已提交操作在校验相同项目、类型、完整请求摘要和身份后返回原回执；仅新操作进入写门禁。"
       ],
       "acceptance": [
         "成功后暂停再以相同 operation_id/请求重放，返回原结果且不重新编译、写产物或发起调用。",
         "换请求、类型、项目、身份或未知 operation 不借历史成功绕过暂停；并发/损坏路径仍失败可解释。",
-        "组装路径以实际编译成功后的暂停重放验证；当前证据仅为源码控制流，不预记该项通过。"
+        "组装路径以实际编译成功后的暂停重放验证；当前证据仅为源码控制流，不预记该项通过。",
+        "annotations.save 与 styles.references.import 提交后暂停，以相同完整请求重放返回原提交身份；换请求冲突，新 operation_id 仍受暂停限制，不重写对象或再次导入图片。实现与既有专项证据见 [RP-04 补充](../../../reports/issue-repair-20261023/RP-04.md#additional-paused-replay-entries-2026-10-22)，仍需在最终整合候选复验。"
       ],
       "entrypoints": [
         "src/deck_master/operations.py",
@@ -659,8 +660,11 @@
         "src/deck_master/icons.py"
       ],
       "tests": [
+        "test_paused_exact_replay.py",
         "test_task_receipt_recovery.py",
-        "test_candidate_decisions.py"
+        "test_candidate_decisions.py",
+        "test_annotations.py",
+        "test_visual_styles.py"
       ]
     },
     {
