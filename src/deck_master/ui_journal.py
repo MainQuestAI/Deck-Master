@@ -557,6 +557,11 @@ def commit_clear(project, *, operation_id, input, plan_id, manifest_digest):
             local_lock(safe_path(_clear_log_path(store).parent, "clear.lock")):
         for entry in _read_clear_log(store):
             if entry["operation_id"] == operation_id:
+                if (entry['plan_id'] != plan_id or entry['manifest_digest'] != manifest_digest
+                        or entry['scope'] != input.get('scope') or input.get('project_id') != doc['project_id']
+                        or entry.get('input_digest') != digest(input)):
+                    raise LocalStateConflict('operation_id',
+                        'the preserved clear receipt cannot verify this exact request; keep the receipt and inspect its backup')
                 return {"status": "cleared", "replayed": True, **entry}
         expected_plan_id, expected_digest = plan_id, manifest_digest
         if not isinstance(expected_digest, str) or len(expected_digest) != 64:
@@ -572,6 +577,7 @@ def commit_clear(project, *, operation_id, input, plan_id, manifest_digest):
         cleared_at = _utc_now_iso()
         result = {"schema_version": "ui_clear_result.v1", "operation_id": operation_id,
                   "plan_id": expected_plan_id, "manifest_digest": expected_digest, "scope": "current_project",
+                  "input_digest": digest(input),
                   "backup_ref": ".deckmaster/workbench/clear-backups/" + expected_digest[:16] + ".json",
                   "cleared": items, "cleared_at": cleared_at}
         validate_schema("ui_clear_result", result)
