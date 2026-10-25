@@ -102,6 +102,14 @@ current observations. A new rollback without an ID can switch again using
 current `previous`; it is not an exact retry. Never lower a project's writer
 floor or overwrite an external path to make rollback appear successful.
 
+Inspect an interrupted installation with `install transaction status --prefix …`
+(optionally `--transaction-id …`). Resolve that ID with `install transaction
+recover --prefix … --transaction-id … --action resume|rollback|abandon`.
+`abandon` requires `--reason …`, preserves managed paths, backups and the journal,
+and clears only its own verified pending pointer. It leaves current health marked
+as conflict; a corrupt journal has no force-unlock path. See the
+[installation recovery controls](../skills/deck-master/references/installation.md#inspect-or-resolve-an-interrupted-transaction).
+
 ## Workbench content operations
 
 For `content_ops.v1`, use `deck-master content plan --project <dir> --input <json>` then `content commit --plan-id … --base-revision … --operation-id <UUIDv4>`. Direct body/outline edits, reorder/remove, and bounded Host rewrite/merge/split share this transaction. Use `content inputs --input <patch.json>` for the recoverable workbench form of existing input updates, `content source --source-id … --revision …` for exact material versions, and `content lineage --page-id … --revision …` for derived-page provenance. Method: `skills/deck-master/references/input-update.md`.

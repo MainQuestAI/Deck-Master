@@ -91,6 +91,52 @@ request. Preserve the journal and inspect the named paths.
 paths, including interrupted legacy migration recovery. It changes only the
 selected prefix. A request that used this option must retain it on exact retry.
 
+### Inspect or resolve an interrupted transaction
+
+```sh
+deck-master install transaction status --prefix /path/to/prefix
+deck-master install transaction status --prefix /path/to/prefix --transaction-id <UUIDv4>
+deck-master install transaction recover --prefix /path/to/prefix --transaction-id <UUIDv4> --action resume
+deck-master install transaction recover --prefix /path/to/prefix --transaction-id <UUIDv4> --action rollback
+deck-master install transaction recover --prefix /path/to/prefix --transaction-id <UUIDv4> --action abandon --reason "Preserve the conflicting installation for inspection"
+```
+
+`status` only reads the preserved journals: phase, finite actions, conflicts,
+available recovery choices, cleanup results and current installation observation.
+It does not create locks, repair a pending pointer, dispatch an installation or
+turn a historical success receipt into a current health claim.
+
+`resume` uses the original frozen verb, release and Host root, even when the
+current `CODEX_HOME` differs. `rollback` reverses only this interrupted
+transaction's provably owned actions, in the original lock order. It is distinct
+from `install rollback`, which creates a new transaction to switch to `previous`.
+Recovery interruption retains its original transaction ID and direction; retry
+the same recovery command. An incomplete preparing proof may still prevent safe
+resume or rollback; no action guesses inode ownership from equal link text.
+
+`abandon` requires a reason and a structurally valid, version-supported journal.
+It persists an `activation_transaction.v2` abandoned receipt, including the
+previous phase and all preserved paths, before clearing only that transaction's
+pending pointer. It does not repair the installation or delete external content,
+backups, preparations, witnesses or the journal. A retry keeps the same reason;
+an abandoned plan cannot later resume or restore managed paths. There is no
+force-unlock path for a corrupt, unsupported or foreign journal. Older runtimes
+must refuse the v2 receipt rather than reinterpret abandonment as success.
+
+After abandonment, status and activation results continue to report
+`current_install_state=conflict` and `installation_requires_attention=true`,
+with the abandoned transaction IDs, even if a later new activation succeeds.
+New requests still perform normal path-ownership and release checks. A completed
+receipt alone is not proof that the retained mixed/conflicting state was repaired.
+
+New transactions mark support for terminal cleanup. Only their current-namespace
+`.after` and `.witness` objects with durably recorded inode identities can be
+removed after `completed` or verified `rolled_back`. Durable capture intents make
+cleanup interruption retryable. Replaced objects and changed parents are
+preserved; original `.before`/legacy backups, unconfirmed preparations and older
+preparation namespaces remain available. Existing terminal v1 receipts without
+cleanup support are read and replayed without retroactive journal changes.
+
 Rollback follows `previous` and keeps method and CLI releases aligned. If the
 previous release predates the Skill, managed links missing from that release are removed and the result
 reports `host_skill_unregistered`. Project data and recorded calls are not rolled back. RC3-04 projects use the

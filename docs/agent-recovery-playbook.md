@@ -425,6 +425,20 @@ managed links absent from an older release; it does not downgrade project
 writer floors or call facts. Exact command and journal details live in
 [installation](../skills/deck-master/references/installation.md#durable-transaction-recovery).
 
+Use `install transaction status --prefix … [--transaction-id …]` for read-only
+phase, conflict, action and cleanup evidence. `install transaction recover
+--prefix … --transaction-id … --action resume` uses the frozen original request;
+`--action rollback` reverses only that interrupted plan. Retry the same ID and
+direction after another interruption. If safe ownership cannot be proved, a
+valid journal may be terminated with `--action abandon --reason …`: this persists
+an explicit v2 abandoned receipt before clearing only its own pending pointer.
+All managed/external paths, backups, preparations and journal evidence remain;
+current health stays `conflict` with `installation_requires_attention=true`.
+New installs still check path ownership. Corrupt or foreign journals cannot be
+abandoned or force-unlocked. Confirmed temporary inode cleanup is limited to
+new transactions after durable completion/verified rollback; earlier namespaces,
+unconfirmed objects, replaced paths and backups remain preserved.
+
 Read the current request, scope, decisions, pause/revoke and completion before
 resuming Content/Design/Review. Do not restart an already completed sub-intent,
 refresh budget under a new operation ID, or restore old permissions with old

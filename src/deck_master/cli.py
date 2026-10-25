@@ -238,6 +238,16 @@ def build_parser() -> argparse.ArgumentParser:
     rollback.add_argument('--transaction-id', help='UUIDv4; freeze the rollback target and replay its original result')
     rollback.add_argument('--no-host-registration',action='store_true',
                           help='CI/non-interactive: do not create or touch the Codex skill link')
+    transactions=installs.add_parser('transaction', help='Inspect or explicitly recover an installation journal')
+    transaction_commands=transactions.add_subparsers(dest='transaction_command',required=True)
+    transaction_status=transaction_commands.add_parser('status')
+    transaction_status.add_argument('--prefix',required=True)
+    transaction_status.add_argument('--transaction-id',help='Select one UUIDv4; omit to list preserved journals')
+    transaction_recover=transaction_commands.add_parser('recover')
+    transaction_recover.add_argument('--prefix',required=True)
+    transaction_recover.add_argument('--transaction-id',required=True)
+    transaction_recover.add_argument('--action',required=True,choices=['resume','rollback','abandon'])
+    transaction_recover.add_argument('--reason',help='Required for abandon; retained with preserved paths')
 
     create = sub.add_parser("create")
     create.add_argument("--selected-resource-id", dest="selected_resource_ids", action="append")
@@ -618,10 +628,13 @@ def main(argv: list[str] | None = None) -> int:
         if options.command == 'legacy-map':
             return _emit(legacy_mapping_table())
         if options.command == 'install':
-            from .install import install_candidate,activate,rollback
+            from .install import install_candidate,activate,rollback,transaction_status,recover_transaction
             from .errors import InstallationTransactionError
             try:
-                if options.install_command=='candidate':result=install_candidate(options.prefix,options.manifest)
+                if options.install_command=='transaction':
+                    if options.transaction_command=='status':result=transaction_status(options.prefix,transaction_id=options.transaction_id)
+                    else:result=recover_transaction(options.prefix,transaction_id=options.transaction_id,action=options.action,reason=options.reason)
+                elif options.install_command=='candidate':result=install_candidate(options.prefix,options.manifest)
                 elif options.install_command=='activate':result=activate(options.prefix,options.release_id,register_host=not options.no_host_registration,transaction_id=options.transaction_id)
                 else:result=rollback(options.prefix,register_host=not options.no_host_registration,transaction_id=options.transaction_id)
             except InstallationTransactionError as exc:

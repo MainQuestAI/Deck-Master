@@ -17,12 +17,15 @@ import ctypes
 import errno
 import sys
 import uuid
+from datetime import datetime, timezone
 
 from .errors import InstallationTransactionError as Failure
 from .store import _atomic_write_bytes
 
 VERSION = 'activation_transaction.v1'
-TERMINAL = {'completed', 'rolled_back'}
+RECOVERY_VERSION = 'activation_transaction.v2'
+VERSIONS = {VERSION, RECOVERY_VERSION}
+TERMINAL = {'completed', 'rolled_back', 'abandoned'}
 STATES = {'preparing', 'prepared', 'applying', 'compensating', 'recovery_conflict', *TERMINAL}
 KINDS = {'link', 'launcher', 'remove', 'move'}
 
@@ -83,7 +86,10 @@ def snapshot(path):
     if stat.S_ISLNK(info.st_mode):
         row['target'] = os.readlink(path)
     elif stat.S_ISREG(info.st_mode):
-        row.update(sha256=hashlib.sha256(path.read_bytes()).hexdigest(), mode=stat.S_IMODE(info.st_mode))
+        raw, actual = read_regular(path)
+        if (actual.st_dev, actual.st_ino) != (info.st_dev, info.st_ino):
+            raise ValueError('installation file changed while reading: ' + str(path))
+        row.update(sha256=hashlib.sha256(raw).hexdigest(), mode=stat.S_IMODE(info.st_mode))
     elif stat.S_ISDIR(info.st_mode):
         # Legacy directories have exactly the validated manifest; include bytes.
         manifest = path / 'companion-manifest.json'
@@ -92,6 +98,23 @@ def snapshot(path):
             row['manifest_identity'] = snapshot(manifest)
             row['entries'] = sorted(entry.name for entry in path.iterdir())
     return row
+
+
+def read_regular(path):
+    """Never follow a replaced symlink or block on an installation FIFO."""
+    handle = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    with os.fdopen(handle, 'rb') as stream:
+        before = os.fstat(stream.fileno())
+        if not stat.S_ISREG(before.st_mode):
+            raise ValueError('installation record must be a regular file: ' + str(path))
+        raw = stream.read()
+        after = os.fstat(stream.fileno())
+        named = Path(path).lstat()
+        if ((before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns, before.st_ctime_ns) !=
+                (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns, after.st_ctime_ns)
+                or (named.st_dev, named.st_ino) != (before.st_dev, before.st_ino)):
+            raise ValueError('installation record changed while reading: ' + str(path))
+        return raw, before
 
 
 def parent_identity(path):
@@ -131,8 +154,8 @@ def pending(root, record):
     if path.exists() or path.is_symlink():
         if path.is_symlink():
             raise _unavailable('pending pointer was replaced externally', record['transaction_id'])
-        value = json.loads(path.read_text())
-        if value.get('schema_version') != VERSION or value.get('transaction_id') != record['transaction_id']:
+        value = json.loads(read_regular(path)[0])
+        if value.get('schema_version') not in VERSIONS or value.get('transaction_id') != record['transaction_id']:
             raise _unavailable('pending pointer is owned by a different or unknown transaction', record['transaction_id'])
         return  # A pointer is immutable; never replace a checked pathname.
     prepared = root / ('.deck-master-pending-' + str(uuid.uuid4()) + '.after')
@@ -150,8 +173,8 @@ def clear_pending(root, record):
     if identity is not None:
         if identity['type'] != stat.S_IFREG:
             raise ValueError('pending pointer changed')
-        value = json.loads(path.read_text())
-        if value.get('schema_version') != VERSION or value.get('transaction_id') != record['transaction_id']:
+        value = json.loads(read_regular(path)[0])
+        if value.get('schema_version') not in VERSIONS or value.get('transaction_id') != record['transaction_id']:
             raise ValueError('pending pointer changed')
         # There is no portable compare-and-unlink. Retain the captured inode;
         # if a writer swapped the source, restore it without replacing anything.
@@ -178,11 +201,20 @@ def _check_journal_directory(root):
 
 
 def _validate_record(root, record, ident):
-    if (not isinstance(record, dict) or record.get('schema_version') != VERSION
+    if (not isinstance(record, dict) or record.get('schema_version') not in VERSIONS
             or record.get('transaction_id') != ident or record.get('prefix') != str(root.parent)
             or record.get('state') not in STATES):
         raise ValueError('unsupported or foreign installation transaction')
     transaction_id(ident)
+    if record['state'] == 'abandoned':
+        resolution = record.get('abandonment')
+        if (record['schema_version'] != RECOVERY_VERSION or not isinstance(resolution, dict)
+                or not isinstance(resolution.get('reason'), str) or not resolution['reason'].strip()
+                or not isinstance(resolution.get('preserved_paths'), list)
+                or not all(isinstance(path, str) for path in resolution['preserved_paths'])
+                or resolution.get('previous_state') not in STATES - TERMINAL
+                or resolution.get('restoration_verified') is not False):
+            raise ValueError('invalid abandonment receipt')
     request = record['request']
     if (request['verb'] not in ('activate', 'rollback') or
             request['prefix'] != str(root.parent) or request['transaction_id'] != ident or
@@ -211,7 +243,8 @@ def _validate_record(root, record, ident):
         raise ValueError('opt-out transaction contains Host root')
     namespace = record.get('preparation_id', ident)
     transaction_id(namespace)
-    preparing = record['state'] == 'preparing'
+    preparing = (record['state'] == 'preparing' or record['state'] == 'abandoned'
+                 and record['abandonment']['previous_state'] == 'preparing')
     migration = record.get('migration', {})
     moved = migration.get('moved')
     removed = migration.get('removed_links', [])
@@ -241,9 +274,11 @@ def _validate_record(root, record, ident):
     if access is not None and (host is None or not Path(access).is_absolute() or '..' in Path(access).parts or
                                not isinstance(record.get('host_access_identity'), dict)):
         raise ValueError('invalid frozen Host access chain')
-    if record['state'] == 'preparing':
-        if not isinstance(record.get('preparations'), list):
-            raise ValueError('preparing transaction lacks durable preparation intents')
+    if preparing and not isinstance(record.get('preparations'), list):
+        raise ValueError('preparing transaction lacks durable preparation intents')
+    if 'preparations' in record:
+        if not isinstance(record['preparations'], list):
+            raise ValueError('invalid durable preparation intents')
         allowed = {root, root / 'bin'} | ({host} if host else set())
         for item in record['preparations']:
             path = Path(item['path'])
@@ -291,8 +326,9 @@ def _validate_record(root, record, ident):
         if path != root / 'bin' and not (host is not None and (path == host or path in host.parents)):
             raise ValueError('invalid prepared parent directory')
     anchors = record.get('inode_anchors')
-    if anchors is None and record['state'] in TERMINAL:
-        return  # Historical terminal receipts require no new ownership claim.
+    historical_terminal = anchors is None and record['state'] in TERMINAL
+    if historical_terminal:
+        anchors = []  # Historical terminal receipts require no new ownership claim.
     if not isinstance(anchors, list):
         raise ValueError('unfinished transaction lacks persistent inode witnesses')
     required = []
@@ -313,8 +349,17 @@ def _validate_record(root, record, ident):
         if item not in required or item in found:
             raise ValueError('inode witness disagrees with frozen managed plan')
         found.add(item)
-    if not preparing and found != required:
+    if not preparing and not historical_terminal and found != required:
         raise ValueError('frozen managed path lacks its inode witness')
+    artifacts = {item['path']: item['identity'] for item in record.get('preparations', [])
+                 if item.get('identity') is not None}
+    artifacts.update({item['path']: item['identity'] for item in anchors})
+    for index, item in enumerate(record.get('cleanup', [])):
+        source = Path(item['path'])
+        if (record['state'] not in {'completed', 'rolled_back'} or artifacts.get(item['path']) != item['identity']
+                or item['captured'] != str(source.parent / f'.deck-master-{namespace}-cleanup-{index}')
+                or item['state'] not in ('pending', 'cleaned', 'preserved')):
+            raise ValueError('invalid terminal cleanup ownership')
 
 
 def read(root, ident):
@@ -323,14 +368,14 @@ def read(root, ident):
         _check_journal_directory(root)
         if path.is_symlink():
             raise ValueError('transaction record is a symlink')
-        record = json.loads(path.read_text())
+        record = json.loads(read_regular(path)[0])
         _validate_record(root, record, ident)
         return record
     except (OSError, ValueError, TypeError, KeyError, AttributeError) as exc:
         raise _unavailable(f'cannot verify preserved transaction {path}: {exc}', ident) from exc
 
 
-def discover(root):
+def discover(root, *, repair_pointer=True):
     """Inspect the bounded activation journal, including prepared-before-pointer."""
     pointer = root / 'activation-pending.json'
     _check_journal_directory(root)
@@ -340,8 +385,8 @@ def discover(root):
         try:
             if not stat.S_ISREG(captured.lstat().st_mode):
                 raise ValueError('captured pending pointer is not regular')
-            value = json.loads(captured.read_text())
-            if value['schema_version'] != VERSION:
+            value = json.loads(read_regular(captured)[0])
+            if value['schema_version'] not in VERSIONS:
                 raise ValueError('unknown captured pending version')
             historical = read(root, transaction_id(value['transaction_id']))
             if historical['state'] not in TERMINAL:
@@ -353,8 +398,8 @@ def discover(root):
         try:
             if pointer.is_symlink():
                 raise ValueError('pending pointer is a symlink')
-            value = json.loads(pointer.read_text())
-            if value['schema_version'] != VERSION:
+            value = json.loads(read_regular(pointer)[0])
+            if value['schema_version'] not in VERSIONS:
                 raise ValueError('unknown pending version')
             selected = transaction_id(value['transaction_id'])
         except (OSError, ValueError, KeyError, TypeError, Failure) as exc:
@@ -368,15 +413,50 @@ def discover(root):
         raise _unavailable('multiple unfinished installation records; preserve journals and inspect')
     if selected:
         original = read(root, selected)
-        if original['state'] in TERMINAL:
+        if original['state'] in TERMINAL and repair_pointer:
             # Completed JSON is authoritative even if pointer deletion failed.
             try:
                 clear_pending(root, original)
             except (OSError, ValueError):
                 pass
-        elif not active or active[0]['transaction_id'] != selected:
+        elif original['state'] not in TERMINAL and (not active or active[0]['transaction_id'] != selected):
             raise _unavailable('pending pointer disagrees with installation journal', selected)
     return active[0] if active else None
+
+
+def preserved_paths(record):
+    """Finite paths from a validated journal; no glob-based cleanup authority."""
+    paths = {row['path'] for row in record['watched']}
+    for step in record['steps']:
+        paths.add(step['path']); paths.add(step['backup'])
+        if step['prepared']:
+            paths.add(step['prepared']['path'])
+    for preparation in [record, *record.get('preparation_history', [])]:
+        paths.update(item['path'] for item in preparation.get('preparations', []))
+    paths.update(item['path'] for item in record.get('inode_anchors', []))
+    return sorted(paths)
+
+
+def abandon(root, record, reason):
+    """Terminate only this verified journal; never repair or delete managed data."""
+    if not isinstance(reason, str) or not reason.strip():
+        raise ValueError('abandon requires a nonempty reason')
+    if record['state'] == 'abandoned':
+        if record['abandonment']['reason'] != reason:
+            raise Failure('installation_transaction_conflict', 'abandon retry must retain its original reason',
+                          transaction_id=record['transaction_id'], state='abandoned')
+    elif record['state'] in TERMINAL:
+        raise Failure('installation_transaction_conflict', 'a completed or rolled-back transaction cannot be abandoned',
+                      transaction_id=record['transaction_id'], state=record['state'])
+    else:
+        record.update(schema_version=RECOVERY_VERSION, state='abandoned', abandonment={
+            'reason': reason, 'occurred_at': datetime.now(timezone.utc).isoformat(),
+            'previous_state': record['state'], 'preserved_paths': preserved_paths(record),
+            'restoration_verified': False})
+        save(root, record)
+        checkpoint('abandoned', record)
+    clear_pending(root, record)
+    return record
 
 
 class Plan:
@@ -386,6 +466,7 @@ class Plan:
         self.root = root
         self.record = {'schema_version': VERSION, 'transaction_id': request['transaction_id'],
                        'prefix': str(root.parent), 'request': request, 'state': 'preparing',
+                       'cleanup_protocol': 'installation_cleanup.v1',
                        'preparation_id': transaction_id(), 'preparations': [],
                        'steps': [], 'created_directories': [], 'inode_anchors': []}
         self.virtual = {}
@@ -662,6 +743,7 @@ class Transaction:
         if not conflict:
             checkpoint('rolled_back', self.record)
             self.finish_pointer()
+            self.cleanup()
 
     def finish_pointer(self):
         # A stale pointer does not turn a durable terminal result into a failure.
@@ -669,6 +751,64 @@ class Transaction:
             clear_pending(self.root, self.record)
         except (OSError, ValueError):
             pass
+
+    def cleanup(self):
+        """Remove only confirmed temporary inodes after a durable terminal result.
+
+        Backups, unacknowledged preparations and earlier namespaces stay intact.
+        Capture intents survive a crash between rename and unlink. Unknown or
+        externally replaced paths are preserved, never a reason to undo success.
+        """
+        if (self.record['state'] not in {'completed', 'rolled_back'}
+                or self.record.get('cleanup_protocol') != 'installation_cleanup.v1'):
+            return
+        if 'cleanup' not in self.record:
+            artifacts = {item['path']: item['identity'] for item in self.record.get('preparations', [])
+                         if item.get('identity') is not None}
+            artifacts.update({item['path']: item['identity'] for item in self.record.get('inode_anchors', [])})
+            namespace = self.record.get('preparation_id', self.record['transaction_id'])
+            self.record['cleanup'] = [
+                {'path': path, 'identity': identity, 'state': 'pending',
+                 'parent_identity': parent_identity(Path(path)),
+                 'captured': str(Path(path).parent / f'.deck-master-{namespace}-cleanup-{index}')}
+                for index, (path, identity) in enumerate(artifacts.items())]
+            self.save()
+        for item in self.record['cleanup']:
+            if item['state'] != 'pending':
+                continue
+            path, captured = Path(item['path']), Path(item['captured'])
+            try:
+                if parent_identity(path) != item['parent_identity']:
+                    raise ValueError('temporary parent changed')
+                actual, saved = snapshot(path), snapshot(captured)
+                if actual is None and saved is None:
+                    item['state'] = 'cleaned'
+                else:
+                    if saved is None:
+                        if actual != item['identity']:
+                            raise ValueError('temporary inode changed')
+                        rename_noreplace(path, captured, item['parent_identity'])
+                        checkpoint('cleanup_captured', self.record, item)
+                    elif actual is not None:
+                        raise ValueError('cleanup capture or source is externally occupied')
+                    if snapshot(captured) != item['identity']:
+                        if snapshot(path) is None:
+                            rename_noreplace(captured, path, item['parent_identity'])
+                        raise ValueError('captured temporary inode changed')
+                    directory = os.open(captured.parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+                    try:
+                        info = os.fstat(directory)
+                        if (info.st_dev, info.st_ino) != (item['parent_identity']['dev'], item['parent_identity']['ino']):
+                            raise ValueError('cleanup parent changed')
+                        os.unlink(captured.name, dir_fd=directory)
+                        os.fsync(directory)
+                    finally:
+                        os.close(directory)
+                    item['state'] = 'cleaned'
+            except (OSError, ValueError) as exc:
+                item.update(state='preserved', reason=str(exc))
+            self.save()
+            checkpoint('cleaned', self.record, item)
 
     def failure(self, recovered):
         original = self.record.get('failure', {})

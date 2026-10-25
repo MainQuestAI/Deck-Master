@@ -356,6 +356,8 @@ CLI_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "install candidate": (None, "-", READ_REASONS["install"]),
     "install activate": (None, "-", READ_REASONS["install"]),
     "install rollback": (None, "-", READ_REASONS["install"]),
+    "install transaction status": (None, "-", READ_REASONS["install"]),
+    "install transaction recover": (None, "-", READ_REASONS["install"]),
     "inputs show": (None, "-", READ_REASONS["read_model"]),
     "task status": (None, "-", READ_REASONS["read_model"]),
     "task list": (None, "-", READ_REASONS["read_model"]),
