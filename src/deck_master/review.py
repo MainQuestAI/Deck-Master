@@ -69,6 +69,15 @@ def replacement_index(reviews):
     return replacements
 
 
+def content_semantic_key(review, finding):
+    """Choose the consumed content axis once for page and manuscript findings."""
+    if finding.get('kind') == 'source':
+        return 'source_speech_semantic_sha' if review.get('kind') == 'speech' else 'source_semantic_sha'
+    if review.get('review_subject') == 'outline':
+        return 'outline_semantic_sha'
+    return 'speech_semantic_sha' if review.get('kind') == 'speech' else 'semantic_sha'
+
+
 def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: dict, *, replacements=None) -> bool:
     """Resolve one finding through explicit, current replacement reviews."""
     if replacements is None:
@@ -100,10 +109,7 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
     def changed_manuscript(owner, candidate):
         old = [subjects.get(_ref_key(ref)) for ref in owner.get('subjects') or []]
         new = [subjects.get(_ref_key(ref)) for ref in candidate.get('subjects') or []]
-        semantic_key = ('source_speech_semantic_sha' if finding.get('kind') == 'source' and review.get('kind') == 'speech' else
-                        'source_semantic_sha' if finding.get('kind') == 'source' else
-                        'outline_semantic_sha' if review.get('review_subject') == 'outline' else
-                        'speech_semantic_sha' if review.get('kind') == 'speech' else 'semantic_sha')
+        semantic_key = content_semantic_key(review, finding)
         return any(before and before.get(semantic_key) and after and after.get('current') and
                    before.get('role') == after.get('role') and
                    before.get('page_id') == after.get('page_id') and
@@ -118,10 +124,7 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
                 continue
             for after in new:
                 hash_key = ('visual_sha' if owner.get('review_stage') == 'page_visual'
-                            else 'source_speech_semantic_sha' if owner.get('review_stage') == 'preproduction' and finding.get('kind') == 'source' and owner.get('kind') == 'speech'
-                            else 'source_semantic_sha' if owner.get('review_stage') == 'preproduction' and finding.get('kind') == 'source'
-                            else 'speech_semantic_sha' if owner.get('kind') == 'speech'
-                            else 'semantic_sha' if owner.get('review_stage') == 'preproduction'
+                            else content_semantic_key(owner, finding) if owner.get('review_stage') == 'preproduction' or owner.get('kind') == 'speech'
                             else 'file_sha') if before.get('role') == 'page' else 'file_sha'
                 if (after and after.get('current') and after.get('page_id') == page_id and
                         after.get('role') == before.get('role') and
@@ -187,11 +190,14 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
         return any(ref.get('sha256') == artifacts.get('artifact:pptx') and _ref_key(ref) not in old
                    for ref in candidate.get('subjects') or [])
 
-    stack = [review]
+    stack = [(review, frozenset())]
     seen = set()
+    edges, verdicts = {}, {}
     while stack:
-        owner = stack.pop()
+        owner, ancestors = stack.pop()
         owner_ref = owner.get('ref')
+        if owner_ref and _ref_key(owner_ref) in ancestors:
+            return False
         if not owner_ref or _ref_key(owner_ref) in seen:
             continue
         seen.add(_ref_key(owner_ref))
@@ -244,19 +250,37 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
                            (page_id is None or info.get('page_id') == page_id)
                            for key, info in subjects.items()):
                     continue
+            candidate_key = _ref_key(candidate['ref']) if candidate.get('ref') else ('pending', id(candidate))
+            edges.setdefault(_ref_key(owner_ref), set()).add(candidate_key)
+            if current and current_subject and (followup.get('resolution') != 'fixed' or (changed and output_changed)):
+                verdicts.setdefault(candidate_key, False)
             if current and candidate.get('observations') and followup.get('evidence'):
                 resolution = followup.get('resolution')
                 if (resolution == 'accepted_variance' and finding.get('impact') == 'needs_judgment' and
                         current_subject and current_preview_subject(candidate) and
                         (followup.get('resolution_reason') or '').strip() and
                         (not removed or (followup.get('resolution_reason') or '').strip())):
-                    return True
+                    verdicts[candidate_key] = True
                 if (resolution == 'fixed' and changed and current_subject and
                         current_preview_subject(candidate) and
                         output_changed):
-                    return True
-            stack.append(candidate)
-    return False
+                    verdicts[candidate_key] = True
+            stack.append((candidate, ancestors | {_ref_key(owner_ref)}))
+    # Only current endpoints decide closure. A later explicit open supersedes
+    # an earlier fixed, while an unrelated finding or stale branch does not.
+    def has_current_successor(key):
+        pending, visited = list(edges.get(key, ())), set()
+        while pending:
+            child = pending.pop()
+            if child in visited:
+                continue
+            visited.add(child)
+            if child in verdicts:
+                return True
+            pending.extend(edges.get(child, ()))
+        return False
+    endpoints = [closed for key, closed in verdicts.items() if not has_current_successor(key)]
+    return bool(endpoints) and all(endpoints)
 
 
 # Kinds whose pass requires actual reading by a non-tool reviewer
