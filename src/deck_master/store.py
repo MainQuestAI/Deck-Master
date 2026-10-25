@@ -453,14 +453,16 @@ class Store:
         _atomic_write_bytes(self.deck_root / "current.json", canonical_json_bytes(pointer))
         return document["revision_id"]
 
-    def operation_receipt(self, operation_id: str) -> dict[str, Any] | None:
+    def operation_receipt(self, operation_id: str, *, reader=None) -> dict[str, Any] | None:
         """Recover only facts saved with the committed pointer, never an orphan.
 
         Older changes have no request digest. Do not infer one from their ID.
         The operations directory is a rebuildable cache, not another ledger.
         """
         from .operations import resolve_operation, lookup_error
-        found = resolve_operation(self, operation_id)
+        if reader is not None and reader.store is not self:
+            raise ValueError("operation reader belongs to another store")
+        found = reader.resolve(operation_id) if reader is not None else resolve_operation(self, operation_id)
         if found.state == 'unknown':
             if found.reason == 'legacy_receipt_only':
                 return None

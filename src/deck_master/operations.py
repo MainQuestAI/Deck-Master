@@ -157,6 +157,60 @@ def resolve_operation(store, operation_id, *, head_revision=None, use_cache=None
         return OperationLookup('unknown', head, reason='history_unreadable')
 
 
+class OperationReader:
+    """One read's validated canonical operation index; never shared across reads."""
+    def __init__(self, store):
+        from . import operation_coverage as cache
+        self.store = store
+        self.root = cache.root_identity(store)
+        self.head = cache.current_head(store)
+        previous = cache.get(self.root)
+        if previous is not None and not cache.valid(store, previous):
+            previous = None
+        self.coverage, _, _ = cache.scan(store, root=self.root, control=self.head,
+            operation_id=None, cached=previous)
+        self.documents = {}
+        self.results = {}
+        self._check_head()
+
+    def _check_head(self):
+        from . import operation_coverage as cache
+        if cache.current_head(self.store) != self.head or cache.root_identity(self.store) != self.root:
+            raise ValueError('current changed during operation reading')
+
+    def snapshot(self, revision):
+        from .snapshots import snapshot_evidence, snapshot_signature
+        self._check_head()
+        header = self.coverage.headers.get(revision)
+        if header is None:
+            raise ValueError('snapshot is not committed')
+        if revision not in self.documents:
+            doc, signature, digest = snapshot_evidence(self.store, revision)
+            if digest != header.sha256 or signature != header.signature:
+                raise ValueError('snapshot changed during operation reading')
+            self.documents[revision] = doc
+        elif snapshot_signature(self.store, revision) != header.signature:
+            raise ValueError('snapshot changed during operation reading')
+        return copy.deepcopy(self.documents[revision])
+
+    def resolve(self, operation_id):
+        validate_id(operation_id)
+        self._check_head()
+        if operation_id in self.results:
+            return copy.deepcopy(self.results[operation_id])
+        revision = self.coverage.operations.get(operation_id)
+        if revision is None:
+            return OperationLookup('not_found', self.head)
+        doc = self.snapshot(revision)
+        decoded = _decode_committed_operation(self.store, doc, operation_id)
+        if decoded is None:
+            return OperationLookup('unknown', self.head, reason='legacy_receipt_only')
+        fmt, kind, record, response = decoded
+        result = OperationLookup('committed', self.head, fmt, kind, revision, record, response)
+        self.results[operation_id] = result
+        return copy.deepcopy(result)
+
+
 def lookup_error(lookup, operation_id):
     unavailable = lookup.reason in ('history_unreadable', 'current_changed')
     return OperationError('operation_unavailable' if unavailable else 'operation_unverified', 'operation_id',

@@ -79,7 +79,7 @@ def test_completed_input_revision_uses_its_adopted_snapshot(tmp_path):
 def test_missing_receipt_is_unknown(tmp_path, monkeypatch):
     from deck_master.store import Store
     project, store, task = completed_content(tmp_path)
-    monkeypatch.setattr(Store, 'operation_receipt', lambda *args: None)
+    monkeypatch.setattr(Store, 'operation_receipt', lambda *args, **kwargs: None)
     relation = run_desk.detail(project, task_id=task['task_id'])['task']['current_relation']
     assert relation['status'] == relation['state'] == 'unknown'
     assert relation['reason'] == 'adoption_receipt_missing'

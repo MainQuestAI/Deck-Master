@@ -53,6 +53,9 @@ class _ReaderStore:
     def load_document(self, revision=None):
         return self.ctx.read_snapshot(revision or self.ctx.document['revision_id'])
 
+    def operation_receipt(self, operation_id):
+        return self.ctx.store.operation_receipt(operation_id, reader=self.ctx.operations())
+
     def __getattr__(self, name):
         return getattr(self.ctx.store, name)
 

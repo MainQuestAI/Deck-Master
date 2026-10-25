@@ -102,6 +102,7 @@ class _ReadContext:
         self.relationships = None
         self.read_failed = False
         self.cacheable = True
+        self.operation_reader = None
 
     def close(self):
         for fd in self.directory_fds.values():
@@ -173,6 +174,12 @@ class _ReadContext:
                 raise
         return self.objects[key]
 
+    def operations(self):
+        if self.operation_reader is None:
+            from .operations import OperationReader
+            self.operation_reader = OperationReader(self.store)
+        return self.operation_reader
+
     def read_snapshot(self, revision):
         if revision != self.document.get("revision_id"):
             # A historical read consumes a canonical ancestry proof. Retain it
@@ -181,18 +188,10 @@ class _ReadContext:
             self.cacheable = False
         if revision in self.snapshots:
             return self.snapshots[revision]
-        from .snapshots import committed_headers, snapshot_evidence, snapshot_signature
         try:
-            for current, identity, _ in committed_headers(self.store):
-                self.snapshot_signatures[current] = snapshot_signature(self.store, current)
-                if current == revision:
-                    value, signature, _ = snapshot_evidence(self.store, current)
-                    if value['project_id'] != identity:
-                        raise ValueError('snapshot project differs')
-                    self.snapshot_signatures[current] = signature
-                    self.snapshots[current] = value
-                    return value
-            raise ValueError('snapshot is not committed')
+            value = self.operations().snapshot(revision)
+            self.snapshots[revision] = value
+            return value
         except READ_FAILURES:
             self.read_failed = True
             raise
