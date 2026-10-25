@@ -57,4 +57,3 @@ export function todoButton(app, action, primary = false, beforeNavigate = () => 
   return disabledReason(button((nextLabels[action.kind] || '查看') + (precise ? '' : ' · 通用入口'), () => {beforeNavigate(); return openAction(app, action, actionRoute(action));}, primary,
     {disabled: blocked}), blocked ? '该项记录暂不可读（已隔离），先处理其它待办。' : '');
 }
-
