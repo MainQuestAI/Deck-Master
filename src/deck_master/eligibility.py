@@ -700,6 +700,34 @@ def task_binding_state(store: Store, document: dict, task: dict) -> dict:
         return {"status": "absent", "reasons": ["binding_missing"],
                 "new_protocol": declared,
                 "digest": None, "expected_digest": None}
+    authorization_failure = None
+    authorization_ref = binding.get("authorization_ref")
+    if authorization_ref is not None:
+        # start/accept rely on the frozen binding, not a new covering grant.
+        # A parent's withdrawal therefore has to reach this shared gate, even
+        # when the child is still recorded or the request may run in background.
+        try:
+            authorization = dependency_slices.authorization_effectiveness(store, document, authorization_ref)
+            withdrawn = any(reason in ("authorization_revoked", "ancestor_authorization_revoked")
+                            for reason in authorization["reasons"])
+            if withdrawn:
+                return {"status": "withdrawn", "reasons": authorization["reasons"],
+                        "new_protocol": True, "digest": binding.get("eligibility_digest"),
+                        "expected_digest": None,
+                        "authorization_id": current_authorization_record(store, document, authorization_ref)["authorization_id"]}
+            if not authorization["effective"]:
+                # A missing current ancestor can be reported as ineffective
+                # even when its historical object remains readable. Unknown,
+                # stale or expired authority never becomes a fresh permission.
+                authorization_failure = {"status": "invalid", "reasons": authorization["reasons"],
+                                         "new_protocol": True, "digest": binding.get("eligibility_digest"),
+                                         "expected_digest": None}
+        except (ModelError, StoreError):
+            # Keep an unreadable binding fail-closed for writes without raising
+            # before evaluate can preserve cancellation and settlement facts.
+            return {"status": "invalid", "reasons": ["bound_authorization_unreadable"],
+                    "new_protocol": True, "digest": binding.get("eligibility_digest"),
+                    "expected_digest": None}
     try:
         models.require_task_binding(document, task)
     except ModelError as exc:
@@ -709,9 +737,11 @@ def task_binding_state(store: Store, document: dict, task: dict) -> dict:
         request = _request(document) or {}
         if binding.get("request_id") and \
                 binding["request_id"] in (request.get("background_request_ids") or []):
-            return {"status": "valid", "reasons": [], "new_protocol": True,
+            return authorization_failure or {"status": "valid", "reasons": [], "new_protocol": True,
                     "digest": binding.get("eligibility_digest"), "expected_digest": None,
                     "background_request_id": binding["request_id"]}
+        if authorization_failure:
+            return authorization_failure
         # A binding whose authorization was replaced by a *withdrawal* is not a
         # foreign binding: report the withdrawal (CONTRACTS §3.3), so the user
         # sees "the withdrawal stands" rather than a structural complaint.
@@ -756,7 +786,7 @@ def task_binding_state(store: Store, document: dict, task: dict) -> dict:
                 [item["key"] for item in state["unregistered"]]),
                 "new_protocol": True, "digest": digest, "expected_digest": expected,
                 "basis": state}
-    return {"status": "valid", "reasons": [], "new_protocol": True,
+    return authorization_failure or {"status": "valid", "reasons": [], "new_protocol": True,
             "digest": digest, "expected_digest": expected}
 
 
@@ -1340,7 +1370,7 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
         binding_state = task_binding_state(store, control, task)
         if binding_state["status"] == "withdrawn":
             block("authorization_revoked",
-                  "the authorization this task bound was withdrawn; the withdrawal stands "
+                  "the bound authorization or its ancestor was withdrawn; the withdrawal stands "
                   "and only settled call facts remain",
                   authorization_id=binding_state.get("authorization_id"))
         elif binding_state["status"] == "invalid":

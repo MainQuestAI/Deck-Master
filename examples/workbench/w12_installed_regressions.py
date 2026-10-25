@@ -38,6 +38,7 @@ def main():
         'test_paused_exact_replay.py', 'test_pr187_review_regressions.py',
         'test_pr188_completed_content.py', 'test_ui_current_relationship.py',
         'test_integration_current_relationship.py', 'test_integration_current_work_browser.py',
+        'test_ancestor_authorization_boundary.py',
     ]
     result = pytest.main(['-q', str(repo / 'tests/rebuild/test_rc_closure_browser.py'),
                          str(repo / 'tests/rebuild/test_settled_image_reuse.py'),

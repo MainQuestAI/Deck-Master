@@ -14,7 +14,7 @@
 | [PR109](https://github.com/MainQuestAI/Deck-Master/pull/109) | `7307dcfc027c4aca2b83b5eb9db616fce1e6f867` | 已纳入两个工作流的 upload-artifact v7；未改变测试矩阵或门限 |
 | [PR188](https://github.com/MainQuestAI/Deck-Master/pull/188) | `159cfd63e9bcf71c10d98dad45a1a2567eb52136` | 已逐块接入新版 UI；交叉行为取舍见 [整合记录](merge-resolution.md) |
 | [PR147](https://github.com/MainQuestAI/Deck-Master/pull/147) | `ad2f278cd637f29b5665fcf71d7064098faf617b` | RP-00 已移植对应窄修复；不重复整枝合并。最终须结合 PR188 的兼容接口重验覆盖 |
-| [PR113](https://github.com/MainQuestAI/Deck-Master/pull/113) | `0af67a4d7015725e663b4db09c50e241974d9e53` | 不并入当前候选；旧稿 CI 失败且有冲突，先对照后续已合并 RC3 范围，未授权自动关闭 |
+| [PR113](https://github.com/MainQuestAI/Deck-Master/pull/113) | `0af67a4d7015725e663b4db09c50e241974d9e53` | 不整枝合并；来源对照发现祖先授权撤回后的任务写门控缺口，已独立复现并做当前合同下的窄修复。其余旧稿差异保留，未自动关闭 |
 
 精确 PR、检查和未解决线程见 [观察快照](pr-snapshot.json)。当前 7 个源 PR 保持原状态；其中 6 个最终检查通过，PR113 仍失败。源 PR 没有 APPROVED 审查；源 PR 通过不覆盖本整合候选。
 
@@ -44,10 +44,13 @@ git merge-tree --write-tree 935e4229c8e6dd77e0a33a95b5cd2724185c685e 159cfd63e9b
 | I2 UI/runtime 交叉整合 | 主 Agent + 3 个子 Agent | IMPLEMENTED | 36 个冲突和 24 个自动合并重叠逐项核对；新版 UI、current_work、审查/返修与恢复边界已接入，仍以 I3/I4 最终结果为准 |
 | I3 完整工程门禁 | 当前整合 Agent / GitHub CI | PENDING | 在最终候选跑全部四组单元、渲染、真实浏览器与汇总，保留失败/重试/跳过身份 |
 | I4 最终安装与连续任务 | 当前整合 Agent | PENDING | 依赖 I2/I3；从同一冻结源码构包、核对包内资源及模块路径，再跑离线/固定下载与连续任务 |
-| I5 专业与外部专项 | 真实 Host、审查者与老板 | NOT_RUN | 逐项对应 RP16/19/20/21/24/28/30、PR188 AC14/18、S3 效果和视觉认可；工程测试不替代。跨执行复用产品决策不在本轮新增授权内 |
+| I4a 外部兼容与性能专项 | 历史安装资源与工程验收 owner | PARTIAL | Frozen A 两条单元参数例及一条渲染例缺固定旧安装；RP28 真实候选采用/恢复已有渲染回归，完整工具链 CPU 收益另需计量，不额外要求模型或人工专业批准 |
+| I5 专业与实际任务专项 | 真实 Host、审查者与老板 | NOT_RUN | RP16/19/20/21/24/30、PR188 AC14/18、S3 效果和视觉认可仍需对应实际证据。bounded settled-image reuse 与外部报告记录/返修清单已实现，不能沿用旧文档的笼统“未实现”；单调用迁移等范围扩展不在本轮新增授权内 |
 | I6 合并与 PR 整理 | 老板决定、整合 Agent 执行 | PENDING | 依赖候选与相应验收明确；提供最终差异、检查与残项后决定合并，源 PR/Issue 不自动关闭 |
 
 任何阶段的新源码必须产生新的候选身份；不得把源 PR 的历史检查改写成整合候选通过。当前阶段没有发布、默认安装切换、真实 HOME 迁移、模型调用或客户项目写入。
+
+在 `9abdcb7b` 的完整门禁期间，来源清理又复现祖先授权撤回后的实际任务启动/正文接纳缺口；安装回归另发现一个嵌套折叠标题的旧测试定位歧义。后续窄修复和回归见 [收口补充](closure-followup.md)。`9abdcb7b` 的已通过结果保留为旧候选证据，不能覆盖补丁后的最终候选。
 
 ## 第一阶段验证
 
