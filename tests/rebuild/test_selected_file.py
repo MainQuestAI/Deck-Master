@@ -19,6 +19,17 @@ def test_regular_and_mismatched_lengths(tmp_path):
         read_selected_file(path, sizes={5})
 
 
+def test_selected_size_conflict_has_machine_code(tmp_path):
+    from deck_master.collaboration_api import error_response
+    path = tmp_path / 'output.pptx'
+    path.write_bytes(b'output')
+    with pytest.raises(ConflictError) as caught:
+        read_selected_file(path, sizes={5})
+    response, status, exit_code = error_response(caught.value)
+    assert (status, exit_code) == (409, 5)
+    assert response['error']['code'] == 'candidate_not_selected_output'
+
+
 @pytest.mark.parametrize('kind', ['directory', 'missing', 'symlink', 'fifo'])
 def test_nonregular_paths_never_read(tmp_path, kind, monkeypatch):
     path = tmp_path / 'candidate'

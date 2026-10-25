@@ -137,7 +137,7 @@ def error_response(exc, *, document=None, operation_id=None):
             exit_code = 4
         details = getattr(exc, 'details', {}) or {}
     elif isinstance(exc, ConflictError) or (isinstance(exc, StoreError) and field == 'base_revision'):
-        code, http, exit_code = 'conflict', 409, 5
+        code, http, exit_code = getattr(exc, 'error_code', 'conflict'), 409, 5
     elif getattr(exc, 'error_code', None):
         code = exc.error_code
         http, exit_code = getattr(exc, 'http_status', 403), getattr(exc, 'exit_code', 4)

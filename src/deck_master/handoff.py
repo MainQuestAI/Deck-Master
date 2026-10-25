@@ -4,13 +4,48 @@ from __future__ import annotations
 
 import hashlib
 import json
+import stat
 import zipfile
 from pathlib import Path
 from pptx.exc import PackageNotFoundError
 from lxml.etree import XMLSyntaxError
 
 from .editing import check_summary
-from .store import Store
+from .store import Store, StoreError
+
+
+def _historical_outputs(store, document):
+    """Index committed originals by metadata and size; do not read every PPTX."""
+    from .models import validate_ref, validate_schema
+    from .snapshots import committed_snapshots
+    objects, rows, gaps = {}, [], []
+    try:
+        for snapshot in committed_snapshots(store, head_revision=document['revision_id']):
+            prior = (snapshot.get('outputs') or {}).get('pptx')
+            if not prior:
+                continue
+            try:
+                key = prior['sha256']
+                if key not in objects:
+                    output = store.read_object_json(prior)
+                    validate_schema('artifact', output)
+                    if output['role'] != 'pptx':
+                        raise ValueError('historical output is not a PPTX artifact')
+                    ref = output['file']
+                    validate_ref(ref, where='historical_output')
+                    info = store._resolve_object_path(ref['path']).lstat()
+                    if not stat.S_ISREG(info.st_mode):
+                        raise ValueError('historical output is not a regular file')
+                    objects[key] = (ref, info.st_size)
+                ref, size = objects[key]
+                rows.append({'revision_id': snapshot['revision_id'], 'output_ref': prior,
+                             'file_ref': ref, 'file_sha256': ref['sha256'], 'size': size})
+            except (StoreError, OSError, ValueError) as exc:
+                gaps.append({'code': 'historical_output_unverifiable',
+                             'revision_id': snapshot['revision_id'], 'reason': type(exc).__name__})
+    except (StoreError, OSError, ValueError) as exc:
+        gaps.append({'code': 'historical_output_unverifiable', 'reason': type(exc).__name__})
+    return rows, gaps
 
 
 def check_handoff(project_dir, *, file_path, purpose="review", notes_policy=None):
@@ -36,7 +71,7 @@ def check_handoff(project_dir, *, file_path, purpose="review", notes_policy=None
     expected_hash = None
     if output_ref:
         expected_hash = store.read_object_json(output_ref)["file"]["sha256"]
-    from .selected_file import read_selected_file
+    from .selected_file import read_selected_file, SelectedFileConflict
     sanitized_hash = None
     sizes = set()
     if output_ref:
@@ -52,34 +87,41 @@ def check_handoff(project_dir, *, file_path, purpose="review", notes_policy=None
             sanitized_hash = hashlib.sha256(projected).hexdigest()
         except OperationError:
             pass
-    from .store import ConflictError
     candidate_bytes, actual_hash = b'', None
     try:
         if sizes:
             candidate_bytes, actual_hash = read_selected_file(candidate, sizes=sizes)
-    except ConflictError as exc:
-        if 'candidate_not_selected_output' not in str(exc):
+    except SelectedFileConflict as exc:
+        if exc.error_code != 'candidate_not_selected_output':
             raise
-    if actual_hash is None and purpose == 'review':
-        # Diagnostics must still identify a previously produced file after a
-        # revision invalidates current output. Bound reads by committed output
-        # lengths, never by the caller's file size or an arbitrary path.
-        from .snapshots import committed_snapshots
-        seen = set()
-        for snapshot in committed_snapshots(store):
-            prior = (snapshot.get('outputs') or {}).get('pptx')
-            if not prior or prior['sha256'] in seen:
-                continue
-            seen.add(prior['sha256'])
-            raw = store.read_object_bytes(store.read_object_json(prior)['file'])
-            sizes.add(len(raw))
-        if sizes:
+    matches, history_gaps, history_status = [], [], 'not_requested'
+    if purpose == 'review' and (actual_hash is None or actual_hash not in (expected_hash, sanitized_hash)):
+        rows, history_gaps = _historical_outputs(store, document)
+        sizes.update(row['size'] for row in rows)
+        if actual_hash is None and sizes:
             try:
                 candidate_bytes, actual_hash = read_selected_file(candidate, sizes=sizes)
-            except ConflictError as exc:
-                if 'candidate_not_selected_output' not in str(exc):
+            except SelectedFileConflict as exc:
+                if exc.error_code != 'candidate_not_selected_output':
                     raise
+        matched = [row for row in rows if row['file_sha256'] == actual_hash]
+        attempted = set()
+        for row in matched:
+            key = row['file_sha256']
+            if key in attempted:
+                continue
+            attempted.add(key)
+            try:
+                store.read_object_bytes(row['file_ref'])  # verifies the matched immutable hash once
+            except (StoreError, OSError, ValueError) as exc:
+                history_gaps.append({'code': 'historical_output_unverifiable',
+                                     'revision_id': row['revision_id'], 'reason': type(exc).__name__})
+        history_status = 'incomplete' if history_gaps else 'complete'
+        if not history_gaps:
+            matches = [{k: row[k] for k in ('revision_id', 'output_ref', 'file_sha256')} for row in matched]
     gaps = []
+    if history_gaps:
+        gaps.append('historical_output_unverifiable')
     if not output_ref:
         gaps.append("missing_current_pptx")
     if actual_hash is None or actual_hash not in (expected_hash, sanitized_hash):
@@ -145,7 +187,10 @@ def check_handoff(project_dir, *, file_path, purpose="review", notes_policy=None
         "file_sha256": actual_hash,
         "current_pptx_sha256": expected_hash,
         "sanitized_pptx_sha256": sanitized_hash,
-        "candidate_relation": ("immutable_original" if actual_hash is not None and actual_hash==expected_hash else "sanitized_copy" if actual_hash is not None and actual_hash==sanitized_hash else "unverified"),
+        "candidate_relation": ("immutable_original" if actual_hash is not None and actual_hash==expected_hash else "sanitized_copy" if actual_hash is not None and actual_hash==sanitized_hash else "historical_output" if matches else "unverified"),
+        "matched_historical_outputs": matches,
+        "history_status": history_status,
+        "history_gaps": history_gaps,
         "input_alignment": alignment,
         "page_count": len(document.get("pages") or []),
         "render_report_status": report_status or "not_evaluated",
