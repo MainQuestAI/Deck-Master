@@ -78,9 +78,10 @@ def project(store, artifact, control, summary, *, fixed=False):
             (action['kind'] in ('prepare_stage', 'refresh_stage') and
              (content_only or design_plan or {'svg_preview': 'svg', 'ppt_preview': 'output', 'pptx': 'output'}.get(action['layer'], action['layer']) not in scope.get('layers', []))))
         (optional if outside else actions).append(action)
-    # Preserve the existing factual order (including production layer order)
-    # within one priority; opaque identities are not a work sequence.
-    actions.sort(key=lambda a: PRIORITY.get(a['kind'], 99))
+    # Keep usable navigation ahead of disabled factual records. Within each
+    # priority, preserve the production layer order; opaque identities are not
+    # a work sequence.
+    actions.sort(key=lambda a: (not a['enabled'], PRIORITY.get(a['kind'], 99)))
     review = {'status': 'not_evaluated', 'review_refs': artifact.get('reviews') or [],
               'missing_units': [], 'blocking_findings': []}
     if (request.get('content_intent') == 'plan_only' or not artifact.get('pages')) and artifact.get('narrative') and artifact.get('content_plan'):

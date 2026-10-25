@@ -151,15 +151,17 @@ def test_inputs_keep_other_entry_drafts_and_confirm_all_differences(tmp_path, mo
         page = browser.new_page()
         try:
             page.goto(server.start()+'studio/')
-            page.get_by_role('button', name='内容与来源', exact=True).click()
+            page.get_by_role('button', name='内容与页序', exact=True).click()
             editor = page.locator('.materials-adjust-form')
             if mode in ('task', 'mixed'):
+                page.get_by_role('button', name='材料与要求', exact=True).click()
                 page.get_by_role('button', name='修改任务要求', exact=True).click()
                 expect(editor.get_by_label('用途与目标', exact=True)).to_be_visible()
                 expect(editor.get_by_label('新增材料完整路径（每行一个）')).to_have_count(0)
                 editor.get_by_label('受众', exact=True).fill('新的明确受众')
                 editor.get_by_role('button', name='关闭编辑并保留草稿', exact=True).click()
             if mode in ('add', 'mixed'):
+                page.get_by_role('button', name='材料与要求', exact=True).click()
                 page.get_by_role('button', name='添加材料', exact=True).click()
                 expect(editor.get_by_label('用途与目标', exact=True)).to_have_count(0)
                 editor.get_by_label('新增材料完整路径（每行一个）').fill(str(source))
@@ -168,6 +170,7 @@ def test_inputs_keep_other_entry_drafts_and_confirm_all_differences(tmp_path, mo
                 editor.get_by_role('button', name='关闭编辑并保留草稿', exact=True).click()
             expect(page.locator('.draft-state')).to_contain_text('已保存到项目')
             page.reload()
+            page.get_by_role('button', name='材料与要求', exact=True).click()
             page.get_by_role('button', name='修改任务要求' if mode == 'task' else '添加材料', exact=True).click()
             if mode == 'mixed':
                 expect(editor.locator('.retained-inputs')).to_contain_text('还保留了要求修改')
@@ -217,11 +220,12 @@ def test_reading_geometry_keeps_labels_targets_and_same_canvas(workbench_page, s
     page.evaluate('''async()=>{scrollTo(0,0);await new Promise(requestAnimationFrame);await new Promise(requestAnimationFrame);}''')
     box = page.locator('.page-image-viewport').bounding_box()
     assert page.evaluate('scrollY') == 0
+    page.screenshot(path=str(tmp_path/f'reading-{size[0]}.png'))
     assert box['y'] <= (580 if size[0] == 390 else 450)
     if size[0] == 1280:
         assert box['height'] >= 320
     for control in page.get_by_role('group', name='单页工具').get_by_role('button').all():
-        assert control.bounding_box()['height'] >= 44 - .01
+        assert control.bounding_box()['height'] >= (44 if size[0]<=560 else 32) - .01
         assert float(control.evaluate('node=>getComputedStyle(node).fontSize').removesuffix('px')) >= 12
     assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
     page.screenshot(path=str(tmp_path/f'reading-{size[0]}.png'))

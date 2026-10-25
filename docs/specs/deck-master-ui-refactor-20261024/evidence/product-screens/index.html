@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Deck Master · 产品实现截图</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f4f5;color:#1b1f24;font:14px/1.6 system-ui,-apple-system,sans-serif}header{padding:28px 32px 20px;background:white;border-bottom:1px solid #dfe2e6}h1{font-size:24px;margin:0 0 8px}p{margin:0;color:#68717d}nav{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}button,select{font:inherit;color:inherit;background:white;border:1px solid #b8bec6;border-radius:6px;padding:6px 12px;cursor:pointer}button[aria-pressed=true]{background:#1b1f24;color:white;border-color:#1b1f24}:focus-visible{outline:2px solid #2463ba;outline-offset:3px}figure{margin:24px auto;padding:0 20px;max-width:1500px}img{display:block;width:100%;height:auto;border:1px solid #dfe2e6;border-radius:8px;background:white}figure.narrow{max-width:430px}figcaption{margin:12px 0;color:#68717d}a{color:#215da8}
+</style>
+<header><h1>Deck Master · 产品实现截图</h1><p>五个工作面、单页阅读与编辑抽屉。来自当前产品实现的同一套合成项目，没有客户资料或模型调用。</p>
+<nav aria-label="截图场景" id="screens"></nav><nav><label>视口宽度 <select id="width"><option>1440</option><option>1280</option><option>390</option></select> px</label><a href="../../IMPLEMENTATION-STATUS.md">实施与验证台账</a></nav></header>
+<figure><img id="capture" alt=""><figcaption id="caption"></figcaption></figure>
+<script>
+const names={'launcher-0':'项目入口 · 空','launcher-1':'项目入口 · 1 项','launcher-30':'项目入口 · 30 项',overview:'制作总览',content:'内容与页序',page:'单页阅读',editor:'正文编辑',gallery:'整稿画廊',style:'风格校准',runs:'任务与交付'};let current='overview';
+const nav=document.querySelector('#screens'),width=document.querySelector('#width');
+for(const [key,name]of Object.entries(names)){const button=document.createElement('button');button.textContent=name;button.dataset.screen=key;button.onclick=()=>{current=key;render()};nav.append(button)}
+function render(){for(const button of nav.children)button.setAttribute('aria-pressed',String(button.dataset.screen===current));document.querySelector('figure').classList.toggle('narrow',width.value==='390');const image=document.querySelector('#capture');image.src=current+'-'+width.value+'.png';image.alt=names[current]+'，'+width.value+'像素视口';document.querySelector('#caption').textContent=names[current]+' · '+width.value+' px · 实际产品截图；此查看器不执行产品操作。'}
+width.onchange=render;render();
+</script></html>

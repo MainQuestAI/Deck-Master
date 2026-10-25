@@ -36,6 +36,7 @@ def test_speech_clipboard_and_no_phase_catalog(tmp_path, route, role, phase, uni
             try:
                 page.goto(link)
                 if route == 'studio/':
+                    page.get_by_role('button',name='更多内容工具',exact=True).click()
                     page.get_by_role('button',name='方法与案例',exact=True).click()
                 area = page.get_by_role('heading',name='方法与案例准备',exact=True).locator('..')
                 expect(area).to_contain_text('当前没有可准备的新阶段')

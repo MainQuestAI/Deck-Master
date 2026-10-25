@@ -17,7 +17,7 @@ import deck_master
 from deck_master import cli, content_review, native_review, review_evidence, service, tasks
 from deck_master.store import Store
 from deck_master.web import WorkbenchServer
-from test_content_preproduction_review import _deck
+from test_content_preproduction_review import _deck, _review
 
 
 class FixtureSession:
@@ -144,6 +144,98 @@ def test_failed_judgments_do_not_become_pass(tmp_path, native):
     assert result["preproduction"]["status"] != "pass"
     assert _review_task(store)["status"] == "completed"
     assert content_review.qualify_for_production(store, store.load_document())["status"] != "pass"
+
+
+def test_empty_pass_recheck_preserves_native_output_and_accepts_receipt(tmp_path, native, monkeypatch):
+    project, store = _deck(tmp_path)
+    original = native.review
+
+    def recheck(self, prompt, schema):
+        observed = original(self, prompt, schema)
+        rows = json.loads(observed["raw_final_message"])["reviews"]
+        if len(self.calls) > 1:
+            prior = next(row for row in self.calls[-1]["prior_reviews"]
+                         if row["review"]["kind"] == "progression")
+            next(row for row in rows if row["kind"] == "progression")["replaces"] = prior["ref"]
+        observed["raw_final_message"] = json.dumps({"reviews": rows})
+        return observed
+
+    monkeypatch.setattr(native, "review", recheck)
+    assert native_review.run(project)["preproduction"]["status"] == "pass"
+    before = deepcopy(store.load_document())
+    prior_progression = next(ref for ref in before["reviews"]
+                             if store.read_object_json(ref)["kind"] == "progression")
+    # A clean unit is only rechecked after explicit force_units selection.
+    assert native_review.run(project, force_units=["progression"])["preproduction"]["status"] == "pass"
+    after = store.load_document()
+    for key in ("narrative", "content_plan", "pages", "outputs", "design_context"):
+        assert after.get(key) == before.get(key)
+    progression = next(store.read_object_json(ref) for ref in reversed(after["reviews"])
+                       if store.read_object_json(ref).get("kind") == "progression")
+    observed = store.read_object_json(progression["reviewer"]["evidence_ref"])
+    raw = next(row for row in json.loads(observed["raw_final_message"])["reviews"]
+               if row["kind"] == "progression")
+    assert raw["findings"] == progression["findings"] == []
+    assert raw["replaces"] == progression["replaces"] == prior_progression
+    assert native.calls[-1]["packet"]["required_units"] == ["progression"]
+    assert [owner["review_ref"] for owner in native.calls[-1]["packet"]["review_scope"]["owners"]] == [prior_progression]
+    assert raw["status"] == progression["status"] == "pass"
+    assert _review_task(store)["status"] == "completed"
+
+
+@pytest.mark.parametrize("case", ["drop_finding", "disjoint_findings", "failed_prior",
+                                  "new_finding_fixed", "new_finding_variance", "new_finding_without_observation",
+                                  "no_observation", "stage_changed"])
+def test_empty_recheck_exception_cannot_hide_findings_or_expand_stages(tmp_path, case):
+    _, store = _deck(tmp_path)
+    reviewer = {"type": "host_self", "id": "synthetic-author", "execution_ref": None,
+                "independence_confirmed": False, "assurance": "unverified"}
+    prior = _review(store, store.load_document(), "progression", reviewer=reviewer)
+    candidate = deepcopy(prior)
+    problem = {"finding_id": "F1", "kind": "content", "impact": "must_fix", "page_id": "p1",
+               "element_refs": ["atom:p1:title"], "message": "unresolved", "expected": "repair",
+               "actual": "missing", "evidence": [], "resolution": "open"}
+    if case in ("drop_finding", "disjoint_findings"):
+        prior["findings"] = [problem]
+    if case == "disjoint_findings":
+        candidate["findings"] = [{**problem, "finding_id": "F2"}]
+    if case == "failed_prior":
+        prior["status"] = "fail"
+    if case.startswith("new_finding"):
+        candidate["status"] = "fail"
+        candidate["findings"] = [problem]
+    if case == "new_finding_fixed":
+        candidate["findings"][0]["resolution"] = "fixed"
+    if case == "new_finding_variance":
+        candidate["findings"][0].update(resolution="accepted_variance", impact="needs_judgment")
+    if case == "new_finding_without_observation":
+        candidate["observations"] = [" "]
+    if case == "no_observation":
+        candidate["observations"] = [" "]
+    if case == "stage_changed":
+        candidate["review_stage"] = "final"
+    candidate["replaces"] = store.put_json_object(prior)
+    error = "same logical review" if case == "stage_changed" else "no shared finding_id"
+    with pytest.raises(tasks.EnvelopeError, match=error):
+        tasks._adopt_review(store, candidate)
+
+
+@pytest.mark.parametrize("status", ["pass", "fail"])
+def test_observed_final_recheck_preserves_existing_stage_scope_and_new_verdict(tmp_path, status):
+    """A clean prior v2 final review may be rechecked, including new bad news."""
+    _, store = _deck(tmp_path)
+    reviewer = {"type": "host_self", "id": "synthetic-author", "execution_ref": None,
+                "independence_confirmed": False, "assurance": "unverified"}
+    prior = _review(store, store.load_document(), "content", reviewer=reviewer)
+    prior["review_stage"] = "final"
+    candidate = deepcopy(prior)
+    candidate.update(status=status, replaces=store.put_json_object(prior),
+                     observations=["Synthetic observed recheck of the same final content scope."])
+    before = store.load_document()
+    assert tasks._adopt_review(store, candidate) == candidate
+    assert candidate["subjects"] == prior["subjects"]
+    assert candidate["dependencies"] == prior["dependencies"]
+    assert store.load_document() == before
 
 
 def test_invalid_output_marks_failure_and_only_explicit_retry_calls_again(tmp_path, native):

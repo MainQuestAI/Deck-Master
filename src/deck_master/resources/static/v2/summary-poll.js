@@ -33,16 +33,16 @@ export class SummaryPoll {
     if (this.stopped || document.hidden) return;
     if (this.busy) { this.again = true; return; }
     clearTimeout(this.timer); this.busy = true; this.controller = new AbortController();
-    const generation = this.generation;
-    const isCurrent = () => !this.stopped && !document.hidden && generation === this.generation;
+    const generation = this.generation, controller = this.controller;
+    const valid = () => !this.stopped && !document.hidden && !controller.signal.aborted && generation === this.generation;
     try {
-      const value = await this.read(this.controller.signal);
-      if (!isCurrent()) return;
-      await this.onValue(value, isCurrent);
-      if (!isCurrent()) return;
+      const value = await this.read(controller.signal);
+      if (!valid()) return;
+      await this.onValue(value, valid);
+      if (!valid()) return;
       this.delay = this.interval(value);
     } catch (error) {
-      if (error.name !== 'AbortError' && isCurrent()) {
+      if (error.name !== 'AbortError' && valid()) {
         this.delay = Math.min(30000, this.delay * 2); this.onError(error);
       }
     } finally {

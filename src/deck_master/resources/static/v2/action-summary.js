@@ -39,6 +39,7 @@ export function todoTitle(action) {
   return action.page_ids?.length ? `${action.page_ids.length} 页${base}` : base;
 }
 export function reasonText(action) {
+  if(action.enabled===false)return ({candidate_unreadable:'候选记录暂不可读，已保留并隔离。',candidate_task_unreadable:'候选所属任务无法确认，暂不推荐采用。',candidate_basis_unreadable:'生成依据暂不可读，当前关系待核实。',request_binding_missing:'未记录与当前请求的绑定，保留为待核实记录。',target_identity_mismatch:'对象身份不完整，保留记录但不会猜测目标。'})[action.blocked_reason]||'当前关系待核实，记录仍保留。';
   if (action.kind === 'compare_candidates' && action.state === 'unknown') return '候选依据或任务关系暂不可核实，先查看原记录。';
   return (reasonLabels[action.reason_code] || action.reason_code || '') +
     (action.blocked_reason === 'candidate_unreadable' ? ' 候选记录损坏，已隔离。' : '');
@@ -55,5 +56,5 @@ export function todoButton(app, action, primary = false, beforeNavigate = () => 
   const blocked = action.enabled === false;
   const precise = app.health.ui_capabilities?.includes('action_targets.v1');
   return disabledReason(button((nextLabels[action.kind] || '查看') + (precise ? '' : ' · 通用入口'), () => {beforeNavigate(); return openAction(app, action, actionRoute(action));}, primary,
-    {disabled: blocked}), blocked ? '该项记录暂不可读（已隔离），先处理其它待办。' : '');
+    {disabled: blocked, 'data-priority-action': primary ? 'true' : null}), blocked ? '该项记录暂不可读（已隔离），先处理其它待办。' : '');
 }

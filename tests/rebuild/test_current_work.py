@@ -177,7 +177,10 @@ def test_unresolved_execution_precedes_delivery_or_early_review(tmp_path, kind):
     summary = workbench.workbench_summary(project)
     action = {'kind': 'verify_execution', 'action_id': 'unknown-original-execution',
               'page_ids': [], 'layer': None, 'enabled': True}
-    summary['next_actions']['actions'].append(action)
+    # Outline-only work may correctly expose no legacy v1 actions; inject the
+    # actual unresolved execution fact for this priority-specific scenario.
+    summary['next_actions'].update(status='recorded')
+    summary['next_actions'].setdefault('actions', []).append(action)
     work = project_work(store, doc, doc, summary)
     assert work['next']['action'] == 'verify_execution'
     assert work['next']['primary_action'] == action

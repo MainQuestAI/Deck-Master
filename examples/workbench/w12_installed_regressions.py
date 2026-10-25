@@ -27,6 +27,17 @@ def main():
         'test_studio_page_browser.py', 'test_studio_reading_browser.py', 'test_studio_gallery_batch_browser.py',
         'test_studio_candidate_batch_browser.py', 'test_studio_delivery_browser.py',
         'test_personal_recovery_browser.py',
+        'test_pr188_design_repairs_browser.py', 'test_pr188_design_content_browser.py',
+        'test_pr188_design_context_browser.py', 'test_pr188_design_type_browser.py',
+    ]
+    # Cross-branch boundaries must also execute against the final installed wheel.
+    integration_tests = [
+        'test_current_work.py', 'test_current_work_dialog_browser.py',
+        'test_pr187_summary_reuse_browser.py', 'test_outline_review.py',
+        'test_source_finding_repair.py', 'test_rc3_external_report.py',
+        'test_paused_exact_replay.py', 'test_pr187_review_regressions.py',
+        'test_pr188_completed_content.py', 'test_ui_current_relationship.py',
+        'test_integration_current_relationship.py', 'test_integration_current_work_browser.py',
     ]
     result = pytest.main(['-q', str(repo / 'tests/rebuild/test_rc_closure_browser.py'),
                          str(repo / 'tests/rebuild/test_settled_image_reuse.py'),
@@ -44,7 +55,7 @@ def main():
                          str(repo / 'tests/rebuild/test_ui_design_browser.py') + '::test_modal_falls_back_to_the_caller_provided_focus_when_trigger_gone',
                          str(repo / 'tests/rebuild/test_navigation_usability_browser.py'),
                          str(repo / 'tests/rebuild/test_ux08_task_walkthrough_browser.py'),
-                         *[str(repo / 'tests/rebuild' / name) for name in studio_tests],
+                         *[str(repo / 'tests/rebuild' / name) for name in [*studio_tests, *integration_tests]],
                          '--require-browser'])
     modules = {name: str(Path(module.__file__).resolve()) for name, module in sys.modules.items()
                if (name == 'deck_master' or name.startswith('deck_master.')) and getattr(module, '__file__', None)}

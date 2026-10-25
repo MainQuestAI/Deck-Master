@@ -1,5 +1,5 @@
 import {get, post, readableError} from './api.js';
-import {el, button, heading, empty, field, modal, version, toast} from './dom.js';
+import {el, button, heading, empty, field, modal, version, toast, actionMenu} from './dom.js';
 import {surfaces, layers} from './routes.js';
 import {externalReviewForm} from './collaboration-desk.js';
 import {draftIntake} from './draft-intake.js';
@@ -46,7 +46,7 @@ export async function launcher(root, health) {
         el('div', {class: 'row wrap'}, button('打开项目', async event => {
           const trigger = event.currentTarget; trigger.disabled = true;
           try { await open(entry.entry_id); } catch (error) { rowError.textContent = readableError(error); trigger.disabled = false; }
-        }, false, {disabled: !entry.available}), button('从列表移除', () => {
+        }, false, {disabled: !entry.available}), actionMenu('项目操作 · '+entry.title,[button('从列表移除', () => {
           const dialog = modal('从最近项目移除', el('p', {}, `仅取消“${entry.title}”的注册，项目文件和历史继续保留。`),
             [button('移除条目', async () => {
               try {
@@ -65,7 +65,7 @@ export async function launcher(root, health) {
             // A late reply belongs to this confirmation, not a subsequently opened form.
             if (dialog.open && dialog.firstElementChild === content) dialog.close();
           };
-        }, false, {class: 'quiet'}))));
+        }, false, {class: 'quiet'})]))));
     }
   };
   search.addEventListener('input', renderList);

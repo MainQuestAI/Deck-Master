@@ -219,6 +219,28 @@ def test_restyle_uses_target_first_then_ordered_original_jpeg_and_png_through_fr
     assert shown["observations"][-1]["submitted"]["references"] == expected
     assert shown["call"]["state"] == "consumed"
     assert store.load_document()["pages"] == original_pages
+    before_read = store.read_current()
+    compared = candidates.show(path, candidate_id=candidate_id)
+    assert [row['file'] for row in compared['reference_sources']] == [jpeg_row['original']['file'], png_row['original']['file']]
+    assert compared['references'] == expected
+    assert store.read_current() == before_read
+
+
+def test_initial_external_reference_candidate_readback_keeps_original_bytes(tmp_path):
+    path, store, _ = project(tmp_path)
+    reference, row, raw = import_reference(path, store, jpeg=True)
+    value = input_value(store.load_document(), ids=['p1'])
+    value['reference_refs'] = [reference]
+    recipe = confirmed(path, store, **value)
+    task = dispatch(path, store, recipe, ['p1'])[0]
+    candidate_id, _ = candidate(path, store, task)
+    before = store.read_current()
+    compared = candidates.show(path, candidate_id=candidate_id)
+    assert compared['reference_sources'] == [{**reference, 'file': row['original']['file']}]
+    assert store.read_object_bytes(compared['reference_sources'][0]['file']) == raw
+    assert compared['reference_sources'][0]['file'] != row['preview']['file']
+    assert compared['references'] == compared['request']['input']['references']
+    assert store.read_current() == before
 
 
 @pytest.mark.parametrize("ids", [["p1"], ["p1", "p2"]])

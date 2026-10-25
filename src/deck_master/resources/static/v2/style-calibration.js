@@ -1,4 +1,5 @@
 import {designBasis, initialDesign} from './design-entry.js';
+import {recipeOrigin, recipeDetails} from './style-record.js';
 import {visualStyle} from './visual-style.js';
 import {stylePhases, studioStyle, styleDisclosure} from './style-phases.js';
 import {candidateCards} from './candidate-cards.js';
@@ -11,7 +12,6 @@ import {observerLabels} from './request-view.js';
 
 const names = {palette: '配色', typography: '文字层级', density: '密度', lines: '线条', composition: '构图', spacing:'间距', icons:'图标'};
 const recipeKind = r => r.schema_version === 'style_recipe.v3' ? ({initial_design:'初始设计',restyle:'重新设计',feasibility:'可行性方案'}[r.intent] || r.intent) : r.schema_version === 'style_recipe.v2' ? '截图风格' : '项目页面风格';
-const recipeReference = (r, label) => r.schema_version === 'style_recipe.v1' ? `${label(r.input.reference.page_id)} · ${version(r.input.reference.revision_id)}` : r.schema_version === 'style_recipe.v2' ? '独立截图参考' : `${r.reference_refs.length} 个独立参考（初始设计可无旧图）`;
 const defaults = {palette: '借用参考页配色', typography: '借用参考页文字层级'};
 const phase = (title, ...body) => {
   const summary = el('span', {class: 'muted style-phase-state'});
@@ -92,15 +92,15 @@ export function style(app) {
   function renderRecipeLibrary(){
     if(!recipeLibrary)return;
     const query=recipeSearch.value.trim().toLocaleLowerCase();
-    const rows=[...recipeRecords.values()].filter(r=>`${r.version} ${r.input.instruction} ${recipeKind(r)} ${recipeReference(r,label)} ${r.input.target_page_ids.map(label).join(' ')}`.toLocaleLowerCase().includes(query));
+    const rows=[...recipeRecords.values()].filter(r=>`${r.version} ${r.input.instruction} ${recipeOrigin(r,label)} ${r.recipe_id} ${r.input.target_page_ids.map(label).join(' ')}`.toLocaleLowerCase().includes(query));
     const count=Math.max(1,Math.ceil(rows.length/6));recipePage=Math.min(recipePage,count-1);
     const current=recipeRecords.get(recipes.value);
-    recipeSelected.textContent=current?`当前查看 V${current.version} · ${current.input.instruction} · ${current.input.target_page_ids.length} 页范围`:'尚未选用规范；可以先检查并确认上方要求。';
+    recipeSelected.textContent=current?`本次选中 V${current.version} · ${current.input.instruction} · ${current.input.target_page_ids.length} 页范围`:'尚未选用规范；可以先检查并确认上方要求。';
     recipeList.replaceChildren(...rows.slice(recipePage*6,recipePage*6+6).map(r=>el('article',{class:'studio-recipe-card','data-recipe-id':r.recipe_id},
-      el('div',{class:'row wrap'},el('h3',{},`V${r.version} · ${r.input.instruction}`),el('span',{class:'studio-rule-state'},recipeKind(r))),
-      el('p',{class:'muted'},`参考：${recipeReference(r,label)}`),
+      el('div',{class:'row wrap'},el('h3',{},`V${r.version} · ${r.input.instruction}`),el('span',{class:'studio-rule-state'},recipes.value===r.recipe_id?'本次选中':'已确认记录')),
+      el('p',{class:'muted'},`${recipeOrigin(r,label)} · 固定依据 ${version(r.base_revision)} · ${r.schema_version}`),
       el('p',{},'目标：'+r.input.target_page_ids.map(label).join('、')),
-      button(recipes.value===r.recipe_id?'正在查看此规范':'使用这版规范',()=>{recipes.value=r.recipe_id;selectRecipe();},false,{'aria-pressed':String(recipes.value===r.recipe_id)}))));
+      button(recipes.value===r.recipe_id?'本次已选中':'使用这版规范',()=>{recipes.value=r.recipe_id;selectRecipe();},false,{'aria-pressed':String(recipes.value===r.recipe_id)}))));
     if(!rows.length)recipeList.append(el('p',{class:'muted'},'没有匹配的规范，当前选择保持不变。'));
     recipePager.replaceChildren(button('上一组规范',()=>{recipePage--;renderRecipeLibrary();},false,{disabled:recipePage===0}),el('span',{},`第 ${recipePage+1} / ${count} 组 · ${rows.length} 个规范`),button('下一组规范',()=>{recipePage++;renderRecipeLibrary();},false,{disabled:recipePage+1===count}));
     recipePager.hidden=rows.length<=6;
@@ -306,7 +306,7 @@ export function style(app) {
     }); } catch (error) { notice.textContent = readableError(error); }
     finally { busy = false; if (!disposed) controls(); }
   }
-  let recipeRecords = new Map(), recipeSerial = 0;
+  let recipeRecords = new Map(), recipeRefs = new Map(), recipeSerial = 0;
   async function loadRecipes(chosen) {
     const token = ++recipeSerial;
     try {
@@ -315,6 +315,7 @@ export function style(app) {
       const keep = typeof chosen === 'string' ? chosen : recipes.value || editor().draft.content.style_trial?.recipe_id;
       result.recipes=result.recipes.filter(v=>['style_recipe.v1','style_recipe.v2','style_recipe.v3'].includes(v.recipe.schema_version));
       recipeRecords = new Map(result.recipes.map(v => [v.recipe.recipe_id,v.recipe]));
+      recipeRefs = new Map(result.recipes.map(v => [v.recipe.recipe_id,v.ref]));
       recipes.replaceChildren(el('option', {value:''}, '选择已确认版本'), ...result.recipes.map(({recipe:r},i) => el('option', {value:r.recipe_id}, `${i+1} · ${recipeKind(r)} · V${r.version} · ${r.input.instruction.slice(0,45)}`)));
       recipes.value = recipeRecords.has(keep) ? keep : ''; selectRecipe(true);
     } catch (error) { if (!disposed) notice.textContent = readableError(error); }
@@ -323,29 +324,15 @@ export function style(app) {
     recipe = recipeRecords.get(recipes.value) || null; renderRecipeLibrary(); expansion.clear(); adoptedCandidate.value = ''; invalidatePlan(false); recipeView.replaceChildren(); trialPage.replaceChildren(); expansionTargets.replaceChildren();
     if (!recipe) return;
     showPhase(2, {auto: restore});
-    recipeView.append(el('p', {}, `V${recipe.version} · ${recipeKind(recipe)} · ${recipe.schema_version}`),
-      el('p', {}, recipe.input.instruction),
-      el('p', {}, '范围：' + (recipe.input.target_page_ids.map(label).join('、') || '未指定页面')),
-      el('p', {class:'muted'}, `参考：${recipeReference(recipe,label)}`),
-      el('p', {class:'muted'}, `方案依据版本 ${version(recipe.base_revision)}；正在读取项目版本 ${version(app.route.revision)}。这是该范围的已保存记录，不代表当前全稿方向或生产许可；沿用前会重新核对依据。`));
-    if (recipe.schema_version === 'style_recipe.v3') {
-      recipeView.append(el('p', {}, recipe.layout_rationale),
-        ...Object.entries(recipe.parameters).filter(([,value]) => typeof value === 'string').map(([key,value]) => el('p', {}, `${names[key] || key}：${value}`)),
-        el('p', {}, '配色：' + Object.entries(recipe.parameters.palette).map(([key,value]) => `${key} ${value}`).join('；')),
-        el('p', {}, `字号：标题 ${recipe.parameters.typography.heading_size_pt}pt，正文 ${recipe.parameters.typography.body_size_pt}pt，辅助文字 ${recipe.parameters.typography.auxiliary_size_pt}pt`),
-        el('p', {}, '允许覆盖：' + (recipe.parameters.allowed_overrides.map(key => names[key] || key).join('、') || '无')),
-        detail('完整固定参数与字体', json(recipe.parameters)),
-        detail('样页覆盖与取舍', json(recipe.page_profiles), json(recipe.sample_targets), json(recipe.uncovered_cases), json(recipe.tradeoffs)),
-        el('p', {class:'muted'}, recipe.intent === 'feasibility' ? '可行性方案仅供阅读；需要另行确认生产规范才能试作。' : '可沿用本版本预览所选范围内的试作；修改结构化方案请通过设计规划入口，不转换为页面参考规范。'));
-    } else {
-      recipeView.append(el('p', {class:'muted'}, '借用：' + Object.keys(recipe.dimensions).map(k => names[k] || k).join('、')),
-        detail('已确认的视觉规则', json(recipe.dimensions), json(recipe.preserve_dimensions)));
-      if (recipe.schema_version === 'style_recipe.v1') recipeView.append(button('以此版本修改要求', () => {
+    recipeView.append(el('h3', {}, `V${recipe.version} · ${recipeOrigin(recipe,label)}`), el('p', {}, recipe.input.instruction),
+      el('p',{class:'muted'},`${recipe.schema_version} · 固定依据 ${version(recipe.base_revision)} · 范围 ${recipe.input.target_page_ids.map(label).join('、')}`),
+      el('p',{class:'muted'},'这里选中的是本次试作依据，不代表已应用到当前全稿。未确认的修改不会进入试作。'),
+      recipeDetails(recipe,label),
+      recipe.schema_version==='style_recipe.v1'?button('以此版本修改要求', () => {
         if (app.readonly) return; hydrateState({...recipe.input, reference: recipe.input.reference, targets:recipe.input.target_page_ids, parent_recipe_id:recipe.recipe_id}); changed();
-      }));
-      else recipeView.append(el('p', {class:'muted'}, '修改截图规范请在外部图片入口恢复这版规范；这里可直接预览已确认范围的试作。'));
-    }
-    recipeView.append(detail('固定版本差异与约束', json(recipe.diff), json(recipe.conflicts)));
+      }):el('p',{class:'muted'},recipe.schema_version==='style_recipe.v2'?'修改图片规范请使用外部图片的已保存规范入口；本处按完整固定版本试作。':'修改这份结构化设计需由 Deck Master Agent 沿用固定规范与明确页范围产生新版本；本处保留完整参数，不降级为跨页借用。'),
+      recipe.intent==='feasibility'&&el('p',{class:'notice'},'这是零调用的版式可行性方案，不能直接派发图像制作。先基于它确认生产设计方案。'),
+      detail('固定版本差异与约束', json(recipe.diff), json(recipe.conflicts)));
     const saved = restore && editor().draft.content.style_trial?.recipe_id === recipe.recipe_id ? editor().draft.content.style_trial : null;
     if (saved) { adoptedCandidate.value = saved.adopted_candidate_id || ''; calls.value = saved.max_calls || 1; for (const id of saved.expansion || []) if (recipe.input.target_page_ids.includes(id)) expansion.add(id); }
     for (const id of recipe.input.target_page_ids) {
@@ -385,11 +372,11 @@ export function style(app) {
     cards.reset();candidateRows.replaceChildren(); if (!chosen) return;
     try {
       const result = await read('/api/candidates?' + new URLSearchParams({revision:app.route.revision})); if (disposed || token !== candidateSerial) return;
-      const entries = result.candidates.filter(v => chosen.input.target_page_ids.includes(v.candidate.page_id) && v.candidate.stage === 'blueprint').slice(-30);
+      const entries = result.candidates.filter(v => v.style_recipe_ref?.sha256===recipeRefs.get(chosen.recipe_id)?.sha256 && chosen.input.target_page_ids.includes(v.candidate.page_id) && v.candidate.stage === 'blueprint').slice(-30);
       candidateRows.append(...cards.render(entries, result.revision_id, {namedComparison:true,extra:v => el('div', {class:'row wrap'},
         // 扩展动作属于阶段 4（试作与采用是阶段 3）：入口必须落在真实阶段。
         v.status === 'adopted' && !app.readonly && button('从此候选扩展', () => { adoptedCandidate.value = v.candidate.candidate_id; invalidatePlan(); showPhase(4); }))}));
-      candidateRows.append(el('p', {class:'muted'}, '显示最近一批目标页候选。是否属于这版风格、仍被采用及依据有效，由扩展计划再次核对。'), button('到任务页查看全部候选', () => app.go({surface:'runs', revision:result.revision_id, task_id:null, runs_area:'decisions'})));
+      candidateRows.append(el('p', {class:'muted'}, '显示这份固定规范最近一批目标页候选。是否仍被采用及依据有效，由扩展计划再次核对。'), button('到任务页查看全部候选', () => app.go({surface:'runs', revision:result.revision_id, task_id:null, runs_area:'decisions'})));
     } catch (error) { if (!disposed && token === candidateSerial) candidateRows.append(el('p', {class:'field-error'}, readableError(error))); }
   }
   function hydrateState(value) {

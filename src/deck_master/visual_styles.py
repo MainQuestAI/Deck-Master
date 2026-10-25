@@ -82,6 +82,8 @@ def import_reference(project, *, data=None, file=None, base_revision, operation_
         recovered = operations.recover(store, operation_id, digest)
         if recovered:
             return recovered
+        # A lost import response remains recoverable after pause. No new blob
+        # or revision is written until the current locked eligibility passes.
         eligibility.guard(store, doc, "asset.import",
                           context={"targets": {"layers": ["design"]}})
         if doc['revision_id'] != base_revision:

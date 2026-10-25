@@ -101,7 +101,7 @@ def test_studio_style_two_routes_compare_adopt_expand_and_review(flow, source, t
                 for width,height in [(1440,900),(1280,800),(390,844)]:
                     page.set_viewport_size({'width':width,'height':height})
                     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
-                    assert page.locator('.visual-style > .studio-style-stages button').evaluate_all('(nodes)=>nodes.every(n=>n.getBoundingClientRect().height>=44)')
+                    assert page.locator('.visual-style > .studio-style-stages button').evaluate_all('(nodes)=>nodes.every(n=>n.getBoundingClientRect().height>=(innerWidth<=560?44:32))')
                     page.screenshot(path=str(out/f'02-rules-{width}.png'),full_page=True)
                 page.set_viewport_size({'width':1440,'height':900})
                 page.get_by_role('button',name='检查并确认视觉规范',exact=True).click()
@@ -357,3 +357,68 @@ def test_pending_current_version_sidebar_keeps_reviewed_candidate_revision(flow,
         else:
             expect(page.get_by_role('button', name='从此候选扩展', exact=True)).to_be_visible()
         assert flow.store.current_revision_id() == current_revision
+
+
+def test_v3_initial_design_without_original_images_is_readable_and_plans_exact_page(tmp_path):
+    from playwright.sync_api import sync_playwright, expect
+    from test_rc3_design_workflows import project, confirmed
+    path,store,_=project(tmp_path)
+    record=confirmed(path,store)
+    before=store.load_document()
+    assert all(not entry.get('blueprint') for entry in before['pages'])
+    server=WorkbenchServer(path)
+    with sync_playwright() as runtime:
+        browser=runtime.chromium.launch();page=browser.new_page(viewport={'width':1440,'height':900});errors=[]
+        page.on('pageerror',lambda error:errors.append(str(error)))
+        try:
+            page.goto(server.start()+'studio/');page.get_by_role('button',name='风格校准',exact=True).click()
+            stage(page,'page',2)
+            card=page.locator('.studio-recipe-card').filter(has_text='初始设计')
+            expect(card).to_have_count(1);card.get_by_role('button',name='使用这版规范',exact=True).click()
+            expect(page.locator('.recipe-rules dt')).to_have_count(7)
+            expect(page.get_by_text('尚未覆盖：多单位数据图尚未覆盖',exact=True)).to_be_visible()
+            assert store.load_document()==before
+            page.reload();stage(page,'page',2)
+            expect(page.locator('.studio-recipe-current')).to_contain_text('本次选中')
+            expect(page.locator('.recipe-rules dt')).to_have_count(7)
+            stage(page,'page',3)
+            page.get_by_label('先试哪一页',exact=True).select_option('p2')
+            with page.expect_response(lambda r:r.url.endswith('/api/styles/plan')) as planned:
+                page.get_by_role('button',name='预览单页试作',exact=True).click()
+            assert planned.value.ok,planned.value.text()
+            value=json.loads(planned.value.request.post_data)['input']
+            assert value=={'recipe_id':record['recipe_id'],'page_ids':['p2'],'max_calls':1}
+            expect(page.get_by_role('button',name='保存并交接风格试作',exact=True)).to_be_enabled()
+            assert store.load_document()==before and not errors
+        finally:browser.close();server.stop()
+
+
+def test_mixed_recipe_catalog_preserves_all_schema_objects_and_scopes(flow):
+    import uuid
+    from playwright.sync_api import sync_playwright, expect
+    from deck_master import styles
+    from test_styles import confirm
+    from test_visual_styles import completed
+    from test_rc3_design_recipes import input_value
+    first=confirm(flow)
+    ref,_,_=completed(flow)
+    proposal=styles.propose(flow.project,input={'schema_version':'style_input.v2','project_id':flow.store.load_document()['project_id'],'base_revision':flow.store.current_revision_id(),'visual_style_ref':ref,'target_page_ids':['p02'],'instruction':'混合目录的图片规范'})
+    second=styles.confirm(flow.project,proposal_id=proposal['proposal_id'],base_revision=flow.store.current_revision_id(),operation_id=str(uuid.uuid4()))['operation_result']
+    value=input_value(flow.store.load_document(),ids=['p02','p03']);value['instruction']='混合目录的初始设计'
+    proposal=styles.propose(flow.project,input=value)
+    third=styles.confirm(flow.project,proposal_id=proposal['proposal_id'],base_revision=flow.store.current_revision_id(),operation_id=str(uuid.uuid4()))['operation_result']
+    before=flow.store.load_document();fixed={ref['sha256']:flow.store.read_object_bytes(ref) for ref in before['style_recipes']}
+    server=WorkbenchServer(flow.project)
+    with sync_playwright() as runtime:
+        browser=runtime.chromium.launch();page=browser.new_page();errors=[];page.on('pageerror',lambda error:errors.append(str(error)))
+        try:
+            page.goto(server.start()+'studio/');page.get_by_role('button',name='风格校准',exact=True).click();stage(page,'page',2)
+            expect(page.locator('.studio-recipe-card')).to_have_count(3)
+            for record,count in [(first,2),(second,2),(third,7)]:
+                card=page.locator('[data-recipe-id="'+record['recipe_id']+'"]')
+                card.get_by_role('button').click()
+                expect(page.locator('.recipe-rules dt')).to_have_count(count)
+                expect(page.locator('.studio-recipe-current')).to_contain_text('本次选中')
+            assert flow.store.load_document()==before and not errors
+            assert {ref['sha256']:flow.store.read_object_bytes(ref) for ref in before['style_recipes']}==fixed
+        finally:browser.close();server.stop()

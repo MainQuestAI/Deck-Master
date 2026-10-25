@@ -7,6 +7,8 @@ import {todoTitle, todoMeta, todoButton} from './action-summary.js';
 export function currentWork(app, work = app.summary.current_work) {
   if (!work) return el('section', {class:'overview-todos stack', 'data-current-work':'true'},
     el('h2', {}, '本次工作投影待重新读取'),
+    el('p', {}, '当前控制状态与工作投影尚未对齐。已读稿件和版本保持，重新读取后再查看下一动作。'),
+    button('重新读取本次工作', () => app.loadRoute({...app.route})),
     button('阅读已有产物', () => app.go({surface:'content'})));
   let panel;
   const closePanel = () => panel.closest('dialog')?.close();
@@ -36,7 +38,7 @@ export function currentWork(app, work = app.summary.current_work) {
         ' · 审查：' + (checks[work.review.status] || work.review.status)),
       el('div', {class:'todo-bottom'},
         next.primary_action && el('span', {}, todoMeta(app, next.primary_action)),
-        button(next.label, () => {closePanel();if(next.primary_action)openAction(app,next.primary_action,{surface:next.surface});else app.go(next.navigation||{surface:next.surface});}, true, {disabled:next.primary_action?.enabled===false}))),
+        button(next.label, () => {closePanel();if(next.primary_action)openAction(app,next.primary_action,{surface:next.surface});else app.go(next.navigation||{surface:next.surface});}, true, {disabled:next.primary_action?.enabled===false,'data-priority-action':'true'}))),
     el('div', {class:'stack'}, secondary, optional,
       work.blockers.length > 0 && el('p', {class:'field-error'}, '接续仍有阻断，请查看具体范围与依据。'),
       !rest.length && evidence));

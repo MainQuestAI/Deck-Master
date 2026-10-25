@@ -72,6 +72,13 @@ def test_old_pass_does_not_mask_ready_recovery(tmp_path, native, monkeypatch):
     recovered = native_review.recover(project, task_id=task['task_id'])
     assert recovered['model_called'] is False
     assert recovered['preproduction']['status'] == 'blocked'
+    adopted = next(store.read_object_json(ref) for ref in reversed(store.load_document()['reviews'])
+                   if any(item.get('finding_id') == 'new-must-fix'
+                          for item in store.read_object_json(ref).get('findings', [])))
+    prior = store.read_object_json(adopted['replaces'])
+    assert prior['status'] == 'pass' and prior['findings'] == []
+    assert adopted['status'] == 'fail' and adopted['findings'][0]['resolution'] == 'open'
+    assert adopted['observations'] == ['Synthetic rereview']
     assert len(native.calls) == 2
 
 

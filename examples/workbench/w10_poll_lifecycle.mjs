@@ -45,6 +45,19 @@ releaseControl(); await flush(); await tick(0);
 assert.equal(followed, 2); slow.stop(); releaseControl(); await flush();
 assert.equal(timers.size, 0);
 
+// A route can change while onValue awaits control. Retire both writes and timing.
+let releaseOld, acceptedOld = false;
+const guarded = new SummaryPoll(async () => ({task_counts:{completed:1}}), async (value, valid) => {
+  await new Promise(resolve => { releaseOld = resolve; });
+  if (valid?.()) acceptedOld = true;
+}, () => {}, {task_counts:{running:1}});
+guarded.start(); await tick(3000);
+guarded.useSnapshot({task_counts:{running:1}});
+releaseOld(); await flush();
+assert.equal(acceptedOld, false);
+assert.equal(guarded.delay, 3000, 'obsolete callback cannot reset the new route interval');
+guarded.stop();
+
 // Navigation must obtain post-write control facts without overlapping reads.
 const {Project} = await import('../../src/deck_master/resources/static/v2/project.js');
 let reads = [], inFlight = 0, controlPeak = 0;
@@ -116,4 +129,26 @@ for (const interrupt of ['route', 'stop', 'hide_resume']) {
   }
   currentPoll.stop(); assert.equal(timers.size, 0);
 }
-console.log(JSON.stringify({passed:true, checks:[...lifecycleResult.checks,'deferred_control_route_fenced','deferred_control_stop_fenced','hide_show_retires_old_callback','new_visible_refresh_recovers','new_snapshot_interval_preserved']}));
+
+// The Project callback must not write after a route has replaced its scope.
+app.health = {ui_capabilities:['collaboration.v1']};
+app.info = {project_id:'same',project_identity:'identity',revision_id:'B'};
+app.route = {revision:'B'}; app.latest = {revision_id:'B'};
+app.root = new EventTarget(); let events = 0, notices = 0;
+app.root.addEventListener('summary-refreshed', () => events++);
+app.syncState = () => notices++;
+app.pendingButton = {textContent:'待交接 2',setAttribute(){throw new Error('stale count write');}};
+const old = app.applySummary({project_id:'same',revision_id:'A'});
+await flush(); assert.equal(reads.length, 1);
+app.generation++; app.controlRead++; // B navigation wins while A awaits control.
+reads.shift()({project_id:'same',project_identity:'identity',revision_id:'A'});
+await old;
+assert.equal(app.info.revision_id,'B'); assert.equal(app.latest.revision_id,'B');
+assert.equal(app.pendingButton.textContent,'待交接 2'); assert.equal(events,0); assert.equal(notices,0);
+app.health.ui_capabilities.push('project_control_light.v1');
+globalThis.fetch = async path => {
+  assert.equal(path,'/api/project?light=1');
+  return {ok:true,json:async()=>({revision_id:'light'})};
+};
+assert.equal((await app.readControl()).revision_id,'light');
+console.log(JSON.stringify({passed:true, checks:[...lifecycleResult.checks,'deferred_control_route_fenced','deferred_control_stop_fenced','hide_show_retires_old_callback','new_visible_refresh_recovers','new_snapshot_interval_preserved','obsolete_callback_interval_fenced','project_route_generation_fenced','negotiated_light_control']}));

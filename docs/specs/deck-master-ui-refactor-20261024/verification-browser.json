@@ -1,0 +1,480 @@
+{
+  "scope": "isolated-r3-prototype-only",
+  "viewports": [
+    {
+      "width": 1440,
+      "height": 900,
+      "route": "overview",
+      "primary": [
+        "核对待处理页"
+      ],
+      "scene": "制作总览",
+      "scrollWidth": 1425,
+      "unlabelled": 0
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "route": "content",
+      "primary": [
+        "核对待处理页"
+      ],
+      "scene": "内容与页序",
+      "scrollWidth": 1425,
+      "unlabelled": 0
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "route": "page",
+      "primary": [
+        "修改正文"
+      ],
+      "scene": "单页制作",
+      "scrollWidth": 1425,
+      "unlabelled": 0
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "route": "gallery",
+      "primary": [],
+      "scene": "整稿画廊",
+      "scrollWidth": 1425,
+      "unlabelled": 0
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "route": "style",
+      "primary": [
+        "查看风格基准"
+      ],
+      "scene": "风格校准",
+      "scrollWidth": 1425,
+      "unlabelled": 0
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "route": "delivery",
+      "primary": [
+        "比较结果"
+      ],
+      "scene": "任务与交付",
+      "scrollWidth": 1425,
+      "unlabelled": 0
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "route": "compare",
+      "primary": [
+        "采用这版正文"
+      ],
+      "scene": "候选比较",
+      "scrollWidth": 1425,
+      "unlabelled": 0
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "route": "projects",
+      "primary": [
+        "打开项目"
+      ],
+      "scene": "所有项目",
+      "scrollWidth": 1425,
+      "unlabelled": 0
+    },
+    {
+      "width": 1280,
+      "height": 800,
+      "route": "overview",
+      "primary": [
+        "核对待处理页"
+      ],
+      "scene": "制作总览",
+      "scrollWidth": 1265,
+      "unlabelled": 0
+    },
+    {
+      "width": 1280,
+      "height": 800,
+      "route": "content",
+      "primary": [
+        "核对待处理页"
+      ],
+      "scene": "内容与页序",
+      "scrollWidth": 1265,
+      "unlabelled": 0
+    },
+    {
+      "width": 1280,
+      "height": 800,
+      "route": "page",
+      "primary": [
+        "修改正文"
+      ],
+      "scene": "单页制作",
+      "scrollWidth": 1265,
+      "unlabelled": 0
+    },
+    {
+      "width": 1280,
+      "height": 800,
+      "route": "gallery",
+      "primary": [],
+      "scene": "整稿画廊",
+      "scrollWidth": 1265,
+      "unlabelled": 0
+    },
+    {
+      "width": 1280,
+      "height": 800,
+      "route": "style",
+      "primary": [
+        "查看风格基准"
+      ],
+      "scene": "风格校准",
+      "scrollWidth": 1265,
+      "unlabelled": 0
+    },
+    {
+      "width": 1280,
+      "height": 800,
+      "route": "delivery",
+      "primary": [
+        "比较结果"
+      ],
+      "scene": "任务与交付",
+      "scrollWidth": 1265,
+      "unlabelled": 0
+    },
+    {
+      "width": 1280,
+      "height": 800,
+      "route": "compare",
+      "primary": [
+        "采用这版正文"
+      ],
+      "scene": "候选比较",
+      "scrollWidth": 1265,
+      "unlabelled": 0
+    },
+    {
+      "width": 1280,
+      "height": 800,
+      "route": "projects",
+      "primary": [
+        "打开项目"
+      ],
+      "scene": "所有项目",
+      "scrollWidth": 1265,
+      "unlabelled": 0
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "route": "overview",
+      "primary": [
+        "核对待处理页"
+      ],
+      "scene": "制作总览",
+      "scrollWidth": 753,
+      "unlabelled": 0
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "route": "content",
+      "primary": [
+        "核对待处理页"
+      ],
+      "scene": "内容与页序",
+      "scrollWidth": 753,
+      "unlabelled": 0
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "route": "page",
+      "primary": [
+        "修改正文"
+      ],
+      "scene": "单页制作",
+      "scrollWidth": 753,
+      "unlabelled": 0
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "route": "gallery",
+      "primary": [],
+      "scene": "整稿画廊",
+      "scrollWidth": 753,
+      "unlabelled": 0
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "route": "style",
+      "primary": [
+        "查看风格基准"
+      ],
+      "scene": "风格校准",
+      "scrollWidth": 753,
+      "unlabelled": 0
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "route": "delivery",
+      "primary": [
+        "比较结果"
+      ],
+      "scene": "任务与交付",
+      "scrollWidth": 753,
+      "unlabelled": 0
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "route": "compare",
+      "primary": [
+        "采用这版正文"
+      ],
+      "scene": "候选比较",
+      "scrollWidth": 753,
+      "unlabelled": 0
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "route": "projects",
+      "primary": [
+        "打开项目"
+      ],
+      "scene": "所有项目",
+      "scrollWidth": 768,
+      "unlabelled": 0
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "route": "overview",
+      "primary": [
+        "核对待处理页"
+      ],
+      "scene": "制作总览",
+      "scrollWidth": 375,
+      "unlabelled": 0
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "route": "content",
+      "primary": [
+        "核对待处理页"
+      ],
+      "scene": "内容与页序",
+      "scrollWidth": 375,
+      "unlabelled": 0
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "route": "page",
+      "primary": [
+        "修改正文"
+      ],
+      "scene": "单页制作",
+      "scrollWidth": 375,
+      "unlabelled": 0
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "route": "gallery",
+      "primary": [],
+      "scene": "整稿画廊",
+      "scrollWidth": 375,
+      "unlabelled": 0
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "route": "style",
+      "primary": [
+        "查看风格基准"
+      ],
+      "scene": "风格校准",
+      "scrollWidth": 375,
+      "unlabelled": 0
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "route": "delivery",
+      "primary": [
+        "比较结果"
+      ],
+      "scene": "任务与交付",
+      "scrollWidth": 375,
+      "unlabelled": 0
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "route": "compare",
+      "primary": [
+        "采用这版正文"
+      ],
+      "scene": "候选比较",
+      "scrollWidth": 375,
+      "unlabelled": 0
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "route": "projects",
+      "primary": [
+        "打开项目"
+      ],
+      "scene": "所有项目",
+      "scrollWidth": 375,
+      "unlabelled": 0
+    }
+  ],
+  "interactions": [
+    {
+      "name": "batch-source-selected-range",
+      "dom": "已选 2 页的共同来源\n\n范围：01、02 页 · 服务流程梳理 · 版本 3\n\n示例中这些页面共同关联服务流程梳理。原文记录了需求受理、任务接力与结果回写的定性问题。\n\n仅表示关联，不表示每页结论均已核实。"
+    },
+    {
+      "name": "adoption-after-reorder",
+      "dom": "内容与页序\n/\n第 02 页\n02 / 06\n三类断点，正在拉长服务周期\n\n现状与问题 · 第 02 页 · 内容稿 R19\n\n正文\n页面预览\n待核对\n修改正文\n正文候选已采用，仍待核对\n当前 R19 · 候选 C02 · 依据版本 3\n查看比较\n\n问题集中在入口、协同与回写三个环节。信息没有形成连续的工作链，让每一次服务都要重新核对背景。\n\n需求进入后，事实与附件分散保存，执行人员需要重复确认背景。\n\n任务跨团队流转时，缺少明确的接手人与交接记录，等待时间难以定位。\n\n完成的结果没有结构化回到任务中，下一次相似需求仍要重新寻找依据。\n\n本页要说清楚\n\n用具体流程说明问题的位置，让后续方案对应到可以执行的改进。\n\n内容依据\n服务流程梳理\n\n版本 3 · 访谈记录 §2\n\n展开来源\n本页制作\n逐页稿\n待核对\n原图\n未制作\nSVG / PPT\n未制作"
+    },
+    {
+      "name": "source-from-preview",
+      "visible": true
+    },
+    {
+      "name": "expand-editor",
+      "geometry": {
+        "height": 900,
+        "width": 880
+      }
+    },
+    {
+      "name": "required-title",
+      "errorVisible": true
+    },
+    {
+      "name": "draft-reopen",
+      "value": "三类断点，正在拉长服务周期（草稿验证）"
+    },
+    {
+      "name": "stale-basis",
+      "adoptDisabled": true,
+      "copy": "当前正文已改变。此候选基于 R18，需先核对新基准；此处不允许直接采用。\n\n保留当前正文\n采用这版正文"
+    },
+    {
+      "name": "menu-arrowup-last",
+      "focus": "下移一页"
+    },
+    {
+      "name": "editor-return-to-visible-menu",
+      "focus": {
+        "name": "第 03 页操作",
+        "tag": "SUMMARY",
+        "visible": true
+      }
+    },
+    {
+      "name": "modal-focus-wrap",
+      "focus": "收起编辑"
+    },
+    {
+      "name": "filtered-selection-retained",
+      "copy": "已选择 2 页 · 包含筛选外页面\n取消选择\n查看来源"
+    },
+    {
+      "name": "empty-search",
+      "copy": "没有匹配的页面\n\n换一个标题关键词，或查看全部页面。\n\n清除筛选"
+    }
+  ],
+  "console": [],
+  "finalLayout": [
+    {
+      "viewport": 1440,
+      "scene": "gallery",
+      "actualWidth": 1440,
+      "client": 1425,
+      "scroll": 1425
+    },
+    {
+      "viewport": 1440,
+      "scene": "compare",
+      "actualWidth": 1440,
+      "client": 1425,
+      "scroll": 1425
+    },
+    {
+      "viewport": 1280,
+      "scene": "gallery",
+      "actualWidth": 1280,
+      "client": 1265,
+      "scroll": 1265
+    },
+    {
+      "viewport": 1280,
+      "scene": "compare",
+      "actualWidth": 1280,
+      "client": 1265,
+      "scroll": 1265
+    },
+    {
+      "viewport": 768,
+      "scene": "gallery",
+      "actualWidth": 768,
+      "client": 753,
+      "scroll": 753
+    },
+    {
+      "viewport": 768,
+      "scene": "compare",
+      "actualWidth": 768,
+      "client": 753,
+      "scroll": 753
+    },
+    {
+      "viewport": 390,
+      "scene": "gallery",
+      "actualWidth": 390,
+      "client": 375,
+      "scroll": 375
+    },
+    {
+      "viewport": 390,
+      "scene": "compare",
+      "actualWidth": 390,
+      "client": 375,
+      "scroll": 375
+    },
+    {
+      "scene": "mobile-page-targets",
+      "targets": [
+        {
+          "height": 44,
+          "width": 44
+        },
+        {
+          "height": 44,
+          "width": 44
+        }
+      ]
+    }
+  ],
+  "viewportNote": "Final gallery/compare checks used tab-scoped CDP emulation after browser-scoped viewport targeted the newer reader tab; actualWidth recorded, temporary overrides cleared after verification."
+}

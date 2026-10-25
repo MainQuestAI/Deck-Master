@@ -74,8 +74,8 @@ def test_five_face_switcher_is_stable_and_single_face(page_fixture):
     revision = store.current_revision_id()
     goto_page(page, server.start(), identity, 'p01', 'svg', revision)
     switchs = page.locator('.page-tools-switcher button')
-    expect(switchs).to_have_count(5)
-    expect(page.locator('.page-tools-switcher button[aria-pressed=true]')).to_have_text('意见')
+    expect(switchs).to_have_count(6)
+    expect(page.locator('.page-tools-switcher button[aria-pressed=true]')).to_have_text('阅读')
     expect(page.locator('.page-tools-faces > :not([hidden])')).to_have_count(1)
     editor_before = page.evaluate('document.querySelector("#personal-draft")?.id')
     # 切到笔记再回来:editor 实例不变(P07a 契约)。
@@ -296,7 +296,8 @@ def test_continuous_face_path_keeps_half_written_opinion(page_fixture):
     revision = store.current_revision_id()
     goto_page(page, server.start(), identity, 'p01', 'svg', revision)
     pressed = lambda: page.locator('.page-tools-switcher button[aria-pressed=true]')
-    expect(pressed()).to_have_text('意见')
+    expect(pressed()).to_have_text('阅读')
+    page.get_by_role('button', name='意见', exact=True).click()
     page.get_by_role('button', name='整页意见', exact=True).click()
     body = page.get_by_label('意见正文', exact=True)
     body.fill('半条意见：标题偏长')
@@ -316,9 +317,10 @@ def test_continuous_face_path_keeps_half_written_opinion(page_fixture):
     page.get_by_role('button', name='笔记', exact=True).click()
     expect(note).to_have_value('随身笔记样例')
     page.get_by_role('button', name='意见', exact=True).click()
-    # 刷新:意见仍是默认活动面(草稿装载不抢面),半条意见从本机缓冲恢复。
+    # 刷新默认阅读，明确进入意见后半条意见从本机缓冲恢复。
     page.reload()
-    expect(pressed()).to_have_text('意见', timeout=20000)
+    expect(pressed()).to_have_text('阅读', timeout=20000)
+    page.get_by_role('button', name='意见', exact=True).click()
     expect(page.get_by_label('意见正文', exact=True)).to_have_value('半条意见：标题偏长', timeout=20000)
     # 换页:第 2 页意见正文为空(不串页);回到第 1 页内容仍在。
     page.get_by_role('button', name='下一页，第 2 页 · 材料如何成为内容', exact=True).click()

@@ -1,6 +1,6 @@
 # 整合收口 · 2026-10-25
 
-当前阶段：已建立第一阶段源码候选；UI 与修复主线的交叉整合尚未完成。这里记录整合事实和接续入口，不把源 PR 的 CI、工程验证或文档补齐当作专业签收。
+当前阶段：已完成第一阶段候选及 UI/runtime 交叉整合，正在运行完整工程门禁。这里记录整合事实和接续入口，不把源 PR 的 CI、工程验证或文档补齐当作专业签收。
 
 ## 固定输入
 
@@ -12,7 +12,7 @@
 | [PR185](https://github.com/MainQuestAI/Deck-Master/pull/185) | `bf4f661bfec4aa28db2869aaf43494d6cf0f4b8d` | 已纳入 RP 实现和其全部历史；专项验收残项保留 |
 | [PR187](https://github.com/MainQuestAI/Deck-Master/pull/187) | `870db06e7067c935b2331ade7f39e6bc20b8393d` | 已纳入 current_work、outline、来源/外部报告返修和后续测试诊断 |
 | [PR109](https://github.com/MainQuestAI/Deck-Master/pull/109) | `7307dcfc027c4aca2b83b5eb9db616fce1e6f867` | 已纳入两个工作流的 upload-artifact v7；未改变测试矩阵或门限 |
-| [PR188](https://github.com/MainQuestAI/Deck-Master/pull/188) | `159cfd63e9bcf71c10d98dad45a1a2567eb52136` | 待交叉整合；本候选当前没有其新版 UI |
+| [PR188](https://github.com/MainQuestAI/Deck-Master/pull/188) | `159cfd63e9bcf71c10d98dad45a1a2567eb52136` | 已逐块接入新版 UI；交叉行为取舍见 [整合记录](merge-resolution.md) |
 | [PR147](https://github.com/MainQuestAI/Deck-Master/pull/147) | `ad2f278cd637f29b5665fcf71d7064098faf617b` | RP-00 已移植对应窄修复；不重复整枝合并。最终须结合 PR188 的兼容接口重验覆盖 |
 | [PR113](https://github.com/MainQuestAI/Deck-Master/pull/113) | `0af67a4d7015725e663b4db09c50e241974d9e53` | 不并入当前候选；旧稿 CI 失败且有冲突，先对照后续已合并 RC3 范围，未授权自动关闭 |
 
@@ -26,7 +26,7 @@
 git merge-tree --write-tree 935e4229c8e6dd77e0a33a95b5cd2724185c685e 159cfd63e9bcf71c10d98dad45a1a2567eb52136
 ```
 
-结果为 **36 个冲突文件、71 个冲突块**：合同 2、runtime 11、前端/示例 11、测试 12。另有 24 个双方均修改但文本自动合并的文件，仍需语义核对。逐文件三阶段 blob 身份和重叠清单见 [机器记录](ui-merge-preflight.json)，原始输出见 [Git 记录](ui-merge-preflight.txt)。虚拟冲突树不是可运行候选，也未写入本分支。
+结果为 **36 个冲突文件、71 个冲突块**：合同 2、runtime 11、前端/示例 11、测试 12。另有 24 个双方均修改但文本自动合并的文件，仍需语义核对。逐文件三阶段 blob 身份和重叠清单见 [机器记录](ui-merge-preflight.json)，原始输出见 [Git 记录](ui-merge-preflight.txt)。上述是合并前的固定预检记录。后续已在本分支逐块解决全部冲突，并核对自动合并重叠；取舍与复现见 [整合记录](merge-resolution.md)。
 
 整合保留的行为：
 
@@ -41,7 +41,7 @@ git merge-tree --write-tree 935e4229c8e6dd77e0a33a95b5cd2724185c685e 159cfd63e9b
 | --- | --- | --- | --- |
 | I0 固定来源 | 当前整合 Agent | DONE | 保留原 PR SHA、CI 和线程事实 |
 | I1 第一阶段候选 | 当前整合 Agent | TARGETED_PASS | 纳入 184/185/187/109；独立 Python 3.12 定向核心 234 通过，真实 Chromium 35 通过；未执行最终全量和安装门禁 |
-| I2 UI/runtime 交叉整合 | 当前整合 Agent | PENDING | 依赖 I1 固定提交；36 个冲突和 24 个自动合并重叠逐项核对，先合同/恢复，再投影/轮询，再 UI/测试；不得整文件选一边 |
+| I2 UI/runtime 交叉整合 | 主 Agent + 3 个子 Agent | IMPLEMENTED | 36 个冲突和 24 个自动合并重叠逐项核对；新版 UI、current_work、审查/返修与恢复边界已接入，仍以 I3/I4 最终结果为准 |
 | I3 完整工程门禁 | 当前整合 Agent / GitHub CI | PENDING | 在最终候选跑全部四组单元、渲染、真实浏览器与汇总，保留失败/重试/跳过身份 |
 | I4 最终安装与连续任务 | 当前整合 Agent | PENDING | 依赖 I2/I3；从同一冻结源码构包、核对包内资源及模块路径，再跑离线/固定下载与连续任务 |
 | I5 专业与外部专项 | 真实 Host、审查者与老板 | NOT_RUN | 逐项对应 RP16/19/20/21/24/28/30、PR188 AC14/18、S3 效果和视觉认可；工程测试不替代。跨执行复用产品决策不在本轮新增授权内 |
@@ -59,4 +59,4 @@ git merge-tree --write-tree 935e4229c8e6dd77e0a33a95b5cd2724185c685e 159cfd63e9b
 - 浏览器首次 **29 failed** 全部为启动时缺少匹配 Chromium；无已执行 UI 断言失败。官方安装首次 TLS 重置后自行重试成功，再执行上述 35 项。原失败 JUnit 保留，未改用例、断言或时限；不记作首次全绿。
 - 完整 diff 检查发现源分支 `action-summary.js` 多一个末尾空行；仅删除该空行，未修改 JS 行为。最早 207 项核心结果属于 `9adc6ebc`；本节记录重新冻结后的 234 项，不能混用 SHA 或累加测试数。
 
-原始 JUnit 留在本任务 worktree 的父目录，未冒充公开附件；机器记录给出摘要与 SHA256。完整 CI、渲染、最终 wheel/离线安装和 UI188 整合仍未执行，不把本次定向通过表述为最终交付通过。
+原始 JUnit 留在本任务 worktree 的父目录，未冒充公开附件；机器记录给出摘要与 SHA256。以上仅为第一阶段历史结果，不把该定向通过表述为最终整合交付通过。后续 UI188 交叉整合与验证另见整合记录。

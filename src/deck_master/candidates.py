@@ -119,10 +119,10 @@ def _recorded_design_basis(store, current, frozen):
     return result
 
 
-def inputs_current(store, document, task):
+def inputs_current(store, document, task, *, read_snapshot=None):
     from .visual_dependencies import is_visual_task, visual_task_inputs_current
     if is_visual_task(task):
-        return visual_task_inputs_current(store, document, task)
+        return visual_task_inputs_current(store, document, task, read_snapshot=read_snapshot)
     target_reference = task.get('stage_request', {}).get('target_reference_ref')
     if target_reference:
         if len(task['scope_pages']) != 1:
@@ -138,7 +138,7 @@ def inputs_current(store, document, task):
         return True
     stage = 'content' if task.get('stage_request', {}).get('stage') == 'content' else (
         'blueprint' if task['kind'] == 'blueprint' else 'svg')
-    dispatched = load_snapshot(store, task['dispatch_revision'])
+    dispatched = (read_snapshot or (lambda rev: load_snapshot(store, rev)))(task['dispatch_revision'])
     return all(generation_basis(store, document, pid, stage) == generation_basis(store, dispatched, pid, stage)
                and any(e['page_id'] == pid for e in document['pages'])
                for pid in task['scope_pages'])
@@ -235,8 +235,7 @@ def _lookup(records, candidate_id):
     return records[candidate_id]
 
 
-def _state(store, document, candidate, task=None):
-    adoptions = [r['revision_id'] for r in document.get('candidate_adoptions', []) if r['candidate_id'] == candidate['candidate_id']]
+def basis_state(store, document, candidate, task=None, *, adopted=False, read_snapshot=None):
     kind = result_kind(candidate)
     if kind == 'content_update':
         current = content_basis(document)
@@ -244,9 +243,7 @@ def _state(store, document, candidate, task=None):
                    if candidate['content_basis'][key] != current[key]]
         return {'content_basis': {'status': 'changed' if changed else 'current', 'changed_fields': changed},
                 'adoption_target': {'status': 'changed' if changed else 'unchanged',
-                                    'original_ref': None, 'current_ref': None},
-                'adopted_revisions': adoptions, **_decision_projection(store, document, candidate, adoptions),
-                'status': 'adopted' if adoptions else 'available'}
+                                    'original_ref': None, 'current_ref': None}}
     entry = next((e for e in document['pages'] if e['page_id'] == candidate['page_id']), None)
     if kind == 'page':
         # Precise scope: only the current Page identity can stale a page candidate.
@@ -263,7 +260,7 @@ def _state(store, document, candidate, task=None):
             # immutable task already records the preservation reference; derive
             # it without rewriting historical candidate objects.
             expected = {**expected, 'blueprint_ref':target_reference}
-            if basis and adoptions and target == candidate['result_ref']:
+            if basis and adopted and target == candidate['result_ref']:
                 # Its own explicit adoption is an allowed transition, so the
                 # adopted sample remains usable for further style expansion.
                 basis = {**basis, 'blueprint_ref':target_reference}
@@ -277,7 +274,7 @@ def _state(store, document, candidate, task=None):
             # immutable request. Its own adoption may change the output slot,
             # never the consumed Page/Plan/style context.
             from .visual_dependencies import plan_visual_projection
-            dispatched = load_snapshot(store, task['dispatch_revision'])
+            dispatched = (read_snapshot or (lambda rev: load_snapshot(store, rev)))(task['dispatch_revision'])
             try:
                 if plan_visual_projection(store, document, [candidate['page_id']]) != plan_visual_projection(store, dispatched, [candidate['page_id']]):
                     changed.append('content_plan_role')
@@ -288,7 +285,15 @@ def _state(store, document, candidate, task=None):
                 changed.append('unverifiable_visual_inputs')
     return {'generation_basis': {'status': 'changed' if changed else 'current', 'changed_fields': changed},
             'adoption_target': {'status': 'missing_page' if entry is None else 'unchanged' if target == candidate['target_ref'] else 'changed',
-                                'original_ref': candidate['target_ref'], 'current_ref': target},
+                                'original_ref': candidate['target_ref'], 'current_ref': target}}
+
+
+
+def _state(store, document, candidate, task=None):
+    adoptions = [r['revision_id'] for r in document.get('candidate_adoptions', []) if r['candidate_id'] == candidate['candidate_id']]
+    from .current_relationship import candidate_relationship
+    basis = basis_state(store, document, candidate, task, adopted=bool(adoptions))
+    return {**basis, 'current_relation': candidate_relationship(document, task, basis),
             'adopted_revisions': adoptions, **_decision_projection(store, document, candidate, adoptions),
             'status': 'adopted' if adoptions else 'available'}
 

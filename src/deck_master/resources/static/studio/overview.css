@@ -1,30 +1,32 @@
 /* Open Design overview: one priority, a compact control band, explicit actions. */
 .studio-workspace .studio-overview .page-head {border:0;padding-bottom:0;margin-bottom:24px}
-.studio-workspace .studio-overview .page-head h1 {font-size:32px;line-height:1.3;letter-spacing:-.02em}
+.studio-workspace .studio-overview .page-head h1 {font-size:var(--dm-type-size-page);line-height:var(--dm-type-line-page);letter-spacing:-.02em}
 .studio-workspace .studio-overview .page-head p {margin-top:8px}
 .studio-workspace .studio-overview .page-head button {display:inline-flex;align-items:center;gap:8px}
-.studio-workspace .studio-overview .overview-todos {display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:12px;border:0;background:transparent;margin:0 0 24px;overflow:visible}
-.studio-workspace .studio-overview .todo-priority {background:var(--surface-warm);color:var(--fg);border-radius:16px;padding:16px 20px;min-height:0}
-.studio-workspace .studio-overview .todo-priority h2 {font-size:22px;line-height:1.4;margin-top:8px}
+.studio-workspace .studio-overview .overview-todos {display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:24px;align-items:start;border:0;background:transparent;margin:0 0 32px;overflow:visible}
+.studio-workspace .studio-overview .todo-priority {background:var(--dm-color-canvas);color:var(--dm-color-text);border:1px solid var(--dm-color-border);border-radius:var(--dm-shape-radius-panel);padding:24px;min-height:200px}
+.studio-workspace .studio-overview .todo-priority h2 {font-size:22px;line-height:30px;margin-top:16px}
 .studio-workspace .studio-overview .todo-priority>p {font-size:14px;line-height:1.65;margin-top:12px}
-.studio-workspace .studio-overview .todo-bottom {padding-top:12px;margin-top:0}
-.studio-workspace .studio-overview .todo-secondary {border:0;border-radius:16px;background:var(--surface-warm);padding:20px 24px}
+.studio-workspace .studio-overview .todo-bottom {padding-top:24px;margin-top:auto}
+.studio-workspace .studio-overview .todo-secondary {border:0;border-radius:var(--dm-shape-radius-panel);background:transparent;padding:12px 0}
 .studio-workspace .studio-overview .todo-row {padding:10px 0;gap:16px}
 .studio-workspace .studio-overview .todo-row h3 {font-size:14px;font-weight:550}
 .studio-workspace .studio-overview .todo-row p {font-size:12px;line-height:1.6;margin-top:4px}
 .studio-workspace .studio-overview .todo-clear {display:block;min-height:0;padding:24px;border:1px solid var(--border)}
-.studio-workspace .studio-overview .section-head {margin:0 0 16px}
+/* The matrix stack supplies the heading gap; avoid a second bottom margin. */
+.studio-workspace .studio-overview .section-head {margin:0}
 .studio-workspace .studio-overview .section-head h2 {font-size:17px}
 .studio-workspace .studio-overview-commandbar {display:grid;grid-template-columns:1fr;gap:12px;padding:0 0 6px}
 .studio-workspace .studio-overview-commandbar .overview-reading-tools {display:flex;flex-wrap:wrap;gap:12px;flex-basis:auto}
 .studio-workspace .studio-overview-commandbar .overview-reading-tools>input {margin-left:auto;width:260px;max-width:320px;flex:0 1 260px}
+.studio-workspace .studio-overview[data-selection="0"] .studio-overview-commandbar .matrix-search {display:none}
 .studio-workspace .studio-overview-commandbar .matrix-search {display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.studio-workspace .studio-overview-commandbar .matrix-search>button[aria-expanded] {margin-left:auto;font-size:12px;display:inline-flex;align-items:center;gap:8px}
+.studio-workspace .studio-overview-commandbar .matrix-search>button[aria-expanded] {margin-left:auto;display:inline-flex;align-items:center;gap:8px;}
 .studio-workspace .studio-batch-modes {display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 .studio-workspace .studio-batch-modes>span {font-size:12px;color:var(--muted);white-space:nowrap}
 .studio-workspace .studio-batch-modes>.row {gap:8px}
-.studio-workspace .studio-batch-modes button {min-height:44px;min-width:110px;background:var(--bg);padding:10px 16px}
-.studio-workspace .studio-batch-modes button[aria-pressed=true] {background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.studio-workspace .studio-batch-modes button {min-width:110px;}
+
 .studio-workspace .studio-overview .batch-actions[data-selection=empty] {border:0;background:var(--surface-warm);box-shadow:none}
 .studio-workspace .studio-overview .batch-actions[data-selection=empty]>.panel-body {padding:12px 16px;gap:16px}
 .studio-workspace .studio-overview .batch-actions[data-selection=empty]>.panel-body>p {font-size:12px;max-width:75ch}
@@ -34,9 +36,9 @@
 .studio-workspace .studio-overview .batch-actions[hidden],.studio-workspace .overview-preferences[hidden] {display:none}
 .studio-workspace .studio-overview .matrix-wrap {border:1px solid var(--border);border-radius:12px}
 .studio-workspace .studio-overview .matrix th {height:48px;padding:10px 12px;background:var(--surface-warm);font-size:12px}
-.studio-workspace .studio-overview .matrix td {height:68px;padding:10px 12px;font-size:13px}
+.studio-workspace .studio-overview .matrix td {height:64px;padding:12px 16px;font-size:13px}
 .studio-workspace .studio-overview .matrix .chapter-row th {height:36px;text-align:left;font-size:12px;padding:8px 16px}
-.studio-workspace .studio-overview .matrix .cell-btn {font-size:12px}
+
 .studio-workspace .studio-overview .matrix-caption {font-size:12px;line-height:1.6;padding:12px 0}
 .studio-workspace .studio-matrix-pager {display:flex;align-items:center;justify-content:space-between;gap:16px;font-size:12px;color:var(--muted);padding-top:12px}
 .studio-workspace .studio-matrix-pager[hidden] {display:none}
@@ -48,11 +50,11 @@
 .studio-workspace .runtime-sync-row>svg {width:18px;height:18px;flex:none;color:var(--muted)}
 .studio-workspace .runtime-sync {flex:1;min-width:160px;font-size:13px;line-height:1.6;margin:0;color:var(--fg)}
 .studio-workspace .runtime-sync-actions {margin-left:auto;gap:8px}
-.studio-workspace .runtime-sync-actions button {font-size:12px;padding:8px 12px;white-space:nowrap}
+.studio-workspace .runtime-sync-actions button {white-space:nowrap;}
 .studio-workspace .banners>.notice {border-radius:12px;padding:12px 16px;gap:12px;font-size:13px;line-height:1.65;background:var(--surface-warm)}
 @media(max-width:1100px) {.studio-workspace .studio-overview .overview-todos {grid-template-columns:1fr}.studio-workspace .studio-overview .todo-priority {min-height:0}}
 @media(max-width:767px) {
- .studio-workspace .studio-overview .page-head h1 {font-size:26px}
+ .studio-workspace .studio-overview .page-head h1 {font-size:var(--dm-type-size-page)}
  .studio-workspace .studio-overview .page-head {margin-bottom:24px;gap:16px}
  .studio-workspace .studio-overview .todo-priority,.studio-workspace .studio-overview .todo-secondary {padding:20px}
  .studio-workspace .studio-overview .todo-priority h2 {font-size:22px}
@@ -64,16 +66,4 @@
  .studio-workspace .runtime-sync-actions {margin-left:30px;flex-wrap:wrap}
 }
 
-.studio-workspace .studio-overview .todo-priority .todo-kicker,
-.studio-workspace .studio-overview .todo-priority>p,
-.studio-workspace .studio-overview .todo-priority .todo-bottom>span{color:var(--muted)}
-.studio-workspace .studio-overview .todo-priority .status{background:#fff;color:var(--fg)}
-.studio-workspace .studio-overview .todo-priority button.primary{background:#171717;color:#fff;border-color:#171717}
-.studio-workspace .studio-overview .todo-priority button.primary:hover{background:#303030;border-color:#303030}
-.studio-workspace .studio-overview .todo-priority :focus-visible{outline-color:#171717}
-
-.studio-workspace .studio-overview .page-head{margin-bottom:16px}
-.studio-workspace .studio-overview .overview-todos{margin-bottom:16px}
-.studio-workspace .studio-overview .todo-secondary{padding:12px 16px}
-.studio-workspace .studio-overview .todo-secondary>summary{padding:0;border:0;background:transparent;min-height:44px}
-.studio-workspace .studio-overview .section-head{margin:0 0 4px}
+.studio-batch-modes[hidden] {display:none}

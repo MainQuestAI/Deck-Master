@@ -1,0 +1,323 @@
+[
+  {
+    "file": "src/deck_master/resources/static/studio/delivery.css",
+    "selectors": [
+      ".studio-workspace .studio-task-state .status"
+    ],
+    "properties": [
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/delivery.css",
+    "selectors": [
+      ".studio-workspace .studio-candidate-heading .status"
+    ],
+    "properties": [
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/delivery.css",
+    "selectors": [
+      ".studio-workspace .studio-export-result-heading .status"
+    ],
+    "properties": [
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/delivery.css",
+    "selectors": [
+      ".studio-workspace .studio-version-sidebar select"
+    ],
+    "properties": [
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/delivery.css",
+    "selectors": [
+      ".studio-workspace .studio-tasks-workspace .run-filters>select"
+    ],
+    "properties": [
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/reading.css",
+    "selectors": [
+      ".studio-workspace .page-workbench .page-pager select"
+    ],
+    "properties": [
+      "padding",
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace textarea"
+    ],
+    "properties": [
+      "border-radius",
+      "padding",
+      "line-height"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .style-calibration .style-source-selector select"
+    ],
+    "properties": [
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .style-primary-phase .style-working-pair select"
+    ],
+    "properties": [
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/studio/workspace.css",
+    "selectors": [
+      ".studio-workspace .studio-gallery-mobile-search input"
+    ],
+    "properties": [
+      "font-size",
+      "padding"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/studio.css",
+    "selectors": [
+      "input:focus,textarea:focus,select:focus"
+    ],
+    "properties": [
+      "border-color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/studio.css",
+    "selectors": [
+      ".status,.state-badge"
+    ],
+    "properties": [
+      "font-size",
+      "padding",
+      "line-height"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/studio.css",
+    "selectors": [
+      ".status.ok"
+    ],
+    "properties": [
+      "background",
+      "color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/studio.css",
+    "selectors": [
+      ".status.warn"
+    ],
+    "properties": [
+      "background",
+      "color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/studio.css",
+    "selectors": [
+      ".status.info"
+    ],
+    "properties": [
+      "background",
+      "color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/studio.css",
+    "selectors": [
+      ".status.error"
+    ],
+    "properties": [
+      "background",
+      "color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/studio.css",
+    "selectors": [
+      ".draft-conflict-pane textarea"
+    ],
+    "properties": [
+      "background",
+      "font-size",
+      "line-height"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      "input,select,textarea"
+    ],
+    "properties": [
+      "font"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      "input,select,textarea"
+    ],
+    "properties": [
+      "border"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      "input,select"
+    ],
+    "properties": [
+      "padding"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      "textarea"
+    ],
+    "properties": [
+      "padding",
+      "line-height"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      ".status"
+    ],
+    "properties": [
+      "font-size",
+      "border"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      ".requirement-panel textarea"
+    ],
+    "properties": [
+      "font-size"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      ".status.error"
+    ],
+    "properties": [
+      "border-color",
+      "background"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      "input,select,textarea"
+    ],
+    "properties": [
+      "border-radius",
+      "background",
+      "color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      "input:focus,textarea:focus,select:focus"
+    ],
+    "properties": [
+      "border-color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      ".status,.state-badge"
+    ],
+    "properties": [
+      "border-radius",
+      "padding",
+      "background",
+      "border-color",
+      "color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/style.css",
+    "selectors": [
+      ".status.warn,.status.info,.status.ok"
+    ],
+    "properties": [
+      "background",
+      "color",
+      "border-color"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      "input,select,textarea"
+    ],
+    "properties": [
+      "border-radius"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      "textarea"
+    ],
+    "properties": [
+      "font-size",
+      "line-height"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      ".personal-draft textarea"
+    ],
+    "properties": [
+      "background"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      ".gallery.is-comparison select"
+    ],
+    "properties": [
+      "padding"
+    ]
+  },
+  {
+    "file": "src/deck_master/resources/static/v2/workbench.css",
+    "selectors": [
+      ".handoff-detail textarea"
+    ],
+    "properties": [
+      "font-size"
+    ]
+  }
+]

@@ -1,6 +1,7 @@
+import {personalClearPanel} from './personal-maintenance.js';
 import {SummaryPoll} from './summary-poll.js';
 import {get, post, revisionQuery, readableError} from './api.js';
-import {el, button, heading, empty, icon, version, announce, modal} from './dom.js';
+import {el, button, heading, empty, icon, version, announce, modal, actionMenu} from './dom.js';
 import {localURL} from './launcher-ui.js';
 import {readRoute, routeHash, position, surfaces, layers} from './routes.js';
 import {DraftEditor} from './drafts.js';
@@ -11,6 +12,14 @@ import {actionTargets} from './action-targets.js';
 import {changesetDesk} from './changeset-desk.js';
 import {collaborationBanner} from './collaboration-desk.js';
 import {currentWork} from './current-work.js';
+
+const currentWorkMatches = (summary, info, revision = summary?.revision_id) =>
+  summary?.project_id === info.project_id && summary.revision_id === revision &&
+  summary.current_work?.identity?.project_id === info.project_id &&
+  summary.current_work.identity.artifact_revision_id === revision &&
+  summary.current_work.identity.control_revision_id === (info.control_revision_id || info.revision_id);
+const pendingHandoffs = (summary, info) => summary?.current_work !== undefined && !currentWorkMatches(summary, info) ? 0 :
+  (summary?.next_actions?.actions || []).filter(action => action.kind === 'handoff' && action.enabled).reduce((count, action) => count + (action.object_count || 0), 0);
 
 export class Project {
   constructor(root, health) { this.root = root; this.health = health; this.generation = 0; this.positionQueue = Promise.resolve(); this.disposables = []; }
@@ -55,7 +64,7 @@ export class Project {
     // Passive refreshes share the in-flight request instead of queuing more.
     if (fresh && this.controlRequest) await this.controlRequest.catch(() => {});
     if (!this.controlRequest) {
-      this.controlRequest = get('/api/project').finally(() => { this.controlRequest = null; });
+      this.controlRequest = get('/api/project' + (this.health.ui_capabilities?.includes('project_control_light.v1') ? '?light=1' : '')).finally(() => { this.controlRequest = null; });
     }
     return this.controlRequest;
   }
@@ -88,15 +97,22 @@ export class Project {
       addEventListener('pageshow', event => { if (event.persisted) { this.summaryPoll.start(); this.summaryPoll.refresh(); } });
     }
   }
-  async applySummary(value, isCurrent) {
+  async applySummary(value, isCurrent = () => true) {
     const routeGeneration = this.generation;
     const current = () => isCurrent() && routeGeneration === this.generation && !this.navigationPending;
     if (!current()) return;
     if (value.project_id !== this.info.project_id) throw new Error('服务项目已变化，请重新打开项目。');
     if (this.health.ui_capabilities?.includes('collaboration.v1')) await this.refreshControl(current, value);
     if (!current()) return;
+    if (this.health.ui_capabilities?.includes('workbench_summary.v2') && !currentWorkMatches(value, this.info)) {
+      // The control read may have overtaken the poll. Publish only the matched
+      // fixed projection just obtained, never overwrite it with the old event.
+      const paired = currentWorkMatches(this.summary, this.info, value.revision_id);
+      value = {...value, current_work:paired ? this.summary.current_work : null,
+        ...(paired ? {next_actions:this.summary.next_actions} : {})};
+    }
     this.latest = value;
-    const count = value.task_counts.awaiting_host || 0;
+    const count = pendingHandoffs(value, this.info);
     if (this.pendingButton) {
       this.pendingButton.textContent = `待交接 ${count}`;
       this.pendingButton.setAttribute('aria-label', `查看待交接任务，${count} 项`);
@@ -129,14 +145,8 @@ export class Project {
     try {
       // The poll just read current facts. Reuse only that exact artifact/control
       // pair; historical routes or a concurrent control write need a fresh read.
-      const matches = value => value?.project_id === info.project_id &&
-        value.current_work?.identity?.project_id === info.project_id &&
-        value.current_work.identity.artifact_revision_id === revision &&
-        value.current_work.identity.control_revision_id === (info.control_revision_id || info.revision_id);
-      const value = matches(observedSummary) ? observedSummary : await get(this.summaryURL(revision));
-      const identity = value.current_work?.identity;
-      if (identity?.project_id === this.info.project_id && identity.artifact_revision_id === revision &&
-          identity.control_revision_id === (info.control_revision_id || info.revision_id)) {
+      const value = currentWorkMatches(observedSummary, info, revision) ? observedSummary : await get(this.summaryURL(revision));
+      if (currentWorkMatches(value, info, revision)) {
         work = value.current_work; actions = value.next_actions;
       }
     } catch { /* Never retain an old action paired with new control facts. */ }
@@ -144,7 +154,23 @@ export class Project {
     this.summary = {...this.summary, current_work:work, ...(actions ? {next_actions:actions} : {})};
     // Replace only the derived work panel. Fixed artifacts, comparisons and
     // draft editors retain their DOM, revision and unsaved content.
-    document.querySelectorAll('[data-current-work]').forEach(node => node.replaceWith(currentWork(this)));
+    document.querySelectorAll('[data-current-work]').forEach(node => {
+      const replacement = currentWork(this), overview = node.closest('.overview');
+      // Keep the batch workspace's primary action after a passive refresh.
+      if (overview) replacement.querySelector('[data-priority-action]')?.classList.toggle('primary', !Number(overview.dataset.selection));
+      node.replaceWith(replacement);
+    });
+  }
+  async pairCurrentWork(info, summary, revision) {
+    if (!this.health.ui_capabilities?.includes('workbench_summary.v2') || currentWorkMatches(summary, info, revision)) return summary;
+    // Keep the requested artifact fixed while obtaining facts for the control
+    // snapshot read alongside it. A second race leaves an explicit read-only
+    // recovery state; it must not borrow an old handoff or change the route.
+    try {
+      const refreshed = await get(this.summaryURL(revision));
+      if (currentWorkMatches(refreshed, info, revision)) return refreshed;
+    } catch { /* Fixed artifacts remain readable when the control pair is unavailable. */ }
+    return {...summary, current_work:null};
   }
   async loadRoute(initial = null, focus = true) {
     const requestedHash = location.hash, requestedRoute = initial && structuredClone(initial);
@@ -171,12 +197,17 @@ export class Project {
       // version (including "current"/null), not the still-visible snapshot.
       // Keep display, permissions and writes on committed state until verified.
       this.navigationRoute = requestedRoute || readRoute(this.info, null, {...this.latest, revision_id:null}, requestedHash);
-      const [info, latest] = await Promise.all([this.readControl(true), get(this.summaryURL())]);
+      const [info, observedLatest] = await Promise.all([this.readControl(true), get(this.summaryURL())]);
+      let latest = observedLatest;
       if (info.project_identity !== this.info.project_identity) throw new Error('项目身份已改变。旧输入仍保留，请从项目列表重新打开。');
       const route = requestedRoute || readRoute(this.info, null, latest, requestedHash);
       route.revision ||= latest.revision_id;
-      const summary = route.revision === latest.revision_id ? latest : await get(this.summaryURL(route.revision));
+      let summary = route.revision === latest.revision_id ? latest : await get(this.summaryURL(route.revision));
       if (summary.project_id !== this.info.project_id) throw new Error('服务中的项目与当前窗口不一致，未替换已读内容。');
+      summary = await this.pairCurrentWork(info, summary, route.revision);
+      if (route.revision === latest.revision_id) latest = summary;
+      else if (this.health.ui_capabilities?.includes('workbench_summary.v2') && !currentWorkMatches(latest, info)) latest = {...latest, current_work:null};
+      if (serial !== this.generation) return;
       const q = revisionQuery(summary.revision_id);
       let data = {};
       if (route.action_id) data = await get('/api/actions/' + encodeURIComponent(route.action_id) + '/targets' + q + this.readingQuery(summary));
@@ -217,7 +248,7 @@ export class Project {
       this.disposables.forEach(dispose => dispose()); this.disposables = [];
       this.info = info; this.latest = latest; this.summary = summary; this.route = route;
       this.summaryPoll?.useSnapshot(latest);
-      this.historical = summary.revision_id !== latest.revision_id;
+      this.historical = summary.revision_id !== (info.control_revision_id || info.revision_id || latest.revision_id);
       this.readonly = this.historical || Boolean(info.sample?.readonly);
       history.replaceState(null, '', routeHash(this.info, route));
       this.render(data);
@@ -246,6 +277,8 @@ export class Project {
   go(patch) {
     const base = this.navigationPending && this.navigationRoute ? this.navigationRoute : this.route;
     const route = {...base, ...patch};
+    if (patch.surface === 'page' && base.surface !== 'page' && !patch.from) route.from = base.surface;
+    if (patch.surface && patch.surface !== 'page') route.from = null;
     if(patch.surface&&patch.surface!=='content'){route.proposal=null;route.compare_proposal=null;}
     if(patch.surface&&patch.surface!=='page')route.atom=null;
     if((patch.surface||patch.review_id===null)&&!('review_id' in patch)){route.review_sha256=null;route.finding=null;route.finding_index=null;}
@@ -362,8 +395,8 @@ export class Project {
   render(data) {
     const nav = el('nav', {class: 'nav', 'aria-label': '项目工作区'});
     for (const [key, label] of Object.entries(surfaces)) nav.append(button([icon(key), el('span', {class: 'nav-label'}, label)], () => this.go({surface: key}), false,
-      {class: (this.route.surface === key || this.route.surface === 'page' && key === 'gallery') ? 'active' : '',
-        'aria-current': (this.route.surface === key || this.route.surface === 'page' && key === 'gallery') ? 'page' : null, title: label}));
+      {class: (this.route.surface === key || this.route.surface === 'page' && key === (this.route.from || 'gallery')) ? 'active' : '',
+        'aria-current': (this.route.surface === key || this.route.surface === 'page' && key === (this.route.from || 'gallery')) ? 'page' : null, title: label}));
     const launcher = localURL(new URLSearchParams(location.search).get('launcher'));
     const aside = el('aside', {class: 'sidebar'}, el('div', {class: 'logo'}, el('img', {class: 'brand-logo', src: '/v2/assets/deck-master-logo/logo-horizontal-light.svg', alt: 'Deck Master', width: 176, height: 46})),
       nav, el('div', {class: 'side-project'}, el('span', {class: 'muted'}, '当前项目'), el('strong', {}, this.info.title),
@@ -385,7 +418,7 @@ export class Project {
         this.syncCurrent, this.syncCompact && button('查看详情', () => modal('项目同步状态', el('div', {class:'stack'}, el('p', {}, this.syncMessage), el('p', {class:'muted'}, '同步只读取运行状态，不会派发任务或更换当前阅读版本。')), [button('核实连接', () => this.connectionInfo())]))));
     if (this.health.ui_capabilities?.includes('run_desk.v1')) banners.append(this.syncRow);
     if (this.historical) banners.append(el('div', {class: 'history-banner'}, el('strong', {}, '历史版本 · 只读'),
-      el('span', {}, '你正在阅读过去保存的稿件；内容与比较保持固定。'), button('查看当前版本', () => this.current()), el('details', {}, el('summary', {}, '版本身份'), el('p', {}, `阅读 ${version(this.route.revision)} · 当前 ${version(this.latest.revision_id)}`))));
+      el('span', {}, '你正在阅读过去保存的稿件；内容与比较保持固定。'), button('查看当前版本', () => this.current()), el('details', {}, el('summary', {}, '版本身份'), el('p', {}, `阅读 ${version(this.route.revision)} · 当前 ${version(this.info.control_revision_id || this.info.revision_id || this.latest.revision_id)}`))));
     if (this.info.sample) banners.append(el('div', {class: 'sample-banner'}, this.info.sample.readonly ? '这是合成的只读示例，未调用模型，也未进行专业质量验收。' : '这是可编辑的合成验证项目，未调用模型，也未进行专业质量验收。'));
     this.main = el('main', {id: 'main', class: 'workspace', tabindex: '-1'});
     const view = this.route.action_id ? actionTargets : this.route.surface === 'content' && this.route.candidate_id ? changesetDesk :
@@ -396,7 +429,7 @@ export class Project {
       if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || document.querySelector('dialog[open]')) return;
       // An element in fullscreen consumes Escape to leave fullscreen: the same
       // keypress must not also navigate the work surface away.
-      if (event.key === 'Escape' && !typing && !document.fullscreenElement) { event.preventDefault(); this.go({surface: 'gallery'}); return; }
+      if (event.key === 'Escape' && !typing && !document.fullscreenElement) { event.preventDefault(); this.go({surface: this.route.from || 'gallery'}); return; }
       // ←/→ 切换页（输入与可滚动阅读区除外），与单页制作链的上一页/下一页一致。
       if ((event.key === 'ArrowLeft' || event.key === 'ArrowRight') && !typing && !event.target.closest('.page-image-viewport,.icon-crop-scroll,.selectable-text,.evidence-json,.diff-lines')) {
         const index = this.summary.pages.findIndex(p => p.page_id === this.route.page_id);
@@ -404,12 +437,12 @@ export class Project {
         if (next) { event.preventDefault(); this.go({page_id: next.page_id}); }
       }
     });
-    const pending = this.summary.task_counts.awaiting_host || 0;
+    const pending = pendingHandoffs(this.latest || this.summary, this.info);
     // 顶栏入口承诺的是"查看待交接任务"：显式落到「正在进行」，不被记住的子区劫持。
     this.pendingButton = button(`待交接 ${pending}`, () => this.go({surface: 'runs', task_id: null, runs_area: 'tasks'}), false, {'aria-label': `查看待交接任务，${pending} 项`});
     this.navigationStatus = el('span', {class: 'status navigation-status', hidden: true}, '正在读取工作面');
     const top = el('header', {class: 'topbar'}, el('div', {class: 'crumb'}, el('strong', {}, this.info.title), el('span', {class: 'version', title: '版本身份可在任务与交付的版本记录中查看'}, this.historical ? '历史稿' : '当前稿'), this.navigationStatus),
-      this.controlSlot, this.pendingButton);
+      this.controlSlot, this.pendingButton, document.documentElement.dataset.workbenchUi === 'studio' && actionMenu('项目菜单',[personalClearPanel(this)]));
     this.root.className = 'shell';
     this.root.replaceChildren(aside, el('div', {class: 'content'}, top, banners, this.main));
   }

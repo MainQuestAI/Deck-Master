@@ -1,0 +1,467 @@
+{
+  "base": "6e0d15484f8a39f7e6136a766ae0ef55bdd900ae",
+  "ui_head": "159cfd63e9bcf71c10d98dad45a1a2567eb52136",
+  "conflicts": 36,
+  "conflict_hunks": 71,
+  "automatic_overlaps": 24,
+  "gate_status": "pending_frozen_candidate_validation",
+  "files": [
+    {
+      "path": "docs/specs/deck-master-workbench-v3/contracts/action-targets.v1.schema.json",
+      "kind": "conflict",
+      "owner": "runtime_contracts",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "bb7eb5cae691f4d81e2369f0df82094cd1d22950"
+    },
+    {
+      "path": "examples/workbench/w10_poll_lifecycle.mjs",
+      "kind": "conflict",
+      "owner": "ui_polling",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "e0df498026492e229236a46d236c2026c29b577a"
+    },
+    {
+      "path": "src/deck_master/annotation_service.py",
+      "kind": "conflict",
+      "owner": "runtime_contracts",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "b71aeb6ae599d194fc810e16c8bfc9d9a396f6ee"
+    },
+    {
+      "path": "src/deck_master/candidates.py",
+      "kind": "conflict",
+      "owner": "runtime_contracts",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "d8d168e6dde92b1fa75de43bc5c737384cb5f6cd"
+    },
+    {
+      "path": "src/deck_master/content_review.py",
+      "kind": "conflict",
+      "owner": "runtime_contracts",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "230ab3f585afaffb0983b8879f3b06f039c9db1a"
+    },
+    {
+      "path": "src/deck_master/eligibility.py",
+      "kind": "conflict",
+      "owner": "runtime_contracts",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "6b35a2975ee31ff0d35d5cf258114c84c776717f"
+    },
+    {
+      "path": "src/deck_master/method_library_view.py",
+      "kind": "conflict",
+      "owner": "runtime_contracts",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "e15d47ebaf397c30ffea8176ba87a3dd26d8f5de"
+    },
+    {
+      "path": "src/deck_master/resources/contracts/action-targets.v1.schema.json",
+      "kind": "conflict",
+      "owner": "runtime_contracts",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "bb7eb5cae691f4d81e2369f0df82094cd1d22950"
+    },
+    {
+      "path": "src/deck_master/resources/static/studio/overview.css",
+      "kind": "conflict",
+      "owner": "ui_polling",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "fc6ab9d86c3785cf79d8dd44125e073d9828c208"
+    },
+    {
+      "path": "src/deck_master/resources/static/v2/action-targets.js",
+      "kind": "conflict",
+      "owner": "ui_polling",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "9bd6c65309741bf9fa340586873897cdaa536fd6"
+    },
+    {
+      "path": "src/deck_master/resources/static/v2/collaboration-desk.js",
+      "kind": "conflict",
+      "owner": "ui_polling",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "b0373d220bdfce353456958b96ab9f247f4d0c7f"
+    },
+    {
+      "path": "src/deck_master/resources/static/v2/launcher-ui.js",
+      "kind": "conflict",
+      "owner": "ui_polling",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "5267106d9c3d61aa348cbc2ab4012d27e78fd476"
+    },
+    {
+      "path": "src/deck_master/resources/static/v2/method-library.js",
+      "kind": "conflict",
+      "owner": "ui_polling",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "16f16c09fcd365d008063ce255f79f70a821caa8"
+    },
+    {
+      "path": "src/deck_master/resources/static/v2/overview.js",
+      "kind": "conflict",
+      "owner": "ui_polling",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "c8656a68f2f8cfd48286b02d98294be2f33a7543"
+    },
+    {
+      "path": "src/deck_master/resources/static/v2/project.js",
+      "kind": "conflict",
+      "owner": "ui_polling",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "f56dcd38e3e96aceba047fa262b6d7905ccc8f80"
+    },
+    {
+      "path": "src/deck_master/resources/static/v2/run-desk.js",
+      "kind": "conflict",
+      "owner": "ui_polling",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "3f54990f59f936092064d31b5b632b1ddb5f2c26"
+    },
+    {
+      "path": "src/deck_master/resources/static/v2/style-calibration.js",
+      "kind": "conflict",
+      "owner": "ui_polling",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "6a218d3b2b0f7813db7baaee07897e2bbb4e795c"
+    },
+    {
+      "path": "src/deck_master/resources/static/v2/summary-poll.js",
+      "kind": "conflict",
+      "owner": "ui_polling",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "e913483ee42bddc7b1bb8133e150b015558ac4a3"
+    },
+    {
+      "path": "src/deck_master/run_desk.py",
+      "kind": "conflict",
+      "owner": "root",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "cb82a5c13cae8c3ca2a92533d30b9a099d597b0e"
+    },
+    {
+      "path": "src/deck_master/tasks.py",
+      "kind": "conflict",
+      "owner": "runtime_contracts",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "a264161647e64aa49b782eb09c48c0ccbbdda520"
+    },
+    {
+      "path": "src/deck_master/ui_journal.py",
+      "kind": "conflict",
+      "owner": "runtime_contracts",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "92551de9cd4d38c65b955fdb026c2bb83a2c65ad"
+    },
+    {
+      "path": "src/deck_master/visual_styles.py",
+      "kind": "conflict",
+      "owner": "runtime_contracts",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "280e6c0e32f993a0e9204d23d1a1338145dd48bc"
+    },
+    {
+      "path": "src/deck_master/web.py",
+      "kind": "conflict",
+      "owner": "root",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "e9822f860a100e0f577603a15753444aad0d2003"
+    },
+    {
+      "path": "src/deck_master/workbench.py",
+      "kind": "conflict",
+      "owner": "root",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "63c40930c714a9088930cf9cc9b62746dc2c35bb"
+    },
+    {
+      "path": "tests/rebuild/test_deep_quality_browser.py",
+      "kind": "conflict",
+      "owner": "tests_acceptance",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "56ce0157606da893506352cbf8b0f88e568969dd"
+    },
+    {
+      "path": "tests/rebuild/test_icon_browser.py",
+      "kind": "conflict",
+      "owner": "tests_acceptance",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "f44760d36f6ce1e0b770e087494959b9eb8bc30e"
+    },
+    {
+      "path": "tests/rebuild/test_pr103_repair_browser.py",
+      "kind": "conflict",
+      "owner": "tests_acceptance",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "5b7ffe0fec6dcdf10ee9bdf45e0f798a2457ff23"
+    },
+    {
+      "path": "tests/rebuild/test_pr104_supplemental_browser.py",
+      "kind": "conflict",
+      "owner": "tests_acceptance",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "3d63736c7279fe816cb1c12c6f1fe3fbd66544c0"
+    },
+    {
+      "path": "tests/rebuild/test_rc3_restyle_workflows.py",
+      "kind": "conflict",
+      "owner": "tests_acceptance",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "5494f46cb594144d7c22641635dc4cd1f1af4654"
+    },
+    {
+      "path": "tests/rebuild/test_rc_closure_browser.py",
+      "kind": "conflict",
+      "owner": "tests_acceptance",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "516b84197a5235d43288feff96663e5a2843ad4b"
+    },
+    {
+      "path": "tests/rebuild/test_studio_style_browser.py",
+      "kind": "conflict",
+      "owner": "tests_acceptance",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "6978d4ab1a77ef61b795c5230a4a992227a96c4e"
+    },
+    {
+      "path": "tests/rebuild/test_ui_journal.py",
+      "kind": "conflict",
+      "owner": "tests_acceptance",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "f0020b3f4a081889a21740adcca940033e166179"
+    },
+    {
+      "path": "tests/rebuild/test_ux06_recovery_responsive_browser.py",
+      "kind": "conflict",
+      "owner": "tests_acceptance",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "ffe905090e7497319a789201b3d67a1a7edb6a6a"
+    },
+    {
+      "path": "tests/rebuild/test_webui_acceptance_matrix.py",
+      "kind": "conflict",
+      "owner": "tests_acceptance",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "df240b2d0635f4be07ec43d937ec155b2f94a9a4"
+    },
+    {
+      "path": "tests/rebuild/test_workbench_actions.py",
+      "kind": "conflict",
+      "owner": "tests_acceptance",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "985f82cc6dcaffb79b689be6c72d9803fc16961f"
+    },
+    {
+      "path": "tests/rebuild/test_workbench_usability_browser.py",
+      "kind": "conflict",
+      "owner": "tests_acceptance",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "01ca250d07814df05a6b59324c0cbb41e7e37cf2"
+    },
+    {
+      "path": "docs/specs/deck-master-workbench-v3/contracts/workbench-summary.v1.schema.json",
+      "kind": "automatic_overlap",
+      "owner": "runtime_contracts",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "620b93a08ae3ab3ce1bfe6004e44d21a7fa3cb76"
+    },
+    {
+      "path": "docs/work-items/wi-issue-repair-20261023/ISSUE-SYNC.md",
+      "kind": "automatic_overlap",
+      "owner": "root",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "9014d3fe841f645c61bcaadf88b29506dc9b891f"
+    },
+    {
+      "path": "docs/work-items/wi-issue-repair-20261023/README.md",
+      "kind": "automatic_overlap",
+      "owner": "root",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "b6b9e0c1f3a01058dd520bbe86d9d7feb6c56a26"
+    },
+    {
+      "path": "docs/work-items/wi-issue-repair-20261023/VALIDATION.md",
+      "kind": "automatic_overlap",
+      "owner": "root",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "5990dbae6b07a02e54c8b7b9e29cd5cdb8fb091c"
+    },
+    {
+      "path": "docs/work-items/wi-issue-repair-20261023/issue-sync.json",
+      "kind": "automatic_overlap",
+      "owner": "root",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "e408460779eafc0aa9b517f4dca340e84a733f00"
+    },
+    {
+      "path": "docs/work-items/wi-issue-repair-20261023/validation.json",
+      "kind": "automatic_overlap",
+      "owner": "root",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "15d3ba196258b558d3c122a1a1018af7dceea49f"
+    },
+    {
+      "path": "examples/workbench/w12_installed_regressions.py",
+      "kind": "automatic_overlap",
+      "owner": "tests_acceptance",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "4987be68dbe83965fe153417ae9b9480279ac5b3"
+    },
+    {
+      "path": "src/deck_master/collaboration.py",
+      "kind": "automatic_overlap",
+      "owner": "runtime_contracts",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "98d707aebae0ebf162c15d17756333adfb1d4c78"
+    },
+    {
+      "path": "src/deck_master/resources/contracts/workbench-summary.v1.schema.json",
+      "kind": "automatic_overlap",
+      "owner": "runtime_contracts",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "620b93a08ae3ab3ce1bfe6004e44d21a7fa3cb76"
+    },
+    {
+      "path": "src/deck_master/resources/static/v2/batch-actions.js",
+      "kind": "automatic_overlap",
+      "owner": "ui_polling",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "55687aa4510448266c6aff760abe5c9dcabd05bb"
+    },
+    {
+      "path": "src/deck_master/resources/static/v2/content-edit.js",
+      "kind": "automatic_overlap",
+      "owner": "ui_polling",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "602bb5bf6d1d8a20088e82494a07eda26bfeb4cb"
+    },
+    {
+      "path": "src/deck_master/resources/static/v2/content-sources.js",
+      "kind": "automatic_overlap",
+      "owner": "ui_polling",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "da97a00a962c4d86a3ec8990c26dd2c1b02eae04"
+    },
+    {
+      "path": "src/deck_master/resources/static/v2/dom.js",
+      "kind": "automatic_overlap",
+      "owner": "ui_polling",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "9d626ee4b6d4c1467a9f5df5c80444092091fce4"
+    },
+    {
+      "path": "src/deck_master/resources/static/v2/evidence-reading.js",
+      "kind": "automatic_overlap",
+      "owner": "ui_polling",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "d7732dce31a05923bca078ad527ac756b2acdb35"
+    },
+    {
+      "path": "src/deck_master/resources/static/v2/navigation-usability.css",
+      "kind": "automatic_overlap",
+      "owner": "ui_polling",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "b77d559dd71ebd3b40f2150a8865de3efcf7c584"
+    },
+    {
+      "path": "src/deck_master/resources/static/v2/workbench.css",
+      "kind": "automatic_overlap",
+      "owner": "ui_polling",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "a9359169cbdc8eeeb1b59abb71a374ca4d495d93"
+    },
+    {
+      "path": "src/deck_master/visual_dependencies.py",
+      "kind": "automatic_overlap",
+      "owner": "runtime_contracts",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "8b9a694daf16531af2d1e4dcb4b9cd6f8e26060c"
+    },
+    {
+      "path": "tests/rebuild/test_action_targets_browser.py",
+      "kind": "automatic_overlap",
+      "owner": "tests_acceptance",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "9a46a46e2c9f6e48d99e3b63528257070f28ce8c"
+    },
+    {
+      "path": "tests/rebuild/test_content_preproduction_review.py",
+      "kind": "automatic_overlap",
+      "owner": "tests_acceptance",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "702e780dc75f1d908be13096df3af5331a864c6a"
+    },
+    {
+      "path": "tests/rebuild/test_native_review.py",
+      "kind": "automatic_overlap",
+      "owner": "tests_acceptance",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "5b8f0504fad28fbe755cfdd4f45313a446ce71ec"
+    },
+    {
+      "path": "tests/rebuild/test_navigation_usability_browser.py",
+      "kind": "automatic_overlap",
+      "owner": "tests_acceptance",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "0843109b38c0b5d173b91168155abd8314de8e0f"
+    },
+    {
+      "path": "tests/rebuild/test_pr103_complete_browser.py",
+      "kind": "automatic_overlap",
+      "owner": "tests_acceptance",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "52c2bc6630774be7bf2083a8d40129dbee3d59e1"
+    },
+    {
+      "path": "tests/rebuild/test_pr104_review_browser.py",
+      "kind": "automatic_overlap",
+      "owner": "tests_acceptance",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "e55c66739c63d5a375b35b6a7ecc9df112819c4c"
+    },
+    {
+      "path": "tests/rebuild/test_studio_content_browser.py",
+      "kind": "automatic_overlap",
+      "owner": "tests_acceptance",
+      "status": "resolved_and_semantically_reviewed",
+      "blob": "2c71c7800e351303e8fc67e92f19e3a5e99acca8"
+    }
+  ],
+  "additional_cross_branch_paths": [
+    "src/deck_master/action_currentness.py",
+    "src/deck_master/current_relationship.py",
+    "src/deck_master/current_work.py",
+    "src/deck_master/resources/contracts/workbench-summary.v2.schema.json",
+    "docs/specs/deck-master-workbench-v3/contracts/workbench-summary.v2.schema.json",
+    "tests/rebuild/test_integration_current_relationship.py",
+    "tests/rebuild/test_integration_current_work_browser.py"
+  ],
+  "resolved_at": "2026-10-25T06:02:28.843457+00:00",
+  "additional_cross_branch_blobs": {
+    "src/deck_master/action_currentness.py": "9bcea08915327b6a14e33f0f39ade68cf616944f",
+    "src/deck_master/current_relationship.py": "03465e01f8af4e97a9161591798d897868012988",
+    "src/deck_master/current_work.py": "8eac51297a39704d39216635b5aa7a39ad730cef",
+    "src/deck_master/resources/contracts/workbench-summary.v2.schema.json": "2738a72c77824117a1012958e0d5c26400efedd0",
+    "docs/specs/deck-master-workbench-v3/contracts/workbench-summary.v2.schema.json": "2738a72c77824117a1012958e0d5c26400efedd0",
+    "tests/rebuild/test_integration_current_relationship.py": "56fe913c6d6117333961d544ba716c9d71193f24",
+    "tests/rebuild/test_integration_current_work_browser.py": "23a982d4f8c38775f08783262bb993fcbe7cc77e"
+  },
+  "diagnostics": {
+    "ui-merge-core-resolved.xml": {
+      "tests": 243,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "ac9f6c41a5216a299eb3f22d82c976e1ad690f9fe9128269568088b710061ad8",
+      "scope": "integration_diagnostic_not_full_gate"
+    },
+    "ui-merge-pairing-final-diagnostic.xml": {
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "1e0b82d96c252b23d497466b0fde887e40963639d22fe510cd618b780d033b76",
+      "scope": "integration_diagnostic_not_full_gate"
+    }
+  }
+}

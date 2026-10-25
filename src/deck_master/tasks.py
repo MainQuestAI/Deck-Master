@@ -401,13 +401,14 @@ def _lookup_task(document: dict, task_id: str, store: Store) -> dict:
     raise EnvelopeError(f"(task {task_id})", "task not found in current Document")
 
 
-def task_inputs_current(store, document, task):
+def task_inputs_current(store, document, task, *, read_snapshot=None):
+    read_snapshot = read_snapshot or store.load_document
     if task.get('review_subject') == 'outline':
         from .outline_review import require_outline
         from .effective_requirements import task_requirements_current
         try:
             require_outline(store, document)
-            dispatched = store.load_document(task['dispatch_revision'])
+            dispatched = read_snapshot(task['dispatch_revision'])
             return (all(dispatched.get(key) == document.get(key) for key in ('narrative', 'content_plan'))
                     and compute_input_digest(dispatched) == compute_input_digest(document)
                     and task_requirements_current(store, document, task))
@@ -422,7 +423,7 @@ def task_inputs_current(store, document, task):
             return False
     from .visual_dependencies import is_visual_task, visual_task_inputs_current
     if is_visual_task(task):
-        return visual_task_inputs_current(store, document, task)
+        return visual_task_inputs_current(store, document, task, read_snapshot=read_snapshot)
     if task.get("kind") == "style_analyze":
         from .visual_styles import inputs_current as analysis_current
         return analysis_current(store, document, task)
@@ -432,10 +433,10 @@ def task_inputs_current(store, document, task):
         # generation basis for image/SVG, the precise content basis for
         # content trials (B03). The generic slot comparison below would
         # wrongly stale an SVG trial whose slot a sibling auto result moved.
-        return inputs_current(store, document, task)
+        return inputs_current(store, document, task, read_snapshot=read_snapshot)
     dispatched = None
     if task.get('kind') in ('review', 'repair'):
-        dispatched = store.load_document(task['dispatch_revision'])
+        dispatched = read_snapshot(task['dispatch_revision'])
         if task.get('review_stage', 'final') == 'final':
             # Output references are real review inputs even when Page/SVG
             # content identity stayed the same after reassembly.
@@ -451,7 +452,7 @@ def task_inputs_current(store, document, task):
                 return False
     if content_identity(document) == task.get('produced_against'):
         return True
-    dispatched = dispatched or store.load_document(task['dispatch_revision'])
+    dispatched = dispatched or read_snapshot(task['dispatch_revision'])
     # Task facts are part of the dispatched input: a task-field change
     # (audience, decisions, ...) invalidates scoped results too, even when
     # pages/design/sources are untouched (spec v1.1 §5.4, c93 defect).
@@ -649,9 +650,16 @@ def _adopt_review(store: Store, review: dict) -> dict:
         old_findings = {f.get("finding_id"): f for f in prior.get("findings") or []}
         new_findings = {f.get("finding_id"): f for f in review.get("findings") or []}
         shared = old_findings.keys() & new_findings.keys()
-        # A prior clean judgment has no finding identity to carry forward.
-        # Existing findings still require explicit, validated closure below.
-        if old_findings and not shared:
+        # A clean prior review has no finding identity to carry forward. A
+        # real recheck may confirm the pass or discover new open defects;
+        # rejecting the latter would hide bad news behind the older pass.
+        # New findings cannot claim an unrecorded fix or accepted variance.
+        clean_prior_recheck = (
+            prior.get("status") == "pass" and not old_findings
+            and any(text.strip() for text in review.get("observations") or [])
+            and all(finding.get("resolution") == "open" for finding in new_findings.values())
+        )
+        if not shared and not clean_prior_recheck:
             raise EnvelopeError("review/replaces", "no shared finding_id with the replaced review")
         from .editing import _current_artifact_digests
         from .review import finding_closed

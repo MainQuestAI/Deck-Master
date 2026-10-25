@@ -52,7 +52,7 @@ def test_passive_project_read_defers_eligibility_until_details_are_opened(projec
     server = WorkbenchServer(project)
     url = server.start()
     try:
-        status, passive = http(url, '/api/project')
+        status, passive = http(url, '/api/project?light=1')
         assert status == 200
         assert calls == []
         assert 'blocking_cards' not in passive['collaboration']
@@ -62,6 +62,12 @@ def test_passive_project_read_defers_eligibility_until_details_are_opened(projec
         assert detailed['revision_id'] == passive['revision_id']
         assert detailed['completion'] == passive['completion']
         assert 'blocking_cards' in detailed['collaboration']
+        calls.clear()
+        status, default = http(url, '/api/project')
+        assert status == 200 and default['collaboration'] == detailed['collaboration']
+        assert calls == ['dispatch.compose', 'dispatch.blueprint', 'export.delivery']
+        for query in ('light=1&details=1', 'light=0', 'light=1&light=1', 'details=0'):
+            assert http(url, '/api/project?' + query)[0] == 400
     finally:
         server.stop()
 

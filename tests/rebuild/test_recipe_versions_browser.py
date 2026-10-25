@@ -44,7 +44,7 @@ def test_v3_without_originals_is_readable_and_reopens_without_dispatch(tmp_path,
                 page.get_by_label('已确认的风格版本', exact=True).select_option(rid)
             expect(page.locator('.style-calibration')).to_contain_text('style_recipe.v3')
             expect(page.locator('.style-calibration')).to_contain_text('关系不随位置调整改变')
-            expect(page.locator('.style-calibration')).to_contain_text('不代表当前全稿方向或生产许可')
+            expect(page.locator('.style-calibration')).to_contain_text('这里选中的是本次试作依据，不代表已应用到当前全稿。未确认的修改不会进入试作。')
             page.screenshot(path=str(tmp_path / 'recipe.png'), full_page=True)
             assert page.get_by_label('先试哪一页', exact=True).last.locator('option').all_text_contents() == ['第 1 页 · 人工确认后提交']
             if route == 'studio/':
@@ -95,7 +95,7 @@ def test_mixed_recipe_catalog_preserves_types_and_paging(flow):
             expect(page.locator('.studio-recipe-card')).to_have_count(2)
             page.locator(f'[data-recipe-id="{v2}"]').get_by_role('button').click()
             expect(page.locator('.style-calibration')).to_contain_text('style_recipe.v2')
-            expect(page.locator('.style-calibration')).to_contain_text('独立截图参考')
+            expect(page.locator('.style-calibration')).to_contain_text('外部图片 · 1 份固定参考')
             page.get_by_label('搜索已确认风格规范').fill('初始设计')
             expect(page.locator('.studio-recipe-card')).to_have_count(1)
             page.locator(f'[data-recipe-id="{v3}"]').get_by_role('button').click()

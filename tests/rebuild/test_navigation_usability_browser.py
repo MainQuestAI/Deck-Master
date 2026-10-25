@@ -261,6 +261,7 @@ def test_artwork_and_save_row_share_the_first_screen(workbench_page, tmp_path, w
     page.goto(studio + '#' + urlencode({'project': info['project_identity'], 'surface': 'page', 'page': 'p02', 'layer': 'svg', 'revision': revision}))
     image = page.locator('.page-reading canvas:visible').first
     image.wait_for()
+    page.get_by_role('button', name='意见', exact=True).click()
     page.get_by_role('button', name='整页意见', exact=True).click()
     # Focus may scroll the window. Measure the actual first view, never a
     # transient smooth-scroll position that happens to bring Save on screen.
@@ -325,8 +326,8 @@ def test_page_opinion_editor_stays_with_artwork_before_trial_form(workbench_page
     image = page.locator('.page-reading canvas:visible').first
     image.wait_for()
     # D4-A:390px 下意见在全高工具面板里,先通过画面旁「工具」入口打开(D5 独立容器)。
+    page.get_by_role('button', name='意见', exact=True).click()
     if width < 1280:
-        page.get_by_role('button', name='意见', exact=True).click()
         expect(page.get_by_role('dialog', name='单页工具面板')).to_be_visible()
     page.locator('.opinion-composer > summary').click()
     editor = page.get_by_role('textbox', name='意见正文', exact=True)

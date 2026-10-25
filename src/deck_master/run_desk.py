@@ -11,8 +11,8 @@ from .models import validate_schema
 from .snapshots import IDENTIFIER, READ_FAILURES, ReadModelError, load_snapshot
 from .store import Store
 from .result_reading import key as reading_key
-from .workbench import _ReadContext, _candidate_facts
-from .action_currentness import Projection
+from .workbench import _ReadContext
+from .action_currentness import legacy_relation
 
 DOCS = 'docs/agent-recovery-playbook.md#run-desk-recovery'
 
@@ -129,7 +129,7 @@ def task_instruction_summary(task):
     return text
 
 
-def task_row(task, ref=None, *, adopted=(), now=None, live=True, projection=None, pending_shas=None):
+def task_row(task, ref=None, *, adopted=(), now=None, live=True, relationships=None):
     now = now or datetime.now(timezone.utc)
     def timestamp(value):
         try:
@@ -145,16 +145,17 @@ def task_row(task, ref=None, *, adopted=(), now=None, live=True, projection=None
     unclaimed_running = task['status'] == 'running' and not task.get('execution_ref')
     calls = Counter(call['state'] for call in task.get('call_allowances', []))
     unknown = bool(calls['unknown'])
-    pending_candidates = [r for r in task.get('candidate_refs', []) if r['sha256'] not in adopted]
-    if pending_shas is not None:
-        pending_candidates = [r for r in pending_candidates if r['sha256'] in pending_shas]
-    relation = projection.task(task) if projection else {'state': 'unknown', 'reason': 'context_not_loaded'}
+    current_relation = relationships.task(task) if relationships else {'status':'unknown','reason':'projection_context_missing'}
+    pending_candidates = (relationships.pending_candidates(task, adopted) if relationships else
+                          [r for r in task.get('candidate_refs', []) if r['sha256'] not in adopted])
     actions = []
     if unknown:
         actions.append('verify_unknown_call')
-    if stale or unclaimed_running:
+    if stale or unclaimed_running or current_relation['reason'] == 'dependencies_unverifiable':
         actions.append('verify_execution')
-    if task['status'] == 'awaiting_host':
+    if relationships and current_relation['status'] not in ('current','background'):
+        pass
+    elif task['status'] == 'awaiting_host':
         actions.append('handoff')
     elif task['status'] == 'failed':
         actions.append('inspect_failure')
@@ -163,20 +164,20 @@ def task_row(task, ref=None, *, adopted=(), now=None, live=True, projection=None
             actions.append('compare_candidates')
         elif not task.get('candidate_refs') and task.get('result_refs'):
             actions.append('review_results')
-    if 'handoff' in actions and relation['reason'] in ('dependency_basis_changed', 'dependencies_unverifiable'):
-        actions = ['replan' if relation['reason'] == 'dependency_basis_changed' else 'verify_execution']
+    if 'handoff' in actions and current_relation['reason'] in ('dependency_basis_changed', 'dependencies_unverifiable'):
+        actions = ['replan' if current_relation['reason'] == 'dependency_basis_changed' else 'verify_execution']
     if unknown:
         actions = [action for action in actions if action in ('verify_unknown_call', 'verify_execution')]
-    if relation['state'] == 'historical':
+    if current_relation['status'] == 'historical':
         actions = []
-    return {'current_relation': relation, 'ref': ref, 'task_id': task['task_id'], 'operation_id': task['operation_id'],
-            'kind': task['kind'], 'status': task['status'], 'scope_pages': task['scope_pages'],
+    return {'ref': ref, 'task_id': task['task_id'], 'operation_id': task['operation_id'],
+            'kind': task['kind'], 'status': task['status'], 'current_relation': {**current_relation, **legacy_relation(current_relation)}, 'scope_pages': task['scope_pages'],
             'instruction': task['instruction'], 'display_instruction': task_instruction_summary(task), 'dispatch_revision': task['dispatch_revision'],
             'created_at': task['created_at'], 'updated_at': task['updated_at'],
             'execution_ref': task.get('execution_ref'), 'execution_started_at': started,
             'execution_time_source': 'core_recorded' if started else 'not_recorded',
             'verification_clock': 'live' if live else 'not_evaluated_for_fixed_revision',
-            'needs_verification': unknown or stale or unclaimed_running,
+            'needs_verification': unknown or stale or unclaimed_running or current_relation['reason'] == 'dependencies_unverifiable',
             'waiting_time_basis': 'execution_started_at' if started else 'last_task_update' if wait_basis else 'unknown', 'call_counts': dict(calls),
             'reading_key':reading_key(task), 'human_actions': actions, 'request_count': len(task.get('generation_requests', [])),
             'attempt_count': len(task.get('generation_attempts', [])),
@@ -239,7 +240,8 @@ def listing(project, *, revision=None, limit=30, offset=0, change_id=None, statu
                   'check': '工程检查', 'compose': '整理内容', 'blueprint': '制作原图', 'svg': '制作 SVG',
                   'render': '渲染预览', 'repair': '局部修改', 'review': '检查', 'export': '准备文件'}
     records = _records(ctx); groups = _groups(ctx, records)
-    projection, pending_shas = _projection(ctx, records)
+    from .current_relationship import CurrentRelationships
+    relationships = CurrentRelationships(ctx, {t['task_id']:t for _,t in records if t})
     selected_ids = None
     if change_id:
         group = next((g for g in groups if g['change_id'] == change_id), None)
@@ -249,7 +251,7 @@ def listing(project, *, revision=None, limit=30, offset=0, change_id=None, statu
     adopted = {r['candidate_ref']['sha256'] for r in doc.get('candidate_adoptions', [])}
     now = datetime.now(timezone.utc); projected = []
     for ref, task in reversed(records):
-        row = (task_row(task, ref, adopted=adopted, now=now, live=revision is None, projection=projection, pending_shas=pending_shas) if task else
+        row = (task_row(task, ref, adopted=adopted, now=now, live=revision is None, relationships=relationships) if task else
                {'ref': ref, 'task_id': None, 'status': 'unreadable', 'human_actions': ['inspect_failure'], 'error': _error()})
         if task and reading is not None and reading_key(task) in reading['seen']:
             row['human_actions']=[a for a in row['human_actions'] if a!='review_results']
@@ -281,7 +283,8 @@ def detail(project, *, task_id, revision=None):
         raise RunReadError('invalid_run_query', 'task_id', 'invalid task identifier', http_status=400)
     store = Store(project); doc = load_snapshot(store, revision); ctx = _ReadContext(store, doc)
     records = _records(ctx)
-    projection, pending_shas = _projection(ctx, records)
+    from .current_relationship import CurrentRelationships
+    relationships = CurrentRelationships(ctx, {t['task_id']:t for _,t in records if t})
     record = next(((ref, t) for ref, t in records if t and t['task_id'] == task_id), None)
     if record is None:
         raise RunReadError('task_not_found', 'task_id', 'task is not readable in this committed project version')
@@ -298,13 +301,5 @@ def detail(project, *, task_id, revision=None):
                 errors.append(_error(field))
     adopted = {r['candidate_ref']['sha256'] for r in doc.get('candidate_adoptions', [])}
     return copy.deepcopy({'project_id': doc['project_id'], 'revision_id': doc['revision_id'],
-        'task': task_row(task, ref, adopted=adopted, live=revision is None, projection=projection, pending_shas=pending_shas), 'links': links,
+        'task': task_row(task, ref, adopted=adopted, live=revision is None, relationships=relationships), 'links': links,
         'call_allowances': task.get('call_allowances', []), 'errors': errors, 'docs_ref': DOCS})
-
-
-def _projection(ctx, records):
-    tasks = {task['task_id']: task for _, task in records if task}
-    ctx.action_projection = Projection(ctx, tasks)
-    _, facts = _candidate_facts(ctx, tasks)
-    pending = {ref['sha256'] for fact in facts for ref in fact['source_refs'][:1]}
-    return ctx.action_projection, pending

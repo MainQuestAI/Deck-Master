@@ -13,6 +13,7 @@
     external:'<path d="M9 5H5v14h14v-4M13 5h6v6M19 5l-9 9"/>',
     check:'<path d="m5 12 4.5 4.5L19 7"/>',
     attention:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5M12 16h.01"/>',
+    more:'<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
     minus:'<path d="M5 12h14"/>',
     plus:'<path d="M5 12h14M12 5v14"/>',
     clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/>',

@@ -49,7 +49,7 @@ def test_matching_control_reuses_but_history_writes_and_races_do_not(tmp_path):
             page.goto(server.start() + 'v2/project.js')
             result = page.evaluate('''async () => {
               const {Project} = await import('/v2/project.js');
-              const summary = (artifact, control) => ({project_id:'p', next_actions:[],
+              const summary = (artifact, control) => ({project_id:'p', revision_id:artifact, next_actions:[],
                 current_work:{identity:{project_id:'p',artifact_revision_id:artifact,control_revision_id:control}}});
               const run = async (artifact, control, observed, race = false) => {
                 let reads=0;
