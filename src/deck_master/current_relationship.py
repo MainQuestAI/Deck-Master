@@ -26,6 +26,15 @@ def request_relationship(document, task):
     return relation('historical', 'request_replaced')
 
 
+def _content_request_semantics(document):
+    """Adopted-content reading ignores controls that govern future writes only."""
+    request = (document.get('collaboration') or {}).get('request')
+    if request is None:
+        return None
+    controls = {'paused', 'pause_reason', 'closed', 'closed_reason', 'background_request_ids'}
+    return {key: value for key, value in request.items() if key not in controls}
+
+
 def candidate_relationship(document, task, state):
     if task is None:
         return relation('unknown', 'candidate_task_unreadable')
@@ -154,8 +163,7 @@ class CurrentRelationships:
                 or before != now
                 or [p['page_id'] for p in adopted.get('pages', [])] !=
                    [p['page_id'] for p in self.document.get('pages', [])]
-                or (adopted.get('collaboration') or {}).get('request') !=
-                   (self.document.get('collaboration') or {}).get('request')):
+                or _content_request_semantics(adopted) != _content_request_semantics(self.document)):
             return relation('historical', 'adopted_content_context_changed')
         return relation(request_status, 'adopted_content_current')
 
