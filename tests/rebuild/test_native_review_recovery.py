@@ -151,7 +151,7 @@ def test_stale_manuscript_recovery_is_refused(tmp_path, native, monkeypatch):
 
 def test_multiple_clean_owners_can_be_rechecked_without_merging_identities(tmp_path, native, monkeypatch):
     project, store = _deck(tmp_path)
-    native.status = 'fail'
+    native.status = 'pass'
     native_review.run(project)
     # Synthetic legacy history can contain multiple independent owners per unit.
     document = store.load_document()
@@ -165,6 +165,7 @@ def test_multiple_clean_owners_can_be_rechecked_without_merging_identities(tmp_p
     store.commit_change(base_revision=document['revision_id'], document=changed, operation_id='legacy-owner-fixture')
     prior = {ref['sha256']: store.read_object_json(ref) for ref in store.load_document()['reviews']}
     assert len(prior) == 8
+    assert all(owner['status'] == 'pass' and not owner['findings'] for owner in prior.values())
     original = FixtureSession.review
     def recheck(self, prompt, schema):
         observation = original(self, prompt, schema)
@@ -174,7 +175,7 @@ def test_multiple_clean_owners_can_be_rechecked_without_merging_identities(tmp_p
         observation['raw_final_message'] = json.dumps({'reviews': rows})
         return observation
     monkeypatch.setattr(FixtureSession, 'review', recheck)
-    result = native_review.run(project)
+    result = native_review.run(project, force_units=sorted({owner['kind'] for owner in prior.values()}))
     assert result['preproduction']['status'] == 'pass'
     after = store.load_document()
     assert len(after['reviews']) == 16

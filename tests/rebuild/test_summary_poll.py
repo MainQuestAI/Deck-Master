@@ -14,7 +14,9 @@ def test_polling_lifecycle_never_overlaps_or_applies_stale_generation():
     result = subprocess.run([node, str(script)], capture_output=True, text=True, check=True, timeout=20)
     receipt = json.loads(result.stdout)
     assert receipt['passed'] is True
-    assert len(receipt['checks']) == 15
+    assert len(receipt['checks']) == 18
     assert {'deferred_control_route_fenced', 'deferred_control_stop_fenced',
             'hide_show_retires_old_callback', 'new_visible_refresh_recovers',
-            'new_snapshot_interval_preserved', 'single_inflight'} <= set(receipt['checks'])
+            'new_snapshot_interval_preserved', 'single_inflight',
+            'obsolete_callback_interval_fenced', 'project_route_generation_fenced',
+            'negotiated_light_control'} <= set(receipt['checks'])
