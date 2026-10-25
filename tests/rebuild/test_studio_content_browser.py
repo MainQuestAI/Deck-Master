@@ -256,6 +256,11 @@ def test_studio_goal_material_links_keep_fixed_source_versions_and_recover(tmp_p
             posted=json.loads(next(r['body'] for r in reversed(requests) if r['url']=='content/plan'))['input']
             assert posted['content_plan']['schema_version']=='content_plan_input.v2'
             links=posted['content_plan']['page_roles'][0]['source_links'];assert len(links)==2
+            differences=page.get_by_role('list',name='具体字段变更',exact=True)
+            expect(differences).to_contain_text('来源关联：未关联 →')
+            expect(differences).to_contain_text('业务事实.md')
+            expect(differences).to_contain_text(values[1])
+            for link in links:expect(differences).to_contain_text(link['source_version']['extract']['sha256'])
             sources={s['source_id']:s for s in before['sources']}
             for link in links:
                 source=sources[link['source_id']];assert link['source_version']=={'original_sha256':source.get('original_sha256'),'extract':source.get('extract')}
@@ -390,7 +395,7 @@ def test_old_poll_cannot_invalidate_newly_read_content_plan(tmp_path, old_poll_e
                 else:
                     route.continue_()
 
-            page.route('**/api/view/summary?personal=1', hold_poll)
+            page.route('**/api/view/summary?protocol=workbench_summary.v2&personal=1', hold_poll)
             page.evaluate('() => window.dispatchEvent(new Event("focus"))')
             page.wait_for_function('() => window.__heldContentPoll === true')
             with page.expect_response(lambda response: response.url.endswith('/api/content/commit')) as receipt:

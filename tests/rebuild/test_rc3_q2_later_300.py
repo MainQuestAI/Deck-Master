@@ -16,7 +16,8 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 CASES = Path(__file__).with_name("rc3_q2_later_300_cases.py").resolve()
-TOOL = ROOT / "tools/rc3_campaign/q2_later_300.py"
+TOOL = ROOT / "tools/rc3_campaign/q2_later_300_v2.py"
+OLD_TOOL = ROOT / "tools/rc3_campaign/q2_later_300.py"
 EXPECTED_CASES = 70
 
 
@@ -38,10 +39,10 @@ def run_logged(tmp_path, argv):
         execution_error = {"type": type(exc).__name__, "message": str(exc)}
         # Temporary artifacts are not necessarily uploaded by CI. Preserve the
         # actual exception/deadline while exposing the last active test inline.
-        def output_tail(value):
-            return value[-4096:].decode("utf-8", "replace") if isinstance(value, bytes) else value[-4096:]
+        def output_tail(value, limit=4096):
+            return value[-limit:].decode("utf-8", "replace") if isinstance(value, bytes) else value[-limit:]
         exc.add_note("Isolated child stdout tail (last 4096 bytes/characters):\n" + output_tail(stdout))
-        exc.add_note("Isolated child stderr tail (last 4096 bytes/characters):\n" + output_tail(stderr))
+        exc.add_note("Isolated child stderr tail (last 65536 bytes/characters):\n" + output_tail(stderr, 65536))
         raise
     except OSError as exc:
         execution_error = {"type": type(exc).__name__, "message": str(exc)}
@@ -65,7 +66,7 @@ def test_all_q2_later_300_cases_run_in_an_actual_isolated_interpreter(tmp_path):
     case_root = tmp_path / "isolated-cases"
     # Keep the active node in captured output if the unchanged deadline fires;
     # durations diagnose completed slow cases without weakening any case checks.
-    argv = [sys.executable, "-I", "-B", "-m", "pytest", "-vv", "--durations=20", "-p", "no:cacheprovider",
+    argv = [sys.executable, "-I", "-B", "-m", "pytest", "-vv", "--q2-diagnostics", "--durations=20", "-p", "no:cacheprovider",
             "-o", "addopts=", "--basetemp=" + str(case_root), "--junitxml=" + str(junit), str(CASES)]
     result = run_logged(tmp_path, argv)
     assert result.returncode == 0, (result.stdout + result.stderr).decode(errors="replace")
@@ -83,35 +84,38 @@ def test_all_q2_later_300_cases_run_in_an_actual_isolated_interpreter(tmp_path):
     }, indent=2) + "\n")
 
 
+@pytest.mark.parametrize("tool", [OLD_TOOL, TOOL])
 @pytest.mark.parametrize("flags", [("-B",), ("-I",)])
-def test_real_CLI_requires_both_flags_before_opening_control_or_ledger(tmp_path, flags):
+def test_real_CLI_requires_both_flags_before_opening_control_or_ledger(tmp_path, flags, tool):
     result = run_logged(tmp_path, [sys.executable, *flags, "-X", "pycache_prefix="+str(tmp_path/"pycache"),
-        str(TOOL), "initialize", "--engineering", "--flow", "r04", "--control", str(tmp_path/"absent.json"),
+        str(tool), "initialize", "--engineering", "--flow", "r04", "--control", str(tmp_path/"absent.json"),
         "--control-sha256", "0"*64])
     assert result.returncode == 2
     assert json.loads(result.stderr)["error"] == "use own absolute Python -I -B"
     assert not (tmp_path/"absent.json").exists()
 
 
+@pytest.mark.parametrize("tool", [OLD_TOOL, TOOL])
 @pytest.mark.parametrize("option", ["--operation", "--adapter-context", "--scope", "--pool"])
-def test_real_CLI_has_no_operation_context_scope_or_pool_override(tmp_path, option):
-    result = run_logged(tmp_path, [sys.executable, "-I", "-B", str(TOOL), "initialize", "--engineering",
+def test_real_CLI_has_no_operation_context_scope_or_pool_override(tmp_path, option, tool):
+    result = run_logged(tmp_path, [sys.executable, "-I", "-B", str(tool), "initialize", "--engineering",
         "--flow", "r04", "--control", str(tmp_path/"absent.json"), "--control-sha256", "0"*64, option, "unauthorized"])
     assert result.returncode == 2 and b"unrecognized arguments" in result.stderr
 
 
-def test_companion_and_pinned_helpers_import_without_Runtime(tmp_path):
+@pytest.mark.parametrize("tool", [OLD_TOOL, TOOL])
+def test_companion_and_pinned_helpers_import_without_Runtime(tmp_path, tool):
     code = ("import importlib.util,sys; s=importlib.util.spec_from_file_location('s09',sys.argv[1]); "
             "m=importlib.util.module_from_spec(s);s.loader.exec_module(m);m.helpers(); "
             "assert not any(n=='deck_master' or n.startswith('deck_master.') for n in sys.modules)")
-    result = run_logged(tmp_path, [sys.executable, "-I", "-B", "-c", code, str(TOOL)])
+    result = run_logged(tmp_path, [sys.executable, "-I", "-B", "-c", code, str(tool)])
     assert result.returncode == 0, result.stderr.decode()
 
 
 def test_timeout_preserves_deadline_type_artifacts_and_bounded_last_node(tmp_path, monkeypatch):
     argv = [sys.executable, "-I", "-B", "-m", "pytest", "-vv"]
     stdout = b"old synthetic progress\n" * 500 + b"last_synthetic_case::test_pending"
-    stderr = b"synthetic diagnostic\n"
+    stderr = b"synthetic earlier timing\n" * 4000 + b"synthetic pre_deadline stack\n"
     failure = subprocess.TimeoutExpired(argv, 180, output=stdout, stderr=stderr)
     calls = []
 
@@ -133,7 +137,8 @@ def test_timeout_preserves_deadline_type_artifacts_and_bounded_last_node(tmp_pat
     notes = caught.value.__notes__
     assert "last_synthetic_case::test_pending" in notes[0]
     assert notes[0].split("\n", 1)[1] == stdout[-4096:].decode()
-    assert notes[1].split("\n", 1)[1] == stderr.decode()
+    assert notes[1].split("\n", 1)[1] == stderr[-65536:].decode()
+    assert "synthetic pre_deadline stack" in notes[1]
     # Exclusive evidence files must refuse replacement, even on another failure.
     with pytest.raises(FileExistsError):
         run_logged(tmp_path, argv)

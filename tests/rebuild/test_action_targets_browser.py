@@ -150,8 +150,9 @@ def test_read_result_removes_same_overview_target_and_survives_reload(action_bro
     errors=[];page.on('console',lambda m:errors.append(m.text) if m.type=='error' else None)
     page.add_init_script("window.cspErrors=[];document.addEventListener('securitypolicyviolation',e=>window.cspErrors.push(e.violatedDirective))")
     page.goto(server.start())
-    page.locator('.todo-more > summary').click()
-    page.get_by_role('button',name='去阅读',exact=True).click()
+    summary=page.request.get(server.start().rstrip('/')+'/api/view/summary?protocol=workbench_summary.v2&personal=1').json()
+    assert summary['current_work']['next']['action']=='review_results'
+    page.locator('.todo-priority').get_by_role('button',name='去阅读',exact=True).click()
     page.get_by_role('heading',name='待办对象',exact=True).wait_for();assert page.locator('.action-target').count()==2
     page.locator('.action-target').first.get_by_role('button',name='查看这个对象').click()
     page.get_by_role('button',name='标记这些结果已读',exact=True).click()

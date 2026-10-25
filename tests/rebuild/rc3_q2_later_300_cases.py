@@ -11,7 +11,7 @@ import sys
 
 import pytest
 
-TOOL = Path(__file__).resolve().parents[2]/'tools/rc3_campaign/q2_later_300.py'
+TOOL = Path(__file__).resolve().parents[2]/'tools/rc3_campaign/q2_later_300_v2.py'
 spec = importlib.util.spec_from_file_location('s09_cases', TOOL)
 p = importlib.util.module_from_spec(spec); spec.loader.exec_module(p)
 
@@ -117,8 +117,8 @@ def fixture(base, tool=p, flow='r04'):
         'revision_id': doc['revision_id'], 'request': doc['collaboration']['request']}
     control = c.save(base/'control.json', {'format': tool.FORMAT, 'status': tool.ENGINEERING, 'observer_id': '/engineering/rc3-s09',
         'assurance': 'synthetic_engineering', 'observed_at_utc': c.now(), 'implementation_review': grammar,
-        'scope': {'tool': tool.reference(Path(tool.__file__).resolve()), 'common': tool.reference(Path(tool.__file__).with_name('controller.py')),
-            'scoped': tool.reference(Path(tool.__file__).with_name('supplementary_recorder.py')), 'ledger_root': str(base/'later-ledger'),
+        'scope': {'tool': tool.reference(Path(tool.__file__).resolve()), 'common': tool.reference(Path(tool.__file__).with_name('controller_v2.py')),
+            'scoped': tool.reference(Path(tool.__file__).with_name('supplementary_recorder_v2.py')), 'ledger_root': str(base/'later-ledger'),
             'origins': {name: deepcopy(row) for name in tool.RUNS}, 'six_cuts': six, 'protocol': grammar, 'resource_selection': grammar}})
     bootstrap = c.save(base/'bootstrap.json', {'SYNTHETIC_NOT_ACTUAL_CHANNEL': True, 'observation_kind': c.OBSERVER_KIND,
         'assurance': 'host_attested', 'observed_at_utc': c.now(), 'tool': 'collaboration.list_agents', 'observed_running_agents': ['/root']})

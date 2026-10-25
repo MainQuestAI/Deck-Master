@@ -121,6 +121,9 @@ def describe_bindings(project, *, external_report, artifact_revision=None):
 def import_report(project, *, external_report, source_bindings, evidence, base_revision,
                   operation_id, artifact_revision=None, adapter_context=None):
     report = _report(external_report, verify_sources=False)
+    if 'engineering_packet_sha256' in report:
+        from .review_handoff import _reviews
+        _reviews(report)
     store = Store(project)
     payload = {"external_report": external_report, "source_bindings": source_bindings,
                "evidence": evidence, "artifact_revision": artifact_revision}
@@ -170,6 +173,12 @@ def import_report(project, *, external_report, source_bindings, evidence, base_r
             if not selected:
                 raise models.ModelError("external_report/reviews/subjects", "each review names its exact source subjects")
             review["subjects"] = [mapping[(item["source_uri"], item["sha256"])] for item in selected]
+            if 'engineering_packet_sha256' in report:
+                from .review_handoff import imported_review_id
+                review['review_id'] = imported_review_id(external_report['report_sha256'], original['review_id'])
+                for finding in review.get('findings') or []:
+                    finding['evidence'] = [mapping[(item['source_uri'], item['sha256'])]
+                                           for item in finding.get('evidence') or []]
             reviewer = review.setdefault("reviewer", {})
             from .delivery_eligibility import human_evidence_status, required_professional_dependencies
             human = reviewer.get("type") in ("human_internal", "human_external")

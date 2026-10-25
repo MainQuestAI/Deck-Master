@@ -402,6 +402,17 @@ def _lookup_task(document: dict, task_id: str, store: Store) -> dict:
 
 
 def task_inputs_current(store, document, task):
+    if task.get('review_subject') == 'outline':
+        from .outline_review import require_outline
+        from .effective_requirements import task_requirements_current
+        try:
+            require_outline(store, document)
+            dispatched = store.load_document(task['dispatch_revision'])
+            return (all(dispatched.get(key) == document.get(key) for key in ('narrative', 'content_plan'))
+                    and compute_input_digest(dispatched) == compute_input_digest(document)
+                    and task_requirements_current(store, document, task))
+        except (StoreError, ValueError, KeyError, TypeError):
+            return False
     if task.get("kind") == "review" and task.get("review_stage") == "original_image":
         from .original_review import inputs_current
         return inputs_current(store, document, task)
@@ -592,6 +603,13 @@ def _build_artifact(
 def _adopt_review(store: Store, review: dict) -> dict:
     """Reviews must reference already-saved objects, never envelope aliases."""
     validate_review_semantics(review)
+    if review.get('review_subject') == 'outline':
+        from .models import writer_at_least
+        from .outline_review import require_outline
+        current = store.load_document()
+        if not writer_at_least(current, 'outline-review.v1'):
+            raise EnvelopeError('review/outline', 'outline must be dispatched under its explicit writer contract')
+        require_outline(store, current)
     if review.get("schema_version") == "deck_review.v2":
         reviewer = review.get("reviewer") or {}
         if reviewer.get("assurance") == "verified_user":
@@ -624,6 +642,7 @@ def _adopt_review(store: Store, review: dict) -> dict:
             raise EnvelopeError("review/replaces", "replaced object is not a review record")
         if (prior.get("review_id") != review.get("review_id") or
                 prior.get("kind") != review.get("kind") or
+                prior.get("review_subject") != review.get("review_subject") or
                 prior.get("review_stage", "final") != review.get("review_stage", "final")):
             raise EnvelopeError("review/replaces", "replaces must point at the same logical review")
         prior = {**prior, 'ref': replaced}

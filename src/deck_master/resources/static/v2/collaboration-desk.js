@@ -1,3 +1,4 @@
+import {currentWork} from './current-work.js';
 import {get, post, canonical, readableError, ApiError} from './api.js';
 import {el, button, modal, version, field, downloadJSON} from './dom.js';
 import {pageText} from './page-text.js';
@@ -204,6 +205,8 @@ async function stateDetails(app) {
     if (!dialog.open || !panel.isConnected) return;
     if (info.project_identity !== app.info.project_identity) throw new Error('服务中的项目身份已变化，请重新打开。');
     app.info = info;
+    await app.refreshCurrentWork(info, () => dialog.open && panel.isConnected);
+    if (!dialog.open || !panel.isConnected) return;
   } catch (error) {
     if (dialog.open && panel.isConnected) panel.replaceChildren(el('p', {class:'field-error'}, readableError(error)),
       button('重试读取', () => { dialog.close(); stateDetails(app); }));
@@ -213,12 +216,9 @@ async function stateDetails(app) {
   const nativeReviewNeeded=(state?.blocking_cards||[]).some(card=>(card.decision?.reason_codes||[])
     .some(code=>['needs_reviewer','preproduction_blocked'].includes(code)));
   const body=el('div',{class:'stack'},el('p',{},'下面显示当前控制事实。正在阅读的历史稿和固定比较不会随控制变化而替换。'),
+    currentWork(app),
     scopeView(app,request?.scope),
     request?.pause_reason&&el('p',{class:'field-error'},'暂停原因：'+request.pause_reason),
-    completion&&el('section',{class:'stack'},el('h3',{},completionLabel(completion)),
-      el('p',{},'约定产物：'+(contentIntents[completion.content_intent]||intents[completion.intent]||'见当前请求')),
-      completion.responsible_role&&el('p',{},'下一责任：'+(roles[completion.responsible_role]||completion.responsible_role)),
-      completion.next_action&&el('p',{},'下一步：'+nextAction(completion.next_action,completion.state==='needs_reviewer'?['needs_reviewer']:[])),details('产物、检查与缺口',completion)),
     nativeReviewNeeded&&app.summary.pages.length>0&&['full_deck','edit'].includes(request?.intent)&&!request?.closed&&!request?.paused&&!app.info.sample?.readonly&&button('独立审阅当前内容',()=>{document.querySelector('#modal').close();nativeReviewForm(app);}),
     el('section',{class:'stack'},el('h3',{},'决定与后续影响'),(state?.decisions||[]).length?(state.decisions.map(decision=>el('article',{class:'collaboration-record'},
       el('strong',{},topics[decision.topic]||'决定'),el('p',{},[dispositions[decision.disposition],dispositions[decision.status]].filter(Boolean).join(' · ')||'状态未记录'),
@@ -404,7 +404,7 @@ export function collaborationBanner(app) {
 
 function requestControls(app) {
   const state=app.info.collaboration,request=state?.request,completion=app.info.completion;
-  const plan=isDesignPlan(completion)&&completion.request_id===request?.request_id;
+  const plan=app.summary.current_work?.next.surface==='style';
   const open=run=>{document.querySelector('#modal')?.close();run();};
   return el('div',{class:'row wrap'},
       !state?.migrated?button('查看升级影响',()=>open(()=>migrationForm(app)),false,{disabled:Boolean(app.info.sample?.readonly)}):
@@ -412,7 +412,7 @@ function requestControls(app) {
         title:request.paused?'恢复本次请求':'暂停本次请求',action:request.paused?'resume':'pause',path:'/collaboration/request/'+(request.paused?'resume':'pause'),
         body:scopeView(app,request.scope),explanation:request.paused?'恢复只继续原请求的有效范围，撤回、费用和缺口均保留。':'暂停将阻止新的制作与采用；读取、取消和已发生调用结算仍可进行。',
         build:evidence=>({request_id:request.request_id,evidence,...(!request.paused?{reason:evidence.text}:{})})})),false,{disabled:Boolean(app.info.sample?.readonly)}),
-      request&&(plan?button(completion.state==='completed'?'查看本次设计方案':'准备本次设计方案',()=>open(()=>app.go({surface:'style'})),true):button('读取下一工作单',()=>open(()=>continueWork(app)),false,{disabled:Boolean(app.info.sample?.readonly)})),
+      request&&!plan&&app.summary.current_work&&button('读取下一工作单',()=>open(()=>continueWork(app)),false,{disabled:Boolean(app.info.sample?.readonly)}),
       button('开始新的明确请求',()=>open(()=>requestForm(app)),false,{disabled:Boolean(app.info.sample?.readonly)})]);
 }
 

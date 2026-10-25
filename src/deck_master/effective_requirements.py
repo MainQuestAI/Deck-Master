@@ -92,6 +92,13 @@ def project_requirements(store, document, *, page_ids, unit):
             'interpretation': 'Effective requirements only; reading does not grant production or assert user acceptance.'}
 
 
+def outline_page_ids(store, document):
+    """Requirement coverage of a validated Plan, never Page review subjects."""
+    from .outline_review import require_outline
+    require_outline(store, document)
+    return list(store.read_object_json(document['content_plan'])['input']['page_order'])
+
+
 def packet_requirements(store, document, *, page_ids, units):
     return {unit: project_requirements(store, document, page_ids=page_ids, unit=unit) for unit in units}
 
@@ -120,6 +127,32 @@ def task_requirements_current(store, document, task, *, unit=None, page_ids=None
     from their actual immutable dispatch snapshot; no old object is rewritten.
     """
     from .snapshots import load_snapshot
+    if task.get('review_subject') == 'outline':
+        before = load_snapshot(store, task['dispatch_revision'])
+        prior_ids = outline_page_ids(store, before)
+        current_ids = outline_page_ids(store, document)
+        kinds = [unit] if unit else [row['kind'] for row in task.get('review_units') or []]
+        prior = packet_requirements(store, before, page_ids=prior_ids, units=kinds)
+        for ref in task.get('inputs') or []:
+            if not ref.get('path', '').endswith('.json'):
+                continue
+            packet = store.read_object_json(ref)
+            if not isinstance(packet, dict) or packet.get('schema_version') != 'content_review_packet.v1':
+                continue
+            frozen = packet.get('effective_requirements')
+            if frozen:
+                for kind in kinds:
+                    supplied = frozen.get(kind)
+                    # Old empty-page packets may have omitted accepted Plan
+                    # requirements. Do not retroactively pretend they were read.
+                    if supplied is None:
+                        return False
+                    supplied = {**supplied, 'review_scope': prior[kind]['review_scope']}
+                    if _semantic_requirements(supplied) != _semantic_requirements(prior[kind]):
+                        return False
+        return all(_semantic_requirements(prior[kind]) ==
+                   _semantic_requirements(project_requirements(store, document, page_ids=current_ids, unit=kind))
+                   for kind in kinds)
     ids = list(task.get('scope_pages') or []) if page_ids is None else list(page_ids)
     units = [unit] if unit else sorted({row['kind'] for row in task.get('review_units') or []} or UNIT_LAYERS)
     from .eligibility import scope_page_ids
@@ -176,6 +209,10 @@ def accepted_requirements_current(store, document, review, ref, owners):
                     introduced = snapshot
                 elif introduced is not None:
                     break
+            if introduced is not None and review.get('review_subject') == 'outline':
+                return _semantic_requirements(project_requirements(store, introduced,
+                    page_ids=outline_page_ids(store, introduced), unit=review['kind'])) == _semantic_requirements(
+                    project_requirements(store, document, page_ids=outline_page_ids(store, document), unit=review['kind']))
             return introduced is not None and _semantic_requirements(project_requirements(
                 store, introduced, page_ids=ids, unit=review['kind'])) == _semantic_requirements(project_requirements(
                 store, document, page_ids=ids, unit=review['kind']))
@@ -188,4 +225,7 @@ def reader_requirements(store, document, *, task=None):
     """Shared read-only author/reader view, bounded to an actual Task if supplied."""
     ids = task.get('scope_pages', []) if task else [row['page_id'] for row in document.get('pages') or []]
     units = [row['kind'] for row in task.get('review_units') or [] if row['kind'] in UNIT_LAYERS] if task else []
+    if (task and task.get('review_subject') == 'outline') or (not task and not ids and document.get('content_plan')):
+        ids = outline_page_ids(store, document)
+        units = units or ['argument', 'progression']
     return packet_requirements(store, document, page_ids=ids, units=units or list(UNIT_LAYERS))
