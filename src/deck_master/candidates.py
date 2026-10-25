@@ -80,13 +80,12 @@ def generation_basis(store, document, page_id, stage, *, preserve_blueprint=Fals
     page = store.read_object_json(entry['page'])
     design, _ = resolve_design(page, document['design_context'], document['design_context'].get('assets') or [])
     if stage != 'content' and task and task.get('kind') == 'blueprint':
-        from .production import stored_blueprint_request, resolve_generation_design
+        from .production import stored_blueprint_request, resolve_generation_design, frozen_design_options
         prepared, _ = stored_blueprint_request(store, task)
         if prepared and prepared.get('resolved_design_context'):
             design = _recorded_design_basis(store, resolve_generation_design(store, document, entry,
                 recipe_ref=task.get('stage_request', {}).get('style_recipe_ref'),
-                design_policy='design_policy' in prepared['resolved_design_context'],
-                asset_inputs='asset_inputs' in prepared['resolved_design_context']),
+                **frozen_design_options(prepared['resolved_design_context'])),
                 prepared['resolved_design_context'])
     elif stage == 'svg':
         from .production import adopted_blueprint_design, resolve_page_rendering_design
