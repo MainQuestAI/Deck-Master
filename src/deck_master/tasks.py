@@ -2111,6 +2111,11 @@ def reissue_changed_method_tasks(store):
         if any(a.get("state") in ("in_flight", "unknown") for a in task.get("call_allowances") or []):
             raise MethodBasisChanged(f"(task {task['task_id']})/call_allowances",
                                      "settle in-flight/unknown calls before replacing this method contract")
+        # Refreshing methods does not refresh authority. Check the original
+        # immutable binding before releasing reservations or writing a successor;
+        # another currently covering grant cannot revive this old Task.
+        eligibility.guard(store, document, 'task.start', context={
+            'task': task, 'targets': {'page_ids': task.get('scope_pages') or []}})
         binding = task.get("collaboration_binding") or {}
         action = ("change.commit" if task.get("change_binding") else "dispatch.compose" if task["kind"] == "compose"
                   else "dispatch.blueprint" if task["kind"] == "blueprint" else "dispatch.host_task")
@@ -2124,13 +2129,13 @@ def reissue_changed_method_tasks(store):
         layers = {"blueprint": ["blueprint"], "reconstruct": ["svg", "blueprint"],
                   "repair": ["page_copy", "svg"], "review": ["review"], "style_analyze": ["design"]}.get(
                       task["kind"], (binding.get("write_scope") or {}).get("layers") or [])
+        context = {'targets': {'page_ids': task.get('scope_pages') or [], 'layers': layers}}
         if task.get("change_binding"):
-            from .changes import action_for_task, _plan_layers
-            layers = _plan_layers({"actions": [action_for_task(store, document, task)]})
+            from .changes import action_for_task, eligibility_context
+            planned_action = action_for_task(store, document, task)
+            context = eligibility_context({'actions': [planned_action], 'max_calls': planned_action['max_calls']})
         from .method_resources import is_content_candidate_task
-        eligibility.guard(store, prospective, action, context={
-            "candidate_count": int(is_content_candidate_task(task)), "count": 0 if is_content_candidate_task(task) else None,
-            "targets": {"page_ids": task.get("scope_pages") or [], "layers": layers}})
+        eligibility.guard(store, prospective, action, context=context)
         replacement = copy.deepcopy(task)
         replacement.update(task_id=uuid.uuid4().hex[:12], operation_id=f"methods-{uuid.uuid4().hex[:12]}",
                            status="awaiting_host", execution_ref=None, result_refs=[], error=None,

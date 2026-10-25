@@ -992,11 +992,15 @@ def qualify_for_production(store, document, *, adapter_context=None, page_ids=No
     """
     status = preproduction_status(store, document, adapter_context=adapter_context,
                                   page_ids=page_ids)
-    return _production_qualification(status, document, adapter_context=adapter_context)
+    return qualification_from_status(status, document, adapter_context=adapter_context)
 
 
-def _production_qualification(status, document, *, adapter_context=None):
-    """Project an already computed verdict within the same operation."""
+def qualification_from_status(status, document, *, adapter_context=None):
+    """Project one already computed review verdict; never grant write authority.
+
+    Readers that need both detailed status and qualification use the same local
+    verdict. Mutation gates still resolve current stored records independently.
+    """
     gaps: list[str] = []
     needs_reviewer = False
     if status["status"] == "missing" and status["requirement"] == "independent_model_or_human":

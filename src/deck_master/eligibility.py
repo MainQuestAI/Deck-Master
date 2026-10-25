@@ -719,7 +719,8 @@ def task_binding_state(store: Store, document: dict, task: dict) -> dict:
                 # A missing current ancestor can be reported as ineffective
                 # even when its historical object remains readable. Unknown,
                 # stale or expired authority never becomes a fresh permission.
-                authorization_failure = {"status": "invalid", "reasons": authorization["reasons"],
+                authorization_failure = {"status": "stale" if "basis_stale" in authorization["reasons"] else "invalid",
+                                         "reasons": authorization["reasons"],
                                          "new_protocol": True, "digest": binding.get("eligibility_digest"),
                                          "expected_digest": None}
         except (ModelError, StoreError):
@@ -742,22 +743,8 @@ def task_binding_state(store: Store, document: dict, task: dict) -> dict:
                     "background_request_id": binding["request_id"]}
         if authorization_failure:
             return authorization_failure
-        # A binding whose authorization was replaced by a *withdrawal* is not a
-        # foreign binding: report the withdrawal (CONTRACTS §3.3), so the user
-        # sees "the withdrawal stands" rather than a structural complaint.
-        auth_ref = binding.get("authorization_ref")
-        if isinstance(auth_ref, dict) and auth_ref.get("path"):
-            try:
-                record = store.read_object_json(auth_ref)
-            except Exception:  # noqa: BLE001
-                record = None
-            if isinstance(record, dict) and record.get("authorization_id"):
-                head = _head(_records(store, _region(document) or {}, "authorizations"),
-                             "authorization_id", record["authorization_id"])
-                if head is None or head[1].get("status") in ("revoked", "superseded", "invalidated"):
-                    return {"status": "withdrawn", "reasons": [exc.detail], "new_protocol": True,
-                            "digest": binding.get("eligibility_digest"), "expected_digest": None,
-                            "authorization_id": record["authorization_id"]}
+        # Actual direct/ancestor revocation was resolved above. Missing,
+        # superseded or structurally invalid records are not user withdrawals.
         return {"status": "invalid", "reasons": [exc.detail], "new_protocol": True,
                 "digest": binding.get("eligibility_digest"), "expected_digest": None}
     digest = binding.get("eligibility_digest")
@@ -976,11 +963,24 @@ def _fixed_delivery_state(store, artifact, control, selected, ref, record):
             or models.compute_input_digest(artifact) != models.compute_input_digest(control)
             or artifact.get('narrative') != control.get('narrative')):
         return None
+    # Replacement alone permits exact-file delivery, but never erases a later
+    # pause or withdrawal. Only normal completion is a closed-state exception.
+    source_request = _request(control)
+    if (source_request or {}).get('request_id') != request.get('request_id'):
+        from .snapshots import committed_snapshots
+        source_request = next((value for snapshot in committed_snapshots(
+            store, head_revision=control['revision_id'])
+            if (value := _request(snapshot)) and value.get('request_id') == request.get('request_id')), None)
+    if source_request is None:
+        return {'effective': False, 'reasons': ['source_request_unavailable'], 'fixed_file_only': True}
+    source_request = dict(source_request)
+    if source_request.get('closed_reason') == 'completed':
+        source_request.update(closed=False, closed_reason=None)
     # Only this read judgement uses the source request. Current auth heads,
     # withdrawals, source rights, user/task facts and policy remain authoritative.
     view = {**artifact, 'task': control['task'], 'sources': control['sources'],
         'policy': control['policy'], 'narrative': control.get('narrative'),
-        'collaboration': {**control['collaboration'], 'request': {**request, 'closed': False, 'paused': False}}}
+        'collaboration': {**control['collaboration'], 'request': source_request}}
     state = dependency_slices.authorization_effectiveness(store, view, ref)
     return {**state, 'fixed_file_only': True}
 
@@ -1188,7 +1188,7 @@ def preproduction_state(store: Store, document: dict, *, page_ids: list[str] | N
     from . import content_review
     try:
         status = content_review.preproduction_status(store, document, page_ids=page_ids)
-        qualified = content_review._production_qualification(status, document)
+        qualified = content_review.qualification_from_status(status, document)
     except ModelError as exc:
         # Only the strict adopted-generation lineage reader reports this
         # path. A damaged Task must not erase read-only recovery, but asset
@@ -1281,6 +1281,14 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
     def block(code, detail, **extra):
         reasons.append({"code": code, "detail": detail, **extra})
 
+    if spec.delivery:
+        for candidate in fixed_candidates:
+            if not candidate.get('fixed_file_only') or not candidate['covers']:
+                continue
+            for code in ('request_paused', 'request_closed'):
+                if code in candidate['reasons']:
+                    block(code, 'the source request for this exact file no longer permits new delivery')
+
     # -- writer boundary ---------------------------------------------------
     legacy_allowed = action in ("create", "continue_project", "migration.describe", "migration.apply",
                                 "review.strict", "export.review", "export.engineering",
@@ -1295,21 +1303,21 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
               "a strict read-only request never writes to the source project")
 
     # -- request state -----------------------------------------------------
-    if enforced and action not in ROUTING_ACTIONS and action != "restore" and not fixed_delivery:
+    if enforced and action not in ROUTING_ACTIONS and action != "restore":
         if request is None:
             block("decision_needed",
                   "no current work request; start one that names the intended intent, "
                   "scope and evidence before production",
                   missing="work_request")
         else:
-            if request.get("closed"):
+            if request.get("closed") and not (fixed_delivery and request.get('closed_reason') == 'completed'):
                 block("request_closed",
                       f"the current request is closed ({request.get('closed_reason')}); "
                       "start a new request for new work")
-            if request.get("paused") and (spec.production or spec.writes):
+            if request.get("paused") and (spec.production or spec.writes or spec.delivery):
                 block("request_paused",
                       request.get("pause_reason") or "the current request is paused")
-            stop = _intent_allows(spec, request, targets)
+            stop = None if fixed_delivery else _intent_allows(spec, request, targets)
             if stop:
                 block("scope_exceeded", stop,
                       request_intent=request.get("intent"),

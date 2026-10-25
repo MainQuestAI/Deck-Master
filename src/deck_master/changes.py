@@ -168,6 +168,19 @@ def _plan_layers(record) -> list[str]:
     return layers
 
 
+def eligibility_context(record):
+    """Derive gate inputs from actual validated actions, including zero-call trials.
+
+    Initial commit and formal method reissue share the same scope and counting
+    rule; neither may infer the content-correction exception from a Task label.
+    """
+    return {'external_call_page_ids': [action['page_id'] for action in record['actions'] if action['max_calls'] > 0],
+            'count': record['max_calls'],
+            'candidate_count': sum(action.get('mode') == 'trial' for action in record['actions']),
+            'targets': {'page_ids': [action['page_id'] for action in record['actions']],
+                        'layers': _plan_layers(record)}}
+
+
 def _read_plan(store, plan_id):
     if not isinstance(plan_id, str) or not re.fullmatch(r'plan-[a-f0-9]{64}', plan_id):
         fail('plan_id', 'use the immutable plan ID returned by changes plan')
@@ -196,13 +209,9 @@ def commit(project, *, plan_id, base_revision, operation_id):
         # so the plan's own write targets must be inside the request scope and
         # covered by an authorization before any task or allowance is created.
         from . import eligibility
-        external_call_page_ids = [action['page_id'] for action in record['actions'] if action['max_calls'] > 0]
-        eligibility.guard(store, document, "change.commit", context={
-            "external_call_page_ids": external_call_page_ids,
-            "count": record['max_calls'],
-            "candidate_count": sum(action.get('mode') == 'trial' for action in record['actions']),
-            "targets": {"page_ids": [action['page_id'] for action in record['actions']],
-                        "layers": _plan_layers(record)}})
+        context = eligibility_context(record)
+        external_call_page_ids = context['external_call_page_ids']
+        eligibility.guard(store, document, "change.commit", context=context)
         authorization_ref = eligibility.covering_authorization_ref(store, document, 'change.commit',
             {'page_ids': [action['page_id'] for action in record['actions']], 'layers': _plan_layers(record)},
             count=record['max_calls'], external_call_page_ids=external_call_page_ids,
