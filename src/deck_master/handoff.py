@@ -16,7 +16,7 @@ from .store import Store
 def check_handoff(project_dir, *, file_path, purpose="review", notes_policy=None):
     if purpose not in ("review", "delivery"):
         raise ValueError("purpose must be review or delivery")
-    candidate = Path(file_path).expanduser().resolve()
+    candidate = Path(file_path).expanduser().absolute()
     if not candidate.is_file() or candidate.suffix.lower() != ".pptx":
         raise ValueError("file must be an existing PPTX")
 
@@ -36,30 +36,39 @@ def check_handoff(project_dir, *, file_path, purpose="review", notes_policy=None
     expected_hash = None
     if output_ref:
         expected_hash = store.read_object_json(output_ref)["file"]["sha256"]
-    actual_hash = hashlib.sha256(candidate.read_bytes()).hexdigest()
-
-    # A public export is a deterministic cleaned copy, not byte-identical to
-    # its immutable original. Recompute from the current object, never trust a
-    # user-supplied manifest to claim provenance.
+    from .selected_file import read_selected_file
     sanitized_hash = None
-    if output_ref and actual_hash != expected_hash:
+    sizes = set()
+    if output_ref:
         from .export_sanitize import pptx
         from .operations import OperationError
+        original = store.read_object_json(output_ref)['file']
+        raw = store.read_object_bytes(original)
+        sizes.add(len(raw))
         try:
-            original = store.read_object_json(output_ref)['file']
             records = _pptx_projection_notes(store, document, resolved_notes)
-            sanitized_hash = hashlib.sha256(pptx(store.read_object_bytes(original), 'deck.pptx',
-                notes=records, include_notes=resolved_notes['pptx_notes'])).hexdigest()
+            projected = pptx(raw, 'deck.pptx', notes=records, include_notes=resolved_notes['pptx_notes'])
+            sizes.add(len(projected))
+            sanitized_hash = hashlib.sha256(projected).hexdigest()
         except OperationError:
+            pass
+    from .store import ConflictError
+    candidate_bytes, actual_hash = b'', None
+    if sizes:
+        try:
+            candidate_bytes, actual_hash = read_selected_file(candidate, sizes=sizes)
+        except ConflictError:
+            # A nonmatching file is a blocked review report, not permission to
+            # read an arbitrary length. Delivery already refused above.
             pass
     gaps = []
     if not output_ref:
         gaps.append("missing_current_pptx")
-    if actual_hash not in (expected_hash, sanitized_hash):
+    if actual_hash is None or actual_hash not in (expected_hash, sanitized_hash):
         gaps.append("candidate_not_current_output")
     from .compiler.native import notes_records
     try:
-        actual_notes = notes_records(candidate)
+        actual_notes = notes_records(candidate_bytes)
         page_notes = _page_notes(store, document)
         expected_text = [p['notes'] if resolved_notes['pptx_notes'] else '' for p in page_notes]
         strict_notes = _pptx_projection_notes(store, document, resolved_notes) is not None
@@ -118,7 +127,7 @@ def check_handoff(project_dir, *, file_path, purpose="review", notes_policy=None
         "file_sha256": actual_hash,
         "current_pptx_sha256": expected_hash,
         "sanitized_pptx_sha256": sanitized_hash,
-        "candidate_relation": ("immutable_original" if actual_hash==expected_hash else "sanitized_copy" if actual_hash==sanitized_hash else "unverified"),
+        "candidate_relation": ("immutable_original" if actual_hash is not None and actual_hash==expected_hash else "sanitized_copy" if actual_hash is not None and actual_hash==sanitized_hash else "unverified"),
         "input_alignment": alignment,
         "page_count": len(document.get("pages") or []),
         "render_report_status": report_status or "not_evaluated",

@@ -284,7 +284,6 @@ def _sort_reasons(reasons):
 
 def selected_output(store, artifact, *, notes_policy=None, file_path=None):
     """Pure exact bytes of the proposed public projection (never a stored approval)."""
-    from pathlib import Path
     from .exports import resolve_notes_policy, _pptx_projection_notes
     from .export_sanitize import pptx
     from .models import sha256_bytes
@@ -302,7 +301,8 @@ def selected_output(store, artifact, *, notes_policy=None, file_path=None):
     result.update(file_sha256=digest, original_file_sha256=obj["file"]["sha256"],
         subject_ref={"path": f".deckmaster/objects/{digest[:2]}/{digest}.pptx", "sha256": digest})
     if file_path is not None:
-        actual = sha256_bytes(Path(file_path).expanduser().read_bytes())
+        from .selected_file import read_selected_file
+        _, actual = read_selected_file(file_path, sizes={len(raw), len(projected)})
         if actual == digest:
             pass
         elif actual == obj["file"]["sha256"]:

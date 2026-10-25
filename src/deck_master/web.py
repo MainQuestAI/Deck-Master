@@ -172,6 +172,8 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                     raise ModelError('query', 'this read route takes no query arguments')
                 if any(len(v) != 1 or not v[0] for v in query.values()):
                     raise ModelError('query', 'query arguments must occur once and be nonempty')
+                if action == 'delivery.describe' and 'file_path' in query:
+                    raise ModelError('file_path', 'HTTP delivery reads accept project outputs, not local paths')
                 data = {key: value[0] for key, value in query.items()}
             for key, value in bound.items():
                 if key in data and data[key] != value:
