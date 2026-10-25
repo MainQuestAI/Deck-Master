@@ -71,3 +71,30 @@ def test_http_path_rejected_before_delivery_dispatch(tmp_path, monkeypatch):
         assert json.load(caught.value)['error']['path'] == 'file_path'
     finally:
         server.stop()
+
+
+def test_permission_error_is_structured(tmp_path, monkeypatch):
+    from deck_master.collaboration_api import error_response
+    def denied(*args, **kwargs):
+        raise PermissionError('synthetic denied')
+    monkeypatch.setattr(os, 'open', denied)
+    with pytest.raises(ModelError) as caught:
+        read_selected_file(tmp_path / 'candidate', sizes={1})
+    response, status, exit_code = error_response(caught.value)
+    assert (status, exit_code) == (400, 2)
+    assert response['error']['code'] == 'selected_file_unreadable'
+
+
+def test_path_replacement_detected(tmp_path, monkeypatch):
+    path = tmp_path / 'candidate'
+    path.write_bytes(b'x')
+    original = os.read
+    def replacing(fd, count):
+        data = original(fd, count)
+        replacement = tmp_path / 'new'
+        replacement.write_bytes(b'x')
+        replacement.replace(path)
+        return data
+    monkeypatch.setattr(os, 'read', replacing)
+    with pytest.raises(ConflictError, match='file changed'):
+        read_selected_file(path, sizes={1})
