@@ -438,8 +438,8 @@ export class Project {
       }
     });
     const pending = pendingHandoffs(this.latest || this.summary, this.info);
-    // 顶栏入口承诺的是"查看待交接任务"：显式落到「正在进行」，不被记住的子区劫持。
-    this.pendingButton = button(`待交接 ${pending}`, () => this.go({surface: 'runs', task_id: null, runs_area: 'tasks'}), false, {'aria-label': `查看待交接任务，${pending} 项`});
+    // 顶栏待交接属于最新状态：显式读取最新任务记录，不继承历史版本或记住的子区。
+    this.pendingButton = button(`待交接 ${pending}`, () => this.go({surface: 'runs', revision: null, task_id: null, runs_area: 'tasks'}), false, {'aria-label': `查看待交接任务，${pending} 项`});
     this.navigationStatus = el('span', {class: 'status navigation-status', hidden: true}, '正在读取工作面');
     const top = el('header', {class: 'topbar'}, el('div', {class: 'crumb'}, el('strong', {}, this.info.title), el('span', {class: 'version', title: '版本身份可在任务与交付的版本记录中查看'}, this.historical ? '历史稿' : '当前稿'), this.navigationStatus),
       this.controlSlot, this.pendingButton, document.documentElement.dataset.workbenchUi === 'studio' && actionMenu('项目菜单',[personalClearPanel(this)]));

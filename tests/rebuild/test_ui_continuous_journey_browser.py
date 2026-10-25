@@ -16,12 +16,12 @@ from urllib.parse import urlencode, urlsplit
 import pytest
 from playwright.sync_api import expect, sync_playwright
 
-from deck_master import exports, local_runtime, tasks
+from deck_master import changes, exports, local_runtime, tasks
 from deck_master.store import Store
 from deck_master.eligibility import EligibilityBlocked
 from rc3_fixtures import settle_fidelity_review
 from test_action_targets_browser import _prepare_browser_project
-from test_content_candidates import accept, dispatch_content_trial, page_envelope, start_task
+from test_content_candidates import accept, content_intent, dispatch_content_trial, page_envelope, start_task
 from test_rc3_studio_control_browser import manuscript_page
 from test_workbench_services import launcher_service  # noqa: F401
 
@@ -121,11 +121,20 @@ def test_same_project_create_material_edit_handoff_candidate_and_fixed_export(la
             assert store.read_object_json(doc['pages'][0]['page'])['customer_visible']['title'] == '再确定行动'
             record('reorder_and_edit', target='p01 now page 2', method='browser')
 
-            # Editing invalidates the earlier manuscript review. Observe the
-            # real refusal, then return a fresh explicitly scripted L1 review
-            # through its real workorder; do not disable the production gate.
-            with pytest.raises(EligibilityBlocked):
-                dispatch_content_trial(project, store, page='p01')
+            # Editing invalidates the earlier manuscript review. RP-02 permits
+            # zero-call Content candidates, while auto changes still require a
+            # current review. Verify that refusal before the fresh L1 review.
+            before_review = copy.deepcopy(store.load_document())
+            auto_plan = changes.plan(project, input=content_intent(store, page='p01', mode='auto'))
+            with pytest.raises(EligibilityBlocked) as blocked:
+                changes.commit(project, plan_id=auto_plan['plan_id'],
+                    base_revision=before_review['revision_id'], operation_id=str(uuid.uuid4()))
+            assert blocked.value.decision['reason_codes'] == ['preproduction_blocked']
+            after_refusal = store.load_document()
+            assert after_refusal == before_review
+            assert store.current_revision_id() == before_review['revision_id']
+            assert after_refusal['tasks'] == before_review['tasks']
+            assert after_refusal.get('candidates', []) == before_review.get('candidates', [])
             settle_fidelity_review(project, page_ids=['p02','p01'],
                 execution_ref='L1-continuous-after-edit',
                 scenario='Synthetic current manuscript check; no professional acceptance')
