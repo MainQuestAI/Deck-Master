@@ -929,6 +929,7 @@ def preproduction_status(store, document, *, adapter_context=None, page_ids=None
         return {"stage": STAGE, "status": "no_manuscript", "requirement": state["effective"],
                 "requirement_state": state, "units": units, "satisfied_units": [],
                 "missing_units": units, "review_refs": [], "blocking_findings": [],
+                "blocking_record_count": 0, "logical_finding_count": 0,
                 "next_action": "write_manuscript"}
     ids = [entry["page_id"] for entry in document.get("pages") or []]
     if page_ids is None:
@@ -941,13 +942,14 @@ def preproduction_status(store, document, *, adapter_context=None, page_ids=None
                         if item["review"].get("status") == "pass"})
     missing = sorted(set(units) - set(satisfied))
     blocking = []
-    from .review import finding_closed, open_findings, pending_judgments
+    from .review import finding_closed, open_findings, pending_judgments, logical_finding_owner
     records = [{**item["review"], "ref": item["review_ref"]} for item in history]
     scoped_pages = set(page_ids) & set(ids)
     for item in history:
         if item["review"].get("kind") not in units:
             continue
         owner = {**item["review"], "ref": item["review_ref"]}
+        logical_owner_ref = logical_finding_owner(records, owner)
         for finding in open_findings(item["review"]) + pending_judgments(item["review"]):
             # Freshness determines whether a pass can satisfy a unit; it does
             # not erase an unresolved defect on a current page. Retired pages,
@@ -964,10 +966,19 @@ def preproduction_status(store, document, *, adapter_context=None, page_ids=None
             if finding_closed(records, owner, finding, artifacts):
                 continue
             blocking.append({"review_id": item["review"].get("review_id"),
+                             "review_ref": item['review_ref'],
+                             "review_stage": item['review'].get('review_stage', 'final'),
+                             "review_subject": item['review'].get('review_subject'),
+                             "page_id": finding.get('page_id'),
+                             "logical_owner_ref": logical_owner_ref,
                              "kind": item["review"].get("kind"),
+                             "finding_kind": finding.get('kind'),
                              "finding_id": finding.get("finding_id") or finding.get("id"),
                              "impact": finding.get("impact"),
                              "message": finding.get("message") or finding.get("detail")})
+    logical_count = len({canonical_json_bytes({key: row[key] for key in
+        ('logical_owner_ref', 'review_id', 'review_stage', 'review_subject', 'kind', 'page_id', 'finding_id')})
+        for row in blocking})
     if missing:
         status = "missing"
     elif blocking:
@@ -981,7 +992,8 @@ def preproduction_status(store, document, *, adapter_context=None, page_ids=None
     return {"stage": STAGE, "status": status, "requirement": state["effective"],
             "requirement_state": state, "units": units, "satisfied_units": satisfied,
             "missing_units": missing, "review_refs": [item["review_ref"] for item in applicable],
-            "blocking_findings": blocking, "next_action": next_action}
+            "blocking_findings": blocking, "blocking_record_count": len(blocking),
+            "logical_finding_count": logical_count, "next_action": next_action}
 
 
 def qualify_for_production(store, document, *, adapter_context=None, page_ids=None) -> dict:
@@ -1018,6 +1030,8 @@ def qualification_from_status(status, document, *, adapter_context=None):
             "status": status["status"],
             "missing_units": status["missing_units"],
             "blocking_findings": status["blocking_findings"],
+            "blocking_record_count": status.get('blocking_record_count', len(status['blocking_findings'])),
+            "logical_finding_count": status.get('logical_finding_count', len(status['blocking_findings'])),
             "next_action": status["next_action"],
             "professional_review_required_for_delivery":
                 bool((document.get("policy") or {}).get("professional_review_required_for_delivery")),

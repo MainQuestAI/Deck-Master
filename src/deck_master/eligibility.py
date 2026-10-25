@@ -1204,7 +1204,8 @@ def preproduction_state(store: Store, document: dict, *, page_ids: list[str] | N
             'requirement_origin': state['origin'], 'requirement_reasons': list(state['reasons']),
             'required': bool(document.get('pages')), 'satisfied': False, 'status': 'unreadable',
             'units': list(units), 'satisfied_units': [], 'missing_units': list(units),
-            'blocking_findings': [], 'review_refs': [], 'needs_reviewer': False, 'via': None,
+            'blocking_findings': [], 'blocking_record_count': 0, 'logical_finding_count': 0,
+            'review_refs': [], 'needs_reviewer': False, 'via': None,
             'reasons': [*state['reasons'], 'stored applicability evidence is unreadable; preserve and inspect the original records']}
     state = status["requirement_state"]
     return {"requirement": state["effective"],
@@ -1218,6 +1219,8 @@ def preproduction_state(store: Store, document: dict, *, page_ids: list[str] | N
             "satisfied_units": list(status["satisfied_units"]),
             "missing_units": list(status["missing_units"]),
             "blocking_findings": list(status["blocking_findings"]),
+            "blocking_record_count": status.get('blocking_record_count', len(status['blocking_findings'])),
+            "logical_finding_count": status.get('logical_finding_count', len(status['blocking_findings'])),
             "review_refs": list(status["review_refs"]),
             "needs_reviewer": bool(qualified["needs_reviewer"]),
             "via": "review" if status["status"] == "pass" else None,
@@ -1604,7 +1607,9 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
                   requirement=preproduction["requirement"],
                   review_status=preproduction["status"],
                   missing_units=preproduction["missing_units"],
-                  open_findings=len(preproduction["blocking_findings"]))
+                  open_findings=preproduction['blocking_record_count'],
+                  blocking_record_count=preproduction['blocking_record_count'],
+                  logical_finding_count=preproduction['logical_finding_count'])
 
     # -- professional delivery policy (never replaced by the review above) --
     delivery = None

@@ -3,6 +3,8 @@ import copy
 import json
 from pathlib import Path
 
+import pytest
+
 from deck_master import review_handoff, content_review, service
 from deck_master.store import Store
 from deck_master.tasks import _adopt_review
@@ -10,7 +12,8 @@ from rc3_fixtures import source_snapshot, authorize_scope, evidence_for, submit_
 from test_external_review_handoff import record, adopt
 from test_workbench_reads import commit
 
-def test_public_reopen_preserves_other_closed_findings(tmp_path):
+@pytest.mark.parametrize('path', ['direct_r01', 'r02_then_r01_r02'])
+def test_public_reopen_preserves_other_closed_findings(tmp_path, path):
     isolated = tmp_path
     project, external = record(Path(isolated))
     imported = adopt(project, external)
@@ -41,7 +44,7 @@ def test_public_reopen_preserves_other_closed_findings(tmp_path):
     doc = store.load_document()
     reopened = copy.deepcopy(fixed)
     reopened.update(replaces=doc['reviews'][-1], status='fail')
-    reopened['findings'] = [reopened['findings'][0]]
+    reopened['findings'] = [reopened['findings'][0 if path == 'direct_r01' else 1]]
     reopened['findings'][0].update(resolution='open', actual='Synthetic recheck demonstrates the qualification remains missing')
     reopened['observations'] = ['Synthetic explicit recheck reopens R01 on exactly the same current manuscript.']
     scope = copy.deepcopy(doc['collaboration']['request']['scope'])
@@ -50,9 +53,15 @@ def test_public_reopen_preserves_other_closed_findings(tmp_path):
         max_external_calls=0, max_candidate_count=0, adoption_policy='within_scope',
         evidence=evidence_for(project, text='Synthetic explicit one-page review recheck authorization; no model calls.', locator='synthetic:reopened-review'))
     units = content_review.required_units(store, store.load_document())
-    task = service.open_host_task(store, kind='review', page_ids=['p1'],
-        review_stage='preproduction', instruction='Synthetic explicit same-manuscript R01 recheck',
-        review_units=[{'kind':kind, 'page_ids':['p1'], 'reason':'missing'} for kind in units])
+    if path == 'direct_r01':
+        task = service.open_host_task(store, kind='review', page_ids=['p1'],
+            review_stage='preproduction', instruction='Synthetic explicit same-manuscript R01 recheck',
+            review_units=[{'kind':kind, 'page_ids':['p1'], 'reason':'missing'} for kind in units])
+    else:
+        dispatched = content_review.dispatch_preproduction_review(project, page_ids=['p1'], force_units=units,
+            instruction='Synthetic explicit same-manuscript R02 recheck omitting R01')
+        assert dispatched['status'] == 'review_dispatched'
+        task = dispatched['task']
     current = store.load_document()
     subjects = [ref for ref in (current.get('narrative'), current.get('content_plan')) if ref] + [current['pages'][0]['page']]
     deps = [{'kind':'content', 'identity':key, 'sha256':current[key]['sha256']}
@@ -72,10 +81,59 @@ def test_public_reopen_preserves_other_closed_findings(tmp_path):
                         'reviews':rows,'usage_events':[],'notes':'Synthetic reopened original finding, no model quality claim'})
     assert result['status'] == 'accepted'
 
+    if path == 'r02_then_r01_r02':
+        before_read = source_snapshot(project)
+        intermediate = review_handoff.repair_handoff(external_report=external, project=project)
+        assert [row['closed'] for row in intermediate['findings']] == [True, False, True, True, True, True]
+        assert content_review.preproduction_status(store, store.load_document())['status'] == 'blocked'
+        assert before_read == source_snapshot(project)
+        current = store.load_document()
+        previous_ref = next(ref for ref in reversed(current['reviews'])
+                            if (row := store.read_object_json(ref))['review_id'] == owner['review_id']
+                            and row['kind'] == owner['kind'])
+        dispatched = content_review.dispatch_preproduction_review(project, page_ids=['p1'], force_units=units,
+            instruction='Synthetic explicit descendant recheck reopens R01 and R02 after R01 was omitted')
+        assert dispatched['status'] == 'review_dispatched'
+        task = dispatched['task']
+        packets = [store.read_object_json(ref) for ref in task['inputs']]
+        packet = next(value for value in packets if value.get('schema_version') == 'content_review_packet.v1')
+        frozen_owners = packet['review_scope']['owners']
+        assert {'kind': owner['kind'], 'review_ref': previous_ref} in frozen_owners
+        rows = []
+        for frozen_owner in frozen_owners:
+            row = store.read_object_json(frozen_owner['review_ref'])
+            row.update(replaces=frozen_owner['review_ref'], subjects=subjects, dependencies=deps,
+                       observations=['Synthetic second public recheck under every frozen historical owner.'])
+            if row['kind'] == owner['kind']:
+                # The root owner still needs its R02 recheck. Only the actual
+                # descendant reopens R01, proving traversal across its omission.
+                indexes = [0, 1] if frozen_owner['review_ref'] == previous_ref else [1]
+                row.update(status='fail', findings=[copy.deepcopy(fixed['findings'][i]) for i in indexes])
+                for finding in row['findings']:
+                    finding.update(resolution='open', actual='Synthetic qualification remains missing at the current endpoint')
+            else:
+                row.update(status='pass', findings=[])
+            rows.append(row)
+        for kind in units:
+            if not any(row['kind'] == kind for row in rows):
+                row = copy.deepcopy(reopened)
+                row.update(kind=kind, review_id='synthetic-second-current-' + kind,
+                           replaces=None, status='pass', findings=[])
+                rows.append(row)
+        result = submit_host_fixture(project, task_id=task['task_id'], execution_ref='synthetic-r01-r02-recheck',
+            host_declaration={'supported_protocols': [task['protocol_version']] if task.get('protocol_version') else [],
+                              'capabilities': task.get('required_capabilities') or []},
+            result_payload={'kind': 'review', 'files': [], 'pages': [], 'page_order': [], 'artifact_specs': [],
+                            'reviews': rows, 'usage_events': [], 'notes': 'Synthetic two-step omission/reopen diagnostic only'})
+        assert result['status'] == 'accepted'
+
     before_read = source_snapshot(project)
     handoff = review_handoff.repair_handoff(external_report=external, project=project)
     assert closed_before == [True] * 6
-    assert [row['closed'] for row in handoff['findings']] == [False, True, True, True, True, True]
+    if path == 'direct_r01':
+        assert [row['closed'] for row in handoff['findings']] == [False, True, True, True, True, True]
+    else:
+        assert [row['closed'] for row in handoff['findings']] == [False, False, True, True, True, True]
     assert not handoff['all_findings_closed']
     assert content_review.preproduction_status(store, store.load_document())['status'] == 'blocked'
     assert before_read == source_snapshot(project)

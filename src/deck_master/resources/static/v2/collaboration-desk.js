@@ -46,8 +46,10 @@ export function admissionView(app, error) {
   const facts = error.details || {};
   const card = facts.decision_card_ref_or_projection || facts.decision_card;
   const report = error.result?.report || error.result?.readable_report || error.result;
+  const counts = facts.preproduction || facts;
   return el('div', {class: 'collaboration-admission stack', role: 'alert'},
     el('p', {class: 'field-error'}, readableError(error)),
+    findingCountView(counts),
     el('p', {}, '当前稿件、可读报告和本次输入均保留。'),
     (facts.effective_scope||facts.scope) && scopeView(app, facts.effective_scope||facts.scope),
     facts.responsible_role && el('p', {}, '下一责任：' + (roles[facts.responsible_role] || facts.responsible_role)),
@@ -55,6 +57,11 @@ export function admissionView(app, error) {
     card && details('决定范围与影响', card),
     report && details('保留的可读报告', report),
     details('错误依据与范围', {path: error.path || error.field, ...facts}));
+}
+
+function findingCountView(value) {
+  return value?.status !== 'unreadable' && Number.isInteger(value?.logical_finding_count) && Number.isInteger(value?.blocking_record_count)
+    ? el('p', {}, `待处理问题 ${value.logical_finding_count} 项 · 审查记录 ${value.blocking_record_count} 条`) : null;
 }
 
 // These are editable instruction copies, never a cached grant or readiness
@@ -282,8 +289,9 @@ function nativeReviewForm(app) {
     start.disabled=true;status.replaceChildren(el('p',{},'独立审阅进行中，请等待实际结果。'));
     try {
       const result=await post('/api/reviews/native',{});
+      const count=findingCountView(result.preproduction);
       status.replaceChildren(el('p',{},result.status==='running'?'已有审阅执行，请核对任务状态。':
-        result.preproduction?.status==='pass'?'当前内容前审已通过，可按现有授权继续制作。':'审阅已完成，请处理报告中的具体问题。'),details('实际审阅结果',result),
+        result.preproduction?.status==='pass'?'当前内容前审已通过，可按现有授权继续制作。':'审阅已完成，请处理报告中的具体问题。'),...(count?[count]:[]),details('实际审阅结果',result),
         button('重新读取当前状态',()=>{dialog.close();app.loadRoute({...app.route});}));
       app.root.dispatchEvent(new CustomEvent('business-state-changed'));
     } catch(error) {status.replaceChildren(admissionView(app,error));}

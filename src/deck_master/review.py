@@ -69,6 +69,31 @@ def replacement_index(reviews):
     return replacements
 
 
+def _same_review_identity(left, right):
+    return (left.get('review_id') == right.get('review_id')
+            and left.get('kind') == right.get('kind')
+            and left.get('review_subject') == right.get('review_subject')
+            and left.get('review_stage', 'final') == right.get('review_stage', 'final'))
+
+
+def logical_finding_owner(reviews, review):
+    """Normalize only proven same-identity replaces edges, never local finding ids."""
+    records = {_ref_key(row['ref']): row for row in reviews if row.get('ref')}
+    current, path = review, []
+    while current.get('ref'):
+        key = _ref_key(current['ref'])
+        if key in path:
+            # A cycle cannot close a finding. Give its records one stable
+            # diagnostic identity without treating it as a valid closure.
+            return records[min(path[path.index(key):])]['ref']
+        path.append(key)
+        parent = records.get(_ref_key(current.get('replaces') or {}))
+        if parent is None or not _same_review_identity(review, parent):
+            return current['ref']
+        current = parent
+    return review.get('ref')
+
+
 def content_semantic_key(review, finding):
     """Choose the consumed content axis once for page and manuscript findings."""
     if finding.get('kind') == 'source':
@@ -203,18 +228,33 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
             continue
         seen.add(_ref_key(owner_ref))
         for candidate in replacements.get(_ref_key(owner_ref), []):
-            if (candidate.get('review_id') != review.get('review_id') or
-                    candidate.get('kind') != review.get('kind') or
-                    candidate.get('review_subject') != review.get('review_subject') or
-                    candidate.get('review_stage', 'final') != review.get('review_stage', 'final')):
+            if not _same_review_identity(review, candidate):
                 continue
+            # Structural ancestry is independent of a per-finding verdict.
+            # A review may omit this finding while a later descendant reopens
+            # or resolves it. Historical/stale intermediates remain traversable.
+            candidate_key = _ref_key(candidate['ref']) if candidate.get('ref') else ('pending', id(candidate))
+            edges.setdefault(_ref_key(owner_ref), set()).add(candidate_key)
+            stack.append((candidate, ancestors | {_ref_key(owner_ref)}))
             followup = next((f for f in candidate.get('findings') or []
                              if f.get('finding_id') == finding.get('finding_id') and
                              f.get('page_id') == page_id), None)
             if followup is None:
                 continue
             deps = candidate.get('dependencies') or []
-            old_keys = {_dependency_key(dep) for dep in owner.get('dependencies') or []}
+            current = all(artifacts.get(_dependency_key(dep)) == dep.get('sha256') for dep in deps)
+            current_subject = (current_manuscript_subjects(candidate) if deck_preproduction
+                               else current_page_subject(candidate))
+            # Compare endpoints to the original owner, including when their
+            # structural path crosses stale or omitted intermediate findings.
+            changed = (changed_manuscript(review, candidate) if deck_preproduction
+                       else changed_on_page(review, candidate))
+            output_changed = current_final_output_changed(review, candidate)
+            if current and current_subject and (followup.get('resolution') != 'fixed' or (changed and output_changed)):
+                # An explicit current but unproven resolution remains open;
+                # it cannot inherit an earlier fixed node's success.
+                verdicts.setdefault(candidate_key, False)
+            old_keys = {_dependency_key(dep) for dep in review.get('dependencies') or []}
             new_keys = {_dependency_key(dep) for dep in deps}
             if deck_preproduction:
                 if not current_manuscript_subjects(candidate):
@@ -222,7 +262,7 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
             elif f'content:page:{page_id}' not in new_keys:
                 continue
             removed = old_keys - new_keys
-            old_deps = {_dependency_key(dep): dep for dep in owner.get('dependencies') or []}
+            old_deps = {_dependency_key(dep): dep for dep in review.get('dependencies') or []}
             # Untracked legacy keys can never be current again; assets must be
             # verifiably retired. Tracked keys must be re-declared.
             if any((key[6:], old_deps[key].get('sha256')) not in retired_assets
@@ -231,15 +271,6 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
                 continue
             if removed and not (followup.get('resolution_reason') or '').strip():
                 continue
-            current = all(artifacts.get(_dependency_key(dep)) == dep.get('sha256') for dep in deps)
-            # Intermediate historical reviews may be stale. Compare the
-            # current endpoint with the original finding owner, so a later
-            # reversion cannot masquerade as a repair.
-            changed = (changed_manuscript(review, candidate) if deck_preproduction
-                       else changed_on_page(review, candidate))
-            current_subject = (current_manuscript_subjects(candidate) if deck_preproduction
-                               else current_page_subject(candidate))
-            output_changed = current_final_output_changed(review, candidate)
             if (subjects and finding.get('kind') == 'source' and
                     followup.get('resolution') == 'fixed' and
                     review.get('review_stage') == 'preproduction'):
@@ -251,10 +282,6 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
                            (page_id is None or info.get('page_id') == page_id)
                            for key, info in subjects.items()):
                     continue
-            candidate_key = _ref_key(candidate['ref']) if candidate.get('ref') else ('pending', id(candidate))
-            edges.setdefault(_ref_key(owner_ref), set()).add(candidate_key)
-            if current and current_subject and (followup.get('resolution') != 'fixed' or (changed and output_changed)):
-                verdicts.setdefault(candidate_key, False)
             if current and candidate.get('observations') and followup.get('evidence'):
                 resolution = followup.get('resolution')
                 if (resolution == 'accepted_variance' and finding.get('impact') == 'needs_judgment' and
@@ -266,7 +293,6 @@ def finding_closed(reviews: list[dict], review: dict, finding: dict, artifacts: 
                         current_preview_subject(candidate) and
                         output_changed):
                     verdicts[candidate_key] = True
-            stack.append((candidate, ancestors | {_ref_key(owner_ref)}))
     # Only current endpoints decide closure. A later explicit open supersedes
     # an earlier fixed, while an unrelated finding or stale branch does not.
     def has_current_successor(key):
