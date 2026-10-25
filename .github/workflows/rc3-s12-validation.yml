@@ -1,9 +1,7 @@
 name: RC3 S12 isolated engineering validation
 
 on:
-  push:
-    branches:
-      - codex/rc3-s12-remote-validation-20261016
+  workflow_dispatch:
 
 permissions:
   contents: read

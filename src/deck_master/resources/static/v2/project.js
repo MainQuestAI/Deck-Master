@@ -18,7 +18,7 @@ const currentWorkMatches = (summary, info, revision = summary?.revision_id) =>
   summary.current_work?.identity?.project_id === info.project_id &&
   summary.current_work.identity.artifact_revision_id === revision &&
   summary.current_work.identity.control_revision_id === (info.control_revision_id || info.revision_id);
-const pendingHandoffs = (summary, info) => summary?.current_work !== undefined && !currentWorkMatches(summary, info) ? 0 :
+const pendingHandoffs = (summary, info) => summary?.current_work !== undefined && !currentWorkMatches(summary, info) ? null :
   (summary?.next_actions?.actions || []).filter(action => action.kind === 'handoff' && action.enabled).reduce((count, action) => count + (action.object_count || 0), 0);
 
 export class Project {
@@ -102,7 +102,13 @@ export class Project {
     const current = () => isCurrent() && routeGeneration === this.generation && !this.navigationPending;
     if (!current()) return;
     if (value.project_id !== this.info.project_id) throw new Error('服务项目已变化，请重新打开项目。');
-    if (this.health.ui_capabilities?.includes('collaboration.v1')) await this.refreshControl(current, value);
+    if (this.health.ui_capabilities?.includes('collaboration.v1') && !await this.refreshControl(current, value)) {
+      if (current()) {
+        if (this.pendingButton) {this.pendingButton.textContent = '待交接 暂不可核实';this.pendingButton.setAttribute('aria-label','待交接数量暂不可核实，打开任务核对');}
+        this.syncState('状态暂不可核实。固定阅读和草稿仍保留，请重试同步。', {error:true});
+      }
+      return;
+    }
     if (!current()) return;
     if (this.health.ui_capabilities?.includes('workbench_summary.v2') && !currentWorkMatches(value, this.info)) {
       // The control read may have overtaken the poll. Publish only the matched
@@ -114,8 +120,8 @@ export class Project {
     this.latest = value;
     const count = pendingHandoffs(value, this.info);
     if (this.pendingButton) {
-      this.pendingButton.textContent = `待交接 ${count}`;
-      this.pendingButton.setAttribute('aria-label', `查看待交接任务，${count} 项`);
+      this.pendingButton.textContent = `待交接 ${count ?? '暂不可核实'}`;
+      this.pendingButton.setAttribute('aria-label', count === null ? '待交接数量暂不可核实，打开任务核对' : `查看待交接任务，${count} 项`);
     }
     this.syncState(value.revision_id !== this.route.revision ? '项目有新状态。当前页面仍按顶栏版本阅读。' : '');
     this.root.dispatchEvent(new CustomEvent('summary-refreshed', {detail: value}));
@@ -129,14 +135,15 @@ export class Project {
       const info = await this.readControl();
       if (!isCurrent() || serial !== this.controlRead || info.project_identity !== this.info.project_identity) return;
       this.info = info;
-      await this.refreshCurrentWork(info, () => isCurrent() && serial === this.controlRead, observedSummary);
+      const paired = await this.refreshCurrentWork(info, () => isCurrent() && serial === this.controlRead, observedSummary);
       if (!isCurrent() || serial !== this.controlRead) return;
       // Refresh only the control facts. Draft editors, fixed canvases and open
       // decisions keep their DOM and confirmed basis across another window's
       // pause/revoke/CAS update.
       const banner = collaborationBanner(this);
       this.controlSlot?.replaceChildren(...(banner ? [banner] : []));
-    } catch { /* Existing fixed reading and the regular sync recovery remain. */ }
+      return paired !== false;
+    } catch { return false; }
   }
   async refreshCurrentWork(info, isCurrent = () => true, observedSummary = null) {
     if (!this.health.ui_capabilities?.includes('workbench_summary.v2') || !this.summary) return;
@@ -160,6 +167,7 @@ export class Project {
       if (overview) replacement.querySelector('[data-priority-action]')?.classList.toggle('primary', !Number(overview.dataset.selection));
       node.replaceWith(replacement);
     });
+    return work !== null;
   }
   async pairCurrentWork(info, summary, revision) {
     if (!this.health.ui_capabilities?.includes('workbench_summary.v2') || currentWorkMatches(summary, info, revision)) return summary;
@@ -439,7 +447,7 @@ export class Project {
     });
     const pending = pendingHandoffs(this.latest || this.summary, this.info);
     // 顶栏待交接属于最新状态：显式读取最新任务记录，不继承历史版本或记住的子区。
-    this.pendingButton = button(`待交接 ${pending}`, () => this.go({surface: 'runs', revision: null, task_id: null, runs_area: 'tasks'}), false, {'aria-label': `查看待交接任务，${pending} 项`});
+    this.pendingButton = button(`待交接 ${pending ?? '暂不可核实'}`, () => this.go({surface: 'runs', revision: null, task_id: null, runs_area: 'tasks'}), false, {'aria-label': pending === null ? '待交接数量暂不可核实，打开任务核对' : `查看待交接任务，${pending} 项`});
     this.navigationStatus = el('span', {class: 'status navigation-status', hidden: true}, '正在读取工作面');
     const top = el('header', {class: 'topbar'}, el('div', {class: 'crumb'}, el('strong', {}, this.info.title), el('span', {class: 'version', title: '版本身份可在任务与交付的版本记录中查看'}, this.historical ? '历史稿' : '当前稿'), this.navigationStatus),
       this.controlSlot, this.pendingButton, document.documentElement.dataset.workbenchUi === 'studio' && actionMenu('项目菜单',[personalClearPanel(this)]));

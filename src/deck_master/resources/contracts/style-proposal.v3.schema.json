@@ -35,7 +35,8 @@
             "initial_design",
             "restyle",
             "feasibility"
-          ]
+          ],
+          "description": "feasibility uses the registered zero-call design-only action over actual Page/Narrative/Plan inputs; it cannot dispatch sample production."
         },
         "target_page_ids": {
           "type": "array",

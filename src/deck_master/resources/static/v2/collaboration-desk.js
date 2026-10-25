@@ -59,32 +59,66 @@ export function admissionView(app, error) {
 
 // These are editable instruction copies, never a cached grant or readiness
 // verdict. Each window keeps its own buffer; recovery copies remain selectable.
+function retainedInstructions(prefix) {
+  const copies=[];let unreadable=false;
+  try {
+    for(const key of Object.keys(localStorage).filter(item=>item.startsWith(prefix))){
+      try {
+        const copy=JSON.parse(localStorage.getItem(key));
+        if(copy&&typeof copy==='object'&&!Array.isArray(copy))copies.push({...copy,storageKey:key});
+        else unreadable=true;
+      } catch {unreadable=true;}
+    }
+  } catch {unreadable=true;}
+  return {copies,unreadable};
+}
+
+function clearConfirmedInstructions(prefix, operationId, currentKey=null) {
+  const retained=retainedInstructions(prefix),removed=new Set();let complete=!retained.unreadable;
+  const keys=new Set(retained.copies.filter(copy=>copy.pending?.payload?.operation_id===operationId).map(copy=>copy.storageKey));
+  if(currentKey)keys.add(currentKey);
+  for(const key of keys){
+    try {localStorage.removeItem(key);removed.add(key);} catch {complete=false;}
+  }
+  return {removed,complete};
+}
+
 function instructionBuffer(app, action) {
   const prefix = `deck-master:v3:control-draft:${app.info.project_identity}:${action}:`;
   const key = prefix + crypto.randomUUID();
   const text = field('本次明确要求（必填）', el('textarea', {rows: 4, required: true, autocomplete: 'off'}), '只记录这次指令。保存副本不会开始制作或授予权限。');
   const status = el('p', {class: 'muted', role: 'status'});
   const recovery = el('select', {'aria-label': '恢复本机的请求文字'}, el('option', {value: ''}, '选择保留的请求文字'));
-  const copies = []; let currentPending = null;
-  try {
-    for (const entry of Object.keys(localStorage).filter(item => item.startsWith(prefix))) {
-      const copy = JSON.parse(localStorage.getItem(entry));
-      if (typeof copy.text === 'string') copies.push(copy);
-    }
-  } catch { status.textContent = '部分本机副本暂不可读。请保留输入并下载副本。'; }
+  const retained=retainedInstructions(prefix),copies=retained.copies.filter(copy=>typeof copy.text==='string');let currentPending=null;
+  if(retained.unreadable)status.textContent='部分本机副本暂不可读。请保留输入并下载副本。';
   copies.forEach((copy, index) => recovery.append(el('option', {value: String(index)}, (copy.pending?'提交结果待核实 · ':'')+(copy.text.slice(0, 70) || '空白请求'))));
   const save = () => {
     try { localStorage.setItem(key, JSON.stringify({text: text.input.value,pending:currentPending})); status.textContent = currentPending?'原请求已保留在本机；提交结果待核实。':'请求文字副本已保留在本机；保存副本不会提交。'; return true; }
     catch { status.textContent = '本机保存未完成。请复制文字或下载副本后再关闭。'; return false; }
   };
-  const buffer={input:text.input,save,setPending(value){currentPending=value;return save();},
+  const buffer={input:text.input,save,complete(operationId){
+    const cleared=clearConfirmedInstructions(prefix,operationId,key);
+    currentPending=null;
+    for(const option of [...recovery.options]){
+      if(option.value!==''&&cleared.removed.has(copies[Number(option.value)]?.storageKey))option.remove();
+    }
+    recovery.value='';
+    status.textContent=cleared.complete?'请求已确认；对应本机副本已清理。':'请求已确认；部分本机副本未清理，可手动处理。';
+  },setPending(value){currentPending=value;return save();},
     lock(value){text.input.readOnly=value;recovery.disabled=value;},onRestore:null};
   recovery.addEventListener('change', () => { if (recovery.value !== '') {
     const copy=copies[Number(recovery.value)];text.input.value=copy.text;currentPending=copy.pending||null;save();buffer.onRestore?.(copy);
   } });
   text.input.addEventListener('input', save);
   buffer.node=el('div', {class: 'stack'}, text.node, status, copies.length > 0 && recovery,
-    button('下载请求文字', () => downloadJSON({instruction_text:text.input.value,pending:currentPending}, 'deck-master-request-draft.json')));
+    button('下载请求文字', () => downloadJSON({instruction_text:text.input.value,pending:currentPending}, 'deck-master-request-draft.json')),
+    button('删除选中的恢复副本',()=>{
+      const copy=copies[Number(recovery.value)];
+      if(recovery.value===''||!copy)return;
+      if(copy.pending){status.textContent='该副本的提交结果待核实，请先核实原请求。';return;}
+      try{localStorage.removeItem(copy.storageKey);recovery.selectedOptions[0].remove();recovery.value='';status.textContent='选中的恢复副本已删除，当前输入保留。';}
+      catch{status.textContent='副本未删除，请保留当前输入。';}
+    }));
   return buffer;
 }
 
@@ -132,7 +166,7 @@ function controlForm(app, {title, action, path, body, explanation, build, initia
       if(action==='request.start'&&!onSuccess)status.append(button('读取下一工作单',()=>{dialog.close();continueWork(app);}));
       onSuccess?.(result,response,{dialog,status});
       submit.hidden = true;
-      instruction.setPending(null);
+      instruction.complete(pending.operation_id);
       app.root.dispatchEvent(new CustomEvent('business-state-changed'));
       return result;
     } catch (error) {
@@ -444,13 +478,12 @@ function continueWork(app) {
 
 function controlRecovery(app) {
   const prefix=`deck-master:v3:control-draft:${app.info.project_identity}:`,copies=new Map();
-  try{
-    for(const key of Object.keys(localStorage).filter(value=>value.startsWith(prefix))){
-      const copy=JSON.parse(localStorage.getItem(key)),pending=copy.pending;
-      if(pending?.payload?.operation_id&&pending.path?.startsWith(projectAPI(app)+'/'))copies.set(pending.payload.operation_id,pending);
-    }
-  }catch{return button('核实请求副本',()=>modal('请求副本暂不可读',el('p',{},'本机副本保持原样。请保留恢复文件并核实原请求，不要重复派发。')));}
-  if(!copies.size)return null;
+  const retained=retainedInstructions(prefix);
+  for(const copy of retained.copies){
+    const pending=copy.pending;
+    if(pending?.payload?.operation_id&&pending.path?.startsWith(projectAPI(app)+'/'))copies.set(pending.payload.operation_id,pending);
+  }
+  if(!copies.size)return retained.unreadable?button('核实请求副本',()=>modal('请求副本暂不可读',el('p',{},'本机副本保持原样。请保留恢复文件并核实原请求，不要重复派发。'))):null;
   return button(`核实已保留的请求（${copies.size}）`,()=>{
     document.querySelector('#modal')?.close();
     const rows=el('div',{class:'stack'});
@@ -460,11 +493,9 @@ function controlRecovery(app) {
         verify.disabled=true;
         try{
           const response=await post(pending.path,pending.payload);
-          for(const key of Object.keys(localStorage).filter(value=>value.startsWith(prefix))){
-            const copy=JSON.parse(localStorage.getItem(key));
-            if(copy.pending?.payload?.operation_id===operation)localStorage.setItem(key,JSON.stringify({...copy,pending:null}));
-          }
+          const cleared=clearConfirmedInstructions(prefix,operation);
           status.replaceChildren(el('p',{},'原请求回执已核实。是否允许下一动作仍按当前控制重新判断。'),details('原操作回执',response),button('重新读取当前状态',()=>{dialog.close();app.loadRoute({...app.route});}));
+          if(!cleared.complete)status.append(el('p',{class:'muted'},'部分本机副本未清理，可手动处理。'));
         }catch(error){status.replaceChildren(admissionView(app,error));verify.disabled=false;}
       });
       rows.append(el('article',{class:'collaboration-record'},el('p',{},'提交结果待核实；固定版本、对象与范围保持原样。'),details('冻结的原请求',pending),verify,status));
