@@ -11,7 +11,7 @@ import {BusinessOperations} from './business-operations.js';
 import {actionTargets} from './action-targets.js';
 import {changesetDesk} from './changeset-desk.js';
 import {collaborationBanner} from './collaboration-desk.js';
-import {currentWork} from './current-work.js';
+import {currentWork, currentWorkKey} from './current-work.js';
 
 const currentWorkMatches = (summary, info, revision = summary?.revision_id) =>
   summary?.project_id === info.project_id && summary.revision_id === revision &&
@@ -161,7 +161,9 @@ export class Project {
     this.summary = {...this.summary, current_work:work, ...(actions ? {next_actions:actions} : {})};
     // Replace only the derived work panel. Fixed artifacts, comparisons and
     // draft editors retain their DOM, revision and unsaved content.
+    const key = currentWorkKey(this);
     document.querySelectorAll('[data-current-work]').forEach(node => {
+      if (node.currentWorkKey === key) return;
       const replacement = currentWork(this), overview = node.closest('.overview');
       // Keep the batch workspace's primary action after a passive refresh.
       if (overview) replacement.querySelector('[data-priority-action]')?.classList.toggle('primary', !Number(overview.dataset.selection));

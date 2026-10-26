@@ -15,13 +15,17 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from .compiler.svg import SvgError
 from . import __version__
-from . import service
-from .models import ModelError
-from .service import ServiceError
-from .store import StoreError, ConflictError
-from .tasks import EnvelopeError, TaskConflict
+
+
+def _load_business():
+    global SvgError, service, ModelError, ServiceError, StoreError, ConflictError, EnvelopeError, TaskConflict
+    from .compiler.svg import SvgError
+    from . import service
+    from .models import ModelError
+    from .service import ServiceError
+    from .store import StoreError, ConflictError
+    from .tasks import EnvelopeError, TaskConflict
 
 LEGACY_IMPORT_COMMAND = ('import', 'legacy')
 
@@ -46,6 +50,7 @@ def _declaration_file(path, *, request=False):
 
 
 def _fail(exc: Exception, *, legacy_command=None) -> int:
+    _load_business()
     from .pipeline import NeedsTool
     from .workbench import ReadModelError
     from .eligibility import EligibilityBlocked
@@ -512,6 +517,10 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
+    if argv == ['--version']:
+        print(f'deck-master {__version__}')
+        raise SystemExit(0)
+    _load_business()
     if len(argv) >= 2 and tuple(argv[:2]) == LEGACY_IMPORT_COMMAND and \
             any(flag in argv[2:] for flag in ('--input', '--out', '--inspect')):
         return _dispatch_import_legacy(argv[2:])

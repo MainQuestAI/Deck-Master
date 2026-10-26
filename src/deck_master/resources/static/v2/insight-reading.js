@@ -1,14 +1,20 @@
-import {get, post, readableError, revisionQuery} from './api.js';
+import {get, post, readableError, revisionQuery, canonical} from './api.js';
 import {el, button, modal, field} from './dom.js';
 import {projectAPI} from './collaboration-desk.js';
 
 export const supportsInsights = app => app.health.ui_capabilities?.includes('content_insight.v1');
 export const details = (title, value) => el('details', {}, el('summary', {}, title), el('pre', {class:'evidence-json'}, JSON.stringify(value,null,2)));
-export function reader(app, path, render) {
+export function reader(app, path, render, {routeOwned = true} = {}) {
   const box=el('section',{class:'insight-reading stack','aria-live':'polite'},el('p',{},'正在读取固定版本…'));
-  const controller=new AbortController(); let disposed=false;
-  app.disposables.push(()=>{disposed=true;controller.abort();});
-  get(path,{signal:controller.signal}).then(value=>{if(!disposed)box.replaceChildren(render(value));}).catch(error=>{if(!disposed)box.replaceChildren(el('p',{role:'alert'},readableError(error)));});
+  const controller=new AbortController(); let disposed=false, pending=null, shown=null;
+  box.dispose=()=>{disposed=true;controller.abort();};
+  if(routeOwned)app.disposables.push(box.dispose);
+  box.refresh=()=>{
+    if(disposed||pending)return pending;
+    pending=get(path,{signal:controller.signal}).then(value=>{if(!disposed){const next=canonical(value);if(next!==shown){shown=next;box.replaceChildren(render(value));}}}).catch(error=>{if(!disposed){shown=null;box.replaceChildren(el('p',{role:'alert'},readableError(error)));}}).finally(()=>{pending=null;});
+    return pending;
+  };
+  box.refresh();
   return box;
 }
 export const issues = value => value.issues?.length ? details('不可读记录与定位依据',value.issues) : null;
@@ -90,6 +96,6 @@ function directionDialog(app,initial){
     status.prepend(el('p',{},'已读取当前准入，请再次核对范围后明确确认。'));}catch(e){status.prepend(el('p',{},readableError(e)));}finally{busy=false;paint();}}));
   paint();
 }
-export function taskMethods(app,id,revision){return reader(app,`/api/tasks/${encodeURIComponent(id)}/methods?`+new URLSearchParams({revision,availability:'current'}),value=>{
+export function taskMethods(app,id,revision,options){return reader(app,`/api/tasks/${encodeURIComponent(id)}/methods?`+new URLSearchParams({revision,availability:'current'}),value=>{
   const d=value.data;if(!d)return el('p',{},'任务依据暂不可读。');
-  return el('div',{class:'stack'},el('h3',{},'任务方法依据'),el('p',{},d.frozen_status==='recorded'?'以下是派发时冻结的有序清单。':'旧任务未记录冻结清单，不套用当前默认方法。'),el('ol',{},d.resources.map(r=>el('li',{},r.display_name||r.id))),details('派发时的版本与字节',d.resources),details('当前安装可用性',d.availability),el('p',{class:'muted'},'资源可读不代表已应用、专业通过或人类认可。缺失或变化请使用下方核实原任务入口。'),issues(value));});}
+  return el('div',{class:'stack'},el('h3',{},'任务方法依据'),el('p',{},d.frozen_status==='recorded'?'以下是派发时冻结的有序清单。':'旧任务未记录冻结清单，不套用当前默认方法。'),el('ol',{},d.resources.map(r=>el('li',{},r.display_name||r.id))),details('派发时的版本与字节',d.resources),details('当前安装可用性',d.availability),el('p',{class:'muted'},'资源可读不代表已应用、专业通过或人类认可。缺失或变化请使用下方核实原任务入口。'),issues(value));},options);}

@@ -109,17 +109,8 @@ SCHEMA_FILES = {
     "text_range": "text-range.v1.schema.json",
 }
 
-REF_PATH_PATTERN = r"^\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\.[a-z0-9]+$"
-SHA256_PATTERN = r"^[a-f0-9]{64}$"
 ZERO_SHA256 = "0" * 64
 
-OBJECT_EXT_FOR_SCHEMA = {
-    "document": "json",
-    "page": "json",
-    "artifact": "json",
-    "task": "json",
-    "review": "json",
-}
 
 DEFAULT_CANVAS = {    "width_px": 1600,
     "height_px": 900,
@@ -1038,8 +1029,6 @@ def content_identity(document: dict[str, Any]) -> str:
     return sha256_bytes(canonical_json_bytes(projection))
 
 
-INPUT_SOURCE_KEYS = ("source_id", "original_sha256", "extract_sha256", "usage_note",
-                     "external_use", "restriction")
 
 
 def compute_input_digest(document: dict[str, Any]) -> str:

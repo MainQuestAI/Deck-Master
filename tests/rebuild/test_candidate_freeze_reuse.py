@@ -16,6 +16,43 @@ def ready(context):
     return report
 
 
+def test_download_reuses_verified_target_and_status_does_not_collect_package(context, monkeypatch):
+    ready(context)
+    reads = []
+    original = Path.read_bytes
+    def read(path):
+        if path.parent == state_path(context).parent and path.name in preview._FILES:
+            reads.append(path.name)
+        return original(path)
+    monkeypatch.setattr(Path, 'read_bytes', read)
+    raw, _ = preview.file_bytes(context[0].project_root, cache_key=context[-1], name='candidate.png')
+    assert raw == b'original candidate.png'
+    assert sorted(reads) == sorted(preview._FILES)
+    retained = {}
+    assert preview._cached(context[0], context[-1], context[-2], verified_files=retained, retain_name='candidate.png')
+    assert retained == {'candidate.png': raw}
+
+
+def test_ordinary_preview_validation_retains_only_one_raw_file(context):
+    import hashlib
+    import tracemalloc
+    report = ready(context)
+    folder = state_path(context).parent
+    for name in preview._FILES:
+        raw = b'x' * (8 * 1024 * 1024)
+        (folder / name).write_bytes(raw)
+        report['files'][name] = {'sha256': hashlib.sha256(raw).hexdigest(), 'bytes': len(raw)}
+    write_json(folder / 'report.json', report)
+    del raw
+    tracemalloc.start()
+    try:
+        assert preview._cached(context[0], context[-1], context[-2]) == report
+        _, peak = tracemalloc.get_traced_memory()
+    finally:
+        tracemalloc.stop()
+    assert peak < 12 * 1024 * 1024
+
+
 def test_freeze_constructs_one_context_and_reads_each_verified_byte_once(context, monkeypatch):
     report = ready(context)
     calls = {'contexts': 0, 'file_reads': 0}

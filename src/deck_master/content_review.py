@@ -36,8 +36,6 @@ SPEECH_UNIT = "speech"
 FIDELITY_UNITS = ("page_copy", "progression")
 ALLOWED_KINDS = BASE_UNITS + (SPEECH_UNIT,)
 
-REQUIREMENTS = ("independent_model_or_human", "host_self", "fidelity_only")
-CAPABILITY_KEYS = ("verified_user_events", "independent_review_receipts", "human_review_receipts")
 
 
 def reviewer_capabilities(adapter_context=None) -> dict:
@@ -921,7 +919,7 @@ def _independently_accepted_reviews(store, document, records):
     return accepted
 
 
-def preproduction_status(store, document, *, adapter_context=None, page_ids=None) -> dict:
+def preproduction_status(store, document, *, adapter_context=None, page_ids=None, read_context=None) -> dict:
     """Whether the current manuscript has an applicable preproduction review."""
     state = requirement_state(store, document)
     units = required_units(store, document)
@@ -936,7 +934,8 @@ def preproduction_status(store, document, *, adapter_context=None, page_ids=None
         page_ids = ids
     history = [row for row in _preproduction_reviews(store, document)
                if row['review'].get('review_subject') != 'outline']
-    artifacts = _current_artifact_digests(store, document)
+    artifacts = (read_context.require(store, document).artifacts if read_context is not None else
+                 _current_artifact_digests(store, document))
     applicable = _applicable_reviews(store, document, page_ids, records=history, digests=artifacts)
     satisfied = sorted({item["review"].get("kind") for item in applicable
                         if item["review"].get("status") == "pass"})

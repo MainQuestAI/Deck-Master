@@ -116,6 +116,52 @@ def save_evidence(name, value):
         (directory / name).write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n')
 
 
+def test_reader_warms_complete_coverage_without_resolver(tmp_path, monkeypatch):
+    store = project(tmp_path)
+    append(store, 523)
+    cache.clear()
+    counts = Counts(monkeypatch)
+    cold, cold_count = counts.run(lambda: operations.OperationReader(store))
+    warm, warm_count = counts.run(lambda: operations.OperationReader(store))
+    save_evidence('reader-coverage.json', {'cold': cold_count, 'warm': warm_count})
+    assert cold.coverage == warm.coverage
+    assert cold_count['snapshot_decode'] == 524
+    assert warm_count['snapshot_decode'] == 0
+    assert warm_count['snapshot_stat'] >= 524  # Full ancestry guard remains.
+    monkeypatch.setenv('DECK_MASTER_OPERATION_CACHE', '0')
+    _, disabled = counts.run(lambda: operations.OperationReader(store))
+    assert disabled['snapshot_decode'] == 524
+
+
+def test_reader_does_not_publish_when_head_changes(tmp_path, monkeypatch):
+    store = project(tmp_path)
+    cache.clear()
+    original = operations.OperationReader._check_head
+    def changed(reader):
+        append(store)
+        original(reader)
+    monkeypatch.setattr(operations.OperationReader, '_check_head', changed)
+    with pytest.raises(ValueError, match='current changed'):
+        operations.OperationReader(store)
+    assert cache.get(cache.root_identity(store)) is None
+
+
+def test_v2_completed_content_warms_history_without_a_resolver(tmp_path, monkeypatch):
+    from deck_master import workbench
+    from test_pr188_completed_content import completed_content
+    project_path, store, _ = completed_content(tmp_path)
+    append(store, 24)
+    cache.clear()
+    workbench._summary_cache.clear()
+    counts = Counts(monkeypatch)
+    cold, cold_count = counts.run(lambda: workbench.workbench_summary(project_path, protocol='workbench_summary.v2'))
+    warm, warm_count = counts.run(lambda: workbench.workbench_summary(project_path, protocol='workbench_summary.v2'))
+    assert cold == warm
+    assert cache.get(cache.root_identity(store)) is not None
+    assert cold_count['snapshot_decode'] - warm_count['snapshot_decode'] >= 24
+    save_evidence('v2-reader-coverage.json', {'cold': cold_count, 'warm': warm_count})
+
+
 @pytest.mark.parametrize('length', [100, 500, 1000])
 def test_real_cold_hot_incremental_counts(tmp_path, monkeypatch, length):
     store = project(tmp_path)
@@ -411,10 +457,14 @@ def test_store_receipt_wrapper_has_one_cold_scan(tmp_path, monkeypatch):
 
 
 @pytest.mark.parametrize('old_damage', ['unchanged', 'missing', 'corrupt_replacement', 'symlink'])
-def test_divergent_history_rebuilds_without_merging_unreachable_operations(tmp_path, old_damage):
+@pytest.mark.parametrize('reader', [False, True])
+def test_divergent_history_rebuilds_without_merging_unreachable_operations(tmp_path, old_damage, reader):
     store = project(tmp_path); base = store.load_document()
     op = str(uuid.uuid4()); saved = submit(store, op, base['revision_id'], {})
-    operations.resolve_operation(store, 'absent')
+    if reader:
+        operations.OperationReader(store)
+    else:
+        operations.resolve_operation(store, 'absent')
     # Replace the control with a different valid branch from the same root,
     # reusing the operation ID only on that selected ancestry. Cached branch
     # metadata must not make this appear to be two committed occurrences.
@@ -436,7 +486,8 @@ def test_divergent_history_rebuilds_without_merging_unreachable_operations(tmp_p
     # The first cache-enabled lookup must fall back from stale coverage, not
     # report unknown merely because an unreachable old snapshot is unreadable.
     assert cache.get(cache.root_identity(store)).head == saved['committed_revision_id']
-    first_enabled = operations.resolve_operation(store, 'absent')
+    first_enabled = (operations.OperationReader(store).resolve('absent') if reader else
+                     operations.resolve_operation(store, 'absent'))
     canonical_absent = operations.resolve_operation(store, 'absent', use_cache=False)
     assert first_enabled == canonical_absent
     assert first_enabled.state == 'not_found' and first_enabled.head_revision == branch['revision_id']

@@ -37,9 +37,6 @@ from .review import PAGE_VISUAL_KINDS
 from .work_context import response_projection
 from .current_work import after_action
 
-AUTO_VIEW = "auto_view_then_production"
-CONTINUE_PRODUCTION = "continue_production"
-PRODUCTION_PENDING = "production_pending"
 
 
 class ServiceError(StoreError):
@@ -99,8 +96,6 @@ def _task_receipt(response: dict, task: dict) -> dict:
     return response
 
 
-def _document_hash(document: dict) -> str:
-    return sha256_bytes(canonical_json_bytes(document))
 
 
 def _utc_now_iso() -> str:
@@ -239,63 +234,6 @@ def _validate_draft(payload):
         raise ServiceError('(draft)/page_order', 'must list each unique page exactly once')
 
 
-def _adopt_draft(store: Store, draft_payload: dict) -> dict:
-    """Validate a complete page array and adopt it through the compose path.
-
-    Both ``create --draft`` and ``import-draft`` share this single lineage so
-    imported copy and Host-composed copy behave identically downstream.
-    """
-    _validate_draft(draft_payload)
-    pages = draft_payload.get("pages") if isinstance(draft_payload, dict) else None
-    page_order = draft_payload.get("page_order") if isinstance(draft_payload, dict) else None
-    if not isinstance(pages, list) or not pages:
-        raise ServiceError("(draft)/pages", "draft must carry a non-empty pages array")
-    # The boundary consumes the eligibility resolver first (CONTRACTS §6.1
-    # order): a paused request or an intent that cannot import (review_only)
-    # gets its precise reason before the writer-boundary route check below.
-    store_document = store.load_document()
-    eligibility.guard(store, store_document, "import_draft",
-                      context={"targets": {"page_ids": [page.get("page_id") for page in pages],
-                                           "layers": ["page_copy"]}})
-    if collaboration_required(store_document):
-        # TASKS T03 item P3-3: never dispatch an unbound legacy compose task on a
-        # collaboration.v1 project. The legacy envelope carries no request, no
-        # collaboration binding and no write scope, and the frozen page_copy
-        # payload cannot carry imported-manuscript confirmation evidence, so
-        # this card blocks the import honestly instead of faking authority.
-        raise ImportRequiresPhasedPath(
-            "(draft)",
-            "this project is at the collaboration.v1 writer, where a draft import cannot use the "
-            "legacy unbound compose envelope. Recovery: (1) start a work request whose scope covers "
-            "the whole deck (collaboration.start_request / collaboration request start), adopt an "
-            "argument Narrative for it, then submit the manuscript through the phased page_copy "
-            "task so Pages, page_links and the bound Plan are written under a real scope; or "
-            "(2) record an explicit decision for a confirmed-manuscript mapping (imported_mapping "
-            "+ fidelity review) once the unified import routing lands. No page, plan or output was "
-            "written by this call")
-    envelope = {
-        "kind": "compose",
-        "files": [],
-        "pages": pages,
-        "page_order": page_order or [page.get("page_id") for page in pages],
-        "artifact_specs": draft_payload.get("artifact_specs") or [],
-        "reviews": draft_payload.get("reviews") or [],
-        "usage_events": [],
-        "notes": draft_payload.get("notes") or "import draft",
-    }
-    if draft_payload.get("content_plan") is not None:
-        envelope["content_plan"] = draft_payload["content_plan"]
-    document = store.load_document()
-    task = open_compose_task(store, document, operation_id=_new_operation_id("draft"),
-                            intent="import_draft" if document.get("compatibility") else "initial")
-    outcome = tasks_mod.accept_result(
-        store,
-        task_id=task["task_id"],
-        operation_id=task["operation_id"],
-        produced_against=task["produced_against"],
-        envelope_raw=envelope,
-    )
-    return outcome
 
 
 def revision_compose_task(store: Store, document, *, operation_id, reason, impact=None, selected_resource_ids=None) -> dict:
@@ -1482,9 +1420,6 @@ def inputs_show(project_dir: Path | str) -> dict:
     }
 
 
-def _read_input_operation(store: Store, operation_id: str) -> dict | None:
-    from .operations import read_legacy_record
-    return read_legacy_record(store, operation_id)
 
 
 def _input_request_digest(document, patch, base_revision, patch_dir):

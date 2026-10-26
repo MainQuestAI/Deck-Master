@@ -10,7 +10,6 @@ from .operations import OperationError
 WRITE_ACTIONS = {name: name for name in (
     'request.start', 'request.replace', 'decision', 'grant', 'adopt-proposal',
     'pause', 'resume', 'revoke', 'migration.apply', 'review.import', 'draft.import')}
-READ_ACTIONS = ('show', 'migration.describe', 'eligibility', 'review.bindings', 'review.evaluate', 'review.record', 'review.repair-handoff', 'delivery.describe', 'draft.preview', 'budget.describe')
 MUTATING_ROUTES = ('continue',)
 _FORBIDDEN = {'adapter_context', 'verified_user_events', 'independent_review_receipts', 'human_review_receipts'}
 _REQUEST = {'intent', 'content_intent', 'scope', 'instruction_evidence', 'variant',

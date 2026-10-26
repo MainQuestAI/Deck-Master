@@ -31,10 +31,11 @@ def _logical_identity(project, current_revision):
 
 
 def context(project):
-    path = project_path(project)
-    store = Store(path)
-    doc = load_snapshot(store)
-    return store, doc, _logical_identity(str(path), doc["revision_id"])
+    from .local_state import project_snapshot
+    from .snapshots import reuse_current_snapshot
+    with reuse_current_snapshot():
+        path, store, doc = project_snapshot(project)
+        return store, doc, _logical_identity(str(path), doc["revision_id"])
 
 
 # B02 (INTERFACES "B02：有效能力与主入口"): what the serving core supports and
@@ -255,14 +256,18 @@ def get(project, draft_id):
 
 
 def list_drafts(project):
+    from .snapshots import FixedSnapshotReader
     store, doc, identity = context(project)
     directory = _directory(store)
     records, errors = [], []
+    snapshot_reader = None
     if directory.is_dir():
         for path in sorted(directory.glob("*.json")):
             try:
                 record = _read(store, path.stem)
-                _validate(store, doc, identity, record["draft"])
+                if snapshot_reader is None:
+                    snapshot_reader = FixedSnapshotReader(store, head_revision=doc['revision_id'])
+                _validate(store, doc, identity, record["draft"], snapshot_reader=snapshot_reader)
                 records.append(record)
             except (ValueError, RuntimeError, OSError, KeyError, TypeError):
                 errors.append({"draft_id": path.stem, "status": "unreadable"})

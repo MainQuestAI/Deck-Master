@@ -2,7 +2,7 @@ import {supportsInsights,taskMethods} from './insight-reading.js';
 import {cancelRecovery} from './run-recovery.js';
 import {taskHandoff} from './change-handoff.js';
 import {personalClearPanel} from './personal-maintenance.js';
-import {get, post, readableError, revisionQuery, fileURL} from './api.js';
+import {get, post, readableError, revisionQuery, fileURL, canonical} from './api.js';
 import {el, button, empty, version, modal, loading, errorNote, disabledReason, icon} from './dom.js';
 
 const names = {style_analyze:'分析截图规范', reconstruct:'制作可编辑稿', compile:'编译整稿', check:'工程检查', compose: '整理内容', blueprint: '制作原图', svg: '制作 SVG', render: '渲染预览', repair: '局部修改', review: '检查', export: '准备文件'};
@@ -13,7 +13,7 @@ const seenKey = task => task.reading_key;
 const clock = value => value ? new Date(value).toLocaleString('zh-CN', {hour12: false}) : '未记录';
 
 
-export function runDesk(app, data) {
+export function runDesk(app, data, {onGroups = () => {}} = {}) {
   const studio = document.documentElement.dataset.workbenchUi === 'studio';
   const recovery = cancelRecovery(app);
   const root = el('section', {'data-container':'section', class: 'panel run-desk', 'aria-label': '运行记录'});
@@ -22,6 +22,7 @@ export function runDesk(app, data) {
   const recoveryReceipt=el('p',{class:'run-recovery-receipt',role:'status'});
   const detail = el('div', {class: 'run-detail stack'});
   let handoff = null;
+  let methods = null, methodsKey = null, detailKey = null, rowsKey = null, visible = true;
   const group = el('select', {'aria-label': '按修改组筛选'}), status = el('select', {'aria-label': '按执行状态筛选'}, el('option', {value: ''}, '所有执行状态'),
     Object.entries(statuses).map(([key, label]) => el('option', {value: key}, label)));
   const attention = el('input', {type: 'checkbox', 'aria-label': '只看需我处理'});
@@ -60,6 +61,9 @@ export function runDesk(app, data) {
     const tasks = page.tasks.filter(task => !state.attention || todo(task).length);
     // UX-05b：每条运行记录默认回答「做什么、对哪些页、现在怎样」，要求原文
     // 折叠在详情里，列表本身不再只有任务类型和内部时间。
+    const nextRowsKey = canonical([tasks, reading.seen, page.revision_id, state.attention]);
+    if (nextRowsKey !== rowsKey) {
+    rowsKey = nextRowsKey;
     rows.replaceChildren(...tasks.map(task => studio ? studioTask(task) : el('article', {class: 'run-task stack', 'data-task-id': task.task_id},
       el('div', {class: 'row wrap run-task-identity'}, el('strong', {}, names[task.kind] || '制作任务'), el('span', {class: 'status'}, statuses[task.status] || task.status)),
       el('p', {class: 'run-requirement'}, `要求：${(task.instruction || '').trim() || '未记录制作要求'}`),
@@ -72,6 +76,7 @@ export function runDesk(app, data) {
       task.task_id && button('查看这项任务', () => app.go({task_id: task.task_id, revision: page.revision_id}), false, {class:'run-task-open'}))));
     if (!tasks.length) rows.append(empty(state.attention ? '本页没有需要你处理的记录' : '没有匹配的运行记录',
       '可继续阅读内容与制作状态。查看其它记录不会触发执行。', el('div', {class: 'row wrap'}, button('阅读内容', () => app.go({surface: 'content'})), button('查看整稿', () => app.go({surface: 'gallery'})))));
+    }
     const move = offset => { choiceMade = true; read({state:{offset},live:false,pinned:page.revision_id,persist:true}); };
     pager.replaceChildren(disabledReason(button('上一页任务', () => move(Math.max(0, state.offset - 30)), false, {disabled: state.offset === 0}), state.offset === 0 ? '已在第一页。' : '', {visible: false}),
       el('span', {}, `第 ${Math.floor(state.offset / 30) + 1} 页 · 每页最多 30 项`),
@@ -128,6 +133,15 @@ export function runDesk(app, data) {
   }
   function renderDetail() {
     const task = selected.task, revision = selected.revision_id;
+    const nextMethodsKey = canonical([task.task_id, revision]);
+    if (supportsInsights(app)) {
+      if (nextMethodsKey !== methodsKey) { methods?.dispose(); methodsKey = nextMethodsKey; methods = taskMethods(app,task.task_id,revision,{routeOwned:false}); }
+      else if (visible) methods.refresh(); // Current installation availability is not frozen by task identity.
+    }
+    const nextDetailKey = canonical([selected,page.groups,reading.seen,reading.etag,readingBlocked,app.readonly,detailLive,
+      recovery.pending.has(task.task_id),recovery.sending.has(task.task_id)]);
+    if (nextDetailKey === detailKey) { if (visible) handoff?.refresh(); return; }
+    detailKey = nextDetailKey;
     handoff?.dispose(); handoff = taskHandoff(app, task, page.groups);
     recovery.observe(task);
     const resultLinks = (task.result_refs || []).map((ref, index) => {
@@ -138,7 +152,7 @@ export function runDesk(app, data) {
       el('p', {}, scopeLabel(task)),
       detailLive && el('p', {class:'muted task-verified-revision'}, `已核实原任务的当前执行状态 · ${version(revision)}`),
       handoff?.node,
-      supportsInsights(app)&&taskMethods(app,task.task_id,revision),
+      methods,
       el('details', {}, el('summary',{},'制作要求与执行身份'), el('p',{},task.instruction),el('p',{class:'muted'},`任务 ${task.task_id} · ${version(revision)}`)),
       el('p', {}, `真实接手时间：${clock(task.execution_started_at)}${task.execution_started_at ? '' : '，不会用最后更新时间代替'}`),
       el('details',{},el('summary',{},'执行记录'),el('p',{class:'execution-reference'},task.execution_ref ? `执行标识：${task.execution_ref}` : '尚无接手记录')),
@@ -204,6 +218,7 @@ export function runDesk(app, data) {
       // pagination must leave both the visible rows and their old offset intact.
       state={...nextState,revision:value.revision_id};live=nextLive;pinned=nextPinned;
       reading=nextReading;readingUnavailable=readingWarning;page = value;
+      onGroups(nextLive ? value.groups : null, value.revision_id);
       if (detailToken === detailSerial) selected = nextDetail;
       loaded = true;readingBlocked=false;recoveryState=null;render();
       if(options.persist)persist();
@@ -225,18 +240,18 @@ export function runDesk(app, data) {
         }else notice.replaceChildren(errorBox({...error.details,message:readableError(error)}),button('重试读取',()=>read(options)));
       }
       return false;
-    } finally { busy = false;controls();if(pendingRead&&!disposed){const next=pendingRead;pendingRead=null;read(next);} }
+    } finally { busy = false;controls();if(pendingRead&&!disposed&&visible){const next=pendingRead;pendingRead=null;read(next);} }
   }
   for (const input of [group, status, attention]) input.addEventListener('change', () => {
     choiceMade = true;read({state:{group:group.value,status:status.value,attention:attention.checked,offset:0},refreshReading:true,persist:true});
   });
   search.addEventListener('keydown',event=>{if(event.key==='Enter')submitSearch();});
   search.addEventListener('input',()=>{choiceMade=true;});
-  const sync = () => { if (live && !document.hidden) read(); };
+  const sync = () => { if (visible && live && !document.hidden) read(); };
   app.root.addEventListener('summary-refreshed', sync);
   function hydrate() {
     const editor = app.editor;
-    if (!editor) { read(); return; }
+    if (!editor) { if(visible)read(); return; }
     editor.ready.then(() => {
       if (disposed || editor !== app.editor) return;
       recovery.hydrate(editor);
@@ -254,12 +269,13 @@ export function runDesk(app, data) {
         }
       }
       if(readingSupported&&saved?.seen?.length){const migrate=button('核实并导入旧草稿的已读记录',async()=>{try{await editor.save();const current=await get('/api/result-reading');const result=await post('/api/result-reading/import-legacy',{draft_id:editor.draft.draft_id,project_identity:app.info.project_identity,expected_etag:current.etag});if(await read({state:{offset:0},refreshReading:true,persist:true}))recoveryReceipt.textContent=`已核实导入 ${result.verified_count} 项旧记录，原草稿保留。`;migrate.remove();app.summaryPoll?.refresh();}catch(error){notice.textContent=readableError(error);}});root.append(migrate);}
-      read(options);
+      if(visible)read(options);else pendingRead=options;
     });
   }
   const onCancel = () => queueMicrotask(() => { if (!disposed && selected) renderDetail(); });
   app.root.addEventListener('cancel-state-changed', onCancel);
   app.root.addEventListener('draft-editor-replaced', hydrate);
-  app.disposables.push(() => { disposed = true; handoff?.dispose(); serial++; app.root.removeEventListener('cancel-state-changed', onCancel); app.root.removeEventListener('summary-refreshed', sync); app.root.removeEventListener('draft-editor-replaced', hydrate); });
+  root.setActive = value => { const resumed = value && !visible; visible = value; if(resumed){const options=pendingRead||{};pendingRead=null;read(options);} };
+  app.disposables.push(() => { disposed = true; handoff?.dispose(); methods?.dispose(); serial++; app.root.removeEventListener('cancel-state-changed', onCancel); app.root.removeEventListener('summary-refreshed', sync); app.root.removeEventListener('draft-editor-replaced', hydrate); });
   render(); hydrate(); return root;
 }

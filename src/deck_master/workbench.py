@@ -11,6 +11,7 @@ import json
 import resource
 import stat
 import threading
+from concurrent.futures import Future
 from collections import Counter, OrderedDict, defaultdict
 from datetime import datetime, timezone
 from functools import lru_cache
@@ -103,6 +104,8 @@ class _ReadContext:
         self.read_failed = False
         self.cacheable = True
         self.operation_reader = None
+        from .current_relationship import _ReaderStore
+        self.reader = _ReaderStore(self)
 
     def close(self):
         for fd in self.directory_fds.values():
@@ -172,7 +175,11 @@ class _ReadContext:
             except READ_FAILURES:
                 self.read_failed = True
                 raise
-        return self.objects[key]
+        value = self.objects[key]
+        if isinstance(value, dict) and (value.get('reviewer') or {}).get('type') in ('human_internal', 'human_external'):
+            # Adapter verdicts can change without changing immutable bytes.
+            self.cacheable = False
+        return value
 
     def operations(self):
         if self.operation_reader is None:
@@ -181,15 +188,14 @@ class _ReadContext:
         return self.operation_reader
 
     def read_snapshot(self, revision):
-        if revision != self.document.get("revision_id"):
-            # A historical read consumes a canonical ancestry proof. Retain it
-            # only within this response; endpoint signatures cannot prove the
-            # complete chain for a later summary request.
-            self.cacheable = False
         if revision in self.snapshots:
             return self.snapshots[revision]
         try:
-            value = self.operations().snapshot(revision)
+            reader = self.operations()
+            value = reader.snapshot(revision)
+            # Retain every signature from the proof actually used, never just
+            # endpoints. A later response must validate the complete ancestry.
+            self.snapshot_signatures.update({key: header.signature for key, header in reader.coverage.headers.items()})
             self.snapshots[revision] = value
             return value
         except READ_FAILURES:
@@ -275,7 +281,7 @@ def _applicability(ctx, entry, artifact):
     from .visual_dependencies import page_visual_equivalent
     def page_equivalent(ref, target):
         return bool(visual_role and target and ref and page_visual_equivalent(
-            ctx.store, ref, target.get('page'), target['page_id']))
+            ctx.reader, ref, target.get('page'), target['page_id']))
     def historic_page_ref(target, digest):
         if not target:
             return None
@@ -289,7 +295,7 @@ def _applicability(ctx, entry, artifact):
                     return page_entry['page']
             parent = node.get('parent_revision_id')
             try:
-                node = ctx.store.load_document(parent) if parent else None
+                node = ctx.read_snapshot(parent) if parent else None
             except READ_FAILURES:
                 return None
         return None
@@ -377,7 +383,7 @@ def _deck_output(ctx):
         expected = [(e["page_id"], (e.get("svg") or {}).get("sha256")) for e in ctx.document.get("pages") or []]
         recorded = [(d.get("identity"), d.get("sha256")) for d in deps]
         from .pipeline import output_matches_current_svg
-        matches = bool(deps and recorded == expected and output_matches_current_svg(ctx.store, ctx.document))
+        matches = bool(deps and recorded == expected and output_matches_current_svg(ctx.reader, ctx.document))
         result.update(file=_copy_json(artifact["file"]), file_integrity="checked_on_file_read",
                       ordered_pages=[{"page_id": pid, "svg_sha256": digest} for pid, digest in recorded],
                       relation="known" if deps else "unknown",
@@ -795,40 +801,122 @@ def _next_actions_block(ctx, actions):
 
 _summary_cache = OrderedDict()
 _summary_cache_lock = threading.Lock()
+_summary_inflight = {}
 
 
-def workbench_summary(project_dir, *, revision=None, reading=None, protocol=None):
+def _cached_summary(ctx, key, revision):
+    with _summary_cache_lock:
+        cached = _summary_cache.get(key)
+    if cached is None:
+        return None
+    now = datetime.now(timezone.utc)
+    unchanged = all(_verification_reason(task, live=revision is None, now=now) == reason
+                    for task, reason in cached['clock_tasks'])
+    try:
+        from .snapshots import snapshot_signature
+        unchanged = unchanged and all(snapshot_signature(ctx.store, rev) == sig
+            for rev, sig in cached['revision_signatures'].items())
+        if unchanged:
+            unchanged = all(sig is not None and snapshot_signature(ctx.store, rev) == sig
+                for rev, sig in cached.get('snapshot_signatures', {}).items())
+        if unchanged:
+            for (path, digest), signature in cached['signatures'].items():
+                ctx.object_stat({'path': path, 'sha256': digest})
+                if ctx.signatures[(path, digest)] != signature:
+                    unchanged = False
+                    break
+    except READ_FAILURES:
+        unchanged = False
+    return cached['json'] if unchanged else None
+
+
+def _save_summary(ctx, key, result):
+    serialized = json.dumps(result, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
+    if not ctx.read_failed and ctx.cacheable:
+        entry = {'json': serialized, 'signatures': dict(ctx.signatures),
+                 'snapshot_signatures': dict(ctx.snapshot_signatures),
+                 'clock_tasks': ctx.clock_tasks, 'revision_signatures': dict(ctx.revision_signatures)}
+        with _summary_cache_lock:
+            _summary_cache[key] = entry
+            _summary_cache.move_to_end(key)
+            while len(_summary_cache) > 4:
+                _summary_cache.popitem(last=False)
+    return serialized
+
+
+def workbench_summary(project_dir, *, revision=None, reading=None, protocol=None, read_context=None):
     if protocol not in (None, 'workbench_summary.v1', 'workbench_summary.v2'):
         raise ReadModelError('read_protocol_unsupported', 'protocol', 'unsupported summary protocol', http_status=400)
     if protocol != 'workbench_summary.v2':
-        return _workbench_summary(project_dir, revision=revision, encoded=False, reading=reading)
-    store = Store(project_dir)
-    control = load_snapshot(store, None)
+        return _workbench_summary(project_dir, revision=revision, encoded=False, reading=reading, read_context=read_context)
+    store = read_context[0] if read_context is not None else Store(project_dir)
+    control = read_context[1] if read_context is not None else load_snapshot(store, None)
     artifact = control if revision is None or revision == control['revision_id'] else load_snapshot(store, revision)
     ctx = _ReadContext(store, artifact, pin_directories=True)
     try:
-        result = _summary(ctx, revision=revision, reading=reading, request_scoped=True)
-        from .current_work import project
-        result['current_work'] = project(store, artifact, control, result, fixed=revision is not None)
-        result['format'] = 'workbench_summary.v2'
-        result['next_actions'] = _next_actions_block(ctx, result['current_work']['next']['actions'])
-        if reading is not None:
-            result['reading_etag'] = reading['etag']
-        return result
+        root_identity = tuple((path.stat().st_dev, path.stat().st_ino)
+                              for path in (store.project_root, store.deck_root))
+        key = (ctx.root, root_identity, 'workbench_summary.v2',
+               sha256_bytes(canonical_json_bytes([artifact, control])), revision, reading['etag'] if reading else None)
+        while True:
+            cached = _cached_summary(ctx, key, revision)
+            if cached is not None:
+                return json.loads(cached)
+            with _summary_cache_lock:
+                pending = _summary_inflight.get(key)
+                if pending is None:
+                    pending = Future()
+                    _summary_inflight[key] = pending
+                    owner = True
+                else:
+                    owner = False
+            if owner:
+                break
+            pending.result()  # No project lock; only the owner removes its entry.
+            # Recheck actual dependencies after waiting, including clock facts.
+        try:
+            # A previous owner may have published between our miss and taking
+            # ownership. Validate outside the global lock before rebuilding.
+            cached = _cached_summary(ctx, key, revision)
+            if cached is not None:
+                pending.set_result(None)
+                return json.loads(cached)
+            result = _build_v2_summary(ctx, artifact, control, revision=revision, reading=reading)
+            _save_summary(ctx, key, result)
+            pending.set_result(None)
+            return result
+        except BaseException as exc:
+            pending.set_exception(exc)
+            raise
+        finally:
+            with _summary_cache_lock:
+                if _summary_inflight.get(key) is pending:
+                    del _summary_inflight[key]
     finally:
         ctx.close()
 
 
-def workbench_summary_json(project_dir, *, revision=None, reading=None, protocol=None):
+def _build_v2_summary(ctx, artifact, control, *, revision, reading):
+    result = _summary(ctx, revision=revision, reading=reading, request_scoped=True)
+    from .current_work import project
+    result['current_work'] = project(ctx.reader, artifact, control, result, fixed=revision is not None)
+    result['format'] = 'workbench_summary.v2'
+    result['next_actions'] = _next_actions_block(ctx, result['current_work']['next']['actions'])
+    if reading is not None:
+        result['reading_etag'] = reading['etag']
+    return result
+
+def workbench_summary_json(project_dir, *, revision=None, reading=None, protocol=None, read_context=None):
     """Same guarded snapshot, already encoded for the HTTP transport."""
     if protocol is not None:
-        return json.dumps(workbench_summary(project_dir, revision=revision, reading=reading, protocol=protocol), ensure_ascii=False).encode("utf-8")
-    return _workbench_summary(project_dir, revision=revision, encoded=True, reading=reading)
+        return json.dumps(workbench_summary(project_dir, revision=revision, reading=reading, protocol=protocol, read_context=read_context), ensure_ascii=False).encode("utf-8")
+    return _workbench_summary(project_dir, revision=revision, encoded=True, reading=reading, read_context=read_context)
 
 
-def _workbench_summary(project_dir, *, revision, encoded, reading=None):
-    store = Store(project_dir)
-    doc = load_snapshot(store, revision)
+def _workbench_summary(project_dir, *, revision, encoded, reading=None, read_context=None):
+    store = read_context[0] if read_context is not None else Store(project_dir)
+    doc = (read_context[1] if read_context is not None and revision in (None, read_context[1]['revision_id']) else
+           load_snapshot(store, revision))
     ctx = _ReadContext(store, doc, pin_directories=True)
     try:
         # The revision file is read and checked by load_snapshot on every call.
@@ -836,43 +924,12 @@ def _workbench_summary(project_dir, *, revision, encoded, reading=None):
         # id must not reuse an old projection. File guards below cover every
         # referenced object, including prepared/frozen metadata and image paths.
         key = (ctx.root, sha256_bytes(canonical_json_bytes(doc)), revision, reading["etag"] if reading else None)
-        with _summary_cache_lock:
-            cached = _summary_cache.get(key)
+        cached = _cached_summary(ctx, key, revision)
         if cached is not None:
-            now = datetime.now(timezone.utc)
-            unchanged = all(_verification_reason(task, live=revision is None, now=now) == reason
-                            for task, reason in cached["clock_tasks"])
-            try:
-                from .snapshots import snapshot_signature
-                unchanged = unchanged and all(snapshot_signature(store, rev) == sig for rev, sig in cached["revision_signatures"].items())
-                if unchanged:
-                    from .snapshots import snapshot_signature
-                    unchanged = all(signature is not None and snapshot_signature(store, rev) == signature
-                                    for rev, signature in cached.get("snapshot_signatures", {}).items())
-                if unchanged:
-                    for (path, digest), signature in cached["signatures"].items():
-                        ctx.object_stat({"path": path, "sha256": digest})
-                        if ctx.signatures[(path, digest)] != signature:
-                            unchanged = False
-                            break
-            except READ_FAILURES:
-                unchanged = False
-            if unchanged:
-                return cached["json"] if encoded else json.loads(cached["json"])
+            return cached if encoded else json.loads(cached)
         result = _summary(ctx, revision=revision, reading=reading)
         if reading is not None:result["reading_etag"]=reading["etag"]
-        serialized = json.dumps(result, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
-        # Never cache partial failures: missing/corrupt objects must be retried
-        # so an independent repair is visible without a business revision.
-        if not ctx.read_failed and ctx.cacheable:
-            entry = {"json": serialized,
-                     "signatures": ctx.signatures, "snapshot_signatures": ctx.snapshot_signatures,
-                     "clock_tasks": ctx.clock_tasks, "revision_signatures": ctx.revision_signatures}
-            with _summary_cache_lock:
-                _summary_cache[key] = entry
-                _summary_cache.move_to_end(key)
-                while len(_summary_cache) > 4:
-                    _summary_cache.popitem(last=False)
+        serialized = _save_summary(ctx, key, result)
         return serialized if encoded else result
     finally:
         ctx.close()
@@ -880,7 +937,7 @@ def _workbench_summary(project_dir, *, revision, encoded, reading=None):
 
 def _summary(ctx, *, revision, member_index=None, reading=None, request_scoped=False):
     from .content_plan import projection
-    store, doc = ctx.store, ctx.document
+    store, doc = ctx.reader, ctx.document
     now = datetime.now(timezone.utc)
     overview = _overview_facts(ctx, live=revision is None, now=now)
     if reading is not None:

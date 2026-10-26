@@ -160,18 +160,28 @@ def resolve_operation(store, operation_id, *, head_revision=None, use_cache=None
 class OperationReader:
     """One read's validated canonical operation index; never shared across reads."""
     def __init__(self, store):
+        import os
         from . import operation_coverage as cache
         self.store = store
         self.root = cache.root_identity(store)
         self.head = cache.current_head(store)
-        previous = cache.get(self.root)
-        if previous is not None and not cache.valid(store, previous):
-            previous = None
+        enabled = os.environ.get('DECK_MASTER_OPERATION_CACHE', '1') != '0'
+        previous = cache.get(self.root) if enabled else None
+        if previous is not None:
+            try:
+                valid = cache.valid(store, previous)
+            except READ_FAILURES:
+                valid = False  # A departed branch is only a disposable hint.
+            if not valid:
+                cache.discard(self.root)
+                previous = None
         self.coverage, _, _ = cache.scan(store, root=self.root, control=self.head,
             operation_id=None, cached=previous)
         self.documents = {}
         self.results = {}
         self._check_head()
+        if enabled:
+            cache.publish(self.coverage)
 
     def _check_head(self):
         from . import operation_coverage as cache

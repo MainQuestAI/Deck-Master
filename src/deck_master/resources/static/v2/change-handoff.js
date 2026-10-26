@@ -10,6 +10,13 @@ const taskLabels = {queued: '等待', awaiting_host: '尚未接手', running: '�
 // 复制只作用于已成功读取且与当前所选一致的组。等待响应期间切换组时，
 // 旧组文本不得再被复制，本机复制提示也只属于被复制的那一组（C01/N01）。
 export const copySnapshot = (loaded, loadedId, selectedId) => loaded && loadedId != null && loadedId === selectedId ? {id: loadedId, text: loaded.text} : null;
+const handoffReads = new WeakMap();
+function readHandoff(app, id) {
+  let reads = handoffReads.get(app);
+  if (!reads) { reads = new Map(); handoffReads.set(app, reads); }
+  if (!reads.has(id)) reads.set(id, get('/api/changes/' + encodeURIComponent(id) + '/handoff').finally(() => reads.delete(id)));
+  return reads.get(id);
+}
 // A task owns the handoff target. Never default to the last group in the catalog.
 export function taskHandoff(app, task, groups) {
   const group = groups.find(row => row.task_ids?.includes(task.task_id));
@@ -37,7 +44,7 @@ export function taskHandoff(app, task, groups) {
   const read = async () => {
     snapshot = null; copy.disabled = true;
     try {
-      const value = await get('/api/changes/' + encodeURIComponent(group.change_id) + '/handoff');
+      const value = await readHandoff(app, group.change_id);
       if (disposed) return;
       if (!value.handoff.tasks.some(row => row.task_id === task.task_id)) throw new Error('交接说明与当前任务不一致，请核实原任务。');
       if (!value.handoff.tasks.some(row => row.task_id === task.task_id && row.status === 'awaiting_host')) throw new Error('任务状态已经变化，请核实原任务后继续。');
@@ -50,15 +57,16 @@ export function taskHandoff(app, task, groups) {
   const details = el('details', {}, el('summary', {}, '完整交接说明与涉及页面'),
     el('p', {}, (group.page_ids || []).map(id => { const i = app.summary.pages.findIndex(p => p.page_id === id); return i < 0 ? id : `第 ${i + 1} 页 · ${app.summary.pages[i].title}`; }).join('、')), text);
   const node = el('section', {class: 'task-handoff stack'}, note, command, el('div', {class: 'row wrap'}, copy, button('重新读取交接说明', read)), details);
-  read(); return {node, dispose: () => { disposed = true; }};
+  read(); return {node, refresh: read, dispose: () => { disposed = true; }};
 }
-export function changeHandoffs(app) {
+export function changeHandoffs(app, initialGroups = null) {
   const node = el('section', {'data-container':'section', class: 'panel change-handoffs', 'aria-label': '持久修改交接'});
   const heading = el('div', {class: 'panel-head'}, el('h2', {}, '修改交接'), el('span', {class: 'status'}, '当前执行状态'));
   const list = el('div', {class: 'change-list stack'}), detail = el('div', {class: 'handoff-detail stack'});
   const notice = el('p', {role: 'status', class: 'muted'});
   node.append(heading, el('div', {class: 'panel-body stack'}, el('p', {class: 'muted'}, '这里读取当前交接事实；页面与任务的历史阅读版本保持不变。'), notice, list, detail));
   const modern = app.health.ui_capabilities?.includes('run_desk.v1');
+  let enabled = false, suppliedGroups = initialGroups;
   let disposed = false, busy = false, timer, delay = 3000, active = null, lastSync = null, latest, latestChangeId = null, rerun = false, readFailed = false, lastList, candidateRows = [], candidateRevision = null, candidateSignature = "";
   const copied = new Set();
   try { for (const id of JSON.parse(localStorage.getItem(`deck-master:v3:copied:${app.info.project_identity}`) || '[]')) copied.add(id); } catch { /* Copy hints are not execution facts. */ }
@@ -125,13 +133,13 @@ export function changeHandoffs(app) {
     } catch (error) { if (!disposed) notice.textContent = readableError(error); }
   }
   async function refresh() {
-    if (disposed) return;
+    if (disposed || !enabled) return;
     // 组切换在读取中途到来时，不丢弃请求：当前读取结束后立即按最新所选重读，
     // 否则面板会一直停留在上一组，等待下一次轮询（N01 的另一半成因）。
     if (busy) { rerun = true; return; }
     busy = true;
     try {
-      const [changes, candidateResult] = await Promise.all([modern ? get('/api/tasks?limit=1').then(value => ({changes: value.groups.filter(group => group.change_id), revision_id: value.revision_id})) : get('/api/changes'), !modern && app.health.ui_capabilities?.includes('candidates.v1') ? get('/api/candidates') : Promise.resolve(null)]); if (disposed) return;
+      const [changes, candidateResult] = await Promise.all([modern ? suppliedGroups ? Promise.resolve({changes:suppliedGroups.filter(group=>group.change_id)}) : get('/api/tasks?limit=1').then(value => ({changes: value.groups.filter(group => group.change_id), revision_id: value.revision_id})) : get('/api/changes'), !modern && app.health.ui_capabilities?.includes('candidates.v1') ? get('/api/candidates') : Promise.resolve(null)]); if (disposed || !enabled) return;
       let candidatesChanged = false;
       if (candidateResult) {
         const signature = JSON.stringify(candidateResult.candidates.map(row => row.ref));
@@ -155,14 +163,14 @@ export function changeHandoffs(app) {
           const selected = changes.changes.find(change => change.task_ids?.includes(app.route.task_id));
           if (selected) active = selected.change_id;
           else if (!modern) for (const change of changes.changes) {
-            const handoff = await get('/api/changes/' + encodeURIComponent(change.change_id) + '/handoff');
+            const handoff = await readHandoff(app, change.change_id);
             if (handoff.handoff.tasks.some(task => task.task_id === app.route.task_id)) { active = change.change_id; break; }
           }
         }
       }
       if (active) {
-        const id = active; const result = await get('/api/changes/' + encodeURIComponent(id) + '/handoff');
-        if (disposed || id !== active) return;
+        const id = active; const result = await readHandoff(app, id);
+        if (disposed || !enabled || id !== active) return;
         const contentChanged = candidatesChanged || JSON.stringify(latest) !== JSON.stringify(result);
         const identityChanged = latestChangeId !== id;
         latest = result; latestChangeId = id; readFailed = false;
@@ -179,11 +187,11 @@ export function changeHandoffs(app) {
       delay = Math.min(30000, delay * 2);
     } finally {
       busy = false;
-      if (rerun && !disposed) { rerun = false; queueMicrotask(refresh); }
+      if (rerun && !disposed && enabled) { rerun = false; queueMicrotask(refresh); }
     }
   }
-  const tick = async () => { if (!document.hidden) await refresh(); if (!disposed) timer = setTimeout(tick, delay); };
-  const sync = () => { if (!document.hidden) refresh(); };
+  const tick = async () => { if (!document.hidden && enabled) await refresh(); if (!disposed && enabled) timer = setTimeout(tick, delay); };
+  const sync = () => { if (enabled && !document.hidden && !(modern && suppliedGroups)) refresh(); };
   const hydrate = () => { const editor = app.editor; editor?.ready.then(() => {
     if (disposed || editor !== app.editor) return;
     recovery.hydrate(editor);
@@ -193,6 +201,7 @@ export function changeHandoffs(app) {
   app.root.addEventListener('cancel-state-changed', onCancel);
   app.root.addEventListener('summary-refreshed', sync); app.root.addEventListener('draft-editor-replaced', hydrate);
   queueMicrotask(hydrate);
-  if (modern) refresh(); else tick();
+  node.setGroups = groups => { suppliedGroups=groups; if(enabled&&!document.hidden)refresh(); };
+  node.setActive = value => { if(enabled===value)return;enabled=value;clearTimeout(timer);rerun=false;if(value){if(modern)refresh();else tick();} };
   app.disposables.push(() => { disposed = true; clearTimeout(timer); app.root.removeEventListener('cancel-state-changed', onCancel); app.root.removeEventListener('summary-refreshed', sync); app.root.removeEventListener('draft-editor-replaced', hydrate); }); return node;
 }

@@ -60,30 +60,10 @@ COMPOSE_V2_SLOTS = ("schema_version", "variant", "payload", "eligibility_digest"
                     "task_id", "operation_id", "produced_against")
 COMPOSE_V2_SCHEMA = "compose_result.v2"
 
-TASK_KINDS = ENVELOPE_KINDS + ("compile", "render", "check")
-TASK_STATUSES = (
-    "queued",
-    "awaiting_host",
-    "running",
-    "completed",
-    "failed",
-    "cancelled",
-    "superseded",
-)
 CALL_OUTCOMES = ("consumed", "not_sent", "unknown")
-ALLOWANCE_STATES = ("reserved", "in_flight", "consumed", "released", "unknown")
 
 HOST_TASK_KINDS = ENVELOPE_KINDS
-LOCAL_TASK_KINDS = ("compile", "render", "check")
 
-MEDIA_EXT = {
-    "image/svg+xml": "svg",
-    "image/png": "png",
-    "image/jpeg": "jpg",
-    "text/plain": "txt",
-    "application/json": "json",
-    "text/markdown": "md",
-}
 
 
 class EnvelopeError(ModelError):

@@ -49,14 +49,15 @@ def _context(project, revision):
     return store, doc, _logical_identity(str(store.project_root), doc["revision_id"])
 
 
-def _facts(store, doc, *, selected_output=None, control=None):
+def _facts(store, doc, *, selected_output=None, control=None, read_context=None):
     control = store.load_document() if control is None else control
     doc = {**doc, "policy": control["policy"], "reviews": control.get("reviews", [])}
     from .editing import ReviewReadContext, check_summary
     from .production_detail import projection
     from .workbench import _ReadContext, _deck_output
 
-    review_context = ReviewReadContext(store, doc)
+    review_context = (read_context.require(store, doc) if read_context is not None and read_context.document == doc
+                      else ReviewReadContext(store, doc))
     summary = check_summary(store, doc, read_context=review_context)
     ctx = _ReadContext(store, doc)
     output = _deck_output(ctx)
@@ -582,13 +583,15 @@ def _copy_bundle(project, result, destination):
     if destination.exists():
         raise ExportError('export_destination_exists', 'destination exists; choose a new output directory',
             exit_code=2, http_status=422)
+    store, _, identity = _context(project, None)
+    record = _record(store, identity, result['export_id'])
     destination.parent.mkdir(parents=True, exist_ok=True)
     stage = Path(tempfile.mkdtemp(prefix='.delivery-', dir=destination.parent))
     try:
         for name in result['files']:
             path = stage / name
             path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_bytes(download(project, export_id=result['export_id'], filename=name)[0])
+            path.write_bytes(_download_file(store, record, name)[0])
         if destination.exists():
             raise ExportError('export_destination_exists', 'destination exists; choose a new output directory',
                 exit_code=2, http_status=422)
@@ -658,9 +661,13 @@ def show(project, *, export_id):
 def download(project, *, export_id, filename):
     store, _, identity = _context(project, None)
     record = _record(store, identity, export_id)
+    return _download_file(store, record, filename)
+
+
+def _download_file(store, record, filename):
     if not isinstance(filename, str) or filename not in record["files"]:
         raise ExportError("export_file_not_found", "file is not on the export whitelist", exit_code=2, http_status=404)
-    path = safe_path(store.project_root, ".deckmaster", "workbench", "exports", export_id, *filename.split("/"))
+    path = safe_path(store.project_root, ".deckmaster", "workbench", "exports", record['export_id'], *filename.split("/"))
     data = path.read_bytes()
     expected = record["files"][filename]
     if len(data) != expected["size"] or sha256_bytes(data) != expected["sha256"]:

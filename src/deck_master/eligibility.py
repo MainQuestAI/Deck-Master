@@ -403,27 +403,9 @@ def _request(document: dict) -> dict | None:
 
 
 def _records(store: Store, region: dict, family: str) -> list[tuple[dict, dict]]:
-    records = []
-    for ref in region.get(family) or []:
-        try:
-            records.append((ref, store.read_object_json(ref)))
-        except Exception:  # noqa: BLE001 - unreadable records cannot participate
-            continue
-    return records
+    return dependency_slices._region_records(store, region, family)
 
 
-def _head(records: list[tuple[dict, dict]], id_field: str, identity: str | None):
-    if identity is None:
-        return None
-    replaced = set()
-    for _, record in records:
-        pair = record.get("replaces")
-        if isinstance(pair, dict) and pair.get("path"):
-            replaced.add((pair.get("path"), pair.get("sha256")))
-    heads = [(ref, record) for ref, record in records
-             if record.get(id_field) == identity
-             and (ref.get("path"), ref.get("sha256")) not in replaced]
-    return heads[-1] if heads else None
 
 
 def _authorization_heads(store: Store, document: dict) -> list[tuple[dict, dict]]:
@@ -1172,7 +1154,7 @@ def _reconciles_current_inputs(control: dict, task: dict | None, spec: ActionSpe
 # Preproduction content review (AC-R06)
 
 
-def preproduction_state(store: Store, document: dict, *, page_ids: list[str] | None = None) -> dict:
+def preproduction_state(store: Store, document: dict, *, page_ids: list[str] | None = None, read_context=None) -> dict:
     """The one preproduction content-review verdict, consumed from T03.
 
     T03's ``content_review`` owns the units, the currency, the reviewer
@@ -1187,7 +1169,7 @@ def preproduction_state(store: Store, document: dict, *, page_ids: list[str] | N
     """
     from . import content_review
     try:
-        status = content_review.preproduction_status(store, document, page_ids=page_ids)
+        status = content_review.preproduction_status(store, document, page_ids=page_ids, read_context=read_context)
         qualified = content_review.qualification_from_status(status, document)
     except ModelError as exc:
         # Only the strict adopted-generation lineage reader reports this
@@ -1593,7 +1575,10 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
         review_pages = (action_pages if spec.subject == "pages"
                         and targets.get("subject") != "deck" and action_pages
                         and set(action_pages) <= current_pages else None)
-        preproduction = preproduction_state(store, control, page_ids=review_pages)
+        read_context = context.get('review_read_context')
+        if read_context is not None and (read_context.store is not store or read_context.document != control):
+            read_context = None
+        preproduction = preproduction_state(store, control, page_ids=review_pages, read_context=read_context)
         if not preproduction["satisfied"]:
             code = "needs_reviewer" if preproduction["needs_reviewer"] \
                 else "preproduction_blocked"
