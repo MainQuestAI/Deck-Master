@@ -1,5 +1,6 @@
 """W03 real local processes and HTTP. Synthetic projects, isolated registries."""
 import copy
+import errno
 from concurrent.futures import ThreadPoolExecutor
 from http.client import HTTPConnection
 import json
@@ -9,6 +10,7 @@ import signal
 import socket
 import subprocess
 import sys
+import threading
 from urllib.parse import urlsplit
 
 import pytest
@@ -232,20 +234,74 @@ def test_wrong_identity_pid_and_build_are_never_reused(launcher_service, tmp_pat
         runtime.stop(other)
 
 
-def test_stale_crashed_service_restarts_and_cleans_only_its_instance(tmp_path):
+def _wait_for_killed_child(pid):
+    try:
+        waited, status = os.waitpid(pid, 0)
+    except ChildProcessError as error:
+        # The service's owning Popen waiter may already have collected it.
+        # ECHILD alone is not proof of death (it can also mean a wrong PID).
+        assert error.errno == errno.ECHILD
+    else:
+        assert waited == pid
+        assert os.WIFSIGNALED(status) and os.WTERMSIG(status) == signal.SIGKILL
+    with pytest.raises(ProcessLookupError):
+        os.kill(pid, 0)
+
+
+@pytest.mark.parametrize('wait_order', ['uncontrolled', 'reaper_first', 'fixture_first'])
+@pytest.mark.parametrize('attempt', range(3))
+def test_stale_crashed_service_restarts_and_cleans_only_its_instance(tmp_path, monkeypatch,
+                                                                   wait_order, attempt):
+    entered, release, finished = threading.Event(), threading.Event(), threading.Event()
+    captured = []
+    original_wait = subprocess.Popen.wait
+
+    def controlled_wait(process, *args, **kwargs):
+        if threading.current_thread().name == 'deck-master-service-reap' and not captured:
+            captured.append(process)
+            entered.set()
+            release.wait()
+            try:
+                return original_wait(process, *args, **kwargs)
+            finally:
+                finished.set()
+        return original_wait(process, *args, **kwargs)
+
+    if wait_order != 'uncontrolled':
+        monkeypatch.setattr(subprocess.Popen, 'wait', controlled_wait)
     desc = runtime.descriptor(registry=tmp_path / 'registry.json')
     first = runtime.ensure(desc)
-    os.kill(first['pid'], signal.SIGKILL)
-    # Reap the child before restart so a listening-but-dying process cannot win.
-    os.waitpid(first['pid'], 0)
-    second = runtime.ensure(desc)
     try:
+        if wait_order != 'uncontrolled':
+            assert entered.wait(3)
+            assert captured[0].pid == first['pid']
+        os.kill(first['pid'], signal.SIGKILL)
+        if wait_order == 'reaper_first':
+            release.set()
+            assert finished.wait(3)
+            assert captured[0].returncode == -signal.SIGKILL
+        # Whichever waiter wins, the old process must be gone before restart.
+        _wait_for_killed_child(first['pid'])
+        if wait_order == 'fixture_first':
+            release.set()
+            assert finished.wait(3)
+        second = runtime.ensure(desc)
         assert first['instance_id'] != second['instance_id']
+        assert runtime.healthy(second, desc)
         runtime.clear_own_state(desc, first['instance_id'])
         assert runtime.read_state(desc)['instance_id'] == second['instance_id']
     finally:
+        release.set()
         runtime.stop(desc)
     assert not desc['state_path'].exists()
+
+
+def test_killed_child_check_does_not_accept_echild_for_a_live_process(monkeypatch):
+    def not_our_child(*_):
+        raise ChildProcessError(errno.ECHILD, 'not a child')
+    monkeypatch.setattr(os, 'waitpid', not_our_child)
+    with pytest.raises(pytest.fail.Exception, match='DID NOT RAISE'):
+        _wait_for_killed_child(os.getpid())
 
 
 def test_explicit_port_conflict_and_stale_pid_are_not_signalled(tmp_path, monkeypatch):
