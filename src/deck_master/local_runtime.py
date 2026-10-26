@@ -10,6 +10,7 @@ import secrets
 import signal
 import subprocess
 import sys
+import threading
 import time
 from http.server import ThreadingHTTPServer
 
@@ -168,6 +169,12 @@ def ensure(desc, *, port=0):
         while time.monotonic() < deadline:
             state = read_state(desc)
             if state and state.get("instance_id") == instance and healthy(state, desc):
+                # A detached service can outlive a short CLI caller, but a live
+                # launcher still owns this child and must collect its exit.
+                # Keep the exact Popen handle until wait completes; no PID scan,
+                # shutdown signal, or ownership of reused services is involved.
+                threading.Thread(target=process.wait, name="deck-master-service-reap",
+                                 daemon=True).start()
                 return {**state, "reused": False}
             if process.poll() is not None:
                 clear_own_state(desc, instance)
