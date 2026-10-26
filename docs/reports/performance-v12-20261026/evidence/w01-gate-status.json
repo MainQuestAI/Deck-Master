@@ -1,0 +1,25 @@
+{
+  "existing_gate": {
+    "warm_samples": 100,
+    "threshold_ms": 250,
+    "unchanged": true
+  },
+  "fixture": {
+    "pages": 300,
+    "candidates": 1500,
+    "tasks": 1650,
+    "attempts": 4500
+  },
+  "candidate_source": "84a3a60efb9721491fd0845ca766caa1244df7d0",
+  "baseline_source": "b688c300dbb612bea9af8cf63a1743fb8136ae2c",
+  "candidate_status": "failed",
+  "baseline_status": "failed",
+  "same_failure": "EligibilityBlocked: task carries no collaboration binding",
+  "background_updates": 0,
+  "timing_acceptance": "not evaluated because background correctness assertion failed; do not infer p95 pass from printed sparse samples",
+  "logs": [
+    "w01.log",
+    "w01-baseline.log"
+  ],
+  "remaining": "Define a legitimate bound background-task fixture through existing collaboration path; no guard or assertion weakened."
+}

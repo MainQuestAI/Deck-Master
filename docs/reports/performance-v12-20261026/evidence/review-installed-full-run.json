@@ -1,0 +1,20 @@
+{
+  "head": "e6d5a572b99d7d0d5c9bf37bb95c335d4b9a35bc",
+  "worktree_sha256_before": "f974cc7a71a0cb72754d4c7cc6986015dfbd1afe0c06f7e7983f9bdde5c5595d",
+  "worktree_sha256_after": "f974cc7a71a0cb72754d4c7cc6986015dfbd1afe0c06f7e7983f9bdde5c5595d",
+  "source_changed_during_run": false,
+  "command": [
+    "/workspace/scratch/performance-installed-e6d5a572/bin/python",
+    "examples/workbench/w12_installed_regressions.py",
+    "--chromium-executable",
+    "/usr/bin/chromium",
+    "--out",
+    "/workspace/scratch/performance-input/review-installed-full-origins.json"
+  ],
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "wall_seconds": 1555.9709185540014,
+  "exit_code": 0,
+  "reaped_children_user_seconds": 1106.5468950000002,
+  "reaped_children_system_seconds": 266.530951,
+  "scope": "Only batches using this runner are serialized; CPU excludes detached/unreaped descendants."
+}

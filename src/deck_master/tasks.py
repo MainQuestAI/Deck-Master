@@ -60,30 +60,10 @@ COMPOSE_V2_SLOTS = ("schema_version", "variant", "payload", "eligibility_digest"
                     "task_id", "operation_id", "produced_against")
 COMPOSE_V2_SCHEMA = "compose_result.v2"
 
-TASK_KINDS = ENVELOPE_KINDS + ("compile", "render", "check")
-TASK_STATUSES = (
-    "queued",
-    "awaiting_host",
-    "running",
-    "completed",
-    "failed",
-    "cancelled",
-    "superseded",
-)
 CALL_OUTCOMES = ("consumed", "not_sent", "unknown")
-ALLOWANCE_STATES = ("reserved", "in_flight", "consumed", "released", "unknown")
 
 HOST_TASK_KINDS = ENVELOPE_KINDS
-LOCAL_TASK_KINDS = ("compile", "render", "check")
 
-MEDIA_EXT = {
-    "image/svg+xml": "svg",
-    "image/png": "png",
-    "image/jpeg": "jpg",
-    "text/plain": "txt",
-    "application/json": "json",
-    "text/markdown": "md",
-}
 
 
 class EnvelopeError(ModelError):
@@ -240,6 +220,8 @@ def _validate_usage_events(raw: dict[str, Any]) -> None:
 
 def _validate_content_envelope(raw: dict) -> None:
     """Validate nested product fields after call facts settle, before field access."""
+    if raw.get('generation_result') is not None and raw.get('kind') != 'blueprint':
+        raise EnvelopeError('(result)/generation_result', 'generation binding is only valid for blueprint Tasks')
     file_ids = {item['file_id'] for item in raw.get('files') or []}
     for index, spec in enumerate(raw.get('artifact_specs') or []):
         where = f'(result)/artifact_specs[{index}]'
@@ -252,6 +234,8 @@ def _validate_content_envelope(raw: dict) -> None:
         for slot in ('dependencies', 'derived_from', 'reference_regions', 'limitations'):
             if spec.get(slot) is not None and not isinstance(spec[slot], list):
                 raise EnvelopeError(where + '/' + slot, 'must be an array')
+        if isinstance(spec.get('provenance'), dict) and 'generation_reuse' in spec['provenance']:
+            raise EnvelopeError(where + '/provenance/generation_reuse', 'receiver-owned association cannot be supplied')
         if spec.get('provenance') is not None and not isinstance(spec['provenance'], dict):
             raise EnvelopeError(where + '/provenance', 'must be an object')
     for index, review in enumerate(raw.get('reviews') or []):
@@ -397,10 +381,29 @@ def _lookup_task(document: dict, task_id: str, store: Store) -> dict:
     raise EnvelopeError(f"(task {task_id})", "task not found in current Document")
 
 
-def task_inputs_current(store, document, task):
+def task_inputs_current(store, document, task, *, read_snapshot=None):
+    read_snapshot = read_snapshot or store.load_document
+    if task.get('review_subject') == 'outline':
+        from .outline_review import require_outline
+        from .effective_requirements import task_requirements_current
+        try:
+            require_outline(store, document)
+            dispatched = read_snapshot(task['dispatch_revision'])
+            return (all(dispatched.get(key) == document.get(key) for key in ('narrative', 'content_plan'))
+                    and getattr(store, 'input_digest', compute_input_digest)(dispatched) == getattr(store, 'input_digest', compute_input_digest)(document)
+                    and task_requirements_current(store, document, task))
+        except (StoreError, ValueError, KeyError, TypeError):
+            return False
+    if task.get("kind") == "review" and task.get("review_stage") == "original_image":
+        from .original_review import inputs_current
+        return inputs_current(store, document, task)
+    if task.get('kind') == 'review' and task.get('review_stage') == 'preproduction':
+        from .effective_requirements import task_requirements_current
+        if not task_requirements_current(store, document, task):
+            return False
     from .visual_dependencies import is_visual_task, visual_task_inputs_current
     if is_visual_task(task):
-        return visual_task_inputs_current(store, document, task)
+        return visual_task_inputs_current(store, document, task, read_snapshot=read_snapshot)
     if task.get("kind") == "style_analyze":
         from .visual_styles import inputs_current as analysis_current
         return analysis_current(store, document, task)
@@ -410,10 +413,10 @@ def task_inputs_current(store, document, task):
         # generation basis for image/SVG, the precise content basis for
         # content trials (B03). The generic slot comparison below would
         # wrongly stale an SVG trial whose slot a sibling auto result moved.
-        return inputs_current(store, document, task)
+        return inputs_current(store, document, task, read_snapshot=read_snapshot)
     dispatched = None
     if task.get('kind') in ('review', 'repair'):
-        dispatched = store.load_document(task['dispatch_revision'])
+        dispatched = read_snapshot(task['dispatch_revision'])
         if task.get('review_stage', 'final') == 'final':
             # Output references are real review inputs even when Page/SVG
             # content identity stayed the same after reassembly.
@@ -429,11 +432,11 @@ def task_inputs_current(store, document, task):
                 return False
     if content_identity(document) == task.get('produced_against'):
         return True
-    dispatched = dispatched or store.load_document(task['dispatch_revision'])
+    dispatched = dispatched or read_snapshot(task['dispatch_revision'])
     # Task facts are part of the dispatched input: a task-field change
     # (audience, decisions, ...) invalidates scoped results too, even when
     # pages/design/sources are untouched (spec v1.1 §5.4, c93 defect).
-    if (compute_input_digest(dispatched) != compute_input_digest(document)
+    if (getattr(store, 'input_digest', compute_input_digest)(dispatched) != getattr(store, 'input_digest', compute_input_digest)(document)
             or dispatched['design_context'] != document['design_context']):
         return False
     if task.get('kind') == 'compose' and task.get('intent') == 'input_revision':
@@ -581,6 +584,13 @@ def _build_artifact(
 def _adopt_review(store: Store, review: dict) -> dict:
     """Reviews must reference already-saved objects, never envelope aliases."""
     validate_review_semantics(review)
+    if review.get('review_subject') == 'outline':
+        from .models import writer_at_least
+        from .outline_review import require_outline
+        current = store.load_document()
+        if not writer_at_least(current, 'outline-review.v1'):
+            raise EnvelopeError('review/outline', 'outline must be dispatched under its explicit writer contract')
+        require_outline(store, current)
     if review.get("schema_version") == "deck_review.v2":
         reviewer = review.get("reviewer") or {}
         if reviewer.get("assurance") == "verified_user":
@@ -613,13 +623,23 @@ def _adopt_review(store: Store, review: dict) -> dict:
             raise EnvelopeError("review/replaces", "replaced object is not a review record")
         if (prior.get("review_id") != review.get("review_id") or
                 prior.get("kind") != review.get("kind") or
+                prior.get("review_subject") != review.get("review_subject") or
                 prior.get("review_stage", "final") != review.get("review_stage", "final")):
             raise EnvelopeError("review/replaces", "replaces must point at the same logical review")
         prior = {**prior, 'ref': replaced}
         old_findings = {f.get("finding_id"): f for f in prior.get("findings") or []}
         new_findings = {f.get("finding_id"): f for f in review.get("findings") or []}
         shared = old_findings.keys() & new_findings.keys()
-        if not shared:
+        # A clean prior review has no finding identity to carry forward. A
+        # real recheck may confirm the pass or discover new open defects;
+        # rejecting the latter would hide bad news behind the older pass.
+        # New findings cannot claim an unrecorded fix or accepted variance.
+        clean_prior_recheck = (
+            prior.get("status") == "pass" and not old_findings
+            and any(text.strip() for text in review.get("observations") or [])
+            and all(finding.get("resolution") == "open" for finding in new_findings.values())
+        )
+        if not shared and not clean_prior_recheck:
             raise EnvelopeError("review/replaces", "no shared finding_id with the replaced review")
         from .editing import _current_artifact_digests
         from .review import finding_closed
@@ -802,6 +822,8 @@ def new_task(
     }
     if review_stage is not None:
         task['review_stage'] = review_stage
+        if review_stage == 'original_image':
+            task['required_capabilities'] = ['original_expression_review.v1']
     if intent is not None:
         task['intent'] = intent
     if input_digest is not None:
@@ -1359,6 +1381,12 @@ def _accept_result_locked(
                                                adapter_context=adapter_context)
         preproduction_receipts = [item['receipt']['receipt_ref'] for item in posture['reviewers']
                                   if item.get('receipt')]
+    elif stage == 'original_image':
+        from .original_review import validate_result
+        if review_receipt_selector is not None:
+            from .review_evidence import current_registry
+            adapter_context = current_registry().review_context(store, document, task, envelope, review_receipt_selector)
+        preproduction_receipts = validate_result(store, document, task, envelope, adapter_context=adapter_context)
     elif review_receipt_selector is not None:
         from .review_evidence import EvidenceRejected
         raise EvidenceRejected('review_receipt_selector', 'receipt selectors are only supported for preproduction review')
@@ -1495,6 +1523,9 @@ def _accept_result_locked(
         {"operation_id": operation_id, "kind": "task_update", "description": "", "read_set": []},
     )
     attach(new_document, plan_ref)
+    if generation_binding and generation_binding.get("reuse"):
+        from .models import require_writer
+        require_writer(new_document, "settled-image-reuse.v1")
     page_slots = {}
     for artifact in artifacts:
         if artifact.get("page_id"):
@@ -1734,9 +1765,6 @@ def call_begin(store: Store, *, task_id: str, allowance_id: str, execution_ref: 
     if task.get("kind") == "style_analyze":
         raise CallBlocked("call_allowances", "visual analysis permits zero image calls")
     from . import eligibility
-    eligibility.guard(store, document, "call.begin",
-                      context={"task": task, "allowance_id": allowance_id,
-                               "targets": {"page_ids": task.get("scope_pages") or []}})
     from .generation import is_new, check_host, begin_attempt
     check_host(task)
     if task.get("status") in ("cancelled", "superseded", "completed"):
@@ -1756,14 +1784,19 @@ def call_begin(store: Store, *, task_id: str, allowance_id: str, execution_ref: 
     if target.get("state") == "in_flight":
         if target.get("execution_ref") == execution_ref:
             if is_new(task):
-                _, attempt, ref = begin_attempt(store, document, task, allowance_id, execution_ref, request_id)
+                _, attempt, ref = begin_attempt(store, document, task, allowance_id, execution_ref, request_id, replay_only=True)
                 return {"status": "already_started", "task_id": task_id, "allowance_id": allowance_id,
                         "attempt_id": attempt["attempt_id"], "attempt_ref": ref, "request_id": request_id}
+            if request_id is not None:
+                raise EnvelopeError("request_id", "old tasks cannot bind generation requests")
             return {"status": "already_started", "task_id": task_id, "allowance_id": allowance_id}
         raise TaskConflict(
             f"(task {task_id})/{allowance_id}",
             "allowance already in flight under another execution",
         )
+    eligibility.guard(store, document, "call.begin",
+                      context={"task": task, "allowance_id": allowance_id,
+                               "targets": {"page_ids": task.get("scope_pages") or []}})
     if target.get("state") in ("consumed", "released", "unknown"):
         raise TaskConflict(
             f"(task {task_id})/{allowance_id}",
@@ -2055,10 +2088,23 @@ def reissue_changed_method_tasks(store):
                 or not task_inputs_current(store, document, task)
                 or not task_method_contract_changed(task)):
             continue
+        binding = task.get("collaboration_binding") or {}
+        request = (document.get("collaboration") or {}).get("request") or {}
+        bound_request = binding.get("request_id")
+        if (bound_request and request.get("request_id")
+                and bound_request != request["request_id"]
+                and bound_request not in (request.get("background_request_ids") or [])):
+            # Replaced requests retain their immutable Task/call history. They
+            # do not participate in the current request's method refresh.
+            continue
         if any(a.get("state") in ("in_flight", "unknown") for a in task.get("call_allowances") or []):
             raise MethodBasisChanged(f"(task {task['task_id']})/call_allowances",
                                      "settle in-flight/unknown calls before replacing this method contract")
-        binding = task.get("collaboration_binding") or {}
+        # Refreshing methods does not refresh authority. Check the original
+        # immutable binding before releasing reservations or writing a successor;
+        # another currently covering grant cannot revive this old Task.
+        eligibility.guard(store, document, 'task.start', context={
+            'task': task, 'targets': {'page_ids': task.get('scope_pages') or []}})
         action = ("change.commit" if task.get("change_binding") else "dispatch.compose" if task["kind"] == "compose"
                   else "dispatch.blueprint" if task["kind"] == "blueprint" else "dispatch.host_task")
         retired = {**task, "status": "superseded", "updated_at": _utc_now_iso()}
@@ -2071,11 +2117,13 @@ def reissue_changed_method_tasks(store):
         layers = {"blueprint": ["blueprint"], "reconstruct": ["svg", "blueprint"],
                   "repair": ["page_copy", "svg"], "review": ["review"], "style_analyze": ["design"]}.get(
                       task["kind"], (binding.get("write_scope") or {}).get("layers") or [])
+        context = {'targets': {'page_ids': task.get('scope_pages') or [], 'layers': layers}}
         if task.get("change_binding"):
-            from .changes import action_for_task, _plan_layers
-            layers = _plan_layers({"actions": [action_for_task(store, document, task)]})
-        eligibility.guard(store, prospective, action, context={"targets": {
-            "page_ids": task.get("scope_pages") or [], "layers": layers}})
+            from .changes import action_for_task, eligibility_context
+            planned_action = action_for_task(store, document, task)
+            context = eligibility_context({'actions': [planned_action], 'max_calls': planned_action['max_calls']})
+        from .method_resources import is_content_candidate_task
+        eligibility.guard(store, prospective, action, context=context)
         replacement = copy.deepcopy(task)
         replacement.update(task_id=uuid.uuid4().hex[:12], operation_id=f"methods-{uuid.uuid4().hex[:12]}",
                            status="awaiting_host", execution_ref=None, result_refs=[], error=None,
@@ -2085,6 +2133,13 @@ def reissue_changed_method_tasks(store):
                                             if a.get("state") == "reserved"])
         for key in ("host_protocol", "execution_started_at", "generation_requests", "generation_attempts"):
             replacement.pop(key, None)
+        content_trial = is_content_candidate_task(task) and task['kind'] == 'repair'
+        legacy_content_contract = content_trial and binding.get('phase') != 'page_copy'
+        if binding and content_trial:
+            from .content_production import write_scope_for
+            scope = write_scope_for(store, document, 'page_copy', page_ids=task['scope_pages'])
+            scope.update(layers=['page_copy'], allow_page_membership_change=False)
+            binding = {**binding, 'phase': 'page_copy', 'write_scope': scope}
         if binding:
             replacement["collaboration_binding"] = collaboration_binding.build_binding(
                 store, document, phase=binding["phase"], executor_type=binding["executor_type"],
@@ -2102,6 +2157,12 @@ def reissue_changed_method_tasks(store):
         if (inherited and task['kind'] == 'compose'
                 and binding.get('phase') in ('design', 'production', 'delivery')):
             inherited = [mid for mid in inherited if mid != 'method-selection']
+        if legacy_content_contract and inherited:
+            # Remove obsolete Design defaults only. Preserve explicit resources;
+            # the normal selector must still reject ones outside Content scope.
+            from .method_resources import method_ids_for
+            obsolete_defaults = set(method_ids_for('repair'))
+            inherited = [mid for mid in inherited if mid not in obsolete_defaults]
         freeze_task_methods(replacement, selected_resource_ids=inherited)
         validate_task_semantics(replacement)
         prospective["tasks"].append(store.put_json_object(replacement))

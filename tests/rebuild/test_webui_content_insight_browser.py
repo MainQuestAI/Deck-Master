@@ -26,6 +26,7 @@ def test_zero_page_narrative_methods_and_refresh(tmp_path, size):
             expect(page.get_by_role('button',name='记录方向决定',exact=True)).to_be_visible()
             page.reload()
             expect(page.locator('.argument-reading h3')).to_contain_text('版本未知')
+            page.get_by_role('button',name='更多内容工具',exact=True).click()
             page.get_by_role('button',name='方法与案例',exact=True).click()
             expect(page.locator('#content-area-methods')).to_contain_text('当前没有可准备的新阶段')
             page.get_by_label('准备上下文').select_option('independent')
@@ -98,6 +99,11 @@ def test_review_drafts_keep_distinct_finding_identity_and_do_not_write_business(
             records=page.request.get(url+'api/drafts').json()['records']
             handoffs=[r['draft']['content']['review_handoff'] for r in records if 'review_handoff' in r['draft']['content']]
             assert {h['finding_id'] for h in handoffs}=={'f1','f2'}
+            for handoff in handoffs:
+                acceptance=handoff['acceptance_set']
+                assert acceptance['review_ref']==ref and acceptance['recheck_status']=='not_run'
+                assert {finding['finding_id'] for finding in acceptance['findings']}=={'f1','f2'}
+                assert acceptance['selected_source_indices']==[handoff['source_index']]
             assert store.load_document()==before
             browser.close()
     finally:server.stop()

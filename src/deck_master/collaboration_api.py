@@ -10,7 +10,6 @@ from .operations import OperationError
 WRITE_ACTIONS = {name: name for name in (
     'request.start', 'request.replace', 'decision', 'grant', 'adopt-proposal',
     'pause', 'resume', 'revoke', 'migration.apply', 'review.import', 'draft.import')}
-READ_ACTIONS = ('show', 'migration.describe', 'eligibility', 'review.bindings', 'review.evaluate', 'delivery.describe', 'draft.preview', 'budget.describe')
 MUTATING_ROUTES = ('continue',)
 _FORBIDDEN = {'adapter_context', 'verified_user_events', 'independent_review_receipts', 'human_review_receipts'}
 _REQUEST = {'intent', 'content_intent', 'scope', 'instruction_evidence', 'variant',
@@ -35,6 +34,8 @@ _FIELDS = {
     'delivery.describe': {'revision', 'file_path', 'notes_policy'},
     'review.import': {'external_report', 'source_bindings', 'evidence', 'artifact_revision'},
     'review.bindings': {'external_report', 'artifact_revision'},
+    'review.record': {'external_report', 'reviews', 'finding_context', 'report_output', 'original_report_path'},
+    'review.repair-handoff': {'external_report'},
     'review.evaluate': {'source', 'source_sha256', 'scope', 'persistence', 'report_output'},
     'draft.import': {'draft_payload', 'instruction_evidence', 'preserve_mainline'},
     'draft.preview': {'draft_payload', 'preserve_mainline'},
@@ -135,7 +136,7 @@ def error_response(exc, *, document=None, operation_id=None):
             exit_code = 4
         details = getattr(exc, 'details', {}) or {}
     elif isinstance(exc, ConflictError) or (isinstance(exc, StoreError) and field == 'base_revision'):
-        code, http, exit_code = 'conflict', 409, 5
+        code, http, exit_code = getattr(exc, 'error_code', 'conflict'), 409, 5
     elif getattr(exc, 'error_code', None):
         code = exc.error_code
         http, exit_code = getattr(exc, 'http_status', 403), getattr(exc, 'exit_code', 4)
@@ -195,6 +196,16 @@ def invoke(project, action, payload=None, *, adapter_context=None, expected_proj
             _known(data, _FIELDS[action])
             result = evaluate(**data, adapter_context=adapter_context)
             return _external_report_response(result)
+        if action in ('review.record', 'review.repair-handoff'):
+            from .review_handoff import record_reviews, repair_handoff
+            _known(data, _FIELDS[action])
+            if action == 'review.record':
+                if project is not None:
+                    raise ModelError('project', 'record packages external reports only; use explicit import for project writes')
+                result = record_reviews(**data)
+            else:
+                result = repair_handoff(project=project, **data)
+            return _response(None, status='read_only', result=result), 200, 0
         store = Store(project)
         if action == 'eligibility':
             from .snapshots import load_artifact_control

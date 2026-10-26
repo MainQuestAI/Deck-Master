@@ -1,0 +1,89 @@
+{
+  "product_commit": "21ccc843",
+  "test_commit": "813bf5c7",
+  "synthetic_data_only": true,
+  "model_invocations": 0,
+  "unit": {
+    "full_attempt": {
+      "passed": 3521,
+      "failed": 11,
+      "errors": 4,
+      "skipped": 2
+    },
+    "cause": "Product changed during the run; immutable installed-byte and service build-identity checks correctly rejected mixed bytes. Earlier private-temp-path attempt is not counted as passing.",
+    "frozen_recheck": {
+      "passed": 86,
+      "deselected": 5,
+      "includes_all_full_attempt_failures_and_errors": true
+    }
+  },
+  "browser": {
+    "partitioned_full_attempt": {
+      "collected": 613,
+      "passed": 590,
+      "failed": 23
+    },
+    "followup": "20 failures corrected by explicit UI entry paths and revalidated; 3 macOS headless native-select keyboard cases remain local failures, with unchanged assertions for Linux CI.",
+    "final_design_and_tools": {
+      "passed": 18
+    },
+    "draft_navigation_annotation_suite": {
+      "passed": 75,
+      "failed": 1,
+      "remaining_test": "same_text_ranges_validate_per_node_and_feed_text_annotation",
+      "remaining_test_recheck_passed": 1
+    },
+    "studio_material_paths": {
+      "passed": 5
+    },
+    "icon_entry": {
+      "passed": 1
+    },
+    "project_opinion_scope": {
+      "passed": 1
+    },
+    "native_select_probe": {
+      "browser": "local macOS Playwright Chromium headless",
+      "html": "<select><option value=\"next\">下一阶段</option><option value=\"independent\">独立阅读</option></select>",
+      "setup": "focus select; value=next",
+      "keys": [
+        "ArrowDown",
+        "Enter"
+      ],
+      "expected": "independent",
+      "observed": "next",
+      "status": "FAIL; original test unchanged"
+    }
+  },
+  "render": {
+    "passed": 125,
+    "failed": 8,
+    "skipped": 1,
+    "status": "local_font_table_environment_difference; not counted as passing",
+    "unchanged_assertions": true,
+    "failed_tests": [
+      "test_rc3_design_native::negative_source_and_native_renders [options0-table_cell_ownership_mismatch, options2-node_atom_ownership_mismatch]",
+      "test_rc3_table_text_slack::true_glyph_overflow [False/True × start/middle/end]"
+    ]
+  },
+  "installed": {
+    "offline_checks_passed": 9,
+    "font": "Arial",
+    "resources_identical": 72,
+    "full_regressions": {
+      "passed": 268,
+      "failed": 0,
+      "duration_seconds": 535.13
+    },
+    "prior_attempt": "Stopped an obsolete-test-flow attempt after detecting hidden-entry assumptions; not counted as passing.",
+    "modules_from_site_packages": 84
+  },
+  "review": {
+    "design_qa": "passed c724de12; parent captures and independent paired judgement",
+    "impeccable": "passed c724de12",
+    "design_review": "passed c10f706b plus 21ccc843 explicit-annotation followup"
+  },
+  "professional_evidence": "not_evaluated",
+  "native_folder_cancel": "previous evidence retained; not repeated",
+  "merge": "not_authorized"
+}

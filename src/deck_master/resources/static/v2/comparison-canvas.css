@@ -34,4 +34,4 @@
 .comparison-canvas:fullscreen .candidate-column {display:flex;flex-direction:column;min-height:0}
 .comparison-canvas:fullscreen .comparison-viewport {flex:1;min-height:0;height:auto}
 @media(max-width:767px){.comparison-pair{grid-template-columns:1fr}.comparison-viewport{height:300px}.canvas-tools{gap:8px}}
-@media(max-width:767px){.candidate-desk:fullscreen .comparison-pair{grid-template-rows:repeat(2,minmax(0,1fr))}.candidate-desk:fullscreen .candidate-column{padding:8px}.candidate-desk:fullscreen .candidate-decisions{gap:4px}.candidate-desk:fullscreen .candidate-decisions button{padding:8px;font-size:12px}.candidate-desk:fullscreen .canvas-tools{margin:0;gap:4px}.candidate-desk:fullscreen .canvas-tools button{padding:8px;font-size:12px}}
+@media(max-width:767px){.candidate-desk:fullscreen .comparison-pair{grid-template-rows:repeat(2,minmax(0,1fr))}.candidate-desk:fullscreen .candidate-column{padding:8px}.candidate-desk:fullscreen .candidate-decisions{gap:4px}.candidate-desk:fullscreen .canvas-tools{margin:0;gap:4px}}

@@ -1,0 +1,821 @@
+{
+  "scenario": "S05_PERF_200_legal_formal_trials",
+  "source": {
+    "source_sha": "b688c300dbb612bea9af8cf63a1743fb8136ae2c",
+    "source_tree_sha": "c81fe0e3e4f66e5270831ffacc424aaac4870eb7",
+    "dirty_fingerprint": "5706a4c8a52b4f81e0de2a65c665148048231c874d83f32b13ca4cdf2f02d75b",
+    "git_status": "?? tests/rebuild/test_performance_overview_browser.py",
+    "loaded_module_origin": "/workspace/scratch/perf-baseline/src/deck_master/__init__.py",
+    "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+    "executable": "/workspace/Deck-Master/.venv/bin/python",
+    "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+    "operation_cache_env": "1"
+  },
+  "manifest_sha256": "786e1a5d980c2a6c0371b872824ede987a9ad2fe989f80eb3978e190ae04daae",
+  "clock_utc": "2026-10-26T13:48:00+00:00",
+  "clock_scope": [
+    "run_desk.datetime: listing and task-row live timeout judgment",
+    "workbench.datetime: same captured read clock for context module"
+  ],
+  "clock_policy": "Same explicit instant in both readers, after fixture task updates. datetime parsing and timeout predicates unchanged; perf_counter/process_time stay real. These listing paths have no other wall-clock source.",
+  "samples_per_condition": 3,
+  "p95": null,
+  "timing_scope": "one in-process run_desk.listing call; warm process, no probe; no HTTP/browser/setup",
+  "instrumentation_timing_included": false,
+  "copied_heavy_scope": {
+    "status": "not_measured",
+    "reason": "Separate workload; not substituted for these legal single-page formal tasks."
+  },
+  "rows": [
+    {
+      "condition": "tasks-25-attention-0-limit-1",
+      "fixture_digest": "2017e17d908db3986ceea00f7a16291b4ea039c9eb0c7cc5f774f182410e898b",
+      "task_count": 25,
+      "attention": false,
+      "limit": 1,
+      "samples": [
+        {
+          "sample": 0,
+          "wall_seconds": 0.13377942199986137,
+          "service_cpu_seconds": 0.13378451200000008,
+          "functional_result_digest": "5f5334d4cf263c59a10639aeac0699aa132ac15919eca4dcdf44a2729577c877"
+        },
+        {
+          "sample": 1,
+          "wall_seconds": 0.13364793700020527,
+          "service_cpu_seconds": 0.1334721190000001,
+          "functional_result_digest": "5f5334d4cf263c59a10639aeac0699aa132ac15919eca4dcdf44a2729577c877"
+        },
+        {
+          "sample": 2,
+          "wall_seconds": 0.1343512900002679,
+          "service_cpu_seconds": 0.1343543170000001,
+          "functional_result_digest": "5f5334d4cf263c59a10639aeac0699aa132ac15919eca4dcdf44a2729577c877"
+        }
+      ],
+      "counts": {
+        "full_row_assemblies": 25,
+        "relationship_contexts": 1,
+        "relationship_task_calls": 25,
+        "relationship_task_cache_misses": 25,
+        "relationship_candidate_calls": 4,
+        "relationship_candidate_cache_misses": 2,
+        "pending_candidate_calls": 25,
+        "candidate_basis_evaluations": 2,
+        "candidate_inputs_current_evaluations": 20,
+        "context_snapshot_calls": 3,
+        "context_snapshot_cache_misses": 3,
+        "operation_readers": 1,
+        "operation_snapshot_calls": 3,
+        "operation_snapshot_cache_misses": 3,
+        "snapshot_full_evidence_reads": 44,
+        "snapshot_signature_calls": 88,
+        "store_document_loads": 0,
+        "store_json_reads": 0,
+        "store_object_byte_reads": 2,
+        "store_object_bytes_returned": 212
+      },
+      "functional_result_digest": "5f5334d4cf263c59a10639aeac0699aa132ac15919eca4dcdf44a2729577c877",
+      "full_response": "/workspace/scratch/performance-input/runs-legal-baseline-responses/tasks-25-attention-0-limit-1.json",
+      "pagination": {
+        "offset": 0,
+        "limit": 1,
+        "total": 25,
+        "next_offset": 1
+      },
+      "status_counts": {
+        "completed": 4,
+        "running": 1,
+        "awaiting_host": 20
+      }
+    },
+    {
+      "condition": "tasks-25-attention-0-limit-30",
+      "fixture_digest": "2017e17d908db3986ceea00f7a16291b4ea039c9eb0c7cc5f774f182410e898b",
+      "task_count": 25,
+      "attention": false,
+      "limit": 30,
+      "samples": [
+        {
+          "sample": 0,
+          "wall_seconds": 0.1346102730003622,
+          "service_cpu_seconds": 0.13458732099999993,
+          "functional_result_digest": "be1fc9f832f0cd59ac7e6d2c9d2f1bd949efb069fdc7ba45d8aded4871c0958e"
+        },
+        {
+          "sample": 1,
+          "wall_seconds": 0.13341370999842184,
+          "service_cpu_seconds": 0.1334171460000002,
+          "functional_result_digest": "be1fc9f832f0cd59ac7e6d2c9d2f1bd949efb069fdc7ba45d8aded4871c0958e"
+        },
+        {
+          "sample": 2,
+          "wall_seconds": 0.1339086630014208,
+          "service_cpu_seconds": 0.1339116589999998,
+          "functional_result_digest": "be1fc9f832f0cd59ac7e6d2c9d2f1bd949efb069fdc7ba45d8aded4871c0958e"
+        }
+      ],
+      "counts": {
+        "full_row_assemblies": 25,
+        "relationship_contexts": 1,
+        "relationship_task_calls": 25,
+        "relationship_task_cache_misses": 25,
+        "relationship_candidate_calls": 4,
+        "relationship_candidate_cache_misses": 2,
+        "pending_candidate_calls": 25,
+        "candidate_basis_evaluations": 2,
+        "candidate_inputs_current_evaluations": 20,
+        "context_snapshot_calls": 3,
+        "context_snapshot_cache_misses": 3,
+        "operation_readers": 1,
+        "operation_snapshot_calls": 3,
+        "operation_snapshot_cache_misses": 3,
+        "snapshot_full_evidence_reads": 44,
+        "snapshot_signature_calls": 88,
+        "store_document_loads": 0,
+        "store_json_reads": 0,
+        "store_object_byte_reads": 2,
+        "store_object_bytes_returned": 212
+      },
+      "functional_result_digest": "be1fc9f832f0cd59ac7e6d2c9d2f1bd949efb069fdc7ba45d8aded4871c0958e",
+      "full_response": "/workspace/scratch/performance-input/runs-legal-baseline-responses/tasks-25-attention-0-limit-30.json",
+      "pagination": {
+        "offset": 0,
+        "limit": 30,
+        "total": 25,
+        "next_offset": null
+      },
+      "status_counts": {
+        "completed": 4,
+        "running": 1,
+        "awaiting_host": 20
+      }
+    },
+    {
+      "condition": "tasks-25-attention-0-limit-100",
+      "fixture_digest": "2017e17d908db3986ceea00f7a16291b4ea039c9eb0c7cc5f774f182410e898b",
+      "task_count": 25,
+      "attention": false,
+      "limit": 100,
+      "samples": [
+        {
+          "sample": 0,
+          "wall_seconds": 0.13472057900071377,
+          "service_cpu_seconds": 0.134717164,
+          "functional_result_digest": "d35efb388207564bb28756b09cd9ad56d01495147ae4acc4a76d3f0b011bb88b"
+        },
+        {
+          "sample": 1,
+          "wall_seconds": 0.13509021000027133,
+          "service_cpu_seconds": 0.13509444700000017,
+          "functional_result_digest": "d35efb388207564bb28756b09cd9ad56d01495147ae4acc4a76d3f0b011bb88b"
+        },
+        {
+          "sample": 2,
+          "wall_seconds": 0.13506682500155875,
+          "service_cpu_seconds": 0.1350445060000003,
+          "functional_result_digest": "d35efb388207564bb28756b09cd9ad56d01495147ae4acc4a76d3f0b011bb88b"
+        }
+      ],
+      "counts": {
+        "full_row_assemblies": 25,
+        "relationship_contexts": 1,
+        "relationship_task_calls": 25,
+        "relationship_task_cache_misses": 25,
+        "relationship_candidate_calls": 4,
+        "relationship_candidate_cache_misses": 2,
+        "pending_candidate_calls": 25,
+        "candidate_basis_evaluations": 2,
+        "candidate_inputs_current_evaluations": 20,
+        "context_snapshot_calls": 3,
+        "context_snapshot_cache_misses": 3,
+        "operation_readers": 1,
+        "operation_snapshot_calls": 3,
+        "operation_snapshot_cache_misses": 3,
+        "snapshot_full_evidence_reads": 44,
+        "snapshot_signature_calls": 88,
+        "store_document_loads": 0,
+        "store_json_reads": 0,
+        "store_object_byte_reads": 2,
+        "store_object_bytes_returned": 212
+      },
+      "functional_result_digest": "d35efb388207564bb28756b09cd9ad56d01495147ae4acc4a76d3f0b011bb88b",
+      "full_response": "/workspace/scratch/performance-input/runs-legal-baseline-responses/tasks-25-attention-0-limit-100.json",
+      "pagination": {
+        "offset": 0,
+        "limit": 100,
+        "total": 25,
+        "next_offset": null
+      },
+      "status_counts": {
+        "completed": 4,
+        "running": 1,
+        "awaiting_host": 20
+      }
+    },
+    {
+      "condition": "tasks-25-attention-1-limit-1",
+      "fixture_digest": "2017e17d908db3986ceea00f7a16291b4ea039c9eb0c7cc5f774f182410e898b",
+      "task_count": 25,
+      "attention": true,
+      "limit": 1,
+      "samples": [
+        {
+          "sample": 0,
+          "wall_seconds": 0.13311931399948662,
+          "service_cpu_seconds": 0.13311638500000011,
+          "functional_result_digest": "5094e7a70f74bbbb01d66b45527a9cfd202fdc936494ba2a950056d97e3d3f6f"
+        },
+        {
+          "sample": 1,
+          "wall_seconds": 0.1346641489999456,
+          "service_cpu_seconds": 0.13466757100000004,
+          "functional_result_digest": "5094e7a70f74bbbb01d66b45527a9cfd202fdc936494ba2a950056d97e3d3f6f"
+        },
+        {
+          "sample": 2,
+          "wall_seconds": 0.13536189099977491,
+          "service_cpu_seconds": 0.135365395,
+          "functional_result_digest": "5094e7a70f74bbbb01d66b45527a9cfd202fdc936494ba2a950056d97e3d3f6f"
+        }
+      ],
+      "counts": {
+        "full_row_assemblies": 25,
+        "relationship_contexts": 1,
+        "relationship_task_calls": 25,
+        "relationship_task_cache_misses": 25,
+        "relationship_candidate_calls": 4,
+        "relationship_candidate_cache_misses": 2,
+        "pending_candidate_calls": 25,
+        "candidate_basis_evaluations": 2,
+        "candidate_inputs_current_evaluations": 20,
+        "context_snapshot_calls": 3,
+        "context_snapshot_cache_misses": 3,
+        "operation_readers": 1,
+        "operation_snapshot_calls": 3,
+        "operation_snapshot_cache_misses": 3,
+        "snapshot_full_evidence_reads": 44,
+        "snapshot_signature_calls": 88,
+        "store_document_loads": 0,
+        "store_json_reads": 0,
+        "store_object_byte_reads": 2,
+        "store_object_bytes_returned": 212
+      },
+      "functional_result_digest": "5094e7a70f74bbbb01d66b45527a9cfd202fdc936494ba2a950056d97e3d3f6f",
+      "full_response": "/workspace/scratch/performance-input/runs-legal-baseline-responses/tasks-25-attention-1-limit-1.json",
+      "pagination": {
+        "offset": 0,
+        "limit": 1,
+        "total": 23,
+        "next_offset": 1
+      },
+      "status_counts": {
+        "completed": 3,
+        "awaiting_host": 20
+      }
+    },
+    {
+      "condition": "tasks-25-attention-1-limit-30",
+      "fixture_digest": "2017e17d908db3986ceea00f7a16291b4ea039c9eb0c7cc5f774f182410e898b",
+      "task_count": 25,
+      "attention": true,
+      "limit": 30,
+      "samples": [
+        {
+          "sample": 0,
+          "wall_seconds": 0.13528048999978637,
+          "service_cpu_seconds": 0.13525893499999997,
+          "functional_result_digest": "1ceded07e07036e3d1068642ebdd19b08d0941c699dc9c428880fb5f97326971"
+        },
+        {
+          "sample": 1,
+          "wall_seconds": 0.13503051299994695,
+          "service_cpu_seconds": 0.13503406500000015,
+          "functional_result_digest": "1ceded07e07036e3d1068642ebdd19b08d0941c699dc9c428880fb5f97326971"
+        },
+        {
+          "sample": 2,
+          "wall_seconds": 0.13487336999969557,
+          "service_cpu_seconds": 0.13485357800000042,
+          "functional_result_digest": "1ceded07e07036e3d1068642ebdd19b08d0941c699dc9c428880fb5f97326971"
+        }
+      ],
+      "counts": {
+        "full_row_assemblies": 25,
+        "relationship_contexts": 1,
+        "relationship_task_calls": 25,
+        "relationship_task_cache_misses": 25,
+        "relationship_candidate_calls": 4,
+        "relationship_candidate_cache_misses": 2,
+        "pending_candidate_calls": 25,
+        "candidate_basis_evaluations": 2,
+        "candidate_inputs_current_evaluations": 20,
+        "context_snapshot_calls": 3,
+        "context_snapshot_cache_misses": 3,
+        "operation_readers": 1,
+        "operation_snapshot_calls": 3,
+        "operation_snapshot_cache_misses": 3,
+        "snapshot_full_evidence_reads": 44,
+        "snapshot_signature_calls": 88,
+        "store_document_loads": 0,
+        "store_json_reads": 0,
+        "store_object_byte_reads": 2,
+        "store_object_bytes_returned": 212
+      },
+      "functional_result_digest": "1ceded07e07036e3d1068642ebdd19b08d0941c699dc9c428880fb5f97326971",
+      "full_response": "/workspace/scratch/performance-input/runs-legal-baseline-responses/tasks-25-attention-1-limit-30.json",
+      "pagination": {
+        "offset": 0,
+        "limit": 30,
+        "total": 23,
+        "next_offset": null
+      },
+      "status_counts": {
+        "completed": 3,
+        "awaiting_host": 20
+      }
+    },
+    {
+      "condition": "tasks-25-attention-1-limit-100",
+      "fixture_digest": "2017e17d908db3986ceea00f7a16291b4ea039c9eb0c7cc5f774f182410e898b",
+      "task_count": 25,
+      "attention": true,
+      "limit": 100,
+      "samples": [
+        {
+          "sample": 0,
+          "wall_seconds": 0.13406162399951427,
+          "service_cpu_seconds": 0.13405720200000015,
+          "functional_result_digest": "06fc4ab65b2ebcca5490cf2d938e5b0ffdccefbb94b72f613b678753c2f9b516"
+        },
+        {
+          "sample": 1,
+          "wall_seconds": 0.13396429199929116,
+          "service_cpu_seconds": 0.13396776399999943,
+          "functional_result_digest": "06fc4ab65b2ebcca5490cf2d938e5b0ffdccefbb94b72f613b678753c2f9b516"
+        },
+        {
+          "sample": 2,
+          "wall_seconds": 0.13411592900047253,
+          "service_cpu_seconds": 0.13409212599999965,
+          "functional_result_digest": "06fc4ab65b2ebcca5490cf2d938e5b0ffdccefbb94b72f613b678753c2f9b516"
+        }
+      ],
+      "counts": {
+        "full_row_assemblies": 25,
+        "relationship_contexts": 1,
+        "relationship_task_calls": 25,
+        "relationship_task_cache_misses": 25,
+        "relationship_candidate_calls": 4,
+        "relationship_candidate_cache_misses": 2,
+        "pending_candidate_calls": 25,
+        "candidate_basis_evaluations": 2,
+        "candidate_inputs_current_evaluations": 20,
+        "context_snapshot_calls": 3,
+        "context_snapshot_cache_misses": 3,
+        "operation_readers": 1,
+        "operation_snapshot_calls": 3,
+        "operation_snapshot_cache_misses": 3,
+        "snapshot_full_evidence_reads": 44,
+        "snapshot_signature_calls": 88,
+        "store_document_loads": 0,
+        "store_json_reads": 0,
+        "store_object_byte_reads": 2,
+        "store_object_bytes_returned": 212
+      },
+      "functional_result_digest": "06fc4ab65b2ebcca5490cf2d938e5b0ffdccefbb94b72f613b678753c2f9b516",
+      "full_response": "/workspace/scratch/performance-input/runs-legal-baseline-responses/tasks-25-attention-1-limit-100.json",
+      "pagination": {
+        "offset": 0,
+        "limit": 100,
+        "total": 23,
+        "next_offset": null
+      },
+      "status_counts": {
+        "completed": 3,
+        "awaiting_host": 20
+      }
+    },
+    {
+      "condition": "tasks-200-attention-0-limit-1",
+      "fixture_digest": "0469d81cf52e271b3e61f9d355e175eeafdb39e988e6f5ab2a19bdd5e4596911",
+      "task_count": 200,
+      "attention": false,
+      "limit": 1,
+      "samples": [
+        {
+          "sample": 0,
+          "wall_seconds": 1.5326467089998914,
+          "service_cpu_seconds": 1.532580524,
+          "functional_result_digest": "478f9fb3dc8334432ca98109772775c23b96813b279baaaeedd714a89346a6b2"
+        },
+        {
+          "sample": 1,
+          "wall_seconds": 1.5538492330015288,
+          "service_cpu_seconds": 1.5535390880000008,
+          "functional_result_digest": "478f9fb3dc8334432ca98109772775c23b96813b279baaaeedd714a89346a6b2"
+        },
+        {
+          "sample": 2,
+          "wall_seconds": 1.5435819260001153,
+          "service_cpu_seconds": 1.5435169799999997,
+          "functional_result_digest": "478f9fb3dc8334432ca98109772775c23b96813b279baaaeedd714a89346a6b2"
+        }
+      ],
+      "counts": {
+        "full_row_assemblies": 200,
+        "relationship_contexts": 1,
+        "relationship_task_calls": 200,
+        "relationship_task_cache_misses": 200,
+        "relationship_candidate_calls": 4,
+        "relationship_candidate_cache_misses": 2,
+        "pending_candidate_calls": 200,
+        "candidate_basis_evaluations": 2,
+        "candidate_inputs_current_evaluations": 195,
+        "context_snapshot_calls": 3,
+        "context_snapshot_cache_misses": 3,
+        "operation_readers": 1,
+        "operation_snapshot_calls": 3,
+        "operation_snapshot_cache_misses": 3,
+        "snapshot_full_evidence_reads": 219,
+        "snapshot_signature_calls": 438,
+        "store_document_loads": 0,
+        "store_json_reads": 0,
+        "store_object_byte_reads": 2,
+        "store_object_bytes_returned": 212
+      },
+      "functional_result_digest": "478f9fb3dc8334432ca98109772775c23b96813b279baaaeedd714a89346a6b2",
+      "full_response": "/workspace/scratch/performance-input/runs-legal-baseline-responses/tasks-200-attention-0-limit-1.json",
+      "pagination": {
+        "offset": 0,
+        "limit": 1,
+        "total": 200,
+        "next_offset": 1
+      },
+      "status_counts": {
+        "completed": 4,
+        "running": 1,
+        "awaiting_host": 195
+      }
+    },
+    {
+      "condition": "tasks-200-attention-0-limit-30",
+      "fixture_digest": "0469d81cf52e271b3e61f9d355e175eeafdb39e988e6f5ab2a19bdd5e4596911",
+      "task_count": 200,
+      "attention": false,
+      "limit": 30,
+      "samples": [
+        {
+          "sample": 0,
+          "wall_seconds": 1.5005826680007885,
+          "service_cpu_seconds": 1.500508790999998,
+          "functional_result_digest": "13178c7d1e1505c04e8d07a1107009ea92f13bcfbc23ceda1703da92bab5e768"
+        },
+        {
+          "sample": 1,
+          "wall_seconds": 1.4982156910009508,
+          "service_cpu_seconds": 1.4981741490000005,
+          "functional_result_digest": "13178c7d1e1505c04e8d07a1107009ea92f13bcfbc23ceda1703da92bab5e768"
+        },
+        {
+          "sample": 2,
+          "wall_seconds": 1.499032439000075,
+          "service_cpu_seconds": 1.4989743049999973,
+          "functional_result_digest": "13178c7d1e1505c04e8d07a1107009ea92f13bcfbc23ceda1703da92bab5e768"
+        }
+      ],
+      "counts": {
+        "full_row_assemblies": 200,
+        "relationship_contexts": 1,
+        "relationship_task_calls": 200,
+        "relationship_task_cache_misses": 200,
+        "relationship_candidate_calls": 4,
+        "relationship_candidate_cache_misses": 2,
+        "pending_candidate_calls": 200,
+        "candidate_basis_evaluations": 2,
+        "candidate_inputs_current_evaluations": 195,
+        "context_snapshot_calls": 3,
+        "context_snapshot_cache_misses": 3,
+        "operation_readers": 1,
+        "operation_snapshot_calls": 3,
+        "operation_snapshot_cache_misses": 3,
+        "snapshot_full_evidence_reads": 219,
+        "snapshot_signature_calls": 438,
+        "store_document_loads": 0,
+        "store_json_reads": 0,
+        "store_object_byte_reads": 2,
+        "store_object_bytes_returned": 212
+      },
+      "functional_result_digest": "13178c7d1e1505c04e8d07a1107009ea92f13bcfbc23ceda1703da92bab5e768",
+      "full_response": "/workspace/scratch/performance-input/runs-legal-baseline-responses/tasks-200-attention-0-limit-30.json",
+      "pagination": {
+        "offset": 0,
+        "limit": 30,
+        "total": 200,
+        "next_offset": 30
+      },
+      "status_counts": {
+        "completed": 4,
+        "running": 1,
+        "awaiting_host": 195
+      }
+    },
+    {
+      "condition": "tasks-200-attention-0-limit-100",
+      "fixture_digest": "0469d81cf52e271b3e61f9d355e175eeafdb39e988e6f5ab2a19bdd5e4596911",
+      "task_count": 200,
+      "attention": false,
+      "limit": 100,
+      "samples": [
+        {
+          "sample": 0,
+          "wall_seconds": 1.4901976390010532,
+          "service_cpu_seconds": 1.4901495879999977,
+          "functional_result_digest": "9df355fc2e1c6eecd12ba5981e071450ab7d7a94255927d12d21175a8dd38782"
+        },
+        {
+          "sample": 1,
+          "wall_seconds": 1.5091716940005426,
+          "service_cpu_seconds": 1.5089893299999986,
+          "functional_result_digest": "9df355fc2e1c6eecd12ba5981e071450ab7d7a94255927d12d21175a8dd38782"
+        },
+        {
+          "sample": 2,
+          "wall_seconds": 1.504075708999153,
+          "service_cpu_seconds": 1.5040351550000004,
+          "functional_result_digest": "9df355fc2e1c6eecd12ba5981e071450ab7d7a94255927d12d21175a8dd38782"
+        }
+      ],
+      "counts": {
+        "full_row_assemblies": 200,
+        "relationship_contexts": 1,
+        "relationship_task_calls": 200,
+        "relationship_task_cache_misses": 200,
+        "relationship_candidate_calls": 4,
+        "relationship_candidate_cache_misses": 2,
+        "pending_candidate_calls": 200,
+        "candidate_basis_evaluations": 2,
+        "candidate_inputs_current_evaluations": 195,
+        "context_snapshot_calls": 3,
+        "context_snapshot_cache_misses": 3,
+        "operation_readers": 1,
+        "operation_snapshot_calls": 3,
+        "operation_snapshot_cache_misses": 3,
+        "snapshot_full_evidence_reads": 219,
+        "snapshot_signature_calls": 438,
+        "store_document_loads": 0,
+        "store_json_reads": 0,
+        "store_object_byte_reads": 2,
+        "store_object_bytes_returned": 212
+      },
+      "functional_result_digest": "9df355fc2e1c6eecd12ba5981e071450ab7d7a94255927d12d21175a8dd38782",
+      "full_response": "/workspace/scratch/performance-input/runs-legal-baseline-responses/tasks-200-attention-0-limit-100.json",
+      "pagination": {
+        "offset": 0,
+        "limit": 100,
+        "total": 200,
+        "next_offset": 100
+      },
+      "status_counts": {
+        "completed": 4,
+        "running": 1,
+        "awaiting_host": 195
+      }
+    },
+    {
+      "condition": "tasks-200-attention-1-limit-1",
+      "fixture_digest": "0469d81cf52e271b3e61f9d355e175eeafdb39e988e6f5ab2a19bdd5e4596911",
+      "task_count": 200,
+      "attention": true,
+      "limit": 1,
+      "samples": [
+        {
+          "sample": 0,
+          "wall_seconds": 1.5245255360005103,
+          "service_cpu_seconds": 1.524473946999997,
+          "functional_result_digest": "1900f5b50301de83cad7a68864b3ff5113e4678e9cb521267bcc01eb64ade44c"
+        },
+        {
+          "sample": 1,
+          "wall_seconds": 1.5504946689998178,
+          "service_cpu_seconds": 1.550434114999998,
+          "functional_result_digest": "1900f5b50301de83cad7a68864b3ff5113e4678e9cb521267bcc01eb64ade44c"
+        },
+        {
+          "sample": 2,
+          "wall_seconds": 1.5773008489995846,
+          "service_cpu_seconds": 1.5772211669999976,
+          "functional_result_digest": "1900f5b50301de83cad7a68864b3ff5113e4678e9cb521267bcc01eb64ade44c"
+        }
+      ],
+      "counts": {
+        "full_row_assemblies": 200,
+        "relationship_contexts": 1,
+        "relationship_task_calls": 200,
+        "relationship_task_cache_misses": 200,
+        "relationship_candidate_calls": 4,
+        "relationship_candidate_cache_misses": 2,
+        "pending_candidate_calls": 200,
+        "candidate_basis_evaluations": 2,
+        "candidate_inputs_current_evaluations": 195,
+        "context_snapshot_calls": 3,
+        "context_snapshot_cache_misses": 3,
+        "operation_readers": 1,
+        "operation_snapshot_calls": 3,
+        "operation_snapshot_cache_misses": 3,
+        "snapshot_full_evidence_reads": 219,
+        "snapshot_signature_calls": 438,
+        "store_document_loads": 0,
+        "store_json_reads": 0,
+        "store_object_byte_reads": 2,
+        "store_object_bytes_returned": 212
+      },
+      "functional_result_digest": "1900f5b50301de83cad7a68864b3ff5113e4678e9cb521267bcc01eb64ade44c",
+      "full_response": "/workspace/scratch/performance-input/runs-legal-baseline-responses/tasks-200-attention-1-limit-1.json",
+      "pagination": {
+        "offset": 0,
+        "limit": 1,
+        "total": 198,
+        "next_offset": 1
+      },
+      "status_counts": {
+        "completed": 3,
+        "awaiting_host": 195
+      }
+    },
+    {
+      "condition": "tasks-200-attention-1-limit-30",
+      "fixture_digest": "0469d81cf52e271b3e61f9d355e175eeafdb39e988e6f5ab2a19bdd5e4596911",
+      "task_count": 200,
+      "attention": true,
+      "limit": 30,
+      "samples": [
+        {
+          "sample": 0,
+          "wall_seconds": 1.5610911310013762,
+          "service_cpu_seconds": 1.5610303910000027,
+          "functional_result_digest": "4711fbdb449cc4df043aaced506148233c414238468b0ec56bcf7269b97eb1bd"
+        },
+        {
+          "sample": 1,
+          "wall_seconds": 1.5156744350006193,
+          "service_cpu_seconds": 1.5154636959999976,
+          "functional_result_digest": "4711fbdb449cc4df043aaced506148233c414238468b0ec56bcf7269b97eb1bd"
+        },
+        {
+          "sample": 2,
+          "wall_seconds": 1.508652845999677,
+          "service_cpu_seconds": 1.5074153660000036,
+          "functional_result_digest": "4711fbdb449cc4df043aaced506148233c414238468b0ec56bcf7269b97eb1bd"
+        }
+      ],
+      "counts": {
+        "full_row_assemblies": 200,
+        "relationship_contexts": 1,
+        "relationship_task_calls": 200,
+        "relationship_task_cache_misses": 200,
+        "relationship_candidate_calls": 4,
+        "relationship_candidate_cache_misses": 2,
+        "pending_candidate_calls": 200,
+        "candidate_basis_evaluations": 2,
+        "candidate_inputs_current_evaluations": 195,
+        "context_snapshot_calls": 3,
+        "context_snapshot_cache_misses": 3,
+        "operation_readers": 1,
+        "operation_snapshot_calls": 3,
+        "operation_snapshot_cache_misses": 3,
+        "snapshot_full_evidence_reads": 219,
+        "snapshot_signature_calls": 438,
+        "store_document_loads": 0,
+        "store_json_reads": 0,
+        "store_object_byte_reads": 2,
+        "store_object_bytes_returned": 212
+      },
+      "functional_result_digest": "4711fbdb449cc4df043aaced506148233c414238468b0ec56bcf7269b97eb1bd",
+      "full_response": "/workspace/scratch/performance-input/runs-legal-baseline-responses/tasks-200-attention-1-limit-30.json",
+      "pagination": {
+        "offset": 0,
+        "limit": 30,
+        "total": 198,
+        "next_offset": 30
+      },
+      "status_counts": {
+        "completed": 3,
+        "awaiting_host": 195
+      }
+    },
+    {
+      "condition": "tasks-200-attention-1-limit-100",
+      "fixture_digest": "0469d81cf52e271b3e61f9d355e175eeafdb39e988e6f5ab2a19bdd5e4596911",
+      "task_count": 200,
+      "attention": true,
+      "limit": 100,
+      "samples": [
+        {
+          "sample": 0,
+          "wall_seconds": 1.5060386860004655,
+          "service_cpu_seconds": 1.5059916590000029,
+          "functional_result_digest": "6c82159579922cd25245d104d7cef979514e14526c1fbd80bea7db603724bb5a"
+        },
+        {
+          "sample": 1,
+          "wall_seconds": 1.5517716129998007,
+          "service_cpu_seconds": 1.551704273999995,
+          "functional_result_digest": "6c82159579922cd25245d104d7cef979514e14526c1fbd80bea7db603724bb5a"
+        },
+        {
+          "sample": 2,
+          "wall_seconds": 1.510351417999118,
+          "service_cpu_seconds": 1.5103167329999962,
+          "functional_result_digest": "6c82159579922cd25245d104d7cef979514e14526c1fbd80bea7db603724bb5a"
+        }
+      ],
+      "counts": {
+        "full_row_assemblies": 200,
+        "relationship_contexts": 1,
+        "relationship_task_calls": 200,
+        "relationship_task_cache_misses": 200,
+        "relationship_candidate_calls": 4,
+        "relationship_candidate_cache_misses": 2,
+        "pending_candidate_calls": 200,
+        "candidate_basis_evaluations": 2,
+        "candidate_inputs_current_evaluations": 195,
+        "context_snapshot_calls": 3,
+        "context_snapshot_cache_misses": 3,
+        "operation_readers": 1,
+        "operation_snapshot_calls": 3,
+        "operation_snapshot_cache_misses": 3,
+        "snapshot_full_evidence_reads": 219,
+        "snapshot_signature_calls": 438,
+        "store_document_loads": 0,
+        "store_json_reads": 0,
+        "store_object_byte_reads": 2,
+        "store_object_bytes_returned": 212
+      },
+      "functional_result_digest": "6c82159579922cd25245d104d7cef979514e14526c1fbd80bea7db603724bb5a",
+      "full_response": "/workspace/scratch/performance-input/runs-legal-baseline-responses/tasks-200-attention-1-limit-100.json",
+      "pagination": {
+        "offset": 0,
+        "limit": 100,
+        "total": 198,
+        "next_offset": 100
+      },
+      "status_counts": {
+        "completed": 3,
+        "awaiting_host": 195
+      }
+    }
+  ],
+  "errors": [],
+  "fixture_checks": [
+    {
+      "task_count": 25,
+      "before": {
+        "digest": "2017e17d908db3986ceea00f7a16291b4ea039c9eb0c7cc5f774f182410e898b",
+        "files": 229,
+        "bytes": 701205
+      },
+      "after": {
+        "digest": "2017e17d908db3986ceea00f7a16291b4ea039c9eb0c7cc5f774f182410e898b",
+        "files": 229,
+        "bytes": 701205
+      },
+      "pointer_before": {
+        "format": "deckmaster-current.v2",
+        "minimum_writer": "method-catalog.v1",
+        "revision_id": "c78fd58b39824d4697346e7837a8d704"
+      },
+      "pointer_after": {
+        "format": "deckmaster-current.v2",
+        "minimum_writer": "method-catalog.v1",
+        "revision_id": "c78fd58b39824d4697346e7837a8d704"
+      },
+      "unchanged": true
+    },
+    {
+      "task_count": 200,
+      "before": {
+        "digest": "0469d81cf52e271b3e61f9d355e175eeafdb39e988e6f5ab2a19bdd5e4596911",
+        "files": 1454,
+        "bytes": 10432608
+      },
+      "after": {
+        "digest": "0469d81cf52e271b3e61f9d355e175eeafdb39e988e6f5ab2a19bdd5e4596911",
+        "files": 1454,
+        "bytes": 10432608
+      },
+      "pointer_before": {
+        "format": "deckmaster-current.v2",
+        "minimum_writer": "method-catalog.v1",
+        "revision_id": "ba2077abc51c42f2afcd520bdb52ecb8"
+      },
+      "pointer_after": {
+        "format": "deckmaster-current.v2",
+        "minimum_writer": "method-catalog.v1",
+        "revision_id": "ba2077abc51c42f2afcd520bdb52ecb8"
+      },
+      "unchanged": true
+    }
+  ],
+  "status": "observed"
+}

@@ -1,0 +1,289 @@
+{
+  "observed_at_utc": "2026-10-25 05:15:44 UTC",
+  "repository": "MainQuestAI/Deck-Master",
+  "remote_main": "afcc23d1654a6ce24583677c4de9d4a80f0f89bd",
+  "open_prs": [
+    {
+      "baseRefName": "codex/repair-plan-baseline-20261023",
+      "checks": [
+        {
+          "counts": [
+            {
+              "conclusion": "SUCCESS",
+              "count": 7
+            }
+          ],
+          "failed": [],
+          "pending": [],
+          "run": "https://github.com/MainQuestAI/Deck-Master/actions/runs/40075042367"
+        },
+        {
+          "counts": [
+            {
+              "conclusion": "SUCCESS",
+              "count": 7
+            }
+          ],
+          "failed": [],
+          "pending": [],
+          "run": "https://github.com/MainQuestAI/Deck-Master/actions/runs/40075046021"
+        }
+      ],
+      "headRefName": "codex/ui-refactor-20261024",
+      "headRefOid": "159cfd63e9bcf71c10d98dad45a1a2567eb52136",
+      "isDraft": false,
+      "mergeStateStatus": "CLEAN",
+      "mergeable": "MERGEABLE",
+      "number": 188,
+      "reviewDecision": "",
+      "title": "refactor(ui): 落地统一控件、工作面层级与单页编辑抽屉",
+      "updatedAt": "2026-10-24T09:55:36Z",
+      "review_threads": [
+        {
+          "path": "src/deck_master/current_relationship.py",
+          "line": 166,
+          "resolved": false,
+          "outdated": false,
+          "id": "PRRT_kwDOSj-DuM6v0Lja",
+          "comment_ids": [
+            4365385056
+          ]
+        }
+      ]
+    },
+    {
+      "baseRefName": "codex/issue-repair-20261023-ci-followup",
+      "checks": [
+        {
+          "counts": [
+            {
+              "conclusion": "SUCCESS",
+              "count": 7
+            }
+          ],
+          "failed": [],
+          "pending": [],
+          "run": "https://github.com/MainQuestAI/Deck-Master/actions/runs/40019501936"
+        },
+        {
+          "counts": [
+            {
+              "conclusion": "SUCCESS",
+              "count": 7
+            }
+          ],
+          "failed": [],
+          "pending": [],
+          "run": "https://github.com/MainQuestAI/Deck-Master/actions/runs/40019508512"
+        }
+      ],
+      "headRefName": "codex/s1-s3-on-601-20261023",
+      "headRefOid": "870db06e7067c935b2331ade7f39e6bc20b8393d",
+      "isDraft": true,
+      "mergeStateStatus": "CLEAN",
+      "mergeable": "MERGEABLE",
+      "number": 187,
+      "reviewDecision": "",
+      "title": "Unify current work and outline review; prepare bounded S3 validation",
+      "updatedAt": "2026-10-23T20:28:36Z",
+      "review_threads": []
+    },
+    {
+      "baseRefName": "codex/repair-plan-baseline-20261023",
+      "checks": [
+        {
+          "counts": [
+            {
+              "conclusion": "SUCCESS",
+              "count": 7
+            }
+          ],
+          "failed": [],
+          "pending": [],
+          "run": "https://github.com/MainQuestAI/Deck-Master/actions/runs/39938670177"
+        },
+        {
+          "counts": [
+            {
+              "conclusion": "SUCCESS",
+              "count": 7
+            }
+          ],
+          "failed": [],
+          "pending": [],
+          "run": "https://github.com/MainQuestAI/Deck-Master/actions/runs/39938679403"
+        }
+      ],
+      "headRefName": "codex/issue-repair-20261023-ci-followup",
+      "headRefOid": "bf4f661bfec4aa28db2869aaf43494d6cf0f4b8d",
+      "isDraft": true,
+      "mergeStateStatus": "CLEAN",
+      "mergeable": "MERGEABLE",
+      "number": 185,
+      "reviewDecision": "",
+      "title": "fix: integrate RP-00–30 repair batches and regression fixes",
+      "updatedAt": "2026-10-23T10:22:46Z",
+      "review_threads": []
+    },
+    {
+      "baseRefName": "main",
+      "checks": [
+        {
+          "counts": [
+            {
+              "conclusion": "SUCCESS",
+              "count": 7
+            }
+          ],
+          "failed": [],
+          "pending": [],
+          "run": "https://github.com/MainQuestAI/Deck-Master/actions/runs/39823738198"
+        },
+        {
+          "counts": [
+            {
+              "conclusion": "SUCCESS",
+              "count": 7
+            }
+          ],
+          "failed": [],
+          "pending": [],
+          "run": "https://github.com/MainQuestAI/Deck-Master/actions/runs/39823747556"
+        }
+      ],
+      "headRefName": "codex/repair-plan-baseline-20261023",
+      "headRefOid": "7bbf204658dfc39f53fa34352543168e7eee1e65",
+      "isDraft": false,
+      "mergeStateStatus": "CLEAN",
+      "mergeable": "MERGEABLE",
+      "number": 184,
+      "reviewDecision": "",
+      "title": "docs: 建立修复专用基准与 51 项 Issue 的可执行任务",
+      "updatedAt": "2026-10-22T17:34:06Z",
+      "review_threads": [
+        {
+          "path": "docs/work-items/wi-issue-repair-20261023/task-cards/RP-00.md",
+          "line": 11,
+          "resolved": false,
+          "outdated": false,
+          "id": "PRRT_kwDOSj-DuM6vTgjf",
+          "comment_ids": [
+            4351506006
+          ]
+        },
+        {
+          "path": "docs/work-items/wi-issue-repair-20261023/task-cards/RP-04.md",
+          "line": 11,
+          "resolved": false,
+          "outdated": false,
+          "id": "PRRT_kwDOSj-DuM6vTgju",
+          "comment_ids": [
+            4351506025
+          ]
+        }
+      ]
+    },
+    {
+      "baseRefName": "main",
+      "checks": [
+        {
+          "counts": [
+            {
+              "conclusion": "SUCCESS",
+              "count": 7
+            }
+          ],
+          "failed": [],
+          "pending": [],
+          "run": "https://github.com/MainQuestAI/Deck-Master/actions/runs/39708627041"
+        },
+        {
+          "counts": [
+            {
+              "conclusion": "SUCCESS",
+              "count": 7
+            }
+          ],
+          "failed": [],
+          "pending": [],
+          "run": "https://github.com/MainQuestAI/Deck-Master/actions/runs/39708667229"
+        }
+      ],
+      "headRefName": "codex/fix-webui-status-polling",
+      "headRefOid": "ad2f278cd637f29b5665fcf71d7064098faf617b",
+      "isDraft": true,
+      "mergeStateStatus": "CLEAN",
+      "mergeable": "MERGEABLE",
+      "number": 147,
+      "reviewDecision": "",
+      "title": "fix: remove expensive status recomputation and overlapping polling",
+      "updatedAt": "2026-10-22T02:37:16Z",
+      "review_threads": []
+    },
+    {
+      "baseRefName": "main",
+      "checks": [
+        {
+          "counts": [
+            {
+              "conclusion": "FAILURE",
+              "count": 2
+            },
+            {
+              "conclusion": "SUCCESS",
+              "count": 5
+            }
+          ],
+          "failed": [
+            {
+              "detailsUrl": "https://github.com/MainQuestAI/Deck-Master/actions/runs/38547976100/job/115798655746",
+              "name": "Required browser and installed UI (Python 3.12, Node 22)"
+            },
+            {
+              "detailsUrl": "https://github.com/MainQuestAI/Deck-Master/actions/runs/38547976100/job/115808767166",
+              "name": "Group report"
+            }
+          ],
+          "pending": [],
+          "run": "https://github.com/MainQuestAI/Deck-Master/actions/runs/38547976100"
+        }
+      ],
+      "headRefName": "impl/rc3-complete",
+      "headRefOid": "0af67a4d7015725e663b4db09c50e241974d9e53",
+      "isDraft": true,
+      "mergeStateStatus": "DIRTY",
+      "mergeable": "CONFLICTING",
+      "number": 113,
+      "reviewDecision": "",
+      "title": "RC3: 接收 ready 基线并启动完整实施（首批开发候选）",
+      "updatedAt": "2026-10-14T10:12:45Z",
+      "review_threads": []
+    },
+    {
+      "baseRefName": "main",
+      "checks": [
+        {
+          "counts": [
+            {
+              "conclusion": "SUCCESS",
+              "count": 7
+            }
+          ],
+          "failed": [],
+          "pending": [],
+          "run": "https://github.com/MainQuestAI/Deck-Master/actions/runs/39278810575"
+        }
+      ],
+      "headRefName": "dependabot/github_actions/actions/upload-artifact-7",
+      "headRefOid": "7307dcfc027c4aca2b83b5eb9db616fce1e6f867",
+      "isDraft": false,
+      "mergeStateStatus": "CLEAN",
+      "mergeable": "MERGEABLE",
+      "number": 109,
+      "reviewDecision": "",
+      "title": "chore(ci): bump actions/upload-artifact from 6 to 7",
+      "updatedAt": "2026-10-19T15:32:36Z",
+      "review_threads": []
+    }
+  ]
+}

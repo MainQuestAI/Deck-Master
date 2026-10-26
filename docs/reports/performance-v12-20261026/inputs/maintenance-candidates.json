@@ -1,0 +1,426 @@
+[
+  {
+    "file": "src/deck_master/service.py",
+    "symbol": "_adopt_draft",
+    "source": "REPORT1 R18 / REPORT2 RED-01",
+    "default_disposition": "核验后删除候选",
+    "note": "",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/service.py",
+    "symbol": "_read_input_operation",
+    "source": "REPORT1 R18 / REPORT2 RED-01",
+    "default_disposition": "核验后删除候选",
+    "note": "",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/service.py",
+    "symbol": "_document_hash",
+    "source": "REPORT1 R18 / REPORT2 RED-01",
+    "default_disposition": "核验后删除候选",
+    "note": "",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/web.py",
+    "symbol": "_write_state",
+    "source": "REPORT1 R18 / REPORT2 RED-01",
+    "default_disposition": "核验后删除候选",
+    "note": "",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/dependency_slices.py",
+    "symbol": "_load_region_object",
+    "source": "REPORT1 R18 / REPORT2 RED-01",
+    "default_disposition": "核验后删除候选",
+    "note": "",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/eligibility.py",
+    "symbol": "_head",
+    "source": "REPORT1 R18 / REPORT2 RED-01",
+    "default_disposition": "核验后删除候选",
+    "note": "",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/web.py",
+    "symbol": "_state_path",
+    "source": "前轮独立静态审查",
+    "default_disposition": "核验后删除候选",
+    "note": "",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/editing.py",
+    "symbol": "_professional_evidence",
+    "source": "REPORT1 R18 / REPORT2 RED-01/02",
+    "default_disposition": "保留现有兼容",
+    "note": "公开名或明确existing importers；不新增兼容框架",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/store.py",
+    "symbol": "open_store",
+    "source": "REPORT1 R18 / REPORT2 RED-01/02",
+    "default_disposition": "保留现有兼容",
+    "note": "公开名或明确existing importers；不新增兼容框架",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/eligibility.py",
+    "symbol": "registered_actions",
+    "source": "REPORT1 R18 / REPORT2 RED-01/02",
+    "default_disposition": "保留现有兼容",
+    "note": "公开名或明确existing importers；不新增兼容框架",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/collaboration_budget.py",
+    "symbol": "budget_plan",
+    "source": "REPORT1 R18 / REPORT2 RED-01/02",
+    "default_disposition": "保留现有兼容",
+    "note": "公开名或明确existing importers；不新增兼容框架",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/collaboration_binding.py",
+    "symbol": "delegation_containment",
+    "source": "REPORT1 R18 / REPORT2 RED-01/02",
+    "default_disposition": "保留现有兼容",
+    "note": "公开名或明确existing importers；不新增兼容框架",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/content_review.py",
+    "symbol": "packet_digest",
+    "source": "REPORT1 R18 / REPORT2 RED-01/02",
+    "default_disposition": "保留现有兼容",
+    "note": "公开名或明确existing importers；不新增兼容框架",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/variant_requests.py",
+    "symbol": "digest_of",
+    "source": "REPORT1 R18 / REPORT2 RED-01/02",
+    "default_disposition": "保留现有兼容",
+    "note": "公开名或明确existing importers；不新增兼容框架",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/service.py",
+    "symbol": "AUTO_VIEW",
+    "source": "REPORT1 R18",
+    "default_disposition": "核验后删除候选",
+    "note": "",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/service.py",
+    "symbol": "CONTINUE_PRODUCTION",
+    "source": "REPORT1 R18",
+    "default_disposition": "核验后删除候选",
+    "note": "",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/service.py",
+    "symbol": "PRODUCTION_PENDING",
+    "source": "REPORT1 R18",
+    "default_disposition": "核验后删除候选",
+    "note": "",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/collaboration_api.py",
+    "symbol": "READ_ACTIONS",
+    "source": "REPORT1 R18",
+    "default_disposition": "核验后删除候选",
+    "note": "WRITE_ACTIONS保留",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/content_review.py",
+    "symbol": "REQUIREMENTS",
+    "source": "REPORT1 R18给出的14个定位符号",
+    "default_disposition": "核验导出/注册后决定",
+    "note": "不连带删除实际校验逻辑或相邻常量",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/content_review.py",
+    "symbol": "CAPABILITY_KEYS",
+    "source": "REPORT1 R18给出的14个定位符号",
+    "default_disposition": "核验导出/注册后决定",
+    "note": "不连带删除实际校验逻辑或相邻常量",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/design_requirements.py",
+    "symbol": "PLAN_DESIGN_FIELDS",
+    "source": "REPORT1 R18给出的14个定位符号",
+    "default_disposition": "核验导出/注册后决定",
+    "note": "不连带删除实际校验逻辑或相邻常量",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/models.py",
+    "symbol": "REF_PATH_PATTERN",
+    "source": "REPORT1 R18给出的14个定位符号",
+    "default_disposition": "核验导出/注册后决定",
+    "note": "不连带删除实际校验逻辑或相邻常量",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/models.py",
+    "symbol": "SHA256_PATTERN",
+    "source": "REPORT1 R18给出的14个定位符号",
+    "default_disposition": "核验导出/注册后决定",
+    "note": "不连带删除实际校验逻辑或相邻常量",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/models.py",
+    "symbol": "OBJECT_EXT_FOR_SCHEMA",
+    "source": "REPORT1 R18给出的14个定位符号",
+    "default_disposition": "核验导出/注册后决定",
+    "note": "不连带删除实际校验逻辑或相邻常量",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/models.py",
+    "symbol": "INPUT_SOURCE_KEYS",
+    "source": "REPORT1 R18给出的14个定位符号",
+    "default_disposition": "核验导出/注册后决定",
+    "note": "不连带删除实际校验逻辑或相邻常量",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/sources.py",
+    "symbol": "FORMAT_KIND",
+    "source": "REPORT1 R18给出的14个定位符号",
+    "default_disposition": "核验导出/注册后决定",
+    "note": "不连带删除实际校验逻辑或相邻常量",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/tasks.py",
+    "symbol": "TASK_KINDS",
+    "source": "REPORT1 R18给出的14个定位符号",
+    "default_disposition": "核验导出/注册后决定",
+    "note": "不连带删除实际校验逻辑或相邻常量",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/tasks.py",
+    "symbol": "ALLOWANCE_STATES",
+    "source": "REPORT1 R18给出的14个定位符号",
+    "default_disposition": "核验导出/注册后决定",
+    "note": "不连带删除实际校验逻辑或相邻常量",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/tasks.py",
+    "symbol": "LOCAL_TASK_KINDS",
+    "source": "REPORT1 R18给出的14个定位符号",
+    "default_disposition": "核验导出/注册后决定",
+    "note": "不连带删除实际校验逻辑或相邻常量",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/tasks.py",
+    "symbol": "MEDIA_EXT",
+    "source": "REPORT1 R18给出的14个定位符号",
+    "default_disposition": "核验导出/注册后决定",
+    "note": "不连带删除实际校验逻辑或相邻常量",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/tasks.py",
+    "symbol": "TASK_STATUSES",
+    "source": "REPORT1 R18给出的14个定位符号",
+    "default_disposition": "核验导出/注册后决定",
+    "note": "不连带删除实际校验逻辑或相邻常量",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/review.py",
+    "symbol": "FALSE_FRIENDS",
+    "source": "REPORT1 R18给出的14个定位符号",
+    "default_disposition": "核验导出/注册后决定",
+    "note": "不连带删除实际校验逻辑或相邻常量",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "requirements.txt",
+    "symbol": "旧依赖和不存在路径说明",
+    "source": "REPORT2 RED-04",
+    "default_disposition": "删除或委托pyproject二选一",
+    "note": "",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "pyproject.toml",
+    "symbol": "python-pptx",
+    "source": "REPORT2 RED-04对照",
+    "default_disposition": "保留实际核心依赖",
+    "note": "",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "pyproject.toml",
+    "symbol": "jsonschema",
+    "source": "REPORT2 RED-04对照",
+    "default_disposition": "保留实际核心依赖",
+    "note": "",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "pyproject.toml",
+    "symbol": "Pillow",
+    "source": "REPORT2 RED-04对照",
+    "default_disposition": "保留实际核心依赖",
+    "note": "",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "pyproject.toml",
+    "symbol": "numpy",
+    "source": "REPORT2 RED-04对照",
+    "default_disposition": "保留实际核心依赖",
+    "note": "",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/collaboration.py",
+    "symbol": "_region_records",
+    "source": "REPORT1 R18",
+    "default_disposition": "交#194活跃语义抽取",
+    "note": "不属于死代码删除",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/collaboration.py",
+    "symbol": "_head_for_identity",
+    "source": "REPORT1 R18",
+    "default_disposition": "交#194活跃语义抽取",
+    "note": "不属于死代码删除",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/dependency_slices.py",
+    "symbol": "_head_for_identity",
+    "source": "REPORT1 R18",
+    "default_disposition": "交#194活跃语义抽取",
+    "note": "不属于死代码删除",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/eligibility.py",
+    "symbol": "_records",
+    "source": "REPORT1 R18",
+    "default_disposition": "交#194活跃语义抽取",
+    "note": "不属于死代码删除",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/service.py",
+    "symbol": "_utc_now_iso",
+    "source": "REPORT1 R18",
+    "default_disposition": "仅相关改动时顺带；无独立收益不处理",
+    "note": "",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/tasks.py",
+    "symbol": "_utc_now_iso",
+    "source": "REPORT1 R18",
+    "default_disposition": "仅相关改动时顺带；无独立收益不处理",
+    "note": "",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/models.py",
+    "symbol": "_utc_now_iso",
+    "source": "REPORT1 R18",
+    "default_disposition": "仅相关改动时顺带；无独立收益不处理",
+    "note": "",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/content.py",
+    "symbol": "_utc_now_iso",
+    "source": "REPORT1 R18",
+    "default_disposition": "仅相关改动时顺带；无独立收益不处理",
+    "note": "",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/models.py",
+    "symbol": "sha256_bytes",
+    "source": "REPORT1 R18 / REPORT2 RED-03",
+    "default_disposition": "仅相关改动时顺带；无独立收益不处理",
+    "note": "",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/sources.py",
+    "symbol": "sha256_bytes",
+    "source": "REPORT1 R18 / REPORT2 RED-03",
+    "default_disposition": "仅相关改动时顺带；无独立收益不处理",
+    "note": "",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/web.py",
+    "symbol": "_project_identity",
+    "source": "REPORT1 R18 / REPORT2 RED-03",
+    "default_disposition": "仅相关改动时顺带；无独立收益不处理",
+    "note": "",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/local_runtime.py",
+    "symbol": "identity",
+    "source": "REPORT1 R18 / REPORT2 RED-03",
+    "default_disposition": "仅相关改动时顺带；无独立收益不处理",
+    "note": "",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/workbench.py",
+    "symbol": "_parse_timestamp",
+    "source": "REPORT1 R18 / REPORT2 RED-03",
+    "default_disposition": "仅相关改动时顺带；无独立收益不处理",
+    "note": "",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/run_desk.py",
+    "symbol": "task_row内timestamp",
+    "source": "REPORT1 R18 / REPORT2 RED-03",
+    "default_disposition": "仅相关改动时顺带；无独立收益不处理",
+    "note": "",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/editing.py",
+    "symbol": "canonical_json_bytes重复导入位置",
+    "source": "REPORT1 lint点名",
+    "default_disposition": "只核对选定导入，不删活跃函数",
+    "note": "",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  },
+  {
+    "file": "src/deck_master/service.py",
+    "symbol": "validate_document_semantics局部重复导入位置",
+    "source": "REPORT1 lint点名",
+    "default_disposition": "只核对选定导入，不做全仓lint清零",
+    "note": "",
+    "verification": "需要 Codex 核验；候选不等于已批准删除"
+  }
+]

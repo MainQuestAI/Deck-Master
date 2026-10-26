@@ -15,7 +15,8 @@ export function comparisonCanvas(app, panels, {fullscreenTarget = null} = {}) {
   function fitWorkspace(){
     if(disposed||!node.isConnected||!fullscreenTarget?.classList.contains('candidate-desk'))return;
     const desktop=innerWidth>=768&&!document.fullscreenElement;
-    const reserve=(fullscreenTarget.querySelector('.candidate-decisions')?.offsetHeight||44)+24;
+    const decisions=fullscreenTarget.querySelector('.candidate-decisions');
+    const reserve=(decisions?.offsetHeight||44)+48;
     for(const item of views){
       const height=desktop?`${Math.max(180,innerHeight-item.viewport.getBoundingClientRect().top-reserve)}px`:'';
       if(item.viewport.style.height!==height)item.viewport.style.height=height;

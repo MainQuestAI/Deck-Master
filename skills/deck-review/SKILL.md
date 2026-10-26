@@ -23,6 +23,8 @@ description: 只读审查项目快照、外部PPTX或明确文件集，检查内
 
 作者自审标 host_self；同作者换 Skill 名、task、execution ID 或提示词不会变成 independent。独立执行须有实际非作者执行与受信回执，人类 professional 须真实人类通道；缺能力明确 needs_reviewer。字符回读不替代关系/实际渲染，旧 Desktop 记录不等于本轮桌面验收。
 
+可选表达审阅：通过现有 selector 显式选择 `expression-review-humanizer`，按冻结 manifest 读取共享的“表达自然度与保真”参考，辅助 M10 / Review；不按“AI味”识别作者，不强制删标点、列表或必要限定。Review 只返回定位、问题、读者影响、建议改写和需保护的事实限定；Content 沿已有范围授权改后核对事实。纯视觉不扩写文字，大纲不套完整稿件要求，旧 Task 不另添资源。
+
 ## 退出条件与下一责任
 
 返回可读报告、证据/范围、未完成维度的具体原因即完成约定审查；未验证项保留缺口。下一责任按问题归属 Content/Design/Master 或交付判定；本职责不制作也不自动修复。
@@ -58,3 +60,24 @@ deck_master_cli = [str(python), "-I", "-m", "deck_master"]
 先读 `capabilities.read_protocols`；支持时可用 `read_protocol="work_context.v2", body_mode="full"`，未协商仍是 v1。v2 full 默认返回完整方法和来源，保留全部 Page/notes/限定、原图 refs/尺寸和物理约束；manifest 的 `context_ready=false` 不能执行为上下文已齐。delta 只省略当前受信适配器实际观察到的同一 Host session/context generation 可取回字节；新会话/压缩后或缺观察按冷 full，CLI cache offer 本身不能证明会话。可随时 full 重新取回。
 
 `runtime_returned_bytes`、body/cache 传输状态只证明 Runtime 返回或省略了哪些字节，不证明 Host 实际阅读、应用、独立审查或批准。实际执行身份、方法 SHA、判断、修改、产物及限制另记。恢复读取当前 scope/决定/撤回和 completion，不重复建项目或补授权。
+
+
+## 当前工作与下一责任（协商读取）
+
+先检查 capabilities.summary_protocols。支持 `workbench_summary.v2` 时，
+使用 `view --summary --summary-protocol workbench_summary.v2`；Python 方法 reader
+在 `read_protocol="work_context.v2"` 外显式传 `summary_protocol="workbench_summary.v2"`。
+四职责都消费同一 `current_work`，区分 delivery、review、next、blockers 和 optional。
+旧核心只返回已有事实与通用阅读入口，不自行补全制作责任。读操作不调用 continue、
+不创建 Task、不花模型预算；真正继续仍走原授权、basis、CAS 与 operation。
+首次有可读产物且当前 Host 支持时呈现一次；后续更新入口。URL、系统接受打开、
+前端加载、用户看见分别报告；没有观察保持未知。云端 loopback 不冒充用户可访问链接。
+
+共创后的审查按固定版本核对原话来源、正式采用依据和实际前后差异：用户经验是否改变了
+推荐、正文及受影响图表关系，还是仅贴了方法标签；改写有无删改数字、范围、因果强度、
+承诺、责任、否定或条件。必要术语和承担功能的回顾不得仅因重复或不够短而列为必须修改。
+沿原 finding_id、owner、replaces 和当前对象引用复查；未阅实际图像或 PPT 就保留视觉缺口。
+
+外部专业审阅完成时按共享 review-and-repair 的「外部只读报告 → 授权返修」合同，
+用 review record 保存标准报告完整发现和源外可接续清单；原报告 hash、发现身份、范围与验收
+条件一同保留，不只交付自定义 R01 列表。缺实际观察保留未核查，记录接口不提供独立证明。

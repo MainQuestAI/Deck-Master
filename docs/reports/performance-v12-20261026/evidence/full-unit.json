@@ -1,0 +1,22 @@
+{
+  "head": "b688c300dbb612bea9af8cf63a1743fb8136ae2c",
+  "worktree_sha256_before": "e4d1c42ef9a3cff3db3bb4076938214a3b49d3f04cba3851f4216b72888edadb",
+  "worktree_sha256_after": "e4d1c42ef9a3cff3db3bb4076938214a3b49d3f04cba3851f4216b72888edadb",
+  "source_changed_during_run": false,
+  "command": [
+    ".venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/rebuild",
+    "-m",
+    "not render and not browser",
+    "--tb=short"
+  ],
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "wall_seconds": 1262.990608087,
+  "exit_code": 1,
+  "reaped_children_user_seconds": 1048.9880389999998,
+  "reaped_children_system_seconds": 93.657632,
+  "scope": "Only batches using this runner are serialized; CPU excludes detached/unreaped descendants."
+}

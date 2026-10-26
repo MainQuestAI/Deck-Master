@@ -59,7 +59,12 @@ export class ImagePool {
     let released = false;
     return {ready: entry.ready, release: () => {
       if (released) return; released = true; entry.pins--; entry.touched = performance.now();
-      if (!entry.pins && (!entry.bitmap || entry.failed)) this.remove(entry);
+      // A gallery layout pass can synchronously release and reacquire the
+      // same immutable image. Retire after that pass, so its in-flight read
+      // remains shared; a real departure still cancels before the next task.
+      if (!entry.pins && (!entry.bitmap || entry.failed)) queueMicrotask(() => {
+        if (!entry.pins && (!entry.bitmap || entry.failed)) this.remove(entry);
+      });
     }};
   }
   async fetch(entry, url, asJSON, priority) {
@@ -80,12 +85,19 @@ export class ImagePool {
     if (entry.kind === 'thumb' && !vector && !ref.path.includes('/cache/candidate-previews/')) {
       const query = new URLSearchParams({...ref, retry: retry ? '1' : '0'});
       let status;
-      for (let attempt = 0; attempt < 80; attempt++) {
+      // Bound active backoff time separately from queue/network/render time.
+      // The first read stays immediate; a warm ready image never waits.
+      let waited = 0, delay = 75;
+      const waitBudget = 12000;
+      while (true) {
         status = await this.fetch(entry, '/api/thumbnails?' + query, true, priority);
         query.set('retry', '0');
         if (status.status === 'ready') break;
         if (!['queued', 'running', 'busy'].includes(status.status)) throw new Error('此层缩略图暂不可读，可重试或打开单页。');
-        await new Promise(resolve => setTimeout(resolve, status.retry_after_ms || 100));
+        if (waited >= waitBudget) break;
+        const wait = Math.min(waitBudget - waited, Math.max(status.retry_after_ms || 100, delay));
+        await new Promise(resolve => setTimeout(resolve, wait));
+        waited += wait; delay = Math.min(1000, delay * 2);
         entry.controller.signal.throwIfAborted();
       }
       if (status.status !== 'ready') throw new Error('缩略图仍在准备，请稍后重试。');

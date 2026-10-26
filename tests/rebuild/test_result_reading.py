@@ -5,7 +5,8 @@ from deck_master import result_reading, workbench, run_desk
 from deck_master.local_state import LocalStateConflict
 from deck_master.samples import create_sample
 from deck_master.store import Store
-from test_workbench_actions import synthetic_task, commit
+from test_workbench_actions import commit
+from test_action_targets import current_read_task
 from test_ui_state_clear import plan as clear_plan, commit as clear_commit
 
 
@@ -14,7 +15,7 @@ def store(tmp_path):
     project=tmp_path/'reading';create_sample(project,page_count=2,readonly=False);store=Store(project)
     doc=copy.deepcopy(store.load_document());doc['tasks']=[]
     for i in range(35):
-        task=synthetic_task(doc,f'read-{i}','completed',result_refs=[doc['pages'][0]['page']]);task['scope_pages']=['p01']
+        task=current_read_task(store,doc,f'read-{i}','completed',page_ids=['p01'],result_refs=[doc['pages'][0]['page']])
         doc['tasks'].append(store.put_json_object(task))
     commit(store,doc,'result-fixture');return store
 

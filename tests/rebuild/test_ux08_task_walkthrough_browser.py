@@ -263,14 +263,14 @@ def test_content_route_change_list_impact_and_draft_restore(content_walkthrough)
         identity = page.request.get(server.start().rstrip('/') + '/api/project').json()['project_identity']
         page.evaluate("args => {location.hash = new URLSearchParams({project: args[0], surface: 'page', page: 'p01', layer: 'content', revision: args[1]})}",
                       [identity, before])
-        page.locator('.content-editor summary').click()
+        page.locator('.content-editor > :is(summary,button)').click()
         page.get_by_role('textbox', name='页面标题', exact=True).fill('项目目标与阅读顺序（走查核对）')
         expect(page.locator('.draft-state')).to_contain_text('已保存到项目', timeout=15000)
         journal.shot('edited-with-live-change-list')
 
         # 失败/恢复腿：不确认就刷新——草稿恢复，比较基准仍是正式原文。
         page.reload()
-        page.locator('.content-editor summary').click()
+        page.locator('.content-editor > :is(summary,button)').click()
         changes = page.locator('.content-changes')
         expect(changes).to_contain_text('本次具体改动（1）', timeout=15000)
         expect(changes.locator('.content-change-before')).to_contain_text('项目目标与阅读顺序')

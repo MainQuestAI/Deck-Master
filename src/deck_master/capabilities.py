@@ -7,6 +7,7 @@ provide their context to the Python boundary; no adapter is invented here.
 
 from __future__ import annotations
 import json
+import re
 from importlib import metadata
 from pathlib import Path
 import subprocess
@@ -40,9 +41,13 @@ def installation_identity():
             def git(*args):
                 return subprocess.run(["git", "-C", str(repo), *args], check=True, capture_output=True,
                                       text=True, timeout=3).stdout.strip()
-            info["source"] = {"sha": git("rev-parse", "HEAD"), "tree": git("rev-parse", "HEAD^{tree}"),
-                              "dirty": bool(git("status", "--porcelain"))}
-        except (OSError, subprocess.SubprocessError):
+            # One fresh observation for both immutable identities; status is
+            # still queried afresh, never inferred from cached source metadata.
+            sha, tree = git("rev-parse", "HEAD", "HEAD^{tree}").splitlines()
+            if not all(re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", value) for value in (sha, tree)):
+                raise ValueError("invalid Git object identity")
+            info["source"] = {"sha": sha, "tree": tree, "dirty": bool(git("status", "--porcelain"))}
+        except (OSError, subprocess.SubprocessError, ValueError):
             pass
     prefix = Path(sys.prefix).resolve()
     manifest = prefix.parent / "release.json"
@@ -74,14 +79,21 @@ def describe(adapter_context=None):
         kinds.append("independent_execution_receipt")
     if available["human_review_receipts"]:
         kinds.append("human_identity_receipt")
+    from .review_channels import describe as review_channels
     registry = current_registry()
     context = context_payload(registry.channel_context() if adapter_context is None else adapter_context)
     return {
         "schema_version": "host_capabilities.v1",
         "package_version": __version__,
         "protocol_capabilities": list(RUNTIME_PROTOCOL_CAPABILITIES),
+        "review_subjects": {"outline": {"capability": "outline_review.v1", "units": ["argument", "progression"]}},
+        "summary_protocols": ["workbench_summary.v1", "workbench_summary.v2"],
         "read_protocols": [{"protocol": "work_context.v2", "body_modes": ["full", "delta", "manifest"],
                             "default_body_mode": "full", "cache_offer_requires_observed_context": True}],
+        "task_response_protocols": [{"protocol": "task_receipt.v1",
+                                     "operations": ["task start", "task accept", "task cancel"],
+                                     "opt_in": True, "context_ready": False,
+                                     "full_context_protocol": "work_context.v2"}],
         "installation_identity": installation_identity(),
         "status": "ready" if all(r["available"] for r in resources) else "needs_tool",
         **available,
@@ -91,6 +103,8 @@ def describe(adapter_context=None):
         "assurance": "host_attested",
         "methods": resources,
         "method_release": method_release(resources),
+        "review_channels": review_channels(adapter_context=adapter_context),
+        "review_channel_status_scope": "registered_receipts_only; see review_channels for native and stage-specific entries",
         "review_channel_status": "available"
         if any(available[k] for k in ("independent_review_receipts", "human_review_receipts"))
         else "needs_reviewer",

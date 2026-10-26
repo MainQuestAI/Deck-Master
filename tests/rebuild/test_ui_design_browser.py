@@ -82,6 +82,27 @@ def test_matrix_keyboard_selection_sort_and_search_keep_focus(workbench_page):
     expect(page.get_by_role('checkbox', name='选择第 02 页', exact=True)).to_be_checked()
 
 
+def test_row_actions_escape_scroll_container_and_return_keyboard_focus(workbench_page):
+    from playwright.sync_api import expect
+    page = workbench_page
+    page.set_viewport_size({'width': 390, 'height': 844})
+    trigger = page.get_by_role('button', name='第 01 页操作', exact=True)
+    trigger.press('Enter')
+    panel = page.locator('.action-popover:popover-open')
+    expect(panel.get_by_role('button', name='阅读正文', exact=True)).to_be_visible()
+    bounds = panel.bounding_box()
+    assert bounds['x'] >= 0 and bounds['x'] + bounds['width'] <= 390
+    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+    page.keyboard.press('Escape')
+    expect(panel).to_have_count(0)
+    expect(trigger).to_be_focused()
+    trigger.press('Enter')
+    panel.get_by_role('button', name='阅读正文', exact=True).click()
+    page.get_by_role('heading', name=re.compile(r'^第 1 页')).wait_for()
+    assert 'layer=content' in page.url
+    expect(page.locator('.action-popover:popover-open')).to_have_count(0)
+
+
 def test_page_shortcuts_respect_controls_and_dialogs(workbench_page):
     page = workbench_page
     page.get_by_role('button', name='打开第 01 页', exact=True).click()

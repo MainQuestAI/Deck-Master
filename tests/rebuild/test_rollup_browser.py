@@ -9,7 +9,8 @@ from deck_master import icons, result_reading
 from test_action_targets_browser import action_browser
 from test_icon_browser import icon_browser
 from test_icon_quality import icon_store, confirm, dispatch
-from test_workbench_actions import commit, synthetic_task
+from test_workbench_actions import commit
+from test_action_targets import current_read_task
 
 pytestmark = pytest.mark.browser
 
@@ -27,9 +28,8 @@ def _reading_tasks(store):
     tasks = []
     for index, page_id in enumerate(('p01', 'p01', 'p02', 'p03')):
         pending = page_id == 'p03'  # Keep the real summary poll at three seconds.
-        task = synthetic_task(doc, f'poll-{index}', 'awaiting_host' if pending else 'completed',
-                              result_refs=[] if pending else [doc['pages'][index // 2]['page']])
-        task['scope_pages'] = [page_id]
+        task = current_read_task(store,doc,f'poll-{index}','awaiting_host' if pending else 'completed',page_ids=[page_id],
+                                 result_refs=[] if pending else [doc['pages'][index // 2]['page']])
         doc['tasks'].append(store.put_json_object(task))
         tasks.append(task)
     commit(store, doc, 'poll-browser')
@@ -39,7 +39,7 @@ def _reading_tasks(store):
 def _next(page, number):
     return page.locator('.matrix tbody tr').filter(
         has=page.get_by_role('button', name=f'打开第 {number:02d} 页', exact=True)
-    ).locator('.matrix-next button')
+    ).locator('.matrix-next button[data-matrix-next]')
 
 
 def _next_summary(page):
@@ -66,6 +66,7 @@ def test_natural_summary_poll_preserves_next_action_node_and_keyboard_focus(acti
     # poll, without dispatching a synthetic summary event or changing its delay.
     with _next_summary(page):
         pass
+    page.get_by_role('button',name='第 01 页操作',exact=True).click()
     next_action = _next(page, 1)
     next_action.focus()
     original = next_action.element_handle()
@@ -84,6 +85,7 @@ def test_real_attention_change_preserves_only_same_page_and_action_focus(action_
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()
     with _next_summary(page):
         pass
+    page.get_by_role('button',name='第 01 页操作',exact=True).click()
     first = _next(page, 1)
     first.focus()
     original = first.element_handle()
@@ -100,7 +102,9 @@ def test_real_attention_change_preserves_only_same_page_and_action_focus(action_
         _mark_read(store, tasks[0])
     expect(first).to_have_text('去阅读')
     expect(first).not_to_be_focused()
-    assert page.evaluate('document.activeElement === document.body')
+    expect(page.get_by_role('button', name='第 01 页操作', exact=True)).to_be_focused()
+    expect(page.locator('.action-popover:popover-open')).to_have_count(0)
+    assert page.evaluate('document.activeElement !== document.body')
 
 
 def test_dispatch_unknown_explains_preservation_without_redispatch(icon_browser):
@@ -218,8 +222,7 @@ def _pagination_tasks(store):
     doc['tasks'] = []
     tasks = []
     for number in range(1, 36):
-        task = synthetic_task(doc, f'result-{number:02}', 'completed', result_refs=[doc['pages'][0]['page']])
-        task['scope_pages'] = ['p01']
+        task = current_read_task(store,doc,f'result-{number:02}','completed',page_ids=['p01'],result_refs=[doc['pages'][0]['page']])
         doc['tasks'].append(store.put_json_object(task))
         tasks.append(task)
     commit(store, doc, 'pagination-browser')

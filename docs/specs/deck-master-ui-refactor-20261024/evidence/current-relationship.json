@@ -1,0 +1,35 @@
+{
+  "evidence_level": "synthetic local read and Chromium regression",
+  "scenarios": [
+    "21 stale + 1 current candidate",
+    "historical failed task + adopted successor",
+    "current failure remains actionable",
+    "request replacement and explicit background retention",
+    "warm cache invalidated by historical snapshot corruption",
+    "unknown calls retained by existing regression"
+  ],
+  "pressure_samples": [
+    {
+      "pages": 24,
+      "candidates": 120,
+      "summary_ms": [
+        99.0,
+        6.9,
+        6.2
+      ]
+    },
+    {
+      "pages": 100,
+      "candidates": 500,
+      "summary_ms": [
+        365.5,
+        18.4,
+        17.7
+      ]
+    }
+  ],
+  "limitations": [
+    "Not a before/after CPU benchmark",
+    "No model calls, customer project, final export or installation acceptance"
+  ]
+}

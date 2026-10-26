@@ -33,7 +33,7 @@ def test_seven_surfaces_at_all_acceptance_sizes(workbench_page, tmp_path):
     page.on('pageerror', lambda error: errors.append(str(error)))
     checks = []
     try:
-        for surface, title in [('launcher', '项目'), ('overview', '制作总览'), ('content', '内容与来源'),
+        for surface, title in [('launcher', '项目'), ('overview', '制作总览'), ('content', '内容与页序'),
                                ('gallery', '整稿画廊'), ('page', None), ('style', '风格校准'), ('runs', '任务与交付')]:
             if surface == 'launcher':
                 page.goto(launcher['url'])
@@ -130,7 +130,7 @@ def test_content_preview_new_version_and_offline_recovery_keep_input(workbench_p
     before = store.read_current()
     page.get_by_role('button', name='打开第 01 页', exact=True).click()
     page.get_by_role('button', name=re.compile('逐页稿')).first.click()
-    page.get_by_text('编辑本页标题与正文', exact=True).click()
+    page.get_by_role('button', name='编辑本页标题与正文', exact=True).click()
     field = page.get_by_role('textbox', name='页面标题', exact=True)
     field.fill('保留这段修改，等待新基准确认')
     page.get_by_role('button', name='预览正文修改影响', exact=True).click()
@@ -148,7 +148,8 @@ def test_content_preview_new_version_and_offline_recovery_keep_input(workbench_p
     commit(store, doc, str(uuid.uuid4()))
     page.evaluate("() => window.dispatchEvent(new Event('focus'))")
     expect(page.locator('.runtime-sync')).to_contain_text('项目有新状态')
-    expect(page.get_by_role('button', name='确认内容变更', exact=True)).to_be_disabled()
+    expect(page.get_by_role('button', name='确认内容变更', exact=True)).to_have_count(0)
+    expect(page.get_by_role('dialog', name='编辑本页标题与正文')).to_contain_text('旧内容计划已禁用')
     expect(field).to_have_value('保留这段修改，等待新基准确认')
     field.fill('新版本提示后仍可继续写草稿')
     expect(field).to_have_value('新版本提示后仍可继续写草稿')
@@ -170,8 +171,8 @@ def test_readonly_sample_keeps_business_controls_disabled(workbench_page, tmp_pa
         page.get_by_role('button', name='风格校准', exact=True).click()
         expect(page.get_by_role('button', name='检查风格要求', exact=True)).to_be_disabled()
         expect(page.get_by_role('combobox', name='风格参考原图')).to_be_disabled()
-        page.get_by_role('button', name='内容与来源', exact=True).click()
-        expect(page.get_by_role('heading', name='内容与来源', exact=True)).to_be_visible()
+        page.get_by_role('button', name='内容与页序', exact=True).click()
+        expect(page.get_by_role('heading', name='内容与页序', exact=True)).to_be_visible()
         assert page.get_by_role('button', name='添加材料', exact=True).count() == 0
         assert store.read_current() == before
     finally:

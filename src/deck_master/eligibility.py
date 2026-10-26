@@ -169,6 +169,8 @@ ACTIONS: dict[str, ActionSpec] = {spec.name: spec for spec in (
           production=True, external=True, role="runtime"),
     # -- adoption (row 3)
     _spec("task.accept", "adoption", "pages", writes=True, role="runtime"),
+    _spec("generation.reuse", "adoption", "pages", layers=("blueprint",),
+          authority="execute", production=True, writes=True, role="runtime"),
     _spec("proposal.adopt", "adoption", "deck", writes=True, role="runtime"),
     _spec("call.settle", "execution", "pages", writes=True, role="host"),
     _spec("material.upload", "adoption", "external_artifact", writes=True, role="user"),
@@ -250,7 +252,7 @@ ACTIONS: dict[str, ActionSpec] = {spec.name: spec for spec in (
 
 # Actions that need a preproduction content review before real page production
 # (CONTRACTS §1.9, §6.3: 新论证 full_deck 默认需要独立内容前审).
-PREPRODUCTION_GATED_ACTIONS = ("dispatch.blueprint", "style.trial", "style.expand",
+PREPRODUCTION_GATED_ACTIONS = ("dispatch.blueprint", "generation.reuse", "style.trial", "style.expand",
                                "change.commit", "compile.ppt", "stage.assemble")
 
 # Every delivery entry consumes the same authorization vocabulary: a grant
@@ -298,7 +300,7 @@ ROUTING_ACTIONS = ("create", "continue_project", "change.plan", "export.review",
 # advances what its own intent/content_intent covers; an action outside that
 # boundary is a scope violation, not a missing decision.
 _INTENT_BLOCKED_ACTIONS = {
-    "review_only": ("dispatch.compose", "import_draft", "dispatch.blueprint", "style.trial",
+    "review_only": ("dispatch.compose", "import_draft", "dispatch.blueprint", "generation.reuse", "style.trial",
                     "style.expand", "change.commit", "compile.ppt", "stage.assemble",
                     "page.edit", "content.operation", "candidate.adopt"),
     "design_trial": ("dispatch.compose", "import_draft", "compile.ppt", "stage.assemble",
@@ -306,9 +308,9 @@ _INTENT_BLOCKED_ACTIONS = {
     "edit": ("dispatch.compose", "stage.assemble"),
 }
 _CONTENT_INTENT_BLOCKED_ACTIONS = {
-    "plan_only": ("dispatch.blueprint", "style.trial", "style.expand", "compile.ppt",
+    "plan_only": ("dispatch.blueprint", "generation.reuse", "style.trial", "style.expand", "compile.ppt",
                   "stage.assemble", "page.edit", "import_draft"),
-    "speech_only": ("dispatch.blueprint", "style.trial", "style.expand", "page.edit",
+    "speech_only": ("dispatch.blueprint", "generation.reuse", "style.trial", "style.expand", "page.edit",
                     "import_draft", "dispatch.compose"),
 }
 
@@ -401,27 +403,9 @@ def _request(document: dict) -> dict | None:
 
 
 def _records(store: Store, region: dict, family: str) -> list[tuple[dict, dict]]:
-    records = []
-    for ref in region.get(family) or []:
-        try:
-            records.append((ref, store.read_object_json(ref)))
-        except Exception:  # noqa: BLE001 - unreadable records cannot participate
-            continue
-    return records
+    return dependency_slices._region_records(store, region, family)
 
 
-def _head(records: list[tuple[dict, dict]], id_field: str, identity: str | None):
-    if identity is None:
-        return None
-    replaced = set()
-    for _, record in records:
-        pair = record.get("replaces")
-        if isinstance(pair, dict) and pair.get("path"):
-            replaced.add((pair.get("path"), pair.get("sha256")))
-    heads = [(ref, record) for ref, record in records
-             if record.get(id_field) == identity
-             and (ref.get("path"), ref.get("sha256")) not in replaced]
-    return heads[-1] if heads else None
 
 
 def _authorization_heads(store: Store, document: dict) -> list[tuple[dict, dict]]:
@@ -698,6 +682,35 @@ def task_binding_state(store: Store, document: dict, task: dict) -> dict:
         return {"status": "absent", "reasons": ["binding_missing"],
                 "new_protocol": declared,
                 "digest": None, "expected_digest": None}
+    authorization_failure = None
+    authorization_ref = binding.get("authorization_ref")
+    if authorization_ref is not None:
+        # start/accept rely on the frozen binding, not a new covering grant.
+        # A parent's withdrawal therefore has to reach this shared gate, even
+        # when the child is still recorded or the request may run in background.
+        try:
+            authorization = dependency_slices.authorization_effectiveness(store, document, authorization_ref)
+            withdrawn = any(reason in ("authorization_revoked", "ancestor_authorization_revoked")
+                            for reason in authorization["reasons"])
+            if withdrawn:
+                return {"status": "withdrawn", "reasons": authorization["reasons"],
+                        "new_protocol": True, "digest": binding.get("eligibility_digest"),
+                        "expected_digest": None,
+                        "authorization_id": current_authorization_record(store, document, authorization_ref)["authorization_id"]}
+            if not authorization["effective"]:
+                # A missing current ancestor can be reported as ineffective
+                # even when its historical object remains readable. Unknown,
+                # stale or expired authority never becomes a fresh permission.
+                authorization_failure = {"status": "stale" if "basis_stale" in authorization["reasons"] else "invalid",
+                                         "reasons": authorization["reasons"],
+                                         "new_protocol": True, "digest": binding.get("eligibility_digest"),
+                                         "expected_digest": None}
+        except (ModelError, StoreError):
+            # Keep an unreadable binding fail-closed for writes without raising
+            # before evaluate can preserve cancellation and settlement facts.
+            return {"status": "invalid", "reasons": ["bound_authorization_unreadable"],
+                    "new_protocol": True, "digest": binding.get("eligibility_digest"),
+                    "expected_digest": None}
     try:
         models.require_task_binding(document, task)
     except ModelError as exc:
@@ -707,25 +720,13 @@ def task_binding_state(store: Store, document: dict, task: dict) -> dict:
         request = _request(document) or {}
         if binding.get("request_id") and \
                 binding["request_id"] in (request.get("background_request_ids") or []):
-            return {"status": "valid", "reasons": [], "new_protocol": True,
+            return authorization_failure or {"status": "valid", "reasons": [], "new_protocol": True,
                     "digest": binding.get("eligibility_digest"), "expected_digest": None,
                     "background_request_id": binding["request_id"]}
-        # A binding whose authorization was replaced by a *withdrawal* is not a
-        # foreign binding: report the withdrawal (CONTRACTS §3.3), so the user
-        # sees "the withdrawal stands" rather than a structural complaint.
-        auth_ref = binding.get("authorization_ref")
-        if isinstance(auth_ref, dict) and auth_ref.get("path"):
-            try:
-                record = store.read_object_json(auth_ref)
-            except Exception:  # noqa: BLE001
-                record = None
-            if isinstance(record, dict) and record.get("authorization_id"):
-                head = _head(_records(store, _region(document) or {}, "authorizations"),
-                             "authorization_id", record["authorization_id"])
-                if head is None or head[1].get("status") in ("revoked", "superseded", "invalidated"):
-                    return {"status": "withdrawn", "reasons": [exc.detail], "new_protocol": True,
-                            "digest": binding.get("eligibility_digest"), "expected_digest": None,
-                            "authorization_id": record["authorization_id"]}
+        if authorization_failure:
+            return authorization_failure
+        # Actual direct/ancestor revocation was resolved above. Missing,
+        # superseded or structurally invalid records are not user withdrawals.
         return {"status": "invalid", "reasons": [exc.detail], "new_protocol": True,
                 "digest": binding.get("eligibility_digest"), "expected_digest": None}
     digest = binding.get("eligibility_digest")
@@ -754,7 +755,7 @@ def task_binding_state(store: Store, document: dict, task: dict) -> dict:
                 [item["key"] for item in state["unregistered"]]),
                 "new_protocol": True, "digest": digest, "expected_digest": expected,
                 "basis": state}
-    return {"status": "valid", "reasons": [], "new_protocol": True,
+    return authorization_failure or {"status": "valid", "reasons": [], "new_protocol": True,
             "digest": digest, "expected_digest": expected}
 
 
@@ -941,14 +942,27 @@ def _fixed_delivery_state(store, artifact, control, selected, ref, record):
             or fixed.get('subject_ref') != (selected or {}).get('subject_ref')
             or fixed.get('file_sha256') != (selected or {}).get('file_sha256')
             or fixed.get('notes_policy') != (selected or {}).get('notes_policy')
-            or models.compute_input_digest(artifact) != models.compute_input_digest(control)
+            or getattr(store, 'input_digest', models.compute_input_digest)(artifact) != getattr(store, 'input_digest', models.compute_input_digest)(control)
             or artifact.get('narrative') != control.get('narrative')):
         return None
+    # Replacement alone permits exact-file delivery, but never erases a later
+    # pause or withdrawal. Only normal completion is a closed-state exception.
+    source_request = _request(control)
+    if (source_request or {}).get('request_id') != request.get('request_id'):
+        from .snapshots import committed_snapshots
+        source_request = next((value for snapshot in committed_snapshots(
+            store, head_revision=control['revision_id'])
+            if (value := _request(snapshot)) and value.get('request_id') == request.get('request_id')), None)
+    if source_request is None:
+        return {'effective': False, 'reasons': ['source_request_unavailable'], 'fixed_file_only': True}
+    source_request = dict(source_request)
+    if source_request.get('closed_reason') == 'completed':
+        source_request.update(closed=False, closed_reason=None)
     # Only this read judgement uses the source request. Current auth heads,
     # withdrawals, source rights, user/task facts and policy remain authoritative.
     view = {**artifact, 'task': control['task'], 'sources': control['sources'],
         'policy': control['policy'], 'narrative': control.get('narrative'),
-        'collaboration': {**control['collaboration'], 'request': {**request, 'closed': False, 'paused': False}}}
+        'collaboration': {**control['collaboration'], 'request': source_request}}
     state = dependency_slices.authorization_effectiveness(store, view, ref)
     return {**state, 'fixed_file_only': True}
 
@@ -1140,7 +1154,7 @@ def _reconciles_current_inputs(control: dict, task: dict | None, spec: ActionSpe
 # Preproduction content review (AC-R06)
 
 
-def preproduction_state(store: Store, document: dict) -> dict:
+def preproduction_state(store: Store, document: dict, *, page_ids: list[str] | None = None, read_context=None) -> dict:
     """The one preproduction content-review verdict, consumed from T03.
 
     T03's ``content_review`` owns the units, the currency, the reviewer
@@ -1150,11 +1164,13 @@ def preproduction_state(store: Store, document: dict) -> dict:
     applicable passing review on the current manuscript. An existing delegate
     covering the review topics is reused to arrange that review (AC-R06) — it
     never substitutes the review's result, so it cannot satisfy this state.
+    Explicit action pages narrow coverage only; deck-level unresolved findings
+    still apply. Omitting page_ids retains the full-manuscript verdict.
     """
     from . import content_review
     try:
-        status = content_review.preproduction_status(store, document)
-        qualified = content_review.qualify_for_production(store, document)
+        status = content_review.preproduction_status(store, document, page_ids=page_ids, read_context=read_context)
+        qualified = content_review.qualification_from_status(status, document)
     except ModelError as exc:
         # Only the strict adopted-generation lineage reader reports this
         # path. A damaged Task must not erase read-only recovery, but asset
@@ -1170,7 +1186,8 @@ def preproduction_state(store: Store, document: dict) -> dict:
             'requirement_origin': state['origin'], 'requirement_reasons': list(state['reasons']),
             'required': bool(document.get('pages')), 'satisfied': False, 'status': 'unreadable',
             'units': list(units), 'satisfied_units': [], 'missing_units': list(units),
-            'blocking_findings': [], 'review_refs': [], 'needs_reviewer': False, 'via': None,
+            'blocking_findings': [], 'blocking_record_count': 0, 'logical_finding_count': 0,
+            'review_refs': [], 'needs_reviewer': False, 'via': None,
             'reasons': [*state['reasons'], 'stored applicability evidence is unreadable; preserve and inspect the original records']}
     state = status["requirement_state"]
     return {"requirement": state["effective"],
@@ -1184,6 +1201,8 @@ def preproduction_state(store: Store, document: dict) -> dict:
             "satisfied_units": list(status["satisfied_units"]),
             "missing_units": list(status["missing_units"]),
             "blocking_findings": list(status["blocking_findings"]),
+            "blocking_record_count": status.get('blocking_record_count', len(status['blocking_findings'])),
+            "logical_finding_count": status.get('logical_finding_count', len(status['blocking_findings'])),
             "review_refs": list(status["review_refs"]),
             "needs_reviewer": bool(qualified["needs_reviewer"]),
             "via": "review" if status["status"] == "pass" else None,
@@ -1234,12 +1253,26 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
     targets = dict(context.get("targets") or {})
     task = context.get("task")
     reasons: list[dict] = []
+    if task and task.get('review_subject') == 'outline' and action in ('task.start', 'task.accept'):
+        from .outline_review import review_targets
+        try:
+            targets = review_targets(store, store.load_document(task['dispatch_revision']))
+        except (StoreError, OSError, ValueError, KeyError, TypeError):
+            reasons.append({'code': 'scope_exceeded', 'detail': 'frozen outline scope cannot be verified'})
     fixed_candidates = (_authority_candidates(store, control, spec, targets, task,
         artifact=artifact, selected_output=context.get('selected_output')) if spec.delivery else [])
     fixed_delivery = any(c['effective'] and c['covers'] and c.get('fixed_file_only') for c in fixed_candidates)
 
     def block(code, detail, **extra):
         reasons.append({"code": code, "detail": detail, **extra})
+
+    if spec.delivery:
+        for candidate in fixed_candidates:
+            if not candidate.get('fixed_file_only') or not candidate['covers']:
+                continue
+            for code in ('request_paused', 'request_closed'):
+                if code in candidate['reasons']:
+                    block(code, 'the source request for this exact file no longer permits new delivery')
 
     # -- writer boundary ---------------------------------------------------
     legacy_allowed = action in ("create", "continue_project", "migration.describe", "migration.apply",
@@ -1255,21 +1288,21 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
               "a strict read-only request never writes to the source project")
 
     # -- request state -----------------------------------------------------
-    if enforced and action not in ROUTING_ACTIONS and action != "restore" and not fixed_delivery:
+    if enforced and action not in ROUTING_ACTIONS and action != "restore":
         if request is None:
             block("decision_needed",
                   "no current work request; start one that names the intended intent, "
                   "scope and evidence before production",
                   missing="work_request")
         else:
-            if request.get("closed"):
+            if request.get("closed") and not (fixed_delivery and request.get('closed_reason') == 'completed'):
                 block("request_closed",
                       f"the current request is closed ({request.get('closed_reason')}); "
                       "start a new request for new work")
-            if request.get("paused") and (spec.production or spec.writes):
+            if request.get("paused") and (spec.production or spec.writes or spec.delivery):
                 block("request_paused",
                       request.get("pause_reason") or "the current request is paused")
-            stop = _intent_allows(spec, request, targets)
+            stop = None if fixed_delivery else _intent_allows(spec, request, targets)
             if stop:
                 block("scope_exceeded", stop,
                       request_intent=request.get("intent"),
@@ -1330,7 +1363,7 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
         binding_state = task_binding_state(store, control, task)
         if binding_state["status"] == "withdrawn":
             block("authorization_revoked",
-                  "the authorization this task bound was withdrawn; the withdrawal stands "
+                  "the bound authorization or its ancestor was withdrawn; the withdrawal stands "
                   "and only settled call facts remain",
                   authorization_id=binding_state.get("authorization_id"))
         elif binding_state["status"] == "invalid":
@@ -1517,15 +1550,35 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
               "request pause and stays until it is explicitly lifted")
 
     # -- input reconciliation ---------------------------------------------
-    if enforced and spec.production and models.input_alignment(control) == "needs_reconciliation":
+    if enforced and spec.production and getattr(store, 'input_alignment', models.input_alignment)(control) == "needs_reconciliation":
         if not _reconciles_current_inputs(control, task, spec, context):
             block("input_reconciliation_pending",
                   "inputs changed; reconcile the content against the new inputs first")
 
     # -- preproduction content review (one T03 verdict for every entry) ----
     preproduction = None
-    if enforced and spec.name in PREPRODUCTION_GATED_ACTIONS:
-        preproduction = preproduction_state(store, control)
+    # Content-only corrections do not produce a visual artifact. Derive the
+    # exception from the server-validated plan targets, never a caller flag.
+    content_correction = (spec.name == "change.commit"
+                          and set(targets.get("layers") or []) == {"page_copy"}
+                          and bool(targets.get("page_ids"))
+                          and context.get("candidate_count") == len(targets["page_ids"])
+                          and not context.get("external_call_page_ids")
+                          and not context.get("count"))
+    if enforced and spec.name in PREPRODUCTION_GATED_ACTIONS and not content_correction:
+        # Use actual page-action targets, not the request's upper permission
+        # bound. Full-deck operations still require full-manuscript coverage.
+        # Missing/empty/unknown targets never turn a partial pass into a pass
+        # for an unbounded action; independent scope/authority gates remain.
+        action_pages = target_page_ids(store, targets)
+        current_pages = {entry["page_id"] for entry in control.get("pages") or []}
+        review_pages = (action_pages if spec.subject == "pages"
+                        and targets.get("subject") != "deck" and action_pages
+                        and set(action_pages) <= current_pages else None)
+        read_context = context.get('review_read_context')
+        if read_context is not None and (read_context.store is not store or read_context.document != control):
+            read_context = None
+        preproduction = preproduction_state(store, control, page_ids=review_pages, read_context=read_context)
         if not preproduction["satisfied"]:
             code = "needs_reviewer" if preproduction["needs_reviewer"] \
                 else "preproduction_blocked"
@@ -1539,7 +1592,9 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
                   requirement=preproduction["requirement"],
                   review_status=preproduction["status"],
                   missing_units=preproduction["missing_units"],
-                  open_findings=len(preproduction["blocking_findings"]))
+                  open_findings=preproduction['blocking_record_count'],
+                  blocking_record_count=preproduction['blocking_record_count'],
+                  logical_finding_count=preproduction['logical_finding_count'])
 
     # -- professional delivery policy (never replaced by the review above) --
     delivery = None
@@ -1558,7 +1613,7 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
                       missing="decision", topics=["delivery_acceptance"],
                       card={"kind": "delivery_card", "projection": spec.card,
                             "topics": ["delivery_acceptance"]})
-        if (models.compute_input_digest(artifact) != models.compute_input_digest(control)
+        if (getattr(store, 'input_digest', models.compute_input_digest)(artifact) != getattr(store, 'input_digest', models.compute_input_digest)(control)
                 or artifact.get('narrative') != control.get('narrative')):
             block('basis_stale', 'selected output no longer matches current audience/source/argument facts')
         delivery = delivery_control_state(store, artifact or control, control, selected_output=context.get("selected_output"))

@@ -20,6 +20,26 @@ REPO = Path(__file__).resolve().parents[2]
 ENVELOPE = REPO / "docs" / "specs" / "deck-master-rebuild-v1" / "examples" / "roundtrips" / "result-envelope" / "compose.json"
 
 
+@pytest.fixture(autouse=True)
+def owned_cli_services(monkeypatch):
+    from deck_master import local_runtime
+    owned = []
+    ensure = local_runtime.ensure
+    def track(desc, **kwargs):
+        state = ensure(desc, **kwargs)
+        if not state.get('reused'):
+            owned.append((desc, state['instance_id']))
+        return state
+    monkeypatch.setattr(local_runtime, 'ensure', track)
+    try:
+        yield
+    finally:
+        for desc, instance in reversed(owned):
+            state = local_runtime.read_state(desc)
+            if state and state.get('instance_id') == instance:
+                local_runtime.stop(desc)
+
+
 def cli_main(argv: list[str]) -> int:
     """Run one CLI command in-process and return its exit code."""
     from deck_master.cli import main
@@ -118,7 +138,8 @@ def test_full_cli_chain_create_start_accept_view_continue(tmp_path: Path) -> Non
         stop_service(project)
 
 
-def test_import_draft_cli_entry(tmp_path: Path) -> None:
+def test_import_draft_cli_entry(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv('DECK_MASTER_NO_AUTO_VIEW', '1')
     draft_file = tmp_path / "draft.json"
     draft_file.write_text(json.dumps(_draft_payload(), ensure_ascii=False), encoding="utf-8")
     project = tmp_path / "proj-draft"
@@ -133,7 +154,8 @@ def test_import_draft_cli_entry(tmp_path: Path) -> None:
     assert follow_up["pending_tasks"] == []
 
 
-def test_create_with_draft_adopts_pages(tmp_path: Path) -> None:
+def test_create_with_draft_adopts_pages(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv('DECK_MASTER_NO_AUTO_VIEW', '1')
     draft_file = tmp_path / "draft.json"
     draft_file.write_text(json.dumps(_draft_payload(), ensure_ascii=False), encoding="utf-8")
     project = tmp_path / "proj-draft2"

@@ -78,19 +78,90 @@ def ux06_browser(tmp_path):
             server.stop()
 
 
-def test_created_project_reopens_after_open_failure_without_recreating(ux06_browser):
+@pytest.fixture
+def recovery_launcher(tmp_path, request, ux06_browser):
+    """Own only this test's launcher and explicitly named recovery targets."""
+    from deck_master import local_runtime
+    from contextlib import ExitStack
+    from urllib.parse import urlsplit
+    reg = tmp_path / 'recovery-launcher' / 'registry.json'
+    descriptor = local_runtime.descriptor(registry=reg)
+    targets = {}
+    owned = ExitStack()
+    request.addfinalizer(owned.close)  # Runs all callbacks, including on failure.
+    def stop_instance(desc, instance):
+        state = local_runtime.read_state(desc)
+        if state and state.get('instance_id') == instance:
+            local_runtime.stop(desc)
+    launcher = local_runtime.ensure(descriptor)
+    if not launcher.get('reused'):
+        owned.callback(stop_instance, descriptor, launcher['instance_id'])
+    page = ux06_browser[0]
+    def opened(response):
+        if urlsplit(response.url).path != '/api/projects/open' or response.status != 200:
+            return
+        try:
+            state = response.json()
+        except Exception:
+            return  # The private-target finalizer handles a lost/unreadable response.
+        if state.get('reused'):
+            return
+        for target in targets:
+            if target.exists():
+                desc = local_runtime.descriptor(project=target)
+                if state.get('identity') == desc['identity']:
+                    targets[target] = state['instance_id']
+    page.on('response', opened)
+    owned.callback(page.remove_listener, 'response', opened)
+    def own_target(name):
+        target = reg.parent / name
+        assert not target.exists()
+        targets[target] = None
+        def stop_target():
+            if not target.exists():
+                return
+            desc = local_runtime.descriptor(project=target)
+            state = local_runtime.read_state(desc)
+            # This path did not exist before this test, inside its exclusive
+            # tmp_path. If delivery failed, discover the instance it created;
+            # once observed, never substitute a different instance.
+            instance = targets[target] or (state or {}).get('instance_id')
+            if instance:
+                stop_instance(desc, instance)
+        owned.callback(stop_target)  # Before create/open can partially succeed.
+        return target
+    own_target.close = owned.close
+    return launcher, reg, own_target
+
+
+def test_recovery_service_is_reclaimed_after_response_loss(recovery_launcher):
+    import socket
+    from urllib.parse import urlsplit
+    from deck_master import local_runtime
+    _, _, own_target = recovery_launcher
+    target = own_target('lost-open-response')
+    create_sample(target, page_count=1, readonly=False)
+    desc = local_runtime.descriptor(project=target)
+    state = local_runtime.ensure(desc)
+    assert not state['reused']
+    try:
+        with pytest.raises(ConnectionError, match='response lost'):
+            raise ConnectionError('response lost after service startup')
+    finally:
+        own_target.close()
+    assert not local_runtime.healthy(state, desc)
+    url = urlsplit(state['url'])
+    with socket.socket() as sock:
+        assert sock.connect_ex((url.hostname, url.port)) != 0
+
+
+def test_created_project_reopens_after_open_failure_without_recreating(ux06_browser, recovery_launcher):
     from playwright.sync_api import expect
     from deck_master import local_runtime
     page, server, path, store, context = ux06_browser
-    import tempfile
-    from pathlib import Path as P
-    reg = P(tempfile.mkdtemp()) / 'registry.json'
-    descriptor = local_runtime.descriptor(registry=reg)
-    launcher = local_runtime.ensure(descriptor)
-    try:
-        await_recovery(page, launcher['url'], reg.parent)
-    finally:
-        local_runtime.stop(descriptor)
+    launcher, reg, own_target = recovery_launcher
+    own_target('recovery-target')
+    await_recovery(page, launcher['url'], reg.parent)
 
 def await_recovery(page, root, parent_dir):
     from playwright.sync_api import expect
@@ -131,22 +202,18 @@ def await_recovery(page, root, parent_dir):
     recovery.click()
     page.wait_for_url(lambda pattern: '#project=' in page.url, timeout=20000)
     assert created_entry is not None and not opened_entry, '恢复路径不得再次创建'
-    # 新建项目 0 页：初始工作面是"内容与来源"。
-    page.get_by_role('heading', name='内容与来源', exact=True).wait_for(timeout=20000)
+    # 新建项目 0 页：初始工作面是"内容与页序"。
+    page.get_by_role('heading', name='内容与页序', exact=True).wait_for(timeout=20000)
 
 
-def test_lost_create_response_offers_register_and_open_without_recreating(ux06_browser):
+def test_lost_create_response_offers_register_and_open_without_recreating(ux06_browser, recovery_launcher):
     """AC20：创建响应丢失时按已存在的位置核实——只登记并打开，不重复创建。"""
     from playwright.sync_api import expect
     from deck_master import local_runtime
     from deck_master.samples import create_sample as make_project
     page, server, path, store, context = ux06_browser
-    import tempfile
-    from pathlib import Path as P
-    reg = P(tempfile.mkdtemp()) / 'registry.json'
-    descriptor = local_runtime.descriptor(registry=reg)
-    launcher = local_runtime.ensure(descriptor)
-    target = reg.parent / 'lost-response-target'
+    launcher, reg, own_target = recovery_launcher
+    target = own_target('lost-response-target')
     try:
         page.goto(launcher['url'])
         expect(page.get_by_role('button', name='新建项目', exact=True)).to_be_visible()
@@ -175,10 +242,12 @@ def test_lost_create_response_offers_register_and_open_without_recreating(ux06_b
         page.wait_for_url(lambda pattern: '#project=' in page.url, timeout=20000)
         assert len(attempts) == create_attempts, '恢复路径不得再次创建'
     finally:
-        local_runtime.stop(descriptor)
+        page.unroute('**/api/projects/create')
 
 
-def test_modal_close_returns_focus_to_the_surface_heading_when_trigger_is_removed(ux06_browser):
+@pytest.mark.parametrize("result", ["removed", "cancelled", "rejected", "refresh_failed", "late_removed", "late_rejected"])
+@pytest.mark.parametrize("refresh_delay", [0, 0.25])
+def test_modal_close_returns_focus_to_the_surface_heading_when_trigger_is_removed(ux06_browser, refresh_delay, result):
     """UX-06b：模态关闭后触发器已被重绘移除时，焦点回到工作面标题而不是 body。"""
     from playwright.sync_api import expect
     from deck_master import local_runtime
@@ -201,10 +270,54 @@ def test_modal_close_returns_focus_to_the_surface_heading_when_trigger_is_remove
         page.get_by_role('button', name='刷新项目列表', exact=True).click()
         card = page.locator('.project-card').first
         expect(card).to_be_visible()
+        trigger = card.get_by_role('button', name=re.compile('^项目操作 · '))
+        trigger.click()
         card.get_by_role('button', name='从列表移除', exact=True).click()
         dialog = page.locator('dialog[open]')
-        dialog.get_by_role('button', name='移除条目', exact=True).click()
+        # Exercise both native close-event / list-response orderings. The original
+        # five-second focus assertion remains unchanged; only the network is delayed.
+        pending = []
+        if result.startswith('late_'):
+            def hold_remove(route):
+                pending.append(route)
+                page.evaluate('window.__removePending = true')
+            page.route('**/api/projects/remove', hold_remove)
+        if result == 'rejected':
+            page.route('**/api/projects/remove', lambda route: route.abort())
+        if result == 'refresh_failed':
+            page.route('**/api/projects', lambda route: route.abort())
+        elif refresh_delay:
+            import time
+            def delayed_list(route):
+                response = route.fetch()
+                time.sleep(refresh_delay)
+                route.fulfill(response=response)
+            page.route('**/api/projects', delayed_list)
+        dialog.get_by_role('button', name='关闭' if result == 'cancelled' else '移除条目', exact=True).click()
+        if result.startswith('late_'):
+            expect(dialog.get_by_role('button', name='关闭', exact=True)).to_be_visible()
+            # The pending POST is completed once; opening another form is not a retry.
+            page.wait_for_function("() => window.__removePending === true")
+            assert len(pending) == 1
+            dialog.get_by_role('button', name='关闭', exact=True).click()
+            page.get_by_role('button', name='新建项目', exact=True).click()
+            title = page.locator('dialog[open]').get_by_label('项目名称（必填）')
+            title.fill('保留新的创建草稿')
+            if result == 'late_removed':
+                pending[0].fulfill(response=pending[0].fetch())
+                expect(page.locator('.project-card')).to_have_count(0)
+            else:
+                pending[0].abort()
+                expect(card.locator('[role="alert"]')).not_to_have_text('')
+            expect(page.locator('dialog[open]')).to_have_count(1)
+            expect(title).to_have_value('保留新的创建草稿')
+            expect(title).to_be_focused()
+            return
         expect(page.locator('dialog[open]')).to_have_count(0)
+        if result in ('cancelled', 'rejected'):
+            expect(page.locator('.project-card')).to_have_count(1)
+            expect(trigger).to_be_focused()
+            return
         expect(page.locator('.project-card')).to_have_count(0)
         # 触发器（列表行按钮）已被重绘移除：焦点回退到工作面标题。
         expect(page.locator('#view-title')).to_be_focused()
@@ -363,6 +476,7 @@ def test_complete_draft_restore_reaches_icon_consumer_through_real_entry(ux06_br
         page.get_by_role('button', name=name, exact=True).click()
     # ① 意见面:填意见正文(入草稿)、选入预置意见,填修改要求。
     face('意见')
+    page.get_by_text('撰写意见', exact=True).click()
     page.get_by_label('意见正文', exact=True).fill('恢复完整草稿的原始意见')
     page.get_by_label('选入意见 1', exact=True).check()
     page.get_by_label('修改要求', exact=True).fill('完整恢复的要求：保留数字')

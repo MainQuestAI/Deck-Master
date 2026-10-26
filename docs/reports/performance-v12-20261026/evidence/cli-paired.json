@@ -1,0 +1,98 @@
+{
+  "baseline": "b688c300dbb612bea9af8cf63a1743fb8136ae2c",
+  "after": "working tree, CLI frozen",
+  "python": "/workspace/Deck-Master/.venv/bin/python",
+  "scope": "fresh subprocess whole process; source import via explicit PYTHONPATH; five paired samples; no p95",
+  "samples": [
+    {
+      "kind": "before",
+      "sample": 0,
+      "wall_seconds": 0.1590460540001004,
+      "cpu_seconds": 0.15864299999999998,
+      "output": "deck-master 1.0.0",
+      "modules": 242,
+      "deck_modules": 26
+    },
+    {
+      "kind": "after",
+      "sample": 0,
+      "wall_seconds": 0.034937689999878785,
+      "cpu_seconds": 0.03457000000000001,
+      "output": "deck-master 1.0.0",
+      "modules": 87,
+      "deck_modules": 1
+    },
+    {
+      "kind": "before",
+      "sample": 1,
+      "wall_seconds": 0.14108841000006578,
+      "cpu_seconds": 0.14074,
+      "output": "deck-master 1.0.0",
+      "modules": 242,
+      "deck_modules": 26
+    },
+    {
+      "kind": "after",
+      "sample": 1,
+      "wall_seconds": 0.035706216000107815,
+      "cpu_seconds": 0.035330999999999946,
+      "output": "deck-master 1.0.0",
+      "modules": 87,
+      "deck_modules": 1
+    },
+    {
+      "kind": "before",
+      "sample": 2,
+      "wall_seconds": 0.1410551779999878,
+      "cpu_seconds": 0.14070499999999994,
+      "output": "deck-master 1.0.0",
+      "modules": 242,
+      "deck_modules": 26
+    },
+    {
+      "kind": "after",
+      "sample": 2,
+      "wall_seconds": 0.035090946999844164,
+      "cpu_seconds": 0.034765000000000004,
+      "output": "deck-master 1.0.0",
+      "modules": 87,
+      "deck_modules": 1
+    },
+    {
+      "kind": "before",
+      "sample": 3,
+      "wall_seconds": 0.14187268600016978,
+      "cpu_seconds": 0.141544,
+      "output": "deck-master 1.0.0",
+      "modules": 242,
+      "deck_modules": 26
+    },
+    {
+      "kind": "after",
+      "sample": 3,
+      "wall_seconds": 0.035507183999925473,
+      "cpu_seconds": 0.03514300000000002,
+      "output": "deck-master 1.0.0",
+      "modules": 87,
+      "deck_modules": 1
+    },
+    {
+      "kind": "before",
+      "sample": 4,
+      "wall_seconds": 0.14513413999975455,
+      "cpu_seconds": 0.144762,
+      "output": "deck-master 1.0.0",
+      "modules": 242,
+      "deck_modules": 26
+    },
+    {
+      "kind": "after",
+      "sample": 4,
+      "wall_seconds": 0.03475577999961388,
+      "cpu_seconds": 0.034375,
+      "output": "deck-master 1.0.0",
+      "modules": 87,
+      "deck_modules": 1
+    }
+  ]
+}

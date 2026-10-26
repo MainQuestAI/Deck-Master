@@ -49,16 +49,21 @@ def _context(project, revision):
     return store, doc, _logical_identity(str(store.project_root), doc["revision_id"])
 
 
-def _facts(store, doc, *, selected_output=None, control=None):
+def _facts(store, doc, *, selected_output=None, control=None, read_context=None, deck_output=None):
     control = store.load_document() if control is None else control
     doc = {**doc, "policy": control["policy"], "reviews": control.get("reviews", [])}
-    from .editing import check_summary
+    from .editing import ReviewReadContext, check_summary
     from .production_detail import projection
     from .workbench import _ReadContext, _deck_output
 
-    summary = check_summary(store, doc)
+    review_context = (read_context.require(store, doc) if read_context is not None and read_context.document == doc
+                      else ReviewReadContext(store, doc))
+    summary = check_summary(store, doc, read_context=review_context)
     ctx = _ReadContext(store, doc)
-    output = _deck_output(ctx)
+    # A paired summary may supply the same artifact's already-checked output.
+    # The control overlay above changes policy/reviews only, not output inputs.
+    # Standalone exports retain their own original output check.
+    output = _deck_output(ctx) if deck_output is None else deck_output
     production = [projection(ctx, page, output) for page in doc["pages"]]
     gaps = [
         {"page_id": e["page_id"], "layer": layer, "reason": "not_recorded"}
@@ -91,7 +96,7 @@ def _facts(store, doc, *, selected_output=None, control=None):
     for key, reason in (summary.get("dimension_reasons") or {}).items():
         gaps.append(quality_gap(key, reason))
     from .delivery_eligibility import professional_policy
-    professional = professional_policy(store, doc, selected_output=selected_output)
+    professional = professional_policy(store, doc, selected_output=selected_output, read_context=review_context)
     if professional["required"] and not professional["satisfied"]:
         # Report the named professional gaps wherever this snapshot's gaps are
         # listed, including when the engineering gate refuses first.
@@ -99,7 +104,7 @@ def _facts(store, doc, *, selected_output=None, control=None):
                     for reason in professional["gap_reasons"])
     return {
         "revision_id": doc["revision_id"],
-        "input_alignment": input_alignment(doc),
+        "input_alignment": getattr(store, "input_alignment", input_alignment)(doc),
         "check_summary": summary,
         "production": production,
         "professional_evidence": professional["evidence"],
@@ -581,13 +586,15 @@ def _copy_bundle(project, result, destination):
     if destination.exists():
         raise ExportError('export_destination_exists', 'destination exists; choose a new output directory',
             exit_code=2, http_status=422)
+    store, _, identity = _context(project, None)
+    record = _record(store, identity, result['export_id'])
     destination.parent.mkdir(parents=True, exist_ok=True)
     stage = Path(tempfile.mkdtemp(prefix='.delivery-', dir=destination.parent))
     try:
         for name in result['files']:
             path = stage / name
             path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_bytes(download(project, export_id=result['export_id'], filename=name)[0])
+            path.write_bytes(_download_file(store, record, name)[0])
         if destination.exists():
             raise ExportError('export_destination_exists', 'destination exists; choose a new output directory',
                 exit_code=2, http_status=422)
@@ -657,9 +664,13 @@ def show(project, *, export_id):
 def download(project, *, export_id, filename):
     store, _, identity = _context(project, None)
     record = _record(store, identity, export_id)
+    return _download_file(store, record, filename)
+
+
+def _download_file(store, record, filename):
     if not isinstance(filename, str) or filename not in record["files"]:
         raise ExportError("export_file_not_found", "file is not on the export whitelist", exit_code=2, http_status=404)
-    path = safe_path(store.project_root, ".deckmaster", "workbench", "exports", export_id, *filename.split("/"))
+    path = safe_path(store.project_root, ".deckmaster", "workbench", "exports", record['export_id'], *filename.split("/"))
     data = path.read_bytes()
     expected = record["files"][filename]
     if len(data) != expected["size"] or sha256_bytes(data) != expected["sha256"]:

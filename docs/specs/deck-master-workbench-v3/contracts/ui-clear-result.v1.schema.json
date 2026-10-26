@@ -8,6 +8,7 @@
   "schema_version": {
    "const": "ui_clear_result.v1"
   },
+  "input_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$", "description": "Optional on historical receipts; binds exact replay of newly committed clear requests."},
   "operation_id": {
    "type": "string",
    "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"

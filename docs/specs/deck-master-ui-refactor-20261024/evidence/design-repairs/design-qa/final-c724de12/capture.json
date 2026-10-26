@@ -1,0 +1,110 @@
+[
+  {
+    "metrics": {
+      "overflow": false,
+      "paragraph": [],
+      "status": []
+    },
+    "surface": "overview",
+    "width": 1440,
+    "height": 900,
+    "url": "http://127.0.0.1:61043/studio/#project=67098d0c70d0a2929dc3d18036cf77e80b08249ea493e93ab9e5189f767c40e5&surface=overview&layer=content&zoom=1&revision=58efa4ed49824d3eb96624ed1fc7b85b",
+    "sha": "c724de12"
+  },
+  {
+    "metrics": {
+      "overflow": false,
+      "paragraph": [],
+      "status": [
+        "正文可读 · 核对状态见详情",
+        "正文可读 · 核对状态见详情",
+        "正文可读 · 核对状态见详情",
+        "正文可读 · 核对状态见详情"
+      ]
+    },
+    "surface": "content",
+    "width": 1440,
+    "height": 900,
+    "url": "http://127.0.0.1:61043/studio/#project=67098d0c70d0a2929dc3d18036cf77e80b08249ea493e93ab9e5189f767c40e5&surface=content&layer=content&zoom=1&revision=58efa4ed49824d3eb96624ed1fc7b85b",
+    "sha": "c724de12"
+  },
+  {
+    "metrics": {
+      "overflow": false,
+      "paragraph": [
+        {
+          "size": "16px",
+          "line": "28px"
+        },
+        {
+          "size": "16px",
+          "line": "28px"
+        },
+        {
+          "size": "16px",
+          "line": "28px"
+        }
+      ],
+      "status": []
+    },
+    "surface": "page",
+    "width": 1440,
+    "height": 900,
+    "url": "http://127.0.0.1:61043/studio/#project=67098d0c70d0a2929dc3d18036cf77e80b08249ea493e93ab9e5189f767c40e5&surface=page&layer=content&zoom=1&from=content&revision=58efa4ed49824d3eb96624ed1fc7b85b&page=p01",
+    "sha": "c724de12"
+  },
+  {
+    "metrics": {
+      "overflow": false,
+      "paragraph": [],
+      "status": []
+    },
+    "surface": "overview",
+    "width": 390,
+    "height": 900,
+    "url": "http://127.0.0.1:61043/studio/#project=67098d0c70d0a2929dc3d18036cf77e80b08249ea493e93ab9e5189f767c40e5&surface=overview&layer=content&zoom=1&revision=58efa4ed49824d3eb96624ed1fc7b85b",
+    "sha": "c724de12"
+  },
+  {
+    "metrics": {
+      "overflow": false,
+      "paragraph": [],
+      "status": [
+        "正文可读 · 核对状态见详情",
+        "正文可读 · 核对状态见详情",
+        "正文可读 · 核对状态见详情",
+        "正文可读 · 核对状态见详情"
+      ]
+    },
+    "surface": "content",
+    "width": 390,
+    "height": 900,
+    "url": "http://127.0.0.1:61043/studio/#project=67098d0c70d0a2929dc3d18036cf77e80b08249ea493e93ab9e5189f767c40e5&surface=content&layer=content&zoom=1&revision=58efa4ed49824d3eb96624ed1fc7b85b",
+    "sha": "c724de12"
+  },
+  {
+    "metrics": {
+      "overflow": false,
+      "paragraph": [
+        {
+          "size": "16px",
+          "line": "28px"
+        },
+        {
+          "size": "16px",
+          "line": "28px"
+        },
+        {
+          "size": "16px",
+          "line": "28px"
+        }
+      ],
+      "status": []
+    },
+    "surface": "page",
+    "width": 390,
+    "height": 900,
+    "url": "http://127.0.0.1:61043/studio/#project=67098d0c70d0a2929dc3d18036cf77e80b08249ea493e93ab9e5189f767c40e5&surface=page&layer=content&zoom=1&from=content&revision=58efa4ed49824d3eb96624ed1fc7b85b&page=p01",
+    "sha": "c724de12"
+  }
+]

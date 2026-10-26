@@ -303,7 +303,7 @@ def test_method_and_plain_notes_import_do_not_claim_each_other(tmp_path):
             # A small real module host mounts the ordinary notes editor with its
             # real API and recovery behavior, without conflating outline notes.
             page.goto(url+'studio/')
-            expect(page.get_by_role('heading',name='内容与来源',exact=True)).to_be_visible()
+            expect(page.get_by_role('heading',name='内容与页序',exact=True)).to_be_visible()
             page.evaluate("""async info=>{const {DraftEditor}=await import('/v2/drafts.js');const d=new DraftEditor(info,{scope:'project',page_id:null,layer:'notes'},info.revision_id,null,{exactRevision:true});d.onRestore=c=>d.restoreInPlace(c);document.querySelector('main').replaceChildren(d.mount());await d.ready;}""",{**info,'revision_id':store.current_revision_id()})
             expect(page.get_by_label('个人草稿',exact=True)).to_have_value('普通笔记')
             with page.expect_response('**/api/drafts/import'):page.get_by_label('导入草稿恢复文件',exact=True).set_input_files(method_file)
@@ -447,6 +447,7 @@ def test_table_atom_keyboard_selection_qualifiers_and_missing_mapping(tmp_path):
         with sync_playwright() as pw:
             browser=pw.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox']);page=browser.new_page(viewport={'width':390,'height':844})
             page.goto(url+'studio/#'+urlencode({'project':info['project_identity'],'surface':'page','page':'p1','revision':store.current_revision_id(),'layer':'content'}))
+            page.locator('.source-inspector > summary').click()
             expect(page.get_by_role('heading',name='正文与证据',exact=True)).to_be_visible()
             card=page.locator('.insight-node').filter(has=page.locator('p.read-text',has_text='12')).first
             expect(card).to_contain_text('仅比较指定记录，不外推节约率。')
@@ -474,7 +475,7 @@ def test_review_handoff_real_plan_commit_and_failure_recovery(tmp_path,failure):
             page.goto(url+'studio/#'+urlencode({'project':info['project_identity'],'surface':'runs','revision':store.current_revision_id(),'layer':'content','review':'reading-review','review_sha256':review_ref['sha256'],'finding':'f1','finding_index':0}))
             page.get_by_role('button',name='准备范围交接草稿',exact=True).click();expect(page.locator('.review-draft-state')).to_contain_text('已保存到项目')
             page.get_by_role('button',name='保存草稿后进入原正文编辑',exact=True).click()
-            page.get_by_text('编辑本页标题与正文',exact=True).click()
+            page.get_by_role('button',name='编辑本页标题与正文',exact=True).click()
             expect(page.get_by_label('正文修改说明',exact=True)).to_have_value('补充限定条件\n预期：说明适用范围\n实际：未说明')
             page.get_by_label('页面标题',exact=True).fill('补充了限定条件的标题')
             expect(page.locator('.draft-state')).to_contain_text('已保存到项目')
@@ -565,6 +566,40 @@ def keyboard_to(page,locator):
     raise AssertionError('Keyboard target was unreachable: '+str(locator))
 
 
+def native_select_typeahead(page, locator, character):
+    """Send a Unicode keyboard character through Chromium's normal input path.
+
+    Playwright's press() key map excludes Chinese characters. Its Chromium
+    keyboard implementation uses this same CDP command; no value setter or
+    JavaScript event dispatch substitutes for the select's default behavior.
+    Native popup navigation is not consumed in headless Chromium on macOS.
+    """
+    expect(locator).to_be_enabled()
+    expect(locator).to_be_focused()
+    locator.evaluate('''node => {
+      node.keyboardEvidence=[];node.keyboardObservers=[];
+      for(const type of ['keydown','keypress','input','change','keyup']){
+        const record=event=>{if(event.target===node)node.keyboardEvidence.push({
+          type:event.type,key:event.key,trusted:event.isTrusted,value:node.value});};
+        window.addEventListener(type,record,true);node.keyboardObservers.push([type,record]);
+      }
+    }''')
+    session=page.context.new_cdp_session(page)
+    try:
+        session.send('Input.dispatchKeyEvent',{'type':'keyDown','key':character,'text':character,'unmodifiedText':character})
+        session.send('Input.dispatchKeyEvent',{'type':'keyUp','key':character})
+    finally:
+        session.detach()
+        events=locator.evaluate('''node => {
+          for(const [type,record] of node.keyboardObservers)window.removeEventListener(type,record,true);
+          return node.keyboardEvidence;
+        }''')
+    assert [event['type'] for event in events if event['type'] in ('input','change')]==['input','change']
+    assert all(event['trusted'] for event in events)
+    assert any(event['type']=='keypress' and event['key']==character for event in events)
+    return events
+
+
 @pytest.mark.browser
 @pytest.mark.parametrize('viewport',[(1280,800),(1440,900),(390,844)])
 def test_insight_primary_paths_keyboard_focus_and_long_content(tmp_path,viewport):
@@ -575,8 +610,13 @@ def test_insight_primary_paths_keyboard_focus_and_long_content(tmp_path,viewport
             browser=pw.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox']);page=browser.new_page(viewport={'width':viewport[0],'height':viewport[1]})
             page.goto(url+'studio/#'+urlencode({'project':info['project_identity'],'surface':'content','revision':store.current_revision_id(),'layer':'content','content_area':'arguments','proposal':ref['sha256']}))
             control=page.get_by_role('button',name='记录方向决定',exact=True);expect(control).to_be_visible();keyboard_to(page,control);page.keyboard.press('Enter');expect(page.get_by_role('dialog')).to_be_visible();page.keyboard.press('Escape');expect(control).to_be_focused()
+            more=page.get_by_role('button',name='更多内容工具',exact=True);keyboard_to(page,more);page.keyboard.press('Enter')
             nav=page.get_by_role('button',name='方法与案例',exact=True);keyboard_to(page,nav);page.keyboard.press('Enter')
-            mode=page.get_by_label('准备上下文');keyboard_to(page,mode);page.keyboard.press('ArrowDown');page.keyboard.press('Enter');expect(page.locator('#content-area-methods')).to_contain_text('准备已核对')
+            mode=page.get_by_label('准备上下文');keyboard_to(page,mode)
+            events=native_select_typeahead(page,mode,'独');page.keyboard.press('Enter')
+            expect(mode).to_have_value('independent');expect(mode).to_be_focused()
+            (tmp_path/'method-context-keyboard-events.json').write_text(json.dumps(events,ensure_ascii=False,indent=2))
+            expect(page.locator('#content-area-methods')).to_contain_text('准备已核对')
             search=page.get_by_label('筛选方法或案例');keyboard_to(page,search);page.keyboard.type('content-m04')
             check=page.locator('label.method-entry').filter(has_text='content-m04 ·').locator('input');keyboard_to(page,check);page.keyboard.press('Space')
             read=page.get_by_role('button',name='阅读 content-m04',exact=True);expect(read).to_be_visible();keyboard_to(page,read);page.keyboard.press('Enter');expect(page.locator('#content-area-methods > section > pre')).to_be_focused()
@@ -592,15 +632,65 @@ def test_insight_primary_paths_keyboard_focus_and_long_content(tmp_path,viewport
 
 
 @pytest.mark.browser
+@pytest.mark.parametrize('block_change',[False,True])
+def test_method_context_keyboard_does_not_bypass_change_handler(tmp_path,block_change):
+    project,store,_,_=candidate(tmp_path);info=ui_journal.project_info(project)
+    server=WorkbenchServer(project);url=server.start();before=store.load_document()
+    try:
+        with sync_playwright() as pw:
+            browser=pw.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox'])
+            page=browser.new_page();contexts=[]
+            page.on('request',lambda request:contexts.append(request.post_data_json['context'])
+                    if request.url.endswith('/api/method-library/preview') else None)
+            page.goto(url+'studio/#'+urlencode({'project':info['project_identity'],'surface':'content',
+                'revision':store.current_revision_id(),'layer':'content','content_area':'methods'}))
+            mode=page.get_by_label('准备上下文');expect(mode).to_be_enabled()
+            expect(page.locator('#content-area-methods')).to_contain_text('目录可浏览；当前没有可准备的新阶段。')
+            if block_change:
+                page.evaluate('''() => document.addEventListener('change',event=>{
+                  if(event.target.getAttribute('aria-label')==='准备上下文')event.stopImmediatePropagation();
+                },true)''')
+            keyboard_to(page,mode);events=native_select_typeahead(page,mode,'独');page.keyboard.press('Enter')
+            expect(mode).to_have_value('independent');expect(mode).to_be_focused()
+            if block_change:
+                with pytest.raises(AssertionError,match='准备已核对') as failed:
+                    expect(page.locator('#content-area-methods')).to_contain_text('准备已核对')
+                assert not any(context['mode']=='independent' for context in contexts)
+            else:
+                expect(page.locator('#content-area-methods')).to_contain_text('准备已核对')
+                assert any(context['mode']=='independent' for context in contexts)
+            (tmp_path/'keyboard-change-handler-evidence.json').write_text(json.dumps({
+                'change_blocked':block_change,'selected_value':mode.input_value(),'events':events,
+                'preview_modes':[context['mode'] for context in contexts],
+                'original_assertion_failure':str(failed.value).split('Actual value:',1)[0] if block_change else None,
+            },ensure_ascii=False,indent=2))
+            assert store.load_document()==before
+            browser.close()
+    finally:server.stop()
+
+
+@pytest.mark.browser
 def test_method_role_stage_change_and_catalog_drift_recheck(tmp_path,resource_root):
     project,store,_,_=candidate(tmp_path);info=ui_journal.project_info(project);before=store.load_document();server=WorkbenchServer(project);url=server.start()
     try:
         with sync_playwright() as pw:
             browser=pw.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox']);page=browser.new_page()
             page.add_init_script("Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>{window.copies=(window.copies||[]).concat(text)}}})")
+            pending_drafts=[]
+            page.route('**/api/drafts', lambda route: pending_drafts.append(route))
             page.goto(url+'studio/#'+urlencode({'project':info['project_identity'],'surface':'content','revision':store.current_revision_id(),'layer':'content','content_area':'methods'}))
+            expect(page.get_by_label('准备上下文')).to_be_disabled()
+            for route in pending_drafts:
+                route.continue_()
+            page.unroute('**/api/drafts')
+            expect(page.get_by_label('准备上下文')).to_be_enabled()
             page.get_by_label('准备上下文').select_option('independent');expect(page.locator('#content-area-methods')).to_contain_text('准备已核对')
-            page.locator('label.method-entry').filter(has_text='content-m04 ·').locator('input').check();expect(page.get_by_role('button',name='阅读 content-m04',exact=True)).to_be_visible()
+            chosen=page.locator('label.method-entry[data-resource-id="content-m04"] input')
+            chosen.evaluate("node=>node.dataset.identityProbe='retained'")
+            chosen.check()
+            expect(page.get_by_role('button',name='阅读 content-m04',exact=True)).to_be_visible()
+            expect(chosen).to_have_attribute('data-identity-probe','retained')
+            expect(chosen).to_be_checked()
             page.get_by_label('方法阅读阶段').select_option('page_copy');expect(page.locator('#content-area-methods')).to_contain_text('准备已核对')
             page.get_by_label('方法阅读角色').select_option('deck-review');expect(page.locator('#content-area-methods')).to_contain_text('准备已核对')
             page.get_by_label('方法阅读阶段').select_option('review');expect(page.locator('#content-area-methods')).to_contain_text('准备已核对')
@@ -670,10 +760,12 @@ def test_neutral_purpose_keeps_user_input_intent_and_speech_policy(tmp_path):
         with sync_playwright() as pw:
             browser=pw.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox']);page=browser.new_page()
             page.goto(url+'studio/#'+urlencode({'project':info['project_identity'],'surface':'content','revision':store.current_revision_id(),'layer':'content'}))
+            page.get_by_role('button',name='材料与要求',exact=True).click()
             page.get_by_role('button',name='修改任务要求',exact=True).click()
             field=page.get_by_label('用途与目标',exact=True);expect(field).not_to_have_value('')
             field.fill('教学、研究与工程评审：不要求商业CTA，保留原口播规则')
             page.get_by_role('button',name='关闭编辑并保留草稿',exact=True).click()
+            page.get_by_role('button',name='材料与要求',exact=True).click()
             page.get_by_role('button',name='修改任务要求',exact=True).click();expect(field).to_have_value('教学、研究与工程评审：不要求商业CTA，保留原口播规则')
             assert store.load_document()==before;browser.close()
     finally:server.stop()
@@ -690,7 +782,7 @@ def test_imported_page_missing_mapping_and_invalid_atom_remains_readable(tmp_pat
         with sync_playwright() as pw:
             browser=pw.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox']);page=browser.new_page()
             route={'project':info['project_identity'],'surface':'page','page':'p1','revision':store.current_revision_id(),'layer':'content'}
-            page.goto(url+'studio/#'+urlencode(route));expect(page.get_by_text('此页未记录原子映射，仍可通过页面来源阅读。',exact=True)).to_be_visible()
+            page.goto(url+'studio/#'+urlencode(route));page.locator('.source-inspector > summary').click();expect(page.get_by_text('此页未绑定论证主线；原子映射和来源关联按下方记录分别展示。',exact=True)).to_be_visible()
             expect(page.locator('.insight-node').filter(has_text='明确未知')).to_contain_text('未记录映射')
             page.goto(url+'studio/#'+urlencode({**route,'atom':'atom:p1:invalid'}));expect(page.get_by_role('heading',name='合成教学稿',exact=True)).to_be_visible()
             expect(page.get_by_role('alert').filter(has_text='Text atom is unavailable')).to_be_visible()
@@ -725,7 +817,18 @@ def test_long_semantics_and_bullet_atoms_survive_narrow_design_handoff(tmp_path)
 
 @pytest.mark.browser
 @pytest.mark.parametrize('second_result',['saved','unknown','conflict'])
-def test_review_single_click_drains_old_and_latest_save(tmp_path,second_result):
+def test_review_single_click_drains_old_and_latest_save(tmp_path,second_result,monkeypatch):
+    from threading import Event
+    second_entered, release_second = Event(), Event()
+    real_save = ui_journal.save
+    def controlled_save(project, *, draft, expected_etag=None):
+        if draft['content'].get('text') == 'P2：最后文字与原范围':
+            # Keep the actual second HTTP save unfinished until the test
+            # releases it. Seeing a browser request is not a fetched response.
+            second_entered.set()
+            assert release_second.wait(10), 'Test did not release the second save response'
+        return real_save(project, draft=draft, expected_etag=expected_etag)
+    monkeypatch.setattr(ui_journal, 'save', controlled_save)
     project,store,ref=reviewed_project(tmp_path);server=WorkbenchServer(project);url=server.start();info=ui_journal.project_info(project);before=store.load_document();held=[];writes=[]
     try:
         with sync_playwright() as pw:
@@ -737,18 +840,27 @@ def test_review_single_click_drains_old_and_latest_save(tmp_path,second_result):
                 if len(writes)==2 and second_result=='conflict':
                     record=ui_journal.list_drafts(project)['records'][0];other=copy.deepcopy(record['draft']);other['content']['text']='另一窗口的明确修改'
                     ui_journal.save(project,draft=other,expected_etag=record['etag'])
+                page.evaluate('(count)=>window.reviewSaveStarted=count',len(writes))
                 held.append((route,route.fetch()))
+                page.evaluate('(count)=>window.reviewSaveReady=count',len(held))
             page.route('**/api/drafts/save',hold)
             note=page.get_by_label('审阅交接备注');note.fill('P1：旧自动保存')
             expect(page.locator('.review-draft-state')).to_contain_text('正在保存到项目')
-            # Pump the route handler without releasing its HTTP response.
-            page.wait_for_timeout(100);assert len(held)==1
+            # Synchronize after route.fetch(), not merely its request event.
+            page.wait_for_function('()=>window.reviewSaveReady===1');assert len(held)==1
             note.fill('P2：最后文字与原范围')
             page.get_by_role('button',name='保存草稿后进入原正文编辑',exact=True).click()
             expect(page.get_by_role('dialog')).to_be_visible();assert len(writes)==1
             with page.expect_request('**/api/drafts/save'):
                 held[0][0].fulfill(response=held[0][1])
-            page.wait_for_timeout(100);assert len(held)==2
+            page.wait_for_function('()=>window.reviewSaveStarted===2')
+            assert second_entered.wait(5)
+            assert len(writes)==2 and len(held)==1
+            expect(page.get_by_role('dialog')).to_be_visible()
+            expect(page.get_by_label('正文修改说明',exact=True)).to_have_count(0)
+            release_second.set()
+            page.wait_for_function('()=>window.reviewSaveReady===2');assert len(held)==2
+            assert held[1][1].status == (409 if second_result=='conflict' else 200)
             expect(page.get_by_role('dialog')).to_be_visible()
             assert writes[1]['draft']['content']['text']=='P2：最后文字与原范围'
             if second_result=='unknown':held[1][0].abort()
@@ -761,8 +873,12 @@ def test_review_single_click_drains_old_and_latest_save(tmp_path,second_result):
                 expect(page.get_by_label('正文修改说明',exact=True)).to_have_count(0)
             page.wait_for_timeout(700)
             assert len(writes)==2 and store.load_document()==before
+            persisted=ui_journal.list_drafts(project)['records'][0]['draft']['content']['text']
+            assert persisted==('另一窗口的明确修改' if second_result=='conflict' else 'P2：最后文字与原范围')
             browser.close()
-    finally:server.stop()
+    finally:
+        release_second.set()
+        server.stop()
 
 
 def test_method_speech_review_uses_existing_resolver_and_rejects_unknown_unit(tmp_path):

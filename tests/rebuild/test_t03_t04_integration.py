@@ -60,11 +60,11 @@ def test_change_dispatch_on_an_enforced_project_is_bound_and_accepted(tmp_path):
     """The edit flow (AC-R03) stays usable in a managed project: commit
     dispatches a bound task, and the result is adopted under the same gate."""
     project, store = _project(tmp_path)
-    # Qualify the whole fixed manuscript under its actual initial scope before
-    # the separate one-page edit request; never smuggle review into copy scope.
-    _settle_preproduction(store, seed="change-flow")
+    # The new request changes the audience/intent applicability basis. Review
+    # its actual page scope after starting it, with review explicitly in scope.
     _start(project, store, intent="edit",
-           scope=_scope(page_ids=["p1"], layers=["page_copy", "svg"]))
+           scope=_scope(page_ids=["p1"], layers=["page_copy", "svg", "review"]))
+    _settle_preproduction(store, seed="change-flow")
     _grant(project, store, actions=("change.commit", "dispatch.host_task"), scope=_scope(page_ids=["p1"]))
     document = store.load_document()
     entry = next(e for e in document["pages"] if e["page_id"] == "p1")
@@ -253,22 +253,32 @@ def _blueprint_eligibility(store):
                                              "layers": ["blueprint"]}})
 
 
-def _accept_preproduction_reviews(project, store, *, findings_by_kind=None):
+def _accept_preproduction_reviews(project, store, *, findings_by_kind=None, force_units=None):
     """The real review path: dispatch the preproduction review task under the
     current request, then accept the full unit set through accept_result. An
     optional map carries open must-fix findings per review kind."""
     document = store.load_document()
     adapter = _independent_adapter(store, document)
-    outcome = dispatch_with_synthetic_provider(project, adapter_context=adapter)
+    outcome = dispatch_with_synthetic_provider(project, adapter_context=adapter, force_units=force_units)
     assert outcome["status"] == "review_dispatched"
     task = outcome["task"]
     document = store.load_document()
     reviewer = {"type": "independent_host", "id": "model-b", "execution_ref": "exec-independent",
                 "independence_confirmed": True, "identity_receipt": None,
                 "assurance": "host_attested"}
-    reviews = [_review(store, document, kind, reviewer=reviewer,
-                       findings=(findings_by_kind or {}).get(kind, ()))
-               for kind in ("argument", "page_copy", "progression", "speech")]
+    packet = store.read_object_json(outcome["review_draft_ref"])
+    reviews = []
+    for kind in packet["required_units"]:
+        owners = [row["review_ref"] for row in packet["review_scope"]["owners"] if row["kind"] == kind]
+        if not owners:
+            reviews.append(_review(store, document, kind, reviewer=reviewer,
+                                   findings=(findings_by_kind or {}).get(kind, ())))
+        for ref in owners:
+            owner = store.read_object_json(ref)
+            row = _review(store, document, kind, reviewer=reviewer,
+                          findings=[*owner["findings"], *(findings_by_kind or {}).get(kind, ())])
+            row.update(review_id=owner["review_id"], replaces=ref)
+            reviews.append(row)
     out = accept_with_synthetic_provider(
         project, task_id=task["task_id"], operation_id=task["operation_id"],
         produced_against=task["produced_against"],
@@ -358,7 +368,7 @@ def test_a_new_failing_review_on_the_same_manuscript_reblocks_production(tmp_pat
                "message": "第二 round 发现限定缺失", "expected": "上屏正文带限定",
                "actual": "正文无该限定", "evidence": []}
     _accept_preproduction_reviews(project, store,
-                                  findings_by_kind={"argument": [finding]})
+                                  findings_by_kind={"argument": [finding]}, force_units=["argument"])
     reblocked = _blueprint_eligibility(store)
     assert reblocked["allowed"] is False
     assert "preproduction_blocked" in reblocked["reason_codes"]
@@ -619,3 +629,79 @@ def test_a_paused_request_gains_no_phase_tasks_through_continue(tmp_path):
             again = service.continue_project(project)
             assert store.load_document() == stable
             assert [t['task_id'] for t in again['pending_tasks']] == [t['task_id'] for t in resumed['pending_tasks']]
+
+
+@pytest.mark.parametrize('selection', [[], ['argument', 'argument'], ['unknown'], 'argument', [None]])
+def test_explicit_recheck_rejects_invalid_units_without_task_or_review_changes(tmp_path, selection):
+    from deck_master.models import ModelError
+    project, store = _deck_with_pages(tmp_path)
+    _production_request(project, store, operation_id='recheck-invalid')
+    _accept_preproduction_reviews(project, store)
+    before = store.read_current()
+    with pytest.raises(ModelError, match='distinct currently required review units'):
+        dispatch_with_synthetic_provider(project,
+            adapter_context=_independent_adapter(store, store.load_document()), force_units=selection)
+    assert store.read_current() == before
+
+
+def test_explicit_recheck_freezes_owners_reuses_live_task_and_cancel_refuses_late_result(tmp_path):
+    from deck_master import native_review, tasks
+    project, store = _deck_with_pages(tmp_path)
+    _production_request(project, store, operation_id='recheck-cancel')
+    _accept_preproduction_reviews(project, store)
+    reviewed = store.load_document()
+    before_refs = list(reviewed['reviews'])
+    before_pages = list(reviewed['pages'])
+    adapter = _independent_adapter(store, reviewed)
+    assert dispatch_with_synthetic_provider(project, adapter_context=adapter)['status'] == 'already_reviewed'
+    first = dispatch_with_synthetic_provider(project, adapter_context=adapter, force_units=['argument'])
+    packet = store.read_object_json(first['review_draft_ref'])
+    owner_refs = [ref for ref in before_refs if store.read_object_json(ref)['kind'] == 'argument']
+    assert packet['required_units'] == ['argument']
+    assert packet['review_scope']['owners'] == [{'kind': 'argument', 'review_ref': ref} for ref in owner_refs]
+    repeated = dispatch_with_synthetic_provider(project, adapter_context=adapter, force_units=['argument'])
+    assert repeated['task']['task_id'] == first['task']['task_id']
+    assert repeated['task']['inputs'] == first['task']['inputs']
+    # Explicit execution of a running recheck does not get hidden by the old pass,
+    # and cannot launch a second native session.
+    assert native_review.run(project, task_id=first['task']['task_id'])['status'] == 'running'
+    service.task_cancel(project, task_id=first['task']['task_id'])
+    cancelled_document = store.load_document()
+    task = first['task']
+    with pytest.raises(tasks.TaskConflict, match='cancel'):
+        service.accept_result(project, task_id=task['task_id'], operation_id=task['operation_id'],
+            produced_against=task['produced_against'], result_payload={'kind': 'review', 'reviews': []})
+    settled = store.load_document()
+    assert settled['change']['operation_id'] == 'settle-' + task['operation_id']
+    cancelled_task = tasks._lookup_task(settled, task['task_id'], store)
+    assert cancelled_task['status'] == 'cancelled' and cancelled_task['result_refs'] == []
+    assert cancelled_task['call_allowances'] == tasks._lookup_task(
+        cancelled_document, task['task_id'], store)['call_allowances']
+    assert store.load_document()['reviews'] == before_refs and store.load_document()['pages'] == before_pages
+    replacement = dispatch_with_synthetic_provider(project, adapter_context=adapter, force_units=['argument'])
+    assert replacement['task']['task_id'] != task['task_id']
+    assert store.read_object_json(replacement['review_draft_ref'])['review_scope']['owners'] == packet['review_scope']['owners']
+
+
+def test_native_cli_exposes_explicit_unit_selection_without_changing_default(tmp_path, monkeypatch, capsys):
+    from deck_master import cli, native_review
+    calls = []
+    def observe(project, **kwargs):
+        calls.append((project, kwargs))
+        return {'status': 'already_reviewed'}
+    monkeypatch.setattr(native_review, 'run', observe)
+    cli.main(['review', 'native', '--project', str(tmp_path), '--force-unit', 'argument', '--force-unit', 'speech'])
+    assert calls[-1][1] == {'task_id': None, 'force_units': ['argument', 'speech']}
+    cli.main(['review', 'native', '--project', str(tmp_path)])
+    assert calls[-1][1] == {'task_id': None, 'force_units': None}
+    capsys.readouterr()
+
+
+def test_explicit_recheck_cannot_add_a_known_but_unrequired_review_dimension(tmp_path):
+    from deck_master.models import ModelError
+    project, store = _project(tmp_path)
+    assert 'argument' not in content_review.required_units(store, store.load_document())
+    before = store.read_current()
+    with pytest.raises(ModelError, match='distinct currently required review units'):
+        content_review.dispatch_preproduction_review(project, force_units=['argument'])
+    assert store.read_current() == before

@@ -22,10 +22,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from . import models
+from . import models, audience_review
 from .editing import _current_artifact_digests
 from .models import ModelError, canonical_json_bytes, sha256_bytes
-from .store import Store
+from .store import Store, StoreError
 
 STAGE = "preproduction"
 
@@ -36,8 +36,6 @@ SPEECH_UNIT = "speech"
 FIDELITY_UNITS = ("page_copy", "progression")
 ALLOWED_KINDS = BASE_UNITS + (SPEECH_UNIT,)
 
-REQUIREMENTS = ("independent_model_or_human", "host_self", "fidelity_only")
-CAPABILITY_KEYS = ("verified_user_events", "independent_review_receipts", "human_review_receipts")
 
 
 def reviewer_capabilities(adapter_context=None) -> dict:
@@ -257,8 +255,13 @@ def build_review_packet(store, document, *, page_ids=None, required=None,
                           "usage_note": source.get("usage_note") or "",
                           "restriction": source.get("restriction") or "",
                           "extract_ref": source.get("extract"), "extract": extract})
+    from .effective_requirements import packet_requirements
+    from .review_handoff import project_findings
+    units = list(required if required is not None else required_units(store, document))
     return {
         "schema_version": "content_review_packet.v1",
+        "external_findings": project_findings(store, document, [p["page_id"] for p in pages]),
+        "effective_requirements": packet_requirements(store, document, page_ids=[p['page_id'] for p in pages], units=units),
         "project_id": document["project_id"],
         "revision_id": document["revision_id"],
         "task": document.get("task") or {},
@@ -268,12 +271,14 @@ def build_review_packet(store, document, *, page_ids=None, required=None,
         "narrative": narrative,
         "plan": plan,
         "manuscript": {"pages": pages, "page_order": [p["page_id"] for p in pages]},
+        "page_copy_checklist": audience_review.page_copy_checklist(document, pages),
         "required_units": list(required if required is not None else required_units(store, document)),
         "requirement": requirement,
         "instruction": (
             "Judge the task fit, the argument, the evidence boundaries, the page coverage, "
             "the progression and the use budgets against the materials and this complete "
-            "candidate manuscript. Return one review record per required unit with subjects "
+            "candidate manuscript. Return a review for every required unit and separately replace "
+            "each frozen historical owner, retaining its finding identities, with subjects "
             "and dependencies binding exactly these objects; do not replace the manuscript "
             "with a summary of the author's conclusion."),
     }
@@ -431,8 +436,20 @@ def _review_pages(store, document, page_ids=None) -> list[str]:
     return ids
 
 
+def validate_force_units(store, document, force_units):
+    """Explicit re-review selection cannot manufacture a new review dimension."""
+    if force_units is None:
+        return []
+    required = set(required_units(store, document))
+    if (not isinstance(force_units, list) or not force_units
+            or not all(isinstance(unit, str) for unit in force_units)
+            or len(force_units) != len(set(force_units)) or not set(force_units) <= required):
+        raise ModelError("content_review/force_units", "select distinct currently required review units")
+    return sorted(force_units)
+
+
 def dispatch_preproduction_review(project, *, page_ids=None, adapter_context=None,
-                                  instruction=None) -> dict:
+                                  instruction=None, force_units=None) -> dict:
     """Open the preproduction review task, or return an honest needs_reviewer.
 
     ``needs_reviewer`` carries the reviewable draft (the packet) so the caller
@@ -450,9 +467,14 @@ def dispatch_preproduction_review(project, *, page_ids=None, adapter_context=Non
     pages = _review_pages(store, document, page_ids)
     if not pages:
         raise ModelError("content_review/pages", "there is no manuscript to review yet")
-    units = required_units(store, document)
+    status = preproduction_status(store, document, page_ids=pages)
+    forced = validate_force_units(store, document, force_units)
+    units = sorted(set(status['missing_units']) | {row['kind'] for row in status['blocking_findings']} | set(forced))
+    if not units:
+        return {'status': 'already_reviewed', 'stage': STAGE, 'units': [], 'preproduction': status}
     packet = build_review_packet(store, document, page_ids=pages, required=units,
                                  requirement=state["effective"])
+    packet['review_scope'] = {'units': units, 'owners': _review_scope_owners(store, document, units, pages)}
     packet_ref = store.put_json_object(packet)
     capabilities = reviewer_capabilities(adapter_context)
     if (state["effective"] == "independent_model_or_human"
@@ -472,7 +494,7 @@ def dispatch_preproduction_review(project, *, page_ids=None, adapter_context=Non
         store, kind="review", page_ids=pages, review_stage=STAGE,
         instruction=instruction or (
             "内容前置审查：读取 packet（材料 + 任务事实 + 完整候选稿），按 required units "
-            f"({', '.join(units)}) 各自提交一条 review 记录。"
+            f"({', '.join(units)}) 提交 review；有历史 owner 时逐一复查并明确 replaces，不合并身份。"
             "subjects/dependencies 必须绑定当前 Narrative、ContentPlan 与本次全部 Page 及来源；"
             "发现必须定位到具体节点/页面/atom 与依据。"),
         extra_inputs=[packet_ref], executor_type=executor_type,
@@ -488,17 +510,76 @@ def dispatch_preproduction_review(project, *, page_ids=None, adapter_context=Non
 # Acceptance (called from the review result path)
 
 
-def _require_unit_coverage(store, document, reviews) -> None:
-    units = set(required_units(store, document))
-    submitted = {review.get("kind") for review in reviews}
-    unknown = sorted(submitted - set(ALLOWED_KINDS))
-    if unknown:
-        raise _envelope_error("review/kind",
-                              f"preproduction reviews cover {list(ALLOWED_KINDS)}; got {unknown}")
-    missing = sorted(units - submitted)
-    if missing:
-        raise _envelope_error("review/kind",
-                              f"preproduction review is incomplete; missing units: {missing}")
+def _review_scope_owners(store, document, units, pages):
+    """Freeze historical frontier and still-open owners, never merge identities."""
+    from .review import finding_closed, open_findings, pending_judgments
+    history = [row for row in _preproduction_reviews(store, document)
+               if row['review'].get('review_subject') != 'outline']
+    records = [{**row['review'], 'ref': row['review_ref']} for row in history]
+    replaced = {row['replaces']['sha256'] for row in records if row.get('replaces')}
+    artifacts = _current_artifact_digests(store, document)
+    owners = []
+    selected_pages = set(pages)
+    has_current_pages = bool(selected_pages & {entry['page_id'] for entry in document['pages']})
+    for row in records:
+        if row['kind'] not in units:
+            continue
+        scoped = {dep['identity'].split(':', 1)[1] for dep in row.get('dependencies', [])
+                  if dep['kind'] == 'content' and dep['identity'].startswith('page:')}
+        # A whole-manuscript recheck must retain narrower historical owners
+        # whose findings still concern this scope. Requiring containment loses
+        # them while the aggregate gate correctly keeps their findings open.
+        # A deck finding blocks every nonempty current scope, even if its
+        # original owner reviewed other pages. Keep that exact owner visible;
+        # inclusion never relaxes the full-manuscript closure requirements.
+        overlaps = bool(selected_pages & scoped)
+        findings = open_findings(row) + pending_judgments(row)
+        if not overlaps:
+            findings = [finding for finding in findings if has_current_pages and finding.get('page_id') is None]
+        unresolved = any(not finding_closed(records, row, finding, artifacts) for finding in findings)
+        if not overlaps and not unresolved:
+            continue
+        if row['ref']['sha256'] not in replaced or unresolved:
+            owners.append({'kind': row['kind'], 'review_ref': row['ref']})
+    return owners
+
+
+def _frozen_review_scope(store, document, task):
+    packets = []
+    for ref in task.get('inputs') or []:
+        try:
+            value = store.read_object_json(ref)
+        except (ValueError, UnicodeError, StoreError):
+            continue
+        if isinstance(value, dict) and value.get('schema_version') == 'content_review_packet.v1':
+            packets.append(value)
+    if len(packets) == 1 and packets[0].get('review_scope') is not None:
+        scope = packets[0]['review_scope']
+        units = scope['units']
+        if (units != packets[0]['required_units'] or not units
+                or set(units) != {row['kind'] for row in task.get('review_units') or []}
+                or not set(units) <= set(ALLOWED_KINDS)):
+            raise _envelope_error('scope', 'frozen packet and Task review units disagree')
+        return scope
+    # Legacy Tasks never acquire a narrower contract from a caller's subset.
+    return {'units': required_units(store, document), 'owners': None}
+
+
+def _require_unit_coverage(store, document, reviews, task) -> None:
+    scope = _frozen_review_scope(store, document, task)
+    units = set(scope['units'])
+    submitted = {review.get('kind') for review in reviews}
+    if submitted != units:
+        raise _envelope_error('review/kind',
+                              f'preproduction review must cover exactly frozen units; missing units: {sorted(units - submitted)}; unexpected units: {sorted(submitted - units)}')
+    if scope['owners'] is not None:
+        expected = {(row['kind'], row['review_ref']['sha256']) for row in scope['owners']}
+        actual = [(row['kind'], row['replaces']['sha256']) for row in reviews if row.get('replaces')]
+        unowned = [row['kind'] for row in reviews if not row.get('replaces')]
+        expected_unowned = units - {kind for kind, _ in expected}
+        if (set(actual) != expected or len(actual) != len(set(actual))
+                or set(unowned) != expected_unowned or len(unowned) != len(set(unowned))):
+            raise _envelope_error('review/replaces', 'replace each frozen historical owner exactly once, without unrelated owners')
 
 
 def _envelope_error(where, message):
@@ -506,7 +587,7 @@ def _envelope_error(where, message):
     return EnvelopeError(f"review/{where}", message)
 
 
-def _require_subject_binding(store, document, review, page_ids) -> None:
+def _require_subject_binding(store, document, review, page_ids, *, artifact_digests=None) -> None:
     cited = {(ref.get("path"), ref.get("sha256")) for ref in review.get("subjects") or []}
     required: set[tuple] = set()
     for pointer in (document.get("narrative"), document.get("content_plan")):
@@ -523,7 +604,10 @@ def _require_subject_binding(store, document, review, page_ids) -> None:
             "subjects",
             "a preproduction review must cite the current Narrative, ContentPlan and every "
             f"reviewed Page; missing {[pair[1][:8] for pair in missing]}")
-    digests = _current_artifact_digests(store, document)
+    # A batch importer may supply facts already verified for this exact artifact.
+    # Standalone callers still derive and validate their own artifact facts.
+    digests = (_current_artifact_digests(store, document)
+               if artifact_digests is None else artifact_digests)
     deps = {f"{dep['kind']}:{dep['identity']}": dep.get("sha256")
             for dep in review.get("dependencies") or []}
     expected = {}
@@ -564,8 +648,24 @@ def validate_preproduction_result(store, document, task, envelope, *, adapter_co
         if review.get("review_stage") != STAGE:
             raise _envelope_error("review_stage", "preproduction results carry review_stage=preproduction")
     state = requirement_state(store, document)
-    _require_unit_coverage(store, document, reviews)
+    _require_unit_coverage(store, document, reviews, task)
     page_ids = list(task.get("scope_pages") or [])
+    if task.get('review_subject') == 'outline':
+        from .outline_review import require_outline, UNITS
+        outline_refs = require_outline(store, document)
+        expected_subjects = {(ref["path"], ref["sha256"]) for ref in outline_refs}
+        if any({(ref["path"], ref["sha256"]) for ref in review.get("subjects", [])} != expected_subjects
+               or any(dep["kind"] == "content" and dep["identity"] not in ("narrative", "content_plan")
+                      for dep in review.get("dependencies", [])) for review in reviews):
+            raise _envelope_error("outline/subjects", "outline binds exactly Narrative and Plan, never Page subjects")
+        if page_ids or any(review.get('kind') not in UNITS for review in reviews):
+            raise _envelope_error('outline', 'outline cannot evaluate pages or production units')
+        if any(f.get('page_id') is not None for review in reviews for f in review.get('findings', [])):
+            raise _envelope_error('outline/findings', 'outline findings use null page and explicit node/role locations')
+    elif not page_ids:
+        raise _envelope_error('scope_pages', 'manuscript review requires explicit nonempty pages')
+    if any(review.get('review_subject') != task.get('review_subject') for review in reviews):
+        raise _envelope_error('review_subject', 'result must retain the frozen subject contract')
     capabilities = reviewer_capabilities(adapter_context)
     accepted_reviewers = []
     if state["effective"] == "independent_model_or_human" and adapter_context is not None:
@@ -645,6 +745,10 @@ def _unit_dependency_equivalent(store, document, review, key, digest):
     This never changes a review or promotes its assurance. Visual bytes and
     speech retain their own checks; design-only layout does not change copy.
     """
+    # Outline reviews bind exact Narrative/Plan versions. Page-scoped editorial
+    # equivalence can omit role facts and must never extend an outline pass.
+    if review.get('review_subject') == 'outline':
+        return False
     import copy
     from .design_requirements import page_semantic_projection, plan_global_projection
     from .models import canonical_json_bytes, sha256_bytes
@@ -686,20 +790,25 @@ def _unit_dependency_equivalent(store, document, review, key, digest):
     return False
 
 
-def _applicable_reviews(store, document, page_ids, *, records=None) -> list[dict]:
+def _applicable_reviews(store, document, page_ids, *, records=None, digests=None) -> list[dict]:
     """Preproduction reviews that can satisfy a current manuscript unit."""
-    digests = _current_artifact_digests(store, document)
+    if digests is None:
+        digests = _current_artifact_digests(store, document)
     applicable = []
     if records is None:
         records = _preproduction_reviews(store, document)
     strict_refs = None
     if requirement_state(store, document)["effective"] == "independent_model_or_human":
         strict_refs = _independently_accepted_reviews(store, document, records)
+    from .effective_requirements import review_task_owners, accepted_requirements_current
+    owners = review_task_owners(store, document)
     for item in records:
         review = item["review"]
+        if not accepted_requirements_current(store, document, review, item['review_ref'], owners):
+            continue
         if strict_refs is not None and item["review_ref"]["sha256"] not in strict_refs:
             continue
-        notes_aliases = (digests.get('_preproduction_notes_aliases') or {}) if review.get('kind') != 'speech' else {}
+        notes_aliases = (digests.get('_preproduction_notes_aliases') or {}) if review.get('kind') != 'speech' and review.get('review_subject') != 'outline' else {}
         deps = {f"{dep['kind']}:{dep['identity']}": dep.get("sha256")
                 for dep in review.get("dependencies") or []}
         stale = [key for key, value in deps.items()
@@ -813,7 +922,7 @@ def _independently_accepted_reviews(store, document, records):
     return accepted
 
 
-def preproduction_status(store, document, *, adapter_context=None, page_ids=None) -> dict:
+def preproduction_status(store, document, *, adapter_context=None, page_ids=None, read_context=None) -> dict:
     """Whether the current manuscript has an applicable preproduction review."""
     state = requirement_state(store, document)
     units = required_units(store, document)
@@ -821,24 +930,28 @@ def preproduction_status(store, document, *, adapter_context=None, page_ids=None
         return {"stage": STAGE, "status": "no_manuscript", "requirement": state["effective"],
                 "requirement_state": state, "units": units, "satisfied_units": [],
                 "missing_units": units, "review_refs": [], "blocking_findings": [],
+                "blocking_record_count": 0, "logical_finding_count": 0,
                 "next_action": "write_manuscript"}
     ids = [entry["page_id"] for entry in document.get("pages") or []]
     if page_ids is None:
         page_ids = ids
-    history = _preproduction_reviews(store, document)
-    applicable = _applicable_reviews(store, document, page_ids, records=history)
+    history = [row for row in _preproduction_reviews(store, document)
+               if row['review'].get('review_subject') != 'outline']
+    artifacts = (read_context.require(store, document).artifacts if read_context is not None else
+                 _current_artifact_digests(store, document))
+    applicable = _applicable_reviews(store, document, page_ids, records=history, digests=artifacts)
     satisfied = sorted({item["review"].get("kind") for item in applicable
                         if item["review"].get("status") == "pass"})
     missing = sorted(set(units) - set(satisfied))
     blocking = []
-    from .review import finding_closed, open_findings, pending_judgments
+    from .review import finding_closed, open_findings, pending_judgments, logical_finding_owner
     records = [{**item["review"], "ref": item["review_ref"]} for item in history]
-    artifacts = _current_artifact_digests(store, document)
     scoped_pages = set(page_ids) & set(ids)
     for item in history:
         if item["review"].get("kind") not in units:
             continue
         owner = {**item["review"], "ref": item["review_ref"]}
+        logical_owner_ref = logical_finding_owner(records, owner)
         for finding in open_findings(item["review"]) + pending_judgments(item["review"]):
             # Freshness determines whether a pass can satisfy a unit; it does
             # not erase an unresolved defect on a current page. Retired pages,
@@ -855,10 +968,19 @@ def preproduction_status(store, document, *, adapter_context=None, page_ids=None
             if finding_closed(records, owner, finding, artifacts):
                 continue
             blocking.append({"review_id": item["review"].get("review_id"),
+                             "review_ref": item['review_ref'],
+                             "review_stage": item['review'].get('review_stage', 'final'),
+                             "review_subject": item['review'].get('review_subject'),
+                             "page_id": finding.get('page_id'),
+                             "logical_owner_ref": logical_owner_ref,
                              "kind": item["review"].get("kind"),
+                             "finding_kind": finding.get('kind'),
                              "finding_id": finding.get("finding_id") or finding.get("id"),
                              "impact": finding.get("impact"),
                              "message": finding.get("message") or finding.get("detail")})
+    logical_count = len({canonical_json_bytes({key: row[key] for key in
+        ('logical_owner_ref', 'review_id', 'review_stage', 'review_subject', 'kind', 'page_id', 'finding_id')})
+        for row in blocking})
     if missing:
         status = "missing"
     elif blocking:
@@ -872,7 +994,8 @@ def preproduction_status(store, document, *, adapter_context=None, page_ids=None
     return {"stage": STAGE, "status": status, "requirement": state["effective"],
             "requirement_state": state, "units": units, "satisfied_units": satisfied,
             "missing_units": missing, "review_refs": [item["review_ref"] for item in applicable],
-            "blocking_findings": blocking, "next_action": next_action}
+            "blocking_findings": blocking, "blocking_record_count": len(blocking),
+            "logical_finding_count": logical_count, "next_action": next_action}
 
 
 def qualify_for_production(store, document, *, adapter_context=None, page_ids=None) -> dict:
@@ -883,6 +1006,15 @@ def qualify_for_production(store, document, *, adapter_context=None, page_ids=No
     """
     status = preproduction_status(store, document, adapter_context=adapter_context,
                                   page_ids=page_ids)
+    return qualification_from_status(status, document, adapter_context=adapter_context)
+
+
+def qualification_from_status(status, document, *, adapter_context=None):
+    """Project one already computed review verdict; never grant write authority.
+
+    Readers that need both detailed status and qualification use the same local
+    verdict. Mutation gates still resolve current stored records independently.
+    """
     gaps: list[str] = []
     needs_reviewer = False
     if status["status"] == "missing" and status["requirement"] == "independent_model_or_human":
@@ -900,6 +1032,8 @@ def qualify_for_production(store, document, *, adapter_context=None, page_ids=No
             "status": status["status"],
             "missing_units": status["missing_units"],
             "blocking_findings": status["blocking_findings"],
+            "blocking_record_count": status.get('blocking_record_count', len(status['blocking_findings'])),
+            "logical_finding_count": status.get('logical_finding_count', len(status['blocking_findings'])),
             "next_action": status["next_action"],
             "professional_review_required_for_delivery":
                 bool((document.get("policy") or {}).get("professional_review_required_for_delivery")),

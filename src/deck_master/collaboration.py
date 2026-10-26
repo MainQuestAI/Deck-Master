@@ -259,13 +259,7 @@ def commit_collaboration_change(store, document, *, operation_id, action, digest
 
 
 def _region_records(store, region, family):
-    records = []
-    for ref in region.get(family) or []:
-        try:
-            records.append((ref, store.read_object_json(ref)))
-        except Exception:  # noqa: BLE001 - unreadable refs cannot participate
-            continue
-    return records
+    return dependency_slices._region_records(store, region, family)
 
 
 def _head_for_identity(store, region, family, id_field, identity):
@@ -274,18 +268,7 @@ def _head_for_identity(store, region, family, id_field, identity):
     the last matching entry for records without a replaces chain."""
     if identity is None:
         return None
-    records = _region_records(store, region, family)
-    replaced_pairs = set()
-    for _, record in records:
-        pair = record.get("replaces")
-        if isinstance(pair, dict) and pair.get("path"):
-            replaced_pairs.add((pair.get("path"), pair.get("sha256")))
-    heads = [(ref, record) for ref, record in records
-             if record.get(id_field) == identity
-             and (ref.get("path"), ref.get("sha256")) not in replaced_pairs]
-    if heads:
-        return heads[-1]
-    return None
+    return dependency_slices._select_head(_region_records(store, region, family), id_field, identity)
 
 
 def _identity_of(store, ref):
@@ -359,10 +342,15 @@ def _matching_request_source(store, document, candidate):
 # Public service functions
 
 
-def describe(project) -> dict:
+def describe(project, *, include_eligibility=True) -> dict:
     """Read-only collaboration projection (CONTRACT §12 show)."""
     store = Store(Path(project).expanduser())
     document = store.load_document()
+    return describe_snapshot(store, document, include_eligibility=include_eligibility)
+
+
+def describe_snapshot(store, document, *, include_eligibility=True):
+    """Project one explicitly supplied read snapshot; no new Store/current read."""
     region = document.get("collaboration")
     result = {
         "project_id": document["project_id"],
@@ -389,6 +377,8 @@ def describe(project) -> dict:
     result["effective_authorizations"] = [{"ref": ref, "record": record,
         **dependency_slices.authorization_effectiveness(store, document, ref)}
         for ref, record in _region_records(store, region, "authorizations")]
+    if not include_eligibility:
+        return result
     from . import eligibility
     result["blocking_cards"] = []
     for action in ("dispatch.compose", "dispatch.blueprint", "export.delivery"):

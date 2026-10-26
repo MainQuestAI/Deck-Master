@@ -111,7 +111,7 @@ def rc3_method_ids_for(kind: str, *, intent: str | None = None,
 _REVIEW_ORDER = ("source-reading", "content-methods", "content-examples",
                  "content-calibration", "review-and-repair", "physical-units")
 _CONTENT_UNITS = {"content", "argument", "page_copy", "progression"}
-_VISUAL_UNITS = {"blueprint_content", "blueprint_fidelity", "conversion", "readability", "privacy"}
+_VISUAL_UNITS = {"visual_expression", "blueprint_content", "blueprint_fidelity", "conversion", "readability", "privacy"}
 
 
 def method_ids_for(kind: str, *, intent: str | None = None,
@@ -119,10 +119,15 @@ def method_ids_for(kind: str, *, intent: str | None = None,
     """Select new dispatch methods from the actual review scope, in stable order."""
     if kind != "review":
         base = rc3_method_ids_for(kind, intent=intent, phase=phase)
+        if kind == 'blueprint':
+            # New image production consumes visual design guidance. Keep the
+            # RC3 selector above unchanged for historical frozen Tasks.
+            base = ('visual-reference', 'physical-units')
         if kind == 'compose':
             extra = (('writing-profiles',) if phase == 'speech' else
                      ('page-writing',) if phase == 'page_copy' else
-                     () if phase in ('design', 'production', 'delivery') else ('method-selection',))
+                     ('content-to-visual',) if phase in ('design', 'production') else
+                     () if phase == 'delivery' else ('method-selection',))
         elif kind in ('blueprint', 'reconstruct', 'style_analyze'):
             extra = ('content-to-visual',)
         else:
@@ -132,7 +137,8 @@ def method_ids_for(kind: str, *, intent: str | None = None,
         # An omitted scope is the Runtime's stage default, never an empty review.
         units = ({"argument", "page_copy", "progression"} if intent == "preproduction"
                  else {"blueprint_content", "blueprint_fidelity", "readability"}
-                 if intent == "page_visual" else _CONTENT_UNITS | _VISUAL_UNITS)
+                 if intent == "page_visual" else {"visual_expression"}
+                 if intent == "original_image" else _CONTENT_UNITS | _VISUAL_UNITS)
     else:
         from .models import ModelError
         if not isinstance(review_units, (list, tuple)) or any(
@@ -149,6 +155,9 @@ def method_ids_for(kind: str, *, intent: str | None = None,
         if intent == "preproduction" and not units <= {"argument", "page_copy", "progression", "speech"}:
             from .models import ModelError
             raise ModelError("task/review_units", "preproduction requires content pre-review units")
+    if intent == "original_image" and units != {"visual_expression"}:
+        from .models import ModelError
+        raise ModelError("task/review_units", "original_image requires visual_expression only")
     selected = {"review-and-repair"}
     if units & _CONTENT_UNITS:
         selected |= {"source-reading", "content-methods", "content-calibration"}
@@ -162,6 +171,20 @@ def method_ids_for(kind: str, *, intent: str | None = None,
     return (*result, "method-review") if units & (_CONTENT_UNITS | {"speech"}) else result
 
 
+def is_content_candidate_task(task: dict) -> bool:
+    stage = task.get('stage_request') or {}
+    return (stage.get('mode') == 'trial' and stage.get('stage') == 'content'
+            and task.get('kind') in ('compose', 'repair'))
+
+
+def role_accepts_task(skill: str, task: dict) -> bool:
+    if skill == 'deck-master':
+        return True
+    if is_content_candidate_task(task):
+        return skill == 'deck-content'
+    return task['kind'] in _ROLE_TASKS[skill]
+
+
 def freeze_task_methods(task: dict, *, selected_resource_ids=None) -> dict:
     """Producer-only: freeze the execution contract before the Task is committed."""
     binding = task.get("collaboration_binding") or {}
@@ -169,7 +192,11 @@ def freeze_task_methods(task: dict, *, selected_resource_ids=None) -> dict:
     layers = (binding.get("write_scope") or {}).get("layers") or []
     if task['kind'] == 'compose' and layers and set(layers) <= {'speech'}:
         phase = 'speech'
-    items = method_resources(task["kind"], intent=task.get("intent") or task.get("review_stage"),
+    content_repair = is_content_candidate_task(task) and task["kind"] == "repair"
+    kind = "compose" if content_repair else task["kind"]
+    if content_repair:
+        phase = "page_copy"
+    items = method_resources(kind, intent=task.get("intent") or task.get("review_stage"),
                              phase=phase, review_units=task.get("review_units"),
                              selected_resource_ids=selected_resource_ids)
     task["method_manifest"] = [{key: item[key] for key in ("id", "relative_path", "sha256")} for item in items]
@@ -224,6 +251,14 @@ def resolve_task_methods(task: dict, *, reader=None) -> dict:
         if not issues:
             issues.append({"reason": "aggregate_hash_mismatch", "expected_sha256": release["methods_sha256"],
                            "actual_sha256": methods_sha256(items)})
+    if is_content_candidate_task(task) and task.get('kind') == 'repair':
+        required = set(method_ids_for('compose', phase='page_copy'))
+        binding = task.get('collaboration_binding') or {}
+        if (not required <= {item['id'] for item in items}
+                or binding and (binding.get('phase') != 'page_copy'
+                                or binding.get('write_scope', {}).get('layers') != ['page_copy'])):
+            basis = 'basis_changed'
+            issues.append({'reason': 'content_candidate_contract_changed'})
     available_release = method_release(actual_items) if all(item["sha256"] is not None for item in actual_items) else None
     return {"methods": items, "method_manifest": manifest, "basis_status": basis,
             "current_method_release": available_release,
@@ -346,7 +381,7 @@ def route_request(text: str) -> dict:
     # remains the input/evidence; exclusions such as "不要讲稿" never become a
     # positive speech request merely because their noun appears in the text.
     normalized = ' '.join(re.split(
-        r"不要|不需要|无需|勿|不(?=改|写|做|审|制作|生图|执行|修复)|\b(?:do\s+not|don't|without|no)\b",
+        r"不要|不需要|无需|勿|不(?=改|写|做|审|制作|生图|执行|修|设计)|\b(?:do\s+not|don't|without|no)\b",
         clause, maxsplit=1)[0] for clause in re.split(r'[,，。；;!！?？\n]', original))
     # Recovery is a command about this work session/project, not a substring
     # found inside the user's subject matter (e.g. recovery procedures).
@@ -365,12 +400,42 @@ def route_request(text: str) -> dict:
         r'^(?:(?:请|麻烦|帮我|先|只|仅|我想|给我)\s*)*(?:协调|统筹|编排|衔接)', normalized)
         or re.search(r'^(?:(?:please|only|just|can you|could you)\s+)*'
             r'(?:coordinate|orchestrate)\b', normalized))
+    # Distinguish requested actions from subject-matter nouns (e.g. writing a
+    # page about review). Two affirmative responsibilities require coordination.
+    clauses = []
+    for sentence in re.split(r"[,，。；;!！?？\n]", original):
+        affirmative = re.split(
+            r"不要|不需要|无需|勿|不(?=改|写|做|审|制作|生图|执行|修|设计)|\b(?:do\s+not|don't|without|no)\b",
+            sentence, maxsplit=1)[0]
+        # English about/regarding introduces subject matter, not more actions.
+        action_text = re.sub(r"\b(?:about|regarding)\b.*?(?=\b(?:and then|then)\b|$)", "", affirmative)
+        clauses.extend(re.split(r"、|然后|随后|接着|再|并且|并|以及|和|与|\b(?:and then|then|and)\b", action_text))
+    actions = set()
+    for clause in clauses:
+        clause = clause.strip()
+        clause = re.sub(r"^(?:(?:请|麻烦|帮我|先|只|仅|我想|给我|直接|please|only|just|directly|can you|could you)\s*)+", "", clause)
+        if re.match(r"(?:策划|规划|(?:写|修改|改写|撰写|补充)(?=.{0,12}(?:稿|内容|正文|逐页|讲稿|口播))|(?:plan|write|rewrite|draft)\b)", clause):
+            actions.add("content")
+        if re.match(r"(?:做设计|设计|出(?:视觉|设计|版式)方案|制作样页|(?:design|layout)\b)", clause):
+            actions.add("design")
+        if re.match(r"(?:只审|只读|审查|审稿|审阅|复核|审核|(?:review|audit|critique|inspect)\b)", clause):
+            actions.add("review")
+        if re.match(r"(?:修复|修正|修理|修$|(?:fix|repair|correct)\b)", clause):
+            actions.add("repair")
+        if clause == "审":
+            actions.add("review")
     if explicit:
         skill = explicit[0] if len(set(explicit)) == 1 else "deck-master"
-    elif review_command:
-        skill = "deck-review"
+    elif len(actions) > 1:
+        skill = "deck-master"
     elif recovery or coordination_command or any(word in normalized for word in ("完整ppt", "整套ppt", "完整作品", "full deck", "complete deck")):
         skill = "deck-master"
+    elif actions:
+        # A clear action outranks nouns in its subject (writing about design).
+        skill = {"content": "deck-content", "design": "deck-design",
+                 "review": "deck-review", "repair": "deck-master"}[next(iter(actions))]
+    elif review_command:
+        skill = "deck-review"
     elif any(word in normalized for word in ("样页", "设计方案", "视觉方案", "版式", "sample page", "design", "layout")):
         skill = "deck-design"
     elif any(word in normalized for word in ("策划", "规划", "大纲", "写稿", "逐页稿", "正文", "口播", "讲稿", "内容包", "plan", "write", "manuscript", "speech", "content")):
@@ -435,7 +500,7 @@ def _read_ids(ids) -> list[dict]:
 
 def read_skill_methods(skill: str, *, entry_mode="named", project=None, task_id=None, text=None,
                        review_units=None, review_stage=None, read_protocol=None, body_mode=None,
-                       cache_offer=None, observed_context=None, selected_resource_ids=None) -> dict:
+                       cache_offer=None, observed_context=None, selected_resource_ids=None, summary_protocol=None) -> dict:
     """Read one responsibility's actual bytes plus current, read-only context.
 
     This does not create a project, dispatch a Task, grant scope, claim independent
@@ -443,12 +508,17 @@ def read_skill_methods(skill: str, *, entry_mode="named", project=None, task_id=
     """
     from .work_context import validate_options
     validate_options(read_protocol, body_mode, cache_offer)
+    if summary_protocol not in (None, 'workbench_summary.v2') or (summary_protocol and read_protocol != 'work_context.v2'):
+        raise ValueError('current_work requires explicit workbench_summary.v2 and work_context.v2 negotiation')
     if skill not in PUBLIC_SKILLS:
         raise ValueError("unknown public Skill")
     if entry_mode not in ENTRY_MODES:
         raise ValueError("unknown Skill entry mode")
     route = route_request(text) if entry_mode == "natural" else None
-    if route and route["skill"] != skill:
+    # Natural routing is a suggestion, not permission. The coordinator may
+    # read ambiguous work without borrowing another role's Task/write rights.
+    coordinating = skill == "deck-master" and route and not route["explicit_name"]
+    if route and route["skill"] != skill and not coordinating:
         raise ValueError(f"instruction routes to {route['skill']}; preserve its responsibility")
     if entry_mode in ("master", "recovery") and project is None:
         raise ValueError("Master handoff/recovery requires the existing project")
@@ -467,7 +537,7 @@ def read_skill_methods(skill: str, *, entry_mode="named", project=None, task_id=
     if read_protocol:
         return _read_skill_v2(skill, entry_mode=entry_mode, project=project, task_id=task_id,
                               route=route, review_units=review_units, review_stage=review_stage,
-                              body_mode=body_mode or 'full', cache_offer=cache_offer, observed_context=observed_context, selected=selected)
+                              body_mode=body_mode or 'full', cache_offer=cache_offer, observed_context=observed_context, selected=selected, summary_protocol=summary_protocol)
     context = None
     dispatch = None
     if project is not None:
@@ -479,18 +549,21 @@ def read_skill_methods(skill: str, *, entry_mode="named", project=None, task_id=
         context = {"project_id": document["project_id"], "artifact_revision_id": document["revision_id"],
                    "request": request,
                    "completion": content_production.completion_status(store, document)}
+        task = None
         if task_id is not None:
             task = next((item for ref in document["tasks"]
                          if (item := store.read_object_json(ref))["task_id"] == task_id), None)
             if task is None:
                 raise MethodResourceMissing("task_id", "task is not referenced by the current project")
-            if skill != "deck-master" and task["kind"] not in _ROLE_TASKS[skill]:
+            if not role_accepts_task(skill, task):
                 raise ValueError(f"{skill} does not execute {task['kind']}; hand off to the responsible role")
             order = service.task_summary(store, document, task)
             dispatch_items = _read_entries(order["method_resources"])
             dispatch = {"task_id": task_id, "work_order": order, "status": order["method_basis_status"],
                         "dispatch_method_release": task.get("method_release"),
                         "current_method_release": method_release(dispatch_items), "methods": dispatch_items}
+        from .effective_requirements import reader_requirements
+        context['effective_requirements'] = reader_requirements(store, document, task=task)
     # A Task consumes its actual manifest verbatim, including a declared missing
     # calibration error. Role entry guidance is separate and never adds a
     # calibration file to an A/B content-method control.
@@ -509,7 +582,7 @@ def read_skill_methods(skill: str, *, entry_mode="named", project=None, task_id=
 
 
 def _read_skill_v2(skill, *, entry_mode, project, task_id, route, review_units, review_stage,
-                   body_mode, cache_offer, observed_context, selected=()):
+                   body_mode, cache_offer, observed_context, selected=(), summary_protocol=None):
     from .work_context import ResourceCollector
     from . import service, content_production
     from .store import Store
@@ -522,13 +595,19 @@ def _read_skill_v2(skill, *, entry_mode, project, task_id, route, review_units, 
         payload['context'] = {'project_id': document['project_id'], 'artifact_revision_id': document['revision_id'],
                               'request': (document.get('collaboration') or {}).get('request'),
                               'completion': content_production.completion_status(store, document)}
+        if summary_protocol:
+            from .current_work import from_snapshot
+            payload['context']['current_work'] = from_snapshot(store, document)
+        task = None
         if task_id is not None:
             task = next((item for ref in document['tasks'] if (item := store.read_object_json(ref))['task_id'] == task_id), None)
             if task is None:
                 raise MethodResourceMissing('task_id', 'task is not referenced by the current project')
-            if skill != 'deck-master' and task['kind'] not in _ROLE_TASKS[skill]:
+            if not role_accepts_task(skill, task):
                 raise ValueError(f'{skill} does not execute {task["kind"]}; hand off to the responsible role')
             payload['tasks'] = [service.task_summary(store, document, task, collector=collector)]
+        from .effective_requirements import reader_requirements
+        payload['context']['effective_requirements'] = reader_requirements(store, document, task=task)
     ids = ('collaboration-routing',) if task_id else (
         ('collaboration-routing', *method_ids_for('review', intent=review_stage, review_units=review_units))
         if skill == 'deck-review' else _ROLE_METHODS[skill])

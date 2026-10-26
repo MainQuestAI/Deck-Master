@@ -1,0 +1,29 @@
+{
+  "head": "756d69d0fa790eb38b3f7ef755b0111d85c4adf8",
+  "worktree_sha256_before": "95b0b63237dbe9651dc6df8c639a1e7504e11335065d52d38b83f054b4dec1c7",
+  "worktree_sha256_after": "95b0b63237dbe9651dc6df8c639a1e7504e11335065d52d38b83f054b4dec1c7",
+  "source_changed_during_run": false,
+  "command": [
+    ".venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/rebuild/test_performance_read_paths.py",
+    "tests/rebuild/test_performance_execution_paths.py",
+    "tests/rebuild/test_performance_successors.py",
+    "tests/rebuild/test_performance_frontend_browser.py",
+    "tests/rebuild/test_integration_current_work_browser.py",
+    "tests/rebuild/test_deep_quality_browser.py::test_candidate_batch_names_the_page_and_layer",
+    "tests/rebuild/test_cli.py",
+    "--require-browser",
+    "--chromium-executable",
+    "/usr/bin/chromium",
+    "--tb=short"
+  ],
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "wall_seconds": 53.45087938100005,
+  "exit_code": 1,
+  "reaped_children_user_seconds": 34.26565,
+  "reaped_children_system_seconds": 7.295573,
+  "scope": "Only batches using this runner are serialized; CPU excludes detached/unreaped descendants."
+}

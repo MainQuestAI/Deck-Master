@@ -65,3 +65,25 @@ reconstruct、repair 和 page_visual 工作单逐页读取 `page_design_contexts
 ## 逻辑与物理单位
 
 实际读取工作单同时给出的 [physical-units 方法](physical-units.md)：从当前 canvas/物理页计算 contain k，核对 SVG_px*k*0.75pt；读取实际 p:sldSz、按明确角色逐run字号及 SVG/PPT 双层净空。固定样式不由外层包装补改，不调 converter 常数。
+
+## 选定品牌原件与冻结附件（asset_inputs.v1）
+
+素材上传只是临时材料，不等于资产登记或选用。通过 `deck-master import asset --project … --asset-id … --kind logo|image|icon|font --file … --external-use allowed` 登记真实原件及来源。权限不代表每页都消费：新页面在 `visual_spec.design_overrides.selected_asset_ids` 写实际选定的图像资产 ID，必须属于该页有效 allowed_asset_ids；缺省/空列表表示不附带图片。注册、改变选用和正式生产继续遵守现有范围及额度，不由此新增授权。
+
+新准备的 `resolved_design_context.asset_inputs` 固定 `asset_inputs.v1`、顺序、asset_id/kind、原件 Artifact Ref、文件 Ref 与 media_type；PNG/JPEG/WebP 必须实际解码检查，来源元数据保留在原件 Artifact。生成 input.references 合并阶段参考和选定原件，角色为 reference，精确重复仅保留一次。Host 用冻结 Ref 对应的本项目对象路径作为 `referenced_image_paths`，保持顺序与真实原件；不能用品牌名字文字代替附件，不能漏传后仍称匹配。生产准备和文件读回不是工具消费证据，实际调用仍按上节原生观察和输出核对结算。
+
+新字段/准备要求 `minimum_writer=asset-inputs.v1`；旧 writer 明确拒绝新事实。历史无此标识的请求保留原 references，不补附件、不原地重写；新正式准备才选用上述规则。选中原件字节、来源或权限变化使相关任务失效；未选资产、仅登记时间变化不使无关新任务失效。SVG 栅格化后另行登记才可选为图片附件，不能假称当前链路自动转换。注册字体不等于 ImageGen 字体附件，PPTX 正文抽取也不等于母版复用。具体支持边界见 RP-19 报告矩阵。
+
+### 显式复用另一已结算执行的原图（bounded reuse）
+
+这不是跨执行 handoff，也不将两条执行算为一次。仅限同项目、非 trial、已登记的 A/B blueprint Task：两者独立 allowance 已 consumed，执行身份不同，整个项目没有 unknown/in_flight。A 的 consumed 可以仅为 Host 报告，不能因此声称它已获原生调用证明；B 必须保留已接纳的原生 controller observation、原始 receipt 和原图。B cancelled/superseded、未登记外部图片、普通 receipt JSON、A 未显式声明 `settled_image_reuse_v1` 均拒绝。旧 A 可由原 execution 使用现有 `task start` 重新声明其原协议、全部原 required_capabilities 加此能力；不改冻结方法、Request、Attempt 和真实消耗。若旧执行合同或输入已失效仍拒绝，不以补能力绕过。
+
+先确认当前指令明确授权 `generation.reuse`（execute、相同 Page/blueprint 范围、within_scope）；这项授权不产生调用额度。A/B 原授权仍须有效，实际已用调用不得超过任何当前父预算上限。满额但未超额可以复用；不得退款、转移额度或重新 settle B。两份冻结输入除分别验证的 basis 外必须完整相同，并保留当前 Page、design、附件顺序/角色和目标校验。
+
+用现有 `task accept --project … --task-id A --operation-id A的operation --produced-against A的值 --result result.json`，在通常 blueprint 信封中写：
+
+```json
+{"generation_result":{"request_id":"A-request","attempt_id":"A-attempt","reuse_from":{"task_id":"B","request_id":"B-request","attempt_id":"B-attempt"}}}
+```
+
+`files`/`artifact_specs` 仍提交 B 的原始 PNG 字节；不可自行填写 provenance.generation_reuse。接收器原子写入 immutable association，lineage 中 source 为 B，destination 为 A；A 的 Attempt 不增加原图、原生证明或 B invocation。正式成功才提升 writer 到 `settled-image-reuse.v1`，重复相同 operation 只恢复原接纳，不新增消耗。V1 不支持接纳后改写/enrich 关联所引用的 Attempt 版本；不匹配时拒绝读取而非替换证据。单调用跨执行接管及未登记 B 的可信关联接口仍未提供，应报告缺口，不能从这条复用路径推定已支持。

@@ -56,6 +56,10 @@ def stored_blueprint_request(store, task):
             if page_ref not in task.get("inputs", []):
                 raise ModelError("task/inputs", "requirements Page is outside actual immutable task inputs")
             page = store.read_object_json(page_ref)
+            if "asset_inputs" in resolved:
+                validate_schema("asset_inputs", resolved["asset_inputs"])
+                if resolved["asset_inputs"] != resolve_asset_inputs(store, page, resolved):
+                    raise ModelError("task/inputs", "selected asset originals differ from the frozen source bindings")
             actual = project_prompt(page, resolved, resolved.get("assets") or [])
             # The immutable policy/instruction prefix is historical evidence;
             # a newer prompt policy must not reinterpret an old Request.
@@ -105,6 +109,11 @@ def resolve_design(page, design, permitted_assets):
         if fid not in fonts:
             raise ModelError(f"visual_spec/design_overrides/{slot}", f"unknown font {fid!r}")
         style["typography"][slot] = fid
+    layout_scope = style.pop("layout_page_ids", None)
+    if "layout_notes" in overrides:
+        style["layout_notes"] = overrides["layout_notes"]
+    elif layout_scope is not None and page["page_id"] not in layout_scope:
+        style["layout_notes"] = ""
     effective["language"] = overrides.get("language", design["language"])
     effective["styles"] = [style]
     effective["default_style_id"] = style["style_id"]
@@ -113,7 +122,7 @@ def resolve_design(page, design, permitted_assets):
     return effective, style
 
 
-def resolve_generation_design(store, document, page_entry, *, recipe_ref=None):
+def resolve_generation_design(store, document, page_entry, *, recipe_ref=None, design_policy=True, asset_inputs=True, text_visibility=True):
     """Resolve the exact current Page/Plan/recipe consumption before prompting."""
     from .design_requirements import resolve_content_requirements
     page = store.read_object_json(page_entry["page"])
@@ -167,15 +176,94 @@ def resolve_generation_design(store, document, page_entry, *, recipe_ref=None):
                 and page_entry["page_id"] in decision.get("scope", {}).get("page_ids", [])
                 and accepted_decision(store, document, ref)):
             decisions.append(ref)
+    if design_policy:
+        visual = page.get("visual_spec") or {}
+        explicit = visual.get("design_policy")
+        if explicit:
+            from .models import validate_page_semantics
+            validate_page_semantics(page)
+        # This default is created only at new preparation, never on frozen request reads.
+        resolved["design_policy"] = deepcopy(explicit) if explicit else {
+            "version": "design_policy.v1", "strategy": "model_designed",
+            "purpose": visual.get("intent") or page["customer_visible"]["title"],
+            "primary_object": page["customer_visible"]["title"],
+            "free_layout": "Choose spatial composition while preserving all fixed copy, ownership and directed relationships.",
+            "layout_instruction": visual.get("layout_hint") or "", "table_roles": []}
+        if explicit:
+            # A revised page layout replaces inherited layout instructions, including
+            # executable recipe composition. Other recipe dimensions remain fixed.
+            notes = visual.get("design_overrides", {}).get("layout_notes", explicit["layout_instruction"])
+            resolved["styles"][0]["layout_notes"] = notes
+            if "recipe_parameters" in resolved:
+                resolved["recipe_parameters"]["composition"] = explicit["layout_instruction"]
+                resolved["recipe_overrides"] = [item for item in resolved.get("recipe_overrides", [])
+                                                 if item.get("field") != "composition"]
     resolved.update(resolve_content_requirements(
         store, document, page_entry["page"], recipe_ref=recipe_ref,
         decision_refs=decisions, recipe_parameters=resolved.get("recipe_parameters")))
+    if not text_visibility:
+        resolved["content_requirements"].pop("text_visibility", None)
+    # Explicit policy is authoritative over a superseded Page hint and Plan projection.
+    if design_policy:
+        resolved["content_requirements"]["layout_hint"] = resolved["design_policy"]["layout_instruction"]
+    if asset_inputs:
+        resolved["asset_inputs"] = resolve_asset_inputs(store, page, resolved)
     return resolved
+
+
+def resolve_asset_inputs(store, page, design):
+    """Bind selected raster originals, never permission or a brand name alone."""
+    import io
+    from PIL import Image
+    from .models import validate_artifact_semantics
+    selected = page.get("visual_spec", {}).get("design_overrides", {}).get("selected_asset_ids", [])
+    if len(selected) != len(set(selected)) or not set(selected) <= set(design.get("allowed_asset_ids", [])):
+        raise ModelError("visual_spec/design_overrides/selected_asset_ids", "selected assets must be unique and permitted on this page")
+    assets = {item["asset_id"]: item for item in design.get("assets", [])}
+    images = []
+    for asset_id in selected:
+        asset = assets[asset_id]
+        if asset.get("external_use") != "allowed":
+            raise ModelError("asset_inputs", "selected original is not permitted for external use")
+        artifact = store.read_object_json(asset["artifact"])
+        validate_artifact_semantics(artifact)
+        if asset["kind"] not in ("logo", "image", "icon") or artifact["role"] != "asset":
+            raise ModelError("asset_inputs", "image attachments require an actual logo/image/icon asset")
+        data = store.read_object_bytes(artifact["file"])
+        try:
+            with Image.open(io.BytesIO(data)) as image:
+                media_type = {"PNG": "image/png", "JPEG": "image/jpeg", "WEBP": "image/webp"}.get(image.format)
+                if media_type is None or media_type != artifact["media_type"]:
+                    raise ValueError("only matching PNG/JPEG/WebP originals are supported image attachments")
+                image.verify()
+        except (OSError, ValueError, Image.DecompressionBombError) as exc:
+            raise ModelError("asset_inputs", "selected asset is not a supported verified raster original; SVG/font/template attachment conversion is unsupported") from exc
+        images.append({"asset_id": asset_id, "kind": asset["kind"], "artifact_ref": deepcopy(asset["artifact"]),
+                       "file": deepcopy(artifact["file"]), "media_type": media_type})
+    result = {"schema_version": "asset_inputs.v1", "images": images}
+    from .models import validate_schema
+    validate_schema("asset_inputs", result)
+    return result
 
 
 def consumed_design(resolved, *, store):
     """Audit Refs stay recorded; freshness compares the actual consumed values."""
     result = {key: value for key, value in resolved.items() if key != "content_basis"}
+    if "asset_inputs" in resolved:
+        # Permission is not consumption. Preserve used font assets separately;
+        # image attachments carry exact immutable file bytes and their role.
+        used = {item["asset_id"] for item in resolved["asset_inputs"]["images"]}
+        used.update(font["asset_id"] for font in resolved.get("fonts", []) if font.get("asset_id"))
+        result["assets"] = [asset for asset in resolved.get("assets", []) if asset["asset_id"] in used]
+        # Registration timestamps are not consumed image inputs; provenance is.
+        result["assets"] = [{**asset, "artifact": {key: value for key, value in
+                              store.read_object_json(asset["artifact"]).items()
+                              if key not in ("artifact_id", "created_at")}}
+                            for asset in sorted(result["assets"], key=lambda item: item["asset_id"])]
+        result["asset_inputs"] = {**resolved["asset_inputs"], "images": [
+            {key: value for key, value in image.items() if key != "artifact_ref"}
+            for image in resolved["asset_inputs"]["images"]]}
+        result["allowed_asset_ids"] = sorted(used)
     if resolved.get("content_basis"):
         from .models import validate_decision_semantics
         basis = resolved["content_basis"]
@@ -249,9 +337,12 @@ def adopted_blueprint_design(store, document, page_entry):
                 or request["input_hash"] != sha256_bytes(canonical_json_bytes(request["input"]))):
             raise ModelError(where, "generation Request project or frozen hash differs")
         owner = tasks._lookup_task(document, request["task_id"], store)
+        from .generation_reuse import artifact_owner
+        reuse_owner = artifact_owner(store, document, artifact, ref)
+        result_owner = reuse_owner or owner
         if (owner["kind"] != "blueprint" or owner["scope_pages"] != [page_entry["page_id"]]
                 or request_ref not in (owner.get("generation_requests") or [])
-                or ref not in (owner.get("result_refs") or [])):
+                or ref not in (result_owner.get("result_refs") or [])):
             raise ModelError(where, "Request and adopted blueprint are not owned by their actual Task")
         attempt_ref = provenance.get("generation_attempt")
         if attempt_ref is None or attempt_ref not in (owner.get("generation_attempts") or []):
@@ -291,6 +382,16 @@ def adopted_blueprint_design(store, document, page_entry):
         raise ModelError(where, "unreadable or invalid adopted generation lineage") from exc
 
 
+def frozen_design_options(resolved):
+    """Negotiate only fields present in immutable historical production inputs."""
+    requirements = resolved.get('content_requirements') or {}
+    visibility = requirements.get('text_visibility')
+    if 'text_visibility' in requirements and visibility != 'customer_visible_only.v1':
+        raise ModelError('content_requirements/text_visibility', 'unsupported frozen visibility contract')
+    return {'design_policy': 'design_policy' in resolved, 'asset_inputs': 'asset_inputs' in resolved,
+            'text_visibility': 'text_visibility' in requirements}
+
+
 def resolve_page_design(store, document, page_entry, *, require_current=False):
     """Full immutable adopted design for writers; legacy Pages keep old behavior."""
     bound = adopted_blueprint_design(store, document, page_entry)
@@ -300,7 +401,8 @@ def resolve_page_design(store, document, page_entry, *, require_current=False):
                               document["design_context"].get("assets") or [])[0]
     resolved = bound["resolved_design_context"]
     if require_current and consumed_design(resolved, store=store) != consumed_design(
-            resolve_generation_design(store, document, page_entry, recipe_ref=bound["recipe_ref"]), store=store):
+            resolve_generation_design(store, document, page_entry, recipe_ref=bound["recipe_ref"],
+                **frozen_design_options(resolved)), store=store):
         raise ModelError("blueprint/content_basis", "adopted blueprint's consumed Page/Plan/design inputs changed")
     return resolved
 
@@ -313,7 +415,9 @@ def resolve_page_rendering_design(store, document, page_entry):
     """
     bound = adopted_blueprint_design(store, document, page_entry)
     if bound is not None:
-        return resolve_generation_design(store, document, page_entry, recipe_ref=bound["recipe_ref"])
+        resolved = bound["resolved_design_context"]
+        return resolve_generation_design(store, document, page_entry, recipe_ref=bound["recipe_ref"],
+            **frozen_design_options(resolved))
     return resolve_page_design(store, document, page_entry)
 
 
@@ -399,9 +503,51 @@ def project_prompt(
             "style_ref": visual.get("style_ref") or resolved_design_context.get("default_style_id"),
         },
     }
-    for key in ("content_requirements", "recipe_parameters", "recipe_overrides"):
+    for key in ("content_requirements", "recipe_parameters", "recipe_overrides", "design_policy", "asset_inputs"):
         if key in resolved_design_context:
             projection[key] = deepcopy(resolved_design_context[key])
+    attachment_instruction = ""
+    if "asset_inputs" in resolved_design_context:
+        inputs = resolved_design_context["asset_inputs"]
+        from .models import validate_schema
+        validate_schema("asset_inputs", inputs)
+        used = {item["asset_id"] for item in inputs["images"]}
+        used.update(font["asset_id"] for font in resolved_design_context.get("fonts", []) if font.get("asset_id"))
+        projection["permitted_assets"] = sorted([asset for asset in assets if asset["asset_id"] in used],
+                                                key=lambda item: item["asset_id"])
+        attachment_instruction = (
+            "Assets (asset_inputs.v1): selected original raster files are supplied as image references. "
+            "Use those actual logo/image bytes and identity, not a textual brand-name substitute. "
+            "Do not invent assets or reproduce unselected brand material. Font registrations are typography "
+            "metadata, not font files attached to ImageGen; no exact font embedding or PPTX master reuse is implied.\n")
+    policy = resolved_design_context.get("design_policy")
+    policy_instruction = ""
+    if policy:
+        projection["visual_spec"]["layout_hint"] = policy["layout_instruction"]
+        policy_instruction = (
+            "Design policy (design_policy.v1): agreed_layout follows the explicit layout_instruction; "
+            "model_designed chooses composition within free_layout, treating layout_instruction as guidance. "
+            "Purpose and primary_object guide hierarchy, not extra visible copy. Preserve all fixed nodes, "
+            "edges, direction, responsibility and ownership regardless of strategy. No minimum node count "
+            "or nonempty layout hint proves quality. Tables are comparisons by default; preserve their cells, "
+            "units, row/column ownership and comparisons. Only tables explicitly tagged content_inventory "
+            "may be rearranged as non-table composition, retaining every cell and its ownership. "
+            "Page layout notes replace project layout notes; only effective notes below apply.\n")
+    requirements = resolved_design_context.get("content_requirements") or {}
+    visibility_instruction = ""
+    if "text_visibility" in requirements:
+        from .models import validate_schema
+        validate_schema("content_requirements", requirements)
+        visibility_instruction = (
+            "Text visibility (customer_visible_only.v1): customer_visible is the ONLY source of text to render. "
+            "content_requirements is non-rendering design context: content_profile classifies composition; "
+            "density_rationale explains density; page_role describes purpose; required_qualifications contains "
+            "Narrative node IDs, never copy to print. Do not turn these fields, source locators, provenance or "
+            "author verification into slide text. Preserve every business condition, attribution and qualification "
+            "already authored in customer_visible, even when it contains words such as source or assumption. "
+            "If a required business condition is missing from fixed copy, return the gap to the content stage; "
+            "do not invent or silently remove copy.\n"
+        )
     payload = json.dumps(projection, ensure_ascii=False, indent=2, sort_keys=True)
     prompt = (
         "Use case: productivity-visual\n"
@@ -413,6 +559,19 @@ def project_prompt(
         "Style/medium: precise enterprise presentation design; clear hierarchy; production-ready reference image\n"
         "Composition/framing: use the supplied canvas, layout intent and node relationships; keep all content inside safe margins\n"
         "Text: render the supplied customer-visible text verbatim and legibly\n"
+        "Editability boundary (both agreed_layout and model_designed): this generated image is a blueprint "
+        "reference, not itself an editable slide. Design text, relationship connectors and principal business "
+        "objects as separable elements that can be reconstructed as native editable PowerPoint text and shapes "
+        "within the actual compiler-supported subset. Keep their wording, direction and ownership intact. "
+        "Photos, permitted logos, textures and complex illustrations may occupy bounded raster asset regions; "
+        "such an image is replaceable as a whole, but its internal objects are not individually editable. "
+        "Do not flatten required editable text, relationships or principal business objects into those regions, "
+        "and never present a full-slide embedded image as an editable reconstruction. Before generation or "
+        "reconstruction, identify any required effect outside the supported subset and explain whether it "
+        "needs native redrawing, a bounded raster asset or simplification, including the visual and editability "
+        "impact; do not silently degrade it. Retain composition freedom within the selected design policy: "
+        "photos, shadows and illustrations are not categorically forbidden. These feasibility notes are "
+        "production context, not additional slide copy.\n"
         "Constraints: do not add claims or invent numeric values, dates, customer data, or outcomes. "
         "If a quantitative judgment requires data absent from the input, return that gap to the content stage "
         "for the necessary evidence; preserve the fixed copy and qualifications. Do not substitute a decorative "
@@ -420,7 +579,7 @@ def project_prompt(
         "when the fixed manuscript explicitly requests them and they create no quantitative impression. "
         "Do not omit modules; connect arrows to their actual nodes; "
         "use only permitted assets; no watermark; no internal notes\n"
-        "Structured input:\n" + payload
+        + visibility_instruction + policy_instruction + attachment_instruction + "Structured input:\n" + payload
     )
     result = {
         "schema_version": "deck_blueprint_request.v1",

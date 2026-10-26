@@ -1,0 +1,1171 @@
+WARNING: The directory '/home/agent/.cache/pip' or its parent directory is not owned or is not writable by the current user. The cache has been disabled. Check the permissions and owner of that directory. If executing pip with sudo, you should use sudo's -H flag.
+Looking in links: /workspace/scratch/performance-input/wheelhouse
+Processing /workspace/Deck-Master
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: deck-master
+  Building wheel for deck-master (pyproject.toml): started
+  Building wheel for deck-master (pyproject.toml): finished with status 'done'
+  Created wheel for deck-master: filename=deck_master-1.0.0-py3-none-any.whl size=1367991 sha256=9c6812918c57fafe6807500e8d2a03bc3a6dbfacad5145e7f5d0e2e0d5296544
+  Stored in directory: /tmp/pip-ephem-wheel-cache-3ivq_d6_/wheels/ab/2d/0d/91085fb9f133d4175cfd5f81cc7a45deffdb87bf9966f72588
+Successfully built deck-master
+running sdist
+running egg_info
+writing src/deck_master.egg-info/PKG-INFO
+writing dependency_links to src/deck_master.egg-info/dependency_links.txt
+writing entry points to src/deck_master.egg-info/entry_points.txt
+writing requirements to src/deck_master.egg-info/requires.txt
+writing top-level names to src/deck_master.egg-info/top_level.txt
+reading manifest file 'src/deck_master.egg-info/SOURCES.txt'
+reading manifest template 'MANIFEST.in'
+warning: no files found matching '*.md' under directory 'src/deck_master/resources'
+adding license file 'LICENSE'
+adding license file 'NOTICE'
+writing manifest file 'src/deck_master.egg-info/SOURCES.txt'
+running check
+creating deck_master-1.0.0
+creating deck_master-1.0.0/skills
+creating deck_master-1.0.0/skills/deck-content
+creating deck_master-1.0.0/skills/deck-content/agents
+creating deck_master-1.0.0/skills/deck-design
+creating deck_master-1.0.0/skills/deck-design/agents
+creating deck_master-1.0.0/skills/deck-master
+creating deck_master-1.0.0/skills/deck-master/agents
+creating deck_master-1.0.0/skills/deck-master/assets/content/examples/E01-marketing
+creating deck_master-1.0.0/skills/deck-master/assets/content/examples/E02-technical-choice
+creating deck_master-1.0.0/skills/deck-master/assets/content/examples/E03-policy-training
+creating deck_master-1.0.0/skills/deck-master/assets/content/examples/E04-saas-retention
+creating deck_master-1.0.0/skills/deck-master/assets/content/examples/E05-inventory-review
+creating deck_master-1.0.0/skills/deck-master/assets/content/examples/E06-rag-teaching
+creating deck_master-1.0.0/skills/deck-master/assets/content/templates
+creating deck_master-1.0.0/skills/deck-master/assets/design
+creating deck_master-1.0.0/skills/deck-master/assets/master
+creating deck_master-1.0.0/skills/deck-master/assets/review
+creating deck_master-1.0.0/skills/deck-master/references
+creating deck_master-1.0.0/skills/deck-master/references/cases
+creating deck_master-1.0.0/skills/deck-master/references/methods
+creating deck_master-1.0.0/skills/deck-master/scripts
+creating deck_master-1.0.0/skills/deck-review
+creating deck_master-1.0.0/skills/deck-review/agents
+creating deck_master-1.0.0/src/deck_master
+creating deck_master-1.0.0/src/deck_master.egg-info
+creating deck_master-1.0.0/src/deck_master/compiler
+creating deck_master-1.0.0/src/deck_master/resources/compiler
+creating deck_master-1.0.0/src/deck_master/resources/contracts
+creating deck_master-1.0.0/src/deck_master/resources/icons/lucide
+creating deck_master-1.0.0/src/deck_master/resources/static/studio
+creating deck_master-1.0.0/src/deck_master/resources/static/v2
+creating deck_master-1.0.0/src/deck_master/resources/static/v2/assets/deck-master-logo
+creating deck_master-1.0.0/tools
+copying files to deck_master-1.0.0...
+copying LICENSE -> deck_master-1.0.0
+copying MANIFEST.in -> deck_master-1.0.0
+copying NOTICE -> deck_master-1.0.0
+copying README.md -> deck_master-1.0.0
+copying THIRD_PARTY_NOTICES.md -> deck_master-1.0.0
+copying pyproject.toml -> deck_master-1.0.0
+copying setup.py -> deck_master-1.0.0
+copying skills/RESOLVER.md -> deck_master-1.0.0/skills
+copying skills/deck-content/SKILL.md -> deck_master-1.0.0/skills/deck-content
+copying skills/deck-content/agents/openai.yaml -> deck_master-1.0.0/skills/deck-content/agents
+copying skills/deck-design/SKILL.md -> deck_master-1.0.0/skills/deck-design
+copying skills/deck-design/agents/openai.yaml -> deck_master-1.0.0/skills/deck-design/agents
+copying skills/deck-master/SKILL.md -> deck_master-1.0.0/skills/deck-master
+copying skills/deck-master/resource-catalog.json -> deck_master-1.0.0/skills/deck-master
+copying skills/deck-master/agents/openai.yaml -> deck_master-1.0.0/skills/deck-master/agents
+copying skills/deck-master/assets/content/examples/E01-marketing/after.md -> deck_master-1.0.0/skills/deck-master/assets/content/examples/E01-marketing
+copying skills/deck-master/assets/content/examples/E01-marketing/before.md -> deck_master-1.0.0/skills/deck-master/assets/content/examples/E01-marketing
+copying skills/deck-master/assets/content/examples/E01-marketing/input.md -> deck_master-1.0.0/skills/deck-master/assets/content/examples/E01-marketing
+copying skills/deck-master/assets/content/examples/E01-marketing/numbers.json -> deck_master-1.0.0/skills/deck-master/assets/content/examples/E01-marketing
+copying skills/deck-master/assets/content/examples/E02-technical-choice/after.md -> deck_master-1.0.0/skills/deck-master/assets/content/examples/E02-technical-choice
+copying skills/deck-master/assets/content/examples/E02-technical-choice/before.md -> deck_master-1.0.0/skills/deck-master/assets/content/examples/E02-technical-choice
+copying skills/deck-master/assets/content/examples/E02-technical-choice/input.md -> deck_master-1.0.0/skills/deck-master/assets/content/examples/E02-technical-choice
+copying skills/deck-master/assets/content/examples/E02-technical-choice/numbers.json -> deck_master-1.0.0/skills/deck-master/assets/content/examples/E02-technical-choice
+copying skills/deck-master/assets/content/examples/E03-policy-training/after.md -> deck_master-1.0.0/skills/deck-master/assets/content/examples/E03-policy-training
+copying skills/deck-master/assets/content/examples/E03-policy-training/before.md -> deck_master-1.0.0/skills/deck-master/assets/content/examples/E03-policy-training
+copying skills/deck-master/assets/content/examples/E03-policy-training/input.md -> deck_master-1.0.0/skills/deck-master/assets/content/examples/E03-policy-training
+copying skills/deck-master/assets/content/examples/E03-policy-training/numbers.json -> deck_master-1.0.0/skills/deck-master/assets/content/examples/E03-policy-training
+copying skills/deck-master/assets/content/examples/E04-saas-retention/after.md -> deck_master-1.0.0/skills/deck-master/assets/content/examples/E04-saas-retention
+copying skills/deck-master/assets/content/examples/E04-saas-retention/before.md -> deck_master-1.0.0/skills/deck-master/assets/content/examples/E04-saas-retention
+copying skills/deck-master/assets/content/examples/E04-saas-retention/input.md -> deck_master-1.0.0/skills/deck-master/assets/content/examples/E04-saas-retention
+copying skills/deck-master/assets/content/examples/E04-saas-retention/numbers.json -> deck_master-1.0.0/skills/deck-master/assets/content/examples/E04-saas-retention
+copying skills/deck-master/assets/content/examples/E05-inventory-review/after.md -> deck_master-1.0.0/skills/deck-master/assets/content/examples/E05-inventory-review
+copying skills/deck-master/assets/content/examples/E05-inventory-review/before.md -> deck_master-1.0.0/skills/deck-master/assets/content/examples/E05-inventory-review
+copying skills/deck-master/assets/content/examples/E05-inventory-review/input.md -> deck_master-1.0.0/skills/deck-master/assets/content/examples/E05-inventory-review
+copying skills/deck-master/assets/content/examples/E06-rag-teaching/after.md -> deck_master-1.0.0/skills/deck-master/assets/content/examples/E06-rag-teaching
+copying skills/deck-master/assets/content/examples/E06-rag-teaching/before.md -> deck_master-1.0.0/skills/deck-master/assets/content/examples/E06-rag-teaching
+copying skills/deck-master/assets/content/examples/E06-rag-teaching/input.md -> deck_master-1.0.0/skills/deck-master/assets/content/examples/E06-rag-teaching
+copying skills/deck-master/assets/content/templates/options-comparison.md -> deck_master-1.0.0/skills/deck-master/assets/content/templates
+copying skills/deck-master/assets/content/templates/page-draft.md -> deck_master-1.0.0/skills/deck-master/assets/content/templates
+copying skills/deck-master/assets/content/templates/teaching-sequence.md -> deck_master-1.0.0/skills/deck-master/assets/content/templates
+copying skills/deck-master/assets/design/semantic-layout-examples.md -> deck_master-1.0.0/skills/deck-master/assets/design
+copying skills/deck-master/assets/master/routing-examples.json -> deck_master-1.0.0/skills/deck-master/assets/master
+copying skills/deck-master/assets/review/calibration-cases.json -> deck_master-1.0.0/skills/deck-master/assets/review
+copying skills/deck-master/references/blueprint-svg.md -> deck_master-1.0.0/skills/deck-master/references
+copying skills/deck-master/references/candidates-and-stages.md -> deck_master-1.0.0/skills/deck-master/references
+copying skills/deck-master/references/collaboration-routing.md -> deck_master-1.0.0/skills/deck-master/references
+copying skills/deck-master/references/content-calibration.md -> deck_master-1.0.0/skills/deck-master/references
+copying skills/deck-master/references/content-examples.md -> deck_master-1.0.0/skills/deck-master/references
+copying skills/deck-master/references/content-methods.md -> deck_master-1.0.0/skills/deck-master/references
+copying skills/deck-master/references/content-to-visual.md -> deck_master-1.0.0/skills/deck-master/references
+copying skills/deck-master/references/icon-quality.md -> deck_master-1.0.0/skills/deck-master/references
+copying skills/deck-master/references/input-update.md -> deck_master-1.0.0/skills/deck-master/references
+copying skills/deck-master/references/installation.md -> deck_master-1.0.0/skills/deck-master/references
+copying skills/deck-master/references/method-review.md -> deck_master-1.0.0/skills/deck-master/references
+copying skills/deck-master/references/method-selection.md -> deck_master-1.0.0/skills/deck-master/references
+copying skills/deck-master/references/method-sources.md -> deck_master-1.0.0/skills/deck-master/references
+copying skills/deck-master/references/narrative-patterns.md -> deck_master-1.0.0/skills/deck-master/references
+copying skills/deck-master/references/page-writing.md -> deck_master-1.0.0/skills/deck-master/references
+copying skills/deck-master/references/physical-units.md -> deck_master-1.0.0/skills/deck-master/references
+copying skills/deck-master/references/review-and-repair.md -> deck_master-1.0.0/skills/deck-master/references
+copying skills/deck-master/references/source-reading.md -> deck_master-1.0.0/skills/deck-master/references
+copying skills/deck-master/references/style-calibration.md -> deck_master-1.0.0/skills/deck-master/references
+copying skills/deck-master/references/visual-reference.md -> deck_master-1.0.0/skills/deck-master/references
+copying skills/deck-master/references/writing-profiles.md -> deck_master-1.0.0/skills/deck-master/references
+copying skills/deck-master/references/cases/E01-marketing.md -> deck_master-1.0.0/skills/deck-master/references/cases
+copying skills/deck-master/references/cases/E02-technical-choice.md -> deck_master-1.0.0/skills/deck-master/references/cases
+copying skills/deck-master/references/cases/E03-policy-training.md -> deck_master-1.0.0/skills/deck-master/references/cases
+copying skills/deck-master/references/cases/E04-saas-retention.md -> deck_master-1.0.0/skills/deck-master/references/cases
+copying skills/deck-master/references/cases/E05-inventory-review.md -> deck_master-1.0.0/skills/deck-master/references/cases
+copying skills/deck-master/references/cases/E06-rag-teaching.md -> deck_master-1.0.0/skills/deck-master/references/cases
+copying skills/deck-master/references/methods/M01-framing.md -> deck_master-1.0.0/skills/deck-master/references/methods
+copying skills/deck-master/references/methods/M02-structured-analysis.md -> deck_master-1.0.0/skills/deck-master/references/methods
+copying skills/deck-master/references/methods/M03-argument.md -> deck_master-1.0.0/skills/deck-master/references/methods
+copying skills/deck-master/references/methods/M04-causal-explanations.md -> deck_master-1.0.0/skills/deck-master/references/methods
+copying skills/deck-master/references/methods/M05-options-and-value.md -> deck_master-1.0.0/skills/deck-master/references/methods
+copying skills/deck-master/references/methods/M06-uncertainty-stress.md -> deck_master-1.0.0/skills/deck-master/references/methods
+copying skills/deck-master/references/methods/M07-synthesis.md -> deck_master-1.0.0/skills/deck-master/references/methods
+copying skills/deck-master/references/methods/M08-narrative.md -> deck_master-1.0.0/skills/deck-master/references/methods
+copying skills/deck-master/references/methods/M09-teaching.md -> deck_master-1.0.0/skills/deck-master/references/methods
+copying skills/deck-master/references/methods/M10-compression.md -> deck_master-1.0.0/skills/deck-master/references/methods
+copying skills/deck-master/scripts/check_case_numbers.py -> deck_master-1.0.0/skills/deck-master/scripts
+copying skills/deck-review/SKILL.md -> deck_master-1.0.0/skills/deck-review
+copying skills/deck-review/agents/openai.yaml -> deck_master-1.0.0/skills/deck-review/agents
+copying src/deck_master/__init__.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/__main__.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/action_currentness.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/activation_transaction.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/annotation_service.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/audience_review.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/candidate_preview.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/candidates.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/capabilities.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/changes.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/cli.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/collaboration.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/collaboration_api.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/collaboration_binding.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/collaboration_budget.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/collaboration_migration.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/collaboration_scope.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/content.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/content_impact.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/content_insight.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/content_ops.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/content_plan.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/content_production.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/content_review.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/current_relationship.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/current_work.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/delivery_eligibility.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/dependency_slices.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/design_completion.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/design_entry.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/design_recipe.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/design_requirements.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/doctor.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/editing.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/effective_requirements.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/eligibility.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/eligibility_entries.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/errors.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/export_sanitize.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/exports.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/external_review.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/gallery_state.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/generation.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/generation_reuse.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/handoff.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/icons.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/insight_http.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/install.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/launcher.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/legacy.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/local_runtime.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/local_state.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/method_library_view.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/method_resources.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/models.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/native_image_evidence.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/native_review.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/native_review_startup.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/native_review_transport.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/observations.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/operation_coverage.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/operations.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/original_review.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/outline_review.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/overview_state.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/personal_recovery.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/pipeline.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/production.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/production_detail.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/project_initialization.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/read_facts.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/readback_relations.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/readback_text.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/registry.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/resource_catalog.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/restoration.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/result_reading.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/review.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/review_channels.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/review_evidence.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/review_handoff.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/review_import.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/run_desk.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/samples.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/selected_file.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/service.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/snapshots.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/source_uploads.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/sources.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/stages.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/store.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/styles.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/tasks.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/text_ranges.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/text_sources.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/thumbnails.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/ui_clear_recovery.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/ui_journal.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/variant_requests.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/view.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/view_server.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/visual_dependencies.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/visual_styles.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/web.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/work_context.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master/workbench.py -> deck_master-1.0.0/src/deck_master
+copying src/deck_master.egg-info/PKG-INFO -> deck_master-1.0.0/src/deck_master.egg-info
+copying src/deck_master.egg-info/SOURCES.txt -> deck_master-1.0.0/src/deck_master.egg-info
+copying src/deck_master.egg-info/dependency_links.txt -> deck_master-1.0.0/src/deck_master.egg-info
+copying src/deck_master.egg-info/entry_points.txt -> deck_master-1.0.0/src/deck_master.egg-info
+copying src/deck_master.egg-info/requires.txt -> deck_master-1.0.0/src/deck_master.egg-info
+copying src/deck_master.egg-info/top_level.txt -> deck_master-1.0.0/src/deck_master.egg-info
+copying src/deck_master/compiler/__init__.py -> deck_master-1.0.0/src/deck_master/compiler
+copying src/deck_master/compiler/api.py -> deck_master-1.0.0/src/deck_master/compiler
+copying src/deck_master/compiler/geometry.py -> deck_master-1.0.0/src/deck_master/compiler
+copying src/deck_master/compiler/native.py -> deck_master-1.0.0/src/deck_master/compiler
+copying src/deck_master/compiler/paint.py -> deck_master-1.0.0/src/deck_master/compiler
+copying src/deck_master/compiler/svg.py -> deck_master-1.0.0/src/deck_master/compiler
+copying src/deck_master/resources/compiler/native.mjs -> deck_master-1.0.0/src/deck_master/resources/compiler
+copying src/deck_master/resources/contracts/action-targets.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/annotation-batch.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/annotation-list.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/annotation.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/artifact.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/asset-inputs.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/authenticated-review-receipt.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/candidate-adoption.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/candidate-decision.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/candidate-selection.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/candidate.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/change-intent.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/change-plan.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/change-set.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/collaboration-authorization.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/collaboration-decision.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/collaboration.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/compose-result.v2.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/content-basis.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/content-operation-input.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/content-operation-plan.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/content-plan-input.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/content-plan-input.v2.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/content-plan.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/content-plan.v2.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/content-requirements.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/document.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/export-manifest.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/generation-attempt.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/generation-input.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/generation-request.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/generation-reuse.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/handoff.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/icon-input.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/icon-recipe.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/narrative.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/native-image-receipt.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/native-review-checkpoint.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/operation-commit.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/page-derivation.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/page-lineage.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/page.v2.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/restore-plan.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/result-reading.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/review.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/review.v2.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/style-input.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/style-input.v2.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/style-input.v3.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/style-proposal.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/style-proposal.v2.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/style-proposal.v3.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/style-recipe.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/style-recipe.v2.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/style-recipe.v3.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/style-reference.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/task.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/text-range.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/thumbnail.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/tool-observation.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/ui-argument.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/ui-arguments.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/ui-clear-backup.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/ui-clear-closure.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/ui-clear-closure.v2.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/ui-clear-inspection.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/ui-clear-plan.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/ui-clear-request.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/ui-clear-result.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/ui-content-requirements.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/ui-draft-record.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/ui-draft-recovery.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/ui-draft.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/ui-gallery.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/ui-method-preview.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/ui-overview.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/ui-page-evidence.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/ui-position.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/ui-review-reading.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/ui-task-methods.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/visual-style-spec.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/work-context.v2.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/workbench-summary.v1.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/contracts/workbench-summary.v2.schema.json -> deck_master-1.0.0/src/deck_master/resources/contracts
+copying src/deck_master/resources/icons/lucide/LICENSE.txt -> deck_master-1.0.0/src/deck_master/resources/icons/lucide
+copying src/deck_master/resources/icons/lucide/bot.svg -> deck_master-1.0.0/src/deck_master/resources/icons/lucide
+copying src/deck_master/resources/icons/lucide/chart-no-axes-combined.svg -> deck_master-1.0.0/src/deck_master/resources/icons/lucide
+copying src/deck_master/resources/icons/lucide/chart-pie.svg -> deck_master-1.0.0/src/deck_master/resources/icons/lucide
+copying src/deck_master/resources/icons/lucide/circle-alert.svg -> deck_master-1.0.0/src/deck_master/resources/icons/lucide
+copying src/deck_master/resources/icons/lucide/circle-check.svg -> deck_master-1.0.0/src/deck_master/resources/icons/lucide
+copying src/deck_master/resources/icons/lucide/cloud.svg -> deck_master-1.0.0/src/deck_master/resources/icons/lucide
+copying src/deck_master/resources/icons/lucide/cpu.svg -> deck_master-1.0.0/src/deck_master/resources/icons/lucide
+copying src/deck_master/resources/icons/lucide/database.svg -> deck_master-1.0.0/src/deck_master/resources/icons/lucide
+copying src/deck_master/resources/icons/lucide/download.svg -> deck_master-1.0.0/src/deck_master/resources/icons/lucide
+copying src/deck_master/resources/icons/lucide/file-text.svg -> deck_master-1.0.0/src/deck_master/resources/icons/lucide
+copying src/deck_master/resources/icons/lucide/folder.svg -> deck_master-1.0.0/src/deck_master/resources/icons/lucide
+copying src/deck_master/resources/icons/lucide/git-branch.svg -> deck_master-1.0.0/src/deck_master/resources/icons/lucide
+copying src/deck_master/resources/icons/lucide/layers.svg -> deck_master-1.0.0/src/deck_master/resources/icons/lucide
+copying src/deck_master/resources/icons/lucide/lock.svg -> deck_master-1.0.0/src/deck_master/resources/icons/lucide
+copying src/deck_master/resources/icons/lucide/manifest.json -> deck_master-1.0.0/src/deck_master/resources/icons/lucide
+copying src/deck_master/resources/icons/lucide/network.svg -> deck_master-1.0.0/src/deck_master/resources/icons/lucide
+copying src/deck_master/resources/icons/lucide/refresh-cw.svg -> deck_master-1.0.0/src/deck_master/resources/icons/lucide
+copying src/deck_master/resources/icons/lucide/search.svg -> deck_master-1.0.0/src/deck_master/resources/icons/lucide
+copying src/deck_master/resources/icons/lucide/server.svg -> deck_master-1.0.0/src/deck_master/resources/icons/lucide
+copying src/deck_master/resources/icons/lucide/settings.svg -> deck_master-1.0.0/src/deck_master/resources/icons/lucide
+copying src/deck_master/resources/icons/lucide/shield-check.svg -> deck_master-1.0.0/src/deck_master/resources/icons/lucide
+copying src/deck_master/resources/icons/lucide/upload.svg -> deck_master-1.0.0/src/deck_master/resources/icons/lucide
+copying src/deck_master/resources/icons/lucide/user.svg -> deck_master-1.0.0/src/deck_master/resources/icons/lucide
+copying src/deck_master/resources/icons/lucide/users.svg -> deck_master-1.0.0/src/deck_master/resources/icons/lucide
+copying src/deck_master/resources/icons/lucide/workflow.svg -> deck_master-1.0.0/src/deck_master/resources/icons/lucide
+copying src/deck_master/resources/static/studio/delivery.css -> deck_master-1.0.0/src/deck_master/resources/static/studio
+copying src/deck_master/resources/static/studio/index.html -> deck_master-1.0.0/src/deck_master/resources/static/studio
+copying src/deck_master/resources/static/studio/overview.css -> deck_master-1.0.0/src/deck_master/resources/static/studio
+copying src/deck_master/resources/static/studio/reading.css -> deck_master-1.0.0/src/deck_master/resources/static/studio
+copying src/deck_master/resources/static/studio/workspace.css -> deck_master-1.0.0/src/deck_master/resources/static/studio
+copying src/deck_master/resources/static/v2/action-summary.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/action-targets.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/annotation-submission.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/annotations.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/api.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/app.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/batch-actions.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/batch-policy.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/business-operations.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/candidate-cards.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/candidate-desk.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/change-handoff.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/changeset-desk.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/collaboration-desk.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/comparison-canvas.css -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/comparison-canvas.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/content-edit.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/content-sources.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/controls.css -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/current-work.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/delivery-desk.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/design-entry.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/dom.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/draft-intake.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/drafts.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/evidence-reading.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/gallery-state.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/gallery.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/history-labels.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/icon-workbench.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/icons.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/images.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/index.html -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/insight-reading.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/launcher-ui.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/material-uploads.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/method-library.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/navigation-usability.css -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/overview-state.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/overview.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/package.json -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/page-reading.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/page-text.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/page-workbench.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/personal-maintenance.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/personal-recovery.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/production-view.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/project.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/receipt-verdict.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/request-view.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/routes.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/run-desk.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/run-recovery.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/studio.css -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/style-calibration.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/style-phases.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/style-record.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/style.css -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/summary-poll.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/text-diff.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/text-selection.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/tokens.css -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/tokens.json -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/trial-actions.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/views.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/visual-style.js -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/workbench.css -> deck_master-1.0.0/src/deck_master/resources/static/v2
+copying src/deck_master/resources/static/v2/assets/deck-master-logo/IBMPlexMono-OFL.txt -> deck_master-1.0.0/src/deck_master/resources/static/v2/assets/deck-master-logo
+copying src/deck_master/resources/static/v2/assets/deck-master-logo/favicon.svg -> deck_master-1.0.0/src/deck_master/resources/static/v2/assets/deck-master-logo
+copying src/deck_master/resources/static/v2/assets/deck-master-logo/logo-horizontal-light.svg -> deck_master-1.0.0/src/deck_master/resources/static/v2/assets/deck-master-logo
+copying tools/build_hook.py -> deck_master-1.0.0/tools
+Writing deck_master-1.0.0/setup.cfg
+Creating tar archive
+removing 'deck_master-1.0.0' (and everything under it)
+{
+  "release_id": "17a2d032ed2c-9c6812918c57",
+  "source_sha": "17a2d032ed2cf128c672ee6e568ddd52f6aeab20",
+  "source_dirty": false,
+  "package_version": "1.0.0",
+  "compiler_version": "python-native-v1",
+  "wheel": "deck_master-1.0.0-py3-none-any.whl",
+  "wheel_sha256": "9c6812918c57fafe6807500e8d2a03bc3a6dbfacad5145e7f5d0e2e0d5296544",
+  "sdist": "deck_master-1.0.0.tar.gz",
+  "sdist_sha256": "2c32ef6b34aa9bc841e836bbe273f220d1cfe8309aadfe82e639d01157b21725",
+  "files": {
+    "deck_master-1.0.0.dist-info/METADATA": "8252abc5e342aca1f5ff811b172e5cacb7eda43ceb7f1987b0659ff61a7b94be",
+    "deck_master-1.0.0.dist-info/RECORD": "993cc66a620e771e6d9c7ff30cfdb628b4c9ccf7e9c32ae039eb12649d47f74a",
+    "deck_master-1.0.0.dist-info/WHEEL": "61532836a2b3111b7ec23519c09df7c41180c27165fb872a6d8913b566b88ad1",
+    "deck_master-1.0.0.dist-info/entry_points.txt": "9c0b47eb75ad35923bcd445799e4f7832654f781188cac21cb11a0993b1e942c",
+    "deck_master-1.0.0.dist-info/licenses/LICENSE": "bcf453e0a82bc0837d03d2003a40721e02a501a508ebb801ebdee19173f51f94",
+    "deck_master-1.0.0.dist-info/licenses/NOTICE": "d421032ac4a0234f6091302cdfbcdb3a2384f8d57cc4a4cccc8bb29545a23d08",
+    "deck_master-1.0.0.dist-info/top_level.txt": "b10b1e0cf510eef5f16d044981ad82e6b1f697b0de264099fc0d467b55f77e90",
+    "deck_master/__init__.py": "fd542e2585b7d1d215cb3c882aeee5d2a690a97152cdceb22a51eb5b0de11898",
+    "deck_master/__main__.py": "6e6c962d213b90011435af87378dbbb2a3eb272a5205610da6b370dd30f29eab",
+    "deck_master/action_currentness.py": "030be8a3329dbf35e0a7c2a1f84fdfabfbe7ace50e077e61916c26a7e31a16ea",
+    "deck_master/activation_transaction.py": "b217773e03e3a3e76764aec140f8c4d210fef258e082400234ba7a6b9ccd4ab1",
+    "deck_master/annotation_service.py": "eb7220cfe929446966597087366e412237c4fc71b342023d76e96d789a6d34f9",
+    "deck_master/audience_review.py": "115502741ddfb6ec7e7448b9006d750b2e6eed673f6bdfa1fb55c14a2439e3c5",
+    "deck_master/candidate_preview.py": "cb5e1f6a8755a22591ee420f87262bbb7aba10d64b7fbb7174baf61fce6b48e0",
+    "deck_master/candidates.py": "2b3d0978133271bb1e93ae5bd167c68ff5e65c5bb1b2b7c6029e51102ed7a773",
+    "deck_master/capabilities.py": "f777e9ce5b0e7f2c4e30ab3105984439ee191875fd5e0f2ebec7edd685b695db",
+    "deck_master/changes.py": "b4ea12dfbe5974010f31afee9abdce1e0683f80885d57d358cd7b04459b705f2",
+    "deck_master/cli.py": "87f77078b5b66e2a90d00240c092190884739343e3d09b6202fe6be13567cb71",
+    "deck_master/collaboration.py": "432cfdcbd21a87dc5819d3b490d4934e4eaa3809f8e417c8b4d3d5a6224da517",
+    "deck_master/collaboration_api.py": "ab303fb8c58b9b8638887de5b1fccc8df80ddffb4b0dcc4764420b03966bb235",
+    "deck_master/collaboration_binding.py": "6790705b65b54c8ac710df58b836ee6e5e2ff685a75fa44f35029f31a8910920",
+    "deck_master/collaboration_budget.py": "f1e74da48b641332ac6d62ea4148c27c46f55ec6eb9422af01d9af3b70301fc4",
+    "deck_master/collaboration_migration.py": "a814a16dc32d23bb8ecde047ea3a3460a4c8315c2a9b1ec9b73551337f1db640",
+    "deck_master/collaboration_scope.py": "65a9cd8ff2129908a17a9595115bc3789b987b5c628e2a8f5e7e5479b8462844",
+    "deck_master/compiler/__init__.py": "c45447cd4fb0139c8d9e96eba4484b2a13c57453bfac2bf2994488d8d7925464",
+    "deck_master/compiler/api.py": "64d5327fb61ae796c4551f980f089df57cba58fc5eb817491ac51d32d3103afc",
+    "deck_master/compiler/geometry.py": "67cc966b6f07a96fca45f477396fafe7dedfb8c2971fb10bbcf11876388cb597",
+    "deck_master/compiler/native.py": "91d16cfeccaba2b856ec1f3359c89695538f051eea6f31dfa9d8de833091cb40",
+    "deck_master/compiler/paint.py": "54f74126c5c5f9e67a2ddf228164cc88d3761130cfb1712639d9f0aaf7e6a18b",
+    "deck_master/compiler/svg.py": "6083928e207390f489fff7273ef20d4d20e4a246dcda3440c9d77c4e69183221",
+    "deck_master/content.py": "d707d010d8b5ff1fe0ada66eac9d90b3a370ed7c3b52b3753d48472b49065d4c",
+    "deck_master/content_impact.py": "ff9756f36fcd00ec463549270f31260e46cf1510e9c3b25d3e45ef9a50157b08",
+    "deck_master/content_insight.py": "25bd3747784b2f953ac66748b56459f4a208379b56ef65e4b3456f0e00bc162f",
+    "deck_master/content_ops.py": "a7fee7de6b6ec4d0ca8a7e81424b7161615942baac604f77e515f20b29ef096e",
+    "deck_master/content_plan.py": "62a4c1140c3dbabfe54289d2194adc773f61bf7167ca1a38a546f2d6309b21a1",
+    "deck_master/content_production.py": "7a787dc98a08ee2f26e87cd0cfb9c5fe08369f0b5b4daec3f956354e3d3e664c",
+    "deck_master/content_review.py": "4c598ac91c4ceb52b470d3e8b24b35fc092f657c9817afd53a14da6a583cd7f2",
+    "deck_master/current_relationship.py": "2f9216111a5637e6fbfc010c92e400947c1357fa2d9732a3674cfc171380e04c",
+    "deck_master/current_work.py": "e841b3aab475c9f4432a2f73ff15f778e0ebded772b8dd2419ef3a0532f77371",
+    "deck_master/delivery_eligibility.py": "d89f55861275bbed1470173f660acc849522c41bbd94d702ed35fd8a6835a0db",
+    "deck_master/dependency_slices.py": "8547dc323d0415385cfe89156af91418d480943d534c74b8f9a6d30b8518ec7c",
+    "deck_master/design_completion.py": "28c34166e2f75cc1b6a386d9685c2c8f9f7ad0c6df2f27e0080169aa3814faba",
+    "deck_master/design_entry.py": "08bb97876719a4ab416bbeb45676a0736cec3ca6e557cd14bec88fd23c30ad1e",
+    "deck_master/design_recipe.py": "c94d09350225873e5804272fa06b4314897eb2379cf6d55b946aa57e55a99826",
+    "deck_master/design_requirements.py": "8997a4921316fb87f55845468d09201354bc692174e63c958ceabf7e30e62850",
+    "deck_master/doctor.py": "c9e7b0e136eb37e6cfc64b7d028799c945e5e326f0707bfec29b99967ed5ff80",
+    "deck_master/editing.py": "9e631e4ba2f769b3e271391ccffbc5d2afba174d3da6ae7bf3eb647d8ccf72fe",
+    "deck_master/effective_requirements.py": "057d563b3fa11dd196f582da4ea280fd1ad94b8b611a116ba38dfede8c6757b6",
+    "deck_master/eligibility.py": "36d6005a378cb5ac93a54350ef355c5ba55b60301bc687df0a717e92209ce49f",
+    "deck_master/eligibility_entries.py": "4f14a998df1e9658a56449e91baf9c9042715b7484eb4b17645d1085b403fea6",
+    "deck_master/errors.py": "9cdb98032e0efbb878d8f92397d8cf919204878727009b8bb6c086ef7ffafa3a",
+    "deck_master/export_sanitize.py": "c052cdb550565d38948b8d220d8feb36f7207781bd2164cd868df041a220fff1",
+    "deck_master/exports.py": "0318fb8925135766cdb2eb15dc6fd107a65b723c30f229ad2f17f4530ba0fb4c",
+    "deck_master/external_review.py": "9e6103e6adda7a674ec9daf806057bcfac3e81d984d8931b6d7c6e73db306004",
+    "deck_master/gallery_state.py": "ec5fcb12ab93369603272c7fde137132d247c8b2b78be3f5a63f3d60d08976d9",
+    "deck_master/generation.py": "b03d008f4643d5da42ae54df1977ff2f6c13264be23f48223ffe663126c21f39",
+    "deck_master/generation_reuse.py": "b93fa2591ff02518cd2a729d7860012075e7658401c82f63e38c6dd747f05927",
+    "deck_master/handoff.py": "e49e3a214b86b846516695635e75555ea15ebc6e1d878ce165db150b709d51d5",
+    "deck_master/icons.py": "bd37cd27a8c203f7f5ed5c112faa09385f3d49b8ad2ba44a3222fc3cb6d2226d",
+    "deck_master/insight_http.py": "451e9d4c694f7dda421a17b1ba20f71fa8ac632928664eefc61b086b9d3be2ac",
+    "deck_master/install.py": "259e6d162a853a0f8e943d9dc09ec781b1c8c61ea22d8bb18e986e687e4414de",
+    "deck_master/launcher.py": "d7a144c8e95a8a66dddf944291ec60018e8c4aeac71f27959f5dcb49d0b490f5",
+    "deck_master/legacy.py": "d64ee868b2ebfacf7cdcc894afe823353903ba0bbb371d7cb62c278234205567",
+    "deck_master/local_runtime.py": "06b54277cdf9991ae68699aa3837928f9ce091feb64ef32ca6aed57e5cab8bad",
+    "deck_master/local_state.py": "56c042ee6cd183d2a91f3cdc66b0ea64a509e45d3895ed56ca7b7423dfcaf6b7",
+    "deck_master/method_library_view.py": "bc7d17cbd9d186ec7659ac3c7477aaa0ced105f749e6d6f74829fb3c93640781",
+    "deck_master/method_resources.py": "e208f00f44db7a27eab02a64f33a186d40c883ad667e6b71a7d06639271b0b24",
+    "deck_master/models.py": "bce73e80e4e730d3ed2c166e92d137a749aa9c6f316d7557838a05ce8552ec12",
+    "deck_master/native_image_evidence.py": "80b5991d5fe3fb1fd098fc7787a2adc9de882786118bfe718e36275c1cbef528",
+    "deck_master/native_review.py": "925bb5af7070e5dc2fb66fdac6980ffeeb86da08001c25229007ecb3103dd736",
+    "deck_master/native_review_startup.py": "c2b6f768cfc3412521486981a0eae3b81c79698efc9fbdc4e6fafad940dc28a9",
+    "deck_master/native_review_transport.py": "984df2bbc4396d69690e4b82c06c8802817a54a7ae023a7a54bca458166f37bf",
+    "deck_master/observations.py": "324e95353aa10cb6a3a821c8dffa0c72eaddce09256c59bb793ffee021652376",
+    "deck_master/operation_coverage.py": "1440a47a14a5b2c7b269c50dea1471960905b6cfb219076a51120fe3d1268db1",
+    "deck_master/operations.py": "87d746772941387c378d9725dc41cef312078be42ea9ce449c693abe5258a9a4",
+    "deck_master/original_review.py": "dd6ba933f296caa48831d37f65f090dca224df4578192f93a685bf4476936319",
+    "deck_master/outline_review.py": "dbfe0df739d46a8e69ee9ac175ea86a470c3759789f41c4dc3d745890fe2f38a",
+    "deck_master/overview_state.py": "f6ad751efe520f57dc8bd9cbc215c9fc8726419ab0bc1682caff43f2d87995dd",
+    "deck_master/personal_recovery.py": "82fabd777bfb02e52c986e60a2e19c882d5458950cd2d61ad290e7e6bd9a2c41",
+    "deck_master/pipeline.py": "8bb8dec23efeefa3f1dffbe9296ee272e00a24bc19dcfeda23f667347107ba00",
+    "deck_master/production.py": "b6719769f26d15f7d12a039eeedf3f1e769b41e9ab8b90e7dd17f8ed7d1530ae",
+    "deck_master/production_detail.py": "8efbf11435a15b14371432c388d386ada95106d42173d819cf8ef25cd0c65def",
+    "deck_master/project_initialization.py": "d91c7bf3da8f40db44472df3809d8af9baf49dcd816b41f8e34ebcad1597f7bc",
+    "deck_master/read_facts.py": "d583560ccd556b4f2a669d20c81d233ec15177af98f821a7c2b793ceb25ae202",
+    "deck_master/readback_relations.py": "68cae81ea77ae4766399a20dd5c5d7a6e8244e427074732057fbcbc6b1c66f58",
+    "deck_master/readback_text.py": "c6ad474f99a23dd551bc69c5aff98b453bcfe827eec971f786dd509de76cfa25",
+    "deck_master/registry.py": "7b596b9d547a9f76a6057182e155cf5b24e6af24cde303b4e382d7d08d91a32c",
+    "deck_master/resource_catalog.py": "8ba1a38eb5684c5b63995580912dc953c9d16dd705d4e5564e6a4bda2f0e9b99",
+    "deck_master/resources/compiler/native.mjs": "72b53900edbea4b25ca3e15d311943333702cab4447e7da49475d7dd1062506a",
+    "deck_master/resources/contracts/action-targets.v1.schema.json": "4b883f1396353fe40aac584cb6b039486657d3e8f0206d25186c9904730ec8f1",
+    "deck_master/resources/contracts/annotation-batch.v1.schema.json": "b60a3ecfa43c364716e64e8e4e2e817a3fd670f1223650127dba2e4a169866bf",
+    "deck_master/resources/contracts/annotation-list.v1.schema.json": "c5104cf3ac7f1e6efd5dc706f0c7f144432855d1aa74f2789dba9d9e269599f0",
+    "deck_master/resources/contracts/annotation.v1.schema.json": "c9aa3a730698550c6b1d991dca97f99af2da54011334b9e222b90b12619f55e0",
+    "deck_master/resources/contracts/artifact.v1.schema.json": "e573e0051a692fe8c8ad3760b2c19eda0eba060174d1e555b588ba13c22c1b6d",
+    "deck_master/resources/contracts/asset-inputs.v1.schema.json": "39a9781745399c142c3b338205d4b4d617ef5cfe4a7c11909c1bbba0b20f52d0",
+    "deck_master/resources/contracts/authenticated-review-receipt.v1.schema.json": "3c1d72c0d0134bcdc70d2ec4dd9a3d9b182035d34d218d4e5279993f26081a87",
+    "deck_master/resources/contracts/candidate-adoption.v1.schema.json": "51c1f5074db7cb0319c5264cffa21ada22a67e3986d6a1243229aef28301f13e",
+    "deck_master/resources/contracts/candidate-decision.v1.schema.json": "ab4f8efbb74be2f1ffbd2d47dc40dc8e65acd5b403f2f7acf1fd299303cdda3d",
+    "deck_master/resources/contracts/candidate-selection.v1.schema.json": "6111b953a4b8f2d91c3c0733e72049116d4445eded630e1e5f63aa197e69cc31",
+    "deck_master/resources/contracts/candidate.v1.schema.json": "565edfb2378d506032f9d848c712ef9ddcf49fdd2f357fd9e360032b2b4e66ef",
+    "deck_master/resources/contracts/change-intent.v1.schema.json": "b6a69249e71c31266b53d825e58945e1e9b747c5e9d74bc4799b6dc52214dff7",
+    "deck_master/resources/contracts/change-plan.v1.schema.json": "cb3306100c71effb8cbbbcb9afe89bdca9eacd593ca0dba09482f25f99f0d943",
+    "deck_master/resources/contracts/change-set.v1.schema.json": "4d4a373703d48a9a3371ac0d8205a9467b62894d769f3fdb2a12d192acd7059d",
+    "deck_master/resources/contracts/collaboration-authorization.v1.schema.json": "dba86733df9844574e3df1c42bdd7b0b581f6fa10fb846a2674a4cfb12c3e1de",
+    "deck_master/resources/contracts/collaboration-decision.v1.schema.json": "603113ea531cca99d314d4cabf3ddb2ba952b6137ac05c045335399e08d8d8f5",
+    "deck_master/resources/contracts/collaboration.v1.schema.json": "55208be7701a78c99814c8e3e6506b6ffd1dd49264018a738256cbe92f21d2bf",
+    "deck_master/resources/contracts/compose-result.v2.schema.json": "10d256cbc7e6d35ea3d8edd6bc9abb51bd9c4af54125bceda2d23fba729af54c",
+    "deck_master/resources/contracts/content-basis.v1.schema.json": "d04fb5e3cdcc3c0295b6e9cf34e29a2bfba42e48b45c1009d0e4961362f2bc3c",
+    "deck_master/resources/contracts/content-operation-input.v1.schema.json": "fb5331ac4ebff01810c8e0f7cb189b318689df938826fc519699664b5ff1aef3",
+    "deck_master/resources/contracts/content-operation-plan.v1.schema.json": "3f8daee4c7838c9def59451c52b881a7f24f59d288f8ca74d02af2c5d6757070",
+    "deck_master/resources/contracts/content-plan-input.v1.schema.json": "a652df923085978daef883c6b6a7c9c12f29764ce0f0279694b318d21dda423e",
+    "deck_master/resources/contracts/content-plan-input.v2.schema.json": "7fa313087f059ba4b41b8378b4ccb00eb992910b5d8eddec9d7a9a552013b839",
+    "deck_master/resources/contracts/content-plan.v1.schema.json": "3f6281d9ce720f7a5a62f3476412e710435462b64ee25db4e755a055e248851b",
+    "deck_master/resources/contracts/content-plan.v2.schema.json": "a95b03ea6eaf67451c911b134a87f9081d35749da502c436bec98ed112bf1d82",
+    "deck_master/resources/contracts/content-requirements.v1.schema.json": "577a8148313229b4f542ec9db957b10e3bfeffc79f8b8b21011b5a8ca02dcf37",
+    "deck_master/resources/contracts/document.v1.schema.json": "652f124d18244943ba4be54d57be26037af0ac04b6194abf91c2141120492fb5",
+    "deck_master/resources/contracts/export-manifest.v1.schema.json": "06dc96a68be11a622b431a558ccd619cf53444b89f7ccbca470545a728b50388",
+    "deck_master/resources/contracts/generation-attempt.v1.schema.json": "d2f175120a286d235db33fcefef7190156aa3f1e6cce57289e7816ec7b8be5a2",
+    "deck_master/resources/contracts/generation-input.v1.schema.json": "3169ddf2870a4dce34cb1818b5c4d5a1a013af4f66f6fd1966630b6f749b53cf",
+    "deck_master/resources/contracts/generation-request.v1.schema.json": "aeffd782e100d34b90981142c81eda50165862061cf0f6a4613f432f13082053",
+    "deck_master/resources/contracts/generation-reuse.v1.schema.json": "dbeb196102f9cd2dc967a2032d2571f10a52066266846ddd7dc1dd1abb0029ae",
+    "deck_master/resources/contracts/handoff.v1.schema.json": "fba6be613a05ef2455cd2c7a05724bfc5a77a8cf64fecddd620bd8a36da6d5ca",
+    "deck_master/resources/contracts/icon-input.v1.schema.json": "93678f038ba5aed542c09d392ff8e257118f8af417e1e10d81792fc4d3400e31",
+    "deck_master/resources/contracts/icon-recipe.v1.schema.json": "de8bca035827c403a5916e05abfb7b27d7e2fd6a7566ffda46b5a813a64c1d0c",
+    "deck_master/resources/contracts/narrative.v1.schema.json": "0a6520977528f6089095c2f48d5108f22658a6a1aac91ce50d9c0e92fe8745c9",
+    "deck_master/resources/contracts/native-image-receipt.v1.schema.json": "3b0cba2a464bbf4eabc24ee123d53498c560b37177976b2121a03305e2d817ff",
+    "deck_master/resources/contracts/native-review-checkpoint.v1.schema.json": "273e9f0750c78782f627bc201e5b653fb913ceff537f3d990bb308bea88698df",
+    "deck_master/resources/contracts/operation-commit.v1.schema.json": "5f2a2c5dc618625d4583924804d02ba3dc300a1d082ee75373a0e3bba222dedd",
+    "deck_master/resources/contracts/page-derivation.v1.schema.json": "0cf1ef106bb133f9e811ac0de89fe6789755ac4d949f258f3dceeaf0ec893295",
+    "deck_master/resources/contracts/page-lineage.v1.schema.json": "de22b1ac233e8109dd01846379403bcfe350620717a89ba6b880969efee547ff",
+    "deck_master/resources/contracts/page.v2.schema.json": "10d350721ce49c574de642e64cca862f6720173c7edb061246153f50aefaf192",
+    "deck_master/resources/contracts/restore-plan.v1.schema.json": "08650d81b4eec9ab237bc82c43b71612aed089bc5913650f600d5f98d89e2cdc",
+    "deck_master/resources/contracts/result-reading.v1.schema.json": "def4c35ca1ac16e2e237007b050ff9ca5e553d8d9269e71c84401c87b451f6b3",
+    "deck_master/resources/contracts/review.v1.schema.json": "1ebff73c5cb747ef6295d14192c6971e7247014ad201ba3a37c9d8e795caacd9",
+    "deck_master/resources/contracts/review.v2.schema.json": "d9579ce8eba72f0702de53ab0fb4a88165afdbbe60264b69b962b61a31be0bdd",
+    "deck_master/resources/contracts/style-input.v1.schema.json": "f77dffd56e80583e2070196ddebc4d45f5654ccf1a0ab2ea73964a79892ff676",
+    "deck_master/resources/contracts/style-input.v2.schema.json": "4504de42be8d21a6bcc063c7956ad7ac570c0e8f30e1c9279c0d39390a794f3c",
+    "deck_master/resources/contracts/style-input.v3.schema.json": "c2a3cf6593c7c8dded3513a282c73f7f92bcdc4331d70f00f16269144d0288b9",
+    "deck_master/resources/contracts/style-proposal.v1.schema.json": "749d07204beb47e82fc927c6366e9bb217e4fb881258039c4866a50a8eeed4fb",
+    "deck_master/resources/contracts/style-proposal.v2.schema.json": "566b044be1c99abdf8080dc53237f1677a1d3858bba46b8bb62d1728b512aa34",
+    "deck_master/resources/contracts/style-proposal.v3.schema.json": "f7187dc94bb1fe4201d3874a026827cba9d61dac824088bf5eb495b75996dd6d",
+    "deck_master/resources/contracts/style-recipe.v1.schema.json": "6d3af31d59529b1f126c9642c04010c278729e35c1a50358e78a4ebd42632b91",
+    "deck_master/resources/contracts/style-recipe.v2.schema.json": "99272084ae9db40b0f68249342ecb0ad736dd22aa9705dfa2e65d643ec5fe034",
+    "deck_master/resources/contracts/style-recipe.v3.schema.json": "5b54238fda9644841b712ecc1e54cb31f16113e067503990f6943e37dcaef8b3",
+    "deck_master/resources/contracts/style-reference.v1.schema.json": "e2653d82ddff3012d0708c22bd3bf776b92992a810f412a0c72f8316cf219695",
+    "deck_master/resources/contracts/task.v1.schema.json": "b2b42d3fafd52e95a6a72b7a3ea1213be5d8f0fdbc0924b74fa56660815c092c",
+    "deck_master/resources/contracts/text-range.v1.schema.json": "740f00bde01a834574041d6b76fb1556fc1fa2fd614b4a9931e4498f0c29dc95",
+    "deck_master/resources/contracts/thumbnail.v1.schema.json": "e1f728c8f081b27dbd204aeab64978dcdc34c21d345a721158432465a55ea637",
+    "deck_master/resources/contracts/tool-observation.v1.schema.json": "39140ea7bcb1594c3a5e6ab3d6bc437a6eee410eb76e5a4ec56a8d996a0a5939",
+    "deck_master/resources/contracts/ui-argument.v1.schema.json": "3b5a12212ebe5d065b8c0f887d1dad921987c82b37d4db67eea3c96121945674",
+    "deck_master/resources/contracts/ui-arguments.v1.schema.json": "385b086c33b0665adcdf658b8d919178de7b9546258af50307637004c546faf7",
+    "deck_master/resources/contracts/ui-clear-backup.v1.schema.json": "08d0a4fb71c772c19e8b5c7bf2c73dff66f6e29945f15d0bdbfe0a6ecf578192",
+    "deck_master/resources/contracts/ui-clear-closure.v1.schema.json": "60bfea6531f553ed0b9c6e81181c49f602630717a9a66dada7fd0b4bc78e4f30",
+    "deck_master/resources/contracts/ui-clear-closure.v2.schema.json": "7807f27ca4a8c0a1db820f4c7b9e04693be54a7a906ce70d9f85ee7cd0055394",
+    "deck_master/resources/contracts/ui-clear-inspection.v1.schema.json": "3303c523f639df85e939c1e51ac05b5ff1a26541e2c2d2f3a91d22562ae2cec2",
+    "deck_master/resources/contracts/ui-clear-plan.v1.schema.json": "32cdf1d2725eff1bd355f2a28257d580b329dae462d440b3b77381e7df0aaa5f",
+    "deck_master/resources/contracts/ui-clear-request.v1.schema.json": "9096191adfe969310f7ef219d4a3449576b21ec7fad5f53f9b7ee805edc26c96",
+    "deck_master/resources/contracts/ui-clear-result.v1.schema.json": "5be73250397c7a4c11bbec4d049d7ab56103e3efc4f9b03a300f43dd18a39329",
+    "deck_master/resources/contracts/ui-content-requirements.v1.schema.json": "57b34439bef70dd849e5e5162ea7887764555d35ab19078b6d781df9725ae8cd",
+    "deck_master/resources/contracts/ui-draft-record.v1.schema.json": "05a54497f367d782656101cd389e35a20ea31638c7760a701a2d998eaedfa436",
+    "deck_master/resources/contracts/ui-draft-recovery.v1.schema.json": "282d4bf684923939b1a331a3c5b68301c47428873f870021edfac5e22ee45b80",
+    "deck_master/resources/contracts/ui-draft.v1.schema.json": "00d85a6745f60bd253b69ea354a63419b35b7f181ed3b14f802a14e037ee1246",
+    "deck_master/resources/contracts/ui-gallery.v1.schema.json": "41df2687b79f0215f433a0577f892f3fe5f3c8433964d5499cd55e275729b955",
+    "deck_master/resources/contracts/ui-method-preview.v1.schema.json": "3891749b949674704b92d4b2e79a36939d8a16f94e1714eed68e3320e64f6bc5",
+    "deck_master/resources/contracts/ui-overview.v1.schema.json": "b9d5c371cb96a24658bba1e3fe5f12d374135f45d86da5bb118113e44bddab6b",
+    "deck_master/resources/contracts/ui-page-evidence.v1.schema.json": "8623c49fdce56c793df7f5dec2d9e9b766357a92122c6fc7bad211331b103e01",
+    "deck_master/resources/contracts/ui-position.v1.schema.json": "8558cb2542baf0167fe56ae2f90f7f39a8cff9354e6d1c6b7f1256db5f79dbd1",
+    "deck_master/resources/contracts/ui-review-reading.v1.schema.json": "9c79c2acc84a18b848c1c6fa37685fbdc29d145c1f628dab1adf452b6058c1f3",
+    "deck_master/resources/contracts/ui-task-methods.v1.schema.json": "48e4b75f174d1270aa5973808db6bcc47e6fa4755a46fe560a4b4b95f3b92006",
+    "deck_master/resources/contracts/visual-style-spec.v1.schema.json": "930472fda784d2324e02e0799e6edb86dda3a066cbe458c805a484fdfadba55f",
+    "deck_master/resources/contracts/work-context.v2.schema.json": "fb5faf3930f156f7bd88a375b7c5f9b9fd096c12b6607276db6d30c146c02649",
+    "deck_master/resources/contracts/workbench-summary.v1.schema.json": "07abc010da13a97833334c2d996c3208149800d54b92608f5e8ec4d2032a088a",
+    "deck_master/resources/contracts/workbench-summary.v2.schema.json": "11d96aa599146a60b48a6c487276ebaca677ccc714b87b70b35a97c86d4bdd36",
+    "deck_master/resources/icons/lucide/LICENSE.txt": "b495047bd93a9b06913511076f504daba17d5bbeb3e0650f3bb53a4220329c57",
+    "deck_master/resources/icons/lucide/bot.svg": "e46fe72fc5b33d7a17b0112df85da9ded851860312e8353f4fe23d87a4ce77f5",
+    "deck_master/resources/icons/lucide/chart-no-axes-combined.svg": "2f8a708c357488cfde7428d9b055b9bb4a99c08dc71e9296da03ecc19291c4ab",
+    "deck_master/resources/icons/lucide/chart-pie.svg": "1ae765b638fe588b392f7da6e2c274fb438b257d936f9f4c7d548c73d5f9d8a1",
+    "deck_master/resources/icons/lucide/circle-alert.svg": "ce3e98b7a03b78c0071131df42466e4e1ff5187fccad30e739ec9ce951cf685a",
+    "deck_master/resources/icons/lucide/circle-check.svg": "9711e045a5999f8a3b0782eb88e09b04e0559bc7b379dcc0a4ae645223e10345",
+    "deck_master/resources/icons/lucide/cloud.svg": "28a34022ed00177eb1f218eea5d2b7af30d09b529187fe32219e4dd8ea2b9740",
+    "deck_master/resources/icons/lucide/cpu.svg": "ec83bb69ec029d367d749afc445b39c8e95891ebf99b0400652677c2b149b99c",
+    "deck_master/resources/icons/lucide/database.svg": "471eb14bc8d144896a82dfc4aa9daf350f769f0896f4bef33e50aabdbb51130d",
+    "deck_master/resources/icons/lucide/download.svg": "3daeee13ded5a3afa2198b1bb4e2262d163922f97d96ac6ff9953e8ed4fe039d",
+    "deck_master/resources/icons/lucide/file-text.svg": "52ca55846c202335fb870c8aa23e9345630ec10489303756d62e750f7109605c",
+    "deck_master/resources/icons/lucide/folder.svg": "f0d92b94b797a8ab7d4c4ae33c3236c47f64068351b4e14bdb5014ee42898a39",
+    "deck_master/resources/icons/lucide/git-branch.svg": "041f04acc8f92657b849540f0440e2e85d0df0b8da2365611e81b9bebfafc4eb",
+    "deck_master/resources/icons/lucide/layers.svg": "ce16d0a955e3581cda17f6b2fd5c5bc2034b405f9cecc31c8ebb8495b4afc1bb",
+    "deck_master/resources/icons/lucide/lock.svg": "d2cfe60cac8deaef36442b5c8218c1e61abe18222784b2a370ea090d13fca840",
+    "deck_master/resources/icons/lucide/manifest.json": "cb612d3a72ff5c3e94f98cd67733175dfc388064e0c9e189152fb0ab40ff6fac",
+    "deck_master/resources/icons/lucide/network.svg": "626be730feea1e5ea7539fbf78b4a3fcb927ce5d7dc43364f2216908672ac792",
+    "deck_master/resources/icons/lucide/refresh-cw.svg": "2e10dd403c85a24f163d59fc6151aa21147fe9402e1305dfc8979208caee8944",
+    "deck_master/resources/icons/lucide/search.svg": "283d371c2e433817bb9c0c8310caa6c77fa4177c0f4f1168d9c83b97af7389dc",
+    "deck_master/resources/icons/lucide/server.svg": "f7bea54b609dc488f3b848995014041846b2443fd2a880653e9e583d7a034f61",
+    "deck_master/resources/icons/lucide/settings.svg": "0ae27fd0f81999229e3127ac96c5b32edfea448e291d509e76212b917551d66b",
+    "deck_master/resources/icons/lucide/shield-check.svg": "8d4fcdbde5bba4abb1a2f6fe53e37ceb6343a1d5449a9d88f6f97c1971d26c4e",
+    "deck_master/resources/icons/lucide/upload.svg": "42816ee1fa0e9d3b82272a97615c1e562b0e9de64780ebf21963bc1db0ceffd1",
+    "deck_master/resources/icons/lucide/user.svg": "eae3b3b2400031ddd5ec869327d127a96014e5f63aa6e06658dd5d4e90661aa8",
+    "deck_master/resources/icons/lucide/users.svg": "eeed488a1ec95ba730dd69996536fb65061d6ea273afb2429ae47e65eebf401c",
+    "deck_master/resources/icons/lucide/workflow.svg": "ae99ea8f56a2835a2cca35b2fbb57643ab73443610970dba23e24bd9df75cfec",
+    "deck_master/resources/method-inventory.json": "ab670baa538433f3c262ef36eeac31c41528266562391e33bf35f179f93f03b6",
+    "deck_master/resources/skill/SKILL.md": "d9b3dd336cdb30074fb72f16599fc2293c0116c5258a7d38fb606e645163a1e0",
+    "deck_master/resources/skill/agents/openai.yaml": "68aa81c35f89e4454e8a63bf1702a11d2be860e51d0f893132ea3a80fded63c3",
+    "deck_master/resources/skill/assets/content/examples/E01-marketing/after.md": "366870b537a26ec5747a5d6bcf939a8195e7c01b7a08d4b3b58da888f9642c09",
+    "deck_master/resources/skill/assets/content/examples/E01-marketing/before.md": "5662e52c410a8c692bd5b6eea02593ec7af35802fb59e247f8faa81feab29288",
+    "deck_master/resources/skill/assets/content/examples/E01-marketing/input.md": "a2082605674c7efc089a51168e2dbe46c367f35091728463e2814fd3878f3239",
+    "deck_master/resources/skill/assets/content/examples/E01-marketing/numbers.json": "116d60cf380446e556eb05d5a1cf291475c5127d729dec58dba3553a3f110357",
+    "deck_master/resources/skill/assets/content/examples/E02-technical-choice/after.md": "bf15602d66f5372ef970a3793291e5df3012b4ac9e2c95cdbd3f43653ecc2273",
+    "deck_master/resources/skill/assets/content/examples/E02-technical-choice/before.md": "55b51e4430fb33f2e523449378de2ad87cb21eb438af19c04c0cd26703a67670",
+    "deck_master/resources/skill/assets/content/examples/E02-technical-choice/input.md": "08693ad3292a967ad028ed0bc5b58bcb855b9637aec9106a2084758d6100a835",
+    "deck_master/resources/skill/assets/content/examples/E02-technical-choice/numbers.json": "2657a68a0126225bc5b9293fd51001fb1ac111e17fdd364ada01ce0fad15970b",
+    "deck_master/resources/skill/assets/content/examples/E03-policy-training/after.md": "2301b116431bf67b1531a70563e118190eec574dfb7c5410647e7d403fec0d46",
+    "deck_master/resources/skill/assets/content/examples/E03-policy-training/before.md": "2eddc1b0c9ee7f3adca605e87f57d81476cad9fca1dfe6b086306afdb5ff319d",
+    "deck_master/resources/skill/assets/content/examples/E03-policy-training/input.md": "dbece8e69a096bd15f980f83f68fa5049c26871c380132beea63f0b71ddf7166",
+    "deck_master/resources/skill/assets/content/examples/E03-policy-training/numbers.json": "4095eae0ae2b6ef71b208da182174eaa5506c4684ae5cef06260061a4ec8e958",
+    "deck_master/resources/skill/assets/content/examples/E04-saas-retention/after.md": "f9873e5e3411cbce5e382ff5b0411bc846025f5971c19389fd26c6645b581165",
+    "deck_master/resources/skill/assets/content/examples/E04-saas-retention/before.md": "32ceba04fd29da2fdab666a68f844e1e0a5a733a0ab6a0646b452394b1889d41",
+    "deck_master/resources/skill/assets/content/examples/E04-saas-retention/input.md": "ca0b091045c84fe427ff74f495e3eab15611df2e1277b67239700295dc4fa461",
+    "deck_master/resources/skill/assets/content/examples/E04-saas-retention/numbers.json": "d2f4f1b03ecbbecb17e7313941023c274d083f8316b329f3c035a4f295c1ccdf",
+    "deck_master/resources/skill/assets/content/examples/E05-inventory-review/after.md": "fd74f2aaad1ce67fffbb23f7c9bea8df632f07f006cacdb164c880d1eb5e5262",
+    "deck_master/resources/skill/assets/content/examples/E05-inventory-review/before.md": "4bf80bd67aee61b72858fd2c67d7173174aa823d29ad42d9e0bf8ba9bf00c544",
+    "deck_master/resources/skill/assets/content/examples/E05-inventory-review/input.md": "188700d7e8b1d31b2b0f76e60b610772e5e1ab48898540a50574febd6034e20a",
+    "deck_master/resources/skill/assets/content/examples/E06-rag-teaching/after.md": "806cce4417a93d4e90ca799cd1fea3656f3829c0d3ad845e22ea2f626be553e9",
+    "deck_master/resources/skill/assets/content/examples/E06-rag-teaching/before.md": "eb929a66646002c7bb88807e6975b07fe165784c9e7f0016199c694237ea9fca",
+    "deck_master/resources/skill/assets/content/examples/E06-rag-teaching/input.md": "c6e35d7a6587ac5ffb0a87a5eb150bc6b9c3ea933527c39bb394d291ad6bf5d9",
+    "deck_master/resources/skill/assets/content/templates/options-comparison.md": "847ea5948571858ac955089ec548c180b0c497618f9d87cc7a3c84029847de70",
+    "deck_master/resources/skill/assets/content/templates/page-draft.md": "14ec8c9360ea21ffd787fac26141d6833386b586db519861ce7286895c46dc15",
+    "deck_master/resources/skill/assets/content/templates/teaching-sequence.md": "9d5acc0e563f7942e4b9d012a2ca054d78f9d2ff069e81b73852dc9e14a24c73",
+    "deck_master/resources/skill/assets/design/semantic-layout-examples.md": "8bbd7db7c1c7cd479181246c06c4e39a1f66023e80251937f2b42111c23b8704",
+    "deck_master/resources/skill/assets/master/routing-examples.json": "e0759fd4d5a4c3dce1d7afd5b4934ad5c77654f3bad4f1cabef8ae3728f5b9a0",
+    "deck_master/resources/skill/assets/review/calibration-cases.json": "2065ca5ddcf8837769764cc115e5de2a9c272c771e602e67cbeb485d75fe0c89",
+    "deck_master/resources/skill/references/blueprint-svg.md": "3f3653ce3dec1513747f6e929d17be0b28f4bd7963cf1f95339ade1ad1e39169",
+    "deck_master/resources/skill/references/candidates-and-stages.md": "bdc2143e464671110def148e13d83a5f622d1ba5c66fb794ce12682c28b08e4f",
+    "deck_master/resources/skill/references/cases/E01-marketing.md": "285b08a9e1e1688c2f8b235177919b8efe887693790f748bc402b9bb51da4827",
+    "deck_master/resources/skill/references/cases/E02-technical-choice.md": "1bcbbe0844c3cc963c324907a504e92f74e08883d5c7b48cb683321d02400498",
+    "deck_master/resources/skill/references/cases/E03-policy-training.md": "2a249fe54d9c142e4240b3f46015639f0bbf2fbb0826cbb6b872fc54e1b80ab1",
+    "deck_master/resources/skill/references/cases/E04-saas-retention.md": "c1c8db7ffda29b69caf2cc9a4f05f1435602c24f971ca0996978448158e1a48b",
+    "deck_master/resources/skill/references/cases/E05-inventory-review.md": "e63e1c523818a79ce33c238528acd162cb652db4e918db6c283c45c301ba290e",
+    "deck_master/resources/skill/references/cases/E06-rag-teaching.md": "c5ef3e72f3e1a411ff1ea1c88e065ec35686e59c586a20227cf1c9038e51126f",
+    "deck_master/resources/skill/references/collaboration-routing.md": "7424af8fc91fed2ec5038aa91abcbbd2576a48be8ebe7662fd06d57b4722b10b",
+    "deck_master/resources/skill/references/content-calibration.md": "8283ae03a7b993c921b89d5260c7620214d3afe398b286a2d01007ceae545c24",
+    "deck_master/resources/skill/references/content-examples.md": "13f3cb7deceb5b1ce554c470f3ea2aa325dd0365c6dda73094fe9e85e181cdbd",
+    "deck_master/resources/skill/references/content-methods.md": "fe495b2fc262c89fd1791c34933f2ad73bce84bbdf143375427791574a0ac2bc",
+    "deck_master/resources/skill/references/content-to-visual.md": "0b3f9767932d7729157f1056ac572714b28dbf29d9530c8cc6a8fe3b52a77200",
+    "deck_master/resources/skill/references/icon-quality.md": "a178377f8d956c6bc42b534905962c57073b615d58ddde566dffdef5314a000b",
+    "deck_master/resources/skill/references/input-update.md": "1f6da62d01532069907f46e29414d65980b61ddd72e9e130541ee49a6a16c756",
+    "deck_master/resources/skill/references/installation.md": "012929dd869f129cc4b9a6a1091c662bc27d584f0cc51d3e6c4be11cb09d2eca",
+    "deck_master/resources/skill/references/method-review.md": "65e3e79fbabfc17d8cbbde691ef390e5acd028fb36b9964e8907f142dcbf98b9",
+    "deck_master/resources/skill/references/method-selection.md": "583ea0f4203bbb2a55b592da732220efaf71d74ed71846276c14c70e7dd708a8",
+    "deck_master/resources/skill/references/method-sources.md": "816af6b602d9125bcbf94772729af13f18a217daeb1492dc687a98c4732a0033",
+    "deck_master/resources/skill/references/methods/M01-framing.md": "de0fcc09db864d5f47841eb1f91eba10f61b972e38564773a904e7124fed2e09",
+    "deck_master/resources/skill/references/methods/M02-structured-analysis.md": "30e7e9dc8f30a4cd2a8038d734ba6e77acbb91c10d34e1cd837d4d7d408174be",
+    "deck_master/resources/skill/references/methods/M03-argument.md": "159b046b28b4e7c82a291bb50a9e8126754a007688cb61203189bae4898b6ff5",
+    "deck_master/resources/skill/references/methods/M04-causal-explanations.md": "cd52c74a319cf30ade75fd029c3476636d4b4b6f9db2eadffdc5f746dd815bf9",
+    "deck_master/resources/skill/references/methods/M05-options-and-value.md": "eee24a2c9a80d3980d8768df2ae926f2998bd436c7dcdd7ea6ba8420d01157f3",
+    "deck_master/resources/skill/references/methods/M06-uncertainty-stress.md": "fce136b1a945ac14004776368ab93e20b5181fee770d0924bd7fa46aea487d24",
+    "deck_master/resources/skill/references/methods/M07-synthesis.md": "4af0b9137f516e03d4b4dbf343ae85bb76a3535ef6b218d479ef7b1e0082fa0a",
+    "deck_master/resources/skill/references/methods/M08-narrative.md": "d4e56ac966ee88332bb4316e501e13f72698e71c45c5bdb5f8fcb271de0e42f7",
+    "deck_master/resources/skill/references/methods/M09-teaching.md": "99d5fde59a3360f6cd9e0101636e3d44a6fcd267643bab6f59a143bbff9dc9a8",
+    "deck_master/resources/skill/references/methods/M10-compression.md": "eebc4d4fe5a133366d2e71d937fb86fbd83b8284c440fe453126d8d2b2e6258d",
+    "deck_master/resources/skill/references/narrative-patterns.md": "16022007031c75262507b7849dd8dbe82f91dafc1e365256991aa4e6be195188",
+    "deck_master/resources/skill/references/page-writing.md": "d65839875dc213519c58962721d53f95024eb7fde05bc55548b4fb1d9dd2049e",
+    "deck_master/resources/skill/references/physical-units.md": "282ce2943df8b4030898ba33ab8055fd115acf9f31931499c1e4c22f50670ff3",
+    "deck_master/resources/skill/references/review-and-repair.md": "860b2af16f6e78014a61d5357190d014a5c075c91ef880627a2f6aa8c4262583",
+    "deck_master/resources/skill/references/source-reading.md": "4be8ac92de269f41010cd25587bbbb652ab2a4bebbbbd329edb9f3d370a60a50",
+    "deck_master/resources/skill/references/style-calibration.md": "f61172e78ebcd21f8848400d5d03375b6d80564675a628e6459fb9efdb3e889f",
+    "deck_master/resources/skill/references/visual-reference.md": "a0ef82bd88ff1712da8c67a6db0cc454fe9b401727f02b6c40f364e8e0696a52",
+    "deck_master/resources/skill/references/writing-profiles.md": "e84fa21f7b484ccd1138f9217e304681de6396c53be5e583fb27faa2a532f54b",
+    "deck_master/resources/skill/resource-catalog.json": "062737b74ea07d5a963d1f22d4cac284a180a122e128f39d4ebd76701594f20d",
+    "deck_master/resources/skill/scripts/check_case_numbers.py": "748cc15af4765fa1809c83f3988ffebacc5c4031bf17d073845e942ad8f2134f",
+    "deck_master/resources/skills/RESOLVER.md": "fcddf6aa12f9588cf83fa34e5957d5985339850710753d19f8d5820cd34ef62a",
+    "deck_master/resources/skills/deck-content/SKILL.md": "4fe9eb7af985bc717e430e5ee21743b047ecc56266d9452a7ea0623b94c4c9e0",
+    "deck_master/resources/skills/deck-content/agents/openai.yaml": "fad8f336ddd95f77fa736d141b51b2421cdc603dbfaa9c511b4be594986c1bed",
+    "deck_master/resources/skills/deck-design/SKILL.md": "6bc69ec9a250389009856e25c234abe1f295e32c9284f3abf0618d64d50bc613",
+    "deck_master/resources/skills/deck-design/agents/openai.yaml": "de93c548a95cee0676b4650c7588d5f17fb915da0bbe4a88417a293cf31d6664",
+    "deck_master/resources/skills/deck-review/SKILL.md": "6cfda42b2a41b9e130ed27b5e67c0a90d533b1ae5f114cfa7e72b6daf9ef1e33",
+    "deck_master/resources/skills/deck-review/agents/openai.yaml": "c48c2292832b0d1a97cd42aca6919b8591f8f922a1ec61964a7a543703d1cfc0",
+    "deck_master/resources/static/studio/delivery.css": "38cd18b3976d967f25c142400b8016e118637de1faab6aedcb8cd9fc8a865b2c",
+    "deck_master/resources/static/studio/index.html": "cf155296e754d24e43b2d232df79ae18d725b9201fe8a7a542594b8d446a8b08",
+    "deck_master/resources/static/studio/overview.css": "c6ddfb68b4ac33ccab17402c67de678219f74edbd1b7aa36bb29c5f713aaf3aa",
+    "deck_master/resources/static/studio/reading.css": "7220f3e2259b9e46a13404f7521d804e87f1b2a5dbf7afac42a3253c8f4c29dc",
+    "deck_master/resources/static/studio/workspace.css": "9f63ceffe7637f4f2d55c7f01e528771290ea02c31c523788f06816b0fb96ee5",
+    "deck_master/resources/static/v2/action-summary.js": "8258c1cdf6a3670e92f43bbbc663221d2d525b69e8d1ea5e2a14ee3f92f532ba",
+    "deck_master/resources/static/v2/action-targets.js": "e9b31ac63ed43d740123957256d6c9a584508db4a078620b9f214fc3dea79e3c",
+    "deck_master/resources/static/v2/annotation-submission.js": "4f2ec6ef892d3422e09475b1d6fde70a8c9ceb3b023d72dbcca55007e98081d3",
+    "deck_master/resources/static/v2/annotations.js": "7bc942afa4722cb6ba539d49ded52137025cccc9858c29bda8442142cb171bc3",
+    "deck_master/resources/static/v2/api.js": "10b6d8d172dd553f49c78586676e49831c22987d67c5ecd55639ff669085ecdf",
+    "deck_master/resources/static/v2/app.js": "d7a282ff4fc5120e3bfd587e7430e627f425bbc80223848a1cb44f28f6dac682",
+    "deck_master/resources/static/v2/assets/deck-master-logo/IBMPlexMono-OFL.txt": "7e6b2818edbd8f6a01ae80641cc8f16a51080d08fb4e532be3a0b6f74adb07da",
+    "deck_master/resources/static/v2/assets/deck-master-logo/favicon.svg": "cc4c77d2e9b287559e21a4005c912467133a18de28c66aaeefe54f5f59399cb5",
+    "deck_master/resources/static/v2/assets/deck-master-logo/logo-horizontal-light.svg": "b52d3b44d64ad023f57932776e37338aa4baa397d1add7af4c1fff8e817d5fa9",
+    "deck_master/resources/static/v2/batch-actions.js": "0a680b3069ddf937b2d575360fab17fb1c1973dc5eb7a228895fff105eeee325",
+    "deck_master/resources/static/v2/batch-policy.js": "851098f29a5fefb7e556aac04937074737ce569cc99703a559f5765f18480571",
+    "deck_master/resources/static/v2/business-operations.js": "2614195e46a9324282ed75f8e55da27b2040a0434ad372616b4aaf6d17847921",
+    "deck_master/resources/static/v2/candidate-cards.js": "1fe33a282cd34598d8994c6f352eb21e834141ae3610591611ff0f696583d70a",
+    "deck_master/resources/static/v2/candidate-desk.js": "b514e58224578af700c3dd81771f1458823a07495634f47f7dcc85f4943f4538",
+    "deck_master/resources/static/v2/change-handoff.js": "a3412df3469a919377e105bf992683ccbb72049739ba0f95632ab16ac2bce92d",
+    "deck_master/resources/static/v2/changeset-desk.js": "c5db027e2c9dcd1f79d2ff86d5da940901103e6d3fd1e8c2e9611d51d7c988b1",
+    "deck_master/resources/static/v2/collaboration-desk.js": "5146cd4607853745ae77b1fdd2e4070e8d07e397dea4560dcdec1ae1e51ae525",
+    "deck_master/resources/static/v2/comparison-canvas.css": "bd3f438af9adf35e948cff60033aa12e1b20c0ca243dcb884170d26435488493",
+    "deck_master/resources/static/v2/comparison-canvas.js": "b104944b854fd751f49db958d00a8a3dab8970e744247f45f195128874974eeb",
+    "deck_master/resources/static/v2/content-edit.js": "8882dc5ae1094fd3ba5aee375acb4f6979e9b637f2137b90f6166aed4795a409",
+    "deck_master/resources/static/v2/content-sources.js": "a603926f333878bfeb258ae66963a3120548d2d80ab83c3a8c00c04fd485570a",
+    "deck_master/resources/static/v2/controls.css": "76789601fca4ab4bf0bebb83466c6623126089c57bea21d6965cf3e72e2d13b7",
+    "deck_master/resources/static/v2/current-work.js": "4d594deafb83e2795de388f053a03841417bcc5c57ef22bba68383a7637a7dbd",
+    "deck_master/resources/static/v2/delivery-desk.js": "2bd6695e7190d7418951c76e2162c14b3e8cb76285de785f0f81b03bbd61136c",
+    "deck_master/resources/static/v2/design-entry.js": "a3d36f09f5eab6ef761b419c1b601ca8be52c8d5e048d9de26385ec274a44e36",
+    "deck_master/resources/static/v2/dom.js": "ddebc00397c91aa89dc7d561b2cb53745c2daafaa003bcd9f27ae1381e2d9844",
+    "deck_master/resources/static/v2/draft-intake.js": "8f1efb18578cfe8297faeb1ee92c36d5aa7c4bb944e7440a03046f425955840e",
+    "deck_master/resources/static/v2/drafts.js": "d4906be6a537b47791b7a44b81ac8eab75ac249a922607092fa60966359877eb",
+    "deck_master/resources/static/v2/evidence-reading.js": "48879bd25a01521918531a1fc00f5e1feae07778313d2012e8fd4d77d1a96482",
+    "deck_master/resources/static/v2/gallery-state.js": "bbe704c776e37bf6dfd216c4f2750e7dec447e9dd0c300556a4a0d1959aee308",
+    "deck_master/resources/static/v2/gallery.js": "22adc2f6a1c120995f081793f12d3c915e220e28e3297a55cee8bb9cf498e232",
+    "deck_master/resources/static/v2/history-labels.js": "a6a5b176850922fd0fd055a992053e63bddbee04b2bdc6b68f6bb79241a87c75",
+    "deck_master/resources/static/v2/icon-workbench.js": "7a538c6c70836fa200f2df173daf19b460e4a1476d15e921d3bc76356a62d3b8",
+    "deck_master/resources/static/v2/icons.js": "451cc6c10f62226fa86eb7eaa6005cff34fae19a6860aef1f2025b3fe363c121",
+    "deck_master/resources/static/v2/images.js": "dfc7b7e6d065c4dbed9782e1fbf8ceba793a1b91b8ada79be7dbf19878c6c601",
+    "deck_master/resources/static/v2/index.html": "59e7bfe5971b1825d52eb4a83b1673a17204a1cd60700edee56f46884f4d07da",
+    "deck_master/resources/static/v2/insight-reading.js": "601f50848d81bba9f46448f5d977dfbf159a4a688586870b102195a15cc19285",
+    "deck_master/resources/static/v2/launcher-ui.js": "40543dbfadcea380432ab89a31c415414547b69edb13fce4c6436ec2724f2c58",
+    "deck_master/resources/static/v2/material-uploads.js": "07808a9aa0055a86d21c61659098280e40a815c4ced3aa53487f5ccc4447a3b5",
+    "deck_master/resources/static/v2/method-library.js": "816bdab84189fe15ee068e739455ae11f26a5e360763844dd7f8d4b3f1936faf",
+    "deck_master/resources/static/v2/navigation-usability.css": "23f8c039b5c0e463f37506f1642b5b3f2eef38ad8af1bae8ad151107fd41a49d",
+    "deck_master/resources/static/v2/overview-state.js": "fce651d5bcb0306ab950788210ed70ebf618c57db6b0f76650a989732327ccaf",
+    "deck_master/resources/static/v2/overview.js": "baa77e4642e311f43f9bfe5d7f4ab1edaea4efab86ed6c54712b165e05bcdbee",
+    "deck_master/resources/static/v2/package.json": "609158e6c5fbc237939fa3ddf7faab80ab690bdc0c8d584414a885130103c4e8",
+    "deck_master/resources/static/v2/page-reading.js": "0aa3ceb508d0e34ec201a3e3d1a2299e8b9a9481314b505f7d55c1a3dd5f0568",
+    "deck_master/resources/static/v2/page-text.js": "2b204cea87c69941e3b7a2280e3ab965afd689d7e2f758aa6221cbc04e06fc91",
+    "deck_master/resources/static/v2/page-workbench.js": "0474d3c0ae78f432a40a0aa46e6e495fc21ad7b2a74d32e788fc0c29a2e7fcc3",
+    "deck_master/resources/static/v2/personal-maintenance.js": "6acdf732943b9c3746c16cf3e50ae4173a049c8c1e117af0fba0dd40cdd877c1",
+    "deck_master/resources/static/v2/personal-recovery.js": "723d73bde146dcc6012d0d5fca83364f7a65c80315984da68a9b6f6cb22846ea",
+    "deck_master/resources/static/v2/production-view.js": "3b84beb3de49b87d3cf74329efcea0be200b1e937e02ce61dedbd7cd2a8a1e08",
+    "deck_master/resources/static/v2/project.js": "196be38bc137b4b03b3fdd19304f67634a61457281a98ebca61d395ca10e2231",
+    "deck_master/resources/static/v2/receipt-verdict.js": "5badeaa03d0694ca798ac41d704db56dc2217391226b16d0e2ec45f9bc984764",
+    "deck_master/resources/static/v2/request-view.js": "0bbb1fd58486ad45d089c17f34e2b79edd35a5b7669c623848d28b944c2c3847",
+    "deck_master/resources/static/v2/routes.js": "8fc34e79435a5bc2860d1511caef28197f579144b578063077dc6cfc2c2f40d0",
+    "deck_master/resources/static/v2/run-desk.js": "2ce27bd46ef07d2a31b5ff73c9654c8c7fd315ab7956793a7ee56a9da5d312fe",
+    "deck_master/resources/static/v2/run-recovery.js": "0601ae908e0cbc7f2b121671e8d11a2b5f4a3250455532688cab02ad12911262",
+    "deck_master/resources/static/v2/studio.css": "4883b533522aa99766a6d1ad0cff15d92e3ca98accb2f84813203918041d7f44",
+    "deck_master/resources/static/v2/style-calibration.js": "fdf1a3a79d7c98458bbeb5f3a2c87d1bf6e1d787add60feecdb400745e3416fd",
+    "deck_master/resources/static/v2/style-phases.js": "c2aa15486f7b259a80574ca4bbcbbd6fa9e1d53386ce232182e33d66fd02353a",
+    "deck_master/resources/static/v2/style-record.js": "b9a8279ff4fabceee374d02eb0f4c2397036371af28e82b1336f1e29d116ea13",
+    "deck_master/resources/static/v2/style.css": "d2c1496d81cebc33b8cc47f4892d9aa2bf028187f884f3add223244b897406a7",
+    "deck_master/resources/static/v2/summary-poll.js": "3f7c7e31db0011e0d21f93e40c486ab95bbbfa280e80d91067590ab371e3cbab",
+    "deck_master/resources/static/v2/text-diff.js": "cc52557c11ad1000989db7151cab5ed203d8b440d1b9c190a017291f12e1a632",
+    "deck_master/resources/static/v2/text-selection.js": "2817fad01c867e9607ea797a9667caea838c9cd46993806c00e9ac47076233fd",
+    "deck_master/resources/static/v2/tokens.css": "efa1ec602b76e377dce4ddf0c38f67cad293ba6c3a1854611b8c61af1988ded3",
+    "deck_master/resources/static/v2/tokens.json": "1c398460d9cc057edb9c0570ba001aa68e8ff82647cfc92b98bd0f8b8ce768db",
+    "deck_master/resources/static/v2/trial-actions.js": "61021e84b1469a05c26f6fddc37af47b26f77d681bc95fe37c646e83496752f7",
+    "deck_master/resources/static/v2/views.js": "b150ed244f79c7c5feb9630068299fc4fe84474adb67cb84a703b4a7bad5e0a4",
+    "deck_master/resources/static/v2/visual-style.js": "b1928c6de0d6b0a61b607d50ce92c0c67243d8a29a269ebae5a0400e5cdfea78",
+    "deck_master/resources/static/v2/workbench.css": "be23919849c6aed1dfe037208e8a5c1c7b5895b282782edfb1222c87225a9fb6",
+    "deck_master/restoration.py": "25681653060af83cc8e5db94c531fd879659dc239c2d055a03aff7e67380f76e",
+    "deck_master/result_reading.py": "cd4f630f4579a6cdd6c858dff401915c9b54627149fb6d8c8f9817e75add52fd",
+    "deck_master/review.py": "f4aab7493de94c73c14e003ebb1493a1a4cee0516acbaa092f7c2c7c5b7c6e90",
+    "deck_master/review_channels.py": "2ac3f4dc7cc7168e0cceb15f38e600f12e231457eec003c3496b9b55e0f74163",
+    "deck_master/review_evidence.py": "974c28503fe1eb2bde53ff7d520604bca0566a695513ffebfb90ba5e6be54f15",
+    "deck_master/review_handoff.py": "197f768a4c6c2d09933fe55cdfb362c980c8e33f69be91a71bb32dc6e5698ae4",
+    "deck_master/review_import.py": "dec9ff3fa35d53340a024bcd8d5728ad37e438f43ef84d1ed6aeb2a78c5f21b4",
+    "deck_master/run_desk.py": "ae9856c93c1f2eb74a3d86493cf52b9aff37d4a97e3617ded041147eaa7905f0",
+    "deck_master/samples.py": "a03b22fee48996267fc830a61d77397fc0fd25bfcf642ec3f8532ac67b2ffee1",
+    "deck_master/selected_file.py": "ee6bcd480e9bf6e34147398162f8c6dd23f6fa84c7e3b267c15459b239a7de2c",
+    "deck_master/service.py": "d09ede78e563ea5f14a57ff2f9a63acef0daad5a29beb16011269bc9e10cac64",
+    "deck_master/snapshots.py": "677095f14be9f40d792be9b22926c7ea46b191ccf7a4e09bce6b4ef42eade7d7",
+    "deck_master/source_uploads.py": "87d9ec351a6154d3a4ab99cbbbc4ba8142b6009bce7fc7007045732d2800655b",
+    "deck_master/sources.py": "dbe89a44f79e9db3be305eb1390dc564f22ae056a91cb98c05cf57ef106e62af",
+    "deck_master/stages.py": "4b489f2f8f2126302b2c461566c9788e01f3f9bfa3cda197120dc38a632f047d",
+    "deck_master/store.py": "1e1cb6e94167860a6c7427de2e6f5ab884e8de81107be1d903a9826297219f60",
+    "deck_master/styles.py": "149b2847bcff6a780694228c9c5ec2fa25efd1810f86da6fef52707866453fe1",
+    "deck_master/tasks.py": "984b4f419a92b3afb6b9fe71aef5501ec5145d1e1b85cd68a6762006cdcfdeb8",
+    "deck_master/text_ranges.py": "2e760fc03a3c443c6e5676dbe8c4d71a78fce189d5f389beabf46622be3da303",
+    "deck_master/text_sources.py": "36e32a72eef3fc529d6a2452b511cb47bb81632c86c88bca48b69d9e9a4f18cb",
+    "deck_master/thumbnails.py": "909b394b2e362a25dd2eb709cbe9db7db2d491b9ece87c247a722def1cc21490",
+    "deck_master/ui_clear_recovery.py": "82d85aeb519851b59f0bb3ba3f0bba8204a770ec8f929b82045639b80a8c6786",
+    "deck_master/ui_journal.py": "a8d389693ee227bd420bb0cebe8ecbaedb8e6f65a29cdba083e66e22a82bac74",
+    "deck_master/variant_requests.py": "8bf788913cc52d436d471742f5f2982ad8238ef3cb12f1cab3076b294cf42b87",
+    "deck_master/view.py": "e6ab075703a6fa456290094d6f7457d8a3c3bac745ba26fc9c2475c2c4549f0f",
+    "deck_master/view_server.py": "53221a5e513ef75a8fa988f27555951162a9e1f97f0e8ab279c3f47b089354de",
+    "deck_master/visual_dependencies.py": "4dcdeb32e6c9c1b658403d837f2868db8efb20133a304629e2f8211c92d0735a",
+    "deck_master/visual_styles.py": "b148e32c01167c0a4f2c2aec21d5c968f2c1113ff22579f7cfb4ce14ef657ac3",
+    "deck_master/web.py": "48dc06f54a03f9dcf3de4aa4676ff89a262384bf203b447e788d7a8e3bcc325d",
+    "deck_master/work_context.py": "afc972837dcecbddc87f3d7305907b919789dde1c83d9e7a2c7c215710c225a1",
+    "deck_master/workbench.py": "8384a8e9750b6e7efb35ebec37a7f7c0a76a870e3e38599b57a50231e0e8ae57"
+  },
+  "method_resource_inventory": {
+    "schema_version": "method_resource_inventory.v1",
+    "public_skills": [
+      "deck-master",
+      "deck-content",
+      "deck-design",
+      "deck-review"
+    ],
+    "shared_method_source": "skills/deck-master",
+    "files": {
+      "deck_master/resources/skill/SKILL.md": {
+        "canonical_source": "skills/deck-master/SKILL.md",
+        "sha256": "d9b3dd336cdb30074fb72f16599fc2293c0116c5258a7d38fb606e645163a1e0"
+      },
+      "deck_master/resources/skill/agents/openai.yaml": {
+        "canonical_source": "skills/deck-master/agents/openai.yaml",
+        "sha256": "68aa81c35f89e4454e8a63bf1702a11d2be860e51d0f893132ea3a80fded63c3"
+      },
+      "deck_master/resources/skill/assets/content/examples/E01-marketing/after.md": {
+        "canonical_source": "skills/deck-master/assets/content/examples/E01-marketing/after.md",
+        "sha256": "366870b537a26ec5747a5d6bcf939a8195e7c01b7a08d4b3b58da888f9642c09"
+      },
+      "deck_master/resources/skill/assets/content/examples/E01-marketing/before.md": {
+        "canonical_source": "skills/deck-master/assets/content/examples/E01-marketing/before.md",
+        "sha256": "5662e52c410a8c692bd5b6eea02593ec7af35802fb59e247f8faa81feab29288"
+      },
+      "deck_master/resources/skill/assets/content/examples/E01-marketing/input.md": {
+        "canonical_source": "skills/deck-master/assets/content/examples/E01-marketing/input.md",
+        "sha256": "a2082605674c7efc089a51168e2dbe46c367f35091728463e2814fd3878f3239"
+      },
+      "deck_master/resources/skill/assets/content/examples/E01-marketing/numbers.json": {
+        "canonical_source": "skills/deck-master/assets/content/examples/E01-marketing/numbers.json",
+        "sha256": "116d60cf380446e556eb05d5a1cf291475c5127d729dec58dba3553a3f110357"
+      },
+      "deck_master/resources/skill/assets/content/examples/E02-technical-choice/after.md": {
+        "canonical_source": "skills/deck-master/assets/content/examples/E02-technical-choice/after.md",
+        "sha256": "bf15602d66f5372ef970a3793291e5df3012b4ac9e2c95cdbd3f43653ecc2273"
+      },
+      "deck_master/resources/skill/assets/content/examples/E02-technical-choice/before.md": {
+        "canonical_source": "skills/deck-master/assets/content/examples/E02-technical-choice/before.md",
+        "sha256": "55b51e4430fb33f2e523449378de2ad87cb21eb438af19c04c0cd26703a67670"
+      },
+      "deck_master/resources/skill/assets/content/examples/E02-technical-choice/input.md": {
+        "canonical_source": "skills/deck-master/assets/content/examples/E02-technical-choice/input.md",
+        "sha256": "08693ad3292a967ad028ed0bc5b58bcb855b9637aec9106a2084758d6100a835"
+      },
+      "deck_master/resources/skill/assets/content/examples/E02-technical-choice/numbers.json": {
+        "canonical_source": "skills/deck-master/assets/content/examples/E02-technical-choice/numbers.json",
+        "sha256": "2657a68a0126225bc5b9293fd51001fb1ac111e17fdd364ada01ce0fad15970b"
+      },
+      "deck_master/resources/skill/assets/content/examples/E03-policy-training/after.md": {
+        "canonical_source": "skills/deck-master/assets/content/examples/E03-policy-training/after.md",
+        "sha256": "2301b116431bf67b1531a70563e118190eec574dfb7c5410647e7d403fec0d46"
+      },
+      "deck_master/resources/skill/assets/content/examples/E03-policy-training/before.md": {
+        "canonical_source": "skills/deck-master/assets/content/examples/E03-policy-training/before.md",
+        "sha256": "2eddc1b0c9ee7f3adca605e87f57d81476cad9fca1dfe6b086306afdb5ff319d"
+      },
+      "deck_master/resources/skill/assets/content/examples/E03-policy-training/input.md": {
+        "canonical_source": "skills/deck-master/assets/content/examples/E03-policy-training/input.md",
+        "sha256": "dbece8e69a096bd15f980f83f68fa5049c26871c380132beea63f0b71ddf7166"
+      },
+      "deck_master/resources/skill/assets/content/examples/E03-policy-training/numbers.json": {
+        "canonical_source": "skills/deck-master/assets/content/examples/E03-policy-training/numbers.json",
+        "sha256": "4095eae0ae2b6ef71b208da182174eaa5506c4684ae5cef06260061a4ec8e958"
+      },
+      "deck_master/resources/skill/assets/content/examples/E04-saas-retention/after.md": {
+        "canonical_source": "skills/deck-master/assets/content/examples/E04-saas-retention/after.md",
+        "sha256": "f9873e5e3411cbce5e382ff5b0411bc846025f5971c19389fd26c6645b581165"
+      },
+      "deck_master/resources/skill/assets/content/examples/E04-saas-retention/before.md": {
+        "canonical_source": "skills/deck-master/assets/content/examples/E04-saas-retention/before.md",
+        "sha256": "32ceba04fd29da2fdab666a68f844e1e0a5a733a0ab6a0646b452394b1889d41"
+      },
+      "deck_master/resources/skill/assets/content/examples/E04-saas-retention/input.md": {
+        "canonical_source": "skills/deck-master/assets/content/examples/E04-saas-retention/input.md",
+        "sha256": "ca0b091045c84fe427ff74f495e3eab15611df2e1277b67239700295dc4fa461"
+      },
+      "deck_master/resources/skill/assets/content/examples/E04-saas-retention/numbers.json": {
+        "canonical_source": "skills/deck-master/assets/content/examples/E04-saas-retention/numbers.json",
+        "sha256": "d2f4f1b03ecbbecb17e7313941023c274d083f8316b329f3c035a4f295c1ccdf"
+      },
+      "deck_master/resources/skill/assets/content/examples/E05-inventory-review/after.md": {
+        "canonical_source": "skills/deck-master/assets/content/examples/E05-inventory-review/after.md",
+        "sha256": "fd74f2aaad1ce67fffbb23f7c9bea8df632f07f006cacdb164c880d1eb5e5262"
+      },
+      "deck_master/resources/skill/assets/content/examples/E05-inventory-review/before.md": {
+        "canonical_source": "skills/deck-master/assets/content/examples/E05-inventory-review/before.md",
+        "sha256": "4bf80bd67aee61b72858fd2c67d7173174aa823d29ad42d9e0bf8ba9bf00c544"
+      },
+      "deck_master/resources/skill/assets/content/examples/E05-inventory-review/input.md": {
+        "canonical_source": "skills/deck-master/assets/content/examples/E05-inventory-review/input.md",
+        "sha256": "188700d7e8b1d31b2b0f76e60b610772e5e1ab48898540a50574febd6034e20a"
+      },
+      "deck_master/resources/skill/assets/content/examples/E06-rag-teaching/after.md": {
+        "canonical_source": "skills/deck-master/assets/content/examples/E06-rag-teaching/after.md",
+        "sha256": "806cce4417a93d4e90ca799cd1fea3656f3829c0d3ad845e22ea2f626be553e9"
+      },
+      "deck_master/resources/skill/assets/content/examples/E06-rag-teaching/before.md": {
+        "canonical_source": "skills/deck-master/assets/content/examples/E06-rag-teaching/before.md",
+        "sha256": "eb929a66646002c7bb88807e6975b07fe165784c9e7f0016199c694237ea9fca"
+      },
+      "deck_master/resources/skill/assets/content/examples/E06-rag-teaching/input.md": {
+        "canonical_source": "skills/deck-master/assets/content/examples/E06-rag-teaching/input.md",
+        "sha256": "c6e35d7a6587ac5ffb0a87a5eb150bc6b9c3ea933527c39bb394d291ad6bf5d9"
+      },
+      "deck_master/resources/skill/assets/content/templates/options-comparison.md": {
+        "canonical_source": "skills/deck-master/assets/content/templates/options-comparison.md",
+        "sha256": "847ea5948571858ac955089ec548c180b0c497618f9d87cc7a3c84029847de70"
+      },
+      "deck_master/resources/skill/assets/content/templates/page-draft.md": {
+        "canonical_source": "skills/deck-master/assets/content/templates/page-draft.md",
+        "sha256": "14ec8c9360ea21ffd787fac26141d6833386b586db519861ce7286895c46dc15"
+      },
+      "deck_master/resources/skill/assets/content/templates/teaching-sequence.md": {
+        "canonical_source": "skills/deck-master/assets/content/templates/teaching-sequence.md",
+        "sha256": "9d5acc0e563f7942e4b9d012a2ca054d78f9d2ff069e81b73852dc9e14a24c73"
+      },
+      "deck_master/resources/skill/assets/design/semantic-layout-examples.md": {
+        "canonical_source": "skills/deck-master/assets/design/semantic-layout-examples.md",
+        "sha256": "8bbd7db7c1c7cd479181246c06c4e39a1f66023e80251937f2b42111c23b8704"
+      },
+      "deck_master/resources/skill/assets/master/routing-examples.json": {
+        "canonical_source": "skills/deck-master/assets/master/routing-examples.json",
+        "sha256": "e0759fd4d5a4c3dce1d7afd5b4934ad5c77654f3bad4f1cabef8ae3728f5b9a0"
+      },
+      "deck_master/resources/skill/assets/review/calibration-cases.json": {
+        "canonical_source": "skills/deck-master/assets/review/calibration-cases.json",
+        "sha256": "2065ca5ddcf8837769764cc115e5de2a9c272c771e602e67cbeb485d75fe0c89"
+      },
+      "deck_master/resources/skill/references/blueprint-svg.md": {
+        "canonical_source": "skills/deck-master/references/blueprint-svg.md",
+        "sha256": "3f3653ce3dec1513747f6e929d17be0b28f4bd7963cf1f95339ade1ad1e39169"
+      },
+      "deck_master/resources/skill/references/candidates-and-stages.md": {
+        "canonical_source": "skills/deck-master/references/candidates-and-stages.md",
+        "sha256": "bdc2143e464671110def148e13d83a5f622d1ba5c66fb794ce12682c28b08e4f"
+      },
+      "deck_master/resources/skill/references/cases/E01-marketing.md": {
+        "canonical_source": "skills/deck-master/references/cases/E01-marketing.md",
+        "sha256": "285b08a9e1e1688c2f8b235177919b8efe887693790f748bc402b9bb51da4827"
+      },
+      "deck_master/resources/skill/references/cases/E02-technical-choice.md": {
+        "canonical_source": "skills/deck-master/references/cases/E02-technical-choice.md",
+        "sha256": "1bcbbe0844c3cc963c324907a504e92f74e08883d5c7b48cb683321d02400498"
+      },
+      "deck_master/resources/skill/references/cases/E03-policy-training.md": {
+        "canonical_source": "skills/deck-master/references/cases/E03-policy-training.md",
+        "sha256": "2a249fe54d9c142e4240b3f46015639f0bbf2fbb0826cbb6b872fc54e1b80ab1"
+      },
+      "deck_master/resources/skill/references/cases/E04-saas-retention.md": {
+        "canonical_source": "skills/deck-master/references/cases/E04-saas-retention.md",
+        "sha256": "c1c8db7ffda29b69caf2cc9a4f05f1435602c24f971ca0996978448158e1a48b"
+      },
+      "deck_master/resources/skill/references/cases/E05-inventory-review.md": {
+        "canonical_source": "skills/deck-master/references/cases/E05-inventory-review.md",
+        "sha256": "e63e1c523818a79ce33c238528acd162cb652db4e918db6c283c45c301ba290e"
+      },
+      "deck_master/resources/skill/references/cases/E06-rag-teaching.md": {
+        "canonical_source": "skills/deck-master/references/cases/E06-rag-teaching.md",
+        "sha256": "c5ef3e72f3e1a411ff1ea1c88e065ec35686e59c586a20227cf1c9038e51126f"
+      },
+      "deck_master/resources/skill/references/collaboration-routing.md": {
+        "canonical_source": "skills/deck-master/references/collaboration-routing.md",
+        "sha256": "7424af8fc91fed2ec5038aa91abcbbd2576a48be8ebe7662fd06d57b4722b10b"
+      },
+      "deck_master/resources/skill/references/content-calibration.md": {
+        "canonical_source": "skills/deck-master/references/content-calibration.md",
+        "sha256": "8283ae03a7b993c921b89d5260c7620214d3afe398b286a2d01007ceae545c24"
+      },
+      "deck_master/resources/skill/references/content-examples.md": {
+        "canonical_source": "skills/deck-master/references/content-examples.md",
+        "sha256": "13f3cb7deceb5b1ce554c470f3ea2aa325dd0365c6dda73094fe9e85e181cdbd"
+      },
+      "deck_master/resources/skill/references/content-methods.md": {
+        "canonical_source": "skills/deck-master/references/content-methods.md",
+        "sha256": "fe495b2fc262c89fd1791c34933f2ad73bce84bbdf143375427791574a0ac2bc"
+      },
+      "deck_master/resources/skill/references/content-to-visual.md": {
+        "canonical_source": "skills/deck-master/references/content-to-visual.md",
+        "sha256": "0b3f9767932d7729157f1056ac572714b28dbf29d9530c8cc6a8fe3b52a77200"
+      },
+      "deck_master/resources/skill/references/icon-quality.md": {
+        "canonical_source": "skills/deck-master/references/icon-quality.md",
+        "sha256": "a178377f8d956c6bc42b534905962c57073b615d58ddde566dffdef5314a000b"
+      },
+      "deck_master/resources/skill/references/input-update.md": {
+        "canonical_source": "skills/deck-master/references/input-update.md",
+        "sha256": "1f6da62d01532069907f46e29414d65980b61ddd72e9e130541ee49a6a16c756"
+      },
+      "deck_master/resources/skill/references/installation.md": {
+        "canonical_source": "skills/deck-master/references/installation.md",
+        "sha256": "012929dd869f129cc4b9a6a1091c662bc27d584f0cc51d3e6c4be11cb09d2eca"
+      },
+      "deck_master/resources/skill/references/method-review.md": {
+        "canonical_source": "skills/deck-master/references/method-review.md",
+        "sha256": "65e3e79fbabfc17d8cbbde691ef390e5acd028fb36b9964e8907f142dcbf98b9"
+      },
+      "deck_master/resources/skill/references/method-selection.md": {
+        "canonical_source": "skills/deck-master/references/method-selection.md",
+        "sha256": "583ea0f4203bbb2a55b592da732220efaf71d74ed71846276c14c70e7dd708a8"
+      },
+      "deck_master/resources/skill/references/method-sources.md": {
+        "canonical_source": "skills/deck-master/references/method-sources.md",
+        "sha256": "816af6b602d9125bcbf94772729af13f18a217daeb1492dc687a98c4732a0033"
+      },
+      "deck_master/resources/skill/references/methods/M01-framing.md": {
+        "canonical_source": "skills/deck-master/references/methods/M01-framing.md",
+        "sha256": "de0fcc09db864d5f47841eb1f91eba10f61b972e38564773a904e7124fed2e09"
+      },
+      "deck_master/resources/skill/references/methods/M02-structured-analysis.md": {
+        "canonical_source": "skills/deck-master/references/methods/M02-structured-analysis.md",
+        "sha256": "30e7e9dc8f30a4cd2a8038d734ba6e77acbb91c10d34e1cd837d4d7d408174be"
+      },
+      "deck_master/resources/skill/references/methods/M03-argument.md": {
+        "canonical_source": "skills/deck-master/references/methods/M03-argument.md",
+        "sha256": "159b046b28b4e7c82a291bb50a9e8126754a007688cb61203189bae4898b6ff5"
+      },
+      "deck_master/resources/skill/references/methods/M04-causal-explanations.md": {
+        "canonical_source": "skills/deck-master/references/methods/M04-causal-explanations.md",
+        "sha256": "cd52c74a319cf30ade75fd029c3476636d4b4b6f9db2eadffdc5f746dd815bf9"
+      },
+      "deck_master/resources/skill/references/methods/M05-options-and-value.md": {
+        "canonical_source": "skills/deck-master/references/methods/M05-options-and-value.md",
+        "sha256": "eee24a2c9a80d3980d8768df2ae926f2998bd436c7dcdd7ea6ba8420d01157f3"
+      },
+      "deck_master/resources/skill/references/methods/M06-uncertainty-stress.md": {
+        "canonical_source": "skills/deck-master/references/methods/M06-uncertainty-stress.md",
+        "sha256": "fce136b1a945ac14004776368ab93e20b5181fee770d0924bd7fa46aea487d24"
+      },
+      "deck_master/resources/skill/references/methods/M07-synthesis.md": {
+        "canonical_source": "skills/deck-master/references/methods/M07-synthesis.md",
+        "sha256": "4af0b9137f516e03d4b4dbf343ae85bb76a3535ef6b218d479ef7b1e0082fa0a"
+      },
+      "deck_master/resources/skill/references/methods/M08-narrative.md": {
+        "canonical_source": "skills/deck-master/references/methods/M08-narrative.md",
+        "sha256": "d4e56ac966ee88332bb4316e501e13f72698e71c45c5bdb5f8fcb271de0e42f7"
+      },
+      "deck_master/resources/skill/references/methods/M09-teaching.md": {
+        "canonical_source": "skills/deck-master/references/methods/M09-teaching.md",
+        "sha256": "99d5fde59a3360f6cd9e0101636e3d44a6fcd267643bab6f59a143bbff9dc9a8"
+      },
+      "deck_master/resources/skill/references/methods/M10-compression.md": {
+        "canonical_source": "skills/deck-master/references/methods/M10-compression.md",
+        "sha256": "eebc4d4fe5a133366d2e71d937fb86fbd83b8284c440fe453126d8d2b2e6258d"
+      },
+      "deck_master/resources/skill/references/narrative-patterns.md": {
+        "canonical_source": "skills/deck-master/references/narrative-patterns.md",
+        "sha256": "16022007031c75262507b7849dd8dbe82f91dafc1e365256991aa4e6be195188"
+      },
+      "deck_master/resources/skill/references/page-writing.md": {
+        "canonical_source": "skills/deck-master/references/page-writing.md",
+        "sha256": "d65839875dc213519c58962721d53f95024eb7fde05bc55548b4fb1d9dd2049e"
+      },
+      "deck_master/resources/skill/references/physical-units.md": {
+        "canonical_source": "skills/deck-master/references/physical-units.md",
+        "sha256": "282ce2943df8b4030898ba33ab8055fd115acf9f31931499c1e4c22f50670ff3"
+      },
+      "deck_master/resources/skill/references/review-and-repair.md": {
+        "canonical_source": "skills/deck-master/references/review-and-repair.md",
+        "sha256": "860b2af16f6e78014a61d5357190d014a5c075c91ef880627a2f6aa8c4262583"
+      },
+      "deck_master/resources/skill/references/source-reading.md": {
+        "canonical_source": "skills/deck-master/references/source-reading.md",
+        "sha256": "4be8ac92de269f41010cd25587bbbb652ab2a4bebbbbd329edb9f3d370a60a50"
+      },
+      "deck_master/resources/skill/references/style-calibration.md": {
+        "canonical_source": "skills/deck-master/references/style-calibration.md",
+        "sha256": "f61172e78ebcd21f8848400d5d03375b6d80564675a628e6459fb9efdb3e889f"
+      },
+      "deck_master/resources/skill/references/visual-reference.md": {
+        "canonical_source": "skills/deck-master/references/visual-reference.md",
+        "sha256": "a0ef82bd88ff1712da8c67a6db0cc454fe9b401727f02b6c40f364e8e0696a52"
+      },
+      "deck_master/resources/skill/references/writing-profiles.md": {
+        "canonical_source": "skills/deck-master/references/writing-profiles.md",
+        "sha256": "e84fa21f7b484ccd1138f9217e304681de6396c53be5e583fb27faa2a532f54b"
+      },
+      "deck_master/resources/skill/resource-catalog.json": {
+        "canonical_source": "skills/deck-master/resource-catalog.json",
+        "sha256": "062737b74ea07d5a963d1f22d4cac284a180a122e128f39d4ebd76701594f20d"
+      },
+      "deck_master/resources/skill/scripts/check_case_numbers.py": {
+        "canonical_source": "skills/deck-master/scripts/check_case_numbers.py",
+        "sha256": "748cc15af4765fa1809c83f3988ffebacc5c4031bf17d073845e942ad8f2134f"
+      },
+      "deck_master/resources/skills/RESOLVER.md": {
+        "canonical_source": "skills/RESOLVER.md",
+        "sha256": "fcddf6aa12f9588cf83fa34e5957d5985339850710753d19f8d5820cd34ef62a"
+      },
+      "deck_master/resources/skills/deck-content/SKILL.md": {
+        "canonical_source": "skills/deck-content/SKILL.md",
+        "sha256": "4fe9eb7af985bc717e430e5ee21743b047ecc56266d9452a7ea0623b94c4c9e0"
+      },
+      "deck_master/resources/skills/deck-content/agents/openai.yaml": {
+        "canonical_source": "skills/deck-content/agents/openai.yaml",
+        "sha256": "fad8f336ddd95f77fa736d141b51b2421cdc603dbfaa9c511b4be594986c1bed"
+      },
+      "deck_master/resources/skills/deck-design/SKILL.md": {
+        "canonical_source": "skills/deck-design/SKILL.md",
+        "sha256": "6bc69ec9a250389009856e25c234abe1f295e32c9284f3abf0618d64d50bc613"
+      },
+      "deck_master/resources/skills/deck-design/agents/openai.yaml": {
+        "canonical_source": "skills/deck-design/agents/openai.yaml",
+        "sha256": "de93c548a95cee0676b4650c7588d5f17fb915da0bbe4a88417a293cf31d6664"
+      },
+      "deck_master/resources/skills/deck-review/SKILL.md": {
+        "canonical_source": "skills/deck-review/SKILL.md",
+        "sha256": "6cfda42b2a41b9e130ed27b5e67c0a90d533b1ae5f114cfa7e72b6daf9ef1e33"
+      },
+      "deck_master/resources/skills/deck-review/agents/openai.yaml": {
+        "canonical_source": "skills/deck-review/agents/openai.yaml",
+        "sha256": "c48c2292832b0d1a97cd42aca6919b8591f8f922a1ec61964a7a543703d1cfc0"
+      }
+    },
+    "generated_exceptions": {
+      "deck_master/resources/method-inventory.json": "Generated by tools/build_hook.py from the exhaustive canonical Skill mapping; no editable source copy."
+    }
+  },
+  "entry": [
+    "python",
+    "-m",
+    "deck_master"
+  ],
+  "professional_evidence": "not_evaluated"
+}

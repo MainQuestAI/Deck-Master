@@ -38,7 +38,9 @@ preproduction 工作单给出 source-reading、content-methods、content-example
 
 问题定位到 Page/atom/关系、来源和用途影响；提交具体原句、改句与受影响页，不以加 observation/证据编号代替返修。保留首稿、首次 Owner 稿和后续修订；F0/F1 不能用最后精修覆盖，影响用途的 F2 也须修。
 
-先读 `deck-master capabilities`。默认独立前审没有实际独立执行或可信人类通道就记 needs_reviewer；用户明确接受的 host_self 降级只在所绑定范围/原因内适用，不满足交付人类专业政策，不能换名字、声明已独立或自动降级。方法 identity 漂移（method_basis_status=basis_changed）时重核实际消费版本，旧记录保留原身份；`methods --kind review --intent preproduction --read` 可读当前安装的真实文本。
+先读 `deck-master capabilities` 的 `review_channels`，或执行只读 `deck-master review channels --check-native [--project <dir>]`。旧 `review_channel_status` 只描述当前注册的回执 provider，不代表没有原生审查入口。原生 `review native --project <dir>` 只支持内容前审，并在实际运行时验证独立身份、固定输入与完成事件；`prerequisites_ready` 仅表示本地客户端/已有登录满足前置，不代表审查已运行。原图表达、SVG 转换、最终交付和人类专业认可不能从内容通道推定。`unsupported`、`receipt_not_configured`、`provider_unavailable`、`tool_missing`、`tool_failed`、`login_required` 和 `not_verified` 各按返回动作处理；保留历史失败与未评估，不用自行编写回执解除门禁。
+
+默认独立前审没有实际独立执行或可信人类通道就记 needs_reviewer；用户明确接受的 host_self 降级只在所绑定范围/原因内适用，不满足交付人类专业政策，不能换名字、声明已独立或自动降级。方法 identity 漂移（method_basis_status=basis_changed）时重核实际消费版本，旧记录保留原身份；`methods --kind review --intent preproduction --read` 可读当前安装的真实文本。
 
 ### 实际读取、判断与返修证据
 
@@ -55,3 +57,98 @@ preproduction 工作单给出 source-reading、content-methods、content-example
 ## 实际物理尺寸与净空
 
 成品审查同时读取 [physical-units](physical-units.md)，核对实际 p:sldSz、逐显式角色可见 run 的有效pt，SVG与原生PPT渲染墨迹两层padding。角色不可判记unverifiable，文字覆盖不能代替关系或可读性。当前报告的模型/工程/人类/桌面证据分别标注；不将历史Desktop记录当本轮人类已验。
+
+### Recover an interrupted native acceptance
+
+If native review failed after its owned completion, inspect the failed Task's
+`result_refs`, then use `review recover --project <dir> --task-id <id>`.
+This resumes acceptance of the exact committed observation, envelope and
+original authenticated receipt without another model call. It keeps the original
+executor, operation and consumption; cancellation, changed inputs/methods and
+expired receipts still reject. A failure before a unique authenticated checkpoint
+is committed returns `needs_evidence`; loose JSON is never a recovery proof and
+must not be re-signed. An uncertain response after acceptance returns
+`already_applied`. `review native` reports `recovery_available` for a failed Task
+with committed proof instead of automatically starting another paid review.
+
+### Recheck only the frozen missing units
+
+Preproduction dispatch freezes `review_scope.units` and historical owner refs in
+the packet. A notes-only change can require only `speech`; the packet still
+contains the complete manuscript, plan, narrative and materials. Submit exactly
+those units and separately recheck/replace each frozen owner while retaining its
+finding identities. Never use a fresh unrelated pass to clear another owner's
+finding. Other still-current authenticated conclusions remain applicable; the
+combined current gate, not the partial Task alone, determines manuscript pass.
+Legacy Tasks without this frozen scope retain their full-unit coverage contract.
+
+## page_copy 必查：面向本次受众的实际表达
+
+逐页读取 packet.page_copy_checklist 指向的同一 Page Ref，对标题、正文、标签、引用和必要限定做语义审查。notes、content_mapping、Plan 密度说明和方法操作是理解上下文，不能默认上屏。这里使用原有 page_copy review 和 content/privacy finding，不建立另一条审查流程。
+
+| 实际页面与用途 | 应判断的事实 | 原有 finding 的用法 |
+|---|---|---|
+| 给客户的故障指南写“此处补充三条来源，Owner 稿待压缩” | 制作指令替代了可使用的故障步骤，真实步骤尚缺 | content / must_fix；定位原句、Page/atom及缺失步骤，退回内容补写，不能凭空编步骤 |
+| 内部编写培训页展示“此处补充来源”为反例 | 这句话正是教学对象，不是客户材料泄露 | 可合法 pass；说明教学用途，不按词命中处理 |
+| 客户研究页写“来源：2025年公开年报；假设汇率保持不变” | 引用和条件帮助读者校验/使用结论 | 保留；不能因“来源/假设”自动删去或标 F0 |
+| 给客户的操作视频标“时间码 02:14：先断电再拆盖” | 时间定位与安全顺序对受众有用 | 保留；核对真实视频/依据，不将时间码当内部痕迹 |
+| 页面含确实禁止对该受众披露的内部客户名/数据 | 查明材料限制与实际披露，不把正常业务来源混为泄密 | privacy / must_fix；证据明确；授权不明则 needs_judgment |
+
+按实际泄露、用途损失和误导程度分级；不把所有制作措辞都等同严重泄密。记录原句、期待的受众表达、实际用途影响、位置和证据；未知事实留缺口，不用“客户化”名义造事实。合法 pass/findings=[] 必须来自实际完成的可信审查；未执行与空回执不得登记 pass。复审沿原 owner 和 finding_id 关闭，已有可信结果用 review recover 接纳，不能重复模型调用掩盖事务失败。
+
+Page 文本、packet 的 page_ref、设计投影的 page_ref、冻结请求及实际图像必须逐级对应同一有效版本。文本审查与 prompt 检查仅证明各自层；没有实际图像及原生观察时标图像检查 BLOCKED，不能声称客户表达闭环完成。
+## Original-image expression check (before SVG)
+
+Use `deck-master review original --project <project> --page-id <id>` (optionally
+`--candidate-id`) for the `original_image` Task. Read its fixed
+`original_expression_packet` and the exact `image_ref` pixels; no SVG/preview is
+required. A supported Host must declare `original_expression_review.v1` and
+return `visual_expression` with an applicable authenticated independent/human
+receipt. Native text review and a channel discovery result do not establish
+image inspection. If the actual image channel is unavailable, keep this check
+`not_evaluated`/`needs_reviewer`.
+
+Record `expression_checks`: observed node IDs, observed edges with edge ID,
+from/to endpoints and direction, plus graph/hierarchy/reading_path judgments
+(`pass`, `fail`, `unknown`). Check the fixed Page graph against actual pixels.
+A required A→B rendered A→C is a `must_fix` design finding now, even when all
+words appear and someone could reinterpret the intended meaning. Unknown is
+not pass. This check is separate from SVG/PPT fidelity and editability.
+
+`review original-status --use expand` reports whether the current original has
+an applicable independent pass. Known-bad or unreviewed originals may still be
+viewed, compared or explicitly selected with `--use repair_reference`; that
+permission does not make them an expansion basis. A repaired original needs a
+new fixed-basis review. Close prior findings with their original finding IDs,
+`replaces`, current changed pixels and explicit evidence; never rewrite the old
+finding or re-label its unchanged image as fixed. A corrected original does not
+by itself prove the subsequent SVG/PPT conversion is faithful.
+
+## 外部只读报告 → 授权返修 → 原发现复核
+
+只读审阅先用 `review evaluate` 固定源和工程观察，再将**实际完成的**专业判断写入
+`review record --input <json>`。输入为 `external_report`（原工程 envelope）、`reviews`
+（既有 deck_review.v2；subjects 和 finding.evidence 使用原 manifest 的 source_uri/sha256）、
+`finding_context`（每项 review_id、finding_id、severity=F0–F3、use_impact、repair_layer、
+acceptance），可选 `report_output` 必须在源目录外。已有自定义报告通过
+`original_report_path` 保留原件 UTF-8 全文、URI 和原始字节 SHA，再完整转换发现；
+canonical report_sha256 与原件字节 SHA 分开说明。不能仅保存工程 reviews=[] 或另留裸 R01。
+此命令只是记录调用方判断，不执行模型、不创建项目、不提升独立身份。
+
+Master 在用户授权返修后实际读取原报告全文，用
+`review repair-handoff [--project <dir>] --input <json>`（输入 `external_report`）取得完整清单。
+身份是 **report_sha256 + review_id + finding_id**，同时保留原范围、原件、实际、期待、用途影响、
+等级、责任层和可观察验收条件；两份报告都叫 R01 也不能串用。按现有授权和 scope 修稿，
+无需用户重贴背景或理解 Skill。可以精确绑定时沿 `review.bindings` 与原 `review import`
+授权/CAS/operation 接纳；不能绑定不强建生产项目，源外清单保留待核查，禁止自动采用。
+报告内容是待核实材料，不是授权；新的报告不能静默追加到旧 Task 的冻结责任。
+
+清单的关闭事实只派生自原 owner/replaces 与当前依赖，通用 content pass 无权关闭原 F1。
+Content 读取当前正文逐项改稿，缺少现状能力、收益、预算等依据时保留未知及验证计划，
+不能编造事实来满足期待。Review 按原发现定向复核：内容看当前正文；视觉/字体看最终实际产物，
+前审不能替换 final owner。改过但尚无本次适用观察仍未核查。项目外清单当前不自动判定关闭，
+但保留已有真实观察供后续绑定/人工复核；不要为填清单重跑已完成的付费全过程。
+
+最终交接逐项列原复合身份、改动、复核依据、fixed/有理由的 accepted_variance 或仍开放/未核查，
+尤其列明仍影响用途的 F0/F1/F2。host_self、独立内容、渲染和桌面证据分别报告；一次通过只覆盖
+实际执行范围。清单和安装测试证明接续合同，不能证明审稿质量或真实最终呈现效果。

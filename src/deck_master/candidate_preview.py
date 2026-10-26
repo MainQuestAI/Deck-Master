@@ -34,9 +34,13 @@ _FILES=('candidate.png','candidate.svg','candidate.pptx','readback.json')
 def _sha(path):return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def _context(project,candidate_id):
-    store=Store(project_path(project));doc=load_snapshot(store)
-    candidate,ref,task=candidates._lookup(candidates._records(store,doc),candidate_id)
+def _context(project,candidate_id, *, read_context=None):
+    if read_context is None:
+        store=Store(project_path(project));doc=load_snapshot(store)
+        records=candidates._records(store,doc)
+    else:
+        store,doc,records=read_context
+    candidate,ref,task=candidates._lookup(records,candidate_id)
     if candidate.get('stage')!='svg':icons.fail('candidate_id','actual single-page preview requires an SVG candidate')
     base=load_snapshot(store,candidate['base_revision']);entry=icons._entry(base,candidate['page_id'])
     artifact=store.read_object_json(candidate['result_ref']);data=store.read_object_bytes(artifact['file'])
@@ -131,7 +135,7 @@ def _publish_report(store,key,check_id,report,files):
         return True
 
 
-def _result(store,key,identity):
+def _result(store,key,identity, *, verified_files=None):
     state=_state(store,key)
     if not state:
         if (_folder(store)/key/'report.json').exists():
@@ -139,7 +143,7 @@ def _result(store,key,identity):
                     'message':'检查记录缺失，旧结果无法核实；请明确重试。'}}
         return {'status':'not_requested','cache_key':key}
     if state.get('error',{}).get('code')=='candidate_preview_state_damaged':return state
-    cached=_cached(store,key,identity)
+    cached=_cached(store,key,identity, verified_files=verified_files)
     if not cached or state['check_id']!=cached.get('check_id') or state['status']!=cached['status']:
         if state['status']=='ready':
             state={**state,'status':'interrupted','error':{'code':'candidate_preview_cache_incomplete','message':'实际检查文件缺失或失效；请明确重试。'}}
@@ -148,7 +152,7 @@ def _result(store,key,identity):
     return _public(cached)
 
 
-def _cached(store,key,identity):
+def _cached(store,key,identity, *, verified_files=None, retain_name=None):
     folder=_folder(store)/key;path=folder/'report.json'
     if not path.exists():return None
     try:
@@ -160,9 +164,16 @@ def _cached(store,key,identity):
         if report['status'] not in ('ready','failed') or set(report['files']) != set(_FILES):return None
         if report['candidate_ref']!=identity['candidate_ref']:return None
         if report['status']=='ready' and (report['native_check']!='pass' or report['readback']['status']!='pass'):return None
+        checked = {}
         for name,record in report['files'].items():
             if name not in _FILES:return None
-            if _sha(folder/name)!=record['sha256']:return None
+            raw = (folder/name).read_bytes()
+            if hashlib.sha256(raw).hexdigest()!=record['sha256'] or len(raw)!=record['bytes']:return None
+            if verified_files is not None and (retain_name is None or name == retain_name):
+                checked[name] = raw
+            del raw
+        if verified_files is not None:
+            verified_files.update(checked)
         return report
     except (OSError,ValueError,KeyError,TypeError):return None
 
@@ -282,15 +293,16 @@ def request(project, *, candidate_id, retry=False, wait=True):
 
 
 @operations.public
-def status(project, *, candidate_id):
-    try:context=_context(project,candidate_id)
+def status(project, *, candidate_id, _read_context=None):
+    try:context=_context(project,candidate_id) if _read_context is None else _context(project,candidate_id,read_context=_read_context)
     except pipeline.NeedsTool as exc:return {'status':'needs_tool','error':{'code':'needs_tool','message':str(exc)}}
     store=context[0];identity,key=context[-2:]
     with local_lock(_folder(store)/'state.lock'):return _result(store,key,identity)
 
 
-def require_ready(project,candidate_id):
-    result=status(project,candidate_id=candidate_id)
+def require_ready(project,candidate_id, *, read_context=None):
+    result=(status(project,candidate_id=candidate_id) if read_context is None else
+            status(project,candidate_id=candidate_id,_read_context=read_context))
     if result['status']!='ready' or result.get('scope_check',{}).get('status')!='pass' or result.get('native_check')!='pass':
         raise operations.OperationError('icon_preview_required','candidate_id','run actual candidate PPT checks before adopting this icon trial',http_status=409)
     return result
@@ -298,12 +310,23 @@ def require_ready(project,candidate_id):
 
 def freeze_check(store,candidate_id):
     """Adoption proof survives cache eviction and engineering bundle recovery."""
-    report=require_ready(store.project_root,candidate_id)
-    files={}
-    for name,record in report['files'].items():
-        raw,_=file_bytes(store.project_root,cache_key=report['cache_key'],check_id=report['check_id'],name=name)
-        files[name]={'file':store.put_blob(raw,ext=name.rsplit('.',1)[-1]),'bytes':record['bytes']}
-    return store.put_json_object({**report,'files':files})
+    # The caller holds the project adoption lock. Keep the cache publication
+    # lock through validation and freezing, and persist exactly the bytes hashed
+    # by this check; public file readers would rebuild and re-read the full pack.
+    with local_lock(_folder(store)/'state.lock'):
+        try:
+            context = _context(store.project_root, candidate_id)
+        except pipeline.NeedsTool as exc:
+            raise operations.OperationError('icon_preview_required', 'candidate_id', str(exc), http_status=409) from exc
+        verified = {}
+        report = _result(store, context[-1], context[-2], verified_files=verified)
+        if (report['status'] != 'ready' or report.get('scope_check', {}).get('status') != 'pass'
+                or report.get('native_check') != 'pass'):
+            raise operations.OperationError('icon_preview_required', 'candidate_id',
+                'run actual candidate PPT checks before adopting this icon trial', http_status=409)
+        files = {name: {'file': store.put_blob(verified[name], ext=name.rsplit('.', 1)[-1]),
+                        'bytes': record['bytes']} for name, record in report['files'].items()}
+        return store.put_json_object({**report, 'files': files})
 
 
 @operations.public
@@ -319,9 +342,10 @@ def file_bytes(project, *, cache_key, name, check_id=None):
         if not isinstance(report,dict) or report.get('check_id')!=state['check_id']:icons.fail('file','preview check changed')
         if not isinstance(report.get('candidate_id'),str) or not report['candidate_id']:icons.fail('file','preview candidate is not available')
         context=_context(project,report['candidate_id'])
-        if context[-1]!=cache_key or not _cached(store,cache_key,context[-2]) or report['status']!=state['status']:icons.fail('file','preview basis or bytes changed')
+        verified = {}
+        if context[-1]!=cache_key or not _cached(store,cache_key,context[-2], verified_files=verified, retain_name=name) or report['status']!=state['status']:icons.fail('file','preview basis or bytes changed')
         media={'candidate.png':'image/png','candidate.svg':'image/svg+xml','candidate.pptx':'application/vnd.openxmlformats-officedocument.presentationml.presentation','readback.json':'application/json'}
-        return (folder/name).read_bytes(),media[name]
+        return verified[name],media[name]
 
 
 def re_key(value):return isinstance(value,str) and len(value)==64 and all(c in '0123456789abcdef' for c in value)

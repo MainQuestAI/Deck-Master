@@ -1,0 +1,225 @@
+{
+  "label": "b688c300",
+  "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "module_files": {
+    "candidate_preview": "/workspace/scratch/perf-baseline/src/deck_master/candidate_preview.py",
+    "exports": "/workspace/scratch/perf-baseline/src/deck_master/exports.py"
+  },
+  "synthetic": true,
+  "results": {
+    "202": {
+      "boundary": "4 x 8 MiB fixed context; no font/tool identity or renderer measurement",
+      "results": {
+        "ordinary_cached": {
+          "unprobed_timing": {
+            "wall_ms": 34.57524800069223,
+            "cpu_ms": 34.555084999999984
+          },
+          "separate_counts": {
+            "candidate.png": 1,
+            "physical_bytes": 33554432,
+            "candidate.pptx": 1,
+            "candidate.svg": 1,
+            "readback.json": 1
+          },
+          "separate_tracemalloc_peak_bytes": 33565898
+        },
+        "target_download": {
+          "unprobed_timing": {
+            "wall_ms": 38.22423700148647,
+            "cpu_ms": 38.22562000000001
+          },
+          "separate_counts": {
+            "candidate.png": 2,
+            "physical_bytes": 41943040,
+            "candidate.pptx": 1,
+            "candidate.svg": 1,
+            "readback.json": 1
+          },
+          "separate_tracemalloc_peak_bytes": 33575443
+        },
+        "freeze": {
+          "unprobed_timing": {
+            "wall_ms": 125.56442499953846,
+            "cpu_ms": 101.73042600000004
+          },
+          "separate_counts": {
+            "candidate.png": 1,
+            "physical_bytes": 33554432,
+            "candidate.pptx": 1,
+            "candidate.svg": 1,
+            "readback.json": 1
+          },
+          "separate_tracemalloc_peak_bytes": 41959778
+        }
+      }
+    },
+    "203": {
+      "boundary": "whole _commit_locked body, not classification-only CPU; lock acquisition/setup excluded",
+      "results": [
+        {
+          "instruction_bytes": 20480,
+          "initial_writer": null,
+          "unprobed_locked_commit_samples": [
+            {
+              "wall_ms": 6.800936000217916,
+              "cpu_ms": 3.5002459999999846
+            },
+            {
+              "wall_ms": 5.083957999886479,
+              "cpu_ms": 2.61265799999999
+            },
+            {
+              "wall_ms": 5.6643210009497125,
+              "cpu_ms": 2.6996790000000104
+            }
+          ],
+          "median_cpu_ms": 2.6996790000000104,
+          "separate_counts": {
+            "task_reads": 3,
+            "task_bytes": 63144
+          },
+          "minimum_writer": null
+        },
+        {
+          "instruction_bytes": 20480,
+          "initial_writer": "asset-inputs.v1",
+          "unprobed_locked_commit_samples": [
+            {
+              "wall_ms": 5.453498000861146,
+              "cpu_ms": 2.503553000000047
+            },
+            {
+              "wall_ms": 5.478834000314237,
+              "cpu_ms": 2.3418139999999976
+            },
+            {
+              "wall_ms": 4.788127000210807,
+              "cpu_ms": 2.4626189999999992
+            }
+          ],
+          "median_cpu_ms": 2.4626189999999992,
+          "separate_counts": {},
+          "minimum_writer": "asset-inputs.v1"
+        },
+        {
+          "instruction_bytes": 102400,
+          "initial_writer": null,
+          "unprobed_locked_commit_samples": [
+            {
+              "wall_ms": 6.715302999509731,
+              "cpu_ms": 3.6281989999999986
+            },
+            {
+              "wall_ms": 5.93754299916327,
+              "cpu_ms": 3.149968000000003
+            },
+            {
+              "wall_ms": 6.037667999407859,
+              "cpu_ms": 3.295792000000075
+            }
+          ],
+          "median_cpu_ms": 3.295792000000075,
+          "separate_counts": {
+            "task_reads": 3,
+            "task_bytes": 308904
+          },
+          "minimum_writer": null
+        },
+        {
+          "instruction_bytes": 102400,
+          "initial_writer": "asset-inputs.v1",
+          "unprobed_locked_commit_samples": [
+            {
+              "wall_ms": 4.755635000037728,
+              "cpu_ms": 2.326811000000095
+            },
+            {
+              "wall_ms": 4.759272998853703,
+              "cpu_ms": 2.6462259999999738
+            },
+            {
+              "wall_ms": 4.703217000496807,
+              "cpu_ms": 2.3712359999998878
+            }
+          ],
+          "median_cpu_ms": 2.3712359999998878,
+          "separate_counts": {},
+          "minimum_writer": "asset-inputs.v1"
+        }
+      ]
+    },
+    "205": {
+      "boundary": "existing review export reuse+copy; synthetic filler text; entry visits include validation/serialization",
+      "results": [
+        {
+          "files_including_manifest_archive": 14,
+          "manifest_files": 12,
+          "unprobed_timing_samples": [
+            {
+              "wall_ms": 29.78862400050275,
+              "cpu_ms": 29.762054999999954
+            },
+            {
+              "wall_ms": 28.13299400077085,
+              "cpu_ms": 28.13431700000013
+            },
+            {
+              "wall_ms": 30.804359001194825,
+              "cpu_ms": 30.80558499999997
+            }
+          ],
+          "separate_counts": {
+            "record_validations": 15,
+            "manifest_entry_visits": 372
+          }
+        },
+        {
+          "files_including_manifest_archive": 44,
+          "manifest_files": 42,
+          "unprobed_timing_samples": [
+            {
+              "wall_ms": 154.773941001622,
+              "cpu_ms": 154.70369699999998
+            },
+            {
+              "wall_ms": 156.68671100138454,
+              "cpu_ms": 156.68921199999986
+            },
+            {
+              "wall_ms": 154.3564419989707,
+              "cpu_ms": 154.330399
+            }
+          ],
+          "separate_counts": {
+            "record_validations": 45,
+            "manifest_entry_visits": 3822
+          }
+        },
+        {
+          "files_including_manifest_archive": 104,
+          "manifest_files": 102,
+          "unprobed_timing_samples": [
+            {
+              "wall_ms": 663.6720179994882,
+              "cpu_ms": 663.2763050000001
+            },
+            {
+              "wall_ms": 663.924758999201,
+              "cpu_ms": 663.8441350000002
+            },
+            {
+              "wall_ms": 651.3014230004046,
+              "cpu_ms": 651.1954379999997
+            }
+          ],
+          "separate_counts": {
+            "record_validations": 105,
+            "manifest_entry_visits": 21522
+          }
+        }
+      ]
+    }
+  }
+}

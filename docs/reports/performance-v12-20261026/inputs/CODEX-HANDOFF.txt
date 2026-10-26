@@ -1,0 +1,12 @@
+执行Deck Master性能优化复审版v1.2，范围保持21张责任卡、6个工作包。
+执行Head：b688c300dbb612bea9af8cf63a1743fb8136ae2c；原始计量Head：555497cb97ba2bec0c62192ec68412ce3c31287f。先核验实际工作树/安装和后续增量。
+读取本包HTML、execution-tasks.json、source-to-issue.csv和measurement-contract.json；#208仅按maintenance-candidates.json的有限范围。
+先处理#198与基础读接口；#190/#191/#193/CLI等可独立窄修；#199只依赖共享读接口稳定，不等待前置整卡关闭。
+复用已有ReadFacts/ReviewReadContext/_ReadContext/FixedSnapshotReader、summary cache、ImagePool、候选worker、operations.recover及local_runtime.stop。
+重点：summary先lookup后核实际依赖；运行期人工证据保持原求值；失败后继不新增receipt；attention分页按准确total保留必要判断。
+同operation在途按project/op管理，digest在项内，只有owner finally清理；等待者超时不重开compiler。不增加持久租约或后台清理。
+候选由现有父组件唯一持有状态；普通缓存核验不留整包；字体guard不足可旁路；不加目录扫描/监控。
+补齐current-work懒格式化/稳定DOM、drafts一次序列化双同步写；保留current availability、既有配对读取和清理恢复所有权。
+只按受影响范围验证，run身份记录一次。新性能建议不是关闭门；既有w01的100暖样本/250ms原场景门保持。
+提交说明实际改动、原因、有效测试/计数及剩余成本；不按删行数、移走函数计数或延长轮询冒充性能改善。
+实际实现、安装、测试通过和收益需要 Codex 核验。

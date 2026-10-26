@@ -1,0 +1,174 @@
+2026-10-26T15:14:02.3580275Z =================================== FAILURES ===================================
+2026-10-26T15:14:02.3580613Z _ test_assembly_waiters_do_not_start_or_release_an_active_compiler[False-False] _
+2026-10-26T15:14:02.3580874Z 
+2026-10-26T15:14:02.3581059Z store = <deck_master.store.Store object at 0x7f44c17d1950>
+2026-10-26T15:14:02.3581483Z monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f44c13148d0>
+2026-10-26T15:14:02.3581882Z waiter_timeout = False, changed_base = False
+2026-10-26T15:14:02.3582049Z 
+2026-10-26T15:14:02.3582381Z     @pytest.mark.parametrize('waiter_timeout,changed_base', [(False, False), (True, False), (False, True), (True, True)])
+2026-10-26T15:14:02.3583356Z     def test_assembly_waiters_do_not_start_or_release_an_active_compiler(store, monkeypatch, waiter_timeout, changed_base):
+2026-10-26T15:14:02.3583842Z         before = prepared(store)
+2026-10-26T15:14:02.3584217Z         entered, release, waiting = threading.Event(), threading.Event(), threading.Event()
+2026-10-26T15:14:02.3584570Z         calls, waiters = [], []
+2026-10-26T15:14:02.3584802Z         class ObservedFuture(Future):
+2026-10-26T15:14:02.3584975Z             def result(self, timeout=None):
+2026-10-26T15:14:02.3585136Z                 waiters.append(1)
+2026-10-26T15:14:02.3585283Z                 if len(waiters) == 2:
+2026-10-26T15:14:02.3585434Z                     waiting.set()
+2026-10-26T15:14:02.3585652Z                 return super().result(timeout=0 if waiter_timeout else timeout)
+2026-10-26T15:14:02.3585940Z         def blocked_compile(*args, **kwargs):
+2026-10-26T15:14:02.3586166Z             calls.append(1)
+2026-10-26T15:14:02.3586645Z             entered.set()
+2026-10-26T15:14:02.3586928Z             assert release.wait(10)
+2026-10-26T15:14:02.3587421Z             raise RuntimeError('controlled compiler failure')
+2026-10-26T15:14:02.3587935Z         monkeypatch.setattr(pipeline, 'Future', ObservedFuture)
+2026-10-26T15:14:02.3588369Z         monkeypatch.setattr(pipeline, 'compile_deck', blocked_compile)
+2026-10-26T15:14:02.3588916Z         args = {'base_revision': before['revision_id'], 'operation_id': str(uuid.uuid4())}
+2026-10-26T15:14:02.3589405Z         with ThreadPoolExecutor(max_workers=3) as executor:
+2026-10-26T15:14:02.3589835Z             owner = executor.submit(pipeline.produce, store.project_root, **args)
+2026-10-26T15:14:02.3590290Z             try:
+2026-10-26T15:14:02.3590582Z >               assert entered.wait(10)
+2026-10-26T15:14:02.3600933Z E               assert False
+2026-10-26T15:14:02.3601207Z E                +  where False = wait(10)
+2026-10-26T15:14:02.3604280Z E                +    where wait = <threading.Event at 0x7f44c14cee50: unset>.wait
+2026-10-26T15:14:02.3604515Z 
+2026-10-26T15:14:02.3604763Z tests/rebuild/test_performance_execution_paths.py:128: AssertionError
+2026-10-26T15:14:02.3605108Z _ test_assembly_waiters_do_not_start_or_release_an_active_compiler[True-False] _
+2026-10-26T15:14:02.3605269Z 
+2026-10-26T15:14:02.3605384Z store = <deck_master.store.Store object at 0x7f44c0531a50>
+2026-10-26T15:14:02.3605670Z monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f44c16c6b50>
+2026-10-26T15:14:02.3605908Z waiter_timeout = True, changed_base = False
+2026-10-26T15:14:02.3606011Z 
+2026-10-26T15:14:02.3606224Z     @pytest.mark.parametrize('waiter_timeout,changed_base', [(False, False), (True, False), (False, True), (True, True)])
+2026-10-26T15:14:02.3606965Z     def test_assembly_waiters_do_not_start_or_release_an_active_compiler(store, monkeypatch, waiter_timeout, changed_base):
+2026-10-26T15:14:02.3607385Z         before = prepared(store)
+2026-10-26T15:14:02.3607629Z         entered, release, waiting = threading.Event(), threading.Event(), threading.Event()
+2026-10-26T15:14:02.3607865Z         calls, waiters = [], []
+2026-10-26T15:14:02.3608016Z         class ObservedFuture(Future):
+2026-10-26T15:14:02.3608176Z             def result(self, timeout=None):
+2026-10-26T15:14:02.3608336Z                 waiters.append(1)
+2026-10-26T15:14:02.3608488Z                 if len(waiters) == 2:
+2026-10-26T15:14:02.3608643Z                     waiting.set()
+2026-10-26T15:14:02.3608844Z                 return super().result(timeout=0 if waiter_timeout else timeout)
+2026-10-26T15:14:02.3609053Z         def blocked_compile(*args, **kwargs):
+2026-10-26T15:14:02.3609206Z             calls.append(1)
+2026-10-26T15:14:02.3609336Z             entered.set()
+2026-10-26T15:14:02.3609479Z             assert release.wait(10)
+2026-10-26T15:14:02.3609660Z             raise RuntimeError('controlled compiler failure')
+2026-10-26T15:14:02.3609879Z         monkeypatch.setattr(pipeline, 'Future', ObservedFuture)
+2026-10-26T15:14:02.3610120Z         monkeypatch.setattr(pipeline, 'compile_deck', blocked_compile)
+2026-10-26T15:14:02.3610545Z         args = {'base_revision': before['revision_id'], 'operation_id': str(uuid.uuid4())}
+2026-10-26T15:14:02.3610804Z         with ThreadPoolExecutor(max_workers=3) as executor:
+2026-10-26T15:14:02.3611049Z             owner = executor.submit(pipeline.produce, store.project_root, **args)
+2026-10-26T15:14:02.3611247Z             try:
+2026-10-26T15:14:02.3611383Z >               assert entered.wait(10)
+2026-10-26T15:14:02.3611533Z E               assert False
+2026-10-26T15:14:02.3611689Z E                +  where False = wait(10)
+2026-10-26T15:14:02.3611918Z E                +    where wait = <threading.Event at 0x7f44c3943a10: unset>.wait
+2026-10-26T15:14:02.3612055Z 
+2026-10-26T15:14:02.3612194Z tests/rebuild/test_performance_execution_paths.py:128: AssertionError
+2026-10-26T15:14:02.3612488Z _ test_assembly_waiters_do_not_start_or_release_an_active_compiler[False-True] _
+2026-10-26T15:14:02.3612692Z 
+2026-10-26T15:14:02.3612802Z store = <deck_master.store.Store object at 0x7f44c0316690>
+2026-10-26T15:14:02.3613172Z monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f44c168ec50>
+2026-10-26T15:14:02.3613405Z waiter_timeout = False, changed_base = True
+2026-10-26T15:14:02.3613508Z 
+2026-10-26T15:14:02.3613712Z     @pytest.mark.parametrize('waiter_timeout,changed_base', [(False, False), (True, False), (False, True), (True, True)])
+2026-10-26T15:14:02.3614141Z     def test_assembly_waiters_do_not_start_or_release_an_active_compiler(store, monkeypatch, waiter_timeout, changed_base):
+2026-10-26T15:14:02.3614428Z         before = prepared(store)
+2026-10-26T15:14:02.3614664Z         entered, release, waiting = threading.Event(), threading.Event(), threading.Event()
+2026-10-26T15:14:02.3614893Z         calls, waiters = [], []
+2026-10-26T15:14:02.3615043Z         class ObservedFuture(Future):
+2026-10-26T15:14:02.3615205Z             def result(self, timeout=None):
+2026-10-26T15:14:02.3615364Z                 waiters.append(1)
+2026-10-26T15:14:02.3615511Z                 if len(waiters) == 2:
+2026-10-26T15:14:02.3615666Z                     waiting.set()
+2026-10-26T15:14:02.3615863Z                 return super().result(timeout=0 if waiter_timeout else timeout)
+2026-10-26T15:14:02.3616072Z         def blocked_compile(*args, **kwargs):
+2026-10-26T15:14:02.3616240Z             calls.append(1)
+2026-10-26T15:14:02.3616487Z             entered.set()
+2026-10-26T15:14:02.3616641Z             assert release.wait(10)
+2026-10-26T15:14:02.3616821Z             raise RuntimeError('controlled compiler failure')
+2026-10-26T15:14:02.3617037Z         monkeypatch.setattr(pipeline, 'Future', ObservedFuture)
+2026-10-26T15:14:02.3617278Z         monkeypatch.setattr(pipeline, 'compile_deck', blocked_compile)
+2026-10-26T15:14:02.3617552Z         args = {'base_revision': before['revision_id'], 'operation_id': str(uuid.uuid4())}
+2026-10-26T15:14:02.3617801Z         with ThreadPoolExecutor(max_workers=3) as executor:
+2026-10-26T15:14:02.3618046Z             owner = executor.submit(pipeline.produce, store.project_root, **args)
+2026-10-26T15:14:02.3618249Z             try:
+2026-10-26T15:14:02.3618387Z >               assert entered.wait(10)
+2026-10-26T15:14:02.3618536Z E               assert False
+2026-10-26T15:14:02.3618691Z E                +  where False = wait(10)
+2026-10-26T15:14:02.3618914Z E                +    where wait = <threading.Event at 0x7f44c3815c50: unset>.wait
+2026-10-26T15:14:02.3619054Z 
+2026-10-26T15:14:02.3619186Z tests/rebuild/test_performance_execution_paths.py:128: AssertionError
+2026-10-26T15:14:02.3619475Z _ test_assembly_waiters_do_not_start_or_release_an_active_compiler[True-True] __
+2026-10-26T15:14:02.3619636Z 
+2026-10-26T15:14:02.3619745Z store = <deck_master.store.Store object at 0x7f44c4062a90>
+2026-10-26T15:14:02.3620001Z monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f44c06e4210>
+2026-10-26T15:14:02.3620228Z waiter_timeout = True, changed_base = True
+2026-10-26T15:14:02.3620328Z 
+2026-10-26T15:14:02.3620622Z     @pytest.mark.parametrize('waiter_timeout,changed_base', [(False, False), (True, False), (False, True), (True, True)])
+2026-10-26T15:14:02.3621054Z     def test_assembly_waiters_do_not_start_or_release_an_active_compiler(store, monkeypatch, waiter_timeout, changed_base):
+2026-10-26T15:14:02.3621342Z         before = prepared(store)
+2026-10-26T15:14:02.3621575Z         entered, release, waiting = threading.Event(), threading.Event(), threading.Event()
+2026-10-26T15:14:02.3621804Z         calls, waiters = [], []
+2026-10-26T15:14:02.3621953Z         class ObservedFuture(Future):
+2026-10-26T15:14:02.3622114Z             def result(self, timeout=None):
+2026-10-26T15:14:02.3622269Z                 waiters.append(1)
+2026-10-26T15:14:02.3622416Z                 if len(waiters) == 2:
+2026-10-26T15:14:02.3622561Z                     waiting.set()
+2026-10-26T15:14:02.3622756Z                 return super().result(timeout=0 if waiter_timeout else timeout)
+2026-10-26T15:14:02.3622968Z         def blocked_compile(*args, **kwargs):
+2026-10-26T15:14:02.3623116Z             calls.append(1)
+2026-10-26T15:14:02.3623327Z             entered.set()
+2026-10-26T15:14:02.3623463Z             assert release.wait(10)
+2026-10-26T15:14:02.3623638Z             raise RuntimeError('controlled compiler failure')
+2026-10-26T15:14:02.3623853Z         monkeypatch.setattr(pipeline, 'Future', ObservedFuture)
+2026-10-26T15:14:02.3624093Z         monkeypatch.setattr(pipeline, 'compile_deck', blocked_compile)
+2026-10-26T15:14:02.3624367Z         args = {'base_revision': before['revision_id'], 'operation_id': str(uuid.uuid4())}
+2026-10-26T15:14:02.3624617Z         with ThreadPoolExecutor(max_workers=3) as executor:
+2026-10-26T15:14:02.3624859Z             owner = executor.submit(pipeline.produce, store.project_root, **args)
+2026-10-26T15:14:02.3625054Z             try:
+2026-10-26T15:14:02.3625190Z >               assert entered.wait(10)
+2026-10-26T15:14:02.3625337Z E               assert False
+2026-10-26T15:14:02.3625487Z E                +  where False = wait(10)
+2026-10-26T15:14:02.3625712Z E                +    where wait = <threading.Event at 0x7f44c1603950: unset>.wait
+2026-10-26T15:14:02.3625853Z 
+2026-10-26T15:14:02.3625982Z tests/rebuild/test_performance_execution_paths.py:128: AssertionError
+2026-10-26T15:14:02.3626237Z =============================== warnings summary ===============================
+2026-10-26T15:14:02.3626767Z tests/rebuild/test_install.py::test_wheel_carries_schema_static_and_methods
+2026-10-26T15:14:02.3627619Z   /opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/_distutils_hack/__init__.py:30: UserWarning: Setuptools is replacing distutils. Support for replacing an already imported distutils is deprecated. In the future, this condition will fail. Register concerns at https://github.com/pypa/setuptools/issues/new?template=distutils-deprecation.yml
+2026-10-26T15:14:02.3628299Z     warnings.warn(
+2026-10-26T15:14:02.3628367Z 
+2026-10-26T15:14:02.3628511Z -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+2026-10-26T15:14:02.3628788Z =========================== short test summary info ============================
+2026-10-26T15:14:02.3629227Z FAILED tests/rebuild/test_performance_execution_paths.py::test_assembly_waiters_do_not_start_or_release_an_active_compiler[False-False] - assert False
+2026-10-26T15:14:02.3629554Z  +  where False = wait(10)
+2026-10-26T15:14:02.3629734Z  +    where wait = <threading.Event at 0x7f44c14cee50: unset>.wait
+2026-10-26T15:14:02.3630154Z FAILED tests/rebuild/test_performance_execution_paths.py::test_assembly_waiters_do_not_start_or_release_an_active_compiler[True-False] - assert False
+2026-10-26T15:14:02.3630471Z  +  where False = wait(10)
+2026-10-26T15:14:02.6214346Z  +    where wait = <threading.Event at 0x7f44c3943a10: unset>.wait
+2026-10-26T15:14:02.6215003Z FAILED tests/rebuild/test_performance_execution_paths.py::test_assembly_waiters_do_not_start_or_release_an_active_compiler[False-True] - assert False
+2026-10-26T15:14:02.6215335Z  +  where False = wait(10)
+2026-10-26T15:14:02.6215898Z  +    where wait = <threading.Event at 0x7f44c3815c50: unset>.wait
+2026-10-26T15:14:02.6216333Z FAILED tests/rebuild/test_performance_execution_paths.py::test_assembly_waiters_do_not_start_or_release_an_active_compiler[True-True] - assert False
+2026-10-26T15:14:02.6216791Z  +  where False = wait(10)
+2026-10-26T15:14:02.6216967Z  +    where wait = <threading.Event at 0x7f44c1603950: unset>.wait
+2026-10-26T15:14:02.6217266Z 4 failed, 4306 passed, 2 skipped, 899 deselected, 1 warning in 888.06s (0:14:48)
+2026-10-26T15:14:03.0125723Z ##[error]Process completed with exit code 1.
+2026-10-26T15:14:03.0209071Z Post job cleanup.
+2026-10-26T15:14:03.0718977Z [command]/usr/bin/git version
+2026-10-26T15:14:03.0749511Z git version 2.55.0
+2026-10-26T15:14:03.0772680Z Temporarily overriding HOME='/home/runner/work/_temp/c9d816aa-2d76-4977-8b42-bd209f61950c' before making global git config changes
+2026-10-26T15:14:03.0773374Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-26T15:14:03.0775784Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/Deck-Master/Deck-Master
+2026-10-26T15:14:03.0803823Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-26T15:14:03.0841008Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-26T15:14:03.1030718Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-26T15:14:03.1057391Z http.https://github.com/.extraheader
+2026-10-26T15:14:03.1071505Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-10-26T15:14:03.1094396Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-26T15:14:03.1291752Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-26T15:14:03.1320617Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-26T15:14:03.1607839Z Cleaning up orphan processes
+2026-10-26T15:14:03.1808950Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

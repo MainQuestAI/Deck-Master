@@ -1,5 +1,3 @@
-# Deck Master dependencies
-# python-pptx is optional — used by workspace/foundation.py, quality/brand_gate.py,
-# delivery/validate.py for slide count and text extraction. Missing import triggers
-# graceful degradation (page count checks skipped, reference_ppt_pages set to null).
-python-pptx>=0.6.21
+# Compatibility entry for pip -r requirements.txt.
+# Core dependencies (including python-pptx) are declared in pyproject.toml.
+.

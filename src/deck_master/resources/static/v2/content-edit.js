@@ -8,8 +8,39 @@ export const inputField = (label, value = '', rows = 3) => {
   return {input, node:el('label', {class:'stack'}, label, input)};
 };
 
+// Compare with the fixed formal plan, never a restored or later edited draft.
+export function contentPlanDifferences(plan, next, pages, sources = []) {
+  const changes = [], previous = plan?.input || plan || {};
+  const text = value => value === '' || value == null ? '未填写' : String(value);
+  const diff = (label, before, after) => {if (canonical(before) !== canonical(after)) changes.push(`${label}：${text(before)} → ${text(after)}`);};
+  const oldChapters = previous.chapters || [], newChapters = next.chapters || [];
+  newChapters.forEach((chapter, index) => {
+    const old = oldChapters.find(item => item.chapter_id === chapter.chapter_id);
+    diff(`章节 ${index + 1} 名称`, old?.title, chapter.title);
+    const members = ids => (ids || []).map(id => `第 ${pages.findIndex(page => page.page_id === id) + 1} 页`).join('、');
+    if (canonical(old?.page_ids || []) !== canonical(chapter.page_ids || [])) diff(`章节 ${index + 1} 页面`, members(old?.page_ids), members(chapter.page_ids));
+  });
+  oldChapters.filter(old => !newChapters.some(chapter => chapter.chapter_id === old.chapter_id)).forEach(old => changes.push(`移除章节：${old.title}`));
+  const oldGoals = previous.page_roles || previous.goals || plan?.goals || [];
+  const linksText = links => (links || []).map(link => {
+    const name = sources.find(source => source.source_id === link.source_id)?.name || link.source_id;
+    const original = link.source_version?.original_sha256 || '未记录', extracted = link.source_version?.extract?.sha256 || '未记录';
+    return `${name} (${link.source_id}) · ${link.locator || '未记录位置'} · 原件 ${original} · 提取 ${extracted}`;
+  }).join('；') || '未关联';
+  for (const goal of next.page_roles || next.goals || []) {
+    const old = oldGoals.find(item => item.page_id === goal.page_id);
+    const index = pages.findIndex(page => page.page_id === goal.page_id);
+    const label = index >= 0 ? `第 ${index + 1} 页 · ${pages[index].title}` : goal.page_id;
+    diff(`${label} · 页面目标`, old?.intended_takeaway ?? old?.purpose, goal.intended_takeaway ?? goal.purpose);
+    if (canonical(old?.source_links || []) !== canonical(goal.source_links || [])) diff(`${label} · 来源关联`, linksText(old?.source_links), linksText(goal.source_links));
+    if ('unresolved_facts' in goal) diff(`${label} · 待确认事实`, (old?.unresolved_facts || []).join('；'), (goal.unresolved_facts || []).join('；'));
+  }
+  if ('input_summary' in next) diff('内容整合结论', previous.input_summary, next.input_summary);
+  return changes;
+}
+
 // One editor owns the recovery copy; every request freezes the original payload.
-export function contentOperation(app, slot, read, hydrate, ref, onDone) {
+export function contentOperation(app, slot, read, hydrate, ref, onDone, {onPlanChange} = {}) {
   let loaded = false, disposed = false, serial = 0, pending = null; const guards = [];
   const notice = el('p', {role:'status', class:'content-operation-note'}), impact = el('div', {class:'stack'});
   const receipt = el('div', {role:'status',class:'content-save-receipt stack',hidden:true});
@@ -29,7 +60,7 @@ export function contentOperation(app, slot, read, hydrate, ref, onDone) {
   }, true, {disabled:true});
   function canWrite() { return loaded && !disposed && !app.readonly && !app.editor?.readonly && canonical(app.editor?.draft.base_ref) === canonical(ref) && (!app.editor.exactRevision || app.editor.draft.base_revision === app.route.revision); }
   function currentBasis() { return app.latest?.revision_id === app.route.revision; }
-  function controls() { for (const guard of guards) guard.disabled = !canWrite(); submit.disabled = !canWrite() || !currentBasis() || !pending || Boolean(app.business.entries.size || app.business.loadWarning); }
+  function controls() { for (const guard of guards) guard.disabled = !canWrite(); submit.disabled = !canWrite() || !currentBasis() || !pending || Boolean(app.business.entries.size || app.business.loadWarning); onPlanChange?.(Boolean(pending), submit); }
   function versionChanged() {
     if (currentBasis() || disposed) return;
     serial++; pending = null; impact.replaceChildren();
@@ -52,10 +83,10 @@ export function contentOperation(app, slot, read, hydrate, ref, onDone) {
       controls();
     });
   }
-  async function preview(input) {
+  async function preview(input, differences = []) {
     if (!canWrite()) return;
     if (!currentBasis()) { versionChanged(); return; }
-    const token = ++serial; pending = null; controls();
+    const token = ++serial, frozenDifferences = structuredClone(differences); pending = null; controls();
     try {
       await app.business.available();
       const value = {schema_version:'content_operation_input.v1', project_id:app.info.project_id, base_revision:app.route.revision, ...input};
@@ -68,6 +99,7 @@ export function contentOperation(app, slot, read, hydrate, ref, onDone) {
         el('p', {}, `修改 ${info.changed_pages.length} 页，移除或替换 ${info.removed_pages.length} 个旧页身份；${info.superseded_tasks.length} 项未完任务将失效。`),
         el('p', {}, info.host_required ? '仅交接选定页，制作工具返回后才更新正文。不会在此生成图片。' : '确认后保存内容，未改页及历史对象保留。'),
         el('p', {class:'muted'}, '旧意见保留旧基准，不自动迁移。' + (info.deck_outputs_invalidated ? '实际稿件变更后整稿文件需要更新。' : '') + (info.preserved_originals_need_review ? '旧原图保留，但需要核对新内容适用性。' : '')));
+      if (frozenDifferences.length) impact.append(el('ul', {class:'content-field-differences','aria-label':'具体字段变更'}, frozenDifferences.map(text => el('li', {class:'read-text'}, text))));
       impact.append(el('p', {}, [...new Set([...info.changed_pages,...info.removed_pages])].map(id => app.summary.pages.find(p=>p.page_id===id)?.title || id).join('、')));
       impact.scrollIntoView({block:'center'});
       submit.textContent = info.host_required ? '确认并交接内容调整' : '确认内容变更'; notice.textContent = '';
@@ -90,12 +122,17 @@ export function contentOperation(app, slot, read, hydrate, ref, onDone) {
   return {changed, preview, previewInputs, canWrite, guard(node) { const fieldset = el('fieldset', {class:'content-form-fields', disabled:!canWrite()}, node); guards.push(fieldset); return fieldset; }, node:el('div', {class:'content-operation stack'}, notice, receipt, impact, submit)};
 }
 
-export function sourceReader(app, link, revision = app.route.revision) {
+const sourceReads = new WeakMap();
+export function sourceReader(app, link, revision = app.route.revision, inlineHost = null) {
   const node = el('div', {class:'stack'}, el('p', {}, '正在读取固定材料版本…'));
-  const dialog = modal('材料原文与定位', node), controller = new AbortController();
+  const controller = new AbortController();
+  let dialog = null;
   const close = () => controller.abort();
-  dialog.addEventListener('close', close, {once:true});
-  app.disposables.push(() => { controller.abort(); dialog.removeEventListener('close',close); if (dialog.contains(node) && dialog.open) dialog.close(); });
+  if(inlineHost){
+    sourceReads.get(inlineHost)?.abort();sourceReads.set(inlineHost,controller);
+    inlineHost.replaceChildren(node);inlineHost.setAttribute('tabindex','-1');inlineHost.focus();
+  }else{dialog=modal('材料原文与定位',node);dialog.addEventListener('close',close,{once:true});}
+  app.disposables.push(() => {controller.abort();dialog?.removeEventListener('close',close);if(dialog?.contains(node)&&dialog.open)dialog.close();});
   const query = new URLSearchParams({revision});
   if (link.locator) query.set('locator', link.locator);
   if (link.source_version?.extract?.sha256) query.set('extract_sha256', link.source_version.extract.sha256);
@@ -149,7 +186,7 @@ export function pageContentEditor(app, data) {
   // R3（深度复审）：比较基准固定为所读正式页面内容——个人草稿恢复只改当前输入，
   // 不能把未提交的草稿当成"原文"；正式提交并读取新版本后才会由新实例建立新基准。
   const original = structuredClone(data.page.customer_visible);
-  const fields = el('div', {class:'stack'});
+  const fields = el('div', {class:'stack edit-field-list'});
   // UX-04b（对账 §5「具体文字差异」）：具体改动常驻显示「块位置：原文 → 改文」，
   // 与影响预览同屏；用户不必在整页文本框之间自行回忆改了什么。
   const changes = el('div', {class:'stack content-changes'});
@@ -159,7 +196,9 @@ export function pageContentEditor(app, data) {
   const handoff=app.reviewHandoff;
   const handoffText=handoff&&handoff.revision===data.revision_id&&canonical(handoff.page_ref)===canonical(data.stages.content.ref)&&handoff.repair_layer==='content'?handoff.text:null;
   const reason = inputField('正文修改说明', handoffText||'调整本页标题或正文', 2);
-  let operation, rangeDraft = null, rangeDialog = null;
+  let operation, preview, rangeDraft = null, rangeDialog = null;
+  const studio = document.documentElement.dataset.workbenchUi === 'studio';
+  const titleError = el('p', {class:'field-error',id:'page-title-error',hidden:true}, '请填写页面标题，再核对修改影响。');
   function openRange(path, label) {
     const pathKey=canonical(path), source=at(value,path);
     const draft=rangeDraft?.path===pathKey?rangeDraft:{path:pathKey,source,start:0,end:Math.min(1,Array.from(source).length),replacement:''};
@@ -196,18 +235,23 @@ export function pageContentEditor(app, data) {
       if (path.length === 1) {
         const label = ({title:'页面标题',subtitle:'页面副标题'}[path[0]] || '页面文字');
         const item = inputField(label, at(value,path), 2);
+        if (path[0] === 'title') {
+          item.input.setAttribute('aria-describedby','page-title-error');
+          item.input.addEventListener('input', () => { titleError.hidden=true;item.input.removeAttribute('aria-invalid'); });
+          item.node.append(titleError);
+        }
         item.input.addEventListener('input', () => { const parent = at(value,path.slice(0,-1)); parent[path.at(-1)] = item.input.value; operation.changed(); drawChanges(); });
-        fields.append(item.node,actionGroup(button('精确修改选段',()=>openRange(path,label),false,{'aria-label':'精确修改选段 · '+label.replaceAll(' · ','/')})));
+        fields.append(el('div',{class:'edit-field'},item.node,actionGroup(button('精确修改选段',()=>openRange(path,label),false,{'aria-label':'精确修改选段 · '+label.replaceAll(' · ','/')}))));
         lastHeading = null;
         continue;
       }
       const arrayAt = blockAt(path);
       const head = blockHeading(value, path, arrayAt);
-      if (head !== lastHeading) { fields.append(el('p', {class:'muted content-block-label'}, head || '正文')); lastHeading = head; }
+      if (!studio && head !== lastHeading) { fields.append(el('p', {class:'muted content-block-label'}, head || '正文')); lastHeading = head; }
       const label = `${head || '正文'} · ${leafLabel(path, arrayAt)}`;
       const item = inputField(label, at(value,path), 4);
       item.input.addEventListener('input', () => { const parent = at(value,path.slice(0,-1)); parent[path.at(-1)] = item.input.value; operation.changed(); drawChanges(); });
-      fields.append(item.node,actionGroup(button('精确修改选段',()=>openRange(path,label),false,{'aria-label':'精确修改选段 · '+label.replaceAll(' · ','/')})));
+      fields.append(el('div',{class:'edit-field'},item.node,actionGroup(button('精确修改选段',()=>openRange(path,label),false,{'aria-label':'精确修改选段 · '+label.replaceAll(' · ','/')}))));
     }
     drawChanges();
   }
@@ -217,11 +261,18 @@ export function pageContentEditor(app, data) {
     if (saved.visible) value = saved.visible;
     reason.input.value = saved.reason || '';rangeDraft=saved.range_edit||null;draw();
   }, data.stages.content.ref,
-    result => app.go({revision:result.revision_id, layer:'content'}));
+    result => app.go({revision:result.revision_id, layer:'content'}),
+    {onPlanChange:(pending,submit) => { if(studio){submit.hidden=!pending;preview?.classList.toggle('primary',!pending);} }});
   reason.input.addEventListener('input', operation.changed);
-  const previewEdit = () => operation.preview({content_plan_ref:data.content_plan?.ref || null, action:'edit', instruction:reason.input.value,
-    targets:[{page_id:data.page_id,page_ref:data.stages.content.ref}],customer_visible:value});
-  const preview = button('预览正文修改影响',previewEdit);
+  const previewEdit = async () => {
+    if (!value.title?.trim()) {
+      titleError.hidden=false;const input=fields.querySelector('[aria-label="页面标题"]');
+      input?.setAttribute('aria-invalid','true');input?.focus();return;
+    }
+    await operation.preview({content_plan_ref:data.content_plan?.ref || null, action:'edit', instruction:reason.input.value,
+      targets:[{page_id:data.page_id,page_ref:data.stages.content.ref}],customer_visible:value});
+  };
+  preview = button('预览正文修改影响',previewEdit,studio);
   app.disposables.push(()=>rangeDialog?.dispose());
   const derivations = el('div');
   get('/api/content/lineage/'+encodeURIComponent(data.page_id)+revisionQuery(data.revision_id)).then(result => {
@@ -230,6 +281,51 @@ export function pageContentEditor(app, data) {
         r.derivation.source_pages.map(p => button('打开来源页 '+p.page_id, () => { document.querySelector('#modal').close(); app.go({page_id:p.page_id,revision:r.derivation.source_revision,layer:'content'}); })))))));
   }).catch(error => derivations.append(el('p', {class:'field-error'}, readableError(error))));
   check.append(changes, operation.node);
-  return el('details', {class:'content-editor'}, el('summary', {}, '编辑本页标题与正文'),
+  if (!studio) return el('details', {class:'content-editor'}, el('summary', {}, '编辑本页标题与正文'),
     el('div', {class:'stack'}, derivations, check, operation.guard(el('div', {class:'stack'}, fields, reason.node, preview))));
+  // Keep the mounted form and its single DraftEditor owner when opening/closing.
+  // A nested exact-range dialog can cover this drawer without replacing it.
+  const title=el('h2',{id:'page-edit-title',tabindex:'-1'},'编辑本页标题与正文');
+  const dialog=el('dialog',{class:'edit-drawer','aria-labelledby':title.id});
+  const expand=button('展开编辑区',()=>{
+    const wide=dialog.classList.toggle('wide');expand.textContent=wide?'收起编辑区':'展开编辑区';
+    expand.setAttribute('aria-expanded',String(wide));
+  },false,{'aria-expanded':'false'});
+  const close=button('关闭编辑',()=>dialog.close());
+  const trigger=button('编辑本页标题与正文',()=>{
+    app.root.dispatchEvent(new CustomEvent('page-edit-open'));
+    dialog.showModal();title.focus();
+  },false,{'aria-haspopup':'dialog',class:'content-edit-trigger'});
+  dialog.append(el('header',{class:'edit-drawer-head'},title,actionGroup(expand,close)),
+    el('div',{class:'edit-drawer-body stack'},
+      el('p',{class:'muted'},'关闭后保留个人草稿；核对影响并确认后才更新正式内容。'),
+      derivations,operation.guard(el('div',{class:'stack'},fields,reason.node)),check),
+    el('footer',{class:'edit-drawer-footer'},operation.guard(preview)));
+  dialog.addEventListener('keydown',event=>{
+    if(event.key!=='Tab')return;
+    const controls=[...dialog.querySelectorAll('button,input,select,textarea,[tabindex]')]
+      .filter(item=>item.tabIndex>=0&&!item.matches(':disabled')&&item.getClientRects().length);
+    const first=controls[0],last=controls.at(-1);
+    if(event.shiftKey&&(document.activeElement===first||document.activeElement===title)){event.preventDefault();last?.focus();}
+    else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
+  });
+  const draftState=el('p',{class:'edit-drawer-draft-state',role:'status'});
+  const recovery=button('处理个人草稿保存问题',()=>{
+    dialog.dataset.recovery='true';dialog.close();app.root.dispatchEvent(new CustomEvent('page-edit-draft-recovery'));
+  },false,{hidden:true});
+  const updateDraft=()=>{
+    const editor=app.editor;
+    draftState.textContent=editor?.stateNode?.textContent||'正在读取个人草稿…';
+    recovery.hidden=!editor?.storageError&&!['unknown','conflict','error'].includes(editor?.status);
+  };
+  app.root.addEventListener('draft-state-changed',updateDraft);updateDraft();
+  dialog.querySelector('footer').prepend(draftState,recovery);
+  app.disposables.push(()=>app.root.removeEventListener('draft-state-changed',updateDraft));
+  dialog.addEventListener('close',()=>{
+    if(dialog.open)return;
+    if(dialog.dataset.recovery){delete dialog.dataset.recovery;return;}
+    if(trigger.isConnected)trigger.focus();
+  });
+  app.disposables.push(()=>{rangeDialog?.dispose();if(dialog.open)dialog.close();});
+  return el('div',{class:'content-editor'},trigger,dialog);
 }

@@ -11,6 +11,13 @@ lands (T07), a strict human policy honestly stays blocked with a concrete gap.
 """
 from __future__ import annotations
 
+from collections import OrderedDict
+import stat
+import threading
+
+_projection_cache = OrderedDict()
+_projection_lock = threading.Lock()
+
 # Gap reasons in report order. Each failing review contributes its specific
 # reasons; a delivery refusal lists the distinct set.
 _REASON_ORDER = (
@@ -112,13 +119,15 @@ def _ref_pair(ref) -> tuple | None:
     return None
 
 
-def professional_policy(store, doc, *, selected_output=None) -> dict:
+def professional_policy(store, doc, *, selected_output=None, read_context=None) -> dict:
     """The single professional-evidence interpretation for delivery.
 
     Returns required/satisfied/human_signoff plus per-review diagnosis. When
     the policy switch is false, satisfied is trivially true and human_signoff
     false: delivery is not blocked, and no human endorsement is claimed.
     """
+    if read_context is not None:
+        read_context.require(store, doc)
     policy = doc.get('policy') or {}
     required = bool(policy.get('professional_review_required_for_delivery'))
     result = {
@@ -152,7 +161,7 @@ def professional_policy(store, doc, *, selected_output=None) -> dict:
     # The same artifact map the shared check summary uses: declared review
     # dependencies are validated against one currentness rule, never two.
     from .editing import _current_artifact_digests
-    artifacts = _current_artifact_digests(store, doc)
+    artifacts = dict(read_context.artifacts) if read_context is not None else _current_artifact_digests(store, doc)
     if selected_output and selected_output.get("file_sha256"):
         artifacts["artifact:pptx"] = selected_output["file_sha256"]
     # Replacement effectiveness (F02, PR107 round 2): recording a replacement
@@ -282,10 +291,9 @@ def _sort_reasons(reasons):
 
 def selected_output(store, artifact, *, notes_policy=None, file_path=None):
     """Pure exact bytes of the proposed public projection (never a stored approval)."""
-    from pathlib import Path
     from .exports import resolve_notes_policy, _pptx_projection_notes
     from .export_sanitize import pptx
-    from .models import sha256_bytes
+    from .models import canonical_json_bytes, sha256_bytes, validate_ref
     policy = resolve_notes_policy(store, artifact, notes_policy)
     ref = artifact.get("outputs", {}).get("pptx")
     result = {"artifact_ref": ref, "subject_ref": None, "file_sha256": None,
@@ -293,14 +301,38 @@ def selected_output(store, artifact, *, notes_policy=None, file_path=None):
     if not ref:
         return result
     obj = store.read_object_json(ref)
-    raw = store.read_object_bytes(obj["file"])
-    projected = pptx(raw, "deck.pptx", notes=_pptx_projection_notes(store, artifact, policy),
-                     include_notes=policy["pptx_notes"])
-    digest = sha256_bytes(projected)
+    source = obj['file']
+    validate_ref(source, where='output/file')
+    def signature():
+        info = (store.ctx.object_stat(source) if hasattr(store, 'ctx') else
+                store._resolve_object_path(source['path']).stat())
+        if not stat.S_ISREG(info.st_mode):
+            raise ValueError('output is not a regular file')
+        return (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
+    source_signature = signature()
+    notes = _pptx_projection_notes(store, artifact, policy)
+    key = (str(store.project_root.resolve()), source['path'], source['sha256'], source_signature,
+           canonical_json_bytes([notes, policy]), pptx)
+    with _projection_lock:
+        metadata = _projection_cache.get(key)
+        if metadata is not None:
+            _projection_cache.move_to_end(key)
+    if metadata is None:
+        raw = store.read_object_bytes(source)
+        projected = pptx(raw, 'deck.pptx', notes=notes, include_notes=policy['pptx_notes'])
+        metadata = (sha256_bytes(projected), len(raw), len(projected))
+        if signature() == source_signature:
+            with _projection_lock:
+                _projection_cache[key] = metadata
+                _projection_cache.move_to_end(key)
+                while len(_projection_cache) > 8:
+                    _projection_cache.popitem(last=False)
+    digest, original_size, projected_size = metadata
     result.update(file_sha256=digest, original_file_sha256=obj["file"]["sha256"],
         subject_ref={"path": f".deckmaster/objects/{digest[:2]}/{digest}.pptx", "sha256": digest})
     if file_path is not None:
-        actual = sha256_bytes(Path(file_path).expanduser().read_bytes())
+        from .selected_file import read_selected_file
+        _, actual = read_selected_file(file_path, sizes={original_size, projected_size})
         if actual == digest:
             pass
         elif actual == obj["file"]["sha256"]:
@@ -315,16 +347,23 @@ def describe(project, *, revision=None, file_path=None, notes_policy=None):
     """Read-only shared final judgement: selected actual file plus current control."""
     from .store import Store
     from .snapshots import load_snapshot
-    from . import eligibility
-    from .exports import _facts, _engineering_ready
     store = Store(project)
     control = store.load_document()
     artifact = load_snapshot(store, revision) if revision else control
+    return describe_snapshots(store, artifact, control, file_path=file_path, notes_policy=notes_policy)
+
+
+def describe_snapshots(store, artifact, control, *, file_path=None, notes_policy=None, read_context=None, deck_output=None):
+    """The same delivery judgement over snapshots already pinned by a reader."""
+    from . import eligibility
+    from .exports import _facts, _engineering_ready
     selected = selected_output(store, artifact, notes_policy=notes_policy, file_path=file_path)
-    facts = _facts(store, artifact, selected_output=selected, control=control)
+    facts = _facts(store, artifact, selected_output=selected, control=control, read_context=read_context,
+        deck_output=deck_output)
     summary = facts['check_summary']
     professional = facts['professional']
-    decision = eligibility.evaluate(store, artifact, control, "export.delivery", {"selected_output": selected})
+    decision = eligibility.evaluate(store, artifact, control, "export.delivery",
+        {"selected_output": selected, "review_read_context": read_context})
     engineering = bool(selected["file_sha256"] and _engineering_ready(artifact, facts))
     codes = list(decision["reason_codes"])
     if not engineering:

@@ -157,6 +157,70 @@ def resolve_operation(store, operation_id, *, head_revision=None, use_cache=None
         return OperationLookup('unknown', head, reason='history_unreadable')
 
 
+class OperationReader:
+    """One read's validated canonical operation index; never shared across reads."""
+    def __init__(self, store):
+        import os
+        from . import operation_coverage as cache
+        self.store = store
+        self.root = cache.root_identity(store)
+        self.head = cache.current_head(store)
+        enabled = os.environ.get('DECK_MASTER_OPERATION_CACHE', '1') != '0'
+        previous = cache.get(self.root) if enabled else None
+        if previous is not None:
+            try:
+                valid = cache.valid(store, previous)
+            except READ_FAILURES:
+                valid = False  # A departed branch is only a disposable hint.
+            if not valid:
+                cache.discard(self.root)
+                previous = None
+        self.coverage, _, _ = cache.scan(store, root=self.root, control=self.head,
+            operation_id=None, cached=previous)
+        self.documents = {}
+        self.results = {}
+        self._check_head()
+        if enabled:
+            cache.publish(self.coverage)
+
+    def _check_head(self):
+        from . import operation_coverage as cache
+        if cache.current_head(self.store) != self.head or cache.root_identity(self.store) != self.root:
+            raise ValueError('current changed during operation reading')
+
+    def snapshot(self, revision):
+        from .snapshots import snapshot_evidence, snapshot_signature
+        self._check_head()
+        header = self.coverage.headers.get(revision)
+        if header is None:
+            raise ValueError('snapshot is not committed')
+        if revision not in self.documents:
+            doc, signature, digest = snapshot_evidence(self.store, revision)
+            if digest != header.sha256 or signature != header.signature:
+                raise ValueError('snapshot changed during operation reading')
+            self.documents[revision] = doc
+        elif snapshot_signature(self.store, revision) != header.signature:
+            raise ValueError('snapshot changed during operation reading')
+        return copy.deepcopy(self.documents[revision])
+
+    def resolve(self, operation_id):
+        validate_id(operation_id)
+        self._check_head()
+        if operation_id in self.results:
+            return copy.deepcopy(self.results[operation_id])
+        revision = self.coverage.operations.get(operation_id)
+        if revision is None:
+            return OperationLookup('not_found', self.head)
+        doc = self.snapshot(revision)
+        decoded = _decode_committed_operation(self.store, doc, operation_id)
+        if decoded is None:
+            return OperationLookup('unknown', self.head, reason='legacy_receipt_only')
+        fmt, kind, record, response = decoded
+        result = OperationLookup('committed', self.head, fmt, kind, revision, record, response)
+        self.results[operation_id] = result
+        return copy.deepcopy(result)
+
+
 def lookup_error(lookup, operation_id):
     unavailable = lookup.reason in ('history_unreadable', 'current_changed')
     return OperationError('operation_unavailable' if unavailable else 'operation_unverified', 'operation_id',
@@ -211,14 +275,17 @@ def publish_index(store, record):
     """Best effort: failure cannot make an already committed operation repeat."""
     try:
         path = safe_path(store.deck_root, 'operations', record['operation_id'] + '.json')
+        expected = {'format': 'operation_index.v1', **record}
         if path.exists():
             try:
                 previous = json.loads(path.read_bytes())
             except (ValueError, OSError):
                 previous = None
+            if previous == expected:
+                return None
             if isinstance(previous, dict) and previous.get('kind') == 'input_update' and 'request_sha256' in previous:
                 return None
-        _atomic_write_bytes(path, canonical_json_bytes({'format': 'operation_index.v1', **record}))
+        _atomic_write_bytes(path, canonical_json_bytes(expected))
     except (OSError, TypedServiceError):
         return {'code': 'receipt_cache_unavailable', 'message': 'committed result is recoverable from project history'}
     return None

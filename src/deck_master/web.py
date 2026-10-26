@@ -38,8 +38,6 @@ def _editing_review_doc(store):
 def _project_identity(project_dir):
     return hashlib.sha256(str(Path(project_dir).resolve()).encode()).hexdigest()
 
-def _state_path(project_dir: Path) -> Path:
-    return project_dir / ".deckmaster" / STATE_FILE
 
 
 def read_active_service(project_dir: Path) -> dict | None:
@@ -50,17 +48,14 @@ def read_active_service(project_dir: Path) -> dict | None:
         return None
 
 
-def _write_state(project_dir: Path, state: dict) -> None:
-    from .local_runtime import descriptor, publish
-    publish(descriptor(project=project_dir), state)
 
 
 # Server-side capability names (single source for /api/health and the
 # /api/project effective-action projection).
-UI_CAPABILITIES = ("content_insight.v1", "method_library_preview.v1", "ui_draft.v1", "ui_gallery.v1", "ui_overview.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1",
+UI_CAPABILITIES = ("project_control_light.v1", "content_insight.v1", "method_library_preview.v1", "ui_draft.v1", "ui_gallery.v1", "ui_overview.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1",
                    "page_detail.v1", "annotations.v1", "changes.v1", "operations.v1", "candidates.v1",
                    "stages.v1", "run_desk.v1", "style_recipes.v1", "content_ops.v1", "exports.v1",
-                   "restoration.v1", "workbench_actions.v1", "action_targets.v1", "icon_quality.v1", "result_reading.v1", "history_summary.v1", "visual_reference.v1", "material_uploads.v1",
+                   "workbench_summary.v2", "restoration.v1", "workbench_actions.v1", "action_targets.v1", "icon_quality.v1", "result_reading.v1", "history_summary.v1", "visual_reference.v1", "material_uploads.v1",
                    "external_review.v1", "delivery_eligibility.v1") + RUNTIME_PROTOCOL_CAPABILITIES
 
 
@@ -172,6 +167,8 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                     raise ModelError('query', 'this read route takes no query arguments')
                 if any(len(v) != 1 or not v[0] for v in query.values()):
                     raise ModelError('query', 'query arguments must occur once and be nonempty')
+                if action == 'delivery.describe' and 'file_path' in query:
+                    raise ModelError('file_path', 'HTTP delivery reads accept project outputs, not local paths')
                 data = {key: value[0] for key, value in query.items()}
             for key, value in bound.items():
                 if key in data and data[key] != value:
@@ -195,6 +192,17 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         if self._collaboration_route('POST'):
             return
         try:
+            if (self.path == '/api/ui-state/commit-clear'
+                    and self.headers.get('X-Deck-Clear-Recovery') != 'indexeddb.v1'):
+                from .operations import OperationError
+                error = OperationError('clear_recovery_upgrade_required', 'recovery_protocol',
+                    '请刷新旧页面以升级清理恢复协议，并保留原清理请求后再核实重试。 '
+                    'Refresh the old page to upgrade clear recovery; preserve the original request before retrying.',
+                    http_status=409, exit_code=4)
+                payload = error.payload()
+                payload['error']['next_action'] = 'refresh the old page; preserve and inspect the original clear request before retrying'
+                self._send_json(payload, error.http_status)
+                return
             if urlparse(self.path).path == '/api/content/uploads':
                 from . import source_uploads
                 from .samples import sample_info
@@ -247,19 +255,21 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             from . import editing, service
             if self.path == '/api/reviews/native':
                 from .native_review import run
-                if set(data) - {'task_id'} or ('task_id' in data and
+                if set(data) - {'task_id', 'force_units'} or ('task_id' in data and
                         (not isinstance(data['task_id'], str) or not data['task_id'])):
-                    raise ModelError('native_review', 'provide only an optional nonempty task_id')
-                result = run(self.store.project_root, task_id=data.get('task_id'))
+                    raise ModelError('native_review', 'provide an optional nonempty task_id or explicit force_units')
+                result = run(self.store.project_root, task_id=data.get('task_id'), force_units=data.get('force_units'))
             elif self.path in ('/api/drafts/save', '/api/drafts/import', '/api/drafts/recovery', '/api/ui-state'):
                 from . import ui_journal
                 action = {'/api/drafts/save': ui_journal.save, '/api/drafts/import': ui_journal.import_recovery,
                           '/api/drafts/recovery': ui_journal.recovery_file, '/api/ui-state': ui_journal.save_position}[self.path]
                 result = action(self.store.project_root, **data)
-            elif self.path in ('/api/ui-state/plan-clear', '/api/ui-state/commit-clear'):
+            elif self.path in ('/api/ui-state/plan-clear', '/api/ui-state/commit-clear', '/api/ui-state/inspect-clear', '/api/ui-state/end-clear'):
                 from . import ui_journal
                 action = {'/api/ui-state/plan-clear': ui_journal.plan_clear,
-                          '/api/ui-state/commit-clear': ui_journal.commit_clear}[self.path]
+                          '/api/ui-state/commit-clear': ui_journal.commit_clear,
+                          '/api/ui-state/inspect-clear': ui_journal.inspect_clear,
+                          '/api/ui-state/end-clear': ui_journal.end_clear}[self.path]
                 result = action(self.store.project_root, **data)
             elif self.path in ('/api/ui-state/plan-restore', '/api/ui-state/restore'):
                 from . import personal_recovery
@@ -277,13 +287,14 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             elif self.path == '/api/overview':
                 from .overview_state import save
                 result = save(self.store.project_root, **data)
-            elif self.path in ('/api/annotations/batch', '/api/changes/plan', '/api/changes/commit', '/api/candidates/plan', '/api/candidates/adopt', '/api/candidates/decision', '/api/stages/assemble', '/api/styles/propose', '/api/styles/confirm', '/api/styles/plan', '/api/styles/analyze', '/api/content/plan', '/api/content/commit', '/api/content/inputs'):
-                from . import annotation_service, changes, candidates, stages, styles, content_ops, visual_styles
+            elif self.path in ('/api/annotations/batch', '/api/changes/plan', '/api/changes/commit', '/api/candidates/plan', '/api/candidates/adopt', '/api/candidates/decision', '/api/stages/assemble', '/api/styles/propose', '/api/styles/confirm', '/api/styles/plan', '/api/styles/analyze', '/api/design/initial-plan', '/api/content/plan', '/api/content/commit', '/api/content/inputs'):
+                from . import annotation_service, changes, candidates, stages, styles, content_ops, visual_styles, design_entry
                 action = {'/api/content/plan': content_ops.plan, '/api/content/commit': content_ops.commit, '/api/content/inputs': content_ops.inputs, '/api/annotations/batch': annotation_service.save,
                           '/api/changes/plan': changes.plan, '/api/changes/commit': changes.commit,
                           '/api/candidates/plan': candidates.plan, '/api/candidates/adopt': candidates.adopt,
                           '/api/candidates/decision': candidates.decide,
                           '/api/stages/assemble': stages.assemble,
+                          '/api/design/initial-plan': design_entry.initial_plan,
                           '/api/styles/analyze': visual_styles.analyze, '/api/styles/propose': styles.propose, '/api/styles/confirm': styles.confirm, '/api/styles/plan': styles.plan}[self.path]
                 result = action(self.store.project_root, **data)
             elif self.path in ('/api/icons/propose', '/api/icons/confirm', '/api/icons/plan', '/api/icons/preview', '/api/candidate-preview/request'):
@@ -341,7 +352,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                                           'field': exc.path, 'next_action': 'inspect current review task and native client status'}},
                                 409 if exc.exit_code == 5 else 422)
                 return
-            if self.path.startswith(('/api/drafts/', '/api/ui-state', '/api/gallery', '/api/overview', '/api/text-ranges/', '/api/annotations/', '/api/changes/', '/api/candidates/', '/api/stages/', '/api/styles/', '/api/icons/', '/api/candidate-preview/', '/api/content/', '/api/export', '/api/history/', '/api/reviews/native')):
+            if self.path.startswith(('/api/drafts/', '/api/ui-state', '/api/gallery', '/api/overview', '/api/text-ranges/', '/api/annotations/', '/api/changes/', '/api/candidates/', '/api/stages/', '/api/styles/', '/api/design/', '/api/icons/', '/api/candidate-preview/', '/api/content/', '/api/export', '/api/history/', '/api/reviews/native')):
                 self._send_error(exc)
                 return
             from .store import ConflictError
@@ -377,6 +388,19 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                     'message': getattr(exc, 'detail', 'Fixed record unavailable'), 'field': getattr(exc, 'path', None)}},
                     getattr(exc, 'http_status', 503))
             return
+        if parsed.path.startswith('/api/ui-state/clear-recovery'):
+            from . import ui_journal
+            try:
+                if parsed.path == '/api/ui-state/clear-recovery' and not parsed.query:
+                    from .ui_clear_recovery import listing
+                    self._send_json(listing(self.store.project_root)); return
+                parts = parsed.path.split('/')
+                if parsed.query or len(parts) != 6 or parts[5] != 'download':
+                    raise ValueError('select an ended clear recovery download')
+                data, name = ui_journal.clear_recovery_download(self.store.project_root, operation_id=parts[4])
+                self._send_bytes(data, 'application/json', download_name=name); return
+            except Exception as exc:
+                self._send_error(exc); return
         if parsed.path.startswith('/api/ui-state/backups'):
             from . import personal_recovery
             try:
@@ -561,7 +585,11 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             try:
                 from . import ui_journal, service
                 if parsed.path == '/api/project':
-                    result = ui_journal.project_info(self.store.project_root, server_capabilities=UI_CAPABILITIES)
+                    query = parse_qs(parsed.query, keep_blank_values=True)
+                    if query not in ({}, {'details': ['1']}, {'light': ['1']}):
+                        raise ValueError('project reads accept either details=1 or light=1')
+                    result = ui_journal.project_info(self.store.project_root, server_capabilities=UI_CAPABILITIES,
+                                                   include_eligibility='light' not in query)
                 elif parsed.path == '/api/drafts':
                     result = ui_journal.list_drafts(self.store.project_root)
                 elif parsed.path == '/api/ui-state':
@@ -651,21 +679,28 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 raise workbench_mod.ReadModelError("invalid_revision", "revision", "provide one revision", http_status=400)
             revision = revisions[0] if revisions else None
             project = self.store.project_root
-            reading=None;reading_unavailable=False
+            reading=None;reading_unavailable=False;summary_context=None
             if 'personal' in query:
                 if query['personal']!=['1']:raise ValueError('personal must be 1')
                 from .result_reading import get
                 if parsed.path not in ('/api/view/summary','/api/workbench') and 'reading_etag' not in query:
                     raise ValueError('personal lists require reading_etag from summary or reading state')
                 if 'reading_etag' in query and len(query['reading_etag'])!=1:raise ValueError('provide one reading_etag')
-                try:reading=get(project,expected_etag=query.get('reading_etag',[None])[0])
+                try:
+                    from .ui_journal import context
+                    summary_context = context(project)
+                    reading=get(project,expected_etag=query.get('reading_etag',[None])[0],read_context=summary_context)
                 except (TypedServiceError,ModelError,OSError,ValueError,KeyError,TypeError):
                     if parsed.path not in ('/api/view/summary','/api/workbench') or 'reading_etag' in query:raise
                     reading_unavailable=True
             if parsed.path == "/api/view":
                 payload = view_mod.project_view(project, revision=revision)
             elif parsed.path in ("/api/view/summary", "/api/workbench"):
-                result=workbench_mod.workbench_summary_json(project, revision=revision, reading=reading)
+                protocols = query.get('protocol', [])
+                if len(protocols) > 1:
+                    raise ValueError('provide one summary protocol')
+                result=workbench_mod.workbench_summary_json(project, revision=revision, reading=reading, protocol=protocols[0] if protocols else None,
+                    read_context=summary_context)
                 if reading_unavailable:
                     payload=json.loads(result);payload['reading_unavailable']=True;self._send_json(payload)
                 else:self._send_json_bytes(result)
@@ -825,14 +860,19 @@ def open_view(project_dir: Path | str, *, open_browser: bool = True, ui: str | N
                 "port": state["port"], "pid": state.get("pid"),
                 "reused": state.get("reused", False), "ui": ui}
     url = state["url"] + ui + "/"
+    presentation = {'address_available': True, 'open_attempted': bool(open_browser),
+                    'system_accepted': None, 'frontend_loaded': None, 'user_seen': None,
+                    'address_scope': 'host_loopback'}
     if open_browser:
         opened = False
         try:
             opened = bool(webbrowser.open(url, new=2))
         except Exception:  # noqa: BLE001 - no browser on this host
             opened = False
+        presentation["system_accepted"] = opened
         if not opened:
             return {
+                "presentation": presentation,
                 "review_url": url,
                 "view_status": "available",
                 "detail": "no browser could be opened; use the local URL above",
@@ -843,7 +883,8 @@ def open_view(project_dir: Path | str, *, open_browser: bool = True, ui: str | N
             }
     return {
         "review_url": url,
-        "view_status": "opened" if open_browser else "available",
+        "view_status": "opened" if open_browser else "available",  # legacy transport observation
+        "presentation": presentation,
         "port": state["port"],
         "pid": state.get("pid"),
         "reused": state.get("reused", False),

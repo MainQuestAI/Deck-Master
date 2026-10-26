@@ -1,0 +1,295 @@
+{
+  "checks": [
+    {
+      "viewport": 1440,
+      "section": "summary",
+      "brokenImages": 0,
+      "client": 1425,
+      "scroll": 1425,
+      "visibleDocs": 1
+    },
+    {
+      "viewport": 1440,
+      "section": "spec",
+      "brokenImages": 0,
+      "client": 1425,
+      "scroll": 1425,
+      "visibleDocs": 1
+    },
+    {
+      "viewport": 1440,
+      "section": "screens",
+      "brokenImages": 0,
+      "client": 1425,
+      "scroll": 1425,
+      "visibleDocs": 1
+    },
+    {
+      "viewport": 1440,
+      "section": "components",
+      "brokenImages": 0,
+      "client": 1425,
+      "scroll": 1425,
+      "visibleDocs": 1
+    },
+    {
+      "viewport": 1440,
+      "section": "implementation",
+      "brokenImages": 0,
+      "client": 1425,
+      "scroll": 1425,
+      "visibleDocs": 1
+    },
+    {
+      "viewport": 1440,
+      "section": "research",
+      "brokenImages": 0,
+      "client": 1425,
+      "scroll": 1425,
+      "visibleDocs": 1
+    },
+    {
+      "viewport": 1440,
+      "section": "issues",
+      "brokenImages": 0,
+      "client": 1425,
+      "scroll": 1425,
+      "visibleDocs": 1
+    },
+    {
+      "viewport": 1440,
+      "section": "engineering",
+      "brokenImages": 0,
+      "client": 1425,
+      "scroll": 1425,
+      "visibleDocs": 1
+    },
+    {
+      "viewport": 1440,
+      "section": "refinement",
+      "brokenImages": 0,
+      "client": 1425,
+      "scroll": 1425,
+      "visibleDocs": 1
+    },
+    {
+      "viewport": 768,
+      "section": "summary",
+      "brokenImages": 0,
+      "client": 753,
+      "scroll": 753,
+      "visibleDocs": 1
+    },
+    {
+      "viewport": 768,
+      "section": "spec",
+      "brokenImages": 0,
+      "client": 753,
+      "scroll": 753,
+      "visibleDocs": 1
+    },
+    {
+      "viewport": 768,
+      "section": "screens",
+      "brokenImages": 0,
+      "client": 753,
+      "scroll": 753,
+      "visibleDocs": 1
+    },
+    {
+      "viewport": 768,
+      "section": "components",
+      "brokenImages": 0,
+      "client": 753,
+      "scroll": 753,
+      "visibleDocs": 1
+    },
+    {
+      "viewport": 768,
+      "section": "implementation",
+      "brokenImages": 0,
+      "client": 753,
+      "scroll": 753,
+      "visibleDocs": 1
+    },
+    {
+      "viewport": 768,
+      "section": "research",
+      "brokenImages": 0,
+      "client": 753,
+      "scroll": 753,
+      "visibleDocs": 1
+    },
+    {
+      "viewport": 768,
+      "section": "issues",
+      "brokenImages": 0,
+      "client": 753,
+      "scroll": 753,
+      "visibleDocs": 1
+    },
+    {
+      "viewport": 768,
+      "section": "engineering",
+      "brokenImages": 0,
+      "client": 753,
+      "scroll": 753,
+      "visibleDocs": 1
+    },
+    {
+      "viewport": 768,
+      "section": "refinement",
+      "brokenImages": 0,
+      "client": 753,
+      "scroll": 753,
+      "visibleDocs": 1
+    },
+    {
+      "viewport": 390,
+      "section": "summary",
+      "brokenImages": 0,
+      "client": 375,
+      "scroll": 375,
+      "visibleDocs": 1
+    },
+    {
+      "viewport": 390,
+      "section": "spec",
+      "brokenImages": 0,
+      "client": 375,
+      "scroll": 375,
+      "visibleDocs": 1
+    },
+    {
+      "viewport": 390,
+      "section": "screens",
+      "brokenImages": 0,
+      "client": 375,
+      "scroll": 375,
+      "visibleDocs": 1
+    },
+    {
+      "viewport": 390,
+      "section": "components",
+      "brokenImages": 0,
+      "client": 375,
+      "scroll": 375,
+      "visibleDocs": 1
+    },
+    {
+      "viewport": 390,
+      "section": "implementation",
+      "brokenImages": 0,
+      "client": 375,
+      "scroll": 375,
+      "visibleDocs": 1
+    },
+    {
+      "viewport": 390,
+      "section": "research",
+      "brokenImages": 0,
+      "client": 375,
+      "scroll": 375,
+      "visibleDocs": 1
+    },
+    {
+      "viewport": 390,
+      "section": "issues",
+      "brokenImages": 0,
+      "client": 375,
+      "scroll": 375,
+      "visibleDocs": 1
+    },
+    {
+      "viewport": 390,
+      "section": "engineering",
+      "brokenImages": 0,
+      "client": 375,
+      "scroll": 375,
+      "visibleDocs": 1
+    },
+    {
+      "viewport": 390,
+      "section": "refinement",
+      "brokenImages": 0,
+      "client": 375,
+      "scroll": 375,
+      "visibleDocs": 1
+    }
+  ],
+  "console": [],
+  "finalNavigation": [
+    {
+      "requested": "spec",
+      "active": "spec",
+      "visible": [
+        "spec"
+      ],
+      "width": 741
+    },
+    {
+      "requested": "screens",
+      "active": "screens",
+      "visible": [
+        "screens"
+      ],
+      "width": 741
+    },
+    {
+      "requested": "components",
+      "active": "components",
+      "visible": [
+        "components"
+      ],
+      "width": 741
+    },
+    {
+      "requested": "implementation",
+      "active": "implementation",
+      "visible": [
+        "implementation"
+      ],
+      "width": 741
+    },
+    {
+      "requested": "research",
+      "active": "research",
+      "visible": [
+        "research"
+      ],
+      "width": 741
+    },
+    {
+      "requested": "issues",
+      "active": "issues",
+      "visible": [
+        "issues"
+      ],
+      "width": 741
+    },
+    {
+      "requested": "engineering",
+      "active": "engineering",
+      "visible": [
+        "engineering"
+      ],
+      "width": 741
+    },
+    {
+      "requested": "refinement",
+      "active": "refinement",
+      "visible": [
+        "refinement"
+      ],
+      "width": 741
+    },
+    {
+      "requested": "summary",
+      "active": "summary",
+      "visible": [
+        "summary"
+      ],
+      "width": 741
+    }
+  ]
+}

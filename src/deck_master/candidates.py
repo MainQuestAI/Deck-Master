@@ -33,6 +33,41 @@ def is_trial(task):
     return task.get('stage_request', {}).get('mode') == 'trial'
 
 
+def isolated_svg_trial(store, document, task):
+    """Prove a pending zero-call candidate branch from its committed plan.
+
+    A caller's trial label is insufficient. The actual writer must be confined
+    to a candidate SVG slot and carry neither call credit nor recorded spend.
+    Missing/corrupt provenance stays blocking; reads never repair it.
+    """
+    if (store is None or document is None or not is_trial(task)
+            or task.get('kind') not in ('reconstruct', 'repair')
+            or task.get('protocol_version') != 'changes.v1'
+            or not {'change_plan', CAPABILITY} <= set(task.get('required_capabilities') or [])
+            or task.get('cost_class') != 'host_reasoning' or task.get('call_allowances')
+            or (task.get('usage') or {}).get('external_calls') not in (None, 0)
+            or task.get('candidate_refs') or task.get('result_refs')
+            or (task.get('collaboration_binding') or {}).get('adoption_policy') != 'candidate_only'):
+        return False
+    try:
+        from .changes import action_for_task
+        action = action_for_task(store, document, task)
+        if (not action or action.get('mode') != 'trial' or action.get('write_slots') != ['svg']
+                or action.get('kind') != task['kind'] or action.get('stage') != task['stage_request'].get('stage')
+                or action.get('max_calls') != 0):
+            return False
+        change = store.read_object_json(task['change_binding']['change_ref'])
+        plan = store.read_object_json(change['plan_ref']); validate_schema('change_plan', plan)
+        return (plan['project_id'] == document['project_id']
+                and plan['base_revision'] == change['base_revision'] == task['dispatch_revision']
+                and plan['actions'] == change['actions'] and plan['max_calls'] == 0
+                and plan['input'].get('mode') == 'trial'
+                and plan['payload_digest'] == change['payload_digest']
+                == sha256_bytes(canonical_json_bytes(plan['input'])))
+    except (StoreError, ModelError, OSError, ValueError, KeyError, TypeError):
+        return False
+
+
 def result_kind(candidate):
     return candidate.get('result_kind', 'artifact')
 
@@ -45,11 +80,12 @@ def generation_basis(store, document, page_id, stage, *, preserve_blueprint=Fals
     page = store.read_object_json(entry['page'])
     design, _ = resolve_design(page, document['design_context'], document['design_context'].get('assets') or [])
     if stage != 'content' and task and task.get('kind') == 'blueprint':
-        from .production import stored_blueprint_request, resolve_generation_design
+        from .production import stored_blueprint_request, resolve_generation_design, frozen_design_options
         prepared, _ = stored_blueprint_request(store, task)
         if prepared and prepared.get('resolved_design_context'):
             design = _recorded_design_basis(store, resolve_generation_design(store, document, entry,
-                recipe_ref=task.get('stage_request', {}).get('style_recipe_ref')),
+                recipe_ref=task.get('stage_request', {}).get('style_recipe_ref'),
+                **frozen_design_options(prepared['resolved_design_context'])),
                 prepared['resolved_design_context'])
     elif stage == 'svg':
         from .production import adopted_blueprint_design, resolve_page_rendering_design
@@ -82,10 +118,10 @@ def _recorded_design_basis(store, current, frozen):
     return result
 
 
-def inputs_current(store, document, task):
+def inputs_current(store, document, task, *, read_snapshot=None):
     from .visual_dependencies import is_visual_task, visual_task_inputs_current
     if is_visual_task(task):
-        return visual_task_inputs_current(store, document, task)
+        return visual_task_inputs_current(store, document, task, read_snapshot=read_snapshot)
     target_reference = task.get('stage_request', {}).get('target_reference_ref')
     if target_reference:
         if len(task['scope_pages']) != 1:
@@ -101,7 +137,7 @@ def inputs_current(store, document, task):
         return True
     stage = 'content' if task.get('stage_request', {}).get('stage') == 'content' else (
         'blueprint' if task['kind'] == 'blueprint' else 'svg')
-    dispatched = load_snapshot(store, task['dispatch_revision'])
+    dispatched = (read_snapshot or (lambda rev: load_snapshot(store, rev)))(task['dispatch_revision'])
     return all(generation_basis(store, document, pid, stage) == generation_basis(store, dispatched, pid, stage)
                and any(e['page_id'] == pid for e in document['pages'])
                for pid in task['scope_pages'])
@@ -198,8 +234,7 @@ def _lookup(records, candidate_id):
     return records[candidate_id]
 
 
-def _state(store, document, candidate, task=None):
-    adoptions = [r['revision_id'] for r in document.get('candidate_adoptions', []) if r['candidate_id'] == candidate['candidate_id']]
+def basis_state(store, document, candidate, task=None, *, adopted=False, read_snapshot=None):
     kind = result_kind(candidate)
     if kind == 'content_update':
         current = content_basis(document)
@@ -207,9 +242,7 @@ def _state(store, document, candidate, task=None):
                    if candidate['content_basis'][key] != current[key]]
         return {'content_basis': {'status': 'changed' if changed else 'current', 'changed_fields': changed},
                 'adoption_target': {'status': 'changed' if changed else 'unchanged',
-                                    'original_ref': None, 'current_ref': None},
-                'adopted_revisions': adoptions, **_decision_projection(store, document, candidate, adoptions),
-                'status': 'adopted' if adoptions else 'available'}
+                                    'original_ref': None, 'current_ref': None}}
     entry = next((e for e in document['pages'] if e['page_id'] == candidate['page_id']), None)
     if kind == 'page':
         # Precise scope: only the current Page identity can stale a page candidate.
@@ -226,7 +259,7 @@ def _state(store, document, candidate, task=None):
             # immutable task already records the preservation reference; derive
             # it without rewriting historical candidate objects.
             expected = {**expected, 'blueprint_ref':target_reference}
-            if basis and adoptions and target == candidate['result_ref']:
+            if basis and adopted and target == candidate['result_ref']:
                 # Its own explicit adoption is an allowed transition, so the
                 # adopted sample remains usable for further style expansion.
                 basis = {**basis, 'blueprint_ref':target_reference}
@@ -240,7 +273,7 @@ def _state(store, document, candidate, task=None):
             # immutable request. Its own adoption may change the output slot,
             # never the consumed Page/Plan/style context.
             from .visual_dependencies import plan_visual_projection
-            dispatched = load_snapshot(store, task['dispatch_revision'])
+            dispatched = (read_snapshot or (lambda rev: load_snapshot(store, rev)))(task['dispatch_revision'])
             try:
                 if plan_visual_projection(store, document, [candidate['page_id']]) != plan_visual_projection(store, dispatched, [candidate['page_id']]):
                     changed.append('content_plan_role')
@@ -251,7 +284,15 @@ def _state(store, document, candidate, task=None):
                 changed.append('unverifiable_visual_inputs')
     return {'generation_basis': {'status': 'changed' if changed else 'current', 'changed_fields': changed},
             'adoption_target': {'status': 'missing_page' if entry is None else 'unchanged' if target == candidate['target_ref'] else 'changed',
-                                'original_ref': candidate['target_ref'], 'current_ref': target},
+                                'original_ref': candidate['target_ref'], 'current_ref': target}}
+
+
+
+def _state(store, document, candidate, task=None):
+    adoptions = [r['revision_id'] for r in document.get('candidate_adoptions', []) if r['candidate_id'] == candidate['candidate_id']]
+    from .current_relationship import candidate_relationship
+    basis = basis_state(store, document, candidate, task, adopted=bool(adoptions))
+    return {**basis, 'current_relation': candidate_relationship(document, task, basis),
             'adopted_revisions': adoptions, **_decision_projection(store, document, candidate, adoptions),
             'status': 'adopted' if adoptions else 'available'}
 
@@ -500,7 +541,11 @@ def show(project, *, candidate_id, revision=None):
             change = store.read_object_json(task['change_binding']['change_ref'])
             change_plan = store.read_object_json(change['plan_ref']); validate_schema('change_plan', change_plan)
             sources = change_plan['input'].get('references', [])
-            files = _reference_files(store, document, sources)
+            # Match dispatch's frozen recipe semantics: v3 submits original
+            # reference bytes; historical v1/v2 tasks submit derived previews.
+            recipe_ref = change_plan['input'].get('style_recipe_ref')
+            original = bool(recipe_ref and store.read_object_json(recipe_ref)['schema_version'] == 'style_recipe.v3')
+            files = _reference_files(store, document, sources, original=original)
             target_ref = task['stage_request'].get('target_reference_ref')
             expected_files = files
             if target_ref:
@@ -528,8 +573,11 @@ def show(project, *, candidate_id, revision=None):
 @operations.public
 def listing(project, *, page_id=None, revision=None):
     store = Store(project_path(project)); document = load_snapshot(store, revision)
+    from .read_facts import ReadFacts
+    store = ReadFacts(store, document)
+    records = _records(store, document)
     rows = []
-    for candidate, ref, task in _records(store, document).values():
+    for candidate, ref, task in records.values():
         if page_id is not None and candidate.get('page_id') != page_id:
             continue
         state = _state(store, document, candidate, task)
@@ -539,7 +587,7 @@ def listing(project, *, page_id=None, revision=None):
         if not reason and task.get('stage_request', {}).get('icon_recipe_ref'):
             try:
                 # The same actual-PPT and scope gates used by adoption planning.
-                _plan(store, document, [candidate['candidate_id']])
+                _plan(store, document, [candidate['candidate_id']], records=records)
             except operations.OperationError as exc:
                 reason = exc.error_code
         change_ref = task.get('change_binding', {}).get('change_ref')
@@ -575,8 +623,10 @@ class AdoptionConflict(operations.OperationError):
         return value
 
 
-def _plan(store, document, candidate_ids):
-    records = _records(store, document)
+def _plan(store, document, candidate_ids, *, records=None):
+    read_records = records
+    if records is None:
+        records = _records(store, document)
     if len(candidate_ids) != len(set(candidate_ids)):
         raise operations.OperationError('candidate_invalid', 'candidate_ids', 'select each candidate once')
     selected = [_lookup(records, cid) for cid in candidate_ids]
@@ -616,7 +666,10 @@ def _plan(store, document, candidate_ids):
             continue
         if task.get('stage_request', {}).get('icon_recipe_ref'):
             from .candidate_preview import require_ready
-            require_ready(store.project_root, candidate['candidate_id'])
+            if read_records is None:
+                require_ready(store.project_root, candidate['candidate_id'])
+            else:
+                require_ready(store.project_root, candidate['candidate_id'], read_context=(store, document, records))
             recipe_ref = task['stage_request']['icon_recipe_ref']
             from .icons import _owned, _sample
             recipe, _ = _owned(store, document, ref=recipe_ref)
@@ -915,8 +968,6 @@ def decide(project, *, input, base_revision, operation_id):
     if not isinstance(input, dict):
         raise operations.OperationError('invalid_input', 'input', 'decision request must be an object')
     from . import eligibility
-    gate_store = Store(project_path(project))
-    eligibility.guard(gate_store, gate_store.load_document(), "candidate.select")
     if input.get('schema_version') != 'candidate_decision.v1':
         raise operations.OperationError('invalid_input', 'input/schema_version',
                                         'decision requests use candidate_decision.v1')
@@ -938,6 +989,7 @@ def decide(project, *, input, base_revision, operation_id):
         previous = operations.recover(store, operation_id, digest)
         if previous:
             return previous
+        eligibility.guard(store, document, "candidate.select")
         if (base_revision != document['revision_id'] or input.get('base_revision') != base_revision
                 or input.get('project_id') != document['project_id']):
             raise operations.OperationError('conflict', 'base_revision',

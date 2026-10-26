@@ -360,19 +360,57 @@ class Store:
             require_writer(document, "rc3-entry.v1")
         # New Task execution contracts and their writer floor share this pointer
         # swap, including initial create and every producer/dispatch path.
+        classification = {}
+        def classified(ref):
+            key = (ref['path'], ref['sha256'])
+            if key not in classification:
+                classification[key] = self.read_object_json(ref)
+            return classification[key]
         if (WRITER_RANK.get(document.get("compatibility", {}).get("minimum_writer"), -1)
                 < WRITER_RANK["rc4-content.v1"] and
-                any("method_manifest" in self.read_object_json(ref) for ref in document.get("tasks") or [])):
+                any("method_manifest" in classified(ref) for ref in document.get("tasks") or [])):
             from .models import require_writer
             document = copy.deepcopy(document)
             require_writer(document, "rc4-content.v1")
         from .resource_catalog import needs_catalog_writer
         if (WRITER_RANK.get(document.get("compatibility", {}).get("minimum_writer"), -1)
                 < WRITER_RANK["method-catalog.v1"] and
-                any(needs_catalog_writer(self.read_object_json(ref)) for ref in document.get("tasks") or [])):
+                any(needs_catalog_writer(classified(ref)) for ref in document.get("tasks") or [])):
             from .models import require_writer
             document = copy.deepcopy(document)
             require_writer(document, "method-catalog.v1")
+        from .production import stored_blueprint_request
+        policy_prepared = False
+        assets_prepared = False
+        if WRITER_RANK.get(document.get("compatibility", {}).get("minimum_writer"), -1) < WRITER_RANK["asset-inputs.v1"]:
+            for task_ref in document.get("tasks", []):
+                task = classified(task_ref)
+                if task.get("kind") == "blueprint":
+                    request, _ = stored_blueprint_request(self, task)
+                    if request and "design_policy" in request.get("resolved_design_context", {}):
+                        policy_prepared = True
+                    if request and "asset_inputs" in request.get("resolved_design_context", {}):
+                        assets_prepared = True
+                        break
+        # Persisting these fields requires a writer that preserves their consumption.
+        # Reads and legacy commits do not manufacture a new policy or writer floor.
+        page_policy = policy_prepared or any("layout_page_ids" in style for style in
+                document.get("design_context", {}).get("styles", []))
+        page_assets = assets_prepared
+        for entry in document.get("pages", []):
+            if page_policy and page_assets:
+                break
+            visual = classified(entry["page"]).get("visual_spec", {})
+            page_policy = page_policy or "design_policy" in visual or "layout_notes" in visual.get("design_overrides", {})
+            page_assets = page_assets or "selected_asset_ids" in visual.get("design_overrides", {})
+        if page_policy:
+            from .models import require_writer
+            document = copy.deepcopy(document)
+            require_writer(document, "design-policy.v1")
+        if page_assets:
+            from .models import require_writer
+            document = copy.deepcopy(document)
+            require_writer(document, "asset-inputs.v1")
         validate_document_semantics(document)
         change = document.get("change") or {}
         change_operation = operation_id or change.get("operation_id") or ""
@@ -425,14 +463,16 @@ class Store:
         _atomic_write_bytes(self.deck_root / "current.json", canonical_json_bytes(pointer))
         return document["revision_id"]
 
-    def operation_receipt(self, operation_id: str) -> dict[str, Any] | None:
+    def operation_receipt(self, operation_id: str, *, reader=None) -> dict[str, Any] | None:
         """Recover only facts saved with the committed pointer, never an orphan.
 
         Older changes have no request digest. Do not infer one from their ID.
         The operations directory is a rebuildable cache, not another ledger.
         """
         from .operations import resolve_operation, lookup_error
-        found = resolve_operation(self, operation_id)
+        if reader is not None and reader.store is not self:
+            raise ValueError("operation reader belongs to another store")
+        found = reader.resolve(operation_id) if reader is not None else resolve_operation(self, operation_id)
         if found.state == 'unknown':
             if found.reason == 'legacy_receipt_only':
                 return None

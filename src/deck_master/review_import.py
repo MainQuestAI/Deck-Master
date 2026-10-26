@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+import json
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 
@@ -65,9 +66,9 @@ def _report(external_report, *, verify_sources=True):
     return report
 
 
-def _context(project, report, artifact_revision):
-    store = Store(project)
-    control = store.load_document()
+def _context(project, report, artifact_revision, *, store=None, control=None):
+    store = store if store is not None else Store(project)
+    control = control if control is not None else store.load_document()
     artifact = load_snapshot(store, artifact_revision) if artifact_revision else control
     original = report["source_manifest"].get("original_project_id")
     if original not in (None, control["project_id"]):
@@ -100,19 +101,32 @@ def _context(project, report, artifact_revision):
 def describe_bindings(project, *, external_report, artifact_revision=None):
     report = _report(external_report)
     store, control, artifact, refs = _context(project, report, artifact_revision)
+    return _describe_bindings(store, control, artifact, refs, report)
+
+
+def _describe_bindings(store, control, artifact, refs, report):
+    facts, index = {}, {}
+    for ref in refs if report.get('subjects') else []:
+        key = models.canonical_json_bytes(ref)
+        if key not in facts:
+            raw = store.read_object_bytes(ref)
+            try:
+                obj = json.loads(raw.decode('utf-8'))
+                file_sha = (obj.get('file') or {}).get('sha256')
+            except (ValueError, TypeError, UnicodeError):
+                file_sha = None
+            if not isinstance(file_sha, str):
+                file_sha = None
+            facts[key] = file_sha
+        file_sha = facts[key]
+        for sha in dict.fromkeys((ref['sha256'], file_sha)):
+            if sha is not None:
+                index.setdefault(sha, []).append((ref, file_sha))
     matches = []
     for subject in report.get("subjects", []):
-        for ref in refs:
-            raw = store.read_object_bytes(ref)
-            file_sha = None
-            try:
-                obj = store.read_object_json(ref)
-                file_sha = (obj.get("file") or {}).get("sha256")
-            except (ValueError, TypeError, UnicodeError):
-                pass
-            if subject["sha256"] in (ref["sha256"], file_sha):
-                matches.append({"source_uri": subject["source_uri"], "source_sha256": subject["sha256"],
-                    "target_ref": ref, **({"target_file_sha256": file_sha} if file_sha and subject["sha256"] == file_sha else {})})
+        for ref, file_sha in index.get(subject['sha256'], []):
+            matches.append({"source_uri": subject["source_uri"], "source_sha256": subject["sha256"],
+                "target_ref": ref, **({"target_file_sha256": file_sha} if file_sha and subject["sha256"] == file_sha else {})})
     return {"project_id": control["project_id"], "artifact_revision_id": artifact["revision_id"],
         "control_revision_id": control["revision_id"], "source_bindings": matches,
         "limitations": ["Bindings prove bytes, not reviewer identity or professional approval"]}
@@ -121,6 +135,9 @@ def describe_bindings(project, *, external_report, artifact_revision=None):
 def import_report(project, *, external_report, source_bindings, evidence, base_revision,
                   operation_id, artifact_revision=None, adapter_context=None):
     report = _report(external_report, verify_sources=False)
+    if 'engineering_packet_sha256' in report:
+        from .review_handoff import _reviews
+        _reviews(report)
     store = Store(project)
     payload = {"external_report": external_report, "source_bindings": source_bindings,
                "evidence": evidence, "artifact_revision": artifact_revision}
@@ -133,14 +150,13 @@ def import_report(project, *, external_report, source_bindings, evidence, base_r
         _report(external_report)
         if base_revision != control["revision_id"]:
             raise ConflictError("base_revision", "review import base changed")
-        _, _, artifact, refs = _context(project, report, artifact_revision)
+        _, _, artifact, refs = _context(project, report, artifact_revision, store=store, control=control)
         if not isinstance(source_bindings, list) or not source_bindings:
             raise models.ModelError("source_bindings", "explicit source bindings are required")
         admissible = {(ref["path"], ref["sha256"]) for ref in refs}
         available = {(item["source_uri"], item["source_sha256"],
             item["target_ref"]["path"], item["target_ref"]["sha256"])
-            for item in describe_bindings(project, external_report=external_report,
-                                          artifact_revision=artifact_revision)["source_bindings"]}
+            for item in _describe_bindings(store, control, artifact, refs, report)["source_bindings"]}
         mapping = {}
         for row in source_bindings:
             ref = row.get("target_ref") or {}
@@ -164,12 +180,19 @@ def import_report(project, *, external_report, source_bindings, evidence, base_r
         collaboration._require_stored_evidence_refs(store, resolved, "review.import/evidence")
         report_ref = store.put_blob(models.canonical_json_bytes(report), ext="json")
         reviews = []
+        base_digests = None
         for original in report.get("reviews", []):
             review = copy.deepcopy(original)
             selected = review.get("subjects") or []
             if not selected:
                 raise models.ModelError("external_report/reviews/subjects", "each review names its exact source subjects")
             review["subjects"] = [mapping[(item["source_uri"], item["sha256"])] for item in selected]
+            if 'engineering_packet_sha256' in report:
+                from .review_handoff import imported_review_id
+                review['review_id'] = imported_review_id(external_report['report_sha256'], original['review_id'])
+                for finding in review.get('findings') or []:
+                    finding['evidence'] = [mapping[(item['source_uri'], item['sha256'])]
+                                           for item in finding.get('evidence') or []]
             reviewer = review.setdefault("reviewer", {})
             from .delivery_eligibility import human_evidence_status, required_professional_dependencies
             human = reviewer.get("type") in ("human_internal", "human_external")
@@ -191,13 +214,16 @@ def import_report(project, *, external_report, source_bindings, evidence, base_r
             models.validate_review_semantics(review)
             from .editing import _current_artifact_digests
             from .review import dependency_problems
-            digests = _current_artifact_digests(store, artifact)
+            if base_digests is None:
+                base_digests = _current_artifact_digests(store, artifact)
+            digests = dict(base_digests)
             bound_pages = [entry for entry in artifact["pages"] if entry["page"] in review["subjects"]]
             required = {f"content:page:{entry['page_id']}": entry["page"]["sha256"] for entry in bound_pages}
             if review.get("review_stage") == "preproduction":
                 from .content_review import _require_subject_binding, requirement_state
                 try:
-                    _require_subject_binding(store, artifact, review, [entry["page_id"] for entry in bound_pages])
+                    _require_subject_binding(store, artifact, review,
+                        [entry["page_id"] for entry in bound_pages], artifact_digests=base_digests)
                 except models.ModelError as exc:
                     if getattr(exc, "path", "").endswith("dependencies"):
                         raise ConflictError("external_report/reviews/dependencies", "review dependencies are incomplete or stale") from exc

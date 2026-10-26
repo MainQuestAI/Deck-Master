@@ -67,6 +67,11 @@ def describe(project) -> dict:
     Browsing a project or diagnosing it never writes anything."""
     store = Store(Path(project).expanduser())
     document = store.load_document()
+    return describe_snapshot(store, document)
+
+
+def describe_snapshot(store, document):
+    """Read migration facts from the caller's exact immutable snapshot."""
     plan = migration_plan(store, document)
     return {
         "project_id": document["project_id"],

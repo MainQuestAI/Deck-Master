@@ -149,6 +149,20 @@ def settle_fidelity_review(project, *, page_ids, execution_ref, scenario):
             'independence_confirmed': False, 'identity_receipt': None, 'evidence_ref': evidence, 'assurance': 'host_attested'},
         'observations': ['L1 synthetic fidelity check: ' + scenario], 'findings': [],
         'created_at': '2026-10-15T00:00:00Z', 'replaces': None} for kind in dispatched['units']]
+    # Rechecks follow the actual frozen workorder, including distinct historical
+    # owners. This clean-fidelity fixture must never erase nonempty findings.
+    packet = store.read_object_json(dispatched['review_draft_ref'])
+    owners = (packet.get('review_scope') or {}).get('owners') or []
+    owned_reviews = []
+    for review in reviews:
+        matching = [owner for owner in owners if owner['kind'] == review['kind']]
+        if not matching:
+            owned_reviews.append(review)
+        for owner in matching:
+            previous = store.read_object_json(owner['review_ref'])
+            assert previous['findings'] == [], 'This clean fixture cannot close an actual historical finding'
+            owned_reviews.append({**review, 'review_id': previous['review_id'], 'replaces': owner['review_ref']})
+    reviews = owned_reviews
     response = submit_host_fixture(project, task_id=task['task_id'], execution_ref=execution_ref,
         host_declaration={'supported_protocols': [task['protocol_version']], 'capabilities': task['required_capabilities']},
         result_payload={'kind': 'review', 'files': [], 'pages': [], 'page_order': [], 'artifact_specs': [],

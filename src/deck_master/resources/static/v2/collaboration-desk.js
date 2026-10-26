@@ -1,3 +1,4 @@
+import {currentWork} from './current-work.js';
 import {get, post, canonical, readableError, ApiError} from './api.js';
 import {el, button, modal, version, field, downloadJSON} from './dom.js';
 import {pageText} from './page-text.js';
@@ -11,7 +12,13 @@ const states = {in_progress: '内容进行中', awaiting_decision: '内容待决
 const roles = {user: '用户', content: '内容制作', reviewer: '审阅者', host: '制作工具', design: '设计制作', owner: '项目负责人', caller: '发起人', runtime: '工作台'};
 const topics = {direction:'论证方向',manuscript:'确认稿',speech:'口播要求',style:'风格要求',tradeoff:'取舍',delivery_acceptance:'交付接受',policy:'工作政策'};
 const dispositions = {accepted:'已接受',rejected:'已拒绝',deferred:'暂缓',active:'当前记录',withdrawn:'已撤回',superseded:'已由新记录接续'};
+export const isDesignPlan = completion => completion?.checks?.some(check => check.kind === 'requested_design_plan') === true;
+export const completionLabel = completion => isDesignPlan(completion)
+  ? ({completed:'本次设计方案已完成',in_progress:'设计方案准备中',awaiting_decision:'设计方案待决定',needs_recovery:'设计方案依据待核实'}[completion.state] || '设计方案状态待核实')
+  : states[completion?.state] || '内容状态未分类';
 function nextAction(value, codes=[]) {
+  if(value==='return_requested_design')return '查看约定设计方案；图稿制作需要新的明确请求与范围。';
+  if(value==='prepare_requested_design')return '准备并确认本次设计方案，保留当前页面；本请求不包含图稿制作。';
   if(value==='return_requested_content')return '阅读约定内容。本次内容工作已正常结束。';
   if(codes.includes('needs_reviewer'))return '安排符合要求的审阅者，继续阅读保留的稿件与报告。';
   if(codes.includes('decision_needed'))return '核对实际稿件与取舍后，记录对应范围的明确决定。';
@@ -39,8 +46,10 @@ export function admissionView(app, error) {
   const facts = error.details || {};
   const card = facts.decision_card_ref_or_projection || facts.decision_card;
   const report = error.result?.report || error.result?.readable_report || error.result;
+  const counts = facts.preproduction || facts;
   return el('div', {class: 'collaboration-admission stack', role: 'alert'},
     el('p', {class: 'field-error'}, readableError(error)),
+    findingCountView(counts),
     el('p', {}, '当前稿件、可读报告和本次输入均保留。'),
     (facts.effective_scope||facts.scope) && scopeView(app, facts.effective_scope||facts.scope),
     facts.responsible_role && el('p', {}, '下一责任：' + (roles[facts.responsible_role] || facts.responsible_role)),
@@ -50,34 +59,73 @@ export function admissionView(app, error) {
     details('错误依据与范围', {path: error.path || error.field, ...facts}));
 }
 
+function findingCountView(value) {
+  return value?.status !== 'unreadable' && Number.isInteger(value?.logical_finding_count) && Number.isInteger(value?.blocking_record_count)
+    ? el('p', {}, `待处理问题 ${value.logical_finding_count} 项 · 审查记录 ${value.blocking_record_count} 条`) : null;
+}
+
 // These are editable instruction copies, never a cached grant or readiness
 // verdict. Each window keeps its own buffer; recovery copies remain selectable.
+function retainedInstructions(prefix) {
+  const copies=[];let unreadable=false;
+  try {
+    for(const key of Object.keys(localStorage).filter(item=>item.startsWith(prefix))){
+      try {
+        const copy=JSON.parse(localStorage.getItem(key));
+        if(copy&&typeof copy==='object'&&!Array.isArray(copy))copies.push({...copy,storageKey:key});
+        else unreadable=true;
+      } catch {unreadable=true;}
+    }
+  } catch {unreadable=true;}
+  return {copies,unreadable};
+}
+
+function clearConfirmedInstructions(prefix, operationId, currentKey=null) {
+  const retained=retainedInstructions(prefix),removed=new Set();let complete=!retained.unreadable;
+  const keys=new Set(retained.copies.filter(copy=>copy.pending?.payload?.operation_id===operationId).map(copy=>copy.storageKey));
+  if(currentKey)keys.add(currentKey);
+  for(const key of keys){
+    try {localStorage.removeItem(key);removed.add(key);} catch {complete=false;}
+  }
+  return {removed,complete};
+}
+
 function instructionBuffer(app, action) {
   const prefix = `deck-master:v3:control-draft:${app.info.project_identity}:${action}:`;
   const key = prefix + crypto.randomUUID();
   const text = field('本次明确要求（必填）', el('textarea', {rows: 4, required: true, autocomplete: 'off'}), '只记录这次指令。保存副本不会开始制作或授予权限。');
   const status = el('p', {class: 'muted', role: 'status'});
   const recovery = el('select', {'aria-label': '恢复本机的请求文字'}, el('option', {value: ''}, '选择保留的请求文字'));
-  const copies = []; let currentPending = null;
-  try {
-    for (const entry of Object.keys(localStorage).filter(item => item.startsWith(prefix))) {
-      const copy = JSON.parse(localStorage.getItem(entry));
-      if (typeof copy.text === 'string') copies.push(copy);
-    }
-  } catch { status.textContent = '部分本机副本暂不可读。请保留输入并下载副本。'; }
+  const retained=retainedInstructions(prefix),copies=retained.copies.filter(copy=>typeof copy.text==='string');let currentPending=null;
+  if(retained.unreadable)status.textContent='部分本机副本暂不可读。请保留输入并下载副本。';
   copies.forEach((copy, index) => recovery.append(el('option', {value: String(index)}, (copy.pending?'提交结果待核实 · ':'')+(copy.text.slice(0, 70) || '空白请求'))));
   const save = () => {
     try { localStorage.setItem(key, JSON.stringify({text: text.input.value,pending:currentPending})); status.textContent = currentPending?'原请求已保留在本机；提交结果待核实。':'请求文字副本已保留在本机；保存副本不会提交。'; return true; }
     catch { status.textContent = '本机保存未完成。请复制文字或下载副本后再关闭。'; return false; }
   };
-  const buffer={input:text.input,save,setPending(value){currentPending=value;return save();},
+  const buffer={input:text.input,save,complete(operationId){
+    const cleared=clearConfirmedInstructions(prefix,operationId,key);
+    currentPending=null;
+    for(const option of [...recovery.options]){
+      if(option.value!==''&&cleared.removed.has(copies[Number(option.value)]?.storageKey))option.remove();
+    }
+    recovery.value='';
+    status.textContent=cleared.complete?'请求已确认；对应本机副本已清理。':'请求已确认；部分本机副本未清理，可手动处理。';
+  },setPending(value){currentPending=value;return save();},
     lock(value){text.input.readOnly=value;recovery.disabled=value;},onRestore:null};
   recovery.addEventListener('change', () => { if (recovery.value !== '') {
     const copy=copies[Number(recovery.value)];text.input.value=copy.text;currentPending=copy.pending||null;save();buffer.onRestore?.(copy);
   } });
   text.input.addEventListener('input', save);
   buffer.node=el('div', {class: 'stack'}, text.node, status, copies.length > 0 && recovery,
-    button('下载请求文字', () => downloadJSON({instruction_text:text.input.value,pending:currentPending}, 'deck-master-request-draft.json')));
+    button('下载请求文字', () => downloadJSON({instruction_text:text.input.value,pending:currentPending}, 'deck-master-request-draft.json')),
+    button('删除选中的恢复副本',()=>{
+      const copy=copies[Number(recovery.value)];
+      if(recovery.value===''||!copy)return;
+      if(copy.pending){status.textContent='该副本的提交结果待核实，请先核实原请求。';return;}
+      try{localStorage.removeItem(copy.storageKey);recovery.selectedOptions[0].remove();recovery.value='';status.textContent='选中的恢复副本已删除，当前输入保留。';}
+      catch{status.textContent='副本未删除，请保留当前输入。';}
+    }));
   return buffer;
 }
 
@@ -125,7 +173,7 @@ function controlForm(app, {title, action, path, body, explanation, build, initia
       if(action==='request.start'&&!onSuccess)status.append(button('读取下一工作单',()=>{dialog.close();continueWork(app);}));
       onSuccess?.(result,response,{dialog,status});
       submit.hidden = true;
-      instruction.setPending(null);
+      instruction.complete(pending.operation_id);
       app.root.dispatchEvent(new CustomEvent('business-state-changed'));
       return result;
     } catch (error) {
@@ -189,17 +237,29 @@ export async function requestForm(app, {source = null, transition = null} = {}) 
       ...(transition==='next_variant'?{variant:{...current?.variant,variant_id:variantId.input.value,label:label.input.value}}:{})}})});
 }
 
-function stateDetails(app) {
+async function stateDetails(app) {
+  const panel = el('div', {class:'stack', role:'status'}, '正在读取本次工作与范围…');
+  const dialog = modal('本次工作与范围', panel);
+  let info;
+  try {
+    info = await get('/api/project?details=1');
+    if (!dialog.open || !panel.isConnected) return;
+    if (info.project_identity !== app.info.project_identity) throw new Error('服务中的项目身份已变化，请重新打开。');
+    app.info = info;
+    await app.refreshCurrentWork(info, () => dialog.open && panel.isConnected);
+    if (!dialog.open || !panel.isConnected) return;
+  } catch (error) {
+    if (dialog.open && panel.isConnected) panel.replaceChildren(el('p', {class:'field-error'}, readableError(error)),
+      button('重试读取', () => { dialog.close(); stateDetails(app); }));
+    return;
+  }
   const state=app.info.collaboration, request=state?.request, completion=app.info.completion;
   const nativeReviewNeeded=(state?.blocking_cards||[]).some(card=>(card.decision?.reason_codes||[])
     .some(code=>['needs_reviewer','preproduction_blocked'].includes(code)));
   const body=el('div',{class:'stack'},el('p',{},'下面显示当前控制事实。正在阅读的历史稿和固定比较不会随控制变化而替换。'),
+    currentWork(app),
     scopeView(app,request?.scope),
     request?.pause_reason&&el('p',{class:'field-error'},'暂停原因：'+request.pause_reason),
-    completion&&el('section',{class:'stack'},el('h3',{},states[completion.state]||'内容状态未分类'),
-      el('p',{},'约定产物：'+(contentIntents[completion.content_intent]||intents[completion.intent]||'见当前请求')),
-      completion.responsible_role&&el('p',{},'下一责任：'+(roles[completion.responsible_role]||completion.responsible_role)),
-      completion.next_action&&el('p',{},'下一步：'+nextAction(completion.next_action,completion.state==='needs_reviewer'?['needs_reviewer']:[])),details('产物、检查与缺口',completion)),
     nativeReviewNeeded&&app.summary.pages.length>0&&['full_deck','edit'].includes(request?.intent)&&!request?.closed&&!request?.paused&&!app.info.sample?.readonly&&button('独立审阅当前内容',()=>{document.querySelector('#modal').close();nativeReviewForm(app);}),
     el('section',{class:'stack'},el('h3',{},'决定与后续影响'),(state?.decisions||[]).length?(state.decisions.map(decision=>el('article',{class:'collaboration-record'},
       el('strong',{},topics[decision.topic]||'决定'),el('p',{},[dispositions[decision.disposition],dispositions[decision.status]].filter(Boolean).join(' · ')||'状态未记录'),
@@ -210,7 +270,7 @@ function stateDetails(app) {
       auth.status!=='revoked'&&button('撤回此授权',()=>{
         document.querySelector('#modal').close();
         controlForm(app,{title:'撤回此授权',action:'revoke',path:'/collaboration/authorizations/'+encodeURIComponent(auth.authorization_id)+'/revoke',
-          body:scopeView(app,auth.scope),explanation:'撤回后停止该授权及其下级的后续采用和制作。已发生调用与费用保留；其它授权不能接管原任务。',build:instruction_evidence=>({evidence:instruction_evidence,reason:instruction_evidence.text})});
+          body:scopeView(app,auth.scope),explanation:'撤回后停止该授权及其下级的后续采用和制作。已发生调用与费用保留；其它授权不能接管原任务。仍有效的本次请求可继续范围内的零调用修稿；如需停止整个请求，请使用“暂停本次请求”。',build:instruction_evidence=>({evidence:instruction_evidence,reason:instruction_evidence.text})});
       },false,{disabled:Boolean(app.info.sample?.readonly)})))),
     controlRecovery(app),requestControls(app),
     request&&!request.closed&&!app.info.sample?.readonly&&button('选择内容审阅方式',()=>{document.querySelector('#modal').close();reviewPolicyForm(app);}),
@@ -218,7 +278,7 @@ function stateDetails(app) {
     !app.info.sample?.readonly&&button('导入确认稿',()=>{document.querySelector('#modal').close();draftImportForm(app);}),
     app.health.ui_capabilities?.includes('external_review.v1')&&button('只读审阅稿件',()=>{document.querySelector('#modal').close();externalReviewForm(app);}),
     details('当前控制与请求身份',{control_revision_id:app.info.control_revision_id,reading_revision_id:app.route.revision,...state}));
-  modal('本次工作与范围',body);
+  panel.replaceChildren(body);
 }
 
 function nativeReviewForm(app) {
@@ -229,8 +289,9 @@ function nativeReviewForm(app) {
     start.disabled=true;status.replaceChildren(el('p',{},'独立审阅进行中，请等待实际结果。'));
     try {
       const result=await post('/api/reviews/native',{});
+      const count=findingCountView(result.preproduction);
       status.replaceChildren(el('p',{},result.status==='running'?'已有审阅执行，请核对任务状态。':
-        result.preproduction?.status==='pass'?'当前内容前审已通过，可按现有授权继续制作。':'审阅已完成，请处理报告中的具体问题。'),details('实际审阅结果',result),
+        result.preproduction?.status==='pass'?'当前内容前审已通过，可按现有授权继续制作。':'审阅已完成，请处理报告中的具体问题。'),...(count?[count]:[]),details('实际审阅结果',result),
         button('重新读取当前状态',()=>{dialog.close();app.loadRoute({...app.route});}));
       app.root.dispatchEvent(new CustomEvent('business-state-changed'));
     } catch(error) {status.replaceChildren(admissionView(app,error));}
@@ -378,21 +439,22 @@ export function collaborationBanner(app) {
   if(!app.info.collaboration)return null;
   const state=app.info.collaboration,request=state.request,completion=app.info.completion;
   const revoked=(state.authorizations||[]).some(auth=>auth.status==='revoked');
-  const label=!state.migrated?'需要升级控制记录':request?.paused?'本次请求已暂停':completion?.state==='completed'&&(!request?.closed||request.closed_reason==='completed')?'本次内容已完成':request?.closed?'本次请求已结束':completion?states[completion.state]||'本次内容状态待核实':request?'本次请求已记录':'尚无本次请求';
+  const label=!state.migrated?'需要升级控制记录':request?.paused?'本次请求已暂停':completion?.state==='completed'&&(!request?.closed||request.closed_reason==='completed')?completionLabel(completion):request?.closed?'本次请求已结束':completion?completionLabel(completion):request?'本次请求已记录':'尚无本次请求';
   return el('section',{class:'collaboration-control','aria-label':'本次工作状态'},
     button(label+(revoked?' · 存在已撤回授权':''),()=>stateDetails(app),false,{'aria-label':'查看本次工作与范围',title:'查看本次工作与范围 · '+label}));
 }
 
 function requestControls(app) {
-  const state=app.info.collaboration,request=state?.request;
+  const state=app.info.collaboration,request=state?.request,completion=app.info.completion;
+  const plan=app.summary.current_work?.next.surface==='style';
   const open=run=>{document.querySelector('#modal')?.close();run();};
   return el('div',{class:'row wrap'},
       !state?.migrated?button('查看升级影响',()=>open(()=>migrationForm(app)),false,{disabled:Boolean(app.info.sample?.readonly)}):
       [request&&!request.closed&&button(request.paused?'恢复本次请求':'暂停本次请求',()=>open(()=>controlForm(app,{
         title:request.paused?'恢复本次请求':'暂停本次请求',action:request.paused?'resume':'pause',path:'/collaboration/request/'+(request.paused?'resume':'pause'),
-        body:scopeView(app,request.scope),explanation:request.paused?'恢复只继续原请求的有效范围，撤回、费用和缺口均保留。':'暂停将阻止新的制作与采用；读取、取消和已发生调用结算仍可进行。',
+        body:scopeView(app,request.scope),explanation:request.paused?'恢复只继续原请求的有效范围，撤回、费用和缺口均保留。':'暂停将阻止新的制作、采用与正式交付，包括已固定的旧文件；读取、取消和已发生调用结算仍可进行。',
         build:evidence=>({request_id:request.request_id,evidence,...(!request.paused?{reason:evidence.text}:{})})})),false,{disabled:Boolean(app.info.sample?.readonly)}),
-      request&&button('读取下一工作单',()=>open(()=>continueWork(app)),false,{disabled:Boolean(app.info.sample?.readonly)}),
+      request&&!plan&&app.summary.current_work&&button('读取下一工作单',()=>open(()=>continueWork(app)),false,{disabled:Boolean(app.info.sample?.readonly)}),
       button('开始新的明确请求',()=>open(()=>requestForm(app)),false,{disabled:Boolean(app.info.sample?.readonly)})]);
 }
 
@@ -407,8 +469,8 @@ function continueWork(app) {
     try{
       const envelope=await post(projectAPI(app)+'/continue',{}),result=resultOf(envelope),completion=result.completion;
       const pending=result.pending_tasks||[];
-      status.replaceChildren(el('div',{class:'stack'},el('h3',{},completion?.state==='completed'?'本次内容已完成':pending.length?`有 ${pending.length} 项工作单待处理`:'当前工作仍需处理缺口'),
-        completion?.state==='completed'&&el('p',{},'约定内容已正常返回；本次读取没有继续派发原图制作。'),
+      status.replaceChildren(el('div',{class:'stack'},el('h3',{},completion?.state==='completed'?completionLabel(completion):pending.length?`有 ${pending.length} 项工作单待处理`:'当前工作仍需处理缺口'),
+        completion?.state==='completed'&&el('p',{},isDesignPlan(completion)?'约定设计方案已返回；本次请求不包含原图制作。':'约定内容已正常返回；本次读取没有继续派发原图制作。'),
         pending.map(task=>el('article',{class:'collaboration-record'},el('strong',{},({compose:'内容整理',blueprint:'原图制作',reconstruct:'SVG 重建',review:'稿件审阅'})[task.kind]||'待处理工作单'),
           el('p',{},`明确范围 ${task.scope_pages?.length||0} 页；尚未由这次读取开始制作。`),details('工作单要求、范围与依据',task),
           button('查看工作单',()=>{dialog.close();app.go({surface:'runs',runs_area:'tasks',task_id:task.task_id,revision:result.revision_id||envelope.artifact_revision_id});}))),
@@ -424,13 +486,12 @@ function continueWork(app) {
 
 function controlRecovery(app) {
   const prefix=`deck-master:v3:control-draft:${app.info.project_identity}:`,copies=new Map();
-  try{
-    for(const key of Object.keys(localStorage).filter(value=>value.startsWith(prefix))){
-      const copy=JSON.parse(localStorage.getItem(key)),pending=copy.pending;
-      if(pending?.payload?.operation_id&&pending.path?.startsWith(projectAPI(app)+'/'))copies.set(pending.payload.operation_id,pending);
-    }
-  }catch{return button('核实请求副本',()=>modal('请求副本暂不可读',el('p',{},'本机副本保持原样。请保留恢复文件并核实原请求，不要重复派发。')));}
-  if(!copies.size)return null;
+  const retained=retainedInstructions(prefix);
+  for(const copy of retained.copies){
+    const pending=copy.pending;
+    if(pending?.payload?.operation_id&&pending.path?.startsWith(projectAPI(app)+'/'))copies.set(pending.payload.operation_id,pending);
+  }
+  if(!copies.size)return retained.unreadable?button('核实请求副本',()=>modal('请求副本暂不可读',el('p',{},'本机副本保持原样。请保留恢复文件并核实原请求，不要重复派发。'))):null;
   return button(`核实已保留的请求（${copies.size}）`,()=>{
     document.querySelector('#modal')?.close();
     const rows=el('div',{class:'stack'});
@@ -440,11 +501,9 @@ function controlRecovery(app) {
         verify.disabled=true;
         try{
           const response=await post(pending.path,pending.payload);
-          for(const key of Object.keys(localStorage).filter(value=>value.startsWith(prefix))){
-            const copy=JSON.parse(localStorage.getItem(key));
-            if(copy.pending?.payload?.operation_id===operation)localStorage.setItem(key,JSON.stringify({...copy,pending:null}));
-          }
+          const cleared=clearConfirmedInstructions(prefix,operation);
           status.replaceChildren(el('p',{},'原请求回执已核实。是否允许下一动作仍按当前控制重新判断。'),details('原操作回执',response),button('重新读取当前状态',()=>{dialog.close();app.loadRoute({...app.route});}));
+          if(!cleared.complete)status.append(el('p',{class:'muted'},'部分本机副本未清理，可手动处理。'));
         }catch(error){status.replaceChildren(admissionView(app,error));verify.disabled=false;}
       });
       rows.append(el('article',{class:'collaboration-record'},el('p',{},'提交结果待核实；固定版本、对象与范围保持原样。'),details('冻结的原请求',pending),verify,status));

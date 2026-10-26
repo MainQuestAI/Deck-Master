@@ -234,3 +234,26 @@ def test_discovery_catches_new_dispatcher_actions_even_before_frontend_wiring(mo
     from deck_master.collaboration_api import _FIELDS
     monkeypatch.setitem(_FIELDS, 'unclassified.new_write', set())
     assert entries.uncovered() == {'collaboration': ['collaboration_api.invoke[unclassified.new_write]']}
+
+
+def test_new_review_and_design_entries_preserve_mutation_boundaries():
+    for surface, name, action in [
+        ('cli', 'review original', 'dispatch.host_task'),
+        ('cli', 'review recover', 'task.accept'),
+        ('public', 'native_review.recover', 'task.accept'),
+    ]:
+        row = entries.classify(surface, name)
+        assert row.action == action and row.exempt is None
+    for surface, name, reason in [
+        ('operations', 'design_entry.initial_plan', 'read_plan'),
+        ('http', '/api/design/initial-plan', 'read_plan'),
+        ('http', '/api/design/', 'internal'),
+        ('cli', 'review channels', 'install'),
+        ('cli', 'review original-status', 'read_model'),
+        ('collaboration', 'collaboration.describe_snapshot', 'read_model'),
+        ('collaboration', 'collaboration_migration.describe_snapshot', 'read_model'),
+    ]:
+        row = entries.classify(surface, name)
+        assert row.action is None and row.exempt == entries.READ_REASONS[reason]
+    # An error-handler prefix must never exempt an actual future write route.
+    assert entries.classify('http', '/api/design/new-write') is None

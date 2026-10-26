@@ -1,0 +1,1560 @@
+{
+  "version": "2026-10-23-r2",
+  "status": "planned",
+  "code_base": "afcc23d1654a6ce24583677c4de9d4a80f0f89bd",
+  "scope": "documentation-only baseline; no product implementation",
+  "issues": [
+    {
+      "number": 132,
+      "title": "[WebUI 整改] 内容工作面瀑布堆叠、操作入口过载及完成/空状态误导",
+      "state": "open",
+      "updated_at": "2026-10-22T16:59:09Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/132",
+      "owner": "RP-22",
+      "body_update_planned": true,
+      "comments": 8
+    },
+    {
+      "number": 133,
+      "title": "[WebUI Bug] 内容计划缺少可视化编辑，表单直接显示 [object HTMLElement]",
+      "state": "open",
+      "updated_at": "2026-10-22T00:43:49Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/133",
+      "owner": "RP-10",
+      "body_update_planned": false,
+      "comments": 2
+    },
+    {
+      "number": 134,
+      "title": "[Skill UX] deck-master 退出时未明确当前状态，缺少 deck-content 下一步交接与决策引导",
+      "state": "open",
+      "updated_at": "2026-10-22T16:59:15Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/134",
+      "owner": "RP-24",
+      "body_update_planned": true,
+      "comments": 7
+    },
+    {
+      "number": 135,
+      "title": "[Content UX] 规划交付缺少决策协作：方法应用说明、方案取舍、审阅问题与可选追问未闭环",
+      "state": "open",
+      "updated_at": "2026-10-21T13:02:31Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/135",
+      "owner": "RP-24",
+      "body_update_planned": false,
+      "comments": 2
+    },
+    {
+      "number": 136,
+      "title": "[WebUI UX] 正文完成后缺少可发现的制作推进入口，提示词/原图/SVG 工作链停留在结果查看",
+      "state": "open",
+      "updated_at": "2026-10-22T00:40:29Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/136",
+      "owner": "RP-21",
+      "body_update_planned": true,
+      "comments": 1
+    },
+    {
+      "number": 137,
+      "title": "[Agent UX] 独立审查能力发现不清，Host 将回执能力未配置误判为没有审查通道",
+      "state": "open",
+      "updated_at": "2026-10-21T09:18:12Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/137",
+      "owner": "RP-01",
+      "body_update_planned": true,
+      "comments": 0
+    },
+    {
+      "number": 138,
+      "title": "[Bug] 原生独立复审结果接纳失败：无 finding 的通过记录无法替换，重试重复执行审查",
+      "state": "open",
+      "updated_at": "2026-10-22T07:47:53Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/138",
+      "owner": "RP-11",
+      "body_update_planned": true,
+      "comments": 5
+    },
+    {
+      "number": 139,
+      "title": "[Bug] V3 样页候选已生成，但详情读取错误使用参考预览，导致比较入口拒绝显示",
+      "state": "open",
+      "updated_at": "2026-10-21T10:47:33Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/139",
+      "owner": "RP-00",
+      "body_update_planned": false,
+      "comments": 0
+    },
+    {
+      "number": 140,
+      "title": "[P1][WebUI] 项目读取耗时约19秒，切换工作面长期保留旧页且缺少就近恢复",
+      "state": "open",
+      "updated_at": "2026-10-22T00:30:54Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/140",
+      "owner": "RP-25",
+      "body_update_planned": false,
+      "comments": 0
+    },
+    {
+      "number": 141,
+      "title": "[P1][Design UX] 首次原图试作入口未呈现视觉方向依据与确认状态，和风格规划流程脱节",
+      "state": "open",
+      "updated_at": "2026-10-22T16:59:10Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/141",
+      "owner": "RP-21",
+      "body_update_planned": true,
+      "comments": 1
+    },
+    {
+      "number": 142,
+      "title": "[P1][Performance] 控制状态轮询重复读取项目且请求重叠，巡检空闲期两个服务持续占用约2个CPU核心",
+      "state": "open",
+      "updated_at": "2026-10-22T02:48:28Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/142",
+      "owner": "RP-25",
+      "body_update_planned": false,
+      "comments": 5
+    },
+    {
+      "number": 143,
+      "title": "[P2][WebUI] 无主线导入稿的证据区将主线绑定缺失写成原子映射缺失，与逐项“已记录映射”冲突",
+      "state": "open",
+      "updated_at": "2026-10-22T00:43:47Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/143",
+      "owner": "RP-10",
+      "body_update_planned": false,
+      "comments": 0
+    },
+    {
+      "number": 144,
+      "title": "[P2][Review] 仅口播审查失效仍强制重做全部前审单元，已有有效结论不能复用",
+      "state": "open",
+      "updated_at": "2026-10-22T01:52:10Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/144",
+      "owner": "RP-12",
+      "body_update_planned": true,
+      "comments": 0
+    },
+    {
+      "number": 145,
+      "title": "[P2][Performance] 图标候选列表逐项重跑全体候选验证，单次读取形成二次增长",
+      "state": "open",
+      "updated_at": "2026-10-22T02:48:44Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/145",
+      "owner": "RP-26",
+      "body_update_planned": false,
+      "comments": 1
+    },
+    {
+      "number": 146,
+      "title": "[P2][Performance] 待协调输入说明循环重新验证历史可达性，热读仍为二次遍历",
+      "state": "open",
+      "updated_at": "2026-10-22T01:52:13Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/146",
+      "owner": "RP-29",
+      "body_update_planned": false,
+      "comments": 0
+    },
+    {
+      "number": 148,
+      "title": "[P2][Eligibility] 零调用正文候选被制作前审门禁阻断，待纠正稿必须先通过旧稿前审",
+      "state": "open",
+      "updated_at": "2026-10-22T02:13:04Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/148",
+      "owner": "RP-02",
+      "body_update_planned": true,
+      "comments": 0
+    },
+    {
+      "number": 149,
+      "title": "[P2][Delivery] 未采用的零调用试作使当前成稿审查失效并阻断交接",
+      "state": "open",
+      "updated_at": "2026-10-22T02:13:06Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/149",
+      "owner": "RP-03",
+      "body_update_planned": false,
+      "comments": 0
+    },
+    {
+      "number": 150,
+      "title": "[P2][Recovery] 已提交操作的精确恢复先被当前暂停门禁拒绝，要求无意义地恢复写权限",
+      "state": "open",
+      "updated_at": "2026-10-22T02:13:07Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/150",
+      "owner": "RP-04",
+      "body_update_planned": true,
+      "comments": 0
+    },
+    {
+      "number": 151,
+      "title": "[P2][Performance] 逐页组装门禁为同一快照重复构建全稿依赖与历史摘要",
+      "state": "open",
+      "updated_at": "2026-10-22T02:13:08Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/151",
+      "owner": "RP-27",
+      "body_update_planned": false,
+      "comments": 0
+    },
+    {
+      "number": 152,
+      "title": "[P2][Pipeline] 已有有效SVG预览仍逐页重渲染并丢弃输出，无用渲染失败可阻断组装",
+      "state": "open",
+      "updated_at": "2026-10-22T02:13:10Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/152",
+      "owner": "RP-05",
+      "body_update_planned": false,
+      "comments": 0
+    },
+    {
+      "number": 153,
+      "title": "[P2][Performance] 冻结单个候选检查经四次公共文件读取重建上下文与整包哈希五轮",
+      "state": "open",
+      "updated_at": "2026-10-22T02:13:11Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/153",
+      "owner": "RP-28",
+      "body_update_planned": false,
+      "comments": 0
+    },
+    {
+      "number": 154,
+      "title": "[P3][Recovery] 个人备份列表逐项重读同一清理日志并重复遍历项目祖先",
+      "state": "open",
+      "updated_at": "2026-10-22T02:13:13Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/154",
+      "owner": "RP-29",
+      "body_update_planned": false,
+      "comments": 0
+    },
+    {
+      "number": 155,
+      "title": "[P3][Review] 同一页同一finding闭合判断重复两遍，每次重建相同历史替换索引",
+      "state": "open",
+      "updated_at": "2026-10-22T02:13:15Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/155",
+      "owner": "RP-27",
+      "body_update_planned": false,
+      "comments": 0
+    },
+    {
+      "number": 156,
+      "title": "[P2][Performance] 变更列表逐项生成完整交接并重新扫描同一变更/任务集合",
+      "state": "open",
+      "updated_at": "2026-10-22T02:28:11Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/156",
+      "owner": "RP-26",
+      "body_update_planned": false,
+      "comments": 0
+    },
+    {
+      "number": 157,
+      "title": "[P2][Performance] 严格专业策略的交付资格读取重复构建同一快照依赖图三次",
+      "state": "open",
+      "updated_at": "2026-10-22T02:49:02Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/157",
+      "owner": "RP-27",
+      "body_update_planned": false,
+      "comments": 1
+    },
+    {
+      "number": 158,
+      "title": "[P3][Recovery] 已存在正确索引的操作查询仍每次原子重写并fsync同一回执索引",
+      "state": "open",
+      "updated_at": "2026-10-22T02:28:16Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/158",
+      "owner": "RP-29",
+      "body_update_planned": false,
+      "comments": 0
+    },
+    {
+      "number": 159,
+      "title": "[P2][Performance] 轮询读取未共享快照与任务事实：轻量控制四次加载、个人摘要三次加载",
+      "state": "open",
+      "updated_at": "2026-10-22T02:46:33Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/159",
+      "owner": "RP-26",
+      "body_update_planned": false,
+      "comments": 0
+    },
+    {
+      "number": 160,
+      "title": "[P2][Performance] 历史分页每页完整解析 head 到 cursor 的前缀，遍历全史形成二次工作",
+      "state": "open",
+      "updated_at": "2026-10-22T02:47:03Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/160",
+      "owner": "RP-29",
+      "body_update_planned": false,
+      "comments": 0
+    },
+    {
+      "number": 161,
+      "title": "[P3][Performance] 单页 lineage 的三个子投影重复扫描同一任务集合",
+      "state": "open",
+      "updated_at": "2026-10-22T02:47:30Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/161",
+      "owner": "RP-26",
+      "body_update_planned": false,
+      "comments": 0
+    },
+    {
+      "number": 162,
+      "title": "[P1][Design] 内容表格被固化为成品版式，设计交接未区分约定排版与模型自主设计",
+      "state": "open",
+      "updated_at": "2026-10-22T05:56:43Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/162",
+      "owner": "RP-17",
+      "body_update_planned": true,
+      "comments": 3
+    },
+    {
+      "number": 163,
+      "title": "[P2][Skill] 设计方法派发三套口径不一致：blueprint 3 项、design 角色 7 项、design phase 缺 content-to-visual",
+      "state": "open",
+      "updated_at": "2026-10-22T04:16:43Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/163",
+      "owner": "RP-18",
+      "body_update_planned": true,
+      "comments": 0
+    },
+    {
+      "number": 164,
+      "title": "[P2][Review] 视觉审查缺表达质量维度：visual_expression 已入合同但不可选/未实现，page_visual 仍只复用三维",
+      "state": "open",
+      "updated_at": "2026-10-22T16:59:13Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/164",
+      "owner": "RP-20",
+      "body_update_planned": true,
+      "comments": 1
+    },
+    {
+      "number": 165,
+      "title": "[P2][Design] 项目级 layout_notes 与逐页设计指令冲突无检测：新样页 prompt 同时要求“不用表格”和“完整保留表格归属”",
+      "state": "open",
+      "updated_at": "2026-10-22T16:59:12Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/165",
+      "owner": "RP-17",
+      "body_update_planned": true,
+      "comments": 1
+    },
+    {
+      "number": 166,
+      "title": "[P2][Contract] new_design 允许零视觉结构：visual_spec/layout_hint 无最小完整性校验，表格正文仍可派发生图",
+      "state": "open",
+      "updated_at": "2026-10-22T04:38:35Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/166",
+      "owner": "RP-17",
+      "body_update_planned": true,
+      "comments": 0
+    },
+    {
+      "number": 167,
+      "title": "[P2][Skill] 合法 Page 正文候选任务被 Content reader 错拒，Design 却接受",
+      "state": "open",
+      "updated_at": "2026-10-22T04:50:58Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/167",
+      "owner": "RP-02",
+      "body_update_planned": true,
+      "comments": 0
+    },
+    {
+      "number": 168,
+      "title": "[P2][Skill] 自然复合请求误选单一职责后，拒绝正确的 Master 协调入口",
+      "state": "open",
+      "updated_at": "2026-10-22T04:50:59Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/168",
+      "owner": "RP-06",
+      "body_update_planned": false,
+      "comments": 0
+    },
+    {
+      "number": 169,
+      "title": "[P2][Workflow] 纯设计方案已完成仍无职责终态，continue 误索要正文或蓝图生产权限",
+      "state": "open",
+      "updated_at": "2026-10-22T04:51:01Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/169",
+      "owner": "RP-06",
+      "body_update_planned": true,
+      "comments": 0
+    },
+    {
+      "number": 170,
+      "title": "[P2][WebUI] 方法准备选择口播审阅，实际发送不含 speech 的三项正文审查范围",
+      "state": "open",
+      "updated_at": "2026-10-22T04:51:02Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/170",
+      "owner": "RP-18",
+      "body_update_planned": false,
+      "comments": 0
+    },
+    {
+      "number": 171,
+      "title": "[P2][Skill UX] 方法准备交接只复制显式ID和不可恢复摘要，丢失角色阶段与范围",
+      "state": "open",
+      "updated_at": "2026-10-22T04:51:03Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/171",
+      "owner": "RP-18",
+      "body_update_planned": false,
+      "comments": 0
+    },
+    {
+      "number": 172,
+      "title": "[P3][WebUI] 项目模式无新阶段时隐藏31项只读方法，混用浏览与派发条件",
+      "state": "open",
+      "updated_at": "2026-10-22T04:51:06Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/172",
+      "owner": "RP-18",
+      "body_update_planned": false,
+      "comments": 0
+    },
+    {
+      "number": 173,
+      "title": "[P1][Pipeline] 上传、设计资产与生产消费未贯通，Logo和模板缺少可用的制作链路",
+      "state": "open",
+      "updated_at": "2026-10-22T06:34:14Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/173",
+      "owner": "RP-19",
+      "body_update_planned": true,
+      "comments": 0
+    },
+    {
+      "number": 174,
+      "title": "[P1][Content] 内部来源误作上屏默认，客户表达与证据追溯未分层",
+      "state": "open",
+      "updated_at": "2026-10-22T08:19:59Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/174",
+      "owner": "RP-16",
+      "body_update_planned": true,
+      "comments": 1
+    },
+    {
+      "number": 175,
+      "title": "[P2][Skill] 改进后完整稿保留作者自证和坏稿错误数字，正例污染客户表达",
+      "state": "open",
+      "updated_at": "2026-10-22T08:20:02Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/175",
+      "owner": "RP-13",
+      "body_update_planned": true,
+      "comments": 1
+    },
+    {
+      "number": 176,
+      "title": "[P2][Skill] 无收益数据规则未按主张和用途限定，泛化要求假设与测量办法",
+      "state": "open",
+      "updated_at": "2026-10-22T07:51:07Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/176",
+      "owner": "RP-13",
+      "body_update_planned": true,
+      "comments": 0
+    },
+    {
+      "number": 177,
+      "title": "[P3][Skill] “删字不是修复”与M10删冗方法矛盾，完整性指导缺少语义边界",
+      "state": "open",
+      "updated_at": "2026-10-22T07:47:49Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/177",
+      "owner": "RP-13",
+      "body_update_planned": true,
+      "comments": 0
+    },
+    {
+      "number": 178,
+      "title": "[P2][Review] 独立内容前审包未展开当前请求与适用协作决定",
+      "state": "open",
+      "updated_at": "2026-10-22T07:51:18Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/178",
+      "owner": "RP-14",
+      "body_update_planned": true,
+      "comments": 0
+    },
+    {
+      "number": 179,
+      "title": "[P2][Review] 内容前审缺客户可见语域维度，失败项只罚藏限定不罚内部证据上屏",
+      "state": "open",
+      "updated_at": "2026-10-22T08:19:08Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/179",
+      "owner": "RP-16",
+      "body_update_planned": true,
+      "comments": 0
+    },
+    {
+      "number": 180,
+      "title": "[P2][Contract] content_profile / required_qualifications 无定义语义却被投影为设计上屏要求",
+      "state": "open",
+      "updated_at": "2026-10-22T08:19:27Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/180",
+      "owner": "RP-15",
+      "body_update_planned": true,
+      "comments": 0
+    },
+    {
+      "number": 181,
+      "title": "[P2][WebUI] 已记录的 v3 初始设计规范被风格工作面静默过滤",
+      "state": "open",
+      "updated_at": "2026-10-22T16:49:16Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/181",
+      "owner": "RP-09",
+      "body_update_planned": true,
+      "comments": 0
+    },
+    {
+      "number": 182,
+      "title": "[P2][WebUI] 总览把历史失败与被接续任务作为当前优先待办，目标列表缺少辨识信息",
+      "state": "open",
+      "updated_at": "2026-10-22T16:49:17Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/182",
+      "owner": "RP-08",
+      "body_update_planned": true,
+      "comments": 0
+    },
+    {
+      "number": 183,
+      "title": "[P2] 单任务领取/接纳回执展开全部待办工作正文，重复携带完整材料",
+      "state": "open",
+      "updated_at": "2026-10-22T16:49:19Z",
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/183",
+      "owner": "RP-07",
+      "body_update_planned": true,
+      "comments": 0
+    }
+  ],
+  "tasks": [
+    {
+      "id": "RP-00",
+      "title": "回收已有窄修复并建立可复验安装基线",
+      "issues": [
+        139
+      ],
+      "depends_on": [],
+      "phase": "0 已有修复正规化",
+      "status": "planned",
+      "steps": [
+        "逐项核对 #138 空 findings、#139 原件引用和 PR #147；只集成对应变更，不整枝覆盖。原本地定位 84a63131 / f1ac7a71 不是可供新执行者依赖的远端前置提交；不得要求先取得它们。当前可获取的实现为 [ae22ef08](https://github.com/MainQuestAI/Deck-Master/commit/ae22ef086369e1ed5904966c79e92097b51fb8ba)，经 [PR185](https://github.com/MainQuestAI/Deck-Master/pull/185) 分支可获取；两项本地修复按缺陷独立重实现，不冒充取回原提交。PR147 的原补丁固定为 [ad2f278c](https://github.com/MainQuestAI/Deck-Master/commit/ad2f278cd637f29b5665fcf71d7064098faf617b)。来源、后续修复和历史实现到集成提交的映射见 [RP-00 证据](../../../reports/issue-repair-20261023/RP-00.md)及[执行台账](../../../reports/issue-repair-20261023/execution-ledger.json)。",
+        "记录合并后源码 SHA、安装包来源及资源摘要；保留各原 PR/补丁归属。"
+      ],
+      "acceptance": [
+        "v3 候选详情读取真实原件字节；v1/v2 参考语义不回退。",
+        "空 findings 通过替换与控制轮询单飞回归通过；#138 的完整恢复及 #142 的缩略图/发行残项仍由后续任务关闭。",
+        "证明安装与集成源码匹配；源码单测、原生调用和实际安装分别记账。"
+      ],
+      "entrypoints": [
+        "src/deck_master/service.py",
+        "src/deck_master/native_review.py",
+        "src/deck_master/candidates.py",
+        "PR #147"
+      ],
+      "tests": [
+        "test_native_review_transport.py",
+        "test_pr105_candidate_metadata.py"
+      ]
+    },
+    {
+      "id": "RP-01",
+      "title": "按阶段发现独立审查通道",
+      "issues": [
+        137
+      ],
+      "depends_on": [],
+      "phase": "1 主链恢复",
+      "status": "planned",
+      "steps": [
+        "枚举内容、原图表达、SVG 转换及最终交付的真实 reviewer 能力与回执要求。",
+        "将通道未配置、能力不支持、工具失败与没有独立 reviewer 分别返回；为后续审查任务提供可执行入口。"
+      ],
+      "acceptance": [
+        "原生内容审查可用不被外推为原图/视觉审查可用。",
+        "支持、缺能力、缺回执配置、实际失败各有准确状态和恢复动作；不伪造 reviewer。",
+        "新增图片阶段审查启用前可发现对应通道；人工/Host 模式按真实支持范围显示。"
+      ],
+      "entrypoints": [
+        "src/deck_master/native_review.py",
+        "src/deck_master/content_review.py",
+        "skills/deck-master/references"
+      ],
+      "tests": [
+        "test_native_review_transport.py",
+        "test_content_preproduction_review.py"
+      ]
+    },
+    {
+      "id": "RP-02",
+      "title": "修复零调用正文候选的完整职责链",
+      "issues": [
+        148,
+        167
+      ],
+      "depends_on": [],
+      "phase": "1 主链恢复",
+      "status": "planned",
+      "steps": [
+        "区分 Page 内容纠正资格与旧稿生产前审资格，零调用正文试作不要求待改旧稿先通过生产前审。",
+        "统一 Content role/phase/scope、方法 manifest、v1/v2 reader 与结果写槽；SVG repair 保持 Design 职责。",
+        "修改 candidates-and-stages.md 中“Page 内容不支持试作候选”的旧禁令；旧冻结任务通过正式过期/恢复流程处理，不静默替换方法。"
+      ],
+      "acceptance": [
+        "真实 task_id 可读 Content v1/v2 工作单→接纳零调用 Page 候选→当前稿不变→采用后按真实依赖失效。",
+        "错误职责、超范围页、旧方法、并发冲突、取消及晚到结果被正确处理。",
+        "不因修正文候选放宽生图/编译权限，不新增外部调用。"
+      ],
+      "entrypoints": [
+        "src/deck_master/eligibility.py",
+        "src/deck_master/service.py",
+        "skills/deck-master/references/candidates-and-stages.md"
+      ],
+      "tests": [
+        "test_content_candidates.py",
+        "test_eligibility_enforcement.py"
+      ]
+    },
+    {
+      "id": "RP-03",
+      "title": "隔离未采用旁支对当前稿的阻塞",
+      "issues": [
+        149
+      ],
+      "depends_on": [
+        "RP-02"
+      ],
+      "phase": "1 主链恢复",
+      "status": "planned",
+      "steps": [
+        "同步修复 review.evaluate_current 和 handoff 的 pending 判定。",
+        "按已采用依赖与本次请求区分旁支试作、当前必需任务和真实未关闭问题，保留旁支可读。"
+      ],
+      "acceptance": [
+        "合法零调用试作未采用时，当前稿原有有效审查和交接状态不被无关旁支撤销。",
+        "采用后真实依赖变更立即失效；当前必需任务、未知调用和未闭合 finding 仍会阻塞。"
+      ],
+      "entrypoints": [
+        "src/deck_master/review.py",
+        "src/deck_master/handoff.py",
+        "src/deck_master/candidates.py"
+      ],
+      "tests": [
+        "test_review.py",
+        "test_content_candidates.py"
+      ]
+    },
+    {
+      "id": "RP-04",
+      "title": "统一精确操作重放与暂停门禁顺序",
+      "issues": [
+        150
+      ],
+      "depends_on": [
+        "RP-00"
+      ],
+      "phase": "1 主链恢复",
+      "status": "planned",
+      "steps": [
+        "覆盖 icons.confirm、candidates.decide、tasks.call_begin、annotations.save、styles.references.import 及 stages.assemble / pipeline.produce 外内两层；以实际公开的可恢复写入口核对完整矩阵，不把此列举当作可以遗漏其他入口的白名单。",
+        "可信已提交操作在校验相同项目、类型、完整请求摘要和身份后返回原回执；仅新操作进入写门禁。"
+      ],
+      "acceptance": [
+        "成功后暂停再以相同 operation_id/请求重放，返回原结果且不重新编译、写产物或发起调用。",
+        "换请求、类型、项目、身份或未知 operation 不借历史成功绕过暂停；并发/损坏路径仍失败可解释。",
+        "组装路径以实际编译成功后的暂停重放验证；当前证据仅为源码控制流，不预记该项通过。",
+        "annotations.save 与 styles.references.import 提交后暂停，以相同完整请求重放返回原提交身份；换请求冲突，新 operation_id 仍受暂停限制，不重写对象或再次导入图片。实现与既有专项证据见 [RP-04 补充](../../../reports/issue-repair-20261023/RP-04.md#additional-paused-replay-entries-2026-10-22)，仍需在最终整合候选复验。"
+      ],
+      "entrypoints": [
+        "src/deck_master/operations.py",
+        "src/deck_master/stages.py",
+        "src/deck_master/pipeline.py",
+        "src/deck_master/icons.py"
+      ],
+      "tests": [
+        "test_paused_exact_replay.py",
+        "test_task_receipt_recovery.py",
+        "test_candidate_decisions.py",
+        "test_annotations.py",
+        "test_visual_styles.py"
+      ]
+    },
+    {
+      "id": "RP-05",
+      "title": "去掉组装前弃用的重复 SVG 渲染",
+      "issues": [
+        152
+      ],
+      "depends_on": [],
+      "phase": "1 主链恢复",
+      "status": "planned",
+      "steps": [
+        "已有有效 SVG 预览时复用正确预览与校验事实，不生成随后丢弃的 PNG。",
+        "仅实际需要 SVG 渲染的分支要求 rsvg；保留真正 PPT 编译、渲染和回读。"
+      ],
+      "acceptance": [
+        "有效预览分支渲染计数下降且输出语义一致；缺失、过期、损坏预览仍执行必要修复。",
+        "PPT 实际渲染与回读仍发生；不能以减少调用替代转换保真验收。"
+      ],
+      "entrypoints": [
+        "src/deck_master/pipeline.py"
+      ],
+      "tests": [
+        "test_svg_compiler.py",
+        "test_service_flow.py"
+      ]
+    },
+    {
+      "id": "RP-06",
+      "title": "复合意图路由与纯设计完成语义",
+      "issues": [
+        168,
+        169
+      ],
+      "depends_on": [],
+      "phase": "1 主链恢复",
+      "status": "planned",
+      "steps": [
+        "自然复合肯定动作由 Master 协调；点名职责、否定、仅审不修和正文中的“审核”词分开解析。",
+        "按当前设计请求、输出及 basis 定义方案完成；纯方案完成后返回，不索要正文或蓝图生产授权。"
+      ],
+      "acceptance": [
+        "复合请求、明确单一职责、否定请求、仅审阅各走正确入口。",
+        "纯设计方案、实际候选生产、未完成方案三个状态分别回读；完成不等于用户采用。",
+        "下一职责沿用已有授权，不把设计方案完成扩展为批量生产。"
+      ],
+      "entrypoints": [
+        "src/deck_master/collaboration.py",
+        "skills/deck-master/SKILL.md"
+      ],
+      "tests": [
+        "test_rc5_host_selection.py",
+        "test_collaboration_contracts.py"
+      ]
+    },
+    {
+      "id": "RP-07",
+      "title": "将单任务变更响应收敛为紧凑回执",
+      "issues": [
+        183
+      ],
+      "depends_on": [],
+      "phase": "1 主链恢复（新增前移）",
+      "status": "planned",
+      "steps": [
+        "核对 task_start、_commit_task_update、accept_result 及 SDK/CLI/HTTP/Host 调用者，建立消费者兼容表。",
+        "变更回执返回当前 task/candidate、revision、结果引用和简要状态；完整工作单经 work_context.v2 显式读取，单次入口复用固定快照。",
+        "通过明确协议版本或能力协商兼容旧消费者，禁止静默省掉其必需输入。"
+      ],
+      "acceptance": [
+        "固定材料长度下用 1/13/30 个合成待办比较响应字节、构造 CPU、JSON 读取次数；单任务回执不再携带每个待办的完整材料正文。",
+        "成功、精确重放、stale/conflict、取消、错误响应保留可执行身份和结果引用；单任务完整读取可获得全部权威输入。",
+        "不改变原件存储、来源追溯、任务绑定、调用结算；未测 CPU 前不声称温升根因或提速比例。"
+      ],
+      "entrypoints": [
+        "src/deck_master/service.py:_pending_host_tasks",
+        "src/deck_master/service.py:task_summary",
+        "src/deck_master/service.py:_commit_task_update",
+        "src/deck_master/service.py:accept_result"
+      ],
+      "tests": [
+        "test_task_receipt_recovery.py",
+        "test_service_flow.py"
+      ]
+    },
+    {
+      "id": "RP-08",
+      "title": "按当前请求与依赖生成真正可行动的待办",
+      "issues": [
+        182
+      ],
+      "depends_on": [
+        "RP-03",
+        "RP-06"
+      ],
+      "phase": "1 主链恢复（新增前移）",
+      "status": "planned",
+      "steps": [
+        "共享当前性投影，基于当前请求、已采用产物依赖、任务接续与候选 basis，区分当前阻塞、当前可行动、历史记录、关系未知。",
+        "summary、run desk 和对象选择页消费相同事实；卡片显示阶段/操作、时间、页范围、状态和当前关系。",
+        "取消 superseded 一律重计划、全部 undecided 一律待比较的推断，保留历史读取。"
+      ],
+      "acceptance": [
+        "混合场景覆盖历史失败、真正当前失败、已接续任务、未闭合 finding、未知调用、21 个 stale 加 1 个 current 候选；推荐对象和可执行路径逐项正确。",
+        "“涉及页数”和“失败任务数”不混写；同名任务可在点开前辨认，固定 revision 的链接正确。",
+        "不自动关闭历史失败或旧候选；不增加逐项完整生产资格校验及外部调用。"
+      ],
+      "entrypoints": [
+        "src/deck_master/workbench.py",
+        "src/deck_master/run_desk.py",
+        "src/deck_master/resources/static/v2/overview.js",
+        "src/deck_master/resources/static/v2/action-targets.js"
+      ],
+      "tests": [
+        "test_workbench_actions.py",
+        "test_overview_state.py",
+        "test_action_targets_browser.py"
+      ]
+    },
+    {
+      "id": "RP-09",
+      "title": "展示和沿用 v1/v2/v3 设计规范",
+      "issues": [
+        181
+      ],
+      "depends_on": [],
+      "phase": "1 主链恢复（新增前移）",
+      "status": "planned",
+      "steps": [
+        "为规范目录、详情、恢复及后续动作增加版本/用途适配，按真实字段读取 v3 initial_design。",
+        "支持混合版本检索、分页和固定 revision；不支持的动作明确解释但保留记录可读。"
+      ],
+      "acceptance": [
+        "仅有 v3 initial_design 且没有旧原图的项目可在浏览器找到并读到方案、范围、历史/当前关系。",
+        "v1/v2/v3 混合记录不串字段，不将历史两页方案当成当前全稿方向，不降级改写对象。",
+        "读取和重新打开不生成任务、调用或确认；支持的沿用动作传递真实版本和 scope。"
+      ],
+      "entrypoints": [
+        "src/deck_master/resources/static/v2/style-calibration.js",
+        "src/deck_master/resources/static/v2/visual-style.js"
+      ],
+      "tests": [
+        "test_studio_style_browser.py",
+        "test_visual_styles.py"
+      ]
+    },
+    {
+      "id": "RP-10",
+      "title": "修复内容计划编辑及来源状态表达",
+      "issues": [
+        133,
+        143
+      ],
+      "depends_on": [],
+      "phase": "随模块交付：明确 UI 修复",
+      "status": "planned",
+      "steps": [
+        "修复 /v2/ DOM 节点/数组挂载；核验 /studio/ 的结构化计划视图、编辑、差异预览和保存回读。",
+        "将主线绑定、正文原子映射、来源关联分别表达，保留未编辑的篇幅、时长、口播和未决字段。"
+      ],
+      "acceptance": [
+        "无计划、有计划零成稿、多页成稿状态都可理解；无 HTMLElement 字符串；编辑→预览→保存→重开一致。",
+        "取消不写入，并发冲突不覆盖；无主线导入稿可以已有文字映射，状态不自相矛盾。",
+        "分别提供 /studio/ 与仍受支持 /v2/ 的真实浏览器记录；不以文案提升证据等级。"
+      ],
+      "entrypoints": [
+        "src/deck_master/resources/static/v2/content-sources.js",
+        "src/deck_master/content_plan.py",
+        "src/deck_master/text_sources.py"
+      ],
+      "tests": [
+        "test_content_mapping_claims.py",
+        "test_studio_integration.py"
+      ]
+    },
+    {
+      "id": "RP-11",
+      "title": "按失败阶段恢复可信独立审查结果",
+      "issues": [
+        138
+      ],
+      "depends_on": [
+        "RP-00",
+        "RP-01"
+      ],
+      "phase": "2 客户表达闭环的审查支持",
+      "status": "planned",
+      "steps": [
+        "在空 findings 窄修复之上覆盖多 owner、历史 finding 闭合及替换语义。",
+        "区分无效结果在标准 proof 持久化之前失败，与合法 envelope 接纳失败但 observation/authenticated proof 已落盘。",
+        "让 failedTask/result_refs 或受支持恢复接口定位可信证据，重新执行接纳事务并沿用原调用，不重复审查；前持久化失败只消费可验证原生证据，缺证据明确报告。"
+      ],
+      "acceptance": [
+        "合法 pass/findings=[] 可替换；多 owner 分别关闭对应历史 finding，不覆盖无关有效结论。",
+        "模拟解析、持久化前、持久化后、事务提交及超时不同故障点；恢复不重复付费/审查，原始消耗保留。",
+        "跨项目、错 execution、改内容、过期 basis、取消/晚到结果拒绝；不能读取任意 JSON 后重新自签为可信回执。"
+      ],
+      "entrypoints": [
+        "src/deck_master/native_review.py",
+        "src/deck_master/content_review.py",
+        "src/deck_master/review.py",
+        "src/deck_master/service.py"
+      ],
+      "tests": [
+        "test_native_review_transport.py",
+        "test_content_preproduction_review.py",
+        "test_review.py"
+      ]
+    },
+    {
+      "id": "RP-12",
+      "title": "只重审失效单元并保留其他有效结论",
+      "issues": [
+        144
+      ],
+      "depends_on": [
+        "RP-11"
+      ],
+      "phase": "2 客户表达闭环的审查支持",
+      "status": "planned",
+      "steps": [
+        "冻结本次必审单元及各历史 owner；阅读上下文保持完整，但允许只重审失效 speech 等范围。",
+        "新结果准确替换所负责单元，历史有效结论按依赖和当前要求复用。"
+      ],
+      "acceptance": [
+        "仅口播变化只重审 speech；正文/关系变化需要对应单元，不以局部审查冒充整稿重新通过。",
+        "与 RP-11 联测多 owner、空 findings、历史闭合；有效要求改变时相关旧结论失效。"
+      ],
+      "entrypoints": [
+        "src/deck_master/content_review.py",
+        "src/deck_master/review.py"
+      ],
+      "tests": [
+        "test_content_preproduction_review.py",
+        "test_rc4_content_review.py"
+      ]
+    },
+    {
+      "id": "RP-13",
+      "title": "纠正写作规则与正例中的客户表达",
+      "issues": [
+        175,
+        176,
+        177
+      ],
+      "depends_on": [],
+      "phase": "2 客户表达闭环",
+      "status": "planned",
+      "steps": [
+        "清除正例中的作者自证、坏稿错误数字和不必要内部转述，保留必要事实口径。",
+        "将测量要求绑定实际效果、收益或投资主张；能力机制说明不机械追加“未实测”。",
+        "修正“删字不是修复”的绝对规则，允许删除冗余但保留因果和必要业务条件。"
+      ],
+      "acceptance": [
+        "成对正反例覆盖合法业务限定、内部追溯、机制说明、量化承诺与删冗；旧坏数字不随正例回流。",
+        "文档可先交付止损，但 #174 不因规则更新关闭；完整闭环由 RP-16 验收。"
+      ],
+      "entrypoints": [
+        "skills/deck-master/references/content-examples.md",
+        "skills/deck-master/references/content-methods.md",
+        "skills/deck-master/references/page-writing.md"
+      ],
+      "tests": [
+        "test_install_host_skill.py"
+      ]
+    },
+    {
+      "id": "RP-14",
+      "title": "把当前有效请求和决定送入审查",
+      "issues": [
+        178
+      ],
+      "depends_on": [],
+      "phase": "2 客户表达闭环",
+      "status": "planned",
+      "steps": [
+        "从已有 request/decision 解析适用的当前要求与来源版本，供作者、reader、前审 packet 共用，不新建平行指令库。",
+        "定义替代、撤销、跨阶段适用和 scope；要求变化后使相关旧审查结论失效。"
+      ],
+      "acceptance": [
+        "审查 packet 含当前受众、用途、有效范围与决定；已撤销/替代要求不继续生效。",
+        "审查执行中要求变化，旧 basis 结果不冒充当前通过；无关页/无关要求不全稿失效。"
+      ],
+      "entrypoints": [
+        "src/deck_master/content_review.py",
+        "src/deck_master/collaboration.py",
+        "src/deck_master/service.py"
+      ],
+      "tests": [
+        "test_collaboration_contracts.py",
+        "test_content_preproduction_review.py"
+      ]
+    },
+    {
+      "id": "RP-15",
+      "title": "定义内容字段语义及客户可见消费边界",
+      "issues": [
+        180
+      ],
+      "depends_on": [],
+      "phase": "2 客户表达闭环",
+      "status": "planned",
+      "steps": [
+        "明确 content_profile、required_qualifications、density_rationale 的语义、默认和合同承载；内部追溯与客户可见条件分别投影。",
+        "保留 qualification 真实节点引用校验与合法空数组；项目节点 ID 无须预先进入产品源码。",
+        "在 design_requirements 和 production 的实际消费路径落实规则，适配旧输入而不悄悄重解释历史冻结对象。"
+      ],
+      "acceptance": [
+        "内部来源/作者核验过程不会自动上屏，业务必要限定仍可见；不按关键词一律删除。",
+        "同版本 Page→设计投影→冻结 prompt 语义一致；历史可读，新旧候选 freshness、无关页隔离和 strict schema 通过共用兼容矩阵。"
+      ],
+      "entrypoints": [
+        "src/deck_master/resources/contracts",
+        "src/deck_master/content_plan.py",
+        "src/deck_master/design_requirements.py",
+        "src/deck_master/production.py"
+      ],
+      "tests": [
+        "test_rc3_design_requirements.py",
+        "test_collaboration_contracts.py"
+      ]
+    },
+    {
+      "id": "RP-16",
+      "title": "以受众语义审查完成客户表达闭环",
+      "issues": [
+        174,
+        179
+      ],
+      "depends_on": [
+        "RP-11",
+        "RP-12",
+        "RP-13",
+        "RP-14",
+        "RP-15"
+      ],
+      "phase": "2 客户表达闭环",
+      "status": "planned",
+      "steps": [
+        "把客户可见语域纳入 page_copy 必查项及可记录 finding；需要新枚举时同步 schema/readers，不新造平行审查流程。",
+        "按真实泄露、受众用途、误导程度分级；关键词只提示，不把“来源/假设/时间码”一律设 F0。",
+        "用同一有效版本贯穿 Page、review packet、设计投影、冻结 prompt 与实际图像。"
+      ],
+      "acceptance": [
+        "内部工作语言混入客户可见区能被判出；合法业务来源和必要条件不会误杀。",
+        "合法 pass/findings=[]、未执行、空回执三者区分；复审不重跑已有可信结果。",
+        "脱敏代表稿实际图像符合受众要求，保留真实原生观察；静态/合成通过只记对应层，未做真实图像检查则 #174/#179 不关闭。"
+      ],
+      "entrypoints": [
+        "src/deck_master/content_review.py",
+        "src/deck_master/review.py",
+        "src/deck_master/resources/contracts/review.v2.schema.json",
+        "skills/deck-master/references/review-and-repair.md"
+      ],
+      "tests": [
+        "test_content_preproduction_review.py",
+        "test_native_review_transport.py"
+      ]
+    },
+    {
+      "id": "RP-17",
+      "title": "统一两种设计策略与修订后的有效依据",
+      "issues": [
+        162,
+        165,
+        166
+      ],
+      "depends_on": [
+        "RP-15"
+      ],
+      "phase": "3 设计与资产",
+      "status": "planned",
+      "steps": [
+        "支持约定排版及模型自主设计；真实比较表可保持表格，内容采集表不得自动固化为版式。",
+        "明确逐页目的、主对象、固定信息关系和自由布局范围；不用节点数量或非空 layout_hint 代理设计质量。",
+        "修图改变布局时先收敛 Page、Plan、页级覆盖和适用全局说明，再冻结生产输入；页覆盖项目默认，记录版本与消费字段。"
+      ],
+      "acceptance": [
+        "去泳道改责任标签的合成用例中，下一冻结输入不再同时要求三泳道；全局样式有明确适用范围。",
+        "约定排版、自由设计、真实比较表、封面等分别可用；固定语义关系保留。",
+        "真实依据变化使相关旧候选 stale；无关页不全稿失效；历史冻结输入不被原地改写，共用兼容矩阵通过。"
+      ],
+      "entrypoints": [
+        "src/deck_master/design_requirements.py",
+        "src/deck_master/production.py",
+        "src/deck_master/resources/contracts",
+        "src/deck_master/visual_styles.py"
+      ],
+      "tests": [
+        "test_rc3_design_requirements.py",
+        "test_visual_style_freshness.py"
+      ]
+    },
+    {
+      "id": "RP-18",
+      "title": "统一职责方法与可接手的方法准备",
+      "issues": [
+        163,
+        170,
+        171,
+        172
+      ],
+      "depends_on": [
+        "RP-02",
+        "RP-06"
+      ],
+      "phase": "随模块交付：方法与交接",
+      "status": "planned",
+      "steps": [
+        "按职责、阶段、scope 提供实际适用方法，校准 blueprint/design role/design phase；不要求三个列表机械相等。",
+        "口播选择实际传 speech；交接复制可读 context、版本、范围、资源及恢复入口。",
+        "分离目录浏览和派发资格；无新阶段仍可读方法，旧冻结 manifest 不静默补写。"
+      ],
+      "acceptance": [
+        "Content 候选与 Design SVG repair 各读对方法；旧 manifest 过期可恢复。",
+        "真实剪贴板→接手 reader 保持角色/阶段/范围；口播准备与复制结果都含 speech，准备不冒充派发。",
+        "无新阶段可浏览，只在真实派发时核资格；不新增权限或许可。"
+      ],
+      "entrypoints": [
+        "src/deck_master/method_resources.py",
+        "src/deck_master/resources/static/v2",
+        "skills/deck-master/references"
+      ],
+      "tests": [
+        "test_install_preparation_coverage.py",
+        "test_rc5_host_selection.py"
+      ]
+    },
+    {
+      "id": "RP-19",
+      "title": "贯通已支持品牌资产的真实生产消费",
+      "issues": [
+        173
+      ],
+      "depends_on": [
+        "RP-17"
+      ],
+      "phase": "3 设计与资产",
+      "status": "planned",
+      "steps": [
+        "列出 Logo、图片、字体、PPTX 模板各自上传、存储、引用、消费、成品校验能力；区分 supported / unsupported / pending。",
+        "先贯通真实支持的 Logo/图片字节、选择范围、固定版本、prompt/工具参数和成品；不把品牌名文字当原件。",
+        "字体与 PPTX 模板按真实能力落地或明确限制；PPTX 正文抽取不称母版复用。"
+      ],
+      "acceptance": [
+        "上传/登记→被选用→实际工具消费→可核对输出，每段分别有证据；无资产的自主设计仍可工作。",
+        "资产字节变化只影响实际消费页，相关旧候选变 stale；历史引用与原件不变。",
+        "格式支持矩阵和 RP-30 共用兼容矩阵完整；不以登记成功关闭未贯通格式。"
+      ],
+      "entrypoints": [
+        "src/deck_master/source_uploads.py",
+        "src/deck_master/production.py",
+        "src/deck_master/design_recipe.py",
+        "src/deck_master/resources/contracts"
+      ],
+      "tests": [
+        "test_visual_styles.py",
+        "test_rc3_design_requirements.py"
+      ]
+    },
+    {
+      "id": "RP-20",
+      "title": "在原图阶段检查表达质量与固定有向关系",
+      "issues": [
+        164
+      ],
+      "depends_on": [
+        "RP-01",
+        "RP-11",
+        "RP-17"
+      ],
+      "phase": "3 设计与资产",
+      "status": "planned",
+      "steps": [
+        "建立原图候选/样页阶段的表达审查入口及 basis，不能只增加 finding.kind 或沿用等待 SVG/preview 的 page_visual。",
+        "核对固定节点、有向边端点、层级、阅读路径；与 SVG/PPT 转换保真及可编辑性检查分别完成。",
+        "已知关系错误可保留查看和带问题比较，不标为扩页依据；允许明确作为修复参考，下一结果需证明问题已修。"
+      ],
+      "acceptance": [
+        "只有原图、尚无 SVG 的样页可以接受适用独立表达检查。",
+        "固定 A→B 却画成 A→C 必须判关系需修正，不能以“文字齐全/含义可解释”推迟到 SVG；明确修复后可恢复扩展。",
+        "未知通道/旧 basis/晚到结果不伪装通过；最终已修错误不重报为交付仍错。"
+      ],
+      "entrypoints": [
+        "src/deck_master/review.py",
+        "src/deck_master/content_review.py",
+        "src/deck_master/production.py",
+        "src/deck_master/resources/contracts/review.v2.schema.json"
+      ],
+      "tests": [
+        "test_review.py",
+        "test_rc3_native_visual_reuse.py"
+      ]
+    },
+    {
+      "id": "RP-21",
+      "title": "把真实设计依据接入样页和扩页入口",
+      "issues": [
+        141,
+        136
+      ],
+      "depends_on": [
+        "RP-09",
+        "RP-17",
+        "RP-19",
+        "RP-20"
+      ],
+      "phase": "3 设计与资产",
+      "status": "planned",
+      "steps": [
+        "制作入口展示本轮选定策略、有效 recipe/资产/文字依据、适用页、继承不变量与自由范围。",
+        "贯通正文→提示词→原图候选→SVG→PPT 的可发现动作，预览与提交消费同一资格和固定 scope。",
+        "沿用已有有效方向；整张旧图作为参考时区分要继承内容与待修问题，不强制每次上传、套模板或重复确认。"
+      ],
+      "acceptance": [
+        "v3 历史规范可读但不冒充本轮全稿方向；选定的当前依据真正进入冻结输入和实际参数。",
+        "无参考初始设计、沿用样页、修改局部、范围扩展都走真实可执行路径；缺能力时说明具体缺项。",
+        "已知错端点不随“扩页依据”继承；不新增逐页审批；正式产物槽位与外部交付文件分别表述。"
+      ],
+      "entrypoints": [
+        "src/deck_master/resources/static/v2/style-calibration.js",
+        "src/deck_master/resources/static/v2/visual-style.js",
+        "src/deck_master/production.py",
+        "src/deck_master/workbench.py"
+      ],
+      "tests": [
+        "test_studio_style_browser.py",
+        "test_workbench_actions.py",
+        "test_rc3_initial_direction_boundary.py"
+      ]
+    },
+    {
+      "id": "RP-22",
+      "title": "按当前动作重排阅读和操作界面",
+      "issues": [
+        132
+      ],
+      "depends_on": [
+        "RP-08",
+        "RP-10",
+        "RP-18"
+      ],
+      "phase": "4 整体体验验收",
+      "status": "planned",
+      "steps": [
+        "沿用 OpenDesign 20261001：浅色中性阅读面、黑色主按钮；压缩巨型优先卡面积及首屏次级动作数量，显示逐页进度。",
+        "消除长提示词的外页/固定容器/PRE 多层滚动；意见表单、资源工具按需展开，保留草稿与可发现入口。",
+        "状态、空状态、材料区和方法案例目录按真实对象组织；已有章节导航和结构化计划继续保留。"
+      ],
+      "acceptance": [
+        "1280×800、1440×900 及实际窄侧栏，在可准确捕获的窗口逐一验证长文本和混合状态；390px 既有 DOM 观察不冒充完整视觉验收。",
+        "首屏可判断当前对象、进展和主要动作；长材料/六类待办不把进度和主要 CTA 推出阅读区。",
+        "键盘焦点、切换、长正文阅读、编辑草稿与固定 revision 正常；/studio/ 与仍支持 /v2/ 分别记结果。",
+        "保存、采用、生产的实际行为与只读截图分开验收；不要求复制原型示例数据。"
+      ],
+      "entrypoints": [
+        "src/deck_master/resources/static/v2/overview.js",
+        "src/deck_master/resources/static/v2/content-sources.js",
+        "src/deck_master/resources/static/v2/page-workbench.js",
+        "DESIGN.md"
+      ],
+      "tests": [
+        "test_studio_integration.py",
+        "test_action_targets_browser.py",
+        "test_ui_state_clear.py"
+      ]
+    },
+    {
+      "id": "RP-23",
+      "title": "核实跨用户轮次的受支持恢复路径",
+      "issues": [],
+      "depends_on": [],
+      "phase": "1 可提前独立诊断；支持 #134",
+      "status": "planned",
+      "steps": [
+        "回放旧 turn 已开始但未发送 attempt→新 turn 调整范围→新 execution 的合成流程，核对现有 Skill/CLI/SDK 的 not_sent、恢复和重领入口。",
+        "区分 Host 未遵守已存在指引、指引缺失和确实缺恢复入口；结论指向最小修改位置，再由后续修复 PR 实施。",
+        "真实发送前核对 execution；确认未发送才结算 not_sent；已完成调用保留真实输出/消耗/原生证据，核实正式无重生成接纳路径是否存在。"
+      ],
+      "acceptance": [
+        "给出可复现受支持调用顺序和证据，或明确缺失点与最小补丁任务；不把未知发送情况记 not_sent。",
+        "旧 execution 与新 selector 失配仍拒绝；不改 selector、不自签证明、不重生成掩盖已有调用。",
+        "已完成图像无正式接纳路径时明确记录，不能把独立输出说成 Runtime 已接纳；#134 最终关闭需处理确认的缺口。"
+      ],
+      "entrypoints": [
+        "src/deck_master/generation.py",
+        "src/deck_master/service.py",
+        "skills/deck-master/references",
+        "docs/agent-recovery-playbook.md"
+      ],
+      "tests": [
+        "test_native_review_transport.py",
+        "test_task_receipt_recovery.py"
+      ]
+    },
+    {
+      "id": "RP-24",
+      "title": "验证阶段退出、决策协作和实际职责交接",
+      "issues": [
+        134,
+        135
+      ],
+      "depends_on": [
+        "RP-06",
+        "RP-18",
+        "RP-21",
+        "RP-23"
+      ],
+      "phase": "4 整体体验验收",
+      "status": "planned",
+      "steps": [
+        "按当前 request/scope/completion/outputs/checks/missing 说明完成范围、产物、停止原因与下一责任。",
+        "已有授权可继续时由 Master 实际协调；能力有限则提供能接手的上下文，不声称已启动。",
+        "规划完成首答说明推荐、取舍、方法影响、关键问题；用户反馈实际更新稿件，方向已定不制造假备选。",
+        "依据 RP-23 诊断落实跨轮恢复缺口；有既有路径就修执行指引并验证遵守，确缺入口再做最小实现。"
+      ],
+      "acceptance": [
+        "完整会话覆盖 plan_only、已授权写稿、真实方向选择、材料充分、关键事实缺失、跳过非阻塞追问、纯设计、失败及 needs_reviewer。",
+        "首答不需用户追问才知道下一步；方法应用有产物证据，作者自述/独立审查区分。",
+        "真实接手 reader 和产物变化可核；跨轮不丢当前范围，保留身份拒绝与真实消耗；不是只验结束语模板。"
+      ],
+      "entrypoints": [
+        "skills/deck-master/SKILL.md",
+        "skills/deck-master/references",
+        "src/deck_master/collaboration.py"
+      ],
+      "tests": [
+        "test_rc5_host_selection.py",
+        "test_collaboration_contracts.py"
+      ]
+    },
+    {
+      "id": "RP-25",
+      "title": "复测正式读取体验并收口轮询残项",
+      "issues": [
+        140,
+        142
+      ],
+      "depends_on": [
+        "RP-00"
+      ],
+      "phase": "随基线交付：现场性能",
+      "status": "planned",
+      "steps": [
+        "在 RP-00 匹配源码的安装上记录冷启动、热切换及空闲轮询 workload，区分服务端、前端等待和缩略图请求。",
+        "验证 PR147 单飞、取消和页面离开清理；单独定位缩略图重复请求，按测得热点修复。",
+        "工作面加载给就近状态/恢复，切换不长期展示旧对象冒充新对象。"
+      ],
+      "acceptance": [
+        "固定相同项目规模与操作序列对比 wall time/CPU/请求数/缩略图数；不拿旧版19秒当当前实测。",
+        "慢响应与取消不重叠轮询、不晚到覆盖新页；失败就近重试。",
+        "#142 仅在轮询、缩略图残项及正式匹配版本验证齐备后关闭；#140 不被单次 API 计时代替。"
+      ],
+      "entrypoints": [
+        "src/deck_master/resources/static/v2",
+        "src/deck_master/workbench.py",
+        "PR #147"
+      ],
+      "tests": [
+        "test_local_runtime_burst.py",
+        "test_ui_state_clear.py"
+      ]
+    },
+    {
+      "id": "RP-26",
+      "title": "共享高频读取中的候选与任务事实",
+      "issues": [
+        159,
+        145,
+        156,
+        161
+      ],
+      "depends_on": [
+        "RP-07",
+        "RP-08"
+      ],
+      "phase": "5 后续性能批次 A",
+      "status": "planned",
+      "steps": [
+        "#159 显式共享同次读取 Document/任务事实，不只添加 context manager 或仅按 revision 全局缓存。",
+        "#145 一次加载候选集合；#156 列表用状态聚合，不逐组构建完整 handoff。",
+        "#161 合并 lineage 三次任务遍历，准确区分遍历与 JSON 解码。"
+      ],
+      "acceptance": [
+        "固定 N/2N/4N 合成数据测构造次数、CPU、JSON 读取；候选列表消除逐项全量重验，其他路径报告真实量级。",
+        "返回语义、排序、unknown/损坏项、固定 revision 一致；采用/写动作重新核当前对象与并发版本。",
+        "没有跨请求缓存资格通过；单页 lineage 不声称原来是 O(N²) 或三次 JSON 解码。"
+      ],
+      "entrypoints": [
+        "src/deck_master/workbench.py",
+        "src/deck_master/candidates.py",
+        "src/deck_master/changes.py"
+      ],
+      "tests": [
+        "test_workbench_actions.py",
+        "test_page_detail.py",
+        "test_candidate_decisions.py"
+      ]
+    },
+    {
+      "id": "RP-27",
+      "title": "复用组装与交付依赖图及 finding 索引",
+      "issues": [
+        151,
+        157,
+        155
+      ],
+      "depends_on": [
+        "RP-11"
+      ],
+      "phase": "5 后续性能批次 B",
+      "status": "planned",
+      "steps": [
+        "#151 同次组装共享依赖事实，#157 严格专业策略同快照复用依赖图。",
+        "明确控制快照、历史产物、选定输出和 notes overlay 的差别。",
+        "#155 一次建立历史替换索引，保留 RP-11 规定的 finding 闭合语义。"
+      ],
+      "acceptance": [
+        "固定页数和历史深度对比构图/闭合次数与 CPU；逐页检查不减少。",
+        "多 owner、历史替换、不同输出版本及 notes overlay 结果相同；不能用错误共享跨越 basis。"
+      ],
+      "entrypoints": [
+        "src/deck_master/stages.py",
+        "src/deck_master/editing.py",
+        "src/deck_master/delivery_eligibility.py",
+        "src/deck_master/visual_dependencies.py",
+        "src/deck_master/review.py"
+      ],
+      "tests": [
+        "test_review.py",
+        "test_eligibility_enforcement.py",
+        "test_service_flow.py"
+      ]
+    },
+    {
+      "id": "RP-28",
+      "title": "冻结检查时复用同批已验证字节",
+      "issues": [
+        153
+      ],
+      "depends_on": [
+        "RP-17"
+      ],
+      "phase": "5 后续性能批次 C",
+      "status": "planned",
+      "steps": [
+        "同次候选检查冻结已验证的实际字节，避免经公共读取重复构建上下文和整包哈希。",
+        "保留锁边界、check_id、工具链、选定输出与内容摘要的一致性检查。"
+      ],
+      "acceptance": [
+        "固定候选包比较上下文构造/文件读取/哈希次数、CPU 和回执；语义不变。",
+        "锁外文件改动、工具链或 check_id 变化仍被发现；取消和晚到结果不被接纳。"
+      ],
+      "entrypoints": [
+        "src/deck_master/candidate_preview.py"
+      ],
+      "tests": [
+        "test_rc3_materialized_candidate_slots.py",
+        "test_pr105_candidate_metadata.py"
+      ]
+    },
+    {
+      "id": "RP-29",
+      "title": "收敛历史读取和恢复的重复工作",
+      "issues": [
+        146,
+        160,
+        158,
+        154
+      ],
+      "depends_on": [],
+      "phase": "5 后续性能批次 D",
+      "status": "planned",
+      "steps": [
+        "#146 固定 head 共享可达性证明；#160 分页减少完整 Document 解析，仍验证旧 head:start。",
+        "#158 可信恢复后正确索引零写入，损坏/缺失仍重建；索引不成为真相源。",
+        "#154 同次备份列表共享清理日志和上下文，各备份对象独立验证，恢复重新捕获。"
+      ],
+      "acceptance": [
+        "固定历史深度与分页规模记录祖先遍历、Document 解析、日志读取、原子写/fsync 次数及 CPU。",
+        "跨项目、中间祖先损坏、循环、游标不匹配、索引损坏、并发恢复均不被漏检。",
+        "不承诺整体祖先校验 O(1)，不跨请求缓存资格或改变历史语义。"
+      ],
+      "entrypoints": [
+        "src/deck_master/view.py",
+        "src/deck_master/snapshots.py",
+        "src/deck_master/editing.py",
+        "src/deck_master/operations.py",
+        "src/deck_master/personal_recovery.py"
+      ],
+      "tests": [
+        "test_task_receipt_recovery.py",
+        "test_store_transactions.py"
+      ]
+    },
+    {
+      "id": "RP-30",
+      "title": "执行跨合同兼容和代表流程联合验收",
+      "issues": [],
+      "depends_on": [
+        "RP-04",
+        "RP-05",
+        "RP-16",
+        "RP-20",
+        "RP-21",
+        "RP-22",
+        "RP-24",
+        "RP-25",
+        "RP-26",
+        "RP-27",
+        "RP-28",
+        "RP-29"
+      ],
+      "phase": "6 联合验收",
+      "status": "planned",
+      "steps": [
+        "按 ACCEPTANCE.md 的 C1–C6 对设计策略、页级覆盖、资产、可见性消费使用同一测试矩阵，变更 PR 就地验证，本任务汇总同一集成版本。",
+        "在脱敏项目走正文纠正→局部复审→样页表达检查→采用/扩页→SVG/PPT→阶段交接，记录每层实际结果。",
+        "核对所有 Issue 的唯一负责卡、残项和实际证据；局部 PR 可先交付，不等51项全完才能合并。"
+      ],
+      "acceptance": [
+        "旧项目可读且不原地改写；真实输入变化只让受影响候选/审查过期；无关页不全稿失效。",
+        "旧方法恢复、取消/晚到、权限/配额、资产支持矩阵均有结果；源码/合成/UI/原生/安装/交付各层单列。",
+        "实际图像、浏览器或正式交付未运行的项标 NOT_RUN/BLOCKED，不用绿色 CI 代替；关闭 Issue 不超出实际证据。"
+      ],
+      "entrypoints": [
+        "docs/work-items/wi-issue-repair-20261023/ACCEPTANCE.md"
+      ],
+      "tests": []
+    }
+  ],
+  "corrections": {
+    "F1": [
+      "RP-01",
+      "RP-20",
+      "RP-21"
+    ],
+    "F2": [
+      "RP-11",
+      "RP-12"
+    ],
+    "F3": [
+      "RP-13",
+      "RP-14",
+      "RP-15",
+      "RP-16"
+    ],
+    "F4": [
+      "RP-04"
+    ],
+    "F5": [
+      "RP-02"
+    ],
+    "F6": [
+      "RP-15",
+      "RP-17",
+      "RP-19",
+      "RP-30"
+    ]
+  },
+  "new_issues": [
+    181,
+    182,
+    183
+  ],
+  "new_comments": [
+    {
+      "issue": 132,
+      "id": 6346416139,
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/132#issuecomment-6346416139"
+    },
+    {
+      "issue": 134,
+      "id": 6346418010,
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/134#issuecomment-6346418010"
+    },
+    {
+      "issue": 141,
+      "id": 6346416670,
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/141#issuecomment-6346416670"
+    },
+    {
+      "issue": 164,
+      "id": 6346417584,
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/164#issuecomment-6346417584"
+    },
+    {
+      "issue": 165,
+      "id": 6346417124,
+      "url": "https://github.com/MainQuestAI/Deck-Master/issues/165#issuecomment-6346417124"
+    }
+  ]
+}

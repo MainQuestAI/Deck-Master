@@ -101,7 +101,7 @@ def test_studio_style_two_routes_compare_adopt_expand_and_review(flow, source, t
                 for width,height in [(1440,900),(1280,800),(390,844)]:
                     page.set_viewport_size({'width':width,'height':height})
                     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
-                    assert page.locator('.visual-style > .studio-style-stages button').evaluate_all('(nodes)=>nodes.every(n=>n.getBoundingClientRect().height>=44)')
+                    assert page.locator('.visual-style > .studio-style-stages button').evaluate_all('(nodes)=>nodes.every(n=>n.getBoundingClientRect().height>=(innerWidth<=560?44:32))')
                     page.screenshot(path=str(out/f'02-rules-{width}.png'),full_page=True)
                 page.set_viewport_size({'width':1440,'height':900})
                 page.get_by_role('button',name='检查并确认视觉规范',exact=True).click()
@@ -136,7 +136,14 @@ def test_studio_style_two_routes_compare_adopt_expand_and_review(flow, source, t
             adopt(candidate,'04-compare.png')
             after_trial=flow.store.load_document()['pages']
             assert after_trial[0]==initial[0] and after_trial[2]==initial[2]
-            page.get_by_role('button',name='查看任务与交付',exact=True).click()
+            # Adoption is not permission to propagate unreviewed original pixels.
+            from deck_master import original_review
+            from synthetic_review_provider import accept_original_expression_fixture
+            assert not original_review.reference_status(flow.store, flow.store.load_document(), 'p02', candidate_id=candidate)['allowed']
+            accept_original_expression_fixture(flow.project, page_id='p02', candidate_id=candidate)
+            assert original_review.reference_status(flow.store, flow.store.load_document(), 'p02', candidate_id=candidate)['allowed']
+            page.reload(); page.get_by_role('button',name='查看当前版本',exact=True).click()
+            page.locator('.sidebar').get_by_role('button',name='任务与交付',exact=True).click()
             expect(page.get_by_role('heading',name='任务与交付',exact=True)).to_be_visible()
             page.locator('.sidebar').get_by_role('button',name='风格校准',exact=True).click()
             page.get_by_role('button',name='项目页面' if source=='page' else '外部图片',exact=True).click()
@@ -155,6 +162,8 @@ def test_studio_style_two_routes_compare_adopt_expand_and_review(flow, source, t
                 page.get_by_role('button',name='从此候选扩展',exact=True).click()
                 page.get_by_label(re.compile('^扩展到 第 3 页')).check()
                 page.get_by_role('button',name='预览明确选页的扩展',exact=True).click()
+            expect(page.get_by_role('button',name=dispatch_label,exact=True)).to_be_enabled()
+            expect(page.get_by_label('本轮制作依据')).to_be_visible()
             page.screenshot(path=str(out/'05-expansion-review.png'),full_page=True)
             page.get_by_role('button',name=dispatch_label,exact=True).click()
             expect(page.locator('#runs-tasks .task-handoff')).to_be_visible()
@@ -281,3 +290,135 @@ def test_screenshot_plan_freezes_target_and_rejects_late_response(flow, invalida
         finally:
             browser.close()
             server.stop()
+
+
+@pytest.mark.parametrize('explicit_history', [False, True])
+def test_pending_current_version_sidebar_keeps_reviewed_candidate_revision(flow, tmp_path, explicit_history):
+    """A surface switch carries the explicit current-read intent across late replies."""
+    from urllib.parse import urlencode
+    from playwright.sync_api import expect
+    from deck_master import original_review, ui_journal
+    from synthetic_review_provider import accept_original_expression_fixture
+    from test_pr103_complete_browser import browser_for
+    from test_styles import confirm, dispatch
+
+    recipe = confirm(flow)
+    candidate = flow.image(dispatch(flow, recipe))['candidate_ids'][0]
+    old_revision = flow.store.current_revision_id()
+    flow.adopt([candidate])
+    assert accept_original_expression_fixture(flow.project, page_id='p02', candidate_id=candidate)['status'] == 'accepted'
+    current_revision = flow.store.current_revision_id()
+    assert original_review.reference_status(flow.store, flow.store.load_document(), 'p02', candidate_id=candidate)['allowed']
+    with browser_for(flow.project) as (page, server):
+        identity = ui_journal.project_info(flow.project)['project_identity']
+        page.goto(server.start() + '#' + urlencode({'project': identity, 'surface': 'runs', 'revision': old_revision}))
+        expect(page.get_by_role('button', name='查看当前版本', exact=True)).to_be_visible()
+        held = []
+
+        def hold_current_tasks(route):
+            if 'revision=' + current_revision in route.request.url:
+                held.append((route, route.fetch()))
+                page.evaluate('window.currentTasksHeld=true')
+            else:
+                route.continue_()
+
+        page.route('**/api/tasks?*', hold_current_tasks)
+        page.get_by_role('button', name='查看当前版本', exact=True).click()
+        page.wait_for_function('()=>window.currentTasksHeld===true')
+        expect(page.locator('#main')).to_have_attribute('aria-busy', 'true')
+        if explicit_history:
+            # An explicit saved historical URL supersedes the current intent.
+            page.goto(server.start() + '#' + urlencode({'project': identity, 'surface': 'style', 'revision': old_revision}))
+        else:
+            page.locator('.sidebar').get_by_role('button', name='风格校准', exact=True).click()
+        expect(page.get_by_role('heading', name='风格校准', exact=True)).to_be_visible()
+        landed = page.url
+        for route, response in held:
+            route.fulfill(response=response)
+        page.unroute('**/api/tasks?*', hold_current_tasks)
+        # A subsequent surface transaction also drains the late response without
+        # letting it restore the obsolete tasks surface or reading revision.
+        page.get_by_role('button', name='项目页面', exact=True).click()
+        stage(page, 'page', 2)
+        page.locator(f'.studio-recipe-card[data-recipe-id="{recipe["recipe_id"]}"]').get_by_role('button').click()
+        stage(page, 'page', 3)
+        state = {'old_revision': old_revision, 'current_revision': current_revision,
+                 'landed_url': landed, 'after_late_url': page.url,
+                 'candidate_id': candidate,
+                 'expand_buttons': page.get_by_role('button', name='从此候选扩展', exact=True).count()}
+        (tmp_path / 'pending-current-sidebar.json').write_text(json.dumps(state, indent=2))
+        page.screenshot(path=str(tmp_path / 'pending-current-sidebar.png'), full_page=True)
+        expected_revision = old_revision if explicit_history else current_revision
+        assert 'revision=' + expected_revision in landed, state
+        assert 'revision=' + expected_revision in page.url, state
+        if explicit_history:
+            expect(page.get_by_role('button', name='从此候选扩展', exact=True)).to_have_count(0)
+            expect(page.get_by_role('button', name='查看当前版本', exact=True)).to_be_visible()
+        else:
+            expect(page.get_by_role('button', name='从此候选扩展', exact=True)).to_be_visible()
+        assert flow.store.current_revision_id() == current_revision
+
+
+def test_v3_initial_design_without_original_images_is_readable_and_plans_exact_page(tmp_path):
+    from playwright.sync_api import sync_playwright, expect
+    from test_rc3_design_workflows import project, confirmed
+    path,store,_=project(tmp_path)
+    record=confirmed(path,store)
+    before=store.load_document()
+    assert all(not entry.get('blueprint') for entry in before['pages'])
+    server=WorkbenchServer(path)
+    with sync_playwright() as runtime:
+        browser=runtime.chromium.launch();page=browser.new_page(viewport={'width':1440,'height':900});errors=[]
+        page.on('pageerror',lambda error:errors.append(str(error)))
+        try:
+            page.goto(server.start()+'studio/');page.get_by_role('button',name='风格校准',exact=True).click()
+            stage(page,'page',2)
+            card=page.locator('.studio-recipe-card').filter(has_text='初始设计')
+            expect(card).to_have_count(1);card.get_by_role('button',name='使用这版规范',exact=True).click()
+            expect(page.locator('.recipe-rules dt')).to_have_count(7)
+            expect(page.get_by_text('尚未覆盖：多单位数据图尚未覆盖',exact=True)).to_be_visible()
+            assert store.load_document()==before
+            page.reload();stage(page,'page',2)
+            expect(page.locator('.studio-recipe-current')).to_contain_text('本次选中')
+            expect(page.locator('.recipe-rules dt')).to_have_count(7)
+            stage(page,'page',3)
+            page.get_by_label('先试哪一页',exact=True).select_option('p2')
+            with page.expect_response(lambda r:r.url.endswith('/api/styles/plan')) as planned:
+                page.get_by_role('button',name='预览单页试作',exact=True).click()
+            assert planned.value.ok,planned.value.text()
+            value=json.loads(planned.value.request.post_data)['input']
+            assert value=={'recipe_id':record['recipe_id'],'page_ids':['p2'],'max_calls':1}
+            expect(page.get_by_role('button',name='保存并交接风格试作',exact=True)).to_be_enabled()
+            assert store.load_document()==before and not errors
+        finally:browser.close();server.stop()
+
+
+def test_mixed_recipe_catalog_preserves_all_schema_objects_and_scopes(flow):
+    import uuid
+    from playwright.sync_api import sync_playwright, expect
+    from deck_master import styles
+    from test_styles import confirm
+    from test_visual_styles import completed
+    from test_rc3_design_recipes import input_value
+    first=confirm(flow)
+    ref,_,_=completed(flow)
+    proposal=styles.propose(flow.project,input={'schema_version':'style_input.v2','project_id':flow.store.load_document()['project_id'],'base_revision':flow.store.current_revision_id(),'visual_style_ref':ref,'target_page_ids':['p02'],'instruction':'混合目录的图片规范'})
+    second=styles.confirm(flow.project,proposal_id=proposal['proposal_id'],base_revision=flow.store.current_revision_id(),operation_id=str(uuid.uuid4()))['operation_result']
+    value=input_value(flow.store.load_document(),ids=['p02','p03']);value['instruction']='混合目录的初始设计'
+    proposal=styles.propose(flow.project,input=value)
+    third=styles.confirm(flow.project,proposal_id=proposal['proposal_id'],base_revision=flow.store.current_revision_id(),operation_id=str(uuid.uuid4()))['operation_result']
+    before=flow.store.load_document();fixed={ref['sha256']:flow.store.read_object_bytes(ref) for ref in before['style_recipes']}
+    server=WorkbenchServer(flow.project)
+    with sync_playwright() as runtime:
+        browser=runtime.chromium.launch();page=browser.new_page();errors=[];page.on('pageerror',lambda error:errors.append(str(error)))
+        try:
+            page.goto(server.start()+'studio/');page.get_by_role('button',name='风格校准',exact=True).click();stage(page,'page',2)
+            expect(page.locator('.studio-recipe-card')).to_have_count(3)
+            for record,count in [(first,2),(second,2),(third,7)]:
+                card=page.locator('[data-recipe-id="'+record['recipe_id']+'"]')
+                card.get_by_role('button').click()
+                expect(page.locator('.recipe-rules dt')).to_have_count(count)
+                expect(page.locator('.studio-recipe-current')).to_contain_text('本次选中')
+            assert flow.store.load_document()==before and not errors
+            assert {ref['sha256']:flow.store.read_object_bytes(ref) for ref in before['style_recipes']}==fixed
+        finally:browser.close();server.stop()

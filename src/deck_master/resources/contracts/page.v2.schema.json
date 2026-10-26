@@ -365,10 +365,103 @@
                 "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
               },
               "uniqueItems": true
+            },
+            "layout_notes": {
+              "type": "string",
+              "description": "Replaces project layout notes for this page, including explicit empty clearing."
+            },
+            "selected_asset_ids": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+              },
+              "description": "Actual image attachments selected for this page; subset of permitted assets. Missing selects none for new preparations."
             }
           },
           "required": [],
           "additionalProperties": false
+        },
+        "design_policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "strategy",
+            "purpose",
+            "primary_object",
+            "free_layout",
+            "layout_instruction",
+            "table_roles"
+          ],
+          "properties": {
+            "version": {
+              "const": "design_policy.v1"
+            },
+            "strategy": {
+              "enum": [
+                "agreed_layout",
+                "model_designed"
+              ]
+            },
+            "purpose": {
+              "type": "string",
+              "minLength": 1
+            },
+            "primary_object": {
+              "type": "string",
+              "minLength": 1
+            },
+            "free_layout": {
+              "type": "string",
+              "minLength": 1
+            },
+            "layout_instruction": {
+              "type": "string"
+            },
+            "table_roles": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "block_id",
+                  "role"
+                ],
+                "properties": {
+                  "block_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "role": {
+                    "enum": [
+                      "comparison",
+                      "content_inventory"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "strategy": {
+                    "const": "agreed_layout"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "layout_instruction": {
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          ]
         }
       },
       "required": [
@@ -454,7 +547,7 @@
         },
         {
           "type": "object",
-          "description": "Page content mapping (CONTRACTS \u00a711.3): atom-level links to Narrative nodes/sources and speaker-note speech segments.",
+          "description": "Page content mapping (CONTRACTS §11.3): atom-level links to Narrative nodes/sources and speaker-note speech segments.",
           "additionalProperties": false,
           "required": [
             "narrative_ref",

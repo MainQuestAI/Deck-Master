@@ -163,8 +163,8 @@ def test_thirty_page_mobile_search_counts_missing_images_and_release(style_conte
     assert page.get_by_role('combobox', name='风格参考原图').input_value() == 'p01'
     assert page.evaluate('() => document.documentElement.scrollWidth <= innerWidth')
     page.screenshot(path=str(path.parent / 'style-mobile.png'))
-    page.get_by_role('button', name='内容与来源', exact=True).click()
-    page.get_by_role('heading', name='内容与来源', exact=True).wait_for()
+    page.get_by_role('button', name='内容与页序', exact=True).click()
+    page.get_by_role('heading', name='内容与页序', exact=True).wait_for()
     assert page.evaluate("async () => (await import('/v2/images.js')).imagePool.snapshot().pinned") == 0
     assert store.read_current() == before
 
@@ -285,8 +285,9 @@ def test_material_states_verify_actual_extract_and_preserve_errors(style_content
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()
     page.get_by_role('button', name='查看当前版本', exact=True).click()
     expect(page).to_have_url(re.compile('revision=' + store.current_revision_id()))
-    page.get_by_role('button', name='内容与来源', exact=True).click()
-    page.get_by_role('heading', name='内容与来源', exact=True).wait_for()
+    page.get_by_role('button', name='内容与页序', exact=True).click()
+    page.get_by_role('heading', name='内容与页序', exact=True).wait_for()
+    page.get_by_role('button',name='材料与来源',exact=True).click()
     card = page.locator('.source-card')
     card.get_by_role('button', name='材料状态与依据', exact=True).click()
     expect(card).to_contain_text('提取：记录待核实')
@@ -327,8 +328,9 @@ def test_visual_source_remains_unverified_and_late_reads_leave_new_face_alone(st
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()
     page.get_by_role('button', name='查看当前版本', exact=True).click()
     expect(page).to_have_url(re.compile('revision=' + store.current_revision_id()))
-    page.get_by_role('button', name='内容与来源', exact=True).click()
-    page.get_by_role('heading', name='内容与来源', exact=True).wait_for()
+    page.get_by_role('button', name='内容与页序', exact=True).click()
+    page.get_by_role('heading', name='内容与页序', exact=True).wait_for()
+    page.get_by_role('button',name='材料与来源',exact=True).click()
     page.locator('.source-card').get_by_role('button', name='材料状态与依据', exact=True).click()
     page.get_by_role('button', name='核实提取状态 diagram.png', exact=True).click()
     expect(page.locator('.source-card')).to_contain_text('提取：待制作工具看图')
@@ -346,8 +348,9 @@ def test_visual_source_remains_unverified_and_late_reads_leave_new_face_alone(st
     page.get_by_role('heading',name='风格校准',exact=True).wait_for()
     held[0][0].fulfill(response=held[0][1])
     assert not page.locator('#modal').evaluate('(node) => node.open')
-    page.get_by_role('button', name='内容与来源', exact=True).click()
-    page.get_by_role('heading', name='内容与来源', exact=True).wait_for()
+    page.get_by_role('button', name='内容与页序', exact=True).click()
+    page.get_by_role('heading', name='内容与页序', exact=True).wait_for()
+    page.get_by_role('button',name='材料与来源',exact=True).click()
     expect(page.locator('.source-card')).to_contain_text('提取：记录待核实')
     assert not page.locator('#modal').evaluate('(node) => node.open')
 

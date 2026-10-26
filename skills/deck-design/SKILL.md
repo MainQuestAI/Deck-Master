@@ -21,11 +21,13 @@ description: 独立设计方案、版式可行性与限定样页试作；消费�
 
 方案包括 Design/recipe、适用页型、代表页选择、布局理由和未覆盖范围。外部试作只对明确授权页和 allowance 执行，固定准确 generation_input/prompt/refs/canvas/物理尺寸后调用真实 ImageGen；按实际能力 freeze/begin/settle。原始蓝图、原 prompt 和失败均保留；无工具返回 needs_tool，不造图。
 
+方案与试作前按实际 compiler 支持子集说明可编辑边界：文字、关系连线和主要业务对象应可分离地重建为原生可编辑 PowerPoint 文字与形状。照片、获准 logo、纹理和复杂插画可作为有明确范围的位图素材；素材整体可替换，但内部不能逐对象编辑，不能承载本应可编辑的正文、关系或主要业务对象，更不能以整页嵌图冒充可编辑重建。所需效果超出支持子集时，先说明原生重画、局部素材化或简化的处理与视觉、可编辑性影响，不静默降级。此边界同时适用于 agreed_layout 与 model_designed，仍保留各自构图自由，不一律禁照片、阴影或插画；说明属于生产上下文，不追加上屏文案或新的审批流程。沿用已冻结请求与方法，不以新说明补改旧输入。
+
 样页候选不是采用；显式采用也不扩大页集合/调用预算。生产与重建的正文来自固定 Page，视觉来自固定原图；信息关系不可仅靠字符覆盖判定。按 physical-units 核对实际 p:sldSz、逐角色 run 字号、SVG 与原生 PPT 留白，不能改 converter 常数或在外层补一套未冻结字体。
 
 ## 退出条件与下一责任
 
-请求的方案/限定样页候选和覆盖说明已返回即结束本职责。缺内容依据交 Content，缺样页选择交用户决定，获得范围授权后由 Master/Producer 接续。完成/needs_tool/needs_reviewer 按 Runtime 真正状态与产物分列，不自动整套制作。
+请求的方案/限定样页候选和覆盖说明已返回即结束本职责。零调用方案读取 styles.propose 返回的 completion 与 proposal_ref；completed 只表示本次范围的方案产物已返回，不是用户确认或样页生产许可。尚未确认的提案不属于 Document 已提交状态，保留返回的固定 Ref，不要求用户为了结束本职责而确认。已确认规范由 continue 按当前 request、scope 与 basis 回读；历史或局部方案不能冒充新请求的完整结果。缺内容依据交 Content，缺样页选择交用户决定，获得范围授权后由 Master/Producer 接续。完成/needs_tool/needs_reviewer 按 Runtime 真正状态与产物分列，不自动整套制作。
 
 ## 同一发布版与方法
 
@@ -58,3 +60,15 @@ deck_master_cli = [str(python), "-I", "-m", "deck_master"]
 先读 `capabilities.read_protocols`；支持时可用 `read_protocol="work_context.v2", body_mode="full"`，未协商仍是 v1。v2 full 默认返回完整方法和来源，保留全部 Page/notes/限定、原图 refs/尺寸和物理约束；manifest 的 `context_ready=false` 不能执行为上下文已齐。delta 只省略当前受信适配器实际观察到的同一 Host session/context generation 可取回字节；新会话/压缩后或缺观察按冷 full，CLI cache offer 本身不能证明会话。可随时 full 重新取回。
 
 `runtime_returned_bytes`、body/cache 传输状态只证明 Runtime 返回或省略了哪些字节，不证明 Host 实际阅读、应用、独立审查或批准。实际执行身份、方法 SHA、判断、修改、产物及限制另记。恢复读取当前 scope/决定/撤回和 completion，不重复建项目或补授权。
+
+
+## 当前工作与下一责任（协商读取）
+
+先检查 capabilities.summary_protocols。支持 `workbench_summary.v2` 时，
+使用 `view --summary --summary-protocol workbench_summary.v2`；Python 方法 reader
+在 `read_protocol="work_context.v2"` 外显式传 `summary_protocol="workbench_summary.v2"`。
+四职责都消费同一 `current_work`，区分 delivery、review、next、blockers 和 optional。
+旧核心只返回已有事实与通用阅读入口，不自行补全制作责任。读操作不调用 continue、
+不创建 Task、不花模型预算；真正继续仍走原授权、basis、CAS 与 operation。
+首次有可读产物且当前 Host 支持时呈现一次；后续更新入口。URL、系统接受打开、
+前端加载、用户看见分别报告；没有观察保持未知。云端 loopback 不冒充用户可访问链接。

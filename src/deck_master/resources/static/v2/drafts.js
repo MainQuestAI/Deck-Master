@@ -244,9 +244,10 @@ export class DraftEditor {
     if (this.disposed) return;
     try {
       const value = {draft: this.draft, etag: this.etag, status: this.status, pendingSave: this.pendingSave};
+      const serialized = JSON.stringify(value);
       // Separate per-draft copies preserve an unsent draft when selecting another.
-      localStorage.setItem(`${this.bufferKey}:copy:${windowBufferId}:${this.draft.draft_id}`, JSON.stringify(value));
-      localStorage.setItem(this.activeKey, JSON.stringify(value));
+      localStorage.setItem(`${this.bufferKey}:copy:${windowBufferId}:${this.draft.draft_id}`, serialized);
+      localStorage.setItem(this.activeKey, serialized);
       this.storageError = '';
     } catch { this.storageError = '浏览器缓冲未保存。输入仍在此页，请立即下载恢复文件或复制内容。'; }
   }

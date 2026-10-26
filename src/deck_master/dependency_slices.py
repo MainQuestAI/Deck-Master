@@ -69,19 +69,20 @@ def _find_page(document, page_id):
     return None
 
 
-def _head_for_identity(store, document, family, id_field, identity):
-    """The current version of ``identity``: the chain head no other version
-    replaces (CONTRACTS §3.3). Falls back to the last match for records
-    without a replaces chain."""
-    if identity is None:
-        return None
-    region = document.get("collaboration") or {}
+def _region_records(store, region, family):
     records = []
     for ref in region.get(family) or []:
         try:
             records.append((ref, store.read_object_json(ref)))
         except Exception:  # noqa: BLE001 - unreadable records are simply absent
             continue
+    return records
+
+
+def _select_head(records, id_field, identity):
+    """Last matching record not replaced by a complete (path, sha256) pair."""
+    if identity is None:
+        return None
     replaced_pairs = set()
     for _, record in records:
         pair = record.get("replaces")
@@ -95,9 +96,12 @@ def _head_for_identity(store, document, family, id_field, identity):
     return None
 
 
-def _load_region_object(store, document, family, id_field, identity):
-    head = _head_for_identity(store, document, family, id_field, identity)
-    return head[1] if head else None
+def _head_for_identity(store, document, family, id_field, identity):
+    if identity is None:
+        return None
+    return _select_head(_region_records(store, document.get('collaboration') or {}, family), id_field, identity)
+
+
 
 
 def _semantic_refs(value):
@@ -401,6 +405,9 @@ def authorization_effectiveness(store, document, authorization_ref, *, now=None,
             parent = authorization_effectiveness(store, document, parent_ref, now=now, _depth=_depth + 1, _seen=_seen)
             if not parent["effective"]:
                 reasons.append("parent_ineffective")
+                if any(reason in ("authorization_revoked", "ancestor_authorization_revoked")
+                       for reason in parent["reasons"]):
+                    reasons.append("ancestor_authorization_revoked")
             if delegation_gaps(store, parent_record, record):
                 reasons.append("parent_scope_exceeded")
     for decision_ref in record.get("decision_refs") or []:

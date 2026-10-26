@@ -1,0 +1,93 @@
+{
+  "version": "performance-v1.2-closeout-status",
+  "recorded_at_utc": "2026-10-26T14:56:28.940864+00:00",
+  "branch": "codex/performance-v12-20261026",
+  "runtime_source_sha": "17a2d032ed2cf128c672ee6e568ddd52f6aeab20",
+  "latest_fixture_sha": "072c88e47ec30bc440f2470bdf03975575175947",
+  "status": "draft_review_ready_not_all_acceptance_passed",
+  "unit": {
+    "full_run": {
+      "passed": 4309,
+      "failed": 1,
+      "skipped": 2,
+      "deselected": 899,
+      "seconds": 1231.11,
+      "source_changed": false
+    },
+    "failure": "W10 extension needs design in explicit synthetic W01 request scope",
+    "fixture_only_repair_sha": "072c88e47ec30bc440f2470bdf03975575175947",
+    "exact_retry_passed": 1,
+    "aggregate_passed": 4310,
+    "aggregate_is_not_second_full_run": true,
+    "skips": "Existing Frozen A external installation checks; unchanged"
+  },
+  "installed": {
+    "passed": 628,
+    "failed": 1,
+    "selected": 629,
+    "seconds": 1561.62,
+    "product_modules_site_packages": 106,
+    "runtime_sha": "17a2d032ed2cf128c672ee6e568ddd52f6aeab20",
+    "source_changed": false,
+    "failure": "test_pending_current_version_sidebar_keeps_reviewed_candidate_revision[False]: recipe card absent",
+    "exact_two_parameter_retry_passed": 2,
+    "diagnostic_trials": 5,
+    "diagnostic_cases_passed": 10,
+    "failure_resolved": false
+  },
+  "offline": {
+    "checks_passed": 9,
+    "external_requests": 0,
+    "page_errors": 0,
+    "three_fixed_download_manifests_verified": true
+  },
+  "source_browser": {
+    "passed": 752,
+    "failed": 8,
+    "runtime_sha": "84a3a60efb9721491fd0845ca766caa1244df7d0",
+    "head_at_start": "756d69d0fa790eb38b3f7ef755b0111d85c4adf8",
+    "worktree_changed_during_run": [
+      "examples/workbench/w01_pressure.py"
+    ],
+    "product_source_unchanged_during_run": true,
+    "is_final_runtime_full_gate": false,
+    "remaining_failures": [
+      "two rsvg-dependent cases",
+      "original clear-storage publication race"
+    ],
+    "five_obsolete_test_expectations_corrected_and_targeted_passed": true
+  },
+  "w01": {
+    "final_factory": "072c88e47ec30bc440f2470bdf03975575175947",
+    "samples_each": 100,
+    "threshold_ms": 250,
+    "baseline_p95_ms": 88.30311100064137,
+    "candidate_p95_ms": 98.0300739993254,
+    "both_passed": true,
+    "background_each": "one start, zero cancel; no sustained-transition coverage claim",
+    "v1_speedup_claim": false
+  },
+  "blocking_items": [
+    "Confirmed b688c300 and candidate clear-storage publication race; no approved new durable arbitration implemented",
+    "Installed style navigation failure not reproduced by exact/diagnostic retries; cause unresolved",
+    "Missing rsvg-convert prevents renderer-dependent cases and full required formal assemble chain"
+  ],
+  "authorization": {
+    "push_and_draft_pr": true,
+    "merge": false,
+    "release": false,
+    "issue_closure": false
+  },
+  "independent_review": "In-thread readonly review completed; parent will create requested separate Astra xhigh cloud review. This is not that independent cloud review.",
+  "atomic_clear_followup": {
+    "status": "implemented_source_verified_installation_pending",
+    "source_parent": "e6d5a572b99d7d0d5c9bf37bb95c335d4b9a35bc",
+    "affected_browser_http_passed": 36,
+    "migration_abort_passed": 6,
+    "independent_product_contention_trials_passed": 10,
+    "prior_e6_full_installed_passed": 630,
+    "prior_e6_supplemental_installed_passed": 12,
+    "review": "local read-only no blocker; separate Astra xhigh review still required",
+    "report": "atomic-clear-followup.md"
+  }
+}

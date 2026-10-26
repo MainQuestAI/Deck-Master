@@ -1,0 +1,248 @@
+{
+  "module_origin": "/workspace/scratch/perf-baseline/src/deck_master/__init__.py",
+  "task_count": 200,
+  "fixture_document_sha256": "c21f9b070a947e4d54a78b8c89fd4a21d009f69f994340456160ff60f66e9372",
+  "scope": "same 200-task w01 fixture; original copied-heavy scopes not conflated; 3 samples are not p95; Store bytes exclude direct context cache IO",
+  "rows": [
+    {
+      "attention": false,
+      "limit": 1,
+      "phase": "uninstrumented",
+      "sample": 0,
+      "cpu_seconds": 0.008784644000000341,
+      "wall_seconds": 0.008779173000220908,
+      "total": 200,
+      "response_sha256": "46a2b99fb47e66199c5692bcdf66b91acefe16273d91cd13bbaac89c07875ff2"
+    },
+    {
+      "attention": false,
+      "limit": 1,
+      "phase": "uninstrumented",
+      "sample": 1,
+      "cpu_seconds": 0.007874594999999651,
+      "wall_seconds": 0.007871920000070531,
+      "total": 200,
+      "response_sha256": "46a2b99fb47e66199c5692bcdf66b91acefe16273d91cd13bbaac89c07875ff2"
+    },
+    {
+      "attention": false,
+      "limit": 1,
+      "phase": "uninstrumented",
+      "sample": 2,
+      "cpu_seconds": 0.007683357000000335,
+      "wall_seconds": 0.007681194000724645,
+      "total": 200,
+      "response_sha256": "46a2b99fb47e66199c5692bcdf66b91acefe16273d91cd13bbaac89c07875ff2"
+    },
+    {
+      "attention": false,
+      "limit": 1,
+      "phase": "probe",
+      "row": 200,
+      "relationship": 200,
+      "relationship_misses": 200,
+      "unique_store_refs": 0,
+      "total": 200
+    },
+    {
+      "attention": false,
+      "limit": 30,
+      "phase": "uninstrumented",
+      "sample": 0,
+      "cpu_seconds": 0.008140731000000123,
+      "wall_seconds": 0.008137535999594547,
+      "total": 200,
+      "response_sha256": "1503db3a7f38d9d121abdc58450a5d99788b6243c57dbe3a5af52a9474b4fdbc"
+    },
+    {
+      "attention": false,
+      "limit": 30,
+      "phase": "uninstrumented",
+      "sample": 1,
+      "cpu_seconds": 0.009359976999999908,
+      "wall_seconds": 0.009356870999909006,
+      "total": 200,
+      "response_sha256": "1503db3a7f38d9d121abdc58450a5d99788b6243c57dbe3a5af52a9474b4fdbc"
+    },
+    {
+      "attention": false,
+      "limit": 30,
+      "phase": "uninstrumented",
+      "sample": 2,
+      "cpu_seconds": 0.008742515999999867,
+      "wall_seconds": 0.00874006100002589,
+      "total": 200,
+      "response_sha256": "1503db3a7f38d9d121abdc58450a5d99788b6243c57dbe3a5af52a9474b4fdbc"
+    },
+    {
+      "attention": false,
+      "limit": 30,
+      "phase": "probe",
+      "row": 200,
+      "relationship": 200,
+      "relationship_misses": 200,
+      "unique_store_refs": 0,
+      "total": 200
+    },
+    {
+      "attention": false,
+      "limit": 100,
+      "phase": "uninstrumented",
+      "sample": 0,
+      "cpu_seconds": 0.010327504999999348,
+      "wall_seconds": 0.010324287000003096,
+      "total": 200,
+      "response_sha256": "6d67bbd4c8b95d507277f7c2299082040056c4a4706f20775c488137010ad134"
+    },
+    {
+      "attention": false,
+      "limit": 100,
+      "phase": "uninstrumented",
+      "sample": 1,
+      "cpu_seconds": 0.009983433000000375,
+      "wall_seconds": 0.009980484999687178,
+      "total": 200,
+      "response_sha256": "6d67bbd4c8b95d507277f7c2299082040056c4a4706f20775c488137010ad134"
+    },
+    {
+      "attention": false,
+      "limit": 100,
+      "phase": "uninstrumented",
+      "sample": 2,
+      "cpu_seconds": 0.009640602000000165,
+      "wall_seconds": 0.009638257000005979,
+      "total": 200,
+      "response_sha256": "6d67bbd4c8b95d507277f7c2299082040056c4a4706f20775c488137010ad134"
+    },
+    {
+      "attention": false,
+      "limit": 100,
+      "phase": "probe",
+      "row": 200,
+      "relationship": 200,
+      "relationship_misses": 200,
+      "unique_store_refs": 0,
+      "total": 200
+    },
+    {
+      "attention": true,
+      "limit": 1,
+      "phase": "uninstrumented",
+      "sample": 0,
+      "cpu_seconds": 0.007305300999999709,
+      "wall_seconds": 0.0073029890008911025,
+      "total": 72,
+      "response_sha256": "cbf317c7ef58f7687c99249f46306714f50118bbab411766c58c8c5a0ff4b32e"
+    },
+    {
+      "attention": true,
+      "limit": 1,
+      "phase": "uninstrumented",
+      "sample": 1,
+      "cpu_seconds": 0.007313085999999913,
+      "wall_seconds": 0.007311014000151772,
+      "total": 72,
+      "response_sha256": "cbf317c7ef58f7687c99249f46306714f50118bbab411766c58c8c5a0ff4b32e"
+    },
+    {
+      "attention": true,
+      "limit": 1,
+      "phase": "uninstrumented",
+      "sample": 2,
+      "cpu_seconds": 0.007349172999999709,
+      "wall_seconds": 0.007347050999669591,
+      "total": 72,
+      "response_sha256": "cbf317c7ef58f7687c99249f46306714f50118bbab411766c58c8c5a0ff4b32e"
+    },
+    {
+      "attention": true,
+      "limit": 1,
+      "phase": "probe",
+      "row": 200,
+      "relationship": 200,
+      "relationship_misses": 200,
+      "unique_store_refs": 0,
+      "total": 72
+    },
+    {
+      "attention": true,
+      "limit": 30,
+      "phase": "uninstrumented",
+      "sample": 0,
+      "cpu_seconds": 0.008106467999999367,
+      "wall_seconds": 0.008102730000246083,
+      "total": 72,
+      "response_sha256": "13c4cc0f9ca087691360fe9a510c9b571a58ae0306fe022c5fde53f3c3d40f45"
+    },
+    {
+      "attention": true,
+      "limit": 30,
+      "phase": "uninstrumented",
+      "sample": 1,
+      "cpu_seconds": 0.008295579999999525,
+      "wall_seconds": 0.008293066000078397,
+      "total": 72,
+      "response_sha256": "13c4cc0f9ca087691360fe9a510c9b571a58ae0306fe022c5fde53f3c3d40f45"
+    },
+    {
+      "attention": true,
+      "limit": 30,
+      "phase": "uninstrumented",
+      "sample": 2,
+      "cpu_seconds": 0.008695688000000423,
+      "wall_seconds": 0.00869318300010491,
+      "total": 72,
+      "response_sha256": "13c4cc0f9ca087691360fe9a510c9b571a58ae0306fe022c5fde53f3c3d40f45"
+    },
+    {
+      "attention": true,
+      "limit": 30,
+      "phase": "probe",
+      "row": 200,
+      "relationship": 200,
+      "relationship_misses": 200,
+      "unique_store_refs": 0,
+      "total": 72
+    },
+    {
+      "attention": true,
+      "limit": 100,
+      "phase": "uninstrumented",
+      "sample": 0,
+      "cpu_seconds": 0.009764534000000324,
+      "wall_seconds": 0.009761276000062935,
+      "total": 72,
+      "response_sha256": "12797a76f6cf0fbc5ee2a9bdcee01dd5c3638f9b07220538f73ae2e93d49d145"
+    },
+    {
+      "attention": true,
+      "limit": 100,
+      "phase": "uninstrumented",
+      "sample": 1,
+      "cpu_seconds": 0.012429789999999663,
+      "wall_seconds": 0.012427059999936318,
+      "total": 72,
+      "response_sha256": "12797a76f6cf0fbc5ee2a9bdcee01dd5c3638f9b07220538f73ae2e93d49d145"
+    },
+    {
+      "attention": true,
+      "limit": 100,
+      "phase": "uninstrumented",
+      "sample": 2,
+      "cpu_seconds": 0.011104976000000377,
+      "wall_seconds": 0.011109451999800513,
+      "total": 72,
+      "response_sha256": "12797a76f6cf0fbc5ee2a9bdcee01dd5c3638f9b07220538f73ae2e93d49d145"
+    },
+    {
+      "attention": true,
+      "limit": 100,
+      "phase": "probe",
+      "row": 200,
+      "relationship": 200,
+      "relationship_misses": 200,
+      "unique_store_refs": 0,
+      "total": 72
+    }
+  ]
+}

@@ -105,10 +105,12 @@ def test_only_allowed_assets_enter_prompt() -> None:
 
 
 def test_blueprint_task_exposes_only_allowed_asset_bytes(tmp_path: Path) -> None:
-    logo = tmp_path / "logo.svg"
-    logo.write_text("<svg xmlns='http://www.w3.org/2000/svg' width='80' height='20'/>")
+    from PIL import Image
+    logo = tmp_path / "logo.png"
+    Image.new("RGB", (80, 20), "green").save(logo)
     project = tmp_path / "project"
     draft = _draft()
+    draft["pages"][0]["visual_spec"]["design_overrides"] = {"selected_asset_ids": ["brand-logo"]}
     service.create(
         project,
         brief="brand test",
@@ -126,7 +128,9 @@ def test_blueprint_task_exposes_only_allowed_asset_bytes(tmp_path: Path) -> None
     files = task["production_request"]["permitted_asset_files"]
     assert len(files) == 1
     assert files[0]["asset_id"] == "brand-logo"
-    assert files[0]["media_type"] == "image/svg+xml"
+    assert files[0]["media_type"] == "image/png"
+    from deck_master.store import Store
+    assert Store(project).read_object_bytes(files[0]["file"]) == logo.read_bytes()
     assert files[0]["file"]["path"].startswith(".deckmaster/objects/")
 
 

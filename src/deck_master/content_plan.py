@@ -323,13 +323,14 @@ def projection(store, document, *, reader=None, page_id=None, summary=False, sch
         if not schema_validated:
             validate_schema("content_plan", plan)
         if plan['schema_version'] == 'content_plan.v2':
-            return _projection_v2(document, plan, ref, page_id=page_id, summary=summary)
+            return _projection_v2(document, plan, ref, page_id=page_id, summary=summary,
+                input_digest=getattr(store, 'input_digest', compute_input_digest)(document))
         if plan["schema_version"] != "content_plan.v1":
             raise ValueError("not a content plan")
         if plan["project_id"] != document["project_id"]:
             raise ValueError("foreign content plan")
         linked = {p["page_id"]: p for p in plan["page_links"]}
-        changed = plan["basis"]["input_digest"] != compute_input_digest(document) or list(linked) != list(pages)
+        changed = plan["basis"]["input_digest"] != getattr(store, "input_digest", compute_input_digest)(document) or list(linked) != list(pages)
         changed |= any(pages.get(pid, {}).get("page") != link["page_ref"] for pid, link in linked.items())
         result = {"status": "recorded", "relation": "known", "ref": ref, "plan_id": plan["plan_id"],
                   "version": plan["version"], "origin": plan["origin"],
@@ -358,12 +359,12 @@ def projection(store, document, *, reader=None, page_id=None, summary=False, sch
                 "error": {"code": "content_plan_unreadable", "message": "stored content plan is missing, invalid or damaged"}}
 
 
-def _projection_v2(document, plan, ref, *, page_id, summary):
+def _projection_v2(document, plan, ref, *, page_id, summary, input_digest=None):
     if plan['project_id'] != document['project_id']:
         raise ValueError('foreign content plan')
     pages = {entry['page_id']: entry for entry in document['pages']}
     linked = {entry['page_id']: entry for entry in plan['page_links']}
-    changed = plan['basis']['input_digest'] != compute_input_digest(document)
+    changed = plan['basis']['input_digest'] != (input_digest if input_digest is not None else compute_input_digest(document))
     changed |= plan.get('narrative_ref') != document.get('narrative')
     if plan['mode'] == 'planned':
         changed |= bool(pages)
