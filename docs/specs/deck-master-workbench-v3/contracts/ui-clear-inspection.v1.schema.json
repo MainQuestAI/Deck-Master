@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "project_identity",
+    "request",
+    "request_digest",
+    "status",
+    "receipt",
+    "backup",
+    "items",
+    "current_state",
+    "reason",
+    "recovery_url",
+    "inspection_digest"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "ui_clear_inspection.v1"
+    },
+    "project_identity": {
+      "type": "string"
+    },
+    "request": {
+      "$ref": "ui-clear-request.v1.schema.json"
+    },
+    "request_digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "status": {
+      "enum": [
+        "cleared",
+        "no_execution_evidence",
+        "incomplete",
+        "unverifiable",
+        "ended"
+      ]
+    },
+    "receipt": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "backup": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "current_state": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "recovery_url": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "inspection_digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  }
+}

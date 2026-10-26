@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "project_identity",
+    "request",
+    "request_digest",
+    "inspection",
+    "backup",
+    "ended_at",
+    "record_digest"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "ui_clear_closure.v1"
+    },
+    "project_identity": {
+      "type": "string"
+    },
+    "request": {
+      "$ref": "ui-clear-request.v1.schema.json"
+    },
+    "request_digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "inspection": {
+      "$ref": "ui-clear-inspection.v1.schema.json"
+    },
+    "backup": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "ui-clear-backup.v1.schema.json"
+        }
+      ]
+    },
+    "ended_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "record_digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  }
+}
