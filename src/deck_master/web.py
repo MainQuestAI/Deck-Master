@@ -258,10 +258,12 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 action = {'/api/drafts/save': ui_journal.save, '/api/drafts/import': ui_journal.import_recovery,
                           '/api/drafts/recovery': ui_journal.recovery_file, '/api/ui-state': ui_journal.save_position}[self.path]
                 result = action(self.store.project_root, **data)
-            elif self.path in ('/api/ui-state/plan-clear', '/api/ui-state/commit-clear'):
+            elif self.path in ('/api/ui-state/plan-clear', '/api/ui-state/commit-clear', '/api/ui-state/inspect-clear', '/api/ui-state/end-clear'):
                 from . import ui_journal
                 action = {'/api/ui-state/plan-clear': ui_journal.plan_clear,
-                          '/api/ui-state/commit-clear': ui_journal.commit_clear}[self.path]
+                          '/api/ui-state/commit-clear': ui_journal.commit_clear,
+                          '/api/ui-state/inspect-clear': ui_journal.inspect_clear,
+                          '/api/ui-state/end-clear': ui_journal.end_clear}[self.path]
                 result = action(self.store.project_root, **data)
             elif self.path in ('/api/ui-state/plan-restore', '/api/ui-state/restore'):
                 from . import personal_recovery
@@ -380,6 +382,19 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                     'message': getattr(exc, 'detail', 'Fixed record unavailable'), 'field': getattr(exc, 'path', None)}},
                     getattr(exc, 'http_status', 503))
             return
+        if parsed.path.startswith('/api/ui-state/clear-recovery'):
+            from . import ui_journal
+            try:
+                if parsed.path == '/api/ui-state/clear-recovery' and not parsed.query:
+                    from .ui_clear_recovery import listing
+                    self._send_json(listing(self.store.project_root)); return
+                parts = parsed.path.split('/')
+                if parsed.query or len(parts) != 6 or parts[5] != 'download':
+                    raise ValueError('select an ended clear recovery download')
+                data, name = ui_journal.clear_recovery_download(self.store.project_root, operation_id=parts[4])
+                self._send_bytes(data, 'application/json', download_name=name); return
+            except Exception as exc:
+                self._send_error(exc); return
         if parsed.path.startswith('/api/ui-state/backups'):
             from . import personal_recovery
             try:

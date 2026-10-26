@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+from contextlib import contextmanager
 import time
 import uuid
 
@@ -549,12 +550,10 @@ def commit_clear(project, *, operation_id, input, plan_id, manifest_digest):
     store, doc, identity = context(project)
     # 与各保存方互斥，固定获取顺序；overview 清理保留 CAS 屏障。
     # （固定获取顺序，保存方各自只取一把锁，不存在死锁环）。clear.lock 保护日志追加。
-    with local_lock(safe_path(_directory(store), "journal.lock")), \
-            local_lock(safe_path(store.deck_root, "workbench", "gallery.lock")), \
-            local_lock(safe_path(store.deck_root, "workbench", "overview.lock")), \
-            local_lock(safe_path(store.deck_root, "workbench", "result-reading.lock")), \
-            local_lock(safe_path(_position_path(store).parent, "position.lock")), \
-            local_lock(safe_path(_clear_log_path(store).parent, "clear.lock")):
+    with clear_lock(store):
+        from .ui_clear_recovery import refuse_ended
+        preserved = dict(operation_id=operation_id, input=input, plan_id=plan_id, manifest_digest=manifest_digest)
+        refuse_ended(store, identity, preserved)
         for entry in _read_clear_log(store):
             if entry["operation_id"] == operation_id:
                 if (entry['plan_id'] != plan_id or entry['manifest_digest'] != manifest_digest
@@ -638,3 +637,30 @@ def _clear_backup_records(store, items):
             records.append({"kind": "reading_position", "id": item["id"], "etag": item["etag"],
                             "record": read_json(_position_path(store))})
     return records
+
+
+@contextmanager
+def clear_lock(store):
+    """Shared lock order for cleanup, inspection and ending a retained request."""
+    with local_lock(safe_path(_directory(store), "journal.lock")), \
+            local_lock(safe_path(store.deck_root, "workbench", "gallery.lock")), \
+            local_lock(safe_path(store.deck_root, "workbench", "overview.lock")), \
+            local_lock(safe_path(store.deck_root, "workbench", "result-reading.lock")), \
+            local_lock(safe_path(_position_path(store).parent, "position.lock")), \
+            local_lock(safe_path(_clear_log_path(store).parent, "clear.lock")):
+        yield
+
+
+def inspect_clear(project, **kwargs):
+    from .ui_clear_recovery import inspect_clear as inspect
+    return inspect(project, **kwargs)
+
+
+def end_clear(project, **kwargs):
+    from .ui_clear_recovery import end_clear as end
+    return end(project, **kwargs)
+
+
+def clear_recovery_download(project, *, operation_id):
+    from .ui_clear_recovery import download
+    return download(project, operation_id=operation_id)

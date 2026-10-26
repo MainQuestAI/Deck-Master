@@ -396,7 +396,8 @@ def build_parser() -> argparse.ArgumentParser:
         "annotations": {"save": ("input", "base-revision", "operation-id"), "list": ()},
         "changes": {"list": (), "plan": ("input",), "commit": ("plan-id", "base-revision", "operation-id"), "handoff": ("change-id",)},
         "operations": {"show": ("operation-id",)},
-        "ui": {"plan-clear": ("input",), "commit-clear": ("operation-id", "input")},
+        "ui": {"plan-clear": ("input",), "commit-clear": ("operation-id", "input"),
+               "inspect-clear": ("operation-id", "input"), "end-clear": ("operation-id", "input", "inspection-digest")},
         "candidates": {"list": (), "show": ("candidate-id",), "plan": ("input",), "adopt": ("input", "base-revision", "operation-id"), "decision": ("input", "base-revision", "operation-id")},
         "stages": {"assemble": ("base-revision", "operation-id")},
         "content": {"plan": ("input",), "commit": ("plan-id", "base-revision", "operation-id"), "inputs": ("input", "base-revision", "operation-id"), "source": ("source-id",), "lineage": ("page-id",)},
@@ -422,7 +423,7 @@ def build_parser() -> argparse.ArgumentParser:
             if name == "icons" and command == "list": command_parser.add_argument("--include-stale", action="store_true")
             if (name == "icons" and command in ("list", "inspect")) or (name == "styles" and command in ("list", "show")):
                 command_parser.add_argument("--revision")
-            if name == "ui" and command == "commit-clear":
+            if name == "ui" and command in ("commit-clear", "inspect-clear", "end-clear"):
                 command_parser.add_argument("--plan-id", required=True)
                 command_parser.add_argument("--manifest-digest", required=True)
             if name == "candidates" and command in ("list", "show"):
@@ -835,11 +836,12 @@ def main(argv: list[str] | None = None) -> int:
                        ("candidates", "plan"): candidates.plan, ("candidates", "adopt"): candidates.adopt,
                        ("candidates", "decision"): candidates.decide,
                        ("ui", "plan-clear"): ui_journal.plan_clear, ("ui", "commit-clear"): ui_journal.commit_clear,
+                       ("ui", "inspect-clear"): ui_journal.inspect_clear, ("ui", "end-clear"): ui_journal.end_clear,
                        ("stages", "assemble"): stages.assemble,
                        ("styles", "analyze"): visual_styles.analyze, ("styles", "list"): styles.listing, ("styles", "show"): styles.show,
                        ("styles", "propose"): styles.propose, ("styles", "confirm"): styles.confirm, ("styles", "plan"): styles.plan}
             fields = {key: getattr(options, key) for key in
-                      ("base_revision", "operation_id", "plan_id", "manifest_digest", "change_id", "candidate_id", "page_id", "revision", "recipe_id", "proposal_id", "source_id", "locator", "extract_sha256", "retry", "include_stale") if hasattr(options, key)}
+                      ("base_revision", "operation_id", "plan_id", "manifest_digest", "inspection_digest", "change_id", "candidate_id", "page_id", "revision", "recipe_id", "proposal_id", "source_id", "locator", "extract_sha256", "retry", "include_stale") if hasattr(options, key)}
             if hasattr(options, "input"):
                 fields["input"] = json.loads(Path(options.input).read_text(encoding="utf-8"))
             return _emit(actions[(options.command, options.workbench_command)](options.project, **fields))

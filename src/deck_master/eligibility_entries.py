@@ -348,6 +348,8 @@ CLI_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
                                "guards recovery; recovery keeps current control)", None),
     "ui plan-clear": (None, "-", READ_REASONS["ui_state"]),
     "ui commit-clear": (None, "-", READ_REASONS["ui_state"]),
+    "ui inspect-clear": (None, "-", READ_REASONS["ui_state"]),
+    "ui end-clear": (None, "-", READ_REASONS["ui_state"]),
     # -- read-only / non-project
     "doctor": (None, "-", READ_REASONS["install"]),
     "legacy-map": (None, "-", READ_REASONS["read_model"]),
@@ -488,6 +490,9 @@ HTTP_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "/api/ui-state": (None, "-", READ_REASONS["ui_state"]),
     "/api/ui-state/plan-clear": (None, "-", READ_REASONS["ui_state"]),
     "/api/ui-state/commit-clear": (None, "-", READ_REASONS["ui_state"]),
+    "/api/ui-state/inspect-clear": (None, "-", READ_REASONS["ui_state"]),
+    "/api/ui-state/end-clear": (None, "-", READ_REASONS["ui_state"]),
+    "/api/ui-state/clear-recovery": (None, "-", READ_REASONS["ui_state"]),
     "/api/ui-state/plan-restore": (None, "-", READ_REASONS["ui_state"]),
     "/api/ui-state/restore": (None, "-", READ_REASONS["ui_state"]),
     "/api/gallery": (None, "-", READ_REASONS["ui_state"]),
