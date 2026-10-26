@@ -24,8 +24,9 @@
 
 ## 键盘：macOS 无头 Chromium 的原生菜单输入
 
-旧本机使用 Playwright 1.61 / Chromium 149；CI 使用 Playwright 1.64.1 /
-Chromium 156.0.8078.4。隔离下载与 CI 相同版本后，macOS 上原三视口仍全部
+旧本机使用 Playwright 1.61 / Chromium 149；CI 日志确认 Chromium 156.0.8078.4，
+未直接输出 Playwright 包版本。本机用 Playwright 1.64.1 及其对应的同版
+Chromium 作隔离对照后，macOS 上原三视口仍全部
 失败。产品控件与不包含产品脚本的裸 `select` 均表现为 ArrowDown 打开菜单，
 Enter 后值仍为 `project`，未产生 input/change，排除了产品处理和版本差异。
 
