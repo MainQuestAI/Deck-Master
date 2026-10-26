@@ -16,7 +16,12 @@ export function personalClearPanel(app) {
   const identity = app.info.project_identity;
   const key = `deck-master:v3:personal-clear:${identity}`;
   let plan = null, keepBusy = false, pending = null, storageBlocked = false, inspection = null;
+  const sameRequest = (left, right) => Boolean(left && right &&
+    left.project_identity === identity && right.project_identity === identity &&
+    left.request?.operation_id === right.request?.operation_id &&
+    canonical(left.request) === canonical(right.request));
   const readPending = () => {
+    const previous = pending;
     try {
       const raw = localStorage.getItem(key);
       pending = raw ? JSON.parse(raw) : null;
@@ -25,10 +30,11 @@ export function personalClearPanel(app) {
           pending.request.input?.scope !== 'current_project' || !pending.request.plan_id || !pending.request.manifest_digest)) {
         throw new Error('unverifiable retained request');
       }
+      if ((previous || pending) && !sameRequest(previous, pending)) { plan = null; inspection = null; }
       storageBlocked = false;
-      if (pending) notice.textContent = '清理结果待核实。原操作编号和请求已保留，请核实并重试原清理。';
+      if (pending && !sameRequest(previous, pending)) notice.textContent = '清理结果待核实。原操作编号和请求已保留，请核实并重试原清理。';
     } catch {
-      storageBlocked = true;
+      pending = null; inspection = null; storageBlocked = true;
       notice.textContent = '本机清理恢复记录暂不可核实。原记录保留，请先查看清理备份；未发起新清理。';
     }
   };
@@ -63,56 +69,68 @@ export function personalClearPanel(app) {
     } catch (error) { plan = null; notice.textContent = clearError(error); }
     finally { keepBusy = false; readPending(); refresh(); }
   });
+  // Only local read/compare/write runs under the origin-wide project lock.
+  // Never hold it while waiting for the server: another tab must be able to recover.
+  const lockedPending = async (change) => {
+    if (!navigator.locks?.request) throw new Error('无法安全保留清理恢复记录，未发起新的清理；请在支持本机恢复锁的浏览器中核实。');
+    return navigator.locks.request(key, () => {
+      readPending();
+      if (storageBlocked) throw new Error('本机清理恢复记录暂不可核实，原记录保留。');
+      return change();
+    });
+  };
+  const requireOwner = (sent) => {
+    if (!sameRequest(pending, sent)) throw new Error('恢复记录已属于其他操作，请核实当前保留的请求。');
+  };
+  const releasePending = (sent) => lockedPending(() => {
+    requireOwner(sent);
+    localStorage.removeItem(key);
+    pending = null; plan = null; inspection = null; scopeView.replaceChildren();
+  });
+  const finish = () => { keepBusy = false; readPending(); refresh(); };
   const commit = button('确认清理并保留备份', async () => {
     if (keepBusy) return;
     readPending();
     if (storageBlocked || (!pending && !plan)) { refresh(); return; }
-    const recovering = Boolean(pending);
+    const recovering = Boolean(pending), expected = pending, planned = plan;
+    let sent = null;
     keepBusy = true; refresh();
     try {
       const current = await get('/api/project?light=1');
       if (current.project_identity !== identity) throw new Error('项目身份已改变，请重新打开原项目核实。');
-      if (!pending) {
-        readPending();
-        if (pending || storageBlocked) throw new Error('本机已有待核实记录，请先处理原清理请求。');
-        pending = {project_identity: identity, request: {operation_id: crypto.randomUUID(),
-          input: {project_id: plan.project_id, scope: 'current_project', draft_ids: 'all', reading_preferences: true},
-          plan_id: plan.plan_id, manifest_digest: plan.manifest_digest}};
-        try { localStorage.setItem(key, JSON.stringify(pending)); }
-        catch { pending = null; throw new Error('无法保留清理恢复记录，未发起清理。'); }
-      }
-      const sent = pending;
+      sent = await lockedPending(() => {
+        if (recovering) requireOwner(expected);
+        else {
+          if (pending) throw new Error('本机已有待核实记录，请先处理原清理请求。');
+          const next = {project_identity: identity, request: {operation_id: crypto.randomUUID(),
+            input: {project_id: planned.project_id, scope: 'current_project', draft_ids: 'all', reading_preferences: true},
+            plan_id: planned.plan_id, manifest_digest: planned.manifest_digest}};
+          localStorage.setItem(key, JSON.stringify(next)); pending = next;
+        }
+        return JSON.parse(JSON.stringify(pending));
+      });
       const result = await post('/api/ui-state/commit-clear', sent.request);
       if (result.status !== 'cleared' || result.operation_id !== sent.request.operation_id ||
           result.plan_id !== sent.request.plan_id || result.manifest_digest !== sent.request.manifest_digest ||
           !Array.isArray(result.cleared)) throw new Error('清理回执无法与原请求对应。');
-      if (localStorage.getItem(key) === JSON.stringify(sent)) localStorage.removeItem(key);
-      pending = null;
+      await releasePending(sent);
       notice.replaceChildren(el('p', {}, `已清理 ${result.cleared.length} 项，恢复备份已保留；任务与候选未受影响。`), personalBackupButton(app));
-      scopeView.replaceChildren();
-      plan = null;
     } catch (error) {
-      // Only a first-attempt, explicit CAS refusal proves this operation did
-      // not clear anything. A replay refusal cannot resolve earlier uncertainty.
-      if (!recovering && error.code === 'local_state_conflict' && error.field === 'manifest_digest') {
-        try { localStorage.removeItem(key); pending = null; plan = null; }
-        catch { /* retain the original recovery request */ }
-        notice.textContent = '个人状态已变化，本次清理被拒绝；请重新生成计划。';
-      } else notice.textContent = clearError(error) + (pending ? ' 清理结果待核实。原请求保留，请先核实原清理结果。' : '');
-    }
-    finally { keepBusy = false; refresh(); }
+      // An explicit first-attempt CAS refusal resolves only the request sent here.
+      if (sent && !recovering && error.code === 'local_state_conflict' && error.field === 'manifest_digest') {
+        try {
+          await releasePending(sent);
+          notice.textContent = '个人状态已变化，本次清理被拒绝；请重新生成计划。';
+        } catch (releaseError) { notice.textContent = clearError(releaseError); }
+      } else notice.textContent = clearError(error) + (pending ? ' 清理结果待核实，原请求保留。' : '');
+    } finally { finish(); }
   }, true, {disabled: true});
   const validateBinding = async (result, sent) => {
     if (result.project_identity !== identity || canonical(result.request) !== canonical(sent.request) ||
         result.request_digest !== await digest(sent.request)) throw new Error('核实结果无法与原清理请求对应。');
   };
-  const releasePending = (sent) => {
-    if (localStorage.getItem(key) !== JSON.stringify(sent)) throw new Error('恢复记录已变化，请重新核实。');
-    localStorage.removeItem(key);
-    pending = null; plan = null; inspection = null; scopeView.replaceChildren();
-  };
-  const showEnded = (sent) => {
-    releasePending(sent);
+  const showEnded = async (sent) => {
+    await releasePending(sent);
     notice.replaceChildren(el('p', {}, '旧清理操作已结束。结果与恢复记录已保留；请生成新计划并重新确认范围。结束操作没有继续删除或恢复草稿。'),
       personalBackupButton(app));
   };
@@ -120,7 +138,7 @@ export function personalClearPanel(app) {
     if (keepBusy) return;
     readPending();
     if (!pending || storageBlocked) { refresh(); return; }
-    const sent = pending;
+    const sent = JSON.parse(JSON.stringify(pending));
     inspection = null; keepBusy = true; refresh();
     try {
       const result = await post('/api/ui-state/inspect-clear', sent.request);
@@ -131,36 +149,39 @@ export function personalClearPanel(app) {
             receipt.manifest_digest !== sent.request.manifest_digest || !Array.isArray(receipt.cleared)) {
           throw new Error('成功回执无法与原清理请求对应。');
         }
-        releasePending(sent);
+        await releasePending(sent);
         notice.replaceChildren(el('p', {}, `已清理 ${receipt.cleared.length} 项；本次核实没有再次清理。${result.backup?.available ? '原备份可查看。' : '原备份暂不可用，请保留回执。'}`), personalBackupButton(app));
-      } else if (result.status === 'ended') showEnded(sent);
+      } else if (result.status === 'ended') await showEnded(sent);
       else if (['no_execution_evidence', 'incomplete', 'unverifiable'].includes(result.status) &&
                /^[a-f0-9]{64}$/.test(result.inspection_digest)) {
-        inspection = result;
+        await lockedPending(() => { requireOwner(sent); inspection = result; });
         if (result.status === 'no_execution_evidence') notice.textContent = '未发现执行证据，不能据此认定旧请求从未执行。可明确结束旧操作，再生成新计划。';
         if (result.status === 'incomplete') notice.textContent = `发现清理中断证据，已核实备份中 ${result.backup?.count || 0} 项记录。结束旧操作会保留备份，不继续删除或自动恢复。`;
         if (result.status === 'unverifiable') notice.textContent = '原清理证据暂无法核实。原请求保留，请检查本机恢复记录后重新核实。';
       } else throw new Error('清理核实状态无法识别，原请求保留。');
     } catch (error) { inspection = null; notice.textContent = clearError(error) + ' 清理结果待核实，原请求保留。'; }
-    finally { keepBusy = false; refresh(); }
+    finally { finish(); }
   });
   const endButton = button('结束旧操作并重新计划', async () => {
     if (keepBusy) return;
     readPending();
     if (storageBlocked || !pending || !inspection || canonical(inspection.request) !== canonical(pending.request) ||
         !['no_execution_evidence', 'incomplete'].includes(inspection.status)) { refresh(); return; }
+    const expected = JSON.parse(JSON.stringify(pending)), confirmation = inspection.inspection_digest;
     keepBusy = true; refresh();
     try {
-      // Preserve the exact end confirmation before transmission, including a
-      // lost response. A later inspection recovers the durable terminal fact.
-      const sent = {...pending, end_inspection_digest: inspection.inspection_digest};
-      localStorage.setItem(key, JSON.stringify(sent)); pending = sent;
+      const sent = await lockedPending(() => {
+        requireOwner(expected);
+        const next = {...pending, end_inspection_digest: confirmation};
+        localStorage.setItem(key, JSON.stringify(next)); pending = next;
+        return JSON.parse(JSON.stringify(next));
+      });
       const result = await post('/api/ui-state/end-clear', {...sent.request, inspection_digest: sent.end_inspection_digest});
       await validateBinding(result, sent);
       if (result.status !== 'ended' || result.inspection_digest !== sent.end_inspection_digest) throw new Error('结束回执无法对应原核实结果。');
-      showEnded(sent);
+      await showEnded(sent);
     } catch (error) { inspection = null; notice.textContent = clearError(error) + ' 清理结果待核实，原请求保留，请重新核实。'; }
-    finally { keepBusy = false; refresh(); }
+    finally { finish(); }
   });
   const body = el('div', {class: 'panel-body stack'}, el('p', {class: 'muted'}, '只清理本项目的个人草稿与阅读设置；先出只读计划，确认后才清理，并保留恢复备份。项目内容、任务与调用记录不受影响。'),
       el('div', {class: 'row wrap'}, planButton, commit, inspectButton, endButton, personalBackupButton(app)), scopeView, notice);

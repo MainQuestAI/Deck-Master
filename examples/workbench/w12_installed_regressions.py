@@ -44,6 +44,7 @@ def main():
         'test_pr189_clear_transport_browser.py',
         'test_pr189_clear_capacity.py', 'test_pr189_clear_capacity_browser.py',
         'test_personal_clear_conflict_browser.py',
+        'test_pr189_clear_ownership_browser.py', 'test_pr189_clear_storage_browser.py',
         'test_deep_review_obligations_browser.py', 'test_ui_continuous_journey_browser.py',
     ]
     result = pytest.main(['-q', str(repo / 'tests/rebuild/test_rc_closure_browser.py'),
