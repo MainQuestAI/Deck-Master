@@ -13,7 +13,7 @@ from .store import Store
 STAGE = 'original_image'
 
 
-def packet(store, document, page_id, *, candidate_id=None):
+def packet(store, document, page_id, *, candidate_id=None, frozen_design=None):
     entry = next((row for row in document['pages'] if row['page_id'] == page_id), None)
     if entry is None:
         raise tasks.EnvelopeError('original_review/page_id', 'page is not current')
@@ -42,10 +42,13 @@ def packet(store, document, page_id, *, candidate_id=None):
     except (OSError, ValueError) as exc:
         raise tasks.EnvelopeError('original_review/image', 'original bytes are not a decodable declared raster image') from exc
     page = store.read_object_json(entry['page'])
-    from .production import resolve_generation_design, adopted_blueprint_design
+    from .production import frozen_design_options, resolve_generation_design, adopted_blueprint_design
     owned = adopted_blueprint_design(store, document, {**entry, 'blueprint': original})
     recipe_ref = owned['recipe_ref'] if owned else None
-    design = resolve_generation_design(store, document, entry, recipe_ref=recipe_ref)
+    # A frozen packet's design contract decides which fields this recompute
+    # may supply; new dispatches keep the full current projection.
+    design = resolve_generation_design(store, document, entry, recipe_ref=recipe_ref,
+        **frozen_design_options(frozen_design) if frozen_design is not None else {})
     from .effective_requirements import packet_requirements
     return {'schema_version': 'original_review_packet.v1', 'project_id': document['project_id'],
         'page_id': page_id, 'candidate_id': candidate_id, 'page_ref': entry['page'],
@@ -78,7 +81,9 @@ def semantic_packet(store, fixed):
 def inputs_current(store, document, task):
     _, fixed = task_packet(store, task)
     try:
-        return semantic_packet(store, fixed) == semantic_packet(store, packet(store, document, fixed['page_id'], candidate_id=fixed['candidate_id']))
+        return semantic_packet(store, fixed) == semantic_packet(store, packet(
+            store, document, fixed['page_id'], candidate_id=fixed['candidate_id'],
+            frozen_design=fixed['resolved_design']))
     except (tasks.EnvelopeError, tasks.StaleInputContext, models.ModelError):
         return False
 
@@ -211,7 +216,14 @@ def reference_status(store, document, page_id, *, candidate_id=None, use='expand
     retained = retained_image_findings(store, document, current, history=history)
     for fixed, row in history:
         keys = ('page_ref', 'image_ref', 'resolved_design', 'effective_requirements')
-        if all(fixed[key] == current[key] for key in keys):
+        try:
+            # Each accepted history stays readable under its own frozen design
+            # contract; an unreadable contract keeps that row conservative.
+            aligned = semantic_packet(store, packet(store, document, fixed['page_id'],
+                candidate_id=fixed['candidate_id'], frozen_design=fixed['resolved_design']))
+        except models.ModelError:
+            continue
+        if all(fixed[key] == aligned[key] for key in keys):
             accepted.append(row)
     # Never let a later pass erase a known error on the exact same image.
     state = 'fail' if retained or any(r['status'] == 'fail' for r in accepted) else ('pass' if any(r['status'] == 'pass' for r in accepted) else 'not_evaluated')
