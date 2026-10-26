@@ -80,7 +80,9 @@ export function personalClearPanel(app) {
     });
   };
   const requireOwner = (sent) => {
-    if (!sameRequest(pending, sent)) throw new Error('恢复记录已属于其他操作，请核实当前保留的请求。');
+    if (!sameRequest(pending, sent) || pending.end_inspection_digest !== sent.end_inspection_digest) {
+      throw new Error('恢复记录已变化，请核实当前保留的请求。');
+    }
   };
   const releasePending = (sent) => lockedPending(() => {
     requireOwner(sent);

@@ -87,3 +87,32 @@ def test_late_response_preserves_next_operation_and_refresh_recovery(project, st
             browser.close()
     finally:
         server.stop()
+
+
+def test_late_first_refusal_preserves_new_end_confirmation_for_same_request(project, store):
+    save_draft(store, project); server = WorkbenchServer(project)
+    try:
+        with sync_playwright() as runtime:
+            browser = runtime.chromium.launch(); context = browser.new_context(); a = context.new_page()
+            url = server.start()+'studio/'; a.goto(url); pa = open_panel(a); click(pa, '生成清理计划')
+            expect(pa.get_by_role('button', name='确认清理并保留备份', exact=True)).to_be_enabled()
+            save_draft(store, project, 'changed'); held = []
+            def hold(route): held.append((route, route.fetch()))
+            a.route('**/api/ui-state/commit-clear', hold); click(pa, '确认清理并保留备份')
+            deadline = time.monotonic()+5
+            while not held and time.monotonic()<deadline: a.wait_for_timeout(10)
+            assert held[0][1].status == 409
+            b = context.new_page(); b.goto(url); pb = open_panel(b); click(pb, '核实原清理结果')
+            expect(pb).to_contain_text('未发现执行证据')
+            b.route('**/api/ui-state/end-clear', hold); click(pb, '结束旧操作并重新计划')
+            deadline = time.monotonic()+5
+            while len(held)<2 and time.monotonic()<deadline: b.wait_for_timeout(10)
+            assert len(held)==2 and held[1][1].ok
+            saved = retained(b); assert saved['end_inspection_digest']
+            held[0][0].fulfill(response=held[0][1])
+            expect(pa.get_by_role('button', name='核实原清理结果', exact=True)).to_be_enabled()
+            assert retained(a) == saved
+            held[1][0].fulfill(response=held[1][1]); expect(pb).to_contain_text('旧清理操作已结束')
+            assert retained(b) is None
+            browser.close()
+    finally: server.stop()

@@ -8,7 +8,8 @@ capacity R1 or original-image N1 findings.
 ## Behavior
 
 - R1 (`6a2e3672`): commit/inspect/end responses release only the preserved
-  project, operation ID and canonical complete request they actually sent.
+  project, operation ID, canonical complete request and retained end-confirmation
+  digest they actually sent.
   Browser Web Locks serialize the short local-storage check/write/delete;
   network calls never hold that lock. Another operation's record is retained
   and re-read. Storage/lock errors never acknowledge completion or send a new
@@ -30,6 +31,7 @@ and ordinary state size limits remain compatible.
 - Five real two-tab response orders: delayed first CAS conflict, commit success,
   inspect success, inspect unresolved result and end success, each followed by
   the next operation losing its successful response and refreshing to recover.
+  A sixth ordering protects a newer end confirmation for the same request.
 - Local read/write/delete and missing/rejected-lock failures, plus two initial
   submissions waiting on the same local lock. Network recovery stays available
   to the other tab while the first response is withheld.
