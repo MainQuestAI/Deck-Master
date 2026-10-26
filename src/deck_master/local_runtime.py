@@ -10,6 +10,7 @@ import secrets
 import signal
 import subprocess
 import sys
+import threading
 import time
 from http.server import ThreadingHTTPServer
 
@@ -144,6 +145,15 @@ def _check_port(port):
         raise LocalStateError("port", "port must be between 0 and 65535")
 
 
+def _terminate_created_child(process):
+    process.terminate()
+    try:
+        process.wait(timeout=2)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.wait(timeout=2)
+
+
 def ensure(desc, *, port=0):
     _check_port(port)
     # Serializes launch decisions, not HTTP requests or Document operations.
@@ -168,18 +178,26 @@ def ensure(desc, *, port=0):
         while time.monotonic() < deadline:
             state = read_state(desc)
             if state and state.get("instance_id") == instance and healthy(state, desc):
+                # A detached service can outlive a short CLI caller, but a live
+                # launcher still owns this child and must collect its exit.
+                # Keep the exact Popen handle until wait completes; no PID scan,
+                # shutdown signal, or ownership of reused services is involved.
+                try:
+                    threading.Thread(target=process.wait, name="deck-master-service-reap",
+                                     daemon=True).start()
+                except Exception:
+                    # Ownership was not handed off. Roll back only this launch,
+                    # using its Popen handle, before propagating the failure.
+                    _terminate_created_child(process)
+                    clear_own_state(desc, instance)
+                    raise
                 return {**state, "reused": False}
             if process.poll() is not None:
                 clear_own_state(desc, instance)
                 error = PortConflict if process.returncode == 5 else ServiceUnavailable
                 raise error("service", "service could not start; inspect its local runtime log")
             time.sleep(0.05)
-        process.terminate()
-        try:
-            process.wait(timeout=2)
-        except subprocess.TimeoutExpired:
-            process.kill()
-            process.wait(timeout=2)
+        _terminate_created_child(process)
         clear_own_state(desc, instance)
         raise ServiceUnavailable("service", "service did not become healthy within 8 seconds; retry or inspect its local log")
 
