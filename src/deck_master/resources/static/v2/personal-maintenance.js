@@ -2,6 +2,12 @@ import {get, post, readableError, canonical, digest} from './api.js';
 import {el, button, modal} from './dom.js';
 import {personalBackupButton} from './personal-recovery.js';
 
+function clearError(error) {
+  return error.code === 'local_state_conflict'
+    ? '清理请求或核实依据与当前状态不一致，请先核实原清理结果。'
+    : readableError(error);
+}
+
 // B05（INTERFACES 个人状态清理）：只读计划先行，确认后按同 etag 清理；
 // 备份可下载；任务/候选/调用事实不在范围（服务端强制，UI 如实转述）。
 export function personalClearPanel(app) {
@@ -54,7 +60,7 @@ export function personalClearPanel(app) {
         el('p', {class: 'muted'}, '任务、候选、调用记录与项目文件不在清理范围。')];
       scopeView.replaceChildren(...planParts.filter(part => part));
       notice.textContent = '';
-    } catch (error) { plan = null; notice.textContent = readableError(error); }
+    } catch (error) { plan = null; notice.textContent = clearError(error); }
     finally { keepBusy = false; readPending(); refresh(); }
   });
   const commit = button('确认清理并保留备份', async () => {
@@ -92,7 +98,7 @@ export function personalClearPanel(app) {
         try { localStorage.removeItem(key); pending = null; plan = null; }
         catch { /* retain the original recovery request */ }
         notice.textContent = '个人状态已变化，本次清理被拒绝；请重新生成计划。';
-      } else notice.textContent = readableError(error) + (pending ? ' 清理结果待核实。原请求保留，请核实并重试原清理。' : '');
+      } else notice.textContent = clearError(error) + (pending ? ' 清理结果待核实。原请求保留，请先核实原清理结果。' : '');
     }
     finally { keepBusy = false; refresh(); }
   }, true, {disabled: true});
@@ -135,7 +141,7 @@ export function personalClearPanel(app) {
         if (result.status === 'incomplete') notice.textContent = `发现清理中断证据，已核实备份中 ${result.backup?.count || 0} 项记录。结束旧操作会保留备份，不继续删除或自动恢复。`;
         if (result.status === 'unverifiable') notice.textContent = '原清理证据暂无法核实。原请求保留，请检查本机恢复记录后重新核实。';
       } else throw new Error('清理核实状态无法识别，原请求保留。');
-    } catch (error) { inspection = null; notice.textContent = readableError(error) + ' 清理结果待核实，原请求保留。'; }
+    } catch (error) { inspection = null; notice.textContent = clearError(error) + ' 清理结果待核实，原请求保留。'; }
     finally { keepBusy = false; refresh(); }
   });
   const endButton = button('结束旧操作并重新计划', async () => {
@@ -153,7 +159,7 @@ export function personalClearPanel(app) {
       await validateBinding(result, sent);
       if (result.status !== 'ended' || result.inspection_digest !== sent.end_inspection_digest) throw new Error('结束回执无法对应原核实结果。');
       showEnded(sent);
-    } catch (error) { inspection = null; notice.textContent = readableError(error) + ' 清理结果待核实，原请求保留，请重新核实。'; }
+    } catch (error) { inspection = null; notice.textContent = clearError(error) + ' 清理结果待核实，原请求保留，请重新核实。'; }
     finally { keepBusy = false; refresh(); }
   });
   const body = el('div', {class: 'panel-body stack'}, el('p', {class: 'muted'}, '只清理本项目的个人草稿与阅读设置；先出只读计划，确认后才清理，并保留恢复备份。项目内容、任务与调用记录不受影响。'),
