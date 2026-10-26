@@ -6,6 +6,11 @@ not rollback them; their operation-owned backup never shares a future clear slot
 from __future__ import annotations
 
 import json
+import hashlib
+import os
+import re
+import stat
+import tempfile
 from . import ui_journal as journal
 from .local_state import LocalStateConflict, LocalStateError, read_json, safe_path, write_json, MAX_BODY
 from .models import validate_schema, canonical_json_bytes
@@ -27,17 +32,95 @@ def closure_path(store, operation_id):
     return safe_path(store.deck_root, 'workbench', 'clear-closures', operation_id + '.json')
 
 
-def closure(store, identity, req):
-    value = read_json(closure_path(store, req['operation_id']))
+def evidence_path(store, digest):
+    if not isinstance(digest, str) or not re.fullmatch(r'[a-f0-9]{64}', digest):
+        raise LocalStateError('clear_evidence', 'invalid recovery evidence digest')
+    return safe_path(store.deck_root, 'workbench', 'clear-evidence', digest + '.json')
+
+
+def _read_evidence(store, reference):
+    """Verify the exact regular file before parsing, without the draft size cap.
+
+    A spooled stream keeps hashing bounded in memory and avoids reopening a
+    potentially replaced path between verification and JSON decoding.
+    """
+    path = evidence_path(store, reference['sha256'])
+    try:
+        descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        with os.fdopen(descriptor, 'rb') as source, tempfile.SpooledTemporaryFile(max_size=MAX_BODY) as verified:
+            info = os.fstat(source.fileno())
+            if not stat.S_ISREG(info.st_mode) or info.st_size != reference['bytes']:
+                raise LocalStateError('clear_evidence', 'recovery evidence has a different type or length; retain it')
+            digest = hashlib.sha256()
+            remaining = reference['bytes']
+            while remaining:
+                chunk = source.read(min(65536, remaining))
+                if not chunk:
+                    raise LocalStateError('clear_evidence', 'recovery evidence is truncated; retain it')
+                remaining -= len(chunk)
+                digest.update(chunk)
+                verified.write(chunk)
+            if source.read(1) or digest.hexdigest() != reference['sha256']:
+                raise LocalStateError('clear_evidence', 'recovery evidence digest differs; retain it')
+            verified.seek(0)
+            return json.load(verified)
+    except (OSError, ValueError, UnicodeError) as exc:
+        raise LocalStateError('clear_evidence', 'recovery evidence cannot be verified; retain original request') from exc
+
+
+def _load_closure(store, identity, operation_id):
+    value = read_json(closure_path(store, operation_id))
     if value is None:
         return None
+    if value.get('schema_version') == 'ui_clear_closure.v2':
+        validate_schema('ui_clear_closure_v2', value)
+        if value['project_identity'] != identity or value['operation_id'] != operation_id:
+            raise LocalStateConflict('operation_id', 'ended clear belongs to another project or operation')
+        if value['record_digest'] != journal.digest({k: v for k, v in value.items() if k != 'record_digest'}):
+            raise LocalStateError('clear_closure', 'ended clear marker cannot be verified; retain it')
+        marker = value
+        value = _read_evidence(store, marker['evidence'])
+        validate_schema('ui_clear_closure', value)
+        if (value['project_identity'] != identity or value['request']['operation_id'] != operation_id
+                or value['request_digest'] != marker['request_digest']
+                or value['inspection']['inspection_digest'] != marker['inspection_digest']
+                or value['ended_at'] != marker['ended_at']):
+            raise LocalStateError('clear_evidence', 'recovery evidence does not match its terminal record')
     validate_schema('ui_clear_closure', value)
-    if (value['project_identity'] != identity or value['request'] != req
-            or value['request_digest'] != journal.digest(req)):
-        raise LocalStateConflict('operation_id', 'ended clear belongs to a different preserved request')
-    if value['record_digest'] != journal.digest({k: v for k, v in value.items() if k != 'record_digest'}):
+    if value['project_identity'] != identity or value['request']['operation_id'] != operation_id:
+        raise LocalStateConflict('operation_id', 'ended clear belongs to another project or operation')
+    if (value['record_digest'] != journal.digest({k: v for k, v in value.items() if k != 'record_digest'})
+            or value['request_digest'] != journal.digest(value['request'])):
         raise LocalStateError('clear_closure', 'ended clear recovery record cannot be verified; retain it')
     return value
+
+
+def closure(store, identity, req):
+    value = _load_closure(store, identity, req['operation_id'])
+    if value is not None and value['request'] != req:
+        raise LocalStateConflict('operation_id', 'ended clear belongs to a different preserved request')
+    return value
+
+
+def _save_closure(store, value):
+    from .store import _atomic_write_bytes
+    raw = canonical_json_bytes(value)
+    reference = dict(sha256=hashlib.sha256(raw).hexdigest(), bytes=len(raw))
+    path = evidence_path(store, reference['sha256'])
+    # Never overwrite an existing content-addressed file, even if damaged.
+    if not path.exists():
+        _atomic_write_bytes(path, raw)
+    if _read_evidence(store, reference) != value:
+        raise LocalStateError('clear_evidence', 'saved recovery evidence differs')
+    marker = dict(schema_version='ui_clear_closure.v2', project_identity=value['project_identity'],
+        operation_id=value['request']['operation_id'], request_digest=value['request_digest'],
+        inspection_digest=value['inspection']['inspection_digest'], evidence=reference,
+        ended_at=value['ended_at'])
+    marker['record_digest'] = journal.digest(marker)
+    validate_schema('ui_clear_closure_v2', marker)
+    # Only this atomic final write is the commit fence. Orphan evidence is not
+    # an ended operation; failures leave the original request recoverable.
+    write_json(closure_path(store, marker['operation_id']), marker)
 
 
 def refuse_ended(store, identity, req):
@@ -166,16 +249,14 @@ def end_clear(project, *, inspection_digest, **kwargs):
             request_digest=journal.digest(req), inspection=observed, backup=backup, ended_at=journal._utc_now_iso())
         value['record_digest'] = journal.digest(value)
         validate_schema('ui_clear_closure', value)
-        # One atomic file is both the replay fence and the operation-owned
-        # recovery bundle. Failure cannot discard the only copy of evidence.
-        write_json(closure_path(store, req['operation_id']), value)
+        _save_closure(store, value)
         return _ended_result(value)
 
 
 def download(project, *, operation_id):
     store, doc, identity = journal.context(project)
     with journal.clear_lock(store):
-        value = read_json(closure_path(store, operation_id))
+        value = _load_closure(store, identity, operation_id)
         if value is None:
             raise LocalStateError('operation_id', 'no ended clear recovery record exists')
         validate_schema('ui_clear_closure', value)
@@ -194,7 +275,7 @@ def listing(project):
         for path in sorted(directory.glob('*.json')):
             operation_id = path.stem
             try:
-                value = read_json(closure_path(store, operation_id))
+                value = _load_closure(store, identity, operation_id)
                 validate_schema('ui_clear_closure', value)
                 if value['request']['operation_id'] != operation_id:
                     raise LocalStateError('operation_id', 'mismatched recovery record')

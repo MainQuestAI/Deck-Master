@@ -102,6 +102,7 @@ SCHEMA_FILES = {
     "ui_clear_result": "ui-clear-result.v1.schema.json",
     "ui_clear_request": "ui-clear-request.v1.schema.json",
     "ui_clear_inspection": "ui-clear-inspection.v1.schema.json",
+    "ui_clear_closure_v2": "ui-clear-closure.v2.schema.json",
     "ui_clear_closure": "ui-clear-closure.v1.schema.json",
     "ui_clear_backup": "ui-clear-backup.v1.schema.json",
     "thumbnail": "thumbnail.v1.schema.json",
