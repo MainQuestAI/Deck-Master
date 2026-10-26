@@ -155,7 +155,9 @@ export function personalClearPanel(app) {
       else if (['no_execution_evidence', 'incomplete', 'unverifiable'].includes(result.status) &&
                /^[a-f0-9]{64}$/.test(result.inspection_digest)) {
         await lockedPending(() => { requireOwner(sent); inspection = result; });
-        if (result.status === 'no_execution_evidence') notice.textContent = '未发现执行证据，不能据此认定旧请求从未执行。可明确结束旧操作，再生成新计划。';
+        if (result.status === 'no_execution_evidence') notice.textContent =
+          (result.backup?.related_operation ? '同范围备份属于另一清理操作，原备份保留；它不能证明本次请求已完成。' : '') +
+          '未发现执行证据，不能据此认定旧请求从未执行。可明确结束旧操作，再生成新计划。';
         if (result.status === 'incomplete') notice.textContent = `发现清理中断证据，已核实备份中 ${result.backup?.count || 0} 项记录。结束旧操作会保留备份，不继续删除或自动恢复。`;
         if (result.status === 'unverifiable') notice.textContent = '原清理证据暂无法核实。原请求保留，请检查本机恢复记录后重新核实。';
       } else throw new Error('清理核实状态无法识别，原请求保留。');

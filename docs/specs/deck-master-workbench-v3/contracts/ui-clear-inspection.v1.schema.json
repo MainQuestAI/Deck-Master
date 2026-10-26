@@ -49,7 +49,38 @@
       "type": [
         "object",
         "null"
-      ]
+      ],
+      "description": "Availability is for this exact request. A validated other-operation backup is related evidence only, never execution proof for this request.",
+      "properties": {
+        "related_operation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "operation_id",
+            "manifest_digest",
+            "digest",
+            "count"
+          ],
+          "properties": {
+            "operation_id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+            },
+            "manifest_digest": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "digest": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
     },
     "items": {
       "type": "array",

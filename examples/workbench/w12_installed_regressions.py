@@ -42,6 +42,7 @@ def main():
         'test_pr189_original_target.py', 'test_pr189_clear_recovery.py',
         'test_pr189_clear_end_browser.py', 'test_pr189_clear_replay.py',
         'test_pr189_clear_transport_browser.py',
+        'test_pr189_related_clear_backup.py', 'test_pr189_related_clear_browser.py',
         'test_pr189_clear_capacity.py', 'test_pr189_clear_capacity_browser.py',
         'test_personal_clear_conflict_browser.py',
         'test_pr189_clear_ownership_browser.py', 'test_pr189_clear_storage_browser.py',

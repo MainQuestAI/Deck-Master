@@ -162,13 +162,26 @@ def _backup(store, doc, identity, req):
     validate_schema('ui_clear_backup', value)
     items = [{k: r[k] for k in ('kind', 'id', 'etag')} for r in value['records']]
     manifest = dict(project_id=doc['project_id'], project_identity=identity, scope='current_project', items=items)
-    if (value['operation_id'] != req['operation_id'] or value['manifest_digest'] != req['manifest_digest']
+    if (value['manifest_digest'] != req['manifest_digest']
             or journal.digest(manifest) != req['manifest_digest'] or len({(r['kind'], r['id']) for r in items}) != len(items)):
-        raise LocalStateError('backup', 'backup does not match this project and original operation')
+        raise LocalStateError('backup', 'backup does not match this project and manifest')
     reader = FixedSnapshotReader(store, head_revision=doc['revision_id'])
     for row in value['records']:
         _validate_record(store, doc, identity, row, snapshot_reader=reader)
     return value
+
+
+def _backup_evidence(store, doc, identity, req):
+    """Validate bytes first; a shared manifest slot does not imply operation ownership."""
+    backup = _backup(store, doc, identity, req)
+    summary = dict(available=False, count=0, digest=None)
+    if backup is None:
+        return None, summary
+    if backup['operation_id'] != req['operation_id']:
+        summary['related_operation'] = dict(operation_id=backup['operation_id'],
+            manifest_digest=backup['manifest_digest'], digest=journal.digest(backup), count=len(backup['records']))
+        return None, summary
+    return backup, dict(available=True, count=len(backup['records']), digest=journal.digest(backup))
 
 
 def _inspection(store, doc, identity, req):
@@ -188,13 +201,12 @@ def _inspection(store, doc, identity, req):
                 # missing/changed backup. Backup availability is a separate fact.
                 value.update(status='cleared', receipt=receipt)
                 try:
-                    backup = _backup(store, doc, identity, req)
-                    value['backup'] = {'available': backup is not None, 'count': len(backup['records']) if backup else 0,
-                        'digest': journal.digest(backup) if backup else None}
+                    backup, value['backup'] = _backup_evidence(store, doc, identity, req)
                 except (ValueError, RuntimeError, OSError, KeyError, TypeError):
                     value['backup'] = {'available': False, 'count': 0, 'digest': None}
             else:
-                backup = _backup(store, doc, identity, req)
+                backup, summary = _backup_evidence(store, doc, identity, req)
+                value['backup'] = summary if backup is not None or summary.get('related_operation') else None
                 _, _, live, blockers, kept_out, live_digest = journal._clear_manifest(store, doc, identity,
                     dict(project_id=doc['project_id'], scope='current_project', draft_ids='all', reading_preferences=True))
                 value['current_state'] = dict(manifest_digest=live_digest, items=live, blockers=blockers, kept_out=kept_out)
