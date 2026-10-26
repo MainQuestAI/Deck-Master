@@ -30,7 +30,9 @@ export function personalClearPanel(app) {
           pending.request.input?.scope !== 'current_project' || !pending.request.plan_id || !pending.request.manifest_digest)) {
         throw new Error('unverifiable retained request');
       }
-      if ((previous || pending) && !sameRequest(previous, pending)) { plan = null; inspection = null; }
+      if ((previous || pending) && !sameRequest(previous, pending)) {
+        plan = null; inspection = null; scopeView.replaceChildren();
+      }
       storageBlocked = false;
       if (pending && !sameRequest(previous, pending)) notice.textContent = '清理结果待核实。原操作编号和请求已保留，请核实并重试原清理。';
     } catch {

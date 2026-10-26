@@ -77,6 +77,9 @@ def test_late_response_preserves_next_operation_and_refresh_recovery(project, st
             route, response = held[0]; route.fulfill(response=response)
             expect(pa.get_by_role('button', name='核实原清理结果', exact=True)).to_be_enabled()
             assert retained(a) == newer
+            # Regression: QA-001 — another operation must not inherit the old visible scope.
+            # Found by /qa on 2026-10-26; report: output/pr189-concurrent/qa/
+            expect(pa).not_to_contain_text('将清理')
             expect(pa.get_by_role('button', name='生成清理计划', exact=True)).to_be_disabled()
             b.unroute('**/api/ui-state/commit-clear'); b.reload(); pb = open_panel(b)
             click(pb, '核实原清理结果'); expect(pb).to_contain_text('已清理')
