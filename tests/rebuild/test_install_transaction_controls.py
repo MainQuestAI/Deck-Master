@@ -129,16 +129,39 @@ def test_explicit_rollback_conflict_keeps_pending_and_external_inode(layout):
     assert journal.snapshot(current) == external
 
 
-def test_abandon_cannot_clear_a_corrupt_or_different_pending_pointer(layout):
+def test_abandon_cannot_clear_a_corrupt_pending_pointer(layout):
     prefix, host = layout
     ident = str(uuid.uuid4())
     kill_at(prefix, host, point='pending', ident=ident)
     pointer = root(prefix) / 'activation-pending.json'
-    pointer.write_text(json.dumps({'schema_version': journal.VERSION, 'transaction_id': str(uuid.uuid4())}))
+    pointer.write_text('{broken')
     before = scene(prefix, host)
     with pytest.raises(InstallationTransactionError):
         install.recover_transaction(prefix, transaction_id=ident, action='abandon', reason='No force unlock')
     assert scene(prefix, host) == before
+
+
+def test_abandon_keeps_durable_receipt_when_pointer_belongs_to_another_transaction(layout):
+    prefix, host = layout
+    ident = str(uuid.uuid4())
+    kill_at(prefix, host, point='pending', ident=ident)
+    pointer = root(prefix) / 'activation-pending.json'
+    completed = [path.stem for path in sorted((root(prefix) / 'transactions/activation').glob('*.json'))
+                 if path.stem != ident and load(prefix, path.stem)['state'] == 'completed']
+    other, = completed
+    pointer.write_text(json.dumps({'schema_version': journal.VERSION, 'transaction_id': other}))
+    with pytest.raises(InstallationTransactionError) as caught:
+        install.recover_transaction(prefix, transaction_id=ident, action='abandon', reason='Explicit abandonment')
+    assert caught.value.error_code == 'installation_transaction_conflict'
+    assert caught.value.transaction_id == ident
+    assert caught.value.transaction_state == 'abandoned'
+    assert load(prefix, ident)['state'] == 'abandoned'
+    assert json.loads(pointer.read_text())['transaction_id'] == other
+    receipt = load(prefix, ident)
+    with pytest.raises(InstallationTransactionError) as caught:
+        install.recover_transaction(prefix, transaction_id=ident, action='abandon', reason='Explicit abandonment')
+    assert caught.value.transaction_state == 'abandoned'
+    assert load(prefix, ident) == receipt
 
 
 @pytest.mark.parametrize('damage', ['json', 'version', 'symlink', 'fifo'])

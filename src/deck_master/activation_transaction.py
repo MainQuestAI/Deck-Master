@@ -509,7 +509,15 @@ def abandon(root, record, reason):
             'restoration_verified': False})
         save(root, record)
         checkpoint('abandoned', record)
-    clear_pending(root, record)
+    try:
+        clear_pending(root, record)
+    except ValueError as exc:
+        # The abandoned receipt is already durable; a pointer that now belongs
+        # to another transaction is never this transaction's to clear.
+        raise Failure('installation_transaction_conflict',
+                      f'the abandoned receipt is durable, but the pending pointer was not cleared: {exc}',
+                      transaction_id=record['transaction_id'], state='abandoned',
+                      details={'pending_pointer': 'retained'}) from exc
     return record
 
 
