@@ -5,11 +5,11 @@ export class ApiError extends Error {
 }
 let token;
 export async function get(path, {signal} = {}) { return request(path, {signal}); }
-export async function post(path, value, {signal} = {}) {
+export async function post(path, value, {signal, headers = {}} = {}) {
   const body = JSON.stringify(value);
   if (new TextEncoder().encode(body).length > 2_000_000) throw new ApiError('内容过大，输入仍保留。请减少本次内容后重试。', 'body_too_large', 422);
   if (!token) token = (await get('/api/session')).token;
-  return request(path, {method: 'POST', headers: {'Content-Type': 'application/json', 'X-Deck-Token': token}, body, signal});
+  return request(path, {method: 'POST', headers: {...headers, 'Content-Type': 'application/json', 'X-Deck-Token': token}, body, signal});
 }
 export async function postBinary(path, file) {
   if(!token)token=(await get('/api/session')).token;

@@ -192,6 +192,17 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         if self._collaboration_route('POST'):
             return
         try:
+            if (self.path == '/api/ui-state/commit-clear'
+                    and self.headers.get('X-Deck-Clear-Recovery') != 'indexeddb.v1'):
+                from .operations import OperationError
+                error = OperationError('clear_recovery_upgrade_required', 'recovery_protocol',
+                    '请刷新旧页面以升级清理恢复协议，并保留原清理请求后再核实重试。 '
+                    'Refresh the old page to upgrade clear recovery; preserve the original request before retrying.',
+                    http_status=409, exit_code=4)
+                payload = error.payload()
+                payload['error']['next_action'] = 'refresh the old page; preserve and inspect the original clear request before retrying'
+                self._send_json(payload, error.http_status)
+                return
             if urlparse(self.path).path == '/api/content/uploads':
                 from . import source_uploads
                 from .samples import sample_info

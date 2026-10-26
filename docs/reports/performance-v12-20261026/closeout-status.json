@@ -78,5 +78,16 @@
     "release": false,
     "issue_closure": false
   },
-  "independent_review": "In-thread readonly review completed; parent will create requested separate Astra xhigh cloud review. This is not that independent cloud review."
+  "independent_review": "In-thread readonly review completed; parent will create requested separate Astra xhigh cloud review. This is not that independent cloud review.",
+  "atomic_clear_followup": {
+    "status": "implemented_source_verified_installation_pending",
+    "source_parent": "e6d5a572b99d7d0d5c9bf37bb95c335d4b9a35bc",
+    "affected_browser_http_passed": 36,
+    "migration_abort_passed": 6,
+    "independent_product_contention_trials_passed": 10,
+    "prior_e6_full_installed_passed": 630,
+    "prior_e6_supplemental_installed_passed": 12,
+    "review": "local read-only no blocker; separate Astra xhigh review still required",
+    "report": "atomic-clear-followup.md"
+  }
 }

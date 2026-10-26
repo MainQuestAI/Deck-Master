@@ -110,6 +110,7 @@ def test_inspection_of_lost_success_does_not_clear_later_draft(project, store):
 @pytest.mark.parametrize('fault', ['mismatched_inspection', 'end_storage_failure', 'stale_inspection'])
 def test_recovery_fault_keeps_original_request(project, store, monkeypatch, fault):
     from deck_master import ui_clear_recovery
+    from test_pr189_clear_ownership_browser import retained as retained_request
     save_draft(store, project)
     before = store.load_document()
     server = WorkbenchServer(project)
@@ -121,7 +122,7 @@ def test_recovery_fault_keeps_original_request(project, store, monkeypatch, faul
             page.route('**/api/ui-state/commit-clear', lambda r: r.abort('failed'))
             panel.get_by_role('button', name='确认清理并保留备份', exact=True).click()
             expect(panel).to_contain_text('清理结果待核实')
-            saved = page.evaluate("Object.entries(localStorage).find(([k])=>k.startsWith('deck-master:v3:personal-clear:'))")
+            saved = retained_request(page)
             if fault == 'mismatched_inspection':
                 def mismatch(route):
                     response = route.fetch(); value = response.json(); value['request_digest'] = '0' * 64
@@ -142,8 +143,8 @@ def test_recovery_fault_keeps_original_request(project, store, monkeypatch, faul
                 assert not response.value.ok
                 expect(panel).to_contain_text('请重新核实')
             expect(panel.get_by_role('button', name='生成清理计划', exact=True)).to_be_disabled()
-            retained = json.loads(page.evaluate('(key)=>localStorage.getItem(key)', saved[0]))
-            assert retained['request'] == json.loads(saved[1])['request']
+            retained = retained_request(page)
+            assert retained['request'] == saved['request']
             assert store.load_document() == before
             browser.close()
     finally: server.stop()

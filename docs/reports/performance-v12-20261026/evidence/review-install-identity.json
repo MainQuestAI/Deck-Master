@@ -1,0 +1,13 @@
+{
+  "source_sha": "e6d5a572b99d7d0d5c9bf37bb95c335d4b9a35bc",
+  "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "package": "/workspace/scratch/performance-installed-e6d5a572/lib/python3.12/site-packages/deck_master",
+  "static": {
+    "candidate-desk.js": "789e35052c42caf970b796c2b8b3225ad5d3647190bf5b73c2854e00921846dd",
+    "personal-maintenance.js": "edc515e25579b40480fd769c4ca2ef287a67b92bd88fbaf4276fa5b726b15756"
+  },
+  "artifacts": {
+    "deck_master-1.0.0.tar.gz": "274f16962d92c9920f7bf377969c493947de710a6dbf4ae04644bb4913207019",
+    "deck_master-1.0.0-py3-none-any.whl": "be4d44cbd123262fb571c54c9925f45ef7a5635e43a04ba68b90b75130f33564"
+  }
+}

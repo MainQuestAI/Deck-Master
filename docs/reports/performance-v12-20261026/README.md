@@ -1,3 +1,5 @@
+Latest atomic recovery follow-up: [atomic-clear-followup.md](atomic-clear-followup.md). Earlier results below retain their original candidate identities.
+
 # Performance iteration v1.2 — implementation and remaining acceptance
 
 The performance changes are implemented through `17a2d032ed2cf128c672ee6e568ddd52f6aeab20`. Keep this work Draft: an actual clear-storage cross-renderer publication race remains unresolved, the required renderer is unavailable, and the completed installed gate retains one unexplained style-navigation failure. No issue is closed.

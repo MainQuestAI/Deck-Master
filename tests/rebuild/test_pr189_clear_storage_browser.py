@@ -24,11 +24,11 @@ def test_local_preflight_failure_never_sends_new_clear(project, store, fault):
               if (fault === 'missing_lock') Object.defineProperty(navigator, 'locks', {value:undefined, configurable:true});
               else if (fault === 'rejected_lock') Object.defineProperty(navigator, 'locks', {value:{request:()=>Promise.reject(new Error('lock unavailable'))}, configurable:true});
               else {
-                const method = fault === 'read' ? 'getItem' : 'setItem';
-                const original = Storage.prototype[method];
-                Storage.prototype[method] = function(key,...args) {
-                  if (key.startsWith('deck-master:v3:personal-clear:')) throw new Error('injected local storage failure');
-                  return original.call(this,key,...args);
+                const method = fault === 'read' ? 'get' : 'put';
+                const original = IDBObjectStore.prototype[method];
+                IDBObjectStore.prototype[method] = function(...args) {
+                  if (this.name === 'records' && this.transaction.db.name === 'deck-master:personal-clear') throw new Error('injected local storage failure');
+                  return original.apply(this,args);
                 };
               }
             }''', fault)
@@ -51,13 +51,16 @@ def test_local_terminal_failure_retains_exact_request(project, store, fault):
             click(panel, '确认清理并保留备份'); expect(panel).to_contain_text('清理结果待核实')
             original = retained(page); page.unroute('**/api/ui-state/commit-clear')
             if fault == 'end_write': click(panel, '核实原清理结果'); expect(panel).to_contain_text('未发现执行证据')
-            page.evaluate('''method => {
-              const original = Storage.prototype[method]; window.restoreStorage = () => { Storage.prototype[method] = original; };
-              Storage.prototype[method] = function(key,...args) {
-                if (key.startsWith('deck-master:v3:personal-clear:')) throw new Error('injected terminal storage failure');
-                return original.call(this,key,...args);
+            page.evaluate('''fault => {
+              const original = IDBObjectStore.prototype.put;
+              window.restoreStorage = () => { IDBObjectStore.prototype.put = original; };
+              IDBObjectStore.prototype.put = function(value,...args) {
+                if (this.name === 'records' && this.transaction.db.name === 'deck-master:personal-clear' &&
+                    (fault === 'remove' ? value.pending === null : Boolean(value.pending?.end_inspection_digest)))
+                  throw new Error('injected terminal storage failure');
+                return original.call(this,value,...args);
               };
-            }''', 'removeItem' if fault == 'remove' else 'setItem')
+            }''', fault)
             click(panel, '核实并重试原清理' if fault == 'remove' else '结束旧操作并重新计划')
             expect(panel).to_contain_text('injected terminal storage failure')
             assert retained(page) == original

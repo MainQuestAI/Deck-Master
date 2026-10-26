@@ -13,7 +13,20 @@ pytestmark = pytest.mark.browser
 
 
 def retained(page):
-    return page.evaluate("JSON.parse(Object.entries(localStorage).find(([k])=>k.startsWith('deck-master:v3:personal-clear:'))?.[1] || 'null')")
+    return page.evaluate("""() => new Promise((resolve, reject) => {
+      const identity = new URLSearchParams(location.hash.slice(1)).get('project');
+      if (!identity) {reject(new Error('missing project identity in test route'));return;}
+      const open = indexedDB.open('deck-master:personal-clear');
+      open.onerror = () => reject(open.error);
+      open.onsuccess = () => {
+        const db = open.result;
+        if (!db.objectStoreNames.contains('records')) {db.close();resolve(null);return;}
+        const tx = db.transaction('records', 'readonly');
+        const read = tx.objectStore('records').get(identity);
+        tx.oncomplete = () => {const value=read.result?.pending ?? null;db.close();resolve(value);};
+        tx.onabort = () => {db.close();reject(tx.error || new Error('test recovery read aborted'));};
+      };
+    })""")
 
 
 def click(panel, name):
@@ -41,8 +54,7 @@ def test_first_confirmation_does_not_retry_a_newly_discovered_request(project, s
             # A's visible action still confirms its own first plan. Its next
             # storage read sees B, but that is not consent to retry B's request.
             expect(pa.get_by_role('button', name='确认清理并保留备份', exact=True)).to_be_enabled()
-            a.wait_for_function('key => localStorage.getItem(key) !== null',
-                arg='deck-master:v3:personal-clear:' + original['project_identity'])
+            assert retained(a) == original  # The other window's transaction is committed.
             sent = []
             a.on('request', lambda request: sent.append(request.url) if request.url.endswith('/commit-clear') else None)
             click(pa, '确认清理并保留备份')
