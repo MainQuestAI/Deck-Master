@@ -39,6 +39,9 @@ def main():
         'test_pr188_completed_content.py', 'test_ui_current_relationship.py',
         'test_integration_current_relationship.py', 'test_integration_current_work_browser.py',
         'test_ancestor_authorization_boundary.py',
+        'test_pr189_original_target.py', 'test_pr189_clear_recovery.py',
+        'test_pr189_clear_end_browser.py', 'test_pr189_clear_replay.py',
+        'test_pr189_clear_transport_browser.py',
         'test_deep_review_obligations_browser.py', 'test_ui_continuous_journey_browser.py',
     ]
     result = pytest.main(['-q', str(repo / 'tests/rebuild/test_rc_closure_browser.py'),

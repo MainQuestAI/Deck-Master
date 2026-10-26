@@ -75,8 +75,11 @@ def test_interrupted_backup_is_preserved_on_end(project, store, monkeypatch, fau
     assert bundle['backup']['records'] and bundle['request'] == req
     assert bundle['inspection']['status'] == 'incomplete'
     # A later clear cannot overwrite the operation-owned recovery copy.
-    save_draft(store, project, 'new-clear')
+    if fault != 'before_delete':
+        save_draft(store, project, 'new-clear')
     fresh = plan(project)
+    if fault == 'before_delete':
+        assert fresh['manifest_digest'] == req['manifest_digest']
     journal.commit_clear(project, **{**req, 'operation_id': 'new-op', 'plan_id': fresh['plan_id'], 'manifest_digest': fresh['manifest_digest']})
     assert journal.clear_recovery_download(project, operation_id=req['operation_id'])[0] == raw
     assert journal.inspect_clear(project, **req)['status'] == 'ended'

@@ -175,6 +175,41 @@ is validated data and never a command to adopt or replay a pending operation.
 Do not delete the journal to resolve a business conflict; it does not change
 Document revision, content identity, or call facts.
 
+## Personal Clear Recovery
+
+A missing `ui commit-clear` response is unknown. Preserve the original input,
+operation ID, plan ID and manifest digest. `ui inspect-clear` accepts those same
+flags (`--input` is the original input JSON file); HTTP uses
+`POST /api/ui-state/inspect-clear` with the original commit body. This reads
+receipts, backup evidence and current personal items under the cleanup locks.
+
+- `cleared`: a matching success receipt exists. Do not clear later drafts;
+  exact commit replay still returns that original receipt. Backup availability
+  is reported separately from completion.
+- `no_execution_evidence`: no completion/backup evidence was found. This does
+  **not** prove the earlier request never executed.
+- `incomplete`: a valid original backup exists without a matching success
+  receipt. Item comparisons describe current state, not inferred deletion causes.
+- `unverifiable`: preserve the request and files; resolve the reported evidence
+  or storage error before ending. Never delete recovery records to unblock UI.
+- `ended`: the durable terminal record fences late commits with this operation
+  ID. It is not a successful cleanup receipt or a rollback.
+
+After explicit user choice, `ui end-clear` accepts the same flags plus
+`--inspection-digest` from inspection (`POST /api/ui-state/end-clear` adds
+`inspection_digest`). Changed evidence returns a conflict: inspect again.
+Repeat the original end request after a lost response, or inspect to recover
+its terminal state. The browser retains the request until a matching terminal
+or success response and then requires a fresh cleanup plan and confirmation.
+
+End atomically retains the request, inspection and operation-owned backup in
+personal state. Its recovery JSON remains downloadable from the backup panel
+and `/api/ui-state/clear-recovery/<operation_id>/download`, including after
+refresh or later cleanup. It does not automatically restore records, delete
+additional items, revise Document, or modify tasks/call facts. Existing backups
+and legacy receipts remain readable; an old receipt without request digest
+cannot prove exact replay. Use this matching runtime for the new recovery flow.
+
 ## History And Restore
 
 - Restore always creates a NEW revision; task call facts (consumed/unknown/

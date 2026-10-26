@@ -9,7 +9,7 @@ from test_styles import Flow, confirm, dispatch
 from test_rp20_original_review import review, submit
 
 
-def test_other_page_pass_cannot_dispatch_expansion(tmp_path):
+def test_other_page_pass_cannot_dispatch_expansion(tmp_path, monkeypatch):
     flow = Flow(tmp_path)
     recipe = confirm(flow)
     cid = flow.image(dispatch(flow, recipe))['candidate_ids'][0]
@@ -20,6 +20,17 @@ def test_other_page_pass_cannot_dispatch_expansion(tmp_path):
     assert state['status'] == 'not_evaluated' and not state['allowed']
     with pytest.raises(OperationError, match='original expression review'):
         dispatch(flow, recipe, ['p03'], cid)
+    assert flow.store.load_document() == before
+    # A preview produced by the old vulnerable planner cannot bypass the fixed
+    # commit gate. Only the old preview's gate is simulated, never commit.
+    from deck_master import styles
+    import uuid
+    with monkeypatch.context() as old:
+        old.setattr(original_review, 'reference_status', lambda *a, **kw: {'allowed': True})
+        preview = styles.plan(flow.project, input={'recipe_id': recipe['recipe_id'], 'page_ids': ['p03'],
+            'max_calls': 1, 'adopted_candidate_id': cid})
+    with pytest.raises(OperationError, match='original expression review'):
+        changes.commit(flow.project, plan_id=preview['plan_id'], base_revision=before['revision_id'], operation_id=str(uuid.uuid4()))
     assert flow.store.load_document() == before
 
 
