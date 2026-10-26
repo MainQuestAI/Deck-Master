@@ -60,11 +60,23 @@ export class Project {
   // must not inherit the previous work surface's personal-reading snapshot.
   readingQuery(summary=this.summary){const etag=summary?.reading_etag;return this.health.ui_capabilities?.includes('result_reading.v1')&&etag?'&'+new URLSearchParams({personal:'1',reading_etag:etag}):'';}
   async readControl(fresh = false) {
-    // Navigation after a write waits for the previous read, then reads anew.
-    // Passive refreshes share the in-flight request instead of queuing more.
-    if (fresh && this.controlRequest) await this.controlRequest.catch(() => {});
+    // Explicit navigation/recovery replaces a potentially stalled read. Only
+    // this read-only fetch is cancelled; writes retain their recovery protocol.
+    // Passive refreshes still share the current request.
+    if (fresh && this.controlRequest) {
+      this.controlAbort.abort();
+      this.controlRequest = null;
+    }
     if (!this.controlRequest) {
-      this.controlRequest = get('/api/project' + (this.health.ui_capabilities?.includes('project_control_light.v1') ? '?light=1' : '')).finally(() => { this.controlRequest = null; });
+      const controller = new AbortController();
+      const request = get('/api/project' + (this.health.ui_capabilities?.includes('project_control_light.v1') ? '?light=1' : ''), {signal: controller.signal}).finally(() => {
+        if (this.controlRequest === request) {
+          this.controlRequest = null;
+          this.controlAbort = null;
+        }
+      });
+      this.controlAbort = controller;
+      this.controlRequest = request;
     }
     return this.controlRequest;
   }

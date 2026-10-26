@@ -222,7 +222,8 @@ def import_report(project, *, external_report, source_bindings, evidence, base_r
             if review.get("review_stage") == "preproduction":
                 from .content_review import _require_subject_binding, requirement_state
                 try:
-                    _require_subject_binding(store, artifact, review, [entry["page_id"] for entry in bound_pages])
+                    _require_subject_binding(store, artifact, review,
+                        [entry["page_id"] for entry in bound_pages], artifact_digests=base_digests)
                 except models.ModelError as exc:
                     if getattr(exc, "path", "").endswith("dependencies"):
                         raise ConflictError("external_report/reviews/dependencies", "review dependencies are incomplete or stale") from exc

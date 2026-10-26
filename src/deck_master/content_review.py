@@ -587,7 +587,7 @@ def _envelope_error(where, message):
     return EnvelopeError(f"review/{where}", message)
 
 
-def _require_subject_binding(store, document, review, page_ids) -> None:
+def _require_subject_binding(store, document, review, page_ids, *, artifact_digests=None) -> None:
     cited = {(ref.get("path"), ref.get("sha256")) for ref in review.get("subjects") or []}
     required: set[tuple] = set()
     for pointer in (document.get("narrative"), document.get("content_plan")):
@@ -604,7 +604,10 @@ def _require_subject_binding(store, document, review, page_ids) -> None:
             "subjects",
             "a preproduction review must cite the current Narrative, ContentPlan and every "
             f"reviewed Page; missing {[pair[1][:8] for pair in missing]}")
-    digests = _current_artifact_digests(store, document)
+    # A batch importer may supply facts already verified for this exact artifact.
+    # Standalone callers still derive and validate their own artifact facts.
+    digests = (_current_artifact_digests(store, document)
+               if artifact_digests is None else artifact_digests)
     deps = {f"{dep['kind']}:{dep['identity']}": dep.get("sha256")
             for dep in review.get("dependencies") or []}
     expected = {}

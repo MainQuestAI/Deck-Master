@@ -1,0 +1,78 @@
+F........................................................ss....................................................................
+=================================== FAILURES ===================================
+________ test_public_import_derives_artifact_once_for_n_and_2n_reviews _________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-62/test_public_import_derives_art0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fddd1296d50>
+record_property = <function record_property.<locals>.append_property at 0x7fddcfe55a80>
+
+    def test_public_import_derives_artifact_once_for_n_and_2n_reviews(tmp_path, monkeypatch, record_property):
+        measurements = []
+        for count in (2, 4):
+            folder = tmp_path / str(count)
+            folder.mkdir()
+            project, external, bindings = _packet(folder, count, large_deck=True)
+            store = Store(project)
+            document = store.load_document()
+            page_paths = {store._resolve_object_path(entry['page']['path']) for entry in document['pages']}
+            assert len(page_paths) == 16
+            assert all(path.stat().st_size > 16384 for path in page_paths)
+            builds, checked = [], []
+            reads = Counter()
+            phase = 'import'
+            original_build = editing._current_artifact_digests
+            original_binding = content_review._require_subject_binding
+            original_read = Path.read_bytes
+    
+            def read(path):
+                raw = original_read(path)
+                if path in page_paths:
+                    reads['page_reads'] += 1
+                    reads['page_bytes'] += len(raw)
+                    reads[f'{phase}_page_reads'] += 1
+                return raw
+    
+            def build(*args, **kwargs):
+                nonlocal phase
+                builds.append(args[1]['revision_id'])
+                previous, phase = phase, 'builder'
+                try:
+                    return original_build(*args, **kwargs)
+                finally:
+                    phase = previous
+    
+            def binding(*args, **kwargs):
+                nonlocal phase
+                checked.append((args[2]['review_id'], kwargs.get('artifact_digests')))
+                previous, phase = phase, 'binding'
+                try:
+                    return original_binding(*args, **kwargs)
+                finally:
+                    phase = previous
+    
+            with monkeypatch.context() as patch:
+                patch.setattr(editing, '_current_artifact_digests', build)
+                patch.setattr(content_review, '_current_artifact_digests', build)
+                patch.setattr(content_review, '_require_subject_binding', binding)
+                patch.setattr(Path, 'read_bytes', read)
+                result = _import(project, external, bindings)
+            assert builds == [document['revision_id']]
+            assert [row[0] for row in checked] == [review['review_id'] for review in external['report']['reviews']]
+            assert checked[0][1] is not None
+            assert all(row[1] is checked[0][1] for row in checked)
+            assert len(result['review_refs']) == count
+            adopted = [store.read_object_json(ref) for ref in result['review_refs']]
+            assert all(review['status'] == 'needs_review' and review['reviewer']['type'] == 'host_self'
+                       for review in adopted)
+            assert reads['builder_page_reads'] >= 16
+            assert reads['binding_page_reads'] == 0
+            measurements.append({'reviews': count, 'pages': 16, **reads})
+        # Count physical reads of large immutable Page objects over the public call,
+        # including commit validation, not just calls to the named artifact helper.
+>       assert measurements[0]['page_reads'] == measurements[1]['page_reads']
+E       assert 146 == 148
+
+tests/rebuild/test_perf_review_import_public.py:116: AssertionError
+=========================== short test summary info ============================
+FAILED tests/rebuild/test_perf_review_import_public.py::test_public_import_derives_artifact_once_for_n_and_2n_reviews
+1 failed, 124 passed, 2 skipped in 22.87s
