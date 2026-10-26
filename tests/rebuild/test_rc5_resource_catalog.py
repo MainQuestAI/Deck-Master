@@ -45,8 +45,8 @@ def fixture_catalog(tmp_path, monkeypatch):
 
 def test_original_inventory_preserved_and_shared_by_build():
     resources = catalog.load_catalog(ROOT / 'skills/deck-master')
-    assert len(resources) == 66  # Fourteen legacy resources plus the 52 reviewed seeds.
-    assert len(methods.RELATIVE_PATHS) == 65
+    assert len(resources) == 67  # Legacy + 52 seeds + optional expression reference.
+    assert len(methods.RELATIVE_PATHS) == 66
     hook = runpy.run_path(str(ROOT / 'tools/build_hook.py'))
     assert hook['canonical_mapping'](ROOT) == catalog.canonical_mapping(resources)
 

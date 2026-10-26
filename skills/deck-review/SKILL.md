@@ -23,6 +23,8 @@ description: 只读审查项目快照、外部PPTX或明确文件集，检查内
 
 作者自审标 host_self；同作者换 Skill 名、task、execution ID 或提示词不会变成 independent。独立执行须有实际非作者执行与受信回执，人类 professional 须真实人类通道；缺能力明确 needs_reviewer。字符回读不替代关系/实际渲染，旧 Desktop 记录不等于本轮桌面验收。
 
+可选表达审阅：通过现有 selector 显式选择 `expression-review-humanizer`，按冻结 manifest 读取共享的“表达自然度与保真”参考，辅助 M10 / Review；不按“AI味”识别作者，不强制删标点、列表或必要限定。Review 只返回定位、问题、读者影响、建议改写和需保护的事实限定；Content 沿已有范围授权改后核对事实。纯视觉不扩写文字，大纲不套完整稿件要求，旧 Task 不另添资源。
+
 ## 退出条件与下一责任
 
 返回可读报告、证据/范围、未完成维度的具体原因即完成约定审查；未验证项保留缺口。下一责任按问题归属 Content/Design/Master 或交付判定；本职责不制作也不自动修复。
