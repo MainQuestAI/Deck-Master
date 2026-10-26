@@ -24,6 +24,14 @@ current unchanged.
   or `continue` returns `status == "needs_tool"`.
 - Auto action: install the named tool (`soffice`, `pdftoppm`, `rsvg-convert`,
   `fc-match`) or point `DECK_MASTER_<TOOL>` at it, then re-run the same step.
+- On macOS, `renderer_fontconfig` checks the full host Fontconfig root with
+  `fc-conflist` (override: `DECK_MASTER_FC_CONFLIST`). The renderer passes that
+  configuration only to its child processes: a bundled LibreOffice may otherwise
+  use a different default prefix and silently lose glyphs or substitute fonts.
+  If discovery fails, provide `FONTCONFIG_FILE` for the existing full host
+  configuration and re-run doctor. Explicit `FONTCONFIG_FILE` or
+  `FONTCONFIG_PATH` settings are preserved; do not replace the configuration
+  with a partial font list or change global/Homebrew application wrappers.
 - Never fall back to fixtures outside demo material.
 
 ## Conflict / Late Result

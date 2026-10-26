@@ -2,11 +2,12 @@
 from __future__ import annotations
 from importlib import resources, metadata
 from pathlib import Path
+import os
 import subprocess
 import sys
 from . import __version__
 from .method_resources import resolve_root, method_ids_for, RELATIVE_PATHS
-from .pipeline import executable, NeedsTool
+from .pipeline import executable, NeedsTool, renderer_environment
 
 STEPS=('compose','blueprint','compile','render','view','export')
 
@@ -45,6 +46,13 @@ def diagnose(step, *, fonts=(), host_imagegen=False):
             try:add(package,'ready',metadata.version(package))
             except metadata.PackageNotFoundError:add(package,'unavailable','not installed')
     if step=='render':
+        try:
+            environment = renderer_environment()
+            add('renderer_fontconfig', 'ready',
+                {'mode': 'host_config' if environment else 'inherited',
+                 'file': (environment or os.environ).get('FONTCONFIG_FILE')})
+        except NeedsTool as exc:
+            add('renderer_fontconfig', 'unavailable', str(exc))
         for name in ('soffice','pdftoppm','rsvg-convert'):
             try:
                 path=executable(name)

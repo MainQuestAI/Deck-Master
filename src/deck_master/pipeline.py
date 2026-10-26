@@ -4,9 +4,11 @@ import json
 import math
 import posixpath
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 import uuid
 import zipfile
@@ -111,16 +113,48 @@ def preview_svg_bytes(data: bytes, *, page_id: str, assets: dict[str, str]) -> b
         node.set('href', Path(assets[href]).as_uri())
     return ET.tostring(tree)
 
+def renderer_environment():
+    """Use the host's full Fontconfig configuration in macOS render children.
+
+    The macOS LibreOffice bundle can embed a different Fontconfig prefix from
+    fc-match. Its default then silently substitutes fonts (or loses CJK glyphs).
+    Discover the active host configuration, without changing global settings or
+    replacing it with a partial font-directory configuration.
+    """
+    if sys.platform != 'darwin' or any(os.environ.get(key) for key in
+                                     ('FONTCONFIG_FILE', 'FONTCONFIG_PATH')):
+        return None  # Inherit the caller's explicit configuration unchanged.
+    try:
+        listing = run([executable('fc-conflist')]).stdout.decode()
+    except (OSError, RendererError, UnicodeError) as exc:
+        raise NeedsTool('cannot discover host Fontconfig; configure FONTCONFIG_FILE') from exc
+    configs = set()
+    for line in listing.splitlines():
+        match = re.match(r'^\+ (/.*/fonts\.conf): ', line)
+        if match:
+            configs.add(Path(match.group(1)))
+    if len(configs) != 1:
+        raise NeedsTool('host Fontconfig root is missing or ambiguous; configure FONTCONFIG_FILE')
+    config = configs.pop()
+    try:
+        with config.open('rb') as stream:
+            stream.read(1)
+    except OSError as exc:
+        raise NeedsTool('host Fontconfig root is unreadable; configure FONTCONFIG_FILE') from exc
+    return {**os.environ, 'FONTCONFIG_FILE': str(config)}
+
+
 def render_deck(pptx_path, output_dir, *, fonts):
     output_dir=Path(output_dir);output_dir.mkdir(parents=True,exist_ok=True)
     # resolve_fonts already verified these fonts using the host's Fontconfig.
-    # Keep that same configuration for LibreOffice: replacing it with a partial
-    # config can prevent headless LibreOffice from starting on Linux.
+    # Bridge the macOS bundle's different default prefix to that full config.
+    # Linux and explicit caller configuration retain their existing behavior.
+    environment = renderer_environment()
     profile=(output_dir/'lo-profile').resolve().as_uri()
-    run([executable('soffice'),f'-env:UserInstallation={profile}','--headless','--convert-to','pdf','--outdir',str(output_dir),str(pptx_path)])
+    run([executable('soffice'),f'-env:UserInstallation={profile}','--headless','--convert-to','pdf','--outdir',str(output_dir),str(pptx_path)], env=environment)
     pdf=output_dir/(Path(pptx_path).stem+'.pdf')
     if not pdf.is_file():raise RuntimeError('renderer did not produce a PDF')
-    run([executable('pdftoppm'),'-r','120','-png',str(pdf),str(output_dir/'page')])
+    run([executable('pdftoppm'),'-r','120','-png',str(pdf),str(output_dir/'page')], env=environment)
     return sorted(output_dir.glob('page-*.png'),key=lambda p:int(p.stem.split('-')[-1]))
 
 
