@@ -215,12 +215,14 @@ def reference_status(store, document, page_id, *, candidate_id=None, use='expand
     history = list(accepted_history(store, document))
     retained = retained_image_findings(store, document, current, history=history)
     for fixed, row in history:
-        keys = ('page_ref', 'image_ref', 'resolved_design', 'effective_requirements')
+        keys = ('page_id', 'page_ref', 'original_ref', 'image_ref', 'resolved_design', 'effective_requirements')
+        if any(fixed[key] != current[key] for key in ('page_id', 'original_ref', 'image_ref')):
+            continue
         try:
             # Each accepted history stays readable under its own frozen design
             # contract; an unreadable contract keeps that row conservative.
-            aligned = semantic_packet(store, packet(store, document, fixed['page_id'],
-                candidate_id=fixed['candidate_id'], frozen_design=fixed['resolved_design']))
+            aligned = semantic_packet(store, packet(store, document, page_id,
+                candidate_id=candidate_id, frozen_design=fixed['resolved_design']))
         except models.ModelError:
             continue
         if all(fixed[key] == aligned[key] for key in keys):
