@@ -530,7 +530,7 @@ def content_phase_status(store, document, *, explicit_speech_mode=None):
 _DESIGN_FACT_UNSET = object()
 
 
-def completion_status(store, document, *, design_fact=_DESIGN_FACT_UNSET):
+def completion_status(store, document, *, design_fact=_DESIGN_FACT_UNSET, edit_context=None):
     """Pure request-scoped completion; unreadable facts remain explicit gaps."""
     from .design_completion import completion_status as design_completion
     design = design_completion(store, document) if design_fact is _DESIGN_FACT_UNSET else design_fact
@@ -545,11 +545,22 @@ def completion_status(store, document, *, design_fact=_DESIGN_FACT_UNSET):
     try:
         if content_edit:
             from .eligibility import evaluate
-            # The request is an upper scope bound, not a proof that every
-            # requested edit has been performed. Diagnose the existing write
-            # entrance; do not infer completion from already-present Pages.
-            edit_decision = evaluate(store, document, document, "content.operation", context={
-                "targets": {**scope, "layers": ["page_copy", "plan"]}})
+            # Only a validated operation plan supplies concrete targets. A
+            # request scope is a permission ceiling, not an operation. Generic
+            # readers retain request-control diagnostics without inventing an
+            # action, page set, extra layer or membership/order change.
+            edit_decision = evaluate(store, document, document, "content.operation", context=edit_context)
+            if edit_context is None:
+                # Without an operation, only the action-independent control
+                # reasons are known. They precede action-specific reasons in
+                # eligibility, so its next owner/action remains authoritative.
+                controls = {"migration_required", "request_closed", "request_paused",
+                            "input_reconciliation_pending"}
+                edit_decision = {**edit_decision,
+                    "reasons": [reason for reason in edit_decision["reasons"] if reason["code"] in controls]}
+                edit_decision["allowed"] = not edit_decision["reasons"]
+                if edit_decision["allowed"]:
+                    edit_decision["next_action"] = None
             phase = {"action": "inspect" if edit_decision["allowed"] else "blocked",
                      "reason": "Inspect the requested manuscript and committed edit result; "
                                "eligibility is not evidence of request completion or quality approval."}

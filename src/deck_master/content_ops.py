@@ -114,11 +114,28 @@ def _plan(store, doc, value):
                        'deck_outputs_invalidated': actual and action != 'outline', 'image_calls': 0}}
 
 
+def _operation_context(doc, planned):
+    """One concrete plan's targets, shared by diagnostics and the write guard."""
+    value = planned['input']
+    return {"candidate_count": int(value.get('mode') == 'trial' and value['action'] in HOST_ACTIONS),
+            "targets": {"page_ids": [item['page_id'] for item in value['targets']]
+                            or [entry['page_id'] for entry in doc['pages']],
+                        "layers": ["page_copy", "plan"],
+                        "allow_page_membership_change": value['action'] in ('remove', 'merge', 'split'),
+                        "allow_page_order_change": value['action'] == 'reorder'}}
+
+
 @operations.public
 def plan(project, *, input):
     store = Store(project_path(project)); doc = load_snapshot(store); value = _plan(store, doc, input)
     validate_schema('content_operation_plan', value); ref = store.put_json_object(value)
-    return {'plan_id': 'content-plan-' + ref['sha256'], 'plan_ref': ref, 'plan': value}
+    response = {'plan_id': 'content-plan-' + ref['sha256'], 'plan_ref': ref, 'plan': value}
+    request = (doc.get('collaboration') or {}).get('request') or {}
+    layers = set((request.get('scope') or {}).get('layers') or [])
+    if request.get('intent') == 'edit' and layers and layers <= {'page_copy', 'plan'}:
+        from .content_production import completion_status
+        response['completion'] = completion_status(store, doc, edit_context=_operation_context(doc, value))
+    return response
 
 
 def _read_plan(store, plan_id):
@@ -212,13 +229,7 @@ def commit(project, *, plan_id, base_revision, operation_id):
         if base_revision != doc['revision_id'] or planned != _plan(store, doc, planned['input']):
             fail('base_revision', 'content plan changed; no pages were changed', conflict=True)
         from . import eligibility
-        eligibility.guard(store, doc, "content.operation", context={
-            "candidate_count": int(planned['input'].get('mode') == 'trial' and planned['input']['action'] in HOST_ACTIONS),
-            "targets": {"page_ids": [item['page_id'] for item in planned['input']['targets']]
-                            or [entry['page_id'] for entry in doc['pages']],
-                        "layers": ["page_copy", "plan"],
-                        "allow_page_membership_change": planned['input']['action'] in ('remove', 'merge', 'split'),
-                        "allow_page_order_change": planned['input']['action'] == 'reorder' }})
+        eligibility.guard(store, doc, "content.operation", context=_operation_context(doc, planned))
         value = planned['input']; action = value['action']; ids = [t['page_id'] for t in value['targets']]
         trial = value.get('mode', 'auto') == 'trial' and action in HOST_ACTIONS
         updated = bump_revision(copy.deepcopy(doc), {'operation_id': operation_id, 'kind': 'content_update', 'description': value['instruction'], 'read_set': []})
