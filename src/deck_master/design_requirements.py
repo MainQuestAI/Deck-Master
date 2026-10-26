@@ -15,7 +15,6 @@ from .models import ModelError, canonical_json_bytes, sha256_bytes
 from .store import StoreError
 
 PAGE_ROLE_FIELDS = ("role", "audience_question", "intended_takeaway", "transition_to_next")
-PLAN_DESIGN_FIELDS = ("content_profile", "density_rationale", "required_qualifications")
 
 
 def _digest(value) -> str:

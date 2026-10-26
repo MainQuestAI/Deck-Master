@@ -1,0 +1,27 @@
+{
+  "head": "e6d5a572b99d7d0d5c9bf37bb95c335d4b9a35bc",
+  "worktree_sha256_before": "980e28c4476d7cdd32383b5bce7a217caecdc84c51b941e26d9c7c44e64196f3",
+  "worktree_sha256_after": "980e28c4476d7cdd32383b5bce7a217caecdc84c51b941e26d9c7c44e64196f3",
+  "source_changed_during_run": false,
+  "command": [
+    ".venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/rebuild/test_clear_recovery_protocol_http.py",
+    "tests/rebuild/test_clear_recovery_migration_browser.py",
+    "tests/rebuild/test_pr189_clear_ownership_browser.py",
+    "tests/rebuild/test_pr189_clear_end_browser.py",
+    "tests/rebuild/test_pr189_clear_storage_browser.py",
+    "tests/rebuild/test_pr189_clear_transport_browser.py",
+    "--require-browser",
+    "--chromium-executable",
+    "/usr/bin/chromium"
+  ],
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "wall_seconds": 94.53205237300062,
+  "exit_code": 1,
+  "reaped_children_user_seconds": 64.13714,
+  "reaped_children_system_seconds": 19.84092,
+  "scope": "Only batches using this runner are serialized; CPU excludes detached/unreaped descendants."
+}

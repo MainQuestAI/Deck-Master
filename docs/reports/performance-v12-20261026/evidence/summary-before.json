@@ -1,0 +1,125 @@
+{
+  "fixture": "existing make_project, 300 pages; no PPTX; framing task retained by factory",
+  "fixture_document_sha256": "5cfcdbbf3e1c65cddb9f3116afa5577a8257602440740d0df53019c337428255",
+  "page_count": 300,
+  "task_count": 0,
+  "module_origin": "/workspace/scratch/perf-baseline/src/deck_master/__init__.py",
+  "python": "3.12.14",
+  "scope": "same process HTTP client+service; 3 warm samples are not p95; Store bytes count excludes direct read-context cache IO; probes separate from timing",
+  "rows": [
+    {
+      "query": "protocol=workbench_summary.v1",
+      "phase": "warm_uninstrumented",
+      "sample": 0,
+      "wall_seconds": 0.015284832999896025,
+      "driver_and_service_cpu_seconds": 0.015460452000000124,
+      "response_sha256": "6bf753802d533f1a7faa0c3f7513a99270ea9e34d7a826cc07775a2e656660ca"
+    },
+    {
+      "query": "protocol=workbench_summary.v1",
+      "phase": "warm_uninstrumented",
+      "sample": 1,
+      "wall_seconds": 0.016574781000144867,
+      "driver_and_service_cpu_seconds": 0.016603216999999892,
+      "response_sha256": "6bf753802d533f1a7faa0c3f7513a99270ea9e34d7a826cc07775a2e656660ca"
+    },
+    {
+      "query": "protocol=workbench_summary.v1",
+      "phase": "warm_uninstrumented",
+      "sample": 2,
+      "wall_seconds": 0.01870096199991167,
+      "driver_and_service_cpu_seconds": 0.018870689000000107,
+      "response_sha256": "6bf753802d533f1a7faa0c3f7513a99270ea9e34d7a826cc07775a2e656660ca"
+    },
+    {
+      "query": "protocol=workbench_summary.v1",
+      "phase": "cold_probe",
+      "artifact_builds": 0,
+      "store_byte_reads": 0,
+      "store_bytes": 0
+    },
+    {
+      "query": "protocol=workbench_summary.v1",
+      "phase": "warm_probe",
+      "artifact_builds": 0,
+      "store_byte_reads": 0,
+      "store_bytes": 0
+    },
+    {
+      "query": "protocol=workbench_summary.v2",
+      "phase": "warm_uninstrumented",
+      "sample": 0,
+      "wall_seconds": 1.1216078430002199,
+      "driver_and_service_cpu_seconds": 1.1215677459999998,
+      "response_sha256": "6138217b456fd843036d7d36ea7ad4b1558b96d258d4f4f88ae1fe79ddefefe2"
+    },
+    {
+      "query": "protocol=workbench_summary.v2",
+      "phase": "warm_uninstrumented",
+      "sample": 1,
+      "wall_seconds": 1.1224690229996668,
+      "driver_and_service_cpu_seconds": 1.1223756390000004,
+      "response_sha256": "6138217b456fd843036d7d36ea7ad4b1558b96d258d4f4f88ae1fe79ddefefe2"
+    },
+    {
+      "query": "protocol=workbench_summary.v2",
+      "phase": "warm_uninstrumented",
+      "sample": 2,
+      "wall_seconds": 1.1589156889999686,
+      "driver_and_service_cpu_seconds": 1.1558194320000004,
+      "response_sha256": "6138217b456fd843036d7d36ea7ad4b1558b96d258d4f4f88ae1fe79ddefefe2"
+    },
+    {
+      "query": "protocol=workbench_summary.v2",
+      "phase": "cold_probe",
+      "artifact_builds": 3,
+      "store_byte_reads": 6916,
+      "store_bytes": 5870625
+    },
+    {
+      "query": "protocol=workbench_summary.v2",
+      "phase": "warm_probe",
+      "artifact_builds": 3,
+      "store_byte_reads": 6916,
+      "store_bytes": 5870625
+    },
+    {
+      "query": "protocol=workbench_summary.v2&personal=1",
+      "phase": "warm_uninstrumented",
+      "sample": 0,
+      "wall_seconds": 1.1458002559998022,
+      "driver_and_service_cpu_seconds": 1.146335198000001,
+      "response_sha256": "b755d3765c697ddb57e56aede963fd435805c35a0b7c26d4eb901c8f1dffecb1"
+    },
+    {
+      "query": "protocol=workbench_summary.v2&personal=1",
+      "phase": "warm_uninstrumented",
+      "sample": 1,
+      "wall_seconds": 1.1313247330003833,
+      "driver_and_service_cpu_seconds": 1.1316381030000002,
+      "response_sha256": "b755d3765c697ddb57e56aede963fd435805c35a0b7c26d4eb901c8f1dffecb1"
+    },
+    {
+      "query": "protocol=workbench_summary.v2&personal=1",
+      "phase": "warm_uninstrumented",
+      "sample": 2,
+      "wall_seconds": 1.1218073320001167,
+      "driver_and_service_cpu_seconds": 1.1220751460000002,
+      "response_sha256": "b755d3765c697ddb57e56aede963fd435805c35a0b7c26d4eb901c8f1dffecb1"
+    },
+    {
+      "query": "protocol=workbench_summary.v2&personal=1",
+      "phase": "cold_probe",
+      "artifact_builds": 3,
+      "store_byte_reads": 6916,
+      "store_bytes": 5870625
+    },
+    {
+      "query": "protocol=workbench_summary.v2&personal=1",
+      "phase": "warm_probe",
+      "artifact_builds": 3,
+      "store_byte_reads": 6916,
+      "store_bytes": 5870625
+    }
+  ]
+}

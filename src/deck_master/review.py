@@ -27,7 +27,6 @@ OPEN_TASK_STATUSES = ('awaiting_host', 'running')
 # 07.8: real leak markers only — never an open-ended banned-word list.
 SENSITIVE_PATTERNS = ('内部资料', '内部使用', '机密', 'confidential', 'internal only', '[internal]')
 # Business words that are never leaks by themselves.
-FALSE_FRIENDS = ('缩略图', '左屏', '右屏', '页角色', 'thumbnail', 'speaker')
 TEACHING_MARKERS = ('教学', '教程', '培训', 'how-to', 'how to', '制作ppt', '制作幻灯片')
 
 
@@ -755,7 +754,7 @@ def privacy_findings(page: dict, *, intent: str = '') -> list[dict]:
                 scan(item, f'{pointer}/{index}')
         elif isinstance(value, str):
             text = value.lower()
-            # FALSE_FRIENDS are never sensitive by themselves; they must not
+            # These ordinary UI words are never sensitive by themselves; they must not
             # short-circuit the scan either — any sensitive marker in the same
             # string still reports.
             for marker in SENSITIVE_PATTERNS:

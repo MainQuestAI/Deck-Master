@@ -1,5 +1,6 @@
 """R1 full HTTP/Chromium recovery with an accepted near-limit backup."""
 import json
+import shutil
 from pathlib import Path
 import pytest
 from playwright.sync_api import expect, sync_playwright
@@ -20,14 +21,24 @@ def test_large_interrupted_clear_ends_refreshes_downloads_and_replans(project, s
     server = WorkbenchServer(project)
     try:
         with sync_playwright() as runtime:
-            browser = runtime.chromium.launch()
+            browser = runtime.chromium.launch(executable_path=shutil.which('chromium') or shutil.which('chromium-browser'))
             page = browser.new_page(accept_downloads=True)
-            page.goto(server.start()+'studio/')
+            # The capacity/interruption scenario starts after initial reading
+            # position persistence. Otherwise that legitimate write can change
+            # the manifest between plan and commit and correctly trigger CAS.
+            with page.expect_response(lambda response: response.url.endswith('/api/ui-state')
+                                      and response.request.method == 'POST') as initial_position:
+                page.goto(server.start()+'studio/')
+            assert initial_position.value.ok
+            initial_position.value.finished()
             panel = open_panel(page)
             panel.get_by_role('button', name='生成清理计划', exact=True).click()
             unlink = Path.unlink
+            interrupted = []
             def fail(path, *args, **kwargs):
-                if path == j._draft_path(store, 'draft-001'): raise OSError('capacity interruption')
+                if path == j._draft_path(store, 'draft-001'):
+                    interrupted.append(path)
+                    raise OSError('capacity interruption')
                 return unlink(path, *args, **kwargs)
             with monkeypatch.context() as patch:
                 patch.setattr(Path, 'unlink', fail)
@@ -35,6 +46,7 @@ def test_large_interrupted_clear_ends_refreshes_downloads_and_replans(project, s
                     panel.get_by_role('button', name='确认清理并保留备份', exact=True).click()
                 req = json.loads(response.value.request.post_data)
                 assert not response.value.ok
+                assert interrupted == [j._draft_path(store, 'draft-001')]
             expect(panel).to_contain_text('清理结果待核实')
             assert MAX_BODY-1500 < j._clear_backup_path(store, req['manifest_digest']).stat().st_size <= MAX_BODY
             with page.expect_response('**/api/ui-state/commit-clear') as replay:

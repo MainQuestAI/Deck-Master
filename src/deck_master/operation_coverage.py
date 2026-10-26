@@ -87,7 +87,7 @@ def discard(root):
 
 
 def publish(coverage):
-    """Only the resolver publishes successful, complete canonical scans."""
+    """Publish successful, complete canonical scans from resolvers or readers."""
     if len(coverage.headers) > MAX_REVISIONS or any(h.signature is None for h in coverage.headers.values()):
         return
     with _lock:

@@ -32,8 +32,9 @@ def _read(store,doc,identity):
     return record
 
 
-def get(project, *, expected_etag=None):
-    store,doc,identity=context(project);record=_read(store,doc,identity)
+def get(project, *, expected_etag=None, read_context=None):
+    store,doc,identity=read_context if read_context is not None else context(project)
+    record=_read(store,doc,identity)
     if expected_etag is not None and expected_etag!=record['etag']:
         raise LocalStateConflict('reading_etag','reading state changed; reload this list before continuing')
     return record

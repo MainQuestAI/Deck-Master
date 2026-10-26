@@ -78,19 +78,90 @@ def ux06_browser(tmp_path):
             server.stop()
 
 
-def test_created_project_reopens_after_open_failure_without_recreating(ux06_browser):
+@pytest.fixture
+def recovery_launcher(tmp_path, request, ux06_browser):
+    """Own only this test's launcher and explicitly named recovery targets."""
+    from deck_master import local_runtime
+    from contextlib import ExitStack
+    from urllib.parse import urlsplit
+    reg = tmp_path / 'recovery-launcher' / 'registry.json'
+    descriptor = local_runtime.descriptor(registry=reg)
+    targets = {}
+    owned = ExitStack()
+    request.addfinalizer(owned.close)  # Runs all callbacks, including on failure.
+    def stop_instance(desc, instance):
+        state = local_runtime.read_state(desc)
+        if state and state.get('instance_id') == instance:
+            local_runtime.stop(desc)
+    launcher = local_runtime.ensure(descriptor)
+    if not launcher.get('reused'):
+        owned.callback(stop_instance, descriptor, launcher['instance_id'])
+    page = ux06_browser[0]
+    def opened(response):
+        if urlsplit(response.url).path != '/api/projects/open' or response.status != 200:
+            return
+        try:
+            state = response.json()
+        except Exception:
+            return  # The private-target finalizer handles a lost/unreadable response.
+        if state.get('reused'):
+            return
+        for target in targets:
+            if target.exists():
+                desc = local_runtime.descriptor(project=target)
+                if state.get('identity') == desc['identity']:
+                    targets[target] = state['instance_id']
+    page.on('response', opened)
+    owned.callback(page.remove_listener, 'response', opened)
+    def own_target(name):
+        target = reg.parent / name
+        assert not target.exists()
+        targets[target] = None
+        def stop_target():
+            if not target.exists():
+                return
+            desc = local_runtime.descriptor(project=target)
+            state = local_runtime.read_state(desc)
+            # This path did not exist before this test, inside its exclusive
+            # tmp_path. If delivery failed, discover the instance it created;
+            # once observed, never substitute a different instance.
+            instance = targets[target] or (state or {}).get('instance_id')
+            if instance:
+                stop_instance(desc, instance)
+        owned.callback(stop_target)  # Before create/open can partially succeed.
+        return target
+    own_target.close = owned.close
+    return launcher, reg, own_target
+
+
+def test_recovery_service_is_reclaimed_after_response_loss(recovery_launcher):
+    import socket
+    from urllib.parse import urlsplit
+    from deck_master import local_runtime
+    _, _, own_target = recovery_launcher
+    target = own_target('lost-open-response')
+    create_sample(target, page_count=1, readonly=False)
+    desc = local_runtime.descriptor(project=target)
+    state = local_runtime.ensure(desc)
+    assert not state['reused']
+    try:
+        with pytest.raises(ConnectionError, match='response lost'):
+            raise ConnectionError('response lost after service startup')
+    finally:
+        own_target.close()
+    assert not local_runtime.healthy(state, desc)
+    url = urlsplit(state['url'])
+    with socket.socket() as sock:
+        assert sock.connect_ex((url.hostname, url.port)) != 0
+
+
+def test_created_project_reopens_after_open_failure_without_recreating(ux06_browser, recovery_launcher):
     from playwright.sync_api import expect
     from deck_master import local_runtime
     page, server, path, store, context = ux06_browser
-    import tempfile
-    from pathlib import Path as P
-    reg = P(tempfile.mkdtemp()) / 'registry.json'
-    descriptor = local_runtime.descriptor(registry=reg)
-    launcher = local_runtime.ensure(descriptor)
-    try:
-        await_recovery(page, launcher['url'], reg.parent)
-    finally:
-        local_runtime.stop(descriptor)
+    launcher, reg, own_target = recovery_launcher
+    own_target('recovery-target')
+    await_recovery(page, launcher['url'], reg.parent)
 
 def await_recovery(page, root, parent_dir):
     from playwright.sync_api import expect
@@ -135,18 +206,14 @@ def await_recovery(page, root, parent_dir):
     page.get_by_role('heading', name='内容与页序', exact=True).wait_for(timeout=20000)
 
 
-def test_lost_create_response_offers_register_and_open_without_recreating(ux06_browser):
+def test_lost_create_response_offers_register_and_open_without_recreating(ux06_browser, recovery_launcher):
     """AC20：创建响应丢失时按已存在的位置核实——只登记并打开，不重复创建。"""
     from playwright.sync_api import expect
     from deck_master import local_runtime
     from deck_master.samples import create_sample as make_project
     page, server, path, store, context = ux06_browser
-    import tempfile
-    from pathlib import Path as P
-    reg = P(tempfile.mkdtemp()) / 'registry.json'
-    descriptor = local_runtime.descriptor(registry=reg)
-    launcher = local_runtime.ensure(descriptor)
-    target = reg.parent / 'lost-response-target'
+    launcher, reg, own_target = recovery_launcher
+    target = own_target('lost-response-target')
     try:
         page.goto(launcher['url'])
         expect(page.get_by_role('button', name='新建项目', exact=True)).to_be_visible()
@@ -175,7 +242,7 @@ def test_lost_create_response_offers_register_and_open_without_recreating(ux06_b
         page.wait_for_url(lambda pattern: '#project=' in page.url, timeout=20000)
         assert len(attempts) == create_attempts, '恢复路径不得再次创建'
     finally:
-        local_runtime.stop(descriptor)
+        page.unroute('**/api/projects/create')
 
 
 @pytest.mark.parametrize("result", ["removed", "cancelled", "rejected", "refresh_failed", "late_removed", "late_rejected"])

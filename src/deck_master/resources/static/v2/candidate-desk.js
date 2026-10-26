@@ -48,6 +48,7 @@ export function candidateDesk(app, data) {
   const previewAction = button('生成候选实际 PPT', requestPreview);
   const previewTools = el('div',{class:'comparison-preview-tools',hidden:true}, el('label',{},'查看 ',compareLayer), previewStatus, previewAction, previewDetails);
   let preview=null, previewTimer=null, previewBusy=false, comparison=null;
+  let previewRead = null, previewPending = false, previewVersion = 0;
   let selected, live, list = [], disposed = false, busy = false, polling = false, serial = 0, currentPlan = null, planInvalid = false, lastSync = null, keepBusy = false;
   const releases = [], auxReleases = [], modalReleases = [];
   const choosePlan = button('预览采用这个候选', planAdoption, false), adopt = button('采用这个候选', adoptSelected, true, {disabled: true});
@@ -106,24 +107,34 @@ export function candidateDesk(app, data) {
     previewDetails.replaceChildren(el('summary',{},'查看检查详情'),preview?.error&&el('pre',{class:'evidence-json'},JSON.stringify(preview.error,null,2)));
     previewAction.disabled=previewBusy||app.readonly||app.historical||['queued','running','busy'].includes(preview?.status);
     previewAction.textContent=preview?.status==='ready'?'重新检查候选实际 PPT':preview&&!['not_requested','queued','running','busy'].includes(preview.status)?'重试候选实际 PPT':'生成候选实际 PPT';
+    iconReview?.update(preview || {status:'not_requested'}, previewBusy || app.readonly || app.historical);
   }
   function receivePreview(value,id) {
     if(disposed||selected?.candidate_id!==id)return;
     if((value.candidate_id&&value.candidate_id!==id)||(value.candidate_ref&&canonical(value.candidate_ref)!==canonical(selected.candidate_ref))){previewStatus.textContent='实际 PPT 与所选候选不一致，未展示。';return;}
     const changed=canonical([preview?.status,preview?.files,preview?.error])!==canonical([value.status,value.files,value.error]);preview=value;previewControls();
     if(changed&&compareLayer.value==='ppt'&&comparison)drawColumns(...comparison);
-    clearTimeout(previewTimer);if(['queued','running','busy'].includes(value.status))previewTimer=setTimeout(()=>refreshPreview(id),2000);
+    clearTimeout(previewTimer);if(!document.hidden&&['queued','running','busy'].includes(value.status))previewTimer=setTimeout(()=>refreshPreview(id),2000);
   }
   async function refreshPreview(id) {
-    try{receivePreview(await get('/api/candidate-preview/status?'+new URLSearchParams({candidate_id:id})),id);}
-    catch(error){if(!disposed&&selected?.candidate_id===id)previewStatus.textContent=readableError(error)+' · SVG 比较仍可使用。';}
+    if(disposed||document.hidden||selected?.candidate_id!==id)return;
+    if(previewBusy){previewPending=true;return;}
+    if(previewRead){previewPending=true;return previewRead;}
+    clearTimeout(previewTimer);
+    const token=serial, version=previewVersion;
+    previewRead=(async()=>{
+      try{const value=await get('/api/candidate-preview/status?'+new URLSearchParams({candidate_id:id}));
+        if(token===serial&&version===previewVersion)receivePreview(value,id);}
+      catch(error){if(!disposed&&token===serial&&selected?.candidate_id===id)previewStatus.textContent=readableError(error)+' · SVG 比较仍可使用。';}
+    })();
+    try{await previewRead;}finally{previewRead=null;if(previewPending&&!disposed&&!document.hidden){previewPending=false;refreshPreview(selected?.candidate_id);}}
   }
   async function requestPreview() {
-    if(previewBusy||!selected||selected.candidate.stage!=='svg')return;
-    const id=selected.candidate_id;previewBusy=true;previewControls();
-    try{receivePreview(await post('/api/candidate-preview/request',{candidate_id:id,retry:Boolean(preview&&preview.status!=='not_requested'),wait:false}),id);}
+    if(previewBusy||app.readonly||app.historical||!selected||selected.candidate.stage!=='svg')return;
+    const id=selected.candidate_id,token=serial;previewVersion++;clearTimeout(previewTimer);previewBusy=true;previewControls();
+    try{const value=await post('/api/candidate-preview/request',{candidate_id:id,retry:Boolean(preview&&preview.status!=='not_requested'),wait:false});if(token===serial)receivePreview(value,id);}
     catch(error){if(!disposed&&selected?.candidate_id===id)previewStatus.textContent=readableError(error)+' · 未展示替代图片。';}
-    finally{previewBusy=false;if(!disposed)previewAction.disabled=app.readonly||app.historical||['queued','running','busy'].includes(preview?.status);}
+    finally{previewBusy=false;if(!disposed){previewControls();if(previewPending&&!document.hidden){previewPending=false;refreshPreview(selected?.candidate_id);}}}
   }
   compareLayer.addEventListener('change',()=>{if(comparison)drawColumns(...comparison);});
   function drawColumns(leftStage, leftRevision, label = '当前采用（原固定基准）', leftPage = null, leftPpt = null) {
@@ -185,7 +196,8 @@ export function candidateDesk(app, data) {
         el('details', {}, el('summary', {}, '请求、Attempt 与结果身份'), el('pre', {class: 'evidence-json'}, JSON.stringify({candidate_id: selected.candidate_id,
           request_id: selected.request?.request_id || null, attempt_id: selected.attempt?.attempt_id || null, result_ref: selected.candidate.result_ref,
           generation_basis: selected.candidate.generation_basis, references: selected.reference_sources, observed_coverage: actual?.coverage || null}, null, 2))))));
-    iconReview = candidateIconReview(app, selected, base, {releaseComparison:()=>{releases.splice(0).forEach(fn=>fn());columns.replaceChildren();}, restoreComparison:()=>drawColumns(...comparison)});
+    iconReview = candidateIconReview(app, selected, base, {preview,requestPreview,releaseComparison:()=>{releases.splice(0).forEach(fn=>fn());columns.replaceChildren();}, restoreComparison:()=>drawColumns(...comparison)});
+    previewControls();
     if (iconReview) evidence.append(iconReview);
   }
   async function choose(id) {
@@ -211,7 +223,12 @@ export function candidateDesk(app, data) {
       const acknowledged = [...app.business.completed.values()].reverse().find(result =>
         result.revision_id === value.revision_id && result.candidate_ids?.includes(id));
       if (acknowledged) adoptionReceipt(acknowledged, false);
-    } catch (error) { if (!disposed && token === serial) { impact.replaceChildren(el('p', {class: 'field-error'}, readableError(error))); select.value = selected?.candidate_id || ''; } }
+    } catch (error) { if (!disposed && token === serial) {
+      impact.replaceChildren(el('p', {class: 'field-error'}, readableError(error))); select.value = selected?.candidate_id || '';
+      // A failed selection retains the previous comparison, but invalidated its
+      // in-flight preview epoch. Rejoin the one reader for that retained choice.
+      if (selected?.candidate.stage === 'svg') refreshPreview(selected.candidate_id);
+    } }
     finally { if (token === serial) { busy = false; if (!disposed) controls(); } }
   }
   select.addEventListener('change', () => choose(select.value));
@@ -306,7 +323,9 @@ export function candidateDesk(app, data) {
   const fromSummary = event => { if (event.detail.revision_id !== live?.revision_id && !document.hidden) refresh(); };
   app.root.addEventListener('summary-refreshed', fromSummary);
   const timer = app.health.ui_capabilities?.includes('run_desk.v1') ? null : setInterval(() => { if (!document.hidden) refresh(); }, 5000);
-  app.disposables.push(() => { disposed = true; serial++; clearInterval(timer); clearTimeout(previewTimer); iconReview?.dispose(); app.root.removeEventListener('summary-refreshed', fromSummary); releases.forEach(fn => fn()); auxReleases.forEach(fn => fn()); modalReleases.forEach(fn => fn()); app.root.removeEventListener('business-state-changed', sync); app.root.removeEventListener('business-rejected', rejected); });
+  const previewVisibility=()=>{clearTimeout(previewTimer);previewPending=false;if(!document.hidden&&selected?.candidate.stage==='svg')refreshPreview(selected.candidate_id);};
+  document.addEventListener('visibilitychange',previewVisibility);
+  app.disposables.push(() => { disposed = true; serial++; clearInterval(timer); clearTimeout(previewTimer); iconReview?.dispose(); document.removeEventListener('visibilitychange',previewVisibility);app.root.removeEventListener('summary-refreshed', fromSummary); releases.forEach(fn => fn()); auxReleases.forEach(fn => fn()); modalReleases.forEach(fn => fn()); app.root.removeEventListener('business-state-changed', sync); app.root.removeEventListener('business-rejected', rejected); });
   refresh(); controls(); return root;
 }
 
@@ -325,7 +344,7 @@ export function candidateBatch(app) {
   const group = el('select', {'aria-label':'按修改组查看候选'}, el('option',{value:''},'全部修改组'));
   const selectionMessage = el('p',{class:'muted candidate-selection-message',role:'status'});
   let offset = 0;
-  let records = [], selected = new Set(), currentPlan = null, disposed = false, busy = false, polling = false, revision = null, serial = 0;
+  let records = [], selected = new Set(), currentPlan = null, disposed = false, busy = false, polling = false, revision = null, serial = 0, visible = true;
   const draft = operationDraft(app);
   const preview = button('预览所选候选的采用影响', previewSelection), adopt = button('采用所选候选', adoptSelection, true, {disabled: true});
   const assemble = button('更新整稿 PPT', assembleDeck);
@@ -477,13 +496,14 @@ export function candidateBatch(app) {
       if (disposed || editor !== app.editor) return;
       const saved = editor.draft.content.candidate_selection;
       selected = new Set(Array.isArray(saved) ? saved.filter(id => typeof id === 'string') : []);
-      currentPlan = null; impact.replaceChildren(); renderRows(); refresh();
+      currentPlan = null; impact.replaceChildren(); renderRows(); if(visible)refresh();
     });
   }
   app.root.addEventListener('draft-editor-replaced', hydrate); hydrate();
-  const onSummary = event => { if (event.detail.revision_id !== revision) refresh(); };
+  const onSummary = event => { if (visible && !document.hidden && event.detail.revision_id !== revision) refresh(); };
   app.root.addEventListener('summary-refreshed', onSummary);
-  const timer = app.health.ui_capabilities?.includes('run_desk.v1') ? null : setInterval(() => { if (!document.hidden) refresh(); }, 5000);
+  const timer = app.health.ui_capabilities?.includes('run_desk.v1') ? null : setInterval(() => { if (visible && !document.hidden) refresh(); }, 5000);
+  root.setActive = value => {const resumed=value&&!visible;visible=value;if(resumed)refresh();};
   app.disposables.push(() => { disposed = true; serial++; clearInterval(timer); app.root.removeEventListener('summary-refreshed', onSummary); app.root.removeEventListener('draft-editor-replaced', hydrate); app.root.removeEventListener('business-state-changed', sync); app.root.removeEventListener('business-rejected', rejected); });
   controls(); return root;
 }

@@ -129,7 +129,7 @@ def task_instruction_summary(task):
     return text
 
 
-def task_row(task, ref=None, *, adopted=(), now=None, live=True, relationships=None):
+def _task_facts(task, *, adopted=(), now=None, live=True, relationships=None):
     now = now or datetime.now(timezone.utc)
     def timestamp(value):
         try:
@@ -170,19 +170,25 @@ def task_row(task, ref=None, *, adopted=(), now=None, live=True, relationships=N
         actions = [action for action in actions if action in ('verify_unknown_call', 'verify_execution')]
     if current_relation['status'] == 'historical':
         actions = []
-    return {'ref': ref, 'task_id': task['task_id'], 'operation_id': task['operation_id'],
-            'kind': task['kind'], 'status': task['status'], 'current_relation': {**current_relation, **legacy_relation(current_relation)}, 'scope_pages': task['scope_pages'],
-            'instruction': task['instruction'], 'display_instruction': task_instruction_summary(task), 'dispatch_revision': task['dispatch_revision'],
-            'created_at': task['created_at'], 'updated_at': task['updated_at'],
+    return {'current_relation': {**current_relation, **legacy_relation(current_relation)},
             'execution_ref': task.get('execution_ref'), 'execution_started_at': started,
             'execution_time_source': 'core_recorded' if started else 'not_recorded',
             'verification_clock': 'live' if live else 'not_evaluated_for_fixed_revision',
             'needs_verification': unknown or stale or unclaimed_running or current_relation['reason'] == 'dependencies_unverifiable',
             'waiting_time_basis': 'execution_started_at' if started else 'last_task_update' if wait_basis else 'unknown', 'call_counts': dict(calls),
-            'reading_key':reading_key(task), 'human_actions': actions, 'request_count': len(task.get('generation_requests', [])),
+            'human_actions': actions, 'pending_candidate_refs': pending_candidates}
+
+
+def task_row(task, ref=None, *, adopted=(), now=None, live=True, relationships=None, facts=None):
+    facts = facts if facts is not None else _task_facts(task, adopted=adopted, now=now, live=live, relationships=relationships)
+    return {**facts, 'ref': ref, 'task_id': task['task_id'], 'operation_id': task['operation_id'],
+            'kind': task['kind'], 'status': task['status'], 'scope_pages': task['scope_pages'],
+            'instruction': task['instruction'], 'display_instruction': task_instruction_summary(task), 'dispatch_revision': task['dispatch_revision'],
+            'created_at': task['created_at'], 'updated_at': task['updated_at'],
+            'reading_key':reading_key(task), 'request_count': len(task.get('generation_requests', [])),
             'attempt_count': len(task.get('generation_attempts', [])),
             'result_refs': task.get('result_refs', []), 'candidate_refs': task.get('candidate_refs', []),
-            'pending_candidate_refs': pending_candidates, 'change_binding': task.get('change_binding'),
+            'change_binding': task.get('change_binding'),
             'error': task.get('error'), 'docs_ref': DOCS}
 
 
@@ -249,30 +255,36 @@ def listing(project, *, revision=None, limit=30, offset=0, change_id=None, statu
             raise RunReadError('change_not_found', 'change_id', 'change is not in this committed version')
         selected_ids = set(group['task_ids'])
     adopted = {r['candidate_ref']['sha256'] for r in doc.get('candidate_adoptions', [])}
-    now = datetime.now(timezone.utc); projected = []
+    now = datetime.now(timezone.utc); selected = []
+    def facts_for(task):
+        facts = _task_facts(task, adopted=adopted, now=now, live=revision is None, relationships=relationships)
+        if reading is not None and reading_key(task) in reading['seen']:
+            facts['human_actions'] = [a for a in facts['human_actions'] if a != 'review_results']
+        return facts
     for ref, task in reversed(records):
-        row = (task_row(task, ref, adopted=adopted, now=now, live=revision is None, relationships=relationships) if task else
-               {'ref': ref, 'task_id': None, 'status': 'unreadable', 'human_actions': ['inspect_failure'], 'error': _error()})
-        if task and reading is not None and reading_key(task) in reading['seen']:
-            row['human_actions']=[a for a in row['human_actions'] if a!='review_results']
+        row = task or {'task_id': None, 'status': 'unreadable'}
         if selected_ids is not None and row['task_id'] not in selected_ids:
             continue
         if status is not None and row['status'] != status:
             continue
-        if attention and not row['human_actions']:
-            continue
         if needle:
-            text = ' '.join([str(row.get('task_id') or ''), str(row.get('instruction') or ''), str(row.get('display_instruction') or ''),
+            text = ' '.join([str(row.get('task_id') or ''), str(row.get('instruction') or ''), task_instruction_summary(task) if task else '',
                              kind_names.get(row.get('kind'), ''),
                              *(page_terms.get(pid, pid) for pid in row.get('scope_pages', []))])
             if needle not in text.casefold():
                 continue
-        projected.append(row)
+        facts = facts_for(task) if attention and task else None
+        if attention and facts is not None and not facts['human_actions']:
+            continue
+        selected.append((ref, task, facts))
+    projected = [task_row(task, ref, facts=facts if facts is not None else facts_for(task)) if task else
+        {'ref': ref, 'task_id': None, 'status': 'unreadable', 'human_actions': ['inspect_failure'], 'error': _error()}
+        for ref, task, facts in selected[offset:offset + limit]]
     return copy.deepcopy({'project_id': doc['project_id'], 'revision_id': doc['revision_id'],
-        'tasks': projected[offset:offset + limit], 'groups': groups,
-        'pagination': {'offset': offset, 'limit': limit, 'total': len(projected),
-                       'next_offset': offset + limit if offset + limit < len(projected) else None},
-        'counts': dict(Counter(row['status'] for row in projected)),
+        'tasks': projected, 'groups': groups,
+        'pagination': {'offset': offset, 'limit': limit, 'total': len(selected),
+                       'next_offset': offset + limit if offset + limit < len(selected) else None},
+        'counts': dict(Counter(task['status'] if task else 'unreadable' for _, task, _ in selected)),
         'active': any(task and task['status'] in ('queued', 'awaiting_host', 'running') for _, task in records),
         'read_only': True, 'empty_actions': ['read_content', 'read_current_stages'] if not records else [], 'docs_ref': DOCS})
 

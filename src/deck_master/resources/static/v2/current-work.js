@@ -1,15 +1,23 @@
 import {openAction} from './action-targets.js';
 import {el, button} from './dom.js';
 import {todoTitle, todoMeta, todoButton} from './action-summary.js';
+import {canonical} from './api.js';
+
+export const currentWorkKey = (app, work = app.summary.current_work) => canonical([
+  work, (app.summary.pages || []).map(page => [page.page_id, page.title]),
+  app.health.ui_capabilities?.includes('action_targets.v1')]);
 
 // Both surfaces render the same fixed read projection. Navigation is not a
 // production action; every eventual submission still uses the existing guard.
 export function currentWork(app, work = app.summary.current_work) {
-  if (!work) return el('section', {class:'overview-todos stack', 'data-current-work':'true'},
+  if (!work) {
+    const pending = el('section', {class:'overview-todos stack', 'data-current-work':'true'},
     el('h2', {}, '本次工作投影待重新读取'),
     el('p', {}, '当前控制状态与工作投影尚未对齐。已读稿件和版本保持，重新读取后再查看下一动作。'),
     button('重新读取本次工作', () => app.loadRoute({...app.route})),
     button('阅读已有产物', () => app.go({surface:'content'})));
+    pending.currentWorkKey = currentWorkKey(app, work); return pending;
+  }
   let panel;
   const closePanel = () => panel.closest('dialog')?.close();
   const next = work.next;
@@ -19,8 +27,12 @@ export function currentWork(app, work = app.summary.current_work) {
   const row = action => el('article', {class:'todo-row'},
     el('div', {}, el('h3', {}, todoTitle(action)), el('p', {class:'muted'}, todoMeta(app, action))),
     todoButton(app, action, false, closePanel));
-  const evidence = el('details', {}, el('summary', {}, '产物、审查与下一步依据'),
-    el('pre', {class:'evidence-json'}, JSON.stringify(work, null, 2)));
+  const evidenceBody = el('pre', {class:'evidence-json'});
+  const evidence = el('details', {}, el('summary', {}, '产物、审查与下一步依据'), evidenceBody);
+  let formatted = false;
+  evidence.addEventListener('toggle', () => {
+    if (evidence.open && !formatted) { evidenceBody.textContent = JSON.stringify(work, null, 2); formatted = true; }
+  });
   const secondary = rest.length > 0 && el('details', {class:'todo-secondary', open:window.innerWidth > 1100},
     el('summary', {class:'todo-list-head'}, el('h3', {}, '其他当前动作'), el('span', {}, `${rest.length} 类事项`)),
     row(rest[0]), rest.length > 1 && el('details', {class:'todo-more'},
@@ -30,7 +42,7 @@ export function currentWork(app, work = app.summary.current_work) {
   const optional = work.optional.length > 0 && el('details',
     {class:'current-work-optional', open:!work.scope.known},
     el('summary', {}, '其他可读记录（不属于本次必做）'), work.optional.map(row));
-  return panel = el('section', {class:'overview-todos', 'aria-label':'制作待办', 'data-current-work':'true'},
+  panel = el('section', {class:'overview-todos', 'aria-label':'制作待办', 'data-current-work':'true'},
     el('div', {class:'todo-priority'},
       el('span', {class:'todo-kicker'}, '本次工作'),
       el('h2', {}, next.title),
@@ -42,4 +54,6 @@ export function currentWork(app, work = app.summary.current_work) {
     el('div', {class:'stack'}, secondary, optional,
       work.blockers.length > 0 && el('p', {class:'field-error'}, '接续仍有阻断，请查看具体范围与依据。'),
       !rest.length && evidence));
+  panel.currentWorkKey = currentWorkKey(app, work);
+  return panel;
 }

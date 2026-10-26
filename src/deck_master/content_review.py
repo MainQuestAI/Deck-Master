@@ -36,8 +36,6 @@ SPEECH_UNIT = "speech"
 FIDELITY_UNITS = ("page_copy", "progression")
 ALLOWED_KINDS = BASE_UNITS + (SPEECH_UNIT,)
 
-REQUIREMENTS = ("independent_model_or_human", "host_self", "fidelity_only")
-CAPABILITY_KEYS = ("verified_user_events", "independent_review_receipts", "human_review_receipts")
 
 
 def reviewer_capabilities(adapter_context=None) -> dict:
@@ -589,7 +587,7 @@ def _envelope_error(where, message):
     return EnvelopeError(f"review/{where}", message)
 
 
-def _require_subject_binding(store, document, review, page_ids) -> None:
+def _require_subject_binding(store, document, review, page_ids, *, artifact_digests=None) -> None:
     cited = {(ref.get("path"), ref.get("sha256")) for ref in review.get("subjects") or []}
     required: set[tuple] = set()
     for pointer in (document.get("narrative"), document.get("content_plan")):
@@ -606,7 +604,10 @@ def _require_subject_binding(store, document, review, page_ids) -> None:
             "subjects",
             "a preproduction review must cite the current Narrative, ContentPlan and every "
             f"reviewed Page; missing {[pair[1][:8] for pair in missing]}")
-    digests = _current_artifact_digests(store, document)
+    # A batch importer may supply facts already verified for this exact artifact.
+    # Standalone callers still derive and validate their own artifact facts.
+    digests = (_current_artifact_digests(store, document)
+               if artifact_digests is None else artifact_digests)
     deps = {f"{dep['kind']}:{dep['identity']}": dep.get("sha256")
             for dep in review.get("dependencies") or []}
     expected = {}
@@ -921,7 +922,7 @@ def _independently_accepted_reviews(store, document, records):
     return accepted
 
 
-def preproduction_status(store, document, *, adapter_context=None, page_ids=None) -> dict:
+def preproduction_status(store, document, *, adapter_context=None, page_ids=None, read_context=None) -> dict:
     """Whether the current manuscript has an applicable preproduction review."""
     state = requirement_state(store, document)
     units = required_units(store, document)
@@ -936,7 +937,8 @@ def preproduction_status(store, document, *, adapter_context=None, page_ids=None
         page_ids = ids
     history = [row for row in _preproduction_reviews(store, document)
                if row['review'].get('review_subject') != 'outline']
-    artifacts = _current_artifact_digests(store, document)
+    artifacts = (read_context.require(store, document).artifacts if read_context is not None else
+                 _current_artifact_digests(store, document))
     applicable = _applicable_reviews(store, document, page_ids, records=history, digests=artifacts)
     satisfied = sorted({item["review"].get("kind") for item in applicable
                         if item["review"].get("status") == "pass"})

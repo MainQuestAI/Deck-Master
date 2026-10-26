@@ -360,16 +360,22 @@ class Store:
             require_writer(document, "rc3-entry.v1")
         # New Task execution contracts and their writer floor share this pointer
         # swap, including initial create and every producer/dispatch path.
+        classification = {}
+        def classified(ref):
+            key = (ref['path'], ref['sha256'])
+            if key not in classification:
+                classification[key] = self.read_object_json(ref)
+            return classification[key]
         if (WRITER_RANK.get(document.get("compatibility", {}).get("minimum_writer"), -1)
                 < WRITER_RANK["rc4-content.v1"] and
-                any("method_manifest" in self.read_object_json(ref) for ref in document.get("tasks") or [])):
+                any("method_manifest" in classified(ref) for ref in document.get("tasks") or [])):
             from .models import require_writer
             document = copy.deepcopy(document)
             require_writer(document, "rc4-content.v1")
         from .resource_catalog import needs_catalog_writer
         if (WRITER_RANK.get(document.get("compatibility", {}).get("minimum_writer"), -1)
                 < WRITER_RANK["method-catalog.v1"] and
-                any(needs_catalog_writer(self.read_object_json(ref)) for ref in document.get("tasks") or [])):
+                any(needs_catalog_writer(classified(ref)) for ref in document.get("tasks") or [])):
             from .models import require_writer
             document = copy.deepcopy(document)
             require_writer(document, "method-catalog.v1")
@@ -378,7 +384,7 @@ class Store:
         assets_prepared = False
         if WRITER_RANK.get(document.get("compatibility", {}).get("minimum_writer"), -1) < WRITER_RANK["asset-inputs.v1"]:
             for task_ref in document.get("tasks", []):
-                task = self.read_object_json(task_ref)
+                task = classified(task_ref)
                 if task.get("kind") == "blueprint":
                     request, _ = stored_blueprint_request(self, task)
                     if request and "design_policy" in request.get("resolved_design_context", {}):
@@ -388,16 +394,20 @@ class Store:
                         break
         # Persisting these fields requires a writer that preserves their consumption.
         # Reads and legacy commits do not manufacture a new policy or writer floor.
-        if (policy_prepared or any("layout_page_ids" in style for style in
-                document.get("design_context", {}).get("styles", [])) or
-                any("design_policy" in (visual := self.read_object_json(entry["page"]).get("visual_spec", {}))
-                    or "layout_notes" in visual.get("design_overrides", {})
-                    for entry in document.get("pages", []))):
+        page_policy = policy_prepared or any("layout_page_ids" in style for style in
+                document.get("design_context", {}).get("styles", []))
+        page_assets = assets_prepared
+        for entry in document.get("pages", []):
+            if page_policy and page_assets:
+                break
+            visual = classified(entry["page"]).get("visual_spec", {})
+            page_policy = page_policy or "design_policy" in visual or "layout_notes" in visual.get("design_overrides", {})
+            page_assets = page_assets or "selected_asset_ids" in visual.get("design_overrides", {})
+        if page_policy:
             from .models import require_writer
             document = copy.deepcopy(document)
             require_writer(document, "design-policy.v1")
-        if assets_prepared or any("selected_asset_ids" in self.read_object_json(entry["page"]).get(
-                "visual_spec", {}).get("design_overrides", {}) for entry in document.get("pages", [])):
+        if page_assets:
             from .models import require_writer
             document = copy.deepcopy(document)
             require_writer(document, "asset-inputs.v1")

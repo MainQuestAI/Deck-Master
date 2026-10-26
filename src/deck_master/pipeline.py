@@ -13,6 +13,8 @@ import tempfile
 import uuid
 import zipfile
 import xml.etree.ElementTree as ET
+from concurrent.futures import Future
+from threading import Lock
 from .compiler import CompileOptions, SvgInput, compile_deck
 from .compiler.svg import parse_svg, image_elements, XLINK_HREF
 from .production import resolve_page_design
@@ -394,12 +396,17 @@ def output_matches_current_svg(store, document):
     return bool(dependencies) and dependencies == expected and notes_match
 
 
+_ASSEMBLIES = {}
+_ASSEMBLY_LOCK = Lock()
+
+
 def produce(project_dir, *, base_revision=None, operation_id=None):
     from . import operations
     from .stages import require_assembly_ready
     store=Store(project_dir)
     from . import eligibility
     explicit = base_revision is not None or operation_id is not None
+    owner = True
     with store._locked():
         doc=store.load_document()
         if explicit:
@@ -410,13 +417,51 @@ def produce(project_dir, *, base_revision=None, operation_id=None):
             previous = operations.recover(store, operation_id, digest)
             if previous:
                 return previous
-            if doc['revision_id'] != base_revision:
-                raise operations.OperationError('conflict', 'base_revision', 'assembly basis changed; read current state', exit_code=5)
+            key = (str(store.project_root.resolve()), operation_id)
+            with _ASSEMBLY_LOCK:
+                active = _ASSEMBLIES.get(key)
+                owner = active is None
+        if owner:
+            if explicit:
+                if doc['revision_id'] != base_revision:
+                    raise operations.OperationError('conflict', 'base_revision', 'assembly basis changed; read current state', exit_code=5)
+                eligibility.guard(store, doc, 'stage.assemble', context={'targets': {'layers': ['output']}})
+            eligibility.guard(store, doc, 'compile.ppt', context={'targets': {'layers': ['output']}})
+            if explicit or store.workbench_protocol_required(doc):
+                require_assembly_ready(store, doc)
+            if explicit:
+                with _ASSEMBLY_LOCK:
+                    active = (digest, Future())
+                    _ASSEMBLIES[key] = active
+    if explicit and not owner:
+        try:
+            active[1].result()  # Never wait while holding the project lock.
+        except Exception:
+            if not active[1].done() or active[0] == digest:
+                raise
+        # Both equal and different requests use the existing recovery/base
+        # rules after the owner finishes; an uncommitted request is no receipt.
+        return produce(project_dir, base_revision=base_revision, operation_id=operation_id)
+    failure = None
+    try:
+        return _produce_artifacts(store, doc, explicit=explicit, base_revision=base_revision,
+                                  operation_id=operation_id, digest=digest if explicit else None)
+    except BaseException as exc:
+        failure = exc
+        raise
+    finally:
         if explicit:
-            eligibility.guard(store, doc, 'stage.assemble', context={'targets': {'layers': ['output']}})
-        eligibility.guard(store, doc, 'compile.ppt', context={'targets': {'layers': ['output']}})
-        if explicit or store.workbench_protocol_required(doc):
-            require_assembly_ready(store, doc)
+            with _ASSEMBLY_LOCK:
+                if _ASSEMBLIES.get(key) is active:
+                    del _ASSEMBLIES[key]
+                if failure is None:
+                    active[1].set_result(None)
+                else:
+                    active[1].set_exception(failure)
+
+
+def _produce_artifacts(store, doc, *, explicit, base_revision, operation_id, digest):
+    from . import operations
     preview_required = {entry['page_id'] for entry in doc['pages']
                         if not _current_svg_preview(store, entry)}
     for tool in ('soffice', 'pdftoppm'):

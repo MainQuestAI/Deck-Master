@@ -21,7 +21,7 @@ browser-deps: ## Install Playwright Chromium and its system dependencies
 	$(PY) -m playwright install --with-deps chromium
 
 test: ## Run core unit tests; renderer and browser gates are separate in CI
-	$(PY) -m pytest -q tests/rebuild -m "not render and not browser"
+	$(PY) tools/run_heavy_tests.py --record dist/test-evidence/local-unit.json -- $(PY) -m pytest -q tests/rebuild -m "not render and not browser"
 
 smoke: ## Inspect the installed CLI and package boundaries (no model or approval)
 	$(RUN) --help

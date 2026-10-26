@@ -15,13 +15,17 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from .compiler.svg import SvgError
 from . import __version__
-from . import service
-from .models import ModelError
-from .service import ServiceError
-from .store import StoreError, ConflictError
-from .tasks import EnvelopeError, TaskConflict
+
+
+def _load_business():
+    global SvgError, service, ModelError, ServiceError, StoreError, ConflictError, EnvelopeError, TaskConflict
+    from .compiler.svg import SvgError
+    from . import service
+    from .models import ModelError
+    from .service import ServiceError
+    from .store import StoreError, ConflictError
+    from .tasks import EnvelopeError, TaskConflict
 
 LEGACY_IMPORT_COMMAND = ('import', 'legacy')
 
@@ -46,6 +50,7 @@ def _declaration_file(path, *, request=False):
 
 
 def _fail(exc: Exception, *, legacy_command=None) -> int:
+    _load_business()
     from .pipeline import NeedsTool
     from .workbench import ReadModelError
     from .eligibility import EligibilityBlocked
@@ -512,6 +517,9 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
+    if argv == ['--version']:
+        print(f'deck-master {__version__}')
+        raise SystemExit(0)
     if len(argv) >= 2 and tuple(argv[:2]) == LEGACY_IMPORT_COMMAND and \
             any(flag in argv[2:] for flag in ('--input', '--out', '--inspect')):
         return _dispatch_import_legacy(argv[2:])
@@ -520,6 +528,7 @@ def main(argv: list[str] | None = None) -> int:
         return legacy
     parser = build_parser()
     options = parser.parse_args(argv)
+    _load_business()
     try:
         if options.command == "capabilities":
             from .capabilities import describe
@@ -1147,6 +1156,7 @@ def _legacy_import_plan(argv) -> int:
         # 已是 v2 完整稿:按 import-draft 语义接收,源数据不改,未知字段由 check_page 显式报错。
         from .collaboration_api import validate_declarations
         validate_declarations({'draft': raw})
+        from . import service
         return _emit(service.import_draft(project or '.', draft_payload=raw,
             base_revision=_option_value(argv, '--base-revision'), operation_id=_option_value(argv, '--operation-id'),
             instruction_evidence=_declaration_file(_option_value(argv, '--instruction-evidence')),

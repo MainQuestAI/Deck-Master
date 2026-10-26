@@ -152,7 +152,7 @@ def _result(store,key,identity, *, verified_files=None):
     return _public(cached)
 
 
-def _cached(store,key,identity, *, verified_files=None):
+def _cached(store,key,identity, *, verified_files=None, retain_name=None):
     folder=_folder(store)/key;path=folder/'report.json'
     if not path.exists():return None
     try:
@@ -169,7 +169,9 @@ def _cached(store,key,identity, *, verified_files=None):
             if name not in _FILES:return None
             raw = (folder/name).read_bytes()
             if hashlib.sha256(raw).hexdigest()!=record['sha256'] or len(raw)!=record['bytes']:return None
-            checked[name] = raw
+            if verified_files is not None and (retain_name is None or name == retain_name):
+                checked[name] = raw
+            del raw
         if verified_files is not None:
             verified_files.update(checked)
         return report
@@ -340,9 +342,10 @@ def file_bytes(project, *, cache_key, name, check_id=None):
         if not isinstance(report,dict) or report.get('check_id')!=state['check_id']:icons.fail('file','preview check changed')
         if not isinstance(report.get('candidate_id'),str) or not report['candidate_id']:icons.fail('file','preview candidate is not available')
         context=_context(project,report['candidate_id'])
-        if context[-1]!=cache_key or not _cached(store,cache_key,context[-2]) or report['status']!=state['status']:icons.fail('file','preview basis or bytes changed')
+        verified = {}
+        if context[-1]!=cache_key or not _cached(store,cache_key,context[-2], verified_files=verified, retain_name=name) or report['status']!=state['status']:icons.fail('file','preview basis or bytes changed')
         media={'candidate.png':'image/png','candidate.svg':'image/svg+xml','candidate.pptx':'application/vnd.openxmlformats-officedocument.presentationml.presentation','readback.json':'application/json'}
-        return (folder/name).read_bytes(),media[name]
+        return verified[name],media[name]
 
 
 def re_key(value):return isinstance(value,str) and len(value)==64 and all(c in '0123456789abcdef' for c in value)

@@ -87,6 +87,11 @@ def local_lock(path):
 
 
 def project_path(value):
+    return project_snapshot(value)[0]
+
+
+def project_snapshot(value):
+    """Validate a local project once and return the exact Store/Document read."""
     from .legacy import looks_like_legacy_run
     from .snapshots import load_snapshot
     from .store import Store
@@ -98,5 +103,6 @@ def project_path(value):
         raise error
     if not path.is_dir():
         raise LocalStateError("project", "project directory does not exist")
-    load_snapshot(Store(path))  # Validate before creating any local state.
-    return path
+    store = Store(path)
+    document = load_snapshot(store)  # Validate before creating any local state.
+    return path, store, document

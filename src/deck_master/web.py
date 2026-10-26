@@ -38,8 +38,6 @@ def _editing_review_doc(store):
 def _project_identity(project_dir):
     return hashlib.sha256(str(Path(project_dir).resolve()).encode()).hexdigest()
 
-def _state_path(project_dir: Path) -> Path:
-    return project_dir / ".deckmaster" / STATE_FILE
 
 
 def read_active_service(project_dir: Path) -> dict | None:
@@ -50,9 +48,6 @@ def read_active_service(project_dir: Path) -> dict | None:
         return None
 
 
-def _write_state(project_dir: Path, state: dict) -> None:
-    from .local_runtime import descriptor, publish
-    publish(descriptor(project=project_dir), state)
 
 
 # Server-side capability names (single source for /api/health and the
@@ -197,6 +192,17 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         if self._collaboration_route('POST'):
             return
         try:
+            if (self.path == '/api/ui-state/commit-clear'
+                    and self.headers.get('X-Deck-Clear-Recovery') != 'indexeddb.v1'):
+                from .operations import OperationError
+                error = OperationError('clear_recovery_upgrade_required', 'recovery_protocol',
+                    '请刷新旧页面以升级清理恢复协议，并保留原清理请求后再核实重试。 '
+                    'Refresh the old page to upgrade clear recovery; preserve the original request before retrying.',
+                    http_status=409, exit_code=4)
+                payload = error.payload()
+                payload['error']['next_action'] = 'refresh the old page; preserve and inspect the original clear request before retrying'
+                self._send_json(payload, error.http_status)
+                return
             if urlparse(self.path).path == '/api/content/uploads':
                 from . import source_uploads
                 from .samples import sample_info
@@ -673,14 +679,17 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 raise workbench_mod.ReadModelError("invalid_revision", "revision", "provide one revision", http_status=400)
             revision = revisions[0] if revisions else None
             project = self.store.project_root
-            reading=None;reading_unavailable=False
+            reading=None;reading_unavailable=False;summary_context=None
             if 'personal' in query:
                 if query['personal']!=['1']:raise ValueError('personal must be 1')
                 from .result_reading import get
                 if parsed.path not in ('/api/view/summary','/api/workbench') and 'reading_etag' not in query:
                     raise ValueError('personal lists require reading_etag from summary or reading state')
                 if 'reading_etag' in query and len(query['reading_etag'])!=1:raise ValueError('provide one reading_etag')
-                try:reading=get(project,expected_etag=query.get('reading_etag',[None])[0])
+                try:
+                    from .ui_journal import context
+                    summary_context = context(project)
+                    reading=get(project,expected_etag=query.get('reading_etag',[None])[0],read_context=summary_context)
                 except (TypedServiceError,ModelError,OSError,ValueError,KeyError,TypeError):
                     if parsed.path not in ('/api/view/summary','/api/workbench') or 'reading_etag' in query:raise
                     reading_unavailable=True
@@ -690,7 +699,8 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 protocols = query.get('protocol', [])
                 if len(protocols) > 1:
                     raise ValueError('provide one summary protocol')
-                result=workbench_mod.workbench_summary_json(project, revision=revision, reading=reading, protocol=protocols[0] if protocols else None)
+                result=workbench_mod.workbench_summary_json(project, revision=revision, reading=reading, protocol=protocols[0] if protocols else None,
+                    read_context=summary_context)
                 if reading_unavailable:
                     payload=json.loads(result);payload['reading_unavailable']=True;self._send_json(payload)
                 else:self._send_json_bytes(result)

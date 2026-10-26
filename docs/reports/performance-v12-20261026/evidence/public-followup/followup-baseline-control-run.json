@@ -1,0 +1,16 @@
+{
+  "head": "7244477a240002ba5365e0283713e8096778c72f",
+  "worktree_sha256_before": "a1b120af303417736c07266cb24889972c4a20e166963f70fc5d3949965561f4",
+  "worktree_sha256_after": "a1b120af303417736c07266cb24889972c4a20e166963f70fc5d3949965561f4",
+  "source_changed_during_run": false,
+  "command": [
+    "/workspace/scratch/performance-installed-7244477a/bin/python",
+    "/workspace/scratch/performance-input/followup-baseline-control.py"
+  ],
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "wall_seconds": 10.124991148000845,
+  "exit_code": 1,
+  "reaped_children_user_seconds": 4.246853,
+  "reaped_children_system_seconds": 0.8825839999999999,
+  "scope": "Only batches using this runner are serialized; CPU excludes detached/unreaped descendants."
+}

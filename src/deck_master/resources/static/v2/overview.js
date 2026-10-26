@@ -107,6 +107,9 @@ function matrixPanel(app, saved, overviewRoot) {
   const pageIndex = new Map(pages.map((page, index) => [page.page_id, index]));
   const needsWork = page => (page.attention?.items?.length || 0) > 0 || promptState(page) === 'missing';
   const thumbs = new Map();
+  const pagesById = new Map(pages.map(page => [page.page_id, page]));
+  let thumbFrame = 0;
+  let thumbAnchor = null;
   let chapterTitleOf = () => null;
   const memory = new OverviewMemory(app, saved);
   let filter = memory.state.filter, search = memory.state.search, ascending = memory.state.sort === 'ascending', disposed = false, tableState = null;
@@ -139,6 +142,44 @@ function matrixPanel(app, saved, overviewRoot) {
   const filterTodo = button('只看需要处理', () => setFilter('todo'), false, {'aria-pressed': 'false'});
   const allCheckbox = el('input', {type: 'checkbox', 'aria-label': '选择当前筛选内所有可操作页面'});
   const table = el('table', {class: 'matrix', 'aria-label': '逐页制作进展'});
+  function syncThumbs() {
+    thumbFrame = 0;
+    if (disposed || !table.isConnected) return;
+    const anchor = thumbAnchor && table.querySelector(`tr[data-page-id="${CSS.escape(thumbAnchor)}"]`);
+    const center = anchor ? anchor.getBoundingClientRect().top : innerHeight / 2;
+    // Only images are windowed; every table row and keyboard control remains.
+    const candidates = [...table.querySelectorAll('.matrix-thumbnail')]
+      .map(node => ({node, rect: node.getBoundingClientRect(), page: pagesById.get(node.dataset.pageId)}))
+      .filter(item => item.page?.stages.blueprint?.file && (studio || (item.rect.bottom > -240 && item.rect.top < innerHeight + 240)))
+      .sort((a, b) => Math.abs(a.rect.top - center) - Math.abs(b.rect.top - center))
+      .slice(0, 48);
+    const wanted = new Map(candidates.map(item => [item.page.page_id, canonical(item.page.stages.blueprint.file)]));
+    // Release departed leases before acquiring the new window's images.
+    for (const [id, view] of thumbs) if (wanted.get(id) !== view.refKey) { view.dispose(); thumbs.delete(id); }
+    for (const {node, page} of candidates) {
+      let view = thumbs.get(page.page_id);
+      if (!view) {
+        view = imageView(app, page.stages.blueprint, `第 ${pageIndex.get(page.page_id) + 1} 页缩略图`, {kind: 'thumb'});
+        view.refKey = wanted.get(page.page_id);
+        thumbs.set(page.page_id, view);
+      }
+      if (view.node.parentNode !== node) node.replaceChildren(view.node);
+    }
+  }
+  function scheduleThumbs(event) {
+    if (event?.type === 'scroll' || event?.type === 'resize') thumbAnchor = null;
+    if (!disposed && !thumbFrame) thumbFrame = requestAnimationFrame(syncThumbs);
+  }
+  // Very tall/zoomed-out viewports can expose more rows than the pool fits.
+  // Pointer and keyboard demand move the image window without removing rows.
+  const demandThumb = event => {
+    const id = event.target.closest('tr[data-page-id]')?.dataset.pageId;
+    if (id && id !== thumbAnchor) { thumbAnchor = id; scheduleThumbs(); }
+  };
+  table.addEventListener('focusin', demandThumb);
+  table.addEventListener('pointerover', demandThumb);
+  window.addEventListener('scroll', scheduleThumbs, true);
+  window.addEventListener('resize', scheduleThumbs);
   const pageLabel = el('span', {role:'status'});
   const previousPage = button('上一组页面', () => { matrixPage--; render(); table.scrollIntoView({block:'start'}); });
   const nextPage = button('下一组页面', () => { matrixPage++; render(); table.scrollIntoView({block:'start'}); });
@@ -261,7 +302,7 @@ function matrixPanel(app, saved, overviewRoot) {
     preferenceStatus.textContent = memory.message; compareButton.hidden = !memory.error; downloadButton.hidden = !memory.error;
     if (preferenceStatus.parentElement) preferenceStatus.parentElement.hidden = studio && memory.supported && !memory.error;
     const nextTableState = canonical([filter, search, ascending, matrixPage, list.map(page => [page.page_id,
-      page.attention?.items?.[0] || null, selected.has(page.page_id), batch.eligible(page), chapterTitleOf(page.page_id)])]);
+      page.attention?.items?.[0] || null, page.stages.blueprint?.file, selected.has(page.page_id), batch.eligible(page), chapterTitleOf(page.page_id)])]);
     if (nextTableState === tableState) return;
     tableState = nextTableState;
 
@@ -285,17 +326,11 @@ function matrixPanel(app, saved, overviewRoot) {
         body.append(el('tr', {class: 'chapter-row'}, el('th', {scope: 'rowgroup', colspan: 8}, chapter)));
       }
       const number = String(pageIndex.get(page.page_id) + 1).padStart(2, '0');
-      const thumb = el('span', {class: 'matrix-thumbnail', 'aria-hidden': true});
+      const thumb = el('span', {class: 'matrix-thumbnail', 'aria-hidden': true, 'data-page-id': page.page_id});
       const blueprint = page.stages.blueprint;
       if (blueprint?.existence === 'recorded' && blueprint.file) {
-        // 复用同一页的缩略图视图：render 重建表格不重新占用图片池
-        let view = thumbs.get(page.page_id);
-        if (!view) {
-          view = imageView(app, blueprint, `第 ${number} 页缩略图`, {kind: 'thumb'});
-          thumbs.set(page.page_id, view);
-          app.disposables.push(view.dispose);
-        }
-        thumb.append(view.node);
+        const view = thumbs.get(page.page_id);
+        if (view && view.refKey === canonical(blueprint.file)) thumb.append(view.node);
       } else thumb.append(icon('minus'));
       const row = el('tr', {'data-page-id':page.page_id},
         el('td', {}, el('label', {class: 'check-target'}, el('input', {type: 'checkbox',
@@ -318,6 +353,7 @@ function matrixPanel(app, saved, overviewRoot) {
       body.append(row);
     }
     table.replaceChildren(el('thead', {}, head), body);
+    scheduleThumbs();
     let replacement = focusKey ? table.querySelector(`[data-focus-key="${CSS.escape(focusKey)}"]`) : focusSort ? table.querySelector('th[aria-sort] button')
       : focusNext ? table.querySelector(`[data-matrix-next="${CSS.escape(focusNext)}"]`)
       : focusLabel ? table.querySelector(`[aria-label="${CSS.escape(focusLabel)}"]`) : null;
@@ -345,8 +381,14 @@ function matrixPanel(app, saved, overviewRoot) {
     }
     render();
   });
-  const readingSync=event=>{const next=event.detail;if(next.revision_id!==app.route.revision)return;let changed=false;for(const page of pages){const fresh=next.pages.find(p=>p.page_id===page.page_id);if(fresh&&canonical(page.attention)!==canonical(fresh.attention)){page.attention=fresh.attention;changed=true;}}if(changed)render();};app.root.addEventListener('summary-refreshed',readingSync);
-  app.disposables.push(() => { disposed = true; unsubscribe(); memory.dispose();app.root.removeEventListener('summary-refreshed',readingSync); });
+  const readingSync=event=>{const next=event.detail;if(next.revision_id!==app.route.revision)return;const byId=new Map(next.pages.map(page=>[page.page_id,page]));let changed=false;for(const page of pages){const fresh=byId.get(page.page_id);if(fresh&&canonical(page.attention)!==canonical(fresh.attention)){page.attention=fresh.attention;changed=true;}}if(changed)render();};app.root.addEventListener('summary-refreshed',readingSync);
+  app.disposables.push(() => {
+    disposed = true; unsubscribe(); memory.dispose(); app.root.removeEventListener('summary-refreshed',readingSync);
+    cancelAnimationFrame(thumbFrame);
+    window.removeEventListener('scroll', scheduleThumbs, true); window.removeEventListener('resize', scheduleThumbs);
+    for (const view of thumbs.values()) view.dispose();
+    thumbs.clear();
+  });
   (async () => {
     try {
       const plan = await get('/api/content-plan' + revisionQuery(app.route.revision));

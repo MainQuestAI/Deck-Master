@@ -12,6 +12,7 @@ import pytest
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--out', type=Path, required=True)
+    parser.add_argument('--chromium-executable', type=Path)
     args = parser.parse_args()
     repo = Path(__file__).resolve().parents[2]
     package = Path(deck_master.__file__).resolve().parent
@@ -32,6 +33,8 @@ def main():
     ]
     # Cross-branch boundaries must also execute against the final installed wheel.
     integration_tests = [
+        'test_control_read_recovery_browser.py', 'test_perf_review_import_public.py',
+        'test_design_editability_prompt.py',
         'test_current_work.py', 'test_current_work_dialog_browser.py',
         'test_pr187_summary_reuse_browser.py', 'test_outline_review.py',
         'test_source_finding_repair.py', 'test_rc3_external_report.py',
@@ -46,6 +49,7 @@ def main():
         'test_pr189_clear_capacity.py', 'test_pr189_clear_capacity_browser.py',
         'test_personal_clear_conflict_browser.py',
         'test_pr189_clear_ownership_browser.py', 'test_pr189_clear_storage_browser.py',
+        'test_clear_recovery_migration_browser.py', 'test_clear_recovery_protocol_http.py',
         'test_deep_review_obligations_browser.py', 'test_ui_continuous_journey_browser.py',
     ]
     result = pytest.main(['-q', str(repo / 'tests/rebuild/test_rc_closure_browser.py'),
@@ -65,7 +69,8 @@ def main():
                          str(repo / 'tests/rebuild/test_navigation_usability_browser.py'),
                          str(repo / 'tests/rebuild/test_ux08_task_walkthrough_browser.py'),
                          *[str(repo / 'tests/rebuild' / name) for name in [*studio_tests, *integration_tests]],
-                         '--require-browser'])
+                         '--require-browser', *(['--chromium-executable', str(args.chromium_executable)]
+                                               if args.chromium_executable else [])])
     modules = {name: str(Path(module.__file__).resolve()) for name, module in sys.modules.items()
                if (name == 'deck_master' or name.startswith('deck_master.')) and getattr(module, '__file__', None)}
     assert all(Path(path).is_relative_to(package) for path in modules.values()), modules

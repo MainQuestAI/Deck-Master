@@ -58,23 +58,48 @@ assert.equal(acceptedOld, false);
 assert.equal(guarded.delay, 3000, 'obsolete callback cannot reset the new route interval');
 guarded.stop();
 
-// Navigation must obtain post-write control facts without overlapping reads.
+// Explicit navigation cancels an obsolete read; passive reads share its successor.
 const {Project} = await import('../../src/deck_master/resources/static/v2/project.js');
 let reads = [], inFlight = 0, controlPeak = 0;
-globalThis.fetch = path => new Promise(resolve => {
+globalThis.fetch = (path, {signal}) => new Promise((resolve, reject) => {
   assert.equal(path, '/api/project');
+  assert.equal(signal.aborted, false);
   controlPeak = Math.max(controlPeak, ++inFlight);
-  reads.push(value => { inFlight--; resolve({ok:true, json:async () => value}); });
+  let settled = false;
+  const finish = action => {
+    if (settled) return;
+    settled = true; inFlight--; signal.removeEventListener('abort', abort); action();
+  };
+  const abort = () => finish(() => reject(new DOMException('Read cancelled', 'AbortError')));
+  signal.addEventListener('abort', abort, {once:true});
+  const respond = value => finish(() => resolve({ok:true, json:async () => value}));
+  respond.signal = signal;
+  reads.push(respond);
 });
 const app = new Project({}, {});
-const first = app.readControl(), shared = app.readControl(), afterWrite = app.readControl(true);
+const first = app.readControl(), shared = app.readControl();
 assert.equal(reads.length, 1);
-reads.shift()({revision_id:'before'});
-assert.equal((await first).revision_id, 'before');
-assert.equal((await shared).revision_id, 'before');
-await flush(); assert.equal(reads.length, 1);
+const firstAborted = assert.rejects(first, {name:'AbortError'});
+const sharedAborted = assert.rejects(shared, {name:'AbortError'});
+const afterWrite = app.readControl(true), newOwner = app.controlRequest;
+assert.equal(reads.length, 2, 'fresh read starts without waiting for the old response');
+const cancelled = reads.shift();
+assert.equal(cancelled.signal.aborted, true);
+assert.equal(reads[0].signal.aborted, false);
+assert.equal(inFlight, 1);
+await Promise.all([firstAborted, sharedAborted]);
+assert.equal(app.controlRequest, newOwner, 'old finally cannot clear the new owner');
+const passive = app.readControl();
+assert.equal(reads.length, 1, 'passive read shares the replacement');
+assert.equal(app.controlRequest, newOwner);
+cancelled({revision_id:'before'}); // A late transport completion cannot revive an aborted fetch.
+await flush();
+assert.equal(app.controlRequest, newOwner);
 reads.shift()({revision_id:'after'});
 assert.equal((await afterWrite).revision_id, 'after');
+assert.equal((await passive).revision_id, 'after');
+assert.equal(app.controlRequest, null);
+assert.equal(inFlight, 0);
 assert.equal(controlPeak, 1);
 const lifecycleResult = {passed: true, checks: ['active_3s', 'idle_15s', 'failure_backoff_max_30s', 'single_inflight', 'focus_coalesced', 'hidden_pauses_aborts', 'visible_immediate', 'late_hidden_response_ignored', 'bfcache_old_generation_ignored', 'stop_removes_listeners']};
 

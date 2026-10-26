@@ -1,0 +1,110 @@
+FFF.........                                                             [100%]
+=================================== FAILURES ===================================
+_______ test_verified_recovery_does_not_wait_for_old_control_get[False] ________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-61/test_verified_recovery_does_no0')
+late_response = False
+
+    @pytest.mark.parametrize('late_response', [False, True])
+    def test_verified_recovery_does_not_wait_for_old_control_get(tmp_path, late_response):
+        project = tmp_path / 'project'
+>       create_gallery_sample(project, page_count=3, readonly=False)
+
+tests/rebuild/test_control_read_recovery_browser.py:19: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+project = PosixPath('/tmp/pytest-of-agent/pytest-61/test_verified_recovery_does_no0/project')
+page_count = 3, readonly = False
+
+    def create_gallery_sample(project, *, page_count=30, readonly=True):
+        """Explicit mixed-layer fixture, not a reconstruction or PPT render claim.
+    
+        SVG and PPT-preview images are independently drawn synthetic layer examples;
+        no actual PPT file, candidate, Attempt, quality approval, or Host call is
+        fabricated. The manifest names visual deviations for a later user test.
+        """
+        import copy
+        from pathlib import Path
+        import uuid
+        from PIL import Image, ImageDraw
+        from .models import validate_schema
+        from .pipeline import artifact
+    
+        if type(page_count) is not int or not 24 <= page_count <= 300:
+>           raise LocalStateError('page_count', 'gallery fixture requires 24 to 300 pages')
+E           deck_master.local_state.LocalStateError: page_count: gallery fixture requires 24 to 300 pages
+
+src/deck_master/samples.py:99: LocalStateError
+________ test_verified_recovery_does_not_wait_for_old_control_get[True] ________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-61/test_verified_recovery_does_no1')
+late_response = True
+
+    @pytest.mark.parametrize('late_response', [False, True])
+    def test_verified_recovery_does_not_wait_for_old_control_get(tmp_path, late_response):
+        project = tmp_path / 'project'
+>       create_gallery_sample(project, page_count=3, readonly=False)
+
+tests/rebuild/test_control_read_recovery_browser.py:19: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+project = PosixPath('/tmp/pytest-of-agent/pytest-61/test_verified_recovery_does_no1/project')
+page_count = 3, readonly = False
+
+    def create_gallery_sample(project, *, page_count=30, readonly=True):
+        """Explicit mixed-layer fixture, not a reconstruction or PPT render claim.
+    
+        SVG and PPT-preview images are independently drawn synthetic layer examples;
+        no actual PPT file, candidate, Attempt, quality approval, or Host call is
+        fabricated. The manifest names visual deviations for a later user test.
+        """
+        import copy
+        from pathlib import Path
+        import uuid
+        from PIL import Image, ImageDraw
+        from .models import validate_schema
+        from .pipeline import artifact
+    
+        if type(page_count) is not int or not 24 <= page_count <= 300:
+>           raise LocalStateError('page_count', 'gallery fixture requires 24 to 300 pages')
+E           deck_master.local_state.LocalStateError: page_count: gallery fixture requires 24 to 300 pages
+
+src/deck_master/samples.py:99: LocalStateError
+______ test_replaced_control_request_cannot_clear_new_single_flight_owner ______
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-61/test_replaced_control_request_0')
+
+    def test_replaced_control_request_cannot_clear_new_single_flight_owner(tmp_path):
+        project = tmp_path / 'project'
+>       create_gallery_sample(project, page_count=1, readonly=False)
+
+tests/rebuild/test_control_read_recovery_browser.py:86: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+project = PosixPath('/tmp/pytest-of-agent/pytest-61/test_replaced_control_request_0/project')
+page_count = 1, readonly = False
+
+    def create_gallery_sample(project, *, page_count=30, readonly=True):
+        """Explicit mixed-layer fixture, not a reconstruction or PPT render claim.
+    
+        SVG and PPT-preview images are independently drawn synthetic layer examples;
+        no actual PPT file, candidate, Attempt, quality approval, or Host call is
+        fabricated. The manifest names visual deviations for a later user test.
+        """
+        import copy
+        from pathlib import Path
+        import uuid
+        from PIL import Image, ImageDraw
+        from .models import validate_schema
+        from .pipeline import artifact
+    
+        if type(page_count) is not int or not 24 <= page_count <= 300:
+>           raise LocalStateError('page_count', 'gallery fixture requires 24 to 300 pages')
+E           deck_master.local_state.LocalStateError: page_count: gallery fixture requires 24 to 300 pages
+
+src/deck_master/samples.py:99: LocalStateError
+=========================== short test summary info ============================
+FAILED tests/rebuild/test_control_read_recovery_browser.py::test_verified_recovery_does_not_wait_for_old_control_get[False]
+FAILED tests/rebuild/test_control_read_recovery_browser.py::test_verified_recovery_does_not_wait_for_old_control_get[True]
+FAILED tests/rebuild/test_control_read_recovery_browser.py::test_replaced_control_request_cannot_clear_new_single_flight_owner
+3 failed, 9 passed in 60.86s (0:01:00)

@@ -1,0 +1,109 @@
+........................................................................ [ 11%]
+........................................................................ [ 22%]
+........................................................................ [ 34%]
+........................................................................ [ 45%]
+........................................F............................... [ 57%]
+........................................................................ [ 68%]
+........................................................................ [ 80%]
+........................................................................ [ 91%]
+.....................................................                    [100%]
+=================================== FAILURES ===================================
+_ test_pending_current_version_sidebar_keeps_reviewed_candidate_revision[False] _
+
+flow = <test_styles.Flow object at 0x7eff263baed0>
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-28/test_pending_current_version_s0')
+explicit_history = False
+
+    @pytest.mark.parametrize('explicit_history', [False, True])
+    def test_pending_current_version_sidebar_keeps_reviewed_candidate_revision(flow, tmp_path, explicit_history):
+        """A surface switch carries the explicit current-read intent across late replies."""
+        from urllib.parse import urlencode
+        from playwright.sync_api import expect
+        from deck_master import original_review, ui_journal
+        from synthetic_review_provider import accept_original_expression_fixture
+        from test_pr103_complete_browser import browser_for
+        from test_styles import confirm, dispatch
+    
+        recipe = confirm(flow)
+        candidate = flow.image(dispatch(flow, recipe))['candidate_ids'][0]
+        old_revision = flow.store.current_revision_id()
+        flow.adopt([candidate])
+        assert accept_original_expression_fixture(flow.project, page_id='p02', candidate_id=candidate)['status'] == 'accepted'
+        current_revision = flow.store.current_revision_id()
+        assert original_review.reference_status(flow.store, flow.store.load_document(), 'p02', candidate_id=candidate)['allowed']
+        with browser_for(flow.project) as (page, server):
+            identity = ui_journal.project_info(flow.project)['project_identity']
+            page.goto(server.start() + '#' + urlencode({'project': identity, 'surface': 'runs', 'revision': old_revision}))
+            expect(page.get_by_role('button', name='查看当前版本', exact=True)).to_be_visible()
+            held = []
+    
+            def hold_current_tasks(route):
+                if 'revision=' + current_revision in route.request.url:
+                    held.append((route, route.fetch()))
+                    page.evaluate('window.currentTasksHeld=true')
+                else:
+                    route.continue_()
+    
+            page.route('**/api/tasks?*', hold_current_tasks)
+            page.get_by_role('button', name='查看当前版本', exact=True).click()
+            page.wait_for_function('()=>window.currentTasksHeld===true')
+            expect(page.locator('#main')).to_have_attribute('aria-busy', 'true')
+            if explicit_history:
+                # An explicit saved historical URL supersedes the current intent.
+                page.goto(server.start() + '#' + urlencode({'project': identity, 'surface': 'style', 'revision': old_revision}))
+            else:
+                page.locator('.sidebar').get_by_role('button', name='风格校准', exact=True).click()
+            expect(page.get_by_role('heading', name='风格校准', exact=True)).to_be_visible()
+            landed = page.url
+            for route, response in held:
+                route.fulfill(response=response)
+            page.unroute('**/api/tasks?*', hold_current_tasks)
+            # A subsequent surface transaction also drains the late response without
+            # letting it restore the obsolete tasks surface or reading revision.
+            page.get_by_role('button', name='项目页面', exact=True).click()
+            stage(page, 'page', 2)
+>           page.locator(f'.studio-recipe-card[data-recipe-id="{recipe["recipe_id"]}"]').get_by_role('button').click()
+
+tests/rebuild/test_studio_style_browser.py:343: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../scratch/performance-installed-17a2d032/lib/python3.12/site-packages/playwright/sync_api/_generated.py:18032: in click
+    self._sync(
+../scratch/performance-installed-17a2d032/lib/python3.12/site-packages/playwright/_impl/_locator.py:165: in click
+    return await self._frame._click(self._selector, strict=True, **params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../scratch/performance-installed-17a2d032/lib/python3.12/site-packages/playwright/_impl/_frame.py:594: in _click
+    await self._channel.send("click", self._timeout, locals_to_params(locals()))
+../scratch/performance-installed-17a2d032/lib/python3.12/site-packages/playwright/_impl/_connection.py:76: in send
+    return await self._connection.wrap_api_call(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <playwright._impl._connection.Connection object at 0x7eff25086840>
+cb = <function Channel.send.<locals>.<lambda> at 0x7eff0c49f9c0>
+is_internal = False, title = None
+
+    async def wrap_api_call(
+        self, cb: Callable[[], Any], is_internal: bool = False, title: str = None
+    ) -> Any:
+        if self._api_zone.get():
+            return await cb()
+        task = asyncio.current_task(self._loop)
+        parsed_st = _attach_api_call_information(
+            getattr(task, "__pw_stack__", None) or _capture_stack_trace(),
+            is_internal,
+            title,
+        )
+        self._api_zone.set(parsed_st)
+        try:
+            return await cb()
+        except Exception as error:
+>           raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+E           playwright._impl._errors.TimeoutError: Locator.click: Timeout 30000ms exceeded.
+E           Call log:
+E             - waiting for locator(".studio-recipe-card[data-recipe-id=\"recipe-0f95e34e7b184d958f6ba9d5443528a6\"]").get_by_role("button")
+
+../scratch/performance-installed-17a2d032/lib/python3.12/site-packages/playwright/_impl/_connection.py:632: TimeoutError
+----------------------------- Captured stdout call -----------------------------
+FINAL_UI_STATE {"url": "http://127.0.0.1:44055/#project=f141929924a48432d139437115120a1b0b8b4ff0abe5cc588f84f9b39936e797&surface=style&layer=original_image&zoom=1&revision=1fca6079e1eb461d90f40296c8192f51", "draft": "已保存到项目，可跨端口恢复", "recovery": "", "references": 0}
+=========================== short test summary info ============================
+FAILED tests/rebuild/test_studio_style_browser.py::test_pending_current_version_sidebar_keeps_reviewed_candidate_revision[False]
+1 failed, 628 passed in 1561.62s (0:26:01)

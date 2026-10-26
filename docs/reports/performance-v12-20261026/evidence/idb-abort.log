@@ -1,0 +1,72 @@
+....F.                                                                   [100%]
+=================================== FAILURES ===================================
+_ test_aborted_publication_keeps_original_evidence_and_never_posts[migration] __
+
+project = PosixPath('/tmp/pytest-of-agent/pytest-46/test_aborted_publication_keeps0/clear-project')
+store = <deck_master.store.Store object at 0x7fbd7a87c4a0>
+session = (<BrowserContext browser=<Browser type=<BrowserType name=chromium executable_path=/home/agent/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome> version=151.0.7922.173>>, 'http://127.0.0.1:39239/studio/')
+stage = 'migration'
+
+    @pytest.mark.parametrize('stage', ['migration', 'first_claim'])
+    def test_aborted_publication_keeps_original_evidence_and_never_posts(project, store, session, stage):
+        save_draft(store, project)
+        context, url = session
+        identity = journal.list_drafts(project)['project_identity']
+        if stage == 'migration':
+            page, old_handler = old_page(context, url)
+            record, raw = retain_old_request(page, project)
+            page.unroute('**/v2/personal-maintenance.js', old_handler)
+        else:
+            page = context.new_page()
+            page.goto(url)
+            panel = open_panel(page)
+            click(panel, '生成清理计划')
+            expect(panel.get_by_role('button', name='确认清理并保留备份', exact=True)).to_be_enabled()
+            record, raw = None, None
+        abort = '''() => {
+          const original=IDBObjectStore.prototype.put;
+          window.publicationAborted=false;
+          IDBObjectStore.prototype.put=function(value,...args){
+            const result=original.call(this,value,...args);
+            if(this.name==='records' && this.transaction.db.name==='deck-master:personal-clear' &&
+               value?.pending && !window.publicationAborted){
+              window.publicationAborted=true;this.transaction.abort();
+            }
+            return result;
+          };
+        }'''
+        posts = []
+        page.on('request', lambda req: posts.append(req.url) if req.url.endswith('/commit-clear') else None)
+        if stage == 'migration':
+            page.add_init_script('(' + abort + ')()')
+            page.reload()
+            panel = open_panel(page)
+        else:
+            page.evaluate(abort)
+            click(panel, '确认清理并保留备份')
+        page.wait_for_function('() => window.publicationAborted === true')
+>       expect(panel).to_contain_text('恢复记录')
+E       AssertionError: Locator expected to contain text '恢复记录'
+E       Actual value: 个人状态与恢复只清理本项目的个人草稿与阅读设置；先出只读计划，确认后才清理，并保留恢复备份。项目内容、任务与调用记录不受影响。生成清理计划核实并重试原清理核实原清理结果结束旧操作并重新计划查看清理备份清理结果待核实。原操作编号和请求已保留，请核实并重试原清理。关闭 
+E       Call log:
+E         - Expect "to_contain_text" get_by_role("dialog", name="个人状态与恢复", exact=True) with timeout 5000ms
+E         - waiting for get_by_role("dialog", name="个人状态与恢复", exact=True)
+E           14 × locator resolved to <dialog open="" class="" id="modal" data-protect-draft="false" aria-labelledby="dialog-title">…</dialog>
+E              - unexpected value "个人状态与恢复只清理本项目的个人草稿与阅读设置；先出只读计划，确认后才清理，并保留恢复备份。项目内容、任务与调用记录不受影响。生成清理计划核实并重试原清理核实原清理结果结束旧操作并重新计划查看清理备份清理结果待核实。原操作编号和请求已保留，请核实并重试原清理。关闭"
+E       
+E       Aria snapshot:
+E       - dialog "个人状态与恢复":
+E         - heading "个人状态与恢复" [level=2]
+E         - paragraph: 只清理本项目的个人草稿与阅读设置；先出只读计划，确认后才清理，并保留恢复备份。项目内容、任务与调用记录不受影响。
+E         - button "生成清理计划" [disabled]
+E         - button "核实并重试原清理"
+E         - button "核实原清理结果"
+E         - button "结束旧操作并重新计划" [disabled]
+E         - button "查看清理备份"
+E         - status: 清理结果待核实。原操作编号和请求已保留，请核实并重试原清理。
+E         - button "关闭"
+
+tests/rebuild/test_clear_recovery_migration_browser.py:285: AssertionError
+=========================== short test summary info ============================
+FAILED tests/rebuild/test_clear_recovery_migration_browser.py::test_aborted_publication_keeps_original_evidence_and_never_posts[migration]
+1 failed, 5 passed in 25.31s

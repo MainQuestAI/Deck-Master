@@ -1,0 +1,22 @@
+{
+  "tool": "rsvg-convert",
+  "system_install": {
+    "command": "apt-get update && apt-get install -y librsvg2-bin",
+    "approval": "require_escalated execution approved",
+    "exit_code": 100,
+    "failure": "Permission denied for /var/lib/apt/lists/partial"
+  },
+  "user_directory_route": {
+    "command": "apt-get -o Dir::State::lists=/workspace/scratch/renderer-apt/lists -o Dir::Cache=/workspace/scratch/renderer-apt/cache update",
+    "approval": "require_escalated execution approved",
+    "exit_code": 0,
+    "outcome": "index download failed; no package downloaded or installed",
+    "error": "Invalid response from proxy: HTTP/1.1 403 Forbidden",
+    "target": "https://snapshot.debian.org/archive/debian/20260828T000000Z/dists/trixie/InRelease",
+    "other_errors": [
+      "Unable to read /etc/apt/apt.conf.d/80-applied-apt-retries - open (13: Permission denied)",
+      "rm: cannot remove '/var/cache/apt/archives/partial/*.deb': Permission denied"
+    ]
+  },
+  "status": "render blocked; no security settings or system permissions changed"
+}

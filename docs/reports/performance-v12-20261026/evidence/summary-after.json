@@ -1,0 +1,125 @@
+{
+  "fixture": "existing make_project, 300 pages; no PPTX; framing task retained by factory",
+  "fixture_document_sha256": "5cfcdbbf3e1c65cddb9f3116afa5577a8257602440740d0df53019c337428255",
+  "page_count": 300,
+  "task_count": 0,
+  "module_origin": "/workspace/Deck-Master/src/deck_master/__init__.py",
+  "python": "3.12.14",
+  "scope": "same process HTTP client+service; 3 warm samples are not p95; Store bytes count excludes direct read-context cache IO; probes separate from timing",
+  "rows": [
+    {
+      "query": "protocol=workbench_summary.v1",
+      "phase": "warm_uninstrumented",
+      "sample": 0,
+      "wall_seconds": 0.02004864299988185,
+      "driver_and_service_cpu_seconds": 0.020063065000000047,
+      "response_sha256": "6bf753802d533f1a7faa0c3f7513a99270ea9e34d7a826cc07775a2e656660ca"
+    },
+    {
+      "query": "protocol=workbench_summary.v1",
+      "phase": "warm_uninstrumented",
+      "sample": 1,
+      "wall_seconds": 0.020756413000071916,
+      "driver_and_service_cpu_seconds": 0.020846748999999998,
+      "response_sha256": "6bf753802d533f1a7faa0c3f7513a99270ea9e34d7a826cc07775a2e656660ca"
+    },
+    {
+      "query": "protocol=workbench_summary.v1",
+      "phase": "warm_uninstrumented",
+      "sample": 2,
+      "wall_seconds": 0.025666915999863704,
+      "driver_and_service_cpu_seconds": 0.026146090999999982,
+      "response_sha256": "6bf753802d533f1a7faa0c3f7513a99270ea9e34d7a826cc07775a2e656660ca"
+    },
+    {
+      "query": "protocol=workbench_summary.v1",
+      "phase": "cold_probe",
+      "artifact_builds": 0,
+      "store_byte_reads": 0,
+      "store_bytes": 0
+    },
+    {
+      "query": "protocol=workbench_summary.v1",
+      "phase": "warm_probe",
+      "artifact_builds": 0,
+      "store_byte_reads": 0,
+      "store_bytes": 0
+    },
+    {
+      "query": "protocol=workbench_summary.v2",
+      "phase": "warm_uninstrumented",
+      "sample": 0,
+      "wall_seconds": 0.0428931520000333,
+      "driver_and_service_cpu_seconds": 0.04331105600000007,
+      "response_sha256": "6138217b456fd843036d7d36ea7ad4b1558b96d258d4f4f88ae1fe79ddefefe2"
+    },
+    {
+      "query": "protocol=workbench_summary.v2",
+      "phase": "warm_uninstrumented",
+      "sample": 1,
+      "wall_seconds": 0.04135504200030482,
+      "driver_and_service_cpu_seconds": 0.04176491800000015,
+      "response_sha256": "6138217b456fd843036d7d36ea7ad4b1558b96d258d4f4f88ae1fe79ddefefe2"
+    },
+    {
+      "query": "protocol=workbench_summary.v2",
+      "phase": "warm_uninstrumented",
+      "sample": 2,
+      "wall_seconds": 0.03853262499978882,
+      "driver_and_service_cpu_seconds": 0.03891259100000011,
+      "response_sha256": "6138217b456fd843036d7d36ea7ad4b1558b96d258d4f4f88ae1fe79ddefefe2"
+    },
+    {
+      "query": "protocol=workbench_summary.v2",
+      "phase": "cold_probe",
+      "artifact_builds": 1,
+      "store_byte_reads": 0,
+      "store_bytes": 0
+    },
+    {
+      "query": "protocol=workbench_summary.v2",
+      "phase": "warm_probe",
+      "artifact_builds": 0,
+      "store_byte_reads": 0,
+      "store_bytes": 0
+    },
+    {
+      "query": "protocol=workbench_summary.v2&personal=1",
+      "phase": "warm_uninstrumented",
+      "sample": 0,
+      "wall_seconds": 0.0757854620001126,
+      "driver_and_service_cpu_seconds": 0.07634042799999996,
+      "response_sha256": "b755d3765c697ddb57e56aede963fd435805c35a0b7c26d4eb901c8f1dffecb1"
+    },
+    {
+      "query": "protocol=workbench_summary.v2&personal=1",
+      "phase": "warm_uninstrumented",
+      "sample": 1,
+      "wall_seconds": 0.0886892909998096,
+      "driver_and_service_cpu_seconds": 0.0887811759999999,
+      "response_sha256": "b755d3765c697ddb57e56aede963fd435805c35a0b7c26d4eb901c8f1dffecb1"
+    },
+    {
+      "query": "protocol=workbench_summary.v2&personal=1",
+      "phase": "warm_uninstrumented",
+      "sample": 2,
+      "wall_seconds": 0.07916343599981701,
+      "driver_and_service_cpu_seconds": 0.0795829880000003,
+      "response_sha256": "b755d3765c697ddb57e56aede963fd435805c35a0b7c26d4eb901c8f1dffecb1"
+    },
+    {
+      "query": "protocol=workbench_summary.v2&personal=1",
+      "phase": "cold_probe",
+      "artifact_builds": 1,
+      "store_byte_reads": 0,
+      "store_bytes": 0
+    },
+    {
+      "query": "protocol=workbench_summary.v2&personal=1",
+      "phase": "warm_probe",
+      "artifact_builds": 0,
+      "store_byte_reads": 0,
+      "store_bytes": 0
+    }
+  ]
+}

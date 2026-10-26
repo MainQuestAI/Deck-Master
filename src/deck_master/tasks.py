@@ -60,30 +60,10 @@ COMPOSE_V2_SLOTS = ("schema_version", "variant", "payload", "eligibility_digest"
                     "task_id", "operation_id", "produced_against")
 COMPOSE_V2_SCHEMA = "compose_result.v2"
 
-TASK_KINDS = ENVELOPE_KINDS + ("compile", "render", "check")
-TASK_STATUSES = (
-    "queued",
-    "awaiting_host",
-    "running",
-    "completed",
-    "failed",
-    "cancelled",
-    "superseded",
-)
 CALL_OUTCOMES = ("consumed", "not_sent", "unknown")
-ALLOWANCE_STATES = ("reserved", "in_flight", "consumed", "released", "unknown")
 
 HOST_TASK_KINDS = ENVELOPE_KINDS
-LOCAL_TASK_KINDS = ("compile", "render", "check")
 
-MEDIA_EXT = {
-    "image/svg+xml": "svg",
-    "image/png": "png",
-    "image/jpeg": "jpg",
-    "text/plain": "txt",
-    "application/json": "json",
-    "text/markdown": "md",
-}
 
 
 class EnvelopeError(ModelError):
@@ -410,7 +390,7 @@ def task_inputs_current(store, document, task, *, read_snapshot=None):
             require_outline(store, document)
             dispatched = read_snapshot(task['dispatch_revision'])
             return (all(dispatched.get(key) == document.get(key) for key in ('narrative', 'content_plan'))
-                    and compute_input_digest(dispatched) == compute_input_digest(document)
+                    and getattr(store, 'input_digest', compute_input_digest)(dispatched) == getattr(store, 'input_digest', compute_input_digest)(document)
                     and task_requirements_current(store, document, task))
         except (StoreError, ValueError, KeyError, TypeError):
             return False
@@ -456,7 +436,7 @@ def task_inputs_current(store, document, task, *, read_snapshot=None):
     # Task facts are part of the dispatched input: a task-field change
     # (audience, decisions, ...) invalidates scoped results too, even when
     # pages/design/sources are untouched (spec v1.1 §5.4, c93 defect).
-    if (compute_input_digest(dispatched) != compute_input_digest(document)
+    if (getattr(store, 'input_digest', compute_input_digest)(dispatched) != getattr(store, 'input_digest', compute_input_digest)(document)
             or dispatched['design_context'] != document['design_context']):
         return False
     if task.get('kind') == 'compose' and task.get('intent') == 'input_revision':

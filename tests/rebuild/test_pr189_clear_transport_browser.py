@@ -5,6 +5,7 @@ from playwright.sync_api import expect, sync_playwright
 
 from deck_master import ui_journal
 from deck_master.web import WorkbenchServer
+from test_pr189_clear_ownership_browser import retained
 from test_ui_state_clear import project, store, save_draft  # noqa: F401
 
 pytestmark = pytest.mark.browser
@@ -54,7 +55,7 @@ def test_clear_unknown_survives_refresh_and_replays_exact_request(project, store
             assert len(requests) == 2 and requests[0] == requests[1]
             assert [r['draft']['draft_id'] for r in ui_journal.list_drafts(project)['records']] == (['after-clear'] if sent else [])
             assert store.load_document() == before
-            assert page.evaluate("Object.keys(localStorage).filter(k=>k.startsWith('deck-master:v3:personal-clear:')).length") == 0
+            assert retained(page) is None
             browser.close()
     finally:
         server.stop()
@@ -80,7 +81,7 @@ def test_first_clear_cas_refusal_keeps_all_drafts_and_allows_replanning(project,
             expect(panel.get_by_role('button', name='生成清理计划', exact=True)).to_be_enabled()
             assert len(ui_journal.list_drafts(project)['records']) == 2
             assert store.load_document() == before
-            assert page.evaluate("Object.keys(localStorage).filter(k=>k.startsWith('deck-master:v3:personal-clear:')).length") == 0
+            assert retained(page) is None
             browser.close()
     finally:
         server.stop()

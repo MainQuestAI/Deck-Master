@@ -124,6 +124,28 @@ def test_pagination_fixed_revision_reverse_completion_and_adoption(store):
     assert run_desk.listing(store.project_root, limit=1)['pagination']['next_offset'] == 1
 
 
+@pytest.mark.parametrize('attention', [False, True])
+def test_page_only_assembles_rows_and_reuses_attention_facts(store, monkeypatch, attention):
+    dispatch(store); dispatch(store, 'p02')
+    expected = run_desk.listing(store.project_root, limit=100, attention=attention)
+    counts = {'rows': 0, 'facts': 0}
+    row, facts = run_desk.task_row, run_desk._task_facts
+    def counted_row(*args, **kwargs):
+        counts['rows'] += 1
+        return row(*args, **kwargs)
+    def counted_facts(*args, **kwargs):
+        counts['facts'] += 1
+        return facts(*args, **kwargs)
+    monkeypatch.setattr(run_desk, 'task_row', counted_row)
+    monkeypatch.setattr(run_desk, '_task_facts', counted_facts)
+    actual = run_desk.listing(store.project_root, limit=1, attention=attention)
+    assert actual['tasks'] == expected['tasks'][:1]
+    assert actual['pagination']['total'] == expected['pagination']['total']
+    assert actual['counts'] == expected['counts']
+    assert counts['rows'] == 1
+    assert counts['facts'] == (len(store.load_document()['tasks']) if attention else 1)
+
+
 def test_group_links_and_handoff_claim_time_share_core_facts(store):
     task = dispatch(store); start(store, task)
     listing = run_desk.listing(store.project_root); group = listing['groups'][0]

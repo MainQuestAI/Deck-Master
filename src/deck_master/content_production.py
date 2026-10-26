@@ -527,10 +527,13 @@ def content_phase_status(store, document, *, explicit_speech_mode=None):
     return _full_content_phase_status(store, document, explicit_speech_mode=explicit_speech_mode)
 
 
-def completion_status(store, document):
+_DESIGN_FACT_UNSET = object()
+
+
+def completion_status(store, document, *, design_fact=_DESIGN_FACT_UNSET):
     """Pure request-scoped completion; unreadable facts remain explicit gaps."""
     from .design_completion import completion_status as design_completion
-    design = design_completion(store, document)
+    design = design_completion(store, document) if design_fact is _DESIGN_FACT_UNSET else design_fact
     if design is not None:
         return design
     request = (document.get("collaboration") or {}).get("request") or {}
@@ -553,7 +556,7 @@ def completion_status(store, document):
                 and (task.get("collaboration_binding") or {}).get("request_id") == request.get("request_id")
                 and state != "needs_recovery"):
             state = "in_progress"
-    if models.input_alignment(document) == 'needs_reconciliation':
+    if getattr(store, 'input_alignment', models.input_alignment)(document) == 'needs_reconciliation':
         state = 'awaiting_decision'
         missing.append({'code': 'input_reconciliation_pending', 'next_action': 'reconcile_current_inputs'})
     refs = ([document["narrative"]] if document.get("narrative") else [])

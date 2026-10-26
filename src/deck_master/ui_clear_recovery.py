@@ -212,8 +212,7 @@ def _inspection(store, doc, identity, req):
                 value['current_state'] = dict(manifest_digest=live_digest, items=live, blockers=blockers, kept_out=kept_out)
                 if backup is not None:
                     from .personal_recovery import _current
-                    value.update(status='incomplete', backup={'available': True, 'count': len(backup['records']),
-                        'digest': journal.digest(backup)})
+                    value.update(status='incomplete', backup=summary)
                     for row in backup['records']:
                         current = _current(store.project_root, store, doc, identity, row)
                         etag = current.get('etag', current.get('digest')) if current else None

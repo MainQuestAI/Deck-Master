@@ -38,9 +38,15 @@ PRIORITY = {name: index for index, name in enumerate((
     'refresh_stage', 'prepare_stage'))}
 
 
-def project(store, artifact, control, summary, *, fixed=False):
+def project(store, artifact, control, summary, *, fixed=False, completion=None):
+    from .editing import ReviewReadContext
+    try:
+        review_context = ReviewReadContext(store, artifact)
+    except (StoreError, OSError, ValueError, KeyError, TypeError):
+        # Preserve each consumer's existing partial-failure interpretation.
+        review_context = None
     request = (artifact.get('collaboration') or {}).get('request') or {}
-    completion = completion_status(store, artifact)
+    completion = completion_status(store, artifact) if completion is None else completion
     scope = completion.get('effective_scope') or {}
     current_request = (control.get('collaboration') or {}).get('request') or {}
     historical = fixed and artifact['revision_id'] != control['revision_id']
@@ -51,7 +57,8 @@ def project(store, artifact, control, summary, *, fixed=False):
     if request.get('intent') == 'full_deck' and not design_plan:
         from .delivery_eligibility import describe_snapshots
         try:
-            full_delivery = describe_snapshots(store, artifact, control)
+            full_delivery = describe_snapshots(store, artifact, control, read_context=review_context,
+                deck_output=(summary.get('outputs') or {}).get('pptx'))
             ready = full_delivery['status'] == 'ready'
             output = full_delivery['selected_output']['artifact_ref']
             completion = {**completion,
@@ -70,7 +77,7 @@ def project(store, artifact, control, summary, *, fixed=False):
     except (StoreError, OSError, ValueError, KeyError, TypeError):
         selected = []
     ids = set(selected if selected is not None else [entry['page_id'] for entry in artifact.get('pages', [])])
-    quality_pending = _quality_pending(store, artifact)
+    quality_pending = _quality_pending(store, artifact, read_context=review_context)
     for action in summary['next_actions'].get('actions', []):
         outside = (historical or not request or
             (action['kind'] == 'review_quality' and not quality_pending) or
@@ -93,7 +100,7 @@ def project(store, artifact, control, summary, *, fixed=False):
     elif artifact.get('pages') and not design_plan:
         from .content_review import preproduction_status
         try:
-            review = preproduction_status(store, artifact, page_ids=sorted(ids))
+            review = preproduction_status(store, artifact, page_ids=sorted(ids), read_context=review_context)
         except (StoreError, OSError, ValueError, KeyError, TypeError):
             review['status'] = 'unknown'
     blockers = []
@@ -173,21 +180,25 @@ def project(store, artifact, control, summary, *, fixed=False):
 
 def from_snapshot(store, document):
     """Shared Host projection on the exact document already selected by reader."""
-    from .workbench import _ReadContext, _summary
+    from .workbench import _ReadContext, _summary, _copy_json
     ctx = _ReadContext(store, document)
     try:
-        return project(store, document, document, _summary(ctx, revision=None, request_scoped=True))
+        return project(ctx.reader, document, document, _summary(ctx, revision=None, request_scoped=True),
+            completion=_copy_json(ctx.completion))
     finally:
         ctx.close()
 
 
-def _quality_pending(store, document):
+def _quality_pending(store, document, *, read_context=None):
     """Recorded passes are history; use existing finding/currentness facts."""
     from .editing import _current_artifact_digests
     from .review import finding_closed, open_findings, pending_judgments, dependency_problems
     try:
-        rows = [{**store.read_object_json(ref), 'ref': ref} for ref in document.get('reviews') or []]
-        artifacts = _current_artifact_digests(store, document)
+        if read_context is not None:
+            read_context.require(store, document)
+        rows = (read_context.reviews if read_context is not None else
+                [{**store.read_object_json(ref), 'ref': ref} for ref in document.get('reviews') or []])
+        artifacts = read_context.artifacts if read_context is not None else _current_artifact_digests(store, document)
         from .effective_requirements import review_task_owners, accepted_requirements_current
         owners = review_task_owners(store, document)
         replaced = {row['replaces']['sha256'] for row in rows if row.get('replaces')}

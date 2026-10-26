@@ -1,5 +1,6 @@
 """Public UI plus CLI: another legal clear must not strand the retained request."""
 import json
+import shutil
 import os
 from pathlib import Path
 import subprocess
@@ -20,7 +21,7 @@ def test_other_cli_clear_then_ui_end_refresh_download_and_replan(project, store,
     save_draft(store, project); before = store.load_document(); server = WorkbenchServer(project)
     try:
         with sync_playwright() as runtime:
-            browser = runtime.chromium.launch(); page = browser.new_page(); page.goto(server.start()+'studio/')
+            browser = runtime.chromium.launch(executable_path=shutil.which('chromium') or shutil.which('chromium-browser')); page = browser.new_page(); page.goto(server.start()+'studio/')
             panel = open_panel(page); click(panel, '生成清理计划')
             page.route('**/api/ui-state/commit-clear', lambda r:r.abort('failed'))
             click(panel, '确认清理并保留备份'); expect(panel).to_contain_text('清理结果待核实')

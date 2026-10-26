@@ -4,6 +4,8 @@ A historical failure remains failed. A stale candidate remains undecided. This
 projection only determines whether either belongs in the current action queue.
 Unknown calls are handled separately and must never disappear with old work.
 """
+from bisect import bisect_right
+
 from .snapshots import READ_FAILURES
 from .models import canonical_json_bytes
 
@@ -52,12 +54,25 @@ class _ReaderStore:
     def __init__(self, ctx):
         self.ctx = ctx
 
+    def input_digest(self, document):
+        return self.ctx.input_digest(document)
+
+    def input_alignment(self, document):
+        return self.ctx.input_alignment(document)
+
+    def page_visual_digest(self, ref):
+        return self.ctx.page_visual_digest(ref)
+
     def read_object_json(self, ref):
         return self.ctx.read(ref)
 
     def read_object_bytes(self, ref):
         self.ctx.object_stat(ref)
-        return self.ctx.store.read_object_bytes(ref)
+        try:
+            return self.ctx.store.read_object_bytes(ref)
+        except READ_FAILURES:
+            self.ctx.read_failed = True
+            raise
 
     def load_document(self, revision=None):
         return self.ctx.read_snapshot(revision or self.ctx.document['revision_id'])
@@ -78,29 +93,34 @@ class CurrentRelationships:
         self.basis_cache = {}
         self.kept_ids = None
         self.task_positions = {task_id: i for i, task_id in enumerate(tasks)}
+        self.pages = {entry['page_id']: entry for entry in self.document.get('pages', [])}
+        self.successors = {}
+        for task_id, task in tasks.items():
+            if task['status'] == 'completed':
+                positions, candidates = self.successors.setdefault(self._successor_key(task), ([], []))
+                positions.append(self.task_positions[task_id])
+                candidates.append((task_id, task))
         refs = [ref for entry in self.document.get('pages', []) for ref in
                 (entry.get(slot) for slot in ('page', 'blueprint', 'svg', 'svg_preview', 'ppt_preview'))]
         refs += list(self.document.get('outputs', {}).values()) + self.document.get('reviews', [])
         refs.append(self.document.get('content_plan'))
         self.adopted_refs = {ref['sha256'] for ref in refs if isinstance(ref, dict)}
 
+    @staticmethod
+    def _successor_key(task):
+        return canonical_json_bytes([(task.get('collaboration_binding') or {}).get('request_id'),
+            task.get('review_stage'), task['kind'], sorted(set(task.get('scope_pages', []))), task.get('instruction')])
+
     def _successor(self, task):
         position = self.task_positions.get(task['task_id'], -1)
         scope = set(task.get('scope_pages', []))
-        pages = {entry['page_id']: entry for entry in self.document.get('pages', [])}
+        pages = self.pages
         if not scope <= pages.keys():
             return None
-        for task_id, successor in self.tasks.items():
-            if self.task_positions[task_id] <= position or successor['status'] != 'completed':
-                continue
-            if (successor.get('collaboration_binding') or {}).get('request_id') != (task.get('collaboration_binding') or {}).get('request_id'):
-                continue
-            if successor.get('review_stage') != task.get('review_stage'):
-                continue
-            if (successor['kind'] != task['kind']
-                    or set(successor.get('scope_pages', [])) != scope
-                    or successor.get('instruction') != task.get('instruction')
-                    or successor.get('created_at', '') < task.get('created_at', '')):
+        positions, candidates = self.successors.get(self._successor_key(task), ([], []))
+        for index in range(bisect_right(positions, position), len(candidates)):
+            task_id, successor = candidates[index]
+            if successor.get('created_at', '') < task.get('created_at', ''):
                 continue
             if request_relationship(self.document, successor)['status'] not in ('current', 'background'):
                 continue
@@ -117,7 +137,6 @@ class CurrentRelationships:
 
     def _completed_content(self, task, request_status):
         """Compare the adopted result, not the inputs that adoption replaced."""
-        from .models import compute_input_digest
         # Receipt resolution proves the complete canonical operation ancestry,
         # including ancestors older than adoption. Endpoint/object signatures
         # do not capture that proof, so never reuse it across summary requests.
@@ -158,7 +177,7 @@ class CurrentRelationships:
             return relation('historical', 'adopted_content_replaced')
         # The whole content context includes membership/order and the adopted
         # narrative/plan. Unrelated rendering and display metadata do not.
-        if (compute_input_digest(adopted) != compute_input_digest(self.document)
+        if (self.store.input_digest(adopted) != self.store.input_digest(self.document)
                 or adopted.get('design_context') != self.document.get('design_context')
                 or before != now
                 or [p['page_id'] for p in adopted.get('pages', [])] !=

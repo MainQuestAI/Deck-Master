@@ -1,4 +1,5 @@
 """Browser local recovery failures must not send or falsely acknowledge a clear."""
+import shutil
 import pytest
 from playwright.sync_api import expect, sync_playwright
 from deck_master.web import WorkbenchServer
@@ -15,7 +16,7 @@ def test_local_preflight_failure_never_sends_new_clear(project, store, fault):
     save_draft(store, project); before = store.load_document(); server = WorkbenchServer(project)
     try:
         with sync_playwright() as runtime:
-            browser = runtime.chromium.launch(); page = browser.new_page(); page.goto(server.start()+'studio/')
+            browser = runtime.chromium.launch(executable_path=shutil.which('chromium') or shutil.which('chromium-browser')); page = browser.new_page(); page.goto(server.start()+'studio/')
             panel = open_panel(page); click(panel, '生成清理计划'); sent = []
             expect(panel.get_by_role('button', name='确认清理并保留备份', exact=True)).to_be_enabled()
             page.on('request', lambda r: sent.append(r.url) if r.url.endswith('/commit-clear') else None)
@@ -23,11 +24,11 @@ def test_local_preflight_failure_never_sends_new_clear(project, store, fault):
               if (fault === 'missing_lock') Object.defineProperty(navigator, 'locks', {value:undefined, configurable:true});
               else if (fault === 'rejected_lock') Object.defineProperty(navigator, 'locks', {value:{request:()=>Promise.reject(new Error('lock unavailable'))}, configurable:true});
               else {
-                const method = fault === 'read' ? 'getItem' : 'setItem';
-                const original = Storage.prototype[method];
-                Storage.prototype[method] = function(key,...args) {
-                  if (key.startsWith('deck-master:v3:personal-clear:')) throw new Error('injected local storage failure');
-                  return original.call(this,key,...args);
+                const method = fault === 'read' ? 'get' : 'put';
+                const original = IDBObjectStore.prototype[method];
+                IDBObjectStore.prototype[method] = function(...args) {
+                  if (this.name === 'records' && this.transaction.db.name === 'deck-master:personal-clear') throw new Error('injected local storage failure');
+                  return original.apply(this,args);
                 };
               }
             }''', fault)
@@ -44,19 +45,22 @@ def test_local_terminal_failure_retains_exact_request(project, store, fault):
     save_draft(store, project); server = WorkbenchServer(project)
     try:
         with sync_playwright() as runtime:
-            browser = runtime.chromium.launch(); page = browser.new_page(); page.goto(server.start()+'studio/')
+            browser = runtime.chromium.launch(executable_path=shutil.which('chromium') or shutil.which('chromium-browser')); page = browser.new_page(); page.goto(server.start()+'studio/')
             panel = open_panel(page); click(panel, '生成清理计划')
             page.route('**/api/ui-state/commit-clear', lambda r:r.abort('failed'))
             click(panel, '确认清理并保留备份'); expect(panel).to_contain_text('清理结果待核实')
             original = retained(page); page.unroute('**/api/ui-state/commit-clear')
             if fault == 'end_write': click(panel, '核实原清理结果'); expect(panel).to_contain_text('未发现执行证据')
-            page.evaluate('''method => {
-              const original = Storage.prototype[method]; window.restoreStorage = () => { Storage.prototype[method] = original; };
-              Storage.prototype[method] = function(key,...args) {
-                if (key.startsWith('deck-master:v3:personal-clear:')) throw new Error('injected terminal storage failure');
-                return original.call(this,key,...args);
+            page.evaluate('''fault => {
+              const original = IDBObjectStore.prototype.put;
+              window.restoreStorage = () => { IDBObjectStore.prototype.put = original; };
+              IDBObjectStore.prototype.put = function(value,...args) {
+                if (this.name === 'records' && this.transaction.db.name === 'deck-master:personal-clear' &&
+                    (fault === 'remove' ? value.pending === null : Boolean(value.pending?.end_inspection_digest)))
+                  throw new Error('injected terminal storage failure');
+                return original.call(this,value,...args);
               };
-            }''', 'removeItem' if fault == 'remove' else 'setItem')
+            }''', fault)
             click(panel, '核实并重试原清理' if fault == 'remove' else '结束旧操作并重新计划')
             expect(panel).to_contain_text('injected terminal storage failure')
             assert retained(page) == original
@@ -73,7 +77,7 @@ def test_two_first_attempts_serialize_only_the_local_record(project, store):
     identity = journal.list_drafts(project)['project_identity']
     try:
         with sync_playwright() as runtime:
-            browser = runtime.chromium.launch(); context = browser.new_context(); pages = []
+            browser = runtime.chromium.launch(executable_path=shutil.which('chromium') or shutil.which('chromium-browser')); context = browser.new_context(); pages = []
             url = server.start()+'studio/'
             for _ in range(2):
                 page = context.new_page(); page.goto(url); panel = open_panel(page); click(panel, '生成清理计划')

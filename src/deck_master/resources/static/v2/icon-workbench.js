@@ -290,13 +290,14 @@ export function iconWorkbench(app,data){
   hydrate();return root;
 }
 
-export function candidateIconReview(app,record,base,{releaseComparison,restoreComparison}={}){
+export function candidateIconReview(app,record,base,{preview:initialPreview,requestPreview,releaseComparison,restoreComparison}={}){
   if(!record.icon_recipe)return null;
   const root=el('section',{'data-container':'section',class:'panel stack candidate-icon-review','aria-label':'候选图标实际检查'}),status=el('p',{role:'status'}),slot=el('div');
   const target=record.icon_recipe.input.targets.find(t=>t.page_id===record.candidate.page_id);
   const choose=el('select',{'aria-label':'比较候选中的图标'},target.icons.map((n,i)=>el('option',{value:i},n.label)));
   const layer=el('select',{'aria-label':'图标比较产物'},el('option',{value:'svg'},'SVG'),el('option',{value:'ppt'},'实际 PPT'));
-  let preview=null,view=null,disposed=false,timer=null,opened=false;
+  let preview=null,view=null,disposed=false,opened=false;
+  const check=button('生成或重试实际 PPT 检查',()=>requestPreview?.());
   const labels={not_requested:'尚未检查',queued:'等待实际 PPT 检查',running:'正在编译和渲染候选 PPT',ready:'工程检查通过 · 待视觉确认',failed:'需修复 · 工程检查未通过',needs_tool:'缺少实际渲染工具',interrupted:'实际检查已中断，请明确重试',busy:'实际检查队列已满，请稍后明确重试。'};
   function describe(value){
     if(value.error?.code==='candidate_preview_state_damaged')return value.status==='busy'
@@ -304,20 +305,18 @@ export function candidateIconReview(app,record,base,{releaseComparison,restoreCo
       :'检查记录损坏，原记录已保留；请明确重试实际 PPT 检查。';
     return (labels[value.status]||value.status)+(value.error?' · '+value.error.message:'');
   }
-  function receive(value){if(disposed)return;const changed=canonical([preview?.status,preview?.files,preview?.error])!==canonical([value.status,value.files,value.error]);preview=value;status.textContent=describe(value);
-    if(opened&&changed)draw();clearTimeout(timer);if(['queued','running','busy'].includes(value.status))timer=setTimeout(refresh,2000);
+  function receive(value,disabled=false){if(disposed)return;const changed=canonical([preview?.status,preview?.files,preview?.error])!==canonical([value.status,value.files,value.error]);preview=value;status.textContent=describe(value);check.disabled=disabled;
+    if(opened&&changed)draw();
   }
-  async function refresh(){try{receive(await get('/api/candidate-preview/status?'+new URLSearchParams({candidate_id:record.candidate_id})));
-  }catch(error){if(!disposed)status.textContent=readableError(error);}}
-  async function check(){try{status.textContent='准备实际检查…';receive(await post('/api/candidate-preview/request',{candidate_id:record.candidate_id,retry:true,wait:false}));}catch(error){if(!disposed)status.textContent=readableError(error);}}
   function draw(){const focused=slot.contains(document.activeElement)?document.activeElement.dataset.iconColumn:null;view?.dispose();const n=target.icons[Number(choose.value)],ppt=layer.value==='ppt';
     view=iconComparison(app,[{title:'固定原图',file:base.stages.blueprint.file,region:n.original_region},
       {title:ppt?'基准实际 PPT':'基准 SVG',file:(ppt?(base.stages.ppt_preview?.applicability?.status==='current'?base.stages.ppt_preview:null):base.stages.svg)?.file,region:n.svg_region,missing:'此固定基准没有有效的实际 PPT 预览'},
       {title:ppt?'候选实际 PPT':'候选 SVG',file:ppt?(preview?.status==='ready'?preview.files?.['candidate.png']?.file:null):record.artifact.file,region:n.svg_region,missing:describe(preview||{status:'not_requested'})}]);slot.replaceChildren(view.node);if(focused!==null)slot.querySelector(`[data-icon-column="${focused}"]`)?.focus();}
   choose.addEventListener('change',()=>{if(opened)draw();});layer.addEventListener('change',()=>{if(opened)draw();});
-  root.append(el('h3',{},'候选图标实际检查'),status,el('div',{class:'row wrap'},button('生成或重试实际 PPT 检查',check),
+  root.append(el('h3',{},'候选图标实际检查'),status,el('div',{class:'row wrap'},check,
     button('打开局部对照',()=>{opened=true;releaseComparison?.();draw();}),button('关闭局部对照',()=>{opened=false;view?.dispose();slot.replaceChildren();restoreComparison?.();root.querySelectorAll('button')[1]?.focus();})),choose,layer,slot,
     el('p',{class:'muted'},'工程检查不代替视觉认可。请查看方向、状态标记、间距和正常尺寸，再使用候选采用操作。'));
   root.isOpen=()=>opened;
-  root.dispose=()=>{disposed=true;clearTimeout(timer);view?.dispose();};app.disposables.push(root.dispose);refresh();return root;
+  root.update=receive;
+  root.dispose=()=>{disposed=true;view?.dispose();};receive(initialPreview||{status:'not_requested'},app.readonly||app.historical);return root;
 }

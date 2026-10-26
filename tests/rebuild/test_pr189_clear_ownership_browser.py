@@ -1,5 +1,6 @@
 """Late clear responses must never release another operation's recovery request."""
 import json
+import shutil
 import time
 import pytest
 from playwright.sync_api import expect, sync_playwright
@@ -12,7 +13,20 @@ pytestmark = pytest.mark.browser
 
 
 def retained(page):
-    return page.evaluate("JSON.parse(Object.entries(localStorage).find(([k])=>k.startsWith('deck-master:v3:personal-clear:'))?.[1] || 'null')")
+    return page.evaluate("""() => new Promise((resolve, reject) => {
+      const identity = new URLSearchParams(location.hash.slice(1)).get('project');
+      if (!identity) {reject(new Error('missing project identity in test route'));return;}
+      const open = indexedDB.open('deck-master:personal-clear');
+      open.onerror = () => reject(open.error);
+      open.onsuccess = () => {
+        const db = open.result;
+        if (!db.objectStoreNames.contains('records')) {db.close();resolve(null);return;}
+        const tx = db.transaction('records', 'readonly');
+        const read = tx.objectStore('records').get(identity);
+        tx.oncomplete = () => {const value=read.result?.pending ?? null;db.close();resolve(value);};
+        tx.onabort = () => {db.close();reject(tx.error || new Error('test recovery read aborted'));};
+      };
+    })""")
 
 
 def click(panel, name):
@@ -24,6 +38,34 @@ def lose_success(route):
     route.abort('failed')
 
 
+def test_first_confirmation_does_not_retry_a_newly_discovered_request(project, store):
+    save_draft(store, project); server = WorkbenchServer(project)
+    try:
+        with sync_playwright() as runtime:
+            browser = runtime.chromium.launch(executable_path=shutil.which('chromium') or shutil.which('chromium-browser'))
+            context = browser.new_context(); a = context.new_page(); b = context.new_page()
+            url = server.start() + 'studio/'
+            a.goto(url); pa = open_panel(a); click(pa, '生成清理计划')
+            expect(pa.get_by_role('button', name='确认清理并保留备份', exact=True)).to_be_enabled()
+            b.goto(url); pb = open_panel(b); click(pb, '生成清理计划')
+            b.route('**/api/ui-state/commit-clear', lambda route: route.abort('failed'))
+            click(pb, '确认清理并保留备份'); expect(pb).to_contain_text('清理结果待核实')
+            original = retained(b)
+            # A's visible action still confirms its own first plan. Its next
+            # storage read sees B, but that is not consent to retry B's request.
+            expect(pa.get_by_role('button', name='确认清理并保留备份', exact=True)).to_be_enabled()
+            assert retained(a) == original  # The other window's transaction is committed.
+            sent = []
+            a.on('request', lambda request: sent.append(request.url) if request.url.endswith('/commit-clear') else None)
+            click(pa, '确认清理并保留备份')
+            expect(pa).to_contain_text('恢复记录已变化')
+            expect(pa.get_by_role('button', name='核实并重试原清理', exact=True)).to_be_enabled()
+            assert sent == [] and retained(a) == original
+            assert len(journal.list_drafts(project)['records']) == 1
+            browser.close()
+    finally: server.stop()
+
+
 @pytest.mark.parametrize('late', ['first_conflict', 'commit_success', 'inspect_success', 'inspect_pending', 'end_success'])
 def test_late_response_preserves_next_operation_and_refresh_recovery(project, store, late):
     save_draft(store, project)
@@ -31,7 +73,7 @@ def test_late_response_preserves_next_operation_and_refresh_recovery(project, st
     server = WorkbenchServer(project)
     try:
         with sync_playwright() as runtime:
-            browser = runtime.chromium.launch()
+            browser = runtime.chromium.launch(executable_path=shutil.which('chromium') or shutil.which('chromium-browser'))
             context = browser.new_context()
             a = context.new_page(); a.goto(server.start()+'studio/'); pa = open_panel(a)
             click(pa, '生成清理计划')
@@ -96,7 +138,7 @@ def test_late_first_refusal_preserves_new_end_confirmation_for_same_request(proj
     save_draft(store, project); server = WorkbenchServer(project)
     try:
         with sync_playwright() as runtime:
-            browser = runtime.chromium.launch(); context = browser.new_context(); a = context.new_page()
+            browser = runtime.chromium.launch(executable_path=shutil.which('chromium') or shutil.which('chromium-browser')); context = browser.new_context(); a = context.new_page()
             url = server.start()+'studio/'; a.goto(url); pa = open_panel(a); click(pa, '生成清理计划')
             expect(pa.get_by_role('button', name='确认清理并保留备份', exact=True)).to_be_enabled()
             save_draft(store, project, 'changed'); held = []

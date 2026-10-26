@@ -51,10 +51,14 @@ export function runs(app, data) {
     if (handoffButton) handoffButton.hidden = !inTaskContext;
     if (returnButton) returnButton.hidden = !inTaskContext;
   };
-  const handoffs = app.health.ui_capabilities?.includes('changes.v1') ? changeHandoffs(app) : null;
+  const handoffs = app.health.ui_capabilities?.includes('changes.v1') ? changeHandoffs(app, app.historical ? null : data.runPage?.groups) : null;
+  let handoffsOpen = false;
+  const handoffDetails = handoffs && !studio ? el('details', {}, el('summary', {}, '其它修改组的交接'), handoffs) : null;
+  handoffDetails?.addEventListener('toggle',()=>{handoffsOpen=handoffDetails.open;handoffs.setActive(handoffsOpen&&!handoffDetails.closest('[hidden]'));});
+  const openHandoffs = () => { handoffsOpen=true;handoffs.setActive(true);const dialog=modal('其它修改组的交接',handoffs);dialog.addEventListener('close',()=>{handoffsOpen=false;handoffs.setActive(false);},{once:true}); };
   const batch = candidateBatch(app);
   const tasks = selected ? [selected] : data.tasks;
-  const runsPanel = data.runPage ? runDesk(app, data) : tasks.length ? el('div', {class: 'task-list stack'}, tasks.map(task => el('article', {class: 'panel task-row'},
+  const runsPanel = data.runPage ? runDesk(app, data, {onGroups:groups=>handoffs?.setGroups(groups)}) : tasks.length ? el('div', {class: 'task-list stack'}, tasks.map(task => el('article', {class: 'panel task-row'},
     el('div', {}, el('h2', {}, taskNames[task.kind] || '制作任务'), el('p', {class: 'muted'}, `${taskStatus[task.status] || '状态待核实'} · 任务 ${task.task_id}`),
       task.result_refs?.length > 0 && el('p', {class: 'muted'}, `${task.result_refs.length} 项已记录结果；这不代表专业质量通过。`)),
     !selected && button('查看这项任务', () => app.go({task_id: task.task_id})), selected && button('查看全部任务', () => app.go({task_id: null}))))): empty('没有已记录的任务', '此版本还没有制作任务。');
@@ -65,7 +69,7 @@ export function runs(app, data) {
   // 返回后仍落在同一个子区；只有初次访问（链接里没有 area）才默认「任务记录」。
   const subareas = [
     ['tasks', 'runs-tasks', '任务记录', el('div', {id: 'runs-tasks', class: 'stack runs-subarea'}, runsPanel,
-      handoffs && (studio ? button('其它修改组的交接',()=>modal('其它修改组的交接',handoffs),false,{class:'studio-other-handoffs'}) : el('details', {}, el('summary', {}, '其它修改组的交接'), handoffs)))],
+      handoffs && (studio ? button('其它修改组的交接',openHandoffs,false,{class:'studio-other-handoffs'}) : handoffDetails))],
     ['decisions', 'runs-decisions', '待决定', el('div', {id: 'runs-decisions', class: 'stack runs-subarea'}, batch)],
   ];
   if (app.health.ui_capabilities?.includes('exports.v1')) {
@@ -76,6 +80,9 @@ export function runs(app, data) {
   const switchers = new Map();
   const showSubarea = (key, {focus = false, persist = false} = {}) => {
     for (const [area, , , section] of subareas) section.hidden = area !== key;
+    runsPanel.setActive?.(key === 'tasks');
+    batch.setActive?.(key === 'decisions');
+    handoffs?.setActive(key === 'tasks' && handoffsOpen);
     for (const [area, control] of switchers) control.setAttribute('aria-pressed', String(area === key));
     syncTaskContext(key);
     if (persist) {

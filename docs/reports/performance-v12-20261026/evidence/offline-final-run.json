@@ -1,0 +1,23 @@
+{
+  "head": "072c88e47ec30bc440f2470bdf03975575175947",
+  "worktree_sha256_before": "158cc902294f7d3c75b52fd02fc82275dd8cdd73a420806f600f45d45915c81b",
+  "worktree_sha256_after": "158cc902294f7d3c75b52fd02fc82275dd8cdd73a420806f600f45d45915c81b",
+  "source_changed_during_run": false,
+  "command": [
+    "/workspace/scratch/performance-installed-17a2d032/bin/python",
+    "examples/workbench/w12_offline_browser.py",
+    "--require-installed",
+    "--font",
+    "DejaVu Sans",
+    "--chromium-executable",
+    "/usr/bin/chromium",
+    "--out",
+    "/workspace/scratch/performance-offline-17a2d032"
+  ],
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "wall_seconds": 7.237957753999581,
+  "exit_code": 0,
+  "reaped_children_user_seconds": 4.992392,
+  "reaped_children_system_seconds": 1.3172789999999999,
+  "scope": "Only batches using this runner are serialized; CPU excludes detached/unreaped descendants."
+}

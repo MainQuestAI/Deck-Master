@@ -1,0 +1,17 @@
+{
+  "release_id": "17a2d032ed2c-9c6812918c57",
+  "source_sha": "17a2d032ed2cf128c672ee6e568ddd52f6aeab20",
+  "source_dirty": false,
+  "package_version": "1.0.0",
+  "compiler_version": "python-native-v1",
+  "wheel": "deck_master-1.0.0-py3-none-any.whl",
+  "wheel_sha256": "9c6812918c57fafe6807500e8d2a03bc3a6dbfacad5145e7f5d0e2e0d5296544",
+  "sdist": "deck_master-1.0.0.tar.gz",
+  "sdist_sha256": "2c32ef6b34aa9bc841e836bbe273f220d1cfe8309aadfe82e639d01157b21725",
+  "entry": [
+    "python",
+    "-m",
+    "deck_master"
+  ],
+  "professional_evidence": "not_evaluated"
+}

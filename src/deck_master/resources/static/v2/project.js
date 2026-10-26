@@ -11,7 +11,7 @@ import {BusinessOperations} from './business-operations.js';
 import {actionTargets} from './action-targets.js';
 import {changesetDesk} from './changeset-desk.js';
 import {collaborationBanner} from './collaboration-desk.js';
-import {currentWork} from './current-work.js';
+import {currentWork, currentWorkKey} from './current-work.js';
 
 const currentWorkMatches = (summary, info, revision = summary?.revision_id) =>
   summary?.project_id === info.project_id && summary.revision_id === revision &&
@@ -60,11 +60,23 @@ export class Project {
   // must not inherit the previous work surface's personal-reading snapshot.
   readingQuery(summary=this.summary){const etag=summary?.reading_etag;return this.health.ui_capabilities?.includes('result_reading.v1')&&etag?'&'+new URLSearchParams({personal:'1',reading_etag:etag}):'';}
   async readControl(fresh = false) {
-    // Navigation after a write waits for the previous read, then reads anew.
-    // Passive refreshes share the in-flight request instead of queuing more.
-    if (fresh && this.controlRequest) await this.controlRequest.catch(() => {});
+    // Explicit navigation/recovery replaces a potentially stalled read. Only
+    // this read-only fetch is cancelled; writes retain their recovery protocol.
+    // Passive refreshes still share the current request.
+    if (fresh && this.controlRequest) {
+      this.controlAbort.abort();
+      this.controlRequest = null;
+    }
     if (!this.controlRequest) {
-      this.controlRequest = get('/api/project' + (this.health.ui_capabilities?.includes('project_control_light.v1') ? '?light=1' : '')).finally(() => { this.controlRequest = null; });
+      const controller = new AbortController();
+      const request = get('/api/project' + (this.health.ui_capabilities?.includes('project_control_light.v1') ? '?light=1' : ''), {signal: controller.signal}).finally(() => {
+        if (this.controlRequest === request) {
+          this.controlRequest = null;
+          this.controlAbort = null;
+        }
+      });
+      this.controlAbort = controller;
+      this.controlRequest = request;
     }
     return this.controlRequest;
   }
@@ -161,7 +173,9 @@ export class Project {
     this.summary = {...this.summary, current_work:work, ...(actions ? {next_actions:actions} : {})};
     // Replace only the derived work panel. Fixed artifacts, comparisons and
     // draft editors retain their DOM, revision and unsaved content.
+    const key = currentWorkKey(this);
     document.querySelectorAll('[data-current-work]').forEach(node => {
+      if (node.currentWorkKey === key) return;
       const replacement = currentWork(this), overview = node.closest('.overview');
       // Keep the batch workspace's primary action after a passive refresh.
       if (overview) replacement.querySelector('[data-priority-action]')?.classList.toggle('primary', !Number(overview.dataset.selection));

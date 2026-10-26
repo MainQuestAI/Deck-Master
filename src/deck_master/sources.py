@@ -33,14 +33,6 @@ SUPPORTED_EXTENSIONS = (
 # output (e.g. "output/") stays a normal directory (spec v1.1 §4).
 TOOL_DIRECTORY_NAMES = {".git", ".venv", "venv", "node_modules", "__pycache__", ".deckmaster"}
 
-FORMAT_KIND = {
-    "txt": "text",
-    "md": "text",
-    "json": "json",
-    "pdf": "pdf",
-    "docx": "docx",
-    "pptx": "pptx",
-}
 
 
 def sha256_bytes(data: bytes) -> str:

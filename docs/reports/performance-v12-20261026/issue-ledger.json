@@ -1,0 +1,1739 @@
+{
+  "version": "performance-v1.2-implementation-ledger-17a2d032-draft",
+  "source_tasks_sha256": "d6fbf14322b8935d11723805700411e2f99672d6041dffd02efb21dde99ba34c",
+  "baseline_head": "b688c300dbb612bea9af8cf63a1743fb8136ae2c",
+  "evidence_baseline_head": "555497cb97ba2bec0c62192ec68412ce3c31287f",
+  "branch": "codex/performance-v12-20261026",
+  "head": "072c88e47ec30bc440f2470bdf03975575175947",
+  "status": "implemented_draft_review_with_unresolved_acceptance",
+  "note": "Per-card implementation/evidence ledger at 17a2d032. Prior runs keep their real source identity. No card closed; full-unit-final and original installed full gate were not finished at document snapshot.",
+  "global_gate_status_file": "closeout-status.json",
+  "issues": [
+    {
+      "task_id": "PERF-195",
+      "issue_number": 195,
+      "issue_url": "https://github.com/MainQuestAI/Deck-Master/issues/195",
+      "work_package": "A",
+      "spec_version": "1.2",
+      "requires": [],
+      "coordination": "按实际同文件改动协调；只运行受影响的验证。",
+      "root_cause": "重测试资源预算",
+      "implementation_requirements": [
+        "本轮约定重批次由一个执行者编排；需要跨入口互斥时，仅在约定顶层入口共用一把本机文件锁，子pytest/Chromium/LibreOffice归属同批次，不重复取锁。",
+        "沿用现有测试命令和分层选择器，一份本次运行记录保存源码/实际运行来源、相关环境、selector和结果；是否复用旧证据由执行者按实际变更判断。",
+        "不开发通用scheduler、全机进程监管、自动依赖推导或持久测试结果缓存；不为本机互斥修改远端CI矩阵或Q2合同。",
+        "轻量受控并发验证顶层互斥即可；最终必要完整验收记录整树指标，不为证明调度收益再跑两套全量并行/串行A/B。"
+      ],
+      "acceptance_requirements": [
+        "同一约定入口的顶层重批次不叠加，嵌套子进程不重复申请槽位而死锁；未经过该入口的任意手工进程不声称受控。",
+        "同一候选的有效结果保留真实身份，新增/受影响用例按实际代码执行；原断言、skip、时限和远端检查不变。",
+        "性能采样与重测试错峰，最终本批进程/资源记录完整；无可比旧证据时不量化调度收益。"
+      ],
+      "observation_targets": [],
+      "planned_entry_paths": [
+        "Makefile",
+        "examples/workbench/w12_installed_regressions.py"
+      ],
+      "implementation_paths_with_current_diff": [
+        "Makefile",
+        "tools/run_heavy_tests.py",
+        "examples/workbench/w01_pressure.py",
+        "examples/workbench/w12_installed_regressions.py"
+      ],
+      "test_paths_existing": [],
+      "test_paths_not_found": [],
+      "state": "implemented_final_validation_incomplete",
+      "commits": [
+        "84a3a60efb9721491fd0845ca766caa1244df7d0",
+        "17a2d032ed2cf128c672ee6e568ddd52f6aeab20",
+        "072c88e47ec30bc440f2470bdf03975575175947"
+      ],
+      "regression_results": [
+        {
+          "scope": "earlier source unit/installed and targeted runs",
+          "record": "evidence/verification-summary.json",
+          "not_final_gate": true
+        },
+        {
+          "scope": "post-patch targeted 71 pass plus corrected PPTX selector pass",
+          "records": [
+            "evidence/closeout-targeted.json",
+            "evidence/closeout-two.json"
+          ],
+          "attribution": "Use command selectors; results do not imply this card has a complete acceptance pass."
+        },
+        "evidence/full-unit-final.json and .log; exact fixture repair in usability-fixture-retry",
+        "evidence/installed-full-final-run.json and installed-full-final-origins.json; 628 passed/1 unresolved failure",
+        "evidence/offline-final-checks.json: original9/9 installed offline checks"
+      ],
+      "measurement_results": [
+        "evidence/runner-mutual-exclusion.json",
+        "evidence/w01-managed-comparison.json",
+        "evidence/w01-final-identities.json"
+      ],
+      "review_results": [
+        "README.md: independent review findings and corrections",
+        "evidence/final-independent-review.json"
+      ],
+      "remaining_evidence": [
+        "Complete process-tree lifetime peak accounting is unavailable; runner reaped-child CPU and mid-run snapshot are explicitly limited. No scheduling CPU saving claimed."
+      ],
+      "source_comment_url": "https://github.com/MainQuestAI/Deck-Master/issues/195#issuecomment-6413096019",
+      "commit_attribution_note": "Iteration implementation commits; per-file git history identifies actual card changes. No claim every file changed in both commits.",
+      "implemented_subitems": [
+        "tools/run_heavy_tests.py 在明确约定入口共用一把本机锁；嵌套标记绕过重复抢锁；Make test 接入。",
+        "每批记录源码前后指纹、命令、平台、exit code、wall 与已回收子进程 CPU；未宣称控制任意手工进程。",
+        "w01 正式绑定后台 Task 的夹具修正已在工作树；100 暖样本/250ms 原门未放宽。",
+        "The w01 background task is formally dispatched with a valid collaboration binding; original 300/1650 shape and 100-warm/250ms gate retained."
+      ],
+      "unimplemented_required_root_causes": [],
+      "implementation_gap_assessment": "No unapplied required performance patch currently identified; final review may find gaps. Recovery race remains a separate confirmed correctness blocker.",
+      "final_gate_status": "executed_with_failures_and_environment_blockers_see_closeout-status.json",
+      "direct_render_blocked_items": [
+        "包含真实渲染的最终必要批次被缺失 rsvg-convert 阻塞。"
+      ]
+    },
+    {
+      "task_id": "PERF-196",
+      "issue_number": 196,
+      "issue_url": "https://github.com/MainQuestAI/Deck-Master/issues/196",
+      "work_package": "A",
+      "spec_version": "1.2",
+      "requires": [],
+      "coordination": "按实际同文件改动协调；只运行受影响的验证。",
+      "root_cause": "测试拥有服务的回收",
+      "implementation_requirements": [
+        "在现有fixture/finalizer或ExitStack中保存本测试实际启动的descriptor/instance；清理登记早于可能失败的下一步，复用local_runtime.stop/现有服务停止接口。",
+        "CLI内容测试可在自身作用域禁用自动打开；确实验证自动打开/恢复的用例保持真实启动，并按目标项目、launcher、浏览器的拥有关系清理。",
+        "不新增持久ownership registry、清理daemon或生产服务协议；生产CLI正常detached行为保持。"
+      ],
+      "acceptance_requirements": [
+        "成功路径与一个代表性受控失败路径均无本批新增服务/端口残留；已有用户服务不受影响。",
+        "setup部分成功时已登记的资源仍回收，不需为每一种异常再复制完整昂贵浏览器链。"
+      ],
+      "observation_targets": [],
+      "planned_entry_paths": [
+        "tests/rebuild/test_cli_chain.py",
+        "tests/rebuild/test_ux06_recovery_responsive_browser.py",
+        "tests/rebuild/conftest.py"
+      ],
+      "implementation_paths_with_current_diff": [
+        "tests/rebuild/test_cli_chain.py",
+        "tests/rebuild/test_ux06_recovery_responsive_browser.py"
+      ],
+      "test_paths_existing": [
+        "tests/rebuild/test_cli_chain.py",
+        "tests/rebuild/test_ux06_recovery_responsive_browser.py"
+      ],
+      "test_paths_not_found": [],
+      "state": "implemented_final_validation_incomplete",
+      "commits": [
+        "84a3a60efb9721491fd0845ca766caa1244df7d0",
+        "17a2d032ed2cf128c672ee6e568ddd52f6aeab20"
+      ],
+      "regression_results": [
+        {
+          "scope": "earlier source unit/installed and targeted runs",
+          "record": "evidence/verification-summary.json",
+          "not_final_gate": true
+        },
+        {
+          "scope": "post-patch targeted 71 pass plus corrected PPTX selector pass",
+          "records": [
+            "evidence/closeout-targeted.json",
+            "evidence/closeout-two.json"
+          ],
+          "attribution": "Use command selectors; results do not imply this card has a complete acceptance pass."
+        },
+        "evidence/full-unit-final.json and .log; exact fixture repair in usability-fixture-retry",
+        "evidence/installed-full-final-run.json and installed-full-final-origins.json; 628 passed/1 unresolved failure",
+        "evidence/offline-final-checks.json: original9/9 installed offline checks"
+      ],
+      "measurement_results": [],
+      "review_results": [
+        "README.md: independent review findings and corrections",
+        "evidence/final-independent-review.json"
+      ],
+      "remaining_evidence": [
+        "Full suite and controlled ownership regressions passed except explicitly listed unrelated gate failures; final process inventory is evidence of current state, not lifetime absence."
+      ],
+      "source_comment_url": "https://github.com/MainQuestAI/Deck-Master/issues/196#issuecomment-6413096375",
+      "commit_attribution_note": "Iteration implementation commits; per-file git history identifies actual card changes. No claim every file changed in both commits.",
+      "implemented_subitems": [
+        "CLI fixture 保存本次新启 descriptor/instance，只停止匹配实例；内容测试在作用域内禁用自动打开。",
+        "recovery_launcher 的 ExitStack/finalizer 提前登记；测试独占且原不存在的 tmp target 在丢失响应时发现其实际实例；已观察实例不会换成另一实例。",
+        "新增受控响应丢失用例核对服务健康状态和端口关闭。"
+      ],
+      "unimplemented_required_root_causes": [],
+      "implementation_gap_assessment": "No unapplied required performance patch currently identified; final review may find gaps. Recovery race remains a separate confirmed correctness blocker.",
+      "final_gate_status": "executed_with_failures_and_environment_blockers_see_closeout-status.json",
+      "direct_render_blocked_items": []
+    },
+    {
+      "task_id": "PERF-159",
+      "issue_number": 159,
+      "issue_url": "https://github.com/MainQuestAI/Deck-Master/issues/159",
+      "work_package": "B",
+      "spec_version": "1.2",
+      "requires": [],
+      "coordination": "后端A/B/C、备份D、前端E可分别窄修；需要共享的只是读接口，不等待整卡关闭。",
+      "root_cause": "单次读取共享快照和对象事实",
+      "implementation_requirements": [
+        "A：公共读入口只捕获一次所需Store/Document/依据；复用现有ReadFacts、_ReadContext和ReviewReadContext，原样传递同一适配器，不新增总管Reader、ContextVar或多层同义代理。",
+        "B：同一依据的对象/Task和completion事实在响应内复用；实际需要历史/identity时才创建历史reader。已有全链证明不是让所有普通GET或每个helper都先走全链。",
+        "C：list_drafts为每个_validate传同一个FixedSnapshotReader；每份draft的hash/schema/base/pending/etag继续核验，保留坏项隔离。",
+        "D：最新Head的自有未完成备份_inspection复用本次_backup_evidence已有完整digest；保持终止前现行重验及相关owner/backup/live变化的确认失效。",
+        "E（独立前端小改）：drafts.persist对同一value只JSON.stringify一次，原有两个localStorage键使用相同字符串；保留两次同步写入、恢复副本和错误行为，可独立于后端接线交付。",
+        "请求结束沿用现有reader/FD清理；不缓存写许可，不延迟清理恢复请求持久化，不增加普通读取的新历史扫描。"
+      ],
+      "acceptance_requirements": [
+        "同一basis的同一ref在一次响应内不重复完整解码；不同basis和实际必要读取分别计数。",
+        "project/personal不重复完整取得同一head，多draft共享同一次可达性证明，结果/错误隔离与参考一致。",
+        "自有未完成备份完整digest一次生成且字段相等；最新清理恢复现有语义保持。",
+        "一次draft.persist只序列化一次、仍写两个原键；刷新恢复、切换draft及存储失败行为相同。"
+      ],
+      "observation_targets": [],
+      "planned_entry_paths": [
+        "src/deck_master/ui_journal.py",
+        "src/deck_master/local_state.py",
+        "src/deck_master/read_facts.py",
+        "src/deck_master/snapshots.py",
+        "src/deck_master/workbench.py",
+        "src/deck_master/ui_clear_recovery.py",
+        "src/deck_master/resources/static/v2/drafts.js"
+      ],
+      "implementation_paths_with_current_diff": [
+        "src/deck_master/ui_journal.py",
+        "src/deck_master/local_state.py",
+        "src/deck_master/workbench.py",
+        "src/deck_master/ui_clear_recovery.py",
+        "src/deck_master/resources/static/v2/drafts.js",
+        "src/deck_master/current_relationship.py",
+        "src/deck_master/result_reading.py",
+        "src/deck_master/web.py",
+        "src/deck_master/content_production.py",
+        "src/deck_master/design_completion.py",
+        "src/deck_master/current_work.py"
+      ],
+      "test_paths_existing": [
+        "tests/rebuild/test_performance_read_paths.py",
+        "tests/rebuild/test_performance_overview_browser.py",
+        "tests/rebuild/test_ui_journal.py",
+        "tests/rebuild/test_pr189_clear_recovery.py",
+        "tests/rebuild/test_pr189_related_clear_backup.py",
+        "tests/rebuild/test_pr189_clear_ownership_browser.py"
+      ],
+      "test_paths_not_found": [],
+      "state": "implemented_with_unresolved_correctness_boundary",
+      "commits": [
+        "84a3a60efb9721491fd0845ca766caa1244df7d0",
+        "17a2d032ed2cf128c672ee6e568ddd52f6aeab20"
+      ],
+      "regression_results": [
+        {
+          "scope": "earlier source unit/installed and targeted runs",
+          "record": "evidence/verification-summary.json",
+          "not_final_gate": true
+        },
+        {
+          "scope": "post-patch targeted 71 pass plus corrected PPTX selector pass",
+          "records": [
+            "evidence/closeout-targeted.json",
+            "evidence/closeout-two.json"
+          ],
+          "attribution": "Use command selectors; results do not imply this card has a complete acceptance pass."
+        },
+        "evidence/full-unit-final.json and .log; exact fixture repair in usability-fixture-retry",
+        "evidence/installed-full-final-run.json and installed-full-final-origins.json; 628 passed/1 unresolved failure",
+        "evidence/offline-final-checks.json: original9/9 installed offline checks"
+      ],
+      "measurement_results": [
+        "evidence/summary-before.json",
+        "evidence/summary-after.json"
+      ],
+      "review_results": [
+        "README.md: independent review findings and corrections",
+        "evidence/final-independent-review.json"
+      ],
+      "remaining_evidence": [
+        "Confirmed original clear-storage publication race remains unresolved. It violates preserved recovery behavior; baseline reproduction is not an exemption."
+      ],
+      "source_comment_url": "https://github.com/MainQuestAI/Deck-Master/issues/159#issuecomment-6413097747",
+      "commit_attribution_note": "Iteration implementation commits; per-file git history identifies actual card changes. No claim every file changed in both commits.",
+      "implemented_subitems": [
+        "project/personal 入口复用已捕获 Store/Document 和原有读适配器；历史 reader 按需创建。",
+        "list_drafts 共享本次 FixedSnapshotReader，保留各草稿完整性核验及坏项隔离。",
+        "自有未完成清理备份复用 _backup_evidence digest；终止前核验和恢复归属失效逻辑保留。",
+        "drafts.persist 同一 value 一次 JSON.stringify，仍同步写两个原键且保留错误行为。",
+        "Completion/design-completion are now request facts, including cached None; copied completion feeds current-work."
+      ],
+      "unimplemented_required_root_causes": [],
+      "implementation_gap_assessment": "No unapplied required performance patch currently identified; final review may find gaps. Recovery race remains a separate confirmed correctness blocker.",
+      "final_gate_status": "executed_with_failures_and_environment_blockers_see_closeout-status.json",
+      "direct_render_blocked_items": [],
+      "unresolved_correctness": {
+        "test": "tests/rebuild/test_pr189_clear_storage_browser.py::test_two_first_attempts_serialize_only_the_local_record",
+        "status": "unresolved",
+        "observations": "Three repeated runs passed and fourth failed; a later single pass does not establish repair.",
+        "failure_class": "cross-renderer publication race in clear-storage request coordination; no attribution to a new performance change without baseline proof",
+        "records": [
+          "evidence/clear-race-repeats.json",
+          "evidence/clear-race-diagnostic.json",
+          "evidence/clear-storage-trace.json"
+        ]
+      }
+    },
+    {
+      "task_id": "PERF-157",
+      "issue_number": 157,
+      "issue_url": "https://github.com/MainQuestAI/Deck-Master/issues/157",
+      "work_package": "B",
+      "spec_version": "1.2",
+      "requires": [],
+      "coordination": "与#159约定同一Store/reader参数后可并行接线，不以#159所有附属项完成为前置。",
+      "root_cause": "单稿依赖与审查事实只派生一次",
+      "implementation_requirements": [
+        "沿用现有ReviewReadContext的artifact/reviews/replacements；同一读入口创建所需上下文一次，current_work/quality/preproduction/delivery内部消费同一依据事实。",
+        "同basis的artifact builder、页面纯摘要、输入新鲜度各复用一次；不同稿件/控制解释分别处理，不放宽现有require约束。",
+        "selected_output、notes、专业策略按现有方式生成独立overlay，不能原地污染共享dict。只共享已验证底层事实，不再造一层长期缓存。"
+      ],
+      "acceptance_requirements": [
+        "无PPTX同basis v2样例完整artifact builder由3次降至1次。",
+        "逐页digest与输入边界无重复语义派生；默认策略/严格策略分别与参考输出一致。",
+        "历史稿与当前control、撤销/暂停、损坏依赖、专业证据缺失仍得到相同结论。"
+      ],
+      "observation_targets": [],
+      "planned_entry_paths": [
+        "src/deck_master/current_work.py",
+        "src/deck_master/editing.py",
+        "src/deck_master/content_review.py",
+        "src/deck_master/delivery_eligibility.py"
+      ],
+      "implementation_paths_with_current_diff": [
+        "src/deck_master/current_work.py",
+        "src/deck_master/content_review.py",
+        "src/deck_master/delivery_eligibility.py",
+        "src/deck_master/eligibility.py",
+        "src/deck_master/exports.py",
+        "src/deck_master/content_plan.py",
+        "src/deck_master/models.py",
+        "src/deck_master/tasks.py",
+        "src/deck_master/visual_dependencies.py",
+        "src/deck_master/current_relationship.py",
+        "src/deck_master/workbench.py"
+      ],
+      "test_paths_existing": [
+        "tests/rebuild/test_performance_read_paths.py",
+        "tests/rebuild/test_current_work.py",
+        "tests/rebuild/test_delivery_control_snapshot.py",
+        "tests/rebuild/test_rc3_selected_delivery.py"
+      ],
+      "test_paths_not_found": [],
+      "state": "implemented_final_validation_incomplete",
+      "commits": [
+        "84a3a60efb9721491fd0845ca766caa1244df7d0",
+        "17a2d032ed2cf128c672ee6e568ddd52f6aeab20"
+      ],
+      "regression_results": [
+        {
+          "scope": "earlier source unit/installed and targeted runs",
+          "record": "evidence/verification-summary.json",
+          "not_final_gate": true
+        },
+        {
+          "scope": "post-patch targeted 71 pass plus corrected PPTX selector pass",
+          "records": [
+            "evidence/closeout-targeted.json",
+            "evidence/closeout-two.json"
+          ],
+          "attribution": "Use command selectors; results do not imply this card has a complete acceptance pass."
+        },
+        "evidence/full-unit-final.json and .log; exact fixture repair in usability-fixture-retry",
+        "evidence/installed-full-final-run.json and installed-full-final-origins.json; 628 passed/1 unresolved failure",
+        "evidence/offline-final-checks.json: original9/9 installed offline checks"
+      ],
+      "measurement_results": [
+        "evidence/summary-before.json",
+        "evidence/summary-after.json"
+      ],
+      "review_results": [
+        "README.md: independent review findings and corrections",
+        "evidence/final-independent-review.json"
+      ],
+      "remaining_evidence": [
+        "Affected fact/overlay regressions passed in final unit selectors; overall browser/install acceptance remains blocked as recorded globally."
+      ],
+      "source_comment_url": "https://github.com/MainQuestAI/Deck-Master/issues/157#issuecomment-6413097335",
+      "commit_attribution_note": "Iteration implementation commits; per-file git history identifies actual card changes. No claim every file changed in both commits.",
+      "implemented_subitems": [
+        "current-work、quality、preproduction、delivery 接入同依据 ReviewReadContext；完整 artifact builder 复用，selected_output 等 overlay 独立。",
+        "现有 require 身份和专业判断未削弱，历史依据与当前控制分开。",
+        "Input identity reuse guards actual task/sources and revision without new full scans; per-ref page visual digest reuse and selected deck-output reuse are applied."
+      ],
+      "unimplemented_required_root_causes": [],
+      "implementation_gap_assessment": "No unapplied required performance patch currently identified; final review may find gaps. Recovery race remains a separate confirmed correctness blocker.",
+      "final_gate_status": "executed_with_failures_and_environment_blockers_see_closeout-status.json",
+      "direct_render_blocked_items": []
+    },
+    {
+      "task_id": "PERF-191",
+      "issue_number": 191,
+      "issue_url": "https://github.com/MainQuestAI/Deck-Master/issues/191",
+      "work_package": "B",
+      "spec_version": "1.2",
+      "requires": [],
+      "coordination": "按实际同文件改动协调；只运行受影响的验证。",
+      "root_cause": "OperationReader发布已核验coverage",
+      "implementation_requirements": [
+        "在OperationReader现有scan与_check_head全部成功后调用已有coverage.publish，沿用valid/publish和8项目/4096版本边界，仅存已验证metadata。",
+        "若验收缓存关闭模式，接入已有DECK_MASTER_OPERATION_CACHE开关；当前OperationReader尚未像resolve_operation一样检查该开关，这属于本卡小改，不增另一开关。",
+        "保留已有祖先签名与Head变化处理；失败不发布成功coverage，不缓存活跃reader或正文。"
+      ],
+      "acceptance_requirements": [
+        "524版本样例第1次完整解析后，第2次容量内不再全链JSON解码；既有O(H)签名核验单列，不承诺O(1)。",
+        "缓存关闭、容量逐出与现有历史损坏/变化反例保持原处理；不新建另一套历史证明框架。"
+      ],
+      "observation_targets": [],
+      "planned_entry_paths": [
+        "src/deck_master/operations.py",
+        "src/deck_master/operation_coverage.py",
+        "src/deck_master/current_relationship.py"
+      ],
+      "implementation_paths_with_current_diff": [
+        "src/deck_master/operations.py",
+        "src/deck_master/operation_coverage.py",
+        "src/deck_master/current_relationship.py"
+      ],
+      "test_paths_existing": [
+        "tests/rebuild/test_operation_coverage.py",
+        "tests/rebuild/test_ui_current_relationship.py",
+        "tests/rebuild/test_integration_current_relationship.py"
+      ],
+      "test_paths_not_found": [],
+      "state": "implemented_final_validation_incomplete",
+      "commits": [
+        "84a3a60efb9721491fd0845ca766caa1244df7d0",
+        "17a2d032ed2cf128c672ee6e568ddd52f6aeab20"
+      ],
+      "regression_results": [
+        {
+          "scope": "earlier source unit/installed and targeted runs",
+          "record": "evidence/verification-summary.json",
+          "not_final_gate": true
+        },
+        {
+          "scope": "post-patch targeted 71 pass plus corrected PPTX selector pass",
+          "records": [
+            "evidence/closeout-targeted.json",
+            "evidence/closeout-two.json"
+          ],
+          "attribution": "Use command selectors; results do not imply this card has a complete acceptance pass."
+        },
+        "evidence/full-unit-final.json and .log; exact fixture repair in usability-fixture-retry",
+        "evidence/installed-full-final-run.json and installed-full-final-origins.json; 628 passed/1 unresolved failure",
+        "evidence/offline-final-checks.json: original9/9 installed offline checks"
+      ],
+      "measurement_results": [],
+      "review_results": [
+        "README.md: independent review findings and corrections",
+        "evidence/final-independent-review.json"
+      ],
+      "remaining_evidence": [
+        "Warm full-decode regression passed; existing O(H) signature verification remains."
+      ],
+      "source_comment_url": "https://github.com/MainQuestAI/Deck-Master/issues/191#issuecomment-6413094371",
+      "commit_attribution_note": "Iteration implementation commits; per-file git history identifies actual card changes. No claim every file changed in both commits.",
+      "implemented_subitems": [
+        "OperationReader 成功 scan 和 _check_head 后发布现有有界 coverage，仅 metadata；接入既有环境开关。",
+        "保留完整祖先签名核验、head 变化处理，损坏/离开分支 cache hint 可冷降级；失败不发布成功事实。"
+      ],
+      "unimplemented_required_root_causes": [],
+      "implementation_gap_assessment": "No unapplied required performance patch currently identified; final review may find gaps. Recovery race remains a separate confirmed correctness blocker.",
+      "final_gate_status": "executed_with_failures_and_environment_blockers_see_closeout-status.json",
+      "direct_render_blocked_items": []
+    },
+    {
+      "task_id": "PERF-190",
+      "issue_number": 190,
+      "issue_url": "https://github.com/MainQuestAI/Deck-Master/issues/190",
+      "work_package": "B",
+      "spec_version": "1.2",
+      "requires": [],
+      "coordination": "可独立于#159/#157窄修；接口整合时共享已验证notes事实，#199不代替本项。",
+      "root_cause": "复用PPTX公开投影",
+      "implementation_requirements": [
+        "在现有PPTX选稿/净化入口增加小型有界metadata复用：首次验证源bytes，保存源签名、original/projected digest与两者size，保持file_path的精确选稿语义。",
+        "暖读先用现有路径/类型/签名验证查已有结果，不能先完整读入/hash原PPTX再查缓存。notes身份由本次对象事实取得；实现身份为发布/进程内固定token，不每轮hash源码树。",
+        "原字节、notes顺序、policy或实现身份变化重算；正式导出仍验证实际字节。缓存不长期保留整包PPTX，不增加磁盘sidecar。"
+      ],
+      "acceptance_requirements": [
+        "稳定合法输入预热后，代表性连续状态读取不再完整净化，也不为查询metadata重复全量读取原PPTX。",
+        "原稿/净化稿选择、digest/size与参考相同；源文件、notes/policy变化正确失效，实际导出不减核验。"
+      ],
+      "observation_targets": [
+        "同一16.93MB等待任务夹具、同一24秒窗口，CPU时间目标降低至少80%；为观察目标，单独未达不否定已证明完成的本根因修复。"
+      ],
+      "planned_entry_paths": [
+        "src/deck_master/delivery_eligibility.py",
+        "src/deck_master/export_sanitize.py",
+        "src/deck_master/current_work.py"
+      ],
+      "implementation_paths_with_current_diff": [
+        "src/deck_master/delivery_eligibility.py",
+        "src/deck_master/current_work.py",
+        "src/deck_master/exports.py"
+      ],
+      "test_paths_existing": [
+        "tests/rebuild/test_performance_read_paths.py",
+        "tests/rebuild/test_delivery_control_snapshot.py",
+        "tests/rebuild/test_rc3_selected_delivery.py"
+      ],
+      "test_paths_not_found": [],
+      "state": "implemented_final_validation_incomplete",
+      "commits": [
+        "84a3a60efb9721491fd0845ca766caa1244df7d0",
+        "17a2d032ed2cf128c672ee6e568ddd52f6aeab20"
+      ],
+      "regression_results": [
+        {
+          "scope": "earlier source unit/installed and targeted runs",
+          "record": "evidence/verification-summary.json",
+          "not_final_gate": true
+        },
+        {
+          "scope": "post-patch targeted 71 pass plus corrected PPTX selector pass",
+          "records": [
+            "evidence/closeout-targeted.json",
+            "evidence/closeout-two.json"
+          ],
+          "attribution": "Use command selectors; results do not imply this card has a complete acceptance pass."
+        },
+        "evidence/full-unit-final.json and .log; exact fixture repair in usability-fixture-retry",
+        "evidence/installed-full-final-run.json and installed-full-final-origins.json; 628 passed/1 unresolved failure",
+        "evidence/offline-final-checks.json: original9/9 installed offline checks"
+      ],
+      "measurement_results": [],
+      "review_results": [
+        "README.md: independent review findings and corrections",
+        "evidence/final-independent-review.json"
+      ],
+      "remaining_evidence": [
+        "16.93MB 24s/60s CPU observation unmeasured. Original installed offline gate passed; renderer-dependent cases remain blocked."
+      ],
+      "source_comment_url": "https://github.com/MainQuestAI/Deck-Master/issues/190#issuecomment-6413093944",
+      "commit_attribution_note": "Iteration implementation commits; per-file git history identifies actual card changes. No claim every file changed in both commits.",
+      "implemented_subitems": [
+        "有界 PPTX metadata cache 保存源签名、原稿/投影 digest 和 size；先签名查缓存，暖命中不整包读取/净化。",
+        "notes/policy 与实际选稿边界保留；不长期保存整包，无磁盘 sidecar；正式文件读取仍核验。"
+      ],
+      "unimplemented_required_root_causes": [],
+      "implementation_gap_assessment": "No unapplied required performance patch currently identified; final review may find gaps. Recovery race remains a separate confirmed correctness blocker.",
+      "final_gate_status": "executed_with_failures_and_environment_blockers_see_closeout-status.json",
+      "direct_render_blocked_items": [
+        "如重建大 PPTX 夹具或必要最终真实 renderer 链，rsvg-convert 缺失阻塞；可用已验证合法现成 PPTX 做纯读计量不应虚称也被阻塞。"
+      ]
+    },
+    {
+      "task_id": "PERF-199",
+      "issue_number": 199,
+      "issue_url": "https://github.com/MainQuestAI/Deck-Master/issues/199",
+      "work_package": "B",
+      "spec_version": "1.2",
+      "requires": [
+        "PERF-159",
+        "PERF-157"
+      ],
+      "coordination": "requires仅指共享读适配器/实际依赖采集接口稳定，不要求关闭#159/#157整卡；#190/#191是收益组合与集成顺序，不是全卡硬前置。",
+      "root_cause": "稳定v2投影与同键在途合并",
+      "implementation_requirements": [
+        "扩展现有_summary_cache的v2 entry与既有4项上限。lookup key使用入口已捕获的项目、artifact/control内容身份、协议和必要参数；先查entry，再验证其中保存的实际读取签名与既有clock条件。",
+        "依赖在正常构建时随实际JSON/bytes读取登记，覆盖内部捕获的read_failed。不得为生成key先运行current_work/artifact builder、全对象扫描或全目录hash。",
+        "先保留reading_etag在缓存身份中；个人变化仍完整影响每页attention、actions和current_work。只有实测需要才在同一entry中复用未过滤事实，不另建个人/控制/时钟三套缓存。",
+        "人工身份adapter等运行期专业判断继续按原路径求值；若不能窄拆，仅该类整响应cacheable=False，纯artifact/PPTX事实仍复用。不新增adapter watcher、撤销数据库或权限机制。",
+        "在同一摘要入口用小型进程内在途合并；等待不持项目写锁，等待者退出不驱逐仍在工作的owner；失败不长期缓存。既有历史证明按需一次执行，不对每个helper额外重验全链。",
+        "ETag/304、HTTP/1.1、gzip、文件watcher和跨进程读缓存均不纳入本轮实施/关闭条件；先消除已证重算。"
+      ],
+      "acceptance_requirements": [
+        "可缓存稳定场景的代表性连续v2/personal读不重做重派生；实际输出与无缓存参考相同。不可缓存场景保留原路径，不要求所有状态命中。",
+        "同身份2/4读取者合并一次可共享构建；异项目/稿件/控制/个人状态不串用，等待者退出不引发并行重建。",
+        "已有文件/历史/控制/reading/time变化仍可见；synthetic人类身份adapter在同稿下改变判断时不返回旧成功。",
+        "计数分别包含构建、依赖签名和运行期判断，不将保留的必要核验隐藏在新helper名称中。"
+      ],
+      "observation_targets": [
+        "300页无PPTX/任务暖摘要p95≤250ms、200任务暖摘要p95≤1s、单标签重PPTX暖态≤5%单核，均为需同机核验的观察目标，不新增发布门槛。"
+      ],
+      "planned_entry_paths": [
+        "src/deck_master/workbench.py",
+        "src/deck_master/web.py",
+        "src/deck_master/resources/static/v2/api.js",
+        "src/deck_master/resources/static/v2/project.js"
+      ],
+      "implementation_paths_with_current_diff": [
+        "src/deck_master/workbench.py",
+        "src/deck_master/web.py",
+        "src/deck_master/resources/static/v2/project.js",
+        "src/deck_master/current_relationship.py"
+      ],
+      "test_paths_existing": [
+        "tests/rebuild/test_performance_read_paths.py",
+        "tests/rebuild/test_current_work.py",
+        "tests/rebuild/test_pr187_summary_reuse_browser.py",
+        "tests/rebuild/test_operation_coverage.py"
+      ],
+      "test_paths_not_found": [],
+      "state": "implemented_final_validation_incomplete",
+      "commits": [
+        "84a3a60efb9721491fd0845ca766caa1244df7d0",
+        "17a2d032ed2cf128c672ee6e568ddd52f6aeab20"
+      ],
+      "regression_results": [
+        {
+          "scope": "earlier source unit/installed and targeted runs",
+          "record": "evidence/verification-summary.json",
+          "not_final_gate": true
+        },
+        {
+          "scope": "post-patch targeted 71 pass plus corrected PPTX selector pass",
+          "records": [
+            "evidence/closeout-targeted.json",
+            "evidence/closeout-two.json"
+          ],
+          "attribution": "Use command selectors; results do not imply this card has a complete acceptance pass."
+        },
+        "evidence/full-unit-final.json and .log; exact fixture repair in usability-fixture-retry",
+        "evidence/installed-full-final-run.json and installed-full-final-origins.json; 628 passed/1 unresolved failure",
+        "evidence/offline-final-checks.json: original9/9 installed offline checks"
+      ],
+      "measurement_results": [
+        "evidence/summary-before.json",
+        "evidence/summary-after.json",
+        "evidence/w01-managed-comparison.json"
+      ],
+      "review_results": [
+        "README.md: independent review findings and corrections",
+        "evidence/final-independent-review.json"
+      ],
+      "remaining_evidence": [
+        "Earlier 300-page summary measurements are not new 17a2d032 measurements. 200-task summary tail latency and large-PPTX CPU remain unmeasured."
+      ],
+      "source_comment_url": null,
+      "commit_attribution_note": "Iteration implementation commits; per-file git history identifies actual card changes. No claim every file changed in both commits.",
+      "implemented_subitems": [
+        "沿用4项 _summary_cache，入口身份 lookup 后验证实际读取依赖，reading_etag 保留。",
+        "同键进程内 in-flight owner 协调，并修复 miss 后注册 owner 时的二次检查竞态。",
+        "历史读实际证明的整条链签名登记到 entry；人工 reviewer adapter 路径旁路整响应缓存，纯底层事实仍可复用。"
+      ],
+      "unimplemented_required_root_causes": [],
+      "implementation_gap_assessment": "No unapplied required performance patch currently identified; final review may find gaps. Recovery race remains a separate confirmed correctness blocker.",
+      "final_gate_status": "executed_with_failures_and_environment_blockers_see_closeout-status.json",
+      "direct_render_blocked_items": [
+        "最终完整 renderer/installed offline gate 的环境阻塞仍存在；普通summary纯读计量本身不需renderer。"
+      ]
+    },
+    {
+      "task_id": "PERF-193",
+      "issue_number": 193,
+      "issue_url": "https://github.com/MainQuestAI/Deck-Master/issues/193",
+      "work_package": "C",
+      "spec_version": "1.2",
+      "requires": [],
+      "coordination": "可独立窄修，和#200共享关系事实；不等待#159全部完成。",
+      "root_cause": "失败后继查找建立一次索引",
+      "implementation_requirements": [
+        "沿用CurrentRelationships，按原相等字段建立一次有序候选索引，替代每个failed task扫描全部tasks；保持原位置/时间语义，不假设created_at单调。",
+        "保留原adopted_refs与逐scope page slot被result_refs覆盖的采用谓词。_successor本来不查operation receipt，本项不得新增回执查询、全链解析或第二套采用资格。"
+      ],
+      "acceptance_requirements": [
+        "100/500/1000失败任务不再逐个扫描全任务表；分别记录一次索引构建、每key候选访问及原采用谓词次数。",
+        "混合失败/成功/取消/相似instruction/部分页采用结果与旧算法一致；不为未证场景预建复杂区间树。"
+      ],
+      "observation_targets": [],
+      "planned_entry_paths": [
+        "src/deck_master/current_relationship.py"
+      ],
+      "implementation_paths_with_current_diff": [
+        "src/deck_master/current_relationship.py"
+      ],
+      "test_paths_existing": [
+        "tests/rebuild/test_performance_successors.py",
+        "tests/rebuild/test_ui_current_relationship.py",
+        "tests/rebuild/test_integration_current_relationship.py"
+      ],
+      "test_paths_not_found": [],
+      "state": "implemented_final_validation_incomplete",
+      "commits": [
+        "84a3a60efb9721491fd0845ca766caa1244df7d0",
+        "17a2d032ed2cf128c672ee6e568ddd52f6aeab20"
+      ],
+      "regression_results": [
+        {
+          "scope": "earlier source unit/installed and targeted runs",
+          "record": "evidence/verification-summary.json",
+          "not_final_gate": true
+        },
+        {
+          "scope": "post-patch targeted 71 pass plus corrected PPTX selector pass",
+          "records": [
+            "evidence/closeout-targeted.json",
+            "evidence/closeout-two.json"
+          ],
+          "attribution": "Use command selectors; results do not imply this card has a complete acceptance pass."
+        },
+        "evidence/full-unit-final.json and .log; exact fixture repair in usability-fixture-retry",
+        "evidence/installed-full-final-run.json and installed-full-final-origins.json; 628 passed/1 unresolved failure",
+        "evidence/offline-final-checks.json: original9/9 installed offline checks"
+      ],
+      "measurement_results": [],
+      "review_results": [
+        "README.md: independent review findings and corrections",
+        "evidence/final-independent-review.json"
+      ],
+      "remaining_evidence": [
+        "Mixed algorithm and 100/500/1000 count regressions passed; no complete shape-matrix timing claim."
+      ],
+      "source_comment_url": "https://github.com/MainQuestAI/Deck-Master/issues/193#issuecomment-6413095284",
+      "commit_attribution_note": "Iteration implementation commits; per-file git history identifies actual card changes. No claim every file changed in both commits.",
+      "implemented_subitems": [
+        "CurrentRelationships 一次按原相等字段建立有序后继索引，保持 task位置、非单调 created_at 与原 adopted_refs/slot 谓词。",
+        "未新增 receipt 查询、全链解析或采用资格规则；现有计数测试覆盖100/500/1000失败项不重复扫描整表。",
+        "Mixed old-algorithm comparison and matching-key/adoption-count regression cases are now present."
+      ],
+      "unimplemented_required_root_causes": [],
+      "implementation_gap_assessment": "No unapplied required performance patch currently identified; final review may find gaps. Recovery race remains a separate confirmed correctness blocker.",
+      "final_gate_status": "executed_with_failures_and_environment_blockers_see_closeout-status.json",
+      "direct_render_blocked_items": []
+    },
+    {
+      "task_id": "PERF-200",
+      "issue_number": 200,
+      "issue_url": "https://github.com/MainQuestAI/Deck-Master/issues/200",
+      "work_package": "C",
+      "spec_version": "1.2",
+      "requires": [],
+      "coordination": "#193/#157/#159可并行，最终组合验收；无需等待这些整卡关闭。",
+      "root_cause": "分页只展开当前页重详情",
+      "implementation_requirements": [
+        "沿用_records、_groups、CurrentRelationships，先执行group/status/search等基础字段过滤与原顺序，不新增跨请求任务索引或sidecar。",
+        "attention=false：确定匹配总数与页成员后，仅为当前页组装完整task_row。",
+        "attention=true：为保证准确total/counts，对轻筛后的候选集求一次必要human_actions/关系/候选事实，再分页；页内行复用这些事实，不复制两套轻/重动作谓词。",
+        "拆开字段组装与必要判定以便复用，不将原重工作搬到名为轻量的helper后只看task_row次数。"
+      ],
+      "acceptance_requirements": [
+        "无attention时完整行组装数量受page size约束；attention时必要判定按筛后候选数解释，分别计关系、候选basis、snapshot与行组装。",
+        "原total/counts、逆records顺序、过滤、分页、组状态、损坏项与固定历史语义相同。",
+        "同输入记录CPU/wall与工作计数；复制重scope与真实形状任务分别报告。"
+      ],
+      "observation_targets": [
+        "200个合法形状任务暖列表p95≤500ms为观察目标，非本卡独立关闭门槛。"
+      ],
+      "planned_entry_paths": [
+        "src/deck_master/run_desk.py",
+        "src/deck_master/current_relationship.py"
+      ],
+      "implementation_paths_with_current_diff": [
+        "src/deck_master/run_desk.py",
+        "src/deck_master/current_relationship.py"
+      ],
+      "test_paths_existing": [
+        "tests/rebuild/test_run_desk.py"
+      ],
+      "test_paths_not_found": [],
+      "state": "implemented_final_validation_incomplete",
+      "commits": [
+        "84a3a60efb9721491fd0845ca766caa1244df7d0",
+        "17a2d032ed2cf128c672ee6e568ddd52f6aeab20"
+      ],
+      "regression_results": [
+        {
+          "scope": "earlier source unit/installed and targeted runs",
+          "record": "evidence/verification-summary.json",
+          "not_final_gate": true
+        },
+        {
+          "scope": "post-patch targeted 71 pass plus corrected PPTX selector pass",
+          "records": [
+            "evidence/closeout-targeted.json",
+            "evidence/closeout-two.json"
+          ],
+          "attribution": "Use command selectors; results do not imply this card has a complete acceptance pass."
+        },
+        "evidence/full-unit-final.json and .log; exact fixture repair in usability-fixture-retry",
+        "evidence/installed-full-final-run.json and installed-full-final-origins.json; 628 passed/1 unresolved failure",
+        "evidence/offline-final-checks.json: original9/9 installed offline checks"
+      ],
+      "measurement_results": [
+        "evidence/runs-legal-comparison.json",
+        "evidence/runs-legal-baseline.json",
+        "evidence/runs-legal-candidate.json"
+      ],
+      "review_results": [
+        "README.md: independent review findings and corrections",
+        "evidence/final-independent-review.json"
+      ],
+      "remaining_evidence": [
+        "Copied heavy-scope workload unmeasured; three legal-task observations are not p95."
+      ],
+      "source_comment_url": null,
+      "commit_attribution_note": "Iteration implementation commits; per-file git history identifies actual card changes. No claim every file changed in both commits.",
+      "implemented_subitems": [
+        "普通分页先做基础过滤/total，再只组装页内行；attention 必要事实只求一次并供页内行复用。",
+        "保留 records 逆序、group/status/search、准确total/counts、损坏项和固定历史语义。"
+      ],
+      "unimplemented_required_root_causes": [],
+      "implementation_gap_assessment": "No unapplied required performance patch currently identified; final review may find gaps. Recovery race remains a separate confirmed correctness blocker.",
+      "final_gate_status": "executed_with_failures_and_environment_blockers_see_closeout-status.json",
+      "direct_render_blocked_items": []
+    },
+    {
+      "task_id": "PERF-198",
+      "issue_number": 198,
+      "issue_url": "https://github.com/MainQuestAI/Deck-Master/issues/198",
+      "work_package": "D",
+      "spec_version": "1.2",
+      "requires": [],
+      "coordination": "按实际同文件改动协调；只运行受影响的验证。",
+      "root_cause": "总览图片租约随可见范围释放",
+      "implementation_requirements": [
+        "只修overview消费者拥有关系：一个父级cleanup管理当前thumbs集合，离组/离开活动图片窗口即dispose并从Map移除，不为每图追加route disposer。",
+        "Studio沿用现成分组；v2只对图片建立有界活动窗口与适量overscan，保留表格/键盘结构。同page_id换图按实际图片引用替换。",
+        "沿用已有ImagePool的LRU、60/4容量、6/2 Gate、共享Promise与microtask保护。需求超容量时交接租约并移动活动窗口，仅排队却不释放首批pin仍算未修。"
+      ],
+      "acceptance_requirements": [
+        "100页两入口访问全部页面均可读，消除60 ready/40 failed。",
+        "pin跟随当前可见需求回落，不随累计浏览增长；离开工作面其租约为0。",
+        "返回旧组、筛选/排序、大视口、迟到响应、焦点/选页及普通gallery不退化。"
+      ],
+      "observation_targets": [],
+      "planned_entry_paths": [
+        "src/deck_master/resources/static/v2/overview.js",
+        "src/deck_master/resources/static/v2/images.js"
+      ],
+      "implementation_paths_with_current_diff": [
+        "src/deck_master/resources/static/v2/overview.js",
+        "src/deck_master/resources/static/v2/images.js"
+      ],
+      "test_paths_existing": [
+        "tests/rebuild/test_performance_overview_browser.py",
+        "tests/rebuild/test_image_pool_remount_browser.py",
+        "tests/rebuild/test_studio_overview_browser.py"
+      ],
+      "test_paths_not_found": [],
+      "state": "implemented_final_validation_incomplete",
+      "commits": [
+        "84a3a60efb9721491fd0845ca766caa1244df7d0",
+        "17a2d032ed2cf128c672ee6e568ddd52f6aeab20"
+      ],
+      "regression_results": [
+        {
+          "scope": "earlier source unit/installed and targeted runs",
+          "record": "evidence/verification-summary.json",
+          "not_final_gate": true
+        },
+        {
+          "scope": "post-patch targeted 71 pass plus corrected PPTX selector pass",
+          "records": [
+            "evidence/closeout-targeted.json",
+            "evidence/closeout-two.json"
+          ],
+          "attribution": "Use command selectors; results do not imply this card has a complete acceptance pass."
+        },
+        "evidence/full-unit-final.json and .log; exact fixture repair in usability-fixture-retry",
+        "evidence/installed-full-final-run.json and installed-full-final-origins.json; 628 passed/1 unresolved failure",
+        "evidence/offline-final-checks.json: original9/9 installed offline checks"
+      ],
+      "measurement_results": [],
+      "review_results": [
+        "README.md: independent review findings and corrections",
+        "evidence/final-independent-review.json"
+      ],
+      "remaining_evidence": [
+        "100-page two-entry/large-viewport/lease browser regressions passed at unchanged overview implementation; no universal-device coverage claim."
+      ],
+      "source_comment_url": null,
+      "commit_attribution_note": "Iteration implementation commits; per-file git history identifies actual card changes. No claim every file changed in both commits.",
+      "implemented_subitems": [
+        "overview 父级单cleanup持有当前thumbs；Studio按组、v2有界可见窗口/overscan释放离开需求，先交还租约再申请。",
+        "保留已有ImagePool60/4容量及6/2Gate；大视口用焦点/指向移动窗口，同page实际图引用变化触发替换。",
+        "100页遍历、返回旧组、大视口和离开路由pin归零用例已存在。"
+      ],
+      "unimplemented_required_root_causes": [],
+      "implementation_gap_assessment": "No unapplied required performance patch currently identified; final review may find gaps. Recovery race remains a separate confirmed correctness blocker.",
+      "final_gate_status": "executed_with_failures_and_environment_blockers_see_closeout-status.json",
+      "direct_render_blocked_items": []
+    },
+    {
+      "task_id": "PERF-201",
+      "issue_number": 201,
+      "issue_url": "https://github.com/MainQuestAI/Deck-Master/issues/201",
+      "work_package": "D",
+      "spec_version": "1.2",
+      "requires": [],
+      "coordination": "overview与#198按同一文件负责人顺序合并；current-work和drafts小改可独立交付。",
+      "root_cause": "runs读取与组件销毁生命周期",
+      "implementation_requirements": [
+        "用现有showSubarea/展开状态控制runs订阅；隐藏时暂停重复被动读取，恢复时刷新一次。首轮允许既有一次路由预取，将其与隐藏后的重复GET分开计数。",
+        "复用已有busy/pendingRead/serial/detailSerial；同一响应的page.groups直接传给交接面板，同组确有并发读取时仅共享本次在途Promise，结束释放，不造通用tasks缓存。",
+        "父组件替换子reader时显式dispose；父级只保留一个收尾登记。未变行、固定方法正文保留DOM；availability=current仍在原可见读取时机更新，不按task_id/revision永久冻结当前安装可用性。",
+        "current-work证据已有details：改为首次展开才格式化JSON、内容变化才更新；project.refreshCurrentWork在实际可见工作投影及所需上下文不变时保留面板DOM/焦点/展开状态。",
+        "currentWorkMatches已能复用本轮summary，保留该分支及不匹配时的配对读取；不新增digest API、通用DOM diff或全局可见性框架。",
+        "P3附属：overview每次summary先建page_id Map，保留revision/缺页/attention语义；无变化行不重建后自然避免重复日期格式化，暂不另建formatter缓存。"
+      ],
+      "acceptance_requirements": [
+        "扣除一次路由预取后，停在版本/文件的隐藏任务与未打开交接不继续发专属GET；同组handoff每轮至多一次。",
+        "代表性连续10次稳定刷新，清理登记不增长、旧reader监听器已释放、未变行与current-work节点身份/焦点/展开状态保持；GC探针仅辅助。",
+        "折叠current-work证据不重复格式化；真实control/reading/time变化及current availability仍更新，旧响应不回填。",
+        "overview页面匹配从O(P²)降至O(P)且原输出一致；没有实测独立CPU收益时不编造数字。"
+      ],
+      "observation_targets": [],
+      "planned_entry_paths": [
+        "src/deck_master/resources/static/v2/views.js",
+        "src/deck_master/resources/static/v2/run-desk.js",
+        "src/deck_master/resources/static/v2/change-handoff.js",
+        "src/deck_master/resources/static/v2/insight-reading.js",
+        "src/deck_master/resources/static/v2/overview.js",
+        "src/deck_master/resources/static/v2/current-work.js",
+        "src/deck_master/resources/static/v2/project.js"
+      ],
+      "implementation_paths_with_current_diff": [
+        "src/deck_master/resources/static/v2/views.js",
+        "src/deck_master/resources/static/v2/run-desk.js",
+        "src/deck_master/resources/static/v2/change-handoff.js",
+        "src/deck_master/resources/static/v2/insight-reading.js",
+        "src/deck_master/resources/static/v2/overview.js",
+        "src/deck_master/resources/static/v2/current-work.js",
+        "src/deck_master/resources/static/v2/project.js"
+      ],
+      "test_paths_existing": [
+        "tests/rebuild/test_performance_frontend_browser.py",
+        "tests/rebuild/test_pr187_summary_reuse_browser.py",
+        "tests/rebuild/test_current_work_dialog_browser.py"
+      ],
+      "test_paths_not_found": [],
+      "state": "implemented_final_validation_incomplete",
+      "commits": [
+        "84a3a60efb9721491fd0845ca766caa1244df7d0",
+        "17a2d032ed2cf128c672ee6e568ddd52f6aeab20"
+      ],
+      "regression_results": [
+        {
+          "scope": "earlier source unit/installed and targeted runs",
+          "record": "evidence/verification-summary.json",
+          "not_final_gate": true
+        },
+        {
+          "scope": "post-patch targeted 71 pass plus corrected PPTX selector pass",
+          "records": [
+            "evidence/closeout-targeted.json",
+            "evidence/closeout-two.json"
+          ],
+          "attribution": "Use command selectors; results do not imply this card has a complete acceptance pass."
+        },
+        "evidence/full-unit-final.json and .log; exact fixture repair in usability-fixture-retry",
+        "evidence/installed-full-final-run.json and installed-full-final-origins.json; 628 passed/1 unresolved failure",
+        "evidence/offline-final-checks.json: original9/9 installed offline checks"
+      ],
+      "measurement_results": [],
+      "review_results": [
+        "README.md: independent review findings and corrections",
+        "evidence/final-independent-review.json"
+      ],
+      "remaining_evidence": [
+        "Installed style navigation had one unexplained failure; exact retry and five diagnostic trials passed without repair, so unresolved. Earlier five expected-view/DOM tests were corrected and passed."
+      ],
+      "source_comment_url": null,
+      "commit_attribution_note": "Iteration implementation commits; per-file git history identifies actual card changes. No claim every file changed in both commits.",
+      "implemented_subitems": [
+        "隐藏runs及未展开handoff暂停被动读取，保留首轮预取；同组共享本次in-flight及live page.groups，历史页不误用当前groups。",
+        "父组件替换reader显式dispose，稳定行/current-work节点保留；折叠current-work证据首次展开格式化。",
+        "overview page_id Map 消除匹配的重复线性查找。",
+        "Only current availability text updates when frozen method facts are unchanged; DOM/focus/expanded state remain."
+      ],
+      "unimplemented_required_root_causes": [],
+      "implementation_gap_assessment": "No unapplied required performance patch currently identified; final review may find gaps. Recovery race remains a separate confirmed correctness blocker.",
+      "final_gate_status": "executed_with_failures_and_environment_blockers_see_closeout-status.json",
+      "direct_render_blocked_items": []
+    },
+    {
+      "task_id": "PERF-192",
+      "issue_number": 192,
+      "issue_url": "https://github.com/MainQuestAI/Deck-Master/issues/192",
+      "work_package": "D",
+      "spec_version": "1.2",
+      "requires": [],
+      "coordination": "按实际同文件改动协调；只运行受影响的验证。",
+      "root_cause": "同候选一个状态读取器",
+      "implementation_requirements": [
+        "candidateIconReview当前只有candidate-desk一个父级调用：父级独占preview状态、timer和显式requestPreview，向子组件传状态与检查回调，删除子组件重复GET/timer/POST入口。",
+        "父级沿现有代号/busy补单飞、hidden暂停、恢复一次刷新和终态停止；子组件负责展示、比较与自身图片释放，父级替换时dispose。",
+        "保留一处route收尾，不把SummaryPoll改成通用基类，不建全标签页订阅注册表或另一套候选缓存。"
+      ],
+      "acceptance_requirements": [
+        "父子同时显示时同候选最多1个在途状态GET；两个检查按钮共享一个显式POST入口，不自动重试POST。",
+        "隐藏/卸载后不新调度，恢复一次刷新，终态停止；显式重查和A→B→A选择后旧GET不覆盖新状态。"
+      ],
+      "observation_targets": [],
+      "planned_entry_paths": [
+        "src/deck_master/resources/static/v2/candidate-desk.js",
+        "src/deck_master/resources/static/v2/icon-workbench.js"
+      ],
+      "implementation_paths_with_current_diff": [
+        "src/deck_master/resources/static/v2/candidate-desk.js",
+        "src/deck_master/resources/static/v2/icon-workbench.js"
+      ],
+      "test_paths_existing": [
+        "tests/rebuild/test_performance_frontend_browser.py",
+        "tests/rebuild/test_rollup_browser.py"
+      ],
+      "test_paths_not_found": [],
+      "state": "implemented_final_validation_incomplete",
+      "commits": [
+        "84a3a60efb9721491fd0845ca766caa1244df7d0",
+        "17a2d032ed2cf128c672ee6e568ddd52f6aeab20"
+      ],
+      "regression_results": [
+        {
+          "scope": "earlier source unit/installed and targeted runs",
+          "record": "evidence/verification-summary.json",
+          "not_final_gate": true
+        },
+        {
+          "scope": "post-patch targeted 71 pass plus corrected PPTX selector pass",
+          "records": [
+            "evidence/closeout-targeted.json",
+            "evidence/closeout-two.json"
+          ],
+          "attribution": "Use command selectors; results do not imply this card has a complete acceptance pass."
+        },
+        "evidence/full-unit-final.json and .log; exact fixture repair in usability-fixture-retry",
+        "evidence/installed-full-final-run.json and installed-full-final-origins.json; 628 passed/1 unresolved failure",
+        "evidence/offline-final-checks.json: original9/9 installed offline checks"
+      ],
+      "measurement_results": [],
+      "review_results": [
+        "README.md: independent review findings and corrections",
+        "evidence/final-independent-review.json"
+      ],
+      "remaining_evidence": [
+        "Actual icon preview browser case remains blocked by missing rsvg-convert; parent state-flow regressions do not replace real rendering."
+      ],
+      "source_comment_url": "https://github.com/MainQuestAI/Deck-Master/issues/192#issuecomment-6413094826",
+      "commit_attribution_note": "Iteration implementation commits; per-file git history identifies actual card changes. No claim every file changed in both commits.",
+      "implemented_subitems": [
+        "candidate-desk父组件唯一持有状态GET/timer/显式POST；子组件只消费状态与回调并释放自身图资源。",
+        "加入单飞、hidden暂停/恢复、终态停止及选择代次；修过A→B→A与隐藏期间在途完成的时序边界。"
+      ],
+      "unimplemented_required_root_causes": [],
+      "implementation_gap_assessment": "No unapplied required performance patch currently identified; final review may find gaps. Recovery race remains a separate confirmed correctness blocker.",
+      "final_gate_status": "executed_with_failures_and_environment_blockers_see_closeout-status.json",
+      "direct_render_blocked_items": []
+    },
+    {
+      "task_id": "PERF-142",
+      "issue_number": 142,
+      "issue_url": "https://github.com/MainQuestAI/Deck-Master/issues/142",
+      "work_package": "D",
+      "spec_version": "1.2",
+      "requires": [],
+      "coordination": "与#198同改images/overview时顺序整合，不以#198整卡关闭为代码前置。",
+      "root_cause": "缩略图重询有界退避",
+      "implementation_requirements": [
+        "沿用ImagePool已有同图Promise、Gate和取消。首个可见请求立即执行；queued/running/busy用一个简单有上限退避序列，尊重已有retry_after_ms。",
+        "用一个明确的累计主动等待预算替代不加说明的80轮延长；现有server queued/running为75ms、busy为150ms，原80轮名义等待约6–12秒（另加网络）。可先以该量级校准，不能保留80轮又将间隔改1秒形成一分钟等待。总等待与ready耗时分别记录。",
+        "客户端退避上限约1秒，抖动不列必做。gallery仅在确认相同布局有重复DOM/解码/fetch工作后窄修观察器，保留真实布局失效和同步reacquire保护。"
+      ],
+      "acceptance_requirements": [
+        "暖ready每图最多1次状态读取；持续未就绪时请求率下降，已有网络/解码≤6/2不变。",
+        "离屏停止新增调度、终止等待有明确预算；调度等待与Gate/网络/生成耗时分开，不用1.2秒宣称端到端ready。",
+        "同immutable图不因同步重挂载重复实际生成；返回视口与真实布局改变仍能正确更新。"
+      ],
+      "observation_targets": [
+        "暖缓存首个可见图p95≤1秒为观察目标；新退避不明显拖慢实际可见体验。"
+      ],
+      "planned_entry_paths": [
+        "src/deck_master/resources/static/v2/images.js",
+        "src/deck_master/resources/static/v2/gallery.js",
+        "src/deck_master/thumbnails.py"
+      ],
+      "implementation_paths_with_current_diff": [
+        "src/deck_master/resources/static/v2/images.js"
+      ],
+      "test_paths_existing": [
+        "tests/rebuild/test_performance_frontend_browser.py",
+        "tests/rebuild/test_image_pool_remount_browser.py",
+        "tests/rebuild/test_comparison_canvas_browser.py"
+      ],
+      "test_paths_not_found": [],
+      "state": "implemented_final_validation_incomplete",
+      "commits": [
+        "84a3a60efb9721491fd0845ca766caa1244df7d0",
+        "17a2d032ed2cf128c672ee6e568ddd52f6aeab20"
+      ],
+      "regression_results": [
+        {
+          "scope": "earlier source unit/installed and targeted runs",
+          "record": "evidence/verification-summary.json",
+          "not_final_gate": true
+        },
+        {
+          "scope": "post-patch targeted 71 pass plus corrected PPTX selector pass",
+          "records": [
+            "evidence/closeout-targeted.json",
+            "evidence/closeout-two.json"
+          ],
+          "attribution": "Use command selectors; results do not imply this card has a complete acceptance pass."
+        },
+        "evidence/full-unit-final.json and .log; exact fixture repair in usability-fixture-retry",
+        "evidence/installed-full-final-run.json and installed-full-final-origins.json; 628 passed/1 unresolved failure",
+        "evidence/offline-final-checks.json: original9/9 installed offline checks"
+      ],
+      "measurement_results": [],
+      "review_results": [
+        "README.md: independent review findings and corrections",
+        "evidence/final-independent-review.json"
+      ],
+      "remaining_evidence": [
+        "30/100-page cold/warm request-rate and ready-time breakdown unmeasured; gallery observer change remains conditional on evidence."
+      ],
+      "source_comment_url": "https://github.com/MainQuestAI/Deck-Master/issues/142#issuecomment-6413096828",
+      "commit_attribution_note": "Iteration implementation commits; per-file git history identifies actual card changes. No claim every file changed in both commits.",
+      "implemented_subitems": [
+        "ImagePool 首次立即读取，queued/running/busy有上限退避且尊重retry_after_ms；累计主动等待预算12秒。",
+        "原Gate、同图Promise、取消与同步reacquire/microtask保护保留；未为未证gallery问题扩大代码。"
+      ],
+      "unimplemented_required_root_causes": [],
+      "implementation_gap_assessment": "No unapplied required performance patch currently identified; final review may find gaps. Recovery race remains a separate confirmed correctness blocker.",
+      "final_gate_status": "executed_with_failures_and_environment_blockers_see_closeout-status.json",
+      "direct_render_blocked_items": [
+        "若选择实际SVG冷生成场景，该renderer部分受rsvg-convert缺失阻塞；PNG已有缓存/可见性检查不因此自动阻塞。"
+      ]
+    },
+    {
+      "task_id": "PERF-202",
+      "issue_number": 202,
+      "issue_url": "https://github.com/MainQuestAI/Deck-Master/issues/202",
+      "work_package": "E",
+      "spec_version": "1.2",
+      "requires": [],
+      "coordination": "按实际同文件改动协调；只运行受影响的验证。",
+      "root_cause": "候选状态身份与缓存字节复用",
+      "implementation_requirements": [
+        "优先改_cached既有保留模式：普通status逐文件核验后释放；file_bytes只保留并返回刚核验的目标bytes；freeze继续显式收集整包。复用verified_files，必要时仅增加目标保留参数，不复制三套校验器。",
+        "状态核验全部文件的语义保持，先消除确定的整包驻留与目标重读。现有executor=2、_JOBS上限64、worker flock、check_id发布与freeze一次核验均沿用。",
+        "身份复用按实测决定；已选对象/资产/实现可用现有身份与廉价签名。字体发现仅在配置/环境/工具/实际字体变化可廉价可靠验证时复用，否则保留fc-match旁路。",
+        "不增递归全字体/全项目扫描、watcher、任务调度或流式HTTP重构；显式request/retry和采用freeze继续现行完整核验。"
+      ],
+      "acceptance_requirements": [
+        "普通4×8MiB校验不同时驻留四份raw；下载目标不重读刚核验的相同bytes，freeze保持整包实际字节。",
+        "同一校验函数覆盖status/file/freeze，check_id切换、缺文件/篡改保持原结果。",
+        "可证明guard内的身份复用计数下降；guard不足时允许旁路并如实报告fc-match次数，不能以零fc-match强迫新增监控。"
+      ],
+      "observation_targets": [],
+      "planned_entry_paths": [
+        "src/deck_master/candidate_preview.py",
+        "src/deck_master/pipeline.py"
+      ],
+      "implementation_paths_with_current_diff": [
+        "src/deck_master/candidate_preview.py",
+        "src/deck_master/pipeline.py"
+      ],
+      "test_paths_existing": [
+        "tests/rebuild/test_candidate_freeze_reuse.py",
+        "tests/rebuild/test_candidate_preview_recovery.py"
+      ],
+      "test_paths_not_found": [],
+      "state": "implemented_final_validation_incomplete",
+      "commits": [
+        "84a3a60efb9721491fd0845ca766caa1244df7d0",
+        "17a2d032ed2cf128c672ee6e568ddd52f6aeab20"
+      ],
+      "regression_results": [
+        {
+          "scope": "earlier source unit/installed and targeted runs",
+          "record": "evidence/verification-summary.json",
+          "not_final_gate": true
+        },
+        {
+          "scope": "post-patch targeted 71 pass plus corrected PPTX selector pass",
+          "records": [
+            "evidence/closeout-targeted.json",
+            "evidence/closeout-two.json"
+          ],
+          "attribution": "Use command selectors; results do not imply this card has a complete acceptance pass."
+        },
+        "evidence/full-unit-final.json and .log; exact fixture repair in usability-fixture-retry",
+        "evidence/installed-full-final-run.json and installed-full-final-origins.json; 628 passed/1 unresolved failure",
+        "evidence/offline-final-checks.json: original9/9 installed offline checks"
+      ],
+      "measurement_results": [
+        "evidence/cost-baseline-final/measurements.json",
+        "evidence/cost-candidate-final/measurements.json"
+      ],
+      "review_results": [
+        "README.md: independent review findings and corrections",
+        "evidence/final-independent-review.json"
+      ],
+      "remaining_evidence": [
+        "Fixed-context memory/byte measurements exclude real font/tool identity and RSS. Font discovery intentionally remains uncached without reliable cheap guard."
+      ],
+      "source_comment_url": null,
+      "commit_attribution_note": "Iteration implementation commits; per-file git history identifies actual card changes. No claim every file changed in both commits.",
+      "implemented_subitems": [
+        "普通_cached校验不留整包；file_bytes仅保留并返回本次核验目标字节；freeze显式保留整包，仍同一校验函数。",
+        "worker数量/JOBS/flock/check_id/freeze语义保留；字体发现未缓存，guard不足旁路符合v1.2。"
+      ],
+      "unimplemented_required_root_causes": [],
+      "implementation_gap_assessment": "No unapplied required performance patch currently identified; final review may find gaps. Recovery race remains a separate confirmed correctness blocker.",
+      "final_gate_status": "executed_with_failures_and_environment_blockers_see_closeout-status.json",
+      "direct_render_blocked_items": [
+        "真实候选编译/渲染链如需要rsvg-convert仍阻塞；缓存字节测试本身可不依赖renderer。"
+      ]
+    },
+    {
+      "task_id": "PERF-203",
+      "issue_number": 203,
+      "issue_url": "https://github.com/MainQuestAI/Deck-Master/issues/203",
+      "work_package": "E",
+      "spec_version": "1.2",
+      "requires": [],
+      "coordination": "按实际同文件改动协调；只运行受影响的验证。",
+      "root_cause": "提交临界区局部复用对象",
+      "implementation_requirements": [
+        "按真实writer等级分支建立锁内局部ref→已核验JSON，多个谓词消费同一对象；Page两类标记一次遍历取得。",
+        "保持短路、read_set、取消、writer单调升级、Document语义和原子指针/CAS。",
+        "不扩全局无界缓存，不把所有现代提交都当三次task扫描。"
+      ],
+      "acceptance_requirements": [
+        "低writer与asset-inputs等分支分别计量；20/100KiB对象同提交不重复读取分类。",
+        "minimum_writer与参考完全一致；损坏、取消、并发及回执行为保持。",
+        "锁内CPU/wall/物理bytes分别报告，不用总接口时延掩盖临界区变化。"
+      ],
+      "observation_targets": [],
+      "planned_entry_paths": [
+        "src/deck_master/store.py"
+      ],
+      "implementation_paths_with_current_diff": [
+        "src/deck_master/store.py"
+      ],
+      "test_paths_existing": [
+        "tests/rebuild/test_performance_execution_paths.py",
+        "tests/rebuild/test_store_transactions.py"
+      ],
+      "test_paths_not_found": [],
+      "state": "implemented_final_validation_incomplete",
+      "commits": [
+        "84a3a60efb9721491fd0845ca766caa1244df7d0",
+        "17a2d032ed2cf128c672ee6e568ddd52f6aeab20"
+      ],
+      "regression_results": [
+        {
+          "scope": "earlier source unit/installed and targeted runs",
+          "record": "evidence/verification-summary.json",
+          "not_final_gate": true
+        },
+        {
+          "scope": "post-patch targeted 71 pass plus corrected PPTX selector pass",
+          "records": [
+            "evidence/closeout-targeted.json",
+            "evidence/closeout-two.json"
+          ],
+          "attribution": "Use command selectors; results do not imply this card has a complete acceptance pass."
+        },
+        "evidence/full-unit-final.json and .log; exact fixture repair in usability-fixture-retry",
+        "evidence/installed-full-final-run.json and installed-full-final-origins.json; 628 passed/1 unresolved failure",
+        "evidence/offline-final-checks.json: original9/9 installed offline checks"
+      ],
+      "measurement_results": [
+        "evidence/cost-baseline-final/measurements.json",
+        "evidence/cost-candidate-final/measurements.json"
+      ],
+      "review_results": [
+        "README.md: independent review findings and corrections",
+        "evidence/final-independent-review.json"
+      ],
+      "remaining_evidence": [
+        "Measurements cover whole locked commit body; modern asset-inputs classification reads remain zero both before/after."
+      ],
+      "source_comment_url": null,
+      "commit_attribution_note": "Iteration implementation commits; per-file git history identifies actual card changes. No claim every file changed in both commits.",
+      "implemented_subitems": [
+        "commit临界区局部ref→已核验JSON供writer分类复用，Page两类标记一次遍历。",
+        "保留writer等级短路、read_set、取消、Document校验与最终CAS；不同writer分支的测试夹具已修正为合法历史/现代形状。"
+      ],
+      "unimplemented_required_root_causes": [],
+      "implementation_gap_assessment": "No unapplied required performance patch currently identified; final review may find gaps. Recovery race remains a separate confirmed correctness blocker.",
+      "final_gate_status": "executed_with_failures_and_environment_blockers_see_closeout-status.json",
+      "direct_render_blocked_items": []
+    },
+    {
+      "task_id": "PERF-204",
+      "issue_number": 204,
+      "issue_url": "https://github.com/MainQuestAI/Deck-Master/issues/204",
+      "work_package": "E",
+      "spec_version": "1.2",
+      "requires": [],
+      "coordination": "可先独立做unique-ref索引，摘要接口与#157/#159协调，不要求前置整卡全部关闭。",
+      "root_cause": "审查导入批量绑定与基础摘要复用",
+      "implementation_requirements": [
+        "一次导入固定report/artifact/control，unique ref完整核验一次。",
+        "同时索引ref.sha256与合法wrapper.file.sha256，每SHA保留有序多值ref及完整身份。",
+        "内部describe复用context，每条review共享基础摘要但使用独立PPTX overlay；外部入口继续独立验证。"
+      ],
+      "acceptance_requirements": [
+        "S subjects×R refs的大对象读取接近O(R)，不是S×R；每review必要专业判断保留。",
+        "多值/顺序/歧义、错绑定/损坏、历史稿及不同PPTX、暂停/撤回和精确重放保持。"
+      ],
+      "observation_targets": [],
+      "planned_entry_paths": [
+        "src/deck_master/review_import.py"
+      ],
+      "implementation_paths_with_current_diff": [
+        "src/deck_master/review_import.py"
+      ],
+      "test_paths_existing": [
+        "tests/rebuild/test_performance_execution_paths.py",
+        "tests/rebuild/test_rc3_external_report.py"
+      ],
+      "test_paths_not_found": [],
+      "state": "implemented_final_validation_incomplete",
+      "commits": [
+        "84a3a60efb9721491fd0845ca766caa1244df7d0",
+        "17a2d032ed2cf128c672ee6e568ddd52f6aeab20"
+      ],
+      "regression_results": [
+        {
+          "scope": "earlier source unit/installed and targeted runs",
+          "record": "evidence/verification-summary.json",
+          "not_final_gate": true
+        },
+        {
+          "scope": "post-patch targeted 71 pass plus corrected PPTX selector pass",
+          "records": [
+            "evidence/closeout-targeted.json",
+            "evidence/closeout-two.json"
+          ],
+          "attribution": "Use command selectors; results do not imply this card has a complete acceptance pass."
+        },
+        "evidence/full-unit-final.json and .log; exact fixture repair in usability-fixture-retry",
+        "evidence/installed-full-final-run.json and installed-full-final-origins.json; 628 passed/1 unresolved failure",
+        "evidence/offline-final-checks.json: original9/9 installed offline checks"
+      ],
+      "measurement_results": [],
+      "review_results": [
+        "README.md: independent review findings and corrections",
+        "evidence/final-independent-review.json"
+      ],
+      "remaining_evidence": [
+        "Actual complete import S×R measurement not performed beyond helper count regressions."
+      ],
+      "source_comment_url": null,
+      "commit_attribution_note": "Iteration implementation commits; per-file git history identifies actual card changes. No claim every file changed in both commits.",
+      "implemented_subitems": [
+        "导入内部describe复用已捕获store/control/artifact；绑定按unique完整ref读取，索引ref SHA及wrapper.file SHA，保留有序多值。",
+        "循环外一次基础artifact摘要，每条review复制独立字典再设置PPTX overlay；专业身份/外部独立核验仍逐原规则。"
+      ],
+      "unimplemented_required_root_causes": [],
+      "implementation_gap_assessment": "No unapplied required performance patch currently identified; final review may find gaps. Recovery race remains a separate confirmed correctness blocker.",
+      "final_gate_status": "executed_with_failures_and_environment_blockers_see_closeout-status.json",
+      "direct_render_blocked_items": []
+    },
+    {
+      "task_id": "PERF-205",
+      "issue_number": 205,
+      "issue_url": "https://github.com/MainQuestAI/Deck-Master/issues/205",
+      "work_package": "E",
+      "spec_version": "1.2",
+      "requires": [],
+      "coordination": "按实际同文件改动协调；只运行受影响的验证。",
+      "root_cause": "导出批量复制共享manifest",
+      "implementation_requirements": [
+        "一次_copy_bundle取得已验证record/manifest供内部复制，公开download仍独立校验。",
+        "逐目标safe_path/白名单/size/SHA和原子发布不变；当前delivery门禁及锁边界保留。"
+      ],
+      "acceptance_requirements": [
+        "14/44/104文件完整清单验证常数次、条目访问近O(F)；逐文件实际字节校验保留。",
+        "导出内容/hash/manifest同参考；文件损坏、目标冲突、当前控制变化正确处理。"
+      ],
+      "observation_targets": [],
+      "planned_entry_paths": [
+        "src/deck_master/exports.py"
+      ],
+      "implementation_paths_with_current_diff": [
+        "src/deck_master/exports.py"
+      ],
+      "test_paths_existing": [
+        "tests/rebuild/test_performance_execution_paths.py",
+        "tests/rebuild/test_versioned_exports.py"
+      ],
+      "test_paths_not_found": [],
+      "state": "implemented_final_validation_incomplete",
+      "commits": [
+        "84a3a60efb9721491fd0845ca766caa1244df7d0",
+        "17a2d032ed2cf128c672ee6e568ddd52f6aeab20"
+      ],
+      "regression_results": [
+        {
+          "scope": "earlier source unit/installed and targeted runs",
+          "record": "evidence/verification-summary.json",
+          "not_final_gate": true
+        },
+        {
+          "scope": "post-patch targeted 71 pass plus corrected PPTX selector pass",
+          "records": [
+            "evidence/closeout-targeted.json",
+            "evidence/closeout-two.json"
+          ],
+          "attribution": "Use command selectors; results do not imply this card has a complete acceptance pass."
+        },
+        "evidence/full-unit-final.json and .log; exact fixture repair in usability-fixture-retry",
+        "evidence/installed-full-final-run.json and installed-full-final-origins.json; 628 passed/1 unresolved failure",
+        "evidence/offline-final-checks.json: original9/9 installed offline checks"
+      ],
+      "measurement_results": [
+        "evidence/cost-baseline-final/measurements.json",
+        "evidence/cost-candidate-final/measurements.json"
+      ],
+      "review_results": [
+        "README.md: independent review findings and corrections",
+        "evidence/final-independent-review.json"
+      ],
+      "remaining_evidence": [
+        "Original offline installed end-to-end gate passed9/9. Synthetic filler-file timing does not generalize to every real export."
+      ],
+      "source_comment_url": null,
+      "commit_attribution_note": "Iteration implementation commits; per-file git history identifies actual card changes. No claim every file changed in both commits.",
+      "implemented_subitems": [
+        "_copy_bundle内部复用一个已验证record/manifest，公开download保持独立验证。",
+        "逐文件safe_path/白名单/size/SHA与原子发布、当前delivery门禁/锁保持。"
+      ],
+      "unimplemented_required_root_causes": [],
+      "implementation_gap_assessment": "No unapplied required performance patch currently identified; final review may find gaps. Recovery race remains a separate confirmed correctness blocker.",
+      "final_gate_status": "executed_with_failures_and_environment_blockers_see_closeout-status.json",
+      "direct_render_blocked_items": [
+        "既有完整offline导出链如先生成渲染产物，缺rsvg-convert阻塞；已有导出夹具的纯复制探针不自动阻塞。"
+      ]
+    },
+    {
+      "task_id": "PERF-206",
+      "issue_number": 206,
+      "issue_url": "https://github.com/MainQuestAI/Deck-Master/issues/206",
+      "work_package": "E",
+      "spec_version": "1.2",
+      "requires": [],
+      "coordination": "按实际同文件改动协调；只运行受影响的验证。",
+      "root_cause": "同操作合并在途组装",
+      "implementation_requirements": [
+        "仅显式assemble在原入口内以(canonical project root, operation_id)登记进程内在途项，项内保存request_digest和owner结果；同digest共享在途执行，不同digest不共享结果也不另开并发compiler。",
+        "owner完成后等待者按原recover/base顺序取得正式结果或冲突；未提交不得伪报committed payload conflict。保留原前后两段业务锁/门禁与CAS，等待不持项目写锁。",
+        "只有owner真正完成/失败的finally清理活跃项；等待者超时/断连不移除owner，不驱逐活跃项，不自动补偿编译。失败通知同批等待者，后续明确重试再走原入口。",
+        "不增持久租约、后台清理线程、第二套receipt或跨进程协调；无operation_id的旧入口不被强行包装成新协议。"
+      ],
+      "acceptance_requirements": [
+        "同服务进程3个相同请求只进入1次compiler；等待者通过正式recover获得结果或同批失败。",
+        "同op异base/digest、等待者先超时、owner提交失败均不出现第二个同时工作的compiler，冲突沿原规则判断。",
+        "暂停/撤回/取消/基线变化和已完成回执语义保持；并发用受控入口验证，只需一次真实本地编译链。"
+      ],
+      "observation_targets": [],
+      "planned_entry_paths": [
+        "src/deck_master/pipeline.py",
+        "src/deck_master/stages.py"
+      ],
+      "implementation_paths_with_current_diff": [
+        "src/deck_master/pipeline.py"
+      ],
+      "test_paths_existing": [
+        "tests/rebuild/test_performance_execution_paths.py",
+        "tests/rebuild/test_paused_exact_replay.py",
+        "tests/rebuild/test_pipeline_preview_reuse.py"
+      ],
+      "test_paths_not_found": [],
+      "state": "implemented_final_validation_incomplete",
+      "commits": [
+        "84a3a60efb9721491fd0845ca766caa1244df7d0",
+        "17a2d032ed2cf128c672ee6e568ddd52f6aeab20"
+      ],
+      "regression_results": [
+        {
+          "scope": "earlier source unit/installed and targeted runs",
+          "record": "evidence/verification-summary.json",
+          "not_final_gate": true
+        },
+        {
+          "scope": "post-patch targeted 71 pass plus corrected PPTX selector pass",
+          "records": [
+            "evidence/closeout-targeted.json",
+            "evidence/closeout-two.json"
+          ],
+          "attribution": "Use command selectors; results do not imply this card has a complete acceptance pass."
+        },
+        "evidence/full-unit-final.json and .log; exact fixture repair in usability-fixture-retry",
+        "evidence/installed-full-final-run.json and installed-full-final-origins.json; 628 passed/1 unresolved failure",
+        "evidence/offline-final-checks.json: original9/9 installed offline checks"
+      ],
+      "measurement_results": [],
+      "review_results": [
+        "README.md: independent review findings and corrections",
+        "evidence/final-independent-review.json"
+      ],
+      "remaining_evidence": [
+        "Controlled concurrency regressions passed; full formal assemble/compiler chain still blocked by missing rsvg-convert."
+      ],
+      "source_comment_url": null,
+      "commit_attribution_note": "Iteration implementation commits; per-file git history identifies actual card changes. No claim every file changed in both commits.",
+      "implemented_subitems": [
+        "显式operation按canonical project/op管理进程内活跃项，digest留在项内；异digest等待当前owner后沿原recover/base冲突规则处理。",
+        "等待不持项目锁；只有owner完成/失败finally清理；超时等待者不删除owner，无持久租约/后台线程。",
+        "受控同/异base、等待者超时和owner失败并发用例已存在。"
+      ],
+      "unimplemented_required_root_causes": [],
+      "implementation_gap_assessment": "No unapplied required performance patch currently identified; final review may find gaps. Recovery race remains a separate confirmed correctness blocker.",
+      "final_gate_status": "executed_with_failures_and_environment_blockers_see_closeout-status.json",
+      "direct_render_blocked_items": [
+        "所需一次真实完整编译/渲染链尚未完成，当前rsvg-convert缺失是明确环境阻塞。"
+      ]
+    },
+    {
+      "task_id": "PERF-194",
+      "issue_number": 194,
+      "issue_url": "https://github.com/MainQuestAI/Deck-Master/issues/194",
+      "work_package": "F",
+      "spec_version": "1.2",
+      "requires": [],
+      "coordination": "与#208共享符号按文件协调；可独立于#159/#157开发。",
+      "root_cause": "统一协作记录head选择语义",
+      "implementation_requirements": [
+        "只统一活跃调用者的纯head选择与必要读取适配，消费既有records/store，不依赖新缓存体系。",
+        "保留原(path,sha256)替代和授权/撤销语义；eligibility._authorization_heads返回全体授权head，不因命名相近强行替代。",
+        "无调用私有入口交#208有限清单裁决；若删除，不为满足三入口一致再保留shim或写无消费者镜像测试。"
+      ],
+      "acceptance_requirements": [
+        "活跃调用者的空身份/坏记录/多head/替代以及真实授权、撤销、依赖、资格路径与参考一致。",
+        "共享抽取减少同义实现，不以净删行或新增适配层数量证明性能。"
+      ],
+      "observation_targets": [],
+      "planned_entry_paths": [
+        "src/deck_master/collaboration.py",
+        "src/deck_master/dependency_slices.py",
+        "src/deck_master/eligibility.py"
+      ],
+      "implementation_paths_with_current_diff": [
+        "src/deck_master/collaboration.py",
+        "src/deck_master/dependency_slices.py",
+        "src/deck_master/eligibility.py"
+      ],
+      "test_paths_existing": [
+        "tests/rebuild/test_ancestor_authorization_boundary.py"
+      ],
+      "test_paths_not_found": [],
+      "state": "implemented_final_validation_incomplete",
+      "commits": [
+        "84a3a60efb9721491fd0845ca766caa1244df7d0",
+        "17a2d032ed2cf128c672ee6e568ddd52f6aeab20"
+      ],
+      "regression_results": [
+        {
+          "scope": "earlier source unit/installed and targeted runs",
+          "record": "evidence/verification-summary.json",
+          "not_final_gate": true
+        },
+        {
+          "scope": "post-patch targeted 71 pass plus corrected PPTX selector pass",
+          "records": [
+            "evidence/closeout-targeted.json",
+            "evidence/closeout-two.json"
+          ],
+          "attribution": "Use command selectors; results do not imply this card has a complete acceptance pass."
+        },
+        "evidence/full-unit-final.json and .log; exact fixture repair in usability-fixture-retry",
+        "evidence/installed-full-final-run.json and installed-full-final-origins.json; 628 passed/1 unresolved failure",
+        "evidence/offline-final-checks.json: original9/9 installed offline checks"
+      ],
+      "measurement_results": [],
+      "review_results": [
+        "README.md: independent review findings and corrections",
+        "evidence/final-independent-review.json"
+      ],
+      "remaining_evidence": [
+        "Final unit authorization/revocation/dependency selectors executed; no independent CPU saving claimed."
+      ],
+      "source_comment_url": "https://github.com/MainQuestAI/Deck-Master/issues/194#issuecomment-6413095634",
+      "commit_attribution_note": "Iteration implementation commits; per-file git history identifies actual card changes. No claim every file changed in both commits.",
+      "implemented_subitems": [
+        "活动records读取与head选择统一到dependency_slices纯helper；collaboration/eligibility保持原入口适配。",
+        "保留(path,sha256)替代和最后匹配顺序；_authorization_heads仍返回全体授权head，不强行替换。"
+      ],
+      "unimplemented_required_root_causes": [],
+      "implementation_gap_assessment": "No unapplied required performance patch currently identified; final review may find gaps. Recovery race remains a separate confirmed correctness blocker.",
+      "final_gate_status": "executed_with_failures_and_environment_blockers_see_closeout-status.json",
+      "direct_render_blocked_items": []
+    },
+    {
+      "task_id": "PERF-207",
+      "issue_number": 207,
+      "issue_url": "https://github.com/MainQuestAI/Deck-Master/issues/207",
+      "work_package": "F",
+      "spec_version": "1.2",
+      "requires": [],
+      "coordination": "CLI快路径可独立窄修，只在同文件发生改动时协调，不依赖#157。",
+      "root_cause": "轻量CLI延迟导入",
+      "implementation_requirements": [
+        "版本快路径不加载无关生产依赖；命令识别后再加载handler，帮助按兼容需求处理。",
+        "保留输出、exit code、命令别名、自动工作台和安装入口，不重写框架。"
+      ],
+      "acceptance_requirements": [
+        "同环境5组以上fresh-process对照固定CPU/模块数下降，数字不含未计时部分。",
+        "source与wheel版本/帮助及代表业务命令行为相同。"
+      ],
+      "observation_targets": [],
+      "planned_entry_paths": [
+        "src/deck_master/cli.py",
+        "src/deck_master/service.py",
+        "src/deck_master/current_work.py"
+      ],
+      "implementation_paths_with_current_diff": [
+        "src/deck_master/cli.py",
+        "src/deck_master/service.py",
+        "src/deck_master/current_work.py"
+      ],
+      "test_paths_existing": [
+        "tests/rebuild/test_performance_execution_paths.py",
+        "tests/rebuild/test_cli_chain.py",
+        "tests/rebuild/test_entry_capabilities.py"
+      ],
+      "test_paths_not_found": [],
+      "state": "implemented_final_validation_incomplete",
+      "commits": [
+        "84a3a60efb9721491fd0845ca766caa1244df7d0",
+        "17a2d032ed2cf128c672ee6e568ddd52f6aeab20"
+      ],
+      "regression_results": [
+        {
+          "scope": "earlier source unit/installed and targeted runs",
+          "record": "evidence/verification-summary.json",
+          "not_final_gate": true
+        },
+        {
+          "scope": "post-patch targeted 71 pass plus corrected PPTX selector pass",
+          "records": [
+            "evidence/closeout-targeted.json",
+            "evidence/closeout-two.json"
+          ],
+          "attribution": "Use command selectors; results do not imply this card has a complete acceptance pass."
+        },
+        "evidence/full-unit-final.json and .log; exact fixture repair in usability-fixture-retry",
+        "evidence/installed-full-final-run.json and installed-full-final-origins.json; 628 passed/1 unresolved failure",
+        "evidence/offline-final-checks.json: original9/9 installed offline checks"
+      ],
+      "measurement_results": [
+        "evidence/cli-paired.json"
+      ],
+      "review_results": [
+        "README.md: independent review findings and corrections",
+        "evidence/final-independent-review.json"
+      ],
+      "remaining_evidence": [
+        "Version fresh-process pairs measured; help latency not measured. Unit/help/source compatibility checks passed; actual wheel origin audited."
+      ],
+      "source_comment_url": null,
+      "commit_attribution_note": "Iteration implementation commits; per-file git history identifies actual card changes. No claim every file changed in both commits.",
+      "implemented_subitems": [
+        "精确--version快路径不加载service/pipeline；五组fresh-process版本配对测量已存在但只覆盖该路径。",
+        "Business imports follow argument parsing; legacy branch imports its service explicitly."
+      ],
+      "unimplemented_required_root_causes": [],
+      "implementation_gap_assessment": "No unapplied required performance patch currently identified; final review may find gaps. Recovery race remains a separate confirmed correctness blocker.",
+      "final_gate_status": "executed_with_failures_and_environment_blockers_see_closeout-status.json",
+      "direct_render_blocked_items": []
+    },
+    {
+      "task_id": "PERF-208",
+      "issue_number": 208,
+      "issue_url": "https://github.com/MainQuestAI/Deck-Master/issues/208",
+      "work_package": "F",
+      "spec_version": "1.2",
+      "requires": [],
+      "coordination": "#194相关符号顺序合并，其余依赖说明/私有入口可独立处理。",
+      "root_cause": "无活动入口及陈旧依赖说明清理",
+      "implementation_requirements": [
+        "只处理maintenance-candidates.json列出的两报告候选和前轮web._state_path候选，逐项保留/删除/待确认；不扩为全仓dead-code/lint治理。",
+        "公开wrapper及明确保留给existing importers的_professional_evidence默认保留；私有无调用候选核对实际注册/兼容后可删除，不因假想未知消费者永久保留新shim。",
+        "requirements.txt删除或明确委托pyproject二选一；核心依赖保留。UTC/hash/identity/timestamp小helper仅随相关文件改动顺带处理。",
+        "无活动入口删除不再写镜像实现或专用无消费者测试；使用受影响模块/代表CLI已有检查。"
+      ],
+      "acceptance_requirements": [
+        "有限清单每项有结论与必要引用依据；不把报告中的38条lint或错计常量数当必须清零指标。",
+        "当前安装说明与pyproject一致，活跃入口与公开兼容行为保持；#194活跃抽取与本卡删除职责不冲突。"
+      ],
+      "observation_targets": [],
+      "planned_entry_paths": [
+        "src/deck_master/service.py",
+        "src/deck_master/web.py",
+        "src/deck_master/dependency_slices.py",
+        "src/deck_master/eligibility.py",
+        "requirements.txt",
+        "pyproject.toml"
+      ],
+      "implementation_paths_with_current_diff": [
+        "src/deck_master/service.py",
+        "src/deck_master/web.py",
+        "src/deck_master/dependency_slices.py",
+        "src/deck_master/eligibility.py",
+        "requirements.txt",
+        "src/deck_master/collaboration_api.py",
+        "src/deck_master/content_review.py",
+        "src/deck_master/design_requirements.py",
+        "src/deck_master/models.py",
+        "src/deck_master/sources.py",
+        "src/deck_master/tasks.py",
+        "src/deck_master/review.py"
+      ],
+      "test_paths_existing": [
+        "tests/rebuild/test_package_boundary.py",
+        "tests/rebuild/test_entry_capabilities.py",
+        "tests/rebuild/test_cli_chain.py"
+      ],
+      "test_paths_not_found": [],
+      "state": "implemented_final_validation_incomplete",
+      "commits": [
+        "84a3a60efb9721491fd0845ca766caa1244df7d0",
+        "17a2d032ed2cf128c672ee6e568ddd52f6aeab20"
+      ],
+      "regression_results": [
+        {
+          "scope": "earlier source unit/installed and targeted runs",
+          "record": "evidence/verification-summary.json",
+          "not_final_gate": true
+        },
+        {
+          "scope": "post-patch targeted 71 pass plus corrected PPTX selector pass",
+          "records": [
+            "evidence/closeout-targeted.json",
+            "evidence/closeout-two.json"
+          ],
+          "attribution": "Use command selectors; results do not imply this card has a complete acceptance pass."
+        },
+        "evidence/full-unit-final.json and .log; exact fixture repair in usability-fixture-retry",
+        "evidence/installed-full-final-run.json and installed-full-final-origins.json; 628 passed/1 unresolved failure",
+        "evidence/offline-final-checks.json: original9/9 installed offline checks"
+      ],
+      "measurement_results": [],
+      "review_results": [
+        "README.md: independent review findings and corrections",
+        "evidence/final-independent-review.json"
+      ],
+      "remaining_evidence": [
+        "Finite53-item disposition retained; package/CLI unit checks passed. Two pre-existing rc3 campaign parser errors remain outside scoped cleanup."
+      ],
+      "source_comment_url": null,
+      "commit_attribution_note": "Iteration implementation commits; per-file git history identifies actual card changes. No claim every file changed in both commits.",
+      "implemented_subitems": [
+        "有限53项逐项裁决已落地：7私有入口及18无活动常量删除，7兼容API/4核心依赖保留，4活动helper归#194。",
+        "requirements.txt委托pyproject；10小helper不扩改；2点名重复导入核对后保留可选清理，不做全仓lint。"
+      ],
+      "unimplemented_required_root_causes": [],
+      "implementation_gap_assessment": "No unapplied required performance patch currently identified; final review may find gaps. Recovery race remains a separate confirmed correctness blocker.",
+      "final_gate_status": "executed_with_failures_and_environment_blockers_see_closeout-status.json",
+      "direct_render_blocked_items": []
+    }
+  ],
+  "runtime_head": "17a2d032ed2cf128c672ee6e568ddd52f6aeab20"
+}

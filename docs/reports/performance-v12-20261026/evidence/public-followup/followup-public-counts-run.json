@@ -1,0 +1,16 @@
+{
+  "head": "7244477a240002ba5365e0283713e8096778c72f",
+  "worktree_sha256_before": "ce21e1522b12c570b3f5c400caa3d0bed9b2c1520326f5ec06a41c2fb32492fa",
+  "worktree_sha256_after": "ce21e1522b12c570b3f5c400caa3d0bed9b2c1520326f5ec06a41c2fb32492fa",
+  "source_changed_during_run": false,
+  "command": [
+    ".venv/bin/python",
+    "/workspace/scratch/performance-input/measure_public_import_followup.py"
+  ],
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "wall_seconds": 1.9303175630011538,
+  "exit_code": 0,
+  "reaped_children_user_seconds": 1.546941,
+  "reaped_children_system_seconds": 0.140129,
+  "scope": "Only batches using this runner are serialized; CPU excludes detached/unreaped descendants."
+}
