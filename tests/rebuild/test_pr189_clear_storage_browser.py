@@ -1,4 +1,5 @@
 """Browser local recovery failures must not send or falsely acknowledge a clear."""
+import shutil
 import pytest
 from playwright.sync_api import expect, sync_playwright
 from deck_master.web import WorkbenchServer
@@ -15,7 +16,7 @@ def test_local_preflight_failure_never_sends_new_clear(project, store, fault):
     save_draft(store, project); before = store.load_document(); server = WorkbenchServer(project)
     try:
         with sync_playwright() as runtime:
-            browser = runtime.chromium.launch(); page = browser.new_page(); page.goto(server.start()+'studio/')
+            browser = runtime.chromium.launch(executable_path=shutil.which('chromium') or shutil.which('chromium-browser')); page = browser.new_page(); page.goto(server.start()+'studio/')
             panel = open_panel(page); click(panel, '生成清理计划'); sent = []
             expect(panel.get_by_role('button', name='确认清理并保留备份', exact=True)).to_be_enabled()
             page.on('request', lambda r: sent.append(r.url) if r.url.endswith('/commit-clear') else None)
@@ -44,7 +45,7 @@ def test_local_terminal_failure_retains_exact_request(project, store, fault):
     save_draft(store, project); server = WorkbenchServer(project)
     try:
         with sync_playwright() as runtime:
-            browser = runtime.chromium.launch(); page = browser.new_page(); page.goto(server.start()+'studio/')
+            browser = runtime.chromium.launch(executable_path=shutil.which('chromium') or shutil.which('chromium-browser')); page = browser.new_page(); page.goto(server.start()+'studio/')
             panel = open_panel(page); click(panel, '生成清理计划')
             page.route('**/api/ui-state/commit-clear', lambda r:r.abort('failed'))
             click(panel, '确认清理并保留备份'); expect(panel).to_contain_text('清理结果待核实')
@@ -73,7 +74,7 @@ def test_two_first_attempts_serialize_only_the_local_record(project, store):
     identity = journal.list_drafts(project)['project_identity']
     try:
         with sync_playwright() as runtime:
-            browser = runtime.chromium.launch(); context = browser.new_context(); pages = []
+            browser = runtime.chromium.launch(executable_path=shutil.which('chromium') or shutil.which('chromium-browser')); context = browser.new_context(); pages = []
             url = server.start()+'studio/'
             for _ in range(2):
                 page = context.new_page(); page.goto(url); panel = open_panel(page); click(panel, '生成清理计划')

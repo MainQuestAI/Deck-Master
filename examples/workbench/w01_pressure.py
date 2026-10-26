@@ -38,7 +38,7 @@ def write_json(path, value):
     path.write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 
 
-def create_fixture(project, *, page_count=300):
+def create_fixture(project, *, page_count=300, background_task_count=150):
     gallery = create_gallery_sample(project, page_count=page_count, readonly=True)
     store = Store(project); base = store.load_document(); doc = copy.deepcopy(base)
     doc['compatibility']['minimum_writer'] = 'candidates.v1'
@@ -132,7 +132,7 @@ def create_fixture(project, *, page_count=300):
     # Ordinary core start/cancel operations on these tasks supply background
     # writes, while all Candidate/Attempt content remains immutable.
     background_ids = []
-    for index in range(150):
+    for index in range(background_task_count):
         tid = f'pressure-background-{index:03}'; background_ids.append(tid)
         task = tasks.new_task(task_id=tid, operation_id=tid, kind='reconstruct', scope_pages=[base['pages'][index % page_count]['page_id']],
             instruction='Synthetic background reasoning task; no model call.', inputs=[], dependencies=[],

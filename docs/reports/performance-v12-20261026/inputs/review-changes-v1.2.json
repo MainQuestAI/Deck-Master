@@ -1,0 +1,72 @@
+[
+  {
+    "id": "R01",
+    "kind": "补齐遗漏",
+    "decision": "current-work折叠证据格式化、相同投影DOM替换分别映射#201；drafts单次序列化落实#159。"
+  },
+  {
+    "id": "R02",
+    "kind": "纠正基准事实",
+    "decision": "w01已有大量任务/候选，默认300页为1500候选/1650任务/4500attempts；补的是v2/personal覆盖。"
+  },
+  {
+    "id": "R03",
+    "kind": "修正缓存设计",
+    "decision": "先查现有entry再验证实际读取签名；不重建依赖图当key，不增多层缓存/目录监控。"
+  },
+  {
+    "id": "R04",
+    "kind": "补运行期边界",
+    "decision": "人类身份adapter判断不被整响应缓存冻结，复用现有求值或局部旁路。"
+  },
+  {
+    "id": "R05",
+    "kind": "修正并发设计",
+    "decision": "在途项按project/op；digest为项内身份；owner清理，等待者超时不再触发重复编译。"
+  },
+  {
+    "id": "R06",
+    "kind": "消除新增重校验",
+    "decision": "失败后继沿原已采用Ref谓词，不添加operation receipt或全链查询。"
+  },
+  {
+    "id": "R07",
+    "kind": "准确限定分页收益",
+    "decision": "attention准确total保留必要候选判断；分别计实际重工作，不只计task_row函数。"
+  },
+  {
+    "id": "R08",
+    "kind": "缩小候选与前端机制",
+    "decision": "候选父级唯一状态源；既有pool/reader/队列沿用；字体复用有廉价guard才做。"
+  },
+  {
+    "id": "R09",
+    "kind": "明确生命周期边界",
+    "decision": "允许现有一次路由预取；current availability保留；一个父cleanup管理子资源。"
+  },
+  {
+    "id": "R10",
+    "kind": "简化退避",
+    "decision": "单一有限等待预算与简单上限，抖动不必做；不把调度等待当ready总耗时。"
+  },
+  {
+    "id": "R11",
+    "kind": "简化验收",
+    "decision": "建议指标不变新门；run身份一次记录；不每卡100样本；保留既有w01原门。"
+  },
+  {
+    "id": "R12",
+    "kind": "缩小测试治理",
+    "decision": "顶层互斥加本批记录、fixture复用停止接口；不做scheduler/registry/daemon。"
+  },
+  {
+    "id": "R13",
+    "kind": "解除伪硬依赖",
+    "decision": "纯净化、失败索引、CLI、helper和文档小改可独立；199仅依赖共享读接口。"
+  },
+  {
+    "id": "R14",
+    "kind": "限定维护范围",
+    "decision": "只处理报告点名候选；不为无消费者helper保留shim，不做38条lint全仓清零。"
+  }
+]

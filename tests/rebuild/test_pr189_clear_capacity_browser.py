@@ -1,5 +1,6 @@
 """R1 full HTTP/Chromium recovery with an accepted near-limit backup."""
 import json
+import shutil
 from pathlib import Path
 import pytest
 from playwright.sync_api import expect, sync_playwright
@@ -20,7 +21,7 @@ def test_large_interrupted_clear_ends_refreshes_downloads_and_replans(project, s
     server = WorkbenchServer(project)
     try:
         with sync_playwright() as runtime:
-            browser = runtime.chromium.launch()
+            browser = runtime.chromium.launch(executable_path=shutil.which('chromium') or shutil.which('chromium-browser'))
             page = browser.new_page(accept_downloads=True)
             page.goto(server.start()+'studio/')
             panel = open_panel(page)

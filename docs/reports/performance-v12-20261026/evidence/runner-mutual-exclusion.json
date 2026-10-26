@@ -1,0 +1,15 @@
+{
+  "scope": "synthetic controlled concurrency, no heavy suites",
+  "nested_completed": true,
+  "overlap": false,
+  "ranges": [
+    [
+      1236.73852951,
+      1236.938679675
+    ],
+    [
+      1236.979644193,
+      1237.179774581
+    ]
+  ]
+}

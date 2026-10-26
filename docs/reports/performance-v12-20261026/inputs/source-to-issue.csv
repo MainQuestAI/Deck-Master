@@ -1,0 +1,67 @@
+﻿source,source_item,topic,canonical_issues,decision,notes
+REPORT(1),R1,v2绕过缓存,#199,新增,仅跨请求投影，具体三遍派生归157
+REPORT(1),R2,同basis三遍artifact,#157,合并既有,同basis一次，不混不同basis
+REPORT(1),R3,page digest/schema实例重复,"#157,#159",合并既有,validator已缓存，仍须核验实际对象
+REPORT(1),R4,completion/overview/quality重复,"#159,#157",合并既有,对象事实和依赖派生分别验收
+REPORT(1),R4b,listing全投影后分页,"#200,#193",新增+关联既有,普通分页与attention分页分别计量；attention准确total保留必要全候选判断。
+REPORT(1),R5,隐藏面板与tick扇出,#201,新增,混合GET不是9次summary
+REPORT(1),R6,HTTP条件请求/HTTP1.0/gzip,#199,本轮不实施,ETag/304、HTTP1.1/gzip留作后续有传输证据时决策；本轮先减少服务端重算。
+REPORT(1),R7,context逐次身份走查,#159,合并既有,重复head/证据复用；保留全链签名
+REPORT(1),R8,header冷miss与容量,"#159,#191",合并边界/更正,冷校验正常；两个2000版本不必然超过4096
+REPORT(1),R9,drafts重复校验/历史证明,#159,合并既有,共享reader，不取消每份draft完整性
+REPORT(1),R10,commit持锁重复读,#203,新增,writer等级条件化，不是所有commit三遍
+REPORT(1),R11,thumbnail身份上下文,#159,合并既有,是context高频消费者，不另开
+REPORT(1),R12,save_position成本,#159,合并+更正,task_id=None跳过已经存在；fsync非直接可删
+REPORT(1),R13,reading_etag整份失效,#199,合并新项,先让etag参与同一entry身份；个人变化需重算attention/actions，不只替换etag字段，不建三层缓存。
+REPORT(1),R14-export,导出manifest/整文件读取,#205,新增,只修重复manifest；逐文件hash保持。流式HTTP尚无内存瓶颈证据，本轮不实施。
+REPORT(1),R14-other,restoration/allowance早退出,,待测,restoration/allowance写前重验可能必要；clear-log只tail缺少完整恢复语义证明，本轮不采纳。
+REPORT(1),R15,summary miss并发,#199,合并新项,扩展现有4项summary cache；先lookup再核实际依赖，不先重建完整图；运行期专业判断不冻结。
+REPORT(1),R16,目录FD与fallback,"#159,#199",资源约束,有界句柄/请求退出关闭，暂不独立优化
+REPORT(1),R17-overview,attention查找O(P²),#201,P3附属定向优化,Map按page_id匹配；保留revision/缺页/attention语义；无独立CPU归因
+REPORT(1),R17-runs,DOM/日期/证据JSON,#201,合并新项,无变化行不重建即避免重复日期格式化；当前availability继续原时机刷新，不再造formatter缓存。
+REPORT(1),R17-gallery,ResizeObserver重建,#142,合并既有线索,相同布局重复DOM/解码/fetch任一经测证实再窄修；未证自激循环，保留同步reacquire保护。
+REPORT(1),R17-layout,page-reading布局读写,,待profile,不声称精确每帧两次reflow
+REPORT(1),R17-drafts,双localStorage序列化,#159,附属定向优化,已补159前端E：persist一次序列化供两个原键同步写，副本/失败语义不变。
+REPORT(1),R17-icon,双状态timer,#192,合并既有,不当作永久timer泄漏
+REPORT(1),R18-head,replaces/records语义重复,#194,合并既有,纯选择函数与输入适配
+REPORT(1),R18-dead,私有分支/常量/wrapper/lint,#208,新增维护项,有限候选表；报告16常量的定位实际14，38条lint不作全仓清零目标。
+REPORT(1),R18-small,UTC/hash/identity/timestamp,#208,附属清理,仅实际触碰范围，不做全仓改写
+REPORT(1),R18-reader,三个reader代理,"#157,#159",不做类合并,按生命周期显式接线
+REPORT(1),R18-contract,84份历史合同副本,,不采纳,不强制历史合同随runtime同步
+REPORT(1),load_schema,额外load_schema LRU建议,,待测/更正,validator/registry已有缓存
+REPORT(1),benchmark,w01已有重任务/候选，尚需明确v2/personal覆盖,"#199,#200,#195",共同验收,纠正零任务说法：默认300页为1500候选、1650任务、4500attempts；默认HTTP请求仍v1。原100暖样本/250ms门槛仅保留原场景，不推广全部新卡。
+REPORT(2),PERF-01,总览60 pin失败,#198,新增,本轮真实浏览器独立复现
+REPORT(2),PERF-02,候选身份构建,"#202,#192",新增+合并既有,父组件一个状态流；后端先修整包驻留和目标重读，字体缓存仅廉价guard成立时复用。
+REPORT(2),PERF-03,v2/三遍新鲜度,"#199,#157,#159",归并,不同于operation coverage
+REPORT(2),PERF-04,runs扇出/分页,"#201,#200",归并,客户端次数与单请求计算各自验收
+REPORT(2),PERF-05,ui_journal身份,#159,合并既有,不另开必要O(H)签名问题
+REPORT(2),PERF-06,缩略图密集重询,#142,合并既有,网络门限制并发，不限制速率
+REPORT(2),PERF-07,review_import批量读取,#204,新增,raw完整性验证不能直接删
+REPORT(2),PERF-08,runs DOM重建,#201,归并,与已证旧DOM保留同生命周期卡
+REPORT(2),RED-01,私有零调用,#208,归并+更正,_professional_evidence为兼容保留
+REPORT(2),RED-02,公开零引用,#208,兼容决策,默认保留，不立即删
+REPORT(2),RED-03,活跃小helper,#208,附属清理,不承诺CPU收益
+REPORT(2),RED-04,requirements陈旧,#208,归并,pyproject唯一依赖事实
+REPORT(2),CPU,轻载0.10–0.16%,,证据边界,与大PPT/重任务样例不互相否定
+REPORT(2),process,未见残留高CPU,"#195,#196",证据边界,近零CPU的残留仍可构成生命周期缺陷
+前轮独立审查,PERF-01,PPTX重复净化,#190,归并,原始计量保留独立fixture身份
+前轮独立审查,PERF-02,三遍事实及v2复用,"#157,#159,#199",归并,原始计量保留独立fixture身份
+前轮独立审查,PERF-03,OperationReader,#191,归并,原始计量保留独立fixture身份
+前轮独立审查,PERF-04,失败索引和分页,"#193,#200",归并,原始计量保留独立fixture身份
+前轮独立审查,PERF-05,隐藏请求,#201,归并,原始计量保留独立fixture身份
+前轮独立审查,PERF-06,方法DOM保留,#201,归并,原始计量保留独立fixture身份
+前轮独立审查,PERF-07,双轮询与后端/内存,"#192,#202",归并,原始计量保留独立fixture身份
+前轮独立审查,PERF-08,导出复制,#205,归并,原始计量保留独立fixture身份
+前轮独立审查,PERF-09,组装在途重复,#206,归并,op为在途项、digest在项内；只有owner清理，等待者超时不得驱逐owner。
+前轮独立审查,PERF-10,CLI启动,#207,归并,原始计量保留独立fixture身份
+前轮独立审查,RED,重复helper与无调用分支,"#194,#208",归并,原始计量保留独立fixture身份
+线上issue,190,复用PPTX公开投影,#190,保留并补评论,没有因写方案关闭
+线上issue,191,OperationReader发布已核验coverage,#191,保留并补评论,没有因写方案关闭
+线上issue,192,同候选一个状态读取器,#192,保留并补评论,没有因写方案关闭
+线上issue,193,失败后继查找建立一次索引,#193,保留并补评论,没有因写方案关闭
+线上issue,194,统一协作记录head选择语义,#194,保留并补评论,没有因写方案关闭
+线上issue,195,重测试资源预算,#195,保留并补评论,没有因写方案关闭
+线上issue,196,测试拥有服务的回收,#196,保留并补评论,没有因写方案关闭
+48a4c23c增量复核,clear-backup-digest,同一次inspect重复生成自有未完成备份摘要,#159,合并既有P3附属,原始计量仍属555497cb；最新Head静态确认，不省掉完整核验与确认失效
+REPORT(1),R17-current-work-evidence,折叠证据仍立即格式化JSON,#201,补齐既有卡,补201：首次展开格式化，投影变化才更新；已有details保持。
+REPORT(1),R17-current-work-panel,相同工作投影无条件replaceWith,#201,补齐既有卡,补201：保留节点/焦点/展开状态；已有currentWorkMatches复用保留，不新增digest API。

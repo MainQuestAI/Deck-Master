@@ -1,5 +1,6 @@
 """Late clear responses must never release another operation's recovery request."""
 import json
+import shutil
 import time
 import pytest
 from playwright.sync_api import expect, sync_playwright
@@ -31,7 +32,7 @@ def test_late_response_preserves_next_operation_and_refresh_recovery(project, st
     server = WorkbenchServer(project)
     try:
         with sync_playwright() as runtime:
-            browser = runtime.chromium.launch()
+            browser = runtime.chromium.launch(executable_path=shutil.which('chromium') or shutil.which('chromium-browser'))
             context = browser.new_context()
             a = context.new_page(); a.goto(server.start()+'studio/'); pa = open_panel(a)
             click(pa, '生成清理计划')
@@ -96,7 +97,7 @@ def test_late_first_refusal_preserves_new_end_confirmation_for_same_request(proj
     save_draft(store, project); server = WorkbenchServer(project)
     try:
         with sync_playwright() as runtime:
-            browser = runtime.chromium.launch(); context = browser.new_context(); a = context.new_page()
+            browser = runtime.chromium.launch(executable_path=shutil.which('chromium') or shutil.which('chromium-browser')); context = browser.new_context(); a = context.new_page()
             url = server.start()+'studio/'; a.goto(url); pa = open_panel(a); click(pa, '生成清理计划')
             expect(pa.get_by_role('button', name='确认清理并保留备份', exact=True)).to_be_enabled()
             save_draft(store, project, 'changed'); held = []

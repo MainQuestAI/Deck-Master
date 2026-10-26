@@ -1,0 +1,75 @@
+{
+  "baseline": "b688c300dbb612bea9af8cf63a1743fb8136ae2c",
+  "branch": "codex/performance-v12-20261026",
+  "runs": [
+    {
+      "record": "integration-targeted.json",
+      "passed": 225,
+      "failed": 2,
+      "deselected": 2,
+      "reason": "New writer-classification test used an invalid legacy fixture; corrected without relaxing assertions."
+    },
+    {
+      "record": "review-fixes-corrected-selector.json",
+      "passed": 55,
+      "failed": 1,
+      "reason": "New hidden-runs browser test omitted real icons.js; corrected test setup."
+    },
+    {
+      "record": "hidden-runs-final.json",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "record": "full-unit.json",
+      "passed": 4291,
+      "failed": 2,
+      "errors": 3,
+      "skipped": 2,
+      "deselected": 899,
+      "reason": "All five unsuccessful items failed isolated pip dependency setup because proxy-free test environment cannot resolve external index. All five unchanged cases subsequently passed offline."
+    },
+    {
+      "record": "isolated-install-retry.json",
+      "passed": 5,
+      "failed": 0,
+      "dependency_source": "local official-package wheelhouse; PIP_NO_INDEX=1; unchanged tests"
+    },
+    {
+      "record": "installed-regressions-run.json",
+      "passed": 61,
+      "failed": 17,
+      "reason": "Missing default Playwright headless-shell; no product assertion failure."
+    },
+    {
+      "record": "installed-retry-run.json",
+      "passed": 10,
+      "failed": 7,
+      "reason": "System Chromium; seven failures from missing shutil import in test adaptation, subsequently fixed. Documentation files were added during this run; installed product wheel was immutable."
+    },
+    {
+      "record": "installed-storage-run.json",
+      "passed": 7,
+      "failed": 0,
+      "reason": "Exact seven selectors after import correction; unchanged installed wheel and product assertions."
+    }
+  ],
+  "scope": "Counts transcribed from actual pytest completion output, each run retains its own source fingerprint; not a final all-gates-passed claim.",
+  "implementation_commit": "84a3a60efb9721491fd0845ca766caa1244df7d0",
+  "unit_aggregate": {
+    "passed": 4296,
+    "skipped": 2,
+    "method": "4291 successful full-run cases plus five unchanged failed-setup cases rerun offline successfully; not a second full-suite run"
+  },
+  "installed_aggregate": {
+    "passed": 78,
+    "method": "61 initial + 10 browser retry + 7 exact corrected selectors; not a single full rerun",
+    "module_origin_audits": [
+      "installed-origin-first.json",
+      "installed-origin-retry.json",
+      "installed-origin-storage.json"
+    ],
+    "browser": "Chromium 151.0.7922.173 Debian GNU/Linux 13",
+    "source_commit": "84a3a60efb9721491fd0845ca766caa1244df7d0"
+  }
+}

@@ -1,0 +1,292 @@
+{
+  "case_carrier": "/workspace/Deck-Master/tests/rebuild/rc3_q2_later_300_cases.py",
+  "expected": 70,
+  "executed": 70,
+  "passed": 70,
+  "failed": 0,
+  "errors": 0,
+  "skipped": 0,
+  "actual_runtime_identity_observations": 61,
+  "case_outcomes": [
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_real_B_request_inputs_full_own_claim_and_single_physical_materialization"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_replays_refused_without_new_physical_sdk_or_cost[release]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_replays_refused_without_new_physical_sdk_or_cost[request]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_replays_refused_without_new_physical_sdk_or_cost[inputs]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_confirmed_materialization_reuses_exact_ref_without_another_physical_call"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_actual_same_project_old_writer_followup_is_honest_and_costs_one_later_turn"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_native_lineage_refusals_before_claim_or_extra_cost[old-fake-fresh]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_native_lineage_refusals_before_claim_or_extra_cost[unknown-followup]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_native_lineage_refusals_before_claim_or_extra_cost[wrong-origin-followup]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_native_lineage_refusals_before_claim_or_extra_cost[preparer]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_actual_W4_is_preserved_charged_and_cannot_claim"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_old_union_later_unknown_blocks_new_sdk_without_retry_or_refund[origin]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_old_union_later_unknown_blocks_new_sdk_without_retry_or_refund[later]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_finite_actions_reject_any_operation_context_scope_or_store_override[operation-service.create]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_finite_actions_reject_any_operation_context_scope_or_store_override[adapter_context-value1]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_finite_actions_reject_any_operation_context_scope_or_store_override[store-foreign]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_finite_actions_reject_any_operation_context_scope_or_store_override[scope-value3]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_other_flows_cannot_gain_a_later_pool[raq2]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_other_flows_cannot_gain_a_later_pool[cq2]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_other_flows_cannot_gain_a_later_pool[r02]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_other_flows_cannot_gain_a_later_pool[flow-04-alias]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_SDK129_refused_before_public_call"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_actual_inputs_commit_lost_ack_is_charged_unknown_and_not_retried"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_duplicate_initialize_and_pool_relocation_rejected"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_original_frozen_files_and_cuts_not_overwritten"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_no_private_nested_policy_target_is_read"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_real_protected_review_uses_old_union_later_binding_and_frozen_original_counterexample"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_old_author_or_inherited_old_author_cannot_review_real_later_manuscript[False]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_old_author_or_inherited_old_author_cannot_review_real_later_manuscript[True]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_actual_F2_preserved_and_cannot_claim"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_actual_R4_preserved_shared_pool_and_cannot_claim"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_verification_requires_repair_and_cannot_be_second_feedback"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_actual_V2_preserved_readonly_not_second_feedback_or_repair"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_completed_content_request_direct_review_dispatch_is_real_preserved_negative"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_lifecycle_requests_retain_same_project_original_released_52B_input"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_real_CAS_race_keeps_error_attempt_and_blocks_retry"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_interrupted_charge_projection_retains_unknown_without_executing_sdk"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_private_target_rejected_before_resolve_stat_or_frozen_reader"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_later_sdk_cuts_require_actual_300s_native_adoption[first_sdk_complete-materialized]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_later_sdk_cuts_require_actual_300s_native_adoption[first_sdk_complete-inputs]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_later_sdk_cuts_require_actual_300s_native_adoption[first_sdk_complete-claimed]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_later_sdk_cuts_require_actual_300s_native_adoption[first_sdk_complete-native-frozen]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_later_sdk_cuts_require_actual_300s_native_adoption[owner_later-materialized]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_later_sdk_cuts_require_actual_300s_native_adoption[owner_later-inputs]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_later_sdk_cuts_require_actual_300s_native_adoption[owner_later-claimed]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_later_sdk_cuts_require_actual_300s_native_adoption[owner_later-native-frozen]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_native_complete_before_sdk_remains_legal_but_first_sdk_waits_for_adoption"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_every_verification_prepare_route_refuses_declared_but_unadopted_repairs[review-request]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_every_verification_prepare_route_refuses_declared_but_unadopted_repairs[review-prepare]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_every_verification_prepare_route_refuses_declared_but_unadopted_repairs[prepare]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_legacy_premature_verification_carriers_cannot_bypass_any_later_entry[begin]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_legacy_premature_verification_carriers_cannot_bypass_any_later_entry[claim]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_legacy_premature_verification_carriers_cannot_bypass_any_later_entry[observe]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_legacy_premature_verification_carriers_cannot_bypass_any_later_entry[objects]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_legacy_premature_verification_carriers_cannot_bypass_any_later_entry[accept]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_legacy_premature_verification_carriers_cannot_bypass_any_later_entry[review-accept]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_legacy_premature_verification_carriers_cannot_bypass_any_later_entry[feedback]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_adopted_repairs_still_require_current_verification_request_and_real_task_binding"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_real_argument_proposal_receipt_is_not_an_adopted_necessary_repair"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_selected_complete_components_cannot_be_masked_by_one_partial_adoption[page-first_sdk_complete]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_selected_complete_components_cannot_be_masked_by_one_partial_adoption[plan-first_sdk_complete]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_selected_complete_components_cannot_be_masked_by_one_partial_adoption[speech-first_sdk_complete]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_selected_complete_components_cannot_be_masked_by_one_partial_adoption[page-owner_later]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_later_technical_correction_can_adopt_the_exact_complete_selected_content[page]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_later_technical_correction_can_adopt_the_exact_complete_selected_content[plan]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_later_technical_correction_can_adopt_the_exact_complete_selected_content[speech]"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_later_selected_correction_replaces_same_component_without_adopting_old_alternative"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_unselected_failed_history_does_not_need_adoption_or_a_full_rewrite"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_different_later_accepted_draft_cannot_hide_selected_unadopted_content"
+    },
+    {
+      "classname": "tests.rebuild.rc3_q2_later_300_cases",
+      "name": "test_owner_later_preserves_proven_original_and_allows_actual_necessary_speech_repair"
+    }
+  ]
+}
