@@ -107,7 +107,7 @@ def test_review_binding_unique_reads_preserve_order_and_multiple_matches():
 def test_assembly_waiters_do_not_start_or_release_an_active_compiler(store, monkeypatch, waiter_timeout, changed_base):
     before = prepared(store)
     entered, release, waiting = threading.Event(), threading.Event(), threading.Event()
-    calls, waiters = [], []
+    calls, waiters, tools = [], [], []
     class ObservedFuture(Future):
         def result(self, timeout=None):
             waiters.append(1)
@@ -119,13 +119,26 @@ def test_assembly_waiters_do_not_start_or_release_an_active_compiler(store, monk
         entered.set()
         assert release.wait(10)
         raise RuntimeError('controlled compiler failure')
+    real_executable = pipeline.executable
+    def controlled_tool(name):
+        # This unit test stops at compile_deck and never launches a renderer.
+        # Tool availability is exercised by the separate real-rendering gate.
+        if name in ('soffice', 'pdftoppm'):
+            tools.append(name)
+            return name
+        return real_executable(name)
+    monkeypatch.setattr(pipeline, 'executable', controlled_tool)
     monkeypatch.setattr(pipeline, 'Future', ObservedFuture)
     monkeypatch.setattr(pipeline, 'compile_deck', blocked_compile)
     args = {'base_revision': before['revision_id'], 'operation_id': str(uuid.uuid4())}
     with ThreadPoolExecutor(max_workers=3) as executor:
         owner = executor.submit(pipeline.produce, store.project_root, **args)
         try:
-            assert entered.wait(10)
+            compiler_entered = entered.wait(10)
+            if not compiler_entered and owner.done():
+                owner.result()  # Report an early setup error, not a masked wait timeout.
+            assert compiler_entered
+            assert tools == ['soffice', 'pdftoppm']
             other_args = {**args, **({'base_revision': '0' * 32} if changed_base else {})}
             others = [executor.submit(pipeline.produce, store.project_root, **other_args) for _ in range(2)]
             assert waiting.wait(10)

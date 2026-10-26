@@ -1,0 +1,188 @@
+.......FFFF.......                                                       [100%]
+=================================== FAILURES ===================================
+_ test_assembly_waiters_do_not_start_or_release_an_active_compiler[False-False] _
+
+store = <deck_master.store.Store object at 0x7f3e2d4a2d20>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f3e2d450bf0>
+waiter_timeout = False, changed_base = False
+
+    @pytest.mark.parametrize('waiter_timeout,changed_base', [(False, False), (True, False), (False, True), (True, True)])
+    def test_assembly_waiters_do_not_start_or_release_an_active_compiler(store, monkeypatch, waiter_timeout, changed_base):
+        before = prepared(store)
+        entered, release, waiting = threading.Event(), threading.Event(), threading.Event()
+        calls, waiters, tools = [], [], []
+        class ObservedFuture(Future):
+            def result(self, timeout=None):
+                waiters.append(1)
+                if len(waiters) == 2:
+                    waiting.set()
+                return super().result(timeout=0 if waiter_timeout else timeout)
+        def blocked_compile(*args, **kwargs):
+            calls.append(1)
+            entered.set()
+            assert release.wait(10)
+            raise RuntimeError('controlled compiler failure')
+        def controlled_tool(name):
+            # This unit test stops at compile_deck and never launches a renderer.
+            # Tool availability is exercised by the separate real-rendering gate.
+            tools.append(name)
+            return name
+        monkeypatch.setattr(pipeline, 'executable', controlled_tool)
+        monkeypatch.setattr(pipeline, 'Future', ObservedFuture)
+        monkeypatch.setattr(pipeline, 'compile_deck', blocked_compile)
+        args = {'base_revision': before['revision_id'], 'operation_id': str(uuid.uuid4())}
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            owner = executor.submit(pipeline.produce, store.project_root, **args)
+            try:
+                compiler_entered = entered.wait(10)
+                if not compiler_entered and owner.done():
+                    owner.result()  # Report an early setup error, not a masked wait timeout.
+                assert compiler_entered
+>               assert tools == ['soffice', 'pdftoppm']
+E               AssertionError: assert ['soffice', '...', 'fc-match'] == ['soffice', 'pdftoppm']
+E                 
+E                 Left contains one more item: 'fc-match'
+E                 Use -v to get more diff
+
+tests/rebuild/test_performance_execution_paths.py:138: AssertionError
+_ test_assembly_waiters_do_not_start_or_release_an_active_compiler[True-False] _
+
+store = <deck_master.store.Store object at 0x7f3e2d3ab680>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f3e2dae5b80>
+waiter_timeout = True, changed_base = False
+
+    @pytest.mark.parametrize('waiter_timeout,changed_base', [(False, False), (True, False), (False, True), (True, True)])
+    def test_assembly_waiters_do_not_start_or_release_an_active_compiler(store, monkeypatch, waiter_timeout, changed_base):
+        before = prepared(store)
+        entered, release, waiting = threading.Event(), threading.Event(), threading.Event()
+        calls, waiters, tools = [], [], []
+        class ObservedFuture(Future):
+            def result(self, timeout=None):
+                waiters.append(1)
+                if len(waiters) == 2:
+                    waiting.set()
+                return super().result(timeout=0 if waiter_timeout else timeout)
+        def blocked_compile(*args, **kwargs):
+            calls.append(1)
+            entered.set()
+            assert release.wait(10)
+            raise RuntimeError('controlled compiler failure')
+        def controlled_tool(name):
+            # This unit test stops at compile_deck and never launches a renderer.
+            # Tool availability is exercised by the separate real-rendering gate.
+            tools.append(name)
+            return name
+        monkeypatch.setattr(pipeline, 'executable', controlled_tool)
+        monkeypatch.setattr(pipeline, 'Future', ObservedFuture)
+        monkeypatch.setattr(pipeline, 'compile_deck', blocked_compile)
+        args = {'base_revision': before['revision_id'], 'operation_id': str(uuid.uuid4())}
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            owner = executor.submit(pipeline.produce, store.project_root, **args)
+            try:
+                compiler_entered = entered.wait(10)
+                if not compiler_entered and owner.done():
+                    owner.result()  # Report an early setup error, not a masked wait timeout.
+                assert compiler_entered
+>               assert tools == ['soffice', 'pdftoppm']
+E               AssertionError: assert ['soffice', '...', 'fc-match'] == ['soffice', 'pdftoppm']
+E                 
+E                 Left contains one more item: 'fc-match'
+E                 Use -v to get more diff
+
+tests/rebuild/test_performance_execution_paths.py:138: AssertionError
+_ test_assembly_waiters_do_not_start_or_release_an_active_compiler[False-True] _
+
+store = <deck_master.store.Store object at 0x7f3e2d2d36b0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f3e2d3111c0>
+waiter_timeout = False, changed_base = True
+
+    @pytest.mark.parametrize('waiter_timeout,changed_base', [(False, False), (True, False), (False, True), (True, True)])
+    def test_assembly_waiters_do_not_start_or_release_an_active_compiler(store, monkeypatch, waiter_timeout, changed_base):
+        before = prepared(store)
+        entered, release, waiting = threading.Event(), threading.Event(), threading.Event()
+        calls, waiters, tools = [], [], []
+        class ObservedFuture(Future):
+            def result(self, timeout=None):
+                waiters.append(1)
+                if len(waiters) == 2:
+                    waiting.set()
+                return super().result(timeout=0 if waiter_timeout else timeout)
+        def blocked_compile(*args, **kwargs):
+            calls.append(1)
+            entered.set()
+            assert release.wait(10)
+            raise RuntimeError('controlled compiler failure')
+        def controlled_tool(name):
+            # This unit test stops at compile_deck and never launches a renderer.
+            # Tool availability is exercised by the separate real-rendering gate.
+            tools.append(name)
+            return name
+        monkeypatch.setattr(pipeline, 'executable', controlled_tool)
+        monkeypatch.setattr(pipeline, 'Future', ObservedFuture)
+        monkeypatch.setattr(pipeline, 'compile_deck', blocked_compile)
+        args = {'base_revision': before['revision_id'], 'operation_id': str(uuid.uuid4())}
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            owner = executor.submit(pipeline.produce, store.project_root, **args)
+            try:
+                compiler_entered = entered.wait(10)
+                if not compiler_entered and owner.done():
+                    owner.result()  # Report an early setup error, not a masked wait timeout.
+                assert compiler_entered
+>               assert tools == ['soffice', 'pdftoppm']
+E               AssertionError: assert ['soffice', '...', 'fc-match'] == ['soffice', 'pdftoppm']
+E                 
+E                 Left contains one more item: 'fc-match'
+E                 Use -v to get more diff
+
+tests/rebuild/test_performance_execution_paths.py:138: AssertionError
+_ test_assembly_waiters_do_not_start_or_release_an_active_compiler[True-True] __
+
+store = <deck_master.store.Store object at 0x7f3e2d3abe30>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f3e2d258c80>
+waiter_timeout = True, changed_base = True
+
+    @pytest.mark.parametrize('waiter_timeout,changed_base', [(False, False), (True, False), (False, True), (True, True)])
+    def test_assembly_waiters_do_not_start_or_release_an_active_compiler(store, monkeypatch, waiter_timeout, changed_base):
+        before = prepared(store)
+        entered, release, waiting = threading.Event(), threading.Event(), threading.Event()
+        calls, waiters, tools = [], [], []
+        class ObservedFuture(Future):
+            def result(self, timeout=None):
+                waiters.append(1)
+                if len(waiters) == 2:
+                    waiting.set()
+                return super().result(timeout=0 if waiter_timeout else timeout)
+        def blocked_compile(*args, **kwargs):
+            calls.append(1)
+            entered.set()
+            assert release.wait(10)
+            raise RuntimeError('controlled compiler failure')
+        def controlled_tool(name):
+            # This unit test stops at compile_deck and never launches a renderer.
+            # Tool availability is exercised by the separate real-rendering gate.
+            tools.append(name)
+            return name
+        monkeypatch.setattr(pipeline, 'executable', controlled_tool)
+        monkeypatch.setattr(pipeline, 'Future', ObservedFuture)
+        monkeypatch.setattr(pipeline, 'compile_deck', blocked_compile)
+        args = {'base_revision': before['revision_id'], 'operation_id': str(uuid.uuid4())}
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            owner = executor.submit(pipeline.produce, store.project_root, **args)
+            try:
+                compiler_entered = entered.wait(10)
+                if not compiler_entered and owner.done():
+                    owner.result()  # Report an early setup error, not a masked wait timeout.
+                assert compiler_entered
+>               assert tools == ['soffice', 'pdftoppm']
+E               AssertionError: assert ['soffice', '...', 'fc-match'] == ['soffice', 'pdftoppm']
+E                 
+E                 Left contains one more item: 'fc-match'
+E                 Use -v to get more diff
+
+tests/rebuild/test_performance_execution_paths.py:138: AssertionError
+=========================== short test summary info ============================
+FAILED tests/rebuild/test_performance_execution_paths.py::test_assembly_waiters_do_not_start_or_release_an_active_compiler[False-False]
+FAILED tests/rebuild/test_performance_execution_paths.py::test_assembly_waiters_do_not_start_or_release_an_active_compiler[True-False]
+FAILED tests/rebuild/test_performance_execution_paths.py::test_assembly_waiters_do_not_start_or_release_an_active_compiler[False-True]
+FAILED tests/rebuild/test_performance_execution_paths.py::test_assembly_waiters_do_not_start_or_release_an_active_compiler[True-True]
+4 failed, 14 passed, 3 deselected in 6.85s

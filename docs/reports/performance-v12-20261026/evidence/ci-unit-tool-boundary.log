@@ -1,0 +1,17 @@
+soffice unavailable; configure DECK_MASTER_SOFFICE
+.
+=============================== warnings summary ===============================
+tests/rebuild/test_candidates.py:323
+  /workspace/Deck-Master/tests/rebuild/test_candidates.py:323: PytestUnknownMarkWarning: Unknown pytest.mark.render - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.render
+
+tests/rebuild/test_pipeline_preview_reuse.py:49
+  /workspace/Deck-Master/tests/rebuild/test_pipeline_preview_reuse.py:49: PytestUnknownMarkWarning: Unknown pytest.mark.render - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.render
+
+tests/rebuild/test_pipeline_preview_reuse.py:108
+  /workspace/Deck-Master/tests/rebuild/test_pipeline_preview_reuse.py:108: PytestUnknownMarkWarning: Unknown pytest.mark.render - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.render
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1 passed, 3 warnings in 1.34s
