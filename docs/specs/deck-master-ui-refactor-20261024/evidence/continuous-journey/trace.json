@@ -1,0 +1,78 @@
+{
+  "steps": [
+    {
+      "step": "create",
+      "project_id": "continuous-project",
+      "revision_id": "71a63f5a118d421da41aafbfb052cd62",
+      "page_order": [
+        "p01",
+        "p02"
+      ],
+      "source": "explicit manuscript",
+      "method": "browser"
+    },
+    {
+      "step": "add_material",
+      "project_id": "continuous-project",
+      "revision_id": "c4b8370e9ded4160a6fbfa183824fda7",
+      "page_order": [
+        "p01",
+        "p02"
+      ],
+      "host": "scripted input reconciliation",
+      "method": "browser and public Host API"
+    },
+    {
+      "step": "reorder_and_edit",
+      "project_id": "continuous-project",
+      "revision_id": "2cc55b396af74067b8db2c80d3659df1",
+      "page_order": [
+        "p02",
+        "p01"
+      ],
+      "target": "p01 now page 2",
+      "method": "browser"
+    },
+    {
+      "step": "selected_page_handoff",
+      "project_id": "continuous-project",
+      "revision_id": "90f22a31893b432d97592c1264e92e39",
+      "page_order": [
+        "p02",
+        "p01"
+      ],
+      "task_id": "task-178529379c3242b488d78475da0202e1",
+      "method": "public trial API and browser handoff",
+      "handoff_sha256": "d06215749a3fe9df9f75061c4a066490e5f0d3532b329ac3cb3ebf0e591791de",
+      "external_calls": 0
+    },
+    {
+      "step": "keep_reopen_adopt",
+      "project_id": "continuous-project",
+      "revision_id": "965a917e4ab34b03972b45bca8e37b34",
+      "page_order": [
+        "p02",
+        "p01"
+      ],
+      "candidate_id": "candidate-75a0345f646e44a1a4cc834112859945",
+      "method": "browser",
+      "returned_by": "scripted content Host"
+    },
+    {
+      "step": "fixed_version_check_and_export",
+      "project_id": "continuous-project",
+      "revision_id": "965a917e4ab34b03972b45bca8e37b34",
+      "page_order": [
+        "p02",
+        "p01"
+      ],
+      "export_revision": "965a917e4ab34b03972b45bca8e37b34",
+      "archive_sha256": "0af2d085bb4000724f1482af43fc2d37a7ed511e036f4b64ab6cad70a03e161c",
+      "purpose": "review",
+      "professional_acceptance": false,
+      "method": "browser download"
+    }
+  ],
+  "errors": [],
+  "model_calls": 0
+}

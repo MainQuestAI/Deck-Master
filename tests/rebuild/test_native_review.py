@@ -3,6 +3,7 @@ from copy import deepcopy
 import fcntl
 import json
 import os
+from pathlib import Path
 import subprocess
 import sys
 import uuid
@@ -11,10 +12,12 @@ from urllib.request import Request, urlopen
 
 import pytest
 
+import deck_master
+
 from deck_master import cli, content_review, native_review, review_evidence, service, tasks
 from deck_master.store import Store
 from deck_master.web import WorkbenchServer
-from test_content_preproduction_review import _deck
+from test_content_preproduction_review import _deck, _review
 
 
 class FixtureSession:
@@ -66,7 +69,34 @@ def _review_task(store):
                 if (task := store.read_object_json(ref)).get("review_stage") == "preproduction")
 
 
+def _isolated_runtime_identity():
+    # Anchor distribution discovery to this interpreter, not cwd/PYTHONPATH.
+    # -I deliberately ignores both; neither process injects a source path.
+    from importlib.metadata import distributions
+    import sysconfig
+
+    installed = [item.version for item in distributions(path=[sysconfig.get_path("purelib")])
+                 if item.metadata["Name"].lower().replace("_", "-") == "deck-master"]
+    return {"package_root": str(Path(deck_master.__file__).resolve().parent),
+            "code_version": deck_master.__version__, "installed_versions": sorted(installed)}
+
+
+def _assert_isolated_runtime_matches(tmp_path):
+    import inspect
+
+    probe = "import json\nfrom pathlib import Path\nimport deck_master\n" + inspect.getsource(_isolated_runtime_identity)
+    probe += "\nprint(json.dumps(_isolated_runtime_identity()))\n"
+    child = subprocess.run([sys.executable, "-I", "-c", probe],
+                           capture_output=True, text=True, cwd=tmp_path, timeout=30)
+    assert child.returncode == 0, child.stderr
+    parent_identity, child_identity = _isolated_runtime_identity(), json.loads(child.stdout)
+    assert child_identity == parent_identity, {"parent": parent_identity, "child": child_identity}
+    return parent_identity
+
+
 def test_normal_runner_receipt_survives_native_process_and_replay_is_no_call(tmp_path, native):
+    identity = _assert_isolated_runtime_matches(tmp_path)
+    assert identity["installed_versions"], identity
     project, store = _deck(tmp_path)
     assert content_review.qualify_for_production(store, store.load_document())["needs_reviewer"]
     before = deepcopy(store.load_document())
@@ -114,6 +144,98 @@ def test_failed_judgments_do_not_become_pass(tmp_path, native):
     assert result["preproduction"]["status"] != "pass"
     assert _review_task(store)["status"] == "completed"
     assert content_review.qualify_for_production(store, store.load_document())["status"] != "pass"
+
+
+def test_empty_pass_recheck_preserves_native_output_and_accepts_receipt(tmp_path, native, monkeypatch):
+    project, store = _deck(tmp_path)
+    original = native.review
+
+    def recheck(self, prompt, schema):
+        observed = original(self, prompt, schema)
+        rows = json.loads(observed["raw_final_message"])["reviews"]
+        if len(self.calls) > 1:
+            prior = next(row for row in self.calls[-1]["prior_reviews"]
+                         if row["review"]["kind"] == "progression")
+            next(row for row in rows if row["kind"] == "progression")["replaces"] = prior["ref"]
+        observed["raw_final_message"] = json.dumps({"reviews": rows})
+        return observed
+
+    monkeypatch.setattr(native, "review", recheck)
+    assert native_review.run(project)["preproduction"]["status"] == "pass"
+    before = deepcopy(store.load_document())
+    prior_progression = next(ref for ref in before["reviews"]
+                             if store.read_object_json(ref)["kind"] == "progression")
+    # A clean unit is only rechecked after explicit force_units selection.
+    assert native_review.run(project, force_units=["progression"])["preproduction"]["status"] == "pass"
+    after = store.load_document()
+    for key in ("narrative", "content_plan", "pages", "outputs", "design_context"):
+        assert after.get(key) == before.get(key)
+    progression = next(store.read_object_json(ref) for ref in reversed(after["reviews"])
+                       if store.read_object_json(ref).get("kind") == "progression")
+    observed = store.read_object_json(progression["reviewer"]["evidence_ref"])
+    raw = next(row for row in json.loads(observed["raw_final_message"])["reviews"]
+               if row["kind"] == "progression")
+    assert raw["findings"] == progression["findings"] == []
+    assert raw["replaces"] == progression["replaces"] == prior_progression
+    assert native.calls[-1]["packet"]["required_units"] == ["progression"]
+    assert [owner["review_ref"] for owner in native.calls[-1]["packet"]["review_scope"]["owners"]] == [prior_progression]
+    assert raw["status"] == progression["status"] == "pass"
+    assert _review_task(store)["status"] == "completed"
+
+
+@pytest.mark.parametrize("case", ["drop_finding", "disjoint_findings", "failed_prior",
+                                  "new_finding_fixed", "new_finding_variance", "new_finding_without_observation",
+                                  "no_observation", "stage_changed"])
+def test_empty_recheck_exception_cannot_hide_findings_or_expand_stages(tmp_path, case):
+    _, store = _deck(tmp_path)
+    reviewer = {"type": "host_self", "id": "synthetic-author", "execution_ref": None,
+                "independence_confirmed": False, "assurance": "unverified"}
+    prior = _review(store, store.load_document(), "progression", reviewer=reviewer)
+    candidate = deepcopy(prior)
+    problem = {"finding_id": "F1", "kind": "content", "impact": "must_fix", "page_id": "p1",
+               "element_refs": ["atom:p1:title"], "message": "unresolved", "expected": "repair",
+               "actual": "missing", "evidence": [], "resolution": "open"}
+    if case in ("drop_finding", "disjoint_findings"):
+        prior["findings"] = [problem]
+    if case == "disjoint_findings":
+        candidate["findings"] = [{**problem, "finding_id": "F2"}]
+    if case == "failed_prior":
+        prior["status"] = "fail"
+    if case.startswith("new_finding"):
+        candidate["status"] = "fail"
+        candidate["findings"] = [problem]
+    if case == "new_finding_fixed":
+        candidate["findings"][0]["resolution"] = "fixed"
+    if case == "new_finding_variance":
+        candidate["findings"][0].update(resolution="accepted_variance", impact="needs_judgment")
+    if case == "new_finding_without_observation":
+        candidate["observations"] = [" "]
+    if case == "no_observation":
+        candidate["observations"] = [" "]
+    if case == "stage_changed":
+        candidate["review_stage"] = "final"
+    candidate["replaces"] = store.put_json_object(prior)
+    error = "same logical review" if case == "stage_changed" else "no shared finding_id"
+    with pytest.raises(tasks.EnvelopeError, match=error):
+        tasks._adopt_review(store, candidate)
+
+
+@pytest.mark.parametrize("status", ["pass", "fail"])
+def test_observed_final_recheck_preserves_existing_stage_scope_and_new_verdict(tmp_path, status):
+    """A clean prior v2 final review may be rechecked, including new bad news."""
+    _, store = _deck(tmp_path)
+    reviewer = {"type": "host_self", "id": "synthetic-author", "execution_ref": None,
+                "independence_confirmed": False, "assurance": "unverified"}
+    prior = _review(store, store.load_document(), "content", reviewer=reviewer)
+    prior["review_stage"] = "final"
+    candidate = deepcopy(prior)
+    candidate.update(status=status, replaces=store.put_json_object(prior),
+                     observations=["Synthetic observed recheck of the same final content scope."])
+    before = store.load_document()
+    assert tasks._adopt_review(store, candidate) == candidate
+    assert candidate["subjects"] == prior["subjects"]
+    assert candidate["dependencies"] == prior["dependencies"]
+    assert store.load_document() == before
 
 
 def test_invalid_output_marks_failure_and_only_explicit_retry_calls_again(tmp_path, native):
@@ -178,7 +300,8 @@ def test_workbench_requires_token_and_rejects_claims_or_caller_paths(tmp_path, n
         with pytest.raises(HTTPError) as missing:
             post({}, 'invalid')
         assert missing.value.code == 403
-        for body in ({'raw_final_message': '{}'}, {'project': '/tmp/elsewhere'}, {'claims': {'verified': True}}):
+        for body in ({'raw_final_message': '{}'}, {'project': '/tmp/elsewhere'}, {'claims': {'verified': True}},
+                     *({'force_units': value} for value in ([], ['unknown'], ['argument', 'argument'], 'argument', [None]))):
             with pytest.raises(HTTPError) as rejected:
                 post(body)
             assert rejected.value.code == 422
@@ -187,3 +310,34 @@ def test_workbench_requires_token_and_rejects_claims_or_caller_paths(tmp_path, n
         assert content_review.qualify_for_production(store, store.load_document())['status'] == 'pass'
     finally:
         server.stop()
+
+
+def test_full_forced_review_does_not_reuse_live_single_page_task(tmp_path, native):
+    from synthetic_review_provider import dispatch_with_synthetic_provider
+    from test_content_preproduction_review import _independent_adapter
+    project, store = _deck(tmp_path)
+    narrow = dispatch_with_synthetic_provider(project, page_ids=['p1'],
+        adapter_context=_independent_adapter(store, store.load_document()), force_units=['argument'])['task']
+    assert narrow['scope_pages'] == ['p1']
+    assert native_review.run(project, task_id=narrow['task_id'])['status'] == 'running'
+    assert not native.calls
+    result = native_review.run(project, force_units=['argument'])
+    assert result['status'] == 'reviewed'
+    full = _review_task(store)
+    assert full['task_id'] != narrow['task_id']
+    assert set(full['scope_pages']) == {'p1', 'p2'}
+    assert {page['page_id'] for page in native.calls[0]['packet']['manuscript']['pages']} == {'p1', 'p2'}
+    assert tasks._lookup_task(store.load_document(), narrow['task_id'], store)['status'] == 'running'
+
+
+@pytest.mark.parametrize('selection', [['unknown'], ['argument', 'argument']])
+def test_cli_rejects_invalid_forced_units_before_native_call(tmp_path, native, capsys, selection):
+    project, store = _deck(tmp_path)
+    before = store.read_current()
+    args = ['review', 'native', '--project', str(project)]
+    for unit in selection:
+        args.extend(['--force-unit', unit])
+    assert cli.main(args) != 0
+    assert not native.calls
+    assert store.read_current() == before
+    capsys.readouterr()

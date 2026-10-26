@@ -19,6 +19,7 @@ from deck_master.web import WorkbenchServer
 from test_deep_review_fixes_browser import project_browser  # noqa: F401  (fixture reuse)
 from test_style_content_browser import confirm_recipe, open_style, toggle_phase, prepare_style_project  # noqa: F401
 from test_ux05_runs_delivery_browser import add_task  # noqa: F401
+from test_candidates import store as candidate_store, dispatch as dispatch_current_task  # noqa: F401
 
 pytestmark = pytest.mark.browser
 
@@ -46,6 +47,23 @@ def historical_obligations_browser(tmp_path):
     yield from project_browser(tmp_path, page_count=30, historical=True)
 
 
+@pytest.fixture
+def current_obligations_browser(candidate_store):
+    from playwright.sync_api import sync_playwright
+    server = WorkbenchServer(candidate_store.project_root)
+    with sync_playwright() as runtime:
+        browser = runtime.chromium.launch()
+        page = browser.new_page(viewport={'width': 1440, 'height': 900})
+        errors = []
+        page.on('pageerror', lambda error: errors.append(str(error)))
+        try:
+            yield page, server, candidate_store
+            assert errors == []
+        finally:
+            browser.close()
+            server.stop()
+
+
 def visible_text(page):
     # innerText 不含未渲染的子树：闭合的 details 与隐藏面板不计入主层。
     return page.evaluate("() => document.body.innerText")
@@ -57,7 +75,7 @@ def test_main_layer_keeps_business_language_on_every_surface(obligations_browser
     page.goto(server.start())
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()
     seen = {}
-    for name, ready in [('制作总览', '制作总览'), ('内容与来源', '内容与来源'), ('整稿画廊', '整稿画廊'),
+    for name, ready in [('制作总览', '制作总览'), ('内容与页序', '内容与页序'), ('整稿画廊', '整稿画廊'),
                         ('风格校准', '风格校准'), ('任务与交付', '任务与交付')]:
         page.get_by_role('button', name=name, exact=True).click()
         page.get_by_role('heading', name=ready, exact=True).wait_for()
@@ -141,22 +159,46 @@ def test_style_handoff_appears_with_a_real_local_plan(authorized_obligations_bro
     expect(handoff).to_be_enabled()
 
 
-def test_topbar_pending_entry_matches_the_latest_list_and_returns_to_history(historical_obligations_browser):
+@pytest.mark.parametrize('ui', ['studio', 'v2'])
+def test_topbar_pending_entry_matches_the_latest_list_and_returns_to_history(current_obligations_browser, ui):
     """N13/AC18：历史 A 无待办、最新 B 有待办；顶栏入口到最新记录，历史仍可返回。"""
+    from urllib.parse import urlencode
     from playwright.sync_api import expect
-    page, server, path, store = historical_obligations_browser
-    add_task(store, 'done-task-1', 'compose', 'completed', '第一版整理已完成。', historical=True)
+    from deck_master import run_desk, workbench
+    page, server, store = current_obligations_browser
     historical = store.current_revision_id()
-    add_task(store, 'todo-task-1', 'reconstruct', 'awaiting_host', '新版本待交接的 SVG 重建。', historical=True)
-    page.goto(server.start())
+    historical_task = next(store.read_object_json(ref) for ref in store.load_document()['tasks']
+                           if store.read_object_json(ref)['status'] == 'completed')
+    before = workbench.workbench_summary(store.project_root, protocol='workbench_summary.v2')
+    assert not any(action['kind'] == 'handoff' for action in before['next_actions'].get('actions', []))
+    # A current request and a public plan/commit supply B's real task binding.
+    # A legacy reader-only task without a request cannot model current work.
+    task = dispatch_current_task(store)
+    current = store.load_document()
+    assert task['collaboration_binding']['request_id'] == current['collaboration']['request']['request_id']
+    assert run_desk.detail(store.project_root, task_id=task['task_id'])['task']['current_relation']['status'] == 'current'
+    latest = workbench.workbench_summary(store.project_root, protocol='workbench_summary.v2')
+    handoffs = [action for action in latest['next_actions'].get('actions', []) if action['kind'] == 'handoff' and action['enabled']]
+    assert sum(action['object_count'] for action in handoffs) == 1
+    targets = workbench.action_targets(store.project_root, handoffs[0]['action_id'], revision=current['revision_id'])['targets']
+    assert [target['object_id'] for target in targets] == [task['task_id']]
+    url = server.start()
+    identity = page.request.get(url + 'api/project').json()['project_identity']
+    page.goto(url + ui + '/#' + urlencode({'project': identity, 'surface': 'overview', 'revision': historical}))
     page.get_by_role('heading', name='制作总览', exact=True).wait_for()
+    expect(page.locator('.history-banner')).to_contain_text('历史版本 · 只读')
+    expect(page.locator('.topbar .version')).to_have_text('历史稿')
+    assert 'revision=' + historical in page.url
     topbar = page.get_by_role('button', name=re.compile(r'^查看待交接任务，(\d+) 项$'))
     expect(topbar).to_have_attribute('aria-label', '查看待交接任务，1 项')
     topbar.click()
     # 顶栏入口落在最新版本的运行列表，且列表里正是那一项待接手任务。
     expect(page.get_by_role('heading', name='任务与交付', exact=True)).to_be_visible(timeout=15000)
-    expect(page.locator('.run-task').filter(has_text='制作可编辑稿').first).to_contain_text('待接手')
-    assert store.current_revision_id() in page.url
+    expect(page).to_have_url(re.compile('revision=' + current['revision_id']))
+    expect(page.locator('.runs-subareas button[aria-pressed="true"]')).to_have_text('任务记录')
+    expect(page.locator(f'.run-task[data-task-id="{task["task_id"]}"]')).to_contain_text('待接手')
+    expect(page.locator('.topbar .version')).to_have_text('当前稿')
+    expect(topbar).to_have_attribute('aria-label', '查看待交接任务，1 项')
 
     # 回到历史版本 A：那里没有这项待办，记录按固定版本展示。
     page.get_by_role('button', name='任务与交付', exact=True).click()
@@ -169,8 +211,13 @@ def test_topbar_pending_entry_matches_the_latest_list_and_returns_to_history(his
     page.get_by_role('button', name='读取所选版本', exact=True).click()
     page.get_by_role('button', name='任务记录', exact=True).click()
     expect(page.locator('.run-desk')).to_contain_text('固定执行记录')
-    expect(page.locator('.run-task').filter(has_text='制作可编辑稿')).to_have_count(0)
-    expect(page.locator('.run-task').filter(has_text='整理内容').first).to_contain_text('结果已记录')
+    expect(page.locator(f'.run-task[data-task-id="{task["task_id"]}"]')).to_have_count(0)
+    expect(page.locator(f'.run-task[data-task-id="{historical_task["task_id"]}"]')).to_contain_text('结果已记录')
+    expect(page.locator('.history-banner')).to_contain_text('历史版本 · 只读')
+    expect(page.locator('.topbar .version')).to_have_text('历史稿')
+    expect(topbar).to_have_attribute('aria-label', '查看待交接任务，1 项')
+    assert 'revision=' + historical in page.url
+    assert store.load_document() == current
 
 
 def test_topbar_pending_entry_always_lands_on_the_task_list(historical_obligations_browser):

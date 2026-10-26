@@ -4,9 +4,11 @@ import json
 import math
 import posixpath
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 import uuid
 import zipfile
@@ -111,17 +113,70 @@ def preview_svg_bytes(data: bytes, *, page_id: str, assets: dict[str, str]) -> b
         node.set('href', Path(assets[href]).as_uri())
     return ET.tostring(tree)
 
+def renderer_environment():
+    """Use the host's full Fontconfig configuration in macOS render children.
+
+    The macOS LibreOffice bundle can embed a different Fontconfig prefix from
+    fc-match. Its default then silently substitutes fonts (or loses CJK glyphs).
+    Discover the active host configuration, without changing global settings or
+    replacing it with a partial font-directory configuration.
+    """
+    if sys.platform != 'darwin' or any(os.environ.get(key) for key in
+                                     ('FONTCONFIG_FILE', 'FONTCONFIG_PATH')):
+        return None  # Inherit the caller's explicit configuration unchanged.
+    try:
+        listing = run([executable('fc-conflist')]).stdout.decode()
+    except (OSError, RendererError, UnicodeError) as exc:
+        raise NeedsTool('cannot discover host Fontconfig; configure FONTCONFIG_FILE') from exc
+    configs = set()
+    for line in listing.splitlines():
+        match = re.match(r'^\+ (/.*/fonts\.conf): ', line)
+        if match:
+            configs.add(Path(match.group(1)))
+    if len(configs) != 1:
+        raise NeedsTool('host Fontconfig root is missing or ambiguous; configure FONTCONFIG_FILE')
+    config = configs.pop()
+    try:
+        with config.open('rb') as stream:
+            stream.read(1)
+    except OSError as exc:
+        raise NeedsTool('host Fontconfig root is unreadable; configure FONTCONFIG_FILE') from exc
+    return {**os.environ, 'FONTCONFIG_FILE': str(config)}
+
+
 def render_deck(pptx_path, output_dir, *, fonts):
     output_dir=Path(output_dir);output_dir.mkdir(parents=True,exist_ok=True)
     # resolve_fonts already verified these fonts using the host's Fontconfig.
-    # Keep that same configuration for LibreOffice: replacing it with a partial
-    # config can prevent headless LibreOffice from starting on Linux.
+    # Bridge the macOS bundle's different default prefix to that full config.
+    # Linux and explicit caller configuration retain their existing behavior.
+    environment = renderer_environment()
     profile=(output_dir/'lo-profile').resolve().as_uri()
-    run([executable('soffice'),f'-env:UserInstallation={profile}','--headless','--convert-to','pdf','--outdir',str(output_dir),str(pptx_path)])
+    run([executable('soffice'),f'-env:UserInstallation={profile}','--headless','--convert-to','pdf','--outdir',str(output_dir),str(pptx_path)], env=environment)
     pdf=output_dir/(Path(pptx_path).stem+'.pdf')
     if not pdf.is_file():raise RuntimeError('renderer did not produce a PDF')
-    run([executable('pdftoppm'),'-r','120','-png',str(pdf),str(output_dir/'page')])
+    run([executable('pdftoppm'),'-r','120','-png',str(pdf),str(output_dir/'page')], env=environment)
     return sorted(output_dir.glob('page-*.png'),key=lambda p:int(p.stem.split('-')[-1]))
+
+
+def _current_svg_preview(store, entry):
+    """Reuse only verified bytes bound to this page's exact SVG object.
+
+    A retained slot alone is not freshness evidence. Invalid legacy previews
+    take the normal render path; explicit assembly still enforces its gates.
+    """
+    if not entry.get('svg_preview') or not entry.get('svg'):
+        return False
+    from .models import ModelError
+    try:
+        preview = store.read_object_json(entry['svg_preview'])
+        validate_artifact_semantics(preview)
+        if (preview['role'] != 'svg_preview' or preview['page_id'] != entry['page_id']
+                or entry['svg'] not in preview.get('derived_from', [])):
+            return False
+        store.read_object_bytes(preview['file'])
+    except (StoreError, ModelError):
+        return False
+    return True
 
 
 def preview_svg_page(project_dir, page_id):
@@ -134,7 +189,7 @@ def preview_svg_page(project_dir, page_id):
     eligibility.guard(store, doc, "render.preview",
                       context={"targets": {"page_ids": [page_id], "layers": ["svg"]}})
     entry = next(e for e in doc['pages'] if e['page_id'] == page_id)
-    if entry.get('svg_preview'):
+    if _current_svg_preview(store, entry):
         return entry['svg_preview']
     svg_artifact = store.read_object_json(entry['svg'])
     data = store.read_object_bytes(svg_artifact['file'])
@@ -344,8 +399,6 @@ def produce(project_dir, *, base_revision=None, operation_id=None):
     from .stages import require_assembly_ready
     store=Store(project_dir)
     from . import eligibility
-    eligibility.guard(store, store.load_document(), "compile.ppt",
-                      context={"targets": {"layers": ["output"]}})
     explicit = base_revision is not None or operation_id is not None
     with store._locked():
         doc=store.load_document()
@@ -359,11 +412,19 @@ def produce(project_dir, *, base_revision=None, operation_id=None):
                 return previous
             if doc['revision_id'] != base_revision:
                 raise operations.OperationError('conflict', 'base_revision', 'assembly basis changed; read current state', exit_code=5)
+        if explicit:
+            eligibility.guard(store, doc, 'stage.assemble', context={'targets': {'layers': ['output']}})
+        eligibility.guard(store, doc, 'compile.ppt', context={'targets': {'layers': ['output']}})
         if explicit or store.workbench_protocol_required(doc):
             require_assembly_ready(store, doc)
-    for tool in ('rsvg-convert','soffice','pdftoppm'):executable(tool)
+    preview_required = {entry['page_id'] for entry in doc['pages']
+                        if not _current_svg_preview(store, entry)}
+    for tool in ('soffice', 'pdftoppm'):
+        executable(tool)
+    if preview_required:
+        executable('rsvg-convert')
     with tempfile.TemporaryDirectory(prefix='production-',dir=store.staging_dir) as temporary:
-        work=Path(temporary);inputs=[];parsed=[];expected=[];approved={};preview_inputs=[]
+        work=Path(temporary);inputs=[];parsed=[];expected=[];approved={};preview_inputs={}
         for index,entry in enumerate(doc['pages']):
             obj=store.read_object_json(entry['svg']);data=store.read_object_bytes(obj['file'])
             page=store.read_object_json(entry['page'])
@@ -371,8 +432,10 @@ def produce(project_dir, *, base_revision=None, operation_id=None):
             approved[entry['page_id']]=mapping
             path=work/f'page-{index+1}.svg';path.write_bytes(data)
             inputs.append(SvgInput(entry['page_id'],path,page.get('speaker_notes', '')));parsed.append(parse_svg(data,page_id=entry['page_id'],assets=mapping))
-            preview_path=work/f'preview-input-{index+1}.svg';preview_path.write_bytes(
-                preview_svg_bytes(data, page_id=entry['page_id'], assets=mapping));preview_inputs.append(preview_path)
+            if entry['page_id'] in preview_required:
+                preview_path = work / f'preview-input-{index+1}.svg'
+                preview_path.write_bytes(preview_svg_bytes(data, page_id=entry['page_id'], assets=mapping))
+                preview_inputs[entry['page_id']] = preview_path
             expected.append(page)
         fonts=resolve_fonts(parsed);canvas=doc['design_context']['canvas']
         options=CompileOptions(width_px=canvas['slide_width_in']*96,height_px=canvas['slide_height_in']*96,fonts=fonts,assets=approved)
@@ -391,8 +454,9 @@ def produce(project_dir, *, base_revision=None, operation_id=None):
         new=bump_revision(doc,{'operation_id':operation_id or 'production-'+uuid.uuid4().hex,'kind':'artifact_adoption','description':'native compile, dual rendering and actual PPT readback','read_set':[]})
         require_writer(new, 'rc3.v1')
         for i,entry in enumerate(new['pages']):
-            preview=work/f'svg-{i+1}.png';run([executable('rsvg-convert'),str(preview_inputs[i]),'-o',str(preview)])
-            if not entry.get('svg_preview'):
+            if entry['page_id'] in preview_required:
+                preview = work / f'svg-{i+1}.png'
+                run([executable('rsvg-convert'), str(preview_inputs[entry['page_id']]), '-o', str(preview)])
                 entry['svg_preview']=artifact(store,preview,'svg_preview',page_id=entry['page_id'],dependencies=svg_deps,derived_from=[entry['svg']])
             entry['ppt_preview']=artifact(store,renders[i],'ppt_preview',page_id=entry['page_id'],dependencies=deps,derived_from=[entry['svg']])
         for i, ref in enumerate(new['tasks']):

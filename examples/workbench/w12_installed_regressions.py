@@ -27,8 +27,33 @@ def main():
         'test_studio_page_browser.py', 'test_studio_reading_browser.py', 'test_studio_gallery_batch_browser.py',
         'test_studio_candidate_batch_browser.py', 'test_studio_delivery_browser.py',
         'test_personal_recovery_browser.py',
+        'test_pr188_design_repairs_browser.py', 'test_pr188_design_content_browser.py',
+        'test_pr188_design_context_browser.py', 'test_pr188_design_type_browser.py',
+    ]
+    # Cross-branch boundaries must also execute against the final installed wheel.
+    integration_tests = [
+        'test_current_work.py', 'test_current_work_dialog_browser.py',
+        'test_pr187_summary_reuse_browser.py', 'test_outline_review.py',
+        'test_source_finding_repair.py', 'test_rc3_external_report.py',
+        'test_paused_exact_replay.py', 'test_pr187_review_regressions.py',
+        'test_pr188_completed_content.py', 'test_ui_current_relationship.py',
+        'test_integration_current_relationship.py', 'test_integration_current_work_browser.py',
+        'test_ancestor_authorization_boundary.py',
+        'test_pr189_original_target.py', 'test_pr189_clear_recovery.py',
+        'test_pr189_clear_end_browser.py', 'test_pr189_clear_replay.py',
+        'test_pr189_clear_transport_browser.py',
+        'test_pr189_related_clear_backup.py', 'test_pr189_related_clear_browser.py',
+        'test_pr189_clear_capacity.py', 'test_pr189_clear_capacity_browser.py',
+        'test_personal_clear_conflict_browser.py',
+        'test_pr189_clear_ownership_browser.py', 'test_pr189_clear_storage_browser.py',
+        'test_deep_review_obligations_browser.py', 'test_ui_continuous_journey_browser.py',
     ]
     result = pytest.main(['-q', str(repo / 'tests/rebuild/test_rc_closure_browser.py'),
+                         str(repo / 'tests/rebuild/test_settled_image_reuse.py'),
+                         str(repo / 'tests/rebuild/test_native_review.py'),
+                         str(repo / 'tests/rebuild/test_native_review_startup.py'),
+                         str(repo / 'tests/rebuild/test_rp03_svg_trial_isolation.py'),
+                         str(repo / 'tests/rebuild/test_x3_design_plan_actions.py'),
                          str(repo / 'tests/rebuild/test_workbench_usability_browser.py'),
                          str(repo / 'tests/rebuild/test_pr103_repair_browser.py'),
                          str(repo / 'tests/rebuild/test_pr103_complete_browser.py'),
@@ -39,7 +64,7 @@ def main():
                          str(repo / 'tests/rebuild/test_ui_design_browser.py') + '::test_modal_falls_back_to_the_caller_provided_focus_when_trigger_gone',
                          str(repo / 'tests/rebuild/test_navigation_usability_browser.py'),
                          str(repo / 'tests/rebuild/test_ux08_task_walkthrough_browser.py'),
-                         *[str(repo / 'tests/rebuild' / name) for name in studio_tests],
+                         *[str(repo / 'tests/rebuild' / name) for name in [*studio_tests, *integration_tests]],
                          '--require-browser'])
     modules = {name: str(Path(module.__file__).resolve()) for name, module in sys.modules.items()
                if (name == 'deck_master' or name.startswith('deck_master.')) and getattr(module, '__file__', None)}

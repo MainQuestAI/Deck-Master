@@ -1,4 +1,4 @@
-export const surfaces = {overview: '制作总览', content: '内容与来源', gallery: '整稿画廊', style: '风格校准', runs: '任务与交付'};
+export const surfaces = {overview: '制作总览', content: '内容与页序', gallery: '整稿画廊', style: '风格校准', runs: '任务与交付'};
 export const layers = {source: '来源', content: '逐页稿', original_image: '原图', svg: 'SVG', ppt: 'PPT', prepared_prompt: '预备提示词', submitted_prompt: '实际提示词'};
 // R4（深度复审）：任务与交付的四个子区是工作区上下文，随链接保存与恢复。
 export const runsAreas = ['tasks', 'decisions', 'versions', 'files'];
@@ -14,6 +14,11 @@ export function readRoute(info, position, summary, hash = location.hash) {
     page_id: params.get('page'), layer: params.get('layer') || 'original_image', revision: params.get('revision') === 'null' ? null : params.get('revision'),
     candidate_id: params.get('candidate'), zoom: params.has('zoom') ? Number(params.get('zoom')) : 1, task_id: params.get('task'),
     action_id: params.get('action'), review_id: params.get('review'), runs_area: runsAreas.includes(params.get('area')) ? params.get('area') : null};
+  route.from = params.get('from');
+  if (params.getAll('from').length > 1 || (route.from && !Object.hasOwn(surfaces, route.from))) throw Error('来源工作面无效。');
+  route.content_q = params.get('content_q') || '';
+  if (params.getAll('content_q').length > 1 || route.content_q.length > 200 || /[\u0000-\u001f\u007f]/.test(route.content_q))
+    throw new Error('逐页稿搜索链接无效，当前内容保留。');
   for(const key of ['content_area','proposal','compare_proposal','atom','review_sha256','finding','finding_index']){
     if(params.getAll(key).length>1)throw Error('阅读链接参数重复。');
     route[key]=params.get(key);
@@ -53,6 +58,8 @@ export function readRoute(info, position, summary, hash = location.hash) {
 export function routeHash(info, route) {
   const params = new URLSearchParams({project: info.project_identity, surface: route.surface, layer: route.layer, zoom: route.zoom || 1});
   for(const key of ['content_area','proposal','compare_proposal','atom','review_sha256','finding','finding_index'])if(route[key]!==null&&route[key]!==undefined)params.set(key,route[key]);
+  if (route.surface === 'page' && route.from) params.set('from', route.from);
+  if (route.content_q) params.set('content_q', route.content_q);
   if (route.revision != null) params.set('revision', route.revision);
   if (route.page_id) params.set('page', route.page_id);
   if (route.candidate_id) params.set('candidate', route.candidate_id);

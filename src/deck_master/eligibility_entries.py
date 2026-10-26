@@ -120,6 +120,8 @@ COLLABORATION_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "collaboration.resume_request": ("request.resume",
                                      "collaboration.resume_request: explicit resume; never widens "
                                      "scope (T02 re-derives from the same request)", None),
+    "collaboration.describe_snapshot": (None, "-", READ_REASONS["read_model"]),
+    "collaboration_migration.describe_snapshot": (None, "-", READ_REASONS["read_model"]),
     "collaboration.describe": (None, "-", READ_REASONS["read_model"]),
     "collaboration.payload_digest": (None, "-", READ_REASONS["internal"]),
     "collaboration.write_digest": (None, "-", READ_REASONS["internal"]),
@@ -135,6 +137,10 @@ COLLABORATION_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "content_production.adopt_proposal": ("proposal.adopt", "content_production.adopt_proposal: locked exact decision/scope/basis adoption", None),
     "content_production.completion_status": (None, "-", READ_REASONS["read_model"]),
     "external_review.evaluate": (None, "-", READ_REASONS["external_report"]),
+    "review_handoff.record_reviews": (None, "-", READ_REASONS["external_report"]),
+    "review_handoff.repair_handoff": (None, "-", READ_REASONS["read_model"]),
+    "collaboration_api.invoke[review.record]": (None, "-", READ_REASONS["external_report"]),
+    "collaboration_api.invoke[review.repair-handoff]": (None, "-", READ_REASONS["read_model"]),
     "review_import.describe_bindings": (None, "-", READ_REASONS["read_model"]),
     "review_import.import_report": ("review.import", "review_import.import_report: locked source/identity/dependency binding and current-control eligibility before commit", None),
     "delivery_eligibility.describe": (None, "-", READ_REASONS["read_model"]),
@@ -164,6 +170,8 @@ COLLABORATION_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
 
 
 PUBLIC_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
+    "native_review.recover": ("task.accept", "native_review.recover resumes its bound execution; service.accept_result → tasks.accept_result evaluates task.accept before adopting reviews; terminal replay is read-only", None),
+    "native_review.recovery_task_ids": (None, "-", READ_REASONS["read_model"]),
     "native_review.run": ("dispatch.host_task", "native_review.run → content_review dispatch/service.task_start/service.accept_result; exact scope and current control before execution/adoption", None),
     "legacy.import_legacy": ("create", "legacy.import_legacy: canonical private create/import normalization; inspect_only remains a source read", None),
     "legacy.looks_like_legacy_run": (None, "-", READ_REASONS["read_model"]),
@@ -229,6 +237,7 @@ OPERATIONS_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "visual_styles.import_reference": ("asset.import",
                                        "visual_styles.import_reference: guard before the "
                                        "reference/asset commit", None),
+    "design_entry.initial_plan": (None, "-", READ_REASONS["read_plan"]),
     # -- read-only operations
     "operations.show": (None, "-", READ_REASONS["read_model"]),
     "annotation_service.list_annotations": (None, "-", READ_REASONS["read_model"]),
@@ -273,7 +282,16 @@ CLI_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "collaboration migration apply": ("migration.apply", "collaboration_migration.apply", None),
     "eligibility": (None, "-", READ_REASONS["read_analysis"]),
     "review evaluate": (None, "-", READ_REASONS["external_report"]),
+    "review record": (None, "-", READ_REASONS["external_report"]),
+    "review repair-handoff": (None, "-", READ_REASONS["read_model"]),
     "review import": ("review.import", "review_import.import_report", None),
+    "review channels": (None, "-", READ_REASONS["install"]),
+    "review outline-status": (None, "-", READ_REASONS["read_model"]),
+    "review outline-packet": (None, "-", READ_REASONS["read_model"]),
+    "review outline": ("dispatch.host_task", "outline_review.dispatch → service.open_host_task revalidates frozen outline scope", None),
+    "review original-status": (None, "-", READ_REASONS["read_model"]),
+    "review original": ("dispatch.host_task", "original_review.dispatch → service.open_host_task guards dispatch; needs_reviewer only persists immutable packet", None),
+    "review recover": ("task.accept", "native_review.recover → service.accept_result/tasks.accept_result; original proof/basis/execution checks and task.accept before adoption", None),
     "review native": ("dispatch.host_task", "native_review.run → content_review dispatch/service.task_start/service.accept_result", None),
     # -- creation and routing
     "create": ("create", "cli.create → service.create (routing gate)", None),
@@ -330,6 +348,8 @@ CLI_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
                                "guards recovery; recovery keeps current control)", None),
     "ui plan-clear": (None, "-", READ_REASONS["ui_state"]),
     "ui commit-clear": (None, "-", READ_REASONS["ui_state"]),
+    "ui inspect-clear": (None, "-", READ_REASONS["ui_state"]),
+    "ui end-clear": (None, "-", READ_REASONS["ui_state"]),
     # -- read-only / non-project
     "doctor": (None, "-", READ_REASONS["install"]),
     "legacy-map": (None, "-", READ_REASONS["read_model"]),
@@ -338,6 +358,8 @@ CLI_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "install candidate": (None, "-", READ_REASONS["install"]),
     "install activate": (None, "-", READ_REASONS["install"]),
     "install rollback": (None, "-", READ_REASONS["install"]),
+    "install transaction status": (None, "-", READ_REASONS["install"]),
+    "install transaction recover": (None, "-", READ_REASONS["install"]),
     "inputs show": (None, "-", READ_REASONS["read_model"]),
     "task status": (None, "-", READ_REASONS["read_model"]),
     "task list": (None, "-", READ_REASONS["read_model"]),
@@ -390,6 +412,10 @@ CLI_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
 # Legacy prefix rows classify only the literal prefix found in a read handler;
 # they never exempt an arbitrary newly added descendant write route.
 HTTP_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
+    "/api/design/initial-plan": (None, "-", READ_REASONS["read_plan"]),
+    # This literal is an error-routing prefix, not an independently dispatched
+    # wildcard route. Concrete initial-plan remains enumerated separately.
+    "/api/design/": (None, "-", READ_REASONS["internal"]),
     "GET /api/projects/{project_id}/collaboration": (None, "-", READ_REASONS["read_model"]),
     "GET /api/projects/{project_id}/collaboration/migration": (None, "-", READ_REASONS["read_model"]),
     "POST /api/projects/{project_id}/collaboration/requests": ("request.start", "collaboration_api.invoke → collaboration.start_request (start/replace share the locked request service)", None),
@@ -464,6 +490,9 @@ HTTP_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "/api/ui-state": (None, "-", READ_REASONS["ui_state"]),
     "/api/ui-state/plan-clear": (None, "-", READ_REASONS["ui_state"]),
     "/api/ui-state/commit-clear": (None, "-", READ_REASONS["ui_state"]),
+    "/api/ui-state/inspect-clear": (None, "-", READ_REASONS["ui_state"]),
+    "/api/ui-state/end-clear": (None, "-", READ_REASONS["ui_state"]),
+    "/api/ui-state/clear-recovery": (None, "-", READ_REASONS["ui_state"]),
     "/api/ui-state/plan-restore": (None, "-", READ_REASONS["ui_state"]),
     "/api/ui-state/restore": (None, "-", READ_REASONS["ui_state"]),
     "/api/gallery": (None, "-", READ_REASONS["ui_state"]),
@@ -663,7 +692,8 @@ def collaboration_surface() -> set[str]:
             found.add(f"{module_name}.{name}")
     found.update(f'collaboration_api.invoke[{action}]' for action in collaboration_api._FIELDS)
     for module_name, names in {'content_production': ('adopt_proposal', 'completion_status'),
-                               'delivery_eligibility': ('describe',)}.items():
+                               'delivery_eligibility': ('describe',),
+                               'review_handoff': ('record_reviews', 'repair_handoff')}.items():
         module = importlib.import_module(f'deck_master.{module_name}')
         found.update(f'{module_name}.{name}' for name in names if inspect.isfunction(getattr(module, name, None)))
     return found

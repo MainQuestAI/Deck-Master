@@ -32,7 +32,8 @@
       "enum": [
         "preproduction",
         "page_visual",
-        "final"
+        "final",
+        "original_image"
       ],
       "description": "Content collaboration v1.2 CONTRACTS \u00a76.3/\u00a711.6: a preproduction review is bound to the current Narrative/Plan/Page manuscript and its source dependencies."
     },
@@ -351,7 +352,8 @@
               "argument",
               "page_copy",
               "progression",
-              "speech"
+              "speech",
+              "visual_expression"
             ]
           },
           "page_ids": {
@@ -788,6 +790,12 @@
       "enum": [
         "argument-connectivity.v1"
       ]
+    },
+    "review_subject": {
+      "enum": [
+        "outline"
+      ],
+      "description": "Explicit outline-only subject; absent retains the original manuscript contract."
     }
   },
   "required": [
@@ -811,5 +819,72 @@
     "usage",
     "call_allowances"
   ],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "review_stage": {
+            "const": "original_image"
+          }
+        },
+        "required": [
+          "review_stage"
+        ]
+      },
+      "then": {
+        "properties": {
+          "kind": {
+            "const": "review"
+          },
+          "scope_pages": {
+            "minItems": 1,
+            "maxItems": 1
+          },
+          "required_capabilities": {
+            "contains": {
+              "const": "original_expression_review.v1"
+            }
+          }
+        },
+        "required": [
+          "required_capabilities"
+        ]
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "review_subject"
+        ],
+        "properties": {
+          "review_subject": {
+            "const": "outline"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "review_stage": {
+            "const": "preproduction"
+          },
+          "kind": {
+            "const": "review"
+          },
+          "scope_pages": {
+            "maxItems": 0
+          },
+          "required_capabilities": {
+            "contains": {
+              "const": "outline_review.v1"
+            }
+          }
+        },
+        "required": [
+          "review_stage",
+          "required_capabilities"
+        ]
+      }
+    }
+  ]
 }

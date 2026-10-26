@@ -42,10 +42,13 @@ SCHEMA_FILES = {
     "content_plan_v2": "content-plan.v2.schema.json",
     "compose_result_v2": "compose-result.v2.schema.json",
     "review_v2": "review.v2.schema.json",
+    "native_review_checkpoint": "native-review-checkpoint.v1.schema.json",
     "authenticated_review_receipt": "authenticated-review-receipt.v1.schema.json",
+    "generation_reuse": "generation-reuse.v1.schema.json",
     "native_image_receipt": "native-image-receipt.v1.schema.json",
     "content_requirements": "content-requirements.v1.schema.json",
     "content_basis": "content-basis.v1.schema.json",
+    "asset_inputs": "asset-inputs.v1.schema.json",
     "style_reference": "style-reference.v1.schema.json",
     "visual_style_spec": "visual-style-spec.v1.schema.json",
     "style_input_v2": "style-input.v2.schema.json",
@@ -97,6 +100,10 @@ SCHEMA_FILES = {
     "ui_overview": "ui-overview.v1.schema.json",
     "ui_clear_plan": "ui-clear-plan.v1.schema.json",
     "ui_clear_result": "ui-clear-result.v1.schema.json",
+    "ui_clear_request": "ui-clear-request.v1.schema.json",
+    "ui_clear_inspection": "ui-clear-inspection.v1.schema.json",
+    "ui_clear_closure_v2": "ui-clear-closure.v2.schema.json",
+    "ui_clear_closure": "ui-clear-closure.v1.schema.json",
     "ui_clear_backup": "ui-clear-backup.v1.schema.json",
     "thumbnail": "thumbnail.v1.schema.json",
     "text_range": "text-range.v1.schema.json",
@@ -301,6 +308,13 @@ def validate_page_semantics(page: dict[str, Any]) -> None:
             raise ModelError(
                 where, f"edge endpoints must exist in nodes, got {edge.get('from')}->{edge.get('to')}"
             )
+    policy = visual.get("design_policy")
+    if policy:
+        table_ids = {block["id"] for block in page["customer_visible"].get("body_blocks", [])
+                     if block["type"] == "table"}
+        roles = [item["block_id"] for item in policy["table_roles"]]
+        if len(roles) != len(set(roles)) or not set(roles) <= table_ids:
+            raise ModelError("page/visual_spec/design_policy/table_roles", "roles must name unique actual tables")
     mapping = page.get("content_mapping")
     if mapping:
         atom_refs = [link.get("element_ref") for link in mapping.get("visible_links") or []]
@@ -349,6 +363,10 @@ def validate_page_semantics(page: dict[str, Any]) -> None:
 
 def validate_task_semantics(task: dict[str, Any]) -> None:
     validate_schema("task", task)
+    if task.get('review_subject') == 'outline':
+        units = task.get('review_units') or []
+        if not units or not {row['kind'] for row in units} <= {'argument', 'progression'} or any(row['page_ids'] for row in units):
+            raise ModelError('task/review_units', 'outline requires nonempty argument/progression units and empty page sets')
     if "method_manifest" in task:
         manifest = task["method_manifest"]
         from .resource_catalog import relative_path
@@ -585,7 +603,7 @@ def validate_compose_result_semantics(result: dict[str, Any]) -> None:
 WRITER_RANK = {None: 0, "generation.v1": 1, "content-plan.v1": 2,
                "changes.v1": 3, "candidates.v1": 4, "run-desk.v1": 5, "style-recipes.v1": 6, "content-ops.v1": 7,
                "content-candidates.v1": 8, "icon-quality.v1": 9, "workbench-quality.v1": 10,
-               "collaboration.v1": 11, "rc3.v1": 12, "rc3-entry.v1": 13, "rc4-content.v1": 14, "method-catalog.v1": 15}
+               "collaboration.v1": 11, "rc3.v1": 12, "rc3-entry.v1": 13, "rc4-content.v1": 14, "method-catalog.v1": 15, "design-policy.v1": 16, "asset-inputs.v1": 17, "original-review.v1": 18, "settled-image-reuse.v1": 19, "outline-review.v1": 20}
 
 
 def require_writer(document, minimum):

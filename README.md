@@ -131,6 +131,30 @@ check the actual exported PPTX with `handoff-check --purpose delivery`.
 `review` can return an unfinished readable copy with its unresolved list.
 `needs_tool` and `needs_reviewer` must retain their actual reasons.
 
+Explicit local `--file` verification accepts stable regular files only, including
+copies outside the project. Symlinks, devices, FIFOs and directories are refused;
+the HTTP delivery checker does not accept local file paths. Reads are bounded by
+known output lengths and checked again for replacement or growth.
+Review-purpose `handoff-check` can identify an exact committed historical original
+as `historical_output`, listing every matched revision and output reference. This
+remains blocked for current delivery. Historical sanitized copies are not recreated
+for identification. An incomplete history index is reported as a gap; a complete
+index does not mean every historical PPTX body was reread—only matching originals
+are byte-verified.
+
+Personal-state clearing retains its operation and request before submission. If a
+response is lost, reopen “个人状态与恢复” and use “核实并重试原清理”; the same request
+is replayed and later drafts are preserved. Historical clear receipts without an
+input digest remain readable and their backups usable, but cannot prove an exact
+request replay; they are not treated as a new cleanup instruction.
+
+Preproduction review reports preserve every blocking review record and expose
+both `blocking_record_count` and `logical_finding_count`. The latter follows an
+explicit same-owner replacement chain and never merges unrelated findings merely
+because their local IDs match. The existing eligibility `open_findings` field
+remains a record-count alias for compatibility; the UI labels the two counts
+separately. Neither count relaxes the production gate.
+
 Persist changed requirements or materials before continuing the same project:
 
 ```bash

@@ -38,16 +38,20 @@ export function personalBackupButton(app) {
   return button('查看清理备份', async()=>{
     const content=el('div',{class:'stack'}), status=el('p',{role:'status'});
     const dialog=modal('个人状态备份',el('div',{class:'stack'},
-      el('p',{},'备份属于本项目。恢复仅补回空记录；同名草稿另存，已有阅读设置保留。项目内容、任务与候选不会改变。'),content,status));
+      el('p',{},'备份属于本项目。已完成清理的备份可预览恢复：只补回空记录，同名草稿另存，已有阅读设置保留。已结束旧操作的恢复记录可下载核对；结束不代表清理成功。项目内容、任务与候选不会改变。'),content,status));
     async function load() {
       try {
-        const listing=await get('/api/ui-state/backups');
+        const [listing, ended]=await Promise.all([get('/api/ui-state/backups'), get('/api/ui-state/clear-recovery')]);
         if(!dialog.open)return;
         content.replaceChildren(...listing.backups.map(row=>el('article',{class:'panel'},el('div',{class:'panel-body stack'},
           el('strong',{},`${row.cleared_at} · ${row.available?`${row.count} 项记录`:'备份待核实'}`),
           row.available?actionGroup(el('a',{class:'download-link',href:`/api/ui-state/backups/${row.backup_id}/download`,download:''},'下载清理备份'),
             button('预览恢复这份备份',()=>preview(row.backup_id),false,{disabled:app.readonly})):el('p',{},row.reason)))));
-        if(!listing.backups.length)content.append(el('p',{},'尚无清理备份。确认清理后会在这里保留。'));
+        content.append(...ended.recoveries.map(row=>el('article',{class:'panel'},el('div',{class:'panel-body stack'},
+          el('strong',{},'已结束的旧清理操作'),
+          el('p',{},row.available?`${row.ended_at} · 保留 ${row.count} 项备份记录；结束不代表清理成功。`:row.reason),
+          row.available?el('a',{class:'download-link',href:`/api/ui-state/clear-recovery/${encodeURIComponent(row.operation_id)}/download`,download:''},'下载旧操作恢复记录'):null))));
+        if(!listing.backups.length && !ended.recoveries.length)content.append(el('p',{},'尚无清理备份。确认清理后会在这里保留。'));
       }catch(error){status.replaceChildren(el('p',{},readableError(error)),button('重新读取备份',load));}
     }
     async function preview(backup_id) {

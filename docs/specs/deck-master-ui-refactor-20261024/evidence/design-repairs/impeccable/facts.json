@@ -1,0 +1,124 @@
+[
+  {
+    "width": 1440,
+    "first": {
+      "x": 256,
+      "y": 386.09375,
+      "width": 1152,
+      "height": 101
+    },
+    "third": {
+      "x": 256,
+      "y": 588.09375,
+      "width": 1152,
+      "height": 101
+    },
+    "overflow": false,
+    "rowText": "1 · 先核对范围，再决定行动\n未归入章节\n正文已记录 · 核对状态见详情\n\n先核对真实稿件，再确认范围与下一步。\n\n第 1 页操作"
+  },
+  {
+    "width": 1440,
+    "url": "http://127.0.0.1:51180/studio/#project=3c47c61514ca5367459cef5ab58be565be204b3539517f81a7760d5ad125987e&surface=page&layer=content&zoom=1&from=content&content_q=28+&revision=3b2a791be4a74606b5154b9061a8512a&page=p28",
+    "activeNav": "内容与页序",
+    "opinionsVisible": false,
+    "reading": {
+      "font": "16px",
+      "line": "28px",
+      "width": 640
+    }
+  },
+  {
+    "width": 1440,
+    "returnQuery": "28 ",
+    "returnFocus": "<a href=\"#project=3c47c61514ca5367459cef5ab58be565be204b3539517f81a7760d5ad125987e&amp;surface=page&amp;layer=content&amp;zoom=1&amp;from=content&amp;content_q=28+&amp;revision=3b2a791be4a74606b5154b9061a8512a&amp;page=p28\" class=\"order-handle object-link\" draggable=\"\" aria-label=\"打开内容页 先核对范围，再决定行动\">28 · 先核对范围，再决定行动</a>"
+  },
+  {
+    "width": 1440,
+    "drawer": {
+      "x": 1000,
+      "y": 0,
+      "width": 440,
+      "height": 900
+    }
+  },
+  {
+    "width": 1440,
+    "opinionsDraftRetained": true,
+    "editFocusRestored": true
+  },
+  {
+    "width": 1280,
+    "first": {
+      "x": 256,
+      "y": 386.09375,
+      "width": 992,
+      "height": 101
+    },
+    "third": {
+      "x": 256,
+      "y": 588.09375,
+      "width": 992,
+      "height": 101
+    },
+    "overflow": false,
+    "rowText": "1 · 先核对范围，再决定行动\n未归入章节\n正文已记录 · 核对状态见详情\n\n先核对真实稿件，再确认范围与下一步。\n\n第 1 页操作"
+  },
+  {
+    "width": 1280,
+    "url": "http://127.0.0.1:51180/studio/#project=3c47c61514ca5367459cef5ab58be565be204b3539517f81a7760d5ad125987e&surface=page&layer=content&zoom=1&from=content&content_q=28+&revision=3b2a791be4a74606b5154b9061a8512a&page=p28",
+    "activeNav": "内容与页序",
+    "opinionsVisible": false,
+    "reading": {
+      "font": "16px",
+      "line": "28px",
+      "width": 554
+    }
+  },
+  {
+    "width": 1280,
+    "returnQuery": "28 ",
+    "returnFocus": "<a href=\"#project=3c47c61514ca5367459cef5ab58be565be204b3539517f81a7760d5ad125987e&amp;surface=page&amp;layer=content&amp;zoom=1&amp;from=content&amp;content_q=28+&amp;revision=3b2a791be4a74606b5154b9061a8512a&amp;page=p28\" class=\"order-handle object-link\" draggable=\"\" aria-label=\"打开内容页 先核对范围，再决定行动\">28 · 先核对范围，再决定行动</a>"
+  },
+  {
+    "width": 1280,
+    "drawer": {
+      "x": 840,
+      "y": 0,
+      "width": 440,
+      "height": 800
+    }
+  },
+  {
+    "width": 1280,
+    "opinionsDraftRetained": true,
+    "editFocusRestored": true
+  },
+  {
+    "width": 390,
+    "first": {
+      "x": 26,
+      "y": 488,
+      "width": 338,
+      "height": 77
+    },
+    "third": {
+      "x": 26,
+      "y": 642,
+      "width": 338,
+      "height": 77
+    },
+    "overflow": false,
+    "rowText": "1 · 先核对范围，再决定行动\n未归入章节\n正文已记录 · 核对状态见详情\n第 1 页操作"
+  },
+  {
+    "width": 390,
+    "url": "http://127.0.0.1:51180/studio/#project=3c47c61514ca5367459cef5ab58be565be204b3539517f81a7760d5ad125987e&surface=page&layer=content&zoom=1&from=content&content_q=28+&revision=3b2a791be4a74606b5154b9061a8512a&page=p28",
+    "activeNav": "内容与页序",
+    "opinionsVisible": false,
+    "reading": {
+      "font": "16px",
+      "line": "28px",
+      "width": 316
+    }
+  }
+]

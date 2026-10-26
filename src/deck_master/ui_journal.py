@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+from contextlib import contextmanager
 import time
 import uuid
 
@@ -130,7 +131,7 @@ def _pointer_gate(project):
     return None
 
 
-def project_info(project, *, server_capabilities=None):
+def project_info(project, *, server_capabilities=None, include_eligibility=True):
     from . import collaboration, collaboration_migration, content_production
     from .samples import sample_info
     from .store import SUPPORTED_WRITERS
@@ -147,17 +148,13 @@ def project_info(project, *, server_capabilities=None):
                 "effective_actions": [{"action": action, "supported": capability in capabilities,
                                        "writable": False, "reason_code": reason}
                                       for action, capability in PROJECT_ACTIONS]}
-    # Immutable snapshots can be read without creating a write lock. Retry if
-    # another window advanced current between the three pure projections;
-    # never publish mixed completion/request/migration bases to the browser.
-    for _ in range(3):
-        store, doc, identity = context(project)
-        collaboration_state = collaboration.describe(project)
-        migration = collaboration_migration.describe(project)
-        if doc["revision_id"] == collaboration_state["revision_id"] == migration["revision_id"]:
-            break
-    else:
-        raise LocalStateError("revision_id", "project state changed while reading; reload the current state")
+    # Explicit shared snapshot/object facts for this response only. A later
+    # write never receives this reader and independently reloads current.
+    from .read_facts import ReadFacts
+    store, doc, identity = context(project)
+    store = ReadFacts(store, doc)
+    collaboration_state = collaboration.describe_snapshot(store, doc, include_eligibility=include_eligibility)
+    migration = collaboration_migration.describe_snapshot(store, doc)
     sample = sample_info(store.project_root)
     compatibility = doc.get("compatibility", {})
     project_format = compatibility.get("project_format", "deck_document.v1")
@@ -221,11 +218,11 @@ def _base_refs(store, doc, target):
     return refs
 
 
-def _validate(store, current, identity, draft):
+def _validate(store, current, identity, draft, *, snapshot_reader=None):
     validate_schema("ui_draft", draft)
     if draft["project_id"] != current["project_id"] or draft["project_identity"] != identity:
         raise LocalStateError("project_identity", "draft belongs to another project")
-    base = load_snapshot(store, draft["base_revision"])
+    base = snapshot_reader.load(draft["base_revision"]) if snapshot_reader else load_snapshot(store, draft["base_revision"])
     refs = _base_refs(store, base, draft["target"])
     if (refs and draft["base_ref"] not in refs) or (not refs and draft["base_ref"] is not None):
         raise LocalStateError("base_ref", "draft basis does not belong to this page/layer/revision")
@@ -553,14 +550,17 @@ def commit_clear(project, *, operation_id, input, plan_id, manifest_digest):
     store, doc, identity = context(project)
     # 与各保存方互斥，固定获取顺序；overview 清理保留 CAS 屏障。
     # （固定获取顺序，保存方各自只取一把锁，不存在死锁环）。clear.lock 保护日志追加。
-    with local_lock(safe_path(_directory(store), "journal.lock")), \
-            local_lock(safe_path(store.deck_root, "workbench", "gallery.lock")), \
-            local_lock(safe_path(store.deck_root, "workbench", "overview.lock")), \
-            local_lock(safe_path(store.deck_root, "workbench", "result-reading.lock")), \
-            local_lock(safe_path(_position_path(store).parent, "position.lock")), \
-            local_lock(safe_path(_clear_log_path(store).parent, "clear.lock")):
+    with clear_lock(store):
+        from .ui_clear_recovery import refuse_ended
+        preserved = dict(operation_id=operation_id, input=input, plan_id=plan_id, manifest_digest=manifest_digest)
+        refuse_ended(store, identity, preserved)
         for entry in _read_clear_log(store):
             if entry["operation_id"] == operation_id:
+                if (entry['plan_id'] != plan_id or entry['manifest_digest'] != manifest_digest
+                        or entry['scope'] != input.get('scope') or input.get('project_id') != doc['project_id']
+                        or entry.get('input_digest') != digest(input)):
+                    raise LocalStateConflict('operation_id',
+                        'the preserved clear receipt cannot verify this exact request; keep the receipt and inspect its backup')
                 return {"status": "cleared", "replayed": True, **entry}
         expected_plan_id, expected_digest = plan_id, manifest_digest
         if not isinstance(expected_digest, str) or len(expected_digest) != 64:
@@ -576,6 +576,7 @@ def commit_clear(project, *, operation_id, input, plan_id, manifest_digest):
         cleared_at = _utc_now_iso()
         result = {"schema_version": "ui_clear_result.v1", "operation_id": operation_id,
                   "plan_id": expected_plan_id, "manifest_digest": expected_digest, "scope": "current_project",
+                  "input_digest": digest(input),
                   "backup_ref": ".deckmaster/workbench/clear-backups/" + expected_digest[:16] + ".json",
                   "cleared": items, "cleared_at": cleared_at}
         validate_schema("ui_clear_result", result)
@@ -636,3 +637,30 @@ def _clear_backup_records(store, items):
             records.append({"kind": "reading_position", "id": item["id"], "etag": item["etag"],
                             "record": read_json(_position_path(store))})
     return records
+
+
+@contextmanager
+def clear_lock(store):
+    """Shared lock order for cleanup, inspection and ending a retained request."""
+    with local_lock(safe_path(_directory(store), "journal.lock")), \
+            local_lock(safe_path(store.deck_root, "workbench", "gallery.lock")), \
+            local_lock(safe_path(store.deck_root, "workbench", "overview.lock")), \
+            local_lock(safe_path(store.deck_root, "workbench", "result-reading.lock")), \
+            local_lock(safe_path(_position_path(store).parent, "position.lock")), \
+            local_lock(safe_path(_clear_log_path(store).parent, "clear.lock")):
+        yield
+
+
+def inspect_clear(project, **kwargs):
+    from .ui_clear_recovery import inspect_clear as inspect
+    return inspect(project, **kwargs)
+
+
+def end_clear(project, **kwargs):
+    from .ui_clear_recovery import end_clear as end
+    return end(project, **kwargs)
+
+
+def clear_recovery_download(project, *, operation_id):
+    from .ui_clear_recovery import download
+    return download(project, operation_id=operation_id)

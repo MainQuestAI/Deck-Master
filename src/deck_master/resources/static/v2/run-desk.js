@@ -1,61 +1,17 @@
 import {supportsInsights,taskMethods} from './insight-reading.js';
 import {cancelRecovery} from './run-recovery.js';
 import {taskHandoff} from './change-handoff.js';
-import {personalBackupButton} from './personal-recovery.js';
+import {personalClearPanel} from './personal-maintenance.js';
 import {get, post, readableError, revisionQuery, fileURL} from './api.js';
 import {el, button, empty, version, modal, loading, errorNote, disabledReason, icon} from './dom.js';
 
 const names = {style_analyze:'分析截图规范', reconstruct:'制作可编辑稿', compile:'编译整稿', check:'工程检查', compose: '整理内容', blueprint: '制作原图', svg: '制作 SVG', render: '渲染预览', repair: '局部修改', review: '检查', export: '准备文件'};
-const statuses = {queued: '等待执行', awaiting_host: '待接手', running: '已记录处理中', completed: '结果已记录', failed: '执行失败', cancelled: '已取消', superseded: '由新任务接续', unreadable: '记录无法读取'};
+const statuses = {queued: '等待执行', awaiting_host: '待接手', running: '已记录处理中', completed: '结果已记录', failed: '执行失败', cancelled: '已取消', superseded: '依据已失效', unreadable: '记录无法读取'};
 const actions = {handoff: '交给 Deck Master Agent', verify_unknown_call: '核实未知调用', verify_execution: '核实原执行', inspect_failure: '查看失败原因', replan: '按当前依据重新计划', compare_candidates: '候选待决定', review_results: '结果待阅读'};
+const relationNames={current:'当前请求与依据',background:'已授权后台任务',historical:'历史记录',unknown:'当前关系待核实'};
 const seenKey = task => task.reading_key;
 const clock = value => value ? new Date(value).toLocaleString('zh-CN', {hour12: false}) : '未记录';
 
-// B05（INTERFACES 个人状态清理）：只读计划先行，确认后按同 etag 清理；
-// 备份可下载；任务/候选/调用事实不在范围（服务端强制，UI 如实转述）。
-function personalClearPanel(app) {
-  const notice = el('p', {class: 'muted', role: 'status'});
-  const scopeView = el('div', {class: 'stack'});
-  let plan = null, keepBusy = false;
-  const planButton = button('生成清理计划', async () => {
-    if (keepBusy) return; keepBusy = true; planButton.disabled = true; scopeView.replaceChildren();
-    try {
-      const current = await get('/api/view/summary');
-      plan = await post('/api/ui-state/plan-clear', {input: {project_id: current.project_id, scope: 'current_project',
-                                                             draft_ids: 'all', reading_preferences: true}});
-      // replaceChildren 会把 null/数字实参字符串化（"null"/"0" 文本）：条件节点
-      // 必须先组数组过滤再展开。
-      const planParts = [
-        el('p', {}, `将清理 ${plan.items.length} 项：${plan.items.map(item => ({draft: '草稿', gallery_state: '画廊选择', reading_position: '阅读位置', overview_preferences: '总览阅读偏好',result_reading:'结果已读记录'})[item.kind]).join('、') || '无'}；恢复备份将保存在本机。`),
-        plan.blockers.length ? el('p', {class: 'field-error'}, `${plan.blockers.length} 项暂不清理（未确认的提交）：请先在顶部核实未确认的保存请求。`) : null,
-        plan.kept_out.length ? el('p', {class: 'muted'}, `损伤保留：${plan.kept_out.join('；')}`) : null,
-        el('p', {class: 'muted'}, '任务、候选、调用记录与项目文件不在清理范围。')];
-      scopeView.replaceChildren(...planParts.filter(part => part));
-      notice.textContent = '';
-    } catch (error) { plan = null; notice.textContent = readableError(error); }
-    finally { keepBusy = false; planButton.disabled = false; commit.disabled = !plan || !plan.items.length; }
-  });
-  const commit = button('确认清理并保留备份', async () => {
-    if (keepBusy || !plan) return; keepBusy = true; commit.disabled = true;
-    try {
-      const result = await post('/api/ui-state/commit-clear', {operation_id: crypto.randomUUID(),
-        input: {project_id: plan.project_id, scope: 'current_project', draft_ids: 'all', reading_preferences: true},
-        plan_id: plan.plan_id, manifest_digest: plan.manifest_digest});
-      notice.replaceChildren(el('p', {}, `已清理 ${result.cleared.length} 项，恢复备份已保留；任务与候选未受影响。`), personalBackupButton(app));
-      scopeView.replaceChildren();
-      plan = null;
-    } catch (error) { notice.textContent = readableError(error) + ' 未清理任何对象。'; }
-    finally { keepBusy = false; planButton.disabled = false; }
-  }, true, {disabled: true});
-  const body = el('div', {class: 'panel-body stack'}, el('p', {class: 'muted'}, '只清理本项目的个人草稿与阅读设置；先出只读计划，确认后才清理，并保留恢复备份。项目内容、任务与调用记录不受影响。'),
-      el('div', {class: 'row wrap'}, planButton, commit, personalBackupButton(app)), scopeView, notice);
-  if (document.documentElement.dataset.workbenchUi === 'studio') {
-    return el('div', {class:'studio-task-maintenance'},
-      button('个人状态与恢复', () => modal('个人状态与恢复', body)),
-      el('span',{class:'muted'},'管理本项目草稿、阅读设置和恢复备份'));
-  }
-  return el('details', {'data-container':'section', class: 'panel personal-clear'}, el('summary', {}, '清理本机个人状态（草稿与阅读设置）'), body);
-}
 
 export function runDesk(app, data) {
   const studio = document.documentElement.dataset.workbenchUi === 'studio';
@@ -73,6 +29,7 @@ export function runDesk(app, data) {
   const submitSearch = () => { choiceMade=true; read({state:{search:search.value.trim(),offset:0},refreshReading:true,persist:true}); };
   const searchButton = button('查询任务', submitSearch);
   const tableHead = el('div',{class:'studio-task-table-head','aria-hidden':'true'},el('span',{},'任务与范围'),el('span',{},'当前状态'),el('span',{},'操作'));
+  let detailSerial = 0, detailLive = false;
   let page = data.runPage, selected = data.runDetail, disposed = false, serial = 0, busy = false, loaded = false;
   let state = {offset: 0, group: '', status: '', attention: false, search:''};
   let reading={seen:[],etag:null},readingUnavailable=false;const readingSupported=app.health.ui_capabilities?.includes('result_reading.v1');
@@ -81,8 +38,8 @@ export function runDesk(app, data) {
   const refreshButton = button('核实最新执行状态', restart);
   root.append(el('div', {class: 'panel-head'}, el('h2', {}, '运行记录'), refreshButton),
     el('div', {class: 'panel-body stack'}, el('p', {class: 'muted'}, '当前执行状态与顶栏的页面阅读版本分开。正常处理中无需你操作；查看结果不代表采用或质量通过。'),
-      el('div', {class: 'row wrap run-filters'}, studio && el('div',{class:'studio-task-search'}, search, searchButton), group, status, el('label', {}, attention, '只看需我处理')), notice, recoveryReceipt, detail, studio && tableHead, rows, pager),
-    personalClearPanel(app));
+      el('div', {class: 'row wrap run-filters'}, studio && el('div',{class:'studio-task-search'}, search, searchButton), group, status, el('label', {}, attention, '只看需我处理')), notice, recoveryReceipt, detail, studio && tableHead, rows, pager));
+  if (!studio) root.append(personalClearPanel(app));
   function persist() {
     const editor = app.editor;
     if (!editor || editor.readonly || editor.disposed || !editor.draft) return;
@@ -107,7 +64,8 @@ export function runDesk(app, data) {
       el('div', {class: 'row wrap run-task-identity'}, el('strong', {}, names[task.kind] || '制作任务'), el('span', {class: 'status'}, statuses[task.status] || task.status)),
       el('p', {class: 'run-requirement'}, `要求：${(task.instruction || '').trim() || '未记录制作要求'}`),
       el('p', {class:'run-task-scope'}, `目标：${scopeLabel(task)}`),
-      el('p', {class: 'muted'}, `接手时间：${clock(task.execution_started_at)}`),
+      el('p', {class: 'muted'}, `${task.task_id} · ${task.operation_id} · 创建 ${clock(task.created_at)} · 接手 ${clock(task.execution_started_at)}`),
+      task.current_relation && el('p', {class:'muted'}, (relationNames[task.current_relation.status]||({current:'当前请求',historical:'历史记录',unknown:'当前关联待核实'})[task.current_relation.state]||'当前关系待核实') + ' · ' + task.current_relation.reason),
       task.human_actions?.includes('verify_execution') && el('p', {class: 'field-error'}, '需要核实原执行。不会自动重试或取消；未确认取消前请勿重复派发。'),
       todo(task).length > 0 && el('p', {class: 'run-actions'}, todo(task).map(key => actions[key] || key).join(' · ')),
       task.error && errorBox(typeof task.error === 'object' ? task.error : {message: task.error}),
@@ -132,8 +90,10 @@ export function runDesk(app, data) {
     return el('article',{class:'run-task studio-task-record','data-task-id':task.task_id},
       el('div',{class:'studio-task-main'},el('span',{class:'studio-task-symbol','aria-hidden':'true'},icon(task.kind==='compose'?'content':'runs')),
         el('div',{class:'studio-task-copy'},el('h3',{},label),el('p',{class:'run-task-scope'},`目标：${scopeLabel(task)}`),
-          el('p',{class:'run-requirement'},`要求：${summary}`))),
+          el('p',{class:'run-requirement'},`要求：${summary}`),
+          el('p',{class:'muted'},`${clock(task.created_at)} · ${task.task_id} · ${task.operation_id}`))),
       el('div',{class:'studio-task-state'},el('span',{class:'status'},icon(statusIcon),statuses[task.status]||'状态待核实'),
+        el('p',{class:'muted'},relationNames[task.current_relation?.status||task.current_relation?.state]||'当前关系待核实'),
         next.length>0 && el('p',{class:task.needs_verification?'field-error':'muted'},next.map(key=>actions[key]||key).join(' · '))),
       task.task_id ? button('查看这项任务',()=>app.go({task_id:task.task_id,revision:page.revision_id}),false,{class:'run-task-open'}) : el('span',{class:'field-error'},'记录无法读取'));
   }
@@ -150,6 +110,22 @@ export function runDesk(app, data) {
       if (!disposed) modal('调用依据与结果记录', el('pre', {class: 'run-evidence'}, JSON.stringify(value, null, 2)));
     } catch (error) { if (!disposed) detail.append(errorBox({...error.details, message: readableError(error)})); }
   }
+  // Detail verification is a separate read intent from the fixed list cursor.
+  // Its epoch also invalidates fixed reads already in flight (including reads
+  // started while verification was pending), without stopping future refreshes.
+  async function verifyDetail(task, cancel = false) {
+    const token = ++detailSerial;
+    const active = () => !disposed && token === detailSerial && app.route.task_id === task.task_id;
+    try {
+      if (cancel) await recovery.cancel(task, recovery.pending.has(task.task_id));
+      const result = await recovery.verify(task.task_id);
+      if (!active()) return;
+      detailLive = true; detailSerial++; selected = result; renderDetail();
+    } catch (error) {
+      if (active()) detail.append(errorBox({...error.details,
+        message: (cancel ? '取消结果请核实。' : '') + readableError(error)}));
+    }
+  }
   function renderDetail() {
     const task = selected.task, revision = selected.revision_id;
     handoff?.dispose(); handoff = taskHandoff(app, task, page.groups);
@@ -160,6 +136,7 @@ export function runDesk(app, data) {
     });
     detail.replaceChildren(el('div', {class: 'stack'}, el('h3', {}, `${names[task.kind] || '制作任务'} · ${statuses[task.status] || task.status}`),
       el('p', {}, scopeLabel(task)),
+      detailLive && el('p', {class:'muted task-verified-revision'}, `已核实原任务的当前执行状态 · ${version(revision)}`),
       handoff?.node,
       supportsInsights(app)&&taskMethods(app,task.task_id,revision),
       el('details', {}, el('summary',{},'制作要求与执行身份'), el('p',{},task.instruction),el('p',{class:'muted'},`任务 ${task.task_id} · ${version(revision)}`)),
@@ -174,11 +151,9 @@ export function runDesk(app, data) {
       (task.call_counts.unknown || 0) > 0 && el('p', {class: 'field-error'}, '未知调用不等于未执行。请核实原调用；本工作台不会重新分配额度或自动重试。'),
       recovery.pending.has(task.task_id) && el('p', {class: 'field-error'}, '取消结果待核实，未安排替代任务。'),
       el('div', {class: 'row wrap'}, button('核实原任务', async () => {
-        try { selected = await recovery.verify(task.task_id); if (!disposed) renderDetail(); }
-        catch (error) { if (!disposed) detail.append(errorBox({...error.details, message: readableError(error)})); }
+        await verifyDetail(task);
       }), ['queued', 'awaiting_host', 'running'].includes(task.status) && disabledReason(button(recovery.pending.has(task.task_id) ? '再次请求取消原任务' : '取消原任务', async () => {
-        try { await recovery.cancel(task, recovery.pending.has(task.task_id)); if (!disposed) { selected = await recovery.verify(task.task_id); renderDetail(); } }
-        catch (error) { if (!disposed) detail.append(errorBox({...error.details, message: '取消结果请核实。' + readableError(error)})); }
+        await verifyDetail(task, true);
       }, false, {disabled: app.readonly || recovery.sending.has(task.task_id)}),
         app.readonly ? '当前视图只读，不能取消任务。' : recovery.sending.has(task.task_id) ? '取消请求已发送，等待核实结果。' : '')),
       el('div', {class: 'stack'}, resultLinks),
@@ -195,7 +170,8 @@ export function runDesk(app, data) {
   async function read(options={}) {
     if (disposed) return;
     if (busy) { if(Object.keys(options).length||pendingRead===null)pendingRead=options; return; }
-    busy = true; const token = ++serial;
+    busy = true; const token = ++serial, detailToken = detailSerial;
+    const nextDetailLive = detailLive;
     const nextState={...state,...options.state},nextLive=options.live??live,nextPinned=options.pinned??pinned;
     const savedReading=Object.hasOwn(options,'readingEtag');
     const fixedReading=savedReading||(!nextLive&&loaded&&!options.refreshReading);
@@ -222,12 +198,14 @@ export function runDesk(app, data) {
       const etag=savedReading?options.readingEtag:nextReading.etag;
       if(readingSupported&&etag){query.set('personal','1');query.set('reading_etag',etag);}
       const value = await get('/api/tasks?' + query);
-      const nextDetail = app.route.task_id ? await get('/api/tasks/' + encodeURIComponent(app.route.task_id) + revisionQuery(nextLive ? null : nextPinned)) : null;
+      const nextDetail = app.route.task_id ? await get('/api/tasks/' + encodeURIComponent(app.route.task_id) + revisionQuery(nextLive || nextDetailLive ? null : nextPinned)) : null;
       if (disposed || token !== serial) return;
       // Commit the page, its cursor and its reading snapshot together. Failed
       // pagination must leave both the visible rows and their old offset intact.
       state={...nextState,revision:value.revision_id};live=nextLive;pinned=nextPinned;
-      reading=nextReading;readingUnavailable=readingWarning;page = value; selected = nextDetail; loaded = true;readingBlocked=false;recoveryState=null;render();
+      reading=nextReading;readingUnavailable=readingWarning;page = value;
+      if (detailToken === detailSerial) selected = nextDetail;
+      loaded = true;readingBlocked=false;recoveryState=null;render();
       if(options.persist)persist();
       if(readingWarning)notice.append(el('p',{class:'field-error'},'个人已读记录暂不可用，任务按未过滤状态展示；损伤文件保留，标记已读暂停。'));
       if(options.notice)notice.append(el('p',{class:'muted'},options.notice));

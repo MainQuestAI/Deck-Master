@@ -1,0 +1,73 @@
+{
+  "schema_version": "native_ui_followup.v1",
+  "date": "2026-10-24",
+  "product_commit": "44fc6a23824d3e8f9a9aa6e80fcd1cc6ef791ecb",
+  "pr_head": "12fd87f9dfe91a9861653feee4aebfcdc4e7dde1",
+  "runtime_source": "independent installed wheel",
+  "ci": {
+    "push": {
+      "run": 40018706952,
+      "status": "SUCCESS"
+    },
+    "pull_request": {
+      "run": 40018715950,
+      "status": "SUCCESS"
+    }
+  },
+  "native_picker": {
+    "selected_path_returned": true,
+    "other_form_fields_preserved": true,
+    "registry_project_count": 0,
+    "cancel": "PASS_NATIVE_ASSISTED",
+    "limitation": "System-panel cancellation is user-observed; post-cancel fields and empty registry are independently read back. No native-panel screenshot is claimed.",
+    "cancel_actor": "User explicitly confirmed clicking Cancel",
+    "readback_actor": "Codex via native Chrome accessibility and isolated registry API",
+    "fields_preserved": [
+      "project name",
+      "purpose",
+      "audience",
+      "save directory",
+      "new folder name"
+    ],
+    "picker_enabled": true,
+    "project_created": false
+  },
+  "native_keyboard": {
+    "platform": "macOS Chrome desktop",
+    "tab_reaches_select": true,
+    "down_enter_without_open": "selection unchanged",
+    "space_down_enter": "PASS, independent mode and preparation checked visible",
+    "tab_reaches_filtered_checkbox": true,
+    "space_selects_resource": true,
+    "tab_enter_opens_reading": true,
+    "reading_receives_focus": true,
+    "project_revision_unchanged": true,
+    "limitations": [
+      "Filter text entered using native accessibility setValue; keyboard paste did not populate it",
+      "Single desktop viewport, not three viewport replay",
+      "No user visual approval inferred"
+    ]
+  },
+  "screenshots": [
+    {
+      "file": "01-draft.png",
+      "sha256": "2d1db325970d1553dce4596761ca709ac763450cf1061f2a46510ebcf9e73836",
+      "storage": "local validation evidence only; browser chrome contains unrelated tab titles"
+    },
+    {
+      "file": "02-picker-selected.png",
+      "sha256": "1a7556d335ed79a705459e03280ccdace45dba3f03039cf669445343087f7707",
+      "storage": "local validation evidence only; browser chrome contains unrelated tab titles"
+    },
+    {
+      "file": "03-keyboard-reading.png",
+      "sha256": "af8cf34b6c9730e977d3cac056709fd181f03c45bc0b7ab5515c34ac12f1cab6",
+      "storage": "local validation evidence only; browser chrome contains unrelated tab titles"
+    },
+    {
+      "file": "04-picker-cancelled.png",
+      "sha256": "c0cd0331a4cdfece2e22f9a17ec5929b3313c242c1f5a0d9d0d3e1c08c05090a",
+      "storage": "local validation evidence only; browser chrome contains unrelated tab titles"
+    }
+  ]
+}

@@ -401,6 +401,9 @@ def authorization_effectiveness(store, document, authorization_ref, *, now=None,
             parent = authorization_effectiveness(store, document, parent_ref, now=now, _depth=_depth + 1, _seen=_seen)
             if not parent["effective"]:
                 reasons.append("parent_ineffective")
+                if any(reason in ("authorization_revoked", "ancestor_authorization_revoked")
+                       for reason in parent["reasons"]):
+                    reasons.append("ancestor_authorization_revoked")
             if delegation_gaps(store, parent_record, record):
                 reasons.append("parent_scope_exceeded")
     for decision_ref in record.get("decision_refs") or []:

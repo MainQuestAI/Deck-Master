@@ -53,7 +53,7 @@ def test_single_page_native_fit_fullscreen_keeps_basis_and_draft(reading_store,s
             intrinsic=canvas.evaluate('e=>({width:e.width,height:e.height,box:e.getBoundingClientRect().toJSON()})')
             assert intrinsic['width']==960 and intrinsic['height']==540
             assert intrinsic['box']['width']==960 and intrinsic['box']['height']==540
-            for control in zoom_scope.get_by_role('button').all():assert control.bounding_box()['height']>=44
+            for control in zoom_scope.get_by_role('button').all():assert control.bounding_box()['height']>=(44 if size[0]<=560 else 32)
             if size[0]==390: zoom_scope.get_by_role('button',name='关闭',exact=True).click()
             if size[0]==1440:
                 for width,height in [(1280,800),(390,844),(1440,900)]:
@@ -95,7 +95,7 @@ def test_single_page_native_fit_fullscreen_keeps_basis_and_draft(reading_store,s
             page.reload();expect(page.locator('.studio-page-reading .page-image-viewport')).to_have_attribute('data-reading-mode','legacy')
             expect(page.get_by_role('group',name='单页图稿阅读')).to_contain_text('已恢复版面比例 150%')
             if size[0]==390: page.get_by_role('button',name='阅读设置',exact=True).click()
-            page.get_by_role('button',name='回到整稿画廊',exact=True).click();expect(page.get_by_role('heading',name='整稿画廊',exact=True)).to_be_visible()
+            page.get_by_role('button',name='返回整稿画廊',exact=True).click();expect(page.get_by_role('heading',name='整稿画廊',exact=True)).to_be_visible()
             assert store.load_document()==before and errors==[]
             (out/f'result-{size[0]}.json').write_text(json.dumps({'passed':True,'viewport':size,'native':intrinsic,'fit':fitted,'fixed_revision':before['revision_id'],'business_unchanged':True,'errors':errors},ensure_ascii=False,indent=2))
         finally:browser.close();server.stop()

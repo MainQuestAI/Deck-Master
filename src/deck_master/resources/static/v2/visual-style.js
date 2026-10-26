@@ -1,3 +1,4 @@
+import {designBasis} from './design-entry.js';
 import {get, post, postBinary, digest, fileURL, readableError, canonical} from './api.js';
 import {el, button, copyText, modal} from './dom.js';
 import {imageView} from './images.js';
@@ -182,7 +183,7 @@ export function visualStyle(app){
     analyze.disabled=blocked||!state.ids.length||state.ids.length>5||!requirement.value.trim();refresh.disabled=!loaded||busy||!state.task_id;handoff.hidden=!state.task_id;
     confirm.disabled=blocked||!spec||Boolean(spec.conflicts.length)||!state.targets.length;trial.disabled=blocked||!state.recipe||!recipe;
     // 交接动作按真实状态出现：没有当前计划时不出现，也不隐藏计划错误。
-    dispatch.hidden=!plan;if(studioStyle())dispatch.parentElement.hidden=!plan;dispatch.disabled=blocked||!plan;expand.disabled=blocked||!recipe||!sample.value||!expansion.size;}
+    dispatch.hidden=!plan;if(studioStyle())dispatch.parentElement.hidden=!plan;dispatch.disabled=blocked||!plan||!plan.eligibility?.allowed;expand.disabled=blocked||!recipe||!sample.value||!expansion.size;}
   function release(){leases.splice(0).forEach(view=>view.dispose());}
   async function loadReferences(){
     const value=await get('/api/styles/references?'+new URLSearchParams({revision:app.route.revision}));if(disposed)return;refs=value.references;fonts=value.fonts||[];
@@ -336,12 +337,12 @@ export function visualStyle(app){
       const actual=result.plan.input.targets.map(item=>item.page_id);
       if(canonical(actual)!==canonical(ids))throw new Error('计划目标与当前选择不一致，请重新预览。');
       plan=result;planSnapshot=frozen;
-      planBox.replaceChildren(el('p',{},`试作 ${actual.length} 页，最多 ${actual.length} 次生图；当前稿保留，返回后比较采用。`),
+      planBox.replaceChildren(designBasis(result,app),el('p',{},`试作 ${actual.length} 页，最多 ${actual.length} 次生图；当前稿保留，返回后比较采用。`),
         el('ul',{},actual.map(id=>{const index=app.summary.pages.findIndex(p=>p.page_id===id);return el('li',{},`第 ${index+1} 页 · ${app.summary.pages[index]?.title||id}`);})));
     }catch(error){if(sameSnapshot(frozen))status.textContent=readableError(error);}finally{busy=false;if(!disposed)controls();}
   }
   async function commitTrial(){
-    if(blockedInput()||!plan)return;
+    if(blockedInput()||!plan||!plan.eligibility?.allowed)return;
     if(!planSnapshot||!sameSnapshot(planSnapshot)){invalidatePlan();controls();status.textContent='目标或规范已变化，请重新预览。';return;}
     const selected=plan;busy=true;controls();
     try{const request={plan_id:selected.plan_id,base_revision:selected.plan.base_revision};await app.business.submit(editor(),'changes.commit',request,{plan_id:selected.plan_id,plan:selected.plan},async result=>{state.change_id=result.change_id;await completedBusiness(result,{surface:'runs',task_id:result.task_ids[0]||null,candidate_id:null,runs_area:'tasks'},'试作要求已保存');});}

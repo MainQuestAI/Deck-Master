@@ -1,0 +1,734 @@
+{
+  "baseline_pr": 184,
+  "implementation_baseline": "55adc97c5bb5f16ae7fcff7c33c43969fae9ce97",
+  "observed_baseline_document_head": "7bbf204658dfc39f53fa34352543168e7eee1e65",
+  "scope": "engineering implementation evidence only; no card closed solely by CI; real image/Host/customer and missing renderer checks remain as each report states",
+  "tasks": [
+    {
+      "task": "RP-00",
+      "issues": [
+        139
+      ],
+      "depends_on": [],
+      "implementation": "ae22ef08 + ebaa7a86 + 61621e58 + 8d42a5b5 + 913cfcae + 0e062fa7 + 346bb988",
+      "evidence": "docs/reports/issue-repair-20261023/RP-00.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN",
+      "evidence_version_mapping": {
+        "historical_report_source": "874cdee32c2a1575041166d1884d7e265defc7fb",
+        "historical_baseline": "55adc97c5bb5f16ae7fcff7c33c43969fae9ce97",
+        "integrated_implementation": "ae22ef086369e1ed5904966c79e92097b51fb8ba",
+        "stable_patch_id": "f3ae9f9ab33286761311798968329c2aa2b8a536",
+        "patch_equivalent_verified": true,
+        "integration_snapshot_inspected": "2e1c5ce40622e366a751c89f783fa23174752355",
+        "integrated_commits": [
+          "ae22ef086369e1ed5904966c79e92097b51fb8ba",
+          "ebaa7a862cdca7ae377bf8f030169035aa592f4e",
+          "61621e58f3219e6a963edc5d72ce0c53e236e67a",
+          "8d42a5b5fe40a2fa3ec4e76d6056d1bbdcf35110",
+          "913cfcae62ac4f93afab7e5521f2f3997a302c7f",
+          "0e062fa7f8a98e80e4277cb2d43c92d3a6ea4fdb",
+          "346bb9884e516d1243a95fa93804bc74ce40f228"
+        ],
+        "verification_scope": "Git identity, patch equivalence and ancestry only. Historical test counts and measurements are not rerun results for the integration snapshot. Intermediate working-tree test invocations did not record a separate exact immutable test SHA."
+      }
+    },
+    {
+      "task": "RP-01",
+      "issues": [
+        137
+      ],
+      "depends_on": [],
+      "implementation": "299169ff",
+      "evidence": "docs/reports/issue-repair-20261023/RP-01.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-02",
+      "issues": [
+        148,
+        167
+      ],
+      "depends_on": [],
+      "implementation": "91fc0f85",
+      "evidence": "docs/reports/issue-repair-20261023/RP-02.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-03",
+      "issues": [
+        149
+      ],
+      "depends_on": [
+        "RP-02"
+      ],
+      "implementation": "7ef9c5e0",
+      "evidence": "docs/reports/issue-repair-20261023/RP-03.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-04",
+      "issues": [
+        150
+      ],
+      "depends_on": [
+        "RP-00"
+      ],
+      "implementation": "e71ca6f9 + 95c3ff72 + 3943d9fc",
+      "evidence": "docs/reports/issue-repair-20261023/RP-04.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-05",
+      "issues": [
+        152
+      ],
+      "depends_on": [],
+      "implementation": "7de02e2b",
+      "evidence": "docs/reports/issue-repair-20261023/RP-05.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-06",
+      "issues": [
+        168,
+        169
+      ],
+      "depends_on": [],
+      "implementation": "0a007783",
+      "evidence": "docs/reports/issue-repair-20261023/RP-06.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-07",
+      "issues": [
+        183
+      ],
+      "depends_on": [],
+      "implementation": "53abc89e",
+      "evidence": "docs/reports/issue-repair-20261023/RP-07.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-08",
+      "issues": [
+        182
+      ],
+      "depends_on": [
+        "RP-03",
+        "RP-06"
+      ],
+      "implementation": "b9a3616e + ff25f438 + 8bec75f8",
+      "evidence": "docs/reports/issue-repair-20261023/RP-08.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-09",
+      "issues": [
+        181
+      ],
+      "depends_on": [],
+      "implementation": "2321f429",
+      "evidence": "docs/work-items/wi-issue-repair-20261023/execution/RP-09.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-10",
+      "issues": [
+        133,
+        143
+      ],
+      "depends_on": [],
+      "implementation": "ab34455b",
+      "evidence": "docs/reports/issue-repair-20261023/RP-10.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-11",
+      "issues": [
+        138
+      ],
+      "depends_on": [
+        "RP-00",
+        "RP-01"
+      ],
+      "implementation": "7ffbc88e",
+      "evidence": "docs/reports/issue-repair-20261023/RP-11.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-12",
+      "issues": [
+        144
+      ],
+      "depends_on": [
+        "RP-11"
+      ],
+      "implementation": "4ee1afeb + 6a0ec367 + d89cf73b + fbcd7c58 + 9d08f79e + c9cc33a2 + 666b41a8",
+      "evidence": "docs/reports/issue-repair-20261023/RP-12.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-13",
+      "issues": [
+        175,
+        176,
+        177
+      ],
+      "depends_on": [],
+      "implementation": "ae79d4c6",
+      "evidence": "docs/reports/issue-repair-20261023/RP-13.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-14",
+      "issues": [
+        178
+      ],
+      "depends_on": [],
+      "implementation": "48962271 + 19e043b9",
+      "evidence": "docs/reports/issue-repair-20261023/RP-14.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-15",
+      "issues": [
+        180
+      ],
+      "depends_on": [],
+      "implementation": "85135b67",
+      "evidence": "docs/reports/issue-repair-20261023/RP-15.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-16",
+      "issues": [
+        174,
+        179
+      ],
+      "depends_on": [
+        "RP-11",
+        "RP-12",
+        "RP-13",
+        "RP-14",
+        "RP-15"
+      ],
+      "implementation": "4ebd1159",
+      "evidence": "docs/reports/issue-repair-20261023/RP-16.md",
+      "state": "partial_implementation_special_acceptance_blocked",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-17",
+      "issues": [
+        162,
+        165,
+        166
+      ],
+      "depends_on": [
+        "RP-15"
+      ],
+      "implementation": "f8482a86",
+      "evidence": "docs/reports/issue-repair-20261023/RP-17.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-18",
+      "issues": [
+        163,
+        170,
+        171,
+        172
+      ],
+      "depends_on": [
+        "RP-02",
+        "RP-06"
+      ],
+      "implementation": "f41cbadb",
+      "evidence": "docs/work-items/wi-issue-repair-20261023/execution/RP-18.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-19",
+      "issues": [
+        173
+      ],
+      "depends_on": [
+        "RP-17"
+      ],
+      "implementation": "5740d552 + 59b71b30",
+      "evidence": "docs/reports/issue-repair-20261023/RP-19.md",
+      "state": "partial_implementation_special_acceptance_blocked",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-20",
+      "issues": [
+        164
+      ],
+      "depends_on": [
+        "RP-01",
+        "RP-11",
+        "RP-17"
+      ],
+      "implementation": "dd424554 + f934b046 + 2805bdf4",
+      "evidence": "docs/reports/issue-repair-20261023/RP-20.md",
+      "state": "partial_implementation_special_acceptance_blocked",
+      "issue_closure": "NOT_RUN",
+      "followup": "Same-image notes edit loss reproduced through public authenticated synthetic receiver; retained relevant findings."
+    },
+    {
+      "task": "RP-21",
+      "issues": [
+        141,
+        136
+      ],
+      "depends_on": [
+        "RP-09",
+        "RP-17",
+        "RP-19",
+        "RP-20"
+      ],
+      "implementation": "f0feca8b + b9de561e + 1c046ec2 + 21f7b799 + d9ca38b6 + 15a4550b + c05c4d96",
+      "evidence": "docs/reports/issue-repair-20261023/RP-21.md",
+      "state": "partial_implementation_special_acceptance_blocked",
+      "issue_closure": "NOT_RUN",
+      "followup": "Same-snapshot preview race reproduced in real Chromium; 16 integrated passes."
+    },
+    {
+      "task": "RP-22",
+      "issues": [
+        132
+      ],
+      "depends_on": [
+        "RP-08",
+        "RP-10",
+        "RP-18"
+      ],
+      "implementation": "5e472de8 + eed5e65a + 059e1160 + 3260c3de + 9db952bd + ad75e4c4",
+      "evidence": "docs/reports/issue-repair-20261023/RP-22.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-23",
+      "issues": [],
+      "depends_on": [],
+      "implementation": "4b4f8576",
+      "evidence": "docs/reports/issue-repair-20261023/RP-23.md",
+      "state": "diagnosed_safe_existing_paths_residual_owned_by_RP24",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-24",
+      "issues": [
+        134,
+        135
+      ],
+      "depends_on": [
+        "RP-06",
+        "RP-18",
+        "RP-21",
+        "RP-23"
+      ],
+      "implementation": "8702e5ac + d4b361ce + a3fdd4d2 + ddeb5722",
+      "evidence": "docs/reports/issue-repair-20261023/RP-24.md",
+      "state": "partial_implementation_special_acceptance_blocked",
+      "issue_closure": "NOT_RUN",
+      "followup": "Authorized 2026-10-23; bounded same-project settled native-image reuse implemented in 9b7a22f6f263f217a66c520c8c6ea4a5c08841c1. Both identities and consumption retained. Real Host acceptance remains NOT_RUN; see RP-24-settled-reuse.md."
+    },
+    {
+      "task": "RP-25",
+      "issues": [
+        140,
+        142
+      ],
+      "depends_on": [
+        "RP-00"
+      ],
+      "implementation": "1177c9fb",
+      "evidence": "docs/work-items/wi-issue-repair-20261023/execution/RP-25.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-26",
+      "issues": [
+        159,
+        145,
+        156,
+        161
+      ],
+      "depends_on": [
+        "RP-07",
+        "RP-08"
+      ],
+      "implementation": "8bec75f8",
+      "evidence": "docs/work-items/wi-issue-repair-20261023/execution/RP-26.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN",
+      "repeated_measurement_followup": {
+        "runtime_source_sha": "2e1c5ce40622e366a751c89f783fa23174752355",
+        "evidence": "docs/work-items/wi-issue-repair-20261023/execution/rp26/repeated-measurements.json",
+        "samples": 216,
+        "per_source": 72,
+        "repeats_per_condition": 3,
+        "historical_matched_pair": [
+          "cbd18a41efffca679768c69134663ea4816c7d92",
+          "7ab32976c802c9a5839fd3eb97c37d8c16ff57d4"
+        ],
+        "input_bytes_equal_across_sources": true,
+        "historical_full_results_equal": true,
+        "current_source_changes": "core_writers adds three protocols; generation.reuse null added. Other fields equal; no normalized equality claim.",
+        "regression": "65 passed; existing count/refusal assertions unchanged",
+        "remote_ci": "NOT_RUN; local-only follow-up"
+      }
+    },
+    {
+      "task": "RP-27",
+      "issues": [
+        151,
+        157,
+        155
+      ],
+      "depends_on": [
+        "RP-11"
+      ],
+      "implementation": "c8b95469 + 8f8d1c6b",
+      "evidence": "docs/reports/issue-repair-20261023/RP-27.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN",
+      "evidence_version_mapping": {
+        "historical_report_source": "704f123a5675ab3d1f9262ea8d86ecb472dd421a",
+        "historical_baseline": "f586a7fe01a706fa7bf1a54d8fb991b8d92f7941",
+        "integrated_implementation": "c8b95469425699cde7c2725d4985c58e2856272d",
+        "stable_patch_id": "7c73755772da9578acd87cbca17748097e8a3a2b",
+        "patch_equivalent_verified": true,
+        "integration_snapshot_inspected": "2e1c5ce40622e366a751c89f783fa23174752355",
+        "integrated_commits": [
+          "c8b95469425699cde7c2725d4985c58e2856272d",
+          "8f8d1c6b3b54ba1674840ed460366845a804ba48"
+        ],
+        "verification_scope": "Git identity, patch equivalence and ancestry only. Historical test counts and measurements are not rerun results for the integration snapshot. Intermediate working-tree test invocations did not record a separate exact immutable test SHA."
+      }
+    },
+    {
+      "task": "RP-28",
+      "issues": [
+        153
+      ],
+      "depends_on": [
+        "RP-17"
+      ],
+      "implementation": "b483a8be",
+      "evidence": "docs/reports/issue-repair-20261023/RP-28.md",
+      "state": "partial_implementation_special_acceptance_blocked",
+      "issue_closure": "NOT_RUN"
+    },
+    {
+      "task": "RP-29",
+      "issues": [
+        146,
+        160,
+        158,
+        154
+      ],
+      "depends_on": [],
+      "implementation": "5fdeeef2 + 9a1af799",
+      "evidence": "docs/reports/issue-repair-20261023/RP-29.md",
+      "state": "implemented_pending_review",
+      "issue_closure": "NOT_RUN",
+      "evidence_version_mapping": {
+        "historical_report_source": "6b1b243bbf53249b11551761cdc68cebff14b8fb",
+        "historical_baseline": "e71ca6f9c5df6374850f25a8ec857ef9cf6aa4bd",
+        "integrated_implementation": "5fdeeef26520cea5f00e4d23917f5c98cfeb1bf6",
+        "stable_patch_id": "470a7ce8d9bcf94f21cc7a076e401c8ec63ebc1f",
+        "patch_equivalent_verified": true,
+        "integration_snapshot_inspected": "2e1c5ce40622e366a751c89f783fa23174752355",
+        "integrated_commits": [
+          "5fdeeef26520cea5f00e4d23917f5c98cfeb1bf6",
+          "9a1af7994b19547bd0159dbe4370e29913415aad"
+        ],
+        "verification_scope": "Git identity, patch equivalence and ancestry only. Historical test counts and measurements are not rerun results for the integration snapshot. Intermediate working-tree test invocations did not record a separate exact immutable test SHA."
+      }
+    },
+    {
+      "task": "RP-30",
+      "issues": [],
+      "depends_on": [
+        "RP-04",
+        "RP-05",
+        "RP-16",
+        "RP-20",
+        "RP-21",
+        "RP-22",
+        "RP-24",
+        "RP-25",
+        "RP-26",
+        "RP-27",
+        "RP-28",
+        "RP-29"
+      ],
+      "implementation": "eed5e65a (integrated code candidate; documentation receipt in this report commit) + 9648efaa + a7fc409d + 5fdacf68 + 99b6fd3b",
+      "evidence": "docs/reports/issue-repair-20261023/RP-30.md",
+      "state": "partial_implementation_special_acceptance_blocked",
+      "issue_closure": "NOT_RUN"
+    }
+  ],
+  "integration_checks": [
+    {
+      "command": "focused task/eligibility/review/design/preview tests",
+      "result": "PASS",
+      "count": 210,
+      "seconds": 23.83,
+      "candidate": "ab34455b"
+    },
+    {
+      "command": "test_recipe_versions_browser.py test_rp10_content_browser.py --require-browser",
+      "result": "PASS",
+      "count": 13,
+      "seconds": 41.84,
+      "candidate": "ab34455b"
+    },
+    {
+      "command": "test_paused_exact_replay.py test_pipeline_preview_reuse.py test_task_receipt_recovery.py test_generation_protocol.py",
+      "result": "PASS",
+      "count": 39,
+      "seconds": 11.48,
+      "candidate": "e71ca6f9"
+    },
+    {
+      "command": "test_task_compact_receipts.py test_task_receipt_recovery.py test_service_flow.py -m not-render/not-browser",
+      "result": "PASS",
+      "count": 44,
+      "deselected": 3,
+      "seconds": 7.64,
+      "candidate": "53abc89e"
+    },
+    {
+      "command": "review channels/cross-turn/content fields/methods/Content/Design/receipts selection",
+      "result": "PASS",
+      "count": 84,
+      "seconds": 11.11,
+      "candidate": "f41cbadb"
+    },
+    {
+      "command": "real Chromium method clipboard selection",
+      "result": "PASS",
+      "count": 2,
+      "seconds": 6.16,
+      "candidate": "f41cbadb"
+    },
+    {
+      "command": "paused exact replay/annotations/visual styles/native recovery/history",
+      "result": "PASS",
+      "count": 62,
+      "seconds": 19.6,
+      "candidate": "3943d9fc"
+    },
+    {
+      "command": "review recovery/effective requirements/content review/design policy/candidate freeze",
+      "result": "PASS",
+      "count": 62,
+      "seconds": 9.12,
+      "candidate": "4ee1afeb plus subsequently committed RP28"
+    },
+    {
+      "command": "exact git archive wheel build, --target /tmp install, package bytes and Skill inventory",
+      "result": "PASS",
+      "matched_package_files": 270,
+      "candidate": "3943d9fc"
+    },
+    {
+      "command": "installed wheel native recovery and stage discovery tests with verified import path",
+      "result": "PASS",
+      "count": 24,
+      "seconds": 2.92,
+      "candidate": "3943d9fc"
+    },
+    {
+      "command": "request_read_facts/candidate_freeze/rp19_assets/rp17_policy/review_owner_scope/rp08_current_actions",
+      "candidate": "8bec75f8",
+      "result": "PASS",
+      "count": 64,
+      "seconds": 15.07
+    },
+    {
+      "command": "doctor --step render",
+      "candidate": "83d3851a",
+      "result": "needs_tool",
+      "detail": "soffice and pdftoppm executable; rsvg-convert unavailable; professional/desktop not_evaluated"
+    },
+    {
+      "command": "service_flow render selection",
+      "candidate": "d4b361ce",
+      "result": "BLOCKED",
+      "count_failed": 3,
+      "reason": "continue returns needs_tool rsvg-convert unavailable before pending page_visual task; no assertions removed"
+    },
+    {
+      "command": "RP30 C6/original/selective/requirements/audience/graph and all schema mirrors",
+      "candidate": "dd424554284f881a1ce76c0f3323cbcbcc37bace",
+      "result": "PASS",
+      "count": 141,
+      "seconds": 69.93
+    },
+    {
+      "command": "RP30 channel/frozen methods/work_context",
+      "candidate": "dd424554284f881a1ce76c0f3323cbcbcc37bace",
+      "result": "PASS",
+      "count": 85,
+      "seconds": 10.77
+    },
+    {
+      "command": "exact archive wheel installed native_review_recovery/rp19_asset_inputs/rp20_original_review/rp22_reading_browser --require-browser",
+      "candidate": "eed5e65ac6889f00de101539e8dc00da0d3f7f59",
+      "result": "PASS",
+      "count": 55,
+      "seconds": 41.22,
+      "installed_module": "/tmp/deck-final-eed5e65a/site/deck_master/__init__.py"
+    }
+  ],
+  "blockers": [
+    {
+      "action": "install official librsvg2-bin",
+      "target": "/var/lib/apt/lists/partial",
+      "status": "BLOCKED",
+      "reason": "user approved; normal apt read-only filesystem, escalated apt permission denied; no installation or security changes"
+    }
+  ],
+  "prohibited_work_not_run": [
+    "paid model calls",
+    "customer production",
+    "HOME activation",
+    "merging",
+    "issue closure",
+    "release publication"
+  ],
+  "updated_utc": "2026-10-22T23:33:10.165962+00:00",
+  "implementation_start_utc": "2026-10-22T17:28:58Z",
+  "remote_rp00": {
+    "branch": "codex/repair-rp00-20261023",
+    "head": "2c2ee3395ba2a4b5fcadce242fe55709b1c889cd",
+    "commits": 3,
+    "files": 18,
+    "pull_request_created": false
+  },
+  "engineering_completion_utc": "2026-10-22T18:38:16.613158+00:00",
+  "final_code_candidate": "424cc95e2452e91bf2ea8bbf5a69df3a4f749b3e",
+  "matched_installation": {
+    "source_sha": "346bb9884e516d1243a95fa93804bc74ce40f228",
+    "installed_module": "/tmp/deck-followup-346bb988/site/deck_master/__init__.py",
+    "matched_package_files": 278,
+    "canonical_skill_inventory_verified": true,
+    "wheel_sha256": "aa829471271e81db5f08992a9689acd78080c5c73bca102fa8979870a426f55d"
+  },
+  "remote_ci": "f0cf569b PR39860006534 success:4units3794pass2skip,render136pass1skip,browser603pass,installed255pass. Duplicatepush39859996259 failure:browser602pass1fail (fixed100ms response-capture synchronization), installed steps skipped; separate success does not replace failure.",
+  "followup_state": "Second-review confirmed X1-X4 repairs integrated locally with retained RP24. Product snapshot b56cef23; source/installed/browser checks passed. No push/PR update retried after prior denial; remote remains fdb8fca9. See R2-confirmed-fixes.md.",
+  "product_decision_pending": null,
+  "followup_validation": {
+    "candidate": "346bb9884e516d1243a95fa93804bc74ce40f228",
+    "result": "PASS within installed Studio browser scope",
+    "count": 9,
+    "seconds": 54.85,
+    "command": "Archived installed complete Studio browser suite --require-browser",
+    "log": "/tmp/deck-followup-346bb988/installed-browser.log"
+  },
+  "active_branch": "codex/issue-repair-20261023-ci-followup",
+  "resolved_blockers": [
+    {
+      "action": "create RP-00 pull request",
+      "target": "MainQuestAI/Deck-Master, codex/repair-rp00-20261023 -> codex/repair-plan-baseline-20261023",
+      "status": "RESOLVED",
+      "reason": "automatic approval rejected public PR submission absent explicit user PR authorization; parent awaiting user confirmation; no PR created",
+      "resolution": "Explicit user approval received 2026-10-22 20:45 UTC; checked all three repair heads had no PR, created integrated draft PR185 containing RP00 and subsequent batches. No duplicate PR, merge, release or issue closure."
+    }
+  ],
+  "pull_request": {
+    "number": 185,
+    "url": "https://github.com/MainQuestAI/Deck-Master/pull/185",
+    "state": "draft",
+    "base": "codex/repair-plan-baseline-20261023",
+    "head": "codex/issue-repair-20261023-ci-followup",
+    "approval": "Explicit public PR creation approval, 2026-10-22 20:45 UTC; not RP24 product approval."
+  },
+  "q2_performance_followup": {
+    "commit": "424cc95e2452e91bf2ea8bbf5a69df3a4f749b3e",
+    "trigger": "8c826711 PR CI39852103635 job120081490120: Q2 cumulative180s timeout after64/70 passed",
+    "unchanged_gate": "9 passed115.25s; child70/70, no skips, unchanged180s",
+    "deterministic_savings": "same40 identity observations: git120->80; ledger scans245->218",
+    "installed_identity_checks": "6 passed0.10s from actual archive wheel; source/hash/dirty/commit and malformed output checks",
+    "new_ci": "REQUIRED; prior other matrix successes do not replace failed PR gate",
+    "installation": {
+      "source_sha": "424cc95e2452e91bf2ea8bbf5a69df3a4f749b3e",
+      "installed_module": "/tmp/deck-followup-424cc95e/site/deck_master/__init__.py",
+      "matched_package_files": 278,
+      "canonical_skill_inventory_verified": true,
+      "wheel_sha256": "607877b0b03cd1619ee539ab35615d588c3696723be9395ca17f61a70209d782"
+    }
+  },
+  "autosave_capture_followup": {
+    "commit": "1e87cda8ece6d0fc5d3d08f523b156518ea9011d",
+    "reproduction": "Event-gated real second save; old unknown variant fails len(held)=1 in4.49s",
+    "repair": "actual response-capture signals; no runtime changes; three variants/all original assertions retained and strengthened",
+    "validation": "real Chromium3pass13.20s; Ruff/diff pass; independent review no concreteP1/P2",
+    "new_exact_head_ci": "REQUIRED"
+  },
+  "product_decision_resolved": {
+    "task": "RP-24",
+    "date": "2026-10-23",
+    "decision": "Explicitly authorized bounded settled-image reuse preserving both executions and consumed calls; unknown state, insufficient current authority/budget or missing trusted evidence remain blocked. Single-call handoff remains unsupported."
+  },
+  "prior_baseline_ci": {
+    "head": "fdb8fca959a40d54e8cc2e4881533473a1838657",
+    "push": 39875325615,
+    "pull_request": 39875331972,
+    "conclusion": "success for both runs; not evidence for the new RP24 head"
+  },
+  "second_review_followup": {
+    "review_baseline": "fdb8fca959a40d54e8cc2e4881533473a1838657",
+    "product_snapshot": "b56cef23c963cf301057740660e298c1a63b9fed",
+    "report": "docs/reports/issue-repair-20261023/R2-confirmed-fixes.md",
+    "commits": {
+      "X1": "08f0ee9e6bf72f3e0ad80991eaa72208f8e78209",
+      "X2": "1f630f81b68fdca2924d340a517ed944bc4d5629",
+      "X3": "7d6836520f954eda108c3c869b10c7c4e66dfe72",
+      "X4": "b56cef23c963cf301057740660e298c1a63b9fed",
+      "RP05_RP25": "46b062c1adcd0a66171e762215a9ba06f8b91c63",
+      "RP26_evidence_mapping": "2c1ac56c087bb89e47e117f2d5eef27a78cfbec4"
+    },
+    "validation": {
+      "source": "139 passed, 8 browser deselected",
+      "installed": "135 passed, 78 modules audited",
+      "source_browser": "12 passed, 4 non-browser deselected",
+      "installed_browser": "12 passed, 4 non-browser deselected, 64 modules audited",
+      "package_files": 281,
+      "wheel_sha256": "917ab9e5aceb01886055bce897fbaec815fffedb6bb3a367dbfcd0d66e6bc49b"
+    },
+    "remote_write": "NOT_RETRIED: prior approval rejection; no new execution-side push confirmation",
+    "new_remote_ci": "NOT_RUN: local commits unpushed",
+    "remaining": [
+      "RP05 real rsvg positive cases NOT_RUN locally (executable absent)",
+      "RP25 formal target Host/site workload NOT_RUN",
+      "RP24 real Host/specialist acceptance remains separate",
+      "Local CJK blank output still environment diagnosis, no unsupported compiler/font change"
+    ]
+  }
+}

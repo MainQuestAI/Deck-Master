@@ -55,7 +55,7 @@ def is_visual_task(task):
                 and task.get("kind") != "compose"))
 
 
-def visual_task_inputs_current(store, document, task):
+def visual_task_inputs_current(store, document, task, *, read_snapshot=None):
     """Actual dispatched visual inputs; no task.preparation/cache inference."""
     from .production import (consumed_design, resolve_page_design,
                              resolve_page_rendering_design, stored_blueprint_request)
@@ -71,7 +71,7 @@ def visual_task_inputs_current(store, document, task):
         if target is not None and any(entry.get("blueprint") != target for entry in document["pages"] if entry["page_id"] in task["scope_pages"]):
             return False
         if prepared and prepared.get("resolved_design_context"):
-            from .production import resolve_generation_design
+            from .production import resolve_generation_design, frozen_design_options
             recipe_ref = task.get("stage_request", {}).get("style_recipe_ref")
             for entry in document["pages"]:
                 if entry["page_id"] in task["scope_pages"]:
@@ -79,7 +79,8 @@ def visual_task_inputs_current(store, document, task):
                     # manuscript identity. Check their actual consumed slice
                     # before that fast path, including rejection/withdrawal.
                     if consumed_design(prepared["resolved_design_context"], store=store) != consumed_design(
-                            resolve_generation_design(store, document, entry, recipe_ref=recipe_ref), store=store):
+                            resolve_generation_design(store, document, entry, recipe_ref=recipe_ref,
+                                **frozen_design_options(prepared["resolved_design_context"])), store=store):
                         return False
         if task.get("kind") != "blueprint":
             for entry in document["pages"]:
@@ -89,7 +90,7 @@ def visual_task_inputs_current(store, document, task):
                     resolve_page_design(store, document, entry, require_current=True)
         if content_identity(document) == task.get("produced_against"):
             return True
-        dispatched = load_snapshot(store, task["dispatch_revision"])
+        dispatched = (read_snapshot or (lambda rev: load_snapshot(store, rev)))(task["dispatch_revision"])
         if compute_input_digest(dispatched) != compute_input_digest(document):
             return False
         ids = task["scope_pages"]

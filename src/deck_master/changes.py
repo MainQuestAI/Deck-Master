@@ -13,7 +13,7 @@ from .local_state import project_path
 from .method_resources import method_release, method_resources
 from .models import (bump_revision, canonical_json_bytes, content_identity, sha256_bytes,
                      validate_schema, validate_task_semantics)
-from .snapshots import load_snapshot
+from .snapshots import READ_FAILURES, load_snapshot
 from .store import Store
 from .ui_journal import _base_refs
 
@@ -48,6 +48,21 @@ def _reference_files(store, document, references, *, original=False):
         store.read_object_bytes(artifact['file'])
         files.append({'file': artifact['file'], 'role': reference['role']})
     return files
+
+
+def _trial_references(store, document, entry, value):
+    """Exact ordered reference files shared by the plan view and Task dispatch."""
+    recipe_ref = value.get('style_recipe_ref')
+    recipe = store.read_object_json(recipe_ref) if recipe_ref else None
+    v3 = bool(recipe and recipe['schema_version'] == 'style_recipe.v3')
+    refs = _reference_files(store, document, value.get('references', []), original=v3)
+    target = None
+    if recipe and (recipe['schema_version'] == 'style_recipe.v2' or v3 and recipe['intent'] == 'restyle'):
+        target = entry['blueprint']
+        original = store.read_object_json(target)
+        store.read_object_bytes(original['file'])
+        refs.insert(0, {'file': original['file'], 'role': 'reference'})
+    return refs, target
 
 
 def _plan(store, document, value):
@@ -153,6 +168,19 @@ def _plan_layers(record) -> list[str]:
     return layers
 
 
+def eligibility_context(record):
+    """Derive gate inputs from actual validated actions, including zero-call trials.
+
+    Initial commit and formal method reissue share the same scope and counting
+    rule; neither may infer the content-correction exception from a Task label.
+    """
+    return {'external_call_page_ids': [action['page_id'] for action in record['actions'] if action['max_calls'] > 0],
+            'count': record['max_calls'],
+            'candidate_count': sum(action.get('mode') == 'trial' for action in record['actions']),
+            'targets': {'page_ids': [action['page_id'] for action in record['actions']],
+                        'layers': _plan_layers(record)}}
+
+
 def _read_plan(store, plan_id):
     if not isinstance(plan_id, str) or not re.fullmatch(r'plan-[a-f0-9]{64}', plan_id):
         fail('plan_id', 'use the immutable plan ID returned by changes plan')
@@ -181,13 +209,9 @@ def commit(project, *, plan_id, base_revision, operation_id):
         # so the plan's own write targets must be inside the request scope and
         # covered by an authorization before any task or allowance is created.
         from . import eligibility
-        external_call_page_ids = [action['page_id'] for action in record['actions'] if action['max_calls'] > 0]
-        eligibility.guard(store, document, "change.commit", context={
-            "external_call_page_ids": external_call_page_ids,
-            "count": record['max_calls'],
-            "candidate_count": sum(action.get('mode') == 'trial' for action in record['actions']),
-            "targets": {"page_ids": [action['page_id'] for action in record['actions']],
-                        "layers": _plan_layers(record)}})
+        context = eligibility_context(record)
+        external_call_page_ids = context['external_call_page_ids']
+        eligibility.guard(store, document, "change.commit", context=context)
         authorization_ref = eligibility.covering_authorization_ref(store, document, 'change.commit',
             {'page_ids': [action['page_id'] for action in record['actions']], 'layers': _plan_layers(record)},
             count=record['max_calls'], external_call_page_ids=external_call_page_ids,
@@ -268,8 +292,15 @@ def _new_task(store, ledger, basis, plan, change_ref, task_id, action, *, author
     # (T03 binding writer; T04 refuses unbound production unconditionally).
     # Older projects keep their exact old dispatch (stamp_task is a no-op).
     from . import collaboration_binding
+    content_trial = action.get('mode') == 'trial' and action['write_slots'] == ['page']
+    write_scope = None
+    if content_trial:
+        from .content_production import write_scope_for
+        write_scope = write_scope_for(store, basis, 'page_copy', page_ids=[action['page_id']])
+        write_scope.update(layers=['page_copy'], allow_page_membership_change=False)
     collaboration_binding.stamp_task(
-        store, basis, task, phase="production", executor_type="host",
+        store, basis, task, phase="page_copy" if content_trial else "production", executor_type="host",
+        write_scope=write_scope,
         page_ids=[action["page_id"]],
         adoption_policy="candidate_only" if action.get("mode") == "trial" else "within_scope",
         authorization_ref=authorization_ref,
@@ -283,9 +314,9 @@ def _new_task(store, ledger, basis, plan, change_ref, task_id, action, *, author
     task.update(protocol, change_binding={'change_ref': change_ref, 'action_id': action['action_id']})
     if 'mode' in action:
         stage = 'content' if action['write_slots'] == ['page'] and action['mode'] == 'trial' else action['stage']
-        v3 = bool(plan['input'].get('style_recipe_ref') and store.read_object_json(plan['input']['style_recipe_ref'])['schema_version'] == 'style_recipe.v3')
+        references, target_reference = _trial_references(store, basis, entry, plan['input'])
         task['stage_request'] = {'mode': action['mode'], 'stage': stage,
-                                 'references': _reference_files(store, basis, plan['input'].get('references', []), original=v3)}
+                                 'references': references}
         if plan['input'].get('style_recipe_ref'):
             task['stage_request']['style_recipe_ref'] = plan['input']['style_recipe_ref']
             task['inputs'].append(plan['input']['style_recipe_ref'])
@@ -296,9 +327,7 @@ def _new_task(store, ledger, basis, plan, change_ref, task_id, action, *, author
             if selected_recipe['schema_version'] == 'style_recipe.v2' or (selected_recipe['schema_version'] == 'style_recipe.v3' and selected_recipe['intent'] == 'restyle'):
                 task['required_capabilities'].append('visual_reference')
                 # The target image anchors all explicitly preserved dimensions.
-                original = store.read_object_json(entry['blueprint'])
-                task['stage_request']['references'].insert(0, {'file': original['file'], 'role': 'reference'})
-                task['stage_request']['target_reference_ref'] = entry['blueprint']
+                task['stage_request']['target_reference_ref'] = target_reference
         if plan['input'].get('icon_recipe_ref'):
             task['stage_request']['icon_recipe_ref'] = plan['input']['icon_recipe_ref']
             task['inputs'].append(plan['input']['icon_recipe_ref'])
@@ -310,6 +339,9 @@ def _new_task(store, ledger, basis, plan, change_ref, task_id, action, *, author
                 # old Hosts are refused before they can claim the task.
                 from .candidates import CONTENT_CAPABILITY
                 task['required_capabilities'].append(CONTENT_CAPABILITY)
+    if content_trial:
+        from .method_resources import freeze_task_methods
+        freeze_task_methods(task)
     validate_task_semantics(task)
     return task
 
@@ -382,31 +414,68 @@ def handoff(project, *, change_id):
              'plan_ref': change['plan_ref'], 'plan': plan_record,
              'read_command': shlex.join(['deck-master', 'changes', 'handoff', '--project', str(store.project_root), '--change-id', change_id])}
     validate_schema('change_handoff', block)
-    completed = sum(t['status'] == 'completed' for t in selected)
-    state = ('completed' if completed == len(rows) else 'partial' if completed else
-             'running' if any(t['status'] == 'running' and t.get('execution_ref') for t in selected) else
-             'cancelled' if all(t['status'] == 'cancelled' for t in selected) else
-             'failed' if any(t['status'] in ('failed', 'superseded') for t in selected) else 'awaiting_host')
-    needs_verification = any(row['needs_verification'] for row in rows)
-    unknown = any(c['state'] == 'unknown' for t in selected for c in t.get('call_allowances', []))
-    if unknown:
-        state = 'unknown'
-    return {'status': state, 'needs_verification': needs_verification or unknown,
+    state = _status(selected)
+    return {**state,
             'recovery': 'Verify the existing execution or confirm cancellation before a new handoff. Never retry a call automatically.',
-            'completed_count': completed, 'total_count': len(rows), 'handoff': block,
+            'handoff': block,
             'summary': f'{len(rows)} explicit page tasks; copy is not execution. Read the committed plan before starting.',
             'text': 'Read this local change using the official CLI. Copying does not start work.\n' +
                     block['read_command'] + '\n\n```deck-master-handoff.v1\n' +
                     json.dumps(block, ensure_ascii=False, indent=2).replace('`', '\\u0060') + '\n```'}
 
 
+def _status(selected):
+    """Aggregate task state without constructing a handoff or command text."""
+    from .run_desk import task_row
+    completed = sum(t['status'] == 'completed' for t in selected)
+    state = ('completed' if completed == len(selected) else 'partial' if completed else
+             'running' if any(t['status'] == 'running' and t.get('execution_ref') for t in selected) else
+             'cancelled' if all(t['status'] == 'cancelled' for t in selected) else
+             'failed' if any(t['status'] in ('failed', 'superseded') for t in selected) else 'awaiting_host')
+    needs_verification = any(task_row(task)['needs_verification'] for task in selected)
+    unknown = any(c['state'] == 'unknown' for t in selected for c in t.get('call_allowances', []))
+    if unknown:
+        state = 'unknown'
+    return {'status': state, 'needs_verification': needs_verification or unknown,
+            'completed_count': completed, 'total_count': len(selected)}
+
+
 @operations.public
 def list_changes(project):
     store = Store(project_path(project)); document = load_snapshot(store)
+    from .read_facts import ReadFacts
+    store = ReadFacts(store, document)
+    task_map, first_error = {}, None
+    for ref in document.get('tasks', []) if document.get('changes') else []:
+        try:
+            task = store.read_object_json(ref)
+            task_map.setdefault(task['task_id'], (task, first_error))
+        except READ_FAILURES as exc:
+            if first_error is None:
+                first_error = exc
     records = []
     for ref in document.get('changes', []):
         change = store.read_object_json(ref); validate_schema('change_set', change)
-        state = handoff(project, change_id=change['change_id'])
+        selected = []
+        for task_id in change['task_ids']:
+            if task_id not in task_map:
+                if first_error is not None:
+                    raise first_error
+                raise tasks.EnvelopeError(f'(task {task_id})', 'task not found in current Document')
+            task, preceding_error = task_map[task_id]
+            if preceding_error is not None:
+                raise preceding_error
+            validate_task_semantics(task)
+            selected.append(task)
+        # Preserve malformed frozen-plan/call-record refusal without building
+        # the complete handoff schema, command, or text for each group.
+        validate_schema('change_plan', store.read_object_json(change['plan_ref']))
+        for task in selected:
+            for item in task.get('generation_requests', []):
+                store.read_object_json(item)['request_id']
+            for item in task.get('generation_attempts', []):
+                store.read_object_json(item)['attempt_id']
+        state = _status(selected)
         records.append({'change_id': change['change_id'], 'ref': ref, 'status': state['status'],
                         'completed_count': state['completed_count'], 'total_count': state['total_count'],
                         'needs_verification': state['needs_verification']})

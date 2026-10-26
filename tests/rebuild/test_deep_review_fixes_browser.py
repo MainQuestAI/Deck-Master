@@ -185,13 +185,13 @@ def test_content_change_list_keeps_the_formal_baseline_after_draft_restore(pages
     identity = page.request.get(server.start().rstrip('/') + '/api/project').json()['project_identity']
     page.evaluate("args => {location.hash = new URLSearchParams({project: args[0], surface: 'page', page: 'p01', layer: 'content', revision: args[1]})}",
                   [identity, before])
-    page.locator('.content-editor summary').click()
+    page.locator('.content-editor > :is(summary,button)').click()
     page.get_by_role('textbox', name='页面标题', exact=True).fill('未提交的草稿标题')
     expect(page.locator('.draft-state')).to_contain_text('已保存到项目', timeout=15000)
 
     # 刷新后恢复的是草稿；比较基准仍是所读正式原文（R3）。
     page.reload()
-    page.locator('.content-editor summary').click()
+    page.locator('.content-editor > :is(summary,button)').click()
     changes = page.locator('.content-changes')
     expect(changes).to_contain_text('本次具体改动（1）', timeout=15000)
     row = changes.locator('.content-change-list li').first
@@ -322,7 +322,7 @@ def test_complex_body_change_list_and_impact_share_one_screen(editorial_browser)
     identity = page.request.get(server.start().rstrip('/') + '/api/project').json()['project_identity']
     page.evaluate("args => {location.hash = new URLSearchParams({project: args[0], surface: 'page', page: 'p01', layer: 'content', revision: args[1]})}",
                   [identity, revision])
-    page.locator('.content-editor summary').click()
+    page.locator('.content-editor > :is(summary,button)').click()
     page.get_by_label('正文块 10 · 文字').fill('第 10 段改写：保留数字，换一种说法。')
     page.get_by_role('button', name='预览正文修改影响', exact=True).click()
     impact = page.locator('.content-operation')

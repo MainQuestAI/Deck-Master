@@ -35,7 +35,8 @@
         "preproduction",
         "page_visual",
         "final",
-        "use_validation"
+        "use_validation",
+        "original_image"
       ]
     },
     "status": {
@@ -373,6 +374,84 @@
           "type": "null"
         }
       ]
+    },
+    "expression_checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "graph",
+        "hierarchy",
+        "reading_path",
+        "observed_nodes",
+        "observed_edges"
+      ],
+      "properties": {
+        "graph": {
+          "enum": [
+            "pass",
+            "fail",
+            "unknown"
+          ]
+        },
+        "hierarchy": {
+          "enum": [
+            "pass",
+            "fail",
+            "unknown"
+          ]
+        },
+        "reading_path": {
+          "enum": [
+            "pass",
+            "fail",
+            "unknown"
+          ]
+        },
+        "observed_nodes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "observed_edges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "edge_id",
+              "from",
+              "to",
+              "direction"
+            ],
+            "properties": {
+              "edge_id": {
+                "type": "string"
+              },
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              },
+              "direction": {
+                "enum": [
+                  "forward",
+                  "both",
+                  "undirected"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "review_subject": {
+      "enum": [
+        "outline"
+      ],
+      "description": "Explicit outline-only subject; absent retains the original manuscript contract."
     }
   },
   "required": [
@@ -388,5 +467,64 @@
     "created_at",
     "replaces"
   ],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "review_stage": {
+            "const": "original_image"
+          }
+        },
+        "required": [
+          "review_stage"
+        ]
+      },
+      "then": {
+        "required": [
+          "expression_checks"
+        ],
+        "properties": {
+          "kind": {
+            "const": "visual_expression"
+          }
+        }
+      },
+      "else": {
+        "not": {
+          "required": [
+            "expression_checks"
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "review_subject"
+        ],
+        "properties": {
+          "review_subject": {
+            "const": "outline"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "review_stage": {
+            "const": "preproduction"
+          },
+          "kind": {
+            "enum": [
+              "argument",
+              "progression"
+            ]
+          }
+        },
+        "required": [
+          "review_stage"
+        ]
+      }
+    }
+  ]
 }

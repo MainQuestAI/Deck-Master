@@ -1,0 +1,104 @@
+{
+  "scope": "same current summary with baseline receipt/snapshot readers vs request-scoped index",
+  "history_padding": 100,
+  "task_count": 3,
+  "equal": true,
+  "samples": {
+    "before": [
+      {
+        "cpu_ms": 24.309999999999942,
+        "wall_ms": 24.343666969798505,
+        "coverage_validations": 2
+      },
+      {
+        "cpu_ms": 24.051000000000045,
+        "wall_ms": 24.06837500166148,
+        "coverage_validations": 2
+      },
+      {
+        "cpu_ms": 24.119,
+        "wall_ms": 24.14612495340407,
+        "coverage_validations": 2
+      },
+      {
+        "cpu_ms": 26.876000000000012,
+        "wall_ms": 27.01233304105699,
+        "coverage_validations": 2
+      },
+      {
+        "cpu_ms": 26.29500000000007,
+        "wall_ms": 26.3072089292109,
+        "coverage_validations": 2
+      },
+      {
+        "cpu_ms": 23.776999999999937,
+        "wall_ms": 23.803374962881207,
+        "coverage_validations": 2
+      },
+      {
+        "cpu_ms": 24.60200000000001,
+        "wall_ms": 24.677540990523994,
+        "coverage_validations": 2
+      },
+      {
+        "cpu_ms": 24.101000000000038,
+        "wall_ms": 24.214999983087182,
+        "coverage_validations": 2
+      }
+    ],
+    "after": [
+      {
+        "cpu_ms": 19.538999999999973,
+        "wall_ms": 19.56179109402001,
+        "coverage_validations": 1
+      },
+      {
+        "cpu_ms": 18.80599999999999,
+        "wall_ms": 18.869083025492728,
+        "coverage_validations": 1
+      },
+      {
+        "cpu_ms": 20.04399999999995,
+        "wall_ms": 20.052916021086276,
+        "coverage_validations": 1
+      },
+      {
+        "cpu_ms": 19.603000000000037,
+        "wall_ms": 19.622665946371853,
+        "coverage_validations": 1
+      },
+      {
+        "cpu_ms": 20.74699999999996,
+        "wall_ms": 20.778292091563344,
+        "coverage_validations": 1
+      },
+      {
+        "cpu_ms": 19.97799999999994,
+        "wall_ms": 20.01520898193121,
+        "coverage_validations": 1
+      },
+      {
+        "cpu_ms": 19.00400000000002,
+        "wall_ms": 19.02250002603978,
+        "coverage_validations": 1
+      },
+      {
+        "cpu_ms": 19.139999999999937,
+        "wall_ms": 19.171749940142035,
+        "coverage_validations": 1
+      }
+    ]
+  },
+  "median": {
+    "before": {
+      "cpu_ms": 24.214499999999973,
+      "wall_ms": 24.279333476442844,
+      "coverage_validations": 2.0
+    },
+    "after": {
+      "cpu_ms": 19.571000000000005,
+      "wall_ms": 19.59222852019593,
+      "coverage_validations": 1.0
+    }
+  }
+}

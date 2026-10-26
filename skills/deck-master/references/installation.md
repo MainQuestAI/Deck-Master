@@ -91,6 +91,83 @@ request. Preserve the journal and inspect the named paths.
 paths, including interrupted legacy migration recovery. It changes only the
 selected prefix. A request that used this option must retain it on exact retry.
 
+### Inspect or resolve an interrupted transaction
+
+```sh
+deck-master install transaction status --prefix /path/to/prefix
+deck-master install transaction status --prefix /path/to/prefix --transaction-id <UUIDv4>
+deck-master install transaction recover --prefix /path/to/prefix --transaction-id <UUIDv4> --action resume
+deck-master install transaction recover --prefix /path/to/prefix --transaction-id <UUIDv4> --action rollback
+deck-master install transaction recover --prefix /path/to/prefix --transaction-id <UUIDv4> --action abandon --reason "Preserve the conflicting installation for inspection"
+```
+
+`status` only reads the preserved journals: phase, finite actions, conflicts,
+available recovery choices, cleanup results and current installation observation.
+It does not create locks, repair a pending pointer, dispatch an installation or
+turn a historical success receipt into a current health claim.
+
+Status collects each journal independently. An unreadable/corrupt/unsupported
+neighbour is returned in `diagnostics` and as an `unverifiable` transaction row;
+it does not hide a readable selected ID. A selected missing journal also returns
+an `unverifiable` row with its reason. `verification=verified` describes only that
+journal's structure, not permission to recover the installation.
+
+The additive `discovery_complete` field states whether all evidence was read;
+`recovery_blocked` also covers inconsistent pointers or multiple unfinished IDs.
+Any global uncertainty removes `available_actions` from all transaction rows.
+An absent selected ID does not make a completed directory scan incomplete, but
+its row is unverifiable and that selected status returns `recovery_blocked=true`.
+`pending.state=unknown` never means no pending request, even if the legacy
+`pending_transaction_id` is null. `verified` identifies one unfinished request
+from verified evidence; `terminal` identifies a stale pointer to a valid terminal
+receipt; only `none` establishes that complete discovery found no unfinished
+request or pending pointer. `pending.pointer_transaction_id` preserves the
+verified pointer identity separately from a journal-derived unfinished ID.
+
+Each action's additive `phase` is a pure observation shared with recovery:
+`ready`, `backed_up` or `applied`, plus reverse recovery and repeated-path
+frontiers (`restored`, `deferred`, `waiting`, `superseded`). A missing target after
+backup is valid only with the required backup, preparation, parent and witnesses.
+Missing proof or external replacement reports `conflict`; historical terminal
+actions report `historical` without comparing old paths to a later installation.
+Current ownership conflicts remove `resume`; `rollback` and `abandon` remain
+subject to the executor's full proof checks. A valid `backed_up` phase retains
+`resume` when discovery is trusted.
+Status is diagnostic even when it returns exit 0. Activate and every recover
+action still require complete globally trusted discovery; no force unlock is
+introduced by partial status results.
+
+`resume` uses the original frozen verb, release and Host root, even when the
+current `CODEX_HOME` differs. `rollback` reverses only this interrupted
+transaction's provably owned actions, in the original lock order. It is distinct
+from `install rollback`, which creates a new transaction to switch to `previous`.
+Recovery interruption retains its original transaction ID and direction; retry
+the same recovery command. An incomplete preparing proof may still prevent safe
+resume or rollback; no action guesses inode ownership from equal link text.
+
+`abandon` requires a reason and a structurally valid, version-supported journal.
+It persists an `activation_transaction.v2` abandoned receipt, including the
+previous phase and all preserved paths, before clearing only that transaction's
+pending pointer. It does not repair the installation or delete external content,
+backups, preparations, witnesses or the journal. A retry keeps the same reason;
+an abandoned plan cannot later resume or restore managed paths. There is no
+force-unlock path for a corrupt, unsupported or foreign journal. Older runtimes
+must refuse the v2 receipt rather than reinterpret abandonment as success.
+
+After abandonment, status and activation results continue to report
+`current_install_state=conflict` and `installation_requires_attention=true`,
+with the abandoned transaction IDs, even if a later new activation succeeds.
+New requests still perform normal path-ownership and release checks. A completed
+receipt alone is not proof that the retained mixed/conflicting state was repaired.
+
+New transactions mark support for terminal cleanup. Only their current-namespace
+`.after` and `.witness` objects with durably recorded inode identities can be
+removed after `completed` or verified `rolled_back`. Durable capture intents make
+cleanup interruption retryable. Replaced objects and changed parents are
+preserved; original `.before`/legacy backups, unconfirmed preparations and older
+preparation namespaces remain available. Existing terminal v1 receipts without
+cleanup support are read and replayed without retroactive journal changes.
+
 Rollback follows `previous` and keeps method and CLI releases aligned. If the
 previous release predates the Skill, managed links missing from that release are removed and the result
 reports `host_skill_unregistered`. Project data and recorded calls are not rolled back. RC3-04 projects use the

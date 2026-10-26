@@ -134,6 +134,8 @@ created_at: timestamp
 
 `budget_state=available/exhausted/unknown` 从已有调用账本派生，不是撤回状态。余额只约束新增 reserve/子授权占额；begin 验证自己的已预留 slot 仍有效，不要求为同一个 slot 再剩余一次额度。最后一份合法调用结算后即使 remaining=0，其结果仍可接纳、范围内收尾仍可继续；额外调用被拒绝。采用已有 candidate 必须有 adoption 权限，但不再消耗 image-call 额度。candidate 数额同理：上限约束新增候选/候选槽，已经合法产生的最后一个候选不因计数达到上限而失去展示/采用资格。
 
+零调用正文纠正只免除视觉生产前审条件，不免除当前请求范围、候选数量或实际绑定授权的有效性。新派发与方法重签均从已验证的 change action 推导相同页面、写层、候选数和调用上限，不能凭 Task 的 trial/content 标签取得例外。允许无需执行授权的只读审查 Task 保持 `authorization_ref=null`；已经绑定授权的 Task 则不能因零调用、另有一份有效 grant 或重新冻结方法，复活已撤回、过期、失效或缺证的原授权及其子链。缺证/失效与用户明确撤回分别报告，实际调用结算和精确成功回放仍遵循原事实通道。
+
 ### 3.4 全套制作的默认预算与未来页集合
 
 1. 尚无 Plan 时，delegate 的 Scope.page_ids=[] 恒是无实际目标页。父委派可另在 constraints 声明 `future_pages={selector:adopted_plan_for_this_request, max_pages:integer|null, max_pages_basis:provided|delegated|pending}`，只授予按本请求规划/提出页数的领域权限。它不是通配全部页面，也不能直接派发 blueprint。max_pages 未定时必须先得到符合已有页数委派/方向决定的有限 page budget；没有这种依据就展示具体页数取舍，不能物化生产授权。
@@ -309,6 +311,7 @@ projection 与每类 action 的必读集合由 Runtime 中央注册；Host 不�
 * 撤回 authorization：终止该授权及其子链的新动作；reserved 未执行额度按原协议释放；in-flight 尝试可取消但不能保证提供方撤销成功，最终只结算事实并隔离结果。
 * 单个 task cancel 保持其原语义，不能冒充项目撤回。CLI/UI 必须明确区分“取消此任务”“暂停本次请求”“撤回此范围”；用户发出“别再做了”时默认暂停当前请求，而非只取消一个 task 后被 continue 重建。
 * 已完成收据重放只返回历史成功事实；当前 delivery/下一动作需重新判定，不得因为回放旧 success 自动继续或宣布当前已验收。
+* 精确文件交付读取来源请求在当前已提交历史中的最新状态，并同时遵守适用的当前请求控制。只有 `closed_reason=completed` 可保留该固定文件的交付资格；暂停、拒绝或撤回不能被旧 artifact 快照中的开放状态覆盖。顺序切换到另一变体本身不撤回已经授权的固定文件，但不扩大为该变体的新文件权限。
 * restore 只恢复内容/视觉/产物事实，保留当前 request、decision/auth 状态、停止策略、费用与操作历史。旧内容与当前受众不匹配时显示 input reconciliation，而不自动恢复旧用户意图。
 
 ## 8. 精确交付谓词

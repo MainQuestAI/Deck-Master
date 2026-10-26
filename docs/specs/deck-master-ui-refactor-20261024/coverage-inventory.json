@@ -1,0 +1,412 @@
+{
+  "schema_version": "ui-refactor-coverage.v1",
+  "date": "2026-10-24",
+  "scope": "READ_ONLY_ENGINEERING_PLAN",
+  "product_code_modified": false,
+  "repository": "MainQuestAI/Deck-Master",
+  "baseline": {
+    "checkout_branch": "main",
+    "checkout_commit": "92e9f567eaf506f004cac1ef68f44f314739631a",
+    "checkout_committed_at": "2026-10-14T15:10:45+08:00",
+    "remote_main_observed": "afcc23d1654a6ce24583677c4de9d4a80f0f89bd",
+    "remote_observation_method": "git ls-remote origin refs/heads/main",
+    "remote_fetched": false,
+    "active_install_inspected": false,
+    "runtime_verified": false,
+    "dirty_worktree_preserved": true
+  },
+  "architecture": {
+    "default_local_entry": "/studio/",
+    "shared_js_entry": "src/deck_master/resources/static/v2/app.js",
+    "js_module_count": 47,
+    "initial_css_order": [
+      "src/deck_master/resources/static/v2/tokens.css",
+      "src/deck_master/resources/static/v2/style.css",
+      "src/deck_master/resources/static/v2/workbench.css",
+      "src/deck_master/resources/static/v2/navigation-usability.css",
+      "src/deck_master/resources/static/v2/studio.css",
+      "src/deck_master/resources/static/studio/workspace.css",
+      "src/deck_master/resources/static/studio/overview.css",
+      "src/deck_master/resources/static/studio/delivery.css",
+      "src/deck_master/resources/static/studio/reading.css"
+    ],
+    "lazy_css": [
+      "src/deck_master/resources/static/v2/comparison-canvas.css"
+    ],
+    "new_framework_proposed": false,
+    "backend_rewrite_proposed": false
+  },
+  "areas": [
+    {
+      "id": "projects",
+      "label": "项目入口",
+      "evidence_status": "LOCAL_SOURCE_INSPECTED_NOT_RUNTIME_VERIFIED",
+      "modules": [
+        "src/deck_master/resources/static/v2/app.js",
+        "src/deck_master/resources/static/v2/launcher-ui.js"
+      ],
+      "capabilities_to_preserve": [
+        "新建与打开",
+        "目录登记与选择恢复",
+        "只读示例",
+        "搜索与不可读状态"
+      ],
+      "regression_entrypoints": [
+        "tests/rebuild/test_ui_design_browser.py",
+        "tests/rebuild/test_entry_capabilities.py"
+      ],
+      "test_execution_status": "NOT_RUN_THIS_AUDIT"
+    },
+    {
+      "id": "shell",
+      "label": "全局工作台",
+      "evidence_status": "LOCAL_SOURCE_INSPECTED_NOT_RUNTIME_VERIFIED",
+      "modules": [
+        "src/deck_master/resources/static/v2/project.js",
+        "src/deck_master/resources/static/v2/routes.js",
+        "src/deck_master/resources/static/v2/api.js",
+        "src/deck_master/resources/static/v2/dom.js"
+      ],
+      "capabilities_to_preserve": [
+        "五工作面",
+        "固定版本和深链接",
+        "能力降级",
+        "连接状态",
+        "返回上下文"
+      ],
+      "regression_entrypoints": [
+        "tests/rebuild/test_navigation_usability_browser.py",
+        "tests/rebuild/test_studio_connection_browser.py"
+      ],
+      "test_execution_status": "NOT_RUN_THIS_AUDIT"
+    },
+    {
+      "id": "overview",
+      "label": "制作总览",
+      "evidence_status": "LOCAL_SOURCE_INSPECTED_NOT_RUNTIME_VERIFIED",
+      "modules": [
+        "src/deck_master/resources/static/v2/overview.js",
+        "src/deck_master/resources/static/v2/overview-state.js",
+        "src/deck_master/resources/static/v2/action-targets.js"
+      ],
+      "capabilities_to_preserve": [
+        "attention与next_actions",
+        "制作矩阵",
+        "提示词事实",
+        "搜索筛选排序",
+        "批量选择"
+      ],
+      "regression_entrypoints": [
+        "tests/rebuild/test_studio_overview_browser.py",
+        "tests/rebuild/test_overview_preferences_browser.py",
+        "tests/rebuild/test_action_targets_browser.py"
+      ],
+      "test_execution_status": "NOT_RUN_THIS_AUDIT"
+    },
+    {
+      "id": "content",
+      "label": "内容与页序",
+      "evidence_status": "LOCAL_SOURCE_INSPECTED_NOT_RUNTIME_VERIFIED",
+      "modules": [
+        "src/deck_master/resources/static/v2/content-sources.js",
+        "src/deck_master/resources/static/v2/content-edit.js",
+        "src/deck_master/resources/static/v2/material-uploads.js"
+      ],
+      "capabilities_to_preserve": [
+        "材料输入与来源关联",
+        "大纲页目标",
+        "正文与页序",
+        "合并拆分改写移除",
+        "影响预览与确认"
+      ],
+      "regression_entrypoints": [
+        "tests/rebuild/test_studio_content_browser.py",
+        "tests/rebuild/test_ux04_content_annotations_browser.py",
+        "tests/rebuild/test_pr105_inputs_browser.py"
+      ],
+      "test_execution_status": "NOT_RUN_THIS_AUDIT"
+    },
+    {
+      "id": "gallery",
+      "label": "整稿画廊",
+      "evidence_status": "LOCAL_SOURCE_INSPECTED_NOT_RUNTIME_VERIFIED",
+      "modules": [
+        "src/deck_master/resources/static/v2/gallery.js",
+        "src/deck_master/resources/static/v2/gallery-state.js",
+        "src/deck_master/resources/static/v2/images.js"
+      ],
+      "capabilities_to_preserve": [
+        "联系表连续并排",
+        "层切换",
+        "参考页",
+        "固定引用",
+        "图片读取和资源释放"
+      ],
+      "regression_entrypoints": [
+        "tests/rebuild/test_gallery_reading_browser.py",
+        "tests/rebuild/test_studio_gallery_batch_browser.py"
+      ],
+      "test_execution_status": "NOT_RUN_THIS_AUDIT"
+    },
+    {
+      "id": "style",
+      "label": "风格校准",
+      "evidence_status": "LOCAL_SOURCE_INSPECTED_NOT_RUNTIME_VERIFIED",
+      "modules": [
+        "src/deck_master/resources/static/v2/style-calibration.js",
+        "src/deck_master/resources/static/v2/visual-style.js",
+        "src/deck_master/resources/static/v2/style-phases.js"
+      ],
+      "capabilities_to_preserve": [
+        "项目内五维",
+        "截图七维",
+        "保持与借用",
+        "单页试作",
+        "候选采用后显式扩选",
+        "恢复原阶段"
+      ],
+      "regression_entrypoints": [
+        "tests/rebuild/test_studio_style_browser.py",
+        "tests/rebuild/test_ux03_style_candidate_browser.py",
+        "tests/rebuild/test_pr103_repair_browser.py"
+      ],
+      "test_execution_status": "NOT_RUN_THIS_AUDIT"
+    },
+    {
+      "id": "runs",
+      "label": "任务与交付",
+      "evidence_status": "LOCAL_SOURCE_INSPECTED_NOT_RUNTIME_VERIFIED",
+      "modules": [
+        "src/deck_master/resources/static/v2/views.js",
+        "src/deck_master/resources/static/v2/run-desk.js",
+        "src/deck_master/resources/static/v2/change-handoff.js",
+        "src/deck_master/resources/static/v2/delivery-desk.js"
+      ],
+      "capabilities_to_preserve": [
+        "正在进行待决定版本文件",
+        "任务分页与目标",
+        "交接核实取消",
+        "版本恢复",
+        "固定版本下载"
+      ],
+      "regression_entrypoints": [
+        "tests/rebuild/test_ux05_runs_delivery_browser.py",
+        "tests/rebuild/test_studio_delivery_browser.py",
+        "tests/rebuild/test_versioned_exports.py"
+      ],
+      "test_execution_status": "NOT_RUN_THIS_AUDIT"
+    },
+    {
+      "id": "page",
+      "label": "共享单页",
+      "evidence_status": "LOCAL_SOURCE_INSPECTED_NOT_RUNTIME_VERIFIED",
+      "modules": [
+        "src/deck_master/resources/static/v2/page-workbench.js",
+        "src/deck_master/resources/static/v2/page-reading.js",
+        "src/deck_master/resources/static/v2/page-text.js",
+        "src/deck_master/resources/static/v2/production-view.js",
+        "src/deck_master/resources/static/v2/request-view.js"
+      ],
+      "capabilities_to_preserve": [
+        "来源逐页稿提示词原图SVGPPT",
+        "完整阅读",
+        "读改标注互斥",
+        "上下页",
+        "历史只读",
+        "预备与实际提示词分离"
+      ],
+      "regression_entrypoints": [
+        "tests/rebuild/test_studio_page_browser.py",
+        "tests/rebuild/test_studio_reading_browser.py",
+        "tests/rebuild/test_page_tools_panel_browser.py"
+      ],
+      "test_execution_status": "NOT_RUN_THIS_AUDIT"
+    },
+    {
+      "id": "sources",
+      "label": "来源阅读",
+      "evidence_status": "LOCAL_SOURCE_INSPECTED_NOT_RUNTIME_VERIFIED",
+      "modules": [
+        "src/deck_master/resources/static/v2/content-edit.js",
+        "src/deck_master/resources/static/v2/content-sources.js"
+      ],
+      "capabilities_to_preserve": [
+        "固定来源版本",
+        "材料定位",
+        "缺失与提取待核实",
+        "原材料不可变"
+      ],
+      "regression_entrypoints": [
+        "tests/rebuild/test_sources.py",
+        "tests/rebuild/test_content_mapping_claims.py"
+      ],
+      "test_execution_status": "NOT_RUN_THIS_AUDIT"
+    },
+    {
+      "id": "candidates",
+      "label": "候选比较",
+      "evidence_status": "LOCAL_SOURCE_INSPECTED_NOT_RUNTIME_VERIFIED",
+      "modules": [
+        "src/deck_master/resources/static/v2/candidate-cards.js",
+        "src/deck_master/resources/static/v2/candidate-desk.js",
+        "src/deck_master/resources/static/v2/changeset-desk.js",
+        "src/deck_master/resources/static/v2/comparison-canvas.js",
+        "src/deck_master/resources/static/v2/text-diff.js"
+      ],
+      "capabilities_to_preserve": [
+        "同页同层固定基准",
+        "正文差异和完整图稿",
+        "采用影响",
+        "保留当前与重开",
+        "基准失效拒绝"
+      ],
+      "regression_entrypoints": [
+        "tests/rebuild/test_comparison_canvas_browser.py",
+        "tests/rebuild/test_studio_candidate_batch_browser.py",
+        "tests/rebuild/test_candidate_decisions.py"
+      ],
+      "test_execution_status": "NOT_RUN_THIS_AUDIT"
+    },
+    {
+      "id": "batch_annotations",
+      "label": "批量与意见",
+      "evidence_status": "LOCAL_SOURCE_INSPECTED_NOT_RUNTIME_VERIFIED",
+      "modules": [
+        "src/deck_master/resources/static/v2/batch-actions.js",
+        "src/deck_master/resources/static/v2/batch-policy.js",
+        "src/deck_master/resources/static/v2/annotations.js",
+        "src/deck_master/resources/static/v2/annotation-submission.js",
+        "src/deck_master/resources/static/v2/text-selection.js",
+        "src/deck_master/resources/static/v2/icon-workbench.js"
+      ],
+      "capabilities_to_preserve": [
+        "筛选外选择数量",
+        "只选可操作对象",
+        "意见不派发",
+        "精确选段和图标范围",
+        "键盘替代",
+        "重复提交防护"
+      ],
+      "regression_entrypoints": [
+        "tests/rebuild/test_ux02_batch_slice_browser.py",
+        "tests/rebuild/test_batch_actions_browser.py",
+        "tests/rebuild/test_icon_browser.py"
+      ],
+      "test_execution_status": "NOT_RUN_THIS_AUDIT"
+    },
+    {
+      "id": "recovery",
+      "label": "草稿与恢复",
+      "evidence_status": "LOCAL_SOURCE_INSPECTED_NOT_RUNTIME_VERIFIED",
+      "modules": [
+        "src/deck_master/resources/static/v2/drafts.js",
+        "src/deck_master/resources/static/v2/business-operations.js",
+        "src/deck_master/resources/static/v2/receipt-verdict.js",
+        "src/deck_master/resources/static/v2/personal-recovery.js",
+        "src/deck_master/resources/static/v2/run-recovery.js",
+        "src/deck_master/resources/static/v2/summary-poll.js"
+      ],
+      "capabilities_to_preserve": [
+        "项目ACK与跨端口草稿",
+        "独立窗口缓冲",
+        "冲突双方保留",
+        "原操作核实和重放",
+        "取消晚回包保护",
+        "读生命周期"
+      ],
+      "regression_entrypoints": [
+        "tests/rebuild/test_personal_recovery_browser.py",
+        "tests/rebuild/test_task_receipt_recovery.py",
+        "tests/rebuild/test_summary_poll.py",
+        "tests/rebuild/test_late_results_and_stops.py"
+      ],
+      "test_execution_status": "NOT_RUN_THIS_AUDIT"
+    }
+  ],
+  "invariants": [
+    "保存不等于提交",
+    "复制不等于接手",
+    "返回不等于采用",
+    "采用不等于检查通过",
+    "检查通过不等于已发布",
+    "历史与比较固定对象",
+    "草稿与业务操作身份独立",
+    "unknown先核实原operation",
+    "取消后迟到结果不能覆盖",
+    "筛选改变保留选择并显示隐藏数量",
+    "风格v1五维与v2七维不得混合",
+    "恢复产生新版本且保留调用事实"
+  ],
+  "phases": [
+    {
+      "id": "E0",
+      "scope": "基线与能力对齐",
+      "depends_on": []
+    },
+    {
+      "id": "E1",
+      "scope": "组件、入口与全局壳",
+      "depends_on": [
+        "E0"
+      ]
+    },
+    {
+      "id": "E2",
+      "scope": "总览、内容与页序",
+      "depends_on": [
+        "E1"
+      ]
+    },
+    {
+      "id": "E3",
+      "scope": "单页、阅读与抽屉",
+      "depends_on": [
+        "E1"
+      ]
+    },
+    {
+      "id": "E4",
+      "scope": "画廊与候选比较",
+      "depends_on": [
+        "E3"
+      ]
+    },
+    {
+      "id": "E5",
+      "scope": "风格、任务与交付",
+      "depends_on": [
+        "E4"
+      ]
+    },
+    {
+      "id": "E6",
+      "scope": "样式收口与冻结包验收",
+      "depends_on": [
+        "E2",
+        "E3",
+        "E4",
+        "E5"
+      ]
+    }
+  ],
+  "historical_evidence": {
+    "source": "docs/specs/deck-master-webui-v4-20260930/PR103-JOINT-REPAIR.md",
+    "interpretation": "historical engineering and partial visual evidence; not current acceptance; not real Host or customer approval"
+  },
+  "acceptance_layers": [
+    "static reference design",
+    "source and unit behavior",
+    "real browser with isolated synthetic projects",
+    "frozen installed package",
+    "real Host generation",
+    "professional quality review",
+    "user acceptance",
+    "delivery and activation"
+  ],
+  "validation": {
+    "referenced_files_checked": 87,
+    "missing_files": [],
+    "status": "PASS",
+    "meaning": "file existence only; no tests executed"
+  }
+}

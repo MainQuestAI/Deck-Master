@@ -1,0 +1,106 @@
+{
+  "schema": "deck-master.ui-research.v1",
+  "date": "2026-10-24",
+  "evidence_layer": "official_document_review",
+  "source_count": 7,
+  "sources": [
+    {
+      "id": "R01",
+      "title": "Linear — Select issues",
+      "url": "https://linear.app/docs/select-issues",
+      "publisher": "Linear",
+      "verified": "2026-10-24",
+      "kind": "official_product_documentation",
+      "facts": [
+        "区分高亮与选择，初次打开列表默认不选择对象。",
+        "选择对象后可通过命令或上下文菜单操作，常用批量操作显示在底部。"
+      ],
+      "inference": "选择驱动批量工具栏；查看对象与选中对象分离。",
+      "boundary": "筛选外选择保留是 Deck Master 本地 D1 约束，非本来源的保证。"
+    },
+    {
+      "id": "R02",
+      "title": "Microsoft — Choose the right view for the task in PowerPoint",
+      "url": "https://support.microsoft.com/en-us/powerpoint/training/choose-the-right-view-for-the-task-in-powerpoint",
+      "publisher": "Microsoft",
+      "verified": "2026-10-24",
+      "kind": "official_product_documentation",
+      "facts": [
+        "编辑、排序、大纲和阅读视图分别适配不同任务。",
+        "客户端与存储环境会影响可用视图。"
+      ],
+      "inference": "区分内容结构、整稿视觉检查与单页阅读制作，保持同页上下文。",
+      "boundary": "不复制 Office 功能区或推断生成候选工作流。"
+    },
+    {
+      "id": "R03",
+      "title": "Figma — Compare changes in Dev Mode",
+      "url": "https://help.figma.com/hc/en-us/articles/15023193382935-Compare-changes-in-Dev-Mode",
+      "publisher": "Figma",
+      "verified": "2026-10-24",
+      "kind": "official_product_documentation",
+      "facts": [
+        "选定对象后可通过版本历史比较差异。",
+        "支持并排、叠加、变更图层和属性查看。"
+      ],
+      "inference": "比较头部持续呈现页、层与两端版本；按媒介选择差异形式。",
+      "boundary": "锁定引用及候选采用语义由 Deck Master 合同定义。"
+    },
+    {
+      "id": "R04",
+      "title": "W3C APG — Menu Button Pattern",
+      "url": "https://www.w3.org/WAI/ARIA/apg/patterns/menu-button/",
+      "publisher": "W3C WAI",
+      "verified": "2026-10-24",
+      "kind": "official_accessibility_guidance",
+      "facts": [
+        "菜单触发器需按钮语义、展开状态与弹出菜单关系。",
+        "Enter 或 Space 打开后焦点进入菜单。"
+      ],
+      "inference": "行末省略号具名并呈现焦点态；选择完整的菜单或普通弹出列表模式。",
+      "boundary": "APG 模式不是仅添加 ARIA 属性即可完成的认证。"
+    },
+    {
+      "id": "R05",
+      "title": "W3C APG — Dialog (Modal) Pattern",
+      "url": "https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/",
+      "publisher": "W3C WAI",
+      "verified": "2026-10-24",
+      "kind": "official_accessibility_guidance",
+      "facts": [
+        "模态对话框令底层内容不可交互，并维持内部焦点循环。",
+        "关闭后焦点通常回到发起控件。"
+      ],
+      "inference": "区分模态编辑抽屉和非模态来源检查；长正文可展开。",
+      "boundary": "草稿持久化和保存业务语义不由 APG 定义。"
+    },
+    {
+      "id": "R06",
+      "title": "W3C — Understanding SC 2.5.8 Target Size (Minimum)",
+      "url": "https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html",
+      "publisher": "W3C WAI",
+      "verified": "2026-10-24",
+      "kind": "official_accessibility_guidance",
+      "facts": [
+        "WCAG 2.2 AA 目标尺寸最小为 24×24 CSS px，并包含若干例外。",
+        "文档区分最小满足与更易操作，并建议重要控件考虑更严格要求。"
+      ],
+      "inference": "保留项目桌面 32/36、触摸目标 44 的分级，并核验真实命中框。",
+      "boundary": "32/36/44 是项目方案，不把 24 作为所有控件的最佳尺寸或完整合规结论。"
+    },
+    {
+      "id": "R07",
+      "title": "W3C — Understanding SC 4.1.3 Status Messages",
+      "url": "https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html",
+      "publisher": "W3C WAI",
+      "verified": "2026-10-24",
+      "kind": "official_accessibility_guidance",
+      "facts": [
+        "状态消息需可被辅助技术识别，并可在不取得焦点时传达。",
+        "成功、等待、进度与错误属于相关消息场景。"
+      ],
+      "inference": "局部状态配合持久任务记录；新结果不打断当前版本判断。",
+      "boundary": "消息可访问性不证明后台成功、采用、检查或交付。"
+    }
+  ]
+}

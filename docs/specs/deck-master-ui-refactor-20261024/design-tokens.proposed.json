@@ -1,0 +1,338 @@
+{
+  "meta": {
+    "name": "Deck Master design token consolidation",
+    "status": "PROPOSED_NOT_APPLIED",
+    "date": "2026-10-23",
+    "scope": "Refined reference and three synthetic application views; no product changes",
+    "basis": "Live source bundle and 9 rendered default surfaces; not all dynamic states",
+    "decision": "Retain 32/36 desktop controls and 44 touch targets; contextualize row actions; 64px minimum row; 440px editing drawer with draft retention.",
+    "revision": "r2"
+  },
+  "groups": {
+    "color": {
+      "canvas": "#ffffff",
+      "surface": "#f7f8f9",
+      "surface-hover": "#eef0f2",
+      "text": "#1b1f24",
+      "text-secondary": "#505760",
+      "text-muted": "#68717c",
+      "text-disabled": "#8a8a8a",
+      "on-action": "#ffffff",
+      "action": "#191c20",
+      "action-hover": "#353b43",
+      "action-pressed": "#404040",
+      "border": "#e2e5e8",
+      "border-subtle": "#ededed",
+      "border-control": "#8b929b",
+      "focus": "#0d0d0d",
+      "success": "#24694d",
+      "success-bg": "#eef5f0",
+      "warning": "#8a5a1e",
+      "warning-bg": "#faf4e8",
+      "danger": "#ac352c",
+      "danger-bg": "#fcf1ef",
+      "info": "#245a89",
+      "info-bg": "#edf4fb",
+      "workspace": "#f4f5f6",
+      "selected": "#e9ecef",
+      "scrim": "rgb(21 28 36 / .18)"
+    },
+    "type": {
+      "font-ui": "-apple-system, BlinkMacSystemFont, \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+      "font-mono": "ui-monospace, \"SFMono-Regular\", Menlo, Consolas, monospace",
+      "size-caption": "12px",
+      "size-control": "13px",
+      "size-body": "14px",
+      "size-reading": "16px",
+      "size-section": "18px",
+      "size-page": "24px",
+      "line-caption": "18px",
+      "line-control": "20px",
+      "line-body": "22px",
+      "line-reading": "28px",
+      "line-section": "26px",
+      "line-page": "32px",
+      "weight-regular": "400",
+      "weight-medium": "500",
+      "weight-strong": "600"
+    },
+    "space": {
+      "0": "0px",
+      "2": "2px",
+      "4": "4px",
+      "6": "6px",
+      "8": "8px",
+      "12": "12px",
+      "16": "16px",
+      "20": "20px",
+      "24": "24px",
+      "32": "32px",
+      "40": "40px",
+      "48": "48px"
+    },
+    "size": {
+      "control-default": "32px",
+      "control-comfort": "36px",
+      "target-touch": "44px",
+      "nav": "36px",
+      "tab": "36px",
+      "status": "22px",
+      "row": "64px",
+      "checkbox": "16px",
+      "icon-sm": "16px",
+      "icon-md": "18px",
+      "icon-lg": "20px",
+      "input-editor": "44px"
+    },
+    "shape": {
+      "radius-control": "6px",
+      "radius-panel": "10px",
+      "radius-overlay": "12px",
+      "radius-pill": "9999px",
+      "border-width": "1px",
+      "focus-width": "2px",
+      "focus-offset": "2px",
+      "icon-stroke": "1.75"
+    },
+    "elevation": {
+      "none": "none",
+      "menu": "0 8px 28px rgb(28 35 44 / .13)",
+      "overlay": "-12px 0 48px rgb(28 35 44 / .12)"
+    },
+    "layout": {
+      "sidebar": "224px",
+      "gutter": "24px",
+      "gutter-narrow": "16px",
+      "section-gap": "32px",
+      "content-gap": "16px",
+      "control-gap": "8px",
+      "action-gap": "12px",
+      "group-gap": "24px",
+      "reading-max": "40rem",
+      "drawer": "440px",
+      "dialog": "500px"
+    },
+    "layer": {
+      "base": "0",
+      "sticky": "10",
+      "popover": "20",
+      "scrim": "30",
+      "drawer": "40",
+      "toast": "50"
+    },
+    "motion": {
+      "fast": "120ms",
+      "normal": "180ms",
+      "slow": "240ms",
+      "ease": "cubic-bezier(0.2, 0, 0, 1)"
+    }
+  },
+  "css_variables": {
+    "--dm-color-canvas": "#ffffff",
+    "--dm-color-surface": "#f7f8f9",
+    "--dm-color-surface-hover": "#eef0f2",
+    "--dm-color-text": "#1b1f24",
+    "--dm-color-text-secondary": "#505760",
+    "--dm-color-text-muted": "#68717c",
+    "--dm-color-text-disabled": "#8a8a8a",
+    "--dm-color-on-action": "#ffffff",
+    "--dm-color-action": "#191c20",
+    "--dm-color-action-hover": "#353b43",
+    "--dm-color-action-pressed": "#404040",
+    "--dm-color-border": "#e2e5e8",
+    "--dm-color-border-subtle": "#ededed",
+    "--dm-color-border-control": "#8b929b",
+    "--dm-color-focus": "#0d0d0d",
+    "--dm-color-success": "#24694d",
+    "--dm-color-success-bg": "#eef5f0",
+    "--dm-color-warning": "#8a5a1e",
+    "--dm-color-warning-bg": "#faf4e8",
+    "--dm-color-danger": "#ac352c",
+    "--dm-color-danger-bg": "#fcf1ef",
+    "--dm-color-info": "#245a89",
+    "--dm-color-info-bg": "#edf4fb",
+    "--dm-color-workspace": "#f4f5f6",
+    "--dm-color-selected": "#e9ecef",
+    "--dm-color-scrim": "rgb(21 28 36 / .18)",
+    "--dm-type-font-ui": "-apple-system, BlinkMacSystemFont, \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+    "--dm-type-font-mono": "ui-monospace, \"SFMono-Regular\", Menlo, Consolas, monospace",
+    "--dm-type-size-caption": "12px",
+    "--dm-type-size-control": "13px",
+    "--dm-type-size-body": "14px",
+    "--dm-type-size-reading": "16px",
+    "--dm-type-size-section": "18px",
+    "--dm-type-size-page": "24px",
+    "--dm-type-line-caption": "18px",
+    "--dm-type-line-control": "20px",
+    "--dm-type-line-body": "22px",
+    "--dm-type-line-reading": "28px",
+    "--dm-type-line-section": "26px",
+    "--dm-type-line-page": "32px",
+    "--dm-type-weight-regular": "400",
+    "--dm-type-weight-medium": "500",
+    "--dm-type-weight-strong": "600",
+    "--dm-space-0": "0px",
+    "--dm-space-2": "2px",
+    "--dm-space-4": "4px",
+    "--dm-space-6": "6px",
+    "--dm-space-8": "8px",
+    "--dm-space-12": "12px",
+    "--dm-space-16": "16px",
+    "--dm-space-20": "20px",
+    "--dm-space-24": "24px",
+    "--dm-space-32": "32px",
+    "--dm-space-40": "40px",
+    "--dm-space-48": "48px",
+    "--dm-size-control-default": "32px",
+    "--dm-size-control-comfort": "36px",
+    "--dm-size-target-touch": "44px",
+    "--dm-size-nav": "36px",
+    "--dm-size-tab": "36px",
+    "--dm-size-status": "22px",
+    "--dm-size-row": "64px",
+    "--dm-size-checkbox": "16px",
+    "--dm-size-icon-sm": "16px",
+    "--dm-size-icon-md": "18px",
+    "--dm-size-icon-lg": "20px",
+    "--dm-size-input-editor": "44px",
+    "--dm-shape-radius-control": "6px",
+    "--dm-shape-radius-panel": "10px",
+    "--dm-shape-radius-overlay": "12px",
+    "--dm-shape-radius-pill": "9999px",
+    "--dm-shape-border-width": "1px",
+    "--dm-shape-focus-width": "2px",
+    "--dm-shape-focus-offset": "2px",
+    "--dm-shape-icon-stroke": "1.75",
+    "--dm-elevation-none": "none",
+    "--dm-elevation-menu": "0 8px 28px rgb(28 35 44 / .13)",
+    "--dm-elevation-overlay": "-12px 0 48px rgb(28 35 44 / .12)",
+    "--dm-layout-sidebar": "224px",
+    "--dm-layout-gutter": "24px",
+    "--dm-layout-gutter-narrow": "16px",
+    "--dm-layout-section-gap": "32px",
+    "--dm-layout-content-gap": "16px",
+    "--dm-layout-control-gap": "8px",
+    "--dm-layout-action-gap": "12px",
+    "--dm-layout-group-gap": "24px",
+    "--dm-layout-reading-max": "40rem",
+    "--dm-layout-drawer": "440px",
+    "--dm-layout-dialog": "500px",
+    "--dm-layer-base": "0",
+    "--dm-layer-sticky": "10",
+    "--dm-layer-popover": "20",
+    "--dm-layer-scrim": "30",
+    "--dm-layer-drawer": "40",
+    "--dm-layer-toast": "50",
+    "--dm-motion-fast": "120ms",
+    "--dm-motion-normal": "180ms",
+    "--dm-motion-slow": "240ms",
+    "--dm-motion-ease": "cubic-bezier(0.2, 0, 0, 1)"
+  },
+  "components": {
+    "button": {
+      "variants": [
+        "primary",
+        "secondary"
+      ],
+      "sizes": [
+        "default:32",
+        "prominent:36"
+      ],
+      "touch": "44 px minimum target",
+      "type": "13 / 20 px, weight 500",
+      "primary_rule": "One primary action per active task region; avoid multiple black navigation selections",
+      "danger": "Semantic tone, not a new size or shape family",
+      "affordance": "All persistent actions have a visible boundary; no free-floating text action buttons",
+      "budget": "One primary and at most two secondary actions per active region; overflow actions in a named menu"
+    },
+    "icon-button": {
+      "size": "32 px with visible boundary; 44 px coarse pointer",
+      "icon": "16 or 18 px, 24-unit SVG with 1.75 stroke",
+      "accessible_name": "Required; tooltip supplements but does not replace name"
+    },
+    "inline-link": {
+      "role": "Navigation destination; href",
+      "appearance": "Inherits text, underline, no box or action-button padding"
+    },
+    "local-action": {
+      "role": "Action on current object; bounded secondary button or named menu",
+      "target": "32 × 32 px minimum desktop target"
+    },
+    "side-nav": {
+      "height": "36 px",
+      "active": "Neutral background + text weight; no elevated card shadow"
+    },
+    "page-tab": {
+      "height": "36 px",
+      "active": "Text + 2 px underline; no black filled button",
+      "behavior": "Tab semantics and arrow-key navigation when real tab panels; otherwise links"
+    },
+    "segmented-control": {
+      "height": "32 px",
+      "active": "White selected surface in neutral group; single choice"
+    },
+    "filter-chip": {
+      "height": "32 px",
+      "shape": "pill",
+      "active": "Border + optional checkmark; aria-pressed"
+    },
+    "status-badge": {
+      "height": "22 px",
+      "interactive": false,
+      "role": "Fact with text and semantic tone; not a filter",
+      "appearance": "Inline fact: small semantic dot + text, no enclosing pill"
+    },
+    "input-select": {
+      "height": "32 px toolbar;44 px editing fields",
+      "type": "14 / 22 px",
+      "states": [
+        "default",
+        "hover",
+        "focus",
+        "invalid",
+        "disabled",
+        "read-only"
+      ],
+      "label": "Visible; placeholder is not label"
+    },
+    "checkbox-radio": {
+      "visual": "16 px",
+      "target": "32 px desktop;44 px touch",
+      "states": [
+        "off",
+        "on",
+        "mixed",
+        "disabled"
+      ]
+    },
+    "menu-item": {
+      "height": "32 px desktop / 44 px touch",
+      "role": "Secondary object actions; not a second main toolbar"
+    },
+    "row": {
+      "min-height": "64 px",
+      "actions": "One named menu; page title navigates; checkbox handles selection independently"
+    },
+    "drawer-dialog": {
+      "drawer": "440px",
+      "dialog": "500px",
+      "narrow": "Full viewport editing drawer; source dialog retains 16px gutter",
+      "behavior": "Modal focus/escape/return handled by actual component; no claim of full accessibility from styling"
+    },
+    "feedback": {
+      "inline": "Placed by affected field or object",
+      "toast": "Temporary acknowledgement only; persistent errors remain inline"
+    }
+  },
+  "refinement": {
+    "persistent_action_styles": [
+      "primary",
+      "secondary"
+    ],
+    "row_action": "one named menu; page title is navigation",
+    "inputs": "44px editing fields; 32px toolbar search",
+    "drawer": "440px, full width on narrow screens; native modal focus; Escape preserves local draft",
+    "business_data": "6 fictional example pages; no product writes",
+    "state_semantics": "Saving never marks content reviewed; modified content remains pending review."
+  }
+}

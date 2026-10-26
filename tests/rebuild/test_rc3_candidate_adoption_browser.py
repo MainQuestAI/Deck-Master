@@ -1,5 +1,6 @@
 """New-request Workbench trial/budget/Host/explicit adoption; L1, zero calls."""
 import shutil
+import re
 import uuid
 from urllib.parse import parse_qsl, urlencode, urlsplit
 
@@ -112,6 +113,13 @@ def test_browser_new_request_trial_then_zero_call_explicit_adoption(tmp_path,bat
             assert after['pages'][0]['blueprint']==before['pages'][0]['blueprint']
             assert after['pages'][1]==before['pages'][1]
             assert eligibility.allowance_usage(store,after)['totals']==eligibility.allowance_usage(store,before)['totals']
+            expect(page).to_have_url(re.compile('revision='+after['revision_id']))
+            page.reload()
+            expect(page.locator('.history-banner')).to_have_count(0)
+            if batch:
+                expect(page.locator(f'[data-candidate-id="{cid}"] input')).to_be_disabled()
+            else:
+                expect(page.locator('.candidate-state')).to_contain_text('当前采用')
             assert errors==[]
             page.screenshot(path=str(tmp_path/'adoption-completed.png'),full_page=True)
         finally:

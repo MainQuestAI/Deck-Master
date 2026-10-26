@@ -44,6 +44,7 @@ decision that affects this task.
 | Plan initial design or restyle selected pages | `styles propose/confirm/plan`, then existing `changes commit/handoff` | [Style recipe protocol](../skills/deck-master/references/style-calibration.md); v3 permits an explicitly authorized first one-or-two-page candidate batch |
 | Refine selected icon objects and reuse an adopted sample | `icons inspect/catalog/propose/confirm/plan`, then existing zero-call `changes commit/handoff` | [Icon quality protocol](../skills/deck-master/references/icon-quality.md); faithful redraw first, fixed object scope, icon_repair Host capability |
 | Check actual candidate PPT before icon adoption | `candidate-preview request/status --project … --candidate-id …` | Isolated single-page compile/render/readback; engineering check and human visual approval are separate |
+| Review original-image expression before SVG | `deck-master review original --project … --page-id … [--candidate-id …]`; `review original-status --project … --page-id … --use expand` | Fixed image/requirements, authenticated independent receipt and explicit graph checks; view/compare/repair_reference are separate from expansion permission |
 | Explicitly assemble reviewed current SVGs | `stages assemble --project … --base-revision … --operation-id <UUIDv4>` | Same normal pipeline, all current page visual gates required; final review still required |
 | Read a change handoff | `deck-master changes handoff --project … --change-id …` | Core plan and task identities; copy does not claim execution |
 | Independent project launcher | `deck-master workbench --registry <file> --no-open` | Separate launcher; optional `--project <absolute-dir>`, `--port 0`, `--stop`; core-only installs report missing v2 UI honestly |
@@ -100,6 +101,14 @@ Completed explicit replay reports its historical result and independent
 current observations. A new rollback without an ID can switch again using
 current `previous`; it is not an exact retry. Never lower a project's writer
 floor or overwrite an external path to make rollback appear successful.
+
+Inspect an interrupted installation with `install transaction status --prefix …`
+(optionally `--transaction-id …`). Resolve that ID with `install transaction
+recover --prefix … --transaction-id … --action resume|rollback|abandon`.
+`abandon` requires `--reason …`, preserves managed paths, backups and the journal,
+and clears only its own verified pending pointer. It leaves current health marked
+as conflict; a corrupt journal has no force-unlock path. See the
+[installation recovery controls](../skills/deck-master/references/installation.md#inspect-or-resolve-an-interrupted-transaction).
 
 ## Workbench content operations
 

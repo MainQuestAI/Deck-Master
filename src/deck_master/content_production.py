@@ -20,6 +20,7 @@ effective accepted Decision covering the exact write scope.
 from __future__ import annotations
 
 import copy
+from dataclasses import dataclass
 import uuid
 from pathlib import Path
 
@@ -528,6 +529,10 @@ def content_phase_status(store, document, *, explicit_speech_mode=None):
 
 def completion_status(store, document):
     """Pure request-scoped completion; unreadable facts remain explicit gaps."""
+    from .design_completion import completion_status as design_completion
+    design = design_completion(store, document)
+    if design is not None:
+        return design
     request = (document.get("collaboration") or {}).get("request") or {}
     missing = []
     try:
@@ -1288,8 +1293,48 @@ def stale_speech_reviews(store, document) -> list[dict]:
 # --- input_revision
 
 
+@dataclass(frozen=True)
+class _InputRevisionRequest:
+    changed_layers: list[str]
+    binding: dict
+    diff: dict
+    expected_digest: str
+    summary: str
+    changed_page_ids: list[str]
+    proposal_by_layer: dict[str, list[dict]]
+
+
+@dataclass(frozen=True)
+class _InputRevisionChanges:
+    request: _InputRevisionRequest
+    current_narrative: dict | None
+    narrative: dict | None
+    narrative_ref: dict | None
+    entries: dict
+    pages: dict
+    changed_pages: set[str]
+    removed: list[str]
+    order: list[str]
+    old_plan: dict | None
+    plan_input: dict | None
+    planning_only: bool
+    imported_mapping: bool
+    scope: dict
+    virtual_update: dict
+
+
 def _accept_input_revision(store, *, document, task, envelope, payload, produced_against,
                            result_digest, staged):
+    request = _validate_input_revision_request(store, document, task, payload)
+    changes = _derive_input_revision_changes(store, document, task, request)
+    from .candidates import is_trial
+    finish = _record_input_revision_trial if is_trial(task) else _adopt_input_revision
+    return finish(store, document=document, task=task, envelope=envelope, changes=changes,
+                  produced_against=produced_against, result_digest=result_digest)
+
+
+def _validate_input_revision_request(store, document, task, payload):
+    """Validate the declared mask, exact scope, diff and immutable proposals."""
     changed_layers = payload.get("changed_layers")
     if (not isinstance(changed_layers, list) or not changed_layers
             or not all(isinstance(layer, str) and layer for layer in changed_layers)):
@@ -1355,7 +1400,26 @@ def _accept_input_revision(store, *, document, task, envelope, payload, produced
         raise tasks_mod.EnvelopeError(
             "(result)/payload/proposals",
             f"a changed layer without any substantive proposal cannot be claimed: {silent}")
+    return _InputRevisionRequest(
+        changed_layers=changed_layers,
+        binding=binding,
+        diff=diff,
+        expected_digest=expected_digest,
+        summary=summary,
+        changed_page_ids=changed_page_ids,
+        proposal_by_layer=proposal_by_layer,
+    )
 
+
+def _derive_input_revision_changes(store, document, task, request):
+    """Resolve all layers and resulting mappings before choosing a write path."""
+    changed_layers = request.changed_layers
+    binding = request.binding
+    diff = request.diff
+    expected_digest = request.expected_digest
+    summary = request.summary
+    changed_page_ids = request.changed_page_ids
+    proposal_by_layer = request.proposal_by_layer
     # Parse every declared layer before constructing a single committed write set.
     single = {}
     for layer in ("narrative", "plan"):
@@ -1532,14 +1596,78 @@ def _accept_input_revision(store, *, document, task, envelope, payload, produced
             raise tasks_mod.EnvelopeError('(result)/payload/changed_layers', 'the editorial operation does not authorize Narrative or speech changes')
         from .content_ops import validate_host_result
         validate_host_result(store, document, task, virtual_update, plan_input)
-    from .candidates import is_trial, record_result
-    if is_trial(task):
-        converted = {'kind': 'compose', 'content_update': virtual_update, 'content_plan': plan_input}
-        return record_result(store, document=document, task=task,
-            updated_task={**task, 'status': 'completed', 'updated_at': tasks_mod._utc_now_iso()},
-            artifacts=[], artifact_refs=[], generation_binding=None, envelope=converted,
-            receipt_envelope=envelope, content_update=virtual_update,
-            produced_against=produced_against, result_digest=result_digest)
+    return _InputRevisionChanges(
+        request=request,
+        current_narrative=current_narrative,
+        narrative=narrative,
+        narrative_ref=narrative_ref,
+        entries=entries,
+        pages=pages,
+        changed_pages=changed_pages,
+        removed=removed,
+        order=order,
+        old_plan=old_plan,
+        plan_input=plan_input,
+        planning_only=planning_only,
+        imported_mapping=imported_mapping,
+        scope=scope,
+        virtual_update=virtual_update,
+    )
+
+
+def _record_input_revision_trial(store, *, document, task, envelope, changes,
+                                 produced_against, result_digest):
+    """Retain a candidate without moving current content or input alignment."""
+    from .candidates import record_result
+    virtual_update, plan_input = changes.virtual_update, changes.plan_input
+    converted = {'kind': 'compose', 'content_update': virtual_update, 'content_plan': plan_input}
+    return record_result(store, document=document, task=task,
+        updated_task={**task, 'status': 'completed', 'updated_at': tasks_mod._utc_now_iso()},
+        artifacts=[], artifact_refs=[], generation_binding=None, envelope=converted,
+        receipt_envelope=envelope, content_update=virtual_update,
+        produced_against=produced_against, result_digest=result_digest)
+
+
+def _retain_input_revision_proposals(store, *, document, task, envelope, changes,
+                                     result_refs, produced_against, result_digest):
+    """Complete the same operation while leaving all current content pointers fixed."""
+    changed_layers = changes.request.changed_layers
+    summary = changes.request.summary
+    virtual_update = changes.virtual_update
+    proposed = [*result_refs]
+    pending = bump_revision(document, {"operation_id": task["operation_id"], "kind": "task_update",
+        "description": "input revision proposals retained without adopting content or clearing reconciliation", "read_set": []})
+    _complete_task(store, pending, task, proposed)
+    return tasks_mod._commit_adoption(store, document=pending, base_revision=document["revision_id"],
+        task=task, envelope=envelope, produced_against=produced_against, result_digest=result_digest,
+        response={"status": "accepted", "revision_id": pending["revision_id"], "variant": "input_revision",
+            "adopted": False, "changed_layers": changed_layers, "proposal_refs": proposed,
+            'impact_summary': summary.strip(), 'new_page_hashes': {},
+            **({'unchanged_reason': virtual_update['unchanged_reason']} if 'unchanged_reason' in virtual_update else {}),
+            "result_refs": proposed, "next_action": "adopt_with_covering_decision"})
+
+
+def _adopt_input_revision(store, *, document, task, envelope, changes,
+                          produced_against, result_digest):
+    """Build one atomic adoption, or retain its proposals under the same receipt."""
+    changed_layers = changes.request.changed_layers
+    binding = changes.request.binding
+    expected_digest = changes.request.expected_digest
+    summary = changes.request.summary
+    current_narrative = changes.current_narrative
+    narrative = changes.narrative
+    narrative_ref = changes.narrative_ref
+    entries = changes.entries
+    pages = changes.pages
+    changed_pages = changes.changed_pages
+    removed = changes.removed
+    order = changes.order
+    old_plan = changes.old_plan
+    plan_input = changes.plan_input
+    planning_only = changes.planning_only
+    imported_mapping = changes.imported_mapping
+    scope = changes.scope
+    virtual_update = changes.virtual_update
     # Reconciling inputs cannot select the initial argument direction. Keep that
     # promotion on the ordinary proposal/covering-decision/adopt_proposal path.
     # Retained proposals and trials do not move the current Narrative pointer.
@@ -1583,17 +1711,9 @@ def _accept_input_revision(store, *, document, task, envelope, payload, produced
             require_role_mapping=mode != "imported_mapping")
         updated["content_plan"] = plan_ref; result_refs.append(plan_ref)
     if binding.get("adoption_policy") in ("proposal_only", "candidate_only"):
-        proposed = [*result_refs]
-        pending = bump_revision(document, {"operation_id": task["operation_id"], "kind": "task_update",
-            "description": "input revision proposals retained without adopting content or clearing reconciliation", "read_set": []})
-        _complete_task(store, pending, task, proposed)
-        return tasks_mod._commit_adoption(store, document=pending, base_revision=document["revision_id"],
-            task=task, envelope=envelope, produced_against=produced_against, result_digest=result_digest,
-            response={"status": "accepted", "revision_id": pending["revision_id"], "variant": "input_revision",
-                "adopted": False, "changed_layers": changed_layers, "proposal_refs": proposed,
-                'impact_summary': summary.strip(), 'new_page_hashes': {},
-                **({'unchanged_reason': virtual_update['unchanged_reason']} if 'unchanged_reason' in virtual_update else {}),
-                "result_refs": proposed, "next_action": "adopt_with_covering_decision"})
+        return _retain_input_revision_proposals(store, document=document, task=task,
+            envelope=envelope, changes=changes, result_refs=result_refs,
+            produced_against=produced_against, result_digest=result_digest)
     actual_plan_change = (plan_input != (old_plan or {}).get('input')
         or plan_input is not None and mode != (old_plan or {}).get('mode'))
     if (any(entry['page'] != entries.get(entry['page_id'], {}).get('page') for entry in new_pages)

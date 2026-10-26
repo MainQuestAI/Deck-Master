@@ -11,7 +11,7 @@ import sys
 
 import pytest
 
-TOOL = Path(__file__).resolve().parents[2]/'tools/rc3_campaign/q2_later_300.py'
+TOOL = Path(__file__).resolve().parents[2]/'tools/rc3_campaign/q2_later_300_v2.py'
 spec = importlib.util.spec_from_file_location('s09_cases', TOOL)
 p = importlib.util.module_from_spec(spec); spec.loader.exec_module(p)
 
@@ -117,8 +117,8 @@ def fixture(base, tool=p, flow='r04'):
         'revision_id': doc['revision_id'], 'request': doc['collaboration']['request']}
     control = c.save(base/'control.json', {'format': tool.FORMAT, 'status': tool.ENGINEERING, 'observer_id': '/engineering/rc3-s09',
         'assurance': 'synthetic_engineering', 'observed_at_utc': c.now(), 'implementation_review': grammar,
-        'scope': {'tool': tool.reference(Path(tool.__file__).resolve()), 'common': tool.reference(Path(tool.__file__).with_name('controller.py')),
-            'scoped': tool.reference(Path(tool.__file__).with_name('supplementary_recorder.py')), 'ledger_root': str(base/'later-ledger'),
+        'scope': {'tool': tool.reference(Path(tool.__file__).resolve()), 'common': tool.reference(Path(tool.__file__).with_name('controller_v2.py')),
+            'scoped': tool.reference(Path(tool.__file__).with_name('supplementary_recorder_v2.py')), 'ledger_root': str(base/'later-ledger'),
             'origins': {name: deepcopy(row) for name in tool.RUNS}, 'six_cuts': six, 'protocol': grammar, 'resource_selection': grammar}})
     bootstrap = c.save(base/'bootstrap.json', {'SYNTHETIC_NOT_ACTUAL_CHANNEL': True, 'observation_kind': c.OBSERVER_KIND,
         'assurance': 'host_attested', 'observed_at_utc': c.now(), 'tool': 'collaboration.list_agents', 'observed_running_agents': ['/root']})
@@ -236,6 +236,22 @@ def review(f, role='feedback', fail=False, stage=None, executor='/root/engineeri
             'findings': finding, 'observations': ['SYNTHETIC full own manuscript and original source read; no professional judgment'],
             'created_at': c.now(), 'replaces': None, 'reviewer': {'type': 'independent_host', 'id': executor,
             'execution_ref': executor, 'independence_confirmed': True, 'identity_receipt': None, 'assurance': 'host_attested', 'evidence_ref': None}})
+    # Reverification must name every owner frozen by the actual dispatch. A
+    # speech-only repair does not resolve the prior page-copy finding: retain
+    # its identity and open finding rather than inventing a clean new owner.
+    packet = c.read(Path(dispatch['packet'])/'review-packet.json')
+    scoped_records = []
+    for record in records:
+        owners = [row for row in packet['review_scope']['owners'] if row['kind'] == record['kind']]
+        for owner in owners:
+            prior = store.read_object_json(owner['review_ref'])
+            replacement = deepcopy(record)
+            replacement.update(review_id=prior['review_id'], replaces=owner['review_ref'],
+                               findings=deepcopy(prior['findings']))
+            scoped_records.append(replacement)
+        if not owners:
+            scoped_records.append(record)
+    records = scoped_records
     envelope = {'kind': 'review', 'pages': [], 'page_order': [], 'artifact_specs': [], 'usage_events': [],
                 'notes': 'SYNTHETIC only, no formal/model/human evidence', 'reviews': records}
     freeze_result(f, envelope, stage, inv)
@@ -649,6 +665,15 @@ def test_adopted_repairs_still_require_current_verification_request_and_real_tas
     record = review(f, role='verification', stage='legal-verification', executor='/root/neutral_final_verifier')
     result = step(f, 'review-accept', stage=record['stage'], ordinal=record['ordinal'], bootstrap=f['bootstrap']['path'])
     assert result['role'] == 'verification' and result['outcome']['status'] == 'accepted'
+    store = c.store_for(f['state'])
+    replacements = record['envelope']['reviews']
+    assert len(replacements) == 2 and all(row['replaces'] for row in replacements)
+    for row in replacements:
+        prior = store.read_object_json(row['replaces'])
+        assert row['review_id'] == prior['review_id']
+        assert row['findings'] == prior['findings']
+    page_copy = next(row for row in replacements if row['kind'] == 'page_copy')
+    assert [finding['resolution'] for finding in page_copy['findings']] == ['open']
 
 
 def test_real_argument_proposal_receipt_is_not_an_adopted_necessary_repair(tmp_path):

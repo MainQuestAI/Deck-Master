@@ -284,6 +284,7 @@ def resolve_content_requirements(store, document, page_ref, *, recipe_ref=None,
     selected = plan_page_projection(plan, page_id)
     visual = page["visual_spec"]
     requirements = {"schema_version": "content_requirements.v1", "mode": mode, **selected,
+                    "text_visibility": "customer_visible_only.v1",
                     "structure_refs": {"atom_ids": sorted(content.atom_ids(page)),
                                        "node_ids": [node["node_id"] for node in visual.get("nodes") or []],
                                        "edge_ids": [edge["edge_id"] for edge in visual.get("edges") or []]},

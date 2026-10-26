@@ -102,6 +102,25 @@ def _current_artifact_digests(store, doc, extra_subjects=()):
             else:
                 body = None
             if body is not None:
+                if role in ('narrative', 'content_plan'):
+                    outline_body = copy.deepcopy(body)
+                    if role == 'narrative':
+                        outline_body['nodes'] = obj.get('nodes') or []
+                    else:
+                        outline_body['input']['page_roles'] = (obj.get('input') or {}).get('page_roles') or []
+                    info['outline_semantic_sha'] = sha256_bytes(canonical_json_bytes(outline_body))
+                source_body = copy.deepcopy(body)
+                if role in ('narrative', 'content_plan'):
+                    source_body = outline_body
+                elif role == 'page':
+                    source_body['visible_mapping'] = mapping.get('visible_links') or []
+                # Source associations, versions and locators are substantive for
+                # source findings, but do not stand in for unrelated prose fixes.
+                info['source_semantic_sha'] = sha256_bytes(canonical_json_bytes(source_body))
+                source_speech_body = ({**source_body, 'speaker_notes': obj.get('speaker_notes'),
+                                       'speech_segments': mapping.get('speech_segments')}
+                                      if role == 'page' else source_body)
+                info['source_speech_semantic_sha'] = sha256_bytes(canonical_json_bytes(source_speech_body))
                 info['semantic_sha'] = sha256_bytes(canonical_json_bytes(body))
                 speech_body = ({**body, 'speaker_notes': obj.get('speaker_notes'),
                                 'speech_segments': (obj.get('content_mapping') or {}).get('speech_segments')}
@@ -291,13 +310,35 @@ def _output_facts(store, doc):
     return facts
 
 
-def check_summary(store, doc):
+class ReviewReadContext:
+    """Dependency facts for one exact document interpretation, within one call.
+
+    A value copy binds all fields, including policy/reviews/notes/output refs;
+    reusing the context with another interpretation fails instead of going stale.
+    """
+    def __init__(self, store, document):
+        self.store = store
+        self.document = copy.deepcopy(document)
+        self.artifacts = _current_artifact_digests(store, document)
+        self.reviews = [{**store.read_object_json(ref), 'ref': ref}
+                        for ref in document.get('reviews') or []]
+        from .review import replacement_index
+        self.replacements = replacement_index(self.reviews)
+
+    def require(self, store, document):
+        if self.store is not store or self.document != document:
+            raise ValueError('review context belongs to a different snapshot interpretation')
+        return self
+
+
+def check_summary(store, doc, *, read_context=None):
     """The full CheckSummary behind review_status (one interpretation, AC-R03)."""
     from . import review as review_mod
-    reviews = [{**store.read_object_json(ref), 'ref': ref} for ref in doc.get('reviews') or []]
+    context = (read_context or ReviewReadContext(store, doc)).require(store, doc)
+    reviews = context.reviews
     document = {**doc, 'tasks': [store.read_object_json(ref) for ref in doc.get('tasks') or []],
                 '_output_facts': _output_facts(store, doc)}
-    return review_mod.evaluate_current(document, reviews, _current_artifact_digests(store, doc))
+    return review_mod.evaluate_current(document, reviews, context.artifacts, replacements=context.replacements, store=store)
 
 
 def review_status(store, doc):
@@ -305,13 +346,13 @@ def review_status(store, doc):
     return check_summary(store, doc)['status']
 
 
-def page_visual_summary(store, doc, entry):
+def page_visual_summary(store, doc, entry, *, read_context=None):
     from .review import evaluate_page_visual
     from .production import resolve_page_rendering_design
     effective = resolve_page_rendering_design(store, doc, entry)
-    reviews = [{**store.read_object_json(ref), 'ref': ref} for ref in doc.get('reviews') or []]
-    return evaluate_page_visual(entry, reviews, _current_artifact_digests(store, doc),
-                                effective.get('allowed_asset_ids') or [])
+    context = (read_context or ReviewReadContext(store, doc)).require(store, doc)
+    return evaluate_page_visual(entry, context.reviews, context.artifacts,
+                                effective.get('allowed_asset_ids') or [], replacements=context.replacements)
 
 
 def _professional_evidence(store, doc):
@@ -449,7 +490,7 @@ def _history_row(document, parent):
 
 def history(project_dir, *, revision=None, page_id=None, layer=None, limit=None, cursor=None, related_only=True):
     """An anchored read projection; legacy calls still return the full ancestry."""
-    from .snapshots import load_snapshot
+    from .snapshots import FixedSnapshotReader
     store = Store(project_dir)
     head = revision or store.current_revision_id()
     start = None
@@ -458,19 +499,19 @@ def history(project_dir, *, revision=None, page_id=None, layer=None, limit=None,
         if len(pieces) != 2 or (revision and revision != pieces[0]):
             raise StoreError('cursor', 'cursor must preserve its original history head')
         head, start = pieces
-    document = load_snapshot(store, head)
+    reader = FixedSnapshotReader(store, head_revision=head)
+    document = reader.load(head)
     if limit is not None and (type(limit) is not int or not 1 <= limit <= 100):
         raise StoreError('limit', 'history page size must be 1–100')
     if start:
-        while document['revision_id'] != start and document.get('parent_revision_id'):
-            document = store.load_document(document['parent_revision_id'])
-        if document['revision_id'] != start:
+        if start not in reader.ancestry(head):
             raise StoreError('cursor', 'cursor is not in the fixed committed ancestry')
+        document = reader.load(start)
     records = []
     next_cursor = None
     while document:
         parent_id = document['parent_revision_id']
-        parent = store.load_document(parent_id) if parent_id else None
+        parent = reader.load(parent_id) if parent_id else None
         row = _history_row(document, parent)
         relevant = [item for item in row['changed_pages'] if (not page_id or item['page_id'] == page_id)
                     and (not layer or layer in item['layers'] or 'basis' in item['layers'])]

@@ -73,6 +73,18 @@ class SyntheticW07:
                 'identity_receipt': None, 'evidence_ref': evidence, 'assurance': 'host_attested'},
             'observations': ['L1 synthetic fidelity protocol fixture; no quality/model/human claim.'],
             'findings': [], 'created_at': '2026-10-15T00:00:00Z', 'replaces': None} for kind in dispatched['units']]
+        packet = self.store.read_object_json(dispatched['review_draft_ref'])
+        owners = (packet.get('review_scope') or {}).get('owners') or []
+        owned_reviews = []
+        for review in reviews:
+            matching = [owner for owner in owners if owner['kind'] == review['kind']]
+            if not matching:
+                owned_reviews.append(review)
+            for owner in matching:
+                previous = self.store.read_object_json(owner['review_ref'])
+                assert previous['findings'] == [], 'Clean synthetic fixture cannot close a historical finding'
+                owned_reviews.append({**review, 'review_id': previous['review_id'], 'replaces': owner['review_ref']})
+        reviews = owned_reviews
         service.task_start(self.project, task_id=task['task_id'], execution_ref='L1-synthetic-w07-fidelity',
             supported_protocols=[task['protocol_version']], capabilities=task['required_capabilities'])
         return service.accept_result(self.project, task_id=task['task_id'], operation_id=task['operation_id'],

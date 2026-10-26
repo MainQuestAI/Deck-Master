@@ -188,7 +188,7 @@ export function gallery(app, data) {
         target_ids:s.selected_page_ids.slice(1), target_refs:s.selected_page_ids.slice(1).map(id => ({page_id:id, page_ref:pages.find(page => page.page_id === id).stages.content.ref}))};
       app.go({surface:'style', page_id:null, candidate_id:null, task_id:null, revision:app.route.revision});
     }, false, {disabled:app.readonly}));
-    const make=el('div',{class:'studio-gallery-production',role:'group','aria-label':'画廊选页制作'},
+    const make=el('div',{class:'studio-gallery-production',hidden:!s.selected_page_ids.length,role:'group','aria-label':'画廊选页制作'},
       el('strong',{},s.selected_page_ids.length?`已选 ${s.selected_page_ids.length} 页`:'选页后开始制作'),
       el('div',{class:'row wrap'},Object.entries(batchNames).map(([action,label])=>button(label,()=>{
         if(app.readonly||app.historical||app.info.sample?.readonly)return;

@@ -32,6 +32,13 @@ def open_opinion_face(page):
     open_face(page, '意见')
 
 
+def open_opinion_composer(page):
+    open_opinion_face(page)
+    composer = page.locator('.opinion-composer')
+    if not composer.evaluate('(node) => node.open'):
+        composer.locator('summary').click()
+
+
 def open_note_face(page):
     """个人笔记(默认展开的 maintenance 节点)与恢复详情都在笔记面。"""
     open_face(page, '笔记')
@@ -56,8 +63,8 @@ def saved_requirement(page, text, refs=None):
 
 
 def opinion(page, text='缩短标题'):
-    page.get_by_role('button', name='整页意见', exact=True).click()
     open_opinion_face(page)
+    page.get_by_role('button', name='整页意见', exact=True).click()
     page.get_by_label('意见正文', exact=True).fill(text)
     page.get_by_role('button', name='保存意见', exact=True).click()
     expect(page.locator('.field-error[data-success]')).to_be_visible()
@@ -67,8 +74,10 @@ def opinion(page, text='缩短标题'):
 def persisted_requirement(workbench):
     page, _, store, _, goto, _ = workbench
     goto()
+    open_opinion_face(page)
     opinion(page)
     goto()
+    open_opinion_face(page)
     expect(page.locator('[aria-label="页面内容"]')).to_have_attribute('data-revision', store.current_revision_id())
     page.get_by_label('选入意见 1', exact=True).check()
     open_opinion_face(page)
@@ -94,6 +103,7 @@ def recover_on_new_port(workbench, text, refs):
         assert url != old_url
         recovered = fresh.new_page()
         recovered.goto(url + '#' + fragment)
+        open_opinion_face(recovered)
         expect(recovered.get_by_label('修改要求', exact=True)).to_have_value(text)
         if refs:
             expect(recovered.get_by_label('选入意见 1', exact=True)).to_be_checked()
@@ -112,6 +122,7 @@ def test_unresolved_requirement_refs_survive_edit_save_and_new_port(workbench, l
     held = []
     page.route('**/api/annotations?*', lambda route: held.append(route))
     page.reload()
+    open_opinion_face(page)
     requirement = page.get_by_label('修改要求', exact=True)
     expect(requirement).to_be_editable()
     expect(requirement).to_have_value(original['text'])
@@ -137,10 +148,12 @@ def test_unresolved_requirement_refs_survive_edit_save_and_new_port(workbench, l
     expect(page.get_by_label('选入意见 1', exact=True)).to_be_checked()
     expect(requirement).to_have_value(text)
     page.reload()
+    open_opinion_face(page)
     expect(page.get_by_label('选入意见 1', exact=True)).to_be_checked()
     page.get_by_label('选入意见 1', exact=True).uncheck()
     assert saved_requirement(page, text, refs=[])['annotation_refs'] == []
     page.reload()
+    open_opinion_face(page)
     expect(page.get_by_label('选入意见 1', exact=True)).not_to_be_checked()
     page.get_by_label('选入意见 1', exact=True).check()
     assert saved_requirement(page, text, refs=original['annotation_refs'])['annotation_refs'] == original['annotation_refs']
@@ -167,6 +180,7 @@ def test_requirement_edit_preserves_unusable_refs_and_basis_until_reselect(workb
     try:
         test_page = other.new_page()
         test_page.goto(url + '#' + page.url.split('#')[1])
+        open_opinion_face(test_page)
         expect(test_page.locator('.requirement-ref')).to_have_count(0)
         expect(test_page.locator('.change-requirement')).to_contain_text('请重新选择')
         text = '只改文字，保留原来的引用证据'
@@ -175,6 +189,7 @@ def test_requirement_edit_preserves_unusable_refs_and_basis_until_reselect(workb
         assert stored['annotation_refs'] == original['annotation_refs']
         assert stored['basis'] == original['basis']
         test_page.reload()
+        open_opinion_face(test_page)
         expect(test_page.get_by_role('button', name='预览修改影响', exact=True)).to_be_disabled()
         test_page.get_by_label('选入意见 1', exact=True).check()
         expect(test_page.get_by_role('button', name='预览修改影响', exact=True)).to_be_enabled()
@@ -205,7 +220,7 @@ def test_requirement_only_copy_is_saved_to_project_and_recovers(workbench):
         open_note_face(other)
         other.get_by_role('button', name='备份与恢复', exact=True).click()
         other.get_by_label('恢复项目中的个人草稿').select_option(draft['draft_id'])
-        open_opinion_face(other)
+        open_opinion_composer(other)
         other.get_by_role('button', name='对当前版本写新意见', exact=True).click()
         open_note_face(other)
         other.get_by_role('button', name='写笔记', exact=True).click()
@@ -278,13 +293,16 @@ def test_real_draft_conflict_compares_downloads_and_saves_all_texts(workbench, t
         a, b = a_context.new_page(), b_context.new_page()
         for window in [a, b]:
             window.goto(url + '#' + page.url.split('#')[1])
+            open_opinion_face(window)
             expect(window.get_by_label('意见正文', exact=True)).to_be_editable()
             open_note_face(window)
             expect(window.get_by_label('个人草稿', exact=True)).to_have_value(initial['content']['text'])
         labels = ['个人草稿', '意见正文', '修改要求']
         def edit(window, texts):
             for label, value in zip(labels, texts, strict=True):
-                if label in ('意见正文', '修改要求'):
+                if label == '意见正文':
+                    open_opinion_composer(window)
+                elif label == '修改要求':
                     open_opinion_face(window)
                 elif label == '个人草稿':
                     open_note_face(window)
@@ -355,8 +373,10 @@ def test_real_draft_conflict_compares_downloads_and_saves_all_texts(workbench, t
 def test_requirement_survives_reload_and_deselect(workbench):
     page, _, store, _, goto, _ = workbench
     goto()
+    open_opinion_face(page)
     opinion(page)
     goto()
+    open_opinion_face(page)
     expect(page.locator('[aria-label="页面内容"]')).to_have_attribute('data-revision', store.current_revision_id())
     page.get_by_label('选入意见 1', exact=True).check()
     text = '标题保持12字以内，保留原数字，禁止新增效果承诺'
@@ -364,6 +384,7 @@ def test_requirement_survives_reload_and_deselect(workbench):
     page.get_by_label('修改要求', exact=True).fill(text)
     assert saved_requirement(page, text)['annotation_refs']
     page.reload()
+    open_opinion_face(page)
     expect(page.get_by_label('选入意见 1', exact=True)).to_be_checked()
     expect(page.get_by_label('修改要求', exact=True)).to_have_value(text)
     page.get_by_label('选入意见 1', exact=True).uncheck()
@@ -377,6 +398,7 @@ def test_old_basis_copy_clears_scope_and_requirement_selection(workbench):
     page, _, store, _, goto, _ = workbench
     old = store.current_revision_id()
     goto()
+    open_opinion_face(page)
     opinion(page)
     records = ui_journal.list_drafts(store.project_root)['records']
     record = next(r for r in records if r['draft']['base_revision'] == old)
@@ -386,6 +408,7 @@ def test_old_basis_copy_clears_scope_and_requirement_selection(workbench):
         'annotation_refs': [], 'basis': {'revision_id': old}}
     ui_journal.save(store.project_root, draft=draft, expected_etag=record['etag'])
     goto()
+    open_opinion_face(page)
     open_note_face(page)
     page.get_by_role('button', name='备份与恢复', exact=True).click()
     choices = page.get_by_label('恢复项目中的个人草稿')
@@ -405,6 +428,7 @@ def test_whole_page_opinion_flows_to_requirement_handoff(workbench):
     """UAC07:画面→整页意见→保存→选入→修改要求→预览影响→确认交接;五工具全程路径。"""
     page, _, store, _, goto, _ = workbench
     goto()
+    open_opinion_face(page)
     open_opinion_face(page)
     page.get_by_role('button', name='整页意见', exact=True).click()
     page.get_by_label('意见正文', exact=True).fill('缩短标题并保留原数字')
@@ -449,8 +473,10 @@ def test_requirement_recovers_on_a_new_port(workbench):
     from deck_master.web import WorkbenchServer
     page, context, store, _, goto, _ = workbench
     goto()
+    open_opinion_face(page)
     opinion(page)
     goto()
+    open_opinion_face(page)
     expect(page.locator('[aria-label="页面内容"]')).to_have_attribute('data-revision', store.current_revision_id())
     page.get_by_label('选入意见 1', exact=True).check()
     text = '保留数字，标题12字以内'
@@ -472,6 +498,7 @@ def test_requirement_recovers_on_a_new_port(workbench):
 def test_late_annotation_list_cannot_remove_a_saved_opinion(workbench, old_error):
     page, _, store, _, goto, _ = workbench
     goto()
+    open_opinion_face(page)
     opinion(page, '意见 A')
     target_revision = store.current_revision_id()
     held = []
@@ -484,12 +511,13 @@ def test_late_annotation_list_cannot_remove_a_saved_opinion(workbench, old_error
             route.fulfill(response=response)
     page.route('**/api/annotations?*', delay_first)
     goto()
+    open_opinion_face(page)
     # Hash navigation returns before the new fixed snapshot is rendered. Do not
     # select a mode on the previous page and then type into its replacement.
     expect(page.locator('[aria-label="页面内容"]')).to_have_attribute('data-revision', target_revision)
     page.wait_for_function('() => window.__heldAnnotationList === true')
-    page.get_by_role('button', name='整页意见', exact=True).click()
     open_opinion_face(page)
+    page.get_by_role('button', name='整页意见', exact=True).click()
     page.get_by_label('意见正文', exact=True).fill('意见 B')
     page.get_by_role('button', name='保存意见', exact=True).click()
     expect(page.locator('.saved-annotations')).to_contain_text('意见 B')
@@ -511,6 +539,7 @@ def test_commit_conflict_shows_frozen_requirement_and_later_draft(workbench):
     from deck_master.models import bump_revision
     page, _, store, _, goto, _ = workbench
     goto()
+    open_opinion_face(page)
     opinion(page)
     original, later = '原请求 A：仅缩短标题', '后写草稿 B：保留原数字'
     open_opinion_face(page)
@@ -626,6 +655,7 @@ def test_loading_draft_is_readonly_and_old_pending_shows_exact_request(workbench
     held = []
     page.route('**/api/drafts', lambda route: held.append(route))
     goto()
+    open_opinion_face(page)
     expect(page.get_by_label('意见正文', exact=True)).not_to_be_editable()
     expect(page.locator('.annotation-notice')).to_contain_text('正在读取草稿')
     for route in list(held):
@@ -649,6 +679,7 @@ def test_loading_draft_is_readonly_and_old_pending_shows_exact_request(workbench
 def test_buffered_draft_remains_readonly_until_project_recovery_loads(workbench):
     page, _, _, _, goto, _ = workbench
     goto()
+    open_opinion_composer(page)
     body = page.get_by_label('意见正文', exact=True)
     expect(body).to_be_editable()
     body.fill('已有浏览器缓冲')
@@ -658,6 +689,7 @@ def test_buffered_draft_remains_readonly_until_project_recovery_loads(workbench)
     held = []
     page.route('**/api/drafts', lambda route: held.append(route))
     page.reload()
+    open_opinion_composer(page)
     expect(body).not_to_be_editable()
     expect(page.locator('.annotation-notice')).to_contain_text('正在读取草稿')
     for route in list(held):

@@ -6,7 +6,7 @@ import re
 from . import ui_journal as journal, gallery_state, overview_state, result_reading
 from .local_state import LocalStateConflict, LocalStateError, local_lock, read_json, safe_path, write_json
 from .models import canonical_json_bytes, validate_schema
-from .snapshots import load_snapshot
+from .snapshots import FixedSnapshotReader, load_snapshot
 
 LABELS = {'draft': '个人草稿', 'gallery_state': '画廊选择', 'reading_position': '阅读位置',
           'overview_preferences': '总览阅读设置', 'result_reading': '结果已读记录'}
@@ -14,12 +14,16 @@ IDS = {'gallery_state': 'gallery.json', 'reading_position': 'position.json',
        'overview_preferences': 'overview.json', 'result_reading': 'result-reading.json'}
 
 
-def _backup(project, backup_id):
+def _backup(project, backup_id, *, context=None):
     if not isinstance(backup_id, str) or not re.fullmatch('[a-f0-9]{16}', backup_id):
         raise LocalStateError('backup_id', 'select a registered backup of this project')
-    store, doc, identity = journal.context(project)
-    entry = next((e for e in reversed(journal._read_clear_log(store))
-                  if e['manifest_digest'][:16] == backup_id), None)
+    if context is None:
+        store, doc, identity = journal.context(project)
+        entries_by_id = {e['manifest_digest'][:16]: e for e in journal._read_clear_log(store)}
+        reader = FixedSnapshotReader(store, head_revision=doc["revision_id"])
+    else:
+        store, doc, identity, entries_by_id, reader = context
+    entry = entries_by_id.get(backup_id)
     if entry is None:
         raise LocalStateError('backup_id', 'backup is not registered in this project')
     value = read_json(journal._clear_backup_path(store, entry['manifest_digest']))
@@ -34,36 +38,37 @@ def _backup(project, backup_id):
     if len({(v['kind'], v['id']) for v in items}) != len(items):
         raise LocalStateError('backup', 'duplicate personal records')
     for row in value['records']:
-        _validate_record(store, doc, identity, row)
+        _validate_record(store, doc, identity, row, snapshot_reader=reader)
     return store, doc, identity, value
 
 
-def _validate_record(store, doc, identity, row):
+def _validate_record(store, doc, identity, row, *, snapshot_reader=None):
+    read = snapshot_reader.load if snapshot_reader else lambda revision: load_snapshot(store, revision)
     kind, record = row['kind'], row['record']
     if kind != 'draft' and row['id'] != IDS[kind]:
         raise LocalStateError('backup', 'invalid personal record identity')
     if kind == 'draft':
         validate_schema('ui_draft_record', record)
-        journal._validate(store, doc, identity, record['draft'])
+        journal._validate(store, doc, identity, record['draft'], snapshot_reader=snapshot_reader)
         valid = (record['draft']['draft_id'] == row['id']
                  and record['digest'] == journal.digest(record['draft'])
                  and record['etag'] == journal.digest({'sequence': record['updated_sequence'], 'digest': record['digest']}))
     elif kind == 'gallery_state':
-        gallery_state._validate(store, doc, identity, record['state'])
+        gallery_state._validate(store, doc, identity, record['state'], snapshot_reader=snapshot_reader)
         valid = record['etag'] == journal.digest({'state': record['state'], 'sequence': record['sequence']})
     elif kind == 'overview_preferences':
         valid = (record['project_id'] == doc['project_id'] and record['project_identity'] == identity
                  and record['etag'] == overview_state._etag(record) and len(record['states']) <= overview_state.MAX_READINGS)
         for state in record['states']:
             overview_state._validate(doc, identity, state)
-            load_snapshot(store, state['revision_id'])
+            read(state['revision_id'])
     elif kind == 'result_reading':
         validate_schema('result_reading', record)
         valid = (record['project_id'] == doc['project_id'] and record['project_identity'] == identity
                  and record['etag'] == result_reading._etag(record))
     else:
         position = record['position']; validate_schema('ui_position', position)
-        load_snapshot(store, position['revision'])
+        read(position['revision'])
         valid = (position['project_id'] == doc['project_id'] and position['project_identity'] == identity
                  and record['digest'] == journal.digest(position))
     if not valid or row['etag'] != record.get('etag', record.get('digest')):
@@ -71,14 +76,17 @@ def _validate_record(store, doc, identity, row):
 
 
 def listing(project):
-    store, _, _ = journal.context(project)
+    store, doc, identity = journal.context(project)
+    log = journal._read_clear_log(store)
+    reader = FixedSnapshotReader(store, head_revision=doc["revision_id"])
+    context = (store, doc, identity, {e['manifest_digest'][:16]: e for e in log}, reader)
     entries, seen = [], set()
-    for entry in reversed(journal._read_clear_log(store)):
+    for entry in reversed(log):
         key = entry['manifest_digest'][:16]
         if key in seen: continue
         seen.add(key)
         try:
-            _, _, _, backup = _backup(project, key)
+            _, _, _, backup = _backup(project, key, context=context)
             entries.append({'backup_id': key, 'cleared_at': backup['cleared_at'],
                             'count': len(backup['records']), 'available': True})
         except (ValueError, RuntimeError, OSError, KeyError, TypeError):
