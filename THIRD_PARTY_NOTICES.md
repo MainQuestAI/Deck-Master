@@ -28,7 +28,8 @@ before each release.
 ## Bundled Non-Code Resources
 
 - `src/deck_master/resources/static/` and the packaged `skill/` copy are
-  first-party Deck Master assets.
+  first-party Deck Master assets except for the third-party adaptations and
+  licensed assets identified below.
 - No font binaries are bundled or required; fonts resolve from the host system
   at compile/render time (see `docs/migration-to-rebuilt-core.md`).
 - Compiler geometry functions carry first-party provenance headers extracted
@@ -48,3 +49,15 @@ No font binary or external font service is used.
 ## Lucide 1.49.0 icon subset
 
 24 offline SVG assets under `src/deck_master/resources/icons/lucide/`. Upstream: https://github.com/lucide-icons/lucide/tree/1.49.0. Full ISC and applicable Feather MIT copyright/permission notices are retained in `LICENSE.txt`; `manifest.json` records source URLs and SHA-256.
+
+## Humanizer expression-review adaptation
+
+`skills/deck-master/references/expression-review-humanizer.md` adapts selected
+editorial guidance from [blader/humanizer](https://github.com/blader/humanizer/tree/8c307f367c91bd974002f10f2be2965d642c13df),
+SKILL version 3.1.0, commit `8c307f367c91bd974002f10f2be2965d642c13df`.
+Copyright (c) 2025 Siqi Chen; MIT License. The canonical reference includes the
+complete upstream copyright and license text plus SHA-256 hashes of the fixed
+SKILL.md, README.md and LICENSE. The same reference ships under
+`deck_master/resources/skill/references/expression-review-humanizer.md` and is
+verified byte-for-byte by the shared catalog/build/install inventory.
+This is a bounded Chinese PPT adaptation, not an installed third-party Skill.

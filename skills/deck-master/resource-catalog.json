@@ -1545,6 +1545,37 @@
       ],
       "review_units": [],
       "readable": true
+    },
+    {
+      "id": "expression-review-humanizer",
+      "relative_path": "references/expression-review-humanizer.md",
+      "kind": "instruction",
+      "owner": "deck-content",
+      "consumers": [
+        "deck-content",
+        "deck-review"
+      ],
+      "dependencies": [],
+      "task_kinds": [
+        "compose",
+        "review"
+      ],
+      "phases": [
+        "framing",
+        "argument",
+        "page_copy",
+        "input_revision",
+        "review",
+        "speech"
+      ],
+      "review_units": [
+        "content",
+        "argument",
+        "page_copy",
+        "progression",
+        "speech"
+      ],
+      "readable": true
     }
   ]
 }
