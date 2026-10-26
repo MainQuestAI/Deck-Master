@@ -66,3 +66,38 @@ def test_local_terminal_failure_retains_exact_request(project, store, fault):
             expect(panel).to_contain_text('已清理' if fault == 'remove' else '未发现执行证据')
             browser.close()
     finally: server.stop()
+
+
+def test_two_first_attempts_serialize_only_the_local_record(project, store):
+    save_draft(store, project); server = WorkbenchServer(project)
+    identity = journal.list_drafts(project)['project_identity']
+    try:
+        with sync_playwright() as runtime:
+            browser = runtime.chromium.launch(); context = browser.new_context(); pages = []
+            url = server.start()+'studio/'
+            for _ in range(2):
+                page = context.new_page(); page.goto(url); panel = open_panel(page); click(panel, '生成清理计划')
+                expect(panel.get_by_role('button', name='确认清理并保留备份', exact=True)).to_be_enabled()
+                pages.append((page, panel))
+            sent = []
+            def absent(route):
+                sent.append(route.request.post_data_json); route.abort('failed')
+            context.route('**/api/ui-state/commit-clear', absent)
+            a, _ = pages[0]
+            a.evaluate('''key => {
+                window.held = navigator.locks.request(key, () => new Promise(resolve => {window.releaseLock = resolve;}));
+            }''', 'deck-master:v3:personal-clear:'+identity)
+            a.wait_for_function('typeof window.releaseLock === "function"')
+            for page, panel in pages:
+                with page.expect_response('**/api/project?light=1'):
+                    click(panel, '确认清理并保留备份')
+            assert sent == []
+            a.evaluate('() => { window.releaseLock(); }')
+            for page, panel in pages:
+                expect(panel.get_by_role('button', name='核实原清理结果', exact=True)).to_be_enabled()
+            assert len(sent) == 1
+            assert retained(pages[0][0]) == retained(pages[1][0])
+            assert retained(a)['request'] == sent[0]
+            assert len(journal.list_drafts(project)['records']) == 1
+            browser.close()
+    finally: server.stop()
