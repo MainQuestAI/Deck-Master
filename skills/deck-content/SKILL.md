@@ -36,6 +36,8 @@ live 默认 cues，明确逐字稿才 verbatim；read_alone 默认 none。未知
 
 以 Runtime `completion.state` 及该子意图的 outputs/checks/missing 判断完成，不用全项目 work_complete；completed 正常返回内容产物和检查，后续 continue 不要求补制作授权。检查缺口返回 needs_reviewer/awaiting_decision 与现有可读稿，不能把 blocked 当成功。下一责任可以是用户决定、Review、Design 或调用者；未请求视觉生产时到此退出。
 
+第一次把稿件交给使用者时，按共享[路由与恢复方法](../deck-master/references/collaboration-routing.md#内容交付与使用者审阅)交付：让使用者知道本稿推荐怎样表达、为什么这样取舍，以及哪些具体判断值得反馈、反馈会怎样改变稿件。执行前的计划、正文里的教学练习、作者检查记录不能替代这次交付回复。材料充分就先交可用稿，不为凑问题拖住写作；已定方向不重新征求批准，没有有意义的待决项也不制造选项或强制追问。
+
 ## 同一发布版与方法
 
 先读取本次 Host 入口路径，不从 PATH 或 HOME 猜另一套安装。把 `skill_entry` 设为实际加载的 SKILL.md 路径（保留未解析的 Host 路径，升级/回退后重新解析），执行：
