@@ -538,8 +538,24 @@ def completion_status(store, document, *, design_fact=_DESIGN_FACT_UNSET):
         return design
     request = (document.get("collaboration") or {}).get("request") or {}
     missing = []
+    scope = request.get("scope") or {}
+    content_edit = (request.get("intent") == "edit" and bool(scope.get("layers"))
+                    and set(scope["layers"]) <= {"page_copy", "plan"})
+    edit_decision = None
     try:
-        phase = content_phase_status(store, document) if request.get("intent") in ("full_deck", "content_only") else {}
+        if content_edit:
+            from .eligibility import evaluate
+            # The request is an upper scope bound, not a proof that every
+            # requested edit has been performed. Diagnose the existing write
+            # entrance; do not infer completion from already-present Pages.
+            edit_decision = evaluate(store, document, document, "content.operation", context={
+                "targets": {**scope, "layers": ["page_copy", "plan"]}})
+            phase = {"action": "inspect" if edit_decision["allowed"] else "blocked",
+                     "reason": "Inspect the requested manuscript and committed edit result; "
+                               "eligibility is not evidence of request completion or quality approval."}
+            missing.extend(edit_decision["reasons"])
+        else:
+            phase = content_phase_status(store, document) if request.get("intent") in ("full_deck", "content_only") else {}
     except (StoreError, OSError, ValueError, KeyError, TypeError) as exc:
         phase = {"action": "blocked", "reason": f"content facts require recovery: {type(exc).__name__}"}
     action = phase.get("action")
@@ -554,7 +570,8 @@ def completion_status(store, document, *, design_fact=_DESIGN_FACT_UNSET):
             continue
         if (task.get("status") in ("running", "awaiting_host", "queued")
                 and (task.get("collaboration_binding") or {}).get("request_id") == request.get("request_id")
-                and state != "needs_recovery"):
+                and state != "needs_recovery"
+                and not (content_edit and edit_decision and not edit_decision["allowed"])):
             state = "in_progress"
     if getattr(store, 'input_alignment', models.input_alignment)(document) == 'needs_reconciliation':
         state = 'awaiting_decision'
@@ -564,15 +581,22 @@ def completion_status(store, document, *, design_fact=_DESIGN_FACT_UNSET):
     ids = set((request.get("scope") or {}).get("page_ids") or [])
     refs += [entry["page"] for entry in document.get("pages") or [] if entry["page_id"] in ids]
     refs += phase.get("proposal_refs") or []
-    if state == "awaiting_decision":
+    if state == "awaiting_decision" and not edit_decision:
         missing.append({"code": "content_requirement", "detail": phase.get("reason")})
+    next_action = "return_requested_content" if state == "completed" else phase.get("reason")
+    responsible_role = "caller" if state == "completed" else "content"
+    if edit_decision:
+        next_action = edit_decision["next_action"] or "inspect_requested_content"
+        responsible_role = edit_decision["responsible_role"] if not edit_decision["allowed"] else "content"
+    if content_edit and state == "needs_recovery":
+        next_action, responsible_role = "recover_task_facts", "master"
     return {"state": state, "request_id": request.get("request_id"), "intent": request.get("intent"),
         "content_intent": request.get("content_intent"), "artifact_revision_id": document["revision_id"],
         "effective_scope": request.get("scope"), "outputs": refs,
         "checks": [{"kind": "requested_content", "status": "pass" if state == "completed" else "not_evaluated",
                     "basis": phase.get("reason")}],
-        "missing": missing, "responsible_role": "content" if state != "completed" else "caller",
-        "next_action": "return_requested_content" if state == "completed" else phase.get("reason")}
+        "missing": missing, "responsible_role": responsible_role,
+        "next_action": next_action}
 
 
 def next_phase_task(store, document, *, explicit_speech_mode: str | None = None, selected_resource_ids=None):

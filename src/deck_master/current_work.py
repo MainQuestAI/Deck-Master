@@ -52,6 +52,8 @@ def project(store, artifact, control, summary, *, fixed=False, completion=None):
     historical = fixed and artifact['revision_id'] != control['revision_id']
     actions, optional = [], []
     content_only = request.get('intent') == 'content_only'
+    content_edit = (request.get('intent') == 'edit' and bool(scope.get('layers'))
+                    and set(scope['layers']) <= {'page_copy', 'plan'})
     design_plan = any(c.get('kind') == 'requested_design_plan' for c in completion['checks'])
     full_delivery = None
     if request.get('intent') == 'full_deck' and not design_plan:
@@ -119,6 +121,10 @@ def project(store, artifact, control, summary, *, fixed=False, completion=None):
         product_name = {'plan_only': '论证与大纲', 'write_only': '上屏稿',
                         'speech_only': '口播稿', 'content_full': '完整内容'}.get(request.get('content_intent'), '内容')
         title = f'本次{product_name}已完成'
+    elif content_edit:
+        code, role = completion['next_action'], completion['responsible_role']
+        blockers = completion['missing']
+        label, title, surface = '查看正文修改与待办', '本次正文修改待接续', 'content'
     elif full_delivery and full_delivery['status'] == 'ready':
         code, role, label, title, surface = 'read_delivery', 'caller', '阅读本次交付', '本次整稿已具备交付资格', 'runs'
     else:
@@ -139,7 +145,8 @@ def project(store, artifact, control, summary, *, fixed=False, completion=None):
     primary = None
     recovery = actions and actions[0]['kind'] in ('verify_execution', 'inspect_failure', 'reconcile_inputs', 'replan')
     if not historical and request and actions and (recovery or (
-            code not in ('review_outline', 'read_delivery') and not design_plan and not (content_only and completion['state'] == 'completed'))):
+            code not in ('review_outline', 'read_delivery') and not design_plan and not (content_only and completion['state'] == 'completed')
+            and not (content_edit and blockers))):
         primary = actions[0]
         code = primary['kind']
         role = 'master'
