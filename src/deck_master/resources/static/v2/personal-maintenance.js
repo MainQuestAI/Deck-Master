@@ -94,9 +94,16 @@ export function personalClearPanel(app) {
   const finish = () => { keepBusy = false; readPending(); refresh(); };
   const commit = button('确认清理并保留备份', async () => {
     if (keepBusy) return;
+    // Bind this click to what was displayed. Discovering another operation
+    // must not turn a first confirmation into an implicit retry of it.
+    const recovering = Boolean(pending), expected = pending && JSON.parse(JSON.stringify(pending)), planned = plan;
     readPending();
-    if (storageBlocked || (!pending && !plan)) { refresh(); return; }
-    const recovering = Boolean(pending), expected = pending, planned = plan;
+    if (storageBlocked) { refresh(); return; }
+    if ((expected || pending) && (!sameRequest(expected, pending) ||
+        expected?.end_inspection_digest !== pending?.end_inspection_digest)) {
+      notice.textContent = '恢复记录已变化，请核实当前保留的请求。'; refresh(); return;
+    }
+    if (!expected && !planned) { refresh(); return; }
     let sent = null;
     keepBusy = true; refresh();
     try {

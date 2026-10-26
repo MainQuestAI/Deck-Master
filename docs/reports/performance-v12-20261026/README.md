@@ -23,6 +23,10 @@ Post-PR CI findings and the targeted assembly-test tool-boundary repair are in
 [ci-unit-followup.md](ci-unit-followup.md). The original failed CI result is
 preserved; this follow-up does not declare the complete matrix passing.
 
+The subsequent independent review's candidate correction, partial clear-click
+repair and unresolved publication/style findings are in
+[review-followup.md](review-followup.md).
+
 | Check | Actual outcome | Boundary |
 |---|---|---|
 | Earlier source unit run | 4291 passed, 2 failed, 3 setup errors, 2 skipped; five unchanged setup cases later passed offline | Earlier candidate aggregate 4296; not the final run |

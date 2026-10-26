@@ -1,0 +1,29 @@
+{
+  "head": "99a59a58d57f0c0c6130069b61637ac105952423",
+  "worktree_sha256_before": "0c75f988a7821b910442a93adc1b604accc7226f1e1a5dfa6d7077cbbc70af62",
+  "worktree_sha256_after": "0c75f988a7821b910442a93adc1b604accc7226f1e1a5dfa6d7077cbbc70af62",
+  "source_changed_during_run": false,
+  "command": [
+    ".venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-s",
+    "-p",
+    "conftest",
+    "-c",
+    "pyproject.toml",
+    "-p",
+    "no:cacheprovider",
+    "/workspace/scratch/pr209-review-repro/test_independent_preview.py",
+    "--require-browser",
+    "--chromium-executable",
+    "/usr/bin/chromium"
+  ],
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "wall_seconds": 12.288340102999427,
+  "exit_code": 0,
+  "reaped_children_user_seconds": 4.2977360000000004,
+  "reaped_children_system_seconds": 1.036241,
+  "scope": "Only batches using this runner are serialized; CPU excludes detached/unreaped descendants."
+}

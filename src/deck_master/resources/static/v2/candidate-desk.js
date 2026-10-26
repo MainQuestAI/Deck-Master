@@ -223,7 +223,12 @@ export function candidateDesk(app, data) {
       const acknowledged = [...app.business.completed.values()].reverse().find(result =>
         result.revision_id === value.revision_id && result.candidate_ids?.includes(id));
       if (acknowledged) adoptionReceipt(acknowledged, false);
-    } catch (error) { if (!disposed && token === serial) { impact.replaceChildren(el('p', {class: 'field-error'}, readableError(error))); select.value = selected?.candidate_id || ''; } }
+    } catch (error) { if (!disposed && token === serial) {
+      impact.replaceChildren(el('p', {class: 'field-error'}, readableError(error))); select.value = selected?.candidate_id || '';
+      // A failed selection retains the previous comparison, but invalidated its
+      // in-flight preview epoch. Rejoin the one reader for that retained choice.
+      if (selected?.candidate.stage === 'svg') refreshPreview(selected.candidate_id);
+    } }
     finally { if (token === serial) { busy = false; if (!disposed) controls(); } }
   }
   select.addEventListener('change', () => choose(select.value));

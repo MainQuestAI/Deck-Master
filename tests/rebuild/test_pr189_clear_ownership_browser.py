@@ -25,6 +25,35 @@ def lose_success(route):
     route.abort('failed')
 
 
+def test_first_confirmation_does_not_retry_a_newly_discovered_request(project, store):
+    save_draft(store, project); server = WorkbenchServer(project)
+    try:
+        with sync_playwright() as runtime:
+            browser = runtime.chromium.launch(executable_path=shutil.which('chromium') or shutil.which('chromium-browser'))
+            context = browser.new_context(); a = context.new_page(); b = context.new_page()
+            url = server.start() + 'studio/'
+            a.goto(url); pa = open_panel(a); click(pa, '生成清理计划')
+            expect(pa.get_by_role('button', name='确认清理并保留备份', exact=True)).to_be_enabled()
+            b.goto(url); pb = open_panel(b); click(pb, '生成清理计划')
+            b.route('**/api/ui-state/commit-clear', lambda route: route.abort('failed'))
+            click(pb, '确认清理并保留备份'); expect(pb).to_contain_text('清理结果待核实')
+            original = retained(b)
+            # A's visible action still confirms its own first plan. Its next
+            # storage read sees B, but that is not consent to retry B's request.
+            expect(pa.get_by_role('button', name='确认清理并保留备份', exact=True)).to_be_enabled()
+            a.wait_for_function('key => localStorage.getItem(key) !== null',
+                arg='deck-master:v3:personal-clear:' + original['project_identity'])
+            sent = []
+            a.on('request', lambda request: sent.append(request.url) if request.url.endswith('/commit-clear') else None)
+            click(pa, '确认清理并保留备份')
+            expect(pa).to_contain_text('恢复记录已变化')
+            expect(pa.get_by_role('button', name='核实并重试原清理', exact=True)).to_be_enabled()
+            assert sent == [] and retained(a) == original
+            assert len(journal.list_drafts(project)['records']) == 1
+            browser.close()
+    finally: server.stop()
+
+
 @pytest.mark.parametrize('late', ['first_conflict', 'commit_success', 'inspect_success', 'inspect_pending', 'end_success'])
 def test_late_response_preserves_next_operation_and_refresh_recovery(project, store, late):
     save_draft(store, project)
