@@ -50,14 +50,17 @@ def create_fixture(project, *, page_count=300, background_task_count=150):
     # inspect those 1,500 historical candidate tasks. These real setup revisions
     # must also be present in a comparison baseline made with this factory.
     source_ref = store.put_json_object({'fixture': FACTORY,
-        'instruction': 'Create synthetic reconstruction tasks solely for start/cancel read pressure; no external calls or accepted results.'})
+        'instruction': 'Create synthetic reconstruction tasks solely for start/cancel read pressure; no external calls or accepted reconstruction results. The W10 extension may import this fixture image and record explicitly synthetic style analysis for read/display pressure, never model work or visual approval.'})
     collaboration.start_request(project, input={'intent': 'full_deck', 'content_intent': None,
         'instruction_evidence': {'kind': 'host_attested_instruction', 'source_ref': source_ref,
             'source_locator': 'fixture:w01-background', 'actor_id': None,
             'transport_receipt_ref': None, 'presentation_ref': None},
         'scope': {'subject': 'deck', 'page_ids': [entry['page_id'] for entry in initial['pages']],
             'page_manifest_ref': None, 'external_artifact_ref': None,
-            'layers': ['blueprint', 'svg', 'output'], 'allow_page_membership_change': False,
+            # W10 extends this same fixture with an imported synthetic image
+            # and disclosed analysis. Name that scope up front so extending it
+            # does not replace the request bound to the background tasks.
+            'layers': ['blueprint', 'svg', 'output', 'design'], 'allow_page_membership_change': False,
             'allow_page_order_change': False, 'purpose': 'working'},
         'replace_request_id': ((initial.get('collaboration') or {}).get('request') or {}).get('request_id')},
         base_revision=initial['revision_id'], operation_id='pressure-background-request')
