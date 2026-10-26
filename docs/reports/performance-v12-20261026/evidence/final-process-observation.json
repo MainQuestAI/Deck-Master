@@ -1,0 +1,6 @@
+{
+  "at_utc": "2026-10-26T14:57:39.762606+00:00",
+  "matching_live_commands": [],
+  "system_zombie_count": 3795,
+  "scope": "Current process snapshot only; not a lifetime inventory. Existing PID1-owned defunct Chromium children were not killed or attributed as listening services."
+}

@@ -1,0 +1,24 @@
+{
+  "head": "756d69d0fa790eb38b3f7ef755b0111d85c4adf8",
+  "worktree_sha256_before": "71abec6fc4231bea73b34b287f4802ed95b450c105415a2c09e28a9e605cb9dc",
+  "worktree_sha256_after": "71abec6fc4231bea73b34b287f4802ed95b450c105415a2c09e28a9e605cb9dc",
+  "source_changed_during_run": false,
+  "command": [
+    ".venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/rebuild/test_pr189_clear_storage_browser.py::test_two_first_attempts_serialize_only_the_local_record",
+    "tests/rebuild/test_performance_read_paths.py::test_pptx_metadata_rechecks_notes_order_and_policy",
+    "--require-browser",
+    "--chromium-executable",
+    "/usr/bin/chromium",
+    "--tb=short"
+  ],
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "wall_seconds": 6.4082508139999845,
+  "exit_code": 0,
+  "reaped_children_user_seconds": 3.446302,
+  "reaped_children_system_seconds": 1.073224,
+  "scope": "Only batches using this runner are serialized; CPU excludes detached/unreaped descendants."
+}

@@ -1,0 +1,18 @@
+{
+  "seed": "/workspace/scratch/w01-managed-seed",
+  "manifest_sha256": "bdb68a1272ff2c339b10772f1be88637bbbda2c77e03bbdce767464a208bec8c",
+  "page_count": 300,
+  "candidate_count": 1500,
+  "task_count": 1650,
+  "attempt_count": 4500,
+  "background_dispatch": {
+    "entry": "service.open_host_task",
+    "count": 150,
+    "initial_revision": "108c83dfb2a2499499b11078afd074ec",
+    "dispatch_head": "7911de3e6c72433b9ee43a861ba629fa"
+  },
+  "factory_source": "17a2d032ed2cf128c672ee6e568ddd52f6aeab20",
+  "baseline_runtime": "b688c300dbb612bea9af8cf63a1743fb8136ae2c",
+  "candidate_runtime": "17a2d032ed2cf128c672ee6e568ddd52f6aeab20",
+  "clones_have_identical_initial_bytes": true
+}

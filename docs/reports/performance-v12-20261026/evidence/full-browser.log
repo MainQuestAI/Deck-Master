@@ -1,0 +1,175 @@
+.....................................................................F.. [  9%]
+..................................F.......FFFF.......................... [ 18%]
+........................................................................ [ 28%]
+........................................................................ [ 37%]
+........................................................................ [ 47%]
+..........F............................................................. [ 56%]
+......................................................F................. [ 66%]
+........................................................................ [ 75%]
+........................................................................ [ 85%]
+........................................................................ [ 94%]
+........................................                                 [100%]
+=================================== FAILURES ===================================
+________________ test_candidate_batch_names_the_page_and_layer _________________
+tests/rebuild/test_deep_quality_browser.py:456: in test_candidate_batch_names_the_page_and_layer
+    expect(row).to_contain_text('第 1 页')
+E   AssertionError: Locator expected to contain text '第 1 页'
+E   Actual value: None
+E   Error: element(s) not found 
+E   Call log:
+E     - Expect "to_contain_text" locator(".candidate-batch-row").first with timeout 5000ms
+E     - waiting for locator(".candidate-batch-row").first
+E   
+E   Aria snapshot:
+E   - link "跳到工作区":
+E     - /url: "#main"
+E   - complementary:
+E     - img "Deck Master"
+E     - navigation "项目工作区":
+E       - button "制作总览"
+E       - button "内容与页序"
+E       - button "整稿画廊"
+E       - button "风格校准"
+E       - button "任务与交付"
+E     - text: 当前项目
+E     - strong: 工作台合成示例
+E     - text: 合成验证项目
+E     - paragraph: 当前为项目独立入口
+E     - button "连接状态"
+E   - banner:
+E     - strong: 工作台合成示例
+E     - text: 当前稿
+E     - region "本次工作状态":
+E       - button "查看本次工作与范围": 内容进行中
+E     - button "查看待交接任务，0 项": 待交接 0
+E     - button "项目菜单"
+E   - text: 这是可编辑的合成验证项目，未调用模型，也未进行专业质量验收。
+E   - main:
+E     - heading "任务与交付" [level=1]
+E     - paragraph: 任务状态按当前阅读版本展示。复制交接说明不会启动模型。
+E     - group "任务与交付的子区":
+E       - button "任务记录" [pressed]
+E       - button "待决定"
+E       - button "版本"
+E       - button "文件"
+E     - region "运行记录":
+E       - heading "运行记录" [level=2]
+E       - button "核实最新执行状态"
+E       - paragraph: 当前执行状态与顶栏的页面阅读版本分开。正常处理中无需你操作；查看结果不代表采用或质量通过。
+E       - searchbox "搜索全部任务"
+E       - button "查询任务"
+E       - combobox "按修改组筛选":
+E         - option "所有修改组" [selected]
+E         - option "修改组 1 · 1/1 项已返回 · 1 页 · 1d0e53"
+E       - combobox "按执行状态筛选":
+E         - option "所有执行状态" [selected]
+E         - option "等待执行"
+E         - option "待接手"
+E         - option "已记录处理中"
+E         - option "结果已记录"
+E         - option "执行失败"
+E         - option "已取消"
+E         - option "依据已失效"
+E         - option "记录无法读取"
+E       - checkbox "只看需我处理"
+E       - text: 只看需我处理 当前执行状态 · 共 2 项
+E       - article:
+E         - heading "制作可编辑稿" [level=3]
+E         - paragraph: 目标：第 1 页 · 项目目标与阅读顺序
+E         - paragraph: 要求：制作要求见详情
+E         - paragraph: 2026/10/26 12:45:19 · task-632d5973a423455dbe05ef5357c10ce9 · 38d63e9d-698b-439d-9380-df1b3d0518ef
+E         - text: 结果已记录
+E         - paragraph: 当前请求与依据
+E         - paragraph: 候选待决定
+E         - button "查看这项任务"
+E       - article:
+E         - heading "检查" [level=3]
+E         - paragraph: 目标：第 1 页 · 项目目标与阅读顺序、第 2 页 · 材料如何成为内容、第 3 页 · 每页保留原图与来源
+E         - paragraph: 要求：制作要求见详情
+E         - paragraph: 2026/10/26 12:45:18 · 422d142dacc0 · review-c08236ae3f40
+E         - text: 结果已记录
+E         - paragraph: 历史记录
+E         - button "查看这项任务"
+E     - button "其它修改组的交接"
+E   - status: 任务与交付，R 647e41f8
+_________ test_actual_icon_candidate_ppt_comparison_retry_and_adoption _________
+tests/rebuild/test_icon_browser.py:114: in test_actual_icon_candidate_ppt_comparison_retry_and_adoption
+    expect(page.locator('.candidate-icon-review [role=status]')).to_contain_text('工程检查通过',timeout=60000)
+E   AssertionError: Locator expected to contain text '工程检查通过'
+E   Actual value: 缺少实际渲染工具 · rsvg-convert unavailable; configure DECK_MASTER_RSVG_CONVERT 
+E   Call log:
+E     - Expect "to_contain_text" locator(".candidate-icon-review [role=status]") with timeout 60000ms
+E     - waiting for locator(".candidate-icon-review [role=status]")
+E       123 × locator resolved to <p role="status">缺少实际渲染工具 · rsvg-convert unavailable; configure DE…</p>
+E           - unexpected value "缺少实际渲染工具 · rsvg-convert unavailable; configure DECK_MASTER_RSVG_CONVERT"
+E   
+E   Aria snapshot:
+E   - status: 缺少实际渲染工具 · rsvg-convert unavailable; configure DECK_MASTER_RSVG_CONVERT
+_ test_same_identity_poll_preserves_selected_workspace_and_its_primary_action[studio] _
+tests/rebuild/test_integration_current_work_browser.py:52: in test_same_identity_poll_preserves_selected_workspace_and_its_primary_action
+    assert page.evaluate('''() =>
+E   assert False
+E    +  where False = evaluate('() =>\n              window.integrationMatrix === document.querySelector(\'.matrix\') &&\n              window.integr...uirement === document.querySelector(\'[aria-label="所选页的制作要求"]\') &&\n              !window.integrationWork.isConnected')
+E    +    where evaluate = <Page url='http://127.0.0.1:37567/studio/#project=5b2b0f990c15cec8eae017a7411681ffa7090ded94711da179885108e6e60d57&surface=overview&layer=original_image&zoom=1&revision=e87841b4c61440dfa44b518516a32d61&q=&filter=all&sort=ascending'>.evaluate
+_ test_same_identity_poll_preserves_selected_workspace_and_its_primary_action[v2] _
+tests/rebuild/test_integration_current_work_browser.py:52: in test_same_identity_poll_preserves_selected_workspace_and_its_primary_action
+    assert page.evaluate('''() =>
+E   assert False
+E    +  where False = evaluate('() =>\n              window.integrationMatrix === document.querySelector(\'.matrix\') &&\n              window.integr...uirement === document.querySelector(\'[aria-label="所选页的制作要求"]\') &&\n              !window.integrationWork.isConnected')
+E    +    where evaluate = <Page url='http://127.0.0.1:37413/v2/#project=43b669f09a9fd72f35758fb5abafea7c8c034c0f0d1218ceea021822d5ebd167&surface=overview&layer=original_image&zoom=1&revision=6015597846d44be5a343e7d63ce6020e&q=&filter=all&sort=ascending'>.evaluate
+_ test_route_load_pairs_delayed_work_with_paused_control_before_first_render[studio] _
+tests/rebuild/test_integration_current_work_browser.py:125: in test_route_load_pairs_delayed_work_with_paused_control_before_first_render
+    page.wait_for_function('() => Boolean(window.integrationFirstWork)')
+.venv/lib/python3.12/site-packages/playwright/sync_api/_generated.py:12809: in wait_for_function
+    self._sync(
+.venv/lib/python3.12/site-packages/playwright/_impl/_page.py:1153: in wait_for_function
+    return await self._main_frame.wait_for_function(**locals_to_params(locals()))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/playwright/_impl/_frame.py:941: in wait_for_function
+    await self._channel.send("waitForFunction", self._timeout, params)
+.venv/lib/python3.12/site-packages/playwright/_impl/_connection.py:76: in send
+    return await self._connection.wrap_api_call(
+.venv/lib/python3.12/site-packages/playwright/_impl/_connection.py:632: in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+E   playwright._impl._errors.TimeoutError: Page.wait_for_function: Timeout 30000ms exceeded.
+_ test_route_load_pairs_delayed_work_with_paused_control_before_first_render[v2] _
+tests/rebuild/test_integration_current_work_browser.py:125: in test_route_load_pairs_delayed_work_with_paused_control_before_first_render
+    page.wait_for_function('() => Boolean(window.integrationFirstWork)')
+.venv/lib/python3.12/site-packages/playwright/sync_api/_generated.py:12809: in wait_for_function
+    self._sync(
+.venv/lib/python3.12/site-packages/playwright/_impl/_page.py:1153: in wait_for_function
+    return await self._main_frame.wait_for_function(**locals_to_params(locals()))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/playwright/_impl/_frame.py:941: in wait_for_function
+    await self._channel.send("waitForFunction", self._timeout, params)
+.venv/lib/python3.12/site-packages/playwright/_impl/_connection.py:76: in send
+    return await self._connection.wrap_api_call(
+.venv/lib/python3.12/site-packages/playwright/_impl/_connection.py:632: in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+E   playwright._impl._errors.TimeoutError: Page.wait_for_function: Timeout 30000ms exceeded.
+___________ test_two_first_attempts_serialize_only_the_local_record ____________
+tests/rebuild/test_pr189_clear_storage_browser.py:99: in test_two_first_attempts_serialize_only_the_local_record
+    assert len(sent) == 1
+E   AssertionError: assert 2 == 1
+E    +  where 2 = len([{'operation_id': 'b55a5e5a-a8e4-4b04-a78e-370fd71d627e', 'input': {'project_id': 'clear-project', 'scope': 'current_p... 'clear-plan-8e3bd1e3022bc5b0', 'manifest_digest': '8e3bd1e3022bc5b099d51e4f3a0e17d86c11e4523b6f23306c63551eacc9e9f4'}])
+___________ test_damaged_preview_busy_polls_without_automatic_retry ____________
+tests/rebuild/test_rollup_browser.py:154: in test_damaged_preview_busy_polls_without_automatic_retry
+    key = candidate_preview._context(store.project_root, candidate_id)[-1]
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/candidate_preview.py:54: in _context
+    path=Path(pipeline.executable(name)).resolve();stat=path.stat()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/pipeline.py:36: in executable
+    if not path:raise NeedsTool(f'{name} unavailable; configure DECK_MASTER_{name.upper().replace("-","_")}')
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   deck_master.pipeline.NeedsTool: rsvg-convert unavailable; configure DECK_MASTER_RSVG_CONVERT
+=========================== short test summary info ============================
+FAILED tests/rebuild/test_deep_quality_browser.py::test_candidate_batch_names_the_page_and_layer
+FAILED tests/rebuild/test_icon_browser.py::test_actual_icon_candidate_ppt_comparison_retry_and_adoption
+FAILED tests/rebuild/test_integration_current_work_browser.py::test_same_identity_poll_preserves_selected_workspace_and_its_primary_action[studio]
+FAILED tests/rebuild/test_integration_current_work_browser.py::test_same_identity_poll_preserves_selected_workspace_and_its_primary_action[v2]
+FAILED tests/rebuild/test_integration_current_work_browser.py::test_route_load_pairs_delayed_work_with_paused_control_before_first_render[studio]
+FAILED tests/rebuild/test_integration_current_work_browser.py::test_route_load_pairs_delayed_work_with_paused_control_before_first_render[v2]
+FAILED tests/rebuild/test_pr189_clear_storage_browser.py::test_two_first_attempts_serialize_only_the_local_record
+FAILED tests/rebuild/test_rollup_browser.py::test_damaged_preview_busy_polls_without_automatic_retry
+8 failed, 752 passed, 4437 deselected in 3149.22s (0:52:29)

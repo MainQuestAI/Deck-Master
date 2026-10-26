@@ -1,0 +1,15 @@
+............F........................................................... [100%]
+=================================== FAILURES ===================================
+______________ test_pptx_metadata_rechecks_notes_order_and_policy ______________
+tests/rebuild/test_performance_read_paths.py:337: in test_pptx_metadata_rechecks_notes_order_and_policy
+    notes = delivery_eligibility.selected_output(store, document, notes_policy='pptx_notes')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/delivery_eligibility.py:297: in selected_output
+    policy = resolve_notes_policy(store, artifact, notes_policy)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/deck_master/exports.py:274: in resolve_notes_policy
+    raise ExportError('export_notes_mapping_invalid', 'selected Plan does not bind the exact current Page set', exit_code=4)
+E   deck_master.exports.ExportError: export: selected Plan does not bind the exact current Page set
+=========================== short test summary info ============================
+FAILED tests/rebuild/test_performance_read_paths.py::test_pptx_metadata_rechecks_notes_order_and_policy
+1 failed, 71 passed in 52.80s
