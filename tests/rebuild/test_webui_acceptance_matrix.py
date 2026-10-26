@@ -566,6 +566,40 @@ def keyboard_to(page,locator):
     raise AssertionError('Keyboard target was unreachable: '+str(locator))
 
 
+def native_select_typeahead(page, locator, character):
+    """Send a Unicode keyboard character through Chromium's normal input path.
+
+    Playwright's press() key map excludes Chinese characters. Its Chromium
+    keyboard implementation uses this same CDP command; no value setter or
+    JavaScript event dispatch substitutes for the select's default behavior.
+    Native popup navigation is not consumed in headless Chromium on macOS.
+    """
+    expect(locator).to_be_enabled()
+    expect(locator).to_be_focused()
+    locator.evaluate('''node => {
+      node.keyboardEvidence=[];node.keyboardObservers=[];
+      for(const type of ['keydown','keypress','input','change','keyup']){
+        const record=event=>{if(event.target===node)node.keyboardEvidence.push({
+          type:event.type,key:event.key,trusted:event.isTrusted,value:node.value});};
+        window.addEventListener(type,record,true);node.keyboardObservers.push([type,record]);
+      }
+    }''')
+    session=page.context.new_cdp_session(page)
+    try:
+        session.send('Input.dispatchKeyEvent',{'type':'keyDown','key':character,'text':character,'unmodifiedText':character})
+        session.send('Input.dispatchKeyEvent',{'type':'keyUp','key':character})
+    finally:
+        session.detach()
+        events=locator.evaluate('''node => {
+          for(const [type,record] of node.keyboardObservers)window.removeEventListener(type,record,true);
+          return node.keyboardEvidence;
+        }''')
+    assert [event['type'] for event in events if event['type'] in ('input','change')]==['input','change']
+    assert all(event['trusted'] for event in events)
+    assert any(event['type']=='keypress' and event['key']==character for event in events)
+    return events
+
+
 @pytest.mark.browser
 @pytest.mark.parametrize('viewport',[(1280,800),(1440,900),(390,844)])
 def test_insight_primary_paths_keyboard_focus_and_long_content(tmp_path,viewport):
@@ -578,7 +612,11 @@ def test_insight_primary_paths_keyboard_focus_and_long_content(tmp_path,viewport
             control=page.get_by_role('button',name='记录方向决定',exact=True);expect(control).to_be_visible();keyboard_to(page,control);page.keyboard.press('Enter');expect(page.get_by_role('dialog')).to_be_visible();page.keyboard.press('Escape');expect(control).to_be_focused()
             more=page.get_by_role('button',name='更多内容工具',exact=True);keyboard_to(page,more);page.keyboard.press('Enter')
             nav=page.get_by_role('button',name='方法与案例',exact=True);keyboard_to(page,nav);page.keyboard.press('Enter')
-            mode=page.get_by_label('准备上下文');keyboard_to(page,mode);page.keyboard.press('ArrowDown');page.keyboard.press('Enter');expect(page.locator('#content-area-methods')).to_contain_text('准备已核对')
+            mode=page.get_by_label('准备上下文');keyboard_to(page,mode)
+            events=native_select_typeahead(page,mode,'独');page.keyboard.press('Enter')
+            expect(mode).to_have_value('independent');expect(mode).to_be_focused()
+            (tmp_path/'method-context-keyboard-events.json').write_text(json.dumps(events,ensure_ascii=False,indent=2))
+            expect(page.locator('#content-area-methods')).to_contain_text('准备已核对')
             search=page.get_by_label('筛选方法或案例');keyboard_to(page,search);page.keyboard.type('content-m04')
             check=page.locator('label.method-entry').filter(has_text='content-m04 ·').locator('input');keyboard_to(page,check);page.keyboard.press('Space')
             read=page.get_by_role('button',name='阅读 content-m04',exact=True);expect(read).to_be_visible();keyboard_to(page,read);page.keyboard.press('Enter');expect(page.locator('#content-area-methods > section > pre')).to_be_focused()
@@ -591,6 +629,44 @@ def test_insight_primary_paths_keyboard_focus_and_long_content(tmp_path,viewport
             assert store.load_document()==before and review_store.load_document()==rbefore
             browser.close()
     finally:first.stop();second.stop()
+
+
+@pytest.mark.browser
+@pytest.mark.parametrize('block_change',[False,True])
+def test_method_context_keyboard_does_not_bypass_change_handler(tmp_path,block_change):
+    project,store,_,_=candidate(tmp_path);info=ui_journal.project_info(project)
+    server=WorkbenchServer(project);url=server.start();before=store.load_document()
+    try:
+        with sync_playwright() as pw:
+            browser=pw.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox'])
+            page=browser.new_page();contexts=[]
+            page.on('request',lambda request:contexts.append(request.post_data_json['context'])
+                    if request.url.endswith('/api/method-library/preview') else None)
+            page.goto(url+'studio/#'+urlencode({'project':info['project_identity'],'surface':'content',
+                'revision':store.current_revision_id(),'layer':'content','content_area':'methods'}))
+            mode=page.get_by_label('准备上下文');expect(mode).to_be_enabled()
+            expect(page.locator('#content-area-methods')).to_contain_text('目录可浏览；当前没有可准备的新阶段。')
+            if block_change:
+                page.evaluate('''() => document.addEventListener('change',event=>{
+                  if(event.target.getAttribute('aria-label')==='准备上下文')event.stopImmediatePropagation();
+                },true)''')
+            keyboard_to(page,mode);events=native_select_typeahead(page,mode,'独');page.keyboard.press('Enter')
+            expect(mode).to_have_value('independent');expect(mode).to_be_focused()
+            if block_change:
+                with pytest.raises(AssertionError,match='准备已核对') as failed:
+                    expect(page.locator('#content-area-methods')).to_contain_text('准备已核对')
+                assert not any(context['mode']=='independent' for context in contexts)
+            else:
+                expect(page.locator('#content-area-methods')).to_contain_text('准备已核对')
+                assert any(context['mode']=='independent' for context in contexts)
+            (tmp_path/'keyboard-change-handler-evidence.json').write_text(json.dumps({
+                'change_blocked':block_change,'selected_value':mode.input_value(),'events':events,
+                'preview_modes':[context['mode'] for context in contexts],
+                'original_assertion_failure':str(failed.value).split('Actual value:',1)[0] if block_change else None,
+            },ensure_ascii=False,indent=2))
+            assert store.load_document()==before
+            browser.close()
+    finally:server.stop()
 
 
 @pytest.mark.browser
