@@ -71,7 +71,8 @@ def _current_artifact_digests(store, doc, extra_subjects=()):
                     'file_sha': content_sha, 'current': key in current_refs}
             if role == 'page':
                 from .visual_dependencies import page_visual_digest
-                info['visual_sha'] = page_visual_digest(obj)
+                digest_reader = getattr(store, 'page_visual_digest', None)
+                info['visual_sha'] = digest_reader(ref) if digest_reader else page_visual_digest(obj)
             # Ephemeral interpretation of actual immutable manuscript objects.
             # A deck-level preproduction fix needs changed content, not only a
             # version/previous_ref or production-note hash change. No extra
@@ -270,13 +271,14 @@ def _current_artifact_digests(store, doc, extra_subjects=()):
     # Retain the Review objects; only content/privacy need a new observation.
     artifacts['_input_stale_reviews'] = set()
     if doc.get('content_basis'):
-        digest = compute_input_digest(doc)
+        input_digest = getattr(store, 'input_digest', compute_input_digest)
+        digest = input_digest(doc)
         revision = doc.get('parent_revision_id')
         visited = set()
         while revision and revision not in visited:
             visited.add(revision)
             prior = store.load_document(revision)
-            if compute_input_digest(prior) != digest:
+            if input_digest(prior) != digest:
                 artifacts['_input_stale_reviews'] = {
                     (ref['path'], ref['sha256']) for ref in prior.get('reviews') or []}
                 break

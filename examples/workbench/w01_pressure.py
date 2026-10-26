@@ -22,7 +22,7 @@ import urllib.request
 
 from PIL import Image, ImageDraw
 
-from deck_master import candidates, production, service, tasks, workbench
+from deck_master import candidates, collaboration, production, service, tasks, workbench
 from deck_master.models import (bump_revision, canonical_json_bytes, content_identity,
                                 sha256_bytes, validate_schema, validate_task_semantics)
 from deck_master.pipeline import artifact
@@ -32,6 +32,10 @@ from deck_master.web import WorkbenchServer, ensure_service, stop_service
 
 SEED = 20260930
 FACTORY = 'w01-pressure.v1'
+# This driver only claims and cancels frozen managed tasks; it does not execute
+# reconstruction or accept results. Refuse any new contract it cannot handle.
+BACKGROUND_PROTOCOLS = ('changes.v1',)
+BACKGROUND_CAPABILITIES = ('collaboration.v1', 'rc3-entry.v1')
 
 
 def write_json(path, value):
@@ -40,9 +44,31 @@ def write_json(path, value):
 
 def create_fixture(project, *, page_count=300, background_task_count=150):
     gallery = create_gallery_sample(project, page_count=page_count, readonly=True)
-    store = Store(project); base = store.load_document(); doc = copy.deepcopy(base)
-    doc['compatibility']['minimum_writer'] = 'candidates.v1'
-    doc['candidates'] = []; doc['tasks'] = []
+    store = Store(project); initial = store.load_document()
+    # Background writes exercise real managed task claims. Dispatch before the
+    # synthetic candidate bulk so the normal dispatcher need not repeatedly
+    # inspect those 1,500 historical candidate tasks. These real setup revisions
+    # must also be present in a comparison baseline made with this factory.
+    source_ref = store.put_json_object({'fixture': FACTORY,
+        'instruction': 'Create synthetic reconstruction tasks solely for start/cancel read pressure; no external calls or accepted results.'})
+    collaboration.start_request(project, input={'intent': 'full_deck', 'content_intent': None,
+        'instruction_evidence': {'kind': 'host_attested_instruction', 'source_ref': source_ref,
+            'source_locator': 'fixture:w01-background', 'actor_id': None,
+            'transport_receipt_ref': None, 'presentation_ref': None},
+        'scope': {'subject': 'deck', 'page_ids': [entry['page_id'] for entry in initial['pages']],
+            'page_manifest_ref': None, 'external_artifact_ref': None,
+            'layers': ['blueprint', 'svg', 'output'], 'allow_page_membership_change': False,
+            'allow_page_order_change': False, 'purpose': 'working'},
+        'replace_request_id': ((initial.get('collaboration') or {}).get('request') or {}).get('request_id')},
+        base_revision=initial['revision_id'], operation_id='pressure-background-request')
+    background_ids = []
+    for index in range(background_task_count):
+        task = service.open_host_task(store, kind='reconstruct',
+            page_ids=[initial['pages'][index % page_count]['page_id']],
+            instruction=f'Synthetic background reasoning task {index:03}; start/cancel only, no model call or accepted output.')
+        background_ids.append(task['task_id'])
+    base = store.load_document(); doc = copy.deepcopy(base)
+    doc['candidates'] = []
     produced = content_identity(base); outcomes = Counter(); image_sizes = []
     manifest_rows = []; tick = 1790726400000
 
@@ -129,15 +155,6 @@ def create_fixture(project, *, page_count=300, background_task_count=150):
                                   'task_id': tid, 'attempt_refs': attempt_refs, 'file': file_ref})
         if (index + 1) % 25 == 0:
             print(json.dumps({'fixture_pages_written': index + 1}), flush=True)
-    # Ordinary core start/cancel operations on these tasks supply background
-    # writes, while all Candidate/Attempt content remains immutable.
-    background_ids = []
-    for index in range(background_task_count):
-        tid = f'pressure-background-{index:03}'; background_ids.append(tid)
-        task = tasks.new_task(task_id=tid, operation_id=tid, kind='reconstruct', scope_pages=[base['pages'][index % page_count]['page_id']],
-            instruction='Synthetic background reasoning task; no model call.', inputs=[], dependencies=[],
-            dispatch_revision=base['revision_id'], produced_against=produced)
-        doc['tasks'].append(store.put_json_object(task))
     updated = bump_revision(doc, {'operation_id': 'pressure-fixture', 'kind': 'task_update',
         'description': 'Explicit synthetic read-pressure dataset; no native Host evidence', 'read_set': []})
     store.commit_change(base_revision=base['revision_id'], document=updated, operation_id='pressure-fixture')
@@ -150,6 +167,7 @@ def create_fixture(project, *, page_count=300, background_task_count=150):
         else:
             counts[path.suffix] += 1
     assert len({r['candidate_id'] for r in manifest_rows}) == page_count * 5
+    assert len(doc['tasks']) == page_count * 5 + background_task_count
     assert counts['generation_attempt.v1'] == page_count * 15
     for pid in (base['pages'][0]['page_id'], base['pages'][-1]['page_id']):
         result = candidates.listing(project, page_id=pid)
@@ -163,14 +181,17 @@ def create_fixture(project, *, page_count=300, background_task_count=150):
         'fixture_revision': updated['revision_id'], 'source_dimensions': [960, 540],
         'candidate_image_bytes': {'min': min(image_sizes), 'max': max(image_sizes), 'total': sum(image_sizes)},
         'object_count': sum(counts.values()), 'object_bytes': object_bytes, 'object_types': dict(counts),
-        'gallery': gallery, 'candidates': manifest_rows, 'background_task_ids': background_ids}
+        'gallery': gallery, 'candidates': manifest_rows, 'background_task_ids': background_ids,
+        'background_dispatch': {'entry': 'service.open_host_task', 'count': background_task_count,
+            'initial_revision': initial['revision_id'], 'dispatch_head': base['revision_id']}}
 
 
 def sample(project, out, manifest, *, source_commit=None, server_mode='detached'):
     store = Store(project); server = WorkbenchServer(project) if server_mode == 'in-process' else None
     stop = threading.Event(); detached_state = None
-    available = {t['task_id'] for ref in store.load_document()['tasks']
-                 if (t := store.read_object_json(ref))['status'] == 'awaiting_host'}
+    available = {t['task_id']: t for ref in store.load_document()['tasks']
+                 if (t := store.read_object_json(ref))['status'] == 'awaiting_host'
+                 and t['task_id'] in manifest['background_task_ids']}
     updates, errors = [], []
 
     def background():
@@ -180,8 +201,12 @@ def sample(project, out, manifest, *, source_commit=None, server_mode='detached'
                     break
                 if tid not in available:
                     continue
+                task = available[tid]
+                assert task['protocol_version'] in BACKGROUND_PROTOCOLS
+                assert set(task['required_capabilities']) <= set(BACKGROUND_CAPABILITIES)
                 started = time.perf_counter()
-                result = service.task_start(project, task_id=tid, execution_ref='synthetic-pressure-background')
+                result = service.task_start(project, task_id=tid, execution_ref='synthetic-pressure-background',
+                    supported_protocols=[task['protocol_version']], capabilities=list(task['required_capabilities']))
                 updates.append({'task_id': tid, 'action': 'start', 'result': {k: result[k] for k in ('status', 'revision_id')}, 'elapsed_ms': (time.perf_counter() - started) * 1000})
                 if stop.wait(.25):
                     break

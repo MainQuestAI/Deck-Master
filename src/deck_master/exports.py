@@ -49,7 +49,7 @@ def _context(project, revision):
     return store, doc, _logical_identity(str(store.project_root), doc["revision_id"])
 
 
-def _facts(store, doc, *, selected_output=None, control=None, read_context=None):
+def _facts(store, doc, *, selected_output=None, control=None, read_context=None, deck_output=None):
     control = store.load_document() if control is None else control
     doc = {**doc, "policy": control["policy"], "reviews": control.get("reviews", [])}
     from .editing import ReviewReadContext, check_summary
@@ -60,7 +60,10 @@ def _facts(store, doc, *, selected_output=None, control=None, read_context=None)
                       else ReviewReadContext(store, doc))
     summary = check_summary(store, doc, read_context=review_context)
     ctx = _ReadContext(store, doc)
-    output = _deck_output(ctx)
+    # A paired summary may supply the same artifact's already-checked output.
+    # The control overlay above changes policy/reviews only, not output inputs.
+    # Standalone exports retain their own original output check.
+    output = _deck_output(ctx) if deck_output is None else deck_output
     production = [projection(ctx, page, output) for page in doc["pages"]]
     gaps = [
         {"page_id": e["page_id"], "layer": layer, "reason": "not_recorded"}
@@ -101,7 +104,7 @@ def _facts(store, doc, *, selected_output=None, control=None, read_context=None)
                     for reason in professional["gap_reasons"])
     return {
         "revision_id": doc["revision_id"],
-        "input_alignment": input_alignment(doc),
+        "input_alignment": getattr(store, "input_alignment", input_alignment)(doc),
         "check_summary": summary,
         "production": production,
         "professional_evidence": professional["evidence"],

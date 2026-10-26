@@ -14,7 +14,7 @@ import threading
 from concurrent.futures import Future
 from collections import Counter, OrderedDict, defaultdict
 from datetime import datetime, timezone
-from functools import lru_cache
+from functools import cached_property, lru_cache
 
 from .models import canonical_json_bytes, input_alignment, sha256_bytes, validate_ref, validate_schema
 from .store import Store
@@ -89,6 +89,8 @@ class _ReadContext:
         self.store, self.document = store, document
         self.objects = {}
         self.metadata_objects = {}
+        self.input_digests = {}
+        self.page_visual_digests = {}
         self.root = str(store.project_root)
         self.directories = (str(store.deck_root), str(store.objects_dir))
         self.pages = {p["page_id"]: p for p in document.get("pages") or []}
@@ -106,6 +108,43 @@ class _ReadContext:
         self.operation_reader = None
         from .current_relationship import _ReaderStore
         self.reader = _ReaderStore(self)
+
+    def input_digest(self, document):
+        from .models import compute_input_digest
+        key = document.get('revision_id')
+        saved = self.input_digests.get(key)
+        # Guard only the inputs consumed by compute_input_digest. Keep raw
+        # sources (extra fields may conservatively invalidate), without sorting
+        # or hashing them to look up the fact. Never copy page/task registries.
+        inputs = [document.get('task'), document.get('sources') or []]
+        if saved is None or saved[0] != inputs:
+            compute = getattr(self.store, 'input_digest', compute_input_digest)
+            saved = (_copy_json(inputs), compute(document))
+            self.input_digests[key] = saved
+        return saved[1]
+
+    def input_alignment(self, document):
+        digest = self.input_digest(document) if document.get('pages') and document.get('content_basis') else None
+        return input_alignment(document, input_digest=digest)
+
+    def page_visual_digest(self, ref):
+        from .visual_dependencies import page_visual_digest
+        page = self.read(ref)  # Preserve ref, byte-integrity and schema checks.
+        key = (ref['path'], ref['sha256'])
+        if key not in self.page_visual_digests:
+            digest_reader = getattr(self.store, 'page_visual_digest', None)
+            self.page_visual_digests[key] = digest_reader(ref) if digest_reader else page_visual_digest(page)
+        return self.page_visual_digests[key]
+
+    @cached_property
+    def design_completion(self):
+        from .design_completion import completion_status
+        return completion_status(self.reader, self.document)
+
+    @cached_property
+    def completion(self):
+        from .content_production import completion_status
+        return completion_status(self.reader, self.document, design_fact=self.design_completion)
 
     def close(self):
         for fd in self.directory_fds.values():
@@ -691,7 +730,7 @@ def _stage_facts(entry, stages, deck_output):
 
 def _deck_facts(ctx):
     facts = []
-    if input_alignment(ctx.document) == "needs_reconciliation":
+    if ctx.input_alignment(ctx.document) == "needs_reconciliation":
         plan_ref = ctx.document.get("content_plan")
         facts.append(_fact("reconcile_inputs", "content_needs_reconciliation", "content_basis",
                            page_ids=[], source_refs=[plan_ref] if plan_ref else []))
@@ -899,7 +938,8 @@ def workbench_summary(project_dir, *, revision=None, reading=None, protocol=None
 def _build_v2_summary(ctx, artifact, control, *, revision, reading):
     result = _summary(ctx, revision=revision, reading=reading, request_scoped=True)
     from .current_work import project
-    result['current_work'] = project(ctx.reader, artifact, control, result, fixed=revision is not None)
+    result['current_work'] = project(ctx.reader, artifact, control, result, fixed=revision is not None,
+        completion=_copy_json(ctx.completion))
     result['format'] = 'workbench_summary.v2'
     result['next_actions'] = _next_actions_block(ctx, result['current_work']['next']['actions'])
     if reading is not None:
@@ -955,10 +995,9 @@ def _summary(ctx, *, revision, member_index=None, reading=None, request_scoped=F
         for page_id in set(task.get("scope_pages") or []):
             by_page[page_id].append(row)
     deck_output = _deck_output(ctx)
-    from .design_completion import completion_status as design_completion
     # The same request/basis projection used by continue distinguishes a plan
     # deliverable from sample production. Missing layers stay in page facts.
-    plan_completion = design_completion(store, doc)
+    plan_completion = ctx.design_completion
     facts = [*overview["facts"], *candidate_facts, *_deck_facts(ctx)]
     pages = []
     for entry in doc.get("pages") or []:
@@ -1002,7 +1041,7 @@ def _summary(ctx, *, revision, member_index=None, reading=None, request_scoped=F
             "page_count": len(pages), "pages": pages,
             "task_counts": dict(sorted(counts.items())),
             "unreadable_tasks": sum(t["status"] == "unreadable" for t in tasks),
-            "outputs": {"pptx": deck_output}, "input_alignment": input_alignment(doc),
+            "outputs": {"pptx": deck_output}, "input_alignment": ctx.input_alignment(doc),
             "content_plan": projection(store, doc, reader=ctx.read, summary=True, schema_validated=True),
             "quality": {"status": "detail_required", "review_refs": doc.get("reviews") or []},
             "candidates": candidates_block,

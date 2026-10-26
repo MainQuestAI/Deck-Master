@@ -452,6 +452,7 @@ def test_candidate_batch_names_the_page_and_layer(workbench):
     page,ctx,store,url,goto,_=workbench
     task=dispatch_candidate(store,'p01',layer='svg'); start_candidate(store,task); accept_candidate(store,task)
     goto('runs')
+    page.get_by_role('button', name='待决定', exact=True).click()
     row=page.locator('.candidate-batch-row').first
     expect(row).to_contain_text('第 1 页')
     expect(row).to_contain_text('SVG')

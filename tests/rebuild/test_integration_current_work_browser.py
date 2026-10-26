@@ -52,7 +52,8 @@ def test_same_identity_poll_preserves_selected_workspace_and_its_primary_action(
             assert page.evaluate('''() =>
               window.integrationMatrix === document.querySelector('.matrix') &&
               window.integrationRequirement === document.querySelector('[aria-label="所选页的制作要求"]') &&
-              !window.integrationWork.isConnected''')
+              window.integrationWork.isConnected &&
+              window.integrationWork === document.querySelector('.overview [data-current-work]')''')
             page.get_by_role('button', name='清除选择', exact=True).click()
             expect(primary).to_have_class(re.compile(r'\bprimary\b'))
             assert store.load_document() == before and errors == []
@@ -85,11 +86,19 @@ def test_route_load_pairs_delayed_work_with_paused_control_before_first_render(c
               const observer = new MutationObserver(() => {
                 const panel = document.querySelector('.overview [data-current-work]');
                 const evidence = panel?.querySelector('.evidence-json');
-                if (!evidence || window.integrationFirstWork) return;
-                window.integrationFirstWork = JSON.parse(evidence.textContent);
+                if (!evidence || window.integrationFirstPanelSeen) return;
+                // Pin the very first panel before opening lazy evidence. Never
+                // query a later panel after a healthy poll has replaced it.
+                window.integrationFirstPanelSeen = true;
                 window.integrationFirstHistory = Boolean(document.querySelector('.history-banner'));
                 window.integrationFirstVersion = document.querySelector('.topbar .version')?.textContent;
+                window.integrationFoldedEvidence = evidence.textContent;
                 observer.disconnect();
+                const details = evidence.closest('details');
+                details.addEventListener('toggle', () => queueMicrotask(() => {
+                  window.integrationFirstWork = JSON.parse(evidence.textContent);
+                }), {once:true});
+                details.open = true;
               });
               observer.observe(document, {subtree:true, childList:true});
             })();''')
@@ -123,6 +132,7 @@ def test_route_load_pairs_delayed_work_with_paused_control_before_first_render(c
             page.route('**/api/view/summary*', summary_read)
             page.goto(server.start() + route_name + '/')
             page.wait_for_function('() => Boolean(window.integrationFirstWork)')
+            assert page.evaluate('window.integrationFoldedEvidence') == ''
             rendered = page.evaluate('window.integrationFirstWork')
             paused = store.load_document()
             expected = workbench.workbench_summary(store.project_root, revision=artifact_revision,

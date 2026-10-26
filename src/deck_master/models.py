@@ -1057,14 +1057,14 @@ def compute_input_digest(document: dict[str, Any]) -> str:
     return sha256_bytes(canonical_json_bytes(payload))
 
 
-def input_alignment(document: dict[str, Any]) -> str:
+def input_alignment(document: dict[str, Any], *, input_digest: str | None = None) -> str:
     """Derived, never stored (spec v1.1 §5.1): how current content maps to inputs."""
     if not document.get("pages"):
         return "no_content"
     basis = document.get("content_basis")
     if not basis:
         return "legacy_current"
-    return "current" if basis.get("input_digest") == compute_input_digest(document) \
+    return "current" if basis.get("input_digest") == (input_digest if input_digest is not None else compute_input_digest(document)) \
         else "needs_reconciliation"
 
 

@@ -54,6 +54,15 @@ class _ReaderStore:
     def __init__(self, ctx):
         self.ctx = ctx
 
+    def input_digest(self, document):
+        return self.ctx.input_digest(document)
+
+    def input_alignment(self, document):
+        return self.ctx.input_alignment(document)
+
+    def page_visual_digest(self, ref):
+        return self.ctx.page_visual_digest(ref)
+
     def read_object_json(self, ref):
         return self.ctx.read(ref)
 
@@ -128,7 +137,6 @@ class CurrentRelationships:
 
     def _completed_content(self, task, request_status):
         """Compare the adopted result, not the inputs that adoption replaced."""
-        from .models import compute_input_digest
         # Receipt resolution proves the complete canonical operation ancestry,
         # including ancestors older than adoption. Endpoint/object signatures
         # do not capture that proof, so never reuse it across summary requests.
@@ -169,7 +177,7 @@ class CurrentRelationships:
             return relation('historical', 'adopted_content_replaced')
         # The whole content context includes membership/order and the adopted
         # narrative/plan. Unrelated rendering and display metadata do not.
-        if (compute_input_digest(adopted) != compute_input_digest(self.document)
+        if (self.store.input_digest(adopted) != self.store.input_digest(self.document)
                 or adopted.get('design_context') != self.document.get('design_context')
                 or before != now
                 or [p['page_id'] for p in adopted.get('pages', [])] !=

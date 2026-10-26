@@ -148,3 +148,20 @@ def test_assembly_waiters_do_not_start_or_release_an_active_compiler(store, monk
                     item.result(timeout=10)
     assert not pipeline._ASSEMBLIES
     assert store.load_document() == before
+
+
+@pytest.mark.parametrize('argv,exit_code', [(['--help'], 0), (['task', '--help'], 0),
+                                          (['--not-a-command'], 2)])
+def test_cli_parses_before_loading_production_dependencies(argv, exit_code):
+    code = """import contextlib,io,json,sys
+from deck_master.cli import main
+with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+    try: main(json.loads(sys.argv[1]))
+    except SystemExit as exc: result = exc.code
+print(json.dumps({'exit_code': result, 'modules': list(sys.modules)}))
+"""
+    result = json.loads(subprocess.check_output(
+        [sys.executable, '-c', code, json.dumps(argv)], text=True))
+    assert result['exit_code'] == exit_code
+    assert 'deck_master.service' not in result['modules']
+    assert 'deck_master.pipeline' not in result['modules']

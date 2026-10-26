@@ -38,7 +38,7 @@ PRIORITY = {name: index for index, name in enumerate((
     'refresh_stage', 'prepare_stage'))}
 
 
-def project(store, artifact, control, summary, *, fixed=False):
+def project(store, artifact, control, summary, *, fixed=False, completion=None):
     from .editing import ReviewReadContext
     try:
         review_context = ReviewReadContext(store, artifact)
@@ -46,7 +46,7 @@ def project(store, artifact, control, summary, *, fixed=False):
         # Preserve each consumer's existing partial-failure interpretation.
         review_context = None
     request = (artifact.get('collaboration') or {}).get('request') or {}
-    completion = completion_status(store, artifact)
+    completion = completion_status(store, artifact) if completion is None else completion
     scope = completion.get('effective_scope') or {}
     current_request = (control.get('collaboration') or {}).get('request') or {}
     historical = fixed and artifact['revision_id'] != control['revision_id']
@@ -57,7 +57,8 @@ def project(store, artifact, control, summary, *, fixed=False):
     if request.get('intent') == 'full_deck' and not design_plan:
         from .delivery_eligibility import describe_snapshots
         try:
-            full_delivery = describe_snapshots(store, artifact, control, read_context=review_context)
+            full_delivery = describe_snapshots(store, artifact, control, read_context=review_context,
+                deck_output=(summary.get('outputs') or {}).get('pptx'))
             ready = full_delivery['status'] == 'ready'
             output = full_delivery['selected_output']['artifact_ref']
             completion = {**completion,
@@ -179,10 +180,11 @@ def project(store, artifact, control, summary, *, fixed=False):
 
 def from_snapshot(store, document):
     """Shared Host projection on the exact document already selected by reader."""
-    from .workbench import _ReadContext, _summary
+    from .workbench import _ReadContext, _summary, _copy_json
     ctx = _ReadContext(store, document)
     try:
-        return project(ctx.reader, document, document, _summary(ctx, revision=None, request_scoped=True))
+        return project(ctx.reader, document, document, _summary(ctx, revision=None, request_scoped=True),
+            completion=_copy_json(ctx.completion))
     finally:
         ctx.close()
 

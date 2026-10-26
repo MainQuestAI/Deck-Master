@@ -61,7 +61,7 @@ def completion_status(store, document, *, proposal=None, proposal_ref=None):
         state = 'needs_recovery'
         missing.append({'code': 'design_facts_unreadable', 'detail': type(exc).__name__})
     from .models import input_alignment
-    if input_alignment(document) == 'needs_reconciliation':
+    if getattr(store, 'input_alignment', input_alignment)(document) == 'needs_reconciliation':
         state = 'awaiting_decision'
         missing.append({'code': 'input_reconciliation_pending'})
     if not outputs and not missing:

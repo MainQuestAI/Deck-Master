@@ -942,7 +942,7 @@ def _fixed_delivery_state(store, artifact, control, selected, ref, record):
             or fixed.get('subject_ref') != (selected or {}).get('subject_ref')
             or fixed.get('file_sha256') != (selected or {}).get('file_sha256')
             or fixed.get('notes_policy') != (selected or {}).get('notes_policy')
-            or models.compute_input_digest(artifact) != models.compute_input_digest(control)
+            or getattr(store, 'input_digest', models.compute_input_digest)(artifact) != getattr(store, 'input_digest', models.compute_input_digest)(control)
             or artifact.get('narrative') != control.get('narrative')):
         return None
     # Replacement alone permits exact-file delivery, but never erases a later
@@ -1550,7 +1550,7 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
               "request pause and stays until it is explicitly lifted")
 
     # -- input reconciliation ---------------------------------------------
-    if enforced and spec.production and models.input_alignment(control) == "needs_reconciliation":
+    if enforced and spec.production and getattr(store, 'input_alignment', models.input_alignment)(control) == "needs_reconciliation":
         if not _reconciles_current_inputs(control, task, spec, context):
             block("input_reconciliation_pending",
                   "inputs changed; reconcile the content against the new inputs first")
@@ -1613,7 +1613,7 @@ def evaluate(store: Store, artifact_snapshot: dict | None, control_snapshot: dic
                       missing="decision", topics=["delivery_acceptance"],
                       card={"kind": "delivery_card", "projection": spec.card,
                             "topics": ["delivery_acceptance"]})
-        if (models.compute_input_digest(artifact) != models.compute_input_digest(control)
+        if (getattr(store, 'input_digest', models.compute_input_digest)(artifact) != getattr(store, 'input_digest', models.compute_input_digest)(control)
                 or artifact.get('narrative') != control.get('narrative')):
             block('basis_stale', 'selected output no longer matches current audience/source/argument facts')
         delivery = delivery_control_state(store, artifact or control, control, selected_output=context.get("selected_output"))

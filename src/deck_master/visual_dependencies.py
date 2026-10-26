@@ -21,8 +21,12 @@ def page_visual_equivalent(store, before_ref, after_ref, page_id):
     """Fail closed unless both real, valid stored Pages have the requested ID."""
     try:
         before, after = store.read_object_json(before_ref), store.read_object_json(after_ref)
-        return (before["page_id"] == after["page_id"] == page_id
-                and page_visual_digest(before) == page_visual_digest(after))
+        if before["page_id"] != page_id or after["page_id"] != page_id:
+            return False
+        digest_reader = getattr(store, 'page_visual_digest', None)
+        if digest_reader:
+            return digest_reader(before_ref) == digest_reader(after_ref)
+        return page_visual_digest(before) == page_visual_digest(after)
     except (StoreError, OSError, ValueError, KeyError, TypeError):
         return False
 
@@ -91,7 +95,7 @@ def visual_task_inputs_current(store, document, task, *, read_snapshot=None):
         if content_identity(document) == task.get("produced_against"):
             return True
         dispatched = (read_snapshot or (lambda rev: load_snapshot(store, rev)))(task["dispatch_revision"])
-        if compute_input_digest(dispatched) != compute_input_digest(document):
+        if getattr(store, 'input_digest', compute_input_digest)(dispatched) != getattr(store, 'input_digest', compute_input_digest)(document):
             return False
         ids = task["scope_pages"]
         if plan_visual_projection(store, dispatched, ids) != plan_visual_projection(store, document, ids):

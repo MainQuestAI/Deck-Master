@@ -73,10 +73,10 @@ def test_method_reader_keeps_dom_but_refreshes_current_availability(icon_browser
       const app={disposables:[]};
       try {
         const node=taskMethods(app,'task','revision',{routeOwned:false});document.body.replaceChildren(node);
-        await node.refresh();const body=node.firstChild;
+        await node.refresh();const body=node.firstChild;const fixed=body.querySelector('details');fixed.open=true;fixed.querySelector('summary').focus();
         for(let i=0;i<10;i++)await node.refresh();
         const stable=node.firstChild===body;available=false;await node.refresh();
-        const changed=node.firstChild!==body&&node.textContent.includes('false');
+        const changed=node.firstChild===body&&node.textContent.includes('false')&&body.querySelector('details')===fixed&&fixed.open&&document.activeElement===fixed.querySelector('summary');
         node.dispose();await node.refresh();return {stable,changed,reads,disposables:app.disposables.length};
       } finally {window.fetch=original;}
     }""")

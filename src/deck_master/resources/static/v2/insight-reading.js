@@ -11,7 +11,7 @@ export function reader(app, path, render, {routeOwned = true} = {}) {
   if(routeOwned)app.disposables.push(box.dispose);
   box.refresh=()=>{
     if(disposed||pending)return pending;
-    pending=get(path,{signal:controller.signal}).then(value=>{if(!disposed){const next=canonical(value);if(next!==shown){shown=next;box.replaceChildren(render(value));}}}).catch(error=>{if(!disposed){shown=null;box.replaceChildren(el('p',{role:'alert'},readableError(error)));}}).finally(()=>{pending=null;});
+    pending=get(path,{signal:controller.signal}).then(value=>{if(!disposed){const next=canonical(value);if(next!==shown){shown=next;const content=render(value);if(box.childNodes.length!==1||box.firstChild!==content)box.replaceChildren(content);}}}).catch(error=>{if(!disposed){shown=null;box.replaceChildren(el('p',{role:'alert'},readableError(error)));}}).finally(()=>{pending=null;});
     return pending;
   };
   box.refresh();
@@ -96,6 +96,18 @@ function directionDialog(app,initial){
     status.prepend(el('p',{},'已读取当前准入，请再次核对范围后明确确认。'));}catch(e){status.prepend(el('p',{},readableError(e)));}finally{busy=false;paint();}}));
   paint();
 }
-export function taskMethods(app,id,revision,options){return reader(app,`/api/tasks/${encodeURIComponent(id)}/methods?`+new URLSearchParams({revision,availability:'current'}),value=>{
-  const d=value.data;if(!d)return el('p',{},'任务依据暂不可读。');
-  return el('div',{class:'stack'},el('h3',{},'任务方法依据'),el('p',{},d.frozen_status==='recorded'?'以下是派发时冻结的有序清单。':'旧任务未记录冻结清单，不套用当前默认方法。'),el('ol',{},d.resources.map(r=>el('li',{},r.display_name||r.id))),details('派发时的版本与字节',d.resources),details('当前安装可用性',d.availability),el('p',{class:'muted'},'资源可读不代表已应用、专业通过或人类认可。缺失或变化请使用下方核实原任务入口。'),issues(value));},options);}
+export function taskMethods(app,id,revision,options){
+  let body=null, frozenKey=null, availability=null;
+  return reader(app,`/api/tasks/${encodeURIComponent(id)}/methods?`+new URLSearchParams({revision,availability:'current'}),value=>{
+    const d=value.data;if(!d){body=null;frozenKey=null;return el('p',{},'任务依据暂不可读。');}
+    const {availability:currentAvailability,...fixed}=d;
+    const key=canonical({...value,data:fixed});
+    if(body&&key===frozenKey){
+      availability.querySelector('pre').textContent=JSON.stringify(currentAvailability,null,2);
+      return body;
+    }
+    frozenKey=key;availability=details('当前安装可用性',currentAvailability);
+    body=el('div',{class:'stack'},el('h3',{},'任务方法依据'),el('p',{},d.frozen_status==='recorded'?'以下是派发时冻结的有序清单。':'旧任务未记录冻结清单，不套用当前默认方法。'),el('ol',{},d.resources.map(r=>el('li',{},r.display_name||r.id))),details('派发时的版本与字节',d.resources),availability,el('p',{class:'muted'},'资源可读不代表已应用、专业通过或人类认可。缺失或变化请使用下方核实原任务入口。'),issues(value));
+    return body;
+  },options);
+}
