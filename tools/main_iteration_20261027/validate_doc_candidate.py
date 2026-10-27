@@ -84,7 +84,12 @@ def links(root, paths):
                     broken.append(row)
     return records, broken, permalink_errors
 
-report = {'baseline': BASE, 'status': 'isolated verification; 正式应用需要 Codex 核验'}
+report = {'baseline': BASE, 'status': 'intermediate documentation sample verification',
+          'validation_scope': {'candidate_stage': 'intermediate_documentation_sample',
+                               'includes': ['archive_bytes', 'fixture_bytes', 'markdown_html_links',
+                                            'package_resource_inventory', 'legacy_manifest'],
+                               'excludes': ['final_candidate', 'json_csv_references', 'product_acceptance']},
+          'final_candidate_status': 'not_evaluated'}
 snapshot_errors = []
 for p, item in TRACKED.items():
     raw = (ROOT / p).read_bytes()
@@ -193,5 +198,6 @@ report['legacy_manifest_alias'] = {'status': 'PASS', 'path_retained': True, 'jso
 report['pass'] = not snapshot_errors and not introduced and not permalink_errors and all(x['found'] for x in fragment_checks)
 (OUT / 'verification.json').write_text(json.dumps(report, ensure_ascii=False, indent=2))
 print(json.dumps(report, ensure_ascii=False, indent=2))
+print('Intermediate documentation sample only; final_candidate_status: not_evaluated.', file=sys.stderr)
 if not report['pass']:
     raise SystemExit(1)
