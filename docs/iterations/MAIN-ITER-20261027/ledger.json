@@ -27,7 +27,8 @@
       "verified_resolution": null,
       "same_basename_candidates_not_identity_proof": [],
       "action": "keep original and record missing provenance; 需要 Codex 核验",
-      "status": "not_resolved_by_this_iteration"
+      "status": "not_resolved_by_this_iteration",
+      "impact_on_current_iteration": "Prevents verification/closure of the cited historical provenance or former acceptance claim. Current behavior is independently checked against fixed baseline and explicit full cards; no current code/test is replaced by a same-name historical source. Does not justify closing this gap or blocking executable current checks."
     },
     {
       "source": "docs/specs/deck-master-content-collaboration-v1.2/CONTENT-QUALITY-ITERATION.md",
@@ -39,7 +40,8 @@
       "verified_resolution": null,
       "same_basename_candidates_not_identity_proof": [],
       "action": "keep original and record missing provenance; 需要 Codex 核验",
-      "status": "not_resolved_by_this_iteration"
+      "status": "not_resolved_by_this_iteration",
+      "impact_on_current_iteration": "Prevents verification/closure of the cited historical provenance or former acceptance claim. Current behavior is independently checked against fixed baseline and explicit full cards; no current code/test is replaced by a same-name historical source. Does not justify closing this gap or blocking executable current checks."
     },
     {
       "source": "docs/specs/deck-master-content-collaboration-v1.2/CONTENT-QUALITY-ITERATION.md",
@@ -156,7 +158,8 @@
         "tools/rc3_campaign/README.md"
       ],
       "action": "keep original and record missing provenance; 需要 Codex 核验",
-      "status": "not_resolved_by_this_iteration"
+      "status": "not_resolved_by_this_iteration",
+      "impact_on_current_iteration": "Prevents verification/closure of the cited historical provenance or former acceptance claim. Current behavior is independently checked against fixed baseline and explicit full cards; no current code/test is replaced by a same-name historical source. Does not justify closing this gap or blocking executable current checks."
     },
     {
       "source": "docs/specs/deck-master-content-collaboration-v1.2/CONTENT-QUALITY-ITERATION.md",
@@ -170,7 +173,8 @@
         "docs/reports/controlled-collaboration-audit-20261012/evidence.json"
       ],
       "action": "keep original and record missing provenance; 需要 Codex 核验",
-      "status": "not_resolved_by_this_iteration"
+      "status": "not_resolved_by_this_iteration",
+      "impact_on_current_iteration": "Prevents verification/closure of the cited historical provenance or former acceptance claim. Current behavior is independently checked against fixed baseline and explicit full cards; no current code/test is replaced by a same-name historical source. Does not justify closing this gap or blocking executable current checks."
     },
     {
       "source": "docs/specs/deck-master-content-collaboration-v1.2/CONTENT-QUALITY-ITERATION.md",
@@ -182,7 +186,8 @@
       "verified_resolution": null,
       "same_basename_candidates_not_identity_proof": [],
       "action": "keep original and record missing provenance; 需要 Codex 核验",
-      "status": "not_resolved_by_this_iteration"
+      "status": "not_resolved_by_this_iteration",
+      "impact_on_current_iteration": "Prevents verification/closure of the cited historical provenance or former acceptance claim. Current behavior is independently checked against fixed baseline and explicit full cards; no current code/test is replaced by a same-name historical source. Does not justify closing this gap or blocking executable current checks."
     },
     {
       "source": "docs/specs/deck-master-content-collaboration-v1.2/CONTENT-QUALITY-ITERATION.md",
@@ -203,7 +208,8 @@
         "docs/work-items/wi-issue-repair-20261023/TASKS.md"
       ],
       "action": "keep original and record missing provenance; 需要 Codex 核验",
-      "status": "not_resolved_by_this_iteration"
+      "status": "not_resolved_by_this_iteration",
+      "impact_on_current_iteration": "Prevents verification/closure of the cited historical provenance or former acceptance claim. Current behavior is independently checked against fixed baseline and explicit full cards; no current code/test is replaced by a same-name historical source. Does not justify closing this gap or blocking executable current checks."
     },
     {
       "source": "docs/specs/deck-master-content-collaboration-v1.2/CONTENT-QUALITY-ITERATION.md",
@@ -217,7 +223,8 @@
         "docs/reports/content-collaboration-v1.2/t03-content-production.md"
       ],
       "action": "keep original and record missing provenance; 需要 Codex 核验",
-      "status": "not_resolved_by_this_iteration"
+      "status": "not_resolved_by_this_iteration",
+      "impact_on_current_iteration": "Prevents verification/closure of the cited historical provenance or former acceptance claim. Current behavior is independently checked against fixed baseline and explicit full cards; no current code/test is replaced by a same-name historical source. Does not justify closing this gap or blocking executable current checks."
     },
     {
       "source": "docs/specs/deck-master-content-collaboration-v1.2/CONTENT-QUALITY-ITERATION.md",
@@ -231,7 +238,8 @@
         "src/deck_master/method_resources.py"
       ],
       "action": "keep original and record missing provenance; 需要 Codex 核验",
-      "status": "not_resolved_by_this_iteration"
+      "status": "not_resolved_by_this_iteration",
+      "impact_on_current_iteration": "Prevents verification/closure of the cited historical provenance or former acceptance claim. Current behavior is independently checked against fixed baseline and explicit full cards; no current code/test is replaced by a same-name historical source. Does not justify closing this gap or blocking executable current checks."
     },
     {
       "source": "docs/specs/deck-master-content-collaboration-v1.2/CONTENT-QUALITY-ITERATION.md",
@@ -245,7 +253,8 @@
         "skills/deck-master/references/content-examples.md"
       ],
       "action": "keep original and record missing provenance; 需要 Codex 核验",
-      "status": "not_resolved_by_this_iteration"
+      "status": "not_resolved_by_this_iteration",
+      "impact_on_current_iteration": "Prevents verification/closure of the cited historical provenance or former acceptance claim. Current behavior is independently checked against fixed baseline and explicit full cards; no current code/test is replaced by a same-name historical source. Does not justify closing this gap or blocking executable current checks."
     },
     {
       "source": "docs/specs/deck-master-content-collaboration-v1.2/CONTENT-QUALITY-ITERATION.md",
@@ -259,7 +268,8 @@
         "src/deck_master/production.py"
       ],
       "action": "keep original and record missing provenance; 需要 Codex 核验",
-      "status": "not_resolved_by_this_iteration"
+      "status": "not_resolved_by_this_iteration",
+      "impact_on_current_iteration": "Prevents verification/closure of the cited historical provenance or former acceptance claim. Current behavior is independently checked against fixed baseline and explicit full cards; no current code/test is replaced by a same-name historical source. Does not justify closing this gap or blocking executable current checks."
     },
     {
       "source": "docs/specs/deck-master-content-collaboration-v1.2/CONTENT-QUALITY-ITERATION.md",
@@ -274,7 +284,8 @@
         "src/deck_master/resources/contracts/content-plan-input.v2.schema.json"
       ],
       "action": "keep original and record missing provenance; 需要 Codex 核验",
-      "status": "not_resolved_by_this_iteration"
+      "status": "not_resolved_by_this_iteration",
+      "impact_on_current_iteration": "Prevents verification/closure of the cited historical provenance or former acceptance claim. Current behavior is independently checked against fixed baseline and explicit full cards; no current code/test is replaced by a same-name historical source. Does not justify closing this gap or blocking executable current checks."
     },
     {
       "source": "docs/specs/deck-master-webui-v4-20260930/UX-REPAIR-DECISIONS.md",
@@ -286,7 +297,8 @@
       "verified_resolution": null,
       "same_basename_candidates_not_identity_proof": [],
       "action": "keep original and record missing provenance; 需要 Codex 核验",
-      "status": "not_resolved_by_this_iteration"
+      "status": "not_resolved_by_this_iteration",
+      "impact_on_current_iteration": "Prevents verification/closure of the cited historical provenance or former acceptance claim. Current behavior is independently checked against fixed baseline and explicit full cards; no current code/test is replaced by a same-name historical source. Does not justify closing this gap or blocking executable current checks."
     }
   ],
   "cards": [
@@ -316,7 +328,9 @@
       "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
       "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
       "implementation_commits": [
-        "aba7f44f4d6be313991a0264637bda6471db8b64"
+        "aba7f44f4d6be313991a0264637bda6471db8b64",
+        "3ff01a803e84d4167e6653f80d8ee77a9ebc1ab1",
+        "66ab177dc4a6f85d7d6e11191e828c3f845edb54"
       ],
       "validation": [
         {
@@ -326,11 +340,20 @@
           "skipped": 6,
           "evidence": "unit-v2.xml",
           "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        },
+        {
+          "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
+          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "evidence": "owner-final.xml"
         }
       ],
-      "status": "implemented_final_gates_running",
+      "status": "implemented_local_checks_recorded_final_gates_in_delivery",
       "remaining": [
-        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
+        "Exact final wheel/sdist, full CI objects, candidate SHA and budget are bound in the corrected developer package; inherited evidence gaps and excluded Host/production acceptance remain explicit."
+      ],
+      "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
+      "implementation_plan_revision": [
+        "Original scope retained; verify existing behavior before any further code change."
       ]
     },
     {
@@ -372,11 +395,20 @@
           "skipped": 6,
           "evidence": "unit-v2.xml",
           "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        },
+        {
+          "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
+          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "evidence": "owner-final.xml"
         }
       ],
-      "status": "implemented_final_gates_running",
+      "status": "implemented_local_checks_recorded_final_gates_in_delivery",
       "remaining": [
-        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
+        "Exact final wheel/sdist, full CI objects, candidate SHA and budget are bound in the corrected developer package; inherited evidence gaps and excluded Host/production acceptance remain explicit."
+      ],
+      "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
+      "implementation_plan_revision": [
+        "Retain paragraph/block boundaries in cells, nested tables and textboxes; preserve table structure and visual reading status."
       ]
     },
     {
@@ -416,11 +448,20 @@
           "skipped": 6,
           "evidence": "unit-v2.xml",
           "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        },
+        {
+          "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
+          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "evidence": "owner-final.xml"
         }
       ],
-      "status": "implemented_final_gates_running",
+      "status": "implemented_local_checks_recorded_final_gates_in_delivery",
       "remaining": [
-        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
+        "Exact final wheel/sdist, full CI objects, candidate SHA and budget are bound in the corrected developer package; inherited evidence gaps and excluded Host/production acceptance remain explicit."
+      ],
+      "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
+      "implementation_plan_revision": [
+        "Original scope retained; verify existing behavior before any further code change."
       ]
     },
     {
@@ -463,11 +504,23 @@
           "skipped": 6,
           "evidence": "unit-v2.xml",
           "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        },
+        {
+          "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
+          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "evidence": "owner-final.xml"
         }
       ],
-      "status": "implemented_final_gates_running",
+      "status": "implemented_local_checks_recorded_final_gates_in_delivery",
       "remaining": [
-        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
+        "Exact final wheel/sdist, full CI objects, candidate SHA and budget are bound in the corrected developer package; inherited evidence gaps and excluded Host/production acceptance remain explicit."
+      ],
+      "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
+      "implementation_plan_revision": [
+        "Preserve the original one-mirror-per-contract rule. Extract shared definitions only for contracts whose unique mirrors share the rebuild-v1 directory; restore the other groups inline and remove formatting-only churn. Keep 14 shared definitions in transitive closure. Recovery adds optional pending_save + independent digest, with local reuse of its original draft subtree. Existing direct-dictionary/summary/native consumers remain intact.",
+        "Keep exactly one byte-identical spec mirror for each of 85 contracts; shared extraction applies only inside the rebuild-v1 mirror group. Shared closure has 14 definitions and 47 same-directory shared refs.",
+        "Review/summary direct dictionary consumers remain inline. Bare validators and independent native output (including nonempty replaces) retain old shape. Whole unique-mirror registry resolves 234 refs offline. Three legacy cross-group refs from a single historical workbench folder also fail on baseline and are not claimed self-contained.",
+        "83 old schemas expand to baseline equality; recovery adds only optional paired pending_save and digest, reusing its existing draft subtree locally. Revised budget replaces original savings."
       ]
     },
     {
@@ -505,11 +558,20 @@
           "skipped": 6,
           "evidence": "unit-v2.xml",
           "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        },
+        {
+          "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
+          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "evidence": "owner-final.xml"
         }
       ],
-      "status": "implemented_final_gates_running",
+      "status": "implemented_local_checks_recorded_final_gates_in_delivery",
       "remaining": [
-        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
+        "Exact final wheel/sdist, full CI objects, candidate SHA and budget are bound in the corrected developer package; inherited evidence gaps and excluded Host/production acceptance remain explicit."
+      ],
+      "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
+      "implementation_plan_revision": [
+        "Original scope retained; verify existing behavior before any further code change."
       ]
     },
     {
@@ -548,11 +610,20 @@
           "skipped": 6,
           "evidence": "unit-v2.xml",
           "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        },
+        {
+          "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
+          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "evidence": "owner-final.xml"
         }
       ],
-      "status": "implemented_final_gates_running",
+      "status": "implemented_local_checks_recorded_final_gates_in_delivery",
       "remaining": [
-        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
+        "Exact final wheel/sdist, full CI objects, candidate SHA and budget are bound in the corrected developer package; inherited evidence gaps and excluded Host/production acceptance remain explicit."
+      ],
+      "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
+      "implementation_plan_revision": [
+        "Original scope retained; verify existing behavior before any further code change."
       ]
     },
     {
@@ -598,11 +669,20 @@
           "files": 34,
           "node_ids": 371,
           "function_asts_equal": 8
+        },
+        {
+          "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
+          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "evidence": "owner-final.xml"
         }
       ],
-      "status": "implemented_final_gates_running",
+      "status": "implemented_local_checks_recorded_final_gates_in_delivery",
       "remaining": [
-        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
+        "Exact final wheel/sdist, full CI objects, candidate SHA and budget are bound in the corrected developer package; inherited evidence gaps and excluded Host/production acceptance remain explicit."
+      ],
+      "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
+      "implementation_plan_revision": [
+        "Original scope retained; verify existing behavior before any further code change."
       ]
     },
     {
@@ -648,11 +728,20 @@
           "skipped": 6,
           "evidence": "unit-v2.xml",
           "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        },
+        {
+          "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
+          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "evidence": "owner-final.xml"
         }
       ],
-      "status": "implemented_final_gates_running",
+      "status": "implemented_local_checks_recorded_final_gates_in_delivery",
       "remaining": [
-        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
+        "Exact final wheel/sdist, full CI objects, candidate SHA and budget are bound in the corrected developer package; inherited evidence gaps and excluded Host/production acceptance remain explicit."
+      ],
+      "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
+      "implementation_plan_revision": [
+        "Original scope retained; verify existing behavior before any further code change."
       ]
     },
     {
@@ -698,11 +787,20 @@
           "skipped": 6,
           "evidence": "unit-v2.xml",
           "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        },
+        {
+          "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
+          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "evidence": "owner-final.xml"
         }
       ],
-      "status": "implemented_final_gates_running",
+      "status": "implemented_local_checks_recorded_final_gates_in_delivery",
       "remaining": [
-        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
+        "Exact final wheel/sdist, full CI objects, candidate SHA and budget are bound in the corrected developer package; inherited evidence gaps and excluded Host/production acceptance remain explicit."
+      ],
+      "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
+      "implementation_plan_revision": [
+        "Original scope retained; verify existing behavior before any further code change."
       ]
     },
     {
@@ -750,11 +848,20 @@
           "skipped": 6,
           "evidence": "unit-v2.xml",
           "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        },
+        {
+          "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
+          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "evidence": "owner-final.xml"
         }
       ],
-      "status": "implemented_final_gates_running",
+      "status": "implemented_local_checks_recorded_final_gates_in_delivery",
       "remaining": [
-        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
+        "Exact final wheel/sdist, full CI objects, candidate SHA and budget are bound in the corrected developer package; inherited evidence gaps and excluded Host/production acceptance remain explicit."
+      ],
+      "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
+      "implementation_plan_revision": [
+        "Original scope retained; verify existing behavior before any further code change."
       ]
     },
     {
@@ -802,11 +909,21 @@
           "skipped": 6,
           "evidence": "unit-v2.xml",
           "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        },
+        {
+          "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
+          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "evidence": "owner-final.xml"
         }
       ],
-      "status": "implemented_final_gates_running",
+      "status": "implemented_local_checks_recorded_final_gates_in_delivery",
       "remaining": [
-        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
+        "Exact final wheel/sdist, full CI objects, candidate SHA and budget are bound in the corrected developer package; inherited evidence gaps and excluded Host/production acceptance remain explicit."
+      ],
+      "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
+      "implementation_plan_revision": [
+        "Original scope retained; verify existing behavior before any further code change.",
+        "Bounded partial header cache only: at most4096; warm signature checks remain O(H). Mac probes record 4096/4097/8193 histories and reachable Python data bytes, not RSS."
       ]
     },
     {
@@ -858,11 +975,21 @@
           "skipped": 6,
           "evidence": "unit-v2.xml",
           "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        },
+        {
+          "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
+          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "evidence": "owner-final.xml"
         }
       ],
-      "status": "implemented_final_gates_running",
+      "status": "implemented_local_checks_recorded_final_gates_in_delivery",
       "remaining": [
-        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
+        "Exact final wheel/sdist, full CI objects, candidate SHA and budget are bound in the corrected developer package; inherited evidence gaps and excluded Host/production acceptance remain explicit."
+      ],
+      "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
+      "implementation_plan_revision": [
+        "Original scope retained; verify existing behavior before any further code change.",
+        "Delivery bundle preparation moves outside write lock, publication rechecks fixed snapshot; external export copy remains inside the lock."
       ]
     },
     {
@@ -911,11 +1038,21 @@
           "skipped": 6,
           "evidence": "unit-v2.xml",
           "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        },
+        {
+          "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
+          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "evidence": "owner-final.xml"
         }
       ],
-      "status": "implemented_final_gates_running",
+      "status": "implemented_local_checks_recorded_final_gates_in_delivery",
       "remaining": [
-        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
+        "Exact final wheel/sdist, full CI objects, candidate SHA and budget are bound in the corrected developer package; inherited evidence gaps and excluded Host/production acceptance remain explicit."
+      ],
+      "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
+      "implementation_plan_revision": [
+        "Original scope retained; verify existing behavior before any further code change.",
+        "Page reads remain60→60 in paired probe; only repeated Document semantic validation2→1. Corrupt Page rejection and current pointer preservation remain."
       ]
     },
     {
@@ -961,11 +1098,21 @@
           "skipped": 6,
           "evidence": "unit-v2.xml",
           "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        },
+        {
+          "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
+          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "evidence": "owner-final.xml"
         }
       ],
-      "status": "implemented_final_gates_running",
+      "status": "implemented_local_checks_recorded_final_gates_in_delivery",
       "remaining": [
-        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
+        "Exact final wheel/sdist, full CI objects, candidate SHA and budget are bound in the corrected developer package; inherited evidence gaps and excluded Host/production acceptance remain explicit."
+      ],
+      "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
+      "implementation_plan_revision": [
+        "Original scope retained; verify existing behavior before any further code change.",
+        "Original controlled SVG probe could not execute with unavailable DejaVu Sans on both baseline and Mac candidate; it is not a pass. Actual installed native and Node compilation plus LibreOffice rendering use an available pinned Verdana font and are separately recorded."
       ]
     },
     {
@@ -1030,7 +1177,9 @@
         "2d2918d1dc397a6676f2e162eb041663f62ad490",
         "bdcc2ad6cbd050d19ab431a3c6e28f755ed7486e",
         "6f6e3bb362f4d1d4ad3059661118763f8e0a0d5b",
-        "e439b330fb5ac4f58945a26b9cb089178d5c776a"
+        "e439b330fb5ac4f58945a26b9cb089178d5c776a",
+        "3ff01a803e84d4167e6653f80d8ee77a9ebc1ab1",
+        "66ab177dc4a6f85d7d6e11191e828c3f845edb54"
       ],
       "validation": [
         {
@@ -1040,11 +1189,21 @@
           "skipped": 6,
           "evidence": "unit-v2.xml",
           "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        },
+        {
+          "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
+          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "evidence": "owner-final.xml"
         }
       ],
-      "status": "implemented_final_gates_running",
+      "status": "implemented_local_checks_recorded_final_gates_in_delivery",
       "remaining": [
-        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
+        "Exact final wheel/sdist, full CI objects, candidate SHA and budget are bound in the corrected developer package; inherited evidence gaps and excluded Host/production acceptance remain explicit."
+      ],
+      "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
+      "implementation_plan_revision": [
+        "Bind explicit recovery custody confirmation to exact draft + pendingSave; download alone never grants leave. New edits invalidate confirmation. Protect readonly recovery modal, navigation and beforeunload.",
+        "Preserve actual owner state during initial read success/error/ACK, hydrate existing local buffer before accepting custom controls, and protect early edit→undo with the same readonly/disposed/base_ref/revision predicate. Four deterministic real Chromium scenarios include quota recovery custody and original draft ID/private brief preservation."
       ]
     },
     {
@@ -1103,11 +1262,20 @@
           "skipped": 6,
           "evidence": "unit-v2.xml",
           "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        },
+        {
+          "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
+          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "evidence": "owner-final.xml"
         }
       ],
-      "status": "implemented_final_gates_running",
+      "status": "implemented_local_checks_recorded_final_gates_in_delivery",
       "remaining": [
-        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
+        "Exact final wheel/sdist, full CI objects, candidate SHA and budget are bound in the corrected developer package; inherited evidence gaps and excluded Host/production acceptance remain explicit."
+      ],
+      "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
+      "implementation_plan_revision": [
+        "Original scope retained; verify existing behavior before any further code change."
       ]
     },
     {
@@ -1174,7 +1342,9 @@
         "2d2918d1dc397a6676f2e162eb041663f62ad490",
         "bdcc2ad6cbd050d19ab431a3c6e28f755ed7486e",
         "6f6e3bb362f4d1d4ad3059661118763f8e0a0d5b",
-        "e439b330fb5ac4f58945a26b9cb089178d5c776a"
+        "e439b330fb5ac4f58945a26b9cb089178d5c776a",
+        "3ff01a803e84d4167e6653f80d8ee77a9ebc1ab1",
+        "66ab177dc4a6f85d7d6e11191e828c3f845edb54"
       ],
       "validation": [
         {
@@ -1184,11 +1354,21 @@
           "skipped": 6,
           "evidence": "unit-v2.xml",
           "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        },
+        {
+          "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
+          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "evidence": "owner-final.xml"
         }
       ],
-      "status": "implemented_final_gates_running",
+      "status": "implemented_local_checks_recorded_final_gates_in_delivery",
       "remaining": [
-        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
+        "Exact final wheel/sdist, full CI objects, candidate SHA and budget are bound in the corrected developer package; inherited evidence gaps and excluded Host/production acceptance remain explicit."
+      ],
+      "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
+      "implementation_plan_revision": [
+        "Notify the actual form owner upon exact ACK retirement; reset formal fields to the fixed form baseline, clear personal fields, invalidate unsubmitted previews; retain dirty/unknown/saving/conflict/new etag/foreign identities.",
+        "Preserve actual owner state during initial read success/error/ACK, hydrate existing local buffer before accepting custom controls, and protect early edit→undo with the same readonly/disposed/base_ref/revision predicate. Four deterministic real Chromium scenarios include quota recovery custody and original draft ID/private brief preservation."
       ]
     },
     {
@@ -1251,7 +1431,9 @@
         "c75a059f2844596b027e1dcfa0bc85e12ffb2f78",
         "2d2918d1dc397a6676f2e162eb041663f62ad490",
         "bdcc2ad6cbd050d19ab431a3c6e28f755ed7486e",
-        "6f6e3bb362f4d1d4ad3059661118763f8e0a0d5b"
+        "6f6e3bb362f4d1d4ad3059661118763f8e0a0d5b",
+        "3ff01a803e84d4167e6653f80d8ee77a9ebc1ab1",
+        "66ab177dc4a6f85d7d6e11191e828c3f845edb54"
       ],
       "validation": [
         {
@@ -1261,11 +1443,20 @@
           "skipped": 6,
           "evidence": "unit-v2.xml",
           "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        },
+        {
+          "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
+          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "evidence": "owner-final.xml"
         }
       ],
-      "status": "implemented_final_gates_running",
+      "status": "implemented_local_checks_recorded_final_gates_in_delivery",
       "remaining": [
-        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
+        "Exact final wheel/sdist, full CI objects, candidate SHA and budget are bound in the corrected developer package; inherited evidence gaps and excluded Host/production acceptance remain explicit."
+      ],
+      "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
+      "implementation_plan_revision": [
+        "Render recovery confirmation synchronously before lazy body GET; cancel and selection generation reject late reads. Preserve the real existing restore flow."
       ]
     },
     {
@@ -1310,8 +1501,13 @@
       "review_disposition": "No implementation; claimed gallery-owner bug retracted. Savings zero.",
       "implementation_commits": [],
       "validation": [],
-      "status": "not_implemented_as_requested",
-      "remaining": []
+      "status": "intentionally_not_implemented",
+      "remaining": [],
+      "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
+      "implementation_plan_revision": [
+        "No implementation; claimed gallery-owner bug retracted. Savings zero."
+      ],
+      "savings": 0
     },
     {
       "id": "UI-ITER-F14",
@@ -1371,7 +1567,9 @@
         "c75a059f2844596b027e1dcfa0bc85e12ffb2f78",
         "2d2918d1dc397a6676f2e162eb041663f62ad490",
         "bdcc2ad6cbd050d19ab431a3c6e28f755ed7486e",
-        "6f6e3bb362f4d1d4ad3059661118763f8e0a0d5b"
+        "6f6e3bb362f4d1d4ad3059661118763f8e0a0d5b",
+        "3ff01a803e84d4167e6653f80d8ee77a9ebc1ab1",
+        "66ab177dc4a6f85d7d6e11191e828c3f845edb54"
       ],
       "validation": [
         {
@@ -1381,11 +1579,20 @@
           "skipped": 6,
           "evidence": "unit-v2.xml",
           "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        },
+        {
+          "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
+          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "evidence": "owner-final.xml"
         }
       ],
-      "status": "implemented_final_gates_running",
+      "status": "implemented_local_checks_recorded_final_gates_in_delivery",
       "remaining": [
-        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
+        "Exact final wheel/sdist, full CI objects, candidate SHA and budget are bound in the corrected developer package; inherited evidence gaps and excluded Host/production acceptance remain explicit."
+      ],
+      "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
+      "implementation_plan_revision": [
+        "Original scope retained; verify existing behavior before any further code change."
       ]
     },
     {
@@ -1436,11 +1643,21 @@
           "command": "python -m pytest -q tests/rebuild/test_main_iteration_doc_safety.py",
           "evidence": "review-fixes.log",
           "legacy_full_validator": "same pre-existing gap count assertion failure at line 20 on baseline and branch"
+        },
+        {
+          "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
+          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "evidence": "owner-final.xml"
         }
       ],
-      "status": "implemented_final_gates_running",
+      "status": "implemented_local_checks_recorded_final_gates_in_delivery",
       "remaining": [
-        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
+        "Exact final wheel/sdist, full CI objects, candidate SHA and budget are bound in the corrected developer package; inherited evidence gaps and excluded Host/production acceptance remain explicit."
+      ],
+      "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
+      "implementation_plan_revision": [
+        "Guard standalone tools before any write, including resolved ancestry and symlinks. Existing candidate rejected. Original destructive probe executed only on an expendable copy.",
+        "Protect verification.json, existing-broken-links.json and link-audit.json report destinations from symlink writes before any IO. Seven destructive layout cases + three report symlink cases preserve sentinel bytes."
       ]
     },
     {
@@ -1489,11 +1706,20 @@
           "command": "python -m pytest -q tests/rebuild/test_main_iteration_doc_safety.py",
           "evidence": "review-fixes.log",
           "legacy_full_validator": "same pre-existing gap count assertion failure at line 20 on baseline and branch"
+        },
+        {
+          "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
+          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "evidence": "owner-final.xml"
         }
       ],
-      "status": "implemented_final_gates_running",
+      "status": "implemented_local_checks_recorded_final_gates_in_delivery",
       "remaining": [
-        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
+        "Exact final wheel/sdist, full CI objects, candidate SHA and budget are bound in the corrected developer package; inherited evidence gaps and excluded Host/production acceptance remain explicit."
+      ],
+      "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
+      "implementation_plan_revision": [
+        "Original scope retained; verify existing behavior before any further code change."
       ]
     },
     {
@@ -1527,7 +1753,9 @@
       "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
       "review_disposition": "Retain the 3077-byte W12.md local dependency; preserve all historical archive originals byte-for-byte.",
       "implementation_commits": [
-        "aba7f44f4d6be313991a0264637bda6471db8b64"
+        "aba7f44f4d6be313991a0264637bda6471db8b64",
+        "3ff01a803e84d4167e6653f80d8ee77a9ebc1ab1",
+        "66ab177dc4a6f85d7d6e11191e828c3f845edb54"
       ],
       "validation": [
         {
@@ -1543,11 +1771,21 @@
           "command": "python -m pytest -q tests/rebuild/test_main_iteration_doc_safety.py",
           "evidence": "review-fixes.log",
           "legacy_full_validator": "same pre-existing gap count assertion failure at line 20 on baseline and branch"
+        },
+        {
+          "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
+          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "evidence": "owner-final.xml"
         }
       ],
-      "status": "implemented_final_gates_running",
+      "status": "implemented_local_checks_recorded_final_gates_in_delivery",
       "remaining": [
-        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
+        "Exact final wheel/sdist, full CI objects, candidate SHA and budget are bound in the corrected developer package; inherited evidence gaps and excluded Host/production acceptance remain explicit."
+      ],
+      "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
+      "implementation_plan_revision": [
+        "Retain the 3077-byte W12.md local dependency; preserve all historical archive originals byte-for-byte.",
+        "ZIP is explicitly tracked despite host global *.zip ignore; SHA256 2d7d6c704e4bce869edc62687cabae114dd3a7427f9a99de613d7519a9838317, 60175643 bytes. Physical archive bytes count in exact budget."
       ]
     },
     {
@@ -1584,7 +1822,9 @@
       "review_disposition": "Scan JSON and CSV too. Keep 262 historical strings in 8 retained files unchanged; map 82 targets to exact-SHA archive members/local W12 through machine-references.json.",
       "implementation_commits": [
         "aba7f44f4d6be313991a0264637bda6471db8b64",
-        "8fe10b3a84d3cf2bb32680c550ad29694601d5e6"
+        "8fe10b3a84d3cf2bb32680c550ad29694601d5e6",
+        "3ff01a803e84d4167e6653f80d8ee77a9ebc1ab1",
+        "66ab177dc4a6f85d7d6e11191e828c3f845edb54"
       ],
       "validation": [
         {
@@ -1600,11 +1840,20 @@
           "command": "python -m pytest -q tests/rebuild/test_main_iteration_doc_safety.py",
           "evidence": "review-fixes.log",
           "legacy_full_validator": "same pre-existing gap count assertion failure at line 20 on baseline and branch"
+        },
+        {
+          "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
+          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "evidence": "owner-final.xml"
         }
       ],
-      "status": "implemented_final_gates_running",
+      "status": "implemented_local_checks_recorded_final_gates_in_delivery",
       "remaining": [
-        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
+        "Exact final wheel/sdist, full CI objects, candidate SHA and budget are bound in the corrected developer package; inherited evidence gaps and excluded Host/production acceptance remain explicit."
+      ],
+      "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
+      "implementation_plan_revision": [
+        "Scan JSON and CSV too. Keep 262 historical strings in 8 retained files unchanged; map 82 targets to exact-SHA archive members/local W12 through machine-references.json."
       ]
     },
     {
@@ -1636,7 +1885,10 @@
       ],
       "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
       "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
-      "implementation_commits": [],
+      "implementation_commits": [
+        "3ff01a803e84d4167e6653f80d8ee77a9ebc1ab1",
+        "66ab177dc4a6f85d7d6e11191e828c3f845edb54"
+      ],
       "validation": [
         {
           "command": "python -m pytest -q tests/rebuild -m \"not render and not browser\" (dedicated TMPDIR/basetemp)",
@@ -1645,39 +1897,112 @@
           "skipped": 6,
           "evidence": "unit-v2.xml",
           "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        },
+        {
+          "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
+          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "evidence": "owner-final.xml"
         }
       ],
-      "status": "implemented_final_gates_running",
+      "status": "implemented_local_checks_recorded_final_gates_in_delivery",
       "remaining": [
-        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
+        "Exact final wheel/sdist, full CI objects, candidate SHA and budget are bound in the corrected developer package; inherited evidence gaps and excluded Host/production acceptance remain explicit."
+      ],
+      "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
+      "implementation_plan_revision": [
+        "Original scope retained; verify existing behavior before any further code change."
       ]
     }
   ],
-  "current_candidate": "revised-v3-in-validation",
-  "acceptance": "in_progress_not_release_ready",
-  "formal_code_commit": "e439b330fb5ac4f58945a26b9cb089178d5c776a",
+  "current_candidate": "formal-final-runtime",
+  "acceptance": "local_regressions_complete_final_gates_bound_in_delivery",
+  "formal_code_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
   "validation_streams": {
     "unit": {
       "status": "pass_with_inherited_skips",
       "passed": 4410,
       "skipped": 6,
-      "evidence": "unit-v2.xml"
+      "evidence": "unit-v2.xml",
+      "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913",
+      "skip_breakdown": {
+        "linux_proc_platform": 4,
+        "external_frozen_a_engineering_installation": 2
+      },
+      "subsequent_changes": "UI owner JS, browser test timing and tracked archive inclusion; exact-head CI unit matrix follows."
     },
     "render": {
       "status": "pass_with_inherited_skip",
       "passed": 138,
       "skipped": 1,
       "skip": "Frozen A installation is an external engineering resource",
-      "evidence": "render-final.xml"
+      "evidence": "render-final.xml",
+      "source_commit": "bdcc2ad6cbd050d19ab431a3c6e28f755ed7486e",
+      "note": "No renderer code changed afterwards; exact-head CI repeats the render gate. Separate actual native/Node compiled decks and nonblank LibreOffice images are preserved."
     },
     "browser": {
-      "status": "running_after_confirmed_owner_repair"
+      "full_predecessor": {
+        "source_commit": "3ff01a803e84d4167e6653f80d8ee77a9ebc1ab1",
+        "passed": 784,
+        "failed": 2,
+        "evidence": "browser-v3.xml",
+        "disposition": "Preserved RED. Correct query-aware draft interception and register late request before asynchronous fetch; original behavior assertions retained."
+      },
+      "post_repair": {
+        "source_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
+        "command": "python -m pytest -q tests/rebuild/test_pr188_reading_browser.py tests/rebuild/test_main_iteration_browser.py tests/rebuild/test_webui_acceptance_matrix.py --require-browser",
+        "passed": 78,
+        "failed": 0,
+        "evidence": "owner-final.xml"
+      },
+      "full_exact_head_gate": "recorded in final delivery and PR CI, never inferred from the targeted pass"
     },
     "installed": {
-      "status": "rebuilding_after_owner_repair"
+      "predecessor": {
+        "source_commit": "3ff01a803e84d4167e6653f80d8ee77a9ebc1ab1",
+        "passed": 676,
+        "failed": 0,
+        "evidence": [
+          "installed-regressions-v3.log",
+          "installed-regressions-v3.json"
+        ],
+        "runtime_module_paths": "all audited in outside-repository site-packages"
+      },
+      "final_distribution": "rebuilt from final runtime; exact hashes, outside wheel/sdist installation and repeated installed checks are recorded in final delivery"
     },
     "ci": {
-      "status": "not_dispatched"
+      "pr": 215,
+      "predecessor_run": 40483509444,
+      "predecessor_head": "3ff01a803e84d4167e6653f80d8ee77a9ebc1ab1",
+      "unit_failure": "Historical ZIP was excluded by host global *.zip ignore. Explicitly tracked in 66ab177d, no assertion removed.",
+      "render_job": 122119784211,
+      "render_status": "success",
+      "exact_final_head_results": "recorded after push in final developer package release-validation.json and PR checks"
+    },
+    "documents": {
+      "command": "python audit_final_documents.py",
+      "evidence": "final-document-audit/report.json",
+      "scope": "Full tracked formal tree, original validator link helpers + unchanged priority classifier; machine JSON/CSV mapping checked by retained test.",
+      "archive_originals": 2868,
+      "archive_crc": "pass",
+      "byte_parity": "pass",
+      "fixtures": 10,
+      "introduced_local_broken_links": 0,
+      "priority_entry_failures": 0,
+      "legacy_full_validator": "same baseline line20 gap-count failure on baseline and branch; separate evidence retained"
+    },
+    "routes": {
+      "evidence": "installed-check/cold-route-evidence/report.json",
+      "fresh_browser_contexts": 10,
+      "page_errors": 0,
+      "scope": "launcher, overview, content, gallery, runs, style, page, regular candidate, changeset candidate, action; visibility time is observational and is not a first-screen improvement claim"
+    },
+    "ruff": {
+      "command": "ruff check src/deck_master tests/rebuild",
+      "result": "pass",
+      "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54"
     }
-  }
+  },
+  "final_evidence_policy": "The corrected developer package data/review-amendments.json and evidence/current/release-validation.json record eventual distribution/CI outcomes against the exact tracked candidate manifest and PR head. Repository ledger preserves pre-push results; no future green is claimed here.",
+  "draft_pr": "https://github.com/MainQuestAI/Deck-Master/pull/215",
+  "remote_main_at_final_local_check": "62dfcfc5637f0bee2358074c4458047689dd5299"
 }
