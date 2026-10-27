@@ -1,1 +1,0 @@
-PASS: baseline -> upgrade -> rollback; installed old/new UI, fixed history, old Task, legacy/future writer refusal, business hashes unchanged

@@ -37,6 +37,6 @@ RC5 方法库已由 PR127 合入；规格及旧报告中的开放状态保留原
 
 ## 更早的架构
 
-退役架构的 Spec 已在 [pre-rebuild archive](../archive/pre-rebuild/README.md)。
+退役架构的 Spec 已在 [pre-rebuild archive](https://github.com/MainQuestAI/Deck-Master/blob/62dfcfc5637f0bee2358074c4458047689dd5299/docs/archive/pre-rebuild/README.md)。
 旧路径、旧截图、旧测试结论用于追溯；活动 schema 仍以
 [src/deck_master/resources/contracts](../../src/deck_master/resources/contracts/) 为准。

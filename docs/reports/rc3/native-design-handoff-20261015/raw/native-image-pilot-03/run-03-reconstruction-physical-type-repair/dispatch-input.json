@@ -1,7 +1,0 @@
-{
-  "kind": "reconstruct",
-  "page_ids": [
-    "p04"
-  ],
-  "instruction": "Repair only actual accepted p04 native SVG geometry/typography for frozen physical 13.333333333333334x7.5in at1600x900 viewBox. Root original instruction incorrectly mapped18pt to24px ignoring actual0.8 conversion scale. Real corrected compilation observed body14.4pt/heading24pt and all35runs below required18pt/30pt. Use actual scale: desired_pt/(0.75*0.8) => body30px and heading50px; explicitly page title and exceptions-heading use heading. Preserve every17Pageatom, relationships, qualifiers, ownership, >=48px margins/>=24px module gaps/fullbody; reflow native layout instead of shrinking/deleting/changePage. Keep originalPNG/v1SVG/oldacceptedreviews/PPT failures unchanged; no newimage. If infeasible report honestly without changing manuscript/scope. Submit realSDK newSVG only; Root will actualcompile/render and independent re-review."
-}

@@ -65,7 +65,7 @@ W02-AC07必须先证明一次真实request→submit→output绑定，W05才能�
 
 ## 接管后的实施与验收门槛
 
-执行状态以 [执行索引](../../../reports/workbench-v3-execution-20260926/README.md) 为准。每卡区分 implementation-ready、core-verified、slice-merged、AC-open、accepted；下游依赖明确能力已合 main，不要求前置卡所有后续集成证据已经关闭。任一时刻仍只有一个活动卡。
+执行状态以 [执行索引](https://github.com/MainQuestAI/Deck-Master/blob/62dfcfc5637f0bee2358074c4458047689dd5299/docs/reports/workbench-v3-execution-20260926/README.md) 为准。每卡区分 implementation-ready、core-verified、slice-merged、AC-open、accepted；下游依赖明确能力已合 main，不要求前置卡所有后续集成证据已经关闭。任一时刻仍只有一个活动卡。
 
 W01-AC01 的 300×5×3 正式压力项目需要 W02 Attempt、W07 Candidate；首轮只交读取能力与 300 页基础采样，不能关闭该 AC。W07 后返回 W01 补证，最终 owner 和 p95 门槛不变；W04/ W10 分别负责首屏与 heap，不重复计 summary。
 

@@ -1,6 +1,6 @@
 # 代码基线：生成工作台 v3
 
-本文件保留实施前的历史核查，不再代表当前 API 能力。W01–W11 已合入，当前实现、候选提交和证据以 [执行索引](../../reports/workbench-v3-execution-20260926/README.md)、[W12](../../reports/workbench-v3-execution-20260926/W12.md) 为准。
+本文件保留实施前的历史核查，不再代表当前 API 能力。W01–W11 已合入，当前实现、候选提交和证据以 [执行索引](https://github.com/MainQuestAI/Deck-Master/blob/62dfcfc5637f0bee2358074c4458047689dd5299/docs/reports/workbench-v3-execution-20260926/README.md)、[W12](https://github.com/MainQuestAI/Deck-Master/blob/62dfcfc5637f0bee2358074c4458047689dd5299/docs/reports/workbench-v3-execution-20260926/W12.md) 为准。
 
 核查日期：2026-09-26。本线程重新核验远端 main、主要接口与上轮基线差异；新增只读/故障探测见 ../../reports/workbench-v3-execution-20260926/REVIEW.md。源码基线：`d1c7c4600cb0fc781070116ed8cc8a1ff6b8b7ca`（`d1c7c46`）。本文件是只读代码核查；没有跑生产项目，也不证明运行或真实 Host 验收通过。后续编码前必须核对当时 main，不把本快照当永久现状。
 

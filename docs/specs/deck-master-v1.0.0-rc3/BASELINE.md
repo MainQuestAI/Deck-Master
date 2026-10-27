@@ -15,7 +15,7 @@ RC3-00 工程接收通过；接收只允许后续实施，不代表 RC3 专业�
 | 规范来源 | 用户 RC3 交付包 SHA256 `3b97b4f22c68a980b212512f1aad4d11789b602b434bedd9a607fe8e9e0493fe` |
 | E1 共同候选 A | 隔离 wheel 安装，源码与方法/合同身份固定；不激活日常安装 |
 | 包版本 | A 保留 `1.0.0.dev2`；RC3 由 RC3-04 统一为 `1.0.0rc3` |
-| 证据 | [接收](../../reports/rc3/baseline.json)、[A 安装](../../reports/rc3/baseline-a.json)、[唯一台账](../../reports/rc3/evidence-ledger.json) |
+| 证据 | [接收](https://github.com/MainQuestAI/Deck-Master/blob/62dfcfc5637f0bee2358074c4458047689dd5299/docs/reports/rc3/baseline.json)、[A 安装](https://github.com/MainQuestAI/Deck-Master/blob/62dfcfc5637f0bee2358074c4458047689dd5299/docs/reports/rc3/baseline-a.json)、[唯一台账](https://github.com/MainQuestAI/Deck-Master/blob/62dfcfc5637f0bee2358074c4458047689dd5299/docs/reports/rc3/evidence-ledger.json) |
 
 ## 接口与移交
 

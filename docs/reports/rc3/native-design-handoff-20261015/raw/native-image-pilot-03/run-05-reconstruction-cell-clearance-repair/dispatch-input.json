@@ -1,7 +1,0 @@
-{
-  "kind": "reconstruct",
-  "page_ids": [
-    "p04"
-  ],
-  "instruction": "Second autonomous actual SVG layout repair for observed F07: v2 actual1601x900/~120dpi PPT tableheader glyphclearance9-10px and body10-11px belowfrozen>=12px althoughSVG13-14px, about+3pxnativeglyph baseline. Preserve all17fixedPageatoms, ownership/arrows/qualifiers/notes,1600x900viewBox/13.333333333333334x7.5in,body30px/heading50px→physical18/30pt,>=48pxexternal/>=24pxmodule/>=12pxcell onBOTH SVG andactualPPT. Reflow nonfrozen leading/wrapping/container allocations with severalpxbuffer fornative renderer; do notsimplyshift alltextup andviolateSVGtoppadding, do notshrinkfonts/delete/changePage/expand/newimage. Preserve allv1/v2/failures; ifinfeasible report truthfully. Rootwill actualcompile/render/newindependentreview; noqualityPASSbylocalparse."
-}

@@ -1,1 +1,0 @@
-{"error": {"type": "EnvelopeError", "message": "(result)/payload/pages/p1/content_mapping/visible_links[0]: content_plan/page/p1/content_mapping/visible_links[0]/source_links[0]/source_version: source identity or version is not in the dispatched inputs"}, "invalid_source_adopted": false, "source_ids": []}

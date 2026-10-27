@@ -1,6 +1,6 @@
 # Deck Master Web UI 设计基线 · 2026-10-01
 
-用户本轮已明确采用OpenDesign项目 **Deck Master · 全链路生成工作台 v3** 的现行设计；此文件替代旧Review Desk视觉及三栏布局约束。旧文档仅存于 [历史归档](docs/design/archive/DESIGN-review-desk-v1.md)。
+用户本轮已明确采用OpenDesign项目 **Deck Master · 全链路生成工作台 v3** 的现行设计；此文件替代旧Review Desk视觉及三栏布局约束。旧文档仅存于 [历史归档](https://github.com/MainQuestAI/Deck-Master/blob/62dfcfc5637f0bee2358074c4458047689dd5299/docs/design/archive/DESIGN-review-desk-v1.md)。
 
 ## 产品职责
 

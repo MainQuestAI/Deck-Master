@@ -533,7 +533,7 @@ reassociation is supported. Cancelled, unknown, consumed and released call facts
 remain unchanged. Do not infer controller-fenced not-sent evidence from an empty
 observation list or a Host-reported release, or use a matched image/input to
 rename another execution's event. The unresolved choices and exact missing
-proofs are recorded in [RP-24 evidence model](reports/issue-repair-20261023/RP-24-cross-execution-evidence.md).
+proofs are recorded in [RP-24 evidence model](https://github.com/MainQuestAI/Deck-Master/blob/62dfcfc5637f0bee2358074c4458047689dd5299/docs/reports/issue-repair-20261023/RP-24-cross-execution-evidence.md).
 
 
 ## Explicit preproduction re-review

@@ -95,7 +95,7 @@ def test_default_provider_gap_keeps_complete_reviewable_manuscript(tmp_path):
 
 
 def test_current_r2_anchor_and_prior_evaluation_bytes_are_separate():
-    report = Path(__file__).resolve().parents[2] / "docs/reports/content-collaboration-v1.2"
+    report = Path(__file__).resolve().parents[2] / "tests/rebuild/fixtures/history/content-collaboration-v1.2"
     manifest = json.loads((report / "fixtures/manifest.json").read_text(encoding="utf-8"))
     current = manifest["current_inputs"]["anchors/content-anchors.md"]
     assert current["sha256"] == "3f58b7392b30ceb4304699071cc12cc6b4eff487af512b48e4121a1e43efb2bc"

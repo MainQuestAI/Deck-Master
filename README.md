@@ -9,7 +9,7 @@ CLI and a loopback review workbench.
 and publication status are listed in [GitHub Releases](https://github.com/MainQuestAI/Deck-Master/releases).
 Start with the [installation and first-run guide](docs/getting-started.md).
 The [RC4 increment](docs/specs/deck-master-next-iteration-20261019/README.md)
-and its [single ledger](docs/reports/rc4/iteration-20261019/execution-ledger.json)
+and its [single ledger](tests/rebuild/fixtures/history/rc4/iteration-20261019/execution-ledger.json)
 retain their original candidate evidence. A source version, built wheel,
 active installation and published Release are separate facts.
 The source includes the RC5 content-method catalog and bounded Host selection,
@@ -172,7 +172,7 @@ receipt-only revision while preserving Page/input basis and tasks. Ordinary
 `inputs update` and `content inputs` have distinct ID/digest contracts. Read
 [input recovery](skills/deck-master/references/input-update.md) before retrying.
 
-The [N6 normal-task evidence](docs/reports/rc4/iteration-20261019/N6-evidence.md)
+The [N6 normal-task evidence](https://github.com/MainQuestAI/Deck-Master/blob/62dfcfc5637f0bee2358074c4458047689dd5299/docs/reports/rc4/iteration-20261019/N6-evidence.md)
 preserves its original staged observations. Subsequent actual installed Host
 validation at PR125 head `d7ec4530` completed native independent review,
 two-page native-image observation, SVG/PPT, real rendering and formal delivery,

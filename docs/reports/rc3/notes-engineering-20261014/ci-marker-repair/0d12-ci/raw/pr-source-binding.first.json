@@ -1,9 +1,0 @@
-{
-  "pr_number": 117,
-  "source_head_sha": "0d12a9d78ed0526f0fb74d1b8abed0a2ec154b4e",
-  "base_sha": "8e274576e7a93de7d10c054558991878501fff0c",
-  "pr_merge_commit_sha": "2b6764d91afecaa5765c4379f39772e2b735ef64",
-  "actual_tested_merge_sha": "2b6764d91afecaa5765c4379f39772e2b735ef64",
-  "source_tree_sha": "24d1bed45b9c42824d8068edec7e03860355aa9f",
-  "observed_at": "2026-10-14 21:18:15 UTC"
-}

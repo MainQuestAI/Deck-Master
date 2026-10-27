@@ -10,8 +10,8 @@ The content-method entry is the [RC5 increment](specs/content-methods-rc5/README
 For inherited work, use the
 [RC4 increment](specs/deck-master-next-iteration-20261019/README.md), inherited
 contracts then the assigned N1–N6 card. Its
-[single candidate ledger](reports/rc4/iteration-20261019/execution-ledger.json)
-records current verification. RC3, Web UI v4 and rebuild reports preserve their
+[single candidate ledger](../tests/rebuild/fixtures/history/rc4/iteration-20261019/execution-ledger.json)
+records that RC4 candidate's dated verification. RC3, Web UI v4 and rebuild reports preserve their
 own date/SHA; read those only for the contract needed by this task.
 
 ## Task Scope

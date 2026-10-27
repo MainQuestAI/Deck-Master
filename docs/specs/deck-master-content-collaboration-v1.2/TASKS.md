@@ -2,7 +2,7 @@
 
 本文件保留能力边界、交付清单与原 AC Owner。2026-10-14 起，本轮目标为 V1.0.0-RC3，实际执行按 [RC3-00～RC3-05](../deck-master-v1.0.0-rc3/TASKS.md) 编排；T03/T04 修复完成并经 RC3-00 接收联合基线后进入后续产品开发。旧 T00–T08 不必先全部完成，未完成交付与本轮质量增量一起进入 RC3。原 PR106 的 R1–R6 和讨论中的 R2-00～05 均不另维护执行状态。
 
-当前产品实现已合流至 PR120；2026-10-18 补齐的实际内容、整稿、备注与候选检查见[RC3 收口报告](../../reports/rc3/closeout-20261018/README.md)。原 37 项 AC 与 13 条 CQ 的唯一责任保持，完整映射见 [RC3 TRACEABILITY](../deck-master-v1.0.0-rc3/TRACEABILITY.md)。下文原能力顺序表示接口/关闭依赖；RC3-04 前置方法与审查能力切片允许在内容验效前提供，完整 T07 仍在集成后关闭。
+当前产品实现已合流至 PR120；2026-10-18 补齐的实际内容、整稿、备注与候选检查见[RC3 收口报告](https://github.com/MainQuestAI/Deck-Master/blob/62dfcfc5637f0bee2358074c4458047689dd5299/docs/reports/rc3/closeout-20261018/README.md)。原 37 项 AC 与 13 条 CQ 的唯一责任保持，完整映射见 [RC3 TRACEABILITY](../deck-master-v1.0.0-rc3/TRACEABILITY.md)。下文原能力顺序表示接口/关闭依赖；RC3-04 前置方法与审查能力切片允许在内容验效前提供，完整 T07 仍在集成后关闭。
 
 所有拟新增模块/字段/命令名以 [CONTRACTS.md](CONTRACTS.md) 为准；当前基线的代码和测试路径用于定位。新增测试文件名是推荐落点，可按仓库组织调整，但 AC ID 与唯一 owner 不得丢失。
 

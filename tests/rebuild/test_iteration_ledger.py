@@ -8,7 +8,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 SUMMARIZE = runpy.run_path(str(ROOT / 'tools/summarize_iteration_ledger.py'))['summarize']
-LEDGER = ROOT / 'docs/reports/rc4/iteration-20261019/execution-ledger.json'
+LEDGER = ROOT / 'tests/rebuild/fixtures/history/rc4/iteration-20261019/execution-ledger.json'
 TRACEABILITY = ROOT / 'docs/specs/deck-master-next-iteration-20261019/traceability.json'
 
 

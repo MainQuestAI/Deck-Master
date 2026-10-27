@@ -1,0 +1,1337 @@
+{
+  "iteration": "MAIN-ITER-20261027",
+  "baseline": "62dfcfc5637f0bee2358074c4458047689dd5299",
+  "remote_main_at_start": "62dfcfc5637f0bee2358074c4458047689dd5299",
+  "input_review_package": "not present; no review archive evidence claimed",
+  "preimplementation": {
+    "input_manifest_files": 485,
+    "git_blobs": 5108,
+    "locations": 224,
+    "unique_ranges": 215,
+    "file_count": 113,
+    "input_checks": "pass",
+    "environment": "Python 3.12.12; Node 26.12.0; real Chromium, LibreOffice, SVG/PDF render smoke passed; unit Node22/24 and Python3.11/3.12 matrix remains CI acceptance",
+    "source_worktree": "original dirty worktree preserved",
+    "product_decisions_required": [],
+    "status": "pass",
+    "boundary": "Facts and corrected implementation plan pass; final unit/render/browser/build/install/CI remain acceptance items, not prior evidence."
+  },
+  "historical_evidence_gaps": [
+    {
+      "source": "docs/specs/deck-master-content-collaboration-v1.2/CONTENT-QUALITY-ITERATION.md",
+      "line": 9,
+      "raw": "../../../sources/quality-r2/sources/supplement/DeckMaster_vs_CyberPPT_内容质量诊断与修复补充Spec_20261013.md",
+      "target": "sources/quality-r2/sources/supplement/DeckMaster_vs_CyberPPT_内容质量诊断与修复补充Spec_20261013.md",
+      "category": "active_inherited_evidence_gap_needs_owner",
+      "reason": "Lines 3–11 retain inherited current TASKS/ACCEPTANCE/CONTRACTS; lines 33–48 and 332–353 cite a separate fixed-SHA source package not present in this tracked tree. Same filenames in current src are not the same historical bytes.",
+      "verified_resolution": null,
+      "same_basename_candidates_not_identity_proof": [],
+      "action": "keep original and record missing provenance; 需要 Codex 核验",
+      "status": "not_resolved_by_this_iteration"
+    },
+    {
+      "source": "docs/specs/deck-master-content-collaboration-v1.2/CONTENT-QUALITY-ITERATION.md",
+      "line": 48,
+      "raw": "../../../sources/quality-r2/sources/prior-report/source_manifest.json",
+      "target": "sources/quality-r2/sources/prior-report/source_manifest.json",
+      "category": "active_inherited_evidence_gap_needs_owner",
+      "reason": "Lines 3–11 retain inherited current TASKS/ACCEPTANCE/CONTRACTS; lines 33–48 and 332–353 cite a separate fixed-SHA source package not present in this tracked tree. Same filenames in current src are not the same historical bytes.",
+      "verified_resolution": null,
+      "same_basename_candidates_not_identity_proof": [],
+      "action": "keep original and record missing provenance; 需要 Codex 核验",
+      "status": "not_resolved_by_this_iteration"
+    },
+    {
+      "source": "docs/specs/deck-master-content-collaboration-v1.2/CONTENT-QUALITY-ITERATION.md",
+      "line": 334,
+      "raw": "../../../sources/quality-r2/sources/diagnosis/README.md",
+      "target": "sources/quality-r2/sources/diagnosis/README.md",
+      "category": "active_inherited_evidence_gap_needs_owner",
+      "reason": "Lines 3–11 retain inherited current TASKS/ACCEPTANCE/CONTRACTS; lines 33–48 and 332–353 cite a separate fixed-SHA source package not present in this tracked tree. Same filenames in current src are not the same historical bytes.",
+      "verified_resolution": null,
+      "same_basename_candidates_not_identity_proof": [
+        "README.md",
+        "benchmarks/README.md",
+        "benchmarks/cases/real_case_template/README.md",
+        "docs/README.md",
+        "docs/archive/README.md",
+        "docs/archive/endgame-runtime-2026-06/README.md",
+        "docs/archive/pre-rebuild/README.md",
+        "docs/archive/pre-rebuild/docs/deck-master-p2-p5-development-guide/README.md",
+        "docs/archive/pre-rebuild/docs/deck-master-real-production-closure-spec-pack/README.md",
+        "docs/archive/pre-rebuild/docs/deck-master-spec-pack/README.md",
+        "docs/archive/pre-rebuild/docs/deck-master-v0.9.12-stack-spec-pack/README.md",
+        "docs/archive/pre-rebuild/docs/deck_master_v09_spec_pack/README.md",
+        "docs/archive/pre-rebuild/docs/qa/2026-06-21-run-workspace-screenshot-matrix/README.md",
+        "docs/archive/pre-rebuild/specs-legacy/README.md",
+        "docs/archive/pre-rebuild/specs-legacy/astra-skill-adaptation/README.md",
+        "docs/archive/pre-rebuild/specs-legacy/open-source-maturity-v1.0/README.md",
+        "docs/archive/pre-rebuild/specs-legacy/overdefense-governance-v1/README.md",
+        "docs/archive/pre-rebuild/specs-legacy/production-closure-v1.3.0/README.md",
+        "docs/archive/pre-rebuild/specs-legacy/sc1-solution-core-independence/README.md",
+        "docs/archive/pre-rebuild/specs-legacy/sc1-solution-core-independence/contracts/README.md",
+        "docs/archive/pre-rebuild/specs-legacy/sc1-solution-core-independence/examples/README.md",
+        "docs/archive/pre-rebuild/specs-legacy/sc1-solution-core-independence/methods/README.md",
+        "docs/archive/pre-rebuild/specs-legacy/sc1-solution-core-independence/sources/README.md",
+        "docs/archive/pre-rebuild/specs-legacy/skill-os-runtime-v1.1/README.md",
+        "docs/archive/pre-rebuild/specs-legacy/web-ui/README.md",
+        "docs/archive/pre-rebuild/test-fixtures/fixtures/high_density/README.md",
+        "docs/design/webui-opendesign-20260930/README.md",
+        "docs/design/webui-opendesign-20261001/README.md",
+        "docs/design/webui-opendesign-20261001/assets/deck-master-logo/README.md",
+        "docs/qa/pr39-flow-quality/README.md",
+        "docs/reports/README.md",
+        "docs/reports/content-collaboration-v1.2/README.md",
+        "docs/reports/content-collaboration-v1.2/evaluation/README.md",
+        "docs/reports/controlled-collaboration-audit-20261012/README.md",
+        "docs/reports/humanizer-20261023/README.md",
+        "docs/reports/humanizer-20261026/README.md",
+        "docs/reports/integration-closeout-20261025/README.md",
+        "docs/reports/performance-v12-20261026/README.md",
+        "docs/reports/pr189-concurrent-recovery-20261026/README.md",
+        "docs/reports/pr189-local-parity-20261026/README.md",
+        "docs/reports/pr189-review-repairs-20261025/README.md",
+        "docs/reports/pr189-review-repairs-20261026/README.md",
+        "docs/reports/pr189-round2-20261026/README.md",
+        "docs/reports/rc3/anchor-calibration-20261014/README.md",
+        "docs/reports/rc3/closeout-20261018/README.md",
+        "docs/reports/rc3/cloud-recovery-20261017/README.md",
+        "docs/reports/rc3/entry-integration-handoff-20261015/README.md",
+        "docs/reports/rc3/final-validation-addendum-20261015/README.md",
+        "docs/reports/rc3/native-content-handoff-20261014/README.md",
+        "docs/reports/rc3/native-design-handoff-20261015/README.md",
+        "docs/reports/rc4/iteration-20261019/README.md",
+        "docs/reports/skill-flow-review-20261012/README.md",
+        "docs/reports/webui-backend-feasibility-20260926/README.md",
+        "docs/reports/webui-backend-feasibility-20260926/evidence/README.md",
+        "docs/reports/workbench-v3-execution-20260926/README.md",
+        "docs/research/content-method-library/README.md",
+        "docs/specs/README.md",
+        "docs/specs/content-methods-rc5/README.md",
+        "docs/specs/deck-master-content-collaboration-v1.2/README.md",
+        "docs/specs/deck-master-deep-quality-fixes/README.md",
+        "docs/specs/deck-master-flow-quality-v1.1/README.md",
+        "docs/specs/deck-master-flow-quality-v1.1/examples/README.md",
+        "docs/specs/deck-master-flow-quality-v1.1/methods/README.md",
+        "docs/specs/deck-master-icon-quality-v1/README.md",
+        "docs/specs/deck-master-next-iteration-20261019/README.md",
+        "docs/specs/deck-master-rebuild-v1/README.md",
+        "docs/specs/deck-master-rebuild-v1/examples/README.md",
+        "docs/specs/deck-master-rebuild-v1/examples/roundtrips/README.md",
+        "docs/specs/deck-master-rebuild-v1/examples/roundtrips/design-context/README.md",
+        "docs/specs/deck-master-rebuild-v1/examples/roundtrips/missing-source/README.md",
+        "docs/specs/deck-master-rebuild-v1/examples/roundtrips/result-envelope/README.md",
+        "docs/specs/deck-master-rebuild-v1/examples/roundtrips/review-fixed/README.md",
+        "docs/specs/deck-master-rebuild-v1/inventory/README.md",
+        "docs/specs/deck-master-rebuild-v1/sources/README.md",
+        "docs/specs/deck-master-rebuild-v1/task-cards/README.md",
+        "docs/specs/deck-master-rebuild-v1/tools/README.md",
+        "docs/specs/deck-master-ui-refactor-20261024/README.md",
+        "docs/specs/deck-master-v1-rc-closure/README.md",
+        "docs/specs/deck-master-v1.0.0-rc3/README.md",
+        "docs/specs/deck-master-v1.0.0-rc3/task-cards/README.md",
+        "docs/specs/deck-master-webui-audit-20261018/README.md",
+        "docs/specs/deck-master-webui-content-methods-20261020/README.md",
+        "docs/specs/deck-master-webui-post127-review-20261020/README.md",
+        "docs/specs/deck-master-webui-usability-v1-iteration/README.md",
+        "docs/specs/deck-master-webui-usability-v1/README.md",
+        "docs/specs/deck-master-webui-v4-20260930/README.md",
+        "docs/specs/deck-master-webui-v4-20260930/evidence/README.md",
+        "docs/specs/deck-master-webui-v4-20260930/task-cards/README.md",
+        "docs/specs/deck-master-workbench-v3/README.md",
+        "docs/specs/deck-master-workbench-v3/packages/README.md",
+        "docs/specs/deck-master-workbench-v3/prototype/README.md",
+        "docs/specs/deck-master-workbench-v3/reviews/README.md",
+        "docs/specs/webui-design-alignment-20261001/README.md",
+        "docs/work-items/wi-issue-repair-20261023/README.md",
+        "examples/workbench/README.md",
+        "product_capabilities/ppt-deck-pro-max/adapters/README.md",
+        "product_capabilities/ppt-deck-pro-max/smoke/README.md",
+        "product_capabilities/ppt-library/adapters/README.md",
+        "product_capabilities/ppt-library/smoke/README.md",
+        "product_capabilities/ppt-master/adapters/README.md",
+        "product_capabilities/ppt-master/smoke/README.md",
+        "product_capabilities/ppt-quality-gate/adapters/README.md",
+        "product_capabilities/ppt-quality-gate/smoke/README.md",
+        "tools/rc3_campaign/README.md"
+      ],
+      "action": "keep original and record missing provenance; 需要 Codex 核验",
+      "status": "not_resolved_by_this_iteration"
+    },
+    {
+      "source": "docs/specs/deck-master-content-collaboration-v1.2/CONTENT-QUALITY-ITERATION.md",
+      "line": 334,
+      "raw": "../../../sources/quality-r2/sources/diagnosis/evidence.json",
+      "target": "sources/quality-r2/sources/diagnosis/evidence.json",
+      "category": "active_inherited_evidence_gap_needs_owner",
+      "reason": "Lines 3–11 retain inherited current TASKS/ACCEPTANCE/CONTRACTS; lines 33–48 and 332–353 cite a separate fixed-SHA source package not present in this tracked tree. Same filenames in current src are not the same historical bytes.",
+      "verified_resolution": null,
+      "same_basename_candidates_not_identity_proof": [
+        "docs/reports/controlled-collaboration-audit-20261012/evidence.json"
+      ],
+      "action": "keep original and record missing provenance; 需要 Codex 核验",
+      "status": "not_resolved_by_this_iteration"
+    },
+    {
+      "source": "docs/specs/deck-master-content-collaboration-v1.2/CONTENT-QUALITY-ITERATION.md",
+      "line": 334,
+      "raw": "../../../sources/quality-r2/sources/diagnosis/inspect.py",
+      "target": "sources/quality-r2/sources/diagnosis/inspect.py",
+      "category": "active_inherited_evidence_gap_needs_owner",
+      "reason": "Lines 3–11 retain inherited current TASKS/ACCEPTANCE/CONTRACTS; lines 33–48 and 332–353 cite a separate fixed-SHA source package not present in this tracked tree. Same filenames in current src are not the same historical bytes.",
+      "verified_resolution": null,
+      "same_basename_candidates_not_identity_proof": [],
+      "action": "keep original and record missing provenance; 需要 Codex 核验",
+      "status": "not_resolved_by_this_iteration"
+    },
+    {
+      "source": "docs/specs/deck-master-content-collaboration-v1.2/CONTENT-QUALITY-ITERATION.md",
+      "line": 335,
+      "raw": "../../../sources/quality-r2/sources/prior-report/evidence/code/docs/specs/deck-master-content-collaboration-v1.2/TASKS.md",
+      "target": "sources/quality-r2/sources/prior-report/evidence/code/docs/specs/deck-master-content-collaboration-v1.2/TASKS.md",
+      "category": "active_inherited_evidence_gap_needs_owner",
+      "reason": "Lines 3–11 retain inherited current TASKS/ACCEPTANCE/CONTRACTS; lines 33–48 and 332–353 cite a separate fixed-SHA source package not present in this tracked tree. Same filenames in current src are not the same historical bytes.",
+      "verified_resolution": null,
+      "same_basename_candidates_not_identity_proof": [
+        "docs/specs/deck-master-content-collaboration-v1.2/TASKS.md",
+        "docs/specs/deck-master-flow-quality-v1.1/TASKS.md",
+        "docs/specs/deck-master-icon-quality-v1/TASKS.md",
+        "docs/specs/deck-master-v1-rc-closure/TASKS.md",
+        "docs/specs/deck-master-v1.0.0-rc3/TASKS.md",
+        "docs/specs/deck-master-webui-content-methods-20261020/TASKS.md",
+        "docs/specs/deck-master-webui-usability-v1-iteration/TASKS.md",
+        "docs/work-items/wi-issue-repair-20261023/TASKS.md"
+      ],
+      "action": "keep original and record missing provenance; 需要 Codex 核验",
+      "status": "not_resolved_by_this_iteration"
+    },
+    {
+      "source": "docs/specs/deck-master-content-collaboration-v1.2/CONTENT-QUALITY-ITERATION.md",
+      "line": 335,
+      "raw": "../../../sources/quality-r2/sources/prior-report/evidence/code/docs/reports/content-collaboration-v1.2/t03-content-production.md",
+      "target": "sources/quality-r2/sources/prior-report/evidence/code/docs/reports/content-collaboration-v1.2/t03-content-production.md",
+      "category": "active_inherited_evidence_gap_needs_owner",
+      "reason": "Lines 3–11 retain inherited current TASKS/ACCEPTANCE/CONTRACTS; lines 33–48 and 332–353 cite a separate fixed-SHA source package not present in this tracked tree. Same filenames in current src are not the same historical bytes.",
+      "verified_resolution": null,
+      "same_basename_candidates_not_identity_proof": [
+        "docs/reports/content-collaboration-v1.2/t03-content-production.md"
+      ],
+      "action": "keep original and record missing provenance; 需要 Codex 核验",
+      "status": "not_resolved_by_this_iteration"
+    },
+    {
+      "source": "docs/specs/deck-master-content-collaboration-v1.2/CONTENT-QUALITY-ITERATION.md",
+      "line": 336,
+      "raw": "../../../sources/quality-r2/sources/prior-report/evidence/code/src/deck_master/method_resources.py",
+      "target": "sources/quality-r2/sources/prior-report/evidence/code/src/deck_master/method_resources.py",
+      "category": "active_inherited_evidence_gap_needs_owner",
+      "reason": "Lines 3–11 retain inherited current TASKS/ACCEPTANCE/CONTRACTS; lines 33–48 and 332–353 cite a separate fixed-SHA source package not present in this tracked tree. Same filenames in current src are not the same historical bytes.",
+      "verified_resolution": null,
+      "same_basename_candidates_not_identity_proof": [
+        "src/deck_master/method_resources.py"
+      ],
+      "action": "keep original and record missing provenance; 需要 Codex 核验",
+      "status": "not_resolved_by_this_iteration"
+    },
+    {
+      "source": "docs/specs/deck-master-content-collaboration-v1.2/CONTENT-QUALITY-ITERATION.md",
+      "line": 336,
+      "raw": "../../../sources/quality-r2/sources/prior-report/evidence/code/skills/deck-master/references/content-examples.md",
+      "target": "sources/quality-r2/sources/prior-report/evidence/code/skills/deck-master/references/content-examples.md",
+      "category": "active_inherited_evidence_gap_needs_owner",
+      "reason": "Lines 3–11 retain inherited current TASKS/ACCEPTANCE/CONTRACTS; lines 33–48 and 332–353 cite a separate fixed-SHA source package not present in this tracked tree. Same filenames in current src are not the same historical bytes.",
+      "verified_resolution": null,
+      "same_basename_candidates_not_identity_proof": [
+        "skills/deck-master/references/content-examples.md"
+      ],
+      "action": "keep original and record missing provenance; 需要 Codex 核验",
+      "status": "not_resolved_by_this_iteration"
+    },
+    {
+      "source": "docs/specs/deck-master-content-collaboration-v1.2/CONTENT-QUALITY-ITERATION.md",
+      "line": 336,
+      "raw": "../../../sources/quality-r2/sources/prior-report/evidence/code/src/deck_master/production.py",
+      "target": "sources/quality-r2/sources/prior-report/evidence/code/src/deck_master/production.py",
+      "category": "active_inherited_evidence_gap_needs_owner",
+      "reason": "Lines 3–11 retain inherited current TASKS/ACCEPTANCE/CONTRACTS; lines 33–48 and 332–353 cite a separate fixed-SHA source package not present in this tracked tree. Same filenames in current src are not the same historical bytes.",
+      "verified_resolution": null,
+      "same_basename_candidates_not_identity_proof": [
+        "src/deck_master/production.py"
+      ],
+      "action": "keep original and record missing provenance; 需要 Codex 核验",
+      "status": "not_resolved_by_this_iteration"
+    },
+    {
+      "source": "docs/specs/deck-master-content-collaboration-v1.2/CONTENT-QUALITY-ITERATION.md",
+      "line": 336,
+      "raw": "../../../sources/quality-r2/sources/prior-report/evidence/code/src/deck_master/resources/contracts/content-plan-input.v2.schema.json",
+      "target": "sources/quality-r2/sources/prior-report/evidence/code/src/deck_master/resources/contracts/content-plan-input.v2.schema.json",
+      "category": "active_inherited_evidence_gap_needs_owner",
+      "reason": "Lines 3–11 retain inherited current TASKS/ACCEPTANCE/CONTRACTS; lines 33–48 and 332–353 cite a separate fixed-SHA source package not present in this tracked tree. Same filenames in current src are not the same historical bytes.",
+      "verified_resolution": null,
+      "same_basename_candidates_not_identity_proof": [
+        "docs/specs/deck-master-rebuild-v1/contracts/content-plan-input.v2.schema.json",
+        "src/deck_master/resources/contracts/content-plan-input.v2.schema.json"
+      ],
+      "action": "keep original and record missing provenance; 需要 Codex 核验",
+      "status": "not_resolved_by_this_iteration"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-v4-20260930/UX-REPAIR-DECISIONS.md",
+      "line": 3,
+      "raw": "../../../evidence/product-design-final-20261006/FINAL-REPAIR-PLAN.md",
+      "target": "evidence/product-design-final-20261006/FINAL-REPAIR-PLAN.md",
+      "category": "active_inherited_evidence_gap_needs_owner",
+      "reason": "Lines 3–5 say D1–D4 are in-force decisions; their external final-repair-plan source is absent from the fixed tree. Decisions remain readable locally, original supporting plan requires its owner.",
+      "verified_resolution": null,
+      "same_basename_candidates_not_identity_proof": [],
+      "action": "keep original and record missing provenance; 需要 Codex 核验",
+      "status": "not_resolved_by_this_iteration"
+    }
+  ],
+  "cards": [
+    {
+      "id": "I00",
+      "title": "固定基线、范围、口径与执行顺序",
+      "current_behavior": [
+        "所有可证明收益仅针对固定 main@62dfcfc5637f0bee2358074c4458047689dd5299。本轮末次查询 main 仍指向此提交。"
+      ],
+      "implementation": [
+        "先核对全部 5,108 个 Git blob 身份和 215 个唯一审查区间 hash；建立独立候选，不覆盖开发中的原目录。",
+        "按本包 tools/rebuild_candidate.py 从固定基线生成文档候选，再应用 root 六补丁、runtime/all.patch、UI all.patch；最终核对 2,309 个文件 SHA。",
+        "本包编号属于 MAIN-ITER-20261027，不重命名历史 T01–T25、RC4 N1–N6 或其 AC。",
+        "所有源码行数按跟踪路径和物理行计算；不删除测试、压缩代码格式或把归档当源码减量。"
+      ],
+      "acceptance": [
+        "固定 SHA、Git blob/文件 SHA/区间 SHA 一致；路径清单无遗漏。",
+        "实施分支以本包 formal patch sequence 为唯一入口，不应用 evidence/not_selected 中实验。"
+      ],
+      "compatibility": [
+        "若 main 或被修改文件漂移，应重新逐段核对并生成新预算；禁止 force 套用旧补丁。",
+        "归档原件不删除信息；原有客户项目/材料/运行目录不迁移。"
+      ],
+      "limitations": [
+        "当前交付是开发卡与经过验证的隔离候选；没有提交、推送或合并 main。"
+      ],
+      "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
+      "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
+      "implementation_commits": [],
+      "validation": [],
+      "status": "preimplementation_facts_verified",
+      "remaining": [
+        "Final branch gates and CI pending"
+      ]
+    },
+    {
+      "id": "M01",
+      "title": "材料读取：原生PPT图形补读提示与DOCX表格单次抽取",
+      "current_behavior": [
+        "DOCX root.iter 同时分发表格和其内部段落；普通/内容控件包裹/嵌套表格中的“收入”分别出现2/2/3次。",
+        "PPTX只将shape type 13/3列为视觉对象；相反箭头、组合原生图形均返回read。"
+      ],
+      "implementation": [
+        "在_read_docx内携带body_covered遍历：只将未被父块涵盖的p作为独立段落；每个tbl保留独立rows/locator。父段落/表格的iter文本已包含内层文本，因此拼接正文时只计未被父块涵盖的块。p内继续发现文本框表格结构，不能在p处停止递归。",
+        "行与单元格选择透明穿透sdt/sdtContent等包装，并在p/tbl/tr/tc边界停止，避免把内层表的行混入外层。普通、整表包装、行包装、单元格包装、嵌套表、文本框表格六类都验证正文一次且结构不丢失。",
+        "在_read_pptx使用python-pptx枚举识别AUTO_SHAPE/CHART/DIAGRAM/FREEFORM/IGX_GRAPHIC/LINE/PICTURE/LINKED_PICTURE，继续递归group；有图形页加入具体slide locator，状态pending_visual。",
+        "调整原test_docx_reading对表格数字的断言，检查完整extract而不是要求它重复出现在paragraph；将probe_root.py的普通、封装、嵌套、箭头、group、纯文字样例并入相关回归。"
+      ],
+      "acceptance": [
+        "python -m pytest -q tests/rebuild/test_sources.py tests/rebuild/test_rc3_four_skills.py",
+        "PYTHONPATH=src python <pack>/evidence/root/probe_root.py --out <isolated-dir>；前三个PPT样例pending_visual、text样例read；五份DOCX正文数字各一次、嵌套表结构2份。独立probe_docx.py含文本框第六类，2×2嵌套表须保留四格行列结构、文本框须保留table locator与pending_visual。",
+        "以真实客户流程图/组织图核对视觉补读定位和Host使用结果，需要 Codex 核验。"
+      ],
+      "compatibility": [
+        "只改变新抽取结果；旧不可变source/extract对象及其定位不重写。",
+        "原文hash、格式错误/needs_tool语义、notes、表格和纯文字抽取保持。",
+        "原生自选图形（含矩形）会要求Host视觉补读；这是一项明确的材料阅读行为修正，不声称自动读懂箭头。"
+      ],
+      "limitations": [
+        "审查副本已验证；正式仓库实施、安装与客户效果需要 Codex 核验。"
+      ],
+      "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
+      "review_disposition": "Retain paragraph/block boundaries in cells, nested tables and textboxes; preserve table structure and visual reading status.",
+      "implementation_commits": [],
+      "validation": [],
+      "status": "candidate_implemented_final_gates_pending",
+      "remaining": [
+        "Final branch gates and CI pending"
+      ]
+    },
+    {
+      "id": "M02",
+      "title": "自然入口：仅放行未分类回退，保留已识别职责边界",
+      "current_behavior": [
+        "未命中任何分类的自然表达回退Master后，被read_skill_methods当成确定职责拒绝。",
+        "现有测试同时要求“只读审查文件”不能由Content入口承接；因此不能删除全部非显式名称冲突检查。"
+      ],
+      "implementation": [
+        "将原路由实现移入私有_route_request，返回原route和内部fallback标志；只有最后未分类else设置fallback=True。",
+        "保留public route_request四个原字段和route_skill输出。read_skill_methods仅对fallback放行所选专业职责；已识别职责和显式点名冲突保持原拒绝。",
+        "真实task/role匹配、project约束、scope与方法冻结检查原样保留；不补新的同义词词典。"
+      ],
+      "acceptance": [
+        "python -m pytest -q tests/rebuild/test_rc3_four_skills.py",
+        "probe_root.py中五个未分类请求可读方法；“只读审查文件”和deck-review显式点名仍不能从Content读取。",
+        "对任务实际职责错配维持原ValueError，源快照前后无写入。"
+      ],
+      "compatibility": [
+        "route_request公开返回shape不变；任何read_skill_methods仍不创建项目、任务、授权或模型调用。",
+        "named/master/recovery路径与旧任务方法清单保持。"
+      ],
+      "limitations": [
+        "审查副本已验证；正式仓库实施、安装与客户效果需要 Codex 核验。"
+      ],
+      "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
+      "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
+      "implementation_commits": [],
+      "validation": [],
+      "status": "candidate_implemented_final_gates_pending",
+      "remaining": [
+        "Final branch gates and CI pending"
+      ]
+    },
+    {
+      "id": "C01",
+      "title": "JSON合同精确公共定义：完成运行注册与安装包一致性",
+      "current_behavior": [
+        "84份合同维护24,135行；58组子结构完全相同。上一轮只完成结构原型，本轮补全真实注册、行为和wheel读取。"
+      ],
+      "implementation": [
+        "保留84个原合同文件与schema版本，添加shared-contracts.v1.schema.json；使用219处相对$ref替换相同结构。保留含本地fragment/$id/$dynamicRef的敏感子树不外提。",
+        "_contract_registry注册集合增加唯一共享文件，不新增公开schema kind、不修改writer floor和版本分派。",
+        "style-v3一致性测试先从实际registry解析input的$ref，再与standalone内容比较；保持约束检查独立。",
+        "按提供的完整补丁实现，不保留第二套手工内联合同源。共享定义名字为迁移时固定ID，修改时核对引用集合。"
+      ],
+      "acceptance": [
+        "python -m pytest -q tests/rebuild/test_contracts.py tests/rebuild/test_collaboration_contracts.py tests/rebuild/test_content_contracts.py tests/rebuild/test_style_v3_contract_consistency.py",
+        "以原版/候选源码/候选wheel分别执行schema_behavior_probe.py，866条结果完全一致；该组不是所有外部消费者的穷尽证明。",
+        "正常构建wheel，确认85份schema与候选源字节一致；离线导入并实际触发跨文件$ref。"
+      ],
+      "compatibility": [
+        "原有84份展开结构逐值相等；包资源glob已覆盖新增JSON，无需另建生成器或运行期网络取schema。",
+        "客户持久对象不迁移，调用参数、ModelError.path/detail及已存在的异常行为对照保持。"
+      ],
+      "limitations": [
+        "审查副本已验证；正式仓库实施、安装与客户效果需要 Codex 核验。",
+        "合同减少5,768行单独计量，不算57,842行Python/JS/CSS/HTML主口径减量。"
+      ],
+      "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
+      "review_disposition": "Keep review.v2 and both workbench-summary contracts inline at established direct-consumer boundaries; retain shared refs elsewhere; synchronize every mirror and add the shared mirror. Verify dictionary consumers, bare validators and offline graph separately.",
+      "implementation_commits": [],
+      "validation": [],
+      "status": "candidate_implemented_final_gates_pending",
+      "remaining": [
+        "Final branch gates and CI pending"
+      ]
+    },
+    {
+      "id": "A01",
+      "title": "收口一处真实跨域私有事务调用，保留现有Store锁",
+      "current_behavior": [
+        "adopt_proposal从tasks导入7行私有装饰器，仅为给局部locked函数包Store._locked；tasks又反向分派内容流程。"
+      ],
+      "implementation": [
+        "删除跨域_project_transaction导入、局部decorator与函数转调；adopt_proposal直接with store._locked()执行同一段事务体。",
+        "replay、base revision、scope/decision检查、commit调用和异常传播顺序不变，所有return仍处于同一锁作用域。"
+      ],
+      "acceptance": [
+        "python -m pytest -q tests/rebuild/test_compose_v2_phases.py tests/rebuild/test_content_preproduction_review.py",
+        "验证重复adoption回执、base冲突和不覆盖当前授权的既有场景；新旧函数除锁包装外调用顺序一致。"
+      ],
+      "compatibility": [
+        "没有新Facade、事务框架、存储协议或公共接口；tasks内部其他调用不动。",
+        "本卡只收敛这个已核实依赖，不宣称80模块依赖组或超长业务函数问题已整体解决。"
+      ],
+      "limitations": [
+        "审查副本已验证；正式仓库实施、安装与客户效果需要 Codex 核验。",
+        "全仓统一事务账本/SQLite迁移和超长函数重写没有精确等价补丁，不纳本轮确定减量。"
+      ],
+      "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
+      "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
+      "implementation_commits": [],
+      "validation": [],
+      "status": "candidate_implemented_final_gates_pending",
+      "remaining": [
+        "Final branch gates and CI pending"
+      ]
+    },
+    {
+      "id": "A02",
+      "title": "共享CLI树遍历，保留入口分类的独立核对",
+      "current_behavior": [
+        "cli_surface和cli_adapter_actions分别实现同一argparse子命令树递归。",
+        "独立的入口分类清单用于发现未登记命令/路由；若全部从运行路由表生成，未知入口测试会失去独立性。"
+      ],
+      "implementation": [
+        "新增私有_cli_leaves(parser, words=())生成(name, parser)，保持原子命令顺序。两个调用者保留自己的结果投影与legacy别名拼接。",
+        "保留SERVICE/CLI/HTTP/PUBLIC分类表、未知入口注入测试、静态/动态surface发现和gated/exempt语义。"
+      ],
+      "acceptance": [
+        "python -m pytest -q tests/rebuild/test_eligibility_entry_coverage.py",
+        "对照cli_surface集合、cli_adapter_actions映射、uncovered/stale/coverage_stats；新增未登记入口必须继续被发现。"
+      ],
+      "compatibility": [
+        "CLI参数、路由、错误码和运行调度没有变化；没有新配置DSL。",
+        "eligibility_entries仍留原位置；文件搬家不算减量。"
+      ],
+      "limitations": [
+        "审查副本已验证；正式仓库实施、安装与客户效果需要 Codex 核验。",
+        "原先1,050–1,700行的广义入口收敛估算取消，不算本轮承诺。"
+      ],
+      "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
+      "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
+      "implementation_commits": [],
+      "validation": [],
+      "status": "candidate_implemented_final_gates_pending",
+      "remaining": [
+        "Final branch gates and CI pending"
+      ]
+    },
+    {
+      "id": "T01",
+      "title": "将候选测试公共构建器从测试套件迁为独立fixture模块",
+      "current_behavior": [
+        "候选store与7个辅助函数由37条from-test导入、2条module导入和1条动态文件加载使用，构建器藏在有测试用例的模块。"
+      ],
+      "implementation": [
+        "把原15–89行的8个函数原样迁入candidate_fixtures.py，连同所需导入和pytest fixture装饰器；原test_candidates改从新模块导入。",
+        "修改33个消费者的from/import/动态文件加载来源，保留别名、fixture注入参数、用例ID与所有断言。",
+        "不同时重写其余660条跨测试导入；按这一批具体清单收口。"
+      ],
+      "acceptance": [
+        "对列出的34个测试文件（含原test_candidates）执行--collect-only，371个node ID逐值一致。",
+        "执行候选、采用、配额、操作路径的对应既有回归；四个skip及真实浏览器消费者由Codex完成环境验收。",
+        "渲染白图用例在同环境原版/候选都失败，须在正式渲染环境核验；不得将它归为本次重构新增问题或计为已通过。"
+      ],
+      "compatibility": [
+        "8个迁移函数AST逐值一致；测试用例没有删除或合并。",
+        "只是测试结构改善，运行功能不受影响，不把迁移75行算净删除。"
+      ],
+      "limitations": [
+        "审查副本已验证；正式仓库实施、安装与客户效果需要 Codex 核验。"
+      ],
+      "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
+      "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
+      "implementation_commits": [],
+      "validation": [],
+      "status": "candidate_implemented_final_gates_pending",
+      "remaining": [
+        "Final branch gates and CI pending"
+      ]
+    },
+    {
+      "id": "R-F02",
+      "title": "同内容 blob 并发写各用独立 staging 文件",
+      "current_behavior": "target 缺失时，同 operation_id（默认 anonymous）和同 digest/ext 的两个调用写同一个 staged 路径；先完成者 link/unlink 后，另一个调用 os.link 的源文件已不存在。最终对象可能正确但第二个业务调用失败。",
+      "implementation": {
+        "algorithm": [
+          "用 tempfile.mkstemp(dir=stage_dir, prefix=\"blob-\", suffix=\".\"+ext) 替换共享 digest staging 路径。",
+          "使用 fdopen 写完整 bytes、flush/fsync，随后原子 hard-link。",
+          "移除 link 后 target 不存在时再次 _atomic_write_bytes 的补偿分支；成功 link 或 FileExistsError 后统一核对目标 hash。",
+          "以 finally 清理唯一临时文件，成功发布后 fsync 目标 bucket。"
+        ],
+        "public_interface": "Store.put_blob(data, ext, operation_id) 参数、返回 ref、对象路径和内容不可变约束不变。",
+        "replacement": "替换 staging 原语，不加项目锁、重试队列或对象写入服务。"
+      },
+      "acceptance": [
+        "原受控时序中两个调用都成功，返回相同 ref，canonical bytes/hash 一致，staging 残留 0。",
+        "test_store_transactions.py 的 objects/document/pointer 注入失败、同 bytes 复用、损坏不可覆盖、symlink/path escape、operation_id 路径拒绝通过。"
+      ],
+      "compatibility": {
+        "preserved": [
+          "相同 bytes 仍得到相同 sha256/path。",
+          "已损坏目标/路径越界/symlink 仍拒绝。",
+          "对象发布失败不推进 Document/current。"
+        ],
+        "limits": [
+          "目录 fsync 只是持久性边界补齐；没有做断电模拟，不能宣称所有父目录在掉电后绝对持久。",
+          "并发失败 0 是特定受控两调用时序的结果，不能当生产故障率统计。"
+        ]
+      },
+      "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
+      "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
+      "implementation_commits": [],
+      "validation": [],
+      "status": "candidate_implemented_final_gates_pending",
+      "remaining": [
+        "Final branch gates and CI pending"
+      ]
+    },
+    {
+      "id": "R-F04",
+      "title": "把实例身份有效与当前 build 可复用分开判断",
+      "current_behavior": "healthy 同时验证身份与调用端 BUILD_ID/version。升级后仍响应的旧实例不可复用，但 stop 也将它当作 not_running；ensure 会启动第二个实例并覆盖发现记录。",
+      "implementation": {
+        "algorithm": [
+          "healthy 新增 keyword-only current_build=True；current_build=False 仍按 state+HTTP 校验 exact instance。",
+          "把 stop 的已验证停止逻辑提到 _stop_instance。",
+          "ensure 不可复用但同 identity/protocol 的旧实例仍活着时，先 _stop_instance，再原启动路径。",
+          "stop 使用 current_build=False 判断是否属于自己。"
+        ],
+        "public_interface": "ensure/stop 返回 shape 和 stop 的 stopped/not_running 状态不变；healthy 默认语义不变。",
+        "replacement": "一个共同停止函数替换原停止段；不扫描 PID，不引入 watchdog。"
+      },
+      "acceptance": [
+        "stop 旧 build 返回 stopped，原 Popen 可 wait/reap，runtime metadata 清除。",
+        "ensure 旧 build 留下且仅留下一个当前 build 健康服务。",
+        "test_local_runtime_reaping.py 4 项通过：owner/external stop、reaper start 失败、parent 退出不等待 detached child。"
+      ],
+      "compatibility": {
+        "preserved": [
+          "未知 PID、错 identity、错 instance、不可验证服务不会被本补丁信号终止。",
+          "同 build 重用、显式端口冲突、新建子进程回收保持。"
+        ],
+        "limits": [
+          "protocol_version 不同的旧实例仍不自动停止；本卡确定收益针对同协议 build/version 升级。",
+          "macOS 路径按既有 fcntl/HTTP 机制设计；实际本次运行在 Linux。"
+        ]
+      },
+      "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
+      "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
+      "implementation_commits": [],
+      "validation": [],
+      "status": "candidate_implemented_final_gates_pending",
+      "remaining": [
+        "Final branch gates and CI pending"
+      ]
+    },
+    {
+      "id": "R-F06",
+      "title": "跨进程成功 assembly 共用现有 operation 回执",
+      "current_behavior": "_ASSEMBLIES/Future 仅同进程可见；两个独立进程可在相同 project/base/operation_id 上同时进入 _produce_artifacts，直到最终 CAS/recover 才合并成功结果。",
+      "implementation": {
+        "algorithm": [
+          "仅 explicit owner 使用 staging/<operation_id>/assembly.lock，复用 safe_path/local_lock。",
+          "获得锁后在 Store._locked 内调用 operations.recover；已成功则直接返回同一 committed result。",
+          "未成功且 base 已移动时走既有 conflict/exit 5，未移动则执行原 _produce_artifacts。",
+          "整个 owner try/finally 仍由原 Future 广播结果/失败，不替换同进程机制。"
+        ],
+        "public_interface": "produce/stages.assemble 参数和回执 shape 不变；同 ID 不同 payload 仍由 recover 拒绝。",
+        "replacement": "新增一个局部互斥租约；成功事实继续仅来自现有 committed ancestry，不写新的 outcome/失败日志。"
+      },
+      "acceptance": [
+        "成功两进程均返回同一 revision，重工作一次。",
+        "失败两进程各一次且不写成功回执；同进程仍单次并广播原异常。",
+        "文件锁等待期间其它项目写入可完成，最终 base 变化应 conflict；不得把整个编译移入项目锁。"
+      ],
+      "compatibility": {
+        "preserved": [
+          "同进程 failure/timeout/changed_base 四组合语义实测保留。",
+          "跨进程首个失败后，下一进程继续一次尝试；不把失败缓存为成功。",
+          "新请求取消/输入变化仍由初始资格与最终 CAS 拒绝。"
+        ],
+        "limits": [
+          "确定去重范围是成功并发请求；跨进程失败重工作仍为 2→2。",
+          "重体探针替换了 compiler/renderer 体，只证明真实入口的重工作拥有者数量和实际 Store 回执恢复，不证明真实渲染性能。",
+          "已有不同 operation_id 的同时 assembly 不在本卡去重范围。"
+        ]
+      },
+      "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
+      "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
+      "implementation_commits": [],
+      "validation": [],
+      "status": "candidate_implemented_final_gates_pending",
+      "remaining": [
+        "Final branch gates and CI pending"
+      ]
+    },
+    {
+      "id": "R-F07",
+      "title": "4096 上限改为有界的部分 header 复用",
+      "current_behavior": "coverage.headers 超过 MAX_REVISIONS=4096 时 publish 完全不保留缓存；4097 起每次负查询重新读取/解析/Schema 校验整条 ancestry。MAX_PROJECTS=8 和总 header=4096 预算原本同时约束完整覆盖。",
+      "implementation": {
+        "algorithm": [
+          "Coverage 增加 complete 标记，不改变 MAX_REVISIONS 或添加第二 cache。",
+          "publish 对长链保存最多 4096 header 和对应 op→revision 映射。",
+          "scan 分离已完整证明的 prefix 与可复用 header hints；partial 请求每次重建请求内完整 ancestry，绝不凭部分缓存断言 not_found。",
+          "保留 project_id 字符串对象共享，避免把每个解析 doc 的同值 project_id 都常驻。"
+        ],
+        "public_interface": "resolve_operation/OperationReader 所有返回结构和 not_found/unknown/committed 判定不变。",
+        "replacement": "替换超限全丢弃分支；无磁盘索引、无额外日志、无无界缓存。"
+      },
+      "acceptance": [
+        "现有 test_operation_coverage.py 48 项通过。",
+        "新增7项验证 partial 大小/重复暖读、缓存段损坏、尾部 missing/foreign/cycle/duplicate、正查询和显式历史 head 与 canonical 完全一致。",
+        "保持 cache disable、weak signature、fork、current pointer 有界重试语义。"
+      ],
+      "compatibility": {
+        "preserved": [
+          "测试冷/暖结果与 use_cache=False 相同，尾部损坏也返回 unknown。",
+          "每次仍检查完整选中祖先链，签名工作仍 O(H)。",
+          "常驻 header 总数≤4096、项目数≤8；单请求完整扫描临时内存仍 O(H)，没有声称变 O(1)。"
+        ],
+        "limits": [
+          "H 远大于4096 时仍需解析 H−4096 个，不能承诺任意长度暖查询零解析。",
+          "长链过去缓存为空，现在使用原有预算：本 fixture 4097/8193 均约2,274,225 bytes 的 Python 可达缓存对象图；不是 RSS 或跨平台常数。",
+          "一个满预算长链仍可能挤出其它项目，这是原全局预算策略，不新增复杂配额。"
+        ]
+      },
+      "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
+      "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
+      "implementation_commits": [],
+      "validation": [],
+      "status": "candidate_implemented_final_gates_pending",
+      "remaining": [
+        "Final branch gates and CI pending"
+      ]
+    },
+    {
+      "id": "R-F08",
+      "title": "将 delivery 打包准备移出项目写锁，固定时点校验发布",
+      "current_behavior": "delivery 在 exports.lock→project write.lock 内执行 _bundle 全部净化、文件哈希、ZIP、record，以及外部 _copy_bundle；准备期间暂停/撤回/其它 task 提交无法获得项目锁。",
+      "implementation": {
+        "algorithm": [
+          "拆开原一个项目锁的 prepare 与 publish 两段，仅沿现有 exports.lock 串行入口。",
+          "_bundle 添加内部 keyword-only control=None；独立其它调用仍用原默认。",
+          "将 sanitize、public/engineering 写入、遍历哈希、ZIP、export-record 生成移到项目锁外。",
+          "最终项目锁中资格重验、control revision 对比、stage.rename、原外部 copy。"
+        ],
+        "public_interface": "create 参数、成功 response、manifest/record/download 路径、review/engineering 结果不变。并发 control 前进现在可导致既有 conflict/exit5 恢复路径；artifact revision 带在错误里。",
+        "replacement": "改变已有锁范围，不引入导出状态机、后台任务或自动重新打包。"
+      },
+      "acceptance": [
+        "旧导出/serialization/copy 一组20项通过（单独HTTP回环用例未跑）。",
+        "新增3项：真实 pause/revoke/普通 task_update 在 bundle 阻塞时可完成；最终资格错误或conflict；没有新 record/外部目录/临时包。",
+        "固定artifact+control的report在准备过程中不混合新旧policy/reviews。",
+        "不扩展 external copy 锁外工作，除非另有能保持失败发布语义的必要需求；本迭代不计该收益。"
+      ],
+      "compatibility": {
+        "preserved": [
+          "暂停/撤回发生在发布之前时禁止 delivery。",
+          "固定 revision、notes selection、export_id 重放/冲突、public sanitizer、download 白名单与hash检查保留。",
+          "external destination 已存在不覆盖，copy 失败内部 record 的留存行为保留。"
+        ],
+        "explicit_behavior_change": [
+          "准备期间的无关 commit 原来等待导出锁释放；现在可先提交，导出最终返回 conflict/exit5。调用方沿既有恢复接口重发，不能声称竞态调度结果逐一相同。"
+        ],
+        "limits": [
+          "外部 _copy_bundle 仍持项目锁；其阻塞 false→false，没有计入本次确定收益。",
+          "exports.lock 仍串行化同项目导出；本卡只释放其它业务写入。",
+          "最终资格评估本身也仍在锁内，未宣称 lock hold time 恒定或总导出 CPU 降低。"
+        ]
+      },
+      "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
+      "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
+      "implementation_commits": [],
+      "validation": [],
+      "status": "candidate_implemented_final_gates_pending",
+      "remaining": [
+        "Final branch gates and CI pending"
+      ]
+    },
+    {
+      "id": "R-F09",
+      "title": "只去除重复 Document 语义验证，保留 Page 扫描语义",
+      "current_behavior": "_commit_locked 验证 Document 后，save_revision 对同一对象重复验证；现代 writer floor 已为 asset-inputs.v1 时，仍为判断较低的 design/asset floor 再读全部 Page JSON。",
+      "implementation": {
+        "algorithm": [
+          "save_revision 分成公共校验入口与私有 immutable-write primitive。",
+          "_commit_locked 保留自身一次语义验证并直调私有 primitive。",
+          "不合入可选 Page classification fast path，保持原扫描代码全文不变。"
+        ],
+        "public_interface": "Store.save_revision/commit_change 参数和返回 revision 不变；没有暴露 validate=False/可信用户标志。",
+        "replacement": "仅去除第二次完整 Document 验证，不新建 projection/cache，也不削弱 Page 损坏检测。"
+      },
+      "acceptance": [
+        "严格F09落入主prototype后，Store/writer定向27项再次通过。",
+        "低floor历史Task读一次并正确提高floor；Page分类和高floor附带损坏扫描保持。",
+        "原子写失败、同 operation replay、stale base/read_set/cancel、不可降低writer/移除协作仍按原机制拒绝。",
+        "配对 commit_fault 明确检查无关损坏Page仍抛StoreError且current不变。"
+      ],
+      "compatibility": {
+        "preserved": [
+          "正常合法快照下 writer floor、页面引用和结果相同。",
+          "public save_revision、显式 read_set/blobs、Document refs、对象读取 hash/symlink 校验保留。",
+          "Page 全量分类与无关损坏对象的拒绝时点保留；实际注入损坏时 main/prototype 都抛 StoreError 且 current不变。"
+        ],
+        "excluded_optional_experiment": [
+          "optional/R-F09-page-classification.patch 曾实测60→0，但会改变无关损坏Page的附带报错时点，已从本迭代、主prototype和all.patch排除。"
+        ],
+        "limits": [
+          "主方案Page JSON读取为60→60，不能计入减I/O收益；这些调用本来也不等同于物理磁盘I/O。"
+        ]
+      },
+      "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
+      "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
+      "implementation_commits": [],
+      "validation": [],
+      "status": "candidate_implemented_final_gates_pending",
+      "remaining": [
+        "Final branch gates and CI pending"
+      ]
+    },
+    {
+      "id": "R-SVG",
+      "title": "assembly 与 compiler 共享一次 SVG 解析结果",
+      "current_behavior": "_produce_artifacts 为 resolve_fonts/readback 解析每页 SVG；随后 public compile_deck 再读同一输入并解析一次，license 检测还单独再读SVG bytes。",
+      "implementation": {
+        "algorithm": [
+          "从 compile_deck 抽出内部 _prepare_inputs 与 _compile_prepared。",
+          "public wrapper 在既有检查顺序下默认自行 prepare；pipeline 先 prepare→resolve_fonts，再传 prepared tuple，避免再解析。",
+          "icon_license 在首次 bytes 读取时计算，不再为license单独读SVG。"
+        ],
+        "public_interface": "compiler/__init__.py 的公开四符号与compile_deck参数完全不变；没有外部可传的 validate=False。",
+        "replacement": "抽出并复用同一解析边界，pipeline不保留第二份独立解析。"
+      },
+      "acceptance": [
+        "test_compiler_api.py 4项：HOME/cwd隔离、输入中途改变拒绝、缺font失败不发布、文本几何边界。",
+        "assembly Future既有测试改内部seam后四组合继续通过。",
+        "render/readback真实集成仍需按项目原render gate在有soffice/rsvg的环境跑；不能用本探针替代。"
+      ],
+      "compatibility": {
+        "preserved": [
+          "native/Node分支、input/assets编译中变化拒绝、失败不发布PPTX、notes/order/license/font参数维持。",
+          "新IR不是长期cache，不改变输入bytes事实来源。"
+        ],
+        "limits": [
+          "本次两页实际运行Python native compiler，renderer前主动停止；不宣称完整渲染或交付通过。",
+          "Node环境分支全文审查，未运行真实Node artifact模块。",
+          "candidate_preview 的独立请求/worker生命周期不在本次确定解析次数收益中。"
+        ]
+      },
+      "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
+      "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
+      "implementation_commits": [],
+      "validation": [],
+      "status": "candidate_implemented_final_gates_pending",
+      "remaining": [
+        "Final branch gates and CI pending"
+      ]
+    },
+    {
+      "id": "UI-ITER-F01",
+      "title": "草稿恢复落盘失败时保留实际页面与编辑器 owner",
+      "current_behavior": [
+        "DraftEditor.dispose 在 archiveLocal 失败时仅 return；Project.loadRoute 随即 editor=null、执行 disposables、commit route 与 render。只有尚未获项目 ACK、无法形成可靠本机恢复副本时构成输入遗失风险；不能宣称所有输入必丢，既有自动保存可能完成。",
+        "页内 prepared prompt 选择在 onBasis 之前已清空原文 DOM；bindDraft 在 dispose 前已清空恢复面板并换 draftRef。仅改 dispose 返回值不足以保护真实 caller。",
+        "method preparation、review handoff、history restore 使用局部 DraftEditor，主 app.editor 不能代表全部实际输入 owner。"
+      ],
+      "implementation": [
+        {
+          "interface": "DraftEditor.persist(): boolean; canLeave(): boolean; dispose(): boolean",
+          "algorithm": "persist 保留现有 per-draft copy 与 active 两个 key，只有两次写均成功返回 true；dispose 先 canLeave，失败不标 disposed、不清 timer、不改 DOM。saved/empty/loading 直接可离开；其余状态要求可靠恢复落盘。"
+        },
+        {
+          "interface": "Project.draftEditors: Set<DraftEditor>; canLeaveDrafts(): boolean",
+          "algorithm": "主 editor setter 注册；三类局部 owner 显式注册；遍历时清已 disposed owner，先统一 preflight 后执行 route 的任何 disposal/commit/render。拒绝时 replaceState 回已提交 route 并保留当前主区，finally 解除 inert。beforeunload 仅不可恢复时 preventDefault/returnValue。"
+        },
+        {
+          "interface": "promptView onBasis returns false to veto; modal canClose callback",
+          "algorithm": "bindDraft 首先检查 dispose 返回值；onBasis 在清原文/leases 前调用，拒绝恢复 select.previous。保护草稿的 review/history 模态在按钮/Escape 之前 canClose；原生程序化 close 的 onclose 有重开兜底。"
+        },
+        {
+          "edge_case": "copy 写成功而 active 写失败",
+          "algorithm": "不按第一写成功放行。旧 active 可能携带同 draft ID 的旧内容，下次 load 的 persist 会覆盖新 copy；本原型保留页面，直到项目 ACK 或可靠恢复位置可写。"
+        }
+      ],
+      "acceptance": [
+        {
+          "step": "运行 probes/lifecycle.mjs before 与 after：dirty/unknown/saving/conflict/error + 全存储失败保持 route、editor、DOM；saved 不挡。",
+          "status": "passed_module_probe",
+          "evidence": "lifecycle-before.json; lifecycle-after.json"
+        },
+        {
+          "step": "copy 成功/active 失败仍留页；局部 editor 阻断；预备稿选择拒绝后原文节点和选择恢复。",
+          "status": "passed_module_probe",
+          "evidence": "lifecycle-after.json"
+        },
+        {
+          "step": "真实 Chromium：saved/dirty/unknown/late ACK；页内两份 prepared basis；method/review/history 三类局部输入；Escape、关闭、后退、刷新；模拟 quota 并检查下载恢复内容。",
+          "status": "required_browser_gate"
+        },
+        {
+          "step": "执行 test_pr105_draft_browser.py、test_control_read_recovery_browser.py、test_modal_close_focus_browser.py，并为拒绝导航加真实浏览器用例。",
+          "status": "required_browser_gate"
+        }
+      ],
+      "compatibility": [
+        "保存 CAS、unknown 精确 pendingSave、409 冲突、显式 archive/恢复/跨基准另写逻辑保留。",
+        "readonly/saved 编辑器不因配额失败阻止离开。没有新增业务写接口或自动重放。",
+        "beforeunload 最终提示与 Escape/原生 dialog 的 focus/owner 时序必须实际浏览器确认。"
+      ],
+      "limitations": [
+        "需要 Codex 核验：环境无 Chromium executable；Node 边界模拟与 Python/HTTP 结果不等价于真实浏览器验收。",
+        "拒绝离开不等于必须停止当前自动保存；晚到 ACK 可使草稿变 saved，用户随后重试导航。"
+      ],
+      "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
+      "review_disposition": "Bind explicit recovery custody confirmation to exact draft + pendingSave; download alone never grants leave. New edits invalidate confirmation. Protect readonly recovery modal, navigation and beforeunload.",
+      "implementation_commits": [],
+      "validation": [],
+      "status": "candidate_implemented_final_gates_pending",
+      "remaining": [
+        "Final branch gates and CI pending"
+      ]
+    },
+    {
+      "id": "UI-ITER-F10",
+      "title": "消除已保存未修改稿每次离开产生的随机完整备份",
+      "current_behavior": [
+        "dispose 对所有非 loading 状态随机写 backup-UUID；同一份 20 KB 已保存稿每次离开都增加一份完整 JSON。showLocalCopies 每次遍历并解析同 context 的所有备份。",
+        "项目个人状态清理面板承诺保留恢复副本，未提供通用浏览器草稿备份的容量上限/整理接口；不能把清服务端视作可删除全部未同步副本的授权。"
+      ],
+      "implementation": [
+        {
+          "algorithm": "从 dispose 删除 archiveLocal 调用。未确认稿依赖 F01 现有稳定 per-draft/active key 的可靠写入，已 ACK 未变化稿直接 dispose。",
+          "retained": "显式恢复、冲突另存、基准重写前仍 archiveLocal；这些操作可能替换同 ID 内容，备份有实际恢复用途。"
+        },
+        {
+          "scope": "本卡停止重复导航导致的新线性增长；不静默删除历史备份，也不设置会丢未同步输入的过期策略。",
+          "capacity_followup": "已有旧备份的显式查看/下载/按条删除可另立产品范围，不能记成这次已实现收益。"
+        }
+      ],
+      "acceptance": [
+        {
+          "step": "相同已保存内容 250 次 dispose，随机备份新增为 0，稳定副本数量保持 2。",
+          "status": "passed_module_probe",
+          "evidence": "lifecycle-before.json; lifecycle-after.json"
+        },
+        {
+          "step": "显式恢复 A→B、冲突另存、对新版写新意见仍可恢复 A；保存回执晚到不覆盖 B。",
+          "status": "required_browser_gate"
+        },
+        {
+          "step": "已有大量备份场景不得自动删档；模拟存储满保持 F01 保护。",
+          "status": "required_browser_gate"
+        }
+      ],
+      "compatibility": [
+        "每个显式恢复/另写动作的旧内容保留要求及 test_pr105 saved archive-failure 预期不变。",
+        "切换历史/只读视图无额外随机备份；原有稳定恢复 key 格式不迁移。"
+      ],
+      "limitations": [
+        "需要 Codex 核验：环境无 Chromium executable；Node 边界模拟与 Python/HTTP 结果不等价于真实浏览器验收。",
+        "不声称浏览器总存储绝对有界；用户主动创建不同草稿/恢复版本属于真实数据增长。"
+      ],
+      "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
+      "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
+      "implementation_commits": [],
+      "validation": [],
+      "status": "candidate_implemented_final_gates_pending",
+      "remaining": [
+        "Final branch gates and CI pending"
+      ]
+    },
+    {
+      "id": "UI-ITER-F11",
+      "title": "按已验证清理回执退休 acknowledged active，保留未同步与显式恢复副本",
+      "current_behavior": [
+        "服务器 commit-clear 与 inspect-clear 已保证 request/plan/digest 对应、备份先行、同 etag 删除、精确重放；本卡不重写该协议。",
+        "客户端仅 compareClear IndexedDB pending 请求，遗留 localStorage active status=saved。下一次 load 看不到服务器该记录便变 dirty，旧文本自动回到编辑框。不是“已清草稿自动写回服务器”：携带旧 etag 的后续保存会冲突。",
+        "产品 B05 保留未同步本机输入供恢复，所以不应清空所有 localStorage 草稿。"
+      ],
+      "implementation": [
+        {
+          "interface": "retireClearedDrafts(identity, receipt, editors) + DraftEditor.retireCleared()",
+          "algorithm": "仅在已有 commit/inspect success 绑定校验后，给 receipt.cleared 中 kind=draft 建 project_identity/draft_id/etag 对应标记。使用独立 key，避免读改写一个全局清理数组，也不覆盖其他标签刚写的新 active。"
+        },
+        {
+          "algorithm": "wasCleared 仅匹配 saved、无 pendingSave、同 etag。load 不自动采用被退休 active；adoptRecord 也检查，覆盖清理完成时旧正文 GET 晚到。实时编辑器及跨标签 storage event 将相同 ACK owner 转 fresh/empty；dirty/unknown/saving/conflict/new etag/外项目都保留。"
+        },
+        {
+          "algorithm": "旧 copy key 保持可下载/明确恢复。用户明确 restoreCopy 时，退休副本转为新 draft_id、etag=null、dirty，避免继续用被删旧 etag 或再次被自动退休。"
+        },
+        {
+          "algorithm": "退休标记写失败时明确显示“项目清理已确认，但浏览器恢复状态未完成”，保留原 IndexedDB 请求，待腾出空间后 inspect/replay 精确补记；不伪称服务器清理失败或发起新 operation。"
+        }
+      ],
+      "acceptance": [
+        {
+          "step": "同 ID/etag saved retired；4 类未同步状态、新 etag、foreign identity 保留；备份 copy 仍在；显式恢复新 ID。",
+          "status": "passed_module_probe",
+          "evidence": "lifecycle-after.json"
+        },
+        {
+          "step": "clear receipt 发生于 compact directory 与正文 GET 之间，晚到正文不得自动复活。",
+          "status": "passed_module_probe",
+          "evidence": "catalog-results.json"
+        },
+        {
+          "step": "两真实标签：一边 clear，一边已 ACK/正在输入/unknown/晚 ACK；storage event 只退休对应 ACK。",
+          "status": "required_browser_gate"
+        },
+        {
+          "step": "模拟退休 key 写失败，服务器成功回执可见、pending 请求仍在；释放空间后 inspect 完成，期间新增草稿不受旧重放影响。",
+          "status": "required_browser_gate"
+        },
+        {
+          "step": "执行 PR189 clear transport/storage/ownership/capacity/end 与 personal recovery 浏览器回归；验证完整清理 caller，不能只调用 helper。",
+          "status": "required_browser_gate"
+        }
+      ],
+      "compatibility": [
+        "未修改服务端清理 scope、manifest CAS、backup、operation log 与 late replay。",
+        "已清的旧备份仍可用户主动恢复；未同步 input、pendingSave、业务 pending 不因看到 receipt 丢弃。",
+        "标记属于当前 origin；跨端口已 ACK 记录本来由服务器恢复，未同步副本的跨端口迁移仍靠恢复文件。"
+      ],
+      "limitations": [
+        "需要 Codex 核验：环境无 Chromium executable；Node 边界模拟与 Python/HTTP 结果不等价于真实浏览器验收。",
+        "退休标记长期保留以阻止旧浏览器副本自动复活；未提供自动 GC，不计其空间为零。",
+        "helper + load + old body race 已测；真实 personalClearPanel → IndexedDB → 两标签全链尚未执行。"
+      ],
+      "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
+      "review_disposition": "Notify the actual form owner upon exact ACK retirement; reset formal fields to the fixed form baseline, clear personal fields, invalidate unsubmitted previews; retain dirty/unknown/saving/conflict/new etag/foreign identities.",
+      "implementation_commits": [],
+      "validation": [],
+      "status": "candidate_implemented_final_gates_pending",
+      "remaining": [
+        "Final branch gates and CI pending"
+      ]
+    },
+    {
+      "id": "UI-ITER-F12",
+      "title": "草稿目录按上下文投影，恢复选定项时单独读取正文",
+      "current_behavior": [
+        "所有编辑器 load/import、BusinessOperations.restore、gallery 都 GET /api/drafts 全量正文。后端逐 JSON 做 digest/schema/basis validation 后返回完整 records，前端再筛 target/context 或只取 pending/text 是否非空。",
+        "同一目标有多个历史稿也必须保留列表供显式选择；不能只返回“最新版”来获得表面减量。"
+      ],
+      "implementation": [
+        {
+          "interface": "ui_journal.list_drafts(project, *, view=None, target=None, context_key=None)",
+          "algorithm": "view=None 原完整 records envelope 保留。editor 要求精确 target 和可选 context_key，返回 entries(draft_id,base_revision,base_ref,etag,digest,summary,updated_sequence)，不带正文。pending 返回 draft_id + 原始 pending 精确 payload；notes 返回去重 page_id/base_revision。仍保留 unreadable errors。"
+        },
+        {
+          "interface": "GET /api/drafts?view=editor&target=<JSON>&context_key=<string>; ?view=pending; ?view=notes",
+          "algorithm": "web.py 校验允许 query keys、单值、view/target 类型；health.ui_capabilities 宣告 ui_draft_query.v1，project_info.draft_reads 向 DraftEditor 透传；未协商能力的前端路径仍用旧 /api/drafts。"
+        },
+        {
+          "interface": "DraftEditor.listURL()/fullRecord(entry)",
+          "algorithm": "无 buffer 且目录有唯一 exact basis 才 GET /api/drafts/{id}；多稿只取目录，选定时再 GET body。校验 etag 与 context，目录之后已变内容拒绝静默替换；disposed owner/已变 select 不接收晚到 body。已有 buffer 通过目录 digest 验 ACK，不再读全文。"
+        },
+        {
+          "algorithm": "BusinessOperations 只消费 pending 投影并仍逐 payload 校验 digest；gallery 只消费 noted_pages，按当前 revision 筛选；所有新 envelope 都保留旧服务返回 records fallback。"
+        }
+      ],
+      "acceptance": [
+        {
+          "step": "真实 Python + localhost HTTP 8 个查询/非法参数分支；完整列表 102 records、目录 101、context 1、原 pending 精确保留、notes 去重 1；101 个目录 digest 与单条 body 一致。",
+          "status": "passed_real_python_and_http",
+          "evidence": "draft-query-results.json"
+        },
+        {
+          "step": "实际 DraftEditor：唯一稿 1 directory+1 body；ACK buffer 仅 1 directory；多稿选定才 body；etag 漂移/选择变化拒绝晚到；旧核心 fallback。",
+          "status": "passed_module_probe",
+          "evidence": "catalog-results.json"
+        },
+        {
+          "step": "四个现有 journal ACK/CAS/two-window/old-base 测试在隔离 prototype/tests 上通过。",
+          "status": "passed_existing_tests",
+          "evidence": "existing-tests.log"
+        },
+        {
+          "step": "实际 Chromium 运行 draft recovery、gallery notes、业务 unknown 恢复；抓 network 确认日常开页无全量正文，断网/409 保留输入。",
+          "status": "required_browser_gate"
+        }
+      ],
+      "compatibility": [
+        "未改变 ui_draft.v1/record、GET 单条、save CAS、import/recovery 的持久化格式。",
+        "保留旧完整 list API；未知/重复 query 改为明确错误，现有无 query callers 保持兼容。",
+        "后端仍 O(N) 读文件和验证，未建索引；不承诺 CPU/IO 降低。summary 只用于列表，不作为采用正文或 pending 的权威副本。"
+      ],
+      "limitations": [
+        "需要 Codex 核验：环境无 Chromium executable；Node 边界模拟与 Python/HTTP 结果不等价于真实浏览器验收。",
+        "该卡不解决 journal 索引或逐文件 validation 的 N 级成本；不能用响应字节降低代称服务端性能提升。"
+      ],
+      "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
+      "review_disposition": "Render recovery confirmation synchronously before lazy body GET; cancel and selection generation reject late reads. Preserve the real existing restore flow.",
+      "implementation_commits": [],
+      "validation": [],
+      "status": "candidate_implemented_final_gates_pending",
+      "remaining": [
+        "Final branch gates and CI pending"
+      ]
+    },
+    {
+      "id": "UI-ITER-F13",
+      "title": "修正画廊 owner 结论，暂不合并两类状态控制器",
+      "current_behavior": [
+        "纠正原审查：真实 gallery.js:27 是 app.galleryMemory ||= new GalleryMemory(...)，失败保存后跨路由复用同一实例。旧 probe 人为 new 第二实例绕过真实 caller，不能证明导航丢选页；该 runtime bug 结论撤销。",
+        "两类控制器共 136 物理行，flush/pending/CAS 有相似流程，但 gallery 是 app 单例跨版本整理，overview 是 project identity+revision 的 Map 并有 URL reading、session fallback、quiet updates、disposed cleanup、verify。"
+      ],
+      "implementation": [
+        {
+          "decision": "本迭代不抽取 common controller，不为覆盖 20 条硬造开发。",
+          "reason": "若仅抽取 set/timer/notify，稳定收益很小；若抽取 flush，仍需两个策略 adapter、状态 envelope、quiet、capability、disposed、GET verify 差异，无法逐行证明会显著减少维护面。"
+        },
+        {
+          "future_gate": "只有真实可执行分支表能证明 ACK、unknown、409、URL preferences、clear etag、route owner 都等价，且实际 diff 有正净减少，再提独立重构。当前收益计 0。"
+        }
+      ],
+      "acceptance": [
+        {
+          "step": "源码 owner 表达式与实际 app 缓存语义核对；失败状态的同 owner 仍保留 p01。",
+          "status": "passed_corrected_owner_probe",
+          "evidence": "lifecycle-after.json"
+        },
+        {
+          "step": "不能再在总报告中列“已复现画廊导航丢选页”，只能列代码重复设计债。",
+          "status": "required_report_correction"
+        },
+        {
+          "step": "现有 test_ux06_gallery_conflict_browser 与 test_overview_preferences_browser 属独立协议回归，未来抽取前才作为 hard gate。",
+          "status": "deferred_no_implementation"
+        }
+      ],
+      "compatibility": [
+        "保留两类 current caller 与持久化 shape。",
+        "不把并不相同的 useSaved(record) 与 useSaved(envelope) 强行统一；不删 overview verify 或 gallery 固定参考语义。"
+      ],
+      "limitations": [
+        "没有新增生产补丁；不计任何确定代码减量。该结论不等于认定所有 gallery/overview 清理细节完美。"
+      ],
+      "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
+      "review_disposition": "No implementation; claimed gallery-owner bug retracted. Savings zero.",
+      "implementation_commits": [],
+      "validation": [],
+      "status": "not_implemented_as_requested",
+      "remaining": []
+    },
+    {
+      "id": "UI-ITER-F14",
+      "title": "按服务角色及工作面动态加载，保持路由 owner 与图标初始化顺序",
+      "current_behavior": [
+        "app.js 同时静态引 launcher 和 Project；Project 又静态引所有 view 和 launcher.localURL；views re-export 将 overview/content/page/style 的全图带入。连 launcher 也读入项目制作链。",
+        "实际 static ES closure 含 export-from 与 icons 共 58 模块、876,577 B，等于全部前端 JS。"
+      ],
+      "implementation": [
+        {
+          "interface": "app.start role dynamic import; Project.viewFor(route): Promise<view>",
+          "algorithm": "health 通过之后 await launcher/project 分支；Project 按 6 工作面 + candidate + action 八种路由显式 import 对应已有文件。loadRoute 在数据校验后 await view、再次 generation 检查，再 F01 preflight/dispose/render(data,view)。"
+        },
+        {
+          "algorithm": "localURL 的原实现移入既有 routes.js；launcher re-export 保留旧 import 兼容，Project 直接从 routes 引用。外部只读审稿表单改点击时 await import，并接原 message 错误呈现。"
+        },
+        {
+          "algorithm": "移除 views.js 四个不再有内部 caller 的 view re-exports，既有模块具体导出保持；不给 class/functions 新建泛加载框架。icons 普通脚本仍在 module app 前，v2 与 studio 均保持。"
+        }
+      ],
+      "acceptance": [
+        {
+          "step": "静态 closure 包含 export-from；v2/studio icons 都在 app 前；八路由实际 import export 名称均正确。",
+          "status": "passed_graph_and_module_probe",
+          "evidence": "loading-graph-results.json; lifecycle-after.json"
+        },
+        {
+          "step": "旧 route import 晚于新 generation 完成时不 dispose 旧 editor、不 render。",
+          "status": "passed_module_probe",
+          "evidence": "lifecycle-after.json"
+        },
+        {
+          "step": "Chromium 冷缓存分别打开 launcher、overview/content/gallery/page/runs/style/candidate/action，记录模块 requests 和页面可操作时间；不能只验证 export 为 function。",
+          "status": "required_browser_gate"
+        },
+        {
+          "step": "断网/404/模块 syntax-error 注入：旧面可见、输入保留、错误可恢复；全部 icon/name、快捷键、lazy 外部审稿入口可用。",
+          "status": "required_browser_gate"
+        },
+        {
+          "step": "test_navigation_usability_browser、test_control_read_recovery_browser、test_ui_design_browser 与安装静态资源用例回归。",
+          "status": "required_browser_gate"
+        }
+      ],
+      "compatibility": [
+        "八类 route 都返回原 exported view function；hash/go/current/nav generation、静态 URL 和 MIME/CSP 不改。",
+        "模块加载失败进入原 catch，旧可见 owner 仍保留；动态加载尚未开始的新业务操作不自动写。",
+        "首次每类工作面多一次模块分支等待，之后 ES module 自身缓存。字节下降不等于 TTI 同比例下降。"
+      ],
+      "limitations": [
+        "需要 Codex 核验：环境无 Chromium executable；Node 边界模拟与 Python/HTTP 结果不等价于真实浏览器验收。",
+        "此补丁净增代码；加载图削减不能算源码删减。缓存验证器/content hash 方案未实施，收益不计。"
+      ],
+      "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
+      "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
+      "implementation_commits": [],
+      "validation": [],
+      "status": "candidate_implemented_final_gates_pending",
+      "remaining": [
+        "Final branch gates and CI pending"
+      ]
+    },
+    {
+      "id": "DOC-00",
+      "title": "固定全量文档身份、引用和保全边界",
+      "current_behavior": [
+        "用户要求全量审查并把文档体量治理纳入一个大迭代；目录年龄不能决定合同失效。",
+        "官方基线 5,108 blobs 已逐字节 SHA 校验；本轮全量文档处置覆盖 4,027 文件，并对 4,593 个入口、消费者和配套文件逐文件列账。"
+      ],
+      "implementation": [
+        "生成完整 per-file 清单：keep/replace/archive/migrate_fixture，原始行区间、bytes、Git blob SHA、SHA256、引用记录 ID 和直接消费者。",
+        "逐行读 src/deck_master/cli.py:1173–1181，确认 legacy manifest 原位保留；读三个真实测试消费者与 package-boundary:130–152、261–273，保留继承 schema 镜像及 guard。",
+        "保留现行/继承 Specs、开放 work-items、当前 DESIGN 接收原件、全部 77 份 canonical Skill；只归档 reports/archive/qa/reviews/governance/旧设计及 README:3 明确被接替的 post127 review。",
+        "逐项分级既有 106 本地诊断；登记 12 个活动继承文档原始证据缺口，禁止用当前同名文件伪装原快照。"
+      ],
+      "acceptance": [
+        "清单中 4,027 docs 的 path 唯一，原文件 SHA 与固定基线一致；每个 archive/migrate_fixture 有唯一 ZIP 位置。",
+        "legacy manifest、84 份合同镜像及所有 Skill 保持原字节；不存在以旧 PASS 作为当前候选通过。",
+        "23 个当前入口本地目标、锚点和准确仓内路径真实断链 0；已知 12 证据缺口保持待核验而不是 PASS。"
+      ],
+      "compatibility": [
+        "本卡不修改运行源码。57,842 行是文档独立样板基线；整个迭代的运行源码与合同变化按最终整合预算核算。Skill 来源、版本和方法 hash 保持。",
+        "不删除回归用例或 assert；历史失败、NOT_RUN、旧候选身份与原附件原字节保全。",
+        "当前规范优先级保持；历史归档/链接不得把旧证据提升为当前候选 PASS。"
+      ],
+      "limitations": [
+        "需要 Codex 核验：只针对固定基线的隔离候选，不替代大迭代最终 CI/用户安装/实际 Host。",
+        "文档压缩保全信息，只减少工作树展开文本/当前字节，不减少 Git 历史，不算产品源码减半。",
+        "12 个继承活动文档的原始证据缺口待 Owner/Codex 补齐，不能把今天同名文件当旧快照。"
+      ],
+      "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
+      "review_disposition": "Guard standalone tools before any write, including resolved ancestry and symlinks. Existing candidate rejected. Original destructive probe executed only on an expendable copy.",
+      "implementation_commits": [],
+      "validation": [],
+      "status": "candidate_implemented_final_gates_pending",
+      "remaining": [
+        "Final branch gates and CI pending"
+      ]
+    },
+    {
+      "id": "DOC-01",
+      "title": "将历史回归输入迁入稳定 fixtures，保留既有断言",
+      "current_behavior": [
+        "三个读取点把历史报告目录当测试资源根；直接删 reports 会使现有回归失效。",
+        "content-anchors.md 的当前/历史评价 SHA 是测试合同；改变原文字节来修链接会破坏回归。"
+      ],
+      "implementation": [
+        "复制 fixture-map.json 列出的 10 文件到 tests/rebuild/fixtures/history/，原字节不动；本卡先不删除旧路径，旧路径删除只归 DOC-02 计账。",
+        "仅改 test_iteration_ledger.py:11、test_generation_protocol.py:293、test_rc3_content_methods.py:98 的路径常量；TRACEABILITY、schema、input_hash、历史评价哈希和所有 assert 保持。",
+        "新增 7 行 fixtures/history/README.md 说明冻结身份；新增 7 行 fixtures/specs/.../ACCEPTANCE.md 接续原锚点相对链接，不复制规范正文。",
+        "src/deck_master/cli.py::_legacy_manifest 继续读取 docs/archive/pre-rebuild/product-capability-manifest.v09.json；保持文件原位。"
+      ],
+      "acceptance": [
+        "10/10 fixture byte equality；对三测试还原路径常量后 AST 与原文件完全一致；测试/断言删除数 0。",
+        "真实 freeze input_hash 仍 e62ee707…；当前 anchor 与 pre-R2/evaluator/adjudication 的固定 SHA 断言继续执行。",
+        "19 项相关检查通过，legacy manifest alias 输出 JSON 与原件一致。"
+      ],
+      "compatibility": [
+        "本卡不修改运行源码。57,842 行是文档独立样板基线；整个迭代的运行源码与合同变化按最终整合预算核算。Skill 来源、版本和方法 hash 保持。",
+        "不删除回归用例或 assert；历史失败、NOT_RUN、旧候选身份与原附件原字节保全。",
+        "当前规范优先级保持；历史归档/链接不得把旧证据提升为当前候选 PASS。"
+      ],
+      "limitations": [
+        "需要 Codex 核验：只针对固定基线的隔离候选，不替代大迭代最终 CI/用户安装/实际 Host。",
+        "文档压缩保全信息，只减少工作树展开文本/当前字节，不减少 Git 历史，不算产品源码减半。"
+      ],
+      "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
+      "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
+      "implementation_commits": [],
+      "validation": [],
+      "status": "candidate_implemented_final_gates_pending",
+      "remaining": [
+        "Final branch gates and CI pending"
+      ]
+    },
+    {
+      "id": "DOC-02",
+      "title": "建立单一离线 ZIP 并收起 2,818 个历史路径",
+      "current_behavior": [
+        "历史报告和原始产物占绝大多数展开文本，仍具有时点身份及引用价值；逐文件删信息不可接受。",
+        "只用 GitHub 链接无法覆盖无网络/下载源码包场景；选择一个标准 ZIP + CSV + 短 README，不加运行服务或重型档案系统。"
+      ],
+      "implementation": [
+        "按 removed-paths.txt 的精确 2,818 路径生成压缩归档；再把 50 份将修改的导航原版一起收入，共 2,868 原文件 + 1 内嵌清单。",
+        "每条记录保留 original_path、Git blob SHA、Git mode、SHA256、bytes、原行数、角色、固定提交 permalink；条目按路径排序、时间固定、DEFLATE level 9。",
+        "先检查 CRC、每个成员与基线原字节一致、内外 manifest 一致及 10 fixture 副本一致，再收起清单内旧展开路径；不碰用户 run/未跟踪文件，也不改写 Git 历史。",
+        "新增 docs/history/ 下仅三个文件；ZIP 60,175,643 B，全部新增历史入口/CSV/ZIP 合计 61,392,746 B 已计入净额。",
+        "DOC-02 与 DOC-03 作为同一完整候选提交；不要把暂时断链的中间状态视为可合入。"
+      ],
+      "acceptance": [
+        "2,868/2,868 原文件逐字节保存；删除信息文件数 0；保留的 legacy manifest 原字节不变。",
+        "归档 SHA256 2d7d6c704e4bce869edc62687cabae114dd3a7427f9a99de613d7519a9838317（本次 Python/zlib 环境）；跨压缩器版本必须重算 ZIP SHA/bytes，不放宽内容哈希核验。",
+        "构建 wheel/sdist 后均不存在 docs/history 或 *-documents.zip 成员；真实 wheel 的 77 份 canonical methods 通过 inventory。"
+      ],
+      "compatibility": [
+        "本卡不修改运行源码。57,842 行是文档独立样板基线；整个迭代的运行源码与合同变化按最终整合预算核算。Skill 来源、版本和方法 hash 保持。",
+        "不删除回归用例或 assert；历史失败、NOT_RUN、旧候选身份与原附件原字节保全。",
+        "当前规范优先级保持；历史归档/链接不得把旧证据提升为当前候选 PASS。"
+      ],
+      "limitations": [
+        "需要 Codex 核验：只针对固定基线的隔离候选，不替代大迭代最终 CI/用户安装/实际 Host。",
+        "文档压缩保全信息，只减少工作树展开文本/当前字节，不减少 Git 历史，不算产品源码减半。"
+      ],
+      "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
+      "review_disposition": "Retain the 3077-byte W12.md local dependency; preserve all historical archive originals byte-for-byte.",
+      "implementation_commits": [],
+      "validation": [],
+      "status": "candidate_implemented_final_gates_pending",
+      "remaining": [
+        "Final branch gates and CI pending"
+      ]
+    },
+    {
+      "id": "DOC-03",
+      "title": "重接 50 份当前导航并完成分级验收",
+      "current_behavior": [
+        "报告迁移后根 README、AGENTS、DESIGN 和继承规格仍需能准确追溯原证据；历史索引不能变成第二套活动规则。",
+        "当前入口必须可达；历史缺口不能仅靠“新增断链为零”掩盖。"
+      ],
+      "implementation": [
+        "按 exact-edits.json 的 50 Markdown 差异修改链接；原报告指向固定基线 permalink，回归台账指向稳定 fixture，docs 根/旧报告/旧归档入口指向唯一离线索引。",
+        "AGENTS:19–20 明确 RC4 是历史候选；AGENTS:64 旧合同路径改固定提交链接；docs/agent-task-index:14 将 current verification 改 dated RC4 verification，保持当前命令规则不动。",
+        "docs/README:37–41 替换为文档身份与历史保全；reports README 29→10 行、archive README 25→8 行；Spec、DESIGN、Skill 仍各自指向现行权威。",
+        "检查新增/迁移的锚点及本地链接；真实库入口 23 文件均检查本地链接、fragment 和精确 inline repo path。",
+        "保留 link-audit.json 的 12 项待核验列表：CONTENT-QUALITY-ITERATION 的外部源包 11 项与 UX-REPAIR-DECISIONS 的原修复方案 1 项。Owner 提供原包/原 manifest 后才能替换；当前同名代码或不同日期 evidence 不是正确目标，不伪造永久链接。"
+      ],
+      "acceptance": [
+        "当前入口真实本地断链 0；6 个新/改动 fragment 解析通过；全库新增本地断链 0。",
+        "剩余 106 原始诊断完整分级：22 HTTP 路由误报、52 历史原件缺口、20 历史日志/覆盖缺口、12 活动继承证据缺口。不能标全库全绿或补成假 PASS。",
+        "candidate.patch 包含全部 53 修改文本与 14 新文本，git apply --reverse --check 通过；所有声明的最终 counts 与逐文件汇总一致。",
+        "完整大迭代合入时重跑相关检查及项目要求的 final CI，需要 Codex 核验；本次不代表用户安装/真实 Host/浏览器专业验收。"
+      ],
+      "compatibility": [
+        "本卡不修改运行源码。57,842 行是文档独立样板基线；整个迭代的运行源码与合同变化按最终整合预算核算。Skill 来源、版本和方法 hash 保持。",
+        "不删除回归用例或 assert；历史失败、NOT_RUN、旧候选身份与原附件原字节保全。",
+        "当前规范优先级保持；历史归档/链接不得把旧证据提升为当前候选 PASS。"
+      ],
+      "limitations": [
+        "需要 Codex 核验：只针对固定基线的隔离候选，不替代大迭代最终 CI/用户安装/实际 Host。",
+        "文档压缩保全信息，只减少工作树展开文本/当前字节，不减少 Git 历史，不算产品源码减半。",
+        "12 个继承活动文档的原始证据缺口待 Owner/Codex 补齐，不能把今天同名文件当旧快照。"
+      ],
+      "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
+      "review_disposition": "Scan JSON and CSV too. Keep 262 historical strings in 8 retained files unchanged; map 82 targets to exact-SHA archive members/local W12 through machine-references.json.",
+      "implementation_commits": [],
+      "validation": [],
+      "status": "candidate_implemented_final_gates_pending",
+      "remaining": [
+        "Final branch gates and CI pending"
+      ]
+    },
+    {
+      "id": "I99",
+      "title": "单一集成候选的功能、安装、浏览器与净量验收",
+      "current_behavior": [
+        "本轮隔离集成 232 项通过；最终 sources 两文件修正后 73 项相关回归通过；两组重叠，不相加。",
+        "浏览器真实交互未运行；renderer 个案在基线和候选均产生全白 PNG，该环境边界尚未消除。"
+      ],
+      "implementation": [
+        "在同一个最终候选执行仓库原有 CI 必需门禁，并保存具体 commit、命令、结果与失败原因；历史 PASS 不能替代当前证据。",
+        "执行真实 Chromium 的草稿 dirty/saved/unknown/late ACK、存储 quota、两个标签、dialog Escape/关闭、后退/刷新、页内 basis 切换和 F14 路由加载。",
+        "在真实可用渲染环境执行 SVG/native assembly、原图比较、preview reuse、导出交付。不得把受控 renderer 前停止称为渲染通过。",
+        "构建最终 wheel/sdist；验证 85 合同资源、77 canonical 方法和实际修改源码；完成独立安装入口检查。",
+        "归档 2,868 原件与 10 fixture byte-parity、23 当前入口真断链零、新增断链零；12 个旧活动证据缺口仍按真实状态登记，不伪造补齐。",
+        "按最终 tracked paths 重算全部预算，记录新增测试及文档开销；只关闭已经满足完整 AC 的发现。"
+      ],
+      "acceptance": [
+        "以上各门禁均有该最终候选的可复现记录，才能签收本迭代；缺失项保持 NEEDS_CODEX，不提前标 PASS。",
+        "回滚用代码提交 revert；不回写客户历史对象，不清理旧本地草稿，不以低 writer 版本打开已不兼容的新项目。",
+        "文档回退按 archive manifest 释放原件到独立目录并核 SHA；原工作目录有变更时逐项合并，不覆盖。"
+      ],
+      "compatibility": [
+        "公开 CLI/HTTP 旧默认参数、ModelError、writer/operation/current CAS、草稿正文与 explicit restore 语义必须保持。",
+        "所有故障拒绝/暂停/撤销/历史恢复场景须保留；本包 F09 不跳过 Page 扫描。"
+      ],
+      "limitations": [
+        "不承诺所有错误环境都等价；formal browser/install/render gates 尚需 Codex 核验。"
+      ],
+      "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
+      "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
+      "implementation_commits": [],
+      "validation": [],
+      "status": "candidate_implemented_final_gates_pending",
+      "remaining": [
+        "Final branch gates and CI pending"
+      ]
+    }
+  ],
+  "current_candidate": "revised-v1",
+  "acceptance": "not_complete"
+}

@@ -1,0 +1,2367 @@
+{
+  "baseline": "62dfcfc5637f0bee2358074c4458047689dd5299",
+  "references": [
+    {
+      "source": "docs/specs/deck-master-webui-v4-20260930/GAP-MATRIX.csv",
+      "line": 49,
+      "raw": "docs/reports/workbench-v3-execution-20260926/W12.md",
+      "target": "docs/reports/workbench-v3-execution-20260926/W12.md",
+      "source_sha256": "454e02b3ef0e274c362d1ee74ab5a7a63190a67bad163a2fd3f225e05d10c820",
+      "target_sha256": "08161581854b62f39c66f17f1fed076e4ad1759797b83f19b9e4cd6afcb3fcab",
+      "resolution": "local"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-v4-20260930/gap-matrix.json",
+      "line": 476,
+      "raw": "docs/reports/workbench-v3-execution-20260926/W12.md",
+      "target": "docs/reports/workbench-v3-execution-20260926/W12.md",
+      "source_sha256": "ff6413413eb6c4260b1d2c44e6e14a52797d50ac19e91478acdb5b92cc0e9dfa",
+      "target_sha256": "08161581854b62f39c66f17f1fed076e4ad1759797b83f19b9e4cd6afcb3fcab",
+      "resolution": "local"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 23,
+      "raw": "docs/reports/rc5/package-verification-cloud-review.json",
+      "target": "docs/reports/rc5/package-verification-cloud-review.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "44a0fd7261b69af5e5b0cfb56871ceb21d9421c4085a4152a2e8bd927d0599c8",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 72,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 73,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 74,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 75,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 88,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 89,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 90,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 91,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 104,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 105,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 106,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 107,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 120,
+      "raw": "../../reports/webui-content-methods/FORMAL-REVIEW-FIXES.md",
+      "target": "docs/reports/webui-content-methods/FORMAL-REVIEW-FIXES.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "6116a003ba9b83231c0a37c9377914e913e6a4a753f2e679ac9f3b4e2f0ec643",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 121,
+      "raw": "../../reports/webui-content-methods/evidence/formal-review-package.json",
+      "target": "docs/reports/webui-content-methods/evidence/formal-review-package.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "bc60c61236df7a66a36aac14119102fd3647ea0aa095f11665ed265cf1b95623",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 134,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 135,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 136,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 137,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 150,
+      "raw": "../../reports/webui-content-methods/FORMAL-REVIEW-FIXES.md",
+      "target": "docs/reports/webui-content-methods/FORMAL-REVIEW-FIXES.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "6116a003ba9b83231c0a37c9377914e913e6a4a753f2e679ac9f3b4e2f0ec643",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 151,
+      "raw": "../../reports/webui-content-methods/evidence/formal-review-package.json",
+      "target": "docs/reports/webui-content-methods/evidence/formal-review-package.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "bc60c61236df7a66a36aac14119102fd3647ea0aa095f11665ed265cf1b95623",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 164,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 165,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 166,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 167,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 180,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 181,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 182,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 183,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 196,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 197,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 198,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 199,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 212,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 213,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 214,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 215,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 228,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 229,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 230,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 231,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 244,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 245,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 246,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 247,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 260,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 261,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 262,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 263,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 276,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 277,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 278,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 279,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 293,
+      "raw": "../../reports/webui-content-methods/FORMAL-REVIEW-FIXES.md",
+      "target": "docs/reports/webui-content-methods/FORMAL-REVIEW-FIXES.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "6116a003ba9b83231c0a37c9377914e913e6a4a753f2e679ac9f3b4e2f0ec643",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 294,
+      "raw": "../../reports/webui-content-methods/evidence/formal-review-package.json",
+      "target": "docs/reports/webui-content-methods/evidence/formal-review-package.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "bc60c61236df7a66a36aac14119102fd3647ea0aa095f11665ed265cf1b95623",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 307,
+      "raw": "../../reports/webui-content-methods/FORMAL-REVIEW-FIXES.md",
+      "target": "docs/reports/webui-content-methods/FORMAL-REVIEW-FIXES.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "6116a003ba9b83231c0a37c9377914e913e6a4a753f2e679ac9f3b4e2f0ec643",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 308,
+      "raw": "../../reports/webui-content-methods/evidence/formal-review-package.json",
+      "target": "docs/reports/webui-content-methods/evidence/formal-review-package.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "bc60c61236df7a66a36aac14119102fd3647ea0aa095f11665ed265cf1b95623",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 322,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 323,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 324,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 325,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 338,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 339,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 340,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 341,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 354,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 355,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 356,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 357,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 358,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-long.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-long.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "d371d17728286ac198c3c038fb6ab9871528ad036d48a23599177eebe6c3fbc9",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 371,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 372,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 373,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 374,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 387,
+      "raw": "../../reports/webui-content-methods/FORMAL-REVIEW-FIXES.md",
+      "target": "docs/reports/webui-content-methods/FORMAL-REVIEW-FIXES.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "6116a003ba9b83231c0a37c9377914e913e6a4a753f2e679ac9f3b4e2f0ec643",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 388,
+      "raw": "../../reports/webui-content-methods/evidence/formal-review-package.json",
+      "target": "docs/reports/webui-content-methods/evidence/formal-review-package.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "bc60c61236df7a66a36aac14119102fd3647ea0aa095f11665ed265cf1b95623",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 401,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 402,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 403,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 404,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 417,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 418,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 419,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 420,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 433,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 434,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 435,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 436,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 449,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 450,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 451,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 452,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 465,
+      "raw": "../../reports/webui-content-methods/REVIEW-FIXES.md",
+      "target": "docs/reports/webui-content-methods/REVIEW-FIXES.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "31b5e022c9c8acb81403dfa1ae39375a325edaf2039b12dbbacb4a1cb5dc41b3",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 466,
+      "raw": "../../reports/webui-content-methods/evidence/independent-review-regression.log",
+      "target": "docs/reports/webui-content-methods/evidence/independent-review-regression.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ca957d1b2b45ad6bd4d862a15675330d10e39a77e754ffd6abf10643fb9da30b",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 467,
+      "raw": "../../reports/webui-content-methods/evidence/independent-review-focused-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/independent-review-focused-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "9b69b1d76e93ee9ea5ce48bd44db5921203c72195c8b1592749ed736d050461c",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 468,
+      "raw": "../../reports/webui-content-methods/evidence/package-review-fixes.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-review-fixes.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "9776e2f453c6c31d2cfeeebd50427dd0663d2399b9b454107670a92a7a59cce0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 481,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 482,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 483,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 484,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 497,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 498,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 499,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 500,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 513,
+      "raw": "../../reports/webui-content-methods/REVIEW-FIXES.md",
+      "target": "docs/reports/webui-content-methods/REVIEW-FIXES.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "31b5e022c9c8acb81403dfa1ae39375a325edaf2039b12dbbacb4a1cb5dc41b3",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 514,
+      "raw": "../../reports/webui-content-methods/evidence/independent-review-regression.log",
+      "target": "docs/reports/webui-content-methods/evidence/independent-review-regression.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ca957d1b2b45ad6bd4d862a15675330d10e39a77e754ffd6abf10643fb9da30b",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 515,
+      "raw": "../../reports/webui-content-methods/evidence/independent-review-focused-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/independent-review-focused-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "9b69b1d76e93ee9ea5ce48bd44db5921203c72195c8b1592749ed736d050461c",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 516,
+      "raw": "../../reports/webui-content-methods/evidence/package-review-fixes.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-review-fixes.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "9776e2f453c6c31d2cfeeebd50427dd0663d2399b9b454107670a92a7a59cce0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 529,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 530,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 531,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 532,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 545,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 546,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 547,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 548,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 561,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 562,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 563,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 564,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 577,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 578,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 579,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 580,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 581,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-long.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-long.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "d371d17728286ac198c3c038fb6ab9871528ad036d48a23599177eebe6c3fbc9",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 594,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 595,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 596,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 597,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 610,
+      "raw": "../../reports/webui-content-methods/FORMAL-REVIEW-FIXES.md",
+      "target": "docs/reports/webui-content-methods/FORMAL-REVIEW-FIXES.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "6116a003ba9b83231c0a37c9377914e913e6a4a753f2e679ac9f3b4e2f0ec643",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 611,
+      "raw": "../../reports/webui-content-methods/evidence/formal-review-package.json",
+      "target": "docs/reports/webui-content-methods/evidence/formal-review-package.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "bc60c61236df7a66a36aac14119102fd3647ea0aa095f11665ed265cf1b95623",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 624,
+      "raw": "../../reports/webui-content-methods/FORMAL-REVIEW-FIXES.md",
+      "target": "docs/reports/webui-content-methods/FORMAL-REVIEW-FIXES.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "6116a003ba9b83231c0a37c9377914e913e6a4a753f2e679ac9f3b4e2f0ec643",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 625,
+      "raw": "../../reports/webui-content-methods/evidence/formal-review-package.json",
+      "target": "docs/reports/webui-content-methods/evidence/formal-review-package.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "bc60c61236df7a66a36aac14119102fd3647ea0aa095f11665ed265cf1b95623",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 638,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 639,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 640,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 641,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 654,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 655,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 656,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 657,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 670,
+      "raw": "../../reports/webui-content-methods/FORMAL-REVIEW-FIXES.md",
+      "target": "docs/reports/webui-content-methods/FORMAL-REVIEW-FIXES.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "6116a003ba9b83231c0a37c9377914e913e6a4a753f2e679ac9f3b4e2f0ec643",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 671,
+      "raw": "../../reports/webui-content-methods/evidence/formal-review-package.json",
+      "target": "docs/reports/webui-content-methods/evidence/formal-review-package.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "bc60c61236df7a66a36aac14119102fd3647ea0aa095f11665ed265cf1b95623",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 684,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 685,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 686,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 687,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 688,
+      "raw": "../../reports/webui-content-methods/evidence/three-scenario-summary.json",
+      "target": "docs/reports/webui-content-methods/evidence/three-scenario-summary.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "2801282250af441ef020c433c6499c5a0f542c30f791515bec1bbcea828ed6a7",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 701,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 702,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 703,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 704,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 705,
+      "raw": "../../reports/webui-content-methods/evidence/three-scenario-summary.json",
+      "target": "docs/reports/webui-content-methods/evidence/three-scenario-summary.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "2801282250af441ef020c433c6499c5a0f542c30f791515bec1bbcea828ed6a7",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 718,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 719,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 720,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 721,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 722,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-long.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-long.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "d371d17728286ac198c3c038fb6ab9871528ad036d48a23599177eebe6c3fbc9",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 735,
+      "raw": "../../reports/webui-content-methods/FORMAL-REVIEW-FIXES.md",
+      "target": "docs/reports/webui-content-methods/FORMAL-REVIEW-FIXES.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "6116a003ba9b83231c0a37c9377914e913e6a4a753f2e679ac9f3b4e2f0ec643",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 736,
+      "raw": "../../reports/webui-content-methods/evidence/formal-review-package.json",
+      "target": "docs/reports/webui-content-methods/evidence/formal-review-package.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "bc60c61236df7a66a36aac14119102fd3647ea0aa095f11665ed265cf1b95623",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 749,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 750,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 751,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 752,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 753,
+      "raw": "../../reports/webui-content-methods/evidence/rollback-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/rollback-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "a894d1538ed1f2861089be4e3b7b3d82711ecb33d58d972748baeaa3e7e6669b",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 766,
+      "raw": "../../reports/webui-content-methods/ENTRY-REGISTRY-FIX.md",
+      "target": "docs/reports/webui-content-methods/ENTRY-REGISTRY-FIX.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "20181b84e6ad13bb15f1675c9a678db4b146cea6868af42a2c9bc97e94272909",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 779,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 780,
+      "raw": "../../reports/webui-content-methods/evidence/matrix-final.log",
+      "target": "docs/reports/webui-content-methods/evidence/matrix-final.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "ad6bd79a57cc162cf29b97273a6de1b622c669eb641df856db2017b34683e25e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 781,
+      "raw": "../../reports/webui-content-methods/evidence/regression-closure.log",
+      "target": "docs/reports/webui-content-methods/evidence/regression-closure.log",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "564ccf788afc05fa667d1ab1eb8829b231bf794fbea66a1c962221ad7d1b5aa0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 782,
+      "raw": "../../reports/webui-content-methods/evidence/package-closure.json",
+      "target": "docs/reports/webui-content-methods/evidence/package-closure.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "1ee9956fa2e340c7ea6ed0ac7fef44105a0672cf82c9ed339a8d2dcece036a83",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 793,
+      "raw": "../../reports/webui-content-methods/DELIVERY.md",
+      "target": "docs/reports/webui-content-methods/DELIVERY.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "3d10685d9a59a376e296691f146e35c5f428e32d4615c3703dc141bdea459ca6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 916,
+      "raw": "../../reports/webui-content-methods/ENTRY-REGISTRY-FIX.md",
+      "target": "docs/reports/webui-content-methods/ENTRY-REGISTRY-FIX.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "20181b84e6ad13bb15f1675c9a678db4b146cea6868af42a2c9bc97e94272909",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 955,
+      "raw": "../../reports/webui-content-methods/BROWSER-LABEL-FIX.md",
+      "target": "docs/reports/webui-content-methods/BROWSER-LABEL-FIX.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "70677ad0e8c6962f2cbeed7492ebf84c24cde1f1f0aad6a4f108d6394ab026bf",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 978,
+      "raw": "../../reports/webui-content-methods/FORMAL-REVIEW-FIXES.md",
+      "target": "docs/reports/webui-content-methods/FORMAL-REVIEW-FIXES.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "6116a003ba9b83231c0a37c9377914e913e6a4a753f2e679ac9f3b4e2f0ec643",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 979,
+      "raw": "../../reports/webui-content-methods/evidence/formal-review-package.json",
+      "target": "docs/reports/webui-content-methods/evidence/formal-review-package.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "bc60c61236df7a66a36aac14119102fd3647ea0aa095f11665ed265cf1b95623",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 990,
+      "raw": "docs/reports/webui-content-methods/IMAGE-LEASE-FIX.md",
+      "target": "docs/reports/webui-content-methods/IMAGE-LEASE-FIX.md",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "9e48e8dd9b05cbdc7f6ad3de98015bf756dca9e34be8f0a65d212f423495af85",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-content-methods-20261020/execution-ledger.json",
+      "line": 996,
+      "raw": "docs/reports/webui-content-methods/evidence/modal-owner-package.json",
+      "target": "docs/reports/webui-content-methods/evidence/modal-owner-package.json",
+      "source_sha256": "5a9fa7b91b997a64d6f68bc9c26319182b33daae11f6317eb041deee47638ced",
+      "target_sha256": "083303c26fc47af41d66a97bd20caa9aca24d5fe94f62d28c54cb58f4a5114f7",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-v1.0.0-rc3/validation.json",
+      "line": 29,
+      "raw": "../../reports/rc3/evidence-ledger.json",
+      "target": "docs/reports/rc3/evidence-ledger.json",
+      "source_sha256": "71220aac68cd26b1dcab9fb5ef3bdd236396ed4c832d174bd048318e48b1e1eb",
+      "target_sha256": "f934abeb75a5f9726033c247f44d060df8c4da084c616b8d66e9e2386a888a4c",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-v1.0.0-rc3/validation.json",
+      "line": 34,
+      "raw": "../../reports/rc3/closeout-20261018/README.md",
+      "target": "docs/reports/rc3/closeout-20261018/README.md",
+      "source_sha256": "71220aac68cd26b1dcab9fb5ef3bdd236396ed4c832d174bd048318e48b1e1eb",
+      "target_sha256": "aabd8e3d86f1631104325783c6d673b6e1321a89ff38401060f816321b9a4edc",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-v1.0.0-rc3/validation.json",
+      "line": 49,
+      "raw": "../../reports/rc3/closeout-20261018/README.md",
+      "target": "docs/reports/rc3/closeout-20261018/README.md",
+      "source_sha256": "71220aac68cd26b1dcab9fb5ef3bdd236396ed4c832d174bd048318e48b1e1eb",
+      "target_sha256": "aabd8e3d86f1631104325783c6d673b6e1321a89ff38401060f816321b9a4edc",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-v1.0.0-rc3/validation.json",
+      "line": 79,
+      "raw": "../../reports/rc3/evidence-ledger.json",
+      "target": "docs/reports/rc3/evidence-ledger.json",
+      "source_sha256": "71220aac68cd26b1dcab9fb5ef3bdd236396ed4c832d174bd048318e48b1e1eb",
+      "target_sha256": "f934abeb75a5f9726033c247f44d060df8c4da084c616b8d66e9e2386a888a4c",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-v1.0.0-rc3/validation.json",
+      "line": 84,
+      "raw": "../../reports/rc3/closeout-20261018/README.md",
+      "target": "docs/reports/rc3/closeout-20261018/README.md",
+      "source_sha256": "71220aac68cd26b1dcab9fb5ef3bdd236396ed4c832d174bd048318e48b1e1eb",
+      "target_sha256": "aabd8e3d86f1631104325783c6d673b6e1321a89ff38401060f816321b9a4edc",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-v1.0.0-rc3/validation.json",
+      "line": 89,
+      "raw": "../../reports/rc3/closeout-20261018/README.md",
+      "target": "docs/reports/rc3/closeout-20261018/README.md",
+      "source_sha256": "71220aac68cd26b1dcab9fb5ef3bdd236396ed4c832d174bd048318e48b1e1eb",
+      "target_sha256": "aabd8e3d86f1631104325783c6d673b6e1321a89ff38401060f816321b9a4edc",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-v1.0.0-rc3/validation.json",
+      "line": 94,
+      "raw": "../../reports/rc3/evidence-ledger.json",
+      "target": "docs/reports/rc3/evidence-ledger.json",
+      "source_sha256": "71220aac68cd26b1dcab9fb5ef3bdd236396ed4c832d174bd048318e48b1e1eb",
+      "target_sha256": "f934abeb75a5f9726033c247f44d060df8c4da084c616b8d66e9e2386a888a4c",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-v1.0.0-rc3/validation.json",
+      "line": 194,
+      "raw": "../../reports/rc3/evidence-ledger.json",
+      "target": "docs/reports/rc3/evidence-ledger.json",
+      "source_sha256": "71220aac68cd26b1dcab9fb5ef3bdd236396ed4c832d174bd048318e48b1e1eb",
+      "target_sha256": "f934abeb75a5f9726033c247f44d060df8c4da084c616b8d66e9e2386a888a4c",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-v1.0.0-rc3/validation.json",
+      "line": 199,
+      "raw": "../../reports/rc3/closeout-20261018/README.md",
+      "target": "docs/reports/rc3/closeout-20261018/README.md",
+      "source_sha256": "71220aac68cd26b1dcab9fb5ef3bdd236396ed4c832d174bd048318e48b1e1eb",
+      "target_sha256": "aabd8e3d86f1631104325783c6d673b6e1321a89ff38401060f816321b9a4edc",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-v1.0.0-rc3/validation.json",
+      "line": 204,
+      "raw": "../../reports/rc3/closeout-20261018/history/planning-VALIDATION.md",
+      "target": "docs/reports/rc3/closeout-20261018/history/planning-VALIDATION.md",
+      "source_sha256": "71220aac68cd26b1dcab9fb5ef3bdd236396ed4c832d174bd048318e48b1e1eb",
+      "target_sha256": "b9bf1ed92b7972690827d470b910fe21ef2742d2db4e2213a5191d04f0ba7027",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-v1.0.0-rc3/validation.json",
+      "line": 209,
+      "raw": "../../reports/rc3/closeout-20261018/history/planning-validation.json",
+      "target": "docs/reports/rc3/closeout-20261018/history/planning-validation.json",
+      "source_sha256": "71220aac68cd26b1dcab9fb5ef3bdd236396ed4c832d174bd048318e48b1e1eb",
+      "target_sha256": "5c15fbaef853513b0c9e911803595f81093d127b9c57311c3d197ba8fad18e6a",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-v1.0.0-rc3/validation.json",
+      "line": 214,
+      "raw": "../../reports/rc3/evidence-ledger.json",
+      "target": "docs/reports/rc3/evidence-ledger.json",
+      "source_sha256": "71220aac68cd26b1dcab9fb5ef3bdd236396ed4c832d174bd048318e48b1e1eb",
+      "target_sha256": "f934abeb75a5f9726033c247f44d060df8c4da084c616b8d66e9e2386a888a4c",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-v1.0.0-rc3/validation.json",
+      "line": 219,
+      "raw": "../../reports/rc3/closeout-20261018/README.md",
+      "target": "docs/reports/rc3/closeout-20261018/README.md",
+      "source_sha256": "71220aac68cd26b1dcab9fb5ef3bdd236396ed4c832d174bd048318e48b1e1eb",
+      "target_sha256": "aabd8e3d86f1631104325783c6d673b6e1321a89ff38401060f816321b9a4edc",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-v1.0.0-rc3/validation.json",
+      "line": 408,
+      "raw": "docs/reports/rc3/closeout-20261018/README.md",
+      "target": "docs/reports/rc3/closeout-20261018/README.md",
+      "source_sha256": "71220aac68cd26b1dcab9fb5ef3bdd236396ed4c832d174bd048318e48b1e1eb",
+      "target_sha256": "aabd8e3d86f1631104325783c6d673b6e1321a89ff38401060f816321b9a4edc",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-v1.0.0-rc3/validation.json",
+      "line": 413,
+      "raw": "docs/reports/rc3/closeout-20261018/README.md",
+      "target": "docs/reports/rc3/closeout-20261018/README.md",
+      "source_sha256": "71220aac68cd26b1dcab9fb5ef3bdd236396ed4c832d174bd048318e48b1e1eb",
+      "target_sha256": "aabd8e3d86f1631104325783c6d673b6e1321a89ff38401060f816321b9a4edc",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-v1.0.0-rc3/validation.json",
+      "line": 418,
+      "raw": "docs/reports/rc3/closeout-20261018/README.md",
+      "target": "docs/reports/rc3/closeout-20261018/README.md",
+      "source_sha256": "71220aac68cd26b1dcab9fb5ef3bdd236396ed4c832d174bd048318e48b1e1eb",
+      "target_sha256": "aabd8e3d86f1631104325783c6d673b6e1321a89ff38401060f816321b9a4edc",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-v1.0.0-rc3/validation.json",
+      "line": 423,
+      "raw": "docs/reports/rc3/closeout-20261018/README.md",
+      "target": "docs/reports/rc3/closeout-20261018/README.md",
+      "source_sha256": "71220aac68cd26b1dcab9fb5ef3bdd236396ed4c832d174bd048318e48b1e1eb",
+      "target_sha256": "aabd8e3d86f1631104325783c6d673b6e1321a89ff38401060f816321b9a4edc",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-v1.0.0-rc3/validation.json",
+      "line": 428,
+      "raw": "docs/reports/rc3/closeout-20261018/README.md",
+      "target": "docs/reports/rc3/closeout-20261018/README.md",
+      "source_sha256": "71220aac68cd26b1dcab9fb5ef3bdd236396ed4c832d174bd048318e48b1e1eb",
+      "target_sha256": "aabd8e3d86f1631104325783c6d673b6e1321a89ff38401060f816321b9a4edc",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-v1.0.0-rc3/validation.json",
+      "line": 433,
+      "raw": "docs/reports/rc3/closeout-20261018/README.md",
+      "target": "docs/reports/rc3/closeout-20261018/README.md",
+      "source_sha256": "71220aac68cd26b1dcab9fb5ef3bdd236396ed4c832d174bd048318e48b1e1eb",
+      "target_sha256": "aabd8e3d86f1631104325783c6d673b6e1321a89ff38401060f816321b9a4edc",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-v1.0.0-rc3/validation.json",
+      "line": 438,
+      "raw": "docs/reports/rc3/closeout-20261018/README.md",
+      "target": "docs/reports/rc3/closeout-20261018/README.md",
+      "source_sha256": "71220aac68cd26b1dcab9fb5ef3bdd236396ed4c832d174bd048318e48b1e1eb",
+      "target_sha256": "aabd8e3d86f1631104325783c6d673b6e1321a89ff38401060f816321b9a4edc",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-v1.0.0-rc3/validation.json",
+      "line": 443,
+      "raw": "docs/reports/rc3/closeout-20261018/README.md",
+      "target": "docs/reports/rc3/closeout-20261018/README.md",
+      "source_sha256": "71220aac68cd26b1dcab9fb5ef3bdd236396ed4c832d174bd048318e48b1e1eb",
+      "target_sha256": "aabd8e3d86f1631104325783c6d673b6e1321a89ff38401060f816321b9a4edc",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-v1.0.0-rc3/validation.json",
+      "line": 448,
+      "raw": "docs/reports/rc3/closeout-20261018/README.md",
+      "target": "docs/reports/rc3/closeout-20261018/README.md",
+      "source_sha256": "71220aac68cd26b1dcab9fb5ef3bdd236396ed4c832d174bd048318e48b1e1eb",
+      "target_sha256": "aabd8e3d86f1631104325783c6d673b6e1321a89ff38401060f816321b9a4edc",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/new-files.json",
+      "line": 734,
+      "raw": "docs/archive/pre-rebuild/README.md",
+      "target": "docs/archive/pre-rebuild/README.md",
+      "source_sha256": "7769cc8700a009dba63abdf49d226c6c7d959654151560428a374f2282e5791e",
+      "target_sha256": "0067d253f253ce314eb8f41c128a037b620a648f98aeba1c1b8738fc5b48ee14",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/new-files.csv",
+      "line": 75,
+      "raw": "docs/archive/pre-rebuild/README.md",
+      "target": "docs/archive/pre-rebuild/README.md",
+      "source_sha256": "da429dfe9b189debd437f102c6c6beddfed825ea1531191660000b7f7c211eeb",
+      "target_sha256": "0067d253f253ce314eb8f41c128a037b620a648f98aeba1c1b8738fc5b48ee14",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 2,
+      "raw": "docs/archive/pre-rebuild/contracts/artifact-manifest.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/artifact-manifest.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "f77e56d318db280a5972e6d33139e740e67499bbf246f51d281b3f33e6bd5d61",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 3,
+      "raw": "docs/archive/pre-rebuild/contracts/artifact-validation.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/artifact-validation.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "84612f18ce8524d9e4f698e6a928da444fbb9d1f0235d39f5db553173a4b7b9d",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 4,
+      "raw": "docs/archive/pre-rebuild/contracts/benchmark-aggregate-report.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/benchmark-aggregate-report.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "fec52725f18211d06d9e9a855e85542039f81e8285e075797fe5411f2060f0c3",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 5,
+      "raw": "docs/archive/pre-rebuild/contracts/blueprint-content-review.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/blueprint-content-review.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "ec27174778d4f7a1c4100e85465c05c9e1643aff627f911e7d410666b3867910",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 6,
+      "raw": "docs/archive/pre-rebuild/contracts/blueprint-manifest.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/blueprint-manifest.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "26c13f81b67007028706172ed9dbd1e9c1cd57eae1b8440ad7a7f8bc4e20f7c5",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 7,
+      "raw": "docs/archive/pre-rebuild/contracts/blueprint-manifest.v2.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/blueprint-manifest.v2.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "d67bc0b7656f25cabb76c5320af6e506f927146b611d2cde6c65d501b1c4c9a3",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 8,
+      "raw": "docs/archive/pre-rebuild/contracts/blueprint-prompt.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/blueprint-prompt.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "9fa445b1b6b6c2d93f82aff818cf61ffa2673d64fc46b249874e4cfd33af3a4d",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 9,
+      "raw": "docs/archive/pre-rebuild/contracts/build-manifest-legacy.v2.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/build-manifest-legacy.v2.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "6f63cd010225f4a62851db74f25517245e13aef0dcdc3c92478f4f0067e70136",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 10,
+      "raw": "docs/archive/pre-rebuild/contracts/build-manifest.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/build-manifest.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "03cc8c1d144bac3961f7f94083f0551481de2ae648992ae464d687ffc880372b",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 11,
+      "raw": "docs/archive/pre-rebuild/contracts/build-manifest.v2.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/build-manifest.v2.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "c28c98f324a3af5dff3776f6600410d3caca6cc06432f4365cb39d0342f3d194",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 12,
+      "raw": "docs/archive/pre-rebuild/contracts/companion-manifest.v2.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/companion-manifest.v2.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "72b680ec1090adc801a3ebd0e7f8f52d2480841023abbaa1a13bc25cd39511c5",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 13,
+      "raw": "docs/archive/pre-rebuild/contracts/content-lock.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/content-lock.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "c765b0986cbc8d7519d104c18966ec99499b8868b6fe1ec6c5df04adcf15f574",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 14,
+      "raw": "docs/archive/pre-rebuild/contracts/content-lock.v2.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/content-lock.v2.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "c833f5a0c8b207431b25c2304d4439d439b9c1f53136a26bfa7fd4a3478cf7b5",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 15,
+      "raw": "docs/archive/pre-rebuild/contracts/customer-visible-safety-gate.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/customer-visible-safety-gate.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "7b4a85465fbc80ae495e7ed8916b4d291f43e64e5689cf65ad8a169bd3a054ef",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 16,
+      "raw": "docs/archive/pre-rebuild/contracts/decision-record.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/decision-record.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "5b9adc0e46f9225f7f90b9e30d55be3f21976840885e3ffa4692bd6b00659bcc",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 17,
+      "raw": "docs/archive/pre-rebuild/contracts/final-readiness.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/final-readiness.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "8fffb9ce407fb41a7262a4f767ea0f5346156358959c72a32af8ae1a0721ac87",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 18,
+      "raw": "docs/archive/pre-rebuild/contracts/final-version-lineage.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/final-version-lineage.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "d7ca2bfa51aa950cc0d07ee9f306cdafe0feeb1ffaa013bf4dd84c562382a27f",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 19,
+      "raw": "docs/archive/pre-rebuild/contracts/generation-result.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/generation-result.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "613cecefd5490b60f189bb4fb1ad4c5587286cffc19fc25862613e19df164766",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 20,
+      "raw": "docs/archive/pre-rebuild/contracts/generation-result.v2.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/generation-result.v2.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "be2bc3d6fc2ca6b3cc33fc627b8a9fc3d8f9df4ce445d0120bd7a0e24489b4bc",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 21,
+      "raw": "docs/archive/pre-rebuild/contracts/generation-task.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/generation-task.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "287e80e47ebf156b699fa5237ec4a76059ee517c62b055b538dcaacc098b2016",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 22,
+      "raw": "docs/archive/pre-rebuild/contracts/high-density-icon-external-acceptance.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/high-density-icon-external-acceptance.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "7a1ca2eb6e6879312e50d4cb54070c376a8bb33d173508987bfa652bb716869b",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 23,
+      "raw": "docs/archive/pre-rebuild/contracts/high-density-manifest-legacy.v2.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/high-density-manifest-legacy.v2.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "4c7fa296279a9bdb8958762c9f4b691bb403cde141e47723a82b365b1f005811",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 24,
+      "raw": "docs/archive/pre-rebuild/contracts/high-density-manifest.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/high-density-manifest.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "edf938b4f41fb421172de5b53eed570268f6a3d21c3fd6cdf540d115c4dbd216",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 25,
+      "raw": "docs/archive/pre-rebuild/contracts/high-density-manifest.v2.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/high-density-manifest.v2.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "adc6c5b938660bbeb19475304fff95b5d3a93168ae0351861b76c5105f5588c9",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 26,
+      "raw": "docs/archive/pre-rebuild/contracts/high-density-provider-smoke.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/high-density-provider-smoke.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "57087c4eeeccce1af8ceec18540d7e592d4df6eec2e6249230c13629d6530264",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 27,
+      "raw": "docs/archive/pre-rebuild/contracts/high-density-status.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/high-density-status.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "f2cada26decf41ea9104ace8304175b77d7d078ce8a8f0b52328cae6b6cadc0c",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 28,
+      "raw": "docs/archive/pre-rebuild/contracts/high-density-status.v2.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/high-density-status.v2.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "a2aab251a06264cf15a50b74b6ded336fb8c0023eed2395c32f01475a914c094",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 29,
+      "raw": "docs/archive/pre-rebuild/contracts/library-status.v2.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/library-status.v2.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "e159d6b01df5ce042af4f8c7f27f39e062f33fbdba167c0a8c4a74f9f8b0b487",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 30,
+      "raw": "docs/archive/pre-rebuild/contracts/mbb-plan.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/mbb-plan.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "fbffb2c7a376a9ce6b6db3d2cdd2a4a22de66a7899e01ce3ab7e4c3e405d0afd",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 31,
+      "raw": "docs/archive/pre-rebuild/contracts/mbb-runtime-seal.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/mbb-runtime-seal.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "494406238fa970ffb55ee21496e0679ca38c2d48c35cb208b8670141e62fcbc0",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 32,
+      "raw": "docs/archive/pre-rebuild/contracts/mbb-selection-receipt.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/mbb-selection-receipt.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "2db8b7d21fed993887927581c5c342802eec0b5874f58146ca85dedcf02e215e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 33,
+      "raw": "docs/archive/pre-rebuild/contracts/mbb-user-decision-receipt.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/mbb-user-decision-receipt.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "149f7376e201e90a3227c2e3b464e880179633f711bffa138b68dfeb60722e84",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 34,
+      "raw": "docs/archive/pre-rebuild/contracts/page-package.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/page-package.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "7a15d853d734b16ade0088252ef6e2ef0c03ce6b629ebf655eb45913f572eed9",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 35,
+      "raw": "docs/archive/pre-rebuild/contracts/page-scene-legacy.v2.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/page-scene-legacy.v2.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "156a026b1897a7a662c09e288f84c345ac53fd01de719c31130a95c3d452e686",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 36,
+      "raw": "docs/archive/pre-rebuild/contracts/page-scene.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/page-scene.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "880e962c93fdf76775085eb406f076adcbcd411ce9763888bfd74b6fa650bbe6",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 37,
+      "raw": "docs/archive/pre-rebuild/contracts/page-scene.v2.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/page-scene.v2.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "5292493deecaaaad47fd5e0fa7070ab7fd14ef77045cdfa838847be0c3b37ff5",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 38,
+      "raw": "docs/archive/pre-rebuild/contracts/ppt-library-bridge-plan.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/ppt-library-bridge-plan.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "acf902f9322f94e7f491a44221cf500655882cc2449f9aceabd50509a53651e4",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 39,
+      "raw": "docs/archive/pre-rebuild/contracts/ppt-library-selection.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/ppt-library-selection.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "92004f4770142ef7d3c3cb18640965451146f7afa3587c0ca8886937d2245a19",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 40,
+      "raw": "docs/archive/pre-rebuild/contracts/ppt-library-selection.v2.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/ppt-library-selection.v2.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "cd1dff3af9414f8398e33767037346535ec85e9767f29d93238f3add1dc93fd9",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 41,
+      "raw": "docs/archive/pre-rebuild/contracts/pptx-readback.v2.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/pptx-readback.v2.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "d4fca6b0b91b980e1de6165df5138008ea8727d493649a529faaf96ba9bf0e4e",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 42,
+      "raw": "docs/archive/pre-rebuild/contracts/provider-host-receipt-legacy.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/provider-host-receipt-legacy.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "502c89759a0f83b731bb444afe951a3b50f9bf09668fc757b5c5bfa33d277759",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 43,
+      "raw": "docs/archive/pre-rebuild/contracts/provider-host-receipt.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/provider-host-receipt.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "ffddc04f378e732e394d9c69943cf14f4f8ef06c36e2cbf5bf997f4f6d0b6f1c",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 44,
+      "raw": "docs/archive/pre-rebuild/contracts/provider-runtime-receipt.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/provider-runtime-receipt.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "e029997c20ffcd989fedd6acff495d9e5db0b4e200d818865e3c455a920efb20",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 45,
+      "raw": "docs/archive/pre-rebuild/contracts/quality-findings.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/quality-findings.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "a99fa850da2035ce1b33bf9d562646359b059b704af07a0972b8d233cf1c3b0b",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 46,
+      "raw": "docs/archive/pre-rebuild/contracts/rc-gate-report.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/rc-gate-report.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "4b117817f28cbec511a3fa12742c94ae432b0d69015bfc262c6436bb07825def",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 47,
+      "raw": "docs/archive/pre-rebuild/contracts/render-result.v2.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/render-result.v2.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "ee7b63b2b8bf57e15aa196a2b96eb7f13f793beb57a27fae183894a898d7030c",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 48,
+      "raw": "docs/archive/pre-rebuild/contracts/setup-status.v2.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/setup-status.v2.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "7fdc76af50cf2059cfc6ff6b1c87da6b1e82fa58a86d64935779833462520366",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 49,
+      "raw": "docs/archive/pre-rebuild/contracts/skill-handoff.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/skill-handoff.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "f69b1a881fb77b36623890134dcf4f4c7d2ffc62e48e669a3409c52b51948b86",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 50,
+      "raw": "docs/archive/pre-rebuild/contracts/sourcing-plan.v2.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/sourcing-plan.v2.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "0412ff73b71ce707c588d782207a9eb4513192206f089799ad8e2e616876402b",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 51,
+      "raw": "docs/archive/pre-rebuild/contracts/stage-approval.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/stage-approval.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "57b4cd3f1a966f2d251bbbf8372d8c3453ef7de29ae7e9756859da29be3c5ffa",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 52,
+      "raw": "docs/archive/pre-rebuild/contracts/stage-contract.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/stage-contract.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "f766a0ef3947a4af3b1cb06e8631d7ef6f3867b609278733c9503f11f6288bd1",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 53,
+      "raw": "docs/archive/pre-rebuild/contracts/style-lock.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/style-lock.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "f29383e66f603a163e2e5c40c59c843a7e3e4c6772475cafb093455cc56ed21f",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 54,
+      "raw": "docs/archive/pre-rebuild/contracts/svg-to-drawingml-trace.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/svg-to-drawingml-trace.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "cbf56359b196232b4d8b448fcc137e783b5c0f022a7cd411ba44f00930931fd3",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 55,
+      "raw": "docs/archive/pre-rebuild/contracts/visual-main-review-receipt.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/visual-main-review-receipt.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "ab232e3e65bbe82b697509cc37f9d81279ac01c6d2bd76e41c79962f9ff364e3",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 56,
+      "raw": "docs/archive/pre-rebuild/contracts/visual-metrics.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/visual-metrics.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "5dec2e02772b93ee859d2c0895bbcbd351e835b1480418eaa5473de6f3bb4f2a",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 57,
+      "raw": "docs/archive/pre-rebuild/contracts/visual-review.v2.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/visual-review.v2.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "d83426156950968a697ffa824da90c61cba4dd7ec48d6733362f4a2277e888f1",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 58,
+      "raw": "docs/archive/pre-rebuild/contracts/workflow-policy.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/workflow-policy.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "845c94a551671d788085a9fcb99b32869e3a74a778f69b152d93aa6d80f8f9cb",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-rebuild-v1/inventory/old-contracts.csv",
+      "line": 59,
+      "raw": "docs/archive/pre-rebuild/contracts/workflow-state.v1.schema.json",
+      "target": "docs/archive/pre-rebuild/contracts/workflow-state.v1.schema.json",
+      "source_sha256": "5c8ffe35ab70a4523ba53c48d4bbfb679d6f48e97654215b09440efe67b563ed",
+      "target_sha256": "9ae565a63d61bc20b94927cbfa41c3beb8fb077f6e0ac4c132b5f2148ae5978b",
+      "resolution": "archive_member"
+    },
+    {
+      "source": "docs/specs/deck-master-webui-v4-20260930/evidence/a01-browser-verification.json",
+      "line": 26,
+      "raw": "docs/reports/workbench-v3-execution-20260926/W12.md",
+      "target": "docs/reports/workbench-v3-execution-20260926/W12.md",
+      "source_sha256": "94044acb02252ea5049c0bbae87a0a7f4cc86710c3d0ba2089195da2781f0355",
+      "target_sha256": "08161581854b62f39c66f17f1fed076e4ad1759797b83f19b9e4cd6afcb3fcab",
+      "resolution": "local"
+    }
+  ],
+  "local_dependencies": [
+    "docs/reports/workbench-v3-execution-20260926/W12.md"
+  ],
+  "resolution": "docs/history/manifest.csv original_path and matching archive member; SHA256 must match"
+}

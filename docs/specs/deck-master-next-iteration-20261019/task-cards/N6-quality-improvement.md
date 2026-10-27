@@ -45,8 +45,8 @@
 
 审查时已读到的定位，实施时需要 Codex 核验：
 
-- `docs/reports/rc3/closeout-20261018/README.md`、`summary.json`、`artifact-manifest.json`。
-- `docs/reports/rc3/evidence-ledger.json` 及明确标识的历史台账。
+- [docs/reports/rc3/closeout-20261018/README.md](https://github.com/MainQuestAI/Deck-Master/blob/62dfcfc5637f0bee2358074c4458047689dd5299/docs/reports/rc3/closeout-20261018/README.md)、`summary.json`、`artifact-manifest.json`。
+- [docs/reports/rc3/evidence-ledger.json](https://github.com/MainQuestAI/Deck-Master/blob/62dfcfc5637f0bee2358074c4458047689dd5299/docs/reports/rc3/evidence-ledger.json) 及明确标识的历史台账。
 - `docs/reports/rc3/native-content-handoff-20261014/` 中可访问的完整原稿、Owner 稿、实际问题和修订记录。
 
 当前 Git 汇总索引指向的部分成品原件位于仓库之外。能取得则按 hash核对；取不到就只把报告当历史报告，不据索引反造图片、原模型执行、原首次稿或完整 PPT。现有报告中已关闭的布局与备注缺陷不能重新列作当前未修问题，但可用于挑选需要减少的返修类型。

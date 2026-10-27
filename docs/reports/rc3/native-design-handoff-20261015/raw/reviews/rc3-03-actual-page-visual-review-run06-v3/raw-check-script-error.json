@@ -1,6 +1,0 @@
-{
-  "tool_exit_code": 1,
-  "type": "SyntaxError",
-  "raw_output": "  File \"<stdin>\", line 17\n    name=sp.find('.//p:cNvPr',ns).attrib.get('name');role='heading' if name in headings else 'body';floor=30 if role=='heading' else18\n                                                                                                          ^^^^^^^^^^^^^^^^^^^^^\nSyntaxError: expected 'else' after 'if' expression",
-  "effect": "Python parser rejected script before any execution or SDK call. Corrected else18 to else 18 and reran; no product mutation or acceptance bypass."
-}

@@ -4,7 +4,7 @@
 
 2026-10-14 起，执行与目标版本统一到 [V1.0.0-RC3](../deck-master-v1.0.0-rc3/README.md)。本文件仍是原 37 AC、13 CQ、F0–F3 与 L0–L6 的唯一验收权威；[RC3 验收规范](../deck-master-v1.0.0-rc3/ACCEPTANCE.md) 只编排交接和汇总，[追踪表](../deck-master-v1.0.0-rc3/TRACEABILITY.md) 不新增另一套通过状态。原能力 Owner 保留，后续卡可提供证据回填；工程交接不自动关闭最终专业 AC。
 
-本文件定义开发完成与候选验收所需的判据，不在规格正文登记执行结果。原规格编写阶段的条目初始为 `not_run`；当前结果、准确版本与适用范围统一见[RC3 执行台账](../../reports/rc3/evidence-ledger.json)和[当前收口报告](../../reports/rc3/closeout-20261018/README.md)。源码、安装、实际文件和备注仍需各自的真实证据，不由规格文字声明通过。
+本文件定义开发完成与候选验收所需的判据，不在规格正文登记执行结果。原规格编写阶段的条目初始为 `not_run`；当前结果、准确版本与适用范围统一见[RC3 执行台账](https://github.com/MainQuestAI/Deck-Master/blob/62dfcfc5637f0bee2358074c4458047689dd5299/docs/reports/rc3/evidence-ledger.json)和[当前收口报告](https://github.com/MainQuestAI/Deck-Master/blob/62dfcfc5637f0bee2358074c4458047689dd5299/docs/reports/rc3/closeout-20261018/README.md)。源码、安装、实际文件和备注仍需各自的真实证据，不由规格文字声明通过。
 
 每条 AC 只有一个负责关闭的工作包；其他工作包可以提供依赖证据，但不得分别维护另一套通过状态。工作包编号与 `TASKS.md` 一致。本文中的“必须”是本版候选实现的验收要求；不把新增设计描述为当前 main 已有能力。
 
