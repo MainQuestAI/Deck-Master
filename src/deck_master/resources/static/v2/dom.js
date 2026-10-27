@@ -34,6 +34,11 @@ export function toast(message) {
 export function announce(message) { document.querySelector('#route-status').textContent = message; }
 let modalTail = null;
 const modalCleanup = new WeakMap();
+export function canReloadWorkbench() {
+  if (!document.querySelector('dialog[open][data-protect-draft="true"], dialog.queued-modal[data-protect-draft="true"]')) return true;
+  toast('仍有受保护的输入，请先处理并关闭当前及排队弹窗，再重新加载工作台。');
+  return false;
+}
 export function modal(title, body, actions = [], {fallback, protectDraft = false, beforeClose, canClose} = {}) {
   const shared = document.querySelector('#modal');
   // An asynchronous service error must never replace a draft conflict or

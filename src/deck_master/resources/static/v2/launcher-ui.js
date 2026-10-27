@@ -1,5 +1,5 @@
 import {get, post, readableError} from './api.js';
-import {el, button, heading, empty, field, modal, version, toast, actionMenu} from './dom.js';
+import {el, button, heading, empty, field, modal, version, toast, actionMenu, canReloadWorkbench} from './dom.js';
 import {surfaces, layers, localURL} from './routes.js';
 export {localURL} from './routes.js';
 import {draftIntake} from './draft-intake.js';
@@ -8,6 +8,33 @@ export async function launcher(root, health) {
   root.className = 'launcher';
   const list = el('section', {class: 'stack', 'aria-label': '最近项目'});
   const message = el('p', {role: 'status', class: 'field-error'});
+  const reviewError = el('div', {role:'status', class:'field-error', hidden:true});
+  let reviewGeneration = 0;
+  const cancelReview = () => { reviewGeneration++; reviewError.replaceChildren(); reviewError.hidden = true; };
+  const reviewButton = button('只读审阅稿件', openExternalReview);
+  const currentReview = (serial, href) => serial === reviewGeneration && root.contains(reviewButton) && location.href === href;
+  async function openExternalReview() {
+    const serial = ++reviewGeneration, href = location.href;
+    let importing = true;
+    reviewError.replaceChildren(); reviewError.hidden = true;
+    try {
+      const {externalReviewForm} = await import('./collaboration-desk.js');
+      importing = false;
+      if (currentReview(serial, href)) externalReviewForm();
+    } catch (error) {
+      if (!currentReview(serial, href)) return;
+      reviewError.hidden = false;
+      if (!importing) { reviewError.textContent = readableError(error); return; }
+      const reload = button('重新加载工作台', () => {
+        if (!currentReview(serial, href) || !reviewError.contains(reload) || !canReloadWorkbench()) return;
+        const target = new URL(href);
+        target.searchParams.set('launcher_action', 'external_review');
+        history.replaceState(null, '', target);
+        location.reload();
+      });
+      reviewError.replaceChildren(el('p', {}, '审阅入口模块未能加载。连接恢复后可重新加载工作台；当前输入仍保留。'), reload);
+    }
+  }
   const search = el('input', {type: 'search', placeholder: '搜索项目名称', 'aria-label': '搜索项目名称', autocomplete: 'off'});
   const count = el('span', {class: 'muted', role: 'status'});
   let entries = [];
@@ -40,6 +67,7 @@ export async function launcher(root, health) {
           const trigger = event.currentTarget; trigger.disabled = true;
           try { await open(entry.entry_id); } catch (error) { rowError.textContent = readableError(error); trigger.disabled = false; }
         }, false, {disabled: !entry.available}), actionMenu('项目操作 · '+entry.title,[button('从列表移除', () => {
+          cancelReview();
           const dialog = modal('从最近项目移除', el('p', {}, `仅取消“${entry.title}”的注册，项目文件和历史继续保留。`),
             [button('移除条目', async () => {
               try {
@@ -71,6 +99,7 @@ export async function launcher(root, health) {
     } catch (error) { message.textContent = readableError(error); }
   };
   async function open(entry_id) {
+    cancelReview();
     const result = await post('/api/projects/open', {entry_id, ui:document.documentElement.dataset.workbenchUi === 'studio' ? 'studio' : 'v2'});
     const url = localURL(result.url);
     if (!url) throw new Error('项目服务返回的位置无效，请从工作台重新打开。');
@@ -79,13 +108,22 @@ export async function launcher(root, health) {
   root.replaceChildren(el('header', {class: 'launcher-brand'}, el('img', {class: 'brand-logo', src: '/v2/assets/deck-master-logo/logo-horizontal-light.svg', alt: 'Deck Master', width: 176, height: 46}), el('span', {class: 'muted'}, '本机制作工作台')),
     el('main', {id: 'main'}, heading('项目', '打开正在制作的方案。材料、逐页内容、制作依据和每版产物，都在同一个地方。', button('新建项目', createForm, true)),
       el('div', {class: 'toolbar'}, el('div', {class: 'row wrap'}, button('选择项目文件夹', registerForm),
-        health.ui_capabilities?.includes('external_review.v1')&&button('只读审阅稿件',async()=>{try { const {externalReviewForm} = await import('./collaboration-desk.js'); externalReviewForm(); } catch(error) { message.textContent=readableError(error); }}),button('打开只读示例', async event => {
+        health.ui_capabilities?.includes('external_review.v1')&&reviewButton,button('打开只读示例', async event => {
+        cancelReview();
         const trigger = event.currentTarget; trigger.disabled = true;
         try { const data = await post('/api/projects/sample', {}); await open(data.project.entry_id); }
         catch (error) { message.textContent = readableError(error); trigger.disabled = false; }
-      }), button('刷新项目列表', refresh)), el('div', {class: 'row wrap'}, search, count)), message, list,
+      }), button('刷新项目列表', refresh)), el('div', {class: 'row wrap'}, search, count)), message, reviewError, list,
       el('footer', {class: 'launcher-foot muted'}, `本机服务 ${health.service_version} · 项目目录仅按你的选择登记。`)));
+  const target = new URL(location.href), actions = target.searchParams.getAll('launcher_action');
+  if (actions.length) {
+    target.searchParams.delete('launcher_action');
+    history.replaceState(null, '', target);
+  }
+  const initialReviewGeneration = reviewGeneration;
   await refresh();
+  if (reviewGeneration === initialReviewGeneration && actions.length === 1 && actions[0] === 'external_review' && health.ui_capabilities?.includes('external_review.v1') && root.contains(reviewButton))
+    await openExternalReview();
   async function picker(input, error, trigger) {
     trigger.disabled = true;
     try {
@@ -97,6 +135,7 @@ export async function launcher(root, health) {
     finally { trigger.disabled = false; }
   }
   function registerForm() {
+    cancelReview();
     const path = field('项目文件夹', el('input', {required: true, placeholder: '填写现有项目的完整目录路径', autocomplete: 'off'}), '只读取你选中的目录，不搜索其它文件夹。');
     const select = button('浏览文件夹', event => picker(path.input, path.error, event.currentTarget));
     const form = el('form', {class: 'stack'}, path.node, select);
@@ -110,6 +149,7 @@ export async function launcher(root, health) {
     dialog.addEventListener('close', refresh, {once: true});
   }
   function createForm() {
+    cancelReview();
     const title = field('项目名称（必填）', el('input', {required: true, maxlength: 200, autocomplete: 'off'}));
     const brief = field('用途（必填）', el('textarea', {required: true, rows: 3, placeholder: '希望受众理解、判断、学习或完成什么？'}));
     const audience = field('受众（必填）', el('input', {required: true, placeholder: '例如：学员、研究同行、工程评审者或业务负责人'}));
