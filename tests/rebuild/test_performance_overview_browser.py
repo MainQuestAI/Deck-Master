@@ -69,8 +69,10 @@ def test_draft_persist_serializes_once_and_keeps_two_synchronous_writes(tmp_path
                   const results = [];
                   for (const failAt of [0, 1, 2]) {
                     let serializations = 0; const writes = [];
-                    const editor = {draft:{draft_id:'synthetic'},etag:'etag',status:'dirty',pendingSave:null,
-                      bufferKey:'synthetic-buffer',activeKey:'synthetic-active'};
+                    const editor = new DraftEditor({project_id:'synthetic',project_identity:'synthetic'},
+                      {scope:'project',page_id:null,layer:'notes'},'revision',null);
+                    Object.assign(editor,{draft:{draft_id:'synthetic'},etag:'etag',status:'dirty',pendingSave:null,
+                      bufferKey:'synthetic-buffer',activeKey:'synthetic-active'});
                     JSON.stringify = (...args) => {serializations++; return stringify(...args);};
                     Storage.prototype.setItem = function(key, value) {
                       writes.push([key, value]);

@@ -1,5 +1,6 @@
 """RC regressions against the real workbench and journal; no Host acceptance claim."""
 import json
+import re
 
 import pytest
 from playwright.sync_api import expect
@@ -653,14 +654,14 @@ def test_prepared_prompt_selection_mounts_one_recovery_panel(workbench):
 def test_loading_draft_is_readonly_and_old_pending_shows_exact_request(workbench):
     page, _, _, _, goto, _ = workbench
     held = []
-    page.route('**/api/drafts', lambda route: held.append(route))
+    page.route(re.compile(r'/api/drafts(?:\?.*)?$'), lambda route: held.append(route))
     goto()
     open_opinion_face(page)
     expect(page.get_by_label('意见正文', exact=True)).not_to_be_editable()
     expect(page.locator('.annotation-notice')).to_contain_text('正在读取草稿')
     for route in list(held):
         route.fulfill(response=route.fetch())
-    page.unroute('**/api/drafts')
+    page.unroute(re.compile(r'/api/drafts(?:\?.*)?$'))
     expect(page.get_by_label('意见正文', exact=True)).to_be_editable()
     # Render an old recovery record with no display_context via the production class.
     page.evaluate('''async () => {
@@ -687,14 +688,14 @@ def test_buffered_draft_remains_readonly_until_project_recovery_loads(workbench)
     page.get_by_role('button', name='保存个人草稿', exact=True).click()
     expect(page.locator('.draft-state')).to_contain_text('已保存到项目')
     held = []
-    page.route('**/api/drafts', lambda route: held.append(route))
+    page.route(re.compile(r'/api/drafts(?:\?.*)?$'), lambda route: held.append(route))
     page.reload()
     open_opinion_composer(page)
     expect(body).not_to_be_editable()
     expect(page.locator('.annotation-notice')).to_contain_text('正在读取草稿')
     for route in list(held):
         route.fulfill(response=route.fetch())
-    page.unroute('**/api/drafts')
+    page.unroute(re.compile(r'/api/drafts(?:\?.*)?$'))
     expect(body).to_be_editable()
     expect(body).to_have_value('已有浏览器缓冲')
 

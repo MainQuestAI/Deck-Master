@@ -56,25 +56,410 @@
       "additionalProperties": false,
       "properties": {
         "palette": {
-          "$ref": "shared-contracts.v1.schema.json#/$defs/d_677888d35e51"
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "summary": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000
+            },
+            "evidence": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 20,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "reference_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "region": {
+                    "type": "array",
+                    "minItems": 4,
+                    "maxItems": 4,
+                    "items": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    }
+                  },
+                  "observation": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "certainty": {
+                    "enum": [
+                      "observed",
+                      "approximate",
+                      "unknown"
+                    ]
+                  }
+                },
+                "required": [
+                  "reference_id",
+                  "region",
+                  "observation",
+                  "certainty"
+                ]
+              }
+            }
+          },
+          "required": [
+            "summary",
+            "evidence"
+          ]
         },
         "typography": {
-          "$ref": "shared-contracts.v1.schema.json#/$defs/d_677888d35e51"
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "summary": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000
+            },
+            "evidence": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 20,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "reference_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "region": {
+                    "type": "array",
+                    "minItems": 4,
+                    "maxItems": 4,
+                    "items": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    }
+                  },
+                  "observation": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "certainty": {
+                    "enum": [
+                      "observed",
+                      "approximate",
+                      "unknown"
+                    ]
+                  }
+                },
+                "required": [
+                  "reference_id",
+                  "region",
+                  "observation",
+                  "certainty"
+                ]
+              }
+            }
+          },
+          "required": [
+            "summary",
+            "evidence"
+          ]
         },
         "composition": {
-          "$ref": "shared-contracts.v1.schema.json#/$defs/d_677888d35e51"
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "summary": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000
+            },
+            "evidence": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 20,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "reference_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "region": {
+                    "type": "array",
+                    "minItems": 4,
+                    "maxItems": 4,
+                    "items": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    }
+                  },
+                  "observation": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "certainty": {
+                    "enum": [
+                      "observed",
+                      "approximate",
+                      "unknown"
+                    ]
+                  }
+                },
+                "required": [
+                  "reference_id",
+                  "region",
+                  "observation",
+                  "certainty"
+                ]
+              }
+            }
+          },
+          "required": [
+            "summary",
+            "evidence"
+          ]
         },
         "spacing": {
-          "$ref": "shared-contracts.v1.schema.json#/$defs/d_677888d35e51"
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "summary": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000
+            },
+            "evidence": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 20,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "reference_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "region": {
+                    "type": "array",
+                    "minItems": 4,
+                    "maxItems": 4,
+                    "items": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    }
+                  },
+                  "observation": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "certainty": {
+                    "enum": [
+                      "observed",
+                      "approximate",
+                      "unknown"
+                    ]
+                  }
+                },
+                "required": [
+                  "reference_id",
+                  "region",
+                  "observation",
+                  "certainty"
+                ]
+              }
+            }
+          },
+          "required": [
+            "summary",
+            "evidence"
+          ]
         },
         "density": {
-          "$ref": "shared-contracts.v1.schema.json#/$defs/d_677888d35e51"
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "summary": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000
+            },
+            "evidence": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 20,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "reference_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "region": {
+                    "type": "array",
+                    "minItems": 4,
+                    "maxItems": 4,
+                    "items": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    }
+                  },
+                  "observation": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "certainty": {
+                    "enum": [
+                      "observed",
+                      "approximate",
+                      "unknown"
+                    ]
+                  }
+                },
+                "required": [
+                  "reference_id",
+                  "region",
+                  "observation",
+                  "certainty"
+                ]
+              }
+            }
+          },
+          "required": [
+            "summary",
+            "evidence"
+          ]
         },
         "lines": {
-          "$ref": "shared-contracts.v1.schema.json#/$defs/d_677888d35e51"
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "summary": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000
+            },
+            "evidence": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 20,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "reference_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "region": {
+                    "type": "array",
+                    "minItems": 4,
+                    "maxItems": 4,
+                    "items": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    }
+                  },
+                  "observation": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "certainty": {
+                    "enum": [
+                      "observed",
+                      "approximate",
+                      "unknown"
+                    ]
+                  }
+                },
+                "required": [
+                  "reference_id",
+                  "region",
+                  "observation",
+                  "certainty"
+                ]
+              }
+            }
+          },
+          "required": [
+            "summary",
+            "evidence"
+          ]
         },
         "icons": {
-          "$ref": "shared-contracts.v1.schema.json#/$defs/d_677888d35e51"
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "summary": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000
+            },
+            "evidence": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 20,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "reference_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "region": {
+                    "type": "array",
+                    "minItems": 4,
+                    "maxItems": 4,
+                    "items": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    }
+                  },
+                  "observation": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "certainty": {
+                    "enum": [
+                      "observed",
+                      "approximate",
+                      "unknown"
+                    ]
+                  }
+                },
+                "required": [
+                  "reference_id",
+                  "region",
+                  "observation",
+                  "certainty"
+                ]
+              }
+            }
+          },
+          "required": [
+            "summary",
+            "evidence"
+          ]
         }
       },
       "required": [

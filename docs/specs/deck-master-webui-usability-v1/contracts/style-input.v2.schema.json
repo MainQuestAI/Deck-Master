@@ -34,7 +34,46 @@
       "maxLength": 4000
     },
     "dimensions": {
-      "$ref": "shared-contracts.v1.schema.json#/$defs/d_47cf3a3e7a1e"
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "palette": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "typography": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "density": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "lines": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "composition": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "spacing": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "icons": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        }
+      },
+      "required": []
     },
     "host_suggestion": {
       "type": "string",

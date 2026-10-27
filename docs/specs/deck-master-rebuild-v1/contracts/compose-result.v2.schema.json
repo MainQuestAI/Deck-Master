@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "compose_result.v2",
-  "description": "Compose v2 result envelope (content collaboration v1.2 CONTRACTS §11.5). Variant payloads write only what the table allows; the tasks parser branches on variant (T03).",
+  "description": "Compose v2 result envelope (content collaboration v1.2 CONTRACTS \u00a711.5). Variant payloads write only what the table allows; the tasks parser branches on variant (T03).",
   "type": "object",
   "additionalProperties": false,
   "required": [
