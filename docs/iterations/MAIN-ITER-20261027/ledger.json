@@ -343,7 +343,7 @@
         },
         {
           "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
-          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "result": "78 targeted regressions passed (56 browser-marked +22 unit) after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
           "evidence": "owner-final.xml"
         }
       ],
@@ -398,7 +398,7 @@
         },
         {
           "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
-          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "result": "78 targeted regressions passed (56 browser-marked +22 unit) after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
           "evidence": "owner-final.xml"
         }
       ],
@@ -451,7 +451,7 @@
         },
         {
           "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
-          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "result": "78 targeted regressions passed (56 browser-marked +22 unit) after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
           "evidence": "owner-final.xml"
         }
       ],
@@ -507,7 +507,7 @@
         },
         {
           "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
-          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "result": "78 targeted regressions passed (56 browser-marked +22 unit) after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
           "evidence": "owner-final.xml"
         }
       ],
@@ -561,7 +561,7 @@
         },
         {
           "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
-          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "result": "78 targeted regressions passed (56 browser-marked +22 unit) after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
           "evidence": "owner-final.xml"
         }
       ],
@@ -613,7 +613,7 @@
         },
         {
           "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
-          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "result": "78 targeted regressions passed (56 browser-marked +22 unit) after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
           "evidence": "owner-final.xml"
         }
       ],
@@ -672,7 +672,7 @@
         },
         {
           "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
-          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "result": "78 targeted regressions passed (56 browser-marked +22 unit) after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
           "evidence": "owner-final.xml"
         }
       ],
@@ -731,7 +731,7 @@
         },
         {
           "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
-          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "result": "78 targeted regressions passed (56 browser-marked +22 unit) after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
           "evidence": "owner-final.xml"
         }
       ],
@@ -790,7 +790,7 @@
         },
         {
           "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
-          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "result": "78 targeted regressions passed (56 browser-marked +22 unit) after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
           "evidence": "owner-final.xml"
         }
       ],
@@ -851,7 +851,7 @@
         },
         {
           "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
-          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "result": "78 targeted regressions passed (56 browser-marked +22 unit) after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
           "evidence": "owner-final.xml"
         }
       ],
@@ -912,7 +912,7 @@
         },
         {
           "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
-          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "result": "78 targeted regressions passed (56 browser-marked +22 unit) after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
           "evidence": "owner-final.xml"
         }
       ],
@@ -978,7 +978,7 @@
         },
         {
           "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
-          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "result": "78 targeted regressions passed (56 browser-marked +22 unit) after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
           "evidence": "owner-final.xml"
         }
       ],
@@ -1041,7 +1041,7 @@
         },
         {
           "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
-          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "result": "78 targeted regressions passed (56 browser-marked +22 unit) after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
           "evidence": "owner-final.xml"
         }
       ],
@@ -1101,7 +1101,7 @@
         },
         {
           "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
-          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "result": "78 targeted regressions passed (56 browser-marked +22 unit) after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
           "evidence": "owner-final.xml"
         }
       ],
@@ -1192,7 +1192,7 @@
         },
         {
           "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
-          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "result": "78 targeted regressions passed (56 browser-marked +22 unit) after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
           "evidence": "owner-final.xml"
         }
       ],
@@ -1265,7 +1265,7 @@
         },
         {
           "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
-          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "result": "78 targeted regressions passed (56 browser-marked +22 unit) after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
           "evidence": "owner-final.xml"
         }
       ],
@@ -1357,7 +1357,7 @@
         },
         {
           "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
-          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "result": "78 targeted regressions passed (56 browser-marked +22 unit) after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
           "evidence": "owner-final.xml"
         }
       ],
@@ -1446,7 +1446,7 @@
         },
         {
           "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
-          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "result": "78 targeted regressions passed (56 browser-marked +22 unit) after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
           "evidence": "owner-final.xml"
         }
       ],
@@ -1582,7 +1582,7 @@
         },
         {
           "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
-          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "result": "78 targeted regressions passed (56 browser-marked +22 unit) after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
           "evidence": "owner-final.xml"
         }
       ],
@@ -1646,7 +1646,7 @@
         },
         {
           "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
-          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "result": "78 targeted regressions passed (56 browser-marked +22 unit) after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
           "evidence": "owner-final.xml"
         }
       ],
@@ -1709,7 +1709,7 @@
         },
         {
           "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
-          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "result": "78 targeted regressions passed (56 browser-marked +22 unit) after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
           "evidence": "owner-final.xml"
         }
       ],
@@ -1774,7 +1774,7 @@
         },
         {
           "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
-          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "result": "78 targeted regressions passed (56 browser-marked +22 unit) after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
           "evidence": "owner-final.xml"
         }
       ],
@@ -1843,7 +1843,7 @@
         },
         {
           "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
-          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "result": "78 targeted regressions passed (56 browser-marked +22 unit) after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
           "evidence": "owner-final.xml"
         }
       ],
@@ -1900,7 +1900,7 @@
         },
         {
           "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
-          "result": "78 targeted browser regressions passed after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
+          "result": "78 targeted regressions passed (56 browser-marked +22 unit) after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
           "evidence": "owner-final.xml"
         }
       ],
@@ -1952,7 +1952,9 @@
         "command": "python -m pytest -q tests/rebuild/test_pr188_reading_browser.py tests/rebuild/test_main_iteration_browser.py tests/rebuild/test_webui_acceptance_matrix.py --require-browser",
         "passed": 78,
         "failed": 0,
-        "evidence": "owner-final.xml"
+        "evidence": "owner-final.xml",
+        "browser_marked": 56,
+        "unit": 22
       },
       "full_exact_head_gate": "recorded in final delivery and PR CI, never inferred from the targeted pass"
     },
