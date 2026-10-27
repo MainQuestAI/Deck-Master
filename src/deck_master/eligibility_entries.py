@@ -617,24 +617,21 @@ def operations_surface() -> set[str]:
     return found
 
 
+def _cli_leaves(parser, words=()):
+    subparsers = next((action for action in parser._actions
+                       if isinstance(action, argparse._SubParsersAction)), None)
+    if subparsers is None:
+        yield " ".join(words), parser
+    else:
+        for name, child in subparsers.choices.items():
+            yield from _cli_leaves(child, (*words, name))
+
+
 def cli_surface() -> set[str]:
     """The parsed subcommand tree plus the legacy alias/refusal surface that is
     handled before the parser (cli._legacy_dispatch)."""
     from . import cli
-    parser = cli.build_parser()
-    names: list[str] = []
-
-    def walk(current, prefix: str) -> None:
-        subparsers = next((action for action in current._actions
-                           if isinstance(action, argparse._SubParsersAction)), None)
-        if subparsers is None:
-            names.append(prefix.strip())
-            return
-        for name, child in sorted(subparsers.choices.items()):
-            walk(child, f"{prefix}{name} ")
-
-    walk(parser, "")
-    parsed = {name for name in names if name}
+    parsed = {name for name, _ in _cli_leaves(cli.build_parser()) if name}
     legacy = {f"legacy:{name}" for name in
               set(cli._LEGACY_ALIAS) | set(cli._LEGACY_GUIDANCE) | set(cli._LEGACY_RETIRED)}
     legacy |= {f"legacy:build {name}" for name in cli._LEGACY_BUILD_SUBCOMMANDS}
@@ -644,19 +641,8 @@ def cli_surface() -> set[str]:
 def cli_adapter_actions() -> dict[str, str]:
     """Actual parser dispatch defaults consumed by CLI's shared invoke branch."""
     from . import cli
-    found = {}
-    def walk(current, words):
-        subparsers = next((action for action in current._actions
-                           if isinstance(action, argparse._SubParsersAction)), None)
-        if subparsers is None:
-            action = current.get_default('collaboration_action')
-            if action is not None:
-                found[' '.join(words)] = action
-        else:
-            for name, child in subparsers.choices.items():
-                walk(child, [*words, name])
-    walk(cli.build_parser(), [])
-    return found
+    return {name: action for name, parser in _cli_leaves(cli.build_parser())
+            if (action := parser.get_default('collaboration_action')) is not None}
 
 
 def http_surface() -> set[str]:
