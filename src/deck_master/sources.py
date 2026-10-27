@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import shutil
 import subprocess
 import zipfile
@@ -187,29 +188,64 @@ def _read_docx(path: Path) -> SourceExtract:
     locators: list[dict] = []
     counter = 0
     has_images=any(e.tag.rsplit("}",1)[-1] in ("drawing","pict") for e in root.iter())
-    for element in root.iter():
+    def blocks(parent, body_covered=False):
+        for child in parent:
+            if child.tag == f"{namespace}p":
+                if not body_covered:
+                    yield child, False
+                yield from blocks(child, True)
+            elif child.tag == f"{namespace}tbl":
+                yield child, body_covered
+                yield from blocks(child, True)
+            else:
+                yield from blocks(child, body_covered)
+
+    def table_parts(parent, wanted):
+        for child in parent:
+            if child.tag == f"{namespace}{wanted}":
+                yield child
+            elif child.tag not in {f"{namespace}{tag}" for tag in ("p", "tbl", "tr", "tc")}:
+                yield from table_parts(child, wanted)
+
+    def block_text(element):
+        parts = []
+        def visit(node):
+            if node.tag == f"{namespace}t":
+                parts.append(node.text or "")
+                return
+            boundary = node is not element and node.tag in {
+                f"{namespace}{name}" for name in ("p", "tbl", "tr", "tc")}
+            if boundary:
+                parts.append("\n")
+            for child in node:
+                visit(child)
+            if boundary:
+                parts.append("\n")
+        visit(element)
+        return re.sub(r"\n+", "\n", "".join(parts)).strip("\n")
+
+    text_parts = []
+    for element, body_covered in blocks(root):
         tag = element.tag
         if tag == f"{namespace}p":
-            text = "".join(node.text or "" for node in element.iter(f"{namespace}t"))
+            text = block_text(element)
             if text.strip():
                 counter += 1
                 locators.append({"locator": f"p{counter}", "kind": "paragraph", "text": text})
+                text_parts.append(text)
         elif tag == f"{namespace}tbl":
             counter += 1
             rows = []
-            for row in element.findall(f"{namespace}tr"):
+            for row in table_parts(element, "tr"):
                 cells = []
-                for cell in row.findall(f"{namespace}tc"):
-                    cell_text = "".join(
-                        node.text or "" for node in cell.iter(f"{namespace}t")
-                    )
+                for cell in table_parts(row, "tc"):
+                    cell_text = block_text(cell)
                     cells.append(cell_text)
                 rows.append(cells)
             locators.append({"locator": f"table{counter}", "kind": "table", "rows": rows})
-    text = "\n".join(
-        item["text"] if "text" in item else json.dumps(item["rows"], ensure_ascii=False)
-        for item in locators
-    )
+            if not body_covered:
+                text_parts.append(json.dumps(rows, ensure_ascii=False))
+    text = "\n".join(text_parts)
     return SourceExtract(
         original_uri=str(path),
         original_sha256=measure_hash(path),
@@ -226,6 +262,7 @@ def _read_docx(path: Path) -> SourceExtract:
 def _read_pptx(path: Path) -> SourceExtract:
     try:
         from pptx import Presentation
+        from pptx.enum.shapes import MSO_SHAPE_TYPE
     except ImportError:
         return SourceExtract(
             original_uri=str(path),
@@ -242,6 +279,11 @@ def _read_pptx(path: Path) -> SourceExtract:
     locators: list[dict] = []
     text_parts: list[str] = []
     image_pages=[]
+    visual_types = {
+        MSO_SHAPE_TYPE.AUTO_SHAPE, MSO_SHAPE_TYPE.CHART, MSO_SHAPE_TYPE.DIAGRAM,
+        MSO_SHAPE_TYPE.FREEFORM, MSO_SHAPE_TYPE.IGX_GRAPHIC, MSO_SHAPE_TYPE.LINE,
+        MSO_SHAPE_TYPE.PICTURE, MSO_SHAPE_TYPE.LINKED_PICTURE,
+    }
     def shapes_recursive(shapes):
         for shape in shapes:
             yield shape
@@ -250,7 +292,7 @@ def _read_pptx(path: Path) -> SourceExtract:
         page_lines = []
         visual=False
         for shape in shapes_recursive(slide.shapes):
-            if shape.shape_type in (13,3):visual=True
+            if shape.shape_type in visual_types:visual=True
             if shape.has_text_frame:
                 for paragraph in shape.text_frame.paragraphs:
                     text = "".join(run.text for run in paragraph.runs)
@@ -265,7 +307,7 @@ def _read_pptx(path: Path) -> SourceExtract:
         if slide.has_notes_slide:
             notes=slide.notes_slide.notes_text_frame.text
             if notes.strip():page_lines.append("[speaker notes] "+notes)
-        if visual or not page_lines:image_pages.append({"locator":f"slide-{index}","reason":"image/chart or textless slide requires actual visual reading"})
+        if visual or not page_lines:image_pages.append({"locator":f"slide-{index}","reason":"graphical meaning or textless slide requires actual visual reading"})
         locators.append({"locator": f"slide-{index}", "kind": "slide", "text": "\n".join(page_lines)})
         text_parts.append("\n".join(page_lines))
     return SourceExtract(

@@ -18,6 +18,30 @@ import pytest
 from deck_master.sources import read_source, tail_constraint
 
 
+@pytest.mark.parametrize("wrapping", ["plain", "table", "row", "cell", "nested", "textbox"])
+def test_docx_tables_keep_wrapped_structure_without_duplicate_body(tmp_path: Path, wrapping: str) -> None:
+    paragraph = '<w:p><w:r><w:t>收入100万元</w:t></w:r></w:p>'
+    cell = '<w:tc>' + paragraph + '</w:tc>'
+    wrap = lambda value: '<w:sdt><w:sdtContent>' + value + '</w:sdtContent></w:sdt>'
+    row = '<w:tr>' + (wrap(cell) if wrapping == "cell" else cell) + '</w:tr>'
+    table = '<w:tbl>' + (wrap(row) if wrapping == "row" else row) + '</w:tbl>'
+    if wrapping == "table":
+        table = wrap(table)
+    if wrapping == "nested":
+        table = '<w:tbl><w:tr><w:tc><w:p><w:r><w:t>外层</w:t></w:r></w:p>' + table + '</w:tc></w:tr></w:tbl>'
+    if wrapping == "textbox":
+        table = '<w:p><w:r><w:pict><v:shape><v:textbox><w:txbxContent>' + table + '</w:txbxContent></v:textbox></v:shape></w:pict></w:r></w:p>'
+    xml = '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:v="urn:schemas-microsoft-com:vml"><w:body>' + table + '</w:body></w:document>'
+    path = tmp_path / (wrapping + '.docx')
+    with zipfile.ZipFile(path, 'w') as archive:
+        archive.writestr('word/document.xml', xml)
+    extract = read_source(path)
+    assert extract.text.count('收入100万元') == 1
+    assert len(extract.tables) == (2 if wrapping == "nested" else 1)
+    assert extract.tables[-1]['rows'] == [['收入100万元']]
+    assert sum(item['kind'] == 'paragraph' for item in extract.locators) == (1 if wrapping == "textbox" else 0)
+
+
 def _write(tmp_path: Path, name: str, content) -> Path:
     path = tmp_path / name
     if isinstance(content, str):
@@ -160,7 +184,7 @@ def test_docx_reading(tmp_path: Path) -> None:
     assert extract.status == "read"
     texts = [item.get("text", "") for item in extract.locators]
     assert any("季度处理量对照" in text for text in texts)
-    assert any("3120" in text for text in texts)
+    assert "3120" in extract.text
     assert any(item.get("kind") == "table" for item in extract.locators)
 
 
