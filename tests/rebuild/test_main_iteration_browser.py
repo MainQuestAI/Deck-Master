@@ -245,6 +245,14 @@ def test_readonly_buffer_can_be_downloaded_confirmed_and_closed_with_escape(tmp_
             note.press('Escape')
             expect(dialog).not_to_be_visible()
             expect(page.get_by_role('button', name='个人记录与操作恢复', exact=True)).to_be_focused()
+            page.get_by_role('button', name='个人记录与操作恢复', exact=True).click()
+            page.evaluate('() => history.back()')
+            expect(dialog).not_to_be_visible()
+            expect(page.locator('#view-title')).to_be_focused()
+            page.evaluate('() => history.forward()')
+            page.get_by_role('button', name='个人记录与操作恢复', exact=True).click()
+            expect(note).to_have_value('readonly unsent buffer')
+            expect(note).to_have_js_property('readOnly', True)
             browser.close()
     finally:
         server.stop()
@@ -335,6 +343,90 @@ def test_dynamic_route_import_preserves_the_visible_owner(tmp_path, outcome):
                 route = held.pop(); response = page.request.get(server.start() + 'v2/gallery.js'); route.fulfill(response=response)
             expect(page.get_by_label('用途与目标', exact=True)).to_have_value('keep current form owner')
             expect(page.locator('.gallery-workbench')).to_have_count(0)
+            browser.close()
+    finally:
+        server.stop()
+
+
+@pytest.mark.parametrize('dismiss', ['close', 'escape'])
+def test_recovery_dialog_belongs_to_committed_work_surface(tmp_path, dismiss):
+    server = WorkbenchServer(project_at(tmp_path))
+    try:
+        with sync_playwright() as runtime:
+            browser = runtime.chromium.launch()
+            page = browser.new_page()
+            errors = []
+            page.on('pageerror', lambda error: errors.append(str(error)))
+            page.goto(server.start() + 'studio/')
+            page.get_by_role('button', name='整稿画廊', exact=True).click()
+            expect(page.locator('.gallery-view')).to_be_visible()
+            page.get_by_role('button', name='任务与交付', exact=True).click()
+            page.get_by_role('button', name='待决定', exact=True).click()
+            trigger = page.get_by_role('button', name='个人记录与操作恢复', exact=True)
+            trigger.click()
+            dialog = page.get_by_role('dialog', name='个人记录与操作恢复', exact=True)
+            expect(dialog).to_be_visible()
+            if dismiss == 'close':
+                dialog.get_by_role('button', name='关闭', exact=True).click()
+            else:
+                dialog.get_by_label('个人草稿', exact=True).press('Escape')
+            expect(dialog).not_to_be_visible()
+            expect(trigger).to_be_focused()
+            trigger.click()
+            page.evaluate('() => history.back()')
+            expect(page.locator('.gallery-view')).to_be_visible()
+            expect(dialog).not_to_be_visible()
+            expect(page.locator('#view-title')).to_be_focused()
+            page.evaluate('() => history.forward()')
+            trigger.click()
+            dialog.get_by_label('个人草稿', exact=True).fill('saved before closing')
+            expect(dialog.locator('.draft-state')).to_contain_text('已保存到项目')
+            dialog.get_by_role('button', name='关闭', exact=True).click()
+            trigger.click()
+            expect(dialog.get_by_label('个人草稿', exact=True)).to_have_value('saved before closing')
+            assert errors == []
+            browser.close()
+    finally:
+        server.stop()
+
+
+def test_recovery_dialog_tracks_replacement_owner_and_blocks_history_under_quota(tmp_path):
+    server = WorkbenchServer(project_at(tmp_path))
+    try:
+        with sync_playwright() as runtime:
+            browser = runtime.chromium.launch()
+            page = browser.new_page(); errors = []
+            page.on('pageerror', lambda error: errors.append(str(error)))
+            page.goto(server.start() + 'studio/'); open_operations(page)
+            page.evaluate("""async () => {const {post}=await import('/v2/api.js');const e=observedDraft;await e.ready;
+              for(const id of ['one','two']) {const draft=structuredClone(e.draft);draft.draft_id=id;draft.content.text=id;
+                await post('/api/drafts/save',{draft});} await e.load();window.previousDraft=e;} """)
+            page.get_by_label('恢复项目中的个人草稿', exact=True).select_option('two')
+            note = page.get_by_label('个人草稿', exact=True)
+            expect(note).to_have_value('two')
+            assert page.evaluate('() => previousDraft.disposed && observedDraft !== previousDraft')
+            page.route('**/api/drafts/save', lambda route: route.abort())
+            page.evaluate("() => {Storage.prototype.setItem=function(){throw new DOMException('quota','QuotaExceededError')};}")
+            note.fill('replacement unsent')
+            expect(page.locator('.draft-state')).to_contain_text('待核实')
+            dialog = page.get_by_role('dialog', name='个人记录与操作恢复', exact=True)
+            dialog.get_by_role('button', name='关闭', exact=True).click()
+            expect(dialog).to_be_visible()
+            note.press('Escape'); expect(dialog).to_be_visible()
+            page.evaluate('() => history.back()')
+            expect(note).to_have_value('replacement unsent')
+            expect(dialog).to_be_visible()
+            page.evaluate('() => history.forward()')
+            expect(note).to_have_value('replacement unsent')
+            expect(dialog).to_be_visible()
+            with page.expect_download():
+                dialog.get_by_role('button', name='下载草稿恢复文件', exact=True).click()
+            note.press('Escape'); expect(dialog).to_be_visible()
+            dialog.get_by_role('button', name='我已保管恢复文件，允许离开', exact=True).click()
+            page.evaluate('() => history.back()')
+            expect(dialog).not_to_be_visible()
+            expect(page.locator('#view-title')).to_be_focused()
+            assert errors == []
             browser.close()
     finally:
         server.stop()
