@@ -69,52 +69,10 @@
       }
     },
     "envelope_ref": {
-      "anyOf": [
-        {
-          "type": "object",
-          "required": [
-            "path",
-            "sha256"
-          ],
-          "additionalProperties": false,
-          "properties": {
-            "path": {
-              "type": "string"
-            },
-            "sha256": {
-              "type": "string",
-              "pattern": "^[a-f0-9]{64}$"
-            }
-          }
-        },
-        {
-          "type": "null"
-        }
-      ]
+      "$ref": "shared-contracts.v1.schema.json#/$defs/d_d9d96449849c"
     },
     "receipt_ref": {
-      "anyOf": [
-        {
-          "type": "object",
-          "required": [
-            "path",
-            "sha256"
-          ],
-          "additionalProperties": false,
-          "properties": {
-            "path": {
-              "type": "string"
-            },
-            "sha256": {
-              "type": "string",
-              "pattern": "^[a-f0-9]{64}$"
-            }
-          }
-        },
-        {
-          "type": "null"
-        }
-      ]
+      "$ref": "shared-contracts.v1.schema.json#/$defs/d_d9d96449849c"
     }
   },
   "allOf": [

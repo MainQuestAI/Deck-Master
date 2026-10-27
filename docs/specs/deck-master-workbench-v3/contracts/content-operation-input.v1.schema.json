@@ -14,29 +14,7 @@
       "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
     },
     "content_plan_ref": {
-      "anyOf": [
-        {
-          "type": "object",
-          "required": [
-            "path",
-            "sha256"
-          ],
-          "additionalProperties": false,
-          "properties": {
-            "path": {
-              "type": "string",
-              "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
-            },
-            "sha256": {
-              "type": "string",
-              "pattern": "^[a-f0-9]{64}$"
-            }
-          }
-        },
-        {
-          "type": "null"
-        }
-      ]
+      "$ref": "shared-contracts.v1.schema.json#/$defs/d_c638eb3aa914"
     },
     "action": {
       "enum": [
@@ -53,36 +31,7 @@
       "type": "array",
       "maxItems": 300,
       "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "page_id": {
-            "type": "string",
-            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
-          },
-          "page_ref": {
-            "type": "object",
-            "required": [
-              "path",
-              "sha256"
-            ],
-            "additionalProperties": false,
-            "properties": {
-              "path": {
-                "type": "string",
-                "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
-              },
-              "sha256": {
-                "type": "string",
-                "pattern": "^[a-f0-9]{64}$"
-              }
-            }
-          }
-        },
-        "required": [
-          "page_id",
-          "page_ref"
-        ]
+        "$ref": "shared-contracts.v1.schema.json#/$defs/d_d61b02986913"
       }
     },
     "instruction": {
@@ -114,25 +63,7 @@
           "items": {
             "oneOf": [
               {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
-                  },
-                  "type": {
-                    "const": "paragraph"
-                  },
-                  "text": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "id",
-                  "type",
-                  "text"
-                ],
-                "additionalProperties": false
+                "$ref": "shared-contracts.v1.schema.json#/$defs/d_66f4972db421"
               },
               {
                 "type": "object",
@@ -162,162 +93,19 @@
                 "additionalProperties": false
               },
               {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
-                  },
-                  "type": {
-                    "const": "table"
-                  },
-                  "title": {
-                    "type": "string"
-                  },
-                  "columns": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "id": {
-                          "type": "string",
-                          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
-                        },
-                        "label": {
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "id",
-                        "label"
-                      ],
-                      "additionalProperties": false
-                    }
-                  },
-                  "rows": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "id": {
-                          "type": "string",
-                          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
-                        },
-                        "cells": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "column_id": {
-                                "type": "string",
-                                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
-                              },
-                              "display_text": {
-                                "type": "string"
-                              },
-                              "value": {
-                                "type": [
-                                  "number",
-                                  "string",
-                                  "null"
-                                ]
-                              },
-                              "unit": {
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "column_id",
-                              "display_text"
-                            ],
-                            "additionalProperties": false
-                          }
-                        }
-                      },
-                      "required": [
-                        "id",
-                        "cells"
-                      ],
-                      "additionalProperties": false
-                    }
-                  }
-                },
-                "required": [
-                  "id",
-                  "type",
-                  "columns",
-                  "rows"
-                ],
-                "additionalProperties": false
+                "$ref": "shared-contracts.v1.schema.json#/$defs/d_dfc8981e8e73"
               }
             ]
           }
         },
         "labels": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
-              },
-              "text": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "id",
-              "text"
-            ],
-            "additionalProperties": false
-          }
+          "$ref": "shared-contracts.v1.schema.json#/$defs/d_d8089dd1312c"
         },
         "footnotes": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
-              },
-              "text": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "id",
-              "text"
-            ],
-            "additionalProperties": false
-          }
+          "$ref": "shared-contracts.v1.schema.json#/$defs/d_d8089dd1312c"
         },
         "callouts": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
-              },
-              "text": {
-                "type": "string"
-              },
-              "tone": {
-                "enum": [
-                  "neutral",
-                  "emphasis"
-                ]
-              }
-            },
-            "required": [
-              "id",
-              "text"
-            ],
-            "additionalProperties": false
-          }
+          "$ref": "shared-contracts.v1.schema.json#/$defs/d_f7e3128a3922"
         }
       },
       "required": [

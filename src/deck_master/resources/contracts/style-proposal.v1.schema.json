@@ -35,51 +35,7 @@
           "maxLength": 128
         },
         "reference": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "page_id": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128
-            },
-            "revision_id": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128
-            },
-            "artifact_ref": {
-              "type": "object",
-              "required": [
-                "path",
-                "sha256"
-              ],
-              "additionalProperties": false,
-              "properties": {
-                "path": {
-                  "type": "string",
-                  "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
-                },
-                "sha256": {
-                  "type": "string",
-                  "pattern": "^[a-f0-9]{64}$"
-                }
-              }
-            },
-            "role": {
-              "enum": [
-                "reference",
-                "edit_target",
-                "supporting"
-              ]
-            }
-          },
-          "required": [
-            "page_id",
-            "revision_id",
-            "artifact_ref",
-            "role"
-          ]
+          "$ref": "shared-contracts.v1.schema.json#/$defs/d_e43cc416746b"
         },
         "target_page_ids": {
           "type": "array",
@@ -98,36 +54,7 @@
           "maxLength": 4000
         },
         "dimensions": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "palette": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 4000
-            },
-            "typography": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 4000
-            },
-            "density": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 4000
-            },
-            "lines": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 4000
-            },
-            "composition": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 4000
-            }
-          },
-          "required": []
+          "$ref": "shared-contracts.v1.schema.json#/$defs/d_cf732cb8c400"
         },
         "prompt_selection": {
           "type": "object",
@@ -233,78 +160,18 @@
       ]
     },
     "targets": {
-      "type": "array",
-      "minItems": 1,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "page_id": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 128
-          },
-          "page_ref": {
-            "type": "object",
-            "required": [
-              "path",
-              "sha256"
-            ],
-            "additionalProperties": false,
-            "properties": {
-              "path": {
-                "type": "string",
-                "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
-              },
-              "sha256": {
-                "type": "string",
-                "pattern": "^[a-f0-9]{64}$"
-              }
-            }
-          },
-          "blueprint_ref": {
-            "anyOf": [
-              {
-                "type": "object",
-                "required": [
-                  "path",
-                  "sha256"
-                ],
-                "additionalProperties": false,
-                "properties": {
-                  "path": {
-                    "type": "string",
-                    "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
-                  },
-                  "sha256": {
-                    "type": "string",
-                    "pattern": "^[a-f0-9]{64}$"
-                  }
-                }
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "content": {
-            "type": "object"
-          }
-        },
-        "required": [
-          "page_id",
-          "page_ref",
-          "blueprint_ref",
-          "content"
-        ]
-      }
+      "$ref": "shared-contracts.v1.schema.json#/$defs/d_a5022e8ab562"
     },
     "reference_sources": {
       "type": "object"
     },
     "preserve_dimensions": {
       "type": "object",
-      "additionalProperties": false,
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4000
+      },
       "propertyNames": {
         "enum": [
           "palette",
@@ -313,44 +180,10 @@
           "lines",
           "composition"
         ]
-      },
-      "additionalProperties": {
-        "type": "string",
-        "minLength": 1,
-        "maxLength": 4000
       }
     },
     "dimensions": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "palette": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 4000
-        },
-        "typography": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 4000
-        },
-        "density": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 4000
-        },
-        "lines": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 4000
-        },
-        "composition": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 4000
-        }
-      },
-      "required": []
+      "$ref": "shared-contracts.v1.schema.json#/$defs/d_cf732cb8c400"
     },
     "conflicts": {
       "type": "array",
@@ -384,29 +217,7 @@
       "minimum": 1
     },
     "parent_ref": {
-      "anyOf": [
-        {
-          "type": "object",
-          "required": [
-            "path",
-            "sha256"
-          ],
-          "additionalProperties": false,
-          "properties": {
-            "path": {
-              "type": "string",
-              "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
-            },
-            "sha256": {
-              "type": "string",
-              "pattern": "^[a-f0-9]{64}$"
-            }
-          }
-        },
-        {
-          "type": "null"
-        }
-      ]
+      "$ref": "shared-contracts.v1.schema.json#/$defs/d_c638eb3aa914"
     },
     "proposal_ref": {
       "type": "object",

@@ -159,7 +159,7 @@ def _contract_registry() -> Registry:
     (e.g. document.v1 -> collaboration.v1.schema.json). Every registered
     contract is loaded once; a bare filename resolves against this registry."""
     registry = Registry()
-    for filename in sorted(set(SCHEMA_FILES.values())):
+    for filename in sorted(set(SCHEMA_FILES.values()) | {"shared-contracts.v1.schema.json"}):
         schema = json.loads(
             resources.files("deck_master").joinpath(f"resources/contracts/{filename}").read_text("utf-8")
         )

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "content_plan.v2",
-  "description": "ContentPlan v2 (content collaboration v1.2 CONTRACTS \u00a711.2). Document.content_plan stays the single current pointer; mode=bound page_order must equal the committed Document.pages order.",
+  "description": "ContentPlan v2 (content collaboration v1.2 CONTRACTS §11.2). Document.content_plan stays the single current pointer; mode=bound page_order must equal the committed Document.pages order.",
   "type": "object",
   "additionalProperties": false,
   "required": [

@@ -3,76 +3,506 @@
   "$id": "urn:deck-master:page-lineage:v1",
   "title": "page_lineage.v1 read projection (not a persistent object)",
   "type": "object",
-  "required": ["format", "project_id", "revision_id", "requested_revision", "page_id", "page", "stages", "sources", "prompts", "tasks", "deck_output", "evidence_level"],
+  "required": [
+    "format",
+    "project_id",
+    "revision_id",
+    "requested_revision",
+    "page_id",
+    "page",
+    "stages",
+    "sources",
+    "prompts",
+    "tasks",
+    "deck_output",
+    "evidence_level"
+  ],
   "additionalProperties": false,
   "properties": {
-    "format": {"const": "page_lineage.v1"},
-    "project_id": {"type": "string"}, "revision_id": {"type": "string"}, "requested_revision": {"type": ["string", "null"]},
-    "page_id": {"type": "string"}, "page": {"type": ["object", "null"]},
-    "stages": {"$ref": "urn:deck-master:workbench-summary:v1#/$defs/stages"},
-    "sources": {"type": "object", "required": ["citations", "relation"], "additionalProperties": false, "properties": {"citations": {"type": "array"}, "relation": {"$ref": "urn:deck-master:workbench-summary:v1#/$defs/relation"}}},
-    "prompts": {
-      "type": "object", "required": ["prepared", "submitted", "errors", "parameters", "attempt"], "additionalProperties": false,
+    "format": {
+      "const": "page_lineage.v1"
+    },
+    "project_id": {
+      "type": "string"
+    },
+    "revision_id": {
+      "type": "string"
+    },
+    "requested_revision": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "page_id": {
+      "type": "string"
+    },
+    "page": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "stages": {
+      "$ref": "urn:deck-master:workbench-summary:v1#/$defs/stages"
+    },
+    "sources": {
+      "type": "object",
+      "required": [
+        "citations",
+        "relation"
+      ],
+      "additionalProperties": false,
       "properties": {
-        "prepared": {"type": "array", "items": {
-          "type": "object", "required": ["ref", "task_ref", "task_id", "dispatch_revision", "text", "prompt_sha256", "state", "observer", "output_relation", "basis"], "additionalProperties": false,
-          "properties": {
-            "sections": {"type": "object", "required": ["state", "segments"], "additionalProperties": false, "properties": {
-              "state": {"enum": ["unstructured", "verified_core_projection"]},
-              "segments": {"type": "array", "items": {"type": "object", "required": ["label", "start", "end"], "additionalProperties": false, "properties": {
-                "label": {"enum": ["instructions", "structured_input"]}, "start": {"type": "integer", "minimum": 0}, "end": {"type": "integer", "minimum": 0}
-              }}}
-            }},
-            "ref": {"$ref": "urn:deck-master:workbench-summary:v1#/$defs/ref"}, "task_ref": {"$ref": "urn:deck-master:workbench-summary:v1#/$defs/ref"},
-            "task_id": {"type": "string"}, "dispatch_revision": {"type": ["string", "null"]}, "text": {"type": "string"}, "prompt_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
-            "state": {"const": "prepared"}, "observer": {"const": "core_frozen"}, "output_relation": {"$ref": "urn:deck-master:workbench-summary:v1#/$defs/relation"}, "basis": {"enum": ["task_result_ref", "invocation_ref", "task_scope_only"]}
-          }
-        }},
-        "submitted": {
-          "type": "object", "required": ["state", "ref", "observer", "text"], "additionalProperties": false,
-          "properties": {"state": {"enum": ["not_recorded", "recorded", "unreadable"]}, "ref": {"$ref": "urn:deck-master:workbench-summary:v1#/$defs/optional_ref"}, "observer": {"enum": ["unknown", "host_reported", "tool_observed"]}, "text": {"type": ["string", "null"]}, "relation": {"$ref": "urn:deck-master:workbench-summary:v1#/$defs/relation"}, "basis": {"enum": ["artifact.provenance.submitted_prompt", "native_tool_observation"]}, "error": {"$ref": "urn:deck-master:workbench-summary:v1#/$defs/error"}}
+        "citations": {
+          "type": "array"
         },
-        "errors": {"type": "array", "items": {"$ref": "urn:deck-master:workbench-summary:v1#/$defs/error"}},
-        "parameters": {"$ref": "urn:deck-master:workbench-summary:v1#/$defs/not_recorded"},
-        "attempt": {"$ref": "urn:deck-master:workbench-summary:v1#/$defs/not_recorded"}
+        "relation": {
+          "$ref": "urn:deck-master:workbench-summary:v1#/$defs/relation"
+        }
       }
     },
-    "generation": {"type": "object", "required": ["requests", "attempts", "errors", "adopted_observation"], "additionalProperties": false, "properties": {"requests": {"type": "array", "items": {"type": "object"}}, "attempts": {"type": "array", "items": {"type": "object"}}, "errors": {"type": "array", "items": {"type": "object"}}, "reuse": {"type": ["object", "null"]},
-        "adopted_observation": {"type": ["object", "null"]}, "adopted_request_ref": {"$ref": "urn:deck-master:workbench-summary:v1#/$defs/optional_ref"}, "adopted_attempt_ref": {"$ref": "urn:deck-master:workbench-summary:v1#/$defs/optional_ref"}}},
-    "tasks": {"type": "array", "items": {"type": "object", "required": ["task_id", "status", "ref"]}},
-    "deck_output": {"$ref": "urn:deck-master:workbench-summary:v1#/$defs/deck_output"},
-    "content_plan": {"type": "object", "required": ["status", "relation", "ref"]},
-    "text_sources": {
-      "type": "object", "required": ["content", "prepared_prompt", "submitted_prompt"], "additionalProperties": false,
+    "prompts": {
+      "type": "object",
+      "required": [
+        "prepared",
+        "submitted",
+        "errors",
+        "parameters",
+        "attempt"
+      ],
+      "additionalProperties": false,
       "properties": {
-        "content": {"type": "array", "items": {"$ref": "#/$defs/text_source"}},
-        "prepared_prompt": {"type": "array", "items": {"$ref": "#/$defs/text_source"}},
-        "submitted_prompt": {"type": "array", "items": {"$ref": "#/$defs/text_source"}}
+        "prepared": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "ref",
+              "task_ref",
+              "task_id",
+              "dispatch_revision",
+              "text",
+              "prompt_sha256",
+              "state",
+              "observer",
+              "output_relation",
+              "basis"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "sections": {
+                "type": "object",
+                "required": [
+                  "state",
+                  "segments"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "state": {
+                    "enum": [
+                      "unstructured",
+                      "verified_core_projection"
+                    ]
+                  },
+                  "segments": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "label",
+                        "start",
+                        "end"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "label": {
+                          "enum": [
+                            "instructions",
+                            "structured_input"
+                          ]
+                        },
+                        "start": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "end": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "ref": {
+                "$ref": "urn:deck-master:workbench-summary:v1#/$defs/ref"
+              },
+              "task_ref": {
+                "$ref": "urn:deck-master:workbench-summary:v1#/$defs/ref"
+              },
+              "task_id": {
+                "type": "string"
+              },
+              "dispatch_revision": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "type": "string"
+              },
+              "prompt_sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "state": {
+                "const": "prepared"
+              },
+              "observer": {
+                "const": "core_frozen"
+              },
+              "output_relation": {
+                "$ref": "urn:deck-master:workbench-summary:v1#/$defs/relation"
+              },
+              "basis": {
+                "enum": [
+                  "task_result_ref",
+                  "invocation_ref",
+                  "task_scope_only"
+                ]
+              }
+            }
+          }
+        },
+        "submitted": {
+          "type": "object",
+          "required": [
+            "state",
+            "ref",
+            "observer",
+            "text"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "state": {
+              "enum": [
+                "not_recorded",
+                "recorded",
+                "unreadable"
+              ]
+            },
+            "ref": {
+              "$ref": "urn:deck-master:workbench-summary:v1#/$defs/optional_ref"
+            },
+            "observer": {
+              "enum": [
+                "unknown",
+                "host_reported",
+                "tool_observed"
+              ]
+            },
+            "text": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "relation": {
+              "$ref": "urn:deck-master:workbench-summary:v1#/$defs/relation"
+            },
+            "basis": {
+              "enum": [
+                "artifact.provenance.submitted_prompt",
+                "native_tool_observation"
+              ]
+            },
+            "error": {
+              "$ref": "urn:deck-master:workbench-summary:v1#/$defs/error"
+            }
+          }
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:deck-master:workbench-summary:v1#/$defs/error"
+          }
+        },
+        "parameters": {
+          "$ref": "urn:deck-master:workbench-summary:v1#/$defs/not_recorded"
+        },
+        "attempt": {
+          "$ref": "urn:deck-master:workbench-summary:v1#/$defs/not_recorded"
+        }
+      }
+    },
+    "generation": {
+      "type": "object",
+      "required": [
+        "requests",
+        "attempts",
+        "errors",
+        "adopted_observation"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "requests": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "attempts": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "reuse": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "adopted_observation": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "adopted_request_ref": {
+          "$ref": "urn:deck-master:workbench-summary:v1#/$defs/optional_ref"
+        },
+        "adopted_attempt_ref": {
+          "$ref": "urn:deck-master:workbench-summary:v1#/$defs/optional_ref"
+        }
+      }
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "task_id",
+          "status",
+          "ref"
+        ]
+      }
+    },
+    "deck_output": {
+      "$ref": "urn:deck-master:workbench-summary:v1#/$defs/deck_output"
+    },
+    "content_plan": {
+      "type": "object",
+      "required": [
+        "status",
+        "relation",
+        "ref"
+      ]
+    },
+    "text_sources": {
+      "type": "object",
+      "required": [
+        "content",
+        "prepared_prompt",
+        "submitted_prompt"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "content": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/text_source"
+          }
+        },
+        "prepared_prompt": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/text_source"
+          }
+        },
+        "submitted_prompt": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/text_source"
+          }
+        }
       }
     },
     "production": {
-      "type": "object", "required": ["revision_id", "page_id", "scope", "svg", "pptx", "render_report", "object_trace", "declared_fonts", "font_substitution", "ppt_raster_ratio", "ocr_text_layer", "evaluations", "unreadable_reviews", "limitations"], "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "revision_id",
+        "page_id",
+        "scope",
+        "svg",
+        "pptx",
+        "render_report",
+        "object_trace",
+        "declared_fonts",
+        "font_substitution",
+        "ppt_raster_ratio",
+        "ocr_text_layer",
+        "evaluations",
+        "unreadable_reviews",
+        "limitations"
+      ],
+      "additionalProperties": false,
       "properties": {
-        "revision_id": {"type": "string"}, "page_id": {"type": "string"}, "scope": {"const": "fixed_snapshot"},
-        "svg": {"type": "object", "required": ["ref", "state", "editability"]},
-        "pptx": {"type": "object", "required": ["ref", "state", "editability", "applicability"]},
-        "render_report": {"type": "object", "required": ["ref", "state", "pptx_relation", "text_runs", "native_shapes", "findings", "recorded_status"], "properties": {"text_runs": {"type": ["integer", "null"], "minimum": 0}, "native_shapes": {"type": ["integer", "null"], "minimum": 0}}},
-        "object_trace": {"type": "object", "required": ["ref", "state", "pptx_relation", "svg_input_image_elements", "svg_relation", "compiler_fonts", "diagnostics"], "properties": {"svg_input_image_elements": {"type": ["integer", "null"], "minimum": 0}}},
-        "declared_fonts": {"type": "array", "items": {"type": "object"}},
-        "font_substitution": {"const": "not_recorded"}, "ppt_raster_ratio": {"type": "null"}, "ocr_text_layer": {"const": "not_recorded"},
-        "evaluations": {"type": "object", "required": ["professional_use", "desktop_editing"]},
-        "unreadable_reviews": {"type": "boolean"}, "limitations": {"type": "array", "items": {"type": "string"}}
+        "revision_id": {
+          "type": "string"
+        },
+        "page_id": {
+          "type": "string"
+        },
+        "scope": {
+          "const": "fixed_snapshot"
+        },
+        "svg": {
+          "type": "object",
+          "required": [
+            "ref",
+            "state",
+            "editability"
+          ]
+        },
+        "pptx": {
+          "type": "object",
+          "required": [
+            "ref",
+            "state",
+            "editability",
+            "applicability"
+          ]
+        },
+        "render_report": {
+          "type": "object",
+          "required": [
+            "ref",
+            "state",
+            "pptx_relation",
+            "text_runs",
+            "native_shapes",
+            "findings",
+            "recorded_status"
+          ],
+          "properties": {
+            "text_runs": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "native_shapes": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            }
+          }
+        },
+        "object_trace": {
+          "type": "object",
+          "required": [
+            "ref",
+            "state",
+            "pptx_relation",
+            "svg_input_image_elements",
+            "svg_relation",
+            "compiler_fonts",
+            "diagnostics"
+          ],
+          "properties": {
+            "svg_input_image_elements": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            }
+          }
+        },
+        "declared_fonts": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "font_substitution": {
+          "const": "not_recorded"
+        },
+        "ppt_raster_ratio": {
+          "type": "null"
+        },
+        "ocr_text_layer": {
+          "const": "not_recorded"
+        },
+        "evaluations": {
+          "type": "object",
+          "required": [
+            "professional_use",
+            "desktop_editing"
+          ]
+        },
+        "unreadable_reviews": {
+          "type": "boolean"
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     },
-    "evidence_level": {"const": "engineering"}
+    "evidence_level": {
+      "const": "engineering"
+    }
   },
   "$defs": {
     "text_source": {
-      "type": "object", "required": ["ref", "locator", "text", "text_sha256", "code_point_length"], "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "ref",
+        "locator",
+        "text",
+        "text_sha256",
+        "code_point_length"
+      ],
+      "additionalProperties": false,
       "properties": {
-        "ref": {"$ref": "urn:deck-master:workbench-summary:v1#/$defs/ref"}, "locator": {"type": "string"}, "text": {"type": "string"},
-        "text_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}, "code_point_length": {"type": "integer", "minimum": 0},
-        "atom_id": {"type": "string"}, "kind": {"type": "string"}
+        "ref": {
+          "$ref": "urn:deck-master:workbench-summary:v1#/$defs/ref"
+        },
+        "locator": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "text_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "code_point_length": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "atom_id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        }
       }
     }
   }

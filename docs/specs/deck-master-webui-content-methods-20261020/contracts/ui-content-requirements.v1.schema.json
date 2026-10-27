@@ -15,64 +15,7 @@
           "type": "string"
         },
         "issues": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "code": {
-                "type": "string"
-              },
-              "field": {
-                "type": "string"
-              },
-              "message": {
-                "type": "string"
-              },
-              "ref": {
-                "anyOf": [
-                  {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                      "path": {
-                        "type": "string",
-                        "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
-                      },
-                      "sha256": {
-                        "type": "string",
-                        "pattern": "^[a-f0-9]{64}$"
-                      }
-                    },
-                    "required": [
-                      "path",
-                      "sha256"
-                    ]
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "page_id": {
-                "anyOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              }
-            },
-            "required": [
-              "code",
-              "field",
-              "message",
-              "ref",
-              "page_id"
-            ]
-          }
+          "$ref": "shared-contracts.v1.schema.json#/$defs/d_7f09caaa780b"
         },
         "status": {
           "enum": [
@@ -161,64 +104,7 @@
           "type": "string"
         },
         "issues": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "code": {
-                "type": "string"
-              },
-              "field": {
-                "type": "string"
-              },
-              "message": {
-                "type": "string"
-              },
-              "ref": {
-                "anyOf": [
-                  {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                      "path": {
-                        "type": "string",
-                        "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
-                      },
-                      "sha256": {
-                        "type": "string",
-                        "pattern": "^[a-f0-9]{64}$"
-                      }
-                    },
-                    "required": [
-                      "path",
-                      "sha256"
-                    ]
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "page_id": {
-                "anyOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              }
-            },
-            "required": [
-              "code",
-              "field",
-              "message",
-              "ref",
-              "page_id"
-            ]
-          }
+          "$ref": "shared-contracts.v1.schema.json#/$defs/d_7f09caaa780b"
         },
         "status": {
           "enum": [

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "collaboration_decision.v1",
-  "description": "Decision object (content collaboration v1.2 CONTRACTS \u00a73.1). authority_mode names the claimed source; trust only comes from evidence.assurance, which Runtime adapter context computes.",
+  "description": "Decision object (content collaboration v1.2 CONTRACTS §3.1). authority_mode names the claimed source; trust only comes from evidence.assurance, which Runtime adapter context computes.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -150,7 +150,7 @@
   "$defs": {
     "proposal_ref": {
       "type": "object",
-      "description": "ProposalRef: projection must be a centrally registered slice (CONTRACTS \u00a73.1); arbitrary JSONPath is rejected.",
+      "description": "ProposalRef: projection must be a centrally registered slice (CONTRACTS §3.1); arbitrary JSONPath is rejected.",
       "additionalProperties": false,
       "required": [
         "artifact_kind",
