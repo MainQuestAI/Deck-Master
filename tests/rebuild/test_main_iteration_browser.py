@@ -1,10 +1,12 @@
 """Real owners, real clear receipts and explicit recovery consent."""
 import json
+from pathlib import Path
 
 import pytest
 from playwright.sync_api import expect, sync_playwright
 
 from deck_master import service
+from deck_master import ui_journal
 from deck_master.web import WorkbenchServer
 
 pytestmark = pytest.mark.browser
@@ -26,6 +28,113 @@ def project_at(tmp_path):
     path = tmp_path / 'project'
     service.create(path, brief='formal brief', audience='formal audience', sources=[source], project_format='workbench.v3')
     return path
+
+
+def open_operations(page):
+    page.evaluate("""async () => {const {DraftEditor}=await import('/v2/drafts.js');const mount=DraftEditor.prototype.mount;
+      DraftEditor.prototype.mount=function(){window.observedDraft=this;return mount.call(this);};} """)
+    page.get_by_role('button', name='任务与交付', exact=True).click()
+    page.get_by_role('button', name='待决定', exact=True).click()
+    page.get_by_role('button', name='个人记录与操作恢复', exact=True).click()
+
+
+@pytest.mark.parametrize('kind', ['ascii', 'near-limit', 'utf8', 'structured'])
+def test_complete_recovery_download_import_through_product(tmp_path, kind):
+    project = project_at(tmp_path)
+    server = WorkbenchServer(project)
+    try:
+        with sync_playwright() as runtime:
+            browser = runtime.chromium.launch()
+            page = browser.new_page(); page.goto(server.start() + 'studio/'); open_operations(page)
+            page.route('**/api/drafts/save', lambda route: route.abort())
+            page.evaluate("() => {Storage.prototype.setItem=function(){throw new DOMException('quota','QuotaExceededError')};}")
+            note = page.get_by_label('个人草稿', exact=True)
+            note.fill('sent original')
+            expect(page.locator('.draft-state')).to_contain_text('待核实')
+            page.evaluate("""kind => {const e=observedDraft;clearTimeout(e.timer);
+              const content= kind==='structured' ? {text:'current', data:Object.fromEntries(Array.from({length:100000},(_,i)=>['k'+String(i).padStart(6,'0'),0]))} :
+                {text:kind==='utf8'?'中😀'.repeat(180000):'a'.repeat(1100000)};
+              e.draft.content=content;
+              if(kind==='near-limit') {e.draft.content.text='';e.draft.content.text='a'.repeat(1998976-new TextEncoder().encode(JSON.stringify(e.draft)).length);}
+              e.pendingSave.draft=structuredClone(e.draft);
+              e.pendingSave.draft.content.text=e.draft.content.text.slice(0,-2)+'bb';
+              e.input.value=e.draft.content.text;e.updateStatus();} """, kind)
+            with page.expect_download() as saved:
+                page.get_by_role('button', name='下载草稿恢复文件', exact=True).click()
+            downloaded = Path(saved.value.path())
+            raw = downloaded.read_bytes(); recovery = json.loads(raw)
+            assert 2_000_000 < len(raw) <= 4_000_000
+            assert recovery['digest'] == ui_journal.digest(recovery['draft'])
+            assert recovery['pending_save_digest'] == ui_journal.digest(recovery['pending_save'])
+            if kind == 'structured':
+                assert len((json.dumps(recovery, ensure_ascii=False, indent=2) + '\n').encode()) > 4_000_000
+            assert not page.evaluate('() => observedDraft.canLeave()')
+            page.get_by_role('button', name='我已保管恢复文件，允许离开', exact=True).click()
+            assert page.evaluate('() => observedDraft.canLeave()')
+            # Changing the original unknown request also revokes custody.
+            page.evaluate("() => {observedDraft.pendingSave.expected_etag='a'.repeat(64);observedDraft.updateStatus();}")
+            assert not page.evaluate('() => observedDraft.canLeave()')
+            page.evaluate('() => {observedDraft.pendingSave.expected_etag=null;observedDraft.updateStatus();}')
+            with page.expect_download():
+                page.get_by_role('button', name='下载草稿恢复文件', exact=True).click()
+            page.get_by_role('button', name='我已保管恢复文件，允许离开', exact=True).click()
+            page.unroute('**/api/drafts/save')
+            page.reload()
+            page.get_by_role('button', name='个人记录与操作恢复', exact=True).click()
+            posts = []
+            page.on('request', lambda request: posts.append(request.url) if request.method == 'POST' else None)
+            with page.expect_response('**/api/drafts/import') as imported:
+                page.get_by_label('导入草稿恢复文件', exact=True).set_input_files(downloaded)
+            assert imported.value.status == 200
+            expect(note).to_have_value(recovery['draft']['content']['text'])
+            assert imported.value.json()['preserved_pending_save']
+            assert imported.value.json()['record']['draft']['content'] == recovery['draft']['content']
+            assert not any(url.endswith('/api/drafts/save') for url in posts)
+            records = ui_journal.list_drafts(project)['records']
+            assert len(records) == 1 and records[0]['draft']['content'] == recovery['draft']['content']
+            browser.close()
+    finally:
+        server.stop()
+
+
+def test_recovery_file_limit_and_legacy_core_fallback_never_allow_lossy_custody(tmp_path):
+    server = WorkbenchServer(project_at(tmp_path))
+    try:
+        with sync_playwright() as runtime:
+            browser = runtime.chromium.launch()
+            page = browser.new_page(); page.goto(server.start() + 'studio/'); open_operations(page)
+            requests = []
+            page.on('request', lambda request: requests.append(request.url) if request.method == 'POST' else None)
+            recovery = page.evaluate("""async () => {const e=observedDraft;const {digest}=await import('/v2/api.js');
+              return {schema_version:'ui_draft_recovery.v1',draft:e.draft,digest:await digest(e.draft)};}""")
+            content = json.dumps(recovery, ensure_ascii=False).encode()
+            for size in (3_999_999, 4_000_000, 4_000_001):
+                file = {'name':'boundary.json', 'mimeType':'application/json', 'buffer':content + b' ' * (size-len(content))}
+                if size <= 4_000_000:
+                    with page.expect_response('**/api/drafts/import') as imported:
+                        page.get_by_label('导入草稿恢复文件', exact=True).set_input_files(file)
+                    assert imported.value.status == 200
+                else:
+                    count = len(requests)
+                    page.get_by_label('导入草稿恢复文件', exact=True).set_input_files(file)
+                    expect(page.locator('.field-error').filter(has_text='恢复文件超过容量限制')).to_be_visible()
+                    assert len(requests) == count
+            page.evaluate("""() => {Storage.prototype.setItem=function(){throw new DOMException('quota','QuotaExceededError')};
+              const e=observedDraft;delete e.info.recovery_limits;e.status='unknown';e.draft.content.text='a'.repeat(1100000);
+              e.pendingSave={draft:structuredClone(e.draft),expected_etag:null};e.updateStatus();} """)
+            downloads = []
+            page.on('download', lambda saved: downloads.append(saved))
+            page.get_by_role('button', name='下载草稿恢复文件', exact=True).click()
+            expect(page.locator('.field-error').filter(has_text='完整恢复文件超过容量限制')).to_be_visible()
+            assert downloads == [] and not page.evaluate('() => observedDraft.canLeave()')
+            expect(page.get_by_role('button', name='我已保管恢复文件，允许离开', exact=True)).to_be_hidden()
+            page.evaluate('() => {observedDraft.draft.content.text="a".repeat(1998977);}')
+            page.get_by_role('button', name='下载草稿恢复文件', exact=True).click()
+            expect(page.locator('.field-error').filter(has_text='单份草稿超过容量限制')).to_be_visible()
+            assert page.evaluate('() => observedDraft.pendingSave.draft.content.text.length') == 1100000
+            browser.close()
+    finally:
+        server.stop()
 
 
 def test_clear_receipt_updates_real_form_in_both_tabs(tmp_path):

@@ -14,6 +14,11 @@ from .snapshots import IDENTIFIER, committed_headers, load_snapshot
 from .tasks import _utc_now_iso
 from .store import Store
 
+RECOVERY_FILE_LIMIT = 4_000_000
+RECOVERY_REQUEST_LIMIT = 4_001_024
+RECOVERY_LIMITS = {"draft_bytes": MAX_BODY - 1024, "file_bytes": RECOVERY_FILE_LIMIT,
+                   "request_bytes": RECOVERY_REQUEST_LIMIT}
+
 
 def digest(value):
     return sha256_bytes(canonical_json_bytes(value))
@@ -166,6 +171,7 @@ def project_info(project, *, server_capabilities=None, include_eligibility=True)
             "core_readers": list(CORE_READERS), "core_writers": list(SUPPORTED_WRITERS),
             "host_execution": "handoff_required", "draft_journal": "ui_draft.v1",
             "sample": sample,
+            "recovery_limits": dict(RECOVERY_LIMITS),
             "draft_reads": "ui_draft_query.v1" if "ui_draft_query.v1" in _capabilities(server_capabilities) else None,
             "control_revision_id": doc["revision_id"],
             "collaboration": collaboration_state,
@@ -370,12 +376,14 @@ def recovery_file(project, *, draft, pending_save=None):
         if any(previous.get(key) != draft.get(key) for key in
                ("project_id", "project_identity", "draft_id", "target", "base_revision", "base_ref")):
             raise LocalStateError("pending_save", "original save must belong to the same draft and basis")
+    if len(canonical_json_bytes(recovery)) > RECOVERY_FILE_LIMIT:
+        raise LocalStateError("recovery", "complete recovery file exceeds 4,000,000 bytes")
     return recovery
 
 
 def import_recovery(project, *, recovery):
     validate_schema("ui_draft_recovery", recovery)
-    if (len(canonical_json_bytes(recovery)) > MAX_BODY or digest(recovery["draft"]) != recovery["digest"]
+    if (len(canonical_json_bytes(recovery)) > RECOVERY_FILE_LIMIT or digest(recovery["draft"]) != recovery["digest"]
             or ("pending_save" in recovery and digest(recovery["pending_save"]) != recovery["pending_save_digest"])):
         raise LocalStateError("recovery", "recovery size or hash is invalid")
     draft = copy.deepcopy(recovery["draft"])

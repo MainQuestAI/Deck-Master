@@ -321,6 +321,11 @@ export class DraftEditor {
   }
   updateStatus() {
     if (!this.stateNode || this.disposed) return;
+    const recoveryState = this.recoverySnapshot();
+    if (this.lastRecoveryState !== recoveryState) {
+      this.downloadedRecovery = null; this.confirmedRecovery = null;
+      this.lastRecoveryState = recoveryState;
+    }
     const text = {loading: '正在读取个人草稿…', empty: '尚无个人草稿', dirty: '仅在本机缓冲，尚未保存到项目',
       saving: '正在保存到项目…', saved: '已保存到项目，可跨端口恢复', unknown: '保存结果待核实，后写内容仅在本机保留',
       conflict: '保存冲突，你的本机稿与项目中的稿件都已保留', error: '未保存到项目，输入仍保留'};
@@ -332,14 +337,14 @@ export class DraftEditor {
     this.noticeNode.hidden = !notice;
     this.basisNode.textContent = `基准 ${version(this.draft.base_revision)} · ${this.info.page_label || '整个项目'} · ${layers[this.target.layer] || '项目笔记'}` +
       (this.staleBasis() ? '。草稿仍绑定原基准，未自动改到新版；可用「对当前版本写新意见」复制文字，原有范围不迁移。' : '');
-    this.storageNode.textContent = this.storageError || this.note || '';
+    this.storageNode.textContent = [this.storageError, this.note].filter(Boolean).join(' ');
     this.rebaseButton.hidden = this.readonly || !this.staleBasis();
     this.saveButton.disabled = this.readonly || ['loading', 'empty', 'saved', 'saving', 'unknown', 'conflict'].includes(this.status);
     this.input.readOnly = this.readonly || this.status === 'loading';
     this.importInput.disabled = this.readonly || this.status === 'loading';
     this.verifyButton.hidden = this.status !== 'unknown';
     this.conflictButton.hidden = this.status !== 'conflict';
-    if (this.recoveryConfirmButton) this.recoveryConfirmButton.hidden = this.downloadedRecovery !== this.recoverySnapshot() || this.confirmedRecovery === this.recoverySnapshot();
+    if (this.recoveryConfirmButton) this.recoveryConfirmButton.hidden = this.downloadedRecovery !== recoveryState || this.confirmedRecovery === recoveryState;
     this.notifyState();
   }
   async save() {
@@ -426,25 +431,38 @@ export class DraftEditor {
   recoverySnapshot() {
     return canonical({draft: this.draft, pendingSave: this.pendingSave});
   }
+  recoveryLimits() {
+    return this.info.recovery_limits || {draft_bytes:1_998_976, file_bytes:2_000_000, request_bytes:2_000_000};
+  }
   async download(draft = this.draft) {
-    const snapshot = this.recoverySnapshot();
-    const value = structuredClone(draft);
-    const pendingSave = this.pendingSave ? structuredClone(this.pendingSave) : null;
-    // Preserve every content purpose and its basis, never HTTP/session metadata.
-    const recovery = {schema_version: 'ui_draft_recovery.v1', draft: value, digest: await digest(value),
-      ...(pendingSave ? {pending_save:pendingSave, pending_save_digest:await digest(pendingSave)} : {})};
-    downloadJSON(recovery, 'deck-master-personal-draft.json');
-    if (canonical(draft) === canonical(this.draft) && snapshot === this.recoverySnapshot()) this.downloadedRecovery = snapshot;
-    this.updateStatus();
-    toast('已发起恢复文件下载。请核对并保管文件，再明确确认允许离开。');
+    try {
+      const snapshot = this.recoverySnapshot();
+      const value = structuredClone(draft);
+      const pendingSave = this.pendingSave ? structuredClone(this.pendingSave) : null;
+      const limits = this.recoveryLimits();
+      if ([value, ...(pendingSave ? [pendingSave.draft] : [])].some(item =>
+        new TextEncoder().encode(canonical(item)).length > limits.draft_bytes))
+        throw new Error('单份草稿超过容量限制，完整内容仍保留；请先处理容量，尚不能确认保管并离开。');
+      // Preserve every content purpose and its basis, never HTTP/session metadata.
+      const recovery = {schema_version: 'ui_draft_recovery.v1', draft: value, digest: await digest(value),
+        ...(pendingSave ? {pending_save:pendingSave, pending_save_digest:await digest(pendingSave)} : {})};
+      downloadJSON(recovery, 'deck-master-personal-draft.json', {compact:true, maxBytes:limits.file_bytes});
+      if (canonical(draft) === canonical(this.draft) && snapshot === this.recoverySnapshot()) this.downloadedRecovery = snapshot;
+      this.updateStatus();
+      toast('已发起恢复文件下载。请核对并保管文件，再明确确认允许离开。');
+    } catch (error) {
+      this.downloadedRecovery = null; this.confirmedRecovery = null;
+      this.note = readableError(error); this.updateStatus();
+    }
   }
   async importFile(input) {
     const file = input.files[0];
     if (!file || this.readonly) return;
     try {
-      if (file.size > 2_000_000) throw new Error('恢复文件超过 2 MB，当前输入仍保留。');
+      const limits = this.recoveryLimits();
+      if (file.size > limits.file_bytes) throw new Error('恢复文件超过容量限制，当前输入仍保留。');
       const recovery = JSON.parse(await file.text());
-      const result = await post('/api/drafts/import', {recovery});
+      const result = await post('/api/drafts/import', {recovery}, {recoveryLimit:limits.request_bytes});
       if (this.matchesContext(result.record.draft) && !['dirty', 'unknown', 'saving', 'conflict'].includes(this.status)) {
         if (this.disposed) return;
         this.restoreCopy({draft:result.record.draft,etag:result.record.etag,status:'saved',pendingSave:null});

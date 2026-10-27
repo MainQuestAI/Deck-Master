@@ -161,8 +161,10 @@ export function sortHeading(label, direction, onToggle) {
   return el('th', {scope: 'col', ...(sorted ? {'aria-sort': direction} : {})},
     button(`${label} · ${state}`, onToggle, false, {class: 'quiet'}));
 }
-export function downloadJSON(value, name) {
-  const objectURL = URL.createObjectURL(new Blob([JSON.stringify(value, null, 2) + '\n'], {type: 'application/json'}));
+export function downloadJSON(value, name, {compact = false, maxBytes = Infinity} = {}) {
+  const blob = new Blob([JSON.stringify(value, null, compact ? undefined : 2) + '\n'], {type: 'application/json'});
+  if (blob.size > maxBytes) throw new Error('完整恢复文件超过容量限制，当前稿与待核实请求均保留；请先保存或核实，尚不能确认保管并离开。');
+  const objectURL = URL.createObjectURL(blob);
   const link = el('a', {href: objectURL, download: name});
   document.body.append(link); link.click(); link.remove();
   setTimeout(() => URL.revokeObjectURL(objectURL), 1000);

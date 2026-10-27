@@ -119,11 +119,13 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
 
     def _read_json_body(self):
         from .local_state import MAX_BODY, LocalStateError
+        from .ui_journal import RECOVERY_REQUEST_LIMIT
+        limit = RECOVERY_REQUEST_LIMIT if self.path in ('/api/drafts/import', '/api/drafts/recovery') else MAX_BODY
         if self.headers.get('Transfer-Encoding') or len(self.headers.get_all('Content-Length', [])) != 1:
             raise LocalStateError('body', 'one Content-Length is required')
         length = int(self.headers.get('Content-Length', '0'))
-        if not 0 < length <= MAX_BODY:
-            raise LocalStateError('body', 'request must be at most 2,000,000 bytes')
+        if not 0 < length <= limit:
+            raise LocalStateError('body', f'request must be at most {limit:,} bytes')
         value = json.loads(self.rfile.read(length))
         if not isinstance(value, dict):
             raise LocalStateError('body', 'request must be a JSON object')
