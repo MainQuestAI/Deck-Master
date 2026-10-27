@@ -387,11 +387,11 @@ export function style(app) {
     primaryTarget.value=value.targets?.[0]||'';showPrimary();renderTargets(); renderExcerpt(); showReference();
   }
   const initialDraftState = structuredClone(state());
-  function hydrate() {
+  function hydrate(event) {
     const current = editor(); loaded = false; serial++; proposal = null; plan = null; preview.replaceChildren(); impact.replaceChildren(); controls(); current.ready.then(() => {
       if (disposed || current !== editor()) return; loaded = true;
       const saved = current.draft.content.style_calibration;
-      hydrateState(saved || initialDraftState);
+      if (saved || event) hydrateState(saved || initialDraftState); else renderTargets();
       if (app.styleSelection && !app.readonly) {
         const seed = app.styleSelection; delete app.styleSelection;
         const validContext = (!seed.project_identity || seed.project_identity === app.info.project_identity) && (!seed.revision || seed.revision === app.route.revision);

@@ -128,6 +128,27 @@ def test_search_does_not_invalidate_order_preview(ui):
     expect(confirm).to_be_enabled()
 
 
+def test_initial_blank_draft_read_does_not_undo_an_accepted_keyboard_reorder(ui):
+    from playwright.sync_api import expect
+    import re
+    page, base = ui
+    held = []
+    page.route(re.compile(r'/api/drafts(?:\?.*)?$'), lambda route: held.append(route))
+    page.get_by_role('button', name='内容与页序', exact=True).click()
+    rows = page.locator('.content-order-row')
+    first = rows.nth(0).get_attribute('data-page-id')
+    second = rows.nth(1).get_attribute('data-page-id')
+    rows.first.locator('.order-handle').focus()
+    page.keyboard.press('Alt+ArrowDown')
+    expect(rows.first).to_have_attribute('data-page-id', second)
+    assert held
+    for route in held:
+        route.fulfill(response=route.fetch())
+    expect(page.locator('.draft-state')).not_to_contain_text('正在读取')
+    expect(rows.first).to_have_attribute('data-page-id', second)
+    expect(rows.nth(1)).to_have_attribute('data-page-id', first)
+
+
 def test_row_leaving_attention_filter_falls_back_to_heading(ui):
     from playwright.sync_api import expect
     page, base = ui

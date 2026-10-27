@@ -169,3 +169,62 @@ def test_method_preparation_clear_resets_the_actual_personal_context(tmp_path):
             browser.close()
     finally:
         server.stop()
+
+
+def test_beforeunload_requires_recovery_custody_under_persistent_quota(tmp_path):
+    server = WorkbenchServer(project_at(tmp_path))
+    try:
+        with sync_playwright() as runtime:
+            browser = runtime.chromium.launch()
+            page = browser.new_page(); page.goto(server.start() + 'studio/'); open_inputs(page)
+            page.route('**/api/drafts/save', lambda route: route.abort())
+            page.evaluate("() => {Storage.prototype.setItem=function(){throw new DOMException('quota','QuotaExceededError')};}")
+            page.get_by_label('用途与目标', exact=True).fill('retain through beforeunload')
+            page.once('dialog', lambda dialog: dialog.dismiss())
+            with page.expect_event('dialog') as prompt:
+                page.evaluate('() => { location.reload(); }')
+            assert prompt.value.type == 'beforeunload' and not page.is_closed()
+            expect(page.get_by_label('用途与目标', exact=True)).to_have_value('retain through beforeunload')
+            page.get_by_role('button', name='更多内容工具', exact=True).click()
+            page.get_by_role('button', name='工作笔记', exact=True).click()
+            with page.expect_download():
+                page.get_by_role('button', name='下载草稿恢复文件', exact=True).click()
+            page.get_by_role('button', name='我已保管恢复文件，允许离开', exact=True).click()
+            with page.expect_event('close'):
+                page.close(run_before_unload=True)
+            browser.close()
+    finally:
+        server.stop()
+
+
+@pytest.mark.parametrize('outcome', ['missing', 'late'])
+def test_dynamic_route_import_preserves_the_visible_owner(tmp_path, outcome):
+    server = WorkbenchServer(project_at(tmp_path))
+    try:
+        with sync_playwright() as runtime:
+            browser = runtime.chromium.launch()
+            page = browser.new_page(); page.goto(server.start() + 'studio/'); open_inputs(page)
+            page.get_by_label('用途与目标', exact=True).fill('keep current form owner')
+            held = []
+            def module(route):
+                if outcome == 'missing':
+                    route.fulfill(status=404, body='missing module')
+                else:
+                    held.append(route)
+            page.route('**/v2/gallery.js', module)
+            with page.expect_request('**/v2/gallery.js'):
+                page.get_by_role('button', name='整稿画廊', exact=True).click()
+            if outcome == 'late':
+                # A real history navigation supersedes the pending module generation.
+                page.evaluate('() => history.back()')
+                expect(page).to_have_url(__import__('re').compile('surface=content'))
+                page.get_by_role('button', name='材料与要求', exact=True).click()
+                page.get_by_role('button', name='修改任务要求', exact=True).click()
+                expect(page.get_by_label('用途与目标', exact=True)).to_have_value('keep current form owner')
+                assert held
+                route = held.pop(); response = page.request.get(server.start() + 'v2/gallery.js'); route.fulfill(response=response)
+            expect(page.get_by_label('用途与目标', exact=True)).to_have_value('keep current form owner')
+            expect(page.locator('.gallery-workbench')).to_have_count(0)
+            browser.close()
+    finally:
+        server.stop()

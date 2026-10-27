@@ -73,12 +73,12 @@ export function contentOperation(app, slot, read, hydrate, ref, onDone, {onPlanC
     if (!canWrite()) return;
     app.editor.draft.content[slot] = structuredClone(read()); app.editor.changed();
   }
-  function bind() {
+  function bind(event) {
     loaded = false; serial++; pending = null; impact.replaceChildren(); controls();
     const editor = app.editor;
     editor.ready.then(() => {
       if (disposed || editor !== app.editor) return;
-      hydrate(structuredClone(editor.draft.content[slot] || formalBaseline));
+      if (editor.draft.content[slot] || event) hydrate(structuredClone(editor.draft.content[slot] || formalBaseline));
       loaded = true;
       if (!canWrite() && !app.readonly) notice.textContent = '草稿绑定另一份内容基准；输入已保留，请回到对应版本核对后编辑。';
       controls();
