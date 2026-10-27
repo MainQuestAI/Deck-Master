@@ -354,7 +354,11 @@
       "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
       "implementation_plan_revision": [
         "Original scope retained; verify existing behavior before any further code change."
-      ]
+      ],
+      "review_r3_acceptance": {
+        "status": "pending_exact_head_validation",
+        "evidence": "REVIEW-R3.md; revised R3 delivery/release-validation.json"
+      }
     },
     {
       "id": "M01",
@@ -409,7 +413,11 @@
       "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
       "implementation_plan_revision": [
         "Retain paragraph/block boundaries in cells, nested tables and textboxes; preserve table structure and visual reading status."
-      ]
+      ],
+      "review_r3_acceptance": {
+        "status": "pending_exact_head_validation",
+        "evidence": "REVIEW-R3.md; revised R3 delivery/release-validation.json"
+      }
     },
     {
       "id": "M02",
@@ -462,7 +470,11 @@
       "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
       "implementation_plan_revision": [
         "Original scope retained; verify existing behavior before any further code change."
-      ]
+      ],
+      "review_r3_acceptance": {
+        "status": "pending_exact_head_validation",
+        "evidence": "REVIEW-R3.md; revised R3 delivery/release-validation.json"
+      }
     },
     {
       "id": "C01",
@@ -521,7 +533,11 @@
         "Keep exactly one byte-identical spec mirror for each of 85 contracts; shared extraction applies only inside the rebuild-v1 mirror group. Shared closure has 14 definitions and 47 same-directory shared refs.",
         "Review/summary direct dictionary consumers remain inline. Bare validators and independent native output (including nonempty replaces) retain old shape. Whole unique-mirror registry resolves 234 refs offline. Three legacy cross-group refs from a single historical workbench folder also fail on baseline and are not claimed self-contained.",
         "83 old schemas expand to baseline equality; recovery adds only optional paired pending_save and digest, reusing its existing draft subtree locally. Revised budget replaces original savings."
-      ]
+      ],
+      "review_r3_acceptance": {
+        "status": "pending_exact_head_validation",
+        "evidence": "REVIEW-R3.md; revised R3 delivery/release-validation.json"
+      }
     },
     {
       "id": "A01",
@@ -572,7 +588,11 @@
       "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
       "implementation_plan_revision": [
         "Original scope retained; verify existing behavior before any further code change."
-      ]
+      ],
+      "review_r3_acceptance": {
+        "status": "pending_exact_head_validation",
+        "evidence": "REVIEW-R3.md; revised R3 delivery/release-validation.json"
+      }
     },
     {
       "id": "A02",
@@ -624,7 +644,11 @@
       "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
       "implementation_plan_revision": [
         "Original scope retained; verify existing behavior before any further code change."
-      ]
+      ],
+      "review_r3_acceptance": {
+        "status": "pending_exact_head_validation",
+        "evidence": "REVIEW-R3.md; revised R3 delivery/release-validation.json"
+      }
     },
     {
       "id": "T01",
@@ -683,7 +707,11 @@
       "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
       "implementation_plan_revision": [
         "Original scope retained; verify existing behavior before any further code change."
-      ]
+      ],
+      "review_r3_acceptance": {
+        "status": "pending_exact_head_validation",
+        "evidence": "REVIEW-R3.md; revised R3 delivery/release-validation.json"
+      }
     },
     {
       "id": "R-F02",
@@ -742,7 +770,11 @@
       "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
       "implementation_plan_revision": [
         "Original scope retained; verify existing behavior before any further code change."
-      ]
+      ],
+      "review_r3_acceptance": {
+        "status": "pending_exact_head_validation",
+        "evidence": "REVIEW-R3.md; revised R3 delivery/release-validation.json"
+      }
     },
     {
       "id": "R-F04",
@@ -801,7 +833,11 @@
       "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
       "implementation_plan_revision": [
         "Original scope retained; verify existing behavior before any further code change."
-      ]
+      ],
+      "review_r3_acceptance": {
+        "status": "pending_exact_head_validation",
+        "evidence": "REVIEW-R3.md; revised R3 delivery/release-validation.json"
+      }
     },
     {
       "id": "R-F06",
@@ -862,7 +898,11 @@
       "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
       "implementation_plan_revision": [
         "Original scope retained; verify existing behavior before any further code change."
-      ]
+      ],
+      "review_r3_acceptance": {
+        "status": "pending_exact_head_validation",
+        "evidence": "REVIEW-R3.md; revised R3 delivery/release-validation.json"
+      }
     },
     {
       "id": "R-F07",
@@ -924,7 +964,11 @@
       "implementation_plan_revision": [
         "Original scope retained; verify existing behavior before any further code change.",
         "Bounded partial header cache only: at most4096; warm signature checks remain O(H). Mac probes record 4096/4097/8193 histories and reachable Python data bytes, not RSS."
-      ]
+      ],
+      "review_r3_acceptance": {
+        "status": "pending_exact_head_validation",
+        "evidence": "REVIEW-R3.md; revised R3 delivery/release-validation.json"
+      }
     },
     {
       "id": "R-F08",
@@ -990,7 +1034,11 @@
       "implementation_plan_revision": [
         "Original scope retained; verify existing behavior before any further code change.",
         "Delivery bundle preparation moves outside write lock, publication rechecks fixed snapshot; external export copy remains inside the lock."
-      ]
+      ],
+      "review_r3_acceptance": {
+        "status": "pending_exact_head_validation",
+        "evidence": "REVIEW-R3.md; revised R3 delivery/release-validation.json"
+      }
     },
     {
       "id": "R-F09",
@@ -1053,7 +1101,11 @@
       "implementation_plan_revision": [
         "Original scope retained; verify existing behavior before any further code change.",
         "Page reads remain60→60 in paired probe; only repeated Document semantic validation2→1. Corrupt Page rejection and current pointer preservation remain."
-      ]
+      ],
+      "review_r3_acceptance": {
+        "status": "pending_exact_head_validation",
+        "evidence": "REVIEW-R3.md; revised R3 delivery/release-validation.json"
+      }
     },
     {
       "id": "R-SVG",
@@ -1113,7 +1165,11 @@
       "implementation_plan_revision": [
         "Original scope retained; verify existing behavior before any further code change.",
         "Original controlled SVG probe could not execute with unavailable DejaVu Sans on both baseline and Mac candidate; it is not a pass. Actual installed native and Node compilation plus LibreOffice rendering use an available pinned Verdana font and are separately recorded."
-      ]
+      ],
+      "review_r3_acceptance": {
+        "status": "pending_exact_head_validation",
+        "evidence": "REVIEW-R3.md; revised R3 delivery/release-validation.json"
+      }
     },
     {
       "id": "UI-ITER-F01",
@@ -1181,7 +1237,8 @@
         "3ff01a803e84d4167e6653f80d8ee77a9ebc1ab1",
         "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
         "4126259b0326297cd1d2b5514cc206775a4c9eb6",
-        "3662f42cc856ebc176f4233faf29551c35054cff"
+        "3662f42cc856ebc176f4233faf29551c35054cff",
+        "c6c0311faece79466134a36a5d64d0d679fa5ff7"
       ],
       "validation": [
         {
@@ -1201,6 +1258,11 @@
           "scope": "PR #215 review R2",
           "evidence": "REVIEW-R2.md and revised delivery evidence/current",
           "status": "targeted checks recorded; final exact-head gates bound in delivery"
+        },
+        {
+          "scope": "PR215 review R3",
+          "evidence": "REVIEW-R3.md; R3 evidence/current",
+          "status": "targeted pass; final exact-head acceptance pending"
         }
       ],
       "status": "implemented_local_checks_recorded_final_gates_in_delivery",
@@ -1211,8 +1273,13 @@
       "implementation_plan_revision": [
         "Bind explicit recovery custody confirmation to exact draft + pendingSave; download alone never grants leave. New edits invalidate confirmation. Protect readonly recovery modal, navigation and beforeunload.",
         "Preserve actual owner state during initial read success/error/ACK, hydrate existing local buffer before accepting custom controls, and protect early edit→undo with the same readonly/disposed/base_ref/revision predicate. Four deterministic real Chromium scenarios include quota recovery custody and original draft ID/private brief preservation.",
-        "PR #215 review R2: Complete recovery UTF-8 capacity is separate from ordinary JSON. Explicit custody requires a complete size-bounded snapshot; mutations to current draft or pending request revoke it. Modal close/Escape follows its container-owned editor including replacement; committed route teardown releases only its own modal."
-      ]
+        "PR #215 review R2: Complete recovery UTF-8 capacity is separate from ordinary JSON. Explicit custody requires a complete size-bounded snapshot; mutations to current draft or pending request revoke it. Modal close/Escape follows its container-owned editor including replacement; committed route teardown releases only its own modal.",
+        "R3: Validate actual compact recovery file and the complete import request before download and custody; preserve legacy fallback, single-draft limits, both drafts, digests and revocation on edit."
+      ],
+      "review_r3_acceptance": {
+        "status": "pending_exact_head_validation",
+        "evidence": "REVIEW-R3.md; revised R3 delivery/release-validation.json"
+      }
     },
     {
       "id": "UI-ITER-F10",
@@ -1284,7 +1351,11 @@
       "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
       "implementation_plan_revision": [
         "Original scope retained; verify existing behavior before any further code change."
-      ]
+      ],
+      "review_r3_acceptance": {
+        "status": "pending_exact_head_validation",
+        "evidence": "REVIEW-R3.md; revised R3 delivery/release-validation.json"
+      }
     },
     {
       "id": "UI-ITER-F11",
@@ -1377,7 +1448,11 @@
       "implementation_plan_revision": [
         "Notify the actual form owner upon exact ACK retirement; reset formal fields to the fixed form baseline, clear personal fields, invalidate unsubmitted previews; retain dirty/unknown/saving/conflict/new etag/foreign identities.",
         "Preserve actual owner state during initial read success/error/ACK, hydrate existing local buffer before accepting custom controls, and protect early edit→undo with the same readonly/disposed/base_ref/revision predicate. Four deterministic real Chromium scenarios include quota recovery custody and original draft ID/private brief preservation."
-      ]
+      ],
+      "review_r3_acceptance": {
+        "status": "pending_exact_head_validation",
+        "evidence": "REVIEW-R3.md; revised R3 delivery/release-validation.json"
+      }
     },
     {
       "id": "UI-ITER-F12",
@@ -1465,7 +1540,11 @@
       "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
       "implementation_plan_revision": [
         "Render recovery confirmation synchronously before lazy body GET; cancel and selection generation reject late reads. Preserve the real existing restore flow."
-      ]
+      ],
+      "review_r3_acceptance": {
+        "status": "pending_exact_head_validation",
+        "evidence": "REVIEW-R3.md; revised R3 delivery/release-validation.json"
+      }
     },
     {
       "id": "UI-ITER-F13",
@@ -1515,7 +1594,11 @@
       "implementation_plan_revision": [
         "No implementation; claimed gallery-owner bug retracted. Savings zero."
       ],
-      "savings": 0
+      "savings": 0,
+      "review_r3_acceptance": {
+        "status": "not_implemented",
+        "evidence": "REVIEW-R3.md; revised R3 delivery/release-validation.json"
+      }
     },
     {
       "id": "UI-ITER-F14",
@@ -1579,7 +1662,8 @@
         "3ff01a803e84d4167e6653f80d8ee77a9ebc1ab1",
         "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
         "2fd3a4540944217fc6b25c5d5bcdb5a0b1ac235b",
-        "acbc1881866f1e910732b7f71c81b3e3a280b917"
+        "acbc1881866f1e910732b7f71c81b3e3a280b917",
+        "d5eec04fe1648562e61bc75126028f1266089414"
       ],
       "validation": [
         {
@@ -1599,6 +1683,11 @@
           "scope": "PR #215 review R2",
           "evidence": "REVIEW-R2.md and revised delivery evidence/current",
           "status": "targeted checks recorded; final exact-head gates bound in delivery"
+        },
+        {
+          "scope": "PR215 review R3",
+          "evidence": "REVIEW-R3.md; R3 evidence/current",
+          "status": "targeted pass; final exact-head acceptance pending"
         }
       ],
       "status": "implemented_local_checks_recorded_final_gates_in_delivery",
@@ -1609,8 +1698,13 @@
       "implementation_plan_revision": [
         "Original scope retained; verify existing behavior before any further code change.",
         "PR #215 review R2: Module-load failures use protected whole-document reload against the captured project/surface/revision/parameters. All draft owners must allow leave. Ordinary reads retain read retry; superseded failure controls are inert; no write replay.",
-        "Real browser offline/online events retain the current-generation protected module reload; online never replays writes or changes stale-target guards."
-      ]
+        "Real browser offline/online events retain the current-generation protected module reload; online never replays writes or changes stale-target guards.",
+        "R3: Distinguish import failure at role boot/external-review from ordinary API errors; guarded full reload, one-shot empty external-review form, protected queued forms and stale-control invalidation. No module URL cache bypass or first-screen performance claim."
+      ],
+      "review_r3_acceptance": {
+        "status": "pending_exact_head_validation",
+        "evidence": "REVIEW-R3.md; revised R3 delivery/release-validation.json"
+      }
     },
     {
       "id": "DOC-00",
@@ -1682,7 +1776,11 @@
         "Guard standalone tools before any write, including resolved ancestry and symlinks. Existing candidate rejected. Original destructive probe executed only on an expendable copy.",
         "Protect verification.json, existing-broken-links.json and link-audit.json report destinations from symlink writes before any IO. Seven destructive layout cases + three report symlink cases preserve sentinel bytes.",
         "PR #215 review R2: Standalone documentation sample validator retains pass and explicitly reports intermediate scope and final_candidate_status=not_evaluated; path safety and archive rules unchanged."
-      ]
+      ],
+      "review_r3_acceptance": {
+        "status": "pending_exact_head_validation",
+        "evidence": "REVIEW-R3.md; revised R3 delivery/release-validation.json"
+      }
     },
     {
       "id": "DOC-01",
@@ -1744,7 +1842,11 @@
       "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
       "implementation_plan_revision": [
         "Original scope retained; verify existing behavior before any further code change."
-      ]
+      ],
+      "review_r3_acceptance": {
+        "status": "pending_exact_head_validation",
+        "evidence": "REVIEW-R3.md; revised R3 delivery/release-validation.json"
+      }
     },
     {
       "id": "DOC-02",
@@ -1810,7 +1912,11 @@
       "implementation_plan_revision": [
         "Retain the 3077-byte W12.md local dependency; preserve all historical archive originals byte-for-byte.",
         "ZIP is explicitly tracked despite host global *.zip ignore; SHA256 2d7d6c704e4bce869edc62687cabae114dd3a7427f9a99de613d7519a9838317, 60175643 bytes. Physical archive bytes count in exact budget."
-      ]
+      ],
+      "review_r3_acceptance": {
+        "status": "pending_exact_head_validation",
+        "evidence": "REVIEW-R3.md; revised R3 delivery/release-validation.json"
+      }
     },
     {
       "id": "DOC-03",
@@ -1875,6 +1981,11 @@
           "scope": "PR #215 review R2",
           "evidence": "REVIEW-R2.md and revised delivery evidence/current",
           "status": "targeted checks recorded; final exact-head gates bound in delivery"
+        },
+        {
+          "scope": "PR215 review R3",
+          "evidence": "REVIEW-R3.md; R3 evidence/current",
+          "status": "targeted pass; final exact-head acceptance pending"
         }
       ],
       "status": "implemented_local_checks_recorded_final_gates_in_delivery",
@@ -1884,8 +1995,13 @@
       "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
       "implementation_plan_revision": [
         "Scan JSON and CSV too. Keep 262 historical strings in 8 retained files unchanged; map 82 targets to exact-SHA archive members/local W12 through machine-references.json.",
-        "PR #215 review R2: Intermediate sample PASS is not final candidate acceptance. Full machine-readable references, exact archive bytes and 12 inherited provenance gaps remain separately audited."
-      ]
+        "PR #215 review R2: Intermediate sample PASS is not final candidate acceptance. Full machine-readable references, exact archive bytes and 12 inherited provenance gaps remain separately audited.",
+        "R3: Keep document sample scope and all inherited gaps; final freeze/seal require the new candidate identity and explicit final test counts, not former798/694 counts."
+      ],
+      "review_r3_acceptance": {
+        "status": "pending_exact_head_validation",
+        "evidence": "REVIEW-R3.md; revised R3 delivery/release-validation.json"
+      }
     },
     {
       "id": "I99",
@@ -1923,7 +2039,9 @@
         "3662f42cc856ebc176f4233faf29551c35054cff",
         "2fd3a4540944217fc6b25c5d5bcdb5a0b1ac235b",
         "a3d1629a647dd5f85baf2bc94f3195a3bc230788",
-        "a01040949d7e5c1f7bcc722ab414348f2e953bbf"
+        "a01040949d7e5c1f7bcc722ab414348f2e953bbf",
+        "c6c0311faece79466134a36a5d64d0d679fa5ff7",
+        "d5eec04fe1648562e61bc75126028f1266089414"
       ],
       "validation": [
         {
@@ -1943,6 +2061,11 @@
           "scope": "PR #215 review R2",
           "evidence": "REVIEW-R2.md and revised delivery evidence/current",
           "status": "targeted checks recorded; final exact-head gates bound in delivery"
+        },
+        {
+          "scope": "PR215 review R3",
+          "evidence": "REVIEW-R3.md; R3 evidence/current",
+          "status": "targeted pass; final exact-head acceptance pending"
         }
       ],
       "status": "implemented_local_checks_recorded_final_gates_in_delivery",
@@ -1953,17 +2076,22 @@
       "implementation_plan_revision": [
         "Original scope retained; verify existing behavior before any further code change.",
         "PR #215 review R2: Bind all 25 cards to the same revised tracked candidate, preserve old ZIP, and report both fixed-baseline and reviewed-head deltas; exact full/installed/CI evidence remains required.",
-        "Deterministically hold real handoff reads through pending/copy-identity assertions; original abort versus transient loading race is recorded on predecessor, forced baseline/current and20 fixed repeats."
-      ]
+        "Deterministically hold real handoff reads through pending/copy-identity assertions; original abort versus transient loading race is recorded on predecessor, forced baseline/current and20 fixed repeats.",
+        "R3: New head requires new complete local/CI/installed validation; preserve073d pass/failure evidence and Q2 unproved cause. Freeze25 cards together; report62df,6e9 and073d comparisons."
+      ],
+      "review_r3_acceptance": {
+        "status": "pending_exact_head_validation",
+        "evidence": "REVIEW-R3.md; revised R3 delivery/release-validation.json"
+      }
     }
   ],
   "current_candidate": {
-    "reviewed_head": "6e9e7d64e7b1963f415c2a4d06de9f2b89881091",
-    "source_runtime_commit": "acbc1881866f1e910732b7f71c81b3e3a280b917",
-    "final_candidate_identity": "Revised delivery freeze-identity.json and data/final-candidate-manifest.json bind final tracked head and SHA."
+    "reviewed_head": "073d083972ab3d36a91109aa846868ef48e6baca",
+    "source_runtime_commit": "d5eec04fe1648562e61bc75126028f1266089414",
+    "final_candidate_identity": "R3 freeze-identity and manifest bind final tracked source; final gate evidence must name that head."
   },
-  "acceptance": "review_r2_targeted_checks_recorded_full_exact_head_gates_required_in_revised_delivery",
-  "formal_code_commit": "acbc1881866f1e910732b7f71c81b3e3a280b917",
+  "acceptance": "review_r3_targeted_pass_complete_exact_head_acceptance_pending",
+  "formal_code_commit": "d5eec04fe1648562e61bc75126028f1266089414",
   "validation_streams": {
     "unit": {
       "status": "pass_with_inherited_skips",
@@ -2096,6 +2224,42 @@
           "validation": "25 targeted browser/read-recovery/handoff cases passed; 4-case handoff file and both10x repeat probes passed"
         }
       }
+    },
+    "review_r3": {
+      "reviewed_head": "073d083972ab3d36a91109aa846868ef48e6baca",
+      "remote_main_at_start": "62dfcfc5637f0bee2358074c4458047689dd5299",
+      "implementation_commits": {
+        "capacity": "c6c0311faece79466134a36a5d64d0d679fa5ff7",
+        "module_entries": "d5eec04fe1648562e61bc75126028f1266089414"
+      },
+      "findings": {
+        "legacy_recovery_envelope": "check actual draft, compact file including newline, and JSON.stringify({recovery}) UTF-8 bytes before download/custody; retain both drafts and original request",
+        "lazy_entry_recovery": "project/launcher boot and external-review imports use explicit guarded document reload; API failures retain ordinary retry; one-shot launcher_action=external_review opens empty form only"
+      },
+      "targeted_validation": {
+        "capacity": "7 passed (six actual ASCII/UTF8 input cases at complete-request limit -1/0/+1 and existing fallback case); capacity-red.xml retains original failure",
+        "entries": "14 passed after final changes; three initial 404 failures retained in entry-red.xml",
+        "combined_browser": "41 passed in focused-browser.xml; all existing lifecycle/readonly/quota/read recovery checks retained",
+        "backend": "16 passed in backend.xml (static modules, HTTP recovery, contracts)",
+        "legacy_http": "Actual clean 6e9 core validates both drafts/recovery; 1999999/2000000 request bytes =>200,2000001/2000012=>422 body. legacy-http.json"
+      },
+      "predecessor_acceptance": {
+        "head": "073d083972ab3d36a91109aa846868ef48e6baca",
+        "local": "4416 unit+6 inherited skips;138 render+1FrozenA;798 browser;694 installed;9offline;native/LO/dual1.1m pass",
+        "pr_ci": {
+          "run": 40519527180,
+          "status": "seven jobs success"
+        },
+        "push_ci": {
+          "run": 40519508172,
+          "status": "failure",
+          "job": 122243045178,
+          "cause": "180s Q2 child timeout; specific cause unproved"
+        },
+        "q2_paired_probes": "6e9 and073d each10 trials, each70 cases passed, unchanged180 deadline; no Q2 fix/retry/relaxation claimed"
+      },
+      "final_acceptance": "PENDING: freeze new tracked head; rebuild wheel/sdist; repeat complete local, outside installed and both seven-job CI gates.073d evidence is predecessor only.",
+      "boundaries": "F13 not implemented;12 provenance gaps,FrozenA,actualHost,customer/professional acceptance remain open; no production/model/release/merge"
     }
   },
   "final_evidence_policy": "The corrected developer package data/review-amendments.json and evidence/current/release-validation.json record eventual distribution/CI outcomes against the exact tracked candidate manifest and PR head. Repository ledger preserves pre-push results; no future green is claimed here.",
@@ -2148,5 +2312,46 @@
       }
     }
   },
-  "previous_candidate_before_review_r2": "formal-final-runtime"
+  "previous_candidate_before_review_r2": "formal-final-runtime",
+  "review_r3": {
+    "reviewed_head": "073d083972ab3d36a91109aa846868ef48e6baca",
+    "remote_main_at_start": "62dfcfc5637f0bee2358074c4458047689dd5299",
+    "implementation_commits": {
+      "capacity": "c6c0311faece79466134a36a5d64d0d679fa5ff7",
+      "module_entries": "d5eec04fe1648562e61bc75126028f1266089414"
+    },
+    "findings": {
+      "legacy_recovery_envelope": "check actual draft, compact file including newline, and JSON.stringify({recovery}) UTF-8 bytes before download/custody; retain both drafts and original request",
+      "lazy_entry_recovery": "project/launcher boot and external-review imports use explicit guarded document reload; API failures retain ordinary retry; one-shot launcher_action=external_review opens empty form only"
+    },
+    "targeted_validation": {
+      "capacity": "7 passed (six actual ASCII/UTF8 input cases at complete-request limit -1/0/+1 and existing fallback case); capacity-red.xml retains original failure",
+      "entries": "14 passed after final changes; three initial 404 failures retained in entry-red.xml",
+      "combined_browser": "41 passed in focused-browser.xml; all existing lifecycle/readonly/quota/read recovery checks retained",
+      "backend": "16 passed in backend.xml (static modules, HTTP recovery, contracts)",
+      "legacy_http": "Actual clean 6e9 core validates both drafts/recovery; 1999999/2000000 request bytes =>200,2000001/2000012=>422 body. legacy-http.json"
+    },
+    "predecessor_acceptance": {
+      "head": "073d083972ab3d36a91109aa846868ef48e6baca",
+      "local": "4416 unit+6 inherited skips;138 render+1FrozenA;798 browser;694 installed;9offline;native/LO/dual1.1m pass",
+      "pr_ci": {
+        "run": 40519527180,
+        "status": "seven jobs success"
+      },
+      "push_ci": {
+        "run": 40519508172,
+        "status": "failure",
+        "job": 122243045178,
+        "cause": "180s Q2 child timeout; specific cause unproved"
+      },
+      "q2_paired_probes": "6e9 and073d each10 trials, each70 cases passed, unchanged180 deadline; no Q2 fix/retry/relaxation claimed"
+    },
+    "final_acceptance": "PENDING: freeze new tracked head; rebuild wheel/sdist; repeat complete local, outside installed and both seven-job CI gates.073d evidence is predecessor only.",
+    "boundaries": "F13 not implemented;12 provenance gaps,FrozenA,actualHost,customer/professional acceptance remain open; no production/model/release/merge"
+  },
+  "previous_candidate_before_review_r3": {
+    "reviewed_head": "6e9e7d64e7b1963f415c2a4d06de9f2b89881091",
+    "source_runtime_commit": "acbc1881866f1e910732b7f71c81b3e3a280b917",
+    "final_candidate_identity": "Revised delivery freeze-identity.json and data/final-candidate-manifest.json bind final tracked head and SHA."
+  }
 }
