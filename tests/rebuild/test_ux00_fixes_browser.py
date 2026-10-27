@@ -26,7 +26,7 @@ from deck_master.models import content_identity
 from deck_master.samples import create_sample
 from deck_master.store import Store
 from deck_master.web import WorkbenchServer
-from test_candidates import candidate
+from candidate_fixtures import candidate
 from test_content_candidates import content_intent
 from test_workbench_actions import commit
 from test_action_targets_browser import _prepare_browser_project

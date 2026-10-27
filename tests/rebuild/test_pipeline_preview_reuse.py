@@ -8,7 +8,7 @@ from deck_master import pipeline, service, stages
 from deck_master.models import bump_revision
 from deck_master.operations import OperationError
 from page_visual_helpers import pass_page_review
-from test_candidates import store, start, accept, envelope  # noqa: F401
+from candidate_fixtures import store, start, accept, envelope  # noqa: F401
 
 
 def prepared(store):

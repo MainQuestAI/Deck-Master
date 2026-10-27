@@ -258,7 +258,7 @@ def test_candidate_desk_rapid_switch_late_reply_and_decisions_target_displayed_o
     import re
     from urllib.parse import urlparse
     from playwright.sync_api import expect
-    from test_candidates import candidate
+    from candidate_fixtures import candidate
     page, server, path, store = ux03_browser
     url = server.start()
     cid1 = candidate(store, width=20)
@@ -330,7 +330,7 @@ def test_expansion_plan_carries_adopted_sample_and_explains_core_rejection(ux03_
     """
     import json
     from playwright.sync_api import expect
-    from test_candidates import candidate
+    from candidate_fixtures import candidate
     page, server, path, store = ux03_browser
     recipe_sha = 'e' * 64
     recipe = v2_recipe(1)

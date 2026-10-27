@@ -12,7 +12,7 @@ from deck_master.samples import create_sample
 from deck_master.store import Store
 from deck_master.web import WorkbenchServer
 from rc3_fixtures import evidence_for, settle_fidelity_review
-from test_candidates import start, accept
+from candidate_fixtures import start, accept
 
 pytestmark = pytest.mark.browser
 

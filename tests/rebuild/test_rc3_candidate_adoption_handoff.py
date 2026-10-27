@@ -6,7 +6,7 @@ import pytest
 from deck_master import candidates, changes, collaboration, eligibility
 from deck_master.operations import OperationError
 from rc3_fixtures import evidence_for
-from test_candidates import dispatch, start, accept, plan as adoption_plan
+from candidate_fixtures import dispatch, start, accept, plan as adoption_plan
 from test_rc3_candidate_adoption_browser import new_request
 
 

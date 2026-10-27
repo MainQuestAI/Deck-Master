@@ -454,7 +454,7 @@ def test_whole_page_opinion_flows_to_requirement_handoff(workbench):
 
 
 def test_nearby_candidates_bind_historical_revision(workbench):
-    from test_candidates import dispatch, start, accept
+    from candidate_fixtures import dispatch, start, accept
     page, _, store, _, goto, _ = workbench
     old = store.current_revision_id()
     task = dispatch(store, 'p01', layer='svg')

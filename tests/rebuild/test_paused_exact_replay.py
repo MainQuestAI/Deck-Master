@@ -79,7 +79,7 @@ def test_call_begin_recovery_keeps_identity_request_and_allowance_binding(flow):
     assert store.load_document() == before
 
 
-from test_candidates import store as assembly_store  # noqa: E402,F401
+from candidate_fixtures import store as assembly_store  # noqa: E402,F401
 from test_pipeline_preview_reuse import prepared  # noqa: E402
 
 

@@ -3,7 +3,7 @@ Synthetic state proves UI behavior, not production rendering quality.
 """
 import pytest
 from test_action_targets_browser import action_browser
-from test_candidates import candidate
+from candidate_fixtures import candidate
 
 pytestmark = pytest.mark.browser
 

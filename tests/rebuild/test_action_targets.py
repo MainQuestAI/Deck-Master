@@ -12,7 +12,7 @@ from deck_master.store import Store
 from deck_master.web import WorkbenchServer
 from test_web import _get_json
 from test_workbench_actions import commit, synthetic_task
-from test_candidates import candidate
+from candidate_fixtures import candidate
 from test_content_candidates import dispatch_content_ops_trial, start_task, accept, changeset_envelope
 from test_workbench_reads import make_project
 from test_content_ops import prepare_editorial_project

@@ -12,7 +12,7 @@ from deck_master.pipeline import artifact
 from deck_master.store import Store
 from test_review import _project_with_passing_reviews
 from test_content_ops import prepare_editorial_project
-from test_candidates import start, accept, plan, adopt
+from candidate_fixtures import start, accept, plan, adopt
 
 
 @pytest.fixture

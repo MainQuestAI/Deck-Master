@@ -681,7 +681,7 @@ def test_candidate_adoption_refused_after_withdrawal(tmp_path):
     is adoptable while the adoption authorization is effective, and the
     withdrawal refuses the very same adoption with the draft untouched."""
     from deck_master.samples import create_sample
-    from test_candidates import accept as trial_accept, dispatch as trial_dispatch, \
+    from candidate_fixtures import accept as trial_accept, dispatch as trial_dispatch, \
         plan as candidate_plan, start as trial_start, adopt as candidate_adopt
     project = tmp_path / "candidate-project"
     create_sample(project, page_count=2, readonly=False)

@@ -25,7 +25,7 @@ def _module(name, filename):
 
 
 gen = _module("rc3_synthetic_generation", "test_generation_protocol.py")
-trial = _module("rc3_synthetic_candidates", "test_candidates.py")
+trial = _module("rc3_synthetic_candidates", "candidate_fixtures.py")
 sty = _module("rc3_synthetic_styles", "test_styles.py")
 enf = _module("rc3_synthetic_control", "test_eligibility_enforcement.py")
 content_trials = _module("rc3_synthetic_content_trials", "test_content_candidates.py")

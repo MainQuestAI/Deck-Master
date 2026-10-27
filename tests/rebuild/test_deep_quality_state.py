@@ -12,7 +12,7 @@ from deck_master.store import Store
 from page_visual_helpers import pass_page_review
 from hostenv import resolve_host_font
 from test_service_flow import _prepare_production
-import test_candidates as artifacts
+import candidate_fixtures as artifacts
 import test_content_candidates as content
 
 

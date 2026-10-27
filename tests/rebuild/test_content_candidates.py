@@ -238,7 +238,7 @@ def test_content_writer_floor_locks_out_older_cores(project, monkeypatch):
 
 
 def test_show_and_list_distinguish_result_kinds(project):
-    from test_candidates import candidate as svg_candidate
+    from candidate_fixtures import candidate as svg_candidate
     path, store = project
     svg_candidate(store)
     page_task = dispatch_content_trial(path, store, 'p01')
@@ -652,7 +652,7 @@ def test_svg_repair_trial_survives_sibling_auto_slot_write(project):
     freshness through the generation basis (which does not include the svg
     slot itself), so a sibling auto result writing the same slot does not
     stale the trial's late return."""
-    from test_candidates import start as svg_start, envelope as svg_envelope, accept as svg_accept
+    from candidate_fixtures import start as svg_start, envelope as svg_envelope, accept as svg_accept
     path, store = project
     doc = store.load_document(); entry = next(e for e in doc['pages'] if e['page_id'] == 'p01')
     value = {'schema_version': 'change_intent.v1', 'project_id': doc['project_id'],
@@ -677,7 +677,7 @@ def test_svg_repair_trial_survives_sibling_auto_slot_write(project):
     auto_task = tasks._lookup_task(store.load_document(), auto['task_ids'][0], store)
     svg_start(store, trial)
     svg_start(store, auto_task)
-    from test_candidates import accept as svg_accept
+    from candidate_fixtures import accept as svg_accept
     svg_accept(store, auto_task, svg_envelope(store, auto_task, 40))
     result = svg_accept(store, trial)
     assert result['status'] == 'candidate_ready' and result['result_kind'] == 'artifact'

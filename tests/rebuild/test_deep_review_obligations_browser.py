@@ -19,7 +19,7 @@ from deck_master.web import WorkbenchServer
 from test_deep_review_fixes_browser import project_browser  # noqa: F401  (fixture reuse)
 from test_style_content_browser import confirm_recipe, open_style, toggle_phase, prepare_style_project  # noqa: F401
 from test_ux05_runs_delivery_browser import add_task  # noqa: F401
-from test_candidates import store as candidate_store, dispatch as dispatch_current_task  # noqa: F401
+from candidate_fixtures import store as candidate_store, dispatch as dispatch_current_task  # noqa: F401
 
 pytestmark = pytest.mark.browser
 

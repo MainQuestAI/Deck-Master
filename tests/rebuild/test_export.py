@@ -295,7 +295,7 @@ def test_adopting_an_existing_svg_candidate_invalidates_delivery_with_named_gaps
     """The audit's before/after pair: a passing deck exports, then adoption refuses."""
     import uuid as uuid_mod
     from deck_master import candidates as candidates_mod, exports
-    from test_candidates import accept, dispatch, plan as plan_adoption
+    from candidate_fixtures import accept, dispatch, plan as plan_adoption
     project, store = _passing_deck(tmp_path)
     # The candidate/changes machinery works on explicit workbench.v3 projects, and
     # an SVG trial needs the current original image to exist.
