@@ -446,6 +446,12 @@ export class DraftEditor {
       // Preserve every content purpose and its basis, never HTTP/session metadata.
       const recovery = {schema_version: 'ui_draft_recovery.v1', draft: value, digest: await digest(value),
         ...(pendingSave ? {pending_save:pendingSave, pending_save_digest:await digest(pendingSave)} : {})};
+      // A legacy core gives file and request the same limit. The import envelope
+      // is larger than the compact file, so both must fit before custody opens.
+      if (new Blob([JSON.stringify(recovery) + '\n']).size > limits.file_bytes)
+        throw new Error('完整恢复文件超过容量限制，当前稿与待核实请求均保留；尚不能确认保管并离开。');
+      if (new TextEncoder().encode(JSON.stringify({recovery})).length > limits.request_bytes)
+        throw new Error('恢复导入请求超过容量限制，当前稿与待核实请求均保留；尚不能确认保管并离开。');
       downloadJSON(recovery, 'deck-master-personal-draft.json', {compact:true, maxBytes:limits.file_bytes});
       if (canonical(draft) === canonical(this.draft) && snapshot === this.recoverySnapshot()) this.downloadedRecovery = snapshot;
       this.updateStatus();

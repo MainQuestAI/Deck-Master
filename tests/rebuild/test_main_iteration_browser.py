@@ -137,6 +137,72 @@ def test_recovery_file_limit_and_legacy_core_fallback_never_allow_lossy_custody(
         server.stop()
 
 
+@pytest.mark.parametrize('encoding', ['ascii', 'utf8'])
+@pytest.mark.parametrize('offset', [-1, 0, 1])
+def test_legacy_recovery_custody_checks_the_complete_import_request(tmp_path, encoding, offset):
+    def text_bytes(size):
+        if encoding == 'ascii':
+            return 'a' * size
+        return '中😀' * (size // 7) + 'a' * (size % 7)
+
+    project = project_at(tmp_path)
+    server = WorkbenchServer(project)
+    try:
+        with sync_playwright() as runtime:
+            browser = runtime.chromium.launch()
+            page = browser.new_page(); page.goto(server.start() + 'studio/'); open_operations(page)
+            writes = []
+            page.on('request', lambda request: writes.append(request.post_data_json)
+                    if request.method == 'POST' and request.url.endswith('/api/drafts/save') else None)
+            page.route('**/api/drafts/save', lambda route: route.abort())
+            page.evaluate("""() => {delete observedDraft.info.recovery_limits;
+              Storage.prototype.setItem=function(){throw new DOMException('quota','QuotaExceededError')};}""")
+            note = page.get_by_label('个人草稿', exact=True)
+            # Both versions enter through actual textarea input events. The pending
+            # version is the original HTTP request, never a replacement fixture.
+            note.fill(text_bytes(990_000))
+            expect(page.locator('.draft-state')).to_contain_text('待核实')
+            overhead = page.evaluate("""() => {const e=observedDraft,draft=structuredClone(e.draft);
+              draft.content.text='';return new TextEncoder().encode(JSON.stringify({recovery:{
+                schema_version:'ui_draft_recovery.v1',draft,digest:'0'.repeat(64),
+                pending_save:e.pendingSave,pending_save_digest:'0'.repeat(64)}})).length;}""")
+            current = text_bytes(2_000_000 + offset - overhead)
+            note.fill(current)
+            downloads = []
+            page.on('download', lambda saved: downloads.append(saved))
+            if offset > 0:
+                page.get_by_role('button', name='下载草稿恢复文件', exact=True).click()
+                expect(page.locator('.personal-draft .field-error')).to_contain_text('恢复导入请求超过容量限制')
+                assert downloads == []
+                expect(page.get_by_role('button', name='我已保管恢复文件，允许离开', exact=True)).to_be_hidden()
+                assert not page.evaluate('() => observedDraft.canLeave()')
+                expect(note).to_have_value(current)
+                assert page.evaluate('() => observedDraft.pendingSave') == writes[0]
+            else:
+                with page.expect_download() as saved:
+                    page.get_by_role('button', name='下载草稿恢复文件', exact=True).click()
+                downloaded = Path(saved.value.path())
+                raw = downloaded.read_bytes(); recovery = json.loads(raw)
+                assert len(raw) == 2_000_000 + offset - 12
+                assert recovery['pending_save'] == writes[0]
+                assert recovery['digest'] == ui_journal.digest(recovery['draft'])
+                assert recovery['pending_save_digest'] == ui_journal.digest(recovery['pending_save'])
+                assert not page.evaluate('() => observedDraft.canLeave()')
+                page.get_by_role('button', name='我已保管恢复文件，允许离开', exact=True).click()
+                assert page.evaluate('() => observedDraft.canLeave()')
+                with page.expect_response('**/api/drafts/import') as imported:
+                    page.get_by_label('导入草稿恢复文件', exact=True).set_input_files(downloaded)
+                assert imported.value.status == 200
+                assert imported.value.json()['record']['draft']['content']['text'] == current
+                assert imported.value.json()['preserved_pending_save']
+                assert len(writes) == 1
+                note.fill(current + 'x')
+                assert not page.evaluate('() => observedDraft.canLeave()')
+            browser.close()
+    finally:
+        server.stop()
+
+
 def test_clear_receipt_updates_real_form_in_both_tabs(tmp_path):
     server = WorkbenchServer(project_at(tmp_path))
     try:
