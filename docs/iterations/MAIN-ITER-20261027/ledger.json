@@ -1578,7 +1578,8 @@
         "6f6e3bb362f4d1d4ad3059661118763f8e0a0d5b",
         "3ff01a803e84d4167e6653f80d8ee77a9ebc1ab1",
         "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
-        "2fd3a4540944217fc6b25c5d5bcdb5a0b1ac235b"
+        "2fd3a4540944217fc6b25c5d5bcdb5a0b1ac235b",
+        "acbc1881866f1e910732b7f71c81b3e3a280b917"
       ],
       "validation": [
         {
@@ -1607,7 +1608,8 @@
       "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
       "implementation_plan_revision": [
         "Original scope retained; verify existing behavior before any further code change.",
-        "PR #215 review R2: Module-load failures use protected whole-document reload against the captured project/surface/revision/parameters. All draft owners must allow leave. Ordinary reads retain read retry; superseded failure controls are inert; no write replay."
+        "PR #215 review R2: Module-load failures use protected whole-document reload against the captured project/surface/revision/parameters. All draft owners must allow leave. Ordinary reads retain read retry; superseded failure controls are inert; no write replay.",
+        "Real browser offline/online events retain the current-generation protected module reload; online never replays writes or changes stale-target guards."
       ]
     },
     {
@@ -1920,7 +1922,8 @@
         "4126259b0326297cd1d2b5514cc206775a4c9eb6",
         "3662f42cc856ebc176f4233faf29551c35054cff",
         "2fd3a4540944217fc6b25c5d5bcdb5a0b1ac235b",
-        "a3d1629a647dd5f85baf2bc94f3195a3bc230788"
+        "a3d1629a647dd5f85baf2bc94f3195a3bc230788",
+        "a01040949d7e5c1f7bcc722ab414348f2e953bbf"
       ],
       "validation": [
         {
@@ -1949,17 +1952,18 @@
       "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
       "implementation_plan_revision": [
         "Original scope retained; verify existing behavior before any further code change.",
-        "PR #215 review R2: Bind all 25 cards to the same revised tracked candidate, preserve old ZIP, and report both fixed-baseline and reviewed-head deltas; exact full/installed/CI evidence remains required."
+        "PR #215 review R2: Bind all 25 cards to the same revised tracked candidate, preserve old ZIP, and report both fixed-baseline and reviewed-head deltas; exact full/installed/CI evidence remains required.",
+        "Deterministically hold real handoff reads through pending/copy-identity assertions; original abort versus transient loading race is recorded on predecessor, forced baseline/current and20 fixed repeats."
       ]
     }
   ],
   "current_candidate": {
     "reviewed_head": "6e9e7d64e7b1963f415c2a4d06de9f2b89881091",
-    "source_runtime_commit": "2fd3a4540944217fc6b25c5d5bcdb5a0b1ac235b",
+    "source_runtime_commit": "acbc1881866f1e910732b7f71c81b3e3a280b917",
     "final_candidate_identity": "Revised delivery freeze-identity.json and data/final-candidate-manifest.json bind final tracked head and SHA."
   },
   "acceptance": "review_r2_targeted_checks_recorded_full_exact_head_gates_required_in_revised_delivery",
-  "formal_code_commit": "2fd3a4540944217fc6b25c5d5bcdb5a0b1ac235b",
+  "formal_code_commit": "acbc1881866f1e910732b7f71c81b3e3a280b917",
   "validation_streams": {
     "unit": {
       "status": "pass_with_inherited_skips",
@@ -2054,7 +2058,9 @@
         "capacity": "4126259b0326297cd1d2b5514cc206775a4c9eb6",
         "modal": "3662f42cc856ebc176f4233faf29551c35054cff",
         "module": "2fd3a4540944217fc6b25c5d5bcdb5a0b1ac235b",
-        "doc_scope": "a3d1629a647dd5f85baf2bc94f3195a3bc230788"
+        "doc_scope": "a3d1629a647dd5f85baf2bc94f3195a3bc230788",
+        "module_online": "acbc1881866f1e910732b7f71c81b3e3a280b917",
+        "handoff_harness": "a01040949d7e5c1f7bcc722ab414348f2e953bbf"
       },
       "preimplementation_status": "confirmed; no second general development authorization required",
       "native_bounded_review": "no reproducible new P1/P2; tests/fixtures summary only, no long suite",
@@ -2063,8 +2069,33 @@
         "browser_and_read_recovery": "21 passed before additional readonly owner assertions; final full browser gate repeats all assertions",
         "doc_sample": "pass=true; validation_scope.candidate_stage=intermediate_documentation_sample; final_candidate_status=not_evaluated"
       },
-      "final_acceptance": "pending at source freeze; exact head, wheel/sdist hashes, local full gates and CI objects must be bound in revised delivery evidence",
-      "historical_boundaries": "All 12 historical provenance gaps, Frozen A, actual Host and customer/professional acceptance remain unchanged."
+      "final_acceptance": "Final head is frozen after these followups; full local and both exact-head CI gate objects must be recorded in revised delivery. Predecessor results are historical only.",
+      "historical_boundaries": "All 12 historical provenance gaps, Frozen A, actual Host and customer/professional acceptance remain unchanged.",
+      "gate_followups": {
+        "handoff_harness": {
+          "commit": "a01040949d7e5c1f7bcc722ab414348f2e953bbf",
+          "original_baseline_repeat": {
+            "pass": 10,
+            "fail": 0
+          },
+          "original_current_repeat": {
+            "pass": 5,
+            "fail": 5
+          },
+          "forced_read_error_both_versions": "expected assertion failure after 100ms",
+          "fixed_repeat_each_version": {
+            "pass": 10,
+            "fail": 0
+          },
+          "disposition": "Hold the real request until all pending/copy identity assertions; fulfill using real service response before unroute. No assertion removed or timeout enlarged."
+        },
+        "module_online": {
+          "commit": "acbc1881866f1e910732b7f71c81b3e3a280b917",
+          "before": "real offline/online events replaced module reload with generic read retry",
+          "after": "keep current-generation protected module reload; ordinary reads unchanged",
+          "validation": "25 targeted browser/read-recovery/handoff cases passed; 4-case handoff file and both10x repeat probes passed"
+        }
+      }
     }
   },
   "final_evidence_policy": "The corrected developer package data/review-amendments.json and evidence/current/release-validation.json record eventual distribution/CI outcomes against the exact tracked candidate manifest and PR head. Repository ledger preserves pre-push results; no future green is claimed here.",
@@ -2078,7 +2109,9 @@
       "capacity": "4126259b0326297cd1d2b5514cc206775a4c9eb6",
       "modal": "3662f42cc856ebc176f4233faf29551c35054cff",
       "module": "2fd3a4540944217fc6b25c5d5bcdb5a0b1ac235b",
-      "doc_scope": "a3d1629a647dd5f85baf2bc94f3195a3bc230788"
+      "doc_scope": "a3d1629a647dd5f85baf2bc94f3195a3bc230788",
+      "module_online": "acbc1881866f1e910732b7f71c81b3e3a280b917",
+      "handoff_harness": "a01040949d7e5c1f7bcc722ab414348f2e953bbf"
     },
     "preimplementation_status": "confirmed; no second general development authorization required",
     "native_bounded_review": "no reproducible new P1/P2; tests/fixtures summary only, no long suite",
@@ -2087,8 +2120,33 @@
       "browser_and_read_recovery": "21 passed before additional readonly owner assertions; final full browser gate repeats all assertions",
       "doc_sample": "pass=true; validation_scope.candidate_stage=intermediate_documentation_sample; final_candidate_status=not_evaluated"
     },
-    "final_acceptance": "pending at source freeze; exact head, wheel/sdist hashes, local full gates and CI objects must be bound in revised delivery evidence",
-    "historical_boundaries": "All 12 historical provenance gaps, Frozen A, actual Host and customer/professional acceptance remain unchanged."
+    "final_acceptance": "Final head is frozen after these followups; full local and both exact-head CI gate objects must be recorded in revised delivery. Predecessor results are historical only.",
+    "historical_boundaries": "All 12 historical provenance gaps, Frozen A, actual Host and customer/professional acceptance remain unchanged.",
+    "gate_followups": {
+      "handoff_harness": {
+        "commit": "a01040949d7e5c1f7bcc722ab414348f2e953bbf",
+        "original_baseline_repeat": {
+          "pass": 10,
+          "fail": 0
+        },
+        "original_current_repeat": {
+          "pass": 5,
+          "fail": 5
+        },
+        "forced_read_error_both_versions": "expected assertion failure after 100ms",
+        "fixed_repeat_each_version": {
+          "pass": 10,
+          "fail": 0
+        },
+        "disposition": "Hold the real request until all pending/copy identity assertions; fulfill using real service response before unroute. No assertion removed or timeout enlarged."
+      },
+      "module_online": {
+        "commit": "acbc1881866f1e910732b7f71c81b3e3a280b917",
+        "before": "real offline/online events replaced module reload with generic read retry",
+        "after": "keep current-generation protected module reload; ordinary reads unchanged",
+        "validation": "25 targeted browser/read-recovery/handoff cases passed; 4-case handoff file and both10x repeat probes passed"
+      }
+    }
   },
   "previous_candidate_before_review_r2": "formal-final-runtime"
 }
