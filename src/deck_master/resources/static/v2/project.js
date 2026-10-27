@@ -229,6 +229,8 @@ export class Project {
     // read. Explicit initial-route/current calls still start a new generation.
     if (!initial && this.navigationPending && this.navigationHash === requestedHash) return;
     const serial = ++this.generation;
+    this.moduleFailure = null;
+    let moduleFailure = null;
     this.controlRead = (this.controlRead || 0) + 1;
     this.navigationHash = requestedHash;
     this.navigationDestination = requestedRoute ? routeHash(this.info, requestedRoute) : requestedHash;
@@ -295,7 +297,9 @@ export class Project {
         }
       }
       if (serial !== this.generation) return;
+      moduleFailure = {serial, identity:info.project_identity, route:structuredClone(route), hash:requestedHash};
       const view = await this.viewFor(route);
+      moduleFailure = null;
       if (serial !== this.generation) return;
       if (!this.canLeaveDrafts()) {
         history.replaceState(null, '', routeHash(this.info, this.route));
@@ -316,7 +320,14 @@ export class Project {
       announce(`${route.surface === 'page' ? '单页 · ' + layers[route.layer] : surfaces[route.surface]}，${version(route.revision)}`);
     } catch (error) {
       if (serial !== this.generation) return;
-      if (this.main) {this.setNotice(readableError(error) + ' 已显示的工作面仍属于顶栏标明的版本。', true);if(this.health.ui_capabilities?.includes('result_reading.v1'))this.notice?.append(button('重新读取待办',()=>this.go({surface:'overview',action_id:null})));}
+      if (moduleFailure) {
+        this.moduleFailure = moduleFailure;
+        const message = '工作面模块未能加载。已读内容与草稿仍保留；连接恢复后可重新加载工作台。';
+        if (this.main) this.moduleFailureNotice(moduleFailure, message);
+        else this.root.replaceChildren(el('main', {id:'main', class:'workspace'}, empty('无法加载这个工作面', message,
+          button('重新加载工作台', () => this.reloadForModule(moduleFailure)))));
+      }
+      else if (this.main) {this.setNotice(readableError(error) + ' 已显示的工作面仍属于顶栏标明的版本。', true);if(this.health.ui_capabilities?.includes('result_reading.v1'))this.notice?.append(button('重新读取待办',()=>this.go({surface:'overview',action_id:null})));}
       else {
         this.root.replaceChildren(el('main', {id: 'main', class: 'workspace'}, empty('无法读取这个位置', readableError(error),
           button('打开项目当前版本', () => { history.replaceState(null, '', location.pathname + location.search); this.loadRoute({...this.route, surface: 'overview', page_id: null, task_id: null, revision: null}); }))));
@@ -331,6 +342,21 @@ export class Project {
         if (this.controlSlot) { this.controlSlot.inert = false; this.controlSlot.removeAttribute('aria-busy'); }
       }
     }
+  }
+  moduleFailureNotice(failure, message) {
+    this.setNotice(message);
+    this.notice?.append(button('重新加载工作台', () => this.reloadForModule(failure)));
+  }
+  reloadForModule(failure) {
+    if (this.moduleFailure !== failure || failure.serial !== this.generation ||
+        failure.identity !== this.info.project_identity) return;
+    if (!this.canLeaveDrafts()) {
+      this.moduleFailureNotice(failure, '草稿尚未可靠保存。请保存到项目、保留本机缓冲，或下载完整恢复文件并明确确认已保管，再重新加载。');
+      return;
+    }
+    if (this.moduleFailure !== failure || failure.serial !== this.generation) return;
+    history.replaceState(null, '', routeHash(this.info, failure.route));
+    location.reload();
   }
   go(patch) {
     const base = this.navigationPending && this.navigationRoute ? this.navigationRoute : this.route;

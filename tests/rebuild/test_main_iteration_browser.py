@@ -342,7 +342,14 @@ def test_dynamic_route_import_preserves_the_visible_owner(tmp_path, outcome):
                 assert held
                 route = held.pop(); response = page.request.get(server.start() + 'v2/gallery.js'); route.fulfill(response=response)
             expect(page.get_by_label('用途与目标', exact=True)).to_have_value('keep current form owner')
-            expect(page.locator('.gallery-workbench')).to_have_count(0)
+            expect(page.locator('.gallery-view')).to_have_count(0)
+            if outcome == 'missing':
+                page.unroute('**/v2/gallery.js', module)
+                with page.expect_request('**/v2/gallery.js'):
+                    page.get_by_role('button', name='重新加载工作台', exact=True).click()
+                expect(page.locator('.gallery-view')).to_be_visible()
+                open_inputs(page)
+                expect(page.get_by_label('用途与目标', exact=True)).to_have_value('keep current form owner')
             browser.close()
     finally:
         server.stop()
@@ -427,6 +434,84 @@ def test_recovery_dialog_tracks_replacement_owner_and_blocks_history_under_quota
             expect(dialog).not_to_be_visible()
             expect(page.locator('#view-title')).to_be_focused()
             assert errors == []
+            browser.close()
+    finally:
+        server.stop()
+
+
+@pytest.mark.parametrize('failure', ['offline', 'dependency'])
+def test_module_recovery_reload_is_guarded_and_rebuilds_module_state(tmp_path, failure):
+    server = WorkbenchServer(project_at(tmp_path))
+    try:
+        with sync_playwright() as runtime:
+            browser = runtime.chromium.launch()
+            page = browser.new_page(); page.goto(server.start() + 'studio/'); open_inputs(page)
+            page.route('**/api/drafts/save', lambda route: route.abort())
+            page.evaluate("() => {Storage.prototype.setItem=function(){throw new DOMException('quota','QuotaExceededError')};}")
+            page.get_by_label('用途与目标', exact=True).fill('unknown original')
+            expect(page.locator('.draft-state')).to_contain_text('待核实')
+            page.get_by_label('用途与目标', exact=True).fill('unsent current')
+            original = page.request.get(server.start() + 'v2/gallery.js').text()
+            def faulty(route):
+                if failure == 'offline':
+                    route.abort('internetdisconnected')
+                else:
+                    route.fulfill(content_type='text/javascript', body=original + "\nimport './module-recovery-probe.js';")
+            page.route('**/v2/gallery.js', faulty)
+            page.route('**/v2/module-recovery-probe.js', lambda route: route.fulfill(content_type='text/javascript', body='throw new Error("dependency failed");'))
+            page.get_by_role('button', name='整稿画廊', exact=True).click()
+            reload = page.get_by_role('button', name='重新加载工作台', exact=True)
+            expect(reload).to_be_visible()
+            failed_target = page.url
+            page.unroute('**/v2/gallery.js', faulty)
+            documents = []
+            page.on('request', lambda request: documents.append(request.url) if request.is_navigation_request() else None)
+            reload.click()
+            expect(page.get_by_label('用途与目标', exact=True)).to_have_value('unsent current')
+            assert documents == []
+            page.get_by_role('button', name='更多内容工具', exact=True).click()
+            page.get_by_role('button', name='工作笔记', exact=True).click()
+            with page.expect_download() as saved:
+                page.get_by_role('button', name='下载草稿恢复文件', exact=True).click()
+            recovery = json.loads(Path(saved.value.path()).read_text())
+            assert recovery['draft']['content']['content_sources']['brief'] == 'unsent current'
+            assert recovery['pending_save']['draft']['content']['content_sources']['brief'] == 'unknown original'
+            reload.click()
+            assert documents == []
+            page.get_by_role('button', name='我已保管恢复文件，允许离开', exact=True).click()
+            writes = []
+            page.on('request', lambda request: writes.append(request.url) if request.method == 'POST' else None)
+            with page.expect_request('**/v2/gallery.js'):
+                reload.click()
+            expect(page.locator('.gallery-view')).to_be_visible()
+            assert page.url == failed_target
+            assert not any(url.endswith('/api/drafts/save') for url in writes)
+            # A superseded failure control cannot reload a different surface.
+            page.reload()
+            expect(page.locator('.gallery-view')).to_be_visible()
+            browser.close()
+    finally:
+        server.stop()
+
+
+def test_module_failure_control_expires_after_another_target_commits(tmp_path):
+    server = WorkbenchServer(project_at(tmp_path))
+    try:
+        with sync_playwright() as runtime:
+            browser = runtime.chromium.launch()
+            page = browser.new_page(); page.goto(server.start() + 'studio/'); open_inputs(page)
+            page.route('**/v2/gallery.js', lambda route: route.fulfill(status=404, body='unavailable'))
+            page.get_by_role('button', name='整稿画廊', exact=True).click()
+            expect(page.get_by_role('button', name='重新加载工作台', exact=True)).to_be_visible()
+            page.evaluate("() => {window.oldModuleReload=[...document.querySelectorAll('button')].find(b=>b.textContent==='重新加载工作台');}")
+            # Overview itself imports gallery.js; use an unrelated module graph
+            # to prove a successful navigation expires the old failure lease.
+            page.get_by_role('button', name='任务与交付', exact=True).click()
+            expect(page.locator('#view-title')).to_have_text('任务与交付')
+            marker = page.evaluate('() => {window.documentMarker=crypto.randomUUID();return documentMarker;}')
+            page.evaluate('() => oldModuleReload.click()')
+            assert page.evaluate('() => documentMarker') == marker
+            expect(page.locator('#view-title')).to_have_text('任务与交付')
             browser.close()
     finally:
         server.stop()
