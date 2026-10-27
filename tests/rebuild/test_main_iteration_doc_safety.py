@@ -56,3 +56,20 @@ def test_machine_references_resolve_to_identical_archive_members_or_local_depend
             assert hashlib.sha256(data).hexdigest() == row['target_sha256']
     w12 = root / 'docs/reports/workbench-v3-execution-20260926/W12.md'
     assert w12.is_file() and w12.stat().st_size == 3077
+
+
+@pytest.mark.parametrize('script,report', [('validate_doc_candidate.py', 'verification.json'),
+                                         ('validate_doc_candidate.py', 'existing-broken-links.json'),
+                                         ('classify_document_links.py', 'link-audit.json')])
+def test_independent_report_writers_reject_symlinks_before_any_write(tmp_path, script, report):
+    source = tmp_path / 'source'; source.mkdir()
+    output = tmp_path / 'output'; output.mkdir()
+    sentinel = tmp_path / 'sentinel'; sentinel.write_bytes(b'preserve outside output')
+    (output / report).symlink_to(sentinel)
+    tool = Path(__file__).resolve().parents[2] / 'tools/main_iteration_20261027' / script
+    command = [sys.executable, str(tool), '--output', str(output)]
+    if script == 'validate_doc_candidate.py':
+        command += ['--source', str(source)]
+    result = subprocess.run(command, capture_output=True, text=True)
+    assert result.returncode != 0 and 'symbolic' in result.stderr
+    assert sentinel.read_bytes() == b'preserve outside output'

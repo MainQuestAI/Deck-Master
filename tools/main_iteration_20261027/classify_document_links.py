@@ -13,6 +13,8 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--output', type=Path, required=True, help='Output directory produced by doc_governance_probe.py.')
 args = parser.parse_args()
 OUT = args.output.resolve()
+if any(p.is_symlink() for p in (args.output, *args.output.parents)) or (OUT / 'link-audit.json').is_symlink():
+    raise SystemExit('Output must not use symbolic links.')
 CANDIDATE = OUT / 'candidate'
 TRACKED = {x['path'] for x in json.loads((OUT / 'source-tree.json').read_text())['tree']}
 AFTER = set(json.loads((OUT / 'candidate-paths.json').read_text()))

@@ -12,11 +12,43 @@
     "digest": {
       "type": "string",
       "pattern": "^[a-f0-9]{64}$"
+    },
+    "pending_save": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "draft",
+        "expected_etag"
+      ],
+      "properties": {
+        "draft": {
+          "$ref": "shared-contracts.v1.schema.json#/$defs/d_8f49407ccbe1"
+        },
+        "expected_etag": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "pending_save_digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
     }
   },
   "required": [
     "schema_version",
     "draft",
     "digest"
-  ]
+  ],
+  "dependentRequired": {
+    "pending_save": [
+      "pending_save_digest"
+    ],
+    "pending_save_digest": [
+      "pending_save"
+    ]
+  }
 }

@@ -424,8 +424,10 @@ export class DraftEditor {
   async download(draft = this.draft) {
     const snapshot = this.recoverySnapshot();
     const value = structuredClone(draft);
+    const pendingSave = this.pendingSave ? structuredClone(this.pendingSave) : null;
     // Preserve every content purpose and its basis, never HTTP/session metadata.
-    const recovery = {schema_version: 'ui_draft_recovery.v1', draft: value, digest: await digest(value)};
+    const recovery = {schema_version: 'ui_draft_recovery.v1', draft: value, digest: await digest(value),
+      ...(pendingSave ? {pending_save:pendingSave, pending_save_digest:await digest(pendingSave)} : {})};
     downloadJSON(recovery, 'deck-master-personal-draft.json');
     if (canonical(draft) === canonical(this.draft) && snapshot === this.recoverySnapshot()) this.downloadedRecovery = snapshot;
     this.updateStatus();
@@ -442,7 +444,7 @@ export class DraftEditor {
         if (this.disposed) return;
         this.restoreCopy({draft:result.record.draft,etag:result.record.etag,status:'saved',pendingSave:null});
       }
-      toast(result.imported_from ? '已另存为独立草稿，项目中的原稿保持。' : '已导入项目，可在对应页面恢复。');
+      toast(result.preserved_pending_save ? '已导入当前稿。原保存结果仍需核实；原请求保留在恢复文件中，未自动重发。' : result.imported_from ? '已另存为独立草稿，项目中的原稿保持。' : '已导入项目，可在对应页面恢复。');
       const listed = await get(this.listURL());
       if (!this.disposed) this.showRestore(listed.entries || listed.records.filter(record => this.matchesContext(record.draft)), listed.errors.length);
     } catch (error) { this.note = readableError(error); this.updateStatus(); }

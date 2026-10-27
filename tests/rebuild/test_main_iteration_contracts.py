@@ -16,6 +16,20 @@ def test_all_contract_mirrors_and_shared_dependency():
         active = contracts / mirror.name
         if active.exists():
             assert mirror.read_bytes() == active.read_bytes(), str(mirror)
+        if 'shared-contracts.v1.schema.json#/' in mirror.read_text():
+            shared = mirror.parent / 'shared-contracts.v1.schema.json'
+            assert shared.read_bytes() == (contracts / shared.name).read_bytes(), str(mirror)
+            registry = Registry().with_resource(shared.name, Resource.from_contents(json.loads(shared.read_text())))
+            def check(value):
+                if isinstance(value, dict):
+                    if value.get('$ref', '').startswith(shared.name + '#/'):
+                        registry.resolver().lookup(value['$ref'])
+                    for child in value.values():
+                        check(child)
+                elif isinstance(value, list):
+                    for child in value:
+                        check(child)
+            check(json.loads(mirror.read_text()))
     assert (root / 'docs/specs/deck-master-rebuild-v1/contracts/shared-contracts.v1.schema.json').read_bytes() == (contracts / 'shared-contracts.v1.schema.json').read_bytes()
 
 

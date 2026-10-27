@@ -25,7 +25,7 @@ OUT = args.output.resolve()
 CANDIDATE = OUT / 'candidate'
 if ROOT == OUT or ROOT.is_relative_to(OUT) or OUT.is_relative_to(ROOT):
     raise SystemExit('Source and output must be disjoint dedicated trees.')
-if any(p.is_symlink() for p in (args.output, *args.output.parents)) or (OUT / 'verification.json').is_symlink():
+if any(p.is_symlink() for p in (args.output, *args.output.parents)) or any((OUT / name).is_symlink() for name in ('verification.json', 'existing-broken-links.json')):
     raise SystemExit('Output must not use symbolic links.')
 TREE = json.loads((OUT / 'source-tree.json').read_text())
 TRACKED = {x['path']: x for x in TREE['tree'] if x['type'] == 'blob'}

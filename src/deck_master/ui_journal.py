@@ -355,25 +355,40 @@ def _portable(value, where="draft"):
         raise LocalStateError(where, "recovery files cannot contain an absolute local path")
 
 
-def recovery_file(project, *, draft):
+def recovery_file(project, *, draft, pending_save=None):
     store, doc, identity = context(project)
     _validate(store, doc, identity, draft)
     _portable(draft)
-    return {"schema_version": "ui_draft_recovery.v1", "draft": draft, "digest": digest(draft)}
+    recovery = {"schema_version": "ui_draft_recovery.v1", "draft": draft, "digest": digest(draft)}
+    if pending_save is not None:
+        recovery.update(pending_save=copy.deepcopy(pending_save), pending_save_digest=digest(pending_save))
+    validate_schema("ui_draft_recovery", recovery)
+    if pending_save is not None:
+        previous = pending_save["draft"]
+        _validate(store, doc, identity, previous)
+        _portable(pending_save)
+        if any(previous.get(key) != draft.get(key) for key in
+               ("project_id", "project_identity", "draft_id", "target", "base_revision", "base_ref")):
+            raise LocalStateError("pending_save", "original save must belong to the same draft and basis")
+    return recovery
 
 
 def import_recovery(project, *, recovery):
     validate_schema("ui_draft_recovery", recovery)
-    if len(canonical_json_bytes(recovery)) > MAX_BODY or digest(recovery["draft"]) != recovery["digest"]:
+    if (len(canonical_json_bytes(recovery)) > MAX_BODY or digest(recovery["draft"]) != recovery["digest"]
+            or ("pending_save" in recovery and digest(recovery["pending_save"]) != recovery["pending_save_digest"])):
         raise LocalStateError("recovery", "recovery size or hash is invalid")
     draft = copy.deepcopy(recovery["draft"])
-    recovery_file(project, draft=draft)  # schema/project/base/portable validation
+    recovery_file(project, draft=draft, pending_save=recovery.get("pending_save"))
+    # The original unknown request remains evidence in the user's recovery file.
+    # Importing a file never retries that request or adopts its old ACK.
     try:
-        return save(project, draft=draft)
+        result = save(project, draft=draft)
     except LocalStateConflict:
         imported_from = draft["draft_id"]
         draft["draft_id"] = "recovered-" + uuid.uuid4().hex
-        return {**save(project, draft=draft), "imported_from": imported_from}
+        result = {**save(project, draft=draft), "imported_from": imported_from}
+    return {**result, **({"preserved_pending_save": True} if "pending_save" in recovery else {})}
 
 
 def _position_path(store):

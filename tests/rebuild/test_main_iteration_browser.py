@@ -70,6 +70,8 @@ def test_quota_recovery_requires_explicit_confirmation_and_new_edits_revoke_it(t
             # Block project save and all browser recovery writes, without changing host settings.
             page.route('**/api/drafts/save', lambda route: route.abort() if route.request.method != 'GET' else route.continue_())
             page.evaluate("""() => { Storage.prototype.setItem = function(){throw new DOMException('quota','QuotaExceededError')}; }""")
+            page.get_by_label('用途与目标', exact=True).fill('sent before unknown')
+            expect(page.locator('.draft-state')).to_contain_text('待核实')
             page.get_by_label('用途与目标', exact=True).fill('keep exactly this draft')
             page.get_by_role('button', name='制作总览', exact=True).click()
             expect(page.get_by_label('用途与目标', exact=True)).to_have_value('keep exactly this draft')
@@ -79,6 +81,9 @@ def test_quota_recovery_requires_explicit_confirmation_and_new_edits_revoke_it(t
                 page.get_by_role('button', name='下载草稿恢复文件', exact=True).click()
             value = json.loads(__import__('pathlib').Path(saved.value.path()).read_text())
             assert value['draft']['content']['content_sources']['brief'] == 'keep exactly this draft'
+            assert value['pending_save']['draft']['content']['content_sources']['brief'] == 'sent before unknown'
+            assert value['pending_save']['expected_etag'] is None
+            assert value['pending_save_digest']
             page.get_by_role('button', name='制作总览', exact=True).click()
             expect(page.get_by_label('用途与目标', exact=True)).to_have_value('keep exactly this draft')
             page.get_by_role('button', name='我已保管恢复文件，允许离开', exact=True).click()
@@ -130,6 +135,37 @@ def test_readonly_buffer_can_be_downloaded_confirmed_and_closed_with_escape(tmp_
             note.press('Escape')
             expect(dialog).not_to_be_visible()
             expect(page.get_by_role('button', name='个人记录与操作恢复', exact=True)).to_be_focused()
+            browser.close()
+    finally:
+        server.stop()
+
+
+def test_method_preparation_clear_resets_the_actual_personal_context(tmp_path):
+    server = WorkbenchServer(project_at(tmp_path))
+    try:
+        with sync_playwright() as runtime:
+            browser = runtime.chromium.launch()
+            page = browser.new_page(); page.goto(server.start() + 'studio/')
+            page.get_by_role('button', name='更多内容工具', exact=True).click()
+            page.get_by_role('button', name='方法与案例', exact=True).click()
+            mode = page.get_by_label('准备上下文', exact=True)
+            role = page.get_by_label('方法阅读角色', exact=True)
+            phase = page.get_by_label('方法阅读阶段', exact=True)
+            mode.select_option('independent'); role.select_option('deck-review'); phase.select_option('speech')
+            expect(page.locator('.method-draft-state')).to_contain_text('已保存到项目')
+            page.get_by_role('button', name='项目菜单', exact=True).click()
+            page.get_by_role('button', name='个人状态与恢复', exact=True).click()
+            panel = page.get_by_role('dialog', name='个人状态与恢复', exact=True)
+            panel.get_by_role('button', name='生成清理计划', exact=True).click()
+            panel.get_by_role('button', name='确认清理并保留备份', exact=True).click()
+            expect(panel).to_contain_text('已清理')
+            panel.get_by_role('button', name='关闭', exact=True).click()
+            expect(mode).to_have_value('project')
+            expect(role).to_have_value('deck-content')
+            expect(phase).to_have_value('argument')
+            mode.select_option('independent')
+            expect(role).to_have_value('deck-content')
+            expect(phase).to_have_value('argument')
             browser.close()
     finally:
         server.stop()
