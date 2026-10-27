@@ -250,9 +250,20 @@ def test_readonly_buffer_can_be_downloaded_confirmed_and_closed_with_escape(tmp_
             expect(dialog).not_to_be_visible()
             expect(page.locator('#view-title')).to_be_focused()
             page.evaluate('() => history.forward()')
+            # The overview now owns a fresh readonly copy of the same dirty
+            # buffer. Custody does not silently transfer to a different owner.
+            expect(page.get_by_role('button', name='重试读取', exact=True)).to_be_visible()
+            page.get_by_role('button', name='个人记录与提交恢复', exact=True).click()
+            overview_recovery = page.locator('.studio-batch-recovery-body')
+            expect(overview_recovery.get_by_label('个人草稿', exact=True)).to_have_value('readonly unsent buffer')
+            expect(overview_recovery.get_by_label('个人草稿', exact=True)).to_have_js_property('readOnly', True)
+            with page.expect_download():
+                overview_recovery.get_by_role('button', name='下载草稿恢复文件', exact=True).click()
+            overview_recovery.get_by_role('button', name='我已保管恢复文件，允许离开', exact=True).click()
+            page.get_by_role('button', name='任务与交付', exact=True).click()
+            page.get_by_role('button', name='待决定', exact=True).click()
             page.get_by_role('button', name='个人记录与操作恢复', exact=True).click()
-            expect(note).to_have_value('readonly unsent buffer')
-            expect(note).to_have_js_property('readOnly', True)
+            expect(dialog.get_by_label('个人草稿', exact=True)).to_have_value('readonly unsent buffer')
             browser.close()
     finally:
         server.stop()

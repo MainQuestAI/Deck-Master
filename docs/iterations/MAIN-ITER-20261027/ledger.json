@@ -1179,7 +1179,9 @@
         "6f6e3bb362f4d1d4ad3059661118763f8e0a0d5b",
         "e439b330fb5ac4f58945a26b9cb089178d5c776a",
         "3ff01a803e84d4167e6653f80d8ee77a9ebc1ab1",
-        "66ab177dc4a6f85d7d6e11191e828c3f845edb54"
+        "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
+        "4126259b0326297cd1d2b5514cc206775a4c9eb6",
+        "3662f42cc856ebc176f4233faf29551c35054cff"
       ],
       "validation": [
         {
@@ -1194,16 +1196,22 @@
           "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
           "result": "78 targeted regressions passed (56 browser-marked +22 unit) after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
           "evidence": "owner-final.xml"
+        },
+        {
+          "scope": "PR #215 review R2",
+          "evidence": "REVIEW-R2.md and revised delivery evidence/current",
+          "status": "targeted checks recorded; final exact-head gates bound in delivery"
         }
       ],
       "status": "implemented_local_checks_recorded_final_gates_in_delivery",
       "remaining": [
-        "Exact final wheel/sdist, full CI objects, candidate SHA and budget are bound in the corrected developer package; inherited evidence gaps and excluded Host/production acceptance remain explicit."
+        "Final exact-head package and CI results are bound in revised delivery; inherited exclusions and historical provenance gaps remain open."
       ],
       "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
       "implementation_plan_revision": [
         "Bind explicit recovery custody confirmation to exact draft + pendingSave; download alone never grants leave. New edits invalidate confirmation. Protect readonly recovery modal, navigation and beforeunload.",
-        "Preserve actual owner state during initial read success/error/ACK, hydrate existing local buffer before accepting custom controls, and protect early edit→undo with the same readonly/disposed/base_ref/revision predicate. Four deterministic real Chromium scenarios include quota recovery custody and original draft ID/private brief preservation."
+        "Preserve actual owner state during initial read success/error/ACK, hydrate existing local buffer before accepting custom controls, and protect early edit→undo with the same readonly/disposed/base_ref/revision predicate. Four deterministic real Chromium scenarios include quota recovery custody and original draft ID/private brief preservation.",
+        "PR #215 review R2: Complete recovery UTF-8 capacity is separate from ordinary JSON. Explicit custody requires a complete size-bounded snapshot; mutations to current draft or pending request revoke it. Modal close/Escape follows its container-owned editor including replacement; committed route teardown releases only its own modal."
       ]
     },
     {
@@ -1569,7 +1577,8 @@
         "bdcc2ad6cbd050d19ab431a3c6e28f755ed7486e",
         "6f6e3bb362f4d1d4ad3059661118763f8e0a0d5b",
         "3ff01a803e84d4167e6653f80d8ee77a9ebc1ab1",
-        "66ab177dc4a6f85d7d6e11191e828c3f845edb54"
+        "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
+        "2fd3a4540944217fc6b25c5d5bcdb5a0b1ac235b"
       ],
       "validation": [
         {
@@ -1584,15 +1593,21 @@
           "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
           "result": "78 targeted regressions passed (56 browser-marked +22 unit) after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
           "evidence": "owner-final.xml"
+        },
+        {
+          "scope": "PR #215 review R2",
+          "evidence": "REVIEW-R2.md and revised delivery evidence/current",
+          "status": "targeted checks recorded; final exact-head gates bound in delivery"
         }
       ],
       "status": "implemented_local_checks_recorded_final_gates_in_delivery",
       "remaining": [
-        "Exact final wheel/sdist, full CI objects, candidate SHA and budget are bound in the corrected developer package; inherited evidence gaps and excluded Host/production acceptance remain explicit."
+        "Final exact-head package and CI results are bound in revised delivery; inherited exclusions and historical provenance gaps remain open."
       ],
       "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
       "implementation_plan_revision": [
-        "Original scope retained; verify existing behavior before any further code change."
+        "Original scope retained; verify existing behavior before any further code change.",
+        "PR #215 review R2: Module-load failures use protected whole-document reload against the captured project/surface/revision/parameters. All draft owners must allow leave. Ordinary reads retain read retry; superseded failure controls are inert; no write replay."
       ]
     },
     {
@@ -1627,7 +1642,8 @@
       "review_disposition": "Guard standalone tools before any write, including resolved ancestry and symlinks. Existing candidate rejected. Original destructive probe executed only on an expendable copy.",
       "implementation_commits": [
         "aba7f44f4d6be313991a0264637bda6471db8b64",
-        "bdcc2ad6cbd050d19ab431a3c6e28f755ed7486e"
+        "bdcc2ad6cbd050d19ab431a3c6e28f755ed7486e",
+        "a3d1629a647dd5f85baf2bc94f3195a3bc230788"
       ],
       "validation": [
         {
@@ -1648,16 +1664,22 @@
           "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
           "result": "78 targeted regressions passed (56 browser-marked +22 unit) after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
           "evidence": "owner-final.xml"
+        },
+        {
+          "scope": "PR #215 review R2",
+          "evidence": "REVIEW-R2.md and revised delivery evidence/current",
+          "status": "targeted checks recorded; final exact-head gates bound in delivery"
         }
       ],
       "status": "implemented_local_checks_recorded_final_gates_in_delivery",
       "remaining": [
-        "Exact final wheel/sdist, full CI objects, candidate SHA and budget are bound in the corrected developer package; inherited evidence gaps and excluded Host/production acceptance remain explicit."
+        "Final exact-head package and CI results are bound in revised delivery; inherited exclusions and historical provenance gaps remain open."
       ],
       "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
       "implementation_plan_revision": [
         "Guard standalone tools before any write, including resolved ancestry and symlinks. Existing candidate rejected. Original destructive probe executed only on an expendable copy.",
-        "Protect verification.json, existing-broken-links.json and link-audit.json report destinations from symlink writes before any IO. Seven destructive layout cases + three report symlink cases preserve sentinel bytes."
+        "Protect verification.json, existing-broken-links.json and link-audit.json report destinations from symlink writes before any IO. Seven destructive layout cases + three report symlink cases preserve sentinel bytes.",
+        "PR #215 review R2: Standalone documentation sample validator retains pass and explicitly reports intermediate scope and final_candidate_status=not_evaluated; path safety and archive rules unchanged."
       ]
     },
     {
@@ -1824,7 +1846,8 @@
         "aba7f44f4d6be313991a0264637bda6471db8b64",
         "8fe10b3a84d3cf2bb32680c550ad29694601d5e6",
         "3ff01a803e84d4167e6653f80d8ee77a9ebc1ab1",
-        "66ab177dc4a6f85d7d6e11191e828c3f845edb54"
+        "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
+        "a3d1629a647dd5f85baf2bc94f3195a3bc230788"
       ],
       "validation": [
         {
@@ -1845,15 +1868,21 @@
           "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
           "result": "78 targeted regressions passed (56 browser-marked +22 unit) after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
           "evidence": "owner-final.xml"
+        },
+        {
+          "scope": "PR #215 review R2",
+          "evidence": "REVIEW-R2.md and revised delivery evidence/current",
+          "status": "targeted checks recorded; final exact-head gates bound in delivery"
         }
       ],
       "status": "implemented_local_checks_recorded_final_gates_in_delivery",
       "remaining": [
-        "Exact final wheel/sdist, full CI objects, candidate SHA and budget are bound in the corrected developer package; inherited evidence gaps and excluded Host/production acceptance remain explicit."
+        "Final exact-head package and CI results are bound in revised delivery; inherited exclusions and historical provenance gaps remain open."
       ],
       "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
       "implementation_plan_revision": [
-        "Scan JSON and CSV too. Keep 262 historical strings in 8 retained files unchanged; map 82 targets to exact-SHA archive members/local W12 through machine-references.json."
+        "Scan JSON and CSV too. Keep 262 historical strings in 8 retained files unchanged; map 82 targets to exact-SHA archive members/local W12 through machine-references.json.",
+        "PR #215 review R2: Intermediate sample PASS is not final candidate acceptance. Full machine-readable references, exact archive bytes and 12 inherited provenance gaps remain separately audited."
       ]
     },
     {
@@ -1887,7 +1916,11 @@
       "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
       "implementation_commits": [
         "3ff01a803e84d4167e6653f80d8ee77a9ebc1ab1",
-        "66ab177dc4a6f85d7d6e11191e828c3f845edb54"
+        "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
+        "4126259b0326297cd1d2b5514cc206775a4c9eb6",
+        "3662f42cc856ebc176f4233faf29551c35054cff",
+        "2fd3a4540944217fc6b25c5d5bcdb5a0b1ac235b",
+        "a3d1629a647dd5f85baf2bc94f3195a3bc230788"
       ],
       "validation": [
         {
@@ -1902,21 +1935,31 @@
           "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
           "result": "78 targeted regressions passed (56 browser-marked +22 unit) after final owner and harness repair; see shared validation_streams for full predecessor outcomes and final exact-head gate binding.",
           "evidence": "owner-final.xml"
+        },
+        {
+          "scope": "PR #215 review R2",
+          "evidence": "REVIEW-R2.md and revised delivery evidence/current",
+          "status": "targeted checks recorded; final exact-head gates bound in delivery"
         }
       ],
       "status": "implemented_local_checks_recorded_final_gates_in_delivery",
       "remaining": [
-        "Exact final wheel/sdist, full CI objects, candidate SHA and budget are bound in the corrected developer package; inherited evidence gaps and excluded Host/production acceptance remain explicit."
+        "Final exact-head package and CI results are bound in revised delivery; inherited exclusions and historical provenance gaps remain open."
       ],
       "original_plan_fields": "current_behavior/implementation/acceptance/compatibility/limitations retain original card wording; review_disposition and implementation_plan_revision state the active amendments.",
       "implementation_plan_revision": [
-        "Original scope retained; verify existing behavior before any further code change."
+        "Original scope retained; verify existing behavior before any further code change.",
+        "PR #215 review R2: Bind all 25 cards to the same revised tracked candidate, preserve old ZIP, and report both fixed-baseline and reviewed-head deltas; exact full/installed/CI evidence remains required."
       ]
     }
   ],
-  "current_candidate": "formal-final-runtime",
-  "acceptance": "local_regressions_complete_final_gates_bound_in_delivery",
-  "formal_code_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54",
+  "current_candidate": {
+    "reviewed_head": "6e9e7d64e7b1963f415c2a4d06de9f2b89881091",
+    "source_runtime_commit": "2fd3a4540944217fc6b25c5d5bcdb5a0b1ac235b",
+    "final_candidate_identity": "Revised delivery freeze-identity.json and data/final-candidate-manifest.json bind final tracked head and SHA."
+  },
+  "acceptance": "review_r2_targeted_checks_recorded_full_exact_head_gates_required_in_revised_delivery",
+  "formal_code_commit": "2fd3a4540944217fc6b25c5d5bcdb5a0b1ac235b",
   "validation_streams": {
     "unit": {
       "status": "pass_with_inherited_skips",
@@ -2002,9 +2045,50 @@
       "command": "ruff check src/deck_master tests/rebuild",
       "result": "pass",
       "source_runtime_commit": "66ab177dc4a6f85d7d6e11191e828c3f845edb54"
+    },
+    "review_r2": {
+      "reviewed_head": "6e9e7d64e7b1963f415c2a4d06de9f2b89881091",
+      "remote_main_at_repair_start": "62dfcfc5637f0bee2358074c4458047689dd5299",
+      "product_decision": "protected full-page reload, explicitly approved in user implementation plan",
+      "implementation_commits": {
+        "capacity": "4126259b0326297cd1d2b5514cc206775a4c9eb6",
+        "modal": "3662f42cc856ebc176f4233faf29551c35054cff",
+        "module": "2fd3a4540944217fc6b25c5d5bcdb5a0b1ac235b",
+        "doc_scope": "a3d1629a647dd5f85baf2bc94f3195a3bc230788"
+      },
+      "preimplementation_status": "confirmed; no second general development authorization required",
+      "native_bounded_review": "no reproducible new P1/P2; tests/fixtures summary only, no long suite",
+      "targeted_validation": {
+        "unit_and_tool_safety": "52 passed; test_main_iteration_recovery.py test_ui_journal.py test_main_iteration_doc_safety.py",
+        "browser_and_read_recovery": "21 passed before additional readonly owner assertions; final full browser gate repeats all assertions",
+        "doc_sample": "pass=true; validation_scope.candidate_stage=intermediate_documentation_sample; final_candidate_status=not_evaluated"
+      },
+      "final_acceptance": "pending at source freeze; exact head, wheel/sdist hashes, local full gates and CI objects must be bound in revised delivery evidence",
+      "historical_boundaries": "All 12 historical provenance gaps, Frozen A, actual Host and customer/professional acceptance remain unchanged."
     }
   },
   "final_evidence_policy": "The corrected developer package data/review-amendments.json and evidence/current/release-validation.json record eventual distribution/CI outcomes against the exact tracked candidate manifest and PR head. Repository ledger preserves pre-push results; no future green is claimed here.",
   "draft_pr": "https://github.com/MainQuestAI/Deck-Master/pull/215",
-  "remote_main_at_final_local_check": "62dfcfc5637f0bee2358074c4458047689dd5299"
+  "remote_main_at_final_local_check": "62dfcfc5637f0bee2358074c4458047689dd5299",
+  "review_r2": {
+    "reviewed_head": "6e9e7d64e7b1963f415c2a4d06de9f2b89881091",
+    "remote_main_at_repair_start": "62dfcfc5637f0bee2358074c4458047689dd5299",
+    "product_decision": "protected full-page reload, explicitly approved in user implementation plan",
+    "implementation_commits": {
+      "capacity": "4126259b0326297cd1d2b5514cc206775a4c9eb6",
+      "modal": "3662f42cc856ebc176f4233faf29551c35054cff",
+      "module": "2fd3a4540944217fc6b25c5d5bcdb5a0b1ac235b",
+      "doc_scope": "a3d1629a647dd5f85baf2bc94f3195a3bc230788"
+    },
+    "preimplementation_status": "confirmed; no second general development authorization required",
+    "native_bounded_review": "no reproducible new P1/P2; tests/fixtures summary only, no long suite",
+    "targeted_validation": {
+      "unit_and_tool_safety": "52 passed; test_main_iteration_recovery.py test_ui_journal.py test_main_iteration_doc_safety.py",
+      "browser_and_read_recovery": "21 passed before additional readonly owner assertions; final full browser gate repeats all assertions",
+      "doc_sample": "pass=true; validation_scope.candidate_stage=intermediate_documentation_sample; final_candidate_status=not_evaluated"
+    },
+    "final_acceptance": "pending at source freeze; exact head, wheel/sdist hashes, local full gates and CI objects must be bound in revised delivery evidence",
+    "historical_boundaries": "All 12 historical provenance gaps, Frozen A, actual Host and customer/professional acceptance remain unchanged."
+  },
+  "previous_candidate_before_review_r2": "formal-final-runtime"
 }
