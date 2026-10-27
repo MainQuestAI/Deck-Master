@@ -34,6 +34,7 @@ class Coverage:
     project_id: str
     headers: dict[str, Header]
     operations: dict[str, str]
+    complete: bool = True
 
 
 _cache = OrderedDict()
@@ -87,15 +88,26 @@ def discard(root):
 
 
 def publish(coverage):
-    """Publish successful, complete canonical scans from resolvers or readers."""
-    if len(coverage.headers) > MAX_REVISIONS or any(h.signature is None for h in coverage.headers.values()):
+    """Retain bounded metadata from successful complete canonical scans."""
+    if MAX_REVISIONS <= 0 or any(h.signature is None for h in coverage.headers.values()):
         return
+    if len(coverage.headers) > MAX_REVISIONS:
+        # Retain bounded canonical headers, never a claim of complete ancestry.
+        # A later scan still walks through the uncached tail before deciding.
+        headers = {}
+        revision = coverage.head
+        while revision is not None and len(headers) < MAX_REVISIONS:
+            header = coverage.headers[revision]
+            headers[revision] = header
+            revision = header.parent
+        coverage = Coverage(coverage.root, coverage.head, coverage.project_id, headers,
+            {h.operation_id: h.revision for h in headers.values() if h.operation_id is not None}, complete=False)
     with _lock:
         _cache[coverage.root] = coverage
         _cache.move_to_end(coverage.root)
         while (len(_cache) > MAX_PROJECTS
                or sum(len(c.headers) for c in _cache.values()) > MAX_REVISIONS):
-            _cache.popitem(last=False)  # Evict whole coverage, never partial trust.
+            _cache.popitem(last=False)  # Evict whole entries; partial metadata proves no absence.
 
 
 def valid(store, coverage):
@@ -114,51 +126,58 @@ def scan(store, *, root, control, operation_id, head_revision=None, cached=None)
     """
     if cached is not None and control in cached.headers and control != cached.head:
         cached = None
-    headers = dict(cached.headers) if cached else {}
-    ops = dict(cached.operations) if cached else {}
+    complete = cached is not None and cached.complete
+    hints = cached.headers if cached is not None else {}
+    headers = dict(cached.headers) if complete else {}
+    ops = dict(cached.operations) if complete else {}
     new_documents = {}
     duplicate = False
     revision = control
     visited = set()
-    project_id = cached.project_id if cached else None
+    project_id = cached.project_id if complete else None
     while revision not in headers:
         if revision in visited:
             raise ValueError('ancestry cycle')
         visited.add(revision)
-        doc, signature, digest = snapshots.snapshot_evidence(store, revision)
-        validate_schema('document', doc)
+        doc = None
+        header = hints.get(revision)
+        if header is None:
+            doc, signature, digest = snapshots.snapshot_evidence(store, revision)
+            validate_schema('document', doc)
+            change = doc.get('change') or {}
+            if not isinstance(change, dict):
+                raise ValueError('invalid change')
+            op = change.get('operation_id')
+            if op is not None and not isinstance(op, str):
+                raise ValueError('invalid operation ID')
+            identity = project_id if doc['project_id'] == project_id else doc['project_id']
+            header = Header(revision, identity, doc['parent_revision_id'], op, signature, digest)
         if project_id is None:
-            project_id = doc['project_id']
-        if doc['project_id'] != project_id:
+            project_id = header.project_id
+        if header.project_id != project_id:
             if cached is not None:
                 return scan(store, root=root, control=control, operation_id=operation_id,
                             head_revision=head_revision)
             raise ValueError('foreign ancestry')
-        change = doc.get('change') or {}
-        if not isinstance(change, dict):
-            raise ValueError('invalid change')
-        op = change.get('operation_id')
-        if op is not None and not isinstance(op, str):
-            raise ValueError('invalid operation ID')
+        op = header.operation_id
         if op is not None:
             if op in ops:
                 duplicate = True
             ops[op] = revision
-        header = Header(revision, project_id, doc['parent_revision_id'], op, signature, digest)
         headers[revision] = header
         # Keep at most the query match; no full Documents survive in the cache.
-        if op == operation_id:
+        if op == operation_id and doc is not None:
             new_documents[revision] = doc
         revision = header.parent
         if revision is None:
-            if cached is not None:
+            if complete:
                 return scan(store, root=root, control=control, operation_id=operation_id,
                             head_revision=head_revision)
             break
     else:
         # New ancestry must connect to a complete cached head, not an arbitrary
         # old node (e.g. a restore/fork). Fall back to a fresh canonical scan.
-        if cached is None:
+        if not complete:
             raise ValueError('ancestry cycle')
         if visited and revision != cached.head:
             return scan(store, root=root, control=control, operation_id=operation_id,

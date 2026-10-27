@@ -142,14 +142,23 @@ class Store:
             raise StoreError(rel_path, "existing object has different bytes; refusing overwrite")
         stage_dir = self._stage_dir(operation_id)
         stage_dir.mkdir(parents=True, exist_ok=True)
-        staged = stage_dir / f"{digest}.{ext}"
-        _atomic_write_bytes(staged, data)
-        target.parent.mkdir(parents=True, exist_ok=True)
-        with contextlib.suppress(FileExistsError):
-            os.link(staged, target)
-        if not target.exists():
-            _atomic_write_bytes(target, data)
-        staged.unlink(missing_ok=True)
+        handle, name = tempfile.mkstemp(dir=stage_dir, prefix="blob-", suffix="." + ext)
+        staged = Path(name)
+        try:
+            with os.fdopen(handle, "wb") as stream:
+                stream.write(data)
+                stream.flush()
+                os.fsync(stream.fileno())
+            target.parent.mkdir(parents=True, exist_ok=True)
+            with contextlib.suppress(FileExistsError):
+                os.link(staged, target)
+            directory = os.open(target.parent, os.O_RDONLY | os.O_DIRECTORY)
+            try:
+                os.fsync(directory)
+            finally:
+                os.close(directory)
+        finally:
+            staged.unlink(missing_ok=True)
         if sha256_bytes(target.read_bytes()) != digest:
             raise StoreError(rel_path, "object bytes do not match digest after write")
         return {"path": rel_path, "sha256": digest}
@@ -283,6 +292,9 @@ class Store:
 
     def save_revision(self, document: dict[str, Any]) -> Path:
         validate_document_semantics(document)
+        return self._save_validated_revision(document)
+
+    def _save_validated_revision(self, document: dict[str, Any]) -> Path:
         revision_id = document["revision_id"]
         self.revisions_dir.mkdir(parents=True, exist_ok=True)
         path = self.revisions_dir / f"{revision_id}.json"
@@ -456,7 +468,7 @@ class Store:
                     or record["base_revision"] != document["parent_revision_id"]
                     or result.get("revision_id") != document["revision_id"]):
                 raise StoreError("operation_commit", "operation/result binding does not match the business commit")
-        self.save_revision(document)
+        self._save_validated_revision(document)
         pointer = {"format": CURRENT_FORMAT, "revision_id": document["revision_id"]}
         if document.get("compatibility"):
             pointer.update(format=WORKBENCH_FORMAT, minimum_writer=document["compatibility"]["minimum_writer"])

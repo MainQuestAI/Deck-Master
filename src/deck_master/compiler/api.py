@@ -38,6 +38,32 @@ class CompileResult:
 def compile_deck(inputs: list[SvgInput], options: CompileOptions, output_dir: Path) -> CompileResult:
     if not inputs:
         raise ValueError('At least one SVG is required')
+    return _compile_prepared(inputs, options, output_dir)
+
+
+def _prepare_inputs(inputs, assets):
+    """Single internal parsing boundary; callers retain these inputs for emission."""
+    asset_hashes = {path: hashlib.sha256(Path(path).read_bytes()).hexdigest() for mapping in assets.values() for path in mapping.values()}
+    pages = []
+    icon_license = False
+    if any(not isinstance(item.page_id, str) or not item.page_id for item in inputs):
+        raise ValueError('SVG page_id must be a nonempty string')
+    if len({item.page_id for item in inputs}) != len(inputs):
+        raise ValueError('SVG page_id must be unique')
+    for item in inputs:
+        data = Path(item.path).read_bytes()
+        page = parse_svg(data, page_id=item.page_id, assets=assets.get(item.page_id, {}))
+        icon_license = icon_license or b'data-icon-license="lucide-1.49.0"' in data
+        page['sha256'] = hashlib.sha256(data).hexdigest()
+        from .native import normalize_notes
+        page['speaker_notes'] = normalize_notes(item.speaker_notes)
+        page['notes_sha256'] = hashlib.sha256(page['speaker_notes'].encode('utf-8')).hexdigest()
+        page['slide_index'] = len(pages) + 1
+        pages.append(page)
+    return pages, asset_hashes, icon_license
+
+
+def _compile_prepared(inputs, options, output_dir, prepared=None):
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=False)
     target = output_dir / 'deck.pptx'
@@ -45,22 +71,7 @@ def compile_deck(inputs: list[SvgInput], options: CompileOptions, output_dir: Pa
         raise FileExistsError(target)
     if not all(math.isfinite(v) and v > 0 for v in (options.width_px, options.height_px)):
         raise ValueError("slide dimensions must be positive")
-    asset_hashes = {path: hashlib.sha256(Path(path).read_bytes()).hexdigest() for mapping in options.assets.values() for path in mapping.values()}
-    pages = []
-    if any(not isinstance(item.page_id, str) or not item.page_id for item in inputs):
-        raise ValueError('SVG page_id must be a nonempty string')
-    if len({item.page_id for item in inputs}) != len(inputs):
-        raise ValueError('SVG page_id must be unique')
-    for item in inputs:
-        data = Path(item.path).read_bytes()
-        page = parse_svg(data, page_id=item.page_id, assets=options.assets.get(item.page_id, {}))
-        page['sha256'] = hashlib.sha256(data).hexdigest()
-        from .native import normalize_notes
-        page['speaker_notes'] = normalize_notes(item.speaker_notes)
-        page['notes_sha256'] = hashlib.sha256(page['speaker_notes'].encode('utf-8')).hexdigest()
-        page['slide_index'] = len(pages) + 1
-        pages.append(page)
-    icon_license = any(b'data-icon-license="lucide-1.49.0"' in Path(item.path).read_bytes() for item in inputs)
+    pages, asset_hashes, icon_license = prepared if prepared is not None else _prepare_inputs(inputs, options.assets)
     diagnostics = []
     for page in pages:
         scale = min(options.width_px / page['width'], options.height_px / page['height'])

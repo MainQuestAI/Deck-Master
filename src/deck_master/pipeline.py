@@ -444,8 +444,20 @@ def produce(project_dir, *, base_revision=None, operation_id=None):
         return produce(project_dir, base_revision=base_revision, operation_id=operation_id)
     failure = None
     try:
-        return _produce_artifacts(store, doc, explicit=explicit, base_revision=base_revision,
-                                  operation_id=operation_id, digest=digest if explicit else None)
+        from contextlib import nullcontext
+        from .local_state import local_lock, safe_path
+        lease = local_lock(safe_path(store.staging_dir, operation_id, 'assembly.lock')) if explicit else nullcontext()
+        # No project lock is held while waiting for a different process.
+        with lease:
+            if explicit:
+                with store._locked():
+                    previous = operations.recover(store, operation_id, digest)
+                    if previous:
+                        return previous
+                    if store.current_revision_id() != base_revision:
+                        raise operations.OperationError('conflict', 'base_revision', 'assembly basis changed; read current state', exit_code=5)
+            return _produce_artifacts(store, doc, explicit=explicit, base_revision=base_revision,
+                                      operation_id=operation_id, digest=digest if explicit else None)
     except BaseException as exc:
         failure = exc
         raise
@@ -469,22 +481,24 @@ def _produce_artifacts(store, doc, *, explicit, base_revision, operation_id, dig
     if preview_required:
         executable('rsvg-convert')
     with tempfile.TemporaryDirectory(prefix='production-',dir=store.staging_dir) as temporary:
-        work=Path(temporary);inputs=[];parsed=[];expected=[];approved={};preview_inputs={}
+        work=Path(temporary);inputs=[];expected=[];approved={};preview_inputs={}
         for index,entry in enumerate(doc['pages']):
             obj=store.read_object_json(entry['svg']);data=store.read_object_bytes(obj['file'])
             page=store.read_object_json(entry['page'])
             mapping=page_asset_paths(store,doc,entry,work)
             approved[entry['page_id']]=mapping
             path=work/f'page-{index+1}.svg';path.write_bytes(data)
-            inputs.append(SvgInput(entry['page_id'],path,page.get('speaker_notes', '')));parsed.append(parse_svg(data,page_id=entry['page_id'],assets=mapping))
+            inputs.append(SvgInput(entry['page_id'],path,page.get('speaker_notes', '')))
             if entry['page_id'] in preview_required:
                 preview_path = work / f'preview-input-{index+1}.svg'
                 preview_path.write_bytes(preview_svg_bytes(data, page_id=entry['page_id'], assets=mapping))
                 preview_inputs[entry['page_id']] = preview_path
             expected.append(page)
+        from .compiler.api import _prepare_inputs, _compile_prepared
+        parsed, asset_hashes, icon_license = _prepare_inputs(inputs, approved)
         fonts=resolve_fonts(parsed);canvas=doc['design_context']['canvas']
         options=CompileOptions(width_px=canvas['slide_width_in']*96,height_px=canvas['slide_height_in']*96,fonts=fonts,assets=approved)
-        compiled=compile_deck(inputs,options,work/'compiled')
+        compiled=_compile_prepared(inputs,options,work/'compiled',(parsed,asset_hashes,icon_license))
         renders=render_deck(compiled.pptx_path,work/'rendered',fonts=fonts)
         if len(renders)!=len(inputs):raise RuntimeError('rendered slide count differs from current page count')
         report=readback(compiled.pptx_path,parsed,expected)

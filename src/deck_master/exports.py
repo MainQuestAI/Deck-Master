@@ -453,10 +453,10 @@ def variant_metadata(store, doc):
     }
 
 
-def _bundle(store, doc, identity, purpose, export_id, target, notes_policy):
+def _bundle(store, doc, identity, purpose, export_id, target, notes_policy, *, control=None):
     from .delivery_eligibility import selected_output
     selected = selected_output(store, doc, notes_policy=notes_policy) if purpose != "engineering" else None
-    facts = _facts(store, doc, selected_output=selected)
+    facts = _facts(store, doc, selected_output=selected, control=control)
     _gate(store, doc, facts, purpose)
     report = _public_report(doc, facts, purpose)
     report['notes_policy'] = notes_policy
@@ -523,45 +523,54 @@ def create(project, *, purpose="review", revision=None, export_id=None, output_d
     cache.mkdir(parents=True, exist_ok=True)
     final = safe_path(cache, export_id)
     with local_lock(safe_path(cache, "exports.lock")):
-        # The lock order is exports -> project. A request pause/revocation can
-        # commit while an export waits for the cache lock. Once admitted again,
-        # delivery publication and any external copy serialize with control
-        # writes through the same project lock, including the final rename.
+        # Capture one fixed artifact/control pair. Preparation does not hold
+        # the project write lock; publication still serializes with control.
         with store._locked() if purpose == 'delivery' else nullcontext():
+            control = store.load_document() if purpose == 'delivery' else None
             if purpose == 'delivery':
                 if revision is None:
-                    doc = store.load_document()
+                    doc = control
                     resolved_notes = resolve_notes_policy(store, doc, notes_policy)
                 _guard_delivery(store, doc, revision, resolved_notes)
+            result = None
             if final.exists():
                 result = _record(store, identity, export_id)
                 old_policy = result['manifest'].get('notes_policy')
                 if (result["revision_id"] != doc["revision_id"] or result["purpose"] != purpose
                         or (old_policy != resolved_notes and (old_policy is not None or notes_policy is not None))):
                     raise ExportError("export_id_conflict", "export ID already belongs to another fixed request", exit_code=5)
-            else:
+        stage = None
+        try:
+            if result is None:
                 stage = Path(tempfile.mkdtemp(prefix=".export-", dir=cache))
-                try:
-                    manifest, filename = _bundle(store, doc, identity, purpose, export_id, stage, resolved_notes)
-                    allowed = {v["path"]: {"sha256": v["sha256"], "size": v["size"]} for v in manifest["files"]}
-                    for name in ("manifest.json", filename):
-                        raw = (stage / name).read_bytes()
-                        allowed[name] = {"sha256": sha256_bytes(raw), "size": len(raw)}
-                    result = {
-                        "schema_version": "export_record.v1", "export_id": export_id,
-                        "project_identity": identity, "revision_id": doc["revision_id"],
-                        "purpose": purpose, "archive": filename, "files": allowed, "manifest": manifest,
-                    }
-                    (stage / "export-record.json").write_bytes(canonical_json_bytes(result))
+                manifest, filename = _bundle(store, doc, identity, purpose, export_id, stage, resolved_notes, control=control)
+                allowed = {v["path"]: {"sha256": v["sha256"], "size": v["size"]} for v in manifest["files"]}
+                for name in ("manifest.json", filename):
+                    raw = (stage / name).read_bytes()
+                    allowed[name] = {"sha256": sha256_bytes(raw), "size": len(raw)}
+                result = {
+                    "schema_version": "export_record.v1", "export_id": export_id,
+                    "project_identity": identity, "revision_id": doc["revision_id"],
+                    "purpose": purpose, "archive": filename, "files": allowed, "manifest": manifest,
+                }
+                (stage / "export-record.json").write_bytes(canonical_json_bytes(result))
+            with store._locked() if purpose == 'delivery' else nullcontext():
+                if purpose == 'delivery':
+                    _guard_delivery(store, doc, revision, resolved_notes)
+                    if store.current_revision_id() != control['revision_id']:
+                        raise ExportError('conflict', 'project changed while preparing export; read current state and repeat the request',
+                            revision=doc['revision_id'], exit_code=5)
+                if stage is not None:
                     stage.rename(final)
-                except BaseException:
-                    shutil.rmtree(stage)
-                    raise
-            response = {"status": "exported", **copy.deepcopy(result), "download_url": f"/api/exports/{export_id}/files/{result['archive']}"}
-            if output_dir is not None:
-                destination = Path(output_dir).expanduser()
-                _copy_bundle(project, result, destination)
-                response['output_dir'] = str(destination)
+                    stage = None
+                response = {"status": "exported", **copy.deepcopy(result), "download_url": f"/api/exports/{export_id}/files/{result['archive']}"}
+                if output_dir is not None:
+                    destination = Path(output_dir).expanduser()
+                    _copy_bundle(project, result, destination)
+                    response['output_dir'] = str(destination)
+        finally:
+            if stage is not None:
+                shutil.rmtree(stage)
     return response
 
 

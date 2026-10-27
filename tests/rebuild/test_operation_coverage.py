@@ -351,7 +351,8 @@ def test_projects_copy_eviction_and_disable(tmp_path, monkeypatch):
     assert measured['snapshot_decode'] == 3
     cache.clear(); monkeypatch.setattr(cache, 'MAX_REVISIONS', 2)
     operations.resolve_operation(store, 'absent', use_cache=True)
-    assert not cache._cache
+    partial = cache.get(cache.root_identity(store))
+    assert not partial.complete and len(partial.headers) == 2
 
 
 def _child_query(root, queue):
