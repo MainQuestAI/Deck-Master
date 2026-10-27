@@ -1,7 +1,5 @@
 import {get, readableError} from './api.js';
 import {el, button, empty} from './dom.js';
-import {launcher} from './launcher-ui.js';
-import {Project} from './project.js';
 const root = document.querySelector('#app');
 async function start() {
   try {
@@ -11,8 +9,13 @@ async function start() {
         '请升级项目服务后重新打开。项目文件仍保留，当前没有执行写入。', button('重新连接', start))));
       return;
     }
-    if (health.role === 'launcher') await launcher(root, health);
-    else await new Project(root, health).start();
+    if (health.role === 'launcher') {
+      const {launcher} = await import('./launcher-ui.js');
+      await launcher(root, health);
+    } else {
+      const {Project} = await import('./project.js');
+      await new Project(root, health).start();
+    }
   } catch (error) {
     root.replaceChildren(el('main', {id: 'main', class: 'workspace'}, empty('暂时无法打开工作台', readableError(error), button('重新连接', start))));
   }

@@ -41,6 +41,7 @@ export function contentPlanDifferences(plan, next, pages, sources = []) {
 
 // One editor owns the recovery copy; every request freezes the original payload.
 export function contentOperation(app, slot, read, hydrate, ref, onDone, {onPlanChange} = {}) {
+  const formalBaseline = structuredClone(read());
   let loaded = false, disposed = false, serial = 0, pending = null; const guards = [];
   const notice = el('p', {role:'status', class:'content-operation-note'}), impact = el('div', {class:'stack'});
   const receipt = el('div', {role:'status',class:'content-save-receipt stack',hidden:true});
@@ -77,7 +78,7 @@ export function contentOperation(app, slot, read, hydrate, ref, onDone, {onPlanC
     const editor = app.editor;
     editor.ready.then(() => {
       if (disposed || editor !== app.editor) return;
-      if (editor.draft.content[slot]) hydrate(structuredClone(editor.draft.content[slot]));
+      hydrate(structuredClone(editor.draft.content[slot] || formalBaseline));
       loaded = true;
       if (!canWrite() && !app.readonly) notice.textContent = '草稿绑定另一份内容基准；输入已保留，请回到对应版本核对后编辑。';
       controls();

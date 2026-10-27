@@ -1,3 +1,4 @@
+import {retireClearedDrafts} from './drafts.js';
 import {get, post, readableError, canonical, digest} from './api.js';
 import {el, button, modal} from './dom.js';
 import {personalBackupButton} from './personal-recovery.js';
@@ -124,6 +125,8 @@ export function personalClearPanel(app) {
       if (result.status !== 'cleared' || result.operation_id !== sent.request.operation_id ||
           result.plan_id !== sent.request.plan_id || result.manifest_digest !== sent.request.manifest_digest ||
           !Array.isArray(result.cleared)) throw new Error('清理回执无法与原请求对应。');
+      try { retireClearedDrafts(identity, result, app.draftEditors); }
+      catch { notice.textContent = '项目清理已确认，但浏览器无法记录恢复状态。原清理请求仍保留，请释放浏览器空间后核实原结果。'; return; }
       await releasePending(sent);
       notice.replaceChildren(el('p', {}, `已清理 ${result.cleared.length} 项，恢复备份已保留；任务与候选未受影响。`), personalBackupButton(app));
     } catch (error) {
@@ -161,6 +164,8 @@ export function personalClearPanel(app) {
             receipt.manifest_digest !== sent.request.manifest_digest || !Array.isArray(receipt.cleared)) {
           throw new Error('成功回执无法与原清理请求对应。');
         }
+        try { retireClearedDrafts(identity, receipt, app.draftEditors); }
+        catch { notice.textContent = '项目清理已确认，但浏览器无法记录恢复状态。原请求仍保留，可释放空间后再次核实。'; return; }
         await releasePending(sent);
         notice.replaceChildren(el('p', {}, `已清理 ${receipt.cleared.length} 项；本次核实没有再次清理。${result.backup?.available ? '原备份可查看。' : '原备份暂不可用，请保留回执。'}`), personalBackupButton(app));
       } else if (result.status === 'ended') await showEnded(sent);

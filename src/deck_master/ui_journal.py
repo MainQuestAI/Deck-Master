@@ -166,6 +166,7 @@ def project_info(project, *, server_capabilities=None, include_eligibility=True)
             "core_readers": list(CORE_READERS), "core_writers": list(SUPPORTED_WRITERS),
             "host_execution": "handoff_required", "draft_journal": "ui_draft.v1",
             "sample": sample,
+            "draft_reads": "ui_draft_query.v1" if "ui_draft_query.v1" in _capabilities(server_capabilities) else None,
             "control_revision_id": doc["revision_id"],
             "collaboration": collaboration_state,
             "completion": content_production.completion_status(store, doc),
@@ -255,23 +256,66 @@ def get(project, draft_id):
     return {"status": "saved" if record else "not_found", "record": record}
 
 
-def list_drafts(project):
+def list_drafts(project, *, view=None, target=None, context_key=None):
+    if view not in (None, "editor", "pending", "notes"):
+        raise LocalStateError("view", "draft view must be editor, pending or notes")
+    if view == "editor":
+        if (not isinstance(target, dict) or set(target) != {"scope", "page_id", "layer"}
+                or target["scope"] not in ("page", "project")
+                or target["layer"] not in ("content", "original_image", "svg", "ppt", "prepared_prompt",
+                                           "submitted_prompt", "outline", "materials", "notes")
+                or (target["page_id"] is not None and
+                    (not isinstance(target["page_id"], str) or not IDENTIFIER.fullmatch(target["page_id"])))
+                or (target["scope"] == "project" and target["page_id"] is not None)
+                or (target["scope"] == "page" and target["page_id"] is None)
+                or (context_key is not None and not isinstance(context_key, str))):
+            raise LocalStateError("target", "editor draft reads require one target and optional context key")
+    elif target is not None or context_key is not None:
+        raise LocalStateError("view", "target and context key are only valid for editor reads")
     from .snapshots import FixedSnapshotReader
     store, doc, identity = context(project)
     directory = _directory(store)
     records, errors = [], []
+    entries, pending, noted = [], [], set()
     snapshot_reader = None
     if directory.is_dir():
         for path in sorted(directory.glob("*.json")):
             try:
                 record = _read(store, path.stem)
+                draft = record["draft"]
+                if view == "editor" and (draft["target"] != target or
+                        (draft["content"].get("context_key") or None) != context_key):
+                    continue
                 if snapshot_reader is None:
                     snapshot_reader = FixedSnapshotReader(store, head_revision=doc['revision_id'])
                 _validate(store, doc, identity, record["draft"], snapshot_reader=snapshot_reader)
-                records.append(record)
+                if view == "editor":
+                    content = draft["content"]
+                    annotation = content.get("annotation") if isinstance(content.get("annotation"), dict) else {}
+                    requirement = content.get("requirement") if isinstance(content.get("requirement"), dict) else {}
+                    summary = str(content.get("text") or annotation.get("body") or requirement.get("text") or "空白草稿")
+                    entries.append({"draft_id": draft["draft_id"], "base_revision": draft["base_revision"],
+                                    "base_ref": draft["base_ref"], "etag": record["etag"],
+                                    "digest": record["digest"], "summary": summary[:45],
+                                    "updated_sequence": record["updated_sequence"]})
+                elif view == "pending":
+                    if draft.get("pending"):
+                        pending.append({"draft_id": draft["draft_id"], "pending": draft["pending"]})
+                elif view == "notes":
+                    if draft["target"]["scope"] == "page" and isinstance(draft["content"].get("text"), str) and draft["content"]["text"].strip():
+                        noted.add((draft["target"]["page_id"], draft["base_revision"]))
+                else:
+                    records.append(record)
             except (ValueError, RuntimeError, OSError, KeyError, TypeError):
                 errors.append({"draft_id": path.stem, "status": "unreadable"})
-    return {"project_id": doc["project_id"], "project_identity": identity, "records": records, "errors": errors}
+    result = {"project_id": doc["project_id"], "project_identity": identity, "errors": errors}
+    if view == "editor":
+        return {**result, "entries": entries}
+    if view == "pending":
+        return {**result, "pending": pending}
+    if view == "notes":
+        return {**result, "noted_pages": [{"page_id": page, "base_revision": revision} for page, revision in sorted(noted)]}
+    return {**result, "records": records}
 
 
 def save(project, *, draft, expected_etag=None):

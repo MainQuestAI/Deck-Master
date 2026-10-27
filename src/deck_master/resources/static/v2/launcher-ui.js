@@ -1,16 +1,9 @@
 import {get, post, readableError} from './api.js';
 import {el, button, heading, empty, field, modal, version, toast, actionMenu} from './dom.js';
-import {surfaces, layers} from './routes.js';
-import {externalReviewForm} from './collaboration-desk.js';
+import {surfaces, layers, localURL} from './routes.js';
+export {localURL} from './routes.js';
 import {draftIntake} from './draft-intake.js';
 
-export function localURL(value) {
-  try {
-    const url = new URL(value);
-    return url.protocol === 'http:' && ['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname) &&
-      !url.username && !url.password && ['/', '/v2/', '/studio/'].includes(url.pathname) ? url : null;
-  } catch { return null; }
-}
 export async function launcher(root, health) {
   root.className = 'launcher';
   const list = el('section', {class: 'stack', 'aria-label': '最近项目'});
@@ -86,7 +79,7 @@ export async function launcher(root, health) {
   root.replaceChildren(el('header', {class: 'launcher-brand'}, el('img', {class: 'brand-logo', src: '/v2/assets/deck-master-logo/logo-horizontal-light.svg', alt: 'Deck Master', width: 176, height: 46}), el('span', {class: 'muted'}, '本机制作工作台')),
     el('main', {id: 'main'}, heading('项目', '打开正在制作的方案。材料、逐页内容、制作依据和每版产物，都在同一个地方。', button('新建项目', createForm, true)),
       el('div', {class: 'toolbar'}, el('div', {class: 'row wrap'}, button('选择项目文件夹', registerForm),
-        health.ui_capabilities?.includes('external_review.v1')&&button('只读审阅稿件',()=>externalReviewForm()),button('打开只读示例', async event => {
+        health.ui_capabilities?.includes('external_review.v1')&&button('只读审阅稿件',async()=>{try { const {externalReviewForm} = await import('./collaboration-desk.js'); externalReviewForm(); } catch(error) { message.textContent=readableError(error); }}),button('打开只读示例', async event => {
         const trigger = event.currentTarget; trigger.disabled = true;
         try { const data = await post('/api/projects/sample', {}); await open(data.project.entry_id); }
         catch (error) { message.textContent = readableError(error); trigger.disabled = false; }

@@ -52,7 +52,7 @@ def read_active_service(project_dir: Path) -> dict | None:
 
 # Server-side capability names (single source for /api/health and the
 # /api/project effective-action projection).
-UI_CAPABILITIES = ("project_control_light.v1", "content_insight.v1", "method_library_preview.v1", "ui_draft.v1", "ui_gallery.v1", "ui_overview.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1",
+UI_CAPABILITIES = ("ui_draft_query.v1", "project_control_light.v1", "content_insight.v1", "method_library_preview.v1", "ui_draft.v1", "ui_gallery.v1", "ui_overview.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1",
                    "page_detail.v1", "annotations.v1", "changes.v1", "operations.v1", "candidates.v1",
                    "stages.v1", "run_desk.v1", "style_recipes.v1", "content_ops.v1", "exports.v1",
                    "workbench_summary.v2", "restoration.v1", "workbench_actions.v1", "action_targets.v1", "icon_quality.v1", "result_reading.v1", "history_summary.v1", "visual_reference.v1", "material_uploads.v1",
@@ -591,7 +591,13 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                     result = ui_journal.project_info(self.store.project_root, server_capabilities=UI_CAPABILITIES,
                                                    include_eligibility='light' not in query)
                 elif parsed.path == '/api/drafts':
-                    result = ui_journal.list_drafts(self.store.project_root)
+                    query = parse_qs(parsed.query, keep_blank_values=True)
+                    if set(query) - {'view', 'target', 'context_key'} or any(len(values) != 1 for values in query.values()):
+                        raise ValueError('draft reads accept one view, target and context_key')
+                    result = ui_journal.list_drafts(self.store.project_root,
+                        view=query.get('view', [None])[0],
+                        target=json.loads(query['target'][0]) if 'target' in query else None,
+                        context_key=query.get('context_key', [None])[0] or None)
                 elif parsed.path == '/api/ui-state':
                     result = {'record': ui_journal.read_position(self.store.project_root)}
                 elif parsed.path == '/api/inputs':

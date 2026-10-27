@@ -37,9 +37,10 @@ export class BusinessOperations {
       for (const entry of local) if (await this.valid(entry.pending)) this.entries.set(entry.pending.operation_id, {...entry, state: 'unknown'});
     } catch { this.storageWarning = '浏览器中的待核实副本暂不可读；请保留草稿恢复文件。'; }
     try {
-      const saved = await get('/api/drafts');
-      for (const record of saved.records) if (await this.valid(record.draft.pending) && !this.entries.has(record.draft.pending.operation_id))
-        this.entries.set(record.draft.pending.operation_id, {pending: record.draft.pending, draft_id: record.draft.draft_id, state: 'unknown'});
+      const saved = await get('/api/drafts' + (this.app.health.ui_capabilities?.includes('ui_draft_query.v1') ? '?view=pending' : ''));
+      for (const draft of saved.pending || saved.records.map(record => record.draft))
+        if (await this.valid(draft.pending) && !this.entries.has(draft.pending.operation_id))
+          this.entries.set(draft.pending.operation_id, {pending: draft.pending, draft_id: draft.draft_id, state: 'unknown'});
     } catch { this.loadWarning = '项目中的待核实请求尚未读取；重新连接后再提交。'; }
     this.render();
   }

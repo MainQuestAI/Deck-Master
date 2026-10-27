@@ -365,8 +365,10 @@ export function historyDesk(app, history) {
         } catch (error) { status.textContent = readableError(error); }
         finally { confirm.disabled = false; }
       }, true);
-      const dialog = modal('确认历史恢复影响', body, [button('取消恢复', () => dialog.close()), confirm]);
-      dialog.addEventListener('close', () => editor.dispose(), {once: true}); app.disposables.push(() => editor.dispose());
+      app.draftEditors.add(editor);
+      const dialog = modal('确认历史恢复影响', body, [button('取消恢复', () => { if (editor.canLeave()) dialog.close(); }), confirm],
+        {protectDraft: true, canClose: () => editor.canLeave(), beforeClose: () => editor.dispose()});
+      app.disposables.push(() => editor.dispose());
     } catch (error) { modal('暂不能预览恢复', el('p', {class: 'field-error'}, readableError(error))); }
     finally { stateIdentity(); }
   }

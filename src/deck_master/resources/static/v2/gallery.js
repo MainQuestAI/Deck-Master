@@ -31,7 +31,8 @@ export function gallery(app, data) {
   const goals = new Map((plan.goals || []).map(goal => [goal.goal_id, goal.page_id]));
   const chapterPages = new Map(chapters.map(chapter => [chapter.chapter_id, new Set(
     Array.isArray(chapter.page_ids) ? chapter.page_ids : (chapter.goal_ids || []).map(id => goals.get(id)))]));
-  const noted = new Set((data.drafts?.records || []).filter(record => record.draft.target.scope === 'page' && typeof record.draft.content.text === 'string' && record.draft.content.text.trim() &&
+  const noted = new Set(data.drafts?.noted_pages ? data.drafts.noted_pages.filter(item => item.base_revision === app.route.revision).map(item => item.page_id) :
+    (data.drafts?.records || []).filter(record => record.draft.target.scope === 'page' && typeof record.draft.content.text === 'string' && record.draft.content.text.trim() &&
     record.draft.base_revision === app.route.revision).map(record => record.draft.target.page_id));
   const selected = memory.state.selected_page_ids.filter(id => ids.has(id));
   const layer = layerNames[app.route.layer] ? app.route.layer : 'original_image';
