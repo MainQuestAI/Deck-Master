@@ -315,11 +315,22 @@
       ],
       "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
       "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
-      "implementation_commits": [],
-      "validation": [],
-      "status": "preimplementation_facts_verified",
+      "implementation_commits": [
+        "aba7f44f4d6be313991a0264637bda6471db8b64"
+      ],
+      "validation": [
+        {
+          "command": "python -m pytest -q tests/rebuild -m \"not render and not browser\" (dedicated TMPDIR/basetemp)",
+          "result": "pass_with_inherited_skips",
+          "passed": 4410,
+          "skipped": 6,
+          "evidence": "unit-v2.xml",
+          "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        }
+      ],
+      "status": "implemented_final_gates_running",
       "remaining": [
-        "Final branch gates and CI pending"
+        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
       ]
     },
     {
@@ -350,11 +361,22 @@
       ],
       "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
       "review_disposition": "Retain paragraph/block boundaries in cells, nested tables and textboxes; preserve table structure and visual reading status.",
-      "implementation_commits": [],
-      "validation": [],
-      "status": "candidate_implemented_final_gates_pending",
+      "implementation_commits": [
+        "16a4f0537a1174e74ce4cb693e6f4eabb1a48b1e"
+      ],
+      "validation": [
+        {
+          "command": "python -m pytest -q tests/rebuild -m \"not render and not browser\" (dedicated TMPDIR/basetemp)",
+          "result": "pass_with_inherited_skips",
+          "passed": 4410,
+          "skipped": 6,
+          "evidence": "unit-v2.xml",
+          "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        }
+      ],
+      "status": "implemented_final_gates_running",
       "remaining": [
-        "Final branch gates and CI pending"
+        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
       ]
     },
     {
@@ -383,11 +405,22 @@
       ],
       "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
       "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
-      "implementation_commits": [],
-      "validation": [],
-      "status": "candidate_implemented_final_gates_pending",
+      "implementation_commits": [
+        "c8c25dc8beb4bd0722638c72f35c2253fd037fe8"
+      ],
+      "validation": [
+        {
+          "command": "python -m pytest -q tests/rebuild -m \"not render and not browser\" (dedicated TMPDIR/basetemp)",
+          "result": "pass_with_inherited_skips",
+          "passed": 4410,
+          "skipped": 6,
+          "evidence": "unit-v2.xml",
+          "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        }
+      ],
+      "status": "implemented_final_gates_running",
       "remaining": [
-        "Final branch gates and CI pending"
+        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
       ]
     },
     {
@@ -416,12 +449,25 @@
         "合同减少5,768行单独计量，不算57,842行Python/JS/CSS/HTML主口径减量。"
       ],
       "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
-      "review_disposition": "Keep review.v2 and both workbench-summary contracts inline at established direct-consumer boundaries; retain shared refs elsewhere; synchronize every mirror and add the shared mirror. Verify dictionary consumers, bare validators and offline graph separately.",
-      "implementation_commits": [],
-      "validation": [],
-      "status": "candidate_implemented_final_gates_pending",
+      "review_disposition": "Preserve the original one-mirror-per-contract rule. Extract shared definitions only for contracts whose unique mirrors share the rebuild-v1 directory; restore the other groups inline and remove formatting-only churn. Keep 14 shared definitions in transitive closure. Recovery adds optional pending_save + independent digest, with local reuse of its original draft subtree. Existing direct-dictionary/summary/native consumers remain intact.",
+      "implementation_commits": [
+        "bc84ec48caa805eac89358ba427028eec2663d2f",
+        "bdcc2ad6cbd050d19ab431a3c6e28f755ed7486e",
+        "6f6e3bb362f4d1d4ad3059661118763f8e0a0d5b"
+      ],
+      "validation": [
+        {
+          "command": "python -m pytest -q tests/rebuild -m \"not render and not browser\" (dedicated TMPDIR/basetemp)",
+          "result": "pass_with_inherited_skips",
+          "passed": 4410,
+          "skipped": 6,
+          "evidence": "unit-v2.xml",
+          "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        }
+      ],
+      "status": "implemented_final_gates_running",
       "remaining": [
-        "Final branch gates and CI pending"
+        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
       ]
     },
     {
@@ -448,11 +494,22 @@
       ],
       "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
       "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
-      "implementation_commits": [],
-      "validation": [],
-      "status": "candidate_implemented_final_gates_pending",
+      "implementation_commits": [
+        "58446e32455f273777172a48b3a58931821f404c"
+      ],
+      "validation": [
+        {
+          "command": "python -m pytest -q tests/rebuild -m \"not render and not browser\" (dedicated TMPDIR/basetemp)",
+          "result": "pass_with_inherited_skips",
+          "passed": 4410,
+          "skipped": 6,
+          "evidence": "unit-v2.xml",
+          "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        }
+      ],
+      "status": "implemented_final_gates_running",
       "remaining": [
-        "Final branch gates and CI pending"
+        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
       ]
     },
     {
@@ -480,11 +537,22 @@
       ],
       "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
       "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
-      "implementation_commits": [],
-      "validation": [],
-      "status": "candidate_implemented_final_gates_pending",
+      "implementation_commits": [
+        "58446e32455f273777172a48b3a58931821f404c"
+      ],
+      "validation": [
+        {
+          "command": "python -m pytest -q tests/rebuild -m \"not render and not browser\" (dedicated TMPDIR/basetemp)",
+          "result": "pass_with_inherited_skips",
+          "passed": 4410,
+          "skipped": 6,
+          "evidence": "unit-v2.xml",
+          "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        }
+      ],
+      "status": "implemented_final_gates_running",
       "remaining": [
-        "Final branch gates and CI pending"
+        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
       ]
     },
     {
@@ -512,11 +580,29 @@
       ],
       "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
       "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
-      "implementation_commits": [],
-      "validation": [],
-      "status": "candidate_implemented_final_gates_pending",
+      "implementation_commits": [
+        "7d4e282917f0fc5222bbb3618078131e2c46dd64"
+      ],
+      "validation": [
+        {
+          "command": "python -m pytest -q tests/rebuild -m \"not render and not browser\" (dedicated TMPDIR/basetemp)",
+          "result": "pass_with_inherited_skips",
+          "passed": 4410,
+          "skipped": 6,
+          "evidence": "unit-v2.xml",
+          "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        },
+        {
+          "result": "pass",
+          "evidence": "t01-equivalence.json",
+          "files": 34,
+          "node_ids": 371,
+          "function_asts_equal": 8
+        }
+      ],
+      "status": "implemented_final_gates_running",
       "remaining": [
-        "Final branch gates and CI pending"
+        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
       ]
     },
     {
@@ -550,11 +636,23 @@
       },
       "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
       "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
-      "implementation_commits": [],
-      "validation": [],
-      "status": "candidate_implemented_final_gates_pending",
+      "implementation_commits": [
+        "8671386ad612d060276706c182ccdefa91f32261",
+        "bdcc2ad6cbd050d19ab431a3c6e28f755ed7486e"
+      ],
+      "validation": [
+        {
+          "command": "python -m pytest -q tests/rebuild -m \"not render and not browser\" (dedicated TMPDIR/basetemp)",
+          "result": "pass_with_inherited_skips",
+          "passed": 4410,
+          "skipped": 6,
+          "evidence": "unit-v2.xml",
+          "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        }
+      ],
+      "status": "implemented_final_gates_running",
       "remaining": [
-        "Final branch gates and CI pending"
+        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
       ]
     },
     {
@@ -588,11 +686,23 @@
       },
       "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
       "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
-      "implementation_commits": [],
-      "validation": [],
-      "status": "candidate_implemented_final_gates_pending",
+      "implementation_commits": [
+        "8671386ad612d060276706c182ccdefa91f32261",
+        "bdcc2ad6cbd050d19ab431a3c6e28f755ed7486e"
+      ],
+      "validation": [
+        {
+          "command": "python -m pytest -q tests/rebuild -m \"not render and not browser\" (dedicated TMPDIR/basetemp)",
+          "result": "pass_with_inherited_skips",
+          "passed": 4410,
+          "skipped": 6,
+          "evidence": "unit-v2.xml",
+          "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        }
+      ],
+      "status": "implemented_final_gates_running",
       "remaining": [
-        "Final branch gates and CI pending"
+        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
       ]
     },
     {
@@ -628,11 +738,23 @@
       },
       "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
       "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
-      "implementation_commits": [],
-      "validation": [],
-      "status": "candidate_implemented_final_gates_pending",
+      "implementation_commits": [
+        "8671386ad612d060276706c182ccdefa91f32261",
+        "bdcc2ad6cbd050d19ab431a3c6e28f755ed7486e"
+      ],
+      "validation": [
+        {
+          "command": "python -m pytest -q tests/rebuild -m \"not render and not browser\" (dedicated TMPDIR/basetemp)",
+          "result": "pass_with_inherited_skips",
+          "passed": 4410,
+          "skipped": 6,
+          "evidence": "unit-v2.xml",
+          "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        }
+      ],
+      "status": "implemented_final_gates_running",
       "remaining": [
-        "Final branch gates and CI pending"
+        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
       ]
     },
     {
@@ -668,11 +790,23 @@
       },
       "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
       "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
-      "implementation_commits": [],
-      "validation": [],
-      "status": "candidate_implemented_final_gates_pending",
+      "implementation_commits": [
+        "8671386ad612d060276706c182ccdefa91f32261",
+        "bdcc2ad6cbd050d19ab431a3c6e28f755ed7486e"
+      ],
+      "validation": [
+        {
+          "command": "python -m pytest -q tests/rebuild -m \"not render and not browser\" (dedicated TMPDIR/basetemp)",
+          "result": "pass_with_inherited_skips",
+          "passed": 4410,
+          "skipped": 6,
+          "evidence": "unit-v2.xml",
+          "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        }
+      ],
+      "status": "implemented_final_gates_running",
       "remaining": [
-        "Final branch gates and CI pending"
+        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
       ]
     },
     {
@@ -712,11 +846,23 @@
       },
       "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
       "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
-      "implementation_commits": [],
-      "validation": [],
-      "status": "candidate_implemented_final_gates_pending",
+      "implementation_commits": [
+        "8671386ad612d060276706c182ccdefa91f32261",
+        "bdcc2ad6cbd050d19ab431a3c6e28f755ed7486e"
+      ],
+      "validation": [
+        {
+          "command": "python -m pytest -q tests/rebuild -m \"not render and not browser\" (dedicated TMPDIR/basetemp)",
+          "result": "pass_with_inherited_skips",
+          "passed": 4410,
+          "skipped": 6,
+          "evidence": "unit-v2.xml",
+          "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        }
+      ],
+      "status": "implemented_final_gates_running",
       "remaining": [
-        "Final branch gates and CI pending"
+        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
       ]
     },
     {
@@ -753,11 +899,23 @@
       },
       "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
       "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
-      "implementation_commits": [],
-      "validation": [],
-      "status": "candidate_implemented_final_gates_pending",
+      "implementation_commits": [
+        "8671386ad612d060276706c182ccdefa91f32261",
+        "bdcc2ad6cbd050d19ab431a3c6e28f755ed7486e"
+      ],
+      "validation": [
+        {
+          "command": "python -m pytest -q tests/rebuild -m \"not render and not browser\" (dedicated TMPDIR/basetemp)",
+          "result": "pass_with_inherited_skips",
+          "passed": 4410,
+          "skipped": 6,
+          "evidence": "unit-v2.xml",
+          "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        }
+      ],
+      "status": "implemented_final_gates_running",
       "remaining": [
-        "Final branch gates and CI pending"
+        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
       ]
     },
     {
@@ -791,11 +949,23 @@
       },
       "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
       "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
-      "implementation_commits": [],
-      "validation": [],
-      "status": "candidate_implemented_final_gates_pending",
+      "implementation_commits": [
+        "8671386ad612d060276706c182ccdefa91f32261",
+        "bdcc2ad6cbd050d19ab431a3c6e28f755ed7486e"
+      ],
+      "validation": [
+        {
+          "command": "python -m pytest -q tests/rebuild -m \"not render and not browser\" (dedicated TMPDIR/basetemp)",
+          "result": "pass_with_inherited_skips",
+          "passed": 4410,
+          "skipped": 6,
+          "evidence": "unit-v2.xml",
+          "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        }
+      ],
+      "status": "implemented_final_gates_running",
       "remaining": [
-        "Final branch gates and CI pending"
+        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
       ]
     },
     {
@@ -855,11 +1025,26 @@
       ],
       "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
       "review_disposition": "Bind explicit recovery custody confirmation to exact draft + pendingSave; download alone never grants leave. New edits invalidate confirmation. Protect readonly recovery modal, navigation and beforeunload.",
-      "implementation_commits": [],
-      "validation": [],
-      "status": "candidate_implemented_final_gates_pending",
+      "implementation_commits": [
+        "c75a059f2844596b027e1dcfa0bc85e12ffb2f78",
+        "2d2918d1dc397a6676f2e162eb041663f62ad490",
+        "bdcc2ad6cbd050d19ab431a3c6e28f755ed7486e",
+        "6f6e3bb362f4d1d4ad3059661118763f8e0a0d5b",
+        "e439b330fb5ac4f58945a26b9cb089178d5c776a"
+      ],
+      "validation": [
+        {
+          "command": "python -m pytest -q tests/rebuild -m \"not render and not browser\" (dedicated TMPDIR/basetemp)",
+          "result": "pass_with_inherited_skips",
+          "passed": 4410,
+          "skipped": 6,
+          "evidence": "unit-v2.xml",
+          "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        }
+      ],
+      "status": "implemented_final_gates_running",
       "remaining": [
-        "Final branch gates and CI pending"
+        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
       ]
     },
     {
@@ -904,11 +1089,25 @@
       ],
       "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
       "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
-      "implementation_commits": [],
-      "validation": [],
-      "status": "candidate_implemented_final_gates_pending",
+      "implementation_commits": [
+        "c75a059f2844596b027e1dcfa0bc85e12ffb2f78",
+        "2d2918d1dc397a6676f2e162eb041663f62ad490",
+        "bdcc2ad6cbd050d19ab431a3c6e28f755ed7486e",
+        "6f6e3bb362f4d1d4ad3059661118763f8e0a0d5b"
+      ],
+      "validation": [
+        {
+          "command": "python -m pytest -q tests/rebuild -m \"not render and not browser\" (dedicated TMPDIR/basetemp)",
+          "result": "pass_with_inherited_skips",
+          "passed": 4410,
+          "skipped": 6,
+          "evidence": "unit-v2.xml",
+          "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        }
+      ],
+      "status": "implemented_final_gates_running",
       "remaining": [
-        "Final branch gates and CI pending"
+        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
       ]
     },
     {
@@ -970,11 +1169,26 @@
       ],
       "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
       "review_disposition": "Notify the actual form owner upon exact ACK retirement; reset formal fields to the fixed form baseline, clear personal fields, invalidate unsubmitted previews; retain dirty/unknown/saving/conflict/new etag/foreign identities.",
-      "implementation_commits": [],
-      "validation": [],
-      "status": "candidate_implemented_final_gates_pending",
+      "implementation_commits": [
+        "c75a059f2844596b027e1dcfa0bc85e12ffb2f78",
+        "2d2918d1dc397a6676f2e162eb041663f62ad490",
+        "bdcc2ad6cbd050d19ab431a3c6e28f755ed7486e",
+        "6f6e3bb362f4d1d4ad3059661118763f8e0a0d5b",
+        "e439b330fb5ac4f58945a26b9cb089178d5c776a"
+      ],
+      "validation": [
+        {
+          "command": "python -m pytest -q tests/rebuild -m \"not render and not browser\" (dedicated TMPDIR/basetemp)",
+          "result": "pass_with_inherited_skips",
+          "passed": 4410,
+          "skipped": 6,
+          "evidence": "unit-v2.xml",
+          "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        }
+      ],
+      "status": "implemented_final_gates_running",
       "remaining": [
-        "Final branch gates and CI pending"
+        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
       ]
     },
     {
@@ -1033,11 +1247,25 @@
       ],
       "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
       "review_disposition": "Render recovery confirmation synchronously before lazy body GET; cancel and selection generation reject late reads. Preserve the real existing restore flow.",
-      "implementation_commits": [],
-      "validation": [],
-      "status": "candidate_implemented_final_gates_pending",
+      "implementation_commits": [
+        "c75a059f2844596b027e1dcfa0bc85e12ffb2f78",
+        "2d2918d1dc397a6676f2e162eb041663f62ad490",
+        "bdcc2ad6cbd050d19ab431a3c6e28f755ed7486e",
+        "6f6e3bb362f4d1d4ad3059661118763f8e0a0d5b"
+      ],
+      "validation": [
+        {
+          "command": "python -m pytest -q tests/rebuild -m \"not render and not browser\" (dedicated TMPDIR/basetemp)",
+          "result": "pass_with_inherited_skips",
+          "passed": 4410,
+          "skipped": 6,
+          "evidence": "unit-v2.xml",
+          "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        }
+      ],
+      "status": "implemented_final_gates_running",
       "remaining": [
-        "Final branch gates and CI pending"
+        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
       ]
     },
     {
@@ -1139,11 +1367,25 @@
       ],
       "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
       "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
-      "implementation_commits": [],
-      "validation": [],
-      "status": "candidate_implemented_final_gates_pending",
+      "implementation_commits": [
+        "c75a059f2844596b027e1dcfa0bc85e12ffb2f78",
+        "2d2918d1dc397a6676f2e162eb041663f62ad490",
+        "bdcc2ad6cbd050d19ab431a3c6e28f755ed7486e",
+        "6f6e3bb362f4d1d4ad3059661118763f8e0a0d5b"
+      ],
+      "validation": [
+        {
+          "command": "python -m pytest -q tests/rebuild -m \"not render and not browser\" (dedicated TMPDIR/basetemp)",
+          "result": "pass_with_inherited_skips",
+          "passed": 4410,
+          "skipped": 6,
+          "evidence": "unit-v2.xml",
+          "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        }
+      ],
+      "status": "implemented_final_gates_running",
       "remaining": [
-        "Final branch gates and CI pending"
+        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
       ]
     },
     {
@@ -1176,11 +1418,29 @@
       ],
       "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
       "review_disposition": "Guard standalone tools before any write, including resolved ancestry and symlinks. Existing candidate rejected. Original destructive probe executed only on an expendable copy.",
-      "implementation_commits": [],
-      "validation": [],
-      "status": "candidate_implemented_final_gates_pending",
+      "implementation_commits": [
+        "aba7f44f4d6be313991a0264637bda6471db8b64",
+        "bdcc2ad6cbd050d19ab431a3c6e28f755ed7486e"
+      ],
+      "validation": [
+        {
+          "command": "python -m pytest -q tests/rebuild -m \"not render and not browser\" (dedicated TMPDIR/basetemp)",
+          "result": "pass_with_inherited_skips",
+          "passed": 4410,
+          "skipped": 6,
+          "evidence": "unit-v2.xml",
+          "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        },
+        {
+          "result": "pass",
+          "command": "python -m pytest -q tests/rebuild/test_main_iteration_doc_safety.py",
+          "evidence": "review-fixes.log",
+          "legacy_full_validator": "same pre-existing gap count assertion failure at line 20 on baseline and branch"
+        }
+      ],
+      "status": "implemented_final_gates_running",
       "remaining": [
-        "Final branch gates and CI pending"
+        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
       ]
     },
     {
@@ -1212,11 +1472,28 @@
       ],
       "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
       "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
-      "implementation_commits": [],
-      "validation": [],
-      "status": "candidate_implemented_final_gates_pending",
+      "implementation_commits": [
+        "aba7f44f4d6be313991a0264637bda6471db8b64"
+      ],
+      "validation": [
+        {
+          "command": "python -m pytest -q tests/rebuild -m \"not render and not browser\" (dedicated TMPDIR/basetemp)",
+          "result": "pass_with_inherited_skips",
+          "passed": 4410,
+          "skipped": 6,
+          "evidence": "unit-v2.xml",
+          "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        },
+        {
+          "result": "pass",
+          "command": "python -m pytest -q tests/rebuild/test_main_iteration_doc_safety.py",
+          "evidence": "review-fixes.log",
+          "legacy_full_validator": "same pre-existing gap count assertion failure at line 20 on baseline and branch"
+        }
+      ],
+      "status": "implemented_final_gates_running",
       "remaining": [
-        "Final branch gates and CI pending"
+        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
       ]
     },
     {
@@ -1249,11 +1526,28 @@
       ],
       "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
       "review_disposition": "Retain the 3077-byte W12.md local dependency; preserve all historical archive originals byte-for-byte.",
-      "implementation_commits": [],
-      "validation": [],
-      "status": "candidate_implemented_final_gates_pending",
+      "implementation_commits": [
+        "aba7f44f4d6be313991a0264637bda6471db8b64"
+      ],
+      "validation": [
+        {
+          "command": "python -m pytest -q tests/rebuild -m \"not render and not browser\" (dedicated TMPDIR/basetemp)",
+          "result": "pass_with_inherited_skips",
+          "passed": 4410,
+          "skipped": 6,
+          "evidence": "unit-v2.xml",
+          "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        },
+        {
+          "result": "pass",
+          "command": "python -m pytest -q tests/rebuild/test_main_iteration_doc_safety.py",
+          "evidence": "review-fixes.log",
+          "legacy_full_validator": "same pre-existing gap count assertion failure at line 20 on baseline and branch"
+        }
+      ],
+      "status": "implemented_final_gates_running",
       "remaining": [
-        "Final branch gates and CI pending"
+        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
       ]
     },
     {
@@ -1288,11 +1582,29 @@
       ],
       "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
       "review_disposition": "Scan JSON and CSV too. Keep 262 historical strings in 8 retained files unchanged; map 82 targets to exact-SHA archive members/local W12 through machine-references.json.",
-      "implementation_commits": [],
-      "validation": [],
-      "status": "candidate_implemented_final_gates_pending",
+      "implementation_commits": [
+        "aba7f44f4d6be313991a0264637bda6471db8b64",
+        "8fe10b3a84d3cf2bb32680c550ad29694601d5e6"
+      ],
+      "validation": [
+        {
+          "command": "python -m pytest -q tests/rebuild -m \"not render and not browser\" (dedicated TMPDIR/basetemp)",
+          "result": "pass_with_inherited_skips",
+          "passed": 4410,
+          "skipped": 6,
+          "evidence": "unit-v2.xml",
+          "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        },
+        {
+          "result": "pass",
+          "command": "python -m pytest -q tests/rebuild/test_main_iteration_doc_safety.py",
+          "evidence": "review-fixes.log",
+          "legacy_full_validator": "same pre-existing gap count assertion failure at line 20 on baseline and branch"
+        }
+      ],
+      "status": "implemented_final_gates_running",
       "remaining": [
-        "Final branch gates and CI pending"
+        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
       ]
     },
     {
@@ -1325,13 +1637,47 @@
       "original_input_sha256": "649dae06e8b3a715e1384c8d90f691b3ad6760efeaa3adc7d1c0a66a01d73638",
       "review_disposition": "Original scope retained; verify existing behavior before any further code change.",
       "implementation_commits": [],
-      "validation": [],
-      "status": "candidate_implemented_final_gates_pending",
+      "validation": [
+        {
+          "command": "python -m pytest -q tests/rebuild -m \"not render and not browser\" (dedicated TMPDIR/basetemp)",
+          "result": "pass_with_inherited_skips",
+          "passed": 4410,
+          "skipped": 6,
+          "evidence": "unit-v2.xml",
+          "source_commit": "0d4f6a2263314e7d7bed7f791f5d0fbf1ef03913"
+        }
+      ],
+      "status": "implemented_final_gates_running",
       "remaining": [
-        "Final branch gates and CI pending"
+        "Final source browser/installed-wheel gate and exact-head CI pending; inherited evidence exclusions stay explicit."
       ]
     }
   ],
-  "current_candidate": "revised-v1",
-  "acceptance": "not_complete"
+  "current_candidate": "revised-v3-in-validation",
+  "acceptance": "in_progress_not_release_ready",
+  "formal_code_commit": "e439b330fb5ac4f58945a26b9cb089178d5c776a",
+  "validation_streams": {
+    "unit": {
+      "status": "pass_with_inherited_skips",
+      "passed": 4410,
+      "skipped": 6,
+      "evidence": "unit-v2.xml"
+    },
+    "render": {
+      "status": "pass_with_inherited_skip",
+      "passed": 138,
+      "skipped": 1,
+      "skip": "Frozen A installation is an external engineering resource",
+      "evidence": "render-final.xml"
+    },
+    "browser": {
+      "status": "running_after_confirmed_owner_repair"
+    },
+    "installed": {
+      "status": "rebuilding_after_owner_repair"
+    },
+    "ci": {
+      "status": "not_dispatched"
+    }
+  }
 }
