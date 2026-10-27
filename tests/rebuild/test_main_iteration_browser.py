@@ -474,6 +474,12 @@ def test_module_recovery_reload_is_guarded_and_rebuilds_module_state(tmp_path, f
             reload = page.get_by_role('button', name='重新加载工作台', exact=True)
             expect(reload).to_be_visible()
             failed_target = page.url
+            if failure == 'offline':
+                page.context.set_offline(True)
+                page.wait_for_function('navigator.onLine === false')
+                page.context.set_offline(False)
+                page.wait_for_function('navigator.onLine === true')
+                expect(reload).to_be_visible()
             page.unroute('**/v2/gallery.js', faulty)
             documents = []
             page.on('request', lambda request: documents.append(request.url) if request.is_navigation_request() else None)

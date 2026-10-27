@@ -113,7 +113,10 @@ export class Project {
     addEventListener('beforeunload', event => {
       if (!this.canLeaveDrafts()) { event.preventDefault(); event.returnValue = ''; }
     });
-    addEventListener('online', () => this.setNotice('网络已恢复。可核实草稿保存，或重新读取当前工作面。', true));
+    addEventListener('online', () => {
+      if (this.moduleFailure?.serial === this.generation) this.moduleFailureNotice(this.moduleFailure, '网络已恢复。请重新加载工作台以恢复这个工作面；未保存草稿仍受保护。');
+      else this.setNotice('网络已恢复。可核实草稿保存，或重新读取当前工作面。', true);
+    });
     await this.loadRoute(this.route, false);
     if (this.health.ui_capabilities?.includes('run_desk.v1')) {
       this.summaryPoll = new SummaryPoll(signal => get(this.summaryURL(), {signal}),
