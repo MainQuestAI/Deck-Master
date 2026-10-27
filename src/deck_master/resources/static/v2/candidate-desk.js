@@ -16,7 +16,7 @@ const clock = value => new Date(value).toLocaleString('zh-CN', {hour12: false});
 function operationDraft(app) {
   app.editor = new DraftEditor(app.info, {scope: 'project', page_id: null, layer: 'notes'}, app.route.revision, null, {readonly: app.readonly});
   const node = el('div', {class:'candidate-draft-host'}, app.editor.mount());
-  if(document.documentElement.dataset.workbenchUi==='studio')return el('div',{class:'studio-candidate-recovery'},button('个人记录与操作恢复',()=>modal('个人记录与操作恢复',node)));
+  if(document.documentElement.dataset.workbenchUi==='studio')return el('div',{class:'studio-candidate-recovery'},button('个人记录与操作恢复',()=>modal('个人记录与操作恢复',node,[],{protectDraft:true,canClose:()=>app.editor.canLeave()})));
   return el('details', {class: 'candidate-recovery'}, el('summary', {}, '个人记录与操作恢复'), node);
 }
 function picture(app, stage, label, releases, kind = 'large') {

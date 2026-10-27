@@ -386,11 +386,12 @@ export function style(app) {
     for (const [key,v] of dimensions) { v.check.checked = key in (value.dimensions || defaults); v.text.value = value.dimensions?.[key] ?? defaults[key] ?? '借用参考页'+names[key]; }
     primaryTarget.value=value.targets?.[0]||'';showPrimary();renderTargets(); renderExcerpt(); showReference();
   }
+  const initialDraftState = structuredClone(state());
   function hydrate() {
     const current = editor(); loaded = false; serial++; proposal = null; plan = null; preview.replaceChildren(); impact.replaceChildren(); controls(); current.ready.then(() => {
       if (disposed || current !== editor()) return; loaded = true;
       const saved = current.draft.content.style_calibration;
-      if (saved) hydrateState(saved); else renderTargets();
+      hydrateState(saved || initialDraftState);
       if (app.styleSelection && !app.readonly) {
         const seed = app.styleSelection; delete app.styleSelection;
         const validContext = (!seed.project_identity || seed.project_identity === app.info.project_identity) && (!seed.revision || seed.revision === app.route.revision);
