@@ -3,7 +3,7 @@
 The 1.0.0 source line includes the merged RC4 increment (PR124) and normal
 installed native independent review (PR125). The
 [RC4 specification](docs/specs/deck-master-next-iteration-20261019/README.md)
-and [candidate ledger](docs/reports/rc4/iteration-20261019/execution-ledger.json)
+and [candidate ledger](tests/rebuild/fixtures/history/rc4/iteration-20261019/execution-ledger.json)
 retain that increment's development contract and dated evidence. Current
 installation, Host requirements and known limitations are in the
 [first-run guide](docs/getting-started.md).
@@ -55,6 +55,6 @@ or a narrower service/Task boundary refactor. New providers, databases and
 unrelated architecture rewrites are outside this increment.
 
 Earlier preview milestones remain in
-[the historical iteration plan](docs/archive/pre-rebuild/docs/releases/2026-07-09-1.0.0-iteration-plan.md).
+[the historical iteration plan](https://github.com/MainQuestAI/Deck-Master/blob/62dfcfc5637f0bee2358074c4458047689dd5299/docs/archive/pre-rebuild/docs/releases/2026-07-09-1.0.0-iteration-plan.md).
 Use [CONTRIBUTING](CONTRIBUTING.md) for development and
 [AGENTS](AGENTS.md) for task routing.
