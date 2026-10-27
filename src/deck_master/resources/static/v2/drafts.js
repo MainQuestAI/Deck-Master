@@ -107,12 +107,15 @@ export class DraftEditor {
       const result = await get(this.listURL());
       if (this.disposed || epoch !== (this.loadEpoch || 0)) return;
       const records = result.entries || result.records.filter(record => this.matchesContext(record.draft));
+      let editedDuringRead = !buffered && this.status !== 'loading';
+      if (editedDuringRead) buffered = true;
       const exact = records.filter(record => (record.draft || record).base_ref?.sha256 === this.baseRef?.sha256 &&
         (!this.exactRevision || (record.draft || record).base_revision === this.baseRevision));
       if (!buffered && exact.length === 1) {
         const record = await this.fullRecord(exact[0]);
         if (this.disposed || epoch !== (this.loadEpoch || 0)) return;
-        this.adoptRecord(record);
+        if (this.status === 'loading') this.adoptRecord(record);
+        else { editedDuringRead = true; buffered = true; }
       }
       else if (!buffered) this.status = 'empty';
       // Restoring an older revision's text as if it were current would bind this
@@ -120,16 +123,18 @@ export class DraftEditor {
       // text stays in the restore list; it is copied forward explicitly.
       if (!buffered && exact.length > 1) this.restoreNotice = `当前版本有 ${exact.length} 份个人草稿，未自动打开；请从下方选择要恢复的一份。`;
       else if (!buffered && !exact.length && records.length) this.restoreNotice = `当前版本没有个人草稿；${records.length} 份旧版本草稿可从下方恢复，再用「对当前版本写新意见」复制文字。`;
-      if (buffered && this.status === 'saved') {
+      if (editedDuringRead) this.restoreNotice = '读取期间已编辑，当前输入已保留；项目中的原草稿仍可明确选择恢复。';
+      if (buffered && !editedDuringRead && this.status === 'saved') {
         const record = records.find(record => (record.draft || record).draft_id === this.draft.draft_id);
         if (!record || (record.draft ? canonical(record.draft) !== canonical(this.draft) : record.digest !== await digest(this.draft))) this.status = 'dirty';
       }
       this.showRestore(records, result.errors.length);
     } catch (error) {
+      if (this.disposed || epoch !== (this.loadEpoch || 0)) return;
       this.note = readableError(error);
-      if (!buffered) this.status = 'empty';
+      if (!buffered && this.status === 'loading') this.status = 'empty';
     }
-    if (this.disposed) return;
+    if (this.disposed || epoch !== (this.loadEpoch || 0)) return;
     this.showLocalCopies(); this.updateStatus();
   }
   // A draft is labelled by whichever text it actually carries: the personal note,

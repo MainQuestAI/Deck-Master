@@ -1,5 +1,7 @@
 """Navigation and focus survive refresh/reorder without editing content."""
 from urllib.parse import parse_qs, urlparse
+import json
+from pathlib import Path
 import pytest
 from deck_master.samples import create_gallery_sample
 from deck_master.web import WorkbenchServer
@@ -128,25 +130,67 @@ def test_search_does_not_invalidate_order_preview(ui):
     expect(confirm).to_be_enabled()
 
 
-def test_initial_blank_draft_read_does_not_undo_an_accepted_keyboard_reorder(ui):
+@pytest.mark.parametrize('read_outcome', ['success', 'failure', 'buffered'])
+def test_initial_blank_draft_read_does_not_undo_an_accepted_keyboard_reorder(ui, read_outcome):
     from playwright.sync_api import expect
     import re
     page, base = ui
+    if read_outcome == 'buffered':
+        page.get_by_role('button', name='内容与页序', exact=True).click()
+        page.get_by_role('button', name='材料与要求', exact=True).click()
+        page.get_by_role('button', name='修改任务要求', exact=True).click()
+        page.get_by_label('用途与目标', exact=True).fill('saved personal brief')
+        expect(page.locator('.draft-state')).to_contain_text('已保存到项目')
+        original_id = page.request.get(base + 'api/drafts').json()['records'][0]['draft']['draft_id']
     held = []
     page.route(re.compile(r'/api/drafts(?:\?.*)?$'), lambda route: held.append(route))
-    page.get_by_role('button', name='内容与页序', exact=True).click()
+    if read_outcome == 'buffered':
+        page.reload()
+    else:
+        page.get_by_role('button', name='内容与页序', exact=True).click()
     rows = page.locator('.content-order-row')
     first = rows.nth(0).get_attribute('data-page-id')
     second = rows.nth(1).get_attribute('data-page-id')
+    if read_outcome == 'failure':
+        page.route('**/api/drafts/save', lambda route: route.abort())
+        page.evaluate("() => {Storage.prototype.setItem=function(){throw new DOMException('quota','QuotaExceededError')};}")
     rows.first.locator('.order-handle').focus()
     page.keyboard.press('Alt+ArrowDown')
     expect(rows.first).to_have_attribute('data-page-id', second)
     assert held
     for route in held:
-        route.fulfill(response=route.fetch())
+        if read_outcome == 'failure':
+            route.abort()
+        else:
+            route.fulfill(response=route.fetch())
+    page.unroute(re.compile(r'/api/drafts(?:\?.*)?$'))
     expect(page.locator('.draft-state')).not_to_contain_text('正在读取')
     expect(rows.first).to_have_attribute('data-page-id', second)
     expect(rows.nth(1)).to_have_attribute('data-page-id', first)
+    if read_outcome == 'failure':
+        expect(page.locator('.draft-state')).to_contain_text('待核实')
+        page.get_by_role('button', name='制作总览', exact=True).click()
+        expect(page.locator('#app')).to_contain_text('仍保留原工作面')
+        expect(rows.first).to_have_attribute('data-page-id', second)
+        page.get_by_role('button', name='更多内容工具', exact=True).click()
+        page.get_by_role('button', name='工作笔记', exact=True).click()
+        with page.expect_download() as saved:
+            page.get_by_role('button', name='下载草稿恢复文件', exact=True).click()
+        recovery = json.loads(Path(saved.value.path()).read_text())
+        assert recovery['draft']['content']['content_sources']['order'][:2] == [second, first]
+        page.get_by_role('button', name='我已保管恢复文件，允许离开', exact=True).click()
+        page.get_by_role('button', name='制作总览', exact=True).click()
+        expect(page.locator('.content-sources')).to_have_count(0)
+        return
+    expect(page.locator('.draft-state')).to_contain_text('已保存到项目')
+    page.get_by_role('button', name='制作总览', exact=True).click()
+    page.get_by_role('button', name='内容与页序', exact=True).click()
+    expect(rows.first).to_have_attribute('data-page-id', second)
+    expect(rows.nth(1)).to_have_attribute('data-page-id', first)
+    if read_outcome == 'buffered':
+        records = page.request.get(base + 'api/drafts').json()['records']
+        record = next(row for row in records if row['draft']['draft_id'] == original_id)
+        assert record['draft']['content']['content_sources']['brief'] == 'saved personal brief'
 
 
 def test_row_leaving_attention_filter_falls_back_to_heading(ui):

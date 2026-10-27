@@ -50,6 +50,7 @@ def test_clear_receipt_updates_real_form_in_both_tabs(tmp_path):
             expect(panel).to_contain_text('已清理')
             panel.get_by_role('button', name='关闭', exact=True).click()
             for page in (a, b):
+                expect(page.locator('.personal-draft .draft-state')).to_contain_text('尚无个人草稿')
                 expect(page.get_by_label('用途与目标', exact=True)).to_have_value('formal brief')
                 expect(page.get_by_label('受众', exact=True)).to_have_value('formal audience')
                 expect(page.get_by_label('本次输入变化说明', exact=True)).to_have_value('')
