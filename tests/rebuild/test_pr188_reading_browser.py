@@ -130,7 +130,7 @@ def test_search_does_not_invalidate_order_preview(ui):
     expect(confirm).to_be_enabled()
 
 
-@pytest.mark.parametrize('read_outcome', ['success', 'failure', 'buffered'])
+@pytest.mark.parametrize('read_outcome', ['success', 'failure', 'buffered', 'undo'])
 def test_initial_blank_draft_read_does_not_undo_an_accepted_keyboard_reorder(ui, read_outcome):
     from playwright.sync_api import expect
     import re
@@ -157,6 +157,12 @@ def test_initial_blank_draft_read_does_not_undo_an_accepted_keyboard_reorder(ui,
     rows.first.locator('.order-handle').focus()
     page.keyboard.press('Alt+ArrowDown')
     expect(rows.first).to_have_attribute('data-page-id', second)
+    expected_first, expected_second = second, first
+    if read_outcome == 'undo':
+        rows.nth(1).locator('.order-handle').focus()
+        page.keyboard.press('Alt+ArrowUp')
+        expect(rows.first).to_have_attribute('data-page-id', first)
+        expected_first, expected_second = first, second
     assert held
     for route in held:
         if read_outcome == 'failure':
@@ -165,13 +171,13 @@ def test_initial_blank_draft_read_does_not_undo_an_accepted_keyboard_reorder(ui,
             route.fulfill(response=route.fetch())
     page.unroute(re.compile(r'/api/drafts(?:\?.*)?$'))
     expect(page.locator('.draft-state')).not_to_contain_text('正在读取')
-    expect(rows.first).to_have_attribute('data-page-id', second)
-    expect(rows.nth(1)).to_have_attribute('data-page-id', first)
+    expect(rows.first).to_have_attribute('data-page-id', expected_first)
+    expect(rows.nth(1)).to_have_attribute('data-page-id', expected_second)
     if read_outcome == 'failure':
         expect(page.locator('.draft-state')).to_contain_text('待核实')
         page.get_by_role('button', name='制作总览', exact=True).click()
         expect(page.locator('#app')).to_contain_text('仍保留原工作面')
-        expect(rows.first).to_have_attribute('data-page-id', second)
+        expect(rows.first).to_have_attribute('data-page-id', expected_first)
         page.get_by_role('button', name='更多内容工具', exact=True).click()
         page.get_by_role('button', name='工作笔记', exact=True).click()
         with page.expect_download() as saved:
@@ -185,8 +191,8 @@ def test_initial_blank_draft_read_does_not_undo_an_accepted_keyboard_reorder(ui,
     expect(page.locator('.draft-state')).to_contain_text('已保存到项目')
     page.get_by_role('button', name='制作总览', exact=True).click()
     page.get_by_role('button', name='内容与页序', exact=True).click()
-    expect(rows.first).to_have_attribute('data-page-id', second)
-    expect(rows.nth(1)).to_have_attribute('data-page-id', first)
+    expect(rows.first).to_have_attribute('data-page-id', expected_first)
+    expect(rows.nth(1)).to_have_attribute('data-page-id', expected_second)
     if read_outcome == 'buffered':
         records = page.request.get(base + 'api/drafts').json()['records']
         record = next(row for row in records if row['draft']['draft_id'] == original_id)

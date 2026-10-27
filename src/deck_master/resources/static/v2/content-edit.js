@@ -59,7 +59,8 @@ export function contentOperation(app, slot, read, hydrate, ref, onDone, {onPlanC
     } catch (error) { notice.textContent = readableError(error); }
     finally { controls(); }
   }, true, {disabled:true});
-  function canWrite() { return loaded && !disposed && !app.readonly && !app.editor?.readonly && canonical(app.editor?.draft.base_ref) === canonical(ref) && (!app.editor.exactRevision || app.editor.draft.base_revision === app.route.revision); }
+  function writableOwner() { return !disposed && !app.readonly && app.editor && !app.editor.readonly && !app.editor.disposed && canonical(app.editor.draft.base_ref) === canonical(ref) && (!app.editor.exactRevision || app.editor.draft.base_revision === app.route.revision); }
+  function canWrite() { return loaded && writableOwner(); }
   function currentBasis() { return app.latest?.revision_id === app.route.revision; }
   function controls() { for (const guard of guards) guard.disabled = !canWrite(); submit.disabled = !canWrite() || !currentBasis() || !pending || Boolean(app.business.entries.size || app.business.loadWarning); onPlanChange?.(Boolean(pending), submit); }
   function versionChanged() {
@@ -71,8 +72,8 @@ export function contentOperation(app, slot, read, hydrate, ref, onDone, {onPlanC
   function changed() {
     if (hydrating) return;
     serial++; pending = null; impact.replaceChildren(); controls();
-    if (!canWrite() && (loaded || disposed || app.readonly || app.editor?.readonly || app.editor?.disposed)) return;
-    if (!loaded && canonical(read()) === canonical(formalBaseline)) return;
+    if (!writableOwner()) return;
+    if (!loaded && canonical(read()) === canonical(app.editor.draft.content[slot] || formalBaseline)) return;
     // Custom controls can accept input while the initial catalog is pending.
     // Give it to the real draft owner immediately, including quota protection.
     app.editor.draft.content[slot] = structuredClone(read()); app.editor.changed();

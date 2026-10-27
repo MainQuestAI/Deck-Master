@@ -394,13 +394,16 @@ def test_late_argument_response_cannot_replace_new_selection(tmp_path):
     try:
         with sync_playwright() as pw:
             browser=pw.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox']);page=browser.new_page()
-            def hold(route):held.append((route,route.fetch()))
+            # Register the held request before any await. The list can render
+            # while a route.fetch() callback is still suspended.
+            def hold(route):held.append(route)
             page.route('**/api/content/arguments/'+ref['sha256']+'?*',hold)
-            page.goto(url+'studio/#'+urlencode({'project':info['project_identity'],'surface':'content','revision':store.current_revision_id(),'layer':'content','content_area':'arguments','proposal':ref['sha256']}))
+            with page.expect_request('**/api/content/arguments/'+ref['sha256']+'?*'):
+                page.goto(url+'studio/#'+urlencode({'project':info['project_identity'],'surface':'content','revision':store.current_revision_id(),'layer':'content','content_area':'arguments','proposal':ref['sha256']}))
             expect(page.get_by_role('button',name='阅读当前主线',exact=True)).to_be_visible();assert held
             page.get_by_role('button',name='阅读当前主线',exact=True).click();expect(page.locator('.argument-reading h3')).to_have_text('新选择的真实主线')
-            for route,response in held:
-                try:route.fulfill(response=response)
+            for route in held:
+                try:route.fulfill(response=page.request.get(route.request.url))
                 except Error:pass  # Aborted by the disposed reader is also correct.
             expect(page.locator('.argument-reading h3')).to_have_text('新选择的真实主线');expect(page.locator('.argument-reading')).to_have_count(1)
             browser.close()
@@ -677,12 +680,14 @@ def test_method_role_stage_change_and_catalog_drift_recheck(tmp_path,resource_ro
             browser=pw.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox']);page=browser.new_page()
             page.add_init_script("Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>{window.copies=(window.copies||[]).concat(text)}}})")
             pending_drafts=[]
-            page.route('**/api/drafts', lambda route: pending_drafts.append(route))
+            draft_catalog = __import__('re').compile(r'/api/drafts(?:\?.*)?$')
+            page.route(draft_catalog, lambda route: pending_drafts.append(route))
             page.goto(url+'studio/#'+urlencode({'project':info['project_identity'],'surface':'content','revision':store.current_revision_id(),'layer':'content','content_area':'methods'}))
             expect(page.get_by_label('准备上下文')).to_be_disabled()
+            assert pending_drafts
             for route in pending_drafts:
                 route.continue_()
-            page.unroute('**/api/drafts')
+            page.unroute(draft_catalog)
             expect(page.get_by_label('准备上下文')).to_be_enabled()
             page.get_by_label('准备上下文').select_option('independent');expect(page.locator('#content-area-methods')).to_contain_text('准备已核对')
             chosen=page.locator('label.method-entry[data-resource-id="content-m04"] input')
