@@ -22,6 +22,9 @@ def test_all_hundred_overview_images_release_departed_leases(tmp_path, route):
                 page = browser.new_page(viewport={'width': 1440, 'height': 900})
                 page.goto(server.start() + route + '/')
                 expect(page.get_by_role('heading', name='制作总览', exact=True)).to_be_visible()
+                # The real initial chapter projection replaces the table rows
+                # after the heading appears; start the lease walk once it commits.
+                expect(page.locator('.chapter-row')).to_have_text(['工作台使用示例'])
                 for index in range(100):
                     if route == 'studio' and index and index % 15 == 0:
                         page.get_by_role('button', name='下一组页面', exact=True).click()
