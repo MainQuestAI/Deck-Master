@@ -8,7 +8,7 @@ from jsonschema import Draft202012Validator
 
 from deck_master import run_desk, workbench
 from deck_master.snapshots import snapshot_evidence
-from test_candidates import store as candidate_store, dispatch  # noqa: F401
+from candidate_fixtures import store as candidate_store, dispatch  # noqa: F401
 from test_pr188_completed_content import completed_content
 from test_workbench_actions import commit
 
@@ -97,7 +97,7 @@ def test_replaced_running_work_stays_historical_but_unknown_calls_remain_actiona
 @pytest.mark.parametrize('protocol', ['workbench_summary.v1', 'workbench_summary.v2'])
 @pytest.mark.parametrize('case', ['mixed', 'unknown_task'])
 def test_summary_protocols_validate_new_relationship_facts(candidate_store, protocol, case):
-    from test_candidates import candidate
+    from candidate_fixtures import candidate
     from test_rp08_current_actions import mixed
 
     store = candidate_store

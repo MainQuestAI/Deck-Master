@@ -15,4 +15,6 @@ def test_embedded_style_input_matches_active_contract(filename):
     standalone.pop("$schema")
     standalone.pop("title")
     embedded = json.loads((contracts / filename).read_text())["properties"]["input"]
+    if "$ref" in embedded:
+        embedded = models._contract_registry().resolver(filename).lookup(embedded["$ref"]).contents
     assert embedded == standalone

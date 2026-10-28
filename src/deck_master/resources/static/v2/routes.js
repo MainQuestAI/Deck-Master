@@ -81,3 +81,11 @@ export function position(info, route) {
     page_id: route.page_id || null, surface: route.surface, layer: route.layer, revision: route.revision,
     zoom: route.zoom || 1, task_id: route.task_id || null};
 }
+
+export function localURL(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'http:' && ['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname) &&
+      !url.username && !url.password && ['/', '/v2/', '/studio/'].includes(url.pathname) ? url : null;
+  } catch { return null; }
+}

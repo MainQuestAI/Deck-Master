@@ -7,7 +7,7 @@ from playwright.sync_api import expect, sync_playwright
 from deck_master.samples import create_gallery_sample
 from deck_master.store import Store
 from deck_master.web import WorkbenchServer
-from test_candidates import store as candidate_store, dispatch  # noqa: F401
+from candidate_fixtures import store as candidate_store, dispatch  # noqa: F401
 
 
 pytestmark = pytest.mark.browser

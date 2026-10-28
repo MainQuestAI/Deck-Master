@@ -23,8 +23,8 @@ from deck_master.samples import create_sample
 from deck_master.store import Store
 
 from test_generation_protocol import accept as accept_image, begin, flow, freeze, settle, start
-from test_candidates import adopt, candidate as svg_candidate, plan
-from test_candidates import store as candidate_store
+from candidate_fixtures import adopt, candidate as svg_candidate, plan
+from candidate_fixtures import store as candidate_store
 from test_workbench_reads import allow_blueprint_preparation
 
 SUMMARY_SCHEMA = json.loads(

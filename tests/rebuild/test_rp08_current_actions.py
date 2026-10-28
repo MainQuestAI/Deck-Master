@@ -8,8 +8,8 @@ import pytest
 from deck_master import candidates, run_desk, tasks, workbench
 from deck_master.models import validate_schema
 from deck_master.web import WorkbenchServer
-from test_candidates import candidate as svg_candidate, dispatch
-from test_candidates import store as candidate_store
+from candidate_fixtures import candidate as svg_candidate, dispatch
+from candidate_fixtures import store as candidate_store
 from test_workbench_actions import commit
 
 

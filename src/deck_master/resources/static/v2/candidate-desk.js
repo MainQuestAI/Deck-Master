@@ -14,9 +14,22 @@ import {adoptCandidates, adoptionBlockReason} from './collaboration-desk.js';
 const stageName = stage => stage === 'blueprint' ? '原图' : stage === 'content' ? '逐页稿' : 'SVG';
 const clock = value => new Date(value).toLocaleString('zh-CN', {hour12: false});
 function operationDraft(app) {
-  app.editor = new DraftEditor(app.info, {scope: 'project', page_id: null, layer: 'notes'}, app.route.revision, null, {readonly: app.readonly});
-  const node = el('div', {class:'candidate-draft-host'}, app.editor.mount());
-  if(document.documentElement.dataset.workbenchUi==='studio')return el('div',{class:'studio-candidate-recovery'},button('个人记录与操作恢复',()=>modal('个人记录与操作恢复',node)));
+  let owner = new DraftEditor(app.info, {scope: 'project', page_id: null, layer: 'notes'}, app.route.revision, null, {readonly: app.readonly});
+  app.editor = owner;
+  const node = el('div', {class:'candidate-draft-host'}, owner.mount());
+  let dialog;
+  const replaced = event => { if (node.contains(event.detail.node)) owner = event.detail; };
+  app.root.addEventListener('draft-editor-replaced', replaced);
+  app.disposables.push(() => {
+    app.root.removeEventListener('draft-editor-replaced', replaced);
+    // Route teardown runs only after every draft owner has allowed leaving.
+    // A shared dialog may already belong to another tool.
+    owner.dispose();
+    if (dialog?.contains(node)) dialog.close();
+  });
+  if(document.documentElement.dataset.workbenchUi==='studio')return el('div',{class:'studio-candidate-recovery'},button('个人记录与操作恢复',()=>{
+    dialog=modal('个人记录与操作恢复',node,[],{protectDraft:true,canClose:()=>owner.canLeave()});
+  }));
   return el('details', {class: 'candidate-recovery'}, el('summary', {}, '个人记录与操作恢复'), node);
 }
 function picture(app, stage, label, releases, kind = 'large') {

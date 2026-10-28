@@ -72,11 +72,12 @@ def read_state(desc):
         return None
 
 
-def healthy(state, desc):
+def healthy(state, desc, *, current_build=True):
     if not isinstance(state, dict) or not all(key in state for key in HEALTH_KEYS):
         return False
-    expected = {"role": desc["role"], "identity": desc["identity"], "protocol_version": PROTOCOL,
-                "service_version": __version__, "build_id": BUILD_ID}
+    expected = {"role": desc["role"], "identity": desc["identity"], "protocol_version": PROTOCOL}
+    if current_build:
+        expected.update(service_version=__version__, build_id=BUILD_ID)
     if any(state.get(key) != value for key, value in expected.items()):
         return False
     port = state.get("port")
@@ -164,6 +165,8 @@ def ensure(desc, *, port=0):
             if port and port != state["port"]:
                 raise PortConflict("port", "this service is already running on a different port; stop it first")
             return {**state, "reused": True}
+        if state and healthy(state, desc, current_build=False):
+            _stop_instance(desc, state)
         instance = secrets.token_hex(16)
         command = [sys.executable, "-m", "deck_master.view_server", "--port", str(port),
                    "--instance-id", instance, "--" + ("project" if desc["role"] == "project" else "registry"),
@@ -207,18 +210,23 @@ def stop(desc):
     startup_lock = safe_path(desc["state_path"].parent, desc["state_path"].name + ".start.lock")
     with local_lock(startup_lock):
         state = read_state(desc)
-        if not healthy(state, desc):
+        if not healthy(state, desc, current_build=False):
             return {"status": "not_running", "role": desc["role"]}
-        if state["pid"] == os.getpid():
-            raise ServiceUnavailable("service", "in-process services must be stopped by their owner")
-        try:
-            os.kill(state["pid"], signal.SIGTERM)
-        except ProcessLookupError:
-            pass
-        deadline = time.monotonic() + 3.0
-        while time.monotonic() < deadline:
-            if not healthy(state, desc):
-                clear_own_state(desc, state["instance_id"])
-                return {"status": "stopped", "role": desc["role"]}
-            time.sleep(0.05)
-        raise ServiceUnavailable("service", "service has not confirmed shutdown; its metadata is retained")
+        return _stop_instance(desc, state)
+
+
+def _stop_instance(desc, state):
+    """Caller owns the startup lock and verified this exact live instance."""
+    if state["pid"] == os.getpid():
+        raise ServiceUnavailable("service", "in-process services must be stopped by their owner")
+    try:
+        os.kill(state["pid"], signal.SIGTERM)
+    except ProcessLookupError:
+        pass
+    deadline = time.monotonic() + 3.0
+    while time.monotonic() < deadline:
+        if not healthy(state, desc, current_build=False):
+            clear_own_state(desc, state["instance_id"])
+            return {"status": "stopped", "role": desc["role"]}
+        time.sleep(0.05)
+    raise ServiceUnavailable("service", "service has not confirmed shutdown; its metadata is retained")

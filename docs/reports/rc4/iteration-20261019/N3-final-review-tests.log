@@ -1,5 +1,0 @@
-.venv/bin/python -m pytest -q tests/rebuild/test_rc4_content_review.py tests/rebuild/test_rc4_work_context.py tests/rebuild/test_rc3_budget_workflow.py tests/rebuild/test_rc3_content_methods.py tests/rebuild/test_content_preproduction_review.py --junitxml=/tmp/N3-final-review-tests.xml
-
-........................................................................ [ 61%]
-..............................................                           [100%]
-118 passed in 14.40s

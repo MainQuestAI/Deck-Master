@@ -368,7 +368,7 @@ _ROLE_TASKS = {
 }
 
 
-def route_request(text: str) -> dict:
+def _route_request(text: str) -> tuple[dict, bool]:
     """Conservative responsibility suggestion; never a grant or stored Request.
 
     Explicit names take precedence. Unclear/mixed production stays with Master;
@@ -424,6 +424,7 @@ def route_request(text: str) -> dict:
             actions.add("repair")
         if clause == "审":
             actions.add("review")
+    fallback = False
     if explicit:
         skill = explicit[0] if len(set(explicit)) == 1 else "deck-master"
     elif len(actions) > 1:
@@ -442,6 +443,7 @@ def route_request(text: str) -> dict:
         skill = "deck-content"
     else:
         skill = "deck-master"
+        fallback = True
     content_intent = None
     if skill == "deck-content":
         if any(word in normalized for word in ("完整内容", "内容包", "content_full", "content package")):
@@ -453,7 +455,11 @@ def route_request(text: str) -> dict:
         else:
             content_intent = "plan_only"
     return {"skill": skill, "content_intent": content_intent, "explicit_name": bool(explicit),
-            "authority": "routing_suggestion_only"}
+            "authority": "routing_suggestion_only"}, fallback
+
+
+def route_request(text: str) -> dict:
+    return _route_request(text)[0]
 
 
 def route_skill(text: str) -> str:
@@ -514,11 +520,11 @@ def read_skill_methods(skill: str, *, entry_mode="named", project=None, task_id=
         raise ValueError("unknown public Skill")
     if entry_mode not in ENTRY_MODES:
         raise ValueError("unknown Skill entry mode")
-    route = route_request(text) if entry_mode == "natural" else None
+    route, fallback = _route_request(text) if entry_mode == "natural" else (None, False)
     # Natural routing is a suggestion, not permission. The coordinator may
     # read ambiguous work without borrowing another role's Task/write rights.
     coordinating = skill == "deck-master" and route and not route["explicit_name"]
-    if route and route["skill"] != skill and not coordinating:
+    if route and route["skill"] != skill and not coordinating and not fallback:
         raise ValueError(f"instruction routes to {route['skill']}; preserve its responsibility")
     if entry_mode in ("master", "recovery") and project is None:
         raise ValueError("Master handoff/recovery requires the existing project")

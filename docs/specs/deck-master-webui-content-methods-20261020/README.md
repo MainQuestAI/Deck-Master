@@ -4,7 +4,7 @@
 
 本轮让用户在现有工作台中看懂方法依据、论证主线、正文证据及审阅问题，并完成有界的方向采用与修改交接。保留现有五工作面和单页制作链。
 
-这是一次独立于 PR127 的 Web UI 迭代；产品实现和未闭合验收见 [交付回执](../../reports/webui-content-methods/DELIVERY.md)，不表示正式发布。
+这是一次独立于 PR127 的 Web UI 迭代；产品实现和未闭合验收见 [交付回执](https://github.com/MainQuestAI/Deck-Master/blob/62dfcfc5637f0bee2358074c4458047689dd5299/docs/reports/webui-content-methods/DELIVERY.md)，不表示正式发布。
 
 | 文档 | 用途 |
 |---|---|

@@ -6,7 +6,7 @@ from playwright.sync_api import expect, sync_playwright
 
 from deck_master import ui_journal
 from deck_master.web import WorkbenchServer
-from test_candidates import store as candidate_store, dispatch  # noqa: F401
+from candidate_fixtures import store as candidate_store, dispatch  # noqa: F401
 from test_rc3_studio_control_browser import open_control_action, rc3_browser  # noqa: F401
 
 pytestmark = pytest.mark.browser

@@ -21,5 +21,5 @@ Start the loopback workbench through the documented CLI only when needed.
 Push, merge, releases and activation follow the user's actual authorization.
 
 The former machine-specific instructions are preserved as
-[historical maintainer guidance](docs/archive/maintainer-environment/CLAUDE-before-rc4-20261019.md).
+[historical maintainer guidance](https://github.com/MainQuestAI/Deck-Master/blob/62dfcfc5637f0bee2358074c4458047689dd5299/docs/archive/maintainer-environment/CLAUDE-before-rc4-20261019.md).
 They describe a past setup and are not prerequisites for this checkout.

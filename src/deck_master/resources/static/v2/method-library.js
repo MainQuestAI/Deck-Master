@@ -18,6 +18,7 @@ export function methodLibrary(app){
   function showScope(){scopeNote.hidden=mode.value!=='independent'||role.value!=='deck-review';scopeNote.textContent='审阅范围：'+reviewUnits.map(unit=>unitNames[unit]||unit).join('、')+'。只准备这些范围，不发起审阅。';}
   for(const input of [mode,role,phase])input.disabled=true;
   const draft=new DraftEditor(app.info,{scope:'project',page_id:null,layer:'notes'},app.route.revision,null,{exactRevision:true,contextKey:'method-preparation'});const draftNode=draft.mount();draft.input.id='method-draft-'+crypto.randomUUID();draftNode.querySelector('label[for=personal-draft]')?.setAttribute('for',draft.input.id);draft.input.setAttribute('aria-label','方法准备备注');draft.stateNode.className='method-draft-state';draftNode.querySelector('h2').textContent='个人准备稿';draft.saveButton.textContent='保存方法准备稿';
+  app.draftEditors.add(draft);
   let disposed=false,serial=0,bodySerial=0,current=null;app.disposables.push(()=>{disposed=true;serial++;bodySerial++;draft.dispose();});
   function context(){return mode.value==='project'?{mode:'project',revision:app.route.revision}:{mode:'independent',role:role.value,phase:phase.value,review_units:role.value==='deck-review'?[...reviewUnits]:[]};}
   function retain(){draft.draft.content.method_preparation={ids:[...select],context:context()};draft.changed();current=null;result.replaceChildren();body.textContent='';}
@@ -43,9 +44,10 @@ export function methodLibrary(app){
   }catch(error){if(!disposed&&ticket===serial){current=null;status.textContent=readableError(error);result.replaceChildren();}}}
   async function readResource(value,r){const ticket=++bodySerial;body.textContent='';try{const text=await get('/api/method-library/resources/'+encodeURIComponent(r.id)+'?'+new URLSearchParams({catalog_digest:value.catalog_digest,...(r.sha256?{sha256:r.sha256}:{})}));if(!disposed&&current===value&&ticket===bodySerial){body.textContent=text.content;body.focus();}}catch(error){if(!disposed&&current===value&&ticket===bodySerial)status.textContent=readableError(error);}}
   root.append(el('div',{class:'row wrap'},mode,role,phase,button('重新核对准备',load)),scopeNote,status,search,list,result,body,el('details',{},el('summary',{},'保存与恢复个人准备稿'),draftNode));
-  function hydratePreparation(){if(disposed)return;serial++;current=null;result.replaceChildren();body.textContent='';select.clear();const saved=draft.draft.content.method_preparation;for(const id of saved?.ids||[])select.add(id);mode.value=saved?.context?.mode==='independent'?'independent':'project';if(mode.value==='independent'){role.value=saved.context.role;phase.value=saved.context.phase;reviewUnits=saved.context.review_units?.length?[...saved.context.review_units]:[...(reviewScopes[phase.value]||reviewScopes.review)];}showScope();load();}
+  const initialPreparation={role:role.value,phase:phase.value,reviewUnits:[...reviewUnits]};
+  function hydratePreparation(){if(disposed)return;serial++;current=null;result.replaceChildren();body.textContent='';select.clear();role.value=initialPreparation.role;phase.value=initialPreparation.phase;reviewUnits=[...initialPreparation.reviewUnits];const saved=draft.draft.content.method_preparation;for(const id of saved?.ids||[])select.add(id);mode.value=saved?.context?.mode==='independent'?'independent':'project';if(mode.value==='independent'){role.value=saved.context.role;phase.value=saved.context.phase;reviewUnits=saved.context.review_units?.length?[...saved.context.review_units]:[...(reviewScopes[phase.value]||reviewScopes.review)];}showScope();load();}
   draft.onRestore=copy=>{if(!draft.restoreInPlace(copy))return false;hydratePreparation();return true;};
   draft.onRebase=(next,previous)=>{const saved=previous.content.method_preparation;if(saved)next.content.method_preparation={ids:[...saved.ids],context:saved.context.mode==='project'?{mode:'project',revision:draft.baseRevision}:structuredClone(saved.context)};};
-  draft.onRebased=hydratePreparation;
+  draft.onRebased=hydratePreparation;draft.onRetired=hydratePreparation;
   draft.ready.then(()=>{if(disposed)return;hydratePreparation();for(const input of [mode,role,phase])input.disabled=false;});return root;
 }

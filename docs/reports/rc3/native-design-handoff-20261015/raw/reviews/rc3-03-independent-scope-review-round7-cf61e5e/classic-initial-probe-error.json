@@ -1,6 +1,0 @@
-{
-  "error": "KeyError: compatibility",
-  "cause": "audit harness assumed classic has compatibility key; classic correctly omits it",
-  "original_disposable_project_retained": "/workspace/work/rc3/reviews/rc3-03-independent-scope-review-round7-cf61e5e/classic-boundary",
-  "product_failure": false
-}

@@ -1,7 +1,0 @@
-你是独立模型内容评价者。仅阅读本目录 packet.json 与本 instructions.txt。不得查看上级controller、另一评价者、仓库锚点/历史评价/开发规划或任何其他答案材料；不继承任何已有评价结论。你不是人类Owner或听众。
-
-先读取并记录输入文件原始字节SHA256。逐项读取相关用途、全部源材料、完整baseline和候选文本；正文与speaker_text分层。所有候选都从匿名内容本身判断，不假定其正反性质，也不调整判断以满足任何数量分布。按packet内唯一通用rubric区分事实/控制权错误、主线重建、局部实质问题和偏好。范围有歧义时说明条件，不自行扩大修改。
-
-每个sample_id均给出实质观察和来源/候选引文、错误类型、severity_or_none、用途是否可用、局部与主线理由、建议修订及不确定性。无实质缺陷可明确说明，不强制为合理稀疏/未测量编造内容。仅评当前样本文本，不声称真实生成效果、用户理解、文件工程或人类专业通过。
-
-将独立初判JSON写入 /workspace/work/rc3/anchor-blind/judge-b/output/initial-judgments.json，实际读取记录写入 /workspace/work/rc3/anchor-blind/judge-b/output/read-log.json。只写这两个新文件，不修改输入或其他项目；不要覆盖已存在的初判。不要读取另一评价者结果。最终native消息报告你的实际canonical任务身份、输入hash、输出原始字节hash、读取范围及任何污染/已见公开材料。缺失配置/事件ID如实unknown，不造签名/身份。两份初判冻结前不得讨论或裁决分歧。

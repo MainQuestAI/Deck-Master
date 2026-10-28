@@ -8,7 +8,7 @@
 
 本报告合并了用户确认的 10 月 12 日“衡鉴 AI／财务费用智能审核”测试诊断、[关联讨论《对比定位问题》](https://chatgpt.com/g/g-p-6a29e67719108191a4aa9ce830acc54e-deck-master/c/6acdd580-1e58-83e9-8325-3712c52539d6)、[补充 Spec](../../../sources/quality-r2/sources/supplement/DeckMaster_vs_CyberPPT_内容质量诊断与修复补充Spec_20261013.md)，并重新核对当前安装与开发快照。CyberPPT 五份 references 均进入学习范围；优先修上游内容，不缩小对制作和 QA 的学习范围。
 
-本轮已按第二轮意见修订五项关键条款及两项交付问题。活动 [TASKS](TASKS.md) §1.1、[ACCEPTANCE](ACCEPTANCE.md) §1.2/§1.2.1/§4.1/§8、[CONTRACTS](CONTRACTS.md) §11.4.1 和[内容锚点](../../reports/content-collaboration-v1.2/anchors/content-anchors.md)同步更新。本文是完整方案，机器接口细节以 CONTRACTS、严重度与验收结论以 ACCEPTANCE 为准；下方旧证据保持其历史身份。
+本轮已按第二轮意见修订五项关键条款及两项交付问题。活动 [TASKS](TASKS.md) §1.1、[ACCEPTANCE](ACCEPTANCE.md) §1.2/§1.2.1/§4.1/§8、[CONTRACTS](CONTRACTS.md) §11.4.1 和[内容锚点](../../../tests/rebuild/fixtures/history/content-collaboration-v1.2/anchors/content-anchors.md)同步更新。本文是完整方案，机器接口细节以 CONTRACTS、严重度与验收结论以 ACCEPTANCE 为准；下方旧证据保持其历史身份。
 
 ## 1. 决策摘要
 

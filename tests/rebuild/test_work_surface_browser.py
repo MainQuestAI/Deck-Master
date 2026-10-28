@@ -11,7 +11,7 @@ from deck_master.store import Store
 from deck_master.samples import create_gallery_sample
 from deck_master.web import WorkbenchServer
 from test_action_targets_browser import action_browser  # noqa: F401
-from test_candidates import accept, candidate, dispatch, envelope, start
+from candidate_fixtures import accept, candidate, dispatch, envelope, start
 from test_ui_design_browser import workbench_page  # noqa: F401
 from test_workbench_actions import commit
 

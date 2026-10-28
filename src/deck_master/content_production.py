@@ -1937,14 +1937,12 @@ def adopt_proposal(project, *, input: dict, base_revision: str, operation_id: st
     grants no production authority (CONTRACTS §11.5).
     """
     from . import collaboration
-    from .tasks import _project_transaction
 
     store = Store(Path(project).expanduser())
     action = collaboration.ACTION_ADOPT_PROPOSAL
     digest = collaboration.write_digest(action, input)
 
-    @_project_transaction
-    def locked(store: Store):
+    with store._locked():
         document = store.load_document()
         replay = collaboration.replay_or_conflict(store, document, operation_id, action, digest)
         if replay:
@@ -1960,5 +1958,3 @@ def adopt_proposal(project, *, input: dict, base_revision: str, operation_id: st
             response={"adopted_refs": [proposal_ref], "invalidated_refs": invalidated,
                       "adopted_kind": schema, "creates_confirmation": False,
                       "authorizes_production": False})
-
-    return locked(store)

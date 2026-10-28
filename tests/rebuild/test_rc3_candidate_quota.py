@@ -5,7 +5,7 @@ import pytest
 
 from deck_master import candidates, changes, collaboration, content_ops, editing, eligibility, service
 from rc3_fixtures import evidence_for
-from test_candidates import store as candidate_store, dispatch, start, accept, plan, adopt
+from candidate_fixtures import store as candidate_store, dispatch, start, accept, plan, adopt
 from test_content_candidates import project as content_project, content_ops_value
 
 

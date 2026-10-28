@@ -3,7 +3,7 @@ import copy
 
 from deck_master import candidates, run_desk, workbench
 from deck_master.models import validate_schema
-from test_candidates import store, candidate, adopt, plan, dispatch  # noqa: F401
+from candidate_fixtures import store, candidate, adopt, plan, dispatch  # noqa: F401
 from test_workbench_actions import commit
 
 

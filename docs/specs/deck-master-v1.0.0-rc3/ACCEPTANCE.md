@@ -47,4 +47,4 @@
 
 ## 5. 本轮执行入口
 
-本轮实际结果见[总台账](../../reports/rc3/evidence-ledger.json)和[收口报告](../../reports/rc3/closeout-20261018/README.md)。36条AC、12条CQ按明确范围提供通过证据；AC-P01真实人类正向签字、CQ-08方法效果对照本次不适用，均有原因，不写成已执行。L4用户认可、L5使用反馈不替代L6文件检查，也不默认阻塞本任务。可执行候选与记录提交分开固定，文档追加不冒充重新生产。
+本轮实际结果见[总台账](https://github.com/MainQuestAI/Deck-Master/blob/62dfcfc5637f0bee2358074c4458047689dd5299/docs/reports/rc3/evidence-ledger.json)和[收口报告](https://github.com/MainQuestAI/Deck-Master/blob/62dfcfc5637f0bee2358074c4458047689dd5299/docs/reports/rc3/closeout-20261018/README.md)。36条AC、12条CQ按明确范围提供通过证据；AC-P01真实人类正向签字、CQ-08方法效果对照本次不适用，均有原因，不写成已执行。L4用户认可、L5使用反馈不替代L6文件检查，也不默认阻塞本任务。可执行候选与记录提交分开固定，文档追加不冒充重新生产。

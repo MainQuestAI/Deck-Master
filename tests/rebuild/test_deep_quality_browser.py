@@ -381,7 +381,7 @@ def test_escape_inside_fullscreen_does_not_navigate_the_surface(workbench):
 
 
 def test_near_field_entry_names_returned_candidates(workbench):
-    from test_candidates import dispatch as dispatch_candidate, start as start_candidate, accept as accept_candidate
+    from candidate_fixtures import dispatch as dispatch_candidate, start as start_candidate, accept as accept_candidate
     page,ctx,store,url,goto,_=workbench
     task=dispatch_candidate(store,'p01',layer='svg'); start_candidate(store,task); accept_candidate(store,task)
     goto()
@@ -448,7 +448,7 @@ def test_delivery_gaps_name_rules_and_keep_unknown_reasons_blocked(workbench):
 
 
 def test_candidate_batch_names_the_page_and_layer(workbench):
-    from test_candidates import dispatch as dispatch_candidate, start as start_candidate, accept as accept_candidate
+    from candidate_fixtures import dispatch as dispatch_candidate, start as start_candidate, accept as accept_candidate
     page,ctx,store,url,goto,_=workbench
     task=dispatch_candidate(store,'p01',layer='svg'); start_candidate(store,task); accept_candidate(store,task)
     goto('runs')

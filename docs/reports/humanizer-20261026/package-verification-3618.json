@@ -1,9 +1,0 @@
-{
-  "base_sha": "3618f3d77d87e52042ccef50e70efcdc0d95b1fd",
-  "status": "PASS",
-  "canonical_wheel_sdist_installed_extracted_files": 77,
-  "isolated_reader": "PASS",
-  "wheel_sha256": "998e5c79e5e3de290ec02b10b701f1c5dee2e7cac3c774409ce1673d9a1a3501",
-  "sdist_sha256": "e58063a9b68764f5828e8db80033e3764de8afa0a671e35708206ad1214bf16d",
-  "resource_sha256": "45023e7cd2999904254c6dc50f12d32b6c6c6ea6fa1a7fd092c2ac1ca1c8247e"
-}

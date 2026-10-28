@@ -26,7 +26,7 @@ from deck_master.models import content_identity
 from deck_master.samples import create_sample
 from deck_master.store import Store
 from deck_master.web import WorkbenchServer
-from test_candidates import candidate
+from candidate_fixtures import candidate
 from test_content_candidates import content_intent
 from test_workbench_actions import commit
 from test_action_targets_browser import _prepare_browser_project
@@ -93,8 +93,15 @@ def test_handoff_copy_binds_to_the_loaded_group_not_the_pending_selection(ux00_b
     latest_group = groups[-1]
     other_index = 1 - groups.index(latest_group)
     # 让默认组从一开始就保持未返回：面板只能显示另一组的内容。
-    aborted = []
-    page.route(f'**/api/changes/{latest_group}/handoff*', lambda route: (aborted.append(route.request.url), route.abort()))
+    intercepted, pending = [], []
+    hold = False
+    def selected_read(route):
+        intercepted.append(route.request.url)
+        if hold:
+            pending.append(route)
+        else:
+            route.abort()
+    page.route(f'**/api/changes/{latest_group}/handoff*', selected_read)
     page.goto(url)
     page.get_by_role('button', name='任务与交付', exact=True).click()
     page.get_by_role('heading', name='任务与交付', exact=True).wait_for()
@@ -111,16 +118,21 @@ def test_handoff_copy_binds_to_the_loaded_group_not_the_pending_selection(ux00_b
     expect(panel.locator('.handoff-detail h3')).to_have_attribute('data-change-id', groups[other_index])
 
     # 切到被隔离的默认组：切换即重绘，复制按钮对新对象停用，标签仍指向已读组。
+    # Hold the real request: aborting it immediately races the loading assertion
+    # against the legitimate read-error state.
+    hold = True
     buttons.nth(groups.index(latest_group)).click()
     expect(panel.locator('.handoff-detail')).to_contain_text('正在读取所选修改组')
     assert panel.locator('.handoff-detail h3').get_attribute('data-change-id') == groups[other_index]
     expect(page.locator('.handoff-detail').get_by_role('button', name='交给 Deck Master Agent', exact=True)).to_be_disabled()
     page.wait_for_timeout(300)
     assert page.evaluate('() => navigator.clipboard.readText()') == '', '等待另一组返回期间不得复制旧组文本'
-    assert aborted, '被隔离组的读取请求应被拦截'
+    assert intercepted and pending, '被隔离组的读取请求应被拦截并保持待返回'
     assert copied() == [], '未发生的复制不得写入本机提示'
 
     # 被隔离组真正返回后，复制作用于它，且提示只属于它。
+    for request in pending:
+        request.fulfill(response=page.request.get(request.request.url))
     page.unroute(f'**/api/changes/{latest_group}/handoff*')
     page.locator('.handoff-detail').get_by_role('button', name='核实执行状态', exact=True).click()
     expect(panel.locator('.handoff-detail h3')).to_have_attribute('data-change-id', latest_group)

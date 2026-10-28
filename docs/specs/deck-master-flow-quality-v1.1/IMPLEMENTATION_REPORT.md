@@ -2,9 +2,9 @@
 
 日期：2026-09-26。分支：`codex/flow-quality`。
 
-**当前进展：PR #39 已进入第三轮修复，当前结果见 [第三轮验证记录](../../qa/pr39-flow-quality/round3.md)，远端门禁以 PR 当前提交的 Checks 为准。AC-17 真实 Codex 会话和用户本机迁移尚未执行。** 自动测试、合成材料与真实 CLI 输出不替代专业内容验收。
+**当前进展：PR #39 已进入第三轮修复，当前结果见 [第三轮验证记录](https://github.com/MainQuestAI/Deck-Master/blob/62dfcfc5637f0bee2358074c4458047689dd5299/docs/qa/pr39-flow-quality/round3.md)，远端门禁以 PR 当前提交的 Checks 为准。AC-17 真实 Codex 会话和用户本机迁移尚未执行。** 自动测试、合成材料与真实 CLI 输出不替代专业内容验收。
 
-第一轮修复与 **528 项回归**见 [修复验证](../../qa/pr39-flow-quality/README.md)。下文 511 项测试、隔离安装结果和 dc2636e 安装候选是前一轮证据；该候选不包含后续修复，安装验收需从最终提交重新构建。
+第一轮修复与 **528 项回归**见 [修复验证](https://github.com/MainQuestAI/Deck-Master/blob/62dfcfc5637f0bee2358074c4458047689dd5299/docs/qa/pr39-flow-quality/README.md)。下文 511 项测试、隔离安装结果和 dc2636e 安装候选是前一轮证据；该候选不包含后续修复，安装验收需从最终提交重新构建。
 
 评审历史：在 `859d479` 核对时，[PR #39](https://github.com/MainQuestAI/Deck-Master/pull/39) 对 `d98e4b0` 提出的 1 项 P1、4 项 P2 中，仅工作台布局已由 `dc2636e` 修复；其余为删页/重排后旧 PPT 可能继续交付、历史恢复未恢复 content_basis、取消修订后无法续作、CI 缺少 rg。该版本两组 unit 失败、真实渲染通过。本次已补充这些修复及 AC-11/AC-13 的负向回归，原记录保留用于追溯。
 

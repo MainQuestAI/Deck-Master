@@ -7,7 +7,7 @@ from playwright.sync_api import expect, sync_playwright
 
 from deck_master import changes, tasks
 from deck_master.web import WorkbenchServer
-from test_candidates import store as candidate_store, dispatch, start
+from candidate_fixtures import store as candidate_store, dispatch, start
 from test_rp08_current_actions import mixed
 
 pytestmark = pytest.mark.browser

@@ -10,7 +10,7 @@ from deck_master.samples import create_sample
 from deck_master.store import Store
 from deck_master.web import WorkbenchServer
 from test_action_targets import add_handoffs, current_read_task
-from test_candidates import candidate
+from candidate_fixtures import candidate
 from test_content_candidates import dispatch_content_ops_trial, start_task, accept, changeset_envelope
 from test_workbench_actions import commit
 from rc3_fixtures import evidence_for, settle_fidelity_review

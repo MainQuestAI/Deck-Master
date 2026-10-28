@@ -254,5 +254,5 @@ model generator: actual content must be authored by the real Host after reading
 the methods. Per-process runtime paths/hashes are captured for future runs;
 a mutable past run must not be assigned a later source hash retroactively.
 The current four-content-intent execution handoff is
-`docs/reports/rc3/RC3-04-B-ACTUAL-CONTENT-HOST-DIAGNOSTIC.json`; it remains separate
+[docs/reports/rc3/RC3-04-B-ACTUAL-CONTENT-HOST-DIAGNOSTIC.json](https://github.com/MainQuestAI/Deck-Master/blob/62dfcfc5637f0bee2358074c4458047689dd5299/docs/reports/rc3/RC3-04-B-ACTUAL-CONTENT-HOST-DIAGNOSTIC.json); it remains separate
 from the final fixed-installed 16-path matrix.

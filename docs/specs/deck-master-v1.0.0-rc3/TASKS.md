@@ -47,4 +47,4 @@ RC3-00 已接收开发基线，当前处于实现后的收口阶段；下面描�
 
 ## 2026-10-18 执行收口
 
-本轮适用检查已通过，六张执行卡已收口。当前结果以[总台账](../../reports/rc3/evidence-ledger.json)为准，逐卡证据见[收口报告](../../reports/rc3/closeout-20261018/README.md)。本轮补齐六组浅稿与四份用途稿、八页完整成品、四种讲稿交付、实际编辑及兼容阅读器备注检查，并修复长备注截断。没有新增一轮功能卡；原始失败与旧台账已归档。
+本轮适用检查已通过，六张执行卡已收口。当前结果以[总台账](https://github.com/MainQuestAI/Deck-Master/blob/62dfcfc5637f0bee2358074c4458047689dd5299/docs/reports/rc3/evidence-ledger.json)为准，逐卡证据见[收口报告](https://github.com/MainQuestAI/Deck-Master/blob/62dfcfc5637f0bee2358074c4458047689dd5299/docs/reports/rc3/closeout-20261018/README.md)。本轮补齐六组浅稿与四份用途稿、八页完整成品、四种讲稿交付、实际编辑及兼容阅读器备注检查，并修复长备注截断。没有新增一轮功能卡；原始失败与旧台账已归档。

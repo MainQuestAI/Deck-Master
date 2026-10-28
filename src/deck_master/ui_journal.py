@@ -14,6 +14,11 @@ from .snapshots import IDENTIFIER, committed_headers, load_snapshot
 from .tasks import _utc_now_iso
 from .store import Store
 
+RECOVERY_FILE_LIMIT = 4_000_000
+RECOVERY_REQUEST_LIMIT = 4_001_024
+RECOVERY_LIMITS = {"draft_bytes": MAX_BODY - 1024, "file_bytes": RECOVERY_FILE_LIMIT,
+                   "request_bytes": RECOVERY_REQUEST_LIMIT}
+
 
 def digest(value):
     return sha256_bytes(canonical_json_bytes(value))
@@ -166,6 +171,8 @@ def project_info(project, *, server_capabilities=None, include_eligibility=True)
             "core_readers": list(CORE_READERS), "core_writers": list(SUPPORTED_WRITERS),
             "host_execution": "handoff_required", "draft_journal": "ui_draft.v1",
             "sample": sample,
+            "recovery_limits": dict(RECOVERY_LIMITS),
+            "draft_reads": "ui_draft_query.v1" if "ui_draft_query.v1" in _capabilities(server_capabilities) else None,
             "control_revision_id": doc["revision_id"],
             "collaboration": collaboration_state,
             "completion": content_production.completion_status(store, doc),
@@ -255,23 +262,66 @@ def get(project, draft_id):
     return {"status": "saved" if record else "not_found", "record": record}
 
 
-def list_drafts(project):
+def list_drafts(project, *, view=None, target=None, context_key=None):
+    if view not in (None, "editor", "pending", "notes"):
+        raise LocalStateError("view", "draft view must be editor, pending or notes")
+    if view == "editor":
+        if (not isinstance(target, dict) or set(target) != {"scope", "page_id", "layer"}
+                or target["scope"] not in ("page", "project")
+                or target["layer"] not in ("content", "original_image", "svg", "ppt", "prepared_prompt",
+                                           "submitted_prompt", "outline", "materials", "notes")
+                or (target["page_id"] is not None and
+                    (not isinstance(target["page_id"], str) or not IDENTIFIER.fullmatch(target["page_id"])))
+                or (target["scope"] == "project" and target["page_id"] is not None)
+                or (target["scope"] == "page" and target["page_id"] is None)
+                or (context_key is not None and not isinstance(context_key, str))):
+            raise LocalStateError("target", "editor draft reads require one target and optional context key")
+    elif target is not None or context_key is not None:
+        raise LocalStateError("view", "target and context key are only valid for editor reads")
     from .snapshots import FixedSnapshotReader
     store, doc, identity = context(project)
     directory = _directory(store)
     records, errors = [], []
+    entries, pending, noted = [], [], set()
     snapshot_reader = None
     if directory.is_dir():
         for path in sorted(directory.glob("*.json")):
             try:
                 record = _read(store, path.stem)
+                draft = record["draft"]
+                if view == "editor" and (draft["target"] != target or
+                        (draft["content"].get("context_key") or None) != context_key):
+                    continue
                 if snapshot_reader is None:
                     snapshot_reader = FixedSnapshotReader(store, head_revision=doc['revision_id'])
                 _validate(store, doc, identity, record["draft"], snapshot_reader=snapshot_reader)
-                records.append(record)
+                if view == "editor":
+                    content = draft["content"]
+                    annotation = content.get("annotation") if isinstance(content.get("annotation"), dict) else {}
+                    requirement = content.get("requirement") if isinstance(content.get("requirement"), dict) else {}
+                    summary = str(content.get("text") or annotation.get("body") or requirement.get("text") or "空白草稿")
+                    entries.append({"draft_id": draft["draft_id"], "base_revision": draft["base_revision"],
+                                    "base_ref": draft["base_ref"], "etag": record["etag"],
+                                    "digest": record["digest"], "summary": summary[:45],
+                                    "updated_sequence": record["updated_sequence"]})
+                elif view == "pending":
+                    if draft.get("pending"):
+                        pending.append({"draft_id": draft["draft_id"], "pending": draft["pending"]})
+                elif view == "notes":
+                    if draft["target"]["scope"] == "page" and isinstance(draft["content"].get("text"), str) and draft["content"]["text"].strip():
+                        noted.add((draft["target"]["page_id"], draft["base_revision"]))
+                else:
+                    records.append(record)
             except (ValueError, RuntimeError, OSError, KeyError, TypeError):
                 errors.append({"draft_id": path.stem, "status": "unreadable"})
-    return {"project_id": doc["project_id"], "project_identity": identity, "records": records, "errors": errors}
+    result = {"project_id": doc["project_id"], "project_identity": identity, "errors": errors}
+    if view == "editor":
+        return {**result, "entries": entries}
+    if view == "pending":
+        return {**result, "pending": pending}
+    if view == "notes":
+        return {**result, "noted_pages": [{"page_id": page, "base_revision": revision} for page, revision in sorted(noted)]}
+    return {**result, "records": records}
 
 
 def save(project, *, draft, expected_etag=None):
@@ -311,25 +361,42 @@ def _portable(value, where="draft"):
         raise LocalStateError(where, "recovery files cannot contain an absolute local path")
 
 
-def recovery_file(project, *, draft):
+def recovery_file(project, *, draft, pending_save=None):
     store, doc, identity = context(project)
     _validate(store, doc, identity, draft)
     _portable(draft)
-    return {"schema_version": "ui_draft_recovery.v1", "draft": draft, "digest": digest(draft)}
+    recovery = {"schema_version": "ui_draft_recovery.v1", "draft": draft, "digest": digest(draft)}
+    if pending_save is not None:
+        recovery.update(pending_save=copy.deepcopy(pending_save), pending_save_digest=digest(pending_save))
+    validate_schema("ui_draft_recovery", recovery)
+    if pending_save is not None:
+        previous = pending_save["draft"]
+        _validate(store, doc, identity, previous)
+        _portable(pending_save)
+        if any(previous.get(key) != draft.get(key) for key in
+               ("project_id", "project_identity", "draft_id", "target", "base_revision", "base_ref")):
+            raise LocalStateError("pending_save", "original save must belong to the same draft and basis")
+    if len(canonical_json_bytes(recovery)) > RECOVERY_FILE_LIMIT:
+        raise LocalStateError("recovery", "complete recovery file exceeds 4,000,000 bytes")
+    return recovery
 
 
 def import_recovery(project, *, recovery):
     validate_schema("ui_draft_recovery", recovery)
-    if len(canonical_json_bytes(recovery)) > MAX_BODY or digest(recovery["draft"]) != recovery["digest"]:
+    if (len(canonical_json_bytes(recovery)) > RECOVERY_FILE_LIMIT or digest(recovery["draft"]) != recovery["digest"]
+            or ("pending_save" in recovery and digest(recovery["pending_save"]) != recovery["pending_save_digest"])):
         raise LocalStateError("recovery", "recovery size or hash is invalid")
     draft = copy.deepcopy(recovery["draft"])
-    recovery_file(project, draft=draft)  # schema/project/base/portable validation
+    recovery_file(project, draft=draft, pending_save=recovery.get("pending_save"))
+    # The original unknown request remains evidence in the user's recovery file.
+    # Importing a file never retries that request or adopts its old ACK.
     try:
-        return save(project, draft=draft)
+        result = save(project, draft=draft)
     except LocalStateConflict:
         imported_from = draft["draft_id"]
         draft["draft_id"] = "recovered-" + uuid.uuid4().hex
-        return {**save(project, draft=draft), "imported_from": imported_from}
+        result = {**save(project, draft=draft), "imported_from": imported_from}
+    return {**result, **({"preserved_pending_save": True} if "pending_save" in recovery else {})}
 
 
 def _position_path(store):

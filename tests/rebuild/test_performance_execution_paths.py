@@ -10,7 +10,7 @@ from concurrent.futures import Future, ThreadPoolExecutor, TimeoutError
 import pytest
 
 from deck_master import exports, pipeline, review_import
-from test_candidates import store  # noqa: F401
+from candidate_fixtures import store  # noqa: F401
 from test_pipeline_preview_reuse import prepared
 from test_versioned_exports import project
 
@@ -129,7 +129,8 @@ def test_assembly_waiters_do_not_start_or_release_an_active_compiler(store, monk
         return real_executable(name)
     monkeypatch.setattr(pipeline, 'executable', controlled_tool)
     monkeypatch.setattr(pipeline, 'Future', ObservedFuture)
-    monkeypatch.setattr(pipeline, 'compile_deck', blocked_compile)
+    from deck_master.compiler import api as compiler_api
+    monkeypatch.setattr(compiler_api, '_compile_prepared', blocked_compile)
     args = {'base_revision': before['revision_id'], 'operation_id': str(uuid.uuid4())}
     with ThreadPoolExecutor(max_workers=3) as executor:
         owner = executor.submit(pipeline.produce, store.project_root, **args)

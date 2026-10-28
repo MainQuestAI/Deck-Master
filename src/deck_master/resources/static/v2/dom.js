@@ -34,7 +34,12 @@ export function toast(message) {
 export function announce(message) { document.querySelector('#route-status').textContent = message; }
 let modalTail = null;
 const modalCleanup = new WeakMap();
-export function modal(title, body, actions = [], {fallback, protectDraft = false, beforeClose} = {}) {
+export function canReloadWorkbench() {
+  if (!document.querySelector('dialog[open][data-protect-draft="true"], dialog.queued-modal[data-protect-draft="true"]')) return true;
+  toast('仍有受保护的输入，请先处理并关闭当前及排队弹窗，再重新加载工作台。');
+  return false;
+}
+export function modal(title, body, actions = [], {fallback, protectDraft = false, beforeClose, canClose} = {}) {
   const shared = document.querySelector('#modal');
   // An asynchronous service error must never replace a draft conflict or
   // recovery decision while the user is comparing their retained text.
@@ -54,10 +59,10 @@ export function modal(title, body, actions = [], {fallback, protectDraft = false
   modalCleanup.set(dialog, cleanup);
   const trigger = document.activeElement;
   const heading = el('h2', {id: waiting ? 'dialog-title-' + crypto.randomUUID() : 'dialog-title'}, title);
-  const close = () => { cleanup(); dialog.close(); };
+  const close = () => { if (canClose?.() === false) return; cleanup(); dialog.close(); };
   // Native close restores focus before its queued close event. Resource-owning
   // dialogs must release their leases before either user dismissal path.
-  dialog.oncancel = beforeClose ? event => { event.preventDefault(); close(); } : null;
+  dialog.oncancel = beforeClose || canClose ? event => { event.preventDefault(); close(); } : null;
   dialog.replaceChildren(el('div', {class: 'modal-body'}, heading, body,
     el('div', {class: 'modal-actions'}, button('关闭', close), actions)));
   dialog.setAttribute('aria-labelledby', heading.id);
@@ -71,6 +76,7 @@ export function modal(title, body, actions = [], {fallback, protectDraft = false
   dialog.onclose = () => {
     // A queued native close from an earlier use must not clean a reopened modal.
     if (dialog.open) return;
+    if (!cleaned && canClose?.() === false) { dialog.showModal(); return; }
     cleanup(); // Fallback for programmatic close, once per content owner.
     if (waiting) { if (modalTail === dialog) modalTail = null; dialog.remove(); }
     // Native close already restored a surviving trigger synchronously. Its queued
@@ -160,8 +166,10 @@ export function sortHeading(label, direction, onToggle) {
   return el('th', {scope: 'col', ...(sorted ? {'aria-sort': direction} : {})},
     button(`${label} · ${state}`, onToggle, false, {class: 'quiet'}));
 }
-export function downloadJSON(value, name) {
-  const objectURL = URL.createObjectURL(new Blob([JSON.stringify(value, null, 2) + '\n'], {type: 'application/json'}));
+export function downloadJSON(value, name, {compact = false, maxBytes = Infinity} = {}) {
+  const blob = new Blob([JSON.stringify(value, null, compact ? undefined : 2) + '\n'], {type: 'application/json'});
+  if (blob.size > maxBytes) throw new Error('完整恢复文件超过容量限制，当前稿与待核实请求均保留；请先保存或核实，尚不能确认保管并离开。');
+  const objectURL = URL.createObjectURL(blob);
   const link = el('a', {href: objectURL, download: name});
   document.body.append(link); link.click(); link.remove();
   setTimeout(() => URL.revokeObjectURL(objectURL), 1000);

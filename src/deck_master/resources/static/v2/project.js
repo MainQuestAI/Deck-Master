@@ -2,14 +2,10 @@ import {personalClearPanel} from './personal-maintenance.js';
 import {SummaryPoll} from './summary-poll.js';
 import {get, post, revisionQuery, readableError} from './api.js';
 import {el, button, heading, empty, icon, version, announce, modal, actionMenu} from './dom.js';
-import {localURL} from './launcher-ui.js';
+import {localURL} from './routes.js';
 import {readRoute, routeHash, position, surfaces, layers} from './routes.js';
 import {DraftEditor} from './drafts.js';
-import {overview, content, pageDetail, runs, style} from './views.js';
-import {gallery} from './gallery.js';
 import {BusinessOperations} from './business-operations.js';
-import {actionTargets} from './action-targets.js';
-import {changesetDesk} from './changeset-desk.js';
 import {collaborationBanner} from './collaboration-desk.js';
 import {currentWork, currentWorkKey} from './current-work.js';
 
@@ -22,15 +18,28 @@ const pendingHandoffs = (summary, info) => summary?.current_work !== undefined &
   (summary?.next_actions?.actions || []).filter(action => action.kind === 'handoff' && action.enabled).reduce((count, action) => count + (action.object_count || 0), 0);
 
 export class Project {
-  constructor(root, health) { this.root = root; this.health = health; this.generation = 0; this.positionQueue = Promise.resolve(); this.disposables = []; }
+  constructor(root, health) { this.root = root; this.health = health; this.generation = 0; this.positionQueue = Promise.resolve(); this.disposables = []; this.draftEditors = new Set(); }
   get editor() { return this._editor; }
   set editor(value) {
     this._editor = value;
     if (!value) return;
+    this.draftEditors.add(value);
     value.onRestore = record => this.restoreDraft(value, record);
+    value.onRetired = () => {
+      if (this.editor === value && !value.disposed)
+        this.root.dispatchEvent(new CustomEvent('draft-editor-replaced', {detail: value}));
+    };
     value.onStateChanged = () => {
       if (this.editor === value && !value.disposed) this.root.dispatchEvent(new CustomEvent('draft-state-changed'));
     };
+  }
+  canLeaveDrafts() {
+    let recoverable = true;
+    for (const editor of this.draftEditors) {
+      if (editor.disposed) this.draftEditors.delete(editor);
+      else if (!editor.canLeave()) recoverable = false;
+    }
+    return recoverable;
   }
   restoreDraft(previous, record) {
     if (this.editor !== previous || previous.disposed || this.navigationPending) return false;
@@ -96,8 +105,18 @@ export class Project {
       this.setNotice(`历史恢复已确认，已创建 ${version(revision)}。当前阅读位置保持不变。`);
       this.notice?.append(button('查看恢复后的版本', () => this.go({surface: 'runs', revision, task_id: null, runs_area: 'versions'})));
     });
-    addEventListener('beforeunload', () => this.editor?.persist());
-    addEventListener('online', () => this.setNotice('网络已恢复。可核实草稿保存，或重新读取当前工作面。', true));
+    addEventListener('storage', event => {
+      if (event.key?.startsWith(`deck-master:v3:cleared:${this.info.project_identity}:`)) {
+        for (const editor of this.draftEditors) editor.retireCleared();
+      }
+    });
+    addEventListener('beforeunload', event => {
+      if (!this.canLeaveDrafts()) { event.preventDefault(); event.returnValue = ''; }
+    });
+    addEventListener('online', () => {
+      if (this.moduleFailure?.serial === this.generation) this.moduleFailureNotice(this.moduleFailure, '网络已恢复。请重新加载工作台以恢复这个工作面；未保存草稿仍受保护。');
+      else this.setNotice('网络已恢复。可核实草稿保存，或重新读取当前工作面。', true);
+    });
     await this.loadRoute(this.route, false);
     if (this.health.ui_capabilities?.includes('run_desk.v1')) {
       this.summaryPoll = new SummaryPoll(signal => get(this.summaryURL(), {signal}),
@@ -194,12 +213,27 @@ export class Project {
     } catch { /* Fixed artifacts remain readable when the control pair is unavailable. */ }
     return {...summary, current_work:null};
   }
+  async viewFor(route) {
+    if (route.action_id) return (await import('./action-targets.js')).actionTargets;
+    if (route.surface === 'content' && route.candidate_id) return (await import('./changeset-desk.js')).changesetDesk;
+    switch (route.surface) {
+      case 'overview': return (await import('./overview.js')).overview;
+      case 'content': return (await import('./content-sources.js')).content;
+      case 'gallery': return (await import('./gallery.js')).gallery;
+      case 'page': return (await import('./page-workbench.js')).pageDetail;
+      case 'runs': return (await import('./views.js')).runs;
+      case 'style': return (await import('./style-calibration.js')).style;
+      default: throw new Error('无法识别工作面，已读内容仍保留。');
+    }
+  }
   async loadRoute(initial = null, focus = true) {
     const requestedHash = location.hash, requestedRoute = initial && structuredClone(initial);
     // go() begins the read synchronously; its queued hashchange shares that
     // read. Explicit initial-route/current calls still start a new generation.
     if (!initial && this.navigationPending && this.navigationHash === requestedHash) return;
     const serial = ++this.generation;
+    this.moduleFailure = null;
+    let moduleFailure = null;
     this.controlRead = (this.controlRead || 0) + 1;
     this.navigationHash = requestedHash;
     this.navigationDestination = requestedRoute ? routeHash(this.info, requestedRoute) : requestedHash;
@@ -250,7 +284,7 @@ export class Project {
       } else if (route.surface === 'gallery') {
         if (!this.health.ui_capabilities?.includes('ui_gallery.v1')) data = {unsupported: true};
         else {
-          const [saved, plan, drafts] = await Promise.all([get('/api/gallery'), get('/api/content-plan' + q), get('/api/drafts')]);
+          const [saved, plan, drafts] = await Promise.all([get('/api/gallery'), get('/api/content-plan' + q), get('/api/drafts' + (this.health.ui_capabilities?.includes('ui_draft_query.v1') ? '?view=notes' : ''))]);
           data = {saved, plan: plan.content_plan, drafts};
         }
       } else if (route.surface === 'runs') {
@@ -266,6 +300,15 @@ export class Project {
         }
       }
       if (serial !== this.generation) return;
+      moduleFailure = {serial, identity:info.project_identity, route:structuredClone(route), hash:requestedHash};
+      const view = await this.viewFor(route);
+      moduleFailure = null;
+      if (serial !== this.generation) return;
+      if (!this.canLeaveDrafts()) {
+        history.replaceState(null, '', routeHash(this.info, this.route));
+        this.setNotice('本机恢复副本未保存，仍保留原工作面。请保存到项目或下载恢复文件后重试。', true);
+        return;
+      }
       this.editor?.dispose(); this.editor = null;
       this.disposables.forEach(dispose => dispose()); this.disposables = [];
       this.info = info; this.latest = latest; this.summary = summary; this.route = route;
@@ -273,14 +316,21 @@ export class Project {
       this.historical = summary.revision_id !== (info.control_revision_id || info.revision_id || latest.revision_id);
       this.readonly = this.historical || Boolean(info.sample?.readonly);
       history.replaceState(null, '', routeHash(this.info, route));
-      this.render(data);
+      this.render(data, view);
       if(summary.reading_unavailable)this.setNotice('个人已读记录暂不可用，已显示未过滤的业务记录；损伤文件保留，请先核实恢复资料。',true);
       this.savePosition();
       if (focus) document.querySelector('#view-title')?.focus();
       announce(`${route.surface === 'page' ? '单页 · ' + layers[route.layer] : surfaces[route.surface]}，${version(route.revision)}`);
     } catch (error) {
       if (serial !== this.generation) return;
-      if (this.main) {this.setNotice(readableError(error) + ' 已显示的工作面仍属于顶栏标明的版本。', true);if(this.health.ui_capabilities?.includes('result_reading.v1'))this.notice?.append(button('重新读取待办',()=>this.go({surface:'overview',action_id:null})));}
+      if (moduleFailure) {
+        this.moduleFailure = moduleFailure;
+        const message = '工作面模块未能加载。已读内容与草稿仍保留；连接恢复后可重新加载工作台。';
+        if (this.main) this.moduleFailureNotice(moduleFailure, message);
+        else this.root.replaceChildren(el('main', {id:'main', class:'workspace'}, empty('无法加载这个工作面', message,
+          button('重新加载工作台', () => this.reloadForModule(moduleFailure)))));
+      }
+      else if (this.main) {this.setNotice(readableError(error) + ' 已显示的工作面仍属于顶栏标明的版本。', true);if(this.health.ui_capabilities?.includes('result_reading.v1'))this.notice?.append(button('重新读取待办',()=>this.go({surface:'overview',action_id:null})));}
       else {
         this.root.replaceChildren(el('main', {id: 'main', class: 'workspace'}, empty('无法读取这个位置', readableError(error),
           button('打开项目当前版本', () => { history.replaceState(null, '', location.pathname + location.search); this.loadRoute({...this.route, surface: 'overview', page_id: null, task_id: null, revision: null}); }))));
@@ -295,6 +345,21 @@ export class Project {
         if (this.controlSlot) { this.controlSlot.inert = false; this.controlSlot.removeAttribute('aria-busy'); }
       }
     }
+  }
+  moduleFailureNotice(failure, message) {
+    this.setNotice(message);
+    this.notice?.append(button('重新加载工作台', () => this.reloadForModule(failure)));
+  }
+  reloadForModule(failure) {
+    if (this.moduleFailure !== failure || failure.serial !== this.generation ||
+        failure.identity !== this.info.project_identity) return;
+    if (!this.canLeaveDrafts()) {
+      this.moduleFailureNotice(failure, '草稿尚未可靠保存。请保存到项目、保留本机缓冲，或下载完整恢复文件并明确确认已保管，再重新加载。');
+      return;
+    }
+    if (this.moduleFailure !== failure || failure.serial !== this.generation) return;
+    history.replaceState(null, '', routeHash(this.info, failure.route));
+    location.reload();
   }
   go(patch) {
     const base = this.navigationPending && this.navigationRoute ? this.navigationRoute : this.route;
@@ -414,7 +479,7 @@ export class Project {
     dialog.addEventListener('close', () => request?.abort(), {once:true});
     verify.click();
   }
-  render(data) {
+  render(data, view) {
     const nav = el('nav', {class: 'nav', 'aria-label': '项目工作区'});
     for (const [key, label] of Object.entries(surfaces)) nav.append(button([icon(key), el('span', {class: 'nav-label'}, label)], () => this.go({surface: key}), false,
       {class: (this.route.surface === key || this.route.surface === 'page' && key === (this.route.from || 'gallery')) ? 'active' : '',
@@ -443,8 +508,6 @@ export class Project {
       el('span', {}, '你正在阅读过去保存的稿件；内容与比较保持固定。'), button('查看当前版本', () => this.current()), el('details', {}, el('summary', {}, '版本身份'), el('p', {}, `阅读 ${version(this.route.revision)} · 当前 ${version(this.info.control_revision_id || this.info.revision_id || this.latest.revision_id)}`))));
     if (this.info.sample) banners.append(el('div', {class: 'sample-banner'}, this.info.sample.readonly ? '这是合成的只读示例，未调用模型，也未进行专业质量验收。' : '这是可编辑的合成验证项目，未调用模型，也未进行专业质量验收。'));
     this.main = el('main', {id: 'main', class: 'workspace', tabindex: '-1'});
-    const view = this.route.action_id ? actionTargets : this.route.surface === 'content' && this.route.candidate_id ? changesetDesk :
-      {overview, content, gallery, page: pageDetail, runs, style}[this.route.surface];
     this.main.append(view(this, data));
     if (this.route.surface === 'page') this.main.addEventListener('keydown', event => {
       const typing = event.target.closest('textarea,input,select,button,a,summary,[contenteditable]');

@@ -22,6 +22,9 @@ def test_all_hundred_overview_images_release_departed_leases(tmp_path, route):
                 page = browser.new_page(viewport={'width': 1440, 'height': 900})
                 page.goto(server.start() + route + '/')
                 expect(page.get_by_role('heading', name='制作总览', exact=True)).to_be_visible()
+                # The real initial chapter projection replaces the table rows
+                # after the heading appears; start the lease walk once it commits.
+                expect(page.locator('.chapter-row')).to_have_text(['工作台使用示例'])
                 for index in range(100):
                     if route == 'studio' and index and index % 15 == 0:
                         page.get_by_role('button', name='下一组页面', exact=True).click()
@@ -69,8 +72,10 @@ def test_draft_persist_serializes_once_and_keeps_two_synchronous_writes(tmp_path
                   const results = [];
                   for (const failAt of [0, 1, 2]) {
                     let serializations = 0; const writes = [];
-                    const editor = {draft:{draft_id:'synthetic'},etag:'etag',status:'dirty',pendingSave:null,
-                      bufferKey:'synthetic-buffer',activeKey:'synthetic-active'};
+                    const editor = new DraftEditor({project_id:'synthetic',project_identity:'synthetic'},
+                      {scope:'project',page_id:null,layer:'notes'},'revision',null);
+                    Object.assign(editor,{draft:{draft_id:'synthetic'},etag:'etag',status:'dirty',pendingSave:null,
+                      bufferKey:'synthetic-buffer',activeKey:'synthetic-active'});
                     JSON.stringify = (...args) => {serializations++; return stringify(...args);};
                     Storage.prototype.setItem = function(key, value) {
                       writes.push([key, value]);

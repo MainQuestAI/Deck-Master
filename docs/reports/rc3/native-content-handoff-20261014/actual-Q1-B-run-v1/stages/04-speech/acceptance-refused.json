@@ -1,8 +1,0 @@
-{
-  "actual_native_writer": "/root/e1_q1_b_speech",
-  "raw_output_sha256": "fb830a670821652782b409543ac99631c80c48591853fde584e0f6d30733c5f6",
-  "error_type": "EnvelopeError",
-  "error": "(result)/payload/updates[4]/speech_segments[1]/kind: this task was dispatched for 'verbatim' speech; got 'cue'",
-  "semantic_fallback": false,
-  "observed_at": "2026-10-14T16:36:37.675064+00:00"
-}

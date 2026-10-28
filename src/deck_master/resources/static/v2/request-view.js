@@ -70,11 +70,12 @@ export function promptView(app, data, layer, onBasis = () => {}) {
   let selected = records.find(r => r.ref.sha256 === selectedRef) || (records.length === 1 || layer === 'submitted_prompt' ? records[0] : null);
   let selectedText = null;
   function render() {
+    const record = layer === 'submitted_prompt' ? {text: actual.text, ref: actual.ref, source: data.text_sources?.submitted_prompt[0]} : selected;
+    const text = record?.text ?? null;
+    if (onBasis(record?.ref || null, text) === false) return false;
     leases.splice(0).forEach(dispose => dispose());
     body.replaceChildren(); diffSlot.replaceChildren();
-    const record = layer === 'submitted_prompt' ? {text: actual.text, ref: actual.ref, source: data.text_sources?.submitted_prompt[0]} : selected;
-    selectedText = record?.text ?? null;
-    onBasis(record?.ref || null, selectedText);
+    selectedText = text;
     body.append(el('p', {class: 'observer-label'}, layer === 'submitted_prompt' ? observerLabels[actual.observer] || observerLabels.unknown : observerLabels.core_frozen));
     if (selectedText === null) {
       body.append(empty(layer === 'submitted_prompt' ? '实际提示词未记录' : '尚无预备提示词', '未用另一份提示词替代。', button('查看逐页稿', () => app.go({layer: 'content', revision: data.revision_id, page_id: data.page_id})))); return;
@@ -98,7 +99,11 @@ export function promptView(app, data, layer, onBasis = () => {}) {
   if (layer === 'prepared_prompt' && records.length > 1) {
     const select = el('select', {'aria-label': '选择草稿绑定的预备提示词'}, el('option', {value: ''}, '先选择具体预备稿'), records.map(record => el('option', {value: record.ref.sha256}, `${record.label} · ${record.ref.sha256.slice(0, 8)}`)));
     select.value = selected?.ref.sha256 || '';
-    select.addEventListener('change', () => { selected = records.find(r => r.ref.sha256 === select.value); render(); });
+    select.addEventListener('change', () => {
+      const previous = selected;
+      selected = records.find(r => r.ref.sha256 === select.value);
+      if (render() === false) { selected = previous; select.value = previous?.ref.sha256 || ''; }
+    });
     container.append(el('label', {}, '固定预备记录 ', select));
   }
   container.append(el('h2', {}, layer === 'submitted_prompt' ? '这张原图的实际提示词' : '预备提示词'), body);

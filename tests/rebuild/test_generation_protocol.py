@@ -290,7 +290,7 @@ def test_completed_native_call_after_cancellation_retains_facts_without_adoption
 
 
 def test_complete_request_vector_from_actual_cli_freeze():
-    path = Path(__file__).resolve().parents[2] / "docs/reports/workbench-v3-execution-20260926/w02/real-host-literal/freeze.json"
+    path = Path(__file__).resolve().parents[2] / "tests/rebuild/fixtures/history/generation/real-host-literal/freeze.json"
     frozen = json.loads(path.read_bytes())
     validate_schema("generation_input", frozen["input"])
     assert sha256_bytes(canonical_json_bytes(frozen["input"])) == frozen["input_hash"] == "e62ee707ffb1531ce9373ad51fda4d0fc6d999216dca708e84a1d469e71d6fac"

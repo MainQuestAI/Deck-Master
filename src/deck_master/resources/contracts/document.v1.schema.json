@@ -122,29 +122,7 @@
             "type": "string"
           },
           "extract": {
-            "anyOf": [
-              {
-                "type": "object",
-                "required": [
-                  "path",
-                  "sha256"
-                ],
-                "additionalProperties": false,
-                "properties": {
-                  "path": {
-                    "type": "string",
-                    "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
-                  },
-                  "sha256": {
-                    "type": "string",
-                    "pattern": "^[a-f0-9]{64}$"
-                  }
-                }
-              },
-              {
-                "type": "null"
-              }
-            ]
+            "$ref": "shared-contracts.v1.schema.json#/$defs/d_c638eb3aa914"
           },
           "external_use": {
             "enum": [
@@ -205,104 +183,16 @@
             }
           },
           "blueprint": {
-            "anyOf": [
-              {
-                "type": "object",
-                "required": [
-                  "path",
-                  "sha256"
-                ],
-                "additionalProperties": false,
-                "properties": {
-                  "path": {
-                    "type": "string",
-                    "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
-                  },
-                  "sha256": {
-                    "type": "string",
-                    "pattern": "^[a-f0-9]{64}$"
-                  }
-                }
-              },
-              {
-                "type": "null"
-              }
-            ]
+            "$ref": "shared-contracts.v1.schema.json#/$defs/d_c638eb3aa914"
           },
           "svg": {
-            "anyOf": [
-              {
-                "type": "object",
-                "required": [
-                  "path",
-                  "sha256"
-                ],
-                "additionalProperties": false,
-                "properties": {
-                  "path": {
-                    "type": "string",
-                    "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
-                  },
-                  "sha256": {
-                    "type": "string",
-                    "pattern": "^[a-f0-9]{64}$"
-                  }
-                }
-              },
-              {
-                "type": "null"
-              }
-            ]
+            "$ref": "shared-contracts.v1.schema.json#/$defs/d_c638eb3aa914"
           },
           "svg_preview": {
-            "anyOf": [
-              {
-                "type": "object",
-                "required": [
-                  "path",
-                  "sha256"
-                ],
-                "additionalProperties": false,
-                "properties": {
-                  "path": {
-                    "type": "string",
-                    "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
-                  },
-                  "sha256": {
-                    "type": "string",
-                    "pattern": "^[a-f0-9]{64}$"
-                  }
-                }
-              },
-              {
-                "type": "null"
-              }
-            ]
+            "$ref": "shared-contracts.v1.schema.json#/$defs/d_c638eb3aa914"
           },
           "ppt_preview": {
-            "anyOf": [
-              {
-                "type": "object",
-                "required": [
-                  "path",
-                  "sha256"
-                ],
-                "additionalProperties": false,
-                "properties": {
-                  "path": {
-                    "type": "string",
-                    "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
-                  },
-                  "sha256": {
-                    "type": "string",
-                    "pattern": "^[a-f0-9]{64}$"
-                  }
-                }
-              },
-              {
-                "type": "null"
-              }
-            ]
+            "$ref": "shared-contracts.v1.schema.json#/$defs/d_c638eb3aa914"
           }
         },
         "required": [
@@ -317,124 +207,22 @@
       }
     },
     "tasks": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": [
-          "path",
-          "sha256"
-        ],
-        "additionalProperties": false,
-        "properties": {
-          "path": {
-            "type": "string",
-            "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
-          },
-          "sha256": {
-            "type": "string",
-            "pattern": "^[a-f0-9]{64}$"
-          }
-        }
-      }
+      "$ref": "shared-contracts.v1.schema.json#/$defs/d_e21310f9468f"
     },
     "reviews": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": [
-          "path",
-          "sha256"
-        ],
-        "additionalProperties": false,
-        "properties": {
-          "path": {
-            "type": "string",
-            "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
-          },
-          "sha256": {
-            "type": "string",
-            "pattern": "^[a-f0-9]{64}$"
-          }
-        }
-      }
+      "$ref": "shared-contracts.v1.schema.json#/$defs/d_e21310f9468f"
     },
     "outputs": {
       "type": "object",
       "properties": {
         "pptx": {
-          "anyOf": [
-            {
-              "type": "object",
-              "required": [
-                "path",
-                "sha256"
-              ],
-              "additionalProperties": false,
-              "properties": {
-                "path": {
-                  "type": "string",
-                  "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
-                },
-                "sha256": {
-                  "type": "string",
-                  "pattern": "^[a-f0-9]{64}$"
-                }
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "$ref": "shared-contracts.v1.schema.json#/$defs/d_c638eb3aa914"
         },
         "trace": {
-          "anyOf": [
-            {
-              "type": "object",
-              "required": [
-                "path",
-                "sha256"
-              ],
-              "additionalProperties": false,
-              "properties": {
-                "path": {
-                  "type": "string",
-                  "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
-                },
-                "sha256": {
-                  "type": "string",
-                  "pattern": "^[a-f0-9]{64}$"
-                }
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "$ref": "shared-contracts.v1.schema.json#/$defs/d_c638eb3aa914"
         },
         "render_report": {
-          "anyOf": [
-            {
-              "type": "object",
-              "required": [
-                "path",
-                "sha256"
-              ],
-              "additionalProperties": false,
-              "properties": {
-                "path": {
-                  "type": "string",
-                  "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
-                },
-                "sha256": {
-                  "type": "string",
-                  "pattern": "^[a-f0-9]{64}$"
-                }
-              }
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "$ref": "shared-contracts.v1.schema.json#/$defs/d_c638eb3aa914"
         }
       },
       "required": [
@@ -934,67 +722,13 @@
       }
     },
     "annotations": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "path",
-          "sha256"
-        ],
-        "properties": {
-          "path": {
-            "type": "string",
-            "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
-          },
-          "sha256": {
-            "type": "string",
-            "pattern": "^[a-f0-9]{64}$"
-          }
-        }
-      }
+      "$ref": "shared-contracts.v1.schema.json#/$defs/d_e21310f9468f"
     },
     "changes": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "path",
-          "sha256"
-        ],
-        "properties": {
-          "path": {
-            "type": "string",
-            "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
-          },
-          "sha256": {
-            "type": "string",
-            "pattern": "^[a-f0-9]{64}$"
-          }
-        }
-      }
+      "$ref": "shared-contracts.v1.schema.json#/$defs/d_e21310f9468f"
     },
     "candidates": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": [
-          "path",
-          "sha256"
-        ],
-        "additionalProperties": false,
-        "properties": {
-          "path": {
-            "type": "string",
-            "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
-          },
-          "sha256": {
-            "type": "string",
-            "pattern": "^[a-f0-9]{64}$"
-          }
-        }
-      }
+      "$ref": "shared-contracts.v1.schema.json#/$defs/d_e21310f9468f"
     },
     "candidate_adoptions": {
       "type": "array",
@@ -1161,114 +895,23 @@
       }
     },
     "candidate_decisions": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": [
-          "path",
-          "sha256"
-        ],
-        "additionalProperties": false,
-        "properties": {
-          "path": {
-            "type": "string",
-            "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
-          },
-          "sha256": {
-            "type": "string",
-            "pattern": "^[a-f0-9]{64}$"
-          }
-        }
-      }
+      "$ref": "shared-contracts.v1.schema.json#/$defs/d_e21310f9468f"
     },
     "style_recipes": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": [
-          "path",
-          "sha256"
-        ],
-        "additionalProperties": false,
-        "properties": {
-          "path": {
-            "type": "string",
-            "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
-          },
-          "sha256": {
-            "type": "string",
-            "pattern": "^[a-f0-9]{64}$"
-          }
-        }
-      }
+      "$ref": "shared-contracts.v1.schema.json#/$defs/d_e21310f9468f"
     },
     "page_derivations": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": [
-          "path",
-          "sha256"
-        ],
-        "additionalProperties": false,
-        "properties": {
-          "path": {
-            "type": "string",
-            "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
-          },
-          "sha256": {
-            "type": "string",
-            "pattern": "^[a-f0-9]{64}$"
-          }
-        }
-      }
+      "$ref": "shared-contracts.v1.schema.json#/$defs/d_e21310f9468f"
     },
     "icon_recipes": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": [
-          "path",
-          "sha256"
-        ],
-        "additionalProperties": false,
-        "properties": {
-          "path": {
-            "type": "string",
-            "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
-          },
-          "sha256": {
-            "type": "string",
-            "pattern": "^[a-f0-9]{64}$"
-          }
-        }
-      }
+      "$ref": "shared-contracts.v1.schema.json#/$defs/d_e21310f9468f"
     },
     "committed_at": {
       "type": "string",
       "format": "date-time"
     },
     "style_references": {
-      "type": "array",
-      "maxItems": 100,
-      "items": {
-        "type": "object",
-        "required": [
-          "path",
-          "sha256"
-        ],
-        "additionalProperties": false,
-        "properties": {
-          "path": {
-            "type": "string",
-            "pattern": "^\\.deckmaster/objects/[a-f0-9]{2}/[a-f0-9]{64}\\.[a-z0-9]+$"
-          },
-          "sha256": {
-            "type": "string",
-            "pattern": "^[a-f0-9]{64}$"
-          }
-        }
-      }
+      "$ref": "shared-contracts.v1.schema.json#/$defs/d_3301753341d1"
     },
     "narrative": {
       "anyOf": [

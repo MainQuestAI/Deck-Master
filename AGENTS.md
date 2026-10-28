@@ -16,8 +16,8 @@ agents working in this repository.
    For inherited RC4 work:
    `docs/specs/deck-master-next-iteration-20261019/06-CODEX-HANDOFF.md`,
    then its specified reading order and the assigned N1–N6 card.
-   The unique candidate ledger is
-   `docs/reports/rc4/iteration-20261019/execution-ledger.json`.
+   The historical RC4 candidate ledger is
+   `tests/rebuild/fixtures/history/rc4/iteration-20261019/execution-ledger.json`.
 
 RC4 inherits the rebuild, Flow Quality and RC3 contracts where the current
 increment does not explicitly change them. Read historical cards only for
@@ -61,7 +61,7 @@ The active implementation baseline for the mainline rebuild is
 
 ## Project Truth
 
-- Runtime contracts: `src/deck_master/resources/contracts/` (唯一活动 schema 来源;旧合同见 docs/archive/pre-rebuild/contracts/).
+- Runtime contracts: `src/deck_master/resources/contracts/` (唯一活动 schema 来源;旧合同见 [固定基线归档合同](https://github.com/MainQuestAI/Deck-Master/tree/62dfcfc5637f0bee2358074c4458047689dd5299/docs/archive/pre-rebuild/contracts)).
 - Rebuilt-core CLI entrypoint (the ONLY command surface): `deck-master`
   (console entry = `deck_master.cli:main`); source checkout equivalent:
   `python -m deck_master`. The retired legacy CLI entry is not part of the new flow.

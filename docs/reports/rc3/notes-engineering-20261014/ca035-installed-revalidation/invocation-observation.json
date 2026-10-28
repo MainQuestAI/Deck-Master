@@ -1,6 +1,0 @@
-{
-  "sys_executable": "/workspace/work/rc3/candidate-02-ca035/prefix/.deck-master/releases/ca0351d2397b-17a3bb5c40bd/venv/bin/python",
-  "isolated_flag": 1,
-  "module_origin": "/workspace/work/rc3/candidate-02-ca035/prefix/.deck-master/releases/ca0351d2397b-17a3bb5c40bd/venv/lib/python3.12/site-packages/deck_master/__init__.py",
-  "module_sha256": "1a880a02d9f145c447043fc9bfc91ed0c228b7714909df20be1f3182f2b8889b"
-}

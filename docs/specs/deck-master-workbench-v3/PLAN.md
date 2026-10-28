@@ -447,6 +447,6 @@ methodology 1–600/601–1200/1201–1800/1801–2143全读；原生6项、外�
 
 ### 本线程独立 Review 后的执行澄清
 
-正式依据见 [独立 Review](../../reports/workbench-v3-execution-20260926/REVIEW.md) 与包索引。W01 首轮合入可用读模型切片，AC01 完整压力待 W07 后回访，不使用占位 Candidate/Attempt 关闭。W02 首个核心 PR 消除 task accept 已提交而回执丢失的恢复窗口，再验证实际观察采集路径；W06 最终负责完整原子操作 AC。CLI 默认 view 仍可查询服务状态，显式读取选项与 HTTP 共用固定快照。
+正式依据见 [独立 Review](https://github.com/MainQuestAI/Deck-Master/blob/62dfcfc5637f0bee2358074c4458047689dd5299/docs/reports/workbench-v3-execution-20260926/REVIEW.md) 与包索引。W01 首轮合入可用读模型切片，AC01 完整压力待 W07 后回访，不使用占位 Candidate/Attempt 关闭。W02 首个核心 PR 消除 task accept 已提交而回执丢失的恢复窗口，再验证实际观察采集路径；W06 最终负责完整原子操作 AC。CLI 默认 view 仍可查询服务状态，显式读取选项与 HTTP 共用固定快照。
 
 所有“trial 不改 current”指不改当前采用 Page/原图/SVG/预览/整稿输出引用。任务、调用、候选事实可以正常提交管理 revision；采用才更换内容槽。Candidate 是业务对象，不能通过新建第二份 revision 注册表绕过 Document 归属/可达性检查。87 个 AC 的编号与最终 owner 保持。

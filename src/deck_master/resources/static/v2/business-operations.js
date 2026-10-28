@@ -37,9 +37,10 @@ export class BusinessOperations {
       for (const entry of local) if (await this.valid(entry.pending)) this.entries.set(entry.pending.operation_id, {...entry, state: 'unknown'});
     } catch { this.storageWarning = '浏览器中的待核实副本暂不可读；请保留草稿恢复文件。'; }
     try {
-      const saved = await get('/api/drafts');
-      for (const record of saved.records) if (await this.valid(record.draft.pending) && !this.entries.has(record.draft.pending.operation_id))
-        this.entries.set(record.draft.pending.operation_id, {pending: record.draft.pending, draft_id: record.draft.draft_id, state: 'unknown'});
+      const saved = await get('/api/drafts' + (this.app.health.ui_capabilities?.includes('ui_draft_query.v1') ? '?view=pending' : ''));
+      for (const draft of saved.pending || saved.records.map(record => record.draft))
+        if (await this.valid(draft.pending) && !this.entries.has(draft.pending.operation_id))
+          this.entries.set(draft.pending.operation_id, {pending: draft.pending, draft_id: draft.draft_id, state: 'unknown'});
     } catch { this.loadWarning = '项目中的待核实请求尚未读取；重新连接后再提交。'; }
     this.render();
   }
@@ -207,15 +208,25 @@ export class BusinessOperations {
     try { latest = await get('/api/view/summary'); } catch { /* Keep both the draft and the exact failure. */ }
     const editor = entry.editor;
     const payload = entry.pending?.payload;
-    modal(payload?.action === 'candidates.adopt' ? '本次未采用任何页，选择已保留' : '本次未提交，输入已保留', el('div', {class: 'stack'}, el('p', {class: 'field-error'}, entry.note),
+    const title = payload?.action === 'candidates.adopt' ? '本次未采用任何页，选择已保留' : '本次未提交，输入已保留';
+    const body = el('div', {class: 'stack'}, el('p', {class: 'field-error'}, entry.note),
       error.details?.items?.length && el('ul', {}, error.details.items.map(item => el('li', {}, `${item.page_id || '候选'}：${item.cause === 'generation_basis_changed' ? '生成依据已变化' : item.cause === 'one_candidate_per_page' ? '同一页只能选择一个候选' : '请重新核对采用目标'}`))),
       el('div', {class: 'conflict-panes'},
         el('section', {}, el('h3', {}, payload ? '冻结的原请求' : '当前草稿'), el('textarea', {readOnly: true, value: payload ? payload.display_context?.instruction ?? JSON.stringify(payload.request || {}) : editor?.pendingText?.() || '', 'aria-label': payload ? '冻结的原请求' : '当前草稿'})),
         payload && el('section', {}, el('h3', {}, '之后继续编辑的草稿'), el('textarea', {readOnly: true, value: editor?.pendingText?.() || '当前窗口未打开草稿；可从恢复入口查看。', 'aria-label': '之后继续编辑的草稿'}), !payload.display_context && el('p', {}, '旧记录未保存修改要求正文，以上按真实原请求展示。')),
         el('section', {}, el('h3', {}, '服务端新基准'), el('p', {}, latest ? version(latest.revision_id) : '暂时无法读取'),
-          el('p', {}, '没有采用或覆盖任何页。重新阅读差异后，再建立新计划。')))),
-      [editor && button('下载保留的草稿', () => editor.download()), latest && button('查看新的当前版本', () => {
-        document.querySelector('#modal').close(); this.app.go({revision: latest.revision_id});
-      })].filter(Boolean));
+          el('p', {}, '没有采用或覆盖任何页。重新阅读差异后，再建立新计划。'))));
+    const owner = editor?.node?.closest('dialog[open]');
+    const actions = [editor && button('下载保留的草稿', () => editor.download()), latest && button('查看新的当前版本', () => {
+      if (editor?.canLeave?.() === false) return;
+      (owner || document.querySelector('#modal'))?.close(); this.app.go({revision: latest.revision_id});
+    })].filter(Boolean);
+    // A rejection belongs beside the protected original request. Queuing a new
+    // dialog behind that owner hides the outcome and leaves an apparently stuck form.
+    if (owner?.dataset.protectDraft === 'true') {
+      owner.querySelector('.business-conflict')?.remove();
+      owner.querySelector('.modal-body').append(el('section', {class:'business-conflict stack', role:'alert'},
+        el('h3', {}, title), body, el('div', {class:'row wrap'}, actions)));
+    } else modal(title, body, actions);
   }
 }

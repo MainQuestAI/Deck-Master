@@ -13,7 +13,7 @@ from page_visual_helpers import pass_page_review
 from test_deep_quality_state import svg_payload
 from test_service_flow import _prepare_production
 from rc3_fixtures import claim_fixture_task
-import test_candidates as artifacts
+import candidate_fixtures as artifacts
 
 
 def _sample(tmp_path, *, page_count):

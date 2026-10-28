@@ -2,7 +2,7 @@
 
 ## 当前状态
 
-父线程已确认最终适用基线 `3217a65630023244eac5a09b3e7570954cce9188` 与 CI 39401753812 成功，并授权本云任务完整 WU01–WU08。独立分支已实现 A/B 产品范围，WU08 验证仍部分未完成；当前结果以 [执行账本](execution-ledger.json) 和 [交付回执](../../reports/webui-content-methods/DELIVERY.md) 为准。PR127 未合并仍是显式依赖，不自动合并。
+父线程已确认最终适用基线 `3217a65630023244eac5a09b3e7570954cce9188` 与 CI 39401753812 成功，并授权本云任务完整 WU01–WU08。独立分支已实现 A/B 产品范围，WU08 验证仍部分未完成；当前结果以 [执行账本](execution-ledger.json) 和 [交付回执](https://github.com/MainQuestAI/Deck-Master/blob/62dfcfc5637f0bee2358074c4458047689dd5299/docs/reports/webui-content-methods/DELIVERY.md) 为准。PR127 未合并仍是显式依赖，不自动合并。
 
 ## 读取顺序
 

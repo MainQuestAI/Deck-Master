@@ -7,7 +7,7 @@ import pytest
 from deck_master import collaboration, eligibility
 from deck_master.operations import OperationError
 from rc3_fixtures import evidence_for
-from test_candidates import store as candidate_store, dispatch, start, accept, envelope
+from candidate_fixtures import store as candidate_store, dispatch, start, accept, envelope
 
 
 def grant(store, policy, *, replace=True):

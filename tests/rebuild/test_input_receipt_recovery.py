@@ -124,6 +124,12 @@ def test_atomic_fault_boundaries(tmp_path, monkeypatch, phase):
     base = store.current_revision_id()
     patch = {'reason': 'Fault boundary', 'task_patch': {'audience': 'changed'}}
     original = module._atomic_write_bytes
+    original_link = module.os.link
+    def link(source, target):
+        if phase == 'object' and store.staging_dir in Path(source).parents:
+            raise OSError('Synthetic IO interruption')
+        return original_link(source, target)
+    monkeypatch.setattr(module.os, 'link', link)
     def write(path, data):
         if ((phase == 'object' and store.staging_dir in path.parents)
                 or (phase == 'revision' and path.parent == store.revisions_dir)
@@ -143,6 +149,7 @@ def test_atomic_fault_boundaries(tmp_path, monkeypatch, phase):
         with pytest.raises((OSError, SystemExit)):
             update(root, store, patch, base=base)
     monkeypatch.setattr(module, '_atomic_write_bytes', original)
+    monkeypatch.setattr(module.os, 'link', original_link)
     monkeypatch.setattr(operations, '_atomic_write_bytes', original)
     lookup = operations.resolve_operation(store, 'plain-operation')
     committed = phase in ('after_pointer', 'cache')

@@ -12,6 +12,41 @@ try {
 } catch { /* Local copies and downloadable recovery remain available. */ }
 
 // A personal recovery copy. No edit, task, call, or adoption endpoint is used.
+const clearedKey = copy => `deck-master:v3:cleared:${copy.draft.project_identity}:${copy.draft.draft_id}:${copy.etag}`;
+const wasCleared = copy => copy?.status === 'saved' && !copy.pendingSave && copy.etag &&
+  localStorage.getItem(clearedKey(copy)) === '1';
+
+// Match ui_journal._portable locally: recovery must remain usable while offline.
+const recoveryContentError = '恢复文件包含当前导入入口不接受的内容，尚不能确认保管并离开';
+const recoveryForbiddenKeys = new Set(['token', 'authorization', 'x-deck-token', 'cookie', 'command', 'cwd', 'absolute_path', 'file_path']);
+export function validateRecoveryContent(value) {
+  const pending = [value];
+  while (pending.length) {
+    const item = pending.pop();
+    if (Array.isArray(item)) {
+      for (const child of item) pending.push(child);
+    } else if (item && typeof item === 'object') {
+      for (const [key, child] of Object.entries(item)) {
+        if (recoveryForbiddenKeys.has(key.toLowerCase())) throw new Error(recoveryContentError);
+        pending.push(child);
+      }
+    } else if (typeof item === 'string') {
+      // Python's [:4] counts Unicode characters, not JavaScript UTF-16 units.
+      let prefix = '', count = 0;
+      for (const character of item) { prefix += character; if (++count === 4) break; }
+      if (item.startsWith('/') || item.startsWith('file://') || item.startsWith('\\\\') || prefix.includes(':\\'))
+        throw new Error(recoveryContentError);
+    }
+  }
+}
+
+export function retireClearedDrafts(identity, receipt, editors = []) {
+  for (const item of receipt.cleared) if (item.kind === 'draft') {
+    localStorage.setItem(clearedKey({draft: {project_identity: identity, draft_id: item.id}, etag: item.etag}), '1');
+  }
+  for (const editor of editors) editor.retireCleared();
+}
+
 export class DraftEditor {
   constructor(info, target, baseRevision, baseRef, {readonly = false, exactRevision = false, contextKey = null} = {}) {
     this.info = info; this.target = target; this.baseRevision = baseRevision; this.baseRef = baseRef;
@@ -44,25 +79,47 @@ export class DraftEditor {
     this.restoreNode = el('div', {class: 'draft-restore'});
     this.localRestoreNode = el('div', {class: 'draft-restore'});
     this.noticeNode = el('p', {class: 'muted draft-notice', hidden: true});
+    this.recoveryConfirmButton = button('我已保管恢复文件，允许离开', () => {
+      const snapshot = this.recoverySnapshot();
+      if (this.downloadedRecovery !== snapshot) return;
+      this.confirmedRecovery = snapshot; this.updateStatus();
+      toast('已确认保管这份恢复内容，现在可以重试离开。继续编辑需要重新下载并确认。');
+    }, false, {hidden: true});
     const node = el('section', {'data-container':'section', class: 'panel personal-draft'},
       el('div', {class: 'panel-head'}, el('h2', {}, '个人草稿'), el('span', {class: 'status'}, '不提交制作任务')),
       el('div', {class: 'panel-body stack'}, el('label', {for: this.input.id}, '留给自己的内容与意见'), this.input,
         this.basisNode, this.noticeNode, this.stateNode, this.storageNode,
         actionGroup(this.saveButton, this.rebaseButton, this.verifyButton, this.conflictButton,
-          button('下载草稿恢复文件', () => this.download())),
+          button('下载草稿恢复文件', () => this.download())), this.recoveryConfirmButton,
         el('label', {class: 'recovery-import'}, '导入草稿恢复文件', file),
         el('p', {class: 'muted field-help'}, '恢复文件可能包含内部提示词。已保存到项目的内容可跨端口恢复；未同步内容请下载保管。'),
         this.restoreNode, this.localRestoreNode));
     this.node = node; this.updateStatus(); this.ready = this.load();
     return node;
   }
+  listURL() {
+    return this.info.draft_reads === 'ui_draft_query.v1' ? '/api/drafts?' + new URLSearchParams({
+      view: 'editor', target: JSON.stringify(this.target), context_key: this.contextKey || ''}) : '/api/drafts';
+  }
+  async fullRecord(entry) {
+    if (entry.draft) return entry;
+    const {record} = await get('/api/drafts/' + encodeURIComponent(entry.draft_id));
+    if (!record || record.etag !== entry.etag || !this.matchesContext(record.draft))
+      throw new Error('所选草稿已变化，当前输入仍保留；请重新读取工作面后再选择。');
+    return record;
+  }
   async load() {
+    const epoch = this.loadEpoch || 0;
     let buffered;
     try {
       const raw = localStorage.getItem(this.activeKey) || (previousWindowBufferId &&
         localStorage.getItem(`${this.bufferKey}:window:${previousWindowBufferId}`));
       buffered = raw ? JSON.parse(raw) : null;
       if (buffered && !this.matchesContext(buffered.draft)) buffered = null;
+      if (wasCleared(buffered)) {
+        buffered = null;
+        this.restoreNotice = '已清理的已保存草稿不会自动打开；本机恢复副本仍可明确选择。';
+      }
     } catch { this.storageError = '浏览器缓冲无法读取。项目中已保存的草稿仍可读取。'; }
     if (buffered) {
       this.draft = buffered.draft; this.etag = buffered.etag || null;
@@ -72,27 +129,37 @@ export class DraftEditor {
       this.persist(); // Claim a new writable copy; the inherited copy remains intact.
     }
     try {
-      const result = await get('/api/drafts');
-      if (this.disposed) return;
-      const records = result.records.filter(record => this.matchesContext(record.draft));
-      const exact = records.filter(record => record.draft.base_ref?.sha256 === this.baseRef?.sha256 && (!this.exactRevision || record.draft.base_revision === this.baseRevision));
-      if (!buffered && exact.length === 1) this.adoptRecord(exact[0]);
+      const result = await get(this.listURL());
+      if (this.disposed || epoch !== (this.loadEpoch || 0)) return;
+      const records = result.entries || result.records.filter(record => this.matchesContext(record.draft));
+      let editedDuringRead = !buffered && this.status !== 'loading';
+      if (editedDuringRead) buffered = true;
+      const exact = records.filter(record => (record.draft || record).base_ref?.sha256 === this.baseRef?.sha256 &&
+        (!this.exactRevision || (record.draft || record).base_revision === this.baseRevision));
+      if (!buffered && exact.length === 1) {
+        const record = await this.fullRecord(exact[0]);
+        if (this.disposed || epoch !== (this.loadEpoch || 0)) return;
+        if (this.status === 'loading') this.adoptRecord(record);
+        else { editedDuringRead = true; buffered = true; }
+      }
       else if (!buffered) this.status = 'empty';
       // Restoring an older revision's text as if it were current would bind this
       // editor to a stale basis and block saving against the current one. Older
       // text stays in the restore list; it is copied forward explicitly.
       if (!buffered && exact.length > 1) this.restoreNotice = `当前版本有 ${exact.length} 份个人草稿，未自动打开；请从下方选择要恢复的一份。`;
       else if (!buffered && !exact.length && records.length) this.restoreNotice = `当前版本没有个人草稿；${records.length} 份旧版本草稿可从下方恢复，再用「对当前版本写新意见」复制文字。`;
-      if (buffered && this.status === 'saved') {
-        const record = records.find(record => record.draft.draft_id === this.draft.draft_id);
-        if (!record || canonical(record.draft) !== canonical(this.draft)) this.status = 'dirty';
+      if (editedDuringRead) this.restoreNotice = '读取期间已编辑，当前输入已保留；项目中的原草稿仍可明确选择恢复。';
+      if (buffered && !editedDuringRead && this.status === 'saved') {
+        const record = records.find(record => (record.draft || record).draft_id === this.draft.draft_id);
+        if (!record || (record.draft ? canonical(record.draft) !== canonical(this.draft) : record.digest !== await digest(this.draft))) this.status = 'dirty';
       }
       this.showRestore(records, result.errors.length);
     } catch (error) {
+      if (this.disposed || epoch !== (this.loadEpoch || 0)) return;
       this.note = readableError(error);
-      if (!buffered) this.status = 'empty';
+      if (!buffered && this.status === 'loading') this.status = 'empty';
     }
-    if (this.disposed) return;
+    if (this.disposed || epoch !== (this.loadEpoch || 0)) return;
     this.showLocalCopies(); this.updateStatus();
   }
   // A draft is labelled by whichever text it actually carries: the personal note,
@@ -126,26 +193,38 @@ export class DraftEditor {
     if (unreadable) this.restoreNode.append(el('p', {class: 'field-error'}, `${unreadable} 份草稿暂不可读，其余内容已保留。`));
     if (!records.length) return;
     const select = el('select', {'aria-label': '恢复项目中的个人草稿'}, el('option', {value: ''}, '选择已保存在项目中的草稿'));
-    for (const record of records) select.append(el('option', {value: record.draft.draft_id},
-      `${version(record.draft.base_revision)} · ${DraftEditor.summary(record.draft)}`));
-    select.addEventListener('change', () => {
-      const record = records.find(item => item.draft.draft_id === select.value);
-      if (!record) return;
-      const copy = {draft: record.draft, etag: record.etag, status: 'saved', pendingSave: null};
-      if (['dirty', 'unknown', 'conflict', 'saving'].includes(this.status)) {
-        if (!this.node.closest('#modal')) {
-          const dialog = modal('保留当前输入再恢复', el('p', {}, '当前稿和待核实保存请求将保留在本机副本中。'),
-            [button('下载当前稿', () => this.download()), button('打开所选草稿', () => { if (this.restoreCopy(copy)) dialog.close(); })], {protectDraft: true});
-          return;
-        }
-        this.restoreConfirm?.remove();
-        this.restoreConfirm = el('div', {class:'draft-restore-confirm stack', role:'group', 'aria-label':'保留当前输入再恢复'},
+    for (const record of records) select.append(el('option', {value: (record.draft || record).draft_id},
+      `${version((record.draft || record).base_revision)} · ${record.draft ? DraftEditor.summary(record.draft) : record.summary}`));
+    select.addEventListener('change', async () => {
+      const selected = select.value, token = this.restoreSelection = (this.restoreSelection || 0) + 1;
+      const entry = records.find(item => (item.draft || item).draft_id === selected);
+      if (!entry) return;
+      let copy, open, dialog;
+      const needsConfirmation = () => ['dirty', 'unknown', 'conflict', 'saving'].includes(this.status);
+      const offer = () => {
+        open = button('打开所选草稿', () => {
+          if (copy && token === this.restoreSelection && select.value === selected && this.restoreCopy(copy)) dialog?.close();
+        }, false, {disabled: !copy});
+        const cancel = button('取消恢复', () => {
+          this.restoreSelection++; select.value = ''; this.restoreConfirm?.remove(); dialog?.close();
+        });
+        const body = el('div', {class:'draft-restore-confirm stack', role:'group', 'aria-label':'保留当前输入再恢复'},
           el('p', {}, '当前稿和待核实保存请求会保留在本机副本中，再打开所选草稿。'),
-          button('下载当前稿', () => this.download()),
-          button('取消恢复', () => { this.restoreConfirm.remove(); select.value=''; }),
-          button('打开所选草稿', () => this.restoreCopy(copy)));
-        this.restoreNode.append(this.restoreConfirm);
-      } else this.restoreCopy(copy);
+          button('下载当前稿', () => this.download()), cancel, open);
+        if (!this.node.closest('#modal')) dialog = modal('保留当前输入再恢复', body, [], {protectDraft:true});
+        else { this.restoreConfirm?.remove(); this.restoreConfirm = body; this.restoreNode.append(body); }
+      };
+      // Render the protection before the lazy body read. Cancel remains usable
+      // during a slow read, and its generation rejects a late body response.
+      if (needsConfirmation()) offer();
+      let record;
+      try { record = await this.fullRecord(entry); }
+      catch (error) { if (!this.disposed && token === this.restoreSelection) { this.note = readableError(error); this.updateStatus(); } return; }
+      if (this.disposed || token !== this.restoreSelection || select.value !== selected) return;
+      copy = {draft: record.draft, etag: record.etag, status: 'saved', pendingSave: null};
+      if (open) open.disabled = false;
+      else if (needsConfirmation()) offer();
+      else this.restoreCopy(copy);
     });
     this.restoreNode.append(select);
   }
@@ -170,6 +249,9 @@ export class DraftEditor {
   restoreCopy(copy) {
     if (this.disposed || !this.matchesContext(copy?.draft)) return;
     if (!this.onRestore) { this.note = '当前编辑器无法恢复，请保留原稿并重新打开工作面。'; this.updateStatus(); return; }
+    try {
+      if (wasCleared(copy)) copy = {...copy, draft: {...structuredClone(copy.draft), draft_id: crypto.randomUUID()}, etag: null, status: 'dirty'};
+    } catch { /* Explicit recovery retains the selected input if markers are unreadable. */ }
     return this.onRestore(copy);
   }
   notifyState() {
@@ -179,6 +261,13 @@ export class DraftEditor {
     this.onStateChanged?.();
   }
   adoptRecord(record) {
+    try {
+      if (wasCleared({draft: record.draft, etag: record.etag, status: 'saved'})) {
+        this.status = 'empty';
+        this.restoreNotice = '这份已保存草稿已清理，本机副本仍可明确恢复。';
+        return;
+      }
+    } catch { /* The project record still provides acknowledged content. */ }
     this.draft = structuredClone(record.draft); this.etag = record.etag;
     this.status = 'saved'; this.pendingSave = null; this.sequence = record.updated_sequence;
     this.restoreNotice = '';
@@ -241,18 +330,27 @@ export class DraftEditor {
     } catch { this.storageError = '本机副本未保存，请先下载恢复文件。'; return false; }
   }
   persist() {
-    if (this.disposed) return;
+    if (this.disposed || this.retireCleared()) return true;
+    let recoverable = false, copySaved = false;
     try {
       const value = {draft: this.draft, etag: this.etag, status: this.status, pendingSave: this.pendingSave};
       const serialized = JSON.stringify(value);
       // Separate per-draft copies preserve an unsent draft when selecting another.
       localStorage.setItem(`${this.bufferKey}:copy:${windowBufferId}:${this.draft.draft_id}`, serialized);
+      copySaved = true;
       localStorage.setItem(this.activeKey, serialized);
+      recoverable = true;
       this.storageError = '';
-    } catch { this.storageError = '浏览器缓冲未保存。输入仍在此页，请立即下载恢复文件或复制内容。'; }
+    } catch { this.storageError = copySaved ? '当前稿已有本机副本，但自动恢复位置未更新。请保留此页并保存到项目或下载恢复文件。' : '浏览器缓冲未保存。输入仍在此页，请立即下载恢复文件或复制内容。'; }
+    return recoverable;
   }
   updateStatus() {
     if (!this.stateNode || this.disposed) return;
+    const recoveryState = this.recoverySnapshot();
+    if (this.lastRecoveryState !== recoveryState) {
+      this.downloadedRecovery = null; this.confirmedRecovery = null;
+      this.lastRecoveryState = recoveryState;
+    }
     const text = {loading: '正在读取个人草稿…', empty: '尚无个人草稿', dirty: '仅在本机缓冲，尚未保存到项目',
       saving: '正在保存到项目…', saved: '已保存到项目，可跨端口恢复', unknown: '保存结果待核实，后写内容仅在本机保留',
       conflict: '保存冲突，你的本机稿与项目中的稿件都已保留', error: '未保存到项目，输入仍保留'};
@@ -264,13 +362,14 @@ export class DraftEditor {
     this.noticeNode.hidden = !notice;
     this.basisNode.textContent = `基准 ${version(this.draft.base_revision)} · ${this.info.page_label || '整个项目'} · ${layers[this.target.layer] || '项目笔记'}` +
       (this.staleBasis() ? '。草稿仍绑定原基准，未自动改到新版；可用「对当前版本写新意见」复制文字，原有范围不迁移。' : '');
-    this.storageNode.textContent = this.storageError || this.note || '';
+    this.storageNode.textContent = [this.storageError, this.note].filter(Boolean).join(' ');
     this.rebaseButton.hidden = this.readonly || !this.staleBasis();
     this.saveButton.disabled = this.readonly || ['loading', 'empty', 'saved', 'saving', 'unknown', 'conflict'].includes(this.status);
     this.input.readOnly = this.readonly || this.status === 'loading';
     this.importInput.disabled = this.readonly || this.status === 'loading';
     this.verifyButton.hidden = this.status !== 'unknown';
     this.conflictButton.hidden = this.status !== 'conflict';
+    if (this.recoveryConfirmButton) this.recoveryConfirmButton.hidden = this.downloadedRecovery !== recoveryState || this.confirmedRecovery === recoveryState;
     this.notifyState();
   }
   async save() {
@@ -354,33 +453,88 @@ export class DraftEditor {
         })], {protectDraft: true});
     } catch (error) { this.note = readableError(error); this.updateStatus(); }
   }
+  recoverySnapshot() {
+    return canonical({draft: this.draft, pendingSave: this.pendingSave});
+  }
+  recoveryLimits() {
+    return this.info.recovery_limits || {draft_bytes:1_998_976, file_bytes:2_000_000, request_bytes:2_000_000};
+  }
   async download(draft = this.draft) {
-    const value = structuredClone(draft);
-    // Preserve every content purpose and its basis, never HTTP/session metadata.
-    const recovery = {schema_version: 'ui_draft_recovery.v1', draft: value, digest: await digest(value)};
-    downloadJSON(recovery, 'deck-master-personal-draft.json');
-    toast('恢复文件已下载。它可能包含内部提示词，请妥善保管。');
+    try {
+      const snapshot = this.recoverySnapshot();
+      const value = structuredClone(draft);
+      const pendingSave = this.pendingSave ? structuredClone(this.pendingSave) : null;
+      try {
+        validateRecoveryContent(value);
+        validateRecoveryContent(pendingSave);
+      } catch {
+        throw new Error(recoveryContentError);
+      }
+      const limits = this.recoveryLimits();
+      if ([value, ...(pendingSave ? [pendingSave.draft] : [])].some(item =>
+        new TextEncoder().encode(canonical(item)).length > limits.draft_bytes))
+        throw new Error('单份草稿超过容量限制，完整内容仍保留；请先处理容量，尚不能确认保管并离开。');
+      // Preserve every content purpose and its basis, never HTTP/session metadata.
+      const recovery = {schema_version: 'ui_draft_recovery.v1', draft: value, digest: await digest(value),
+        ...(pendingSave ? {pending_save:pendingSave, pending_save_digest:await digest(pendingSave)} : {})};
+      // A legacy core gives file and request the same limit. The import envelope
+      // is larger than the compact file, so both must fit before custody opens.
+      if (new Blob([JSON.stringify(recovery) + '\n']).size > limits.file_bytes)
+        throw new Error('完整恢复文件超过容量限制，当前稿与待核实请求均保留；尚不能确认保管并离开。');
+      if (new TextEncoder().encode(JSON.stringify({recovery})).length > limits.request_bytes)
+        throw new Error('恢复导入请求超过容量限制，当前稿与待核实请求均保留；尚不能确认保管并离开。');
+      downloadJSON(recovery, 'deck-master-personal-draft.json', {compact:true, maxBytes:limits.file_bytes});
+      if (canonical(draft) === canonical(this.draft) && snapshot === this.recoverySnapshot()) this.downloadedRecovery = snapshot;
+      this.updateStatus();
+      toast('已发起恢复文件下载。请核对并保管文件，再明确确认允许离开。');
+    } catch (error) {
+      this.downloadedRecovery = null; this.confirmedRecovery = null;
+      this.note = readableError(error); this.updateStatus();
+    }
   }
   async importFile(input) {
     const file = input.files[0];
     if (!file || this.readonly) return;
     try {
-      if (file.size > 2_000_000) throw new Error('恢复文件超过 2 MB，当前输入仍保留。');
+      const limits = this.recoveryLimits();
+      if (file.size > limits.file_bytes) throw new Error('恢复文件超过容量限制，当前输入仍保留。');
       const recovery = JSON.parse(await file.text());
-      const result = await post('/api/drafts/import', {recovery});
+      const result = await post('/api/drafts/import', {recovery}, {recoveryLimit:limits.request_bytes});
       if (this.matchesContext(result.record.draft) && !['dirty', 'unknown', 'saving', 'conflict'].includes(this.status)) {
         if (this.disposed) return;
         this.restoreCopy({draft:result.record.draft,etag:result.record.etag,status:'saved',pendingSave:null});
       }
-      toast(result.imported_from ? '已另存为独立草稿，项目中的原稿保持。' : '已导入项目，可在对应页面恢复。');
-      const records = (await get('/api/drafts')).records.filter(record => this.matchesContext(record.draft));
-      this.showRestore(records, 0);
+      toast(result.preserved_pending_save ? '已导入当前稿。原保存结果仍需核实；原请求保留在恢复文件中，未自动重发。' : result.imported_from ? '已另存为独立草稿，项目中的原稿保持。' : '已导入项目，可在对应页面恢复。');
+      const listed = await get(this.listURL());
+      if (!this.disposed) this.showRestore(listed.entries || listed.records.filter(record => this.matchesContext(record.draft)), listed.errors.length);
     } catch (error) { this.note = readableError(error); this.updateStatus(); }
     finally { input.value = ''; }
   }
+  retireCleared() {
+    if (this.disposed) return false;
+    try {
+      if (!wasCleared(this)) return false;
+    } catch { return false; }
+    clearTimeout(this.timer);
+    this.loadEpoch = (this.loadEpoch || 0) + 1;
+    this.draft = this.fresh(); this.etag = null; this.pendingSave = null; this.status = 'empty';
+    if (this.input) this.input.value = '';
+    this.restoreNotice = '这份已保存草稿已清理，本机副本仍可明确恢复。';
+    this.updateStatus(); this.onRetired?.();
+    return true;
+  }
+  canLeave() {
+    this.retireCleared();
+    if (this.disposed || ['loading', 'empty', 'saved'].includes(this.status)) return true;
+    if (this.confirmedRecovery === this.recoverySnapshot() || this.persist()) return true;
+    this.updateStatus();
+    return false;
+  }
   dispose() {
-    if (this.status !== 'loading') if (!this.archiveLocal()) { this.updateStatus(); return; }
-        this.persist(); this.disposed = true; clearTimeout(this.timer);
-    // An in-flight request may still ACK its own copy; it cannot change a new editor.
+    if (!this.canLeave()) return false;
+    // Stable per-draft copies already preserve unsaved input. Only explicit
+    // replacement/rebase needs archiveLocal() to preserve an older version.
+    this.disposed = true; clearTimeout(this.timer);
+    return true;
   }
 }

@@ -144,11 +144,43 @@
     "digest": {
       "type": "string",
       "pattern": "^[a-f0-9]{64}$"
+    },
+    "pending_save": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "draft",
+        "expected_etag"
+      ],
+      "properties": {
+        "draft": {
+          "$ref": "#/properties/draft"
+        },
+        "expected_etag": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "pending_save_digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
     }
   },
   "required": [
     "schema_version",
     "draft",
     "digest"
-  ]
+  ],
+  "dependentRequired": {
+    "pending_save": [
+      "pending_save_digest"
+    ],
+    "pending_save_digest": [
+      "pending_save"
+    ]
+  }
 }

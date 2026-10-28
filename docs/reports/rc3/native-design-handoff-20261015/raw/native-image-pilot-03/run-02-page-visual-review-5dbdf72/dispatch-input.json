@@ -1,8 +1,0 @@
-{
-  "kind": "review",
-  "page_ids": [
-    "p04"
-  ],
-  "instruction": "Independent native non-author actual page_visual engineering review of fixed p04 manuscript, original real image, accepted native SVG preview and native PPTX rendering. Evaluate all Page atoms, cell ownership, directed relations, qualifiers, reading order, readability, original findings F01-F04 and honest blueprint differences; no manuscript or image edits, no global/human/desktop/fair E2E3 PASS. Return all three required page_visual reviews using actual inspected subjects and current dependencies; truthful model reviewer provenance.",
-  "review_stage": "page_visual"
-}

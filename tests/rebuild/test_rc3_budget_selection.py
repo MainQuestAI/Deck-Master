@@ -4,7 +4,7 @@ import uuid
 import pytest
 
 from deck_master import changes, collaboration, eligibility, service, tasks
-from test_candidates import store as candidate_store
+from candidate_fixtures import store as candidate_store
 from test_rc3_candidate_quota import grant as candidate_grant
 from test_rc3_budget_workflow import project, change_input
 from test_rc3_budget_workflow import grant, spend

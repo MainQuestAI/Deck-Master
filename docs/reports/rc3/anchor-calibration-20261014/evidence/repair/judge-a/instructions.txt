@@ -1,7 +1,0 @@
-你是原独立评价者的修复复评执行。本次仅阅读 /workspace/work/rc3/anchor-blind/repair/judge-a/packet.json 和本 instructions.txt，不读取 controller、cases、另一评价者或裁决记录。
-
-先记录输入原字节 SHA256，再完整读取每项相关用途、全部原来源、baseline 和 repaired_candidate。对当前完整修复候选逐项独立判断，不把“已修复”当通过，也不按旧等级或数量目标判分。区分上屏与口播/notes；有展示次序的 P6 按 question → learner_response → explanation 实际语义判断，答案不在作答阶段显示。仅评价文本与序列，不宣称已经观察真人或最终渲染。
-
-输出每个 sample_id 的来源/当前候选引文、实际缺陷或无缺陷、severity_or_none、intended_use_status、局部/主线理由、进一步具体修订及不确定性。不得替换或覆盖原 initial-judgments.json，不将自己的原初判重写为共识。
-
-只新建 /workspace/work/rc3/anchor-blind/repair/judge-a/output/repair-judgments.json 与 /workspace/work/rc3/anchor-blind/repair/judge-a/output/read-log.json，先确认不存在，用 exclusive create 保存固定字节。不得修改输入/产品代码/其他结果。最终 native 消息报告实际 canonical identity、输入/输出原字节 hash、完整读取范围、是否接触其他评价/裁决；不能编造平台签名、模型配置、人类身份或专业通过。两份输出冻结前不得讨论彼此结论。

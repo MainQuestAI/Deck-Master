@@ -200,10 +200,11 @@ export function pageDetail(app, data) {
     noteRecovery.replaceChildren(tabs,writing,recovery);
   }
   function bindDraft(ref, text) {
+    if (app.editor && !app.editor.dispose()) return false;
     noteRecovery.replaceChildren();
     recoveryView = null;
     draftRef = ref;
-    app.editor?.dispose(); app.editor = null;
+    app.editor = null;
     if (layer === 'source') {
       annotations?.bind(null, null);
       draftSlot.replaceChildren(el('p', {class: 'muted'}, '个人草稿绑定逐页稿或提示词层；来源层只提供阅读。'));
@@ -232,7 +233,7 @@ export function pageDetail(app, data) {
       if (!view) return;
       const download = view.querySelector('.panel-body > .row button:last-child');
       recovery.replaceChildren(recovery.firstElementChild);
-      recovery.append(editor.basisNode, ...(download ? [download] : []),
+      recovery.append(editor.basisNode, editor.recoveryConfirmButton, ...(download ? [download] : []),
         ...view.querySelectorAll('.recovery-import, .field-help, .draft-restore'));
     };
     hoistRecovery(app.editor);

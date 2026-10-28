@@ -33,6 +33,9 @@ def main():
     ]
     # Cross-branch boundaries must also execute against the final installed wheel.
     integration_tests = [
+        'test_main_iteration_browser.py', 'test_main_iteration_entry_recovery_browser.py', 'test_main_iteration_recovery.py',
+        'test_main_iteration_portable_browser.py',
+        'test_main_iteration_contracts.py', 'test_pr188_reading_browser.py',
         'test_control_read_recovery_browser.py', 'test_perf_review_import_public.py',
         'test_design_editability_prompt.py',
         'test_current_work.py', 'test_current_work_dialog_browser.py',

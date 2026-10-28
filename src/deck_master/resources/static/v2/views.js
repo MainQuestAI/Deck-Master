@@ -8,9 +8,6 @@ import {changeHandoffs} from './change-handoff.js';
 import {routeHash} from './routes.js';
 
 const panel = (title, ...children) => el('section', {class: 'panel', 'data-container':'section'}, el('div', {class: 'panel-head'}, el('h2', {}, title)), el('div', {class: 'panel-body stack'}, children));
-export {overview} from './overview.js';
-export {content} from './content-sources.js';
-export {pageDetail} from './page-workbench.js';
 const taskNames = {compose: '整理内容', blueprint: '制作原图', svg: '制作 SVG', render: '渲染预览', repair: '局部修改', review: '检查', export: '准备文件'};
 const taskStatus = {awaiting_host: '待交接', running: '已记录处理中', completed: '结果已记录', failed: '执行失败', cancelled: '已取消', superseded: '已由新任务接续', blocked: '需要处理阻碍'};
 export function runs(app, data) {
@@ -111,4 +108,3 @@ export function runs(app, data) {
   showSubarea(remembered);
   return node;
 }
-export {style} from './style-calibration.js';

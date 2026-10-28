@@ -1,6 +1,6 @@
 # 开发与 Host 接入规格
 
-截至 W11 合入，W01–W11 的 CLI/HTTP 已实施；W12 正在验证固定提交的隔离安装候选。CLI 只有 `deck-master` 一个命令面，各子命令与 HTTP 复用相同 Service。下面标为结构示意的旧设计 JSON 不能直接提交；活动合同以 `src/deck_master/resources/contracts/` 为准，可运行脚本从真实回包获取 ID。执行状态见 [W12](../../reports/workbench-v3-execution-20260926/W12.md)。
+截至 W11 合入，W01–W11 的 CLI/HTTP 已实施；W12 正在验证固定提交的隔离安装候选。CLI 只有 `deck-master` 一个命令面，各子命令与 HTTP 复用相同 Service。下面标为结构示意的旧设计 JSON 不能直接提交；活动合同以 `src/deck_master/resources/contracts/` 为准，可运行脚本从真实回包获取 ID。执行状态见 [W12](https://github.com/MainQuestAI/Deck-Master/blob/62dfcfc5637f0bee2358074c4458047689dd5299/docs/reports/workbench-v3-execution-20260926/W12.md)。
 
 ## 安装后 Quickstart（当前可运行）
 

@@ -12,7 +12,7 @@ from deck_master.models import bump_revision, require_writer
 from deck_master.samples import create_sample
 from deck_master.store import Store, StoreError
 from deck_master.web import WorkbenchServer
-from test_candidates import accept, adopt, dispatch, plan, start
+from candidate_fixtures import accept, adopt, dispatch, plan, start
 from rc3_fixtures import authorize_scope, evidence_for, settle_fidelity_review
 
 

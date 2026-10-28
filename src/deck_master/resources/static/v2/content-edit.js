@@ -41,7 +41,8 @@ export function contentPlanDifferences(plan, next, pages, sources = []) {
 
 // One editor owns the recovery copy; every request freezes the original payload.
 export function contentOperation(app, slot, read, hydrate, ref, onDone, {onPlanChange} = {}) {
-  let loaded = false, disposed = false, serial = 0, pending = null; const guards = [];
+  const formalBaseline = structuredClone(read());
+  let loaded = false, hydrating = false, disposed = false, serial = 0, pending = null; const guards = [];
   const notice = el('p', {role:'status', class:'content-operation-note'}), impact = el('div', {class:'stack'});
   const receipt = el('div', {role:'status',class:'content-save-receipt stack',hidden:true});
   const submit = button('确认内容变更', async () => {
@@ -58,7 +59,8 @@ export function contentOperation(app, slot, read, hydrate, ref, onDone, {onPlanC
     } catch (error) { notice.textContent = readableError(error); }
     finally { controls(); }
   }, true, {disabled:true});
-  function canWrite() { return loaded && !disposed && !app.readonly && !app.editor?.readonly && canonical(app.editor?.draft.base_ref) === canonical(ref) && (!app.editor.exactRevision || app.editor.draft.base_revision === app.route.revision); }
+  function writableOwner() { return !disposed && !app.readonly && app.editor && !app.editor.readonly && !app.editor.disposed && canonical(app.editor.draft.base_ref) === canonical(ref) && (!app.editor.exactRevision || app.editor.draft.base_revision === app.route.revision); }
+  function canWrite() { return loaded && writableOwner(); }
   function currentBasis() { return app.latest?.revision_id === app.route.revision; }
   function controls() { for (const guard of guards) guard.disabled = !canWrite(); submit.disabled = !canWrite() || !currentBasis() || !pending || Boolean(app.business.entries.size || app.business.loadWarning); onPlanChange?.(Boolean(pending), submit); }
   function versionChanged() {
@@ -68,16 +70,31 @@ export function contentOperation(app, slot, read, hydrate, ref, onDone, {onPlanC
     controls();
   }
   function changed() {
+    if (hydrating) return;
     serial++; pending = null; impact.replaceChildren(); controls();
-    if (!canWrite()) return;
+    if (!writableOwner()) return;
+    if (!loaded && canonical(read()) === canonical(app.editor.draft.content[slot] || formalBaseline)) return;
+    // Custom controls can accept input while the initial catalog is pending.
+    // Give it to the real draft owner immediately, including quota protection.
     app.editor.draft.content[slot] = structuredClone(read()); app.editor.changed();
   }
-  function bind() {
+  function bind(event) {
     loaded = false; serial++; pending = null; impact.replaceChildren(); controls();
     const editor = app.editor;
+    const hydrateOwner = () => {
+      if (disposed || editor !== app.editor) return;
+      if (editor.draft.content[slot] || event) {
+        hydrating = true;
+        try { hydrate(structuredClone(editor.draft.content[slot] || formalBaseline)); }
+        finally { hydrating = false; }
+      }
+    };
+    // load() has already read a local buffer before its first network await.
+    // Present that owner's fields before a user can operate the new view.
+    if (editor.draft.content[slot]) queueMicrotask(hydrateOwner);
     editor.ready.then(() => {
       if (disposed || editor !== app.editor) return;
-      if (editor.draft.content[slot]) hydrate(structuredClone(editor.draft.content[slot]));
+      hydrateOwner();
       loaded = true;
       if (!canWrite() && !app.readonly) notice.textContent = '草稿绑定另一份内容基准；输入已保留，请回到对应版本核对后编辑。';
       controls();

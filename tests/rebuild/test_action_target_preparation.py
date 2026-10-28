@@ -3,7 +3,7 @@ from deck_master import content_review
 from deck_master.samples import create_sample
 from deck_master.store import Store
 from test_action_targets_browser import _prepare_browser_project
-from test_candidates import candidate
+from candidate_fixtures import candidate
 
 
 def test_confirmed_browser_direction_is_reviewed_before_svg_candidate_dispatch(tmp_path):
