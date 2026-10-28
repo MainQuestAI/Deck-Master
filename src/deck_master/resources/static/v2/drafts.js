@@ -15,6 +15,31 @@ try {
 const clearedKey = copy => `deck-master:v3:cleared:${copy.draft.project_identity}:${copy.draft.draft_id}:${copy.etag}`;
 const wasCleared = copy => copy?.status === 'saved' && !copy.pendingSave && copy.etag &&
   localStorage.getItem(clearedKey(copy)) === '1';
+
+// Match ui_journal._portable locally: recovery must remain usable while offline.
+const recoveryContentError = '恢复文件包含当前导入入口不接受的内容，尚不能确认保管并离开';
+const recoveryForbiddenKeys = new Set(['token', 'authorization', 'x-deck-token', 'cookie', 'command', 'cwd', 'absolute_path', 'file_path']);
+export function validateRecoveryContent(value) {
+  const pending = [value];
+  while (pending.length) {
+    const item = pending.pop();
+    if (Array.isArray(item)) {
+      for (const child of item) pending.push(child);
+    } else if (item && typeof item === 'object') {
+      for (const [key, child] of Object.entries(item)) {
+        if (recoveryForbiddenKeys.has(key.toLowerCase())) throw new Error(recoveryContentError);
+        pending.push(child);
+      }
+    } else if (typeof item === 'string') {
+      // Python's [:4] counts Unicode characters, not JavaScript UTF-16 units.
+      let prefix = '', count = 0;
+      for (const character of item) { prefix += character; if (++count === 4) break; }
+      if (item.startsWith('/') || item.startsWith('file://') || item.startsWith('\\\\') || prefix.includes(':\\'))
+        throw new Error(recoveryContentError);
+    }
+  }
+}
+
 export function retireClearedDrafts(identity, receipt, editors = []) {
   for (const item of receipt.cleared) if (item.kind === 'draft') {
     localStorage.setItem(clearedKey({draft: {project_identity: identity, draft_id: item.id}, etag: item.etag}), '1');
@@ -439,6 +464,12 @@ export class DraftEditor {
       const snapshot = this.recoverySnapshot();
       const value = structuredClone(draft);
       const pendingSave = this.pendingSave ? structuredClone(this.pendingSave) : null;
+      try {
+        validateRecoveryContent(value);
+        validateRecoveryContent(pendingSave);
+      } catch {
+        throw new Error(recoveryContentError);
+      }
       const limits = this.recoveryLimits();
       if ([value, ...(pendingSave ? [pendingSave.draft] : [])].some(item =>
         new TextEncoder().encode(canonical(item)).length > limits.draft_bytes))
