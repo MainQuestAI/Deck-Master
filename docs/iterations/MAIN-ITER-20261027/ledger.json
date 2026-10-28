@@ -361,7 +361,7 @@
       },
       "review_r4_acceptance": {
         "status": "pending_exact_head_validation",
-        "evidence": "REVIEW-R4.md; R4 delivery/release-validation.json after final gates"
+        "evidence": "REVIEW-R4.md; acceptance-r2 delivery/release-validation.json after new frozen-head gates;430f first-attempt failure preserved"
       }
     },
     {
@@ -424,7 +424,7 @@
       },
       "review_r4_acceptance": {
         "status": "pending_exact_head_validation",
-        "evidence": "REVIEW-R4.md; R4 delivery/release-validation.json after final gates"
+        "evidence": "REVIEW-R4.md; acceptance-r2 delivery/release-validation.json after new frozen-head gates;430f first-attempt failure preserved"
       }
     },
     {
@@ -485,7 +485,7 @@
       },
       "review_r4_acceptance": {
         "status": "pending_exact_head_validation",
-        "evidence": "REVIEW-R4.md; R4 delivery/release-validation.json after final gates"
+        "evidence": "REVIEW-R4.md; acceptance-r2 delivery/release-validation.json after new frozen-head gates;430f first-attempt failure preserved"
       }
     },
     {
@@ -552,7 +552,7 @@
       },
       "review_r4_acceptance": {
         "status": "pending_exact_head_validation",
-        "evidence": "REVIEW-R4.md; R4 delivery/release-validation.json after final gates"
+        "evidence": "REVIEW-R4.md; acceptance-r2 delivery/release-validation.json after new frozen-head gates;430f first-attempt failure preserved"
       }
     },
     {
@@ -611,7 +611,7 @@
       },
       "review_r4_acceptance": {
         "status": "pending_exact_head_validation",
-        "evidence": "REVIEW-R4.md; R4 delivery/release-validation.json after final gates"
+        "evidence": "REVIEW-R4.md; acceptance-r2 delivery/release-validation.json after new frozen-head gates;430f first-attempt failure preserved"
       }
     },
     {
@@ -671,7 +671,7 @@
       },
       "review_r4_acceptance": {
         "status": "pending_exact_head_validation",
-        "evidence": "REVIEW-R4.md; R4 delivery/release-validation.json after final gates"
+        "evidence": "REVIEW-R4.md; acceptance-r2 delivery/release-validation.json after new frozen-head gates;430f first-attempt failure preserved"
       }
     },
     {
@@ -738,7 +738,7 @@
       },
       "review_r4_acceptance": {
         "status": "pending_exact_head_validation",
-        "evidence": "REVIEW-R4.md; R4 delivery/release-validation.json after final gates"
+        "evidence": "REVIEW-R4.md; acceptance-r2 delivery/release-validation.json after new frozen-head gates;430f first-attempt failure preserved"
       }
     },
     {
@@ -805,7 +805,7 @@
       },
       "review_r4_acceptance": {
         "status": "pending_exact_head_validation",
-        "evidence": "REVIEW-R4.md; R4 delivery/release-validation.json after final gates"
+        "evidence": "REVIEW-R4.md; acceptance-r2 delivery/release-validation.json after new frozen-head gates;430f first-attempt failure preserved"
       }
     },
     {
@@ -872,7 +872,7 @@
       },
       "review_r4_acceptance": {
         "status": "pending_exact_head_validation",
-        "evidence": "REVIEW-R4.md; R4 delivery/release-validation.json after final gates"
+        "evidence": "REVIEW-R4.md; acceptance-r2 delivery/release-validation.json after new frozen-head gates;430f first-attempt failure preserved"
       }
     },
     {
@@ -941,7 +941,7 @@
       },
       "review_r4_acceptance": {
         "status": "pending_exact_head_validation",
-        "evidence": "REVIEW-R4.md; R4 delivery/release-validation.json after final gates"
+        "evidence": "REVIEW-R4.md; acceptance-r2 delivery/release-validation.json after new frozen-head gates;430f first-attempt failure preserved"
       }
     },
     {
@@ -1011,7 +1011,7 @@
       },
       "review_r4_acceptance": {
         "status": "pending_exact_head_validation",
-        "evidence": "REVIEW-R4.md; R4 delivery/release-validation.json after final gates"
+        "evidence": "REVIEW-R4.md; acceptance-r2 delivery/release-validation.json after new frozen-head gates;430f first-attempt failure preserved"
       }
     },
     {
@@ -1085,7 +1085,7 @@
       },
       "review_r4_acceptance": {
         "status": "pending_exact_head_validation",
-        "evidence": "REVIEW-R4.md; R4 delivery/release-validation.json after final gates"
+        "evidence": "REVIEW-R4.md; acceptance-r2 delivery/release-validation.json after new frozen-head gates;430f first-attempt failure preserved"
       }
     },
     {
@@ -1156,7 +1156,7 @@
       },
       "review_r4_acceptance": {
         "status": "pending_exact_head_validation",
-        "evidence": "REVIEW-R4.md; R4 delivery/release-validation.json after final gates"
+        "evidence": "REVIEW-R4.md; acceptance-r2 delivery/release-validation.json after new frozen-head gates;430f first-attempt failure preserved"
       }
     },
     {
@@ -1224,7 +1224,7 @@
       },
       "review_r4_acceptance": {
         "status": "pending_exact_head_validation",
-        "evidence": "REVIEW-R4.md; R4 delivery/release-validation.json after final gates"
+        "evidence": "REVIEW-R4.md; acceptance-r2 delivery/release-validation.json after new frozen-head gates;430f first-attempt failure preserved"
       }
     },
     {
@@ -1346,7 +1346,7 @@
       },
       "review_r4_acceptance": {
         "status": "pending_exact_head_validation",
-        "evidence": "REVIEW-R4.md; R4 delivery/release-validation.json after final gates",
+        "evidence": "REVIEW-R4.md; acceptance-r2 delivery/release-validation.json after new frozen-head gates;430f first-attempt failure preserved",
         "scope": "R4: Align local download/custody eligibility with existing backend _portable rules for the complete current draft and pending_save, including nested payloads and arrays. Exact Unicode code-point prefix checks; no backend policy/API/Schema change. Invalid content revokes eligibility and preserves both drafts; offline, readonly and leave guards remain."
       }
     },
@@ -1427,7 +1427,7 @@
       },
       "review_r4_acceptance": {
         "status": "pending_exact_head_validation",
-        "evidence": "REVIEW-R4.md; R4 delivery/release-validation.json after final gates"
+        "evidence": "REVIEW-R4.md; acceptance-r2 delivery/release-validation.json after new frozen-head gates;430f first-attempt failure preserved"
       }
     },
     {
@@ -1528,7 +1528,7 @@
       },
       "review_r4_acceptance": {
         "status": "pending_exact_head_validation",
-        "evidence": "REVIEW-R4.md; R4 delivery/release-validation.json after final gates"
+        "evidence": "REVIEW-R4.md; acceptance-r2 delivery/release-validation.json after new frozen-head gates;430f first-attempt failure preserved"
       }
     },
     {
@@ -1624,7 +1624,7 @@
       },
       "review_r4_acceptance": {
         "status": "pending_exact_head_validation",
-        "evidence": "REVIEW-R4.md; R4 delivery/release-validation.json after final gates"
+        "evidence": "REVIEW-R4.md; acceptance-r2 delivery/release-validation.json after new frozen-head gates;430f first-attempt failure preserved"
       }
     },
     {
@@ -1682,7 +1682,7 @@
       },
       "review_r4_acceptance": {
         "status": "intentional_nonimplementation_retained",
-        "evidence": "REVIEW-R4.md; R4 delivery/release-validation.json after final gates"
+        "evidence": "REVIEW-R4.md; acceptance-r2 delivery/release-validation.json after new frozen-head gates;430f first-attempt failure preserved"
       }
     },
     {
@@ -1792,7 +1792,7 @@
       },
       "review_r4_acceptance": {
         "status": "pending_exact_head_validation",
-        "evidence": "REVIEW-R4.md; R4 delivery/release-validation.json after final gates"
+        "evidence": "REVIEW-R4.md; acceptance-r2 delivery/release-validation.json after new frozen-head gates;430f first-attempt failure preserved"
       }
     },
     {
@@ -1872,7 +1872,7 @@
       },
       "review_r4_acceptance": {
         "status": "pending_exact_head_validation",
-        "evidence": "REVIEW-R4.md; R4 delivery/release-validation.json after final gates"
+        "evidence": "REVIEW-R4.md; acceptance-r2 delivery/release-validation.json after new frozen-head gates;430f first-attempt failure preserved"
       }
     },
     {
@@ -1942,7 +1942,7 @@
       },
       "review_r4_acceptance": {
         "status": "pending_exact_head_validation",
-        "evidence": "REVIEW-R4.md; R4 delivery/release-validation.json after final gates"
+        "evidence": "REVIEW-R4.md; acceptance-r2 delivery/release-validation.json after new frozen-head gates;430f first-attempt failure preserved"
       }
     },
     {
@@ -2016,7 +2016,7 @@
       },
       "review_r4_acceptance": {
         "status": "pending_exact_head_validation",
-        "evidence": "REVIEW-R4.md; R4 delivery/release-validation.json after final gates"
+        "evidence": "REVIEW-R4.md; acceptance-r2 delivery/release-validation.json after new frozen-head gates;430f first-attempt failure preserved"
       }
     },
     {
@@ -2112,7 +2112,7 @@
       },
       "review_r4_acceptance": {
         "status": "pending_exact_head_validation",
-        "evidence": "REVIEW-R4.md; R4 delivery/release-validation.json after final gates",
+        "evidence": "REVIEW-R4.md; acceptance-r2 delivery/release-validation.json after new frozen-head gates;430f first-attempt failure preserved",
         "scope": "R4: Link the latest review and separately preserve Pro closure of two R3 findings, local portable-content counterexamples and new implementation/acceptance evidence. Historical archive rules and provenance gaps are unchanged."
       }
     },
@@ -2155,7 +2155,8 @@
         "a01040949d7e5c1f7bcc722ab414348f2e953bbf",
         "c6c0311faece79466134a36a5d64d0d679fa5ff7",
         "d5eec04fe1648562e61bc75126028f1266089414",
-        "853b56c40653655db6f63d220deb20d46ec51621"
+        "853b56c40653655db6f63d220deb20d46ec51621",
+        "8012bd1cbb5cf8c82ce16071a3520f91b396c7ba"
       ],
       "validation": [
         {
@@ -2186,6 +2187,13 @@
           "status": "source fix and targeted checks complete; final exact-head gates pending",
           "evidence": "REVIEW-R4.md; portable-red-v2.xml; portable-green-v3.xml; adjacent.xml; eventual R4 delivery/release-validation.json",
           "source_runtime_commit": "853b56c40653655db6f63d220deb20d46ec51621"
+        },
+        {
+          "scope": "PR215 review R4 first full gate and synchronization followup",
+          "failed_predecessor_head": "430f047e86273d02448edd2a1273854c08889380",
+          "status": "430f browser829pass1fail0skip; no seal.8012 targeted3pass; complete new-head acceptance-r2 pending",
+          "test_commit": "8012bd1cbb5cf8c82ce16071a3520f91b396c7ba",
+          "evidence": "REVIEW-R4.md; implementation/failed-attempt-summary.json; implementation/overview-synchronized.xml"
         }
       ],
       "status": "implemented_local_checks_recorded_final_gates_in_delivery",
@@ -2198,7 +2206,8 @@
         "PR #215 review R2: Bind all 25 cards to the same revised tracked candidate, preserve old ZIP, and report both fixed-baseline and reviewed-head deltas; exact full/installed/CI evidence remains required.",
         "Deterministically hold real handoff reads through pending/copy-identity assertions; original abort versus transient loading race is recorded on predecessor, forced baseline/current and20 fixed repeats.",
         "R3: New head requires new complete local/CI/installed validation; preserve073d pass/failure evidence and Q2 unproved cause. Freeze25 cards together; report62df,6e9 and073d comparisons.",
-        "R4: Bind all25 cards, runner, candidate and sealer to a new frozen head with new local/installed/CI results. Add9c373d86-to-new budget beside62df/6e9/073d; preserve R3 package and all prior failures. No old-head green or package is new acceptance."
+        "R4: Bind all25 cards, runner, candidate and sealer to a new frozen head with new local/installed/CI results. Add9c373d86-to-new budget beside62df/6e9/073d; preserve R3 package and all prior failures. No old-head green or package is new acceptance.",
+        "R4 gate followup: Preserve430f full-browser failure and controlled fixed-baseline/installed diagnostics. Wait for real initial chapter projection in the existing100-page lease regression; do not change product, timeouts or lease assertions. Freeze and rebuild again for acceptance-r2."
       ],
       "review_r3_acceptance": {
         "status": "pending_exact_head_validation",
@@ -2206,7 +2215,7 @@
       },
       "review_r4_acceptance": {
         "status": "pending_exact_head_validation",
-        "evidence": "REVIEW-R4.md; R4 delivery/release-validation.json after final gates",
+        "evidence": "REVIEW-R4.md; acceptance-r2 delivery/release-validation.json after new frozen-head gates;430f first-attempt failure preserved",
         "scope": "R4: Bind all25 cards, runner, candidate and sealer to a new frozen head with new local/installed/CI results. Add9c373d86-to-new budget beside62df/6e9/073d; preserve R3 package and all prior failures. No old-head green or package is new acceptance."
       }
     }
@@ -2214,9 +2223,11 @@
   "current_candidate": {
     "reviewed_head": "9c373d86592079d96506ca675c4d3f0f1eb8147a",
     "source_runtime_commit": "853b56c40653655db6f63d220deb20d46ec51621",
-    "final_candidate_identity": "R4 source implementation and targeted checks complete. Final head is frozen only after ledger commit; new freeze-identity/manifest/full local-installed-CI evidence must bind that exact head."
+    "final_candidate_identity": "R4 runtime fix and targeted checks complete. First frozen430f candidate failed full browser and was not sealed;8012 adds test readiness only. Freeze a new clean head after this ledger commit; acceptance-r2 manifest, rebuilt distributions and all local/installed/CI evidence must bind that new exact head.",
+    "source_test_commit": "8012bd1cbb5cf8c82ce16071a3520f91b396c7ba",
+    "failed_predecessor_head": "430f047e86273d02448edd2a1273854c08889380"
   },
-  "acceptance": "review_r4_targeted_pass_exact_head_acceptance_pending",
+  "acceptance": "review_r4_first_full_gate_failed_synchronization_targeted_pass_new_exact_head_pending",
   "formal_code_commit": "853b56c40653655db6f63d220deb20d46ec51621",
   "validation_streams": {
     "unit": {
@@ -2388,9 +2399,9 @@
       "boundaries": "F13 not implemented;12 provenance gaps,FrozenA,actualHost,customer/professional acceptance remain open; no production/model/release/merge"
     },
     "review_r4": {
-      "status": "targeted_pass_exact_head_acceptance_pending",
+      "status": "first_full_gate_failed_synchronization_targeted_pass_new_exact_head_pending",
       "details": "See top-level review_r4 for source reviews, product decision, finding status and required new-head evidence.",
-      "evidence": "REVIEW-R4.md; R4 implementation and eventual delivery/release-validation.json"
+      "evidence": "REVIEW-R4.md; implementation/failed-attempt-summary.json; implementation/overview-synchronized.xml; eventual acceptance-r2 delivery/release-validation.json"
     }
   },
   "final_evidence_policy": "The corrected developer package data/review-amendments.json and evidence/current/release-validation.json record eventual distribution/CI outcomes against the exact tracked candidate manifest and PR head. Repository ledger preserves pre-push results; no future green is claimed here.",
@@ -2492,7 +2503,7 @@
   },
   "review_r4": {
     "reviewed_head": "9c373d86592079d96506ca675c4d3f0f1eb8147a",
-    "status": "implemented_targeted_pass_exact_head_acceptance_pending",
+    "status": "implemented_first_full_gate_failed_synchronization_targeted_pass_new_exact_head_pending",
     "product_decision": "Preserve backend recovery import restrictions; add complete local draft and pending_save content checks before download and custody. No API, Schema or backend-policy change.",
     "source_reviews": {
       "chatgpt_pro": {
@@ -2523,12 +2534,13 @@
       }
     },
     "implementation_commits": {
-      "portable_content": "853b56c40653655db6f63d220deb20d46ec51621"
+      "portable_content": "853b56c40653655db6f63d220deb20d46ec51621",
+      "overview_test_readiness": "8012bd1cbb5cf8c82ce16071a3520f91b396c7ba"
     },
     "targeted_validation": {
       "source_runtime_commit": "853b56c40653655db6f63d220deb20d46ec51621",
       "product_red": {
-        "command": "python -m pytest -q tests/rebuild/test_main_iteration_portable_browser.py -k test_unimportable_content_never_grants_recovery_custody --require-browser",
+        "command": "python -m pytest -q tests/rebuild/test_main_iteration_portable_browser.py --require-browser",
         "result": "3 failed; each observed actual forbidden recovery download",
         "evidence": "portable-red-v2.xml; portable-red-v2.log",
         "product_head": "9c373d86592079d96506ca675c4d3f0f1eb8147a"
@@ -2576,7 +2588,7 @@
         "local_sha_crc_recheck": "pass; independent per-member verification retained in R3 evidence, not rerun as R4 source acceptance"
       }
     },
-    "final_acceptance": "PENDING: freeze a new clean head, rebuild wheel/sdist outside repository, execute all original local gates and both seven-job CI workflows, verify a new unified candidate/ZIP. Do not execute the old R3 sealer or reuse9c gates as new-head acceptance.",
+    "final_acceptance": "PENDING: freeze a new clean head after this ledger commit; use acceptance-r2 for new wheel/sdist builds, outside-repository install and all original local/installed/both seven-job CI gates. New unified candidate/ZIP requires all passing. Preserve430f failure and all preceding artifacts; no old sealer or old-head green is new acceptance.",
     "budget_comparisons": [
       "62dfcfc5637f0bee2358074c4458047689dd5299",
       "6e9e7d64e7b1963f415c2a4d06de9f2b89881091",
@@ -2596,7 +2608,77 @@
         "existing_skips": 1
       },
       "installed_expected_passed": 726,
-      "status": "collection and prior unchanged groups only; verify actual new-head results, not acceptance"
+      "status": "830 browser/5391 total collected before test-only readiness change; no test added/removed by8012. Reconfirm new frozen manifest and actual results;430f counts remain failed predecessor evidence."
+    },
+    "full_gate_attempts": [
+      {
+        "head": "430f047e86273d02448edd2a1273854c08889380",
+        "status": "failed_not_sealed",
+        "evidence": "implementation/failed-attempt-summary.json; original gate XML/logs",
+        "local_counts": {
+          "unit": {
+            "passed": 4416,
+            "failed": 0,
+            "skipped": 6
+          },
+          "render": {
+            "passed": 138,
+            "failed": 0,
+            "skipped": 1
+          },
+          "browser": {
+            "passed": 829,
+            "failed": 1,
+            "skipped": 0
+          },
+          "installed": {
+            "passed": 726,
+            "failed": 0,
+            "skipped": 0
+          },
+          "offline_ui": {
+            "passed": 9,
+            "failed": 0
+          }
+        },
+        "actual_svg_native_libreoffice": "pass; actual compile/render/nonblank checks; visual and desktop-editing professional acceptance not evaluated",
+        "actual_dual_1100000_recovery": "pass; both bodies complete, digest parity, product import200, original save replays0",
+        "failure": {
+          "test": "tests/rebuild/test_performance_overview_browser.py::test_all_hundred_overview_images_release_departed_leases[v2]",
+          "line": 29,
+          "error": "Element is not attached to the DOM",
+          "original_trace_limit": "Original gate did not capture row index or DOM trace; exact original row/interleaving is not asserted."
+        },
+        "disposition": "Preserve all results and failures as predecessor evidence only; new clean head and acceptance-r2 full gates required before sealing."
+      }
+    ],
+    "gate_followups": {
+      "overview_test_readiness": {
+        "commit": "8012bd1cbb5cf8c82ce16071a3520f91b396c7ba",
+        "controlled_diagnostics": {
+          "evidence": "implementation/failed-attempt-summary.json:diagnostics",
+          "versions": [
+            "62dfcfc5637f0bee2358074c4458047689dd5299",
+            "430f047e86273d02448edd2a1273854c08889380"
+          ],
+          "same_overview_sha256": "baa77e4642e311f43f9bfe5d7f4ab1edaea4efab86ed6c54712b165e05bcdbee",
+          "mechanism": "Holding the real content-plan response reproduces detachment of a row acquired before initial chapter projection in both fixed baseline and430f installed runtime; no application DOM or API payload mutation.",
+          "ready_projection_controls": "Both versions retained all100-page lease assertions and passed with final pinned0.",
+          "limit": "Controlled probes prove the synchronization mechanism; the original failing gate has no row-index/DOM trace, so its exact interleaving is not claimed."
+        },
+        "change": "Add only2 comment lines and the real expected .chapter-row text readiness assertion after heading visibility; no runtime change, no assertion removal, no timeout change.",
+        "targeted": {
+          "command": "python -m pytest -q tests/rebuild/test_performance_overview_browser.py --require-browser",
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0,
+          "duration_seconds": 17.34,
+          "evidence": "implementation/overview-synchronized.xml; implementation/overview-synchronized.log",
+          "scope": "original v2,studio and serialization regressions"
+        },
+        "static": "Whole Ruff check passed.",
+        "acceptance": "Targeted pass only; does not reclassify430f or accept a future head."
+      }
     }
   }
 }

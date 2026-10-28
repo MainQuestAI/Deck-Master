@@ -1,6 +1,6 @@
 # PR #215 综合复审修复 · R4
 
-固定 main 基线 `62dfcfc5637f0bee2358074c4458047689dd5299`；本轮审查 head `9c373d86592079d96506ca675c4d3f0f1eb8147a`。源码修复提交为 `853b56c40653655db6f63d220deb20d46ec51621`，专项检查已通过。最终 head 仍须在文档提交后冻结；该源码提交不是最终候选验收身份。
+固定 main 基线 `62dfcfc5637f0bee2358074c4458047689dd5299`；本轮审查 head `9c373d86592079d96506ca675c4d3f0f1eb8147a`。源码修复提交为 `853b56c40653655db6f63d220deb20d46ec51621`，专项检查已通过。首轮冻结候选 `430f047e86273d02448edd2a1273854c08889380` 因完整 browser 门禁失败而未封包；测试同步修正提交为 `8012bd1cbb5cf8c82ce16071a3520f91b396c7ba`。最终 head 仍须在本次文档提交后重新冻结，进入独立 `acceptance-r2` 门禁；两个源码／测试提交均不是最终候选验收身份。
 
 ## 审查合并与明确裁决
 
@@ -31,18 +31,38 @@
 
 | 检查 | 命令／证据 | 实际结果 |
 |---|---|---|
-| 产品RED | `python -m pytest -q tests/rebuild/test_main_iteration_portable_browser.py -k test_unimportable_content_never_grants_recovery_custody --require-browser`；`portable-red-v2.xml`／`.log` | 旧产品9c373d86下3项均因实际下载了不可导入文件而失败。 |
+| 产品RED | `python -m pytest -q tests/rebuild/test_main_iteration_portable_browser.py --require-browser`；`portable-red-v2.xml`／`.log` | 旧产品9c373d86下3项均因实际下载了不可导入文件而失败。 |
 | 新专项GREEN | `python -m pytest -q tests/rebuild/test_main_iteration_portable_browser.py --require-browser`；`portable-green-v3.xml`／`.log` | 12 passed、0 skipped，24.06s。 |
 | 原相邻回归 | `python -m pytest -q tests/rebuild/test_main_iteration_browser.py tests/rebuild/test_main_iteration_entry_recovery_browser.py tests/rebuild/test_main_iteration_recovery.py --require-browser`；`adjacent.xml`／`.log` | 50 passed、0 skipped，114.68s。 |
 | 静态检查 | Ruff、Node22及Node24语法检查、`git diff --check` | 通过。 |
 
 首轮 `portable-red.xml` 的3项失败是事件回调fixture把内置 `append` 直接交给Playwright所致，不作为产品RED；改为普通lambda后才得到上表正式RED。首轮 `portable-green.xml` 为8通过、3个fixture失败：readonly reload后观察钩子未重建、两个往返场景使用隐式browser context。修正观察及显式context后，`portable-green-v2.xml` 11项通过；新增真实pending冲突验证后，最终v3为12项通过。所有失败原件保留，未删除断言或放宽超时。
 
-源码修复提交下收集为830项browser、5391项总测试；Mac unit预期4416通过加6项既有跳过、render预期138通过加1项Frozen A跳过、installed预期726项。以上是收集／预期数量，最终运行结果仍须逐项核对，不预填PASS。
+源码修复提交下收集为830项browser、5391项总测试。首轮实际运行计数见下表；新测试修正不新增或删除测试，重新冻结后的清单和结果仍须单独核对。
+
+## 首轮完整门禁失败与同步修正
+
+首轮候选 `430f047e86273d02448edd2a1273854c08889380` 的结果完整保留在 `implementation/failed-attempt-summary.json` 及原日志中，**整体失败，未封包**。
+
+| 检查 | 首轮实际结果 |
+|---|---|
+| Mac unit | 4416 passed、6项既有跳过。 |
+| render | 138 passed、1项Frozen A跳过。 |
+| required browser | 829 passed、1 failed、0 skipped。 |
+| 仓库外 installed | 726 passed、0 skipped。 |
+| 离线 UI | 9项通过。 |
+| 实际 SVG/native 与 LibreOffice | 实际编译、渲染及非空白图检查通过；视觉／桌面编辑专业验收未评估。 |
+| 实际双110万字符恢复 | 两稿完整、摘要一致、产品导入200，原保存请求重发0次。 |
+
+失败为既有 `test_performance_overview_browser.py::test_all_hundred_overview_images_release_departed_leases[v2]` 第29行 `Element is not attached to the DOM`。原门禁没有保留行索引或DOM轨迹，不能声称已经还原该次失败的确切行或调度顺序。
+
+后续只控制真实 `/api/content-plan` 响应交付时机，在固定基线 `62df` 源码与 `430f` 仓库外安装包均复现：标题已显示时取得的行句柄，会在初始真实章节投影替换表格后脱离DOM。两者 `overview.js` SHA256均为 `baa77e4642e311f43f9bfe5d7f4ab1edaea4efab86ed6c54712b165e05bcdbee`；未修改应用DOM或API正文。等待真实章节投影后，两版均走完原100页租约检查，最终pinned为0。这证明了可复现的同步缺口，未把后续诊断伪称原失败轨迹。
+
+测试提交 `8012bd1cbb5cf8c82ce16071a3520f91b396c7ba` 仅在标题断言后增加 `expect(page.locator('.chapter-row')).to_have_text(['工作台使用示例'])` 与2行说明；产品源码、超时及原有全部租约断言不变。执行 `python -m pytest -q tests/rebuild/test_performance_overview_browser.py --require-browser`，原v2、studio及序列化3项通过，17.34s，证据为 `overview-synchronized.xml`／`.log`；完整Ruff检查通过。该专项通过不撤销 `430f` 的失败，也不代替新 head 的完整门禁。
 
 ## 最终候选与边界
 
-新head冻结后重新构建wheel/sdist并在仓库外安装，执行原Ruff、四组Python3.11/3.12×Node22/24、真实render、required browser、installed／离线UI、native／LibreOffice及实际双110万输入恢复。测试数量以冻结清单为准，既有跳过边界不变。只有本地与新push／PR各七项CI均通过、新反例关闭后才封包；旧R3 sealer和旧head结果不得作为新候选验收。
+本次文档提交后重新冻结新head，使用新的 `acceptance-r2` 目录重新构建wheel/sdist并在仓库外安装，执行原Ruff、四组Python3.11/3.12×Node22/24、真实render、required browser、installed／离线UI、native／LibreOffice及实际双110万输入恢复。测试数量以冻结清单为准，既有跳过边界不变。只有本地与新push／PR各七项CI均通过、新反例关闭后才封包；旧R3 sealer、首轮430f门禁及其他旧head结果不得作为新候选验收。首轮失败原件继续保留。
 
 R3已通过的本机及两路CI（push `40538823069`、PR `40538841970`）属于前序证据。旧包 `Deck-Master-main-iteration-cards-20261027-review-r3.zip` SHA256 `3be548cd4e0a2df03b596fd908a7099cace7db2f247ec23fe14afece74770bef` 保留。`073d` 的Q2 180秒超时及两版本各十轮对照继续保留，远端原因未证明；不修改时限、断言、隔离或持久化语义。
 
