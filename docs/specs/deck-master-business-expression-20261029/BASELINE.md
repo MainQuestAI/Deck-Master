@@ -1,6 +1,6 @@
 # 方案依据与本次核对
 
-日期：2026-10-29（Asia/Shanghai）。本次只修改公开理念与规划文档，没有功能修改或真实内容生成。
+日期：2026-10-29（Asia/Shanghai）。v0.1 整理公开理念与规划，v0.2 只修订开发套件；均未实施功能或真实内容生成。
 
 ## 来源与取舍
 
@@ -14,7 +14,7 @@
 
 ## 固定源码核对
 
-本次 `git fetch origin` 后，远端 main 与原方案均为 [ce4ef8b2](https://github.com/MainQuestAI/Deck-Master/commit/ce4ef8b204dd5033019364ce44979adac7f4243b)。独立工作树从该提交开始；原工作目录已有改动未纳入本次提交。
+v0.1 从 [ce4ef8b2](https://github.com/MainQuestAI/Deck-Master/commit/ce4ef8b204dd5033019364ce44979adac7f4243b) 核对源码。v0.2 重新 fetch 后从最新 origin/main [03c06add](https://github.com/MainQuestAI/Deck-Master/commit/03c06add760eb20a9e457c6f8bda0b2a8b8036b7) 建立独立修订分支；两基线间只有文档变化，运行代码依据不变。原工作目录的其他改动未纳入。
 
 | 核对点 | 实际观察 | 开发含义 |
 | --- | --- | --- |
@@ -22,11 +22,12 @@
 | [方法选择/冻结](../../../src/deck_master/method_resources.py) | method_ids_for 依 kind/intent/phase/review_units；freeze_task_methods 接收显式资源，冻结 manifest/hash | 现函数没有商业策划能力参数；新默认包须按能力隔离，不全局替换 |
 | [阶段指令](../../../src/deck_master/content_production.py) | framing 指令仍是受众变化目标；argument 产 Narrative 提案及可选 planned Plan | 任务导向须连同方法、阶段与成果约定修改 |
 | [M07](../../../skills/deck-master/references/methods/M07-synthesis.md) | 当前要求去掉只有分类名称的节点 | 新增可展开业务主题语义，不能简单放宽空口号 |
-| [依赖切片](../../../src/deck_master/dependency_slices.py) | TASK_FACT_IDENTITIES 含 scenario，不含 existing_decisions；direction 最小依赖为 audience/brief | 绑定实际消费的场景与共识，防止旧策略继续有效 |
+| [依赖切片](../../../src/deck_master/dependency_slices.py) | TASK_FACT_IDENTITIES 含 scenario，不含 existing_decisions；framing 最小依赖仅 brief，argument 为 brief/audience，direction 为 audience/brief，均未强制 scenario | 补任务及决定的实际场景/共识绑定；tasks.py 整体摘要检查与 inputs_update 显式退役仍存在，不据此推断所有旧任务均可接受 |
 | [影响分析](../../../src/deck_master/content_impact.py) | 记录 changed_task_fields；affected_pages 从变化来源引用计算，unaffected 为其补集 | 场景修改后的语义影响不能仅用现投影判定 |
 | [大纲审查](../../../src/deck_master/outline_review.py) | 固定当前 Narrative/匹配 Plan；要求零页例外成立；派发无显式 selected_resource_ids | 复用审查链，补正式选卡传递 |
 | [完整前审](../../../src/deck_master/content_review.py) | dispatch 读取 packet 并要求独立性，open_host_task 没传显式选卡 | 接入所需方法但保留真实独立审查 |
 | [采用入口](../../../src/deck_master/content_production.py) | narrative.v1 严格分派和采用分支仍存在 | D01 必须适配所有消费处，不能只加 schema |
+| Narrative 直接版本分派 | rg 搜索 src/deck_master 的 Python 文件，narrative.v1 涉及 models / content_production / content_insight / content_review / editing 共 5 个文件；editing.py:64 原未列入套件 | D01 补齐，且继续盘点无显式版本字符串的字段消费者 |
 | [当前设计](../../../DESIGN.md) | 2026-10-24 UI 增量优先，浅色面与黑色主操作 | D06 沿现行入口接线，不重做视觉系统 |
 
 链接从本文件回到仓库根；具体调用及所有受影响消费点由各卡开工再定位。历史合同与测试报告不反向覆盖活动 schema。
@@ -35,4 +36,21 @@
 
 原 Space 报告中的纯函数探针、零页面顺序采用合成路径是原讨论记录，本次未重跑。本次没有测试新框架效果，没有完成 D00 小样、D08 留出评估、浏览器交互、PPT 渲染或 PowerPoint/WPS 编辑。本套件对应的产品实现仍为 planned。
 
-本次已执行文档级校验：17 份 Markdown、160 个本地链接、固定提交的源码链接路径均可解析；10 张卡与索引的 68 项 AC 一致且无重复；12 个工作单元的依赖无环；JSON 可解析，状态保持 planned/inactive、AC 均为 not_run；git diff 空白检查通过。通过 Python 标准库遍历目标文件、解析链接/AC/JSON 并对依赖图做深度遍历检查，固定源码链接使用 git cat-file 核对。它们是文档证据，不替代上述产品验证。
+v0.1 的历史文档校验为 17 份 Markdown、160 个本地链接、68 项 AC、12 个工作单元；该记录不作为 v0.2 证据。
+
+## v0.2 修订与验证
+
+依据 2026-10-29 的修订说明及本轮 review，落实作者主审 + 三模型辅审、目标/最低评测档位和 D02a/D02b 拆分；补齐 Narrative 消费者、任务/决定依赖及四态投影冻结。将真实修正/采用前移至 D06a，补已关闭请求的有界后续改写，以 D00a 输入分诊解除 X01 的条件依赖循环。v0.2 只修改本套件文档，不实施产品代码。
+
+文档检查结果见下方验证记录；它们不能替代 D00/D08 的模型生成、作者专业评审或产品运行验证。
+
+| 检查命令/方式 | v0.2 结果 |
+| --- | --- |
+| `python3 -B` 执行一次性标准库校验脚本：解析卡片 AC、JSON、Markdown 链接与标题，深度遍历依赖图 | 13 份 Markdown、89 个本地链接/锚点、10 张卡、71 项 AC；索引与卡片逐项一致，每项恰归一个工作单元；15 个工作单元在 X01 未启用/启用两种图中均无环；README 数量与 I1 顺序一致 |
+| `git show <固定 SHA>:<源码路径>`，并检查引用行号 | SPEC 的 29 条固定源码链接路径与行号存在 |
+| `python3 -m json.tool docs/specs/deck-master-business-expression-20261029/execution-index.json` | 可解析；两档数值一致，实际档位未冻结，卡/单元保持 planned/inactive、71 项 AC 均为 not_run |
+| `rg -n <旧评审措辞集合> docs/specs/deck-master-business-expression-20261029`（检查旧双人评审、额外裁决人与缺评审安排等表述） | 无匹配（退出码 1 为预期） |
+| `git diff --exit-code -- src skills tests`；`git diff --name-only` | 产品代码、Skill、测试无变更；仅本套件 12 个文件改变，根 README 引用无冲突，无需修改 |
+| `git diff --check` | 通过 |
+
+本次没有运行产品测试、模型生成或三模型辅审，没有完成任何开发卡验收，也未执行合并、安装迁移或 Release 发布。

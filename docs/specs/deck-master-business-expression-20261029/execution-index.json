@@ -4,7 +4,65 @@
   "date": "2026-10-29",
   "status": "planned",
   "implementation_started": false,
-  "evaluation_thresholds": "proposed_pending_D00_freeze",
+  "evaluation_thresholds": {
+    "target": {
+      "development_packs": 6,
+      "holdout_packs": 6,
+      "total_packs": 12,
+      "holdout_outputs": 48,
+      "paired_comparisons": 24,
+      "new_outputs": 24,
+      "max_severe_failures": 0,
+      "min_all_five_dimensions_at_least_2": 20,
+      "min_new_overall_better": 16,
+      "comparisons_per_scenario": 12,
+      "min_new_better_per_scenario": 8
+    },
+    "floor": {
+      "development_packs": 2,
+      "holdout_packs": 3,
+      "total_packs": 5,
+      "holdout_outputs": 24,
+      "paired_comparisons": 12,
+      "new_outputs": 12,
+      "max_severe_failures": 0,
+      "min_all_five_dimensions_at_least_2": 10,
+      "min_new_overall_better": 8,
+      "comparisons_per_scenario": 6,
+      "min_new_better_per_scenario": 4
+    },
+    "frozen_tier": null,
+    "status": "proposed_pending_D00_freeze",
+    "review_panel": {
+      "lead": "author",
+      "assistants": [
+        "claude",
+        "codex",
+        "kimi"
+      ],
+      "final_authority": "author",
+      "model_versions": {
+        "claude": null,
+        "codex": null,
+        "kimi": null
+      },
+      "process": {
+        "randomized_blind_ab": true,
+        "hide_version_identity_and_method_names": true,
+        "independent_fresh_sessions": true,
+        "mutually_blind_assistants": true,
+        "author_initial_before_feedback": true,
+        "retain_initial_final_and_all_model_scores": true,
+        "retain_model_majority": true,
+        "unanimous_disagreement_requires_author_reason": true,
+        "generator_review_requires_fresh_context_and_bias_disclosure": true,
+        "kimi_participates_in_generation": false,
+        "report_label": "作者主审 + 三模型辅审"
+      }
+    },
+    "freeze_owner": "D00",
+    "no_post_freeze_tier_downgrade_or_holdout_reselection": true
+  },
   "cards": [
     {
       "id": "D00",
@@ -12,7 +70,9 @@
       "path": "task-cards/D00.md",
       "iteration": "I0",
       "status": "planned",
-      "depends_on": [],
+      "depends_on": [
+        "D00a"
+      ],
       "acceptance": [
         {
           "id": "D00-AC01",
@@ -33,6 +93,11 @@
           "id": "D00-AC04",
           "status": "not_run",
           "evidence": []
+        },
+        {
+          "id": "D00-AC05",
+          "status": "not_run",
+          "evidence": []
         }
       ],
       "implementation_commit": null,
@@ -41,7 +106,14 @@
       "model_evidence": [],
       "author_acceptance": [],
       "not_run": [],
-      "risks": []
+      "risks": [],
+      "conditional_depends_on": [
+        {
+          "work_unit": "X01",
+          "when": "X01.status != inactive",
+          "currently_active": false
+        }
+      ]
     },
     {
       "id": "D01",
@@ -87,6 +159,16 @@
           "id": "D01-AC07",
           "status": "not_run",
           "evidence": []
+        },
+        {
+          "id": "D01-AC08",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D01-AC09",
+          "status": "not_run",
+          "evidence": []
         }
       ],
       "implementation_commit": null,
@@ -104,7 +186,8 @@
       "iteration": "I1",
       "status": "planned",
       "depends_on": [
-        "D01"
+        "D02a",
+        "D02b"
       ],
       "acceptance": [
         {
@@ -169,7 +252,7 @@
       "status": "planned",
       "depends_on": [
         "D01",
-        "D02",
+        "D02b",
         "D06a"
       ],
       "acceptance": [
@@ -514,7 +597,7 @@
       "iteration": "conditional",
       "status": "inactive",
       "depends_on": [
-        "D00"
+        "D00a"
       ],
       "acceptance": [
         {
@@ -549,10 +632,48 @@
   ],
   "work_units": [
     {
-      "id": "D00",
+      "id": "D00a",
       "card": "D00",
       "depends_on": [],
-      "status": "planned"
+      "status": "planned",
+      "deliverable": "候选材料选择与现有入口可读性/阻塞记录；不要求完整 D00 验收",
+      "acceptance_ids": []
+    },
+    {
+      "id": "X01",
+      "card": "X01",
+      "depends_on": [
+        "D00a"
+      ],
+      "status": "inactive",
+      "acceptance_ids": [
+        "X01-AC01",
+        "X01-AC02",
+        "X01-AC03",
+        "X01-AC04"
+      ]
+    },
+    {
+      "id": "D00",
+      "card": "D00",
+      "depends_on": [
+        "D00a"
+      ],
+      "status": "planned",
+      "conditional_depends_on": [
+        {
+          "work_unit": "X01",
+          "when": "X01.status != inactive",
+          "currently_active": false
+        }
+      ],
+      "acceptance_ids": [
+        "D00-AC01",
+        "D00-AC02",
+        "D00-AC03",
+        "D00-AC04",
+        "D00-AC05"
+      ]
     },
     {
       "id": "D01",
@@ -560,25 +681,96 @@
       "depends_on": [
         "D00"
       ],
-      "status": "planned"
+      "status": "planned",
+      "acceptance_ids": [
+        "D01-AC01",
+        "D01-AC02",
+        "D01-AC03",
+        "D01-AC04",
+        "D01-AC05",
+        "D01-AC06",
+        "D01-AC07",
+        "D01-AC08",
+        "D01-AC09"
+      ]
+    },
+    {
+      "id": "D02a",
+      "card": "D02",
+      "depends_on": [
+        "D00"
+      ],
+      "status": "planned",
+      "deliverable": "方法文本校准、实际方法作用及字节/内容对照，沿 D00 合法对象验证",
+      "acceptance_ids": [
+        "D02-AC08",
+        "D02-AC09"
+      ]
+    },
+    {
+      "id": "D02b",
+      "card": "D02",
+      "depends_on": [
+        "D01",
+        "D02a"
+      ],
+      "status": "planned",
+      "deliverable": "创建、后续阶段及审查入口到 freeze 的选卡参数链",
+      "acceptance_ids": [
+        "D02-AC01",
+        "D02-AC02",
+        "D02-AC03",
+        "D02-AC04",
+        "D02-AC05",
+        "D02-AC06",
+        "D02-AC07"
+      ]
     },
     {
       "id": "D02",
       "card": "D02",
       "depends_on": [
-        "D01"
+        "D02a",
+        "D02b"
       ],
-      "status": "planned"
+      "status": "planned",
+      "acceptance_ids": []
+    },
+    {
+      "id": "D06a",
+      "card": "D06",
+      "depends_on": [
+        "D01",
+        "D02b"
+      ],
+      "status": "planned",
+      "deliverable": "I1 任务输入、框架阅读、真实修正/采用与恢复；合法持久化对象连接后端，不等待 D03 框架生成",
+      "acceptance_ids": [
+        "D06-AC01",
+        "D06-AC03",
+        "D06-AC04"
+      ]
     },
     {
       "id": "D03",
       "card": "D03",
       "depends_on": [
         "D01",
-        "D02",
+        "D02b",
         "D06a"
       ],
-      "status": "planned"
+      "status": "planned",
+      "acceptance_ids": [
+        "D03-AC01",
+        "D03-AC02",
+        "D03-AC03",
+        "D03-AC04",
+        "D03-AC05",
+        "D03-AC06",
+        "D03-AC07",
+        "D03-AC08",
+        "D03-AC09"
+      ]
     },
     {
       "id": "D04",
@@ -586,7 +778,16 @@
       "depends_on": [
         "D03"
       ],
-      "status": "planned"
+      "status": "planned",
+      "acceptance_ids": [
+        "D04-AC01",
+        "D04-AC02",
+        "D04-AC03",
+        "D04-AC04",
+        "D04-AC05",
+        "D04-AC06",
+        "D04-AC07"
+      ]
     },
     {
       "id": "D05",
@@ -595,7 +796,32 @@
         "D01",
         "D04"
       ],
-      "status": "planned"
+      "status": "planned",
+      "acceptance_ids": [
+        "D05-AC01",
+        "D05-AC02",
+        "D05-AC03",
+        "D05-AC04",
+        "D05-AC05",
+        "D05-AC06",
+        "D05-AC07",
+        "D05-AC08"
+      ]
+    },
+    {
+      "id": "D06b",
+      "card": "D06",
+      "depends_on": [
+        "D03",
+        "D05",
+        "D06a"
+      ],
+      "status": "planned",
+      "deliverable": "I2 策略影响与实际重编界面，含已完成请求的有界后续修改",
+      "acceptance_ids": [
+        "D06-AC02",
+        "D06-AC06"
+      ]
     },
     {
       "id": "D06",
@@ -604,7 +830,11 @@
         "D06a",
         "D06b"
       ],
-      "status": "planned"
+      "status": "planned",
+      "acceptance_ids": [
+        "D06-AC05",
+        "D06-AC07"
+      ]
     },
     {
       "id": "D07",
@@ -613,7 +843,17 @@
         "D04",
         "D06"
       ],
-      "status": "planned"
+      "status": "planned",
+      "acceptance_ids": [
+        "D07-AC01",
+        "D07-AC02",
+        "D07-AC03",
+        "D07-AC04",
+        "D07-AC05",
+        "D07-AC06",
+        "D07-AC07",
+        "D07-AC08"
+      ]
     },
     {
       "id": "D08",
@@ -628,36 +868,17 @@
         "D06",
         "D07"
       ],
-      "status": "planned"
-    },
-    {
-      "id": "X01",
-      "card": "X01",
-      "depends_on": [
-        "D00"
-      ],
-      "status": "inactive"
-    },
-    {
-      "id": "D06a",
-      "card": "D06",
-      "depends_on": [
-        "D01",
-        "D02"
-      ],
       "status": "planned",
-      "deliverable": "I1 最小任务输入和框架阅读入口；以合法固定对象验证，不等待 D03 完成"
-    },
-    {
-      "id": "D06b",
-      "card": "D06",
-      "depends_on": [
-        "D03",
-        "D05",
-        "D06a"
-      ],
-      "status": "planned",
-      "deliverable": "I2 实际框架采用与策略重编界面"
+      "acceptance_ids": [
+        "D08-AC01",
+        "D08-AC02",
+        "D08-AC03",
+        "D08-AC04",
+        "D08-AC05"
+      ]
     }
-  ]
+  ],
+  "suite_version": "0.2",
+  "document_revision_base": "03c06add760eb20a9e457c6f8bda0b2a8b8036b7",
+  "dependency_semantics": "depends_on 引用 work_units；conditional_depends_on 仅在条件成立时加边。卡条目镜像其收口单元；工作单元 acceptance_ids 是 AC 唯一验收归属。"
 }
