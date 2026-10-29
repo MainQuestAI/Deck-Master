@@ -1,0 +1,512 @@
+{
+  "schema_version": "business_expression_eval_tasks.v1",
+  "status": "selected_pre_call",
+  "note": "评测元数据，不是 Runtime contract；task字段沿service.create现有参数传入。",
+  "tasks": [
+    {
+      "id": "dev-01-first_proposal",
+      "pack_id": "dev-01",
+      "split": "development",
+      "scenario": "first_proposal",
+      "title": "dev-01 首次提案",
+      "brief": "仅策划：作者要用这份材料说明值得改变的业务环节、能力怎样介入和人员怎样使用，争取认同一个可验证的试点方向。受众没有先行接受系统价值。 同源事实不可改写成未具备能力或已实现收益。给出可展开的主线、主题关系与页职责及具体取舍，最多6页的策划提案。完成Narrative和planned Plan后返回，不生产Page、口播、设计或PPT。",
+      "audience": "业务负责人、使用部门与信息化负责人共同参加的方案交流",
+      "presentation_mode": "live",
+      "page_limit": 6,
+      "existing_decisions": [
+        "已知存在材料描述的业务问题；尚未形成采购决定；不得假定已认同系统价值"
+      ],
+      "required_expression": [
+        "区分材料事实、能力、建议、未知",
+        "主题能回到需求、能力、场景与限制",
+        "说明主线、支撑和省略的内容及理由",
+        "引用材料具体版本和位置，保留关键限定"
+      ],
+      "severe_failure_basis": "SPEC.md#评分与失败规则 + material/严重失真及尾部约束",
+      "request_input": {
+        "intent": "content_only",
+        "content_intent": "plan_only",
+        "scope": {
+          "subject": "deck",
+          "page_ids": [],
+          "page_manifest_ref": null,
+          "external_artifact_ref": null,
+          "layers": [
+            "narrative",
+            "plan"
+          ],
+          "allow_page_membership_change": false,
+          "allow_page_order_change": false,
+          "purpose": "working"
+        }
+      },
+      "method_selection": {
+        "framing": [
+          "content-m01"
+        ],
+        "argument": [
+          "content-m02",
+          "content-m04",
+          "content-m07",
+          "content-m08",
+          "content-m10"
+        ]
+      }
+    },
+    {
+      "id": "dev-01-competitive_bid",
+      "pack_id": "dev-01",
+      "split": "development",
+      "scenario": "competitive_bid",
+      "title": "dev-01 竞标",
+      "brief": "仅策划：作者要回应已经明确的采购范围、需求与约束，说明自己的方案怎样适配、如何交付及哪些需要另行确认。受众已经理解品类价值，不重复行业教育；没有对手事实，不虚构比较。 同源事实不可改写成未具备能力或已实现收益。给出可展开的主线、主题关系与页职责及具体取舍，最多6页的策划提案。完成Narrative和planned Plan后返回，不生产Page、口播、设计或PPT。",
+      "audience": "业务、技术与采购组成的评审组",
+      "presentation_mode": "live",
+      "page_limit": 6,
+      "existing_decisions": [
+        "以材料 R1 起的需求及明确限制为本期范围；保留现有系统；本轮评审是方案适配与交付判断；没有竞争对手资料"
+      ],
+      "required_expression": [
+        "区分材料事实、能力、建议、未知",
+        "主题能回到需求、能力、场景与限制",
+        "说明主线、支撑和省略的内容及理由",
+        "引用材料具体版本和位置，保留关键限定"
+      ],
+      "severe_failure_basis": "SPEC.md#评分与失败规则 + material/严重失真及尾部约束",
+      "request_input": {
+        "intent": "content_only",
+        "content_intent": "plan_only",
+        "scope": {
+          "subject": "deck",
+          "page_ids": [],
+          "page_manifest_ref": null,
+          "external_artifact_ref": null,
+          "layers": [
+            "narrative",
+            "plan"
+          ],
+          "allow_page_membership_change": false,
+          "allow_page_order_change": false,
+          "purpose": "working"
+        }
+      },
+      "method_selection": {
+        "framing": [
+          "content-m01"
+        ],
+        "argument": [
+          "content-m02",
+          "content-m03",
+          "content-m05",
+          "content-m07",
+          "content-m08",
+          "content-m10"
+        ]
+      }
+    },
+    {
+      "id": "dev-02-first_proposal",
+      "pack_id": "dev-02",
+      "split": "development",
+      "scenario": "first_proposal",
+      "title": "dev-02 首次提案",
+      "brief": "仅策划：作者要用这份材料说明值得改变的业务环节、能力怎样介入和人员怎样使用，争取认同一个可验证的试点方向。受众没有先行接受系统价值。 同源事实不可改写成未具备能力或已实现收益。给出可展开的主线、主题关系与页职责及具体取舍，最多6页的策划提案。完成Narrative和planned Plan后返回，不生产Page、口播、设计或PPT。",
+      "audience": "业务负责人、使用部门与信息化负责人共同参加的方案交流",
+      "presentation_mode": "live",
+      "page_limit": 6,
+      "existing_decisions": [
+        "已知存在材料描述的业务问题；尚未形成采购决定；不得假定已认同系统价值"
+      ],
+      "required_expression": [
+        "区分材料事实、能力、建议、未知",
+        "主题能回到需求、能力、场景与限制",
+        "说明主线、支撑和省略的内容及理由",
+        "引用材料具体版本和位置，保留关键限定"
+      ],
+      "severe_failure_basis": "SPEC.md#评分与失败规则 + material/严重失真及尾部约束",
+      "request_input": {
+        "intent": "content_only",
+        "content_intent": "plan_only",
+        "scope": {
+          "subject": "deck",
+          "page_ids": [],
+          "page_manifest_ref": null,
+          "external_artifact_ref": null,
+          "layers": [
+            "narrative",
+            "plan"
+          ],
+          "allow_page_membership_change": false,
+          "allow_page_order_change": false,
+          "purpose": "working"
+        }
+      },
+      "method_selection": {
+        "framing": [
+          "content-m01"
+        ],
+        "argument": [
+          "content-m02",
+          "content-m04",
+          "content-m07",
+          "content-m08",
+          "content-m10"
+        ]
+      }
+    },
+    {
+      "id": "dev-02-competitive_bid",
+      "pack_id": "dev-02",
+      "split": "development",
+      "scenario": "competitive_bid",
+      "title": "dev-02 竞标",
+      "brief": "仅策划：作者要回应已经明确的采购范围、需求与约束，说明自己的方案怎样适配、如何交付及哪些需要另行确认。受众已经理解品类价值，不重复行业教育；没有对手事实，不虚构比较。 同源事实不可改写成未具备能力或已实现收益。给出可展开的主线、主题关系与页职责及具体取舍，最多6页的策划提案。完成Narrative和planned Plan后返回，不生产Page、口播、设计或PPT。",
+      "audience": "业务、技术与采购组成的评审组",
+      "presentation_mode": "live",
+      "page_limit": 6,
+      "existing_decisions": [
+        "以材料 R1 起的需求及明确限制为本期范围；保留现有系统；本轮评审是方案适配与交付判断；没有竞争对手资料"
+      ],
+      "required_expression": [
+        "区分材料事实、能力、建议、未知",
+        "主题能回到需求、能力、场景与限制",
+        "说明主线、支撑和省略的内容及理由",
+        "引用材料具体版本和位置，保留关键限定"
+      ],
+      "severe_failure_basis": "SPEC.md#评分与失败规则 + material/严重失真及尾部约束",
+      "request_input": {
+        "intent": "content_only",
+        "content_intent": "plan_only",
+        "scope": {
+          "subject": "deck",
+          "page_ids": [],
+          "page_manifest_ref": null,
+          "external_artifact_ref": null,
+          "layers": [
+            "narrative",
+            "plan"
+          ],
+          "allow_page_membership_change": false,
+          "allow_page_order_change": false,
+          "purpose": "working"
+        }
+      },
+      "method_selection": {
+        "framing": [
+          "content-m01"
+        ],
+        "argument": [
+          "content-m02",
+          "content-m03",
+          "content-m05",
+          "content-m07",
+          "content-m08",
+          "content-m10"
+        ]
+      }
+    },
+    {
+      "id": "holdout-01-first_proposal",
+      "pack_id": "holdout-01",
+      "split": "holdout",
+      "scenario": "first_proposal",
+      "title": "holdout-01 首次提案",
+      "brief": "仅策划：作者要用这份材料说明值得改变的业务环节、能力怎样介入和人员怎样使用，争取认同一个可验证的试点方向。受众没有先行接受系统价值。 同源事实不可改写成未具备能力或已实现收益。给出可展开的主线、主题关系与页职责及具体取舍，最多6页的策划提案。完成Narrative和planned Plan后返回，不生产Page、口播、设计或PPT。",
+      "audience": "业务负责人、使用部门与信息化负责人共同参加的方案交流",
+      "presentation_mode": "live",
+      "page_limit": 6,
+      "existing_decisions": [
+        "已知存在材料描述的业务问题；尚未形成采购决定；不得假定已认同系统价值"
+      ],
+      "required_expression": [
+        "区分材料事实、能力、建议、未知",
+        "主题能回到需求、能力、场景与限制",
+        "说明主线、支撑和省略的内容及理由",
+        "引用材料具体版本和位置，保留关键限定"
+      ],
+      "severe_failure_basis": "SPEC.md#评分与失败规则 + material/严重失真及尾部约束",
+      "request_input": {
+        "intent": "content_only",
+        "content_intent": "plan_only",
+        "scope": {
+          "subject": "deck",
+          "page_ids": [],
+          "page_manifest_ref": null,
+          "external_artifact_ref": null,
+          "layers": [
+            "narrative",
+            "plan"
+          ],
+          "allow_page_membership_change": false,
+          "allow_page_order_change": false,
+          "purpose": "working"
+        }
+      },
+      "method_selection": {
+        "framing": [
+          "content-m01"
+        ],
+        "argument": [
+          "content-m02",
+          "content-m04",
+          "content-m07",
+          "content-m08",
+          "content-m10"
+        ]
+      }
+    },
+    {
+      "id": "holdout-01-competitive_bid",
+      "pack_id": "holdout-01",
+      "split": "holdout",
+      "scenario": "competitive_bid",
+      "title": "holdout-01 竞标",
+      "brief": "仅策划：作者要回应已经明确的采购范围、需求与约束，说明自己的方案怎样适配、如何交付及哪些需要另行确认。受众已经理解品类价值，不重复行业教育；没有对手事实，不虚构比较。 同源事实不可改写成未具备能力或已实现收益。给出可展开的主线、主题关系与页职责及具体取舍，最多6页的策划提案。完成Narrative和planned Plan后返回，不生产Page、口播、设计或PPT。",
+      "audience": "业务、技术与采购组成的评审组",
+      "presentation_mode": "live",
+      "page_limit": 6,
+      "existing_decisions": [
+        "以材料 R1 起的需求及明确限制为本期范围；保留现有系统；本轮评审是方案适配与交付判断；没有竞争对手资料"
+      ],
+      "required_expression": [
+        "区分材料事实、能力、建议、未知",
+        "主题能回到需求、能力、场景与限制",
+        "说明主线、支撑和省略的内容及理由",
+        "引用材料具体版本和位置，保留关键限定"
+      ],
+      "severe_failure_basis": "SPEC.md#评分与失败规则 + material/严重失真及尾部约束",
+      "request_input": {
+        "intent": "content_only",
+        "content_intent": "plan_only",
+        "scope": {
+          "subject": "deck",
+          "page_ids": [],
+          "page_manifest_ref": null,
+          "external_artifact_ref": null,
+          "layers": [
+            "narrative",
+            "plan"
+          ],
+          "allow_page_membership_change": false,
+          "allow_page_order_change": false,
+          "purpose": "working"
+        }
+      },
+      "method_selection": {
+        "framing": [
+          "content-m01"
+        ],
+        "argument": [
+          "content-m02",
+          "content-m03",
+          "content-m05",
+          "content-m07",
+          "content-m08",
+          "content-m10"
+        ]
+      }
+    },
+    {
+      "id": "holdout-02-first_proposal",
+      "pack_id": "holdout-02",
+      "split": "holdout",
+      "scenario": "first_proposal",
+      "title": "holdout-02 首次提案",
+      "brief": "仅策划：作者要用这份材料说明值得改变的业务环节、能力怎样介入和人员怎样使用，争取认同一个可验证的试点方向。受众没有先行接受系统价值。 同源事实不可改写成未具备能力或已实现收益。给出可展开的主线、主题关系与页职责及具体取舍，最多6页的策划提案。完成Narrative和planned Plan后返回，不生产Page、口播、设计或PPT。",
+      "audience": "业务负责人、使用部门与信息化负责人共同参加的方案交流",
+      "presentation_mode": "live",
+      "page_limit": 6,
+      "existing_decisions": [
+        "已知存在材料描述的业务问题；尚未形成采购决定；不得假定已认同系统价值"
+      ],
+      "required_expression": [
+        "区分材料事实、能力、建议、未知",
+        "主题能回到需求、能力、场景与限制",
+        "说明主线、支撑和省略的内容及理由",
+        "引用材料具体版本和位置，保留关键限定"
+      ],
+      "severe_failure_basis": "SPEC.md#评分与失败规则 + material/严重失真及尾部约束",
+      "request_input": {
+        "intent": "content_only",
+        "content_intent": "plan_only",
+        "scope": {
+          "subject": "deck",
+          "page_ids": [],
+          "page_manifest_ref": null,
+          "external_artifact_ref": null,
+          "layers": [
+            "narrative",
+            "plan"
+          ],
+          "allow_page_membership_change": false,
+          "allow_page_order_change": false,
+          "purpose": "working"
+        }
+      },
+      "method_selection": {
+        "framing": [
+          "content-m01"
+        ],
+        "argument": [
+          "content-m02",
+          "content-m04",
+          "content-m07",
+          "content-m08",
+          "content-m10"
+        ]
+      }
+    },
+    {
+      "id": "holdout-02-competitive_bid",
+      "pack_id": "holdout-02",
+      "split": "holdout",
+      "scenario": "competitive_bid",
+      "title": "holdout-02 竞标",
+      "brief": "仅策划：作者要回应已经明确的采购范围、需求与约束，说明自己的方案怎样适配、如何交付及哪些需要另行确认。受众已经理解品类价值，不重复行业教育；没有对手事实，不虚构比较。 同源事实不可改写成未具备能力或已实现收益。给出可展开的主线、主题关系与页职责及具体取舍，最多6页的策划提案。完成Narrative和planned Plan后返回，不生产Page、口播、设计或PPT。",
+      "audience": "业务、技术与采购组成的评审组",
+      "presentation_mode": "live",
+      "page_limit": 6,
+      "existing_decisions": [
+        "以材料 R1 起的需求及明确限制为本期范围；保留现有系统；本轮评审是方案适配与交付判断；没有竞争对手资料"
+      ],
+      "required_expression": [
+        "区分材料事实、能力、建议、未知",
+        "主题能回到需求、能力、场景与限制",
+        "说明主线、支撑和省略的内容及理由",
+        "引用材料具体版本和位置，保留关键限定"
+      ],
+      "severe_failure_basis": "SPEC.md#评分与失败规则 + material/严重失真及尾部约束",
+      "request_input": {
+        "intent": "content_only",
+        "content_intent": "plan_only",
+        "scope": {
+          "subject": "deck",
+          "page_ids": [],
+          "page_manifest_ref": null,
+          "external_artifact_ref": null,
+          "layers": [
+            "narrative",
+            "plan"
+          ],
+          "allow_page_membership_change": false,
+          "allow_page_order_change": false,
+          "purpose": "working"
+        }
+      },
+      "method_selection": {
+        "framing": [
+          "content-m01"
+        ],
+        "argument": [
+          "content-m02",
+          "content-m03",
+          "content-m05",
+          "content-m07",
+          "content-m08",
+          "content-m10"
+        ]
+      }
+    },
+    {
+      "id": "holdout-03-first_proposal",
+      "pack_id": "holdout-03",
+      "split": "holdout",
+      "scenario": "first_proposal",
+      "title": "holdout-03 首次提案",
+      "brief": "仅策划：作者要用这份材料说明值得改变的业务环节、能力怎样介入和人员怎样使用，争取认同一个可验证的试点方向。受众没有先行接受系统价值。 同源事实不可改写成未具备能力或已实现收益。给出可展开的主线、主题关系与页职责及具体取舍，最多6页的策划提案。完成Narrative和planned Plan后返回，不生产Page、口播、设计或PPT。",
+      "audience": "业务负责人、使用部门与信息化负责人共同参加的方案交流",
+      "presentation_mode": "live",
+      "page_limit": 6,
+      "existing_decisions": [
+        "已知存在材料描述的业务问题；尚未形成采购决定；不得假定已认同系统价值"
+      ],
+      "required_expression": [
+        "区分材料事实、能力、建议、未知",
+        "主题能回到需求、能力、场景与限制",
+        "说明主线、支撑和省略的内容及理由",
+        "引用材料具体版本和位置，保留关键限定"
+      ],
+      "severe_failure_basis": "SPEC.md#评分与失败规则 + material/严重失真及尾部约束",
+      "request_input": {
+        "intent": "content_only",
+        "content_intent": "plan_only",
+        "scope": {
+          "subject": "deck",
+          "page_ids": [],
+          "page_manifest_ref": null,
+          "external_artifact_ref": null,
+          "layers": [
+            "narrative",
+            "plan"
+          ],
+          "allow_page_membership_change": false,
+          "allow_page_order_change": false,
+          "purpose": "working"
+        }
+      },
+      "method_selection": {
+        "framing": [
+          "content-m01"
+        ],
+        "argument": [
+          "content-m02",
+          "content-m04",
+          "content-m07",
+          "content-m08",
+          "content-m10"
+        ]
+      }
+    },
+    {
+      "id": "holdout-03-competitive_bid",
+      "pack_id": "holdout-03",
+      "split": "holdout",
+      "scenario": "competitive_bid",
+      "title": "holdout-03 竞标",
+      "brief": "仅策划：作者要回应已经明确的采购范围、需求与约束，说明自己的方案怎样适配、如何交付及哪些需要另行确认。受众已经理解品类价值，不重复行业教育；没有对手事实，不虚构比较。 同源事实不可改写成未具备能力或已实现收益。给出可展开的主线、主题关系与页职责及具体取舍，最多6页的策划提案。完成Narrative和planned Plan后返回，不生产Page、口播、设计或PPT。",
+      "audience": "业务、技术与采购组成的评审组",
+      "presentation_mode": "live",
+      "page_limit": 6,
+      "existing_decisions": [
+        "以材料 R1 起的需求及明确限制为本期范围；保留现有系统；本轮评审是方案适配与交付判断；没有竞争对手资料"
+      ],
+      "required_expression": [
+        "区分材料事实、能力、建议、未知",
+        "主题能回到需求、能力、场景与限制",
+        "说明主线、支撑和省略的内容及理由",
+        "引用材料具体版本和位置，保留关键限定"
+      ],
+      "severe_failure_basis": "SPEC.md#评分与失败规则 + material/严重失真及尾部约束",
+      "request_input": {
+        "intent": "content_only",
+        "content_intent": "plan_only",
+        "scope": {
+          "subject": "deck",
+          "page_ids": [],
+          "page_manifest_ref": null,
+          "external_artifact_ref": null,
+          "layers": [
+            "narrative",
+            "plan"
+          ],
+          "allow_page_membership_change": false,
+          "allow_page_order_change": false,
+          "purpose": "working"
+        }
+      },
+      "method_selection": {
+        "framing": [
+          "content-m01"
+        ],
+        "argument": [
+          "content-m02",
+          "content-m03",
+          "content-m05",
+          "content-m07",
+          "content-m08",
+          "content-m10"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "schema_version": "business_expression_eval_materials.v1",
+  "status": "selected_pre_call",
+  "tier": "floor",
+  "packs": [
+    {
+      "id": "dev-01",
+      "split": "development",
+      "path": "materials/dev-01.md",
+      "sha256": "e56e79a10c7e40a87b6f4078827b575a9cdff8be5248e9a0f311ab50d347776a",
+      "bytes": 2622,
+      "synthetic": true,
+      "authorization": "original_synthetic_for_this_evaluation",
+      "format": "md"
+    },
+    {
+      "id": "dev-02",
+      "split": "development",
+      "path": "materials/dev-02.md",
+      "sha256": "7a4ab2be0ec5d79a8676324d7cfd99fd2de4c542f1fc04c4d72326f67e5b7252",
+      "bytes": 2550,
+      "synthetic": true,
+      "authorization": "original_synthetic_for_this_evaluation",
+      "format": "md"
+    },
+    {
+      "id": "holdout-01",
+      "split": "holdout",
+      "path": "materials/holdout-01.md",
+      "sha256": "f196b88841576034cdb6e0155a263bebb830de7eb88b3f39d3469094fb839b6c",
+      "bytes": 1631,
+      "synthetic": true,
+      "authorization": "original_synthetic_for_this_evaluation",
+      "format": "md"
+    },
+    {
+      "id": "holdout-02",
+      "split": "holdout",
+      "path": "materials/holdout-02.md",
+      "sha256": "adb9d6bfac66a8747c6fdc78afdf4e0fa72c5cd7983d9abae6a48a498141bceb",
+      "bytes": 1856,
+      "synthetic": true,
+      "authorization": "original_synthetic_for_this_evaluation",
+      "format": "md"
+    },
+    {
+      "id": "holdout-03",
+      "split": "holdout",
+      "path": "materials/holdout-03.md",
+      "sha256": "cfaed19aeaf99f8f3bf19079aac4cd311b0bd8c8d1d436f0ab27ef0124143da5",
+      "bytes": 1760,
+      "synthetic": true,
+      "authorization": "original_synthetic_for_this_evaluation",
+      "format": "md"
+    }
+  ],
+  "tasks_sha256": "58025929e9483ed1d18e7449ffa536b9dbbd42fb4a276c78f91cbc2e58defd88",
+  "holdout_policy": {
+    "use_only_at": "D08_after_implementation_and_methods_freeze",
+    "initial_author_exposure": true,
+    "sent_to_generation": false,
+    "used_for_tuning": false,
+    "read_by_triage": "hash_only_no_extraction_or_dispatch"
+  }
+}

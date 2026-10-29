@@ -1,0 +1,75 @@
+{
+  "schema_version": "business_expression_eval_freeze.v1",
+  "status": "frozen_for_I0",
+  "frozen_at": "2026-10-29T05:40:49.934322+00:00",
+  "code_baseline": "035845f228d1ba4cd7fc9b41cdedd8fd734043df",
+  "tier": "floor",
+  "scope": "I0: content_only/plan_only, no Page/speech/design",
+  "materials_manifest_sha256": "7ddeb52ea04ca22ae5d01af09160a75ff0f3f72062c3d414cc71466ae5d86b7f",
+  "tasks_sha256": "58025929e9483ed1d18e7449ffa536b9dbbd42fb4a276c78f91cbc2e58defd88",
+  "protocol_sha256": "2dbd0cae01ddc35d42124e6dae654317b24adfce774aad929f1eda7c25bc96c2",
+  "experiment_sha256": "6706d5d7c71c02ab6c2b2a31d43e08279a1ada30b1c5c2784c0d4de75d1437ec",
+  "report_template_sha256": "bd758cc6bc575c8f9f39694990a909aaad7a2c58a8dd319e2f175e0d8a59d401",
+  "generation": {
+    "requested_model_id": "gpt-6.1-sol",
+    "reasoning_effort": "high",
+    "client": "codex-cli 0.165.0",
+    "auth": "existing_ChatGPT_subscription",
+    "fresh_session_per_stage": true,
+    "backend_revision": "record_response_metadata_if_exposed_else_unknown",
+    "sampling": "provider_default_unexposed_not_fabricated"
+  },
+  "review_panel": {
+    "lead": "project_author",
+    "final_authority": "project_author",
+    "requested_model_ids": {
+      "claude": "claude-opus-4-7",
+      "codex": "gpt-6.1-sol",
+      "kimi": "k3.1-pro"
+    },
+    "client_versions": {
+      "claude": "2.1.312",
+      "codex": "0.165.0",
+      "kimi": "2.3.0"
+    },
+    "availability": "CLI installed; Claude/Codex login observed; configured Kimi model observed; no reviewer generation calls yet",
+    "actual_model_metadata": "must record observed fields; requested ID not proof of backend snapshot",
+    "author_initial_before_feedback": true,
+    "mutually_blind_fresh_sessions": true,
+    "kimi_generation": false,
+    "generator_review_bias_disclosure": true
+  },
+  "budget": {
+    "authorization": "user_reply: 按上述订阅额度执行",
+    "authorization_scope": "I0 only",
+    "max_total_initiated_requests": 32,
+    "generation_planned": 16,
+    "review_planned": 12,
+    "failure_retry_reserve": 4,
+    "new_paid_API_currency_budget": 0,
+    "purchase_credits": false,
+    "unknown_request": "counts against bound; verify before retry; stop on unobservable autonomous turns",
+    "D08_calls_authorized": false
+  },
+  "D08": {
+    "tier": "floor",
+    "holdout_outputs": 24,
+    "paired_comparisons": 12,
+    "new_outputs": 12,
+    "max_severe_failures": 0,
+    "min_all_five_dimensions_at_least_2": 10,
+    "min_new_overall_better": 8,
+    "comparisons_per_scenario": 6,
+    "min_new_better_per_scenario": 4,
+    "report_template_sha256": "bd758cc6bc575c8f9f39694990a909aaad7a2c58a8dd319e2f175e0d8a59d401",
+    "cost_status": "pending_before_holdout_use",
+    "generation_scope": "content_full"
+  },
+  "I0_gate": {
+    "recognizable_strategy_or_business_organization_improvement": true,
+    "max_new_key_fact_errors": 0,
+    "min_author_confirmed_expandable_structures": 1,
+    "verdict_without_author_confirmation": "incomplete"
+  },
+  "runner_sha256": "9964a808a757451ab10d3e9894c190c7f831da7176c64bb6f78647f4a676cebb"
+}

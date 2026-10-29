@@ -1,0 +1,256 @@
+{
+  "schema_version": "business_expression_input_triage.v1",
+  "created_at": "2026-10-29T05:36:23.429564+00:00",
+  "code_base": "035845f228d1ba4cd7fc9b41cdedd8fd734043df",
+  "status": "pass",
+  "model_calls": 0,
+  "professional_evidence": "not_evaluated",
+  "material_manifest_sha256": "7ddeb52ea04ca22ae5d01af09160a75ff0f3f72062c3d414cc71466ae5d86b7f",
+  "materials": [
+    {
+      "pack_id": "dev-01",
+      "split": "development",
+      "sha256": "e56e79a10c7e40a87b6f4078827b575a9cdff8be5248e9a0f311ab50d347776a",
+      "bytes": 2622,
+      "status": "read",
+      "full_text_equal": true,
+      "locators": 25,
+      "tail_constraint_retained": true
+    },
+    {
+      "pack_id": "dev-02",
+      "split": "development",
+      "sha256": "7a4ab2be0ec5d79a8676324d7cfd99fd2de4c542f1fc04c4d72326f67e5b7252",
+      "bytes": 2550,
+      "status": "read",
+      "full_text_equal": true,
+      "locators": 25,
+      "tail_constraint_retained": true
+    },
+    {
+      "pack_id": "holdout-01",
+      "split": "holdout",
+      "sha256": "f196b88841576034cdb6e0155a263bebb830de7eb88b3f39d3469094fb839b6c",
+      "bytes": 1631,
+      "status": "hash_verified_not_extracted"
+    },
+    {
+      "pack_id": "holdout-02",
+      "split": "holdout",
+      "sha256": "adb9d6bfac66a8747c6fdc78afdf4e0fa72c5cd7983d9abae6a48a498141bceb",
+      "bytes": 1856,
+      "status": "hash_verified_not_extracted"
+    },
+    {
+      "pack_id": "holdout-03",
+      "split": "holdout",
+      "sha256": "cfaed19aeaf99f8f3bf19079aac4cd311b0bd8c8d1d436f0ab27ef0124143da5",
+      "bytes": 1760,
+      "status": "hash_verified_not_extracted"
+    }
+  ],
+  "projects": [
+    {
+      "task_definition_id": "dev-01-first_proposal",
+      "project_id": "dev-01-first_proposal",
+      "revision_id": "ccea139a574749a7aea1687fd43c7d76",
+      "task_id": "63b64a5c8291",
+      "source_hash": "e56e79a10c7e40a87b6f4078827b575a9cdff8be5248e9a0f311ab50d347776a",
+      "page_count": 0,
+      "request_intent": "content_only",
+      "content_intent": "plan_only",
+      "layers": [
+        "narrative",
+        "plan"
+      ],
+      "phase": "framing",
+      "task_status": "awaiting_host",
+      "method_basis_status": "current",
+      "methods": [
+        {
+          "id": "source-reading",
+          "relative_path": "references/source-reading.md",
+          "sha256": "4be8ac92de269f41010cd25587bbbb652ab2a4bebbbbd329edb9f3d370a60a50",
+          "bytes": 6681
+        },
+        {
+          "id": "content-methods",
+          "relative_path": "references/content-methods.md",
+          "sha256": "fe495b2fc262c89fd1791c34933f2ad73bce84bbdf143375427791574a0ac2bc",
+          "bytes": 12355
+        },
+        {
+          "id": "content-examples",
+          "relative_path": "references/content-examples.md",
+          "sha256": "13f3cb7deceb5b1ce554c470f3ea2aa325dd0365c6dda73094fe9e85e181cdbd",
+          "bytes": 19036
+        },
+        {
+          "id": "method-selection",
+          "relative_path": "references/method-selection.md",
+          "sha256": "583ea0f4203bbb2a55b592da732220efaf71d74ed71846276c14c70e7dd708a8",
+          "bytes": 3493
+        },
+        {
+          "id": "content-m01",
+          "relative_path": "references/methods/M01-framing.md",
+          "sha256": "de0fcc09db864d5f47841eb1f91eba10f61b972e38564773a904e7124fed2e09",
+          "bytes": 4959
+        }
+      ],
+      "method_total_bytes": 46524
+    },
+    {
+      "task_definition_id": "dev-01-competitive_bid",
+      "project_id": "dev-01-competitive_bid",
+      "revision_id": "39ed19b1350546ba89cc7d6a41dbbe9d",
+      "task_id": "47c42e06434e",
+      "source_hash": "e56e79a10c7e40a87b6f4078827b575a9cdff8be5248e9a0f311ab50d347776a",
+      "page_count": 0,
+      "request_intent": "content_only",
+      "content_intent": "plan_only",
+      "layers": [
+        "narrative",
+        "plan"
+      ],
+      "phase": "framing",
+      "task_status": "awaiting_host",
+      "method_basis_status": "current",
+      "methods": [
+        {
+          "id": "source-reading",
+          "relative_path": "references/source-reading.md",
+          "sha256": "4be8ac92de269f41010cd25587bbbb652ab2a4bebbbbd329edb9f3d370a60a50",
+          "bytes": 6681
+        },
+        {
+          "id": "content-methods",
+          "relative_path": "references/content-methods.md",
+          "sha256": "fe495b2fc262c89fd1791c34933f2ad73bce84bbdf143375427791574a0ac2bc",
+          "bytes": 12355
+        },
+        {
+          "id": "content-examples",
+          "relative_path": "references/content-examples.md",
+          "sha256": "13f3cb7deceb5b1ce554c470f3ea2aa325dd0365c6dda73094fe9e85e181cdbd",
+          "bytes": 19036
+        },
+        {
+          "id": "method-selection",
+          "relative_path": "references/method-selection.md",
+          "sha256": "583ea0f4203bbb2a55b592da732220efaf71d74ed71846276c14c70e7dd708a8",
+          "bytes": 3493
+        },
+        {
+          "id": "content-m01",
+          "relative_path": "references/methods/M01-framing.md",
+          "sha256": "de0fcc09db864d5f47841eb1f91eba10f61b972e38564773a904e7124fed2e09",
+          "bytes": 4959
+        }
+      ],
+      "method_total_bytes": 46524
+    },
+    {
+      "task_definition_id": "dev-02-first_proposal",
+      "project_id": "dev-02-first_proposal",
+      "revision_id": "3bfae9538b6d40009ebb936ed54a985c",
+      "task_id": "8043499100af",
+      "source_hash": "7a4ab2be0ec5d79a8676324d7cfd99fd2de4c542f1fc04c4d72326f67e5b7252",
+      "page_count": 0,
+      "request_intent": "content_only",
+      "content_intent": "plan_only",
+      "layers": [
+        "narrative",
+        "plan"
+      ],
+      "phase": "framing",
+      "task_status": "awaiting_host",
+      "method_basis_status": "current",
+      "methods": [
+        {
+          "id": "source-reading",
+          "relative_path": "references/source-reading.md",
+          "sha256": "4be8ac92de269f41010cd25587bbbb652ab2a4bebbbbd329edb9f3d370a60a50",
+          "bytes": 6681
+        },
+        {
+          "id": "content-methods",
+          "relative_path": "references/content-methods.md",
+          "sha256": "fe495b2fc262c89fd1791c34933f2ad73bce84bbdf143375427791574a0ac2bc",
+          "bytes": 12355
+        },
+        {
+          "id": "content-examples",
+          "relative_path": "references/content-examples.md",
+          "sha256": "13f3cb7deceb5b1ce554c470f3ea2aa325dd0365c6dda73094fe9e85e181cdbd",
+          "bytes": 19036
+        },
+        {
+          "id": "method-selection",
+          "relative_path": "references/method-selection.md",
+          "sha256": "583ea0f4203bbb2a55b592da732220efaf71d74ed71846276c14c70e7dd708a8",
+          "bytes": 3493
+        },
+        {
+          "id": "content-m01",
+          "relative_path": "references/methods/M01-framing.md",
+          "sha256": "de0fcc09db864d5f47841eb1f91eba10f61b972e38564773a904e7124fed2e09",
+          "bytes": 4959
+        }
+      ],
+      "method_total_bytes": 46524
+    },
+    {
+      "task_definition_id": "dev-02-competitive_bid",
+      "project_id": "dev-02-competitive_bid",
+      "revision_id": "f2cc14c73d1843d1925ff4117ba41be8",
+      "task_id": "5b29822a6c5b",
+      "source_hash": "7a4ab2be0ec5d79a8676324d7cfd99fd2de4c542f1fc04c4d72326f67e5b7252",
+      "page_count": 0,
+      "request_intent": "content_only",
+      "content_intent": "plan_only",
+      "layers": [
+        "narrative",
+        "plan"
+      ],
+      "phase": "framing",
+      "task_status": "awaiting_host",
+      "method_basis_status": "current",
+      "methods": [
+        {
+          "id": "source-reading",
+          "relative_path": "references/source-reading.md",
+          "sha256": "4be8ac92de269f41010cd25587bbbb652ab2a4bebbbbd329edb9f3d370a60a50",
+          "bytes": 6681
+        },
+        {
+          "id": "content-methods",
+          "relative_path": "references/content-methods.md",
+          "sha256": "fe495b2fc262c89fd1791c34933f2ad73bce84bbdf143375427791574a0ac2bc",
+          "bytes": 12355
+        },
+        {
+          "id": "content-examples",
+          "relative_path": "references/content-examples.md",
+          "sha256": "13f3cb7deceb5b1ce554c470f3ea2aa325dd0365c6dda73094fe9e85e181cdbd",
+          "bytes": 19036
+        },
+        {
+          "id": "method-selection",
+          "relative_path": "references/method-selection.md",
+          "sha256": "583ea0f4203bbb2a55b592da732220efaf71d74ed71846276c14c70e7dd708a8",
+          "bytes": 3493
+        },
+        {
+          "id": "content-m01",
+          "relative_path": "references/methods/M01-framing.md",
+          "sha256": "de0fcc09db864d5f47841eb1f91eba10f61b972e38564773a904e7124fed2e09",
+          "bytes": 4959
+        }
+      ],
+      "method_total_bytes": 46524
+    }
+  ],
+  "x01": "inactive",
+  "conclusion": "D00a readable inputs and scoped pending tasks only; D00 has not passed"
+}
