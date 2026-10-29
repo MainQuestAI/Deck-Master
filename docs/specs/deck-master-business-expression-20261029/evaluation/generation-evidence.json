@@ -1,0 +1,853 @@
+{
+  "schema_version": "business_expression_I0_generation_evidence.v1",
+  "code_base": "035845f228d1ba4cd7fc9b41cdedd8fd734043df",
+  "implementation_commit": "6cd1123b3483ce90de16c32cb42012c20fb9bbd2",
+  "freeze_sha256": "a3ff2c013a9e3ba9438c2d1a0e90592723172b859ab09d057af08f9bb23c581e",
+  "scope": "content_only/plan_only; explicit synthetic inputs",
+  "initiated_requests": 16,
+  "completed_single_turn_sessions": 16,
+  "review_requests": 0,
+  "generation_retries": 0,
+  "first_pass_rejections": 1,
+  "transport_metadata_repairs": 1,
+  "budget_total_bound": 32,
+  "budget_remaining_including_review_and_reserve": 16,
+  "new_API_spend": 0,
+  "purchased_credits": false,
+  "provider_internal_retries": "not_exposed; no additional client-initiated requests",
+  "actual_backend_snapshot": "not_exposed; requested_model_id and CLI usage trace retained",
+  "professional_review": "not_run; author_initial_required",
+  "go_adjust": "incomplete",
+  "holdout_generated_outputs": 0,
+  "samples": [
+    {
+      "sample": "baseline--dev-01-first_proposal",
+      "complete": true,
+      "page_count": 0,
+      "adopted": false,
+      "request_closed": true,
+      "proposal_refs": [
+        {
+          "path": ".deckmaster/objects/25/25d089128d830a3e704865e66b0e5bf1e164610c63b09ca730d3690b4fa982c5.json",
+          "sha256": "25d089128d830a3e704865e66b0e5bf1e164610c63b09ca730d3690b4fa982c5"
+        },
+        {
+          "path": ".deckmaster/objects/5a/5a5606131ef7ba8ba818973a39523a2841841c6e32407f81c5e82836559ac7f3.json",
+          "sha256": "5a5606131ef7ba8ba818973a39523a2841841c6e32407f81c5e82836559ac7f3"
+        }
+      ],
+      "page_roles": 5,
+      "node_count": 15,
+      "source_and_plan_refs_valid": true,
+      "technical_transport_repair": false,
+      "original_model_response_sha256": "5eea02dc1c5683bfdfff7c46656c00e28ab905b2727e39a4dd96b2d741f2143a",
+      "accepted_envelope_sha256": "71487fff23a8fab8998fdc77121015e5058d588e03b21e6b09926da2b15e9449",
+      "author_notes_sha256": "09ff5e2942aa1bd7e513617ae663ed0bc2075da4d7dbeab0fae63453447a1c5c"
+    },
+    {
+      "sample": "baseline--dev-02-first_proposal",
+      "complete": true,
+      "page_count": 0,
+      "adopted": false,
+      "request_closed": true,
+      "proposal_refs": [
+        {
+          "path": ".deckmaster/objects/4e/4e66ddefaa56cfd9cbc83b363a312c862b444c4946f72ea54b67ee313b09eb37.json",
+          "sha256": "4e66ddefaa56cfd9cbc83b363a312c862b444c4946f72ea54b67ee313b09eb37"
+        },
+        {
+          "path": ".deckmaster/objects/ba/ba4191aa48b4dd0f714b6882ddecacd4ba0816baf2ace7e91fd2884fdd8046fb.json",
+          "sha256": "ba4191aa48b4dd0f714b6882ddecacd4ba0816baf2ace7e91fd2884fdd8046fb"
+        }
+      ],
+      "page_roles": 6,
+      "node_count": 14,
+      "source_and_plan_refs_valid": true,
+      "technical_transport_repair": true,
+      "original_model_response_sha256": "f8172b127291db6ba1b5ef807aa479fbe647fb710045d479e8b586c226772e18",
+      "accepted_envelope_sha256": "aeae7736d1e6781ae1c6da91ce81fc92f7d2034b62c607b06c34b373f94b217a",
+      "author_notes_sha256": "8ba34bfac20daee3ad753630ecb27631c6d54166a922361875ff9683d42e5e32"
+    },
+    {
+      "sample": "baseline--dev-02-competitive_bid",
+      "complete": true,
+      "page_count": 0,
+      "adopted": false,
+      "request_closed": true,
+      "proposal_refs": [
+        {
+          "path": ".deckmaster/objects/76/76a3dcfa07e2fd893bca9dfb004302670fbb5f70c6a718d1054fef1684d11372.json",
+          "sha256": "76a3dcfa07e2fd893bca9dfb004302670fbb5f70c6a718d1054fef1684d11372"
+        },
+        {
+          "path": ".deckmaster/objects/55/55393532dbdd799fae65f10cae619bdc7f1b07c9d0f8ac04df9c0d8450fafd82.json",
+          "sha256": "55393532dbdd799fae65f10cae619bdc7f1b07c9d0f8ac04df9c0d8450fafd82"
+        }
+      ],
+      "page_roles": 6,
+      "node_count": 15,
+      "source_and_plan_refs_valid": true,
+      "technical_transport_repair": false,
+      "original_model_response_sha256": "0016f1eeec47dfb4c6b4c9feae6d8815f400e35f8776b81db9a4aa11efc73824",
+      "accepted_envelope_sha256": "ba3933a3ff7e65bdb9dc4862a4b69ba15deaccef7aef0ce7edd66a3dfbfc44ab",
+      "author_notes_sha256": "54a145518b30715e8263757f87e1e501e0a9337beb42f4593c766fe5047e81c4"
+    },
+    {
+      "sample": "baseline--dev-01-competitive_bid",
+      "complete": true,
+      "page_count": 0,
+      "adopted": false,
+      "request_closed": true,
+      "proposal_refs": [
+        {
+          "path": ".deckmaster/objects/c6/c64f890e1201d015a116dba471b1e2d60c72e665d1be896131bc3be4faa634cb.json",
+          "sha256": "c64f890e1201d015a116dba471b1e2d60c72e665d1be896131bc3be4faa634cb"
+        },
+        {
+          "path": ".deckmaster/objects/04/043e97f93756ded8c273f2298a9d099d5dc9eb6f8b29eb7561c6599096fdeb90.json",
+          "sha256": "043e97f93756ded8c273f2298a9d099d5dc9eb6f8b29eb7561c6599096fdeb90"
+        }
+      ],
+      "page_roles": 6,
+      "node_count": 15,
+      "source_and_plan_refs_valid": true,
+      "technical_transport_repair": false,
+      "original_model_response_sha256": "4eaafc4334c8854eca78d377ca5005cdde9e2c5f6ba075ee507fb0e37f8f3aff",
+      "accepted_envelope_sha256": "b181c0032ddaadeec21a79b8abf6893003bb1e34bb2031fb8416febae25f3e65",
+      "author_notes_sha256": "5e9bdfebe2ccabed9974d142f3d5683fc4444253042a4c8ee451b88d7db6f960"
+    },
+    {
+      "sample": "experiment--dev-02-first_proposal",
+      "complete": true,
+      "page_count": 0,
+      "adopted": false,
+      "request_closed": true,
+      "proposal_refs": [
+        {
+          "path": ".deckmaster/objects/b3/b3fac65ed83f0b1c2c432594d8a1fd43ba0658efbeb4c7cd3bdb73ff680950c9.json",
+          "sha256": "b3fac65ed83f0b1c2c432594d8a1fd43ba0658efbeb4c7cd3bdb73ff680950c9"
+        },
+        {
+          "path": ".deckmaster/objects/82/82ff769b0512bc2d65dc69e729c65a48c9e8af23e89e896e475ecd9cd60b0baa.json",
+          "sha256": "82ff769b0512bc2d65dc69e729c65a48c9e8af23e89e896e475ecd9cd60b0baa"
+        }
+      ],
+      "page_roles": 6,
+      "node_count": 18,
+      "source_and_plan_refs_valid": true,
+      "technical_transport_repair": false,
+      "original_model_response_sha256": "643fd88c7ea460587833c857526d8cdd2229dac307bc01fd8ba4ce1ecb3883f4",
+      "accepted_envelope_sha256": "ee26193e68cb822338b9c9a85b44f904fd4184ee86e8a66af2d1475a100e2cec",
+      "author_notes_sha256": "848f0f486a5d463abcaae48abcfe341310874c32c691ebe5fef21cd10b604239"
+    },
+    {
+      "sample": "experiment--dev-02-competitive_bid",
+      "complete": true,
+      "page_count": 0,
+      "adopted": false,
+      "request_closed": true,
+      "proposal_refs": [
+        {
+          "path": ".deckmaster/objects/7c/7cb2091f98b79c2de7c88a2a5e0a44b7a62970b0d722435d61bb3fc2a0ad5682.json",
+          "sha256": "7cb2091f98b79c2de7c88a2a5e0a44b7a62970b0d722435d61bb3fc2a0ad5682"
+        },
+        {
+          "path": ".deckmaster/objects/10/1013ee9d4e5a316d7cb0bc10f6ddfb35320c5b876fb1af87e996381937541ff2.json",
+          "sha256": "1013ee9d4e5a316d7cb0bc10f6ddfb35320c5b876fb1af87e996381937541ff2"
+        }
+      ],
+      "page_roles": 6,
+      "node_count": 16,
+      "source_and_plan_refs_valid": true,
+      "technical_transport_repair": false,
+      "original_model_response_sha256": "acd37e4e7c53a4b6694f6559fd7e21aeb0c05f639208e8464b095a1894dbbd00",
+      "accepted_envelope_sha256": "5350b3a59f89ae1bff58de44931d918b30d8b09be2bc62ebc3e58e907c9dc4a6",
+      "author_notes_sha256": "ef630fe3f9e90826a26faf789ead07303b16358e34a8241c9e7780b3319b685f"
+    },
+    {
+      "sample": "experiment--dev-01-competitive_bid",
+      "complete": true,
+      "page_count": 0,
+      "adopted": false,
+      "request_closed": true,
+      "proposal_refs": [
+        {
+          "path": ".deckmaster/objects/13/133a7a41826135a42df1041df54c0256b6a0fd0dcb183e9ad7fc9eb34bb24445.json",
+          "sha256": "133a7a41826135a42df1041df54c0256b6a0fd0dcb183e9ad7fc9eb34bb24445"
+        },
+        {
+          "path": ".deckmaster/objects/b8/b80b44185a41de42d4d65dcbd32b9cbd3f5468a8b14fe80bcd7a1f330e3ee67e.json",
+          "sha256": "b80b44185a41de42d4d65dcbd32b9cbd3f5468a8b14fe80bcd7a1f330e3ee67e"
+        }
+      ],
+      "page_roles": 6,
+      "node_count": 17,
+      "source_and_plan_refs_valid": true,
+      "technical_transport_repair": false,
+      "original_model_response_sha256": "899174f10f17e7495dab05e7cce5a1577d65b94ff5cd44aafa360083b0c6dccf",
+      "accepted_envelope_sha256": "0be5c4f36a5bc75900166c6f210e92e7c823e20b5c9f6c20fa0423775e9591df",
+      "author_notes_sha256": "9972a00cf9b5dbdf0e2daa93a365a5490a52d026c5780fcafb8f183594b4975a"
+    },
+    {
+      "sample": "experiment--dev-01-first_proposal",
+      "complete": true,
+      "page_count": 0,
+      "adopted": false,
+      "request_closed": true,
+      "proposal_refs": [
+        {
+          "path": ".deckmaster/objects/9a/9a6dd044a98221c6b3b7814d71d9a53251ec878d913ddc8f94848f98d9d8f833.json",
+          "sha256": "9a6dd044a98221c6b3b7814d71d9a53251ec878d913ddc8f94848f98d9d8f833"
+        },
+        {
+          "path": ".deckmaster/objects/6a/6ae9252ff0797084f305d6b24af13301762ce01d529ab1d16387d4c96b151cac.json",
+          "sha256": "6ae9252ff0797084f305d6b24af13301762ce01d529ab1d16387d4c96b151cac"
+        }
+      ],
+      "page_roles": 6,
+      "node_count": 17,
+      "source_and_plan_refs_valid": true,
+      "technical_transport_repair": false,
+      "original_model_response_sha256": "fdb3c8b9a0eb9b4a1b56ae4fe6296271d290c404b35bd72ee8591cae05028b55",
+      "accepted_envelope_sha256": "e44334dec59e0dcdab39d5baf512cbb37c4d14ae4e6d71e8fbf6bb06c0c17b93",
+      "author_notes_sha256": "528db544fb19c283429bf1a385e861d4e88a453d21f67bed3313ef7c04db2592"
+    }
+  ],
+  "calls": [
+    {
+      "number": 1,
+      "sample": "baseline--dev-01-first_proposal",
+      "phase": "framing",
+      "execution_ref": "d00-fe80ebf3bcd24a8396c8409b62ebdd6b",
+      "requested_model": "gpt-6.1-sol",
+      "prompt_sha256": "120b0ec38ebca460608fab81dcfae796ce5db24fb0cb63c2881714824c766dc2",
+      "prompt_bytes": 64356,
+      "freeze_sha256": "a3ff2c013a9e3ba9438c2d1a0e90592723172b859ab09d057af08f9bb23c581e",
+      "thread_id": "01a1862d-da01-7f90-96c5-4183a6c1c2fd",
+      "completed_turns": 1,
+      "status": "accepted",
+      "first_pass_status": "accepted",
+      "transport_repair": null,
+      "process": {
+        "returncode": 0,
+        "elapsed_seconds": 181.89833362499485
+      },
+      "usage": {
+        "input_tokens": 43044,
+        "cached_input_tokens": 12288,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 7390,
+        "reasoning_output_tokens": 744
+      },
+      "method_total_bytes": 46524,
+      "response_sha256": "adc3ac609c48f2621a942a7bc0d89c8d84d8bbd7cf5a0c37156673c28b1f2a70",
+      "method_set_sha256": "f75372be300a9daa6c9764a792f48a8b7411194f89c55575f29285a58f0451ff"
+    },
+    {
+      "number": 2,
+      "sample": "baseline--dev-01-first_proposal",
+      "phase": "argument",
+      "execution_ref": "d00-2d4432c51904432f96e4fc784f49e3e3",
+      "requested_model": "gpt-6.1-sol",
+      "prompt_sha256": "805abcca94ec29bf54125343d2907cc7aad78fada13e0a822b29ee6ff2dc1cc8",
+      "prompt_bytes": 109954,
+      "freeze_sha256": "a3ff2c013a9e3ba9438c2d1a0e90592723172b859ab09d057af08f9bb23c581e",
+      "thread_id": "01a18631-8ea1-72c3-9ccf-d7c99d9c4d42",
+      "completed_turns": 1,
+      "status": "accepted",
+      "first_pass_status": "accepted",
+      "transport_repair": null,
+      "process": {
+        "returncode": 0,
+        "elapsed_seconds": 361.88504408398876
+      },
+      "usage": {
+        "input_tokens": 56113,
+        "cached_input_tokens": 12288,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 15751,
+        "reasoning_output_tokens": 2070
+      },
+      "method_total_bytes": 66046,
+      "response_sha256": "5eea02dc1c5683bfdfff7c46656c00e28ab905b2727e39a4dd96b2d741f2143a",
+      "method_set_sha256": "e605ef5a90661af9c40b649b84223ceb340950901b49ddb7f5e092397d94ca12"
+    },
+    {
+      "number": 3,
+      "sample": "baseline--dev-01-competitive_bid",
+      "phase": "framing",
+      "execution_ref": "d00-9d1f1a1cfc6d40eeac66430b7cce3e84",
+      "requested_model": "gpt-6.1-sol",
+      "prompt_sha256": "147ec5521d3a56a47ad8d2c57bb64c6b90fa8704b6d2818eb18cdd5887183ff0",
+      "prompt_bytes": 64413,
+      "freeze_sha256": "a3ff2c013a9e3ba9438c2d1a0e90592723172b859ab09d057af08f9bb23c581e",
+      "thread_id": "01a18631-934e-78a1-bd72-ccb5c7393c90",
+      "completed_turns": 1,
+      "status": "accepted",
+      "first_pass_status": "accepted",
+      "transport_repair": null,
+      "process": {
+        "returncode": 0,
+        "elapsed_seconds": 233.3845269579906
+      },
+      "usage": {
+        "input_tokens": 43060,
+        "cached_input_tokens": 12288,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 9009,
+        "reasoning_output_tokens": 1552
+      },
+      "method_total_bytes": 46524,
+      "response_sha256": "a57ebe68098743b28eb27f0fb0b80e384381db0e7c897b66a9f9ffab9efce3c1",
+      "method_set_sha256": "f75372be300a9daa6c9764a792f48a8b7411194f89c55575f29285a58f0451ff"
+    },
+    {
+      "number": 4,
+      "sample": "baseline--dev-02-first_proposal",
+      "phase": "framing",
+      "execution_ref": "d00-e7fbc489ea1d4c8fb307b70471b5b622",
+      "requested_model": "gpt-6.1-sol",
+      "prompt_sha256": "177ffd3cfa22264920bd78c3f0f81ad484c5b3ce0b9261161129fc02ec9ff3fe",
+      "prompt_bytes": 64212,
+      "freeze_sha256": "a3ff2c013a9e3ba9438c2d1a0e90592723172b859ab09d057af08f9bb23c581e",
+      "thread_id": "01a18631-9864-74d1-91ae-7c4af2632ec2",
+      "completed_turns": 1,
+      "status": "accepted",
+      "first_pass_status": "accepted",
+      "transport_repair": null,
+      "process": {
+        "returncode": 0,
+        "elapsed_seconds": 193.52287599997362
+      },
+      "usage": {
+        "input_tokens": 43172,
+        "cached_input_tokens": 12288,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 7296,
+        "reasoning_output_tokens": 1034
+      },
+      "method_total_bytes": 46524,
+      "response_sha256": "56b686e3b136bb0dd15a25c073f4a1ef24d692aa662bacce34ec0f6631a75eee",
+      "method_set_sha256": "f75372be300a9daa6c9764a792f48a8b7411194f89c55575f29285a58f0451ff"
+    },
+    {
+      "number": 5,
+      "sample": "baseline--dev-02-competitive_bid",
+      "phase": "framing",
+      "execution_ref": "d00-f044938d4fef4ee0bd10b7763273da04",
+      "requested_model": "gpt-6.1-sol",
+      "prompt_sha256": "1de89663ec2b91f6bed9351c918de2dce514a66ace8b109019828a7fac3989f7",
+      "prompt_bytes": 64269,
+      "freeze_sha256": "a3ff2c013a9e3ba9438c2d1a0e90592723172b859ab09d057af08f9bb23c581e",
+      "thread_id": "01a18631-9d1b-78b0-a542-ff13bc6692b4",
+      "completed_turns": 1,
+      "status": "accepted",
+      "first_pass_status": "accepted",
+      "transport_repair": null,
+      "process": {
+        "returncode": 0,
+        "elapsed_seconds": 182.67002799996408
+      },
+      "usage": {
+        "input_tokens": 43013,
+        "cached_input_tokens": 12288,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 7704,
+        "reasoning_output_tokens": 1034
+      },
+      "method_total_bytes": 46524,
+      "response_sha256": "89518b345c5773bc7d1aae2dcd0bde9990b6a8409df8b6e1ad1118ac15a50d62",
+      "method_set_sha256": "f75372be300a9daa6c9764a792f48a8b7411194f89c55575f29285a58f0451ff"
+    },
+    {
+      "number": 6,
+      "sample": "baseline--dev-02-first_proposal",
+      "phase": "argument",
+      "execution_ref": "d00-fee9c5596ea84c0fac55b9f9b0132bd7",
+      "requested_model": "gpt-6.1-sol",
+      "prompt_sha256": "87f98f4906f4e93206c5773643e304bbdef6534bd9363f6474188a88315815da",
+      "prompt_bytes": 107754,
+      "freeze_sha256": "a3ff2c013a9e3ba9438c2d1a0e90592723172b859ab09d057af08f9bb23c581e",
+      "thread_id": "01a18634-f87c-7163-8a23-07218272b7aa",
+      "completed_turns": 1,
+      "status": "accepted",
+      "first_pass_status": "rejected",
+      "transport_repair": {
+        "kind": "deterministic_transport_metadata_only",
+        "rationale": "same source ID, original hash and extract SHA already match; use the exact path from dispatched source; no prose/claims/locators/nodes changed",
+        "patches": [
+          {
+            "pointer": "/payload/narrative/nodes/2/source_links/0/source_version/extract/path",
+            "before": ".deckmaster/objects/89/896890fe6e042d4f4acfcf49597dcbcda34ce998153043b904248d9af8a747.json",
+            "after": ".deckmaster/objects/89/896890fe6e042d4f4acfcf49597dcbcda34ce998153043b904248ebd9af8a747.json"
+          }
+        ],
+        "extra_model_requests": 0
+      },
+      "process": {
+        "returncode": 0,
+        "elapsed_seconds": 256.7746800419991
+      },
+      "usage": {
+        "input_tokens": 55798,
+        "cached_input_tokens": 12288,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 14153,
+        "reasoning_output_tokens": 1034
+      },
+      "method_total_bytes": 66046,
+      "response_sha256": "f8172b127291db6ba1b5ef807aa479fbe647fb710045d479e8b586c226772e18",
+      "method_set_sha256": "e605ef5a90661af9c40b649b84223ceb340950901b49ddb7f5e092397d94ca12"
+    },
+    {
+      "number": 7,
+      "sample": "baseline--dev-02-competitive_bid",
+      "phase": "argument",
+      "execution_ref": "d00-2bdc5afc20a14f5dad7e851732fe1a5b",
+      "requested_model": "gpt-6.1-sol",
+      "prompt_sha256": "ee733865cc9e6706c7d4d8e1350d2b9971f993358d4ebd0af8eba1402c3956f9",
+      "prompt_bytes": 113912,
+      "freeze_sha256": "a3ff2c013a9e3ba9438c2d1a0e90592723172b859ab09d057af08f9bb23c581e",
+      "thread_id": "01a18634-fd45-7f43-8139-41270c265518",
+      "completed_turns": 1,
+      "status": "accepted",
+      "first_pass_status": "accepted",
+      "transport_repair": null,
+      "process": {
+        "returncode": 0,
+        "elapsed_seconds": 330.9422500410001
+      },
+      "usage": {
+        "input_tokens": 57528,
+        "cached_input_tokens": 12288,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 16867,
+        "reasoning_output_tokens": 1034
+      },
+      "method_total_bytes": 70530,
+      "response_sha256": "0016f1eeec47dfb4c6b4c9feae6d8815f400e35f8776b81db9a4aa11efc73824",
+      "method_set_sha256": "dd841289957c34c7f105bd5b41d5167e6a670859d9e22cb64fea389a4866d1e4"
+    },
+    {
+      "number": 8,
+      "sample": "baseline--dev-01-competitive_bid",
+      "phase": "argument",
+      "execution_ref": "d00-d583965906a841689ea6925ccbcde0a0",
+      "requested_model": "gpt-6.1-sol",
+      "prompt_sha256": "3a4201e79f5d7a0b7e1ec594e201ceee93336b4e681896fe834460e3456aa7c4",
+      "prompt_bytes": 116084,
+      "freeze_sha256": "a3ff2c013a9e3ba9438c2d1a0e90592723172b859ab09d057af08f9bb23c581e",
+      "thread_id": "01a18635-9f54-73f1-ae73-a879b3b61d65",
+      "completed_turns": 1,
+      "status": "accepted",
+      "first_pass_status": "accepted",
+      "transport_repair": null,
+      "process": {
+        "returncode": 0,
+        "elapsed_seconds": 367.9500741250231
+      },
+      "usage": {
+        "input_tokens": 57994,
+        "cached_input_tokens": 12288,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 17292,
+        "reasoning_output_tokens": 2588
+      },
+      "method_total_bytes": 70530,
+      "response_sha256": "4eaafc4334c8854eca78d377ca5005cdde9e2c5f6ba075ee507fb0e37f8f3aff",
+      "method_set_sha256": "dd841289957c34c7f105bd5b41d5167e6a670859d9e22cb64fea389a4866d1e4"
+    },
+    {
+      "number": 9,
+      "sample": "experiment--dev-01-first_proposal",
+      "phase": "framing",
+      "execution_ref": "d00-393a4a65f28847199a53c117fd0ca71d",
+      "requested_model": "gpt-6.1-sol",
+      "prompt_sha256": "5304c59e27ce59bc19c9d70ef8334058cda52a0c6eb6c63633021a6188d06cbf",
+      "prompt_bytes": 66420,
+      "freeze_sha256": "a3ff2c013a9e3ba9438c2d1a0e90592723172b859ab09d057af08f9bb23c581e",
+      "thread_id": "01a1863b-fcec-7051-b219-428f80312194",
+      "completed_turns": 1,
+      "status": "accepted",
+      "first_pass_status": "accepted",
+      "transport_repair": null,
+      "process": {
+        "returncode": 0,
+        "elapsed_seconds": 297.5534649590263
+      },
+      "usage": {
+        "input_tokens": 43544,
+        "cached_input_tokens": 12288,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 10296,
+        "reasoning_output_tokens": 2588
+      },
+      "method_total_bytes": 46524,
+      "response_sha256": "5d27fd530e85bc14673e5058dc0b81a6e57a6179f533cd9f4ef11d0bb428b8a6",
+      "method_set_sha256": "f75372be300a9daa6c9764a792f48a8b7411194f89c55575f29285a58f0451ff"
+    },
+    {
+      "number": 10,
+      "sample": "experiment--dev-01-competitive_bid",
+      "phase": "framing",
+      "execution_ref": "d00-d1cc93d827ab457392f823e2263ff79c",
+      "requested_model": "gpt-6.1-sol",
+      "prompt_sha256": "2625d6c4e94126fdf254adf9e1ec1e4be214f705665c24695e8f4ea1dcd1e37d",
+      "prompt_bytes": 66477,
+      "freeze_sha256": "a3ff2c013a9e3ba9438c2d1a0e90592723172b859ab09d057af08f9bb23c581e",
+      "thread_id": "01a1863c-0121-7063-8e25-c04b739c197e",
+      "completed_turns": 1,
+      "status": "accepted",
+      "first_pass_status": "accepted",
+      "transport_repair": null,
+      "process": {
+        "returncode": 0,
+        "elapsed_seconds": 222.06467095797416
+      },
+      "usage": {
+        "input_tokens": 43560,
+        "cached_input_tokens": 12288,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 8926,
+        "reasoning_output_tokens": 1490
+      },
+      "method_total_bytes": 46524,
+      "response_sha256": "a14f49dc7799a7664feeec2516f37a0282016af182eda6f85368415dd3949565",
+      "method_set_sha256": "f75372be300a9daa6c9764a792f48a8b7411194f89c55575f29285a58f0451ff"
+    },
+    {
+      "number": 11,
+      "sample": "experiment--dev-02-first_proposal",
+      "phase": "framing",
+      "execution_ref": "d00-02f03771e99246a39dfb6774a013dd7a",
+      "requested_model": "gpt-6.1-sol",
+      "prompt_sha256": "33a9f7b2a7c3ccb4cd7b0e27dac8639b3cd6e242e793c467b40b0034d81b5f74",
+      "prompt_bytes": 66276,
+      "freeze_sha256": "a3ff2c013a9e3ba9438c2d1a0e90592723172b859ab09d057af08f9bb23c581e",
+      "thread_id": "01a1863c-0638-7c82-b0c0-d9c4c50d84c4",
+      "completed_turns": 1,
+      "status": "accepted",
+      "first_pass_status": "accepted",
+      "transport_repair": null,
+      "process": {
+        "returncode": 0,
+        "elapsed_seconds": 206.62178262497764
+      },
+      "usage": {
+        "input_tokens": 43491,
+        "cached_input_tokens": 23296,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 7386,
+        "reasoning_output_tokens": 1034
+      },
+      "method_total_bytes": 46524,
+      "response_sha256": "0b3348148d596c82e6d310a08f294f49487ba14c8570cc1f38bf8e300eea3515",
+      "method_set_sha256": "f75372be300a9daa6c9764a792f48a8b7411194f89c55575f29285a58f0451ff"
+    },
+    {
+      "number": 12,
+      "sample": "experiment--dev-02-competitive_bid",
+      "phase": "framing",
+      "execution_ref": "d00-fe8016cf2ff84b38bf6d98c259674d53",
+      "requested_model": "gpt-6.1-sol",
+      "prompt_sha256": "c223861c158950211d5dfd1180f9a28aed1fd024876356808931d2a7fcd9c067",
+      "prompt_bytes": 66333,
+      "freeze_sha256": "a3ff2c013a9e3ba9438c2d1a0e90592723172b859ab09d057af08f9bb23c581e",
+      "thread_id": "01a1863c-0ace-7611-9154-27dce734f0c6",
+      "completed_turns": 1,
+      "status": "accepted",
+      "first_pass_status": "accepted",
+      "transport_repair": null,
+      "process": {
+        "returncode": 0,
+        "elapsed_seconds": 175.0252691670321
+      },
+      "usage": {
+        "input_tokens": 43501,
+        "cached_input_tokens": 12288,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 8145,
+        "reasoning_output_tokens": 1034
+      },
+      "method_total_bytes": 46524,
+      "response_sha256": "1c12e3c1632269f76160c61fd3b08bcc53d1618cfc76f3a3a063e10acbff9786",
+      "method_set_sha256": "f75372be300a9daa6c9764a792f48a8b7411194f89c55575f29285a58f0451ff"
+    },
+    {
+      "number": 13,
+      "sample": "experiment--dev-02-first_proposal",
+      "phase": "argument",
+      "execution_ref": "d00-7b4f8032ed82472699ad8d25a386e242",
+      "requested_model": "gpt-6.1-sol",
+      "prompt_sha256": "dc5758d73c653fd2dffa5e25c5a6e3718d8605ec54e20daf5189e7eef5451940",
+      "prompt_bytes": 110327,
+      "freeze_sha256": "a3ff2c013a9e3ba9438c2d1a0e90592723172b859ab09d057af08f9bb23c581e",
+      "thread_id": "01a1863f-46a2-76c1-98a2-2aeefacba282",
+      "completed_turns": 1,
+      "status": "accepted",
+      "first_pass_status": "accepted",
+      "transport_repair": null,
+      "process": {
+        "returncode": 0,
+        "elapsed_seconds": 414.09790337499
+      },
+      "usage": {
+        "input_tokens": 56407,
+        "cached_input_tokens": 12288,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 17410,
+        "reasoning_output_tokens": 3106
+      },
+      "method_total_bytes": 66046,
+      "response_sha256": "643fd88c7ea460587833c857526d8cdd2229dac307bc01fd8ba4ce1ecb3883f4",
+      "method_set_sha256": "e605ef5a90661af9c40b649b84223ceb340950901b49ddb7f5e092397d94ca12"
+    },
+    {
+      "number": 14,
+      "sample": "experiment--dev-02-competitive_bid",
+      "phase": "argument",
+      "execution_ref": "d00-a65c11eb834b421590c43f1cc4b4b7ce",
+      "requested_model": "gpt-6.1-sol",
+      "prompt_sha256": "9f332ffec12065923ff73e39814b363033ff23f289ac5247803d2c6f4a8bb2a1",
+      "prompt_bytes": 116268,
+      "freeze_sha256": "a3ff2c013a9e3ba9438c2d1a0e90592723172b859ab09d057af08f9bb23c581e",
+      "thread_id": "01a1863f-4b4d-77c0-af6e-505585d30510",
+      "completed_turns": 1,
+      "status": "accepted",
+      "first_pass_status": "accepted",
+      "transport_repair": null,
+      "process": {
+        "returncode": 0,
+        "elapsed_seconds": 298.1073250839836
+      },
+      "usage": {
+        "input_tokens": 58069,
+        "cached_input_tokens": 12288,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 15609,
+        "reasoning_output_tokens": 799
+      },
+      "method_total_bytes": 70530,
+      "response_sha256": "acd37e4e7c53a4b6694f6559fd7e21aeb0c05f639208e8464b095a1894dbbd00",
+      "method_set_sha256": "dd841289957c34c7f105bd5b41d5167e6a670859d9e22cb64fea389a4866d1e4"
+    },
+    {
+      "number": 15,
+      "sample": "experiment--dev-01-competitive_bid",
+      "phase": "argument",
+      "execution_ref": "d00-ce2755e13af84444bda0a8a10f3d132b",
+      "requested_model": "gpt-6.1-sol",
+      "prompt_sha256": "3c5916ee135f6bee37e23c9e2f828f77d052904f97a1642652ec86688b931898",
+      "prompt_bytes": 118421,
+      "freeze_sha256": "a3ff2c013a9e3ba9438c2d1a0e90592723172b859ab09d057af08f9bb23c581e",
+      "thread_id": "01a1863f-f1ed-7621-98f9-e02ddb6bcefe",
+      "completed_turns": 1,
+      "status": "accepted",
+      "first_pass_status": "accepted",
+      "transport_repair": null,
+      "process": {
+        "returncode": 0,
+        "elapsed_seconds": 485.0839781250106
+      },
+      "usage": {
+        "input_tokens": 58750,
+        "cached_input_tokens": 58624,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 20412,
+        "reasoning_output_tokens": 3624
+      },
+      "method_total_bytes": 70530,
+      "response_sha256": "899174f10f17e7495dab05e7cce5a1577d65b94ff5cd44aafa360083b0c6dccf",
+      "method_set_sha256": "dd841289957c34c7f105bd5b41d5167e6a670859d9e22cb64fea389a4866d1e4"
+    },
+    {
+      "number": 16,
+      "sample": "experiment--dev-01-first_proposal",
+      "phase": "argument",
+      "execution_ref": "d00-00c50cdff9714c169931f4a93a005190",
+      "requested_model": "gpt-6.1-sol",
+      "prompt_sha256": "ea4c726c7a8b41bcbdd165c9ed2e4e0a010516050ac06c2c483e0f11323056fb",
+      "prompt_bytes": 114760,
+      "freeze_sha256": "a3ff2c013a9e3ba9438c2d1a0e90592723172b859ab09d057af08f9bb23c581e",
+      "thread_id": "01a18640-cee0-70b1-9ccb-83a08114d326",
+      "completed_turns": 1,
+      "status": "accepted",
+      "first_pass_status": "accepted",
+      "transport_repair": null,
+      "process": {
+        "returncode": 0,
+        "elapsed_seconds": 343.7603394999751
+      },
+      "usage": {
+        "input_tokens": 57612,
+        "cached_input_tokens": 12288,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 16031,
+        "reasoning_output_tokens": 1034
+      },
+      "method_total_bytes": 66046,
+      "response_sha256": "fdb3c8b9a0eb9b4a1b56ae4fe6296271d290c404b35bd72ee8591cae05028b55",
+      "method_set_sha256": "e605ef5a90661af9c40b649b84223ceb340950901b49ddb7f5e092397d94ca12"
+    }
+  ],
+  "totals": {
+    "input_tokens": 804656,
+    "cached_input_tokens": 253952,
+    "output_tokens": 199677,
+    "reasoning_output_tokens": 25799
+  },
+  "sum_call_elapsed_seconds": 4551.34,
+  "elapsed_caveat": "sum of overlapping per-call durations, not end-to-end latency",
+  "method_sets": {
+    "f75372be300a9daa6c9764a792f48a8b7411194f89c55575f29285a58f0451ff": [
+      {
+        "id": "source-reading",
+        "relative_path": "references/source-reading.md",
+        "sha256": "4be8ac92de269f41010cd25587bbbb652ab2a4bebbbbd329edb9f3d370a60a50",
+        "bytes": 6681
+      },
+      {
+        "id": "content-methods",
+        "relative_path": "references/content-methods.md",
+        "sha256": "fe495b2fc262c89fd1791c34933f2ad73bce84bbdf143375427791574a0ac2bc",
+        "bytes": 12355
+      },
+      {
+        "id": "content-examples",
+        "relative_path": "references/content-examples.md",
+        "sha256": "13f3cb7deceb5b1ce554c470f3ea2aa325dd0365c6dda73094fe9e85e181cdbd",
+        "bytes": 19036
+      },
+      {
+        "id": "method-selection",
+        "relative_path": "references/method-selection.md",
+        "sha256": "583ea0f4203bbb2a55b592da732220efaf71d74ed71846276c14c70e7dd708a8",
+        "bytes": 3493
+      },
+      {
+        "id": "content-m01",
+        "relative_path": "references/methods/M01-framing.md",
+        "sha256": "de0fcc09db864d5f47841eb1f91eba10f61b972e38564773a904e7124fed2e09",
+        "bytes": 4959
+      }
+    ],
+    "e605ef5a90661af9c40b649b84223ceb340950901b49ddb7f5e092397d94ca12": [
+      {
+        "id": "source-reading",
+        "relative_path": "references/source-reading.md",
+        "sha256": "4be8ac92de269f41010cd25587bbbb652ab2a4bebbbbd329edb9f3d370a60a50",
+        "bytes": 6681
+      },
+      {
+        "id": "content-methods",
+        "relative_path": "references/content-methods.md",
+        "sha256": "fe495b2fc262c89fd1791c34933f2ad73bce84bbdf143375427791574a0ac2bc",
+        "bytes": 12355
+      },
+      {
+        "id": "content-examples",
+        "relative_path": "references/content-examples.md",
+        "sha256": "13f3cb7deceb5b1ce554c470f3ea2aa325dd0365c6dda73094fe9e85e181cdbd",
+        "bytes": 19036
+      },
+      {
+        "id": "method-selection",
+        "relative_path": "references/method-selection.md",
+        "sha256": "583ea0f4203bbb2a55b592da732220efaf71d74ed71846276c14c70e7dd708a8",
+        "bytes": 3493
+      },
+      {
+        "id": "content-m02",
+        "relative_path": "references/methods/M02-structured-analysis.md",
+        "sha256": "30e7e9dc8f30a4cd2a8038d734ba6e77acbb91c10d34e1cd837d4d7d408174be",
+        "bytes": 4962
+      },
+      {
+        "id": "content-m04",
+        "relative_path": "references/methods/M04-causal-explanations.md",
+        "sha256": "cd52c74a319cf30ade75fd029c3476636d4b4b6f9db2eadffdc5f746dd815bf9",
+        "bytes": 5158
+      },
+      {
+        "id": "content-m07",
+        "relative_path": "references/methods/M07-synthesis.md",
+        "sha256": "4af0b9137f516e03d4b4dbf343ae85bb76a3535ef6b218d479ef7b1e0082fa0a",
+        "bytes": 4566
+      },
+      {
+        "id": "content-m08",
+        "relative_path": "references/methods/M08-narrative.md",
+        "sha256": "d4e56ac966ee88332bb4316e501e13f72698e71c45c5bdb5f8fcb271de0e42f7",
+        "bytes": 5149
+      },
+      {
+        "id": "content-m10",
+        "relative_path": "references/methods/M10-compression.md",
+        "sha256": "eebc4d4fe5a133366d2e71d937fb86fbd83b8284c440fe453126d8d2b2e6258d",
+        "bytes": 4646
+      }
+    ],
+    "dd841289957c34c7f105bd5b41d5167e6a670859d9e22cb64fea389a4866d1e4": [
+      {
+        "id": "source-reading",
+        "relative_path": "references/source-reading.md",
+        "sha256": "4be8ac92de269f41010cd25587bbbb652ab2a4bebbbbd329edb9f3d370a60a50",
+        "bytes": 6681
+      },
+      {
+        "id": "content-methods",
+        "relative_path": "references/content-methods.md",
+        "sha256": "fe495b2fc262c89fd1791c34933f2ad73bce84bbdf143375427791574a0ac2bc",
+        "bytes": 12355
+      },
+      {
+        "id": "content-examples",
+        "relative_path": "references/content-examples.md",
+        "sha256": "13f3cb7deceb5b1ce554c470f3ea2aa325dd0365c6dda73094fe9e85e181cdbd",
+        "bytes": 19036
+      },
+      {
+        "id": "method-selection",
+        "relative_path": "references/method-selection.md",
+        "sha256": "583ea0f4203bbb2a55b592da732220efaf71d74ed71846276c14c70e7dd708a8",
+        "bytes": 3493
+      },
+      {
+        "id": "content-m02",
+        "relative_path": "references/methods/M02-structured-analysis.md",
+        "sha256": "30e7e9dc8f30a4cd2a8038d734ba6e77acbb91c10d34e1cd837d4d7d408174be",
+        "bytes": 4962
+      },
+      {
+        "id": "content-m03",
+        "relative_path": "references/methods/M03-argument.md",
+        "sha256": "159b046b28b4e7c82a291bb50a9e8126754a007688cb61203189bae4898b6ff5",
+        "bytes": 4524
+      },
+      {
+        "id": "content-m05",
+        "relative_path": "references/methods/M05-options-and-value.md",
+        "sha256": "eee24a2c9a80d3980d8768df2ae926f2998bd436c7dcdd7ea6ba8420d01157f3",
+        "bytes": 5118
+      },
+      {
+        "id": "content-m07",
+        "relative_path": "references/methods/M07-synthesis.md",
+        "sha256": "4af0b9137f516e03d4b4dbf343ae85bb76a3535ef6b218d479ef7b1e0082fa0a",
+        "bytes": 4566
+      },
+      {
+        "id": "content-m08",
+        "relative_path": "references/methods/M08-narrative.md",
+        "sha256": "d4e56ac966ee88332bb4316e501e13f72698e71c45c5bdb5f8fcb271de0e42f7",
+        "bytes": 5149
+      },
+      {
+        "id": "content-m10",
+        "relative_path": "references/methods/M10-compression.md",
+        "sha256": "eebc4d4fe5a133366d2e71d937fb86fbd83b8284c440fe453126d8d2b2e6258d",
+        "bytes": 4646
+      }
+    ]
+  }
+}

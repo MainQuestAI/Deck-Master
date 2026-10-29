@@ -2,7 +2,7 @@
   "schema_version": "development_index.v1",
   "baseline": "ce4ef8b204dd5033019364ce44979adac7f4243b",
   "date": "2026-10-29",
-  "status": "in_progress",
+  "status": "awaiting_author",
   "implementation_started": true,
   "evaluation_thresholds": {
     "target": {
@@ -76,7 +76,7 @@
       "title": "固定内容基线与配对任务",
       "path": "task-cards/D00.md",
       "iteration": "I0",
-      "status": "in_progress",
+      "status": "awaiting_author",
       "depends_on": [
         "D00a"
       ],
@@ -93,8 +93,11 @@
         },
         {
           "id": "D00-AC02",
-          "status": "not_run",
-          "evidence": []
+          "status": "pass",
+          "evidence": [
+            "evaluation/generation-evidence.json",
+            "evaluation/execution-report.md"
+          ]
         },
         {
           "id": "D00-AC03",
@@ -119,36 +122,48 @@
           ]
         }
       ],
-      "implementation_commit": null,
+      "implementation_commit": "6cd1123b3483ce90de16c32cb42012c20fb9bbd2",
       "changed_files": [
+        "README.md",
+        "task-cards/D00.md",
+        "execution-index.json",
         "evaluation/README.md",
+        "evaluation/blind_packet.py",
+        "evaluation/execution-report.md",
         "evaluation/experiment.md",
         "evaluation/freeze.json",
         "evaluation/generate.py",
+        "evaluation/generation-evidence.json",
         "evaluation/input-triage.json",
         "evaluation/manifest.json",
+        "evaluation/materials/dev-01.md",
+        "evaluation/materials/dev-02.md",
+        "evaluation/materials/holdout-01.md",
+        "evaluation/materials/holdout-02.md",
+        "evaluation/materials/holdout-03.md",
         "evaluation/protocol.md",
         "evaluation/report-template.md",
         "evaluation/tasks.json",
-        "evaluation/triage.py",
-        "execution-index.json"
+        "evaluation/triage.py"
       ],
       "engineering_evidence": [
         "evaluation/input-triage.json",
         "evaluation/execution-report.md"
       ],
-      "model_evidence": [],
+      "model_evidence": [
+        "evaluation/generation-evidence.json"
+      ],
       "author_acceptance": [],
       "not_run": [
-        "8份完整策划尚在生成，D00-AC02未关闭",
-        "作者初判、三模型辅审、作者终判及go/adjust未执行，D00-AC03未关闭",
-        "D08完整稿调用费用未授权，留出未执行"
+        "作者初判尚待提供；按冻结流程未启动三模型辅审或作者终判；D00-AC03未关闭",
+        "D08完整稿评测费用未授权，留出未执行"
       ],
       "risks": [
         "全部输入明确合成，不能外推为真实客户接受",
         "留出集在选定编写时对编写者暴露；不进入后续方法调试或生成上下文",
         "模型请求ID已冻结；实际响应未暴露的后台快照/采样字段保持未知",
-        "I0仅策划，不验证正文、口播及全文贯穿"
+        "I0仅策划，不验证正文、口播及全文贯穿",
+        "16次阶段输出有1次来源路径抄写导致首次接纳拒绝；仅按同一来源和已正确SHA做传输元数据修正，原始失败保留；不作为内容效果改善"
       ],
       "conditional_depends_on": [
         {
@@ -684,7 +699,8 @@
       "evidence": [
         "evaluation/input-triage.json",
         "evaluation/execution-report.md"
-      ]
+      ],
+      "implementation_commit": "6cd1123b3483ce90de16c32cb42012c20fb9bbd2"
     },
     {
       "id": "X01",
@@ -706,7 +722,7 @@
       "depends_on": [
         "D00a"
       ],
-      "status": "in_progress",
+      "status": "awaiting_author",
       "conditional_depends_on": [
         {
           "work_unit": "X01",
@@ -723,6 +739,7 @@
       ],
       "evidence": [
         "evaluation/freeze.json",
+        "evaluation/generation-evidence.json",
         "evaluation/execution-report.md"
       ]
     },
@@ -932,5 +949,7 @@
   "suite_version": "0.2",
   "document_revision_base": "03c06add760eb20a9e457c6f8bda0b2a8b8036b7",
   "dependency_semantics": "depends_on 引用 work_units；conditional_depends_on 仅在条件成立时加边。卡条目镜像其收口单元；工作单元 acceptance_ids 是 AC 唯一验收归属。",
-  "execution_base": "035845f228d1ba4cd7fc9b41cdedd8fd734043df"
+  "execution_base": "035845f228d1ba4cd7fc9b41cdedd8fd734043df",
+  "execution_started_at": "2026-10-29",
+  "current_gate": "D00 author initial judgment, then three-model feedback and author final go/adjust"
 }

@@ -11,7 +11,9 @@
 1. [SPEC.md](SPEC.md)：唯一活动总方案，包含范围、方法 M01–M10、调用机制、真源、协议兼容、采用路径、评测设计。
 2. [BASELINE.md](BASELINE.md)：源讨论与 Space 依据、本次代码核对、未复测项。
 3. 下表中本次工作卡：实施步骤、代码落点、交付、逐项 AC 与验证入口。
-4. [execution-index.json](execution-index.json)：唯一机器可读执行状态；10 张卡、71 项 AC，当前均未执行，X01 未启用。
+4. [execution-index.json](execution-index.json)：唯一机器可读执行状态；10 张卡、71 项 AC，记录实际关口、证据和 X01 是否启用。
+
+开发执行与真实证据从 [D00 执行记录](evaluation/execution-report.md) 进入；卡片正文保留验收定义，当前进度与关口以执行索引为准。生成原始运行保存在本地，未提交仓库。
 
 本套件的 D00–D08 不替换历史 T/N/W 卡编号。运行时合同继续以 `src/deck_master/resources/contracts/` 为准，方法继续编辑 canonical references，不在本套件复制运行 schema 或方法全文。
 
