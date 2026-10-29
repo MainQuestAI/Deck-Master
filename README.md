@@ -1,18 +1,34 @@
 # Deck Master
 
-Deck Master 帮助解决方案作者、提案者、竞标者和分享者，**在真实需求与技术边界内，把复杂的事情讲简单，把抽象的事情讲具体。**
+[English](README.md) | [简体中文](README.zh-CN.md)
 
-我们从讲述者的商业任务出发：这次要讲什么、表达什么判断、争取什么结果。受众的语言与经验用来校准表达。核心工作是理解需求、理清架构、提炼业务框架，并让它贯穿整套内容、场景与讲稿。
+Deck Master is an AI-native workbench for developing and presenting business
+solutions. It helps solution architects, proposal authors and presenters turn
+complex material into clear, coherent decks grounded in real requirements and
+product capabilities.
 
-## 同一材料，形成适合这次任务的 deck
+## Philosophy
 
-首次提案介绍会员系统，重点是改善什么、如何改善、具体怎样使用；竞标则突出对关键需求的理解、方案回应和有依据的优势。这样的变化应当改变内容的主线与取舍。
+A strong deck starts with business judgment: what needs to be said, why it
+matters for this task, and how the parts fit together. Our aim is to help authors
+understand the problem, find an organizing idea, and develop it into an
+explanation that makes complex ideas clear and abstract ideas concrete.
 
-“钱、事、酒、账”代表我们追求的业务提炼能力：简洁名称背后有准确拆解，能展开回需求、能力、场景与边界，并统领完整方案。它不是固定四格模板，也不是靠生成口诀替代理解。
+Three principles guide the product:
 
-方法卡应帮助作者完成这种有效加工。视觉负责说明关系、变化和过程；PPT 和生成引擎负责稳定承载表达。当前工程提供本地优先的 Agent 工作台，通过 CLI 和本机 Web UI 连接内容、生成、可编辑 SVG/PPT、审查与返修。
+- **Purpose shapes the story.** The author's task determines the central message,
+  emphasis and content choices; the audience's knowledge guides how to explain them.
+- **Understanding gives content its structure.** A useful business framework
+  connects requirements, capabilities and scenarios, and carries through the
+  whole deck and its spoken delivery.
+- **Visuals do explanatory work.** Words, diagrams and examples make
+  relationships, processes and tradeoffs visible. Formats and production tools
+  serve that purpose.
 
-详见[核心理念](docs/product-philosophy.md)。下一轮优先建设[商业表达能力与开发卡套件](docs/specs/deck-master-business-expression-20261029/README.md)：任务策略、业务框架、方法有效调用、全文贯穿和策略重编。**这些是待开发与验证的目标；排版优化及新输出引擎留待后续迭代。**
+These principles guide product development. The current workbench connects
+content planning, editable SVG/PPT production, review and revision through a CLI
+and local Web UI. See the [capability boundaries](#capability-boundaries) for
+current implementation limits.
 
 **Version:** Python package `1.0.0`, in release preparation. Published assets
 and publication status are listed in [GitHub Releases](https://github.com/MainQuestAI/Deck-Master/releases).
@@ -42,12 +58,10 @@ the old command surface maps onto the new CLI per
 
 ## Who It Is For
 
-Deck Master serves solution architects, proposal authors, bidders and presenters.
-It aims to help them turn business understanding into a clear, coherent deck:
-choose what matters for this task, organize a meaningful framework, and explain
-the solution in language the audience can use. Existing content, review and
-production workflows provide the foundation; the next increment develops and
-evaluates the business-expression capabilities described above.
+Deck Master is built for people who explain business solutions: solution
+architects, consultants, proposal authors, bidders and presenters. It supports
+their work from understanding source material and shaping the narrative to
+producing, reviewing and revising the deck.
 
 ## Install
 
@@ -157,7 +171,8 @@ index does not mean every historical PPTX body was reread—only matching origin
 are byte-verified.
 
 Personal-state clearing retains its operation and request before submission. If a
-response is lost, reopen “个人状态与恢复” and use “核实并重试原清理”; the same request
+response is lost, reopen the personal-state and recovery panel and use its
+verify-and-retry action for the original cleanup; the same request
 is replayed and later drafts are preserved. Historical clear receipts without an
 input digest remain readable and their backups usable, but cannot prove an exact
 request replay; they are not treated as a new cleanup instruction.
@@ -240,8 +255,8 @@ engineering specifications and dated evidence. Historical reports do not certify
 the current candidate; see the [archive index](docs/archive/README.md).
 
 - [Installation, First Run, Host Requirements and Upgrade](docs/getting-started.md)
-- [核心理念：从业务判断到商业表达](docs/product-philosophy.md)
-- [下一轮商业表达能力：总方案与开发卡](docs/specs/deck-master-business-expression-20261029/README.md)
+- [Product Philosophy (Chinese)](docs/product-philosophy.md)
+- [Next Iteration: Business Expression Plan and Development Cards (Chinese)](docs/specs/deck-master-business-expression-20261029/README.md)
 - [Agent Entry](AGENTS.md)
 - [Agent Task Index](docs/agent-task-index.md)
 - [Agent Recovery Playbook](docs/agent-recovery-playbook.md)
