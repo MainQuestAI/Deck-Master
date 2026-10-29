@@ -2,7 +2,7 @@
   "schema_version": "development_index.v1",
   "baseline": "ce4ef8b204dd5033019364ce44979adac7f4243b",
   "date": "2026-10-29",
-  "status": "awaiting_author",
+  "status": "author_feedback_received",
   "implementation_started": true,
   "evaluation_thresholds": {
     "target": {
@@ -76,7 +76,7 @@
       "title": "固定内容基线与配对任务",
       "path": "task-cards/D00.md",
       "iteration": "I0",
-      "status": "awaiting_author",
+      "status": "author_feedback_received",
       "depends_on": [
         "D00a"
       ],
@@ -144,18 +144,21 @@
         "evaluation/protocol.md",
         "evaluation/report-template.md",
         "evaluation/tasks.json",
-        "evaluation/triage.py"
+        "evaluation/triage.py",
+        "evaluation/review-reconciliation-20261029.md"
       ],
       "engineering_evidence": [
         "evaluation/input-triage.json",
         "evaluation/execution-report.md"
       ],
       "model_evidence": [
-        "evaluation/generation-evidence.json"
+        "evaluation/generation-evidence.json",
+        "evaluation/review-reconciliation-20261029.md"
       ],
       "author_acceptance": [],
       "not_run": [
-        "作者初判尚待提供；按冻结流程未启动三模型辅审或作者终判；D00-AC03未关闭",
+        "作者反馈已收到；未保存反馈前初判，不追补；尚无作者go/adjust终判，D00-AC03未关闭",
+        "用户提供四份外部评审，具体模型版本、独立会话和原始调用未核实；未新增本地辅审调用",
         "D08完整稿评测费用未授权，留出未执行"
       ],
       "risks": [
@@ -171,7 +174,22 @@
           "when": "X01.status != inactive",
           "currently_active": false
         }
-      ]
+      ],
+      "author_feedback": {
+        "verbatim": "我基本同意 kimi 的评审，其他的不同角度的差异很大",
+        "classification": "qualitative_after_review_feedback",
+        "provisional_preferences": {
+          "P01": "A",
+          "P02": "B",
+          "P03": "A",
+          "P04": "B"
+        },
+        "individual_scores": null,
+        "gate_verdict": null,
+        "evidence": [
+          "evaluation/review-reconciliation-20261029.md"
+        ]
+      }
     },
     {
       "id": "D01",
@@ -722,7 +740,7 @@
       "depends_on": [
         "D00a"
       ],
-      "status": "awaiting_author",
+      "status": "author_feedback_received",
       "conditional_depends_on": [
         {
           "work_unit": "X01",
@@ -740,7 +758,8 @@
       "evidence": [
         "evaluation/freeze.json",
         "evaluation/generation-evidence.json",
-        "evaluation/execution-report.md"
+        "evaluation/execution-report.md",
+        "evaluation/review-reconciliation-20261029.md"
       ]
     },
     {
@@ -951,5 +970,5 @@
   "dependency_semantics": "depends_on 引用 work_units；conditional_depends_on 仅在条件成立时加边。卡条目镜像其收口单元；工作单元 acceptance_ids 是 AC 唯一验收归属。",
   "execution_base": "035845f228d1ba4cd7fc9b41cdedd8fd734043df",
   "execution_started_at": "2026-10-29",
-  "current_gate": "D00 author initial judgment, then three-model feedback and author final go/adjust"
+  "current_gate": "D00: qualitative author alignment with Kimi received; reconcile review findings; author go/adjust and full review evidence not recorded"
 }
