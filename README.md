@@ -1,9 +1,18 @@
 # Deck Master
 
-Deck Master is a local-first, agent-operable solution-deck workbench: from a
-brief and real source material it drives content composition, blueprint
-generation, editable SVG/PPT production, review and repair — all through one
-CLI and a loopback review workbench.
+Deck Master 帮助解决方案作者、提案者、竞标者和分享者，**在真实需求与技术边界内，把复杂的事情讲简单，把抽象的事情讲具体。**
+
+我们从讲述者的商业任务出发：这次要讲什么、表达什么判断、争取什么结果。受众的语言与经验用来校准表达。核心工作是理解需求、理清架构、提炼业务框架，并让它贯穿整套内容、场景与讲稿。
+
+## 同一材料，形成适合这次任务的 deck
+
+首次提案介绍会员系统，重点是改善什么、如何改善、具体怎样使用；竞标则突出对关键需求的理解、方案回应和有依据的优势。这样的变化应当改变内容的主线与取舍。
+
+“钱、事、酒、账”代表我们追求的业务提炼能力：简洁名称背后有准确拆解，能展开回需求、能力、场景与边界，并统领完整方案。它不是固定四格模板，也不是靠生成口诀替代理解。
+
+方法卡应帮助作者完成这种有效加工。视觉负责说明关系、变化和过程；PPT 和生成引擎负责稳定承载表达。当前工程提供本地优先的 Agent 工作台，通过 CLI 和本机 Web UI 连接内容、生成、可编辑 SVG/PPT、审查与返修。
+
+详见[核心理念](docs/product-philosophy.md)。下一轮优先建设[商业表达能力与开发卡套件](docs/specs/deck-master-business-expression-20261029/README.md)：任务策略、业务框架、方法有效调用、全文贯穿和策略重编。**这些是待开发与验证的目标；排版优化及新输出引擎留待后续迭代。**
 
 **Version:** Python package `1.0.0`, in release preparation. Published assets
 and publication status are listed in [GitHub Releases](https://github.com/MainQuestAI/Deck-Master/releases).
@@ -33,7 +42,12 @@ the old command surface maps onto the new CLI per
 
 ## Who It Is For
 
-Deck Master is built for solution architects and proposal builders who need a repeatable way to decide which pages should be generated, which pages should be reused, and which pages are ready for review or delivery.
+Deck Master serves solution architects, proposal authors, bidders and presenters.
+It aims to help them turn business understanding into a clear, coherent deck:
+choose what matters for this task, organize a meaningful framework, and explain
+the solution in language the audience can use. Existing content, review and
+production workflows provide the foundation; the next increment develops and
+evaluates the business-expression capabilities described above.
 
 ## Install
 
@@ -226,6 +240,8 @@ engineering specifications and dated evidence. Historical reports do not certify
 the current candidate; see the [archive index](docs/archive/README.md).
 
 - [Installation, First Run, Host Requirements and Upgrade](docs/getting-started.md)
+- [核心理念：从业务判断到商业表达](docs/product-philosophy.md)
+- [下一轮商业表达能力：总方案与开发卡](docs/specs/deck-master-business-expression-20261029/README.md)
 - [Agent Entry](AGENTS.md)
 - [Agent Task Index](docs/agent-task-index.md)
 - [Agent Recovery Playbook](docs/agent-recovery-playbook.md)

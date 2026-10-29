@@ -19,6 +19,10 @@
 
 ## 贡献、方法与工程来源
 
+[核心理念](product-philosophy.md)说明 Deck Master 服务讲述者的商业任务，以及内容有效加工的标准。
+下一轮开发输入见[商业表达能力套件](specs/deck-master-business-expression-20261029/README.md)：
+9 张主卡、1 张条件卡，当前为规划状态；已有工程机制与待验证目标分别说明。
+
 | 目的 | 入口 | 如何使用 |
 | --- | --- | --- |
 | 贡献和验证 | [CONTRIBUTING](../CONTRIBUTING.md)、[现行 CI](../.github/workflows/rebuild.yml) | 按修改范围运行必要检查；旧日志不能替代候选检查 |

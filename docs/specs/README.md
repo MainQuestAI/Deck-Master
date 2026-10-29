@@ -6,6 +6,10 @@
 
 ## 当前主线使用的增量与继承合同
 
+下一轮规划入口：[商业表达能力开发套件](deck-master-business-expression-20261029/README.md)。
+这是 2026-10-29 整理的开发输入，包含 D00–D08 与条件卡 X01，尚未实施；
+不改变下列现行合同或证明新能力已经通过验收。
+
 | 目录 | 定位 |
 | --- | --- |
 | [Content WebUI](deck-master-webui-content-methods-20261020/README.md) | PR130 已合入；固定版本读取、方向采用及审阅交接，原记录保留时点 |

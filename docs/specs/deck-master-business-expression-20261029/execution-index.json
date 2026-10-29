@@ -1,0 +1,663 @@
+{
+  "schema_version": "development_index.v1",
+  "baseline": "ce4ef8b204dd5033019364ce44979adac7f4243b",
+  "date": "2026-10-29",
+  "status": "planned",
+  "implementation_started": false,
+  "evaluation_thresholds": "proposed_pending_D00_freeze",
+  "cards": [
+    {
+      "id": "D00",
+      "title": "固定内容基线与配对任务",
+      "path": "task-cards/D00.md",
+      "iteration": "I0",
+      "status": "planned",
+      "depends_on": [],
+      "acceptance": [
+        {
+          "id": "D00-AC01",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D00-AC02",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D00-AC03",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D00-AC04",
+          "status": "not_run",
+          "evidence": []
+        }
+      ],
+      "implementation_commit": null,
+      "changed_files": [],
+      "engineering_evidence": [],
+      "model_evidence": [],
+      "author_acceptance": [],
+      "not_run": [],
+      "risks": []
+    },
+    {
+      "id": "D01",
+      "title": "作者策略和业务框架的最小合同",
+      "path": "task-cards/D01.md",
+      "iteration": "I1",
+      "status": "planned",
+      "depends_on": [
+        "D00"
+      ],
+      "acceptance": [
+        {
+          "id": "D01-AC01",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D01-AC02",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D01-AC03",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D01-AC04",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D01-AC05",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D01-AC06",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D01-AC07",
+          "status": "not_run",
+          "evidence": []
+        }
+      ],
+      "implementation_commit": null,
+      "changed_files": [],
+      "engineering_evidence": [],
+      "model_evidence": [],
+      "author_acceptance": [],
+      "not_run": [],
+      "risks": []
+    },
+    {
+      "id": "D02",
+      "title": "方法选择与成果审查接通",
+      "path": "task-cards/D02.md",
+      "iteration": "I1",
+      "status": "planned",
+      "depends_on": [
+        "D01"
+      ],
+      "acceptance": [
+        {
+          "id": "D02-AC01",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D02-AC02",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D02-AC03",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D02-AC04",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D02-AC05",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D02-AC06",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D02-AC07",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D02-AC08",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D02-AC09",
+          "status": "not_run",
+          "evidence": []
+        }
+      ],
+      "implementation_commit": null,
+      "changed_files": [],
+      "engineering_evidence": [],
+      "model_evidence": [],
+      "author_acceptance": [],
+      "not_run": [],
+      "risks": []
+    },
+    {
+      "id": "D03",
+      "title": "业务框架提炼与反向展开",
+      "path": "task-cards/D03.md",
+      "iteration": "I1",
+      "status": "planned",
+      "depends_on": [
+        "D01",
+        "D02",
+        "D06a"
+      ],
+      "acceptance": [
+        {
+          "id": "D03-AC01",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D03-AC02",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D03-AC03",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D03-AC04",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D03-AC05",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D03-AC06",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D03-AC07",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D03-AC08",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D03-AC09",
+          "status": "not_run",
+          "evidence": []
+        }
+      ],
+      "implementation_commit": null,
+      "changed_files": [],
+      "engineering_evidence": [],
+      "model_evidence": [],
+      "author_acceptance": [],
+      "not_run": [],
+      "risks": []
+    },
+    {
+      "id": "D04",
+      "title": "前置质量审查与完整内容展开",
+      "path": "task-cards/D04.md",
+      "iteration": "I2",
+      "status": "planned",
+      "depends_on": [
+        "D03"
+      ],
+      "acceptance": [
+        {
+          "id": "D04-AC01",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D04-AC02",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D04-AC03",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D04-AC04",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D04-AC05",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D04-AC06",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D04-AC07",
+          "status": "not_run",
+          "evidence": []
+        }
+      ],
+      "implementation_commit": null,
+      "changed_files": [],
+      "engineering_evidence": [],
+      "model_evidence": [],
+      "author_acceptance": [],
+      "not_run": [],
+      "risks": []
+    },
+    {
+      "id": "D05",
+      "title": "策略变化的影响预览和定向重编",
+      "path": "task-cards/D05.md",
+      "iteration": "I2",
+      "status": "planned",
+      "depends_on": [
+        "D01",
+        "D04"
+      ],
+      "acceptance": [
+        {
+          "id": "D05-AC01",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D05-AC02",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D05-AC03",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D05-AC04",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D05-AC05",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D05-AC06",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D05-AC07",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D05-AC08",
+          "status": "not_run",
+          "evidence": []
+        }
+      ],
+      "implementation_commit": null,
+      "changed_files": [],
+      "engineering_evidence": [],
+      "model_evidence": [],
+      "author_acceptance": [],
+      "not_run": [],
+      "risks": []
+    },
+    {
+      "id": "D06",
+      "title": "作者任务和框架工作流",
+      "path": "task-cards/D06.md",
+      "iteration": "I1–I3",
+      "status": "planned",
+      "depends_on": [
+        "D06a",
+        "D06b"
+      ],
+      "acceptance": [
+        {
+          "id": "D06-AC01",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D06-AC02",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D06-AC03",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D06-AC04",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D06-AC05",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D06-AC06",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D06-AC07",
+          "status": "not_run",
+          "evidence": []
+        }
+      ],
+      "implementation_commit": null,
+      "changed_files": [],
+      "engineering_evidence": [],
+      "model_evidence": [],
+      "author_acceptance": [],
+      "not_run": [],
+      "risks": []
+    },
+    {
+      "id": "D07",
+      "title": "固定版本作者包与有界接续",
+      "path": "task-cards/D07.md",
+      "iteration": "I3",
+      "status": "planned",
+      "depends_on": [
+        "D04",
+        "D06"
+      ],
+      "acceptance": [
+        {
+          "id": "D07-AC01",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D07-AC02",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D07-AC03",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D07-AC04",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D07-AC05",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D07-AC06",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D07-AC07",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D07-AC08",
+          "status": "not_run",
+          "evidence": []
+        }
+      ],
+      "implementation_commit": null,
+      "changed_files": [],
+      "engineering_evidence": [],
+      "model_evidence": [],
+      "author_acceptance": [],
+      "not_run": [],
+      "risks": []
+    },
+    {
+      "id": "D08",
+      "title": "留出效果与发布验收",
+      "path": "task-cards/D08.md",
+      "iteration": "I3",
+      "status": "planned",
+      "depends_on": [
+        "D00",
+        "D01",
+        "D02",
+        "D03",
+        "D04",
+        "D05",
+        "D06",
+        "D07"
+      ],
+      "acceptance": [
+        {
+          "id": "D08-AC01",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D08-AC02",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D08-AC03",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D08-AC04",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "D08-AC05",
+          "status": "not_run",
+          "evidence": []
+        }
+      ],
+      "implementation_commit": null,
+      "changed_files": [],
+      "engineering_evidence": [],
+      "model_evidence": [],
+      "author_acceptance": [],
+      "not_run": [],
+      "risks": []
+    },
+    {
+      "id": "X01",
+      "title": "表格需求材料读取",
+      "path": "task-cards/X01.md",
+      "iteration": "conditional",
+      "status": "inactive",
+      "depends_on": [
+        "D00"
+      ],
+      "acceptance": [
+        {
+          "id": "X01-AC01",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "X01-AC02",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "X01-AC03",
+          "status": "not_run",
+          "evidence": []
+        },
+        {
+          "id": "X01-AC04",
+          "status": "not_run",
+          "evidence": []
+        }
+      ],
+      "implementation_commit": null,
+      "changed_files": [],
+      "engineering_evidence": [],
+      "model_evidence": [],
+      "author_acceptance": [],
+      "not_run": [],
+      "risks": []
+    }
+  ],
+  "work_units": [
+    {
+      "id": "D00",
+      "card": "D00",
+      "depends_on": [],
+      "status": "planned"
+    },
+    {
+      "id": "D01",
+      "card": "D01",
+      "depends_on": [
+        "D00"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "D02",
+      "card": "D02",
+      "depends_on": [
+        "D01"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "D03",
+      "card": "D03",
+      "depends_on": [
+        "D01",
+        "D02",
+        "D06a"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "D04",
+      "card": "D04",
+      "depends_on": [
+        "D03"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "D05",
+      "card": "D05",
+      "depends_on": [
+        "D01",
+        "D04"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "D06",
+      "card": "D06",
+      "depends_on": [
+        "D06a",
+        "D06b"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "D07",
+      "card": "D07",
+      "depends_on": [
+        "D04",
+        "D06"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "D08",
+      "card": "D08",
+      "depends_on": [
+        "D00",
+        "D01",
+        "D02",
+        "D03",
+        "D04",
+        "D05",
+        "D06",
+        "D07"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "X01",
+      "card": "X01",
+      "depends_on": [
+        "D00"
+      ],
+      "status": "inactive"
+    },
+    {
+      "id": "D06a",
+      "card": "D06",
+      "depends_on": [
+        "D01",
+        "D02"
+      ],
+      "status": "planned",
+      "deliverable": "I1 最小任务输入和框架阅读入口；以合法固定对象验证，不等待 D03 完成"
+    },
+    {
+      "id": "D06b",
+      "card": "D06",
+      "depends_on": [
+        "D03",
+        "D05",
+        "D06a"
+      ],
+      "status": "planned",
+      "deliverable": "I2 实际框架采用与策略重编界面"
+    }
+  ]
+}
