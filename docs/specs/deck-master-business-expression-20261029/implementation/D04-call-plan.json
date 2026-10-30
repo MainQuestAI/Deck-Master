@@ -326,5 +326,6 @@
         "sha256": "eebc4d4fe5a133366d2e71d937fb86fbd83b8284c440fe453126d8d2b2e6258d"
       }
     ]
-  }
+  },
+  "execution_request_rule": "Prepared projects/packets are explicitly zero-call preflight only. After budget approval create a new bounded request citing the exact user allocation, retain the preflight request and history, and rebuild the live packet/Task at the actual revision. Preflight packet SHA is evidence for review, never live prompt identity or authority to spend."
 }
