@@ -84,7 +84,9 @@ def project_requirements(store, document, *, page_ids, unit):
         decisions.append({'ref': ref, 'decision': record,
                           'instruction_evidence': _evidence(store, record.get('evidence'))})
     decisions.sort(key=lambda item: (item['decision']['decision_id'], item['ref']['sha256']))
-    return {'request': request_view,
+    from .business_review import standard
+    criteria = standard(store, document)
+    return {**({'business_review_standard': criteria['dependency']} if criteria else {}), 'request': request_view,
             'task_facts': {key: document.get('task', {}).get(key) for key in
                            ('audience', 'brief', 'scenario', 'presentation_mode')},
             'review_scope': {'page_ids': sorted(ids), 'unit': unit},

@@ -695,7 +695,8 @@
             "original-review.v1",
             "settled-image-reuse.v1",
             "outline-review.v1",
-            "business-framing.v1"
+            "business-framing.v1",
+            "business-review.v1"
           ]
         }
       },

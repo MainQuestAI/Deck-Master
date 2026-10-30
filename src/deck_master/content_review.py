@@ -258,7 +258,10 @@ def build_review_packet(store, document, *, page_ids=None, required=None,
     from .effective_requirements import packet_requirements
     from .review_handoff import project_findings
     units = list(required if required is not None else required_units(store, document))
+    from .business_review import projection
+    business = projection(store, document, page_ids=page_ids)
     return {
+        **({"business_review": business} if business is not None else {}),
         "schema_version": "content_review_packet.v1",
         "external_findings": project_findings(store, document, [p["page_id"] for p in pages]),
         "effective_requirements": packet_requirements(store, document, page_ids=[p['page_id'] for p in pages], units=units),
@@ -663,6 +666,8 @@ def validate_preproduction_result(store, document, task, envelope, *, adapter_co
             raise _envelope_error("review_stage", "preproduction results carry review_stage=preproduction")
     state = requirement_state(store, document)
     _require_unit_coverage(store, document, reviews, task)
+    from .business_review import validate_result
+    validate_result(store, task, reviews)
     page_ids = list(task.get("scope_pages") or [])
     if task.get('review_subject') == 'outline':
         from .outline_review import require_outline, UNITS
@@ -818,6 +823,9 @@ def _applicable_reviews(store, document, page_ids, *, records=None, digests=None
     owners = review_task_owners(store, document)
     for item in records:
         review = item["review"]
+        from .business_review import applicable as business_standard_current
+        if not business_standard_current(store, document, review):
+            continue
         if not accepted_requirements_current(store, document, review, item['review_ref'], owners):
             continue
         if strict_refs is not None and item["review_ref"]["sha256"] not in strict_refs:

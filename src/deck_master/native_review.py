@@ -107,6 +107,10 @@ def _envelope(store, document, task, session, observation, units):
     deps += [{"kind": "content", "identity": "page:" + entry["page_id"], "sha256": entry["page"]["sha256"]} for entry in pages]
     deps += [{"kind": "source", "identity": source["source_id"], "sha256": source["extract"]["sha256"]}
              for source in document.get("sources") or [] if source.get("extract")]
+    from .business_review import frozen_standard
+    standard = frozen_standard(store, task)
+    if standard is not None:
+        deps.append(standard["dependency"])
     previous = {(ref["path"], ref["sha256"]): store.read_object_json(ref)
                 for ref in document.get("reviews") or []}
     evidence_ref = store.put_json_object(observation)

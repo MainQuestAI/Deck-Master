@@ -237,6 +237,9 @@ def build_phase_task(store, document, *, operation_id: str, intent: str = "initi
             raise ModelError("(task)/phase",
                              f"phase {phase!r} has no compose.v2 variant; "
                              f"use one of {sorted(PHASE_VARIANT)}")
+    if phase == PAGE_COPY and intent != 'input_revision':
+        from .business_review import guard_expansion
+        guard_expansion(store, document)
     if phase not in REGISTERED_PHASES:
         raise ModelError("(task)/phase", f"unregistered phase {phase!r}")
     spec = PHASE_SPEC.get(phase, {"layers": ["narrative"], "purpose": "exploratory",
@@ -293,6 +296,9 @@ def build_phase_task(store, document, *, operation_id: str, intent: str = "initi
                if CAPABILITY in task['required_capabilities'] else None),
         decision_refs=collaboration_binding.decision_refs_for(store, document, topics))
     task["collaboration_binding"] = binding
+    if phase in (PAGE_COPY, SPEECH) and intent != 'input_revision':
+        from .business_review import expansion_instruction
+        task["instruction"] += expansion_instruction(store, document)
     from .method_resources import freeze_task_methods
     freeze_task_methods(task, selected_resource_ids=selected_resource_ids)
     collaboration_binding.require_binding(document, task)
@@ -484,6 +490,12 @@ def _full_content_phase_status(store, document, *, explicit_speech_mode: str | N
                  and plan.get("mode") == "bound" and plan.get("page_links")
                  and (plan.get("narrative_ref") or None) == narrative_ref)
     if not bound:
+        from .business_review import expansion_required, guard_expansion
+        if expansion_required(store, document):
+            try:
+                guard_expansion(store, document)
+            except ModelError:
+                return {'action': 'blocked', 'phase': PAGE_COPY, 'reason': 'business_outline_review_required'}
         proposals = _proposals_for_phase(store, document, "page_copy")
         if proposals is not None:
             return {"action": "await_decision", "phase": PAGE_COPY, "topic": "direction",
@@ -947,9 +959,11 @@ def _check_mapping_against(
 def _accept_page_copy(store, *, document, task, envelope, payload, produced_against,
                       result_digest, staged):
     from .content_plan import attach, build_v2_plan
+    from .business_review import validate_expansion
     pages_raw = payload.get("pages")
     page_order = payload.get("page_order")
     plan_input = _payload_object(payload, "plan_input", "plan_input")
+    validate_expansion(store, document, page_order, plan_input)
     if not isinstance(pages_raw, list) or not pages_raw:
         raise tasks_mod.EnvelopeError(
             "(result)/payload/pages",

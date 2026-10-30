@@ -1388,6 +1388,10 @@ def open_host_task(store, *, kind, page_ids, instruction, base_revision=None, pa
         adoption_policy="within_scope", action="dispatch.host_task",
         action_targets={"page_ids": list(page_ids), "layers": host_layers},
         selected_resource_ids=selected_resource_ids)
+    from .business_review import prepare_task
+    prepare_task(store, document, task)
+    from .models import validate_task_semantics
+    validate_task_semantics(task)
     updated=bump_revision(document,{'operation_id':_new_operation_id('dispatch'),'kind':'task_update','description':instruction,'read_set':[]})
     if protocol:
         from .models import require_writer
