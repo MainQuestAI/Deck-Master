@@ -1,9 +1,9 @@
 """Each standalone generator rejects unsafe layouts before any write."""
+import csv
 import hashlib
 import json
 import subprocess
 import sys
-import zipfile
 from pathlib import Path
 
 import pytest
@@ -48,12 +48,18 @@ def test_machine_references_resolve_to_identical_archive_members_or_local_depend
     mapping = json.loads((root / 'docs/history/machine-references.json').read_text())
     assert len(mapping['references']) == 262
     assert len({row['target'] for row in mapping['references']}) == 82
-    archive = next((root / 'docs/history').glob('*.zip'))
-    with zipfile.ZipFile(archive) as opened:
-        for row in mapping['references']:
-            assert hashlib.sha256((root / row['source']).read_bytes()).hexdigest() == row['source_sha256']
-            data = (root / row['target']).read_bytes() if row['resolution'] == 'local' else opened.read(row['target'])
+    # 2026-10-30 (#223): the historical zip is a release asset, not a git blob.
+    # Archive members stay pinned by sha256 in manifest.csv (its copy inside the
+    # zip, ARCHIVE-MANIFEST.csv, is byte-identical), so verify against that.
+    manifest = {row['original_path']: row['sha256']
+                for row in csv.DictReader((root / 'docs/history/manifest.csv').open(encoding='utf-8'))}
+    for row in mapping['references']:
+        assert hashlib.sha256((root / row['source']).read_bytes()).hexdigest() == row['source_sha256']
+        if row['resolution'] == 'local':
+            data = (root / row['target']).read_bytes()
             assert hashlib.sha256(data).hexdigest() == row['target_sha256']
+        else:
+            assert manifest[row['target']] == row['target_sha256']
     w12 = root / 'docs/reports/workbench-v3-execution-20260926/W12.md'
     assert w12.is_file() and w12.stat().st_size == 3077
 
