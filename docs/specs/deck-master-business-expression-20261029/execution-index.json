@@ -597,27 +597,33 @@
         },
         {
           "id": "D04-AC03",
-          "status": "not_run",
+          "status": "pass",
           "evidence": [
             "implementation/D04-validation.md",
-            "implementation/D04-zero-call-probe.json"
-          ]
+            "implementation/D04-zero-call-probe.json",
+            "implementation/D04-live-validation.json"
+          ],
+          "evidence_scope": "runtime validation plus two complete synthetic manuscripts and independent Codex judgment; complete-manuscript author decision remains pending"
         },
         {
           "id": "D04-AC04",
-          "status": "not_run",
+          "status": "pass",
           "evidence": [
             "implementation/D04-validation.md",
-            "implementation/D04-zero-call-probe.json"
-          ]
+            "implementation/D04-zero-call-probe.json",
+            "implementation/D04-live-validation.json"
+          ],
+          "evidence_scope": "runtime validation plus two complete synthetic manuscripts and independent Codex judgment; complete-manuscript author decision remains pending"
         },
         {
           "id": "D04-AC05",
-          "status": "not_run",
+          "status": "pass",
           "evidence": [
             "implementation/D04-validation.md",
-            "implementation/D04-zero-call-probe.json"
-          ]
+            "implementation/D04-zero-call-probe.json",
+            "implementation/D04-live-validation.json"
+          ],
+          "evidence_scope": "runtime validation plus two complete synthetic manuscripts and independent Codex judgment; complete-manuscript author decision remains pending"
         },
         {
           "id": "D04-AC06",
@@ -656,20 +662,30 @@
         "implementation/D04-validation.md",
         "implementation/D04-zero-call-probe.json",
         "implementation/D04-call01-failure.json",
-        "implementation/D04-call-plan-r2.json"
+        "implementation/D04-call-plan-r2.json",
+        "implementation/D04-call-plan-r3.json",
+        "implementation/D04-call04-host-marshaling.json"
       ],
       "model_evidence": [
         "implementation/D04-call01-failure.json",
-        "implementation/D04-negative-recheck.json"
+        "implementation/D04-negative-recheck.json",
+        "implementation/D04-call04-host-marshaling.json",
+        "implementation/D04-live-validation.json"
       ],
       "author_acceptance": [],
       "not_run": [
-        "AC03/04/05 actual complete copy/cases/speech/demonstration outline and independent full review"
+        "Complete manuscript business-author judgment pending; two outline judgments are not complete-copy approval",
+        "D08 holdout / visual / PPT / actual demo / timed rehearsal / customer outcome validation not run"
       ],
       "risks": [
-        "New policy-version checks deliberately require rechecking old D03 passes; historical objects remain unchanged",
-        "Synthetic engineering transports are not live semantic review evidence"
-      ]
+        "Only two synthetic development tasks; not holdout generalization or customer acceptance",
+        "Member PC-01 nonblocking readability suggestion remains open; frozen reviewed words unchanged",
+        "Member call04 required explicit zero-call Host structural marshaling; pure model Page-schema success not claimed",
+        "D03-AC06 same-v2 multi-framework branch remains explicitly unverified"
+      ],
+      "author_gate": "awaiting_complete_manuscript_author_judgment",
+      "schema_fix_commit": "4050be7f",
+      "author_review_package": "implementation/D04-author-review.json"
     },
     {
       "id": "D05",
@@ -1199,13 +1215,17 @@
         "D04-AC07"
       ],
       "continuation_authority": "implementation/D03-author-go.json",
-      "deferred_dependency_branch": "D03-AC06 explicitly retained unverified by user; no new generation budget",
+      "deferred_dependency_branch": "D03-AC06 explicitly retained unverified by user; D04 separately authorized ten-call budget now exhausted",
       "implementation_commit": "6513899aaf84c5f7784cba3bfda7897ae6cbded5",
       "engineering_evidence": [
         "implementation/D04-validation.md",
         "implementation/D04-zero-call-probe.json"
       ],
-      "content_gate": "engineering_ready_live_negative_and_full_manuscript_validation_pending_separate_budget"
+      "content_gate": "runtime_and_independent_model_pass_awaiting_complete_manuscript_author_judgment",
+      "model_evidence": [
+        "implementation/D04-live-validation.json"
+      ],
+      "author_review_package": "implementation/D04-author-review.json"
     },
     {
       "id": "D05",
@@ -1301,7 +1321,7 @@
   "dependency_semantics": "depends_on 引用 work_units；conditional_depends_on 仅在条件成立时加边。卡条目镜像其收口单元；工作单元 acceptance_ids 是 AC 唯一验收归属。",
   "execution_base": "035845f228d1ba4cd7fc9b41cdedd8fd734043df",
   "execution_started_at": "2026-10-29",
-  "current_gate": "D04反例正确阻断，会员大纲新标准复核pass；六页正文生成中，累计已预留4／10次。",
+  "current_gate": "D04两份六页正文／案例／逐字讲稿均已接纳并通过独立Codex四单位前审；10／10完成，1项非阻断建议开放，待完整稿作者终判。D05/D06b/D07未启动，多框架及D08保留未验证。",
   "updated_at": "2026-10-30",
   "calibration_budget": {
     "overall_subscription_bound": 32,
@@ -1335,16 +1355,21 @@
     "separate_from_prior_budget": true,
     "proposed_max_calls": 10,
     "authorized_calls": 10,
-    "calls_used": 4,
-    "evidence": "implementation/D04-call-plan-r2.json",
+    "calls_used": 10,
+    "evidence": "implementation/D04-live-validation.json",
     "new_API_spend_allowed": 0,
     "D08_authorized": false,
-    "calls_in_flight": 1,
-    "calls_completed": 3,
+    "calls_in_flight": 0,
+    "calls_completed": 10,
     "authorization": "用户明确回复：补1次，总上限10",
-    "formally_accepted_reviews": 2,
-    "failed_acceptances": 1,
-    "remaining_calls_unexecuted": 6,
-    "gate": "member_outline_passed_page_copy_in_flight"
+    "formally_accepted_reviews": 5,
+    "failed_acceptances": 2,
+    "remaining_calls_unexecuted": 0,
+    "gate": "complete_independent_model_pass_await_author",
+    "accepted_review_unit_objects": 14,
+    "unrecovered_failed_acceptances": 1,
+    "zero_model_cost_host_recoveries": 1,
+    "frozen_execution_plan": "implementation/D04-call-plan-r3.json",
+    "formally_accepted_reviews_counter_unit": "native review invocation; 14 Review unit objects across 5 accepted calls"
   }
 }
