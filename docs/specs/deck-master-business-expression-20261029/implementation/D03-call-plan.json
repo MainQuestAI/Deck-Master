@@ -1,6 +1,6 @@
 {
   "date": "2026-10-30",
-  "authorized": false,
+  "authorized": true,
   "prior_local_calls": 28,
   "max_new_calls": 4,
   "requested_cumulative_bound": 32,
@@ -72,7 +72,8 @@
     "docs/specs/deck-master-business-expression-20261029/evaluation/tasks.json": "58025929e9483ed1d18e7449ffa536b9dbbd42fb4a276c78f91cbc2e58defd88",
     "docs/specs/deck-master-business-expression-20261029/evaluation/materials/dev-01.md": "e56e79a10c7e40a87b6f4078827b575a9cdff8be5248e9a0f311ab50d347776a",
     "src/deck_master/native_review.py": "14032d637f21cdd8e4ca173328199ffbee484c01d8c9413a8faaf9822bac0ea1",
-    "src/deck_master/native_review_transport.py": "984df2bbc4396d69690e4b82c06c8802817a54a7ae023a7a54bca458166f37bf"
+    "src/deck_master/native_review_transport.py": "984df2bbc4396d69690e4b82c06c8802817a54a7ae023a7a54bca458166f37bf",
+    "docs/specs/deck-master-business-expression-20261029/implementation/D02b-call-plan.json": "4b83904dd32efa894b4c19dfe99932d68ed059faa785904c5ee14bbba3e936a6"
   },
   "review_selected_resource_ids": [
     "content-m02",
@@ -80,5 +81,12 @@
     "content-m07",
     "content-m08",
     "content-m10"
-  ]
+  ],
+  "authorization": "用户于2026-10-30明确回复：按上述最后 4 次执行",
+  "authorized_cumulative_bound": 32,
+  "runner_sha256": "b88bc3a82f281e88c1ddfa000c24a5511d1175072d46e808e2af854a25142d95",
+  "reference_prompts_sha256": {
+    "framing": "120b0ec38ebca460608fab81dcfae796ce5db24fb0cb63c2881714824c766dc2",
+    "argument": "805abcca94ec29bf54125343d2907cc7aad78fada13e0a822b29ee6ff2dc1cc8"
+  }
 }
