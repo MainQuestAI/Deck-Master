@@ -1,0 +1,290 @@
+{
+  "date": "2026-10-30",
+  "stage": "post-R1 text revision; not model validated",
+  "resources": [
+    {
+      "file": "skills/deck-master/references/methods/M01-framing.md",
+      "baseline_bytes": 4959,
+      "r1_bytes": 5136,
+      "r1_sha256": "c36cf34aac28cb2cbb5a590c20360c399ed8bf262a9c7cb9bf3445ddb9a1f9c1",
+      "r2_bytes": 5136,
+      "r2_sha256": "c36cf34aac28cb2cbb5a590c20360c399ed8bf262a9c7cb9bf3445ddb9a1f9c1",
+      "delta_from_r1": 0,
+      "delta_from_baseline": 177
+    },
+    {
+      "file": "skills/deck-master/references/methods/M02-structured-analysis.md",
+      "baseline_bytes": 4962,
+      "r1_bytes": 5211,
+      "r1_sha256": "ccd78062cd61ba22ff3e6160dcf3e6f3e6f17d20a02d95e4a9b95ba3d6d2d4b1",
+      "r2_bytes": 5211,
+      "r2_sha256": "ccd78062cd61ba22ff3e6160dcf3e6f3e6f17d20a02d95e4a9b95ba3d6d2d4b1",
+      "delta_from_r1": 0,
+      "delta_from_baseline": 249
+    },
+    {
+      "file": "skills/deck-master/references/methods/M07-synthesis.md",
+      "baseline_bytes": 4566,
+      "r1_bytes": 4876,
+      "r1_sha256": "6416f7982602184ecaa73abf9f745d60ee574381c46a5d250cfd2e080d4a825c",
+      "r2_bytes": 4876,
+      "r2_sha256": "6416f7982602184ecaa73abf9f745d60ee574381c46a5d250cfd2e080d4a825c",
+      "delta_from_r1": 0,
+      "delta_from_baseline": 310
+    },
+    {
+      "file": "skills/deck-master/references/methods/M08-narrative.md",
+      "baseline_bytes": 5149,
+      "r1_bytes": 5363,
+      "r1_sha256": "91730be0041ea6dd823206a293a89d9f75be9d39820f69684726a47b921d9773",
+      "r2_bytes": 5899,
+      "r2_sha256": "92784f1716d2e46d5e777ff4e6da9b4fa83b9b47b93017b262ab1cd7637ac178",
+      "delta_from_r1": 536,
+      "delta_from_baseline": 750
+    },
+    {
+      "file": "skills/deck-master/references/method-selection.md",
+      "baseline_bytes": 3493,
+      "r1_bytes": 3877,
+      "r1_sha256": "c4aecd7886f0199e4f1d47ecb9b538ee3279c27dfa50999edbde16016a597667",
+      "r2_bytes": 4118,
+      "r2_sha256": "42ff8f0ef7dd3902437e853d1f5af5d0432a9c8c643ee5ebe33929c0f6ce6049",
+      "delta_from_r1": 241,
+      "delta_from_baseline": 625
+    },
+    {
+      "file": "skills/deck-master/references/content-methods.md",
+      "baseline_bytes": 12355,
+      "r1_bytes": 12991,
+      "r1_sha256": "af20c5a3ed260845df6bef64fbcea94304c28a9e1762a5bce20ed14efdfc61e9",
+      "r2_bytes": 12991,
+      "r2_sha256": "af20c5a3ed260845df6bef64fbcea94304c28a9e1762a5bce20ed14efdfc61e9",
+      "delta_from_r1": 0,
+      "delta_from_baseline": 636
+    },
+    {
+      "file": "skills/deck-master/references/narrative-patterns.md",
+      "baseline_bytes": 2987,
+      "r1_bytes": 3526,
+      "r1_sha256": "5b4b061ecff3997f58a73f1ad2d2d1f3a7bd330142ce6997642557af4b6277f8",
+      "r2_bytes": 3526,
+      "r2_sha256": "5b4b061ecff3997f58a73f1ad2d2d1f3a7bd330142ce6997642557af4b6277f8",
+      "delta_from_r1": 0,
+      "delta_from_baseline": 539
+    },
+    {
+      "file": "skills/deck-master/references/method-review.md",
+      "baseline_bytes": 2427,
+      "r1_bytes": 2959,
+      "r1_sha256": "6037ea7065dd4d1b106ec6c4dcded6a206c2fa77d155d290a4876660150b64d2",
+      "r2_bytes": 3197,
+      "r2_sha256": "a51022f06329cc4209ed006c3d157827604fe1eb39de64dbfe804b3854ef66ed",
+      "delta_from_r1": 238,
+      "delta_from_baseline": 770
+    }
+  ],
+  "combinations": {
+    "dev-01-first_proposal": {
+      "framing": {
+        "actual_utf8_bytes": 47962,
+        "manifest": [
+          {
+            "id": "source-reading",
+            "relative_path": "references/source-reading.md",
+            "sha256": "4be8ac92de269f41010cd25587bbbb652ab2a4bebbbbd329edb9f3d370a60a50",
+            "bytes": 6681
+          },
+          {
+            "id": "content-methods",
+            "relative_path": "references/content-methods.md",
+            "sha256": "af20c5a3ed260845df6bef64fbcea94304c28a9e1762a5bce20ed14efdfc61e9",
+            "bytes": 12991
+          },
+          {
+            "id": "content-examples",
+            "relative_path": "references/content-examples.md",
+            "sha256": "13f3cb7deceb5b1ce554c470f3ea2aa325dd0365c6dda73094fe9e85e181cdbd",
+            "bytes": 19036
+          },
+          {
+            "id": "method-selection",
+            "relative_path": "references/method-selection.md",
+            "sha256": "42ff8f0ef7dd3902437e853d1f5af5d0432a9c8c643ee5ebe33929c0f6ce6049",
+            "bytes": 4118
+          },
+          {
+            "id": "content-m01",
+            "relative_path": "references/methods/M01-framing.md",
+            "sha256": "c36cf34aac28cb2cbb5a590c20360c399ed8bf262a9c7cb9bf3445ddb9a1f9c1",
+            "bytes": 5136
+          }
+        ]
+      },
+      "argument": {
+        "actual_utf8_bytes": 68616,
+        "manifest": [
+          {
+            "id": "source-reading",
+            "relative_path": "references/source-reading.md",
+            "sha256": "4be8ac92de269f41010cd25587bbbb652ab2a4bebbbbd329edb9f3d370a60a50",
+            "bytes": 6681
+          },
+          {
+            "id": "content-methods",
+            "relative_path": "references/content-methods.md",
+            "sha256": "af20c5a3ed260845df6bef64fbcea94304c28a9e1762a5bce20ed14efdfc61e9",
+            "bytes": 12991
+          },
+          {
+            "id": "content-examples",
+            "relative_path": "references/content-examples.md",
+            "sha256": "13f3cb7deceb5b1ce554c470f3ea2aa325dd0365c6dda73094fe9e85e181cdbd",
+            "bytes": 19036
+          },
+          {
+            "id": "method-selection",
+            "relative_path": "references/method-selection.md",
+            "sha256": "42ff8f0ef7dd3902437e853d1f5af5d0432a9c8c643ee5ebe33929c0f6ce6049",
+            "bytes": 4118
+          },
+          {
+            "id": "content-m02",
+            "relative_path": "references/methods/M02-structured-analysis.md",
+            "sha256": "ccd78062cd61ba22ff3e6160dcf3e6f3e6f17d20a02d95e4a9b95ba3d6d2d4b1",
+            "bytes": 5211
+          },
+          {
+            "id": "content-m04",
+            "relative_path": "references/methods/M04-causal-explanations.md",
+            "sha256": "cd52c74a319cf30ade75fd029c3476636d4b4b6f9db2eadffdc5f746dd815bf9",
+            "bytes": 5158
+          },
+          {
+            "id": "content-m07",
+            "relative_path": "references/methods/M07-synthesis.md",
+            "sha256": "6416f7982602184ecaa73abf9f745d60ee574381c46a5d250cfd2e080d4a825c",
+            "bytes": 4876
+          },
+          {
+            "id": "content-m08",
+            "relative_path": "references/methods/M08-narrative.md",
+            "sha256": "92784f1716d2e46d5e777ff4e6da9b4fa83b9b47b93017b262ab1cd7637ac178",
+            "bytes": 5899
+          },
+          {
+            "id": "content-m10",
+            "relative_path": "references/methods/M10-compression.md",
+            "sha256": "eebc4d4fe5a133366d2e71d937fb86fbd83b8284c440fe453126d8d2b2e6258d",
+            "bytes": 4646
+          }
+        ]
+      }
+    },
+    "dev-02-competitive_bid": {
+      "framing": {
+        "actual_utf8_bytes": 47962,
+        "manifest": [
+          {
+            "id": "source-reading",
+            "relative_path": "references/source-reading.md",
+            "sha256": "4be8ac92de269f41010cd25587bbbb652ab2a4bebbbbd329edb9f3d370a60a50",
+            "bytes": 6681
+          },
+          {
+            "id": "content-methods",
+            "relative_path": "references/content-methods.md",
+            "sha256": "af20c5a3ed260845df6bef64fbcea94304c28a9e1762a5bce20ed14efdfc61e9",
+            "bytes": 12991
+          },
+          {
+            "id": "content-examples",
+            "relative_path": "references/content-examples.md",
+            "sha256": "13f3cb7deceb5b1ce554c470f3ea2aa325dd0365c6dda73094fe9e85e181cdbd",
+            "bytes": 19036
+          },
+          {
+            "id": "method-selection",
+            "relative_path": "references/method-selection.md",
+            "sha256": "42ff8f0ef7dd3902437e853d1f5af5d0432a9c8c643ee5ebe33929c0f6ce6049",
+            "bytes": 4118
+          },
+          {
+            "id": "content-m01",
+            "relative_path": "references/methods/M01-framing.md",
+            "sha256": "c36cf34aac28cb2cbb5a590c20360c399ed8bf262a9c7cb9bf3445ddb9a1f9c1",
+            "bytes": 5136
+          }
+        ]
+      },
+      "argument": {
+        "actual_utf8_bytes": 73100,
+        "manifest": [
+          {
+            "id": "source-reading",
+            "relative_path": "references/source-reading.md",
+            "sha256": "4be8ac92de269f41010cd25587bbbb652ab2a4bebbbbd329edb9f3d370a60a50",
+            "bytes": 6681
+          },
+          {
+            "id": "content-methods",
+            "relative_path": "references/content-methods.md",
+            "sha256": "af20c5a3ed260845df6bef64fbcea94304c28a9e1762a5bce20ed14efdfc61e9",
+            "bytes": 12991
+          },
+          {
+            "id": "content-examples",
+            "relative_path": "references/content-examples.md",
+            "sha256": "13f3cb7deceb5b1ce554c470f3ea2aa325dd0365c6dda73094fe9e85e181cdbd",
+            "bytes": 19036
+          },
+          {
+            "id": "method-selection",
+            "relative_path": "references/method-selection.md",
+            "sha256": "42ff8f0ef7dd3902437e853d1f5af5d0432a9c8c643ee5ebe33929c0f6ce6049",
+            "bytes": 4118
+          },
+          {
+            "id": "content-m02",
+            "relative_path": "references/methods/M02-structured-analysis.md",
+            "sha256": "ccd78062cd61ba22ff3e6160dcf3e6f3e6f17d20a02d95e4a9b95ba3d6d2d4b1",
+            "bytes": 5211
+          },
+          {
+            "id": "content-m03",
+            "relative_path": "references/methods/M03-argument.md",
+            "sha256": "159b046b28b4e7c82a291bb50a9e8126754a007688cb61203189bae4898b6ff5",
+            "bytes": 4524
+          },
+          {
+            "id": "content-m05",
+            "relative_path": "references/methods/M05-options-and-value.md",
+            "sha256": "eee24a2c9a80d3980d8768df2ae926f2998bd436c7dcdd7ea6ba8420d01157f3",
+            "bytes": 5118
+          },
+          {
+            "id": "content-m07",
+            "relative_path": "references/methods/M07-synthesis.md",
+            "sha256": "6416f7982602184ecaa73abf9f745d60ee574381c46a5d250cfd2e080d4a825c",
+            "bytes": 4876
+          },
+          {
+            "id": "content-m08",
+            "relative_path": "references/methods/M08-narrative.md",
+            "sha256": "92784f1716d2e46d5e777ff4e6da9b4fa83b9b47b93017b262ab1cd7637ac178",
+            "bytes": 5899
+          },
+          {
+            "id": "content-m10",
+            "relative_path": "references/methods/M10-compression.md",
+            "sha256": "eebc4d4fe5a133366d2e71d937fb86fbd83b8284c440fe453126d8d2b2e6258d",
+            "bytes": 4646
+          }
+        ]
+      }
+    }
+  },
+  "runtime_defaults_changed": false,
+  "selection_changed": false,
+  "new_model_calls": 0,
+  "context_reduction_claimed": false
+}

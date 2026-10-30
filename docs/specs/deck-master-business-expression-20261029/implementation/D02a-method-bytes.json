@@ -1,0 +1,158 @@
+{
+  "date": "2026-10-30",
+  "resources": [
+    {
+      "file": "skills/deck-master/references/methods/M01-framing.md",
+      "before_bytes": 4959,
+      "after_bytes": 5136,
+      "delta_bytes": 177,
+      "before_sha256": "de0fcc09db864d5f47841eb1f91eba10f61b972e38564773a904e7124fed2e09",
+      "after_sha256": "c36cf34aac28cb2cbb5a590c20360c399ed8bf262a9c7cb9bf3445ddb9a1f9c1"
+    },
+    {
+      "file": "skills/deck-master/references/methods/M02-structured-analysis.md",
+      "before_bytes": 4962,
+      "after_bytes": 5211,
+      "delta_bytes": 249,
+      "before_sha256": "30e7e9dc8f30a4cd2a8038d734ba6e77acbb91c10d34e1cd837d4d7d408174be",
+      "after_sha256": "ccd78062cd61ba22ff3e6160dcf3e6f3e6f17d20a02d95e4a9b95ba3d6d2d4b1"
+    },
+    {
+      "file": "skills/deck-master/references/methods/M07-synthesis.md",
+      "before_bytes": 4566,
+      "after_bytes": 4876,
+      "delta_bytes": 310,
+      "before_sha256": "4af0b9137f516e03d4b4dbf343ae85bb76a3535ef6b218d479ef7b1e0082fa0a",
+      "after_sha256": "6416f7982602184ecaa73abf9f745d60ee574381c46a5d250cfd2e080d4a825c"
+    },
+    {
+      "file": "skills/deck-master/references/methods/M08-narrative.md",
+      "before_bytes": 5149,
+      "after_bytes": 5363,
+      "delta_bytes": 214,
+      "before_sha256": "d4e56ac966ee88332bb4316e501e13f72698e71c45c5bdb5f8fcb271de0e42f7",
+      "after_sha256": "91730be0041ea6dd823206a293a89d9f75be9d39820f69684726a47b921d9773"
+    },
+    {
+      "file": "skills/deck-master/references/method-selection.md",
+      "before_bytes": 3493,
+      "after_bytes": 3877,
+      "delta_bytes": 384,
+      "before_sha256": "583ea0f4203bbb2a55b592da732220efaf71d74ed71846276c14c70e7dd708a8",
+      "after_sha256": "c4aecd7886f0199e4f1d47ecb9b538ee3279c27dfa50999edbde16016a597667"
+    },
+    {
+      "file": "skills/deck-master/references/content-methods.md",
+      "before_bytes": 12355,
+      "after_bytes": 12991,
+      "delta_bytes": 636,
+      "before_sha256": "fe495b2fc262c89fd1791c34933f2ad73bce84bbdf143375427791574a0ac2bc",
+      "after_sha256": "af20c5a3ed260845df6bef64fbcea94304c28a9e1762a5bce20ed14efdfc61e9"
+    },
+    {
+      "file": "skills/deck-master/references/narrative-patterns.md",
+      "before_bytes": 2987,
+      "after_bytes": 3526,
+      "delta_bytes": 539,
+      "before_sha256": "16022007031c75262507b7849dd8dbe82f91dafc1e365256991aa4e6be195188",
+      "after_sha256": "5b4b061ecff3997f58a73f1ad2d2d1f3a7bd330142ce6997642557af4b6277f8"
+    },
+    {
+      "file": "skills/deck-master/references/method-review.md",
+      "before_bytes": 2427,
+      "after_bytes": 2959,
+      "delta_bytes": 532,
+      "before_sha256": "65e3e79fbabfc17d8cbbde691ef390e5acd028fb36b9964e8907f142dcbf98b9",
+      "after_sha256": "6037ea7065dd4d1b106ec6c4dcded6a206c2fa77d155d290a4876660150b64d2"
+    }
+  ],
+  "combinations": {
+    "framing": {
+      "actual_utf8_bytes": 47721,
+      "manifest": [
+        {
+          "id": "source-reading",
+          "relative_path": "references/source-reading.md",
+          "sha256": "4be8ac92de269f41010cd25587bbbb652ab2a4bebbbbd329edb9f3d370a60a50"
+        },
+        {
+          "id": "content-methods",
+          "relative_path": "references/content-methods.md",
+          "sha256": "af20c5a3ed260845df6bef64fbcea94304c28a9e1762a5bce20ed14efdfc61e9"
+        },
+        {
+          "id": "content-examples",
+          "relative_path": "references/content-examples.md",
+          "sha256": "13f3cb7deceb5b1ce554c470f3ea2aa325dd0365c6dda73094fe9e85e181cdbd"
+        },
+        {
+          "id": "method-selection",
+          "relative_path": "references/method-selection.md",
+          "sha256": "c4aecd7886f0199e4f1d47ecb9b538ee3279c27dfa50999edbde16016a597667"
+        },
+        {
+          "id": "content-m01",
+          "relative_path": "references/methods/M01-framing.md",
+          "sha256": "c36cf34aac28cb2cbb5a590c20360c399ed8bf262a9c7cb9bf3445ddb9a1f9c1"
+        }
+      ],
+      "meaning": "Runtime returned full registered dependencies; application not yet evaluated"
+    },
+    "argument": {
+      "actual_utf8_bytes": 67839,
+      "manifest": [
+        {
+          "id": "source-reading",
+          "relative_path": "references/source-reading.md",
+          "sha256": "4be8ac92de269f41010cd25587bbbb652ab2a4bebbbbd329edb9f3d370a60a50"
+        },
+        {
+          "id": "content-methods",
+          "relative_path": "references/content-methods.md",
+          "sha256": "af20c5a3ed260845df6bef64fbcea94304c28a9e1762a5bce20ed14efdfc61e9"
+        },
+        {
+          "id": "content-examples",
+          "relative_path": "references/content-examples.md",
+          "sha256": "13f3cb7deceb5b1ce554c470f3ea2aa325dd0365c6dda73094fe9e85e181cdbd"
+        },
+        {
+          "id": "method-selection",
+          "relative_path": "references/method-selection.md",
+          "sha256": "c4aecd7886f0199e4f1d47ecb9b538ee3279c27dfa50999edbde16016a597667"
+        },
+        {
+          "id": "content-m02",
+          "relative_path": "references/methods/M02-structured-analysis.md",
+          "sha256": "ccd78062cd61ba22ff3e6160dcf3e6f3e6f17d20a02d95e4a9b95ba3d6d2d4b1"
+        },
+        {
+          "id": "content-m04",
+          "relative_path": "references/methods/M04-causal-explanations.md",
+          "sha256": "cd52c74a319cf30ade75fd029c3476636d4b4b6f9db2eadffdc5f746dd815bf9"
+        },
+        {
+          "id": "content-m07",
+          "relative_path": "references/methods/M07-synthesis.md",
+          "sha256": "6416f7982602184ecaa73abf9f745d60ee574381c46a5d250cfd2e080d4a825c"
+        },
+        {
+          "id": "content-m08",
+          "relative_path": "references/methods/M08-narrative.md",
+          "sha256": "91730be0041ea6dd823206a293a89d9f75be9d39820f69684726a47b921d9773"
+        },
+        {
+          "id": "content-m10",
+          "relative_path": "references/methods/M10-compression.md",
+          "sha256": "eebc4d4fe5a133366d2e71d937fb86fbd83b8284c440fe453126d8d2b2e6258d"
+        }
+      ],
+      "meaning": "Runtime returned full registered dependencies; application not yet evaluated"
+    }
+  },
+  "old_task_manifest_unchanged": true,
+  "old_task_current_basis": "basis_changed",
+  "runtime_defaults_changed": false,
+  "content_comparison": "pending explicit four-call budget reallocation; retained I0 originals and author choice are design evidence, not application of these new bytes",
+  "byte_result": "text changed; no context reduction claimed; D02b new-capability default slicing remains pending"
+}

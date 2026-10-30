@@ -1,0 +1,139 @@
+{
+  "date": "2026-10-30",
+  "status": "adjust_required",
+  "scope": "D02a R1; v1 planning; two development tasks; no holdout",
+  "calls": [
+    {
+      "number": 17,
+      "sample": "dev-01-first_proposal",
+      "phase": "framing",
+      "prompt_sha256": "4d6da69d9c249f933f7a8c3158df2b773647e408b31d6b452ebe9eb1902de248",
+      "prompt_bytes": 66041,
+      "call_plan_sha256": "3735be71ad0c7c022fc62eeadf1de57184d715b64c81bf2cd65fce2dae84a584",
+      "requested_model_id": "gpt-6.1-sol",
+      "status": "accepted",
+      "response_sha256": "4fb9816d98433f2d7b1a6722f3d6c798763d4a870db4d2d277c2e3729e89c522",
+      "methods_utf8_bytes": 47721,
+      "receipt_sha256": "1d6d455c898a5606ef5483b84fea51e237287d6b95d9cd07108bcc5bcd7ddd29",
+      "source_links_verified": 7,
+      "node_count": 10,
+      "planned_page_count": 0,
+      "usage": {
+        "input_tokens": 43749,
+        "cached_input_tokens": 12288,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 6894,
+        "reasoning_output_tokens": 516
+      },
+      "process": {
+        "returncode": 0,
+        "elapsed_seconds": 174.24079491599696
+      }
+    },
+    {
+      "number": 18,
+      "sample": "dev-02-competitive_bid",
+      "phase": "framing",
+      "prompt_sha256": "83c7d0e03bf300667c14effddeade94bfd5906fdf2ae49b9514c649cbf982799",
+      "prompt_bytes": 65954,
+      "call_plan_sha256": "3735be71ad0c7c022fc62eeadf1de57184d715b64c81bf2cd65fce2dae84a584",
+      "requested_model_id": "gpt-6.1-sol",
+      "status": "accepted",
+      "response_sha256": "86c8a49b524690a40024071c7636e19d0793150c32bf5fb6655314333a750d6c",
+      "methods_utf8_bytes": 47721,
+      "receipt_sha256": "4b56763a1d911fd94afe00ab51b5f6d0b8146e6506b6be3282370b5b4705038f",
+      "source_links_verified": 6,
+      "node_count": 10,
+      "planned_page_count": 0,
+      "usage": {
+        "input_tokens": 43717,
+        "cached_input_tokens": 12288,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 7236,
+        "reasoning_output_tokens": 516
+      },
+      "process": {
+        "returncode": 0,
+        "elapsed_seconds": 174.25938958401093
+      }
+    },
+    {
+      "number": 19,
+      "sample": "dev-01-first_proposal",
+      "phase": "argument",
+      "prompt_sha256": "903ec00381952613eda1b15d08d0a6acf41bb1a3a12c9c450367aad85bf39b51",
+      "prompt_bytes": 110442,
+      "call_plan_sha256": "3735be71ad0c7c022fc62eeadf1de57184d715b64c81bf2cd65fce2dae84a584",
+      "requested_model_id": "gpt-6.1-sol",
+      "status": "accepted",
+      "response_sha256": "f8ad7ae41f472d59a647438678ebf70a395ae6af0bf39befdd4ec4d394e9a78a",
+      "methods_utf8_bytes": 67839,
+      "receipt_sha256": "46bb2d293c6a5b7c85be734feb90887c352b6bdcbe4bafad19fe57e674514d9c",
+      "source_links_verified": 22,
+      "node_count": 15,
+      "planned_page_count": 6,
+      "usage": {
+        "input_tokens": 56609,
+        "cached_input_tokens": 12288,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 15406,
+        "reasoning_output_tokens": 1034
+      },
+      "process": {
+        "returncode": 0,
+        "elapsed_seconds": 262.22148799995193
+      }
+    },
+    {
+      "number": 20,
+      "sample": "dev-02-competitive_bid",
+      "phase": "argument",
+      "prompt_sha256": "b9a5a22765abd473442315f00be9912d9d16c1a9c06ea94a0e180f63abcc70a3",
+      "prompt_bytes": 114920,
+      "call_plan_sha256": "3735be71ad0c7c022fc62eeadf1de57184d715b64c81bf2cd65fce2dae84a584",
+      "requested_model_id": "gpt-6.1-sol",
+      "status": "accepted",
+      "response_sha256": "56f136d54698b3af9b8d8db61f1a796b351ad25412c3da0c8abab18d2e5987da",
+      "methods_utf8_bytes": 72323,
+      "receipt_sha256": "263acba7e4a6a40237a7b87e13afbc1f0b1fd375ffaa09e938417169efd4c64f",
+      "source_links_verified": 18,
+      "node_count": 15,
+      "planned_page_count": 6,
+      "usage": {
+        "input_tokens": 57934,
+        "cached_input_tokens": 12288,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 13792,
+        "reasoning_output_tokens": 1094
+      },
+      "process": {
+        "returncode": 0,
+        "elapsed_seconds": 231.03237662499305
+      }
+    }
+  ],
+  "prior_local_calls": 16,
+  "new_local_calls": 4,
+  "total_local_calls": 20,
+  "overall_bound": 32,
+  "retries": 0,
+  "new_API_spend": 0,
+  "request_closed": true,
+  "actual_pages": 0,
+  "adopted": false,
+  "engineering": "accepted is schema/source/task acceptance, not content approval",
+  "content_review": {
+    "reviewer": "current Host",
+    "independent": false,
+    "author_accepted": false,
+    "improvements": [
+      "会员稿以名单、规则、记录交接说明能力和人员使用",
+      "售后稿将设备适用性与版本治理联系，权限和专家接手分开展开"
+    ],
+    "unresolved": [
+      "会员首提仅比较CSV与接口，弱化改善现有流程等真实替代",
+      "售后竞标单列演示页，将交付和验证挤在末页；相对作者所选P04-B发生回退"
+    ]
+  },
+  "next": "R2 canonical text amended after R1; no R2 calls authorized or started; D02b remains planned"
+}
