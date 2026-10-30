@@ -75,5 +75,8 @@
     "New Narrative/Plan/Pages/Speech and native reviews bind the same adopted revision.",
     "Export before/after author-readable manuscripts plus row-level assessments, review observations and failure evidence.",
     "D05 stays open until author reviews actual manuscripts; model pass alone does not close card."
-  ]
+  ],
+  "status": "withdrawn",
+  "withdrawal_reason": "User rejected scenario-label-only first-proposal to bid premise; no RFP input. Round closed and current agent removed from responsibility.",
+  "closeout_record": "implementation/20261030-closeout-handoff.md"
 }

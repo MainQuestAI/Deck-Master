@@ -2,7 +2,7 @@
   "schema_version": "development_index.v1",
   "baseline": "ce4ef8b204dd5033019364ce44979adac7f4243b",
   "date": "2026-10-29",
-  "status": "in_progress",
+  "status": "paused",
   "implementation_started": true,
   "evaluation_thresholds": {
     "target": {
@@ -603,7 +603,7 @@
             "implementation/D04-zero-call-probe.json",
             "implementation/D04-live-validation.json"
           ],
-          "evidence_scope": "runtime validation plus two complete synthetic manuscripts and independent Codex judgment; complete-manuscript author decision remains pending"
+          "evidence_scope": "Two synthetic complete manuscripts received author acceptance; not general product or evaluation-process approval. See implementation/20261030-closeout-handoff.md"
         },
         {
           "id": "D04-AC04",
@@ -613,7 +613,7 @@
             "implementation/D04-zero-call-probe.json",
             "implementation/D04-live-validation.json"
           ],
-          "evidence_scope": "runtime validation plus two complete synthetic manuscripts and independent Codex judgment; complete-manuscript author decision remains pending"
+          "evidence_scope": "Two synthetic complete manuscripts received author acceptance; not general product or evaluation-process approval. See implementation/20261030-closeout-handoff.md"
         },
         {
           "id": "D04-AC05",
@@ -623,7 +623,7 @@
             "implementation/D04-zero-call-probe.json",
             "implementation/D04-live-validation.json"
           ],
-          "evidence_scope": "runtime validation plus two complete synthetic manuscripts and independent Codex judgment; complete-manuscript author decision remains pending"
+          "evidence_scope": "Two synthetic complete manuscripts received author acceptance; not general product or evaluation-process approval. See implementation/20261030-closeout-handoff.md"
         },
         {
           "id": "D04-AC06",
@@ -694,7 +694,7 @@
       "title": "策略变化的影响预览和定向重编",
       "path": "task-cards/D05.md",
       "iteration": "I2",
-      "status": "in_progress",
+      "status": "paused",
       "depends_on": [
         "D01",
         "D04"
@@ -752,8 +752,9 @@
       "not_run": [],
       "risks": [],
       "continuation_authority": "implementation/D04-author-go.json",
-      "model_evaluation": "not_run_pending_separate_budget",
-      "author_gate": "pending_actual_recompiled_manuscripts"
+      "model_evaluation": "not_run_plan_withdrawn",
+      "author_gate": "validation_premise_rejected",
+      "closeout_record": "implementation/20261030-closeout-handoff.md"
     },
     {
       "id": "D06",
@@ -1247,7 +1248,7 @@
         "D01",
         "D04"
       ],
-      "status": "in_progress",
+      "status": "paused",
       "acceptance_ids": [
         "D05-AC01",
         "D05-AC02",
@@ -1264,8 +1265,9 @@
         "implementation/D05-engineering.json",
         "implementation/D05-validation.md"
       ],
-      "model_evaluation": "not_run_pending_separate_budget",
-      "author_gate": "pending_actual_recompiled_manuscripts"
+      "model_evaluation": "not_run_plan_withdrawn",
+      "author_gate": "validation_premise_rejected",
+      "closeout_record": "implementation/20261030-closeout-handoff.md"
     },
     {
       "id": "D06b",
@@ -1342,7 +1344,7 @@
   "dependency_semantics": "depends_on 引用 work_units；conditional_depends_on 仅在条件成立时加边。卡条目镜像其收口单元；工作单元 acceptance_ids 是 AC 唯一验收归属。",
   "execution_base": "035845f228d1ba4cd7fc9b41cdedd8fd734043df",
   "execution_started_at": "2026-10-29",
-  "current_gate": "D04作者认可已记录；D05工程及零调用预检通过，真实策略重编与独立审查待单列最多4次预算。历史32次与D04的10次冻结。",
+  "current_gate": "用户要求本轮收口并更换负责人；D05错误业务前提及预算计划撤回，不自动继续。",
   "updated_at": "2026-10-30",
   "calibration_budget": {
     "overall_subscription_bound": 32,
@@ -1392,5 +1394,6 @@
     "zero_model_cost_host_recoveries": 1,
     "frozen_execution_plan": "implementation/D04-call-plan-r3.json",
     "formally_accepted_reviews_counter_unit": "native review invocation; 14 Review unit objects across 5 accepted calls"
-  }
+  },
+  "closeout_record": "implementation/20261030-closeout-handoff.md"
 }
