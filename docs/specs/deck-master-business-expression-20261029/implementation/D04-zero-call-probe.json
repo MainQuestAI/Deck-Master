@@ -1,0 +1,221 @@
+{
+  "date": "2026-10-30",
+  "scope": "D04 zero-call engineering preflight; real approved outline copies plus explicit negative fixture; no live semantic evaluation",
+  "code_base": "6513899aaf84c5f7784cba3bfda7897ae6cbded5",
+  "model_calls": 0,
+  "historical_budget_used": 32,
+  "cases": [
+    {
+      "sample": "fixed-framework",
+      "source_unchanged": true,
+      "source_tree_sha256": "502222f09f3017e031b43757ab809cdb95df3303933e38ffe4143eb1783b192d",
+      "accepted_refs": [
+        {
+          "path": ".deckmaster/objects/f4/f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4.json",
+          "sha256": "f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4"
+        },
+        {
+          "path": ".deckmaster/objects/f3/f3e8fbef1956e7f7311911a8253b0c055facbbe1fa8c3824bef3e279da340c80.json",
+          "sha256": "f3e8fbef1956e7f7311911a8253b0c055facbbe1fa8c3824bef3e279da340c80"
+        }
+      ],
+      "historical_reviews_pass_retained": true,
+      "current_new_standard_gate": "missing",
+      "current_full_request_id": "req-db7c8b7d1bc2",
+      "phase_before_review": {
+        "action": "blocked",
+        "phase": "page_copy",
+        "reason": "business_outline_review_required"
+      },
+      "unavailable_channel_status": "needs_reviewer",
+      "packet_utf8_bytes": 79308,
+      "actual_pages": 0,
+      "new_generation_tasks": 0,
+      "model_calls": 0,
+      "standard": {
+        "version": "business-expression-review.v1",
+        "method": {
+          "id": "method-review",
+          "relative_path": "references/method-review.md",
+          "sha256": "56d5d3b65e832d07630e23bd494912f0bbb5345bf91b6900024c4bc53b6d896b"
+        },
+        "dependency": {
+          "kind": "policy",
+          "identity": "business-expression-review-standard",
+          "sha256": "5ad1fc16b10a89c0fd7338c793b3c2cee0444852789abbd7a5b02f93e9e20254"
+        }
+      },
+      "packet_sha256": "f43d4f9ffee558461cacd919eeb97431ba5d47bf703d38239b5e44fec4d3c54d"
+    },
+    {
+      "sample": "bid",
+      "source_unchanged": true,
+      "source_tree_sha256": "04d4d72f872a79d1782e70ff3bccfdf6b111c4c23f3dc7ccc091400edf2810f1",
+      "accepted_refs": [
+        {
+          "path": ".deckmaster/objects/08/08babed069c993197371e2b216e6b20400a40d26238dd4fa0eedd9f798cca98d.json",
+          "sha256": "08babed069c993197371e2b216e6b20400a40d26238dd4fa0eedd9f798cca98d"
+        },
+        {
+          "path": ".deckmaster/objects/42/42b09b1c76b49f18729e4b6a7d100939db6e9ba07442b14f9a0508a666c278b1.json",
+          "sha256": "42b09b1c76b49f18729e4b6a7d100939db6e9ba07442b14f9a0508a666c278b1"
+        }
+      ],
+      "historical_reviews_pass_retained": true,
+      "current_new_standard_gate": "missing",
+      "current_full_request_id": "req-db7c8b7d1bc2",
+      "phase_before_review": {
+        "action": "blocked",
+        "phase": "page_copy",
+        "reason": "business_outline_review_required"
+      },
+      "unavailable_channel_status": "needs_reviewer",
+      "packet_utf8_bytes": 80504,
+      "actual_pages": 0,
+      "new_generation_tasks": 0,
+      "model_calls": 0,
+      "standard": {
+        "version": "business-expression-review.v1",
+        "method": {
+          "id": "method-review",
+          "relative_path": "references/method-review.md",
+          "sha256": "56d5d3b65e832d07630e23bd494912f0bbb5345bf91b6900024c4bc53b6d896b"
+        },
+        "dependency": {
+          "kind": "policy",
+          "identity": "business-expression-review-standard",
+          "sha256": "5ad1fc16b10a89c0fd7338c793b3c2cee0444852789abbd7a5b02f93e9e20254"
+        }
+      },
+      "packet_sha256": "c6e4e22dfddb7291029ab5c17aa18a0a45aa6baa97bf5cb2bda88e946f3f87be"
+    }
+  ],
+  "negative_fixture": {
+    "purpose": "intentional engineering counterexample; not model output",
+    "edits": [
+      {
+        "topic_id": "t-hq-rules",
+        "meaning": "全面赋能、业务升级、价值跃迁。"
+      },
+      {
+        "topic_id": "t-store-execution",
+        "meaning": "现有产品能够自动覆盖全部营销流程，无需核对授权、领取能力、数据字段或权限。"
+      },
+      {
+        "topic_id": "t-hq-review",
+        "meaning": "客户已经决定采购；本次按竞标回应，只强调我们优于其他供应商，无需再解释业务如何使用。"
+      }
+    ],
+    "source_refs": [
+      {
+        "path": ".deckmaster/objects/f4/f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4.json",
+        "sha256": "f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4"
+      },
+      {
+        "path": ".deckmaster/objects/f3/f3e8fbef1956e7f7311911a8253b0c055facbbe1fa8c3824bef3e279da340c80.json",
+        "sha256": "f3e8fbef1956e7f7311911a8253b0c055facbbe1fa8c3824bef3e279da340c80"
+      }
+    ],
+    "fixture_refs": [
+      {
+        "path": ".deckmaster/objects/6e/6ec76cfad1dc83455c95bf480c3f3fcfe69f4acab050214db0bfd3144295a00a.json",
+        "sha256": "6ec76cfad1dc83455c95bf480c3f3fcfe69f4acab050214db0bfd3144295a00a"
+      },
+      {
+        "path": ".deckmaster/objects/fb/fb377267e575644d9feaabebdd181c9008ea0ad9abd340f29055d85c5d7f8c57.json",
+        "sha256": "fb377267e575644d9feaabebdd181c9008ea0ad9abd340f29055d85c5d7f8c57"
+      }
+    ],
+    "gate": "missing",
+    "actual_pages": 0,
+    "model_calls": 0,
+    "semantic_detection": "NOT_RUN",
+    "standard": {
+      "version": "business-expression-review.v1",
+      "method": {
+        "id": "method-review",
+        "relative_path": "references/method-review.md",
+        "sha256": "56d5d3b65e832d07630e23bd494912f0bbb5345bf91b6900024c4bc53b6d896b"
+      },
+      "dependency": {
+        "kind": "policy",
+        "identity": "business-expression-review-standard",
+        "sha256": "5ad1fc16b10a89c0fd7338c793b3c2cee0444852789abbd7a5b02f93e9e20254"
+      }
+    },
+    "local_compute_accepted": "accepted",
+    "packet_sha256": "fe046bb8b711e183a4d62b363aeb0731a478867e365244618b9a8f90869b606e"
+  },
+  "method_previews": {
+    "page_copy": [
+      {
+        "id": "source-reading",
+        "relative_path": "references/source-reading.md",
+        "sha256": "4be8ac92de269f41010cd25587bbbb652ab2a4bebbbbd329edb9f3d370a60a50"
+      },
+      {
+        "id": "content-methods",
+        "relative_path": "references/content-methods.md",
+        "sha256": "e6ca410e25dcbfbc80b526eb93cb599c23fbe6ed2d6a21ad112d18c4624c3eb3"
+      },
+      {
+        "id": "content-examples",
+        "relative_path": "references/content-examples.md",
+        "sha256": "13f3cb7deceb5b1ce554c470f3ea2aa325dd0365c6dda73094fe9e85e181cdbd"
+      },
+      {
+        "id": "page-writing",
+        "relative_path": "references/page-writing.md",
+        "sha256": "d65839875dc213519c58962721d53f95024eb7fde05bc55548b4fb1d9dd2049e"
+      },
+      {
+        "id": "content-m03",
+        "relative_path": "references/methods/M03-argument.md",
+        "sha256": "159b046b28b4e7c82a291bb50a9e8126754a007688cb61203189bae4898b6ff5"
+      },
+      {
+        "id": "content-m04",
+        "relative_path": "references/methods/M04-causal-explanations.md",
+        "sha256": "cd52c74a319cf30ade75fd029c3476636d4b4b6f9db2eadffdc5f746dd815bf9"
+      },
+      {
+        "id": "content-m09",
+        "relative_path": "references/methods/M09-teaching.md",
+        "sha256": "99d5fde59a3360f6cd9e0101636e3d44a6fcd267643bab6f59a143bbff9dc9a8"
+      },
+      {
+        "id": "content-m10",
+        "relative_path": "references/methods/M10-compression.md",
+        "sha256": "eebc4d4fe5a133366d2e71d937fb86fbd83b8284c440fe453126d8d2b2e6258d"
+      }
+    ],
+    "speech": [
+      {
+        "id": "content-methods",
+        "relative_path": "references/content-methods.md",
+        "sha256": "e6ca410e25dcbfbc80b526eb93cb599c23fbe6ed2d6a21ad112d18c4624c3eb3"
+      },
+      {
+        "id": "content-examples",
+        "relative_path": "references/content-examples.md",
+        "sha256": "13f3cb7deceb5b1ce554c470f3ea2aa325dd0365c6dda73094fe9e85e181cdbd"
+      },
+      {
+        "id": "writing-profiles",
+        "relative_path": "references/writing-profiles.md",
+        "sha256": "e84fa21f7b484ccd1138f9217e304681de6396c53be5e583fb27faa2a532f54b"
+      },
+      {
+        "id": "page-writing",
+        "relative_path": "references/page-writing.md",
+        "sha256": "d65839875dc213519c58962721d53f95024eb7fde05bc55548b4fb1d9dd2049e"
+      }
+    ]
+  },
+  "local_evidence_root": "/Users/dingcheng/.codex/tmp/deck-master-business-expression-20261030/d04-zero-call-probe-r2",
+  "earlier_probe_failure": {
+    "path": "/Users/dingcheng/.codex/tmp/deck-master-business-expression-20261030/d04-zero-call-probe-r1/failure.json",
+    "reason": "M09 is outside speech phase; retained r1; r2 selects legal page-writing/writing-profiles",
+    "model_calls": 0
+  }
+}

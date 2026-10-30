@@ -1,0 +1,330 @@
+{
+  "date": "2026-10-30",
+  "budget_id": "D04-content-validation-20261030",
+  "authorized": false,
+  "scope": "D04 development content validation only; same two approved synthetic outlines plus one deliberately flawed fixture",
+  "implementation_base": "6513899aaf84c5f7784cba3bfda7897ae6cbded5",
+  "historical_I0_to_D03_budget": {
+    "completed_calls": 32,
+    "ceiling": 32,
+    "remaining": 0,
+    "this_budget_is_separate": true
+  },
+  "proposed_max_new_calls": 9,
+  "alternative_pilot_max_new_calls": 5,
+  "new_API_spend_allowed": 0,
+  "subscription": "existing Codex ChatGPT subscription only",
+  "generation_model": "gpt-6.1-sol",
+  "generation_reasoning_effort": "high",
+  "review_model": "gpt-6.1-sol",
+  "review_reasoning_effort": "medium (verify before every turn)",
+  "auto_retry": false,
+  "D08_authorized": false,
+  "visual_generation_authorized": false,
+  "requested_content": "Along the two approved fixed outlines, full on-screen copy/cases plus explicitly requested verbatim speaker notes; at most six pages per sample. No image/SVG/PPT or delivery approval.",
+  "calls": [
+    {
+      "number": 1,
+      "sample": "negative",
+      "kind": "native_outline_review",
+      "purpose": "Detect the three deliberately located defects; fail expected; not model-generated content"
+    },
+    {
+      "number": 2,
+      "sample": "fixed-framework",
+      "kind": "native_outline_review",
+      "purpose": "Recheck approved unchanged framework under the versioned D04 standard"
+    },
+    {
+      "number": 3,
+      "sample": "fixed-framework",
+      "kind": "page_copy",
+      "purpose": "All six actual Pages, cases and atom mappings; original order/role nodes/qualifications retained"
+    },
+    {
+      "number": 4,
+      "sample": "fixed-framework",
+      "kind": "speech",
+      "purpose": "Explicit verbatim notes and segments for the six fixed actual Pages"
+    },
+    {
+      "number": 5,
+      "sample": "fixed-framework",
+      "kind": "native_full_content_review",
+      "purpose": "Full actual copy/cases/notes; argument/page_copy/progression/speech"
+    },
+    {
+      "number": 6,
+      "sample": "bid",
+      "kind": "native_outline_review",
+      "purpose": "Recheck approved unchanged bid outline under the versioned D04 standard"
+    },
+    {
+      "number": 7,
+      "sample": "bid",
+      "kind": "page_copy",
+      "purpose": "All six actual Pages, cases and atom mappings; retain the approved strategy"
+    },
+    {
+      "number": 8,
+      "sample": "bid",
+      "kind": "speech",
+      "purpose": "Explicit verbatim notes and segments for the six fixed actual Pages"
+    },
+    {
+      "number": 9,
+      "sample": "bid",
+      "kind": "native_full_content_review",
+      "purpose": "Full actual copy/cases/notes; argument/page_copy/progression/speech"
+    }
+  ],
+  "pilot_gate": "First 5 calls cover the three-defect negative fixture and one full member manuscript. If all expected gates hold, an authorized 9-call plan may proceed to the 4 bid calls; a 5-call authorization stops after the member manuscript.",
+  "negative_fixture_expected_faults": [
+    {
+      "topic_id": "t-hq-rules",
+      "meaning": "全面赋能、业务升级、价值跃迁。"
+    },
+    {
+      "topic_id": "t-store-execution",
+      "meaning": "现有产品能够自动覆盖全部营销流程，无需核对授权、领取能力、数据字段或权限。"
+    },
+    {
+      "topic_id": "t-hq-review",
+      "meaning": "客户已经决定采购；本次按竞标回应，只强调我们优于其他供应商，无需再解释业务如何使用。"
+    }
+  ],
+  "source_projects": {
+    "fixed-framework": {
+      "refs": [
+        {
+          "path": ".deckmaster/objects/f4/f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4.json",
+          "sha256": "f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4"
+        },
+        {
+          "path": ".deckmaster/objects/f3/f3e8fbef1956e7f7311911a8253b0c055facbbe1fa8c3824bef3e279da340c80.json",
+          "sha256": "f3e8fbef1956e7f7311911a8253b0c055facbbe1fa8c3824bef3e279da340c80"
+        }
+      ],
+      "packet_sha256": "f43d4f9ffee558461cacd919eeb97431ba5d47bf703d38239b5e44fec4d3c54d"
+    },
+    "bid": {
+      "refs": [
+        {
+          "path": ".deckmaster/objects/08/08babed069c993197371e2b216e6b20400a40d26238dd4fa0eedd9f798cca98d.json",
+          "sha256": "08babed069c993197371e2b216e6b20400a40d26238dd4fa0eedd9f798cca98d"
+        },
+        {
+          "path": ".deckmaster/objects/42/42b09b1c76b49f18729e4b6a7d100939db6e9ba07442b14f9a0508a666c278b1.json",
+          "sha256": "42b09b1c76b49f18729e4b6a7d100939db6e9ba07442b14f9a0508a666c278b1"
+        }
+      ],
+      "packet_sha256": "c6e4e22dfddb7291029ab5c17aa18a0a45aa6baa97bf5cb2bda88e946f3f87be"
+    }
+  },
+  "method_previews": {
+    "page_copy": [
+      {
+        "id": "source-reading",
+        "relative_path": "references/source-reading.md",
+        "sha256": "4be8ac92de269f41010cd25587bbbb652ab2a4bebbbbd329edb9f3d370a60a50"
+      },
+      {
+        "id": "content-methods",
+        "relative_path": "references/content-methods.md",
+        "sha256": "e6ca410e25dcbfbc80b526eb93cb599c23fbe6ed2d6a21ad112d18c4624c3eb3"
+      },
+      {
+        "id": "content-examples",
+        "relative_path": "references/content-examples.md",
+        "sha256": "13f3cb7deceb5b1ce554c470f3ea2aa325dd0365c6dda73094fe9e85e181cdbd"
+      },
+      {
+        "id": "page-writing",
+        "relative_path": "references/page-writing.md",
+        "sha256": "d65839875dc213519c58962721d53f95024eb7fde05bc55548b4fb1d9dd2049e"
+      },
+      {
+        "id": "content-m03",
+        "relative_path": "references/methods/M03-argument.md",
+        "sha256": "159b046b28b4e7c82a291bb50a9e8126754a007688cb61203189bae4898b6ff5"
+      },
+      {
+        "id": "content-m04",
+        "relative_path": "references/methods/M04-causal-explanations.md",
+        "sha256": "cd52c74a319cf30ade75fd029c3476636d4b4b6f9db2eadffdc5f746dd815bf9"
+      },
+      {
+        "id": "content-m09",
+        "relative_path": "references/methods/M09-teaching.md",
+        "sha256": "99d5fde59a3360f6cd9e0101636e3d44a6fcd267643bab6f59a143bbff9dc9a8"
+      },
+      {
+        "id": "content-m10",
+        "relative_path": "references/methods/M10-compression.md",
+        "sha256": "eebc4d4fe5a133366d2e71d937fb86fbd83b8284c440fe453126d8d2b2e6258d"
+      }
+    ],
+    "speech": [
+      {
+        "id": "content-methods",
+        "relative_path": "references/content-methods.md",
+        "sha256": "e6ca410e25dcbfbc80b526eb93cb599c23fbe6ed2d6a21ad112d18c4624c3eb3"
+      },
+      {
+        "id": "content-examples",
+        "relative_path": "references/content-examples.md",
+        "sha256": "13f3cb7deceb5b1ce554c470f3ea2aa325dd0365c6dda73094fe9e85e181cdbd"
+      },
+      {
+        "id": "writing-profiles",
+        "relative_path": "references/writing-profiles.md",
+        "sha256": "e84fa21f7b484ccd1138f9217e304681de6396c53be5e583fb27faa2a532f54b"
+      },
+      {
+        "id": "page-writing",
+        "relative_path": "references/page-writing.md",
+        "sha256": "d65839875dc213519c58962721d53f95024eb7fde05bc55548b4fb1d9dd2049e"
+      }
+    ]
+  },
+  "review_selected_resource_ids": [
+    "content-m02",
+    "content-m03",
+    "content-m07",
+    "content-m08",
+    "content-m10"
+  ],
+  "frozen_files_sha256": {
+    "src/deck_master/business_review.py": "976db06dfb1d026a762d3cba121c72fd4e61a597cc92db15ebf69a24abd913d6",
+    "src/deck_master/native_review.py": "664ab69e87276a36c2fb3aa676eacbe4a2e359f57177affbf4a9b619ddfb03b2",
+    "src/deck_master/native_review_transport.py": "984df2bbc4396d69690e4b82c06c8802817a54a7ae023a7a54bca458166f37bf",
+    "src/deck_master/content_production.py": "8ef616b0640c342c33c27fc19503bb0132b9e5fe7faa66b9947facf9e30e85c7",
+    "skills/deck-master/references/method-review.md": "56d5d3b65e832d07630e23bd494912f0bbb5345bf91b6900024c4bc53b6d896b",
+    "src/deck_master/content_review.py": "45642d109b5f13e2cf20fef79abd4468bd51bebc63ef12f982eed52bdd6eec56",
+    "src/deck_master/effective_requirements.py": "8ec4fc992478ca0c5676c567c7312c3dd4747936438d9f70682a6966d08beb18",
+    "src/deck_master/service.py": "d60c30a7a2b8e84e092d9b94afb85c3b3c91ee25742ab17b8eef3f130fe9d5f7",
+    "src/deck_master/store.py": "fec9a927014f863fe210d6d66e9d08e2d4f925d171b64f96be989d0d503a8c90",
+    "src/deck_master/models.py": "4245d4931f3e2cd2f87df2b8ea7a3b156623f6efe68a5416da7ffa08805e1786",
+    "src/deck_master/capabilities.py": "6d94fd2f9ffff303eefecb4ce577dba240c04e3b863dca589f70a94c511077a6",
+    "src/deck_master/resources/contracts/document.v1.schema.json": "23c41f35322f84809912a5066b45d22612e56e40305d8098f85e88490d7d224e",
+    "src/deck_master/resources/contracts/compose-result.v2.schema.json": "10d256cbc7e6d35ea3d8edd6bc9abb51bd9c4af54125bceda2d23fba729af54c",
+    "src/deck_master/resources/contracts/page.v2.schema.json": "2f6b8e3ab978dcb0779604996e5f353360421342e5fb5b483376da06622bf5b4",
+    "src/deck_master/resources/contracts/content-plan-input.v2.schema.json": "2adfbedd7593fa6b061de182c7a53455fd6fabdbc2c464d2454be954fd50ac8e"
+  },
+  "stop_rules": [
+    "No model turn before explicit user budget allocation; do not add these calls to or alter the frozen 32-call budget",
+    "Reserve each attempt before a turn; no retry, fallback provider, API-key billing or quota purchase",
+    "Read the actual negative findings against the three known edits; a fabricated pass or missing material defect stops the pilot; do not judge by keyword count",
+    "Positive outline must pass current versioned criteria before Page-copy dispatch; a full-content request does not supply model budget",
+    "Any unexpected schema/transport/evidence/finding-location failure preserves the raw result and stops dependent steps; no silent regeneration",
+    "Model pass is not author/professional/customer acceptance; multi-frame comparison and D08 remain unverified"
+  ],
+  "authorized_new_calls": 0,
+  "spent_new_calls": 0,
+  "review_method_previews": {
+    "outline": [
+      {
+        "id": "source-reading",
+        "relative_path": "references/source-reading.md",
+        "sha256": "4be8ac92de269f41010cd25587bbbb652ab2a4bebbbbd329edb9f3d370a60a50"
+      },
+      {
+        "id": "content-methods",
+        "relative_path": "references/content-methods.md",
+        "sha256": "e6ca410e25dcbfbc80b526eb93cb599c23fbe6ed2d6a21ad112d18c4624c3eb3"
+      },
+      {
+        "id": "content-calibration",
+        "relative_path": "references/content-calibration.md",
+        "sha256": "8283ae03a7b993c921b89d5260c7620214d3afe398b286a2d01007ceae545c24"
+      },
+      {
+        "id": "review-and-repair",
+        "relative_path": "references/review-and-repair.md",
+        "sha256": "860b2af16f6e78014a61d5357190d014a5c075c91ef880627a2f6aa8c4262583"
+      },
+      {
+        "id": "method-review",
+        "relative_path": "references/method-review.md",
+        "sha256": "56d5d3b65e832d07630e23bd494912f0bbb5345bf91b6900024c4bc53b6d896b"
+      },
+      {
+        "id": "content-m02",
+        "relative_path": "references/methods/M02-structured-analysis.md",
+        "sha256": "ccd78062cd61ba22ff3e6160dcf3e6f3e6f17d20a02d95e4a9b95ba3d6d2d4b1"
+      },
+      {
+        "id": "content-m03",
+        "relative_path": "references/methods/M03-argument.md",
+        "sha256": "159b046b28b4e7c82a291bb50a9e8126754a007688cb61203189bae4898b6ff5"
+      },
+      {
+        "id": "content-m07",
+        "relative_path": "references/methods/M07-synthesis.md",
+        "sha256": "6416f7982602184ecaa73abf9f745d60ee574381c46a5d250cfd2e080d4a825c"
+      },
+      {
+        "id": "content-m08",
+        "relative_path": "references/methods/M08-narrative.md",
+        "sha256": "92784f1716d2e46d5e777ff4e6da9b4fa83b9b47b93017b262ab1cd7637ac178"
+      },
+      {
+        "id": "content-m10",
+        "relative_path": "references/methods/M10-compression.md",
+        "sha256": "eebc4d4fe5a133366d2e71d937fb86fbd83b8284c440fe453126d8d2b2e6258d"
+      }
+    ],
+    "full": [
+      {
+        "id": "source-reading",
+        "relative_path": "references/source-reading.md",
+        "sha256": "4be8ac92de269f41010cd25587bbbb652ab2a4bebbbbd329edb9f3d370a60a50"
+      },
+      {
+        "id": "content-methods",
+        "relative_path": "references/content-methods.md",
+        "sha256": "e6ca410e25dcbfbc80b526eb93cb599c23fbe6ed2d6a21ad112d18c4624c3eb3"
+      },
+      {
+        "id": "content-calibration",
+        "relative_path": "references/content-calibration.md",
+        "sha256": "8283ae03a7b993c921b89d5260c7620214d3afe398b286a2d01007ceae545c24"
+      },
+      {
+        "id": "review-and-repair",
+        "relative_path": "references/review-and-repair.md",
+        "sha256": "860b2af16f6e78014a61d5357190d014a5c075c91ef880627a2f6aa8c4262583"
+      },
+      {
+        "id": "method-review",
+        "relative_path": "references/method-review.md",
+        "sha256": "56d5d3b65e832d07630e23bd494912f0bbb5345bf91b6900024c4bc53b6d896b"
+      },
+      {
+        "id": "content-m02",
+        "relative_path": "references/methods/M02-structured-analysis.md",
+        "sha256": "ccd78062cd61ba22ff3e6160dcf3e6f3e6f17d20a02d95e4a9b95ba3d6d2d4b1"
+      },
+      {
+        "id": "content-m03",
+        "relative_path": "references/methods/M03-argument.md",
+        "sha256": "159b046b28b4e7c82a291bb50a9e8126754a007688cb61203189bae4898b6ff5"
+      },
+      {
+        "id": "content-m07",
+        "relative_path": "references/methods/M07-synthesis.md",
+        "sha256": "6416f7982602184ecaa73abf9f745d60ee574381c46a5d250cfd2e080d4a825c"
+      },
+      {
+        "id": "content-m08",
+        "relative_path": "references/methods/M08-narrative.md",
+        "sha256": "92784f1716d2e46d5e777ff4e6da9b4fa83b9b47b93017b262ab1cd7637ac178"
+      },
+      {
+        "id": "content-m10",
+        "relative_path": "references/methods/M10-compression.md",
+        "sha256": "eebc4d4fe5a133366d2e71d937fb86fbd83b8284c440fe453126d8d2b2e6258d"
+      }
+    ]
+  }
+}

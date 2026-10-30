@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-30",
+  "source": "direct user message in this implementation chat",
+  "verbatim": "认可两份稿可展开，按这个方向继续推进；多框架比较分支保留未验证，新增模型调用预算单列。",
+  "scope": [
+    "dev-01-fixed-framework",
+    "dev-02-competitive_bid-current-v2"
+  ],
+  "decision": "two fixed outlines expandable; continue D04 within authorized implementation scope",
+  "multi_frame_branch": "not_verified_retained",
+  "new_model_calls_authorized": 0,
+  "basis": "D03-calibration-r1.json fixed Narrative/Plan refs and two independent outline reviews"
+}

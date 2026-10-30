@@ -534,9 +534,11 @@
         },
         {
           "id": "D03-AC09",
-          "status": "not_run",
+          "status": "pass",
           "evidence": [
-            "implementation/D03-validation.md"
+            "implementation/D03-author-go.json",
+            "implementation/D03-validation.md",
+            "implementation/D06a-validation.md"
           ]
         }
       ],
@@ -553,10 +555,11 @@
       "model_evidence": [
         "implementation/D03-calibration-r1.json"
       ],
-      "author_acceptance": [],
+      "author_acceptance": [
+        "implementation/D03-author-go.json"
+      ],
       "not_run": [
         "AC06: 同一当前v2任务下两个实质不同框架的正向比较，本轮未生成；既定框架不强造候选",
-        "AC09: 老板对本轮两份固定稿的可展开判断尚未给出",
         "三模型完整辅审、留出集与D08未运行"
       ],
       "risks": [
@@ -570,7 +573,7 @@
       "title": "前置质量审查与完整内容展开",
       "path": "task-cards/D04.md",
       "iteration": "I2",
-      "status": "planned",
+      "status": "in_progress",
       "depends_on": [
         "D03"
       ],
@@ -578,46 +581,91 @@
         {
           "id": "D04-AC01",
           "status": "not_run",
-          "evidence": []
+          "evidence": [
+            "implementation/D04-validation.md",
+            "implementation/D04-zero-call-probe.json"
+          ]
         },
         {
           "id": "D04-AC02",
-          "status": "not_run",
-          "evidence": []
+          "status": "pass",
+          "evidence": [
+            "implementation/D04-validation.md",
+            "implementation/D04-zero-call-probe.json"
+          ]
         },
         {
           "id": "D04-AC03",
           "status": "not_run",
-          "evidence": []
+          "evidence": [
+            "implementation/D04-validation.md",
+            "implementation/D04-zero-call-probe.json"
+          ]
         },
         {
           "id": "D04-AC04",
           "status": "not_run",
-          "evidence": []
+          "evidence": [
+            "implementation/D04-validation.md",
+            "implementation/D04-zero-call-probe.json"
+          ]
         },
         {
           "id": "D04-AC05",
           "status": "not_run",
-          "evidence": []
+          "evidence": [
+            "implementation/D04-validation.md",
+            "implementation/D04-zero-call-probe.json"
+          ]
         },
         {
           "id": "D04-AC06",
-          "status": "not_run",
-          "evidence": []
+          "status": "pass",
+          "evidence": [
+            "implementation/D04-validation.md",
+            "implementation/D04-zero-call-probe.json"
+          ]
         },
         {
           "id": "D04-AC07",
-          "status": "not_run",
-          "evidence": []
+          "status": "pass",
+          "evidence": [
+            "implementation/D04-validation.md",
+            "implementation/D04-zero-call-probe.json"
+          ]
         }
       ],
-      "implementation_commit": null,
-      "changed_files": [],
-      "engineering_evidence": [],
+      "implementation_commit": "6513899aaf84c5f7784cba3bfda7897ae6cbded5",
+      "changed_files": [
+        "docs/specs/deck-master-rebuild-v1/contracts/document.v1.schema.json",
+        "skills/deck-master/references/method-review.md",
+        "src/deck_master/business_review.py",
+        "src/deck_master/capabilities.py",
+        "src/deck_master/content_production.py",
+        "src/deck_master/content_review.py",
+        "src/deck_master/effective_requirements.py",
+        "src/deck_master/models.py",
+        "src/deck_master/native_review.py",
+        "src/deck_master/resources/contracts/document.v1.schema.json",
+        "src/deck_master/service.py",
+        "src/deck_master/store.py",
+        "tests/rebuild/test_business_content_review.py"
+      ],
+      "engineering_evidence": [
+        "implementation/D04-validation.md",
+        "implementation/D04-zero-call-probe.json"
+      ],
       "model_evidence": [],
       "author_acceptance": [],
-      "not_run": [],
-      "risks": []
+      "not_run": [
+        "AC01 live semantic detection of the three-defect negative fixture",
+        "AC03/04/05 actual complete copy/cases/speech/demonstration outline and independent full review",
+        "D04 new model budget is separate and unapproved; no new calls"
+      ],
+      "risks": [
+        "New policy-version checks deliberately require rechecking old D03 passes; historical objects remain unchanged",
+        "Synthetic engineering transports are not live semantic review evidence"
+      ]
     },
     {
       "id": "D05",
@@ -1121,10 +1169,13 @@
         "implementation/D03-validation.md",
         "implementation/D03-calibration-r1.json"
       ],
-      "content_gate": "two_fixed_outline_native_reviews_pass_author_judgment_and_conditional_multi_frame_branch_open",
+      "content_gate": "author_go_for_two_fixed_outlines_multi_frame_branch_explicitly_deferred",
       "implementation_commit": "92448874358fe2d136e3e8dd901c6ad9f116e70f",
       "model_evidence": [
         "implementation/D03-calibration-r1.json"
+      ],
+      "author_acceptance": [
+        "implementation/D03-author-go.json"
       ]
     },
     {
@@ -1133,7 +1184,7 @@
       "depends_on": [
         "D03"
       ],
-      "status": "planned",
+      "status": "in_progress",
       "acceptance_ids": [
         "D04-AC01",
         "D04-AC02",
@@ -1142,7 +1193,15 @@
         "D04-AC05",
         "D04-AC06",
         "D04-AC07"
-      ]
+      ],
+      "continuation_authority": "implementation/D03-author-go.json",
+      "deferred_dependency_branch": "D03-AC06 explicitly retained unverified by user; no new generation budget",
+      "implementation_commit": "6513899aaf84c5f7784cba3bfda7897ae6cbded5",
+      "engineering_evidence": [
+        "implementation/D04-validation.md",
+        "implementation/D04-zero-call-probe.json"
+      ],
+      "content_gate": "engineering_ready_live_negative_and_full_manuscript_validation_pending_separate_budget"
     },
     {
       "id": "D05",
@@ -1238,7 +1297,7 @@
   "dependency_semantics": "depends_on 引用 work_units；conditional_depends_on 仅在条件成立时加边。卡条目镜像其收口单元；工作单元 acceptance_ids 是 AC 唯一验收归属。",
   "execution_base": "035845f228d1ba4cd7fc9b41cdedd8fd734043df",
   "execution_started_at": "2026-10-29",
-  "current_gate": "D03 两份固定大纲独立Codex论证/页序均pass，32/32完成；待I1作者判断，AC06同一v2任务多框架正向分支NOT_RUN；未启用D04/D08",
+  "current_gate": "D03两份获作者可展开认可，多框架分支保留未验证；D04工程215项回归通过，真实全文与反例验证待独立新预算，原32/32不扩写",
   "updated_at": "2026-10-30",
   "calibration_budget": {
     "overall_subscription_bound": 32,
@@ -1267,5 +1326,15 @@
     "D03_calls_completed": 4,
     "D03_independent_reviews_completed": 2,
     "D03_format_recovery_model_calls": 0
+  },
+  "D04_budget_proposal": {
+    "separate_from_prior_budget": true,
+    "proposed_max_calls": 9,
+    "alternative_pilot_calls": 5,
+    "authorized_calls": 0,
+    "calls_used": 0,
+    "evidence": "implementation/D04-call-plan.json",
+    "new_API_spend_allowed": 0,
+    "D08_authorized": false
   }
 }
