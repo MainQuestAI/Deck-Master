@@ -1,0 +1,216 @@
+{
+  "scope": "real generated development copies connected to shipped UI/HTTP; automated mechanism verification, not author approval",
+  "extra_model_calls": 0,
+  "cases": [
+    {
+      "case": "member",
+      "source_tree_sha256_before_after": "50b4e367c5c99a35ed65973978a0eb2aad6fceea04eecdf40acd7aa53d14dcd5",
+      "source_unchanged": true,
+      "source_narrative_ref": {
+        "path": ".deckmaster/objects/bd/bd043e73968e5aa90599cbef99b099a993bce05ee2b4f177bffc3f6d28e543ba.json",
+        "sha256": "bd043e73968e5aa90599cbef99b099a993bce05ee2b4f177bffc3f6d28e543ba"
+      },
+      "accepted_refs": [
+        {
+          "path": ".deckmaster/objects/34/3420d01e1ee92c80fd83d1111c0230f6e65d69bf4bdfe2a2474baaca5423020a.json",
+          "sha256": "3420d01e1ee92c80fd83d1111c0230f6e65d69bf4bdfe2a2474baaca5423020a"
+        },
+        {
+          "path": ".deckmaster/objects/cf/cff09b3e723959dac2332c779a5145e443e6ddd78909c72476d8eab55849570a.json",
+          "sha256": "cff09b3e723959dac2332c779a5145e443e6ddd78909c72476d8eab55849570a"
+        }
+      ],
+      "before_revision": "37447a2c27a3405a98bbca7e1f8344a0",
+      "after_revision": "066e6fabd9004db2854b67d693e82e25",
+      "actual_pages": 0,
+      "tasks_after": 4,
+      "source_links": 12,
+      "http_posts": 5,
+      "console_page_errors": [],
+      "human_author_approval": false
+    },
+    {
+      "case": "bid",
+      "source_tree_sha256_before_after": "ebb6786250e6a6bddd43c96676e0ed84db95dd6cb508be2d77212a1d1b1cfa68",
+      "source_unchanged": true,
+      "source_narrative_ref": {
+        "path": ".deckmaster/objects/08/08babed069c993197371e2b216e6b20400a40d26238dd4fa0eedd9f798cca98d.json",
+        "sha256": "08babed069c993197371e2b216e6b20400a40d26238dd4fa0eedd9f798cca98d"
+      },
+      "accepted_refs": [
+        {
+          "path": ".deckmaster/objects/08/08babed069c993197371e2b216e6b20400a40d26238dd4fa0eedd9f798cca98d.json",
+          "sha256": "08babed069c993197371e2b216e6b20400a40d26238dd4fa0eedd9f798cca98d"
+        },
+        {
+          "path": ".deckmaster/objects/42/42b09b1c76b49f18729e4b6a7d100939db6e9ba07442b14f9a0508a666c278b1.json",
+          "sha256": "42b09b1c76b49f18729e4b6a7d100939db6e9ba07442b14f9a0508a666c278b1"
+        }
+      ],
+      "before_revision": "17acf4fab85d47b4852e7b5dc60ed6c7",
+      "after_revision": "612e39bf5a8b4fe9bfed0feef29b4cb2",
+      "actual_pages": 0,
+      "tasks_after": 2,
+      "source_links": 14,
+      "http_posts": 4,
+      "console_page_errors": [],
+      "human_author_approval": false
+    }
+  ],
+  "screenshots": [
+    {
+      "file": "member-adopted-1280.png",
+      "sha256": "247cadca6782fd8e2c8fbe0425136aa4ac0e618b3b3fea6aa9a77fe3c207d930"
+    },
+    {
+      "file": "member-adopted-1440.png",
+      "sha256": "bb7df9657b77ca891557b9793e982fb205bc8675f4c126112765985df22aee26"
+    },
+    {
+      "file": "member-adopted-390.png",
+      "sha256": "fe6a18e72a2cac8d89a8b09a11dbde76f48f8e499fca357fa7d64bc12ffeeeb0"
+    },
+    {
+      "file": "bid-adopted-1280.png",
+      "sha256": "54e32b4a0c01bef71fb3d60f2739b78ff1acb957bf9142394e75bf2c82d21ddf"
+    },
+    {
+      "file": "bid-adopted-1440.png",
+      "sha256": "92503dc5f313234791f79edaa1e6fd2a9dd80d6c20b46e491aa66697371f8abe"
+    },
+    {
+      "file": "bid-adopted-390.png",
+      "sha256": "377287039cd0961ec8fc6cabc826383e468f7537dadcaff5f017b93a5d9ba180"
+    }
+  ],
+  "latest_readback": [
+    {
+      "case": "member",
+      "size": [
+        1280,
+        800
+      ],
+      "revision": "066e6fabd9004db2854b67d693e82e25",
+      "ui_contract": "ui_argument.v2",
+      "topic_count": 5,
+      "page_errors": [],
+      "files": [
+        {
+          "name": "member-latest-top-1280.png",
+          "sha256": "ad8e11fa4377474055befe9a4c4d1d108942f09863a914ac8b375e9817152cb9"
+        },
+        {
+          "name": "member-latest-full-1280.png",
+          "sha256": "d9ca8c10637e1559a06218b48c4c55c5714aac61fa6abec5c8474ae768578c14"
+        }
+      ]
+    },
+    {
+      "case": "member",
+      "size": [
+        1440,
+        900
+      ],
+      "revision": "066e6fabd9004db2854b67d693e82e25",
+      "ui_contract": "ui_argument.v2",
+      "topic_count": 5,
+      "page_errors": [],
+      "files": [
+        {
+          "name": "member-latest-top-1440.png",
+          "sha256": "ff812bbbf374a1bfbff73eee1078b5b9e138f4df2250caaab0b1f50e26fa5e6f"
+        },
+        {
+          "name": "member-latest-full-1440.png",
+          "sha256": "ddf38e485ea5d2c9a68349ac3a7178847818d50456bb270f9fce389adb82a36c"
+        }
+      ]
+    },
+    {
+      "case": "member",
+      "size": [
+        390,
+        844
+      ],
+      "revision": "066e6fabd9004db2854b67d693e82e25",
+      "ui_contract": "ui_argument.v2",
+      "topic_count": 5,
+      "page_errors": [],
+      "files": [
+        {
+          "name": "member-latest-top-390.png",
+          "sha256": "49c007fbae0aa9537df292c11c894cb2c2248b9dd86a940a3ea32495f1995c78"
+        },
+        {
+          "name": "member-latest-full-390.png",
+          "sha256": "c83fbef0aab1ed5f5e8ea4c9e4a08cf38edd449624a29f68ccaaf2828a12a362"
+        }
+      ]
+    },
+    {
+      "case": "bid",
+      "size": [
+        1280,
+        800
+      ],
+      "revision": "612e39bf5a8b4fe9bfed0feef29b4cb2",
+      "ui_contract": "ui_argument.v2",
+      "topic_count": 6,
+      "page_errors": [],
+      "files": [
+        {
+          "name": "bid-latest-top-1280.png",
+          "sha256": "2d498fd27974dcd62b578ae80fbfa2059ac05bf71337874058d2f7863a067795"
+        },
+        {
+          "name": "bid-latest-full-1280.png",
+          "sha256": "afa29a658d51e751d7c59b3098d9e7a39fb740fa11379ce1f8d0814b8980c6b8"
+        }
+      ]
+    },
+    {
+      "case": "bid",
+      "size": [
+        1440,
+        900
+      ],
+      "revision": "612e39bf5a8b4fe9bfed0feef29b4cb2",
+      "ui_contract": "ui_argument.v2",
+      "topic_count": 6,
+      "page_errors": [],
+      "files": [
+        {
+          "name": "bid-latest-top-1440.png",
+          "sha256": "68546fb40caa5376deaf1ffae609aaa7f7dbcc7e558ca153c0f263c471213eb1"
+        },
+        {
+          "name": "bid-latest-full-1440.png",
+          "sha256": "6a6a407804c60a5798e512b1fb7ac5145c72622ced4ddbc0c481eba50991d669"
+        }
+      ]
+    },
+    {
+      "case": "bid",
+      "size": [
+        390,
+        844
+      ],
+      "revision": "612e39bf5a8b4fe9bfed0feef29b4cb2",
+      "ui_contract": "ui_argument.v2",
+      "topic_count": 6,
+      "page_errors": [],
+      "files": [
+        {
+          "name": "bid-latest-top-390.png",
+          "sha256": "64f5dc4b988d3837d4b1008c03856c42a5b290579a7837feade0e7c1a7b7aece"
+        },
+        {
+          "name": "bid-latest-full-390.png",
+          "sha256": "70777998ed04ee8175bf245325dbe17990773d1a3c9ce560eda7a7a34ac674a6"
+        }
+      ]
+    }
+  ],
+  "evidence_root": "/Users/dingcheng/.codex/tmp/deck-master-business-expression-20261030/d06a-ui-probe",
+  "implementation_commit": "eaebe31e854055bf4cec58dc23b01acead8005fb"
+}

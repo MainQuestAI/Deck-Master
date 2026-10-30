@@ -462,7 +462,7 @@
       "title": "业务框架提炼与反向展开",
       "path": "task-cards/D03.md",
       "iteration": "I1",
-      "status": "planned",
+      "status": "in_progress",
       "depends_on": [
         "D01",
         "D02b",
@@ -517,10 +517,15 @@
       ],
       "implementation_commit": null,
       "changed_files": [],
-      "engineering_evidence": [],
+      "engineering_evidence": [
+        "implementation/D03-progress.md"
+      ],
       "model_evidence": [],
       "author_acceptance": [],
-      "not_run": [],
+      "not_run": [
+        "已确定框架的真实生成待剩余额度分配",
+        "独立大纲审查与作者结论尚未完成"
+      ],
       "risks": []
     },
     {
@@ -650,8 +655,11 @@
       "acceptance": [
         {
           "id": "D06-AC01",
-          "status": "not_run",
-          "evidence": []
+          "status": "pass",
+          "evidence": [
+            "implementation/D06a-validation.md",
+            "implementation/D06a-ui-probe.json"
+          ]
         },
         {
           "id": "D06-AC02",
@@ -660,13 +668,19 @@
         },
         {
           "id": "D06-AC03",
-          "status": "not_run",
-          "evidence": []
+          "status": "pass",
+          "evidence": [
+            "implementation/D06a-validation.md",
+            "implementation/D06a-ui-probe.json"
+          ]
         },
         {
           "id": "D06-AC04",
-          "status": "not_run",
-          "evidence": []
+          "status": "pass",
+          "evidence": [
+            "implementation/D06a-validation.md",
+            "implementation/D06a-ui-probe.json"
+          ]
         },
         {
           "id": "D06-AC05",
@@ -684,13 +698,36 @@
           "evidence": []
         }
       ],
-      "implementation_commit": null,
-      "changed_files": [],
-      "engineering_evidence": [],
+      "implementation_commit": "eaebe31e854055bf4cec58dc23b01acead8005fb",
+      "changed_files": [
+        "docs/specs/deck-master-webui-content-methods-20261020/contracts/ui-argument.v2.schema.json",
+        "src/deck_master/business_outline.py",
+        "src/deck_master/content_insight.py",
+        "src/deck_master/eligibility_entries.py",
+        "src/deck_master/models.py",
+        "src/deck_master/registry.py",
+        "src/deck_master/resources/contracts/ui-argument.v2.schema.json",
+        "src/deck_master/resources/static/v2/business-outline.js",
+        "src/deck_master/resources/static/v2/content-sources.js",
+        "src/deck_master/resources/static/v2/insight-reading.js",
+        "src/deck_master/resources/static/v2/launcher-ui.js",
+        "src/deck_master/web.py",
+        "tests/rebuild/test_business_outline_authoring.py",
+        "tests/rebuild/test_business_outline_browser.py"
+      ],
+      "engineering_evidence": [
+        "implementation/D06a-validation.md",
+        "implementation/D06a-ui-probe.json"
+      ],
       "model_evidence": [],
       "author_acceptance": [],
-      "not_run": [],
-      "risks": []
+      "not_run": [
+        "D06b 策略重编、D06 收口未执行",
+        "实际作者签字与独立专业审查未完成"
+      ],
+      "risks": [
+        "D06a 是开发机制闭环，不等同 I1 整体商业表达通过"
+      ]
     },
     {
       "id": "D07",
@@ -1009,13 +1046,19 @@
         "D01",
         "D02b"
       ],
-      "status": "in_progress",
+      "status": "completed",
       "deliverable": "I1 任务输入、框架阅读、真实修正/采用与恢复；合法持久化对象连接后端，不等待 D03 框架生成",
       "acceptance_ids": [
         "D06-AC01",
         "D06-AC03",
         "D06-AC04"
-      ]
+      ],
+      "implementation_commit": "eaebe31e854055bf4cec58dc23b01acead8005fb",
+      "engineering_evidence": [
+        "implementation/D06a-validation.md",
+        "implementation/D06a-ui-probe.json"
+      ],
+      "content_gate": "engineering_workflow_ready_for_D03_not_author_or_professional_signoff"
     },
     {
       "id": "D03",
@@ -1025,7 +1068,7 @@
         "D02b",
         "D06a"
       ],
-      "status": "planned",
+      "status": "in_progress",
       "acceptance_ids": [
         "D03-AC01",
         "D03-AC02",
@@ -1036,7 +1079,11 @@
         "D03-AC07",
         "D03-AC08",
         "D03-AC09"
-      ]
+      ],
+      "engineering_evidence": [
+        "implementation/D03-progress.md"
+      ],
+      "content_gate": "fixed_framework_generation_and_independent_outline_review_pending_allocation"
     },
     {
       "id": "D04",
@@ -1149,7 +1196,7 @@
   "dependency_semantics": "depends_on 引用 work_units；conditional_depends_on 仅在条件成立时加边。卡条目镜像其收口单元；工作单元 acceptance_ids 是 AC 唯一验收归属。",
   "execution_base": "035845f228d1ba4cd7fc9b41cdedd8fd734043df",
   "execution_started_at": "2026-10-29",
-  "current_gate": "D02b engineering and v2 development calibration complete with one recorded Host qualification; D02 professional acceptance open; D06a author workflow in progress; model calls 28/32, four remaining unassigned",
+  "current_gate": "D06a 工程闭环完成；D03 补样与独立大纲审查待剩余4次分配，I1作者/专业关口未关闭",
   "updated_at": "2026-10-30",
   "calibration_budget": {
     "overall_subscription_bound": 32,

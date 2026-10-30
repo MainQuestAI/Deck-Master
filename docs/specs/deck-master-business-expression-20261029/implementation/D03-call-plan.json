@@ -1,0 +1,77 @@
+{
+  "date": "2026-10-30",
+  "authorized": false,
+  "prior_local_calls": 28,
+  "max_new_calls": 4,
+  "requested_cumulative_bound": 32,
+  "new_API_spend_allowed": 0,
+  "auto_retry": false,
+  "D08_authorized": false,
+  "scope": "D03 remaining development evidence; synthetic fixed framework + independent native outline review; no holdout or full manuscript",
+  "implementation_base": "eaebe31e854055bf4cec58dc23b01acead8005fb",
+  "generation_model": "gpt-6.1-sol",
+  "generation_reasoning_effort": "high",
+  "review_model": "gpt-6.1-sol",
+  "review_reasoning_effort": "medium (current native subscription setting; recheck before use)",
+  "calls": [
+    {
+      "number": 29,
+      "kind": "generation",
+      "sample": "dev-01-fixed-framework",
+      "phase": "framing"
+    },
+    {
+      "number": 30,
+      "kind": "generation",
+      "sample": "dev-01-fixed-framework",
+      "phase": "argument"
+    },
+    {
+      "number": 31,
+      "kind": "native_outline_review",
+      "sample": "dev-01-fixed-framework",
+      "units": [
+        "argument",
+        "progression"
+      ]
+    },
+    {
+      "number": 32,
+      "kind": "native_outline_review",
+      "sample": "dev-02-competitive_bid-current-v2",
+      "units": [
+        "argument",
+        "progression"
+      ]
+    }
+  ],
+  "fixed_framework_input": {
+    "base_task": "dev-01-first_proposal",
+    "instruction": "合成评测条件，非老板新增业务主张：框架已确认为“总部定规则→门店执行→总部复盘”。保留这三段的业务含义，直接检验和展开；允许真实交叉对应，缺口如实列出；不要重新发明框架或凑候选标题。",
+    "append_to": "existing_decisions"
+  },
+  "reused_materials": {
+    "definition": "evaluation/tasks.json development dev-01 only; same immutable source bytes as D02b",
+    "D02b_tasks_sha256": "58025929e9483ed1d18e7449ffa536b9dbbd42fb4a276c78f91cbc2e58defd88"
+  },
+  "method_and_contract_freeze": "Use unchanged D02b canonical method and Narrative/Plan hashes; validate before calls. New UI projection is read-only.",
+  "review_channel_prerequisites": {
+    "status": "prerequisites_ready",
+    "model_called": false,
+    "session_verified": false
+  },
+  "stop_rules": [
+    "No generation or review before explicit user allocation",
+    "Reserve each attempt in one ledger before calling; overall count must not exceed 32",
+    "No automatic retry or model fallback; failure or uncertain outcome still consumes the reserved slot until reconciled",
+    "Review findings are retained; no automatic fix-and-rerun",
+    "Independent review is not author approval; other required reviewer/holdout gaps remain open",
+    "Stop before turn/start if the native session does not match the frozen ChatGPT subscription model/provider boundary"
+  ],
+  "frozen_files_sha256": {
+    "docs/specs/deck-master-business-expression-20261029/evaluation/tasks.json": "58025929e9483ed1d18e7449ffa536b9dbbd42fb4a276c78f91cbc2e58defd88",
+    "docs/specs/deck-master-business-expression-20261029/evaluation/materials/dev-01.md": "e56e79a10c7e40a87b6f4078827b575a9cdff8be5248e9a0f311ab50d347776a",
+    "src/deck_master/native_review.py": "14032d637f21cdd8e4ca173328199ffbee484c01d8c9413a8faaf9822bac0ea1",
+    "src/deck_master/native_review_transport.py": "984df2bbc4396d69690e4b82c06c8802817a54a7ae023a7a54bca458166f37bf"
+  }
+}
