@@ -1,0 +1,154 @@
+{
+  "date": "2026-10-30",
+  "budget_id": "D04-content-validation-20261030",
+  "approved_ceiling": 9,
+  "actual_model_completions": 1,
+  "remaining_calls_unexecuted": 8,
+  "original_plan_sha256": "66c8d36757b5818f641dc8c422b9717d9f6fc633bd1f42090302fec2ca5def73",
+  "raw_completion_sha256": "5997e1b1f0c880167ef028c5c19eba749c718725c05e42da3f1e0de2be4fa33d",
+  "actual_execution": {
+    "model": "gpt-6.1-sol",
+    "thread_id": "01a18b5b-851a-71c2-bb18-04c8cf0e3e65",
+    "execution_ref": "codex-native:01a18b5b-851a-71c2-bb18-04c8cf0e3e65",
+    "model_called": false
+  },
+  "raw_review_judgments": {
+    "reviews": [
+      {
+        "kind": "argument",
+        "status": "fail",
+        "observations": [
+          "老板，已逐项复核固定 Narrative、planned ContentPlan、完整合成来源及前任 argument 审查。前任没有 finding；本次发现三个主题含义存在实质错误，不能沿用旧通过结论。",
+          "n-hq-rules、n-store-execution、n-hq-review 及 p02—p04 已有具体业务展开，但不能据此忽略 business_frame.topics.meaning 中与其冲突的实际主张。映射齐全不证明主题语义成立。",
+          "判断仅覆盖大纲论证，不涉及页面正文、口播、视觉、真实客户授权或专业批准。"
+        ],
+        "replaces": {
+          "path": ".deckmaster/objects/be/bef846e6a60ba4687a64a625adf35e72537d31e2472ce94722a7f037da7ce9f2.json",
+          "sha256": "bef846e6a60ba4687a64a625adf35e72537d31e2472ce94722a7f037da7ce9f2"
+        },
+        "findings": [
+          {
+            "finding_id": "ARG-001",
+            "kind": "content",
+            "impact": "must_fix",
+            "page_id": "p02",
+            "element_refs": [
+              "topic:t-hq-rules",
+              "node:n-hq-rules",
+              "role:p02"
+            ],
+            "message": "“总部定规则”的主题含义只有空口号，未表达该段具体工作。虽有下层节点和页职责补充，主题本身仍不能作为可展开的业务概括使用。",
+            "expected": "主题含义应概括客户准备数据与授权、C1筛选名单、C2配置权益，以及总部向门店交付适用对象、条件和例外口径，并保留成立条件。",
+            "actual": "topic:t-hq-rules.meaning 原句为“全面赋能、业务升级、价值跃迁。”；它未说明任何岗位动作或交接对象。n-hq-rules 与 role:p02 实际展开的却是数据准备、名单筛选和权益条件交付。来源 L9、L13、L15 支持这些具体工作，不支持用口号替代含义。",
+            "evidence": [
+              {
+                "path": ".deckmaster/objects/6e/6ec76cfad1dc83455c95bf480c3f3fcfe69f4acab050214db0bfd3144295a00a.json",
+                "sha256": "6ec76cfad1dc83455c95bf480c3f3fcfe69f4acab050214db0bfd3144295a00a"
+              },
+              {
+                "path": ".deckmaster/objects/e5/e56e79a10c7e40a87b6f4078827b575a9cdff8be5248e9a0f311ab50d347776a.md",
+                "sha256": "e56e79a10c7e40a87b6f4078827b575a9cdff8be5248e9a0f311ab50d347776a"
+              }
+            ],
+            "resolution": "open",
+            "resolution_reason": "当前固定大纲仍保留该空泛含义；本次只读审查，未修改。"
+          },
+          {
+            "finding_id": "ARG-002",
+            "kind": "content",
+            "impact": "must_fix",
+            "page_id": "p03",
+            "element_refs": [
+              "topic:t-store-execution",
+              "node:n-store-execution",
+              "node:n-consent",
+              "node:n-c3",
+              "role:p03"
+            ],
+            "message": "“门店执行”的主题含义把有限能力扩大为全流程自动覆盖，并明确取消必要核验，违背来源和自身下层论证，会误导产品能力与进入条件判断。",
+            "expected": "区分员工核销、店长过程查看和人员跟进判断；授权拒收、领取状态、字段及权限按证据保留前提或缺口，不推定自动覆盖。",
+            "actual": "原句为“现有产品能够自动覆盖全部营销流程，无需核对授权、领取能力、数据字段或权限。”来源 L13 仅证明 C2、C3 的有限能力，L15 明确要求客户确认授权与拒收标识；n-store-execution 及 role:p03 也明确领取、跟进与新增拒收处理仍需核验。该主题主张与这些内容直接冲突。",
+            "evidence": [
+              {
+                "path": ".deckmaster/objects/6e/6ec76cfad1dc83455c95bf480c3f3fcfe69f4acab050214db0bfd3144295a00a.json",
+                "sha256": "6ec76cfad1dc83455c95bf480c3f3fcfe69f4acab050214db0bfd3144295a00a"
+              },
+              {
+                "path": ".deckmaster/objects/e5/e56e79a10c7e40a87b6f4078827b575a9cdff8be5248e9a0f311ab50d347776a.md",
+                "sha256": "e56e79a10c7e40a87b6f4078827b575a9cdff8be5248e9a0f311ab50d347776a"
+              }
+            ],
+            "resolution": "open",
+            "resolution_reason": "当前主题仍断言无需核验；其他节点中的正确限定不能消除这项矛盾。"
+          },
+          {
+            "finding_id": "ARG-003",
+            "kind": "content",
+            "impact": "must_fix",
+            "page_id": "p04",
+            "element_refs": [
+              "topic:t-hq-review",
+              "node:n-task-boundary",
+              "node:n-hq-review",
+              "role:p04"
+            ],
+            "message": "“总部复盘”的主题含义虚构采购共识，将首次提案改为竞标，并取消业务使用解释，既偏离本次任务，也未表达复盘主题的实际含义。",
+            "expected": "保持尚无采购决定的首次提案场景，解释总部如何依据实际记录、导出明细与人工整理按活动和门店复盘，并保留字段、权限和统计口径条件。",
+            "actual": "原句为“客户已经决定采购；本次按竞标回应，只强调我们优于其他供应商，无需再解释业务如何使用。”任务明确为 first_proposal，n-task-boundary 明确“没有采购决定”；来源 L25 不代表采购结果，L9、L13 仅支持复盘需求和明细导出能力，未提供供应商优劣证据。该含义还与 n-hq-review、role:p04 的人工复盘展开冲突。",
+            "evidence": [
+              {
+                "path": ".deckmaster/objects/6e/6ec76cfad1dc83455c95bf480c3f3fcfe69f4acab050214db0bfd3144295a00a.json",
+                "sha256": "6ec76cfad1dc83455c95bf480c3f3fcfe69f4acab050214db0bfd3144295a00a"
+              },
+              {
+                "path": ".deckmaster/objects/e5/e56e79a10c7e40a87b6f4078827b575a9cdff8be5248e9a0f311ab50d347776a.md",
+                "sha256": "e56e79a10c7e40a87b6f4078827b575a9cdff8be5248e9a0f311ab50d347776a"
+              }
+            ],
+            "resolution": "open",
+            "resolution_reason": "当前固定大纲仍含无依据的采购决定及竞标策略，未获修正。"
+          }
+        ]
+      },
+      {
+        "kind": "progression",
+        "status": "pass",
+        "observations": [
+          "已重新核对前任 progression 审查与当前 p01—p06 的全部页职责、承接、章节及预算；前任无 finding。本结论仅针对计划层组织推进，不抵消 argument 的三个开放问题。",
+          "role:p01 由 n-current 的现状和产品必要性问题进入；role:p02 解释名单与权益交付，role:p03 承接店员使用及店长跟进，role:p04 推进到记录整理与总部复盘。各页增加新的岗位动作或交接结果，符合来源 src-5933d6c4 L7、L9、L13、L19。",
+          "role:p04→role:p05 在业务工作解释之后比较现有流程改善与产品试点；n-route 的两条路线是业务选项，没有被冒充第二叙事候选。role:p05 展开 n-delivery 的准备与移交，role:p06 展开 n-verify、n-entry-conditions 的检查对象和改变方向条件，承接成立。",
+          "固定 Plan fb377267e575644d9feaabebdd181c9008ea0ad9abd340f29055d85c5d7f8c57 共六页；演示嵌入 p02—p04，没有挤占 p05 的交付责任与 p06 的验证。pi-page-budget 和 pi-trial-specifics 保留必要取舍与待确认项。该判断不证明实际正文能容纳全部内容，也不证明实际讲述时长。"
+        ],
+        "replaces": {
+          "path": ".deckmaster/objects/a1/a17b0cbd277c7c59f61e8627ff328a57ee1c1511bceab35e7af447e974696e82.json",
+          "sha256": "a17b0cbd277c7c59f61e8627ff328a57ee1c1511bceab35e7af447e974696e82"
+        },
+        "findings": []
+      }
+    ]
+  },
+  "runtime_acceptance": "failed",
+  "failure": {
+    "type": "EnvelopeError",
+    "error_code": null,
+    "message": "review/outline/findings: outline findings use null page and explicit node/role locations"
+  },
+  "receiver_error": "Outline findings require page_id=null; the old producer output schema incorrectly allowed strings. The model used valid planned role IDs p02/p03/p04.",
+  "semantic_faults_observed": [
+    "empty topic meaning",
+    "unsupported all-capabilities claim",
+    "first-proposal treated as decided procurement/bid"
+  ],
+  "root_cause": "producer output schema did not encode the existing outline receiver invariant",
+  "repair": "native _judgment_schema now accepts subject=outline and constrains finding.page_id to null; both request and envelope validation use it; prompt directs planned page locators to role:<page_id>",
+  "regression": {
+    "tests": 60,
+    "result": "pass",
+    "elapsed_seconds": 7.03,
+    "scope": "business content/outline/native/preproduction review"
+  },
+  "model_retry": false,
+  "dependent_calls_executed": false,
+  "formally_accepted_negative_review": false,
+  "local_evidence_root": "/Users/dingcheng/.codex/tmp/deck-master-business-expression-20261030/d04-r1"
+}

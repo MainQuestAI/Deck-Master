@@ -1,0 +1,31 @@
+{
+  "date": "2026-10-30",
+  "authorized": false,
+  "original_approved_budget": 9,
+  "already_used": 1,
+  "original_calls_remaining": 8,
+  "reason": "An implementation output-schema omission consumed one model call whose three findings were correct but could not be formally accepted. The schema is fixed and 60 checks pass; no retry occurred.",
+  "options": [
+    {
+      "id": "one_explicit_recheck",
+      "proposed_total_ceiling": 10,
+      "additional_calls_over_prior_budget": 1,
+      "remaining_max_calls": 9,
+      "scope": "one explicit negative recheck under the fixed schema, then the original eight positive-outline/copy/speech/full-review calls for both samples"
+    },
+    {
+      "id": "keep_nine_defer_negative_acceptance",
+      "proposed_total_ceiling": 9,
+      "additional_calls_over_prior_budget": 0,
+      "remaining_max_calls": 8,
+      "scope": "retain raw negative semantic findings and keep formal negative acceptance unverified; with explicit user acceptance of that boundary, execute the original eight positive calls"
+    }
+  ],
+  "constraints": {
+    "API_spend": 0,
+    "subscription": "existing Codex ChatGPT subscription",
+    "automatic_retry": false,
+    "D08": false,
+    "visual_or_PPT": false
+  }
+}
