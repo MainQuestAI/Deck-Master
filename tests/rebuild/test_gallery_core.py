@@ -241,12 +241,10 @@ def test_gallery_and_thumbnail_http_keep_host_origin_hash_and_csp_guards(project
         server.stop()
 
 
-def test_schema_mirrors_are_identical_and_personal_state_is_valid(project):
+def test_personal_state_is_valid(project):
+    # 2026-10-30: the docs/specs contract mirrors were retired; schemas have one
+    # active source under src/deck_master/resources/contracts (audit OD-D1).
     validate_schema('ui_gallery', state(project))
-    root = Path(__file__).resolve().parents[2]
-    for name in ('ui-gallery.v1.schema.json', 'thumbnail.v1.schema.json'):
-        mirror = next((root / 'docs/specs/deck-master-workbench-v3').rglob(name))
-        assert mirror.read_bytes() == (root / 'src/deck_master/resources/contracts' / name).read_bytes()
 
 
 def test_missing_reference_keeps_selection_and_can_be_removed_without_manual_file_repair(project):

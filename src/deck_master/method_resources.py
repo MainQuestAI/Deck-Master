@@ -16,6 +16,8 @@ from pathlib import Path
 
 from .errors import MethodResourceMissing
 from .models import canonical_json_bytes, sha256_bytes
+from .content_review import BASE_UNITS, SPEECH_UNIT
+from .review import PAGE_VISUAL_KINDS, REVIEW_DIMENSIONS
 
 from . import __version__
 
@@ -110,8 +112,10 @@ def rc3_method_ids_for(kind: str, *, intent: str | None = None,
 
 _REVIEW_ORDER = ("source-reading", "content-methods", "content-examples",
                  "content-calibration", "review-and-repair", "physical-units")
-_CONTENT_UNITS = {"content", "argument", "page_copy", "progression"}
-_VISUAL_UNITS = {"visual_expression", "blueprint_content", "blueprint_fidelity", "conversion", "readability", "privacy"}
+# The unit sets are owned by content_review/review; this module never re-declares
+# them. The default scope below is the Runtime's stage default, not an empty review.
+_CONTENT_UNITS = {"content", *BASE_UNITS}
+_VISUAL_UNITS = {"visual_expression", *(kind for kind in REVIEW_DIMENSIONS if kind != "content")}
 
 
 def method_ids_for(kind: str, *, intent: str | None = None,
@@ -135,8 +139,8 @@ def method_ids_for(kind: str, *, intent: str | None = None,
         return tuple(dict.fromkeys((*base, *extra)))
     if review_units is None:
         # An omitted scope is the Runtime's stage default, never an empty review.
-        units = ({"argument", "page_copy", "progression"} if intent == "preproduction"
-                 else {"blueprint_content", "blueprint_fidelity", "readability"}
+        units = (set(BASE_UNITS) if intent == "preproduction"
+                 else set(PAGE_VISUAL_KINDS)
                  if intent == "page_visual" else {"visual_expression"}
                  if intent == "original_image" else _CONTENT_UNITS | _VISUAL_UNITS)
     else:
@@ -149,10 +153,10 @@ def method_ids_for(kind: str, *, intent: str | None = None,
         if not units or not units <= _CONTENT_UNITS | _VISUAL_UNITS | {"speech"}:
             from .models import ModelError
             raise ModelError("task/review_units", "review units must name a non-empty registered scope")
-        if intent == "page_visual" and not units <= {"blueprint_content", "blueprint_fidelity", "readability"}:
+        if intent == "page_visual" and not units <= set(PAGE_VISUAL_KINDS):
             from .models import ModelError
             raise ModelError("task/review_units", "page_visual cannot review non-visual units")
-        if intent == "preproduction" and not units <= {"argument", "page_copy", "progression", "speech"}:
+        if intent == "preproduction" and not units <= set(BASE_UNITS) | {SPEECH_UNIT}:
             from .models import ModelError
             raise ModelError("task/review_units", "preproduction requires content pre-review units")
     if intent == "original_image" and units != {"visual_expression"}:
@@ -272,8 +276,8 @@ def method_resources(kind: str, *, intent: str | None = None,
     items = []
     selected_units = review_units
     if kind == 'review' and selected_units is None:
-        selected_units = (['argument', 'page_copy', 'progression'] if intent == 'preproduction'
-                          else ['blueprint_content', 'blueprint_fidelity', 'readability']
+        selected_units = (list(BASE_UNITS) if intent == 'preproduction'
+                          else list(PAGE_VISUAL_KINDS)
                           if intent == 'page_visual' else sorted(_CONTENT_UNITS | _VISUAL_UNITS))
     selected_phase = phase or ('review' if kind == 'review' else
                               'production' if kind in ('blueprint', 'reconstruct', 'style_analyze') else
@@ -532,8 +536,8 @@ def read_skill_methods(skill: str, *, entry_mode="named", project=None, task_id=
         raise ValueError("frozen Task methods cannot be supplemented; use formal reissue")
     selection_units = review_units
     if skill == 'deck-review' and selection_units is None:
-        selection_units = (['argument', 'page_copy', 'progression'] if review_stage == 'preproduction'
-                           else ['blueprint_content', 'blueprint_fidelity', 'readability']
+        selection_units = (list(BASE_UNITS) if review_stage == 'preproduction'
+                           else list(PAGE_VISUAL_KINDS)
                            if review_stage == 'page_visual' else sorted(_CONTENT_UNITS | _VISUAL_UNITS))
     selected = _selected_ids(selected_resource_ids, role=skill,
                              phase='review' if skill == 'deck-review' else None,
