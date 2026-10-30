@@ -1,0 +1,251 @@
+{
+  "date": "2026-10-30",
+  "scope": "D04 call04 original six-page copy output; schema failure and zero-model recovery",
+  "failure": "EnvelopeError payload/pages[0]: customer_visible required",
+  "root_cause": "Evaluation prompt supplied generic pages.items=object and plan_input=object, omitted full nested canonical Page schema; model generated incompatible page.v2/title/content/visible_atoms container",
+  "raw_response_sha256": "bbb219d1408522679f0cd7a366919204307cee9b4d7ae55538a6463ccb6b0a1e",
+  "original_prompt_sha256": "f9efab69be9c932c290148b3501502b5f3db01a2e86e7015813e86c901da9970",
+  "host_marshaling": {
+    "model_called": false,
+    "scope": "observed call04 only; no runtime fallback; raw bytes retained",
+    "text_changed": false,
+    "narrative_node_or_source_links_changed": false,
+    "added_metadata": [
+      "canonical Page schema version",
+      "current page role id",
+      "reference_mode=new_design: intent only, no visual generated"
+    ],
+    "removed_metadata": [
+      "unsupported duplicate project/version/origin/previous_ref fields",
+      "duplicate visible_atoms cache"
+    ],
+    "checks": [
+      {
+        "page_id": "p01",
+        "all_visible_text_exact": true,
+        "all_node_and_source_links_exact": true,
+        "old_to_runtime_atom_ids": {
+          "p01-title": "atom:p01:title",
+          "p01-current": "atom:p01:block:p01-current:text",
+          "p01-frame": "atom:p01:block:p01-frame:text",
+          "p01-choice": "atom:p01:block:p01-choice:text",
+          "p01-boundary": "atom:p01:block:p01-boundary:text"
+        }
+      },
+      {
+        "page_id": "p02",
+        "all_visible_text_exact": true,
+        "all_node_and_source_links_exact": true,
+        "old_to_runtime_atom_ids": {
+          "p02-title": "atom:p02:title",
+          "p02-input": "atom:p02:block:p02-input:text",
+          "p02-rule": "atom:p02:block:p02-rule:text",
+          "p02-example": "atom:p02:block:p02-example:text",
+          "p02-boundary": "atom:p02:block:p02-boundary:text"
+        }
+      },
+      {
+        "page_id": "p03",
+        "all_visible_text_exact": true,
+        "all_node_and_source_links_exact": true,
+        "old_to_runtime_atom_ids": {
+          "p03-title": "atom:p03:title",
+          "p03-staff": "atom:p03:block:p03-staff:text",
+          "p03-manager": "atom:p03:block:p03-manager:text",
+          "p03-example": "atom:p03:block:p03-example:text",
+          "p03-boundary": "atom:p03:block:p03-boundary:text"
+        }
+      },
+      {
+        "page_id": "p04",
+        "all_visible_text_exact": true,
+        "all_node_and_source_links_exact": true,
+        "old_to_runtime_atom_ids": {
+          "p04-title": "atom:p04:title",
+          "p04-input": "atom:p04:block:p04-input:text",
+          "p04-work": "atom:p04:block:p04-work:text",
+          "p04-example": "atom:p04:block:p04-example:text",
+          "p04-feedback": "atom:p04:block:p04-feedback:text"
+        }
+      },
+      {
+        "page_id": "p05",
+        "all_visible_text_exact": true,
+        "all_node_and_source_links_exact": true,
+        "old_to_runtime_atom_ids": {
+          "p05-title": "atom:p05:title",
+          "p05-existing": "atom:p05:block:p05-existing:text",
+          "p05-product": "atom:p05:block:p05-product:text",
+          "p05-delivery": "atom:p05:block:p05-delivery:text",
+          "p05-dependency": "atom:p05:block:p05-dependency:text"
+        }
+      },
+      {
+        "page_id": "p06",
+        "all_visible_text_exact": true,
+        "all_node_and_source_links_exact": true,
+        "old_to_runtime_atom_ids": {
+          "p06-title": "atom:p06:title",
+          "p06-checks": "atom:p06:block:p06-checks:text",
+          "p06-evidence": "atom:p06:block:p06-evidence:text",
+          "p06-entry": "atom:p06:block:p06-entry:text",
+          "p06-direction": "atom:p06:block:p06-direction:text"
+        }
+      }
+    ]
+  },
+  "probe_receipt": {
+    "status": "accepted",
+    "project_id": "dev-01-fixed-framework",
+    "revision_id": "4a7a7e3458ae4e7a94bcd21eaa16d6f3",
+    "requested_action": "task accept",
+    "result_refs": [
+      {
+        "path": ".deckmaster/objects/0e/0ebf87a106769c99beb4f1287a4c2da5ff4a699ad30408e69e8e4a90a5a90e6d.json",
+        "sha256": "0ebf87a106769c99beb4f1287a4c2da5ff4a699ad30408e69e8e4a90a5a90e6d"
+      },
+      {
+        "path": ".deckmaster/objects/db/db64265df165ca7e614d539ea4c52145d1e524f1e6b5a3f2de933b8b0135ae35.json",
+        "sha256": "db64265df165ca7e614d539ea4c52145d1e524f1e6b5a3f2de933b8b0135ae35"
+      },
+      {
+        "path": ".deckmaster/objects/8c/8c20190170b7be3f25a74bff4cc1185987995bd39cc4888f5581cf0345624f3e.json",
+        "sha256": "8c20190170b7be3f25a74bff4cc1185987995bd39cc4888f5581cf0345624f3e"
+      },
+      {
+        "path": ".deckmaster/objects/2f/2feb0df4c6e16c8983fc91d806c6af0c8152141fb0c5860af59da7e033b2ffd8.json",
+        "sha256": "2feb0df4c6e16c8983fc91d806c6af0c8152141fb0c5860af59da7e033b2ffd8"
+      },
+      {
+        "path": ".deckmaster/objects/88/8884817528d8697c0a38eef22f23bb51fa64131502bf0dee17a9b7e21212fd5f.json",
+        "sha256": "8884817528d8697c0a38eef22f23bb51fa64131502bf0dee17a9b7e21212fd5f"
+      },
+      {
+        "path": ".deckmaster/objects/75/75034c0c59cacc42cc1dda3b0ecd69db6d78c44bd0e919bfbab4c1b8a2288d28.json",
+        "sha256": "75034c0c59cacc42cc1dda3b0ecd69db6d78c44bd0e919bfbab4c1b8a2288d28"
+      },
+      {
+        "path": ".deckmaster/objects/2d/2d15fd1532f5f3d043a996ac61b6fd88a31ae0a2a285bf55eb836474684e538e.json",
+        "sha256": "2d15fd1532f5f3d043a996ac61b6fd88a31ae0a2a285bf55eb836474684e538e"
+      }
+    ],
+    "pending_tasks": [],
+    "findings": [],
+    "next_action": "speech_or_production",
+    "input_alignment": "current",
+    "review_url": null,
+    "view_status": "view_arrives_with_workbench",
+    "evidence_level": "engineering",
+    "current_revision_id": "4a7a7e3458ae4e7a94bcd21eaa16d6f3",
+    "work_complete": true,
+    "operation_result": {
+      "status": "accepted",
+      "revision_id": "4a7a7e3458ae4e7a94bcd21eaa16d6f3",
+      "variant": "page_copy",
+      "adopted": true,
+      "page_refs": {
+        "p01": {
+          "path": ".deckmaster/objects/0e/0ebf87a106769c99beb4f1287a4c2da5ff4a699ad30408e69e8e4a90a5a90e6d.json",
+          "sha256": "0ebf87a106769c99beb4f1287a4c2da5ff4a699ad30408e69e8e4a90a5a90e6d"
+        },
+        "p02": {
+          "path": ".deckmaster/objects/db/db64265df165ca7e614d539ea4c52145d1e524f1e6b5a3f2de933b8b0135ae35.json",
+          "sha256": "db64265df165ca7e614d539ea4c52145d1e524f1e6b5a3f2de933b8b0135ae35"
+        },
+        "p03": {
+          "path": ".deckmaster/objects/8c/8c20190170b7be3f25a74bff4cc1185987995bd39cc4888f5581cf0345624f3e.json",
+          "sha256": "8c20190170b7be3f25a74bff4cc1185987995bd39cc4888f5581cf0345624f3e"
+        },
+        "p04": {
+          "path": ".deckmaster/objects/2f/2feb0df4c6e16c8983fc91d806c6af0c8152141fb0c5860af59da7e033b2ffd8.json",
+          "sha256": "2feb0df4c6e16c8983fc91d806c6af0c8152141fb0c5860af59da7e033b2ffd8"
+        },
+        "p05": {
+          "path": ".deckmaster/objects/88/8884817528d8697c0a38eef22f23bb51fa64131502bf0dee17a9b7e21212fd5f.json",
+          "sha256": "8884817528d8697c0a38eef22f23bb51fa64131502bf0dee17a9b7e21212fd5f"
+        },
+        "p06": {
+          "path": ".deckmaster/objects/75/75034c0c59cacc42cc1dda3b0ecd69db6d78c44bd0e919bfbab4c1b8a2288d28.json",
+          "sha256": "75034c0c59cacc42cc1dda3b0ecd69db6d78c44bd0e919bfbab4c1b8a2288d28"
+        }
+      },
+      "plan_ref": {
+        "path": ".deckmaster/objects/2d/2d15fd1532f5f3d043a996ac61b6fd88a31ae0a2a285bf55eb836474684e538e.json",
+        "sha256": "2d15fd1532f5f3d043a996ac61b6fd88a31ae0a2a285bf55eb836474684e538e"
+      },
+      "result_refs": [
+        {
+          "path": ".deckmaster/objects/0e/0ebf87a106769c99beb4f1287a4c2da5ff4a699ad30408e69e8e4a90a5a90e6d.json",
+          "sha256": "0ebf87a106769c99beb4f1287a4c2da5ff4a699ad30408e69e8e4a90a5a90e6d"
+        },
+        {
+          "path": ".deckmaster/objects/db/db64265df165ca7e614d539ea4c52145d1e524f1e6b5a3f2de933b8b0135ae35.json",
+          "sha256": "db64265df165ca7e614d539ea4c52145d1e524f1e6b5a3f2de933b8b0135ae35"
+        },
+        {
+          "path": ".deckmaster/objects/8c/8c20190170b7be3f25a74bff4cc1185987995bd39cc4888f5581cf0345624f3e.json",
+          "sha256": "8c20190170b7be3f25a74bff4cc1185987995bd39cc4888f5581cf0345624f3e"
+        },
+        {
+          "path": ".deckmaster/objects/2f/2feb0df4c6e16c8983fc91d806c6af0c8152141fb0c5860af59da7e033b2ffd8.json",
+          "sha256": "2feb0df4c6e16c8983fc91d806c6af0c8152141fb0c5860af59da7e033b2ffd8"
+        },
+        {
+          "path": ".deckmaster/objects/88/8884817528d8697c0a38eef22f23bb51fa64131502bf0dee17a9b7e21212fd5f.json",
+          "sha256": "8884817528d8697c0a38eef22f23bb51fa64131502bf0dee17a9b7e21212fd5f"
+        },
+        {
+          "path": ".deckmaster/objects/75/75034c0c59cacc42cc1dda3b0ecd69db6d78c44bd0e919bfbab4c1b8a2288d28.json",
+          "sha256": "75034c0c59cacc42cc1dda3b0ecd69db6d78c44bd0e919bfbab4c1b8a2288d28"
+        },
+        {
+          "path": ".deckmaster/objects/2d/2d15fd1532f5f3d043a996ac61b6fd88a31ae0a2a285bf55eb836474684e538e.json",
+          "sha256": "2d15fd1532f5f3d043a996ac61b6fd88a31ae0a2a285bf55eb836474684e538e"
+        }
+      ],
+      "page_count": 6,
+      "work_complete": true,
+      "next_action": "speech_or_production"
+    },
+    "variant": "page_copy",
+    "adopted": true,
+    "page_refs": {
+      "p01": {
+        "path": ".deckmaster/objects/0e/0ebf87a106769c99beb4f1287a4c2da5ff4a699ad30408e69e8e4a90a5a90e6d.json",
+        "sha256": "0ebf87a106769c99beb4f1287a4c2da5ff4a699ad30408e69e8e4a90a5a90e6d"
+      },
+      "p02": {
+        "path": ".deckmaster/objects/db/db64265df165ca7e614d539ea4c52145d1e524f1e6b5a3f2de933b8b0135ae35.json",
+        "sha256": "db64265df165ca7e614d539ea4c52145d1e524f1e6b5a3f2de933b8b0135ae35"
+      },
+      "p03": {
+        "path": ".deckmaster/objects/8c/8c20190170b7be3f25a74bff4cc1185987995bd39cc4888f5581cf0345624f3e.json",
+        "sha256": "8c20190170b7be3f25a74bff4cc1185987995bd39cc4888f5581cf0345624f3e"
+      },
+      "p04": {
+        "path": ".deckmaster/objects/2f/2feb0df4c6e16c8983fc91d806c6af0c8152141fb0c5860af59da7e033b2ffd8.json",
+        "sha256": "2feb0df4c6e16c8983fc91d806c6af0c8152141fb0c5860af59da7e033b2ffd8"
+      },
+      "p05": {
+        "path": ".deckmaster/objects/88/8884817528d8697c0a38eef22f23bb51fa64131502bf0dee17a9b7e21212fd5f.json",
+        "sha256": "8884817528d8697c0a38eef22f23bb51fa64131502bf0dee17a9b7e21212fd5f"
+      },
+      "p06": {
+        "path": ".deckmaster/objects/75/75034c0c59cacc42cc1dda3b0ecd69db6d78c44bd0e919bfbab4c1b8a2288d28.json",
+        "sha256": "75034c0c59cacc42cc1dda3b0ecd69db6d78c44bd0e919bfbab4c1b8a2288d28"
+      }
+    },
+    "plan_ref": {
+      "path": ".deckmaster/objects/2d/2d15fd1532f5f3d043a996ac61b6fd88a31ae0a2a285bf55eb836474684e538e.json",
+      "sha256": "2d15fd1532f5f3d043a996ac61b6fd88a31ae0a2a285bf55eb836474684e538e"
+    },
+    "page_count": 6
+  },
+  "converter_source_sha256": "0a86b216ffaf246e93650502e04ddb73d71dc38d153bbedf91160c2254f01558",
+  "model_retry": false,
+  "added_calls": 0,
+  "runtime_contract_relaxed": false,
+  "future_fix": "r3 runner supplies complete canonical nested contracts and recursive reference bundle; no conversion fallback for future outputs",
+  "local_evidence_root": "/Users/dingcheng/.codex/tmp/deck-master-business-expression-20261030/d04-r2",
+  "pure_model_schema_success": false
+}
