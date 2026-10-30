@@ -28,6 +28,7 @@ from referencing import Registry, Resource
 SCHEMA_FILES = {
     "ui_arguments": "ui-arguments.v1.schema.json",
     "ui_argument": "ui-argument.v1.schema.json",
+    "ui_argument_v2": "ui-argument.v2.schema.json",
     "ui_page_evidence": "ui-page-evidence.v1.schema.json",
     "ui_review_reading": "ui-review-reading.v1.schema.json",
     "ui_content_requirements": "ui-content-requirements.v1.schema.json",
@@ -179,6 +180,7 @@ def _validator(kind: str) -> Draft202012Validator:
 NARRATIVE_VERSIONS = ("narrative.v1", "narrative.v2")
 
 _VERSIONED_KINDS = {
+    "ui_argument": {"ui_argument.v2": "ui_argument_v2"},
     "narrative": {"narrative.v2": "narrative_v2"},
     "content_plan": {"content_plan.v2": "content_plan_v2"},
     "content_plan_input": {"content_plan_input.v2": "content_plan_input_v2"},

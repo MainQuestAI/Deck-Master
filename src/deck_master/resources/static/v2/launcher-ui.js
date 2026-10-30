@@ -153,6 +153,8 @@ export async function launcher(root, health) {
     const title = field('项目名称（必填）', el('input', {required: true, maxlength: 200, autocomplete: 'off'}));
     const brief = field('用途（必填）', el('textarea', {required: true, rows: 3, placeholder: '希望受众理解、判断、学习或完成什么？'}));
     const audience = field('受众（必填）', el('input', {required: true, placeholder: '例如：学员、研究同行、工程评审者或业务负责人'}));
+    const scenario = field('交流场景（可选）',el('textarea',{rows:2,placeholder:'例如：首次向客户提案，或按既定需求参与竞标'}));
+    const decisions = field('已有共识与既定框架（可选，每行一条）',el('textarea',{rows:2,placeholder:'已确认的重点、顺序或框架将作为任务约束保留'}));
     const work = field('本次约定产物', el('select', {}, el('option', {value:'full_deck'}, '完整方案'),
       el('option', {value:'plan_only'}, '论证与大纲'), el('option', {value:'write_only'}, '上屏稿'),
       el('option', {value:'speech_only'}, '已有稿件的口播稿'), el('option', {value:'content_full'}, '完整内容')),
@@ -164,7 +166,7 @@ export async function launcher(root, health) {
     const folder = field('新项目文件夹名（必填）', el('input', {required: true, placeholder: '例如：我的方案', pattern: '[^/\\\\]+', autocomplete: 'off'}), '将在上述位置创建新目录；不能覆盖已有目录。');
     const limit = field('页数目标（可选）', el('input', {type: 'number', min: 1, step: 1}));
     const error = el('p', {class: 'field-error', role: 'alert'});
-    const form = el('form', {class: 'stack launcher-create-form'}, title.node, brief.node, audience.node, manuscript.node, work.node, mode.node,
+    const form = el('form', {class: 'stack launcher-create-form'}, title.node, brief.node, audience.node, scenario.node, decisions.node, manuscript.node, work.node, mode.node,
       el('div', {class: 'form-pair'}, parent.node, folder.node), button('选择保存文件夹', event => picker(parent.input, parent.error, event.currentTarget)),
       limit.node, el('p', {class: 'muted'}, '可从用途开始，也可选入完整确认稿；确认稿按明确页序建立导入映射，保留来源。创建项目不会启动模型或授予制作权限。'), error);
     const submit = button('创建项目', () => form.requestSubmit(), true);
@@ -176,6 +178,9 @@ export async function launcher(root, health) {
       event.preventDefault(); submit.disabled = true; error.textContent = '';
       const path = parent.input.value.trim().replace(/\/+$/, '') + '/' + folder.input.value.trim();
       const data = {path, title: title.input.value.trim(), brief: brief.input.value.trim(), audience: audience.input.value.trim()};
+      data.scenario=scenario.input.value.trim();
+      data.existing_decisions=decisions.input.value.split('\n').map(s=>s.trim()).filter(Boolean);
+      if(!manuscript.payload&&['full_deck','plan_only','content_full'].includes(work.input.value))data.business_framing=true;
       if (manuscript.payload) data.draft = manuscript.payload;
       if (work.input.value==='speech_only'&&!manuscript.payload) {
         error.textContent='口播工作需要已有完整稿件，请先选择确认稿 JSON 文件。'; submit.disabled=false; manuscript.input.focus(); return;

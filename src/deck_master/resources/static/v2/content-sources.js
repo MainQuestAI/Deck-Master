@@ -32,7 +32,8 @@ export function content(app, data) {
   app.editor = new DraftEditor(app.info, {scope:'project',page_id:null,layer:'outline'}, app.route.revision, ref, {readonly:app.readonly,exactRevision:true});
   const draftNode = app.editor.mount();
   const brief = inputField('用途与目标', inputs?.task.brief || ''), audience = inputField('受众', inputs?.task.audience || '', 2);
-  const decisions = inputField('既定决定（每行一条）', (inputs?.task.existing_decisions || []).join('\n'));
+  const scenario = inputField('交流场景',inputs?.task.scenario || '',2);
+  const decisions = inputField('已有共识与既定框架（每行一条）', (inputs?.task.existing_decisions || []).join('\n'));
   const reason = inputField('本次输入变化说明', '', 2), additions = inputField('新增材料完整路径（每行一个）', '', 2);
   let uploads = [];
   let sourceRows = (inputs?.sources || []).map(s => ({source_id:s.source_id, name:s.name || s.source_id, usage_note:s.usage_note || '', action:'keep', path:'', extract:s.extract}));
@@ -105,9 +106,9 @@ export function content(app, data) {
   const materialEditor = el('div',{class:'stack'});
   const retainedInputs = el('div',{class:'retained-inputs row wrap',role:'status',hidden:true});
   let editTrigger = null, editKind = 'task', editSourceId = null, editReturnScroll = null;
-  function read() { return {brief:brief.input.value,audience:audience.input.value,decisions:decisions.input.value,reason:reason.input.value,additions:additions.input.value,sources:sourceRows,uploads,order,selected:[...selected],instruction:instruction.input.value,split_point:splitPoint.input.value,merge_title:mergeTitle.input.value,adjustment_action:adjustmentAction,summary:summary.input.value,goals,chapters}; }
+  function read() { return {brief:brief.input.value,audience:audience.input.value,scenario:scenario.input.value,decisions:decisions.input.value,reason:reason.input.value,additions:additions.input.value,sources:sourceRows,uploads,order,selected:[...selected],instruction:instruction.input.value,split_point:splitPoint.input.value,merge_title:mergeTitle.input.value,adjustment_action:adjustmentAction,summary:summary.input.value,goals,chapters}; }
   function hydrate(s) {
-    for (const [key,field] of Object.entries({brief,audience,decisions,reason,additions,instruction,split_point:splitPoint,merge_title:mergeTitle,summary})) if (key in s) field.input.value=s[key];
+    for (const [key,field] of Object.entries({brief,audience,scenario,decisions,reason,additions,instruction,split_point:splitPoint,merge_title:mergeTitle,summary})) if (key in s) field.input.value=s[key];
     showSummary();
     if (s.sources) sourceRows=s.sources;
     if (Array.isArray(s.uploads)) uploads=s.uploads;
@@ -131,7 +132,7 @@ export function content(app, data) {
   });
   const changed=()=>{if(orderAction)orderAction.hidden=studio&&order.every((id,i)=>id===pages[i].page_id);operation.changed();showRetainedInputs();orderReview.querySelector('.content-request-review')?.remove();adjustmentError.hidden=true;for(const field of [splitPoint,mergeTitle])field.input.removeAttribute('aria-invalid');if(adjustDetails&&!adjustDetails.hidden){adjustDetails.dataset.step='edit';returnEdit.hidden=true;}};
   function showRetainedInputs() {
-    const taskChanged=inputs && (brief.input.value!==inputs.task.brief || audience.input.value!==inputs.task.audience ||
+    const taskChanged=inputs && (brief.input.value!==inputs.task.brief || audience.input.value!==inputs.task.audience || scenario.input.value!==(inputs.task.scenario||'') ||
       decisions.input.value!==(inputs.task.existing_decisions||[]).join('\n'));
     const materialsChanged=Boolean(additions.input.value.trim()||uploads.length||sourceRows.some(source=>source.action!=='keep'||
       source.usage_note!==(inputs?.sources.find(item=>item.source_id===source.source_id)?.usage_note||'')));
@@ -140,7 +141,7 @@ export function content(app, data) {
     retainedInputs.replaceChildren(...(other ? [el('span',{},editKind==='task'?'还保留了材料变更；预览会列出全部差异。':'还保留了要求修改；预览会列出全部差异。'),
       button(editKind==='task'?'返回材料变更':'返回要求修改',()=>openMaterialEditor(editKind==='task'?'add':'task'))] : []));
   }
-  for (const field of [brief,audience,decisions,reason,additions,instruction,splitPoint,mergeTitle,summary]) field.input.addEventListener('input',changed);
+  for (const field of [brief,audience,scenario,decisions,reason,additions,instruction,splitPoint,mergeTitle,summary]) field.input.addEventListener('input',changed);
   function sourceState(source, node) {
     const fact = sourceFacts.get(source.source_id);
     const extraction = fact?.data?.extraction_status;
@@ -318,11 +319,12 @@ export function content(app, data) {
     const differences=[];
     if(brief.input.value!==inputs.task.brief)differences.push('用途：'+inputs.task.brief+' → '+brief.input.value);
     if(audience.input.value!==inputs.task.audience)differences.push('受众：'+inputs.task.audience+' → '+audience.input.value);
+    if(scenario.input.value!==(inputs.task.scenario||''))differences.push('交流场景：'+(inputs.task.scenario||'')+' → '+scenario.input.value);
     if(decisions.input.value!==(inputs.task.existing_decisions || []).join('\n'))differences.push('既定决定：'+(inputs.task.existing_decisions || []).join('；')+' → '+decisions.input.value);
     for(const source of sourceRows)if(source.action!=='keep')differences.push((source.action==='remove'?'移除：':'替换：')+source.name+(source.action==='replace'?' → '+(source.upload?.name || source.path):''));
     for(const source of source_changes.add)differences.push('新增材料：'+(source.path || uploads.find(item=>item.upload_id===source.upload_id)?.name || '已接收材料'));
     for(const source of source_changes.metadata){const previous=inputs.sources.find(s=>s.source_id===source.source_id);differences.push('材料用途 · '+(previous?.name || source.source_id)+'：'+(previous?.usage_note || '未填写')+' → '+(source.usage_note || '未填写'));}
-    completedAction='inputs';operation.previewInputs({reason:reason.input.value,task_patch:{brief:brief.input.value,audience:audience.input.value,existing_decisions:decisions.input.value.split('\n').filter(v=>v.trim())},source_changes},differences);
+    completedAction='inputs';operation.previewInputs({reason:reason.input.value,task_patch:{brief:brief.input.value,audience:audience.input.value,scenario:scenario.input.value,existing_decisions:decisions.input.value.split('\n').filter(v=>v.trim())},source_changes},differences);
     adjustDetails.dataset.step='review';
     returnEdit.hidden=false;
   }
@@ -408,7 +410,7 @@ export function content(app, data) {
     } else {
       editorTitle.textContent=kind==='add'?'添加材料':'修改任务要求';
       if(kind==='add') materialEditor.append(...[app.health.ui_capabilities?.includes('material_uploads.v1') ? materialUploads(app,()=>uploads,records=>{uploads=records;changed();}) : null,additions.node].filter(Boolean));
-      else materialEditor.append(brief.node,audience.node,decisions.node,el('p',{class:'muted'},'保留已明确的决定；需要改变时在此修改，并说明原因。'));
+      else materialEditor.append(brief.node,audience.node,scenario.node,decisions.node,el('p',{class:'muted'},'保留已明确的决定；需要改变时在此修改，并说明原因。'));
     }
     if (!inputImpact.contains(operation.node)) inputImpact.replaceChildren(operation.node);adjustDetails.hidden=false;adjustDetails.open=true;
     adjustDetails.scrollIntoView({block:'start'});(kind==='add'?additions.input:materialEditor.querySelector('textarea,select'))?.focus({preventScroll:true});

@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "project_id": {
+      "$ref": "ui-argument.v1.schema.json#/oneOf/0/properties/project_id"
+    },
+    "revision_id": {
+      "$ref": "ui-argument.v1.schema.json#/oneOf/0/properties/revision_id"
+    },
+    "issues": {
+      "$ref": "ui-argument.v1.schema.json#/oneOf/0/properties/issues"
+    },
+    "status": {
+      "$ref": "ui-argument.v1.schema.json#/oneOf/0/properties/status"
+    },
+    "schema_version": {
+      "const": "ui_argument.v2"
+    },
+    "data": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "item": {
+          "$ref": "ui-argument.v1.schema.json#/oneOf/0/properties/data/properties/item"
+        },
+        "narrative": {
+          "$ref": "ui-argument.v1.schema.json#/oneOf/0/properties/data/properties/narrative"
+        },
+        "related_pages": {
+          "$ref": "ui-argument.v1.schema.json#/oneOf/0/properties/data/properties/related_pages"
+        },
+        "plans": {
+          "$ref": "ui-argument.v1.schema.json#/oneOf/0/properties/data/properties/plans"
+        },
+        "plan_status": {
+          "$ref": "ui-argument.v1.schema.json#/oneOf/0/properties/data/properties/plan_status"
+        },
+        "decisions": {
+          "$ref": "ui-argument.v1.schema.json#/oneOf/0/properties/data/properties/decisions"
+        },
+        "adoption": {
+          "$ref": "ui-argument.v1.schema.json#/oneOf/0/properties/data/properties/adoption"
+        },
+        "business_group": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "narrative_ref": {
+              "$ref": "ui-argument.v1.schema.json#/oneOf/0/properties/data/properties/item/oneOf/1/properties/ref"
+            },
+            "plan_ref": {
+              "anyOf": [
+                {
+                  "$ref": "ui-argument.v1.schema.json#/oneOf/0/properties/data/properties/item/oneOf/1/properties/ref"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "subject_refs": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "write_scope": {
+              "type": "object"
+            },
+            "assessed_control_revision": {
+              "type": "string"
+            },
+            "basis": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "reason_codes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "can_start_followup": {
+              "type": "boolean"
+            },
+            "can_record_direction_decision": {
+              "type": "boolean"
+            },
+            "can_adopt": {
+              "type": "boolean"
+            },
+            "can_revise": {
+              "type": "boolean"
+            },
+            "is_adopted": {
+              "type": "boolean"
+            },
+            "author_revision": {
+              "type": "boolean"
+            },
+            "next_ref": {
+              "anyOf": [
+                {
+                  "$ref": "ui-argument.v1.schema.json#/oneOf/0/properties/data/properties/item/oneOf/1/properties/ref"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "existing_decision_ref": {
+              "anyOf": [
+                {
+                  "$ref": "ui-argument.v1.schema.json#/oneOf/0/properties/data/properties/item/oneOf/1/properties/ref"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "narrative_ref",
+            "plan_ref",
+            "subject_refs",
+            "write_scope",
+            "assessed_control_revision",
+            "basis",
+            "reason_codes",
+            "can_start_followup",
+            "can_record_direction_decision",
+            "can_adopt",
+            "can_revise",
+            "is_adopted",
+            "author_revision",
+            "next_ref",
+            "existing_decision_ref"
+          ]
+        }
+      },
+      "required": [
+        "item",
+        "narrative",
+        "related_pages",
+        "plans",
+        "plan_status",
+        "decisions",
+        "adoption",
+        "business_group"
+      ]
+    }
+  },
+  "required": [
+    "project_id",
+    "revision_id",
+    "issues",
+    "status",
+    "schema_version",
+    "data"
+  ]
+}

@@ -52,7 +52,7 @@ def read_active_service(project_dir: Path) -> dict | None:
 
 # Server-side capability names (single source for /api/health and the
 # /api/project effective-action projection).
-UI_CAPABILITIES = ("ui_draft_query.v1", "project_control_light.v1", "content_insight.v1", "method_library_preview.v1", "ui_draft.v1", "ui_gallery.v1", "ui_overview.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1",
+UI_CAPABILITIES = ("ui_draft_query.v1", "project_control_light.v1", "content_insight.v1", "business_outline_ui.v1", "method_library_preview.v1", "ui_draft.v1", "ui_gallery.v1", "ui_overview.v1", "thumbnails.v1", "fixed_snapshot.v1", "text_range.v1",
                    "page_detail.v1", "annotations.v1", "changes.v1", "operations.v1", "candidates.v1",
                    "stages.v1", "run_desk.v1", "style_recipes.v1", "content_ops.v1", "exports.v1",
                    "workbench_summary.v2", "restoration.v1", "workbench_actions.v1", "action_targets.v1", "icon_quality.v1", "result_reading.v1", "history_summary.v1", "visual_reference.v1", "material_uploads.v1",
@@ -255,7 +255,10 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                     self._send_json({'error': {'code': 'unsupported_project_format', 'message': 'this action requires a workbench.v3 project'}}, 409)
                     return
             from . import editing, service
-            if self.path == '/api/reviews/native':
+            if self.path == '/api/content/outline-revisions':
+                from .business_outline import revise
+                result = revise(self.store.project_root, data)
+            elif self.path == '/api/reviews/native':
                 from .native_review import run
                 if set(data) - {'task_id', 'force_units', 'subject', 'selected_resource_ids'} or ('task_id' in data and
                         (not isinstance(data['task_id'], str) or not data['task_id'])):

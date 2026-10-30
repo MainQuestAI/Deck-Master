@@ -436,6 +436,7 @@ HTTP_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     "GET /api/projects/{project_id}/delivery-eligibility": (None, "-", READ_REASONS["read_model"]),
     "POST /api/reviews/evaluate": (None, "-", READ_REASONS["external_report"]),
     "/api/reviews/native": ("dispatch.host_task", "web.do_POST → native_review.run → gated dispatch/claim/adoption", None),
+    "/api/content/outline-revisions": ("dispatch.compose", "business_outline.revise → bounded request and local compose proposal; normal claim/accept", None),
     # Launcher writes only its registry for register/remove/open. The explicit
     # create/sample endpoints additionally invoke canonical project creation.
     "/api/projects": (None, "-", READ_REASONS["read_model"]),

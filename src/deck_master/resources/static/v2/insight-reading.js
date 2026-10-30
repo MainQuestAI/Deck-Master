@@ -1,6 +1,7 @@
 import {get, post, readableError, revisionQuery, canonical} from './api.js';
 import {el, button, modal, field} from './dom.js';
 import {projectAPI} from './collaboration-desk.js';
+import {businessFrameBody,businessControls} from './business-outline.js';
 
 export const supportsInsights = app => app.health.ui_capabilities?.includes('content_insight.v1');
 export const details = (title, value) => el('details', {}, el('summary', {}, title), el('pre', {class:'evidence-json'}, JSON.stringify(value,null,2)));
@@ -21,16 +22,20 @@ export const issues = value => value.issues?.length ? details('不可读记录�
 const objectText = value => typeof value==='string'?value:Object.entries(value||{}).filter(([k])=>!/(^id$|_id$|_ids$|ref$|refs$)/.test(k)).map(([,v])=>typeof v==='string'?v:Array.isArray(v)?v.map(objectText).join('；'):v&&typeof v==='object'?objectText(v):String(v??'')).filter(Boolean).join(' · ');
 const roleNames={claim:'主张',evidence:'证据',qualification:'限定条件',context:'背景',action:'行动',question:'问题'};
 const relationNames={supports:'支持',qualifies:'限定',contrasts:'对比',causes:'导致',depends_on:'依赖',explains:'解释',precedes:'先于'};
-export function narrativeBody(value) {
+export function narrativeBody(value,controls=null) {
   if(!value.data)return el('div',{},el('p',{},'这份主线有记录但暂不可读。'),issues(value));
   const d=value.data,n=d.narrative;
+  const argumentDetails=[
+el('h4',{},'论点与条件'),n.nodes.map(node=>el('section',{class:'insight-node'},el('strong',{},node.statement||node.node_id),el('p',{},roleNames[node.role]||'论点'),details('完整论点与来源',node))),
+    el('h4',{},'论证关系'),n.edges.map(edge=>el('p',{},`${n.nodes.find(x=>x.node_id===edge.from_node_id)?.statement||'原论点不可读'} → ${n.nodes.find(x=>x.node_id===edge.to_node_id)?.statement||'目标论点不可读'} · ${relationNames[edge.relation]||edge.relation}`)),
+    el('h4',{},'未决问题'),(n.issues||[]).map(i=>el('p',{class:'read-text'},objectText(i))),
+    el('h4',{},'业务替代与代价'),el('p',{class:'muted'},'以下是稿件中的业务选项，不是另一个叙事候选。'),(n.alternatives||[]).map(i=>el('p',{class:'read-text'},objectText(i)))
+  ];
   return el('article',{class:'stack argument-reading'},el('h3',{},d.item.central_statement||'主线尚未形成核心回答'),
     el('p',{},d.item.communication_question||'未记录沟通问题'),
     el('p',{class:'muted'},({current:'当前主线',proposal:'本请求待选',historical:'历史主线'})[d.item.relation]+' · '+(n.maturity==='argument'?'论证稿':'框架稿')),
-    el('h4',{},'论点与条件'),n.nodes.map(node=>el('section',{class:'insight-node'},el('strong',{},node.statement||node.node_id),el('p',{},roleNames[node.role]||'论点'),details('完整论点与来源',node))),
-    el('h4',{},'论证关系'),n.edges.map(edge=>el('p',{},`${n.nodes.find(x=>x.node_id===edge.from_node_id)?.statement||'原论点不可读'} → ${n.nodes.find(x=>x.node_id===edge.to_node_id)?.statement||'目标论点不可读'} · ${relationNames[edge.relation]||edge.relation}`)),
-    el('h4',{},'未决问题'),(n.issues||[]).map(i=>el('p',{class:'read-text'},objectText(i))),
-    el('h4',{},'业务替代与代价'),el('p',{class:'muted'},'以下是稿件中的业务选项，不是另一个叙事候选。'),(n.alternatives||[]).map(i=>el('p',{class:'read-text'},objectText(i))),
+    controls,businessFrameBody(d),
+    n.business_strategy?el('details',{},el('summary',{},'展开完整论点、关系与业务选项'),el('div',{class:'stack'},...argumentDetails)):argumentDetails,
     el('h4',{},'固定计划与页面职责'),!d.plans.length&&el('p',{},d.plan_status==='unreadable'?'关联计划暂不可读。':'没有记录与这份主线关联的计划。'),
     d.plans.map(plan=>plan.readable?el('div',{},plan.data.planned_roles.map(r=>el('div',{class:'read-text'},el('strong',{},r.role.role),el('p',{},r.role.audience_question),el('p',{},r.role.intended_takeaway),el('p',{class:'muted'},r.page_ref?'已有页面引用':'计划职责，尚无页面'))),details('固定计划原文',plan)):details('不可读计划',plan)),
     details('完整主线、固定引用与决定依据',d),issues(value));
@@ -43,15 +48,20 @@ export function argumentDesk(app) {
   function load(){list.replaceChildren(reader(app,'/api/content/arguments?'+new URLSearchParams({revision,offset,limit:30}),value=>{
     const items=value.data?.items||[];
     const select=el('select',{'aria-label':'选择右侧比较主线'},el('option',{value:''},'选择另一份真实主线'),items.filter(i=>i.readable&&i.ref.sha256!==app.route.proposal).map(i=>el('option',{value:i.ref.sha256},i.central_statement||i.narrative_id)));
-    return el('div',{class:'stack'},items.length?items.map(i=>el('div',{class:'insight-list-row'},el('span',{},i.readable?(i.central_statement||'未记录核心回答'):'主线暂不可读'),i.readable&&button(({current:'阅读当前主线',proposal:'阅读待选主线',historical:'阅读历史主线'})[i.relation],()=>open(i.ref.sha256)))):el('p',{},'没有记录论证主线；已有逐页稿和材料仍可阅读。'),
+    const rows=items.length?items.map(i=>el('div',{class:'insight-list-row'},el('span',{},i.readable?(i.central_statement||'未记录核心回答'):'主线暂不可读'),i.readable&&button(({current:'阅读当前主线',proposal:'阅读待选主线',historical:'阅读历史主线'})[i.relation],()=>open(i.ref.sha256)))):el('p',{},'没有记录论证主线；已有逐页稿和材料仍可阅读。');
+    return el('div',{class:'stack'},app.route.proposal?el('details',{},el('summary',{},'切换阅读其他主线'),rows):rows,
       app.route.proposal&&el('div',{class:'row wrap'},select,button('固定比较两份主线',()=>{if(select.value)open(app.route.proposal,select.value);})),
       el('div',{class:'row wrap'},button('上一组',()=>{offset=Math.max(0,offset-30);load();},false,{disabled:offset===0}),button('下一组',()=>{offset=value.data.pagination.next_offset;load();},false,{disabled:value.data?.pagination.next_offset==null})),issues(value));
   }));}
-  for(const sha of [app.route.proposal,app.route.compare_proposal].filter(Boolean))reading.append(reader(app,`/api/content/arguments/${sha}`+revisionQuery(revision),value=>el('div',{class:'stack'},narrativeBody(value),value.data&&!app.route.compare_proposal&&adoptionControls(app,value))));
+  for(const sha of [app.route.proposal,app.route.compare_proposal].filter(Boolean))reading.append(reader(app,`/api/content/arguments/${sha}`+revisionQuery(revision),value=>{
+    const controls=value.data&&!app.route.compare_proposal?adoptionControls(app,value):null;
+    return el('div',{class:'stack'},narrativeBody(value,value.data?.business_group?controls:null),!value.data?.business_group&&controls);
+  }));
   root.append(list,reading);load();return root;
 }
 function adoptionControls(app,value){
   const d=value.data,a=d.adoption;
+  if(d.business_group)return businessControls(app,value);
   const node=el('div',{class:'stack'},details('采用范围与影响',a));
   try{if(localStorage.getItem(`deck-master:direction:${app.info.project_identity}:${d.item.ref.sha256}`))node.append(button('核实或查看原方向操作',()=>directionDialog(app,value)));}catch{node.append(el('p',{},'方向操作缓冲暂不可读。'));}
   if(app.readonly||!(a.can_adopt||a.can_record_direction_decision)) {node.append(el('p',{},'此对象目前只读。'),details('阻断原因',[...a.decision_reason_codes,...a.adoption_reason_codes]));return node;}

@@ -242,8 +242,14 @@ def argument(project, sha256, *, revision=None):
                                   'reason_codes': state.get('reasons', [])})
             except READ_FAILURES:
                 gaps.append(issue(ref, 'decision'))
-    return envelope(doc, 'argument', {'item': item, 'narrative': obj, 'related_pages': related, 'plans': plans,
+    from .business_outline import admission
+    value = envelope(doc, 'argument', {'item': item, 'narrative': obj, 'related_pages': related, 'plans': plans,
         'plan_status': 'partial' if plans and plan_errors else 'recorded' if plans else 'unreadable' if plan_errors else 'absent', 'decisions': decisions, 'adoption': adoption(store, doc, item['ref'], item)}, gaps)
+    group = admission(store, doc, item['ref'], obj, plans)
+    if group is not None:
+        value['schema_version'] = 'ui_argument.v2'
+        value['data']['business_group'] = group
+    return value
 
 
 def page_object(store, doc, page_id):
