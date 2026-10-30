@@ -580,10 +580,11 @@
       "acceptance": [
         {
           "id": "D04-AC01",
-          "status": "not_run",
+          "status": "pass",
           "evidence": [
             "implementation/D04-validation.md",
-            "implementation/D04-zero-call-probe.json"
+            "implementation/D04-zero-call-probe.json",
+            "implementation/D04-negative-recheck.json"
           ]
         },
         {
@@ -654,17 +655,16 @@
       "engineering_evidence": [
         "implementation/D04-validation.md",
         "implementation/D04-zero-call-probe.json",
-        "implementation/D04-call01-failure.json"
+        "implementation/D04-call01-failure.json",
+        "implementation/D04-call-plan-r2.json"
       ],
       "model_evidence": [
-        "implementation/D04-call01-failure.json"
+        "implementation/D04-call01-failure.json",
+        "implementation/D04-negative-recheck.json"
       ],
       "author_acceptance": [],
       "not_run": [
-        "AC01 live semantic detection of the three-defect negative fixture",
-        "AC03/04/05 actual complete copy/cases/speech/demonstration outline and independent full review",
-        "D04 new model budget is separate and unapproved; no new calls",
-        "Negative semantic findings observed in a real native completion, but formal acceptance failed; no retry or dependent calls"
+        "AC03/04/05 actual complete copy/cases/speech/demonstration outline and independent full review"
       ],
       "risks": [
         "New policy-version checks deliberately require rechecking old D03 passes; historical objects remain unchanged",
@@ -1301,7 +1301,7 @@
   "dependency_semantics": "depends_on 引用 work_units；conditional_depends_on 仅在条件成立时加边。卡条目镜像其收口单元；工作单元 acceptance_ids 是 AC 唯一验收归属。",
   "execution_base": "035845f228d1ba4cd7fc9b41cdedd8fd734043df",
   "execution_started_at": "2026-10-29",
-  "current_gate": "D04第1次原生反例审查正确指出3缺陷，但因输出schema/接纳规则不一致未接受；已修复并60回归通过，无重试；后续8次停止待具体预算/边界决定",
+  "current_gate": "D04反例正确阻断，会员大纲新标准复核pass；六页正文生成中，累计已预留4／10次。",
   "updated_at": "2026-10-30",
   "calibration_budget": {
     "overall_subscription_bound": 32,
@@ -1333,19 +1333,18 @@
   },
   "D04_budget_proposal": {
     "separate_from_prior_budget": true,
-    "proposed_max_calls": 9,
-    "alternative_pilot_calls": 5,
-    "authorized_calls": 9,
-    "calls_used": 1,
-    "evidence": "implementation/D04-call-plan.json",
+    "proposed_max_calls": 10,
+    "authorized_calls": 10,
+    "calls_used": 4,
+    "evidence": "implementation/D04-call-plan-r2.json",
     "new_API_spend_allowed": 0,
     "D08_authorized": false,
-    "calls_in_flight": 0,
-    "calls_completed": 1,
-    "authorization": "用户于2026-10-30明确回复：最多9次，两份都验证",
-    "formally_accepted_reviews": 0,
+    "calls_in_flight": 1,
+    "calls_completed": 3,
+    "authorization": "用户明确回复：补1次，总上限10",
+    "formally_accepted_reviews": 2,
     "failed_acceptances": 1,
-    "remaining_calls_unexecuted": 8,
-    "gate": "stopped_on_output_schema_contract_mismatch"
+    "remaining_calls_unexecuted": 6,
+    "gate": "member_outline_passed_page_copy_in_flight"
   }
 }
