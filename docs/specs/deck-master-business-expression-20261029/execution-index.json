@@ -741,14 +741,19 @@
           "evidence": []
         }
       ],
-      "implementation_commit": null,
+      "implementation_commit": "0c91beac4668311cc9856cd9608e6beed620363b",
       "changed_files": [],
-      "engineering_evidence": [],
+      "engineering_evidence": [
+        "implementation/D05-engineering.json",
+        "implementation/D05-validation.md"
+      ],
       "model_evidence": [],
       "author_acceptance": [],
       "not_run": [],
       "risks": [],
-      "continuation_authority": "implementation/D04-author-go.json"
+      "continuation_authority": "implementation/D04-author-go.json",
+      "model_evaluation": "not_run_pending_separate_budget",
+      "author_gate": "pending_actual_recompiled_manuscripts"
     },
     {
       "id": "D06",
@@ -1253,7 +1258,14 @@
         "D05-AC07",
         "D05-AC08"
       ],
-      "continuation_authority": "implementation/D04-author-go.json"
+      "continuation_authority": "implementation/D04-author-go.json",
+      "implementation_commit": "0c91beac4668311cc9856cd9608e6beed620363b",
+      "engineering_evidence": [
+        "implementation/D05-engineering.json",
+        "implementation/D05-validation.md"
+      ],
+      "model_evaluation": "not_run_pending_separate_budget",
+      "author_gate": "pending_actual_recompiled_manuscripts"
     },
     {
       "id": "D06b",
@@ -1330,7 +1342,7 @@
   "dependency_semantics": "depends_on 引用 work_units；conditional_depends_on 仅在条件成立时加边。卡条目镜像其收口单元；工作单元 acceptance_ids 是 AC 唯一验收归属。",
   "execution_base": "035845f228d1ba4cd7fc9b41cdedd8fd734043df",
   "execution_started_at": "2026-10-29",
-  "current_gate": "D04两份完整稿获老板明确认可，进入D05工程；D04单列10次及历史32次冻结，后续模型验证另列预算。",
+  "current_gate": "D04作者认可已记录；D05工程及零调用预检通过，真实策略重编与独立审查待单列最多4次预算。历史32次与D04的10次冻结。",
   "updated_at": "2026-10-30",
   "calibration_budget": {
     "overall_subscription_bound": 32,

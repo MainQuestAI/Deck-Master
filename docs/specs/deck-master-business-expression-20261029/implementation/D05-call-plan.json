@@ -1,0 +1,79 @@
+{
+  "date": "2026-10-30",
+  "budget_id": "D05-strategy-recompile-20261030",
+  "authorized": false,
+  "implementation_base": "0c91beac4668311cc9856cd9608e6beed620363b",
+  "max_new_calls": 4,
+  "used_calls": 0,
+  "existing_budgets": {
+    "I0_D03": {
+      "used": 32,
+      "ceiling": 32,
+      "frozen": true
+    },
+    "D04": {
+      "used": 10,
+      "ceiling": 10,
+      "frozen": true
+    }
+  },
+  "subscription": "existing Codex ChatGPT subscription only",
+  "new_API_spend_allowed": 0,
+  "auto_retry": false,
+  "generation_model": "gpt-6.1-sol",
+  "generation_reasoning_effort": "high",
+  "review_model": "gpt-6.1-sol",
+  "review_reasoning_effort": "medium; verify before each call",
+  "D08_authorized": false,
+  "visual_generation_authorized": false,
+  "material": "Existing explicitly synthetic member first-proposal six-page manuscript and its immutable source bundle. Both origins use the same baseline to isolate lifecycle behavior, not two independent business datasets.",
+  "instruction": "Synthetic development task: turn the approved member first-proposal into a competitive bid response. Preserve source facts and unknowns; organize requirement fit, delivery and verification. Reassess every page, selectively rewrite/reorder when necessary and explain reuse. Reconcile verbatim notes in the same adoption. No invented procurement consensus, proven capabilities, success metrics or live demo execution.",
+  "origins": {
+    "active": "A bounded content_full request is active before input revision.",
+    "closed": "Use an isolated snapshot of the actual closed production revision f029506ad05d46ff8728ad943a4501af; first prove direct input change refuses, then create a new bounded request with the actual evaluation instruction and input revision. Never reopen the old request."
+  },
+  "calls": [
+    {
+      "number": 1,
+      "origin": "active",
+      "kind": "input_revision",
+      "purpose": "One complete coordinated Narrative/Plan/changed Pages/speech proposal with explicit six-page assessments; formal accept once."
+    },
+    {
+      "number": 2,
+      "origin": "active",
+      "kind": "native_full_content_review",
+      "requires": "call 1 accepted",
+      "purpose": "Independent argument/page_copy/progression/speech review of the exact adopted objects; check fact fidelity, substantive bid transformation, justified reuse and no unwarranted full rewrite."
+    },
+    {
+      "number": 3,
+      "origin": "closed",
+      "kind": "input_revision",
+      "requires": "calls 1 and 2 pass",
+      "purpose": "Same task from genuine closed production snapshot, new bounded request; independent complete coordinated proposal and formal accept once."
+    },
+    {
+      "number": 4,
+      "origin": "closed",
+      "kind": "native_full_content_review",
+      "requires": "call 3 accepted",
+      "purpose": "Independent four-unit review of exact adopted version and comparison to fixed original."
+    }
+  ],
+  "host_protocol": {
+    "pre_call": "Freeze exact task, source bytes, ordered methods and all transitive canonical schemas; claim supported protocols and actual capabilities; reserve one budget unit before process launch. No call if preflight fails.",
+    "model_output": "Complete canonical objects for proposed Narrative, Plan input, changed Page copy and speech-only Page proposals, plus diff assessments. Unchanged Pages may be reused with reason and exact old Ref.",
+    "deterministic_adapter": "Store model object bytes as content-addressed JSON and substitute declared object aliases with resulting Refs only; never change words or invent assessments. For speech-layer Page proposals retain old visible Page bytes, apply only returned notes/segments, per existing protocol. No unregistered schema repair or content correction.",
+    "timeout_seconds_per_call": 1200,
+    "failure": "Preserve raw output, counted reservation and formal rejection; do not retry or continue dependent calls. Ask only if a new budget or author decision is needed."
+  },
+  "acceptance": [
+    "Actual on-screen copy and argument roles/order change for bid; titles alone do not pass.",
+    "Source facts/limitations remain traceable; expression changes do not invent product maturity or procurement facts.",
+    "Reuse has concrete current-strategy evidence; unrelated content is preserved where suitable.",
+    "New Narrative/Plan/Pages/Speech and native reviews bind the same adopted revision.",
+    "Export before/after author-readable manuscripts plus row-level assessments, review observations and failure evidence.",
+    "D05 stays open until author reviews actual manuscripts; model pass alone does not close card."
+  ]
+}

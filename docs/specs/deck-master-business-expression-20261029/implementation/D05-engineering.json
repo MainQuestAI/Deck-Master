@@ -1,0 +1,894 @@
+{
+  "date": "2026-10-30",
+  "implementation_commit": "0c91beac4668311cc9856cd9608e6beed620363b",
+  "model_calls": 0,
+  "engineering_status": "pass",
+  "semantic_acceptance": "not_run",
+  "author_gate": "pending_actual_recompiled_manuscripts",
+  "test_batches": [
+    {
+      "passed": 189,
+      "seconds": 29.66,
+      "scope": "business_recompile, content_edit_completion, content_ops, dependency_slices, collaboration_restore, planned_input_revision, variant_requests, input_receipt_recovery, business_framing, business_content_review, content_mapping_claims"
+    },
+    {
+      "passed": 27,
+      "seconds": 8.46,
+      "scope": "compose_v2_phases, package_boundary"
+    },
+    {
+      "passed": 25,
+      "seconds": 6.32,
+      "scope": "business_recompile, dependency_slices after registry wiring cleanup; overlaps first batch"
+    }
+  ],
+  "ruff": "pass",
+  "preflight": {
+    "model_calls": 0,
+    "original_tree_unchanged": true,
+    "results": [
+      {
+        "origin": "closed",
+        "original_revision": "f029506ad05d46ff8728ad943a4501af",
+        "revision": "be81ee5d81d84f1cb7ec354898fe29e1",
+        "task_id": "a814195efb99",
+        "impact": {
+          "affected_claims": [],
+          "affected_pages": [],
+          "basis": {
+            "after_input_digest": "76499c9cdffbe98450fbc733d2fe84f79ded2649072a84596407ccc184c4fa26",
+            "before_input_digest": "cbe3fb52c4b9a0314b8e91ec79adc0fc02a17582eeb274e08676ef6c4df66f8c",
+            "narrative_ref": {
+              "path": ".deckmaster/objects/f4/f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4.json",
+              "sha256": "f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4"
+            },
+            "plan_ref": {
+              "path": ".deckmaster/objects/26/26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b.json",
+              "sha256": "26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b"
+            },
+            "task_after": {
+              "audience": "业务负责人、使用部门与信息化负责人共同参加的方案交流",
+              "brief": "仅策划：作者要用这份材料说明值得改变的业务环节、能力怎样介入和人员怎样使用，争取认同一个可验证的试点方向。受众没有先行接受系统价值。 同源事实不可改写成未具备能力或已实现收益。给出可展开的主线、主题关系与页职责及具体取舍，最多6页的策划提案。完成Narrative和planned Plan后返回，不生产Page、口播、设计或PPT。",
+              "existing_decisions": [
+                "已知存在材料描述的业务问题；尚未形成采购决定；不得假定已认同系统价值",
+                "合成评测条件，非老板新增业务主张：框架已确认为“总部定规则→门店执行→总部复盘”。保留这三段的业务含义，直接检验和展开；允许真实交叉对应，缺口如实列出；不要重新发明框架或凑候选标题。"
+              ],
+              "page_limit": 6,
+              "presentation_mode": "live",
+              "presentation_mode_source": "provided",
+              "scenario": "competitive_bid",
+              "title": "dev-01 合成既定框架"
+            },
+            "task_before": {
+              "audience": "业务负责人、使用部门与信息化负责人共同参加的方案交流",
+              "brief": "仅策划：作者要用这份材料说明值得改变的业务环节、能力怎样介入和人员怎样使用，争取认同一个可验证的试点方向。受众没有先行接受系统价值。 同源事实不可改写成未具备能力或已实现收益。给出可展开的主线、主题关系与页职责及具体取舍，最多6页的策划提案。完成Narrative和planned Plan后返回，不生产Page、口播、设计或PPT。",
+              "existing_decisions": [
+                "已知存在材料描述的业务问题；尚未形成采购决定；不得假定已认同系统价值",
+                "合成评测条件，非老板新增业务主张：框架已确认为“总部定规则→门店执行→总部复盘”。保留这三段的业务含义，直接检验和展开；允许真实交叉对应，缺口如实列出；不要重新发明框架或凑候选标题。"
+              ],
+              "page_limit": 6,
+              "presentation_mode": "live",
+              "presentation_mode_source": "provided",
+              "scenario": "first_proposal",
+              "title": "dev-01 合成既定框架"
+            }
+          },
+          "changed_sources": {
+            "added": [],
+            "changed": [],
+            "removed": []
+          },
+          "changed_task_fields": [
+            "scenario"
+          ],
+          "claim_links": [],
+          "estimated": false,
+          "has_impact": true,
+          "impact_digest": "b723d9207bc8631f362937f69c4cbe8d961b19a471bf85e59d81accfdc013bb5",
+          "note": "Fixed input impact only. Reassess strategy before rewrite/reuse; no automatic full rewrite or reuse.",
+          "open_findings": [],
+          "page_assessments": [
+            {
+              "evidence_refs": [
+                {
+                  "path": ".deckmaster/objects/f3/f3b9fdcaddc14fcc2c3c2068ba1dd682e13fa5c7f188386f96de54b2bf54b599.json",
+                  "sha256": "f3b9fdcaddc14fcc2c3c2068ba1dd682e13fa5c7f188386f96de54b2bf54b599"
+                },
+                {
+                  "path": ".deckmaster/objects/f4/f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4.json",
+                  "sha256": "f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4"
+                },
+                {
+                  "path": ".deckmaster/objects/26/26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b.json",
+                  "sha256": "26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b"
+                }
+              ],
+              "page_id": "p01",
+              "reason_codes": [
+                "strategy_task_facts_changed"
+              ],
+              "state": "needs_reassessment"
+            },
+            {
+              "evidence_refs": [
+                {
+                  "path": ".deckmaster/objects/54/54656c25aa3ef2cd41d14ba331d2471f3b6aee48ee814316ba45d0d52a762d01.json",
+                  "sha256": "54656c25aa3ef2cd41d14ba331d2471f3b6aee48ee814316ba45d0d52a762d01"
+                },
+                {
+                  "path": ".deckmaster/objects/f4/f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4.json",
+                  "sha256": "f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4"
+                },
+                {
+                  "path": ".deckmaster/objects/26/26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b.json",
+                  "sha256": "26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b"
+                }
+              ],
+              "page_id": "p02",
+              "reason_codes": [
+                "strategy_task_facts_changed"
+              ],
+              "state": "needs_reassessment"
+            },
+            {
+              "evidence_refs": [
+                {
+                  "path": ".deckmaster/objects/f4/f4ef14fbd698377ca6fd59c940f7ea5159eabf3a7d3b9df05493b2abd1a08eb9.json",
+                  "sha256": "f4ef14fbd698377ca6fd59c940f7ea5159eabf3a7d3b9df05493b2abd1a08eb9"
+                },
+                {
+                  "path": ".deckmaster/objects/f4/f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4.json",
+                  "sha256": "f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4"
+                },
+                {
+                  "path": ".deckmaster/objects/26/26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b.json",
+                  "sha256": "26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b"
+                }
+              ],
+              "page_id": "p03",
+              "reason_codes": [
+                "strategy_task_facts_changed"
+              ],
+              "state": "needs_reassessment"
+            },
+            {
+              "evidence_refs": [
+                {
+                  "path": ".deckmaster/objects/b5/b56ba239489306b57ce692337b1fc270b38eea9ce07911f2b1f6d3c573ed8024.json",
+                  "sha256": "b56ba239489306b57ce692337b1fc270b38eea9ce07911f2b1f6d3c573ed8024"
+                },
+                {
+                  "path": ".deckmaster/objects/f4/f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4.json",
+                  "sha256": "f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4"
+                },
+                {
+                  "path": ".deckmaster/objects/26/26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b.json",
+                  "sha256": "26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b"
+                }
+              ],
+              "page_id": "p04",
+              "reason_codes": [
+                "strategy_task_facts_changed"
+              ],
+              "state": "needs_reassessment"
+            },
+            {
+              "evidence_refs": [
+                {
+                  "path": ".deckmaster/objects/74/7403771d2e42bda3e6be90928b1af6a3bae8d8242d68ae69c161600f1271d305.json",
+                  "sha256": "7403771d2e42bda3e6be90928b1af6a3bae8d8242d68ae69c161600f1271d305"
+                },
+                {
+                  "path": ".deckmaster/objects/f4/f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4.json",
+                  "sha256": "f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4"
+                },
+                {
+                  "path": ".deckmaster/objects/26/26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b.json",
+                  "sha256": "26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b"
+                }
+              ],
+              "page_id": "p05",
+              "reason_codes": [
+                "strategy_task_facts_changed"
+              ],
+              "state": "needs_reassessment"
+            },
+            {
+              "evidence_refs": [
+                {
+                  "path": ".deckmaster/objects/57/57feddaa8acd3d4cc8c8c5dafee68f9378877e554246ed4630c758c73a5be47b.json",
+                  "sha256": "57feddaa8acd3d4cc8c8c5dafee68f9378877e554246ed4630c758c73a5be47b"
+                },
+                {
+                  "path": ".deckmaster/objects/f4/f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4.json",
+                  "sha256": "f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4"
+                },
+                {
+                  "path": ".deckmaster/objects/26/26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b.json",
+                  "sha256": "26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b"
+                }
+              ],
+              "page_id": "p06",
+              "reason_codes": [
+                "strategy_task_facts_changed"
+              ],
+              "state": "needs_reassessment"
+            }
+          ],
+          "page_links": [],
+          "schema_version": "content_impact.v2",
+          "strategy_reassessment_required": true,
+          "unresolved_items": []
+        },
+        "required_capabilities": [
+          "compose.v2",
+          "collaboration.v1",
+          "rc3-entry.v1",
+          "business-framing.v1",
+          "business-recompile.v1"
+        ],
+        "checks": "6 fixed Pages preserved; source bytes unchanged; old closed request readable; frozen impact and task schema pass; no generation"
+      },
+      {
+        "origin": "active",
+        "original_revision": "f029506ad05d46ff8728ad943a4501af",
+        "revision": "c3ab6950b50b48d79244fde527a586c3",
+        "task_id": "c0106451797a",
+        "impact": {
+          "affected_claims": [],
+          "affected_pages": [],
+          "basis": {
+            "after_input_digest": "76499c9cdffbe98450fbc733d2fe84f79ded2649072a84596407ccc184c4fa26",
+            "before_input_digest": "cbe3fb52c4b9a0314b8e91ec79adc0fc02a17582eeb274e08676ef6c4df66f8c",
+            "narrative_ref": {
+              "path": ".deckmaster/objects/f4/f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4.json",
+              "sha256": "f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4"
+            },
+            "plan_ref": {
+              "path": ".deckmaster/objects/26/26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b.json",
+              "sha256": "26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b"
+            },
+            "task_after": {
+              "audience": "业务负责人、使用部门与信息化负责人共同参加的方案交流",
+              "brief": "仅策划：作者要用这份材料说明值得改变的业务环节、能力怎样介入和人员怎样使用，争取认同一个可验证的试点方向。受众没有先行接受系统价值。 同源事实不可改写成未具备能力或已实现收益。给出可展开的主线、主题关系与页职责及具体取舍，最多6页的策划提案。完成Narrative和planned Plan后返回，不生产Page、口播、设计或PPT。",
+              "existing_decisions": [
+                "已知存在材料描述的业务问题；尚未形成采购决定；不得假定已认同系统价值",
+                "合成评测条件，非老板新增业务主张：框架已确认为“总部定规则→门店执行→总部复盘”。保留这三段的业务含义，直接检验和展开；允许真实交叉对应，缺口如实列出；不要重新发明框架或凑候选标题。"
+              ],
+              "page_limit": 6,
+              "presentation_mode": "live",
+              "presentation_mode_source": "provided",
+              "scenario": "competitive_bid",
+              "title": "dev-01 合成既定框架"
+            },
+            "task_before": {
+              "audience": "业务负责人、使用部门与信息化负责人共同参加的方案交流",
+              "brief": "仅策划：作者要用这份材料说明值得改变的业务环节、能力怎样介入和人员怎样使用，争取认同一个可验证的试点方向。受众没有先行接受系统价值。 同源事实不可改写成未具备能力或已实现收益。给出可展开的主线、主题关系与页职责及具体取舍，最多6页的策划提案。完成Narrative和planned Plan后返回，不生产Page、口播、设计或PPT。",
+              "existing_decisions": [
+                "已知存在材料描述的业务问题；尚未形成采购决定；不得假定已认同系统价值",
+                "合成评测条件，非老板新增业务主张：框架已确认为“总部定规则→门店执行→总部复盘”。保留这三段的业务含义，直接检验和展开；允许真实交叉对应，缺口如实列出；不要重新发明框架或凑候选标题。"
+              ],
+              "page_limit": 6,
+              "presentation_mode": "live",
+              "presentation_mode_source": "provided",
+              "scenario": "first_proposal",
+              "title": "dev-01 合成既定框架"
+            }
+          },
+          "changed_sources": {
+            "added": [],
+            "changed": [],
+            "removed": []
+          },
+          "changed_task_fields": [
+            "scenario"
+          ],
+          "claim_links": [],
+          "estimated": false,
+          "has_impact": true,
+          "impact_digest": "b723d9207bc8631f362937f69c4cbe8d961b19a471bf85e59d81accfdc013bb5",
+          "note": "Fixed input impact only. Reassess strategy before rewrite/reuse; no automatic full rewrite or reuse.",
+          "open_findings": [],
+          "page_assessments": [
+            {
+              "evidence_refs": [
+                {
+                  "path": ".deckmaster/objects/f3/f3b9fdcaddc14fcc2c3c2068ba1dd682e13fa5c7f188386f96de54b2bf54b599.json",
+                  "sha256": "f3b9fdcaddc14fcc2c3c2068ba1dd682e13fa5c7f188386f96de54b2bf54b599"
+                },
+                {
+                  "path": ".deckmaster/objects/f4/f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4.json",
+                  "sha256": "f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4"
+                },
+                {
+                  "path": ".deckmaster/objects/26/26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b.json",
+                  "sha256": "26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b"
+                }
+              ],
+              "page_id": "p01",
+              "reason_codes": [
+                "strategy_task_facts_changed"
+              ],
+              "state": "needs_reassessment"
+            },
+            {
+              "evidence_refs": [
+                {
+                  "path": ".deckmaster/objects/54/54656c25aa3ef2cd41d14ba331d2471f3b6aee48ee814316ba45d0d52a762d01.json",
+                  "sha256": "54656c25aa3ef2cd41d14ba331d2471f3b6aee48ee814316ba45d0d52a762d01"
+                },
+                {
+                  "path": ".deckmaster/objects/f4/f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4.json",
+                  "sha256": "f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4"
+                },
+                {
+                  "path": ".deckmaster/objects/26/26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b.json",
+                  "sha256": "26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b"
+                }
+              ],
+              "page_id": "p02",
+              "reason_codes": [
+                "strategy_task_facts_changed"
+              ],
+              "state": "needs_reassessment"
+            },
+            {
+              "evidence_refs": [
+                {
+                  "path": ".deckmaster/objects/f4/f4ef14fbd698377ca6fd59c940f7ea5159eabf3a7d3b9df05493b2abd1a08eb9.json",
+                  "sha256": "f4ef14fbd698377ca6fd59c940f7ea5159eabf3a7d3b9df05493b2abd1a08eb9"
+                },
+                {
+                  "path": ".deckmaster/objects/f4/f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4.json",
+                  "sha256": "f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4"
+                },
+                {
+                  "path": ".deckmaster/objects/26/26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b.json",
+                  "sha256": "26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b"
+                }
+              ],
+              "page_id": "p03",
+              "reason_codes": [
+                "strategy_task_facts_changed"
+              ],
+              "state": "needs_reassessment"
+            },
+            {
+              "evidence_refs": [
+                {
+                  "path": ".deckmaster/objects/b5/b56ba239489306b57ce692337b1fc270b38eea9ce07911f2b1f6d3c573ed8024.json",
+                  "sha256": "b56ba239489306b57ce692337b1fc270b38eea9ce07911f2b1f6d3c573ed8024"
+                },
+                {
+                  "path": ".deckmaster/objects/f4/f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4.json",
+                  "sha256": "f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4"
+                },
+                {
+                  "path": ".deckmaster/objects/26/26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b.json",
+                  "sha256": "26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b"
+                }
+              ],
+              "page_id": "p04",
+              "reason_codes": [
+                "strategy_task_facts_changed"
+              ],
+              "state": "needs_reassessment"
+            },
+            {
+              "evidence_refs": [
+                {
+                  "path": ".deckmaster/objects/74/7403771d2e42bda3e6be90928b1af6a3bae8d8242d68ae69c161600f1271d305.json",
+                  "sha256": "7403771d2e42bda3e6be90928b1af6a3bae8d8242d68ae69c161600f1271d305"
+                },
+                {
+                  "path": ".deckmaster/objects/f4/f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4.json",
+                  "sha256": "f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4"
+                },
+                {
+                  "path": ".deckmaster/objects/26/26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b.json",
+                  "sha256": "26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b"
+                }
+              ],
+              "page_id": "p05",
+              "reason_codes": [
+                "strategy_task_facts_changed"
+              ],
+              "state": "needs_reassessment"
+            },
+            {
+              "evidence_refs": [
+                {
+                  "path": ".deckmaster/objects/57/57feddaa8acd3d4cc8c8c5dafee68f9378877e554246ed4630c758c73a5be47b.json",
+                  "sha256": "57feddaa8acd3d4cc8c8c5dafee68f9378877e554246ed4630c758c73a5be47b"
+                },
+                {
+                  "path": ".deckmaster/objects/f4/f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4.json",
+                  "sha256": "f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4"
+                },
+                {
+                  "path": ".deckmaster/objects/26/26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b.json",
+                  "sha256": "26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b"
+                }
+              ],
+              "page_id": "p06",
+              "reason_codes": [
+                "strategy_task_facts_changed"
+              ],
+              "state": "needs_reassessment"
+            }
+          ],
+          "page_links": [],
+          "schema_version": "content_impact.v2",
+          "strategy_reassessment_required": true,
+          "unresolved_items": []
+        },
+        "required_capabilities": [
+          "compose.v2",
+          "collaboration.v1",
+          "rc3-entry.v1",
+          "business-framing.v1",
+          "business-recompile.v1"
+        ],
+        "checks": "6 fixed Pages preserved; source bytes unchanged; old closed request readable; frozen impact and task schema pass; no generation"
+      }
+    ]
+  },
+  "six_page_reuse": {
+    "model_calls": 0,
+    "synthetic_mechanism_only": true,
+    "exact_six_page_refs_preserved": true,
+    "result": {
+      "status": "accepted",
+      "project_id": "dev-01-fixed-framework",
+      "revision_id": "c3491a33d9e1460d9d43cad10b3178fb",
+      "requested_action": "task accept",
+      "result_refs": [
+        {
+          "path": ".deckmaster/objects/ae/ae3151fe4aee3bacf439e0f7cd93b25ec9a60b1b501ec9c07611e2a03b68efeb.json",
+          "sha256": "ae3151fe4aee3bacf439e0f7cd93b25ec9a60b1b501ec9c07611e2a03b68efeb"
+        }
+      ],
+      "pending_tasks": [],
+      "findings": [],
+      "next_action": "continue_within_request",
+      "input_alignment": "current",
+      "review_url": null,
+      "view_status": "view_arrives_with_workbench",
+      "evidence_level": "engineering",
+      "current_revision_id": "c3491a33d9e1460d9d43cad10b3178fb",
+      "new_page_hashes": {},
+      "unchanged_reason": "Synthetic six-page exact-byte reuse adapter probe only.",
+      "impact_summary": "Synthetic six-page exact-byte reuse adapter probe only.",
+      "operation_result": {
+        "status": "accepted",
+        "revision_id": "c3491a33d9e1460d9d43cad10b3178fb",
+        "variant": "input_revision",
+        "adopted": true,
+        "changed_layers": [
+          "plan"
+        ],
+        "narrative_ref": {
+          "path": ".deckmaster/objects/f4/f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4.json",
+          "sha256": "f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4"
+        },
+        "impact_summary": "Synthetic six-page exact-byte reuse adapter probe only.",
+        "page_assessments": [
+          {
+            "page_id": "p01",
+            "state": "reusable_after_review",
+            "reason_codes": [
+              "engineering_budget_only_probe"
+            ],
+            "reason": "Zero-model engineering proof only: page budget increases from six to eight, with no change to facts, strategy, role, copy or script. Not professional reuse judgment.",
+            "evidence_refs": [
+              {
+                "path": ".deckmaster/objects/f3/f3b9fdcaddc14fcc2c3c2068ba1dd682e13fa5c7f188386f96de54b2bf54b599.json",
+                "sha256": "f3b9fdcaddc14fcc2c3c2068ba1dd682e13fa5c7f188386f96de54b2bf54b599"
+              },
+              {
+                "path": ".deckmaster/objects/f4/f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4.json",
+                "sha256": "f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4"
+              },
+              {
+                "path": ".deckmaster/objects/26/26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b.json",
+                "sha256": "26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b"
+              }
+            ]
+          },
+          {
+            "page_id": "p02",
+            "state": "reusable_after_review",
+            "reason_codes": [
+              "engineering_budget_only_probe"
+            ],
+            "reason": "Zero-model engineering proof only: page budget increases from six to eight, with no change to facts, strategy, role, copy or script. Not professional reuse judgment.",
+            "evidence_refs": [
+              {
+                "path": ".deckmaster/objects/54/54656c25aa3ef2cd41d14ba331d2471f3b6aee48ee814316ba45d0d52a762d01.json",
+                "sha256": "54656c25aa3ef2cd41d14ba331d2471f3b6aee48ee814316ba45d0d52a762d01"
+              },
+              {
+                "path": ".deckmaster/objects/f4/f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4.json",
+                "sha256": "f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4"
+              },
+              {
+                "path": ".deckmaster/objects/26/26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b.json",
+                "sha256": "26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b"
+              }
+            ]
+          },
+          {
+            "page_id": "p03",
+            "state": "reusable_after_review",
+            "reason_codes": [
+              "engineering_budget_only_probe"
+            ],
+            "reason": "Zero-model engineering proof only: page budget increases from six to eight, with no change to facts, strategy, role, copy or script. Not professional reuse judgment.",
+            "evidence_refs": [
+              {
+                "path": ".deckmaster/objects/f4/f4ef14fbd698377ca6fd59c940f7ea5159eabf3a7d3b9df05493b2abd1a08eb9.json",
+                "sha256": "f4ef14fbd698377ca6fd59c940f7ea5159eabf3a7d3b9df05493b2abd1a08eb9"
+              },
+              {
+                "path": ".deckmaster/objects/f4/f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4.json",
+                "sha256": "f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4"
+              },
+              {
+                "path": ".deckmaster/objects/26/26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b.json",
+                "sha256": "26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b"
+              }
+            ]
+          },
+          {
+            "page_id": "p04",
+            "state": "reusable_after_review",
+            "reason_codes": [
+              "engineering_budget_only_probe"
+            ],
+            "reason": "Zero-model engineering proof only: page budget increases from six to eight, with no change to facts, strategy, role, copy or script. Not professional reuse judgment.",
+            "evidence_refs": [
+              {
+                "path": ".deckmaster/objects/b5/b56ba239489306b57ce692337b1fc270b38eea9ce07911f2b1f6d3c573ed8024.json",
+                "sha256": "b56ba239489306b57ce692337b1fc270b38eea9ce07911f2b1f6d3c573ed8024"
+              },
+              {
+                "path": ".deckmaster/objects/f4/f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4.json",
+                "sha256": "f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4"
+              },
+              {
+                "path": ".deckmaster/objects/26/26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b.json",
+                "sha256": "26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b"
+              }
+            ]
+          },
+          {
+            "page_id": "p05",
+            "state": "reusable_after_review",
+            "reason_codes": [
+              "engineering_budget_only_probe"
+            ],
+            "reason": "Zero-model engineering proof only: page budget increases from six to eight, with no change to facts, strategy, role, copy or script. Not professional reuse judgment.",
+            "evidence_refs": [
+              {
+                "path": ".deckmaster/objects/74/7403771d2e42bda3e6be90928b1af6a3bae8d8242d68ae69c161600f1271d305.json",
+                "sha256": "7403771d2e42bda3e6be90928b1af6a3bae8d8242d68ae69c161600f1271d305"
+              },
+              {
+                "path": ".deckmaster/objects/f4/f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4.json",
+                "sha256": "f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4"
+              },
+              {
+                "path": ".deckmaster/objects/26/26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b.json",
+                "sha256": "26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b"
+              }
+            ]
+          },
+          {
+            "page_id": "p06",
+            "state": "reusable_after_review",
+            "reason_codes": [
+              "engineering_budget_only_probe"
+            ],
+            "reason": "Zero-model engineering proof only: page budget increases from six to eight, with no change to facts, strategy, role, copy or script. Not professional reuse judgment.",
+            "evidence_refs": [
+              {
+                "path": ".deckmaster/objects/57/57feddaa8acd3d4cc8c8c5dafee68f9378877e554246ed4630c758c73a5be47b.json",
+                "sha256": "57feddaa8acd3d4cc8c8c5dafee68f9378877e554246ed4630c758c73a5be47b"
+              },
+              {
+                "path": ".deckmaster/objects/f4/f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4.json",
+                "sha256": "f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4"
+              },
+              {
+                "path": ".deckmaster/objects/26/26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b.json",
+                "sha256": "26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b"
+              }
+            ]
+          }
+        ],
+        "unchanged_reason": "Synthetic six-page exact-byte reuse adapter probe only.",
+        "new_page_hashes": {},
+        "plan_ref": {
+          "path": ".deckmaster/objects/ae/ae3151fe4aee3bacf439e0f7cd93b25ec9a60b1b501ec9c07611e2a03b68efeb.json",
+          "sha256": "ae3151fe4aee3bacf439e0f7cd93b25ec9a60b1b501ec9c07611e2a03b68efeb"
+        },
+        "page_refs": [
+          {
+            "path": ".deckmaster/objects/f3/f3b9fdcaddc14fcc2c3c2068ba1dd682e13fa5c7f188386f96de54b2bf54b599.json",
+            "sha256": "f3b9fdcaddc14fcc2c3c2068ba1dd682e13fa5c7f188386f96de54b2bf54b599"
+          },
+          {
+            "path": ".deckmaster/objects/54/54656c25aa3ef2cd41d14ba331d2471f3b6aee48ee814316ba45d0d52a762d01.json",
+            "sha256": "54656c25aa3ef2cd41d14ba331d2471f3b6aee48ee814316ba45d0d52a762d01"
+          },
+          {
+            "path": ".deckmaster/objects/f4/f4ef14fbd698377ca6fd59c940f7ea5159eabf3a7d3b9df05493b2abd1a08eb9.json",
+            "sha256": "f4ef14fbd698377ca6fd59c940f7ea5159eabf3a7d3b9df05493b2abd1a08eb9"
+          },
+          {
+            "path": ".deckmaster/objects/b5/b56ba239489306b57ce692337b1fc270b38eea9ce07911f2b1f6d3c573ed8024.json",
+            "sha256": "b56ba239489306b57ce692337b1fc270b38eea9ce07911f2b1f6d3c573ed8024"
+          },
+          {
+            "path": ".deckmaster/objects/74/7403771d2e42bda3e6be90928b1af6a3bae8d8242d68ae69c161600f1271d305.json",
+            "sha256": "7403771d2e42bda3e6be90928b1af6a3bae8d8242d68ae69c161600f1271d305"
+          },
+          {
+            "path": ".deckmaster/objects/57/57feddaa8acd3d4cc8c8c5dafee68f9378877e554246ed4630c758c73a5be47b.json",
+            "sha256": "57feddaa8acd3d4cc8c8c5dafee68f9378877e554246ed4630c758c73a5be47b"
+          }
+        ],
+        "result_refs": [
+          {
+            "path": ".deckmaster/objects/ae/ae3151fe4aee3bacf439e0f7cd93b25ec9a60b1b501ec9c07611e2a03b68efeb.json",
+            "sha256": "ae3151fe4aee3bacf439e0f7cd93b25ec9a60b1b501ec9c07611e2a03b68efeb"
+          }
+        ],
+        "invalidated_outputs": [],
+        "effective_scope": {
+          "allow_page_membership_change": false,
+          "allow_page_order_change": true,
+          "external_artifact_ref": null,
+          "layers": [
+            "narrative",
+            "page_copy",
+            "plan",
+            "speech"
+          ],
+          "page_ids": [
+            "p01",
+            "p02",
+            "p03",
+            "p04",
+            "p05",
+            "p06"
+          ],
+          "page_manifest_ref": null,
+          "purpose": "working",
+          "subject": "deck"
+        },
+        "next_action": "continue_within_request"
+      },
+      "variant": "input_revision",
+      "adopted": true,
+      "changed_layers": [
+        "plan"
+      ],
+      "page_refs": [
+        {
+          "path": ".deckmaster/objects/f3/f3b9fdcaddc14fcc2c3c2068ba1dd682e13fa5c7f188386f96de54b2bf54b599.json",
+          "sha256": "f3b9fdcaddc14fcc2c3c2068ba1dd682e13fa5c7f188386f96de54b2bf54b599"
+        },
+        {
+          "path": ".deckmaster/objects/54/54656c25aa3ef2cd41d14ba331d2471f3b6aee48ee814316ba45d0d52a762d01.json",
+          "sha256": "54656c25aa3ef2cd41d14ba331d2471f3b6aee48ee814316ba45d0d52a762d01"
+        },
+        {
+          "path": ".deckmaster/objects/f4/f4ef14fbd698377ca6fd59c940f7ea5159eabf3a7d3b9df05493b2abd1a08eb9.json",
+          "sha256": "f4ef14fbd698377ca6fd59c940f7ea5159eabf3a7d3b9df05493b2abd1a08eb9"
+        },
+        {
+          "path": ".deckmaster/objects/b5/b56ba239489306b57ce692337b1fc270b38eea9ce07911f2b1f6d3c573ed8024.json",
+          "sha256": "b56ba239489306b57ce692337b1fc270b38eea9ce07911f2b1f6d3c573ed8024"
+        },
+        {
+          "path": ".deckmaster/objects/74/7403771d2e42bda3e6be90928b1af6a3bae8d8242d68ae69c161600f1271d305.json",
+          "sha256": "7403771d2e42bda3e6be90928b1af6a3bae8d8242d68ae69c161600f1271d305"
+        },
+        {
+          "path": ".deckmaster/objects/57/57feddaa8acd3d4cc8c8c5dafee68f9378877e554246ed4630c758c73a5be47b.json",
+          "sha256": "57feddaa8acd3d4cc8c8c5dafee68f9378877e554246ed4630c758c73a5be47b"
+        }
+      ],
+      "plan_ref": {
+        "path": ".deckmaster/objects/ae/ae3151fe4aee3bacf439e0f7cd93b25ec9a60b1b501ec9c07611e2a03b68efeb.json",
+        "sha256": "ae3151fe4aee3bacf439e0f7cd93b25ec9a60b1b501ec9c07611e2a03b68efeb"
+      },
+      "narrative_ref": {
+        "path": ".deckmaster/objects/f4/f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4.json",
+        "sha256": "f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4"
+      },
+      "invalidated_outputs": [],
+      "effective_scope": {
+        "allow_page_membership_change": false,
+        "allow_page_order_change": true,
+        "external_artifact_ref": null,
+        "layers": [
+          "narrative",
+          "page_copy",
+          "plan",
+          "speech"
+        ],
+        "page_ids": [
+          "p01",
+          "p02",
+          "p03",
+          "p04",
+          "p05",
+          "p06"
+        ],
+        "page_manifest_ref": null,
+        "purpose": "working",
+        "subject": "deck"
+      },
+      "page_assessments": [
+        {
+          "page_id": "p01",
+          "state": "reusable_after_review",
+          "reason_codes": [
+            "engineering_budget_only_probe"
+          ],
+          "reason": "Zero-model engineering proof only: page budget increases from six to eight, with no change to facts, strategy, role, copy or script. Not professional reuse judgment.",
+          "evidence_refs": [
+            {
+              "path": ".deckmaster/objects/f3/f3b9fdcaddc14fcc2c3c2068ba1dd682e13fa5c7f188386f96de54b2bf54b599.json",
+              "sha256": "f3b9fdcaddc14fcc2c3c2068ba1dd682e13fa5c7f188386f96de54b2bf54b599"
+            },
+            {
+              "path": ".deckmaster/objects/f4/f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4.json",
+              "sha256": "f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4"
+            },
+            {
+              "path": ".deckmaster/objects/26/26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b.json",
+              "sha256": "26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b"
+            }
+          ]
+        },
+        {
+          "page_id": "p02",
+          "state": "reusable_after_review",
+          "reason_codes": [
+            "engineering_budget_only_probe"
+          ],
+          "reason": "Zero-model engineering proof only: page budget increases from six to eight, with no change to facts, strategy, role, copy or script. Not professional reuse judgment.",
+          "evidence_refs": [
+            {
+              "path": ".deckmaster/objects/54/54656c25aa3ef2cd41d14ba331d2471f3b6aee48ee814316ba45d0d52a762d01.json",
+              "sha256": "54656c25aa3ef2cd41d14ba331d2471f3b6aee48ee814316ba45d0d52a762d01"
+            },
+            {
+              "path": ".deckmaster/objects/f4/f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4.json",
+              "sha256": "f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4"
+            },
+            {
+              "path": ".deckmaster/objects/26/26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b.json",
+              "sha256": "26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b"
+            }
+          ]
+        },
+        {
+          "page_id": "p03",
+          "state": "reusable_after_review",
+          "reason_codes": [
+            "engineering_budget_only_probe"
+          ],
+          "reason": "Zero-model engineering proof only: page budget increases from six to eight, with no change to facts, strategy, role, copy or script. Not professional reuse judgment.",
+          "evidence_refs": [
+            {
+              "path": ".deckmaster/objects/f4/f4ef14fbd698377ca6fd59c940f7ea5159eabf3a7d3b9df05493b2abd1a08eb9.json",
+              "sha256": "f4ef14fbd698377ca6fd59c940f7ea5159eabf3a7d3b9df05493b2abd1a08eb9"
+            },
+            {
+              "path": ".deckmaster/objects/f4/f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4.json",
+              "sha256": "f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4"
+            },
+            {
+              "path": ".deckmaster/objects/26/26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b.json",
+              "sha256": "26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b"
+            }
+          ]
+        },
+        {
+          "page_id": "p04",
+          "state": "reusable_after_review",
+          "reason_codes": [
+            "engineering_budget_only_probe"
+          ],
+          "reason": "Zero-model engineering proof only: page budget increases from six to eight, with no change to facts, strategy, role, copy or script. Not professional reuse judgment.",
+          "evidence_refs": [
+            {
+              "path": ".deckmaster/objects/b5/b56ba239489306b57ce692337b1fc270b38eea9ce07911f2b1f6d3c573ed8024.json",
+              "sha256": "b56ba239489306b57ce692337b1fc270b38eea9ce07911f2b1f6d3c573ed8024"
+            },
+            {
+              "path": ".deckmaster/objects/f4/f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4.json",
+              "sha256": "f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4"
+            },
+            {
+              "path": ".deckmaster/objects/26/26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b.json",
+              "sha256": "26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b"
+            }
+          ]
+        },
+        {
+          "page_id": "p05",
+          "state": "reusable_after_review",
+          "reason_codes": [
+            "engineering_budget_only_probe"
+          ],
+          "reason": "Zero-model engineering proof only: page budget increases from six to eight, with no change to facts, strategy, role, copy or script. Not professional reuse judgment.",
+          "evidence_refs": [
+            {
+              "path": ".deckmaster/objects/74/7403771d2e42bda3e6be90928b1af6a3bae8d8242d68ae69c161600f1271d305.json",
+              "sha256": "7403771d2e42bda3e6be90928b1af6a3bae8d8242d68ae69c161600f1271d305"
+            },
+            {
+              "path": ".deckmaster/objects/f4/f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4.json",
+              "sha256": "f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4"
+            },
+            {
+              "path": ".deckmaster/objects/26/26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b.json",
+              "sha256": "26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b"
+            }
+          ]
+        },
+        {
+          "page_id": "p06",
+          "state": "reusable_after_review",
+          "reason_codes": [
+            "engineering_budget_only_probe"
+          ],
+          "reason": "Zero-model engineering proof only: page budget increases from six to eight, with no change to facts, strategy, role, copy or script. Not professional reuse judgment.",
+          "evidence_refs": [
+            {
+              "path": ".deckmaster/objects/57/57feddaa8acd3d4cc8c8c5dafee68f9378877e554246ed4630c758c73a5be47b.json",
+              "sha256": "57feddaa8acd3d4cc8c8c5dafee68f9378877e554246ed4630c758c73a5be47b"
+            },
+            {
+              "path": ".deckmaster/objects/f4/f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4.json",
+              "sha256": "f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4"
+            },
+            {
+              "path": ".deckmaster/objects/26/26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b.json",
+              "sha256": "26ea51626076488e4091828cc76199727ce4b69b737d364bd987c6bc36e8c29b"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "local_evidence": [
+    {
+      "path": "/Users/dingcheng/.codex/tmp/deck-master-business-expression-20261030/d05-preflight/check.py",
+      "sha256": "8063608bdb3cd72c5ca32c80a62e014563c3179beb053dabc00bf5b7daa0fdad"
+    },
+    {
+      "path": "/Users/dingcheng/.codex/tmp/deck-master-business-expression-20261030/d05-preflight/result.json",
+      "sha256": "9d2c1ec9f42cc61cffbb2a96f980c19a19d7332499cdb3aa835d5d001de8b437"
+    },
+    {
+      "path": "/Users/dingcheng/.codex/tmp/deck-master-business-expression-20261030/d05-preflight/reuse.py",
+      "sha256": "13414709a7ee75a146822cfe1dbdbf501933f947ef52e2a33ae43013450a2d4f"
+    },
+    {
+      "path": "/Users/dingcheng/.codex/tmp/deck-master-business-expression-20261030/d05-preflight/reuse-result.json",
+      "sha256": "5b1be6208930507efddb0b5c14b94158104c3b5ab8b3191d9421e3e8c589efc4"
+    }
+  ],
+  "limitations": [
+    "All new adoption tests are synthetic Host mechanism proofs; no model quality judgment.",
+    "Historical snapshot copies pin the real closed production revision for preflight; source project unchanged.",
+    "Active-start fixture begins as a newly opened bounded content request; not a separate customer scenario.",
+    "D03 multiple-framework branch remains unverified; no D08 or visuals."
+  ]
+}
