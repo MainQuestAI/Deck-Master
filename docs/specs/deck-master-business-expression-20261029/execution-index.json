@@ -359,16 +359,20 @@
           "status": "pass",
           "evidence": [
             "implementation/D02a-validation.md",
-            "implementation/D02a-calibration-r1.json"
+            "implementation/D02a-calibration-r1.json",
+            "implementation/D02a-calibration-r2-engineering.json",
+            "implementation/D02a-calibration-r2-review.json"
           ]
         },
         {
           "id": "D02-AC09",
-          "status": "in_progress",
+          "status": "pass",
           "evidence": [
             "implementation/D02a-validation.md",
             "implementation/D02a-method-bytes.json",
-            "implementation/D02a-method-bytes-r2.json"
+            "implementation/D02a-method-bytes-r2.json",
+            "implementation/D02a-calibration-r2-engineering.json",
+            "implementation/D02a-calibration-r2-review.json"
           ]
         }
       ],
@@ -396,16 +400,18 @@
         "implementation/D02a-call-plan.json"
       ],
       "model_evidence": [
-        "implementation/D02a-calibration-r1.json"
+        "implementation/D02a-calibration-r1.json",
+        "implementation/D02a-calibration-r2-engineering.json",
+        "implementation/D02a-calibration-r2-review.json"
       ],
       "author_acceptance": [],
       "not_run": [
-        "R2文本修订尚无模型验证；D02b创建与审查选卡接线未启动",
-        "未进行独立内容辅审或新一轮作者终判；D08留出未运行"
+        "D02b创建与审查选卡接线待实施；没有新增独立内容辅审或R2作者终判",
+        "未运行D08留出或新合同自动生成质量验证；正文、讲稿尚未生成"
       ],
       "risks": [
-        "R1会员首提弱化现有流程替代，售后竞标独立演示挤占交付和验证；D02a保持调整中",
-        "文本增加实际依赖字节，没有上下文减负结论"
+        "R2解决两个固定开发任务的已知缺口；不外推方法整体优越或客户接受",
+        "实际依赖字节增加，没有上下文减负结论；D02b复验新版打包字节"
       ]
     },
     {
@@ -886,7 +892,7 @@
       "depends_on": [
         "D00"
       ],
-      "status": "in_progress",
+      "status": "completed",
       "deliverable": "方法文本校准、实际方法作用及字节/内容对照，沿 D00 合法对象验证",
       "acceptance_ids": [
         "D02-AC08",
@@ -897,10 +903,14 @@
         "implementation/D02a-method-bytes.json",
         "implementation/D02a-call-plan.json",
         "implementation/D02a-calibration-r1.json",
-        "implementation/D02a-method-bytes-r2.json"
+        "implementation/D02a-method-bytes-r2.json",
+        "implementation/D02a-call-plan-r2.json",
+        "implementation/D02a-r2-checklist.md",
+        "implementation/D02a-calibration-r2-engineering.json",
+        "implementation/D02a-calibration-r2-review.json"
       ],
       "implementation_commit": "7e713582159a3d924941926d6e733faa7538e2ae",
-      "content_gate": "adjust_required"
+      "content_gate": "text_ready_for_wiring_not_professional_signoff"
     },
     {
       "id": "D02b",
@@ -909,7 +919,7 @@
         "D01",
         "D02a"
       ],
-      "status": "planned",
+      "status": "in_progress",
       "deliverable": "创建、后续阶段及审查入口到 freeze 的选卡参数链",
       "acceptance_ids": [
         "D02-AC01",
@@ -1078,17 +1088,22 @@
   "dependency_semantics": "depends_on 引用 work_units；conditional_depends_on 仅在条件成立时加边。卡条目镜像其收口单元；工作单元 acceptance_ids 是 AC 唯一验收归属。",
   "execution_base": "035845f228d1ba4cd7fc9b41cdedd8fd734043df",
   "execution_started_at": "2026-10-29",
-  "current_gate": "D00 author go recorded; D01 engineering complete; D02a R1 four calls complete, content adjustment required, R2 text ready and four-call reallocation awaiting answer; D02b and downstream planned",
+  "current_gate": "D02a R2 four calls complete, two known content gaps resolved in development Host check; method text ready for D02b wiring; D02/I1 professional acceptance open; no further model calls authorized",
   "updated_at": "2026-10-30",
   "calibration_budget": {
     "overall_subscription_bound": 32,
     "I0_calls_used": 16,
     "D02a_R1_calls_used": 4,
-    "total_used": 20,
-    "remaining_unassigned": 12,
+    "total_used": 24,
+    "remaining_unassigned": 8,
     "R2_requested_calls": 4,
-    "R2_authorization": "pending",
+    "R2_authorization": "用户明确回复：再分配 4 次验证第二轮",
     "new_API_spend_allowed": 0,
-    "D08_calls_authorized": false
+    "D08_calls_authorized": false,
+    "R2_authorized_calls": 4,
+    "R2_calls_used": 4,
+    "authorized_cumulative_bound": 24,
+    "R2_calls_completed": 4,
+    "R2_calls_in_flight": 0
   }
 }

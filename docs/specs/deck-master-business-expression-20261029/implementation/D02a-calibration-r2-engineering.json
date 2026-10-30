@@ -1,0 +1,129 @@
+{
+  "date": "2026-10-30",
+  "status": "engineering_complete_content_review_pending",
+  "scope": "D02a R2; same two development tasks and selections; v1 planning; no holdout",
+  "calls": [
+    {
+      "number": 21,
+      "sample": "dev-01-first_proposal",
+      "phase": "framing",
+      "prompt_sha256": "f5a93c6d8987781b025256992647a7b0f34958c3c8a2efbaaf3794f7bcc04a92",
+      "prompt_bytes": 66284,
+      "call_plan_sha256": "b2c0d1e611e502e4e60c1d437c64d850b7f1b67702f70bde9f5af6508db1137e",
+      "requested_model_id": "gpt-6.1-sol",
+      "status": "accepted",
+      "response_sha256": "15fa1e3c9d0a794f314d02573c35f827f32ef45e7e7029b4decbf77beab76bc9",
+      "receipt_sha256": "8e3f174f423de4ef1270ab326b38d9f52ccb563f5db00376298837a86284d82d",
+      "methods_utf8_bytes": 47962,
+      "source_links_verified": 6,
+      "node_count": 10,
+      "planned_page_count": 0,
+      "usage": {
+        "input_tokens": 43814,
+        "cached_input_tokens": 12288,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 7402,
+        "reasoning_output_tokens": 852
+      },
+      "process": {
+        "returncode": 0,
+        "elapsed_seconds": 186.7915651249932
+      }
+    },
+    {
+      "number": 22,
+      "sample": "dev-02-competitive_bid",
+      "phase": "framing",
+      "prompt_sha256": "8f627fe96185100f844283a86124a95f899970855b957330bbc612ec277523cd",
+      "prompt_bytes": 66197,
+      "call_plan_sha256": "b2c0d1e611e502e4e60c1d437c64d850b7f1b67702f70bde9f5af6508db1137e",
+      "requested_model_id": "gpt-6.1-sol",
+      "status": "accepted",
+      "response_sha256": "4588b0a51ee00881f7340d37dbd6e8fd2b4bf5190b590840af8675d3a83f4aae",
+      "receipt_sha256": "65ed2dc1ded94b9866e3369f896f7d07c25260fbe8687c7fce2fda971324a102",
+      "methods_utf8_bytes": 47962,
+      "source_links_verified": 6,
+      "node_count": 10,
+      "planned_page_count": 0,
+      "usage": {
+        "input_tokens": 43608,
+        "cached_input_tokens": 12288,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 7622,
+        "reasoning_output_tokens": 733
+      },
+      "process": {
+        "returncode": 0,
+        "elapsed_seconds": 175.53664666699478
+      }
+    },
+    {
+      "number": 23,
+      "sample": "dev-01-first_proposal",
+      "phase": "argument",
+      "prompt_sha256": "92ea69f00ffa5430310bf0f2a4396332a30855d65582b5e32fee4ca8709a7b52",
+      "prompt_bytes": 111694,
+      "call_plan_sha256": "b2c0d1e611e502e4e60c1d437c64d850b7f1b67702f70bde9f5af6508db1137e",
+      "requested_model_id": "gpt-6.1-sol",
+      "status": "accepted",
+      "response_sha256": "801edee311e9423ea303c88a7e5aff2468e07c3877b95cde1cfeeea1f6dd7a6d",
+      "receipt_sha256": "eb347d751cea0181f6b054d49556a298d8708de917cf31636c94073ccea706f5",
+      "methods_utf8_bytes": 68616,
+      "source_links_verified": 24,
+      "node_count": 16,
+      "planned_page_count": 6,
+      "usage": {
+        "input_tokens": 56819,
+        "cached_input_tokens": 12288,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 17119,
+        "reasoning_output_tokens": 2070
+      },
+      "process": {
+        "returncode": 0,
+        "elapsed_seconds": 242.76839179196395
+      }
+    },
+    {
+      "number": 24,
+      "sample": "dev-02-competitive_bid",
+      "phase": "argument",
+      "prompt_sha256": "47ea0d0d6c194134426e5af1f20671aee2b0caa011f20031c9540fc5b8544906",
+      "prompt_bytes": 117203,
+      "call_plan_sha256": "b2c0d1e611e502e4e60c1d437c64d850b7f1b67702f70bde9f5af6508db1137e",
+      "requested_model_id": "gpt-6.1-sol",
+      "status": "accepted",
+      "response_sha256": "e8c8a2d4f7a3a23f28aa27806596d5b3bf520cd84635f4bfdb34f42b12174dc0",
+      "receipt_sha256": "238c9f81e57d509bd53d832ad785100df02b7b69d394591cc6c770264962dfca",
+      "methods_utf8_bytes": 73100,
+      "source_links_verified": 22,
+      "node_count": 16,
+      "planned_page_count": 6,
+      "usage": {
+        "input_tokens": 58294,
+        "cached_input_tokens": 12288,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 17006,
+        "reasoning_output_tokens": 2070
+      },
+      "process": {
+        "returncode": 0,
+        "elapsed_seconds": 348.63704358396353
+      }
+    }
+  ],
+  "prior_local_calls": 20,
+  "new_local_calls": 4,
+  "total_local_calls": 24,
+  "overall_bound": 32,
+  "authorized_cumulative_bound": 24,
+  "retries": 0,
+  "new_API_spend": 0,
+  "request_closed": true,
+  "actual_pages": 0,
+  "adopted": false,
+  "engineering": "source/task/schema acceptance; not professional content acceptance",
+  "independent_review_performed": false,
+  "author_accepted": false,
+  "notes": "No claim of context reduction, full manuscript continuity, or holdout improvement"
+}
