@@ -48,10 +48,12 @@ class _ObservedProvider:
         return deepcopy(self.claims)
 
 
-def _judgment_schema(units):
+def _judgment_schema(units, *, subject=None):
     review = models.load_schema("review_v2")
     finding = deepcopy(review["properties"]["findings"]["items"])
     finding["required"] = list(finding["properties"])
+    if subject == "outline":
+        finding["properties"]["page_id"] = {"type": "null"}
     row = {"type": "object", "additionalProperties": False,
            "required": ["kind", "status", "observations", "findings", "replaces"],
            "properties": {"kind": {"enum": list(units)},
@@ -90,7 +92,7 @@ def _packet(store, task):
 def _envelope(store, document, task, session, observation, units):
     try:
         judgments = json.loads(observation["raw_final_message"])
-        Draft202012Validator(_judgment_schema(units)).validate(judgments)
+        Draft202012Validator(_judgment_schema(units, subject=task.get("review_subject"))).validate(judgments)
     except (ValueError, ValidationError) as exc:
         raise review_evidence.EvidenceRejected("native_review/output", "native final output is not a valid complete review judgment") from exc
     rows = judgments["reviews"]
@@ -443,7 +445,8 @@ def _run(store, *, task_id, force_units=None, subject=None, selected_resource_id
                     owner_refs = {row['review_ref']['sha256'] for row in packet['review_scope']['owners']}
                     prior = [row for row in prior if row['ref']['sha256'] in owner_refs]
                 subject_instruction = ("Independently review only the fixed Narrative and ContentPlan outline, argument and progression. "
-                    "There are no page-copy or visual-production judgments; cite outline nodes and evidence. "
+                    "There are no page-copy or visual-production judgments; every finding page_id must be null. "
+                    "Locate planned pages using role:<page_id> in element_refs and cite outline nodes/topics/evidence. "
                     if subject == 'outline' else "Independently review the complete manuscript against the task, materials, and frozen methods below. ")
                 prompt = (subject_instruction +
                           "Return a judgment for every required unit. Multiple judgments of one unit are allowed only to replace distinct "
@@ -452,7 +455,7 @@ def _run(store, *, task_id, force_units=None, subject=None, selected_resource_id
                           "and use replaces only when actually verifying the corresponding previous review. Never fabricate "
                           "human/professional approval or claim unobserved evidence. JSON input follows:\n" +
                           json.dumps({"packet": packet, "methods": methods["methods"], "prior_reviews": prior}, ensure_ascii=False))
-                observation = session.review(prompt, _judgment_schema(units))
+                observation = session.review(prompt, _judgment_schema(units, subject=subject))
                 if (observation.get("thread_id") != session.thread_id or observation.get("turn_id") != session.turn_id
                         or observation.get("status") != "completed"):
                     raise review_evidence.EvidenceRejected("native_review/completion", "completion does not match the owned native execution")

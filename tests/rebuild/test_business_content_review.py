@@ -251,3 +251,26 @@ def test_full_copy_speech_and_four_unit_review_keep_one_adopted_argument(tmp_pat
     packet=native.calls[-1]['packet'];assert set(packet['required_units'])=={'argument','page_copy','progression','speech'}
     assert packet['narrative']==store.read_object_json(nref) and packet['manuscript']['pages'][0]['speaker_notes']==notes
     doc=store.load_document();assert not any(doc['outputs'].values()) and all(e['blueprint'] is None for e in doc['pages'])
+
+
+def test_native_outline_output_schema_matches_null_page_receiver_contract(tmp_path,native,monkeypatch):
+    from jsonschema import Draft202012Validator
+    finding={'finding_id':'outline-gap','kind':'content','impact':'must_fix','page_id':'p1',
+        'element_refs':['role:p1','topic:handoff'],'message':'Synthetic planned-role finding.',
+        'expected':'A substantive meaning.','actual':'An unsupported interpretation.',
+        'evidence':[{'path':'.deckmaster/objects/aa/'+'a'*64+'.json','sha256':'a'*64}],
+        'resolution':'open','resolution_reason':''}
+    judgment={'reviews':[{'kind':'argument','status':'fail','observations':[],'findings':[finding],'replaces':None}]}
+    assert Draft202012Validator(native_review._judgment_schema(['argument'])).is_valid(judgment)
+    schema=native_review._judgment_schema(['argument'],subject='outline')
+    assert not Draft202012Validator(schema).is_valid(judgment)
+    finding['page_id']=None;Draft202012Validator(schema).validate(judgment)
+    captured=[]
+    class SchemaSession(FixtureSession):
+        def review(self,prompt,contract):
+            captured.append(contract)
+            assert 'page_id must be null' in prompt
+            return super().review(prompt,contract)
+    monkeypatch.setattr(native_review,'CodexReviewSession',SchemaSession)
+    path,_=adopted(tmp_path);native_review.run(path,subject='outline')
+    assert captured[0]['properties']['reviews']['items']['properties']['findings']['items']['properties']['page_id']=={'type':'null'}
