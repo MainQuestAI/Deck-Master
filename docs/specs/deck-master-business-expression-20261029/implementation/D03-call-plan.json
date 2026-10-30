@@ -73,5 +73,12 @@
     "docs/specs/deck-master-business-expression-20261029/evaluation/materials/dev-01.md": "e56e79a10c7e40a87b6f4078827b575a9cdff8be5248e9a0f311ab50d347776a",
     "src/deck_master/native_review.py": "14032d637f21cdd8e4ca173328199ffbee484c01d8c9413a8faaf9822bac0ea1",
     "src/deck_master/native_review_transport.py": "984df2bbc4396d69690e4b82c06c8802817a54a7ae023a7a54bca458166f37bf"
-  }
+  },
+  "review_selected_resource_ids": [
+    "content-m02",
+    "content-m03",
+    "content-m07",
+    "content-m08",
+    "content-m10"
+  ]
 }
