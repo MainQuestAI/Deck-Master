@@ -2,7 +2,7 @@
   "schema_version": "development_index.v1",
   "baseline": "ce4ef8b204dd5033019364ce44979adac7f4243b",
   "date": "2026-10-29",
-  "status": "author_feedback_received",
+  "status": "in_progress",
   "implementation_started": true,
   "evaluation_thresholds": {
     "target": {
@@ -76,7 +76,7 @@
       "title": "固定内容基线与配对任务",
       "path": "task-cards/D00.md",
       "iteration": "I0",
-      "status": "author_feedback_received",
+      "status": "completed",
       "depends_on": [
         "D00a"
       ],
@@ -101,8 +101,11 @@
         },
         {
           "id": "D00-AC03",
-          "status": "not_run",
-          "evidence": []
+          "status": "pass",
+          "evidence": [
+            "evaluation/author-go-20261030.md",
+            "evaluation/review-reconciliation-20261029.md"
+          ]
         },
         {
           "id": "D00-AC04",
@@ -145,7 +148,8 @@
         "evaluation/report-template.md",
         "evaluation/tasks.json",
         "evaluation/triage.py",
-        "evaluation/review-reconciliation-20261029.md"
+        "evaluation/review-reconciliation-20261029.md",
+        "evaluation/author-go-20261030.md"
       ],
       "engineering_evidence": [
         "evaluation/input-triage.json",
@@ -155,10 +159,11 @@
         "evaluation/generation-evidence.json",
         "evaluation/review-reconciliation-20261029.md"
       ],
-      "author_acceptance": [],
+      "author_acceptance": [
+        "evaluation/author-go-20261030.md"
+      ],
       "not_run": [
-        "作者反馈已收到；未保存反馈前初判，不追补；尚无作者go/adjust终判，D00-AC03未关闭",
-        "用户提供四份外部评审，具体模型版本、独立会话和原始调用未核实；未新增本地辅审调用",
+        "未保存反馈前作者初判，不追补；外部评审具体模型版本与独立会话未核实；作者明确接受保留缺项后继续",
         "D08完整稿评测费用未授权，留出未执行"
       ],
       "risks": [
@@ -185,9 +190,10 @@
           "P04": "B"
         },
         "individual_scores": null,
-        "gate_verdict": null,
+        "gate_verdict": "go_with_recorded_deviations",
         "evidence": [
-          "evaluation/review-reconciliation-20261029.md"
+          "evaluation/review-reconciliation-20261029.md",
+          "evaluation/author-go-20261030.md"
         ]
       }
     },
@@ -196,71 +202,118 @@
       "title": "作者策略和业务框架的最小合同",
       "path": "task-cards/D01.md",
       "iteration": "I1",
-      "status": "planned",
+      "status": "completed",
       "depends_on": [
         "D00"
       ],
       "acceptance": [
         {
           "id": "D01-AC01",
-          "status": "not_run",
-          "evidence": []
+          "status": "pass",
+          "evidence": [
+            "implementation/D01-validation.md"
+          ]
         },
         {
           "id": "D01-AC02",
-          "status": "not_run",
-          "evidence": []
+          "status": "pass",
+          "evidence": [
+            "implementation/D01-validation.md"
+          ]
         },
         {
           "id": "D01-AC03",
-          "status": "not_run",
-          "evidence": []
+          "status": "pass",
+          "evidence": [
+            "implementation/D01-validation.md"
+          ]
         },
         {
           "id": "D01-AC04",
-          "status": "not_run",
-          "evidence": []
+          "status": "pass",
+          "evidence": [
+            "implementation/D01-validation.md"
+          ]
         },
         {
           "id": "D01-AC05",
-          "status": "not_run",
-          "evidence": []
+          "status": "pass",
+          "evidence": [
+            "implementation/D01-validation.md"
+          ]
         },
         {
           "id": "D01-AC06",
-          "status": "not_run",
-          "evidence": []
+          "status": "pass",
+          "evidence": [
+            "implementation/D01-validation.md"
+          ]
         },
         {
           "id": "D01-AC07",
-          "status": "not_run",
-          "evidence": []
+          "status": "pass",
+          "evidence": [
+            "implementation/D01-validation.md"
+          ]
         },
         {
           "id": "D01-AC08",
-          "status": "not_run",
-          "evidence": []
+          "status": "pass",
+          "evidence": [
+            "implementation/D01-validation.md"
+          ]
         },
         {
           "id": "D01-AC09",
-          "status": "not_run",
-          "evidence": []
+          "status": "pass",
+          "evidence": [
+            "implementation/D01-validation.md"
+          ]
         }
       ],
-      "implementation_commit": null,
-      "changed_files": [],
-      "engineering_evidence": [],
+      "implementation_commit": "abf3a9149c4d7899a8ab3e8700bf6a14befe7e09",
+      "changed_files": [
+        "src/deck_master/business_framing.py",
+        "src/deck_master/models.py",
+        "src/deck_master/content_production.py",
+        "src/deck_master/dependency_slices.py",
+        "src/deck_master/content_insight.py",
+        "src/deck_master/content_review.py",
+        "src/deck_master/editing.py",
+        "src/deck_master/capabilities.py",
+        "src/deck_master/cli.py",
+        "src/deck_master/service.py",
+        "src/deck_master/store.py",
+        "src/deck_master/resources/contracts/narrative.v2.schema.json",
+        "src/deck_master/resources/contracts/document.v1.schema.json",
+        "tests/rebuild/test_business_framing.py"
+      ],
+      "engineering_evidence": [
+        "implementation/D01-validation.md",
+        "implementation/D01-probe-summary.json",
+        "implementation/D01-consumers.json",
+        "implementation/D01-contract-decisions.md"
+      ],
       "model_evidence": [],
       "author_acceptance": [],
-      "not_run": [],
-      "risks": []
+      "not_run": [
+        "未进行D01新合同的独立模型专业评审或专门作者UI交互；由后续真实生成/作者流程继续验证",
+        "content_impact.v2四态接口已冻结，D05语义分析尚未实施"
+      ],
+      "risks": [
+        "新合同当前为显式--business-framing opt-in；D02b负责新入口和默认选择接线",
+        "服务级内容为D00已确认稿的Host标注，不是新一轮自动生成质量验证"
+      ],
+      "supplemental_commits": [
+        "5593a4817062b11afe503d5ebbba8ad363cb86bb"
+      ]
     },
     {
       "id": "D02",
       "title": "方法选择与成果审查接通",
       "path": "task-cards/D02.md",
       "iteration": "I1",
-      "status": "planned",
+      "status": "in_progress",
       "depends_on": [
         "D02a",
         "D02b"
@@ -303,22 +356,57 @@
         },
         {
           "id": "D02-AC08",
-          "status": "not_run",
-          "evidence": []
+          "status": "pass",
+          "evidence": [
+            "implementation/D02a-validation.md",
+            "implementation/D02a-calibration-r1.json"
+          ]
         },
         {
           "id": "D02-AC09",
-          "status": "not_run",
-          "evidence": []
+          "status": "in_progress",
+          "evidence": [
+            "implementation/D02a-validation.md",
+            "implementation/D02a-method-bytes.json",
+            "implementation/D02a-method-bytes-r2.json"
+          ]
         }
       ],
-      "implementation_commit": null,
-      "changed_files": [],
-      "engineering_evidence": [],
-      "model_evidence": [],
+      "implementation_commit": "7e713582159a3d924941926d6e733faa7538e2ae",
+      "changed_files": [
+        "docs/specs/deck-master-business-expression-20261029/evaluation/calibrate_d02a.py",
+        "docs/specs/deck-master-business-expression-20261029/implementation/D02a-calibration-r1.json",
+        "docs/specs/deck-master-business-expression-20261029/implementation/D02a-call-plan.json",
+        "docs/specs/deck-master-business-expression-20261029/implementation/D02a-method-bytes-r2.json",
+        "docs/specs/deck-master-business-expression-20261029/implementation/D02a-method-bytes.json",
+        "docs/specs/deck-master-business-expression-20261029/implementation/D02a-validation.md",
+        "skills/deck-master/references/content-methods.md",
+        "skills/deck-master/references/method-review.md",
+        "skills/deck-master/references/method-selection.md",
+        "skills/deck-master/references/methods/M01-framing.md",
+        "skills/deck-master/references/methods/M02-structured-analysis.md",
+        "skills/deck-master/references/methods/M07-synthesis.md",
+        "skills/deck-master/references/methods/M08-narrative.md",
+        "skills/deck-master/references/narrative-patterns.md"
+      ],
+      "engineering_evidence": [
+        "implementation/D02a-validation.md",
+        "implementation/D02a-method-bytes.json",
+        "implementation/D02a-method-bytes-r2.json",
+        "implementation/D02a-call-plan.json"
+      ],
+      "model_evidence": [
+        "implementation/D02a-calibration-r1.json"
+      ],
       "author_acceptance": [],
-      "not_run": [],
-      "risks": []
+      "not_run": [
+        "R2文本修订尚无模型验证；D02b创建与审查选卡接线未启动",
+        "未进行独立内容辅审或新一轮作者终判；D08留出未运行"
+      ],
+      "risks": [
+        "R1会员首提弱化现有流程替代，售后竞标独立演示挤占交付和验证；D02a保持调整中",
+        "文本增加实际依赖字节，没有上下文减负结论"
+      ]
     },
     {
       "id": "D03",
@@ -740,7 +828,7 @@
       "depends_on": [
         "D00a"
       ],
-      "status": "author_feedback_received",
+      "status": "completed",
       "conditional_depends_on": [
         {
           "work_unit": "X01",
@@ -759,7 +847,8 @@
         "evaluation/freeze.json",
         "evaluation/generation-evidence.json",
         "evaluation/execution-report.md",
-        "evaluation/review-reconciliation-20261029.md"
+        "evaluation/review-reconciliation-20261029.md",
+        "evaluation/author-go-20261030.md"
       ]
     },
     {
@@ -768,7 +857,7 @@
       "depends_on": [
         "D00"
       ],
-      "status": "planned",
+      "status": "completed",
       "acceptance_ids": [
         "D01-AC01",
         "D01-AC02",
@@ -779,6 +868,16 @@
         "D01-AC07",
         "D01-AC08",
         "D01-AC09"
+      ],
+      "evidence": [
+        "implementation/D01-validation.md",
+        "implementation/D01-probe-summary.json",
+        "implementation/D01-consumers.json",
+        "implementation/D01-contract-decisions.md"
+      ],
+      "implementation_commit": "abf3a9149c4d7899a8ab3e8700bf6a14befe7e09",
+      "supplemental_commits": [
+        "5593a4817062b11afe503d5ebbba8ad363cb86bb"
       ]
     },
     {
@@ -787,12 +886,21 @@
       "depends_on": [
         "D00"
       ],
-      "status": "planned",
+      "status": "in_progress",
       "deliverable": "方法文本校准、实际方法作用及字节/内容对照，沿 D00 合法对象验证",
       "acceptance_ids": [
         "D02-AC08",
         "D02-AC09"
-      ]
+      ],
+      "evidence": [
+        "implementation/D02a-validation.md",
+        "implementation/D02a-method-bytes.json",
+        "implementation/D02a-call-plan.json",
+        "implementation/D02a-calibration-r1.json",
+        "implementation/D02a-method-bytes-r2.json"
+      ],
+      "implementation_commit": "7e713582159a3d924941926d6e733faa7538e2ae",
+      "content_gate": "adjust_required"
     },
     {
       "id": "D02b",
@@ -970,5 +1078,17 @@
   "dependency_semantics": "depends_on 引用 work_units；conditional_depends_on 仅在条件成立时加边。卡条目镜像其收口单元；工作单元 acceptance_ids 是 AC 唯一验收归属。",
   "execution_base": "035845f228d1ba4cd7fc9b41cdedd8fd734043df",
   "execution_started_at": "2026-10-29",
-  "current_gate": "D00: qualitative author alignment with Kimi received; reconcile review findings; author go/adjust and full review evidence not recorded"
+  "current_gate": "D00 author go recorded; D01 engineering complete; D02a R1 four calls complete, content adjustment required, R2 text ready and four-call reallocation awaiting answer; D02b and downstream planned",
+  "updated_at": "2026-10-30",
+  "calibration_budget": {
+    "overall_subscription_bound": 32,
+    "I0_calls_used": 16,
+    "D02a_R1_calls_used": 4,
+    "total_used": 20,
+    "remaining_unassigned": 12,
+    "R2_requested_calls": 4,
+    "R2_authorization": "pending",
+    "new_API_spend_allowed": 0,
+    "D08_calls_authorized": false
+  }
 }
