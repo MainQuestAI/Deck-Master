@@ -1,0 +1,12 @@
+{
+  "failure": "JSONDecodeError: Extra data at line 985, character 36642",
+  "action": "extract the unique complete leading JSON object; remove only one trailing unmatched brace outside it",
+  "model_retry": false,
+  "extra_model_calls": 0,
+  "raw_sha256": "ba37e1719e4c6966c1a73827c4c5a0e1700bdb52a78eb212807cd720583eeefa",
+  "raw_chars": 36643,
+  "accepted_object_chars": 36641,
+  "discarded_suffix": "\n}",
+  "payload_content_changed": false,
+  "accepted_json_sha256": "27982f12dfdd8c6ab924f2d95684beeb2ecc43db241c8adf6752185a37d10973"
+}

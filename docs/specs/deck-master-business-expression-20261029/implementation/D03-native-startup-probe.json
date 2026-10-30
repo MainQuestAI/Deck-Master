@@ -1,0 +1,12 @@
+{
+  "status": "actual_native_startup_verified",
+  "model": "gpt-6.1-sol",
+  "native_provider": "openai",
+  "sandbox": "readOnly",
+  "network_access": false,
+  "approval_policy": "never",
+  "turn_started": false,
+  "model_called": false,
+  "execution_ref": "codex-native:01a18b08-8c7b-7321-9884-cc07ddda32f1",
+  "evidence_scope": "startup only, not an independent content review"
+}
