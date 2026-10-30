@@ -1,0 +1,274 @@
+{
+  "date": "2026-10-30",
+  "status": "engineering_complete_content_review_pending",
+  "scope": "D02b new v2/minimal-context development calibration; no holdout",
+  "implementation_base": "042ecaad2b5949421e5756e4883ad236f2bd3a71",
+  "calls": [
+    {
+      "number": 25,
+      "sample": "dev-01-first_proposal",
+      "phase": "framing",
+      "prompt_sha256": "aa885e56fc108eae89396c777cac5744c8c8f5895efe3853aeb97e3f5afb64fd",
+      "prompt_bytes": 50958,
+      "call_plan_sha256": "4b83904dd32efa894b4c19dfe99932d68ed059faa785904c5ee14bbba3e936a6",
+      "requested_model_id": "gpt-6.1-sol",
+      "status": "accepted",
+      "response_sha256": "bc75994680317071cb72da17e52344e544e7a9d46de869c697b9c1a1eb99a3d6",
+      "receipt_sha256": "7669bd6e118470059823d0e355688ddca4854988895c50d055fefdac3cc7242d",
+      "methods_utf8_bytes": 29127,
+      "source_links_verified": 13,
+      "node_count": 16,
+      "planned_page_count": 0,
+      "topic_names": [
+        "把活动对象说清并形成可用名单",
+        "让总部权益规则进入门店执行",
+        "让店长依据已有记录安排跟进",
+        "用活动明细复盘执行过程",
+        "用有限试点判断是否值得继续"
+      ],
+      "method_application_refs": [
+        {
+          "task_id": "10f405cb5e37",
+          "method_id": "content-m01",
+          "sha256": "c36cf34aac28cb2cbb5a590c20360c399ed8bf262a9c7cb9bf3445ddb9a1f9c1",
+          "result_pointer": "/business_strategy"
+        },
+        {
+          "task_id": "10f405cb5e37",
+          "method_id": "content-m01",
+          "sha256": "c36cf34aac28cb2cbb5a590c20360c399ed8bf262a9c7cb9bf3445ddb9a1f9c1",
+          "result_pointer": "/issues"
+        }
+      ],
+      "usage": {
+        "input_tokens": 39568,
+        "cached_input_tokens": 12288,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 12140,
+        "reasoning_output_tokens": 1552
+      },
+      "process": {
+        "returncode": 0,
+        "elapsed_seconds": 254.45449408399872
+      }
+    },
+    {
+      "number": 26,
+      "sample": "dev-02-competitive_bid",
+      "phase": "framing",
+      "prompt_sha256": "a50096f543e185d12d2fc6db622165c3279b195654e8307e2ad6abcc9aec53d4",
+      "prompt_bytes": 50871,
+      "call_plan_sha256": "4b83904dd32efa894b4c19dfe99932d68ed059faa785904c5ee14bbba3e936a6",
+      "requested_model_id": "gpt-6.1-sol",
+      "status": "accepted",
+      "response_sha256": "56f63666c3ff2e1f262659412bc1e1d3cd08ef7ea630b0775f4394b014a5ee6c",
+      "receipt_sha256": "d64fd6f44a0f23ca53b969a1a7fd5cc9da176b543a08bf9486c05a9d80df0d1b",
+      "methods_utf8_bytes": 29127,
+      "source_links_verified": 14,
+      "node_count": 16,
+      "planned_page_count": 0,
+      "topic_names": [
+        "需求覆盖与新增适用性映射",
+        "检索操作与例外交接",
+        "版本、权限与专家责任",
+        "限定范围验证与交付依赖",
+        "验收依据与待确认承诺"
+      ],
+      "method_application_refs": [
+        {
+          "task_id": "f01e3dbd8ecf",
+          "method_id": "content-m01",
+          "sha256": "c36cf34aac28cb2cbb5a590c20360c399ed8bf262a9c7cb9bf3445ddb9a1f9c1",
+          "result_pointer": "/business_strategy"
+        },
+        {
+          "task_id": "f01e3dbd8ecf",
+          "method_id": "content-m01",
+          "sha256": "c36cf34aac28cb2cbb5a590c20360c399ed8bf262a9c7cb9bf3445ddb9a1f9c1",
+          "result_pointer": "/issues"
+        }
+      ],
+      "usage": {
+        "input_tokens": 39547,
+        "cached_input_tokens": 12288,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 12229,
+        "reasoning_output_tokens": 1552
+      },
+      "process": {
+        "returncode": 0,
+        "elapsed_seconds": 268.0242573749856
+      }
+    },
+    {
+      "number": 27,
+      "sample": "dev-01-first_proposal",
+      "phase": "argument",
+      "prompt_sha256": "2c6cd7778578ea325006d3e8240c6d59720e65eb911271f2c543828e51b36944",
+      "prompt_bytes": 107678,
+      "call_plan_sha256": "4b83904dd32efa894b4c19dfe99932d68ed059faa785904c5ee14bbba3e936a6",
+      "requested_model_id": "gpt-6.1-sol",
+      "status": "accepted",
+      "response_sha256": "de61456a4274cf518cbd9aa356987ec98cba7e20be7f6c30561128fbbd5ea23f",
+      "receipt_sha256": "31f0544ba046f2df92e1e51c0487c230ded3bf9e33717cc84a5fbaafe95aa651",
+      "methods_utf8_bytes": 49781,
+      "source_links_verified": 37,
+      "node_count": 20,
+      "planned_page_count": 6,
+      "topic_names": [
+        "形成有明确口径的活动名单",
+        "把总部权益规则交给门店执行",
+        "让已有记录支持店长安排跟进",
+        "按活动与门店核对执行过程",
+        "比较工作路线并限定两店验证"
+      ],
+      "method_application_refs": [
+        {
+          "task_id": "c0342ab79520",
+          "method_id": "content-m02",
+          "sha256": "ccd78062cd61ba22ff3e6160dcf3e6f3e6f17d20a02d95e4a9b95ba3d6d2d4b1",
+          "result_pointer": "/business_strategy/rationale"
+        },
+        {
+          "task_id": "c0342ab79520",
+          "method_id": "content-m02",
+          "sha256": "ccd78062cd61ba22ff3e6160dcf3e6f3e6f17d20a02d95e4a9b95ba3d6d2d4b1",
+          "result_pointer": "/nodes/15"
+        },
+        {
+          "task_id": "c0342ab79520",
+          "method_id": "content-m07",
+          "sha256": "6416f7982602184ecaa73abf9f745d60ee574381c46a5d250cfd2e080d4a825c",
+          "result_pointer": "/business_frame"
+        },
+        {
+          "task_id": "c0342ab79520",
+          "method_id": "content-m07",
+          "sha256": "6416f7982602184ecaa73abf9f745d60ee574381c46a5d250cfd2e080d4a825c",
+          "result_pointer": "/nodes/0"
+        },
+        {
+          "task_id": "c0342ab79520",
+          "method_id": "content-m04",
+          "sha256": "cd52c74a319cf30ade75fd029c3476636d4b4b6f9db2eadffdc5f746dd815bf9",
+          "result_pointer": "/nodes/14"
+        },
+        {
+          "task_id": "c0342ab79520",
+          "method_id": "content-m04",
+          "sha256": "cd52c74a319cf30ade75fd029c3476636d4b4b6f9db2eadffdc5f746dd815bf9",
+          "result_pointer": "/nodes/16"
+        },
+        {
+          "task_id": "c0342ab79520",
+          "method_id": "content-m08",
+          "sha256": "92784f1716d2e46d5e777ff4e6da9b4fa83b9b47b93017b262ab1cd7637ac178",
+          "result_pointer": "/business_strategy/rationale"
+        },
+        {
+          "task_id": "c0342ab79520",
+          "method_id": "content-m08",
+          "sha256": "92784f1716d2e46d5e777ff4e6da9b4fa83b9b47b93017b262ab1cd7637ac178",
+          "result_pointer": "/alternatives"
+        }
+      ],
+      "usage": {
+        "input_tokens": 56502,
+        "cached_input_tokens": 12288,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 22773,
+        "reasoning_output_tokens": 2070
+      },
+      "process": {
+        "returncode": 0,
+        "elapsed_seconds": 462.44082762498874
+      }
+    },
+    {
+      "number": 28,
+      "sample": "dev-02-competitive_bid",
+      "phase": "argument",
+      "prompt_sha256": "32b123e2e81501c96f38e362606773b81fbcd4b566d653d7c028696d1191eae2",
+      "prompt_bytes": 110666,
+      "call_plan_sha256": "4b83904dd32efa894b4c19dfe99932d68ed059faa785904c5ee14bbba3e936a6",
+      "requested_model_id": "gpt-6.1-sol",
+      "status": "accepted",
+      "response_sha256": "af926a51f07efa097503aaae4e2900605e084a92c1902cd5707d328201d5ace0",
+      "receipt_sha256": "56e118cab610e36d1b35c8b6f72cd91c4cd751e65dd5472bb8b85012c51add8a",
+      "methods_utf8_bytes": 54265,
+      "source_links_verified": 36,
+      "node_count": 22,
+      "planned_page_count": 6,
+      "topic_names": [
+        "需求覆盖与承诺边界",
+        "设备条件与手册适用",
+        "资料更新与专家承接",
+        "授权输入与访问行为",
+        "建设依赖与移交",
+        "需求验证与待定承诺"
+      ],
+      "method_application_refs": [
+        {
+          "task_id": "c7c60222aa3a",
+          "method_id": "content-m02",
+          "sha256": "ccd78062cd61ba22ff3e6160dcf3e6f3e6f17d20a02d95e4a9b95ba3d6d2d4b1",
+          "result_pointer": "/business_strategy/rationale"
+        },
+        {
+          "task_id": "c7c60222aa3a",
+          "method_id": "content-m07",
+          "sha256": "6416f7982602184ecaa73abf9f745d60ee574381c46a5d250cfd2e080d4a825c",
+          "result_pointer": "/business_frame"
+        },
+        {
+          "task_id": "c7c60222aa3a",
+          "method_id": "content-m03",
+          "sha256": "159b046b28b4e7c82a291bb50a9e8126754a007688cb61203189bae4898b6ff5",
+          "result_pointer": "/nodes/16"
+        },
+        {
+          "task_id": "c7c60222aa3a",
+          "method_id": "content-m03",
+          "sha256": "159b046b28b4e7c82a291bb50a9e8126754a007688cb61203189bae4898b6ff5",
+          "result_pointer": "/nodes/17"
+        },
+        {
+          "task_id": "c7c60222aa3a",
+          "method_id": "content-m03",
+          "sha256": "159b046b28b4e7c82a291bb50a9e8126754a007688cb61203189bae4898b6ff5",
+          "result_pointer": "/nodes/19"
+        },
+        {
+          "task_id": "c7c60222aa3a",
+          "method_id": "content-m08",
+          "sha256": "92784f1716d2e46d5e777ff4e6da9b4fa83b9b47b93017b262ab1cd7637ac178",
+          "result_pointer": "/business_strategy/rationale"
+        }
+      ],
+      "usage": {
+        "input_tokens": 57659,
+        "cached_input_tokens": 12288,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 23767,
+        "reasoning_output_tokens": 3106
+      },
+      "process": {
+        "returncode": 0,
+        "elapsed_seconds": 555.9850795000093
+      }
+    }
+  ],
+  "prior_local_calls": 24,
+  "new_local_calls": 4,
+  "total_local_calls": 28,
+  "overall_bound": 32,
+  "authorized_cumulative_bound": 28,
+  "retries": 0,
+  "new_API_spend": 0,
+  "request_closed": true,
+  "actual_pages": 0,
+  "adopted": false,
+  "engineering": "v2/source/basis/application-ref acceptance is not professional semantic approval",
+  "independent_review_performed": false,
+  "author_accepted": false
+}

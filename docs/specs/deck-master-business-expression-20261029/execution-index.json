@@ -335,9 +335,12 @@
         },
         {
           "id": "D02-AC03",
-          "status": "in_progress",
+          "status": "pass",
           "evidence": [
-            "implementation/D02b-validation.md"
+            "implementation/D02b-validation.md",
+            "implementation/D02b-calibration-r1-engineering.json",
+            "implementation/D02b-calibration-r1-review.json",
+            "implementation/D02b-host-correction.json"
           ]
         },
         {
@@ -356,9 +359,12 @@
         },
         {
           "id": "D02-AC06",
-          "status": "in_progress",
+          "status": "pass",
           "evidence": [
-            "implementation/D02b-validation.md"
+            "implementation/D02b-validation.md",
+            "implementation/D02b-calibration-r1-engineering.json",
+            "implementation/D02b-calibration-r1-review.json",
+            "implementation/D02b-host-correction.json"
           ]
         },
         {
@@ -428,21 +434,27 @@
         "implementation/D02b-validation.md",
         "implementation/D02b-method-bytes.json",
         "implementation/D02b-probe-summary.json",
-        "implementation/D02b-call-plan.json"
+        "implementation/D02b-call-plan.json",
+        "implementation/D02b-host-correction.json"
       ],
       "model_evidence": [
         "implementation/D02a-calibration-r1.json",
         "implementation/D02a-calibration-r2-engineering.json",
-        "implementation/D02a-calibration-r2-review.json"
+        "implementation/D02a-calibration-r2-review.json",
+        "implementation/D02b-calibration-r1-engineering.json",
+        "implementation/D02b-calibration-r1-review.json"
       ],
       "author_acceptance": [],
       "not_run": [
-        "D02b新版合同与缩小上下文的四次真实内容校准运行中",
-        "未进行D02b新独立专业评审或作者UI验收；D08未运行"
+        "D02专业验收仍待I1真实作者工作流和后续审查；未新增独立native专业审查调用",
+        "未运行D08留出、正文/口播贯穿或发布验收"
       ],
       "risks": [
-        "R2两固定开发任务的已知缺口已落实，不外推整体方法优越",
-        "D02b实际字节下降，内容效果尚待真实校准；不把字节下降当作验收"
+        "会员原始v2稿有一项导出前提未充分说明，已单列Host修订一项六处；不能称为纯模型无修订通过",
+        "本轮仅两个固定任务，无新盲评/留出，实际字节下降不外推整体质量与商业效果"
+      ],
+      "supplemental_commits": [
+        "25a96d335bdb9ccdaed87759fb89dac4ac33daeb"
       ]
     },
     {
@@ -630,7 +642,7 @@
       "title": "作者任务和框架工作流",
       "path": "task-cards/D06.md",
       "iteration": "I1–I3",
-      "status": "planned",
+      "status": "in_progress",
       "depends_on": [
         "D06a",
         "D06b"
@@ -943,8 +955,8 @@
       "implementation_commit": "7e713582159a3d924941926d6e733faa7538e2ae",
       "content_gate": "text_ready_for_wiring_not_professional_signoff",
       "supplemental_commits": [
-        "3e830e24",
-        "ac805029"
+        "3e830e2404c8370cbb2898c1d6387d4e078accee",
+        "ac8050298f09b8cee80337b6ac2bb197717abd09"
       ]
     },
     {
@@ -954,7 +966,7 @@
         "D01",
         "D02a"
       ],
-      "status": "in_progress",
+      "status": "completed",
       "deliverable": "创建、后续阶段及审查入口到 freeze 的选卡参数链",
       "acceptance_ids": [
         "D02-AC01",
@@ -970,9 +982,15 @@
         "implementation/D02b-validation.md",
         "implementation/D02b-method-bytes.json",
         "implementation/D02b-probe-summary.json",
-        "implementation/D02b-call-plan.json"
+        "implementation/D02b-call-plan.json",
+        "implementation/D02b-calibration-r1-engineering.json",
+        "implementation/D02b-calibration-r1-review.json",
+        "implementation/D02b-host-correction.json"
       ],
-      "content_gate": "live_v2_calibration_running"
+      "content_gate": "ready_for_D06a_with_recorded_Host_qualification_not_professional_signoff",
+      "supplemental_commits": [
+        "25a96d335bdb9ccdaed87759fb89dac4ac33daeb"
+      ]
     },
     {
       "id": "D02",
@@ -981,7 +999,7 @@
         "D02a",
         "D02b"
       ],
-      "status": "planned",
+      "status": "in_progress",
       "acceptance_ids": []
     },
     {
@@ -991,7 +1009,7 @@
         "D01",
         "D02b"
       ],
-      "status": "planned",
+      "status": "in_progress",
       "deliverable": "I1 任务输入、框架阅读、真实修正/采用与恢复；合法持久化对象连接后端，不等待 D03 框架生成",
       "acceptance_ids": [
         "D06-AC01",
@@ -1131,13 +1149,13 @@
   "dependency_semantics": "depends_on 引用 work_units；conditional_depends_on 仅在条件成立时加边。卡条目镜像其收口单元；工作单元 acceptance_ids 是 AC 唯一验收归属。",
   "execution_base": "035845f228d1ba4cd7fc9b41cdedd8fd734043df",
   "execution_started_at": "2026-10-29",
-  "current_gate": "D02b v2/minimal-context four-call validation: requests 25-26 framing in flight, two argument requests reserved by authorization; D06a planned",
+  "current_gate": "D02b engineering and v2 development calibration complete with one recorded Host qualification; D02 professional acceptance open; D06a author workflow in progress; model calls 28/32, four remaining unassigned",
   "updated_at": "2026-10-30",
   "calibration_budget": {
     "overall_subscription_bound": 32,
     "I0_calls_used": 16,
     "D02a_R1_calls_used": 4,
-    "total_used": 26,
+    "total_used": 28,
     "remaining_unassigned": 4,
     "R2_requested_calls": 4,
     "R2_authorization": "用户明确回复：再分配 4 次验证第二轮",
@@ -1149,9 +1167,9 @@
     "R2_calls_completed": 4,
     "R2_calls_in_flight": 0,
     "D02b_authorized_calls": 4,
-    "D02b_calls_used": 2,
+    "D02b_calls_used": 4,
     "D02b_authorization": "用户于2026-10-30明确回复：分配 4 次验证 D02b",
-    "D02b_calls_in_flight": 2,
-    "D02b_calls_completed": 0
+    "D02b_calls_in_flight": 0,
+    "D02b_calls_completed": 4
   }
 }
