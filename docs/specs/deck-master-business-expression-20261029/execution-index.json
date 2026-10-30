@@ -321,38 +321,52 @@
       "acceptance": [
         {
           "id": "D02-AC01",
-          "status": "not_run",
-          "evidence": []
+          "status": "pass",
+          "evidence": [
+            "implementation/D02b-validation.md"
+          ]
         },
         {
           "id": "D02-AC02",
-          "status": "not_run",
-          "evidence": []
+          "status": "pass",
+          "evidence": [
+            "implementation/D02b-validation.md"
+          ]
         },
         {
           "id": "D02-AC03",
-          "status": "not_run",
-          "evidence": []
+          "status": "in_progress",
+          "evidence": [
+            "implementation/D02b-validation.md"
+          ]
         },
         {
           "id": "D02-AC04",
-          "status": "not_run",
-          "evidence": []
+          "status": "pass",
+          "evidence": [
+            "implementation/D02b-validation.md"
+          ]
         },
         {
           "id": "D02-AC05",
-          "status": "not_run",
-          "evidence": []
+          "status": "pass",
+          "evidence": [
+            "implementation/D02b-validation.md"
+          ]
         },
         {
           "id": "D02-AC06",
-          "status": "not_run",
-          "evidence": []
+          "status": "in_progress",
+          "evidence": [
+            "implementation/D02b-validation.md"
+          ]
         },
         {
           "id": "D02-AC07",
-          "status": "not_run",
-          "evidence": []
+          "status": "pass",
+          "evidence": [
+            "implementation/D02b-validation.md"
+          ]
         },
         {
           "id": "D02-AC08",
@@ -376,7 +390,7 @@
           ]
         }
       ],
-      "implementation_commit": "7e713582159a3d924941926d6e733faa7538e2ae",
+      "implementation_commit": "042ecaad2b5949421e5756e4883ad236f2bd3a71",
       "changed_files": [
         "docs/specs/deck-master-business-expression-20261029/evaluation/calibrate_d02a.py",
         "docs/specs/deck-master-business-expression-20261029/implementation/D02a-calibration-r1.json",
@@ -391,13 +405,30 @@
         "skills/deck-master/references/methods/M02-structured-analysis.md",
         "skills/deck-master/references/methods/M07-synthesis.md",
         "skills/deck-master/references/methods/M08-narrative.md",
-        "skills/deck-master/references/narrative-patterns.md"
+        "skills/deck-master/references/narrative-patterns.md",
+        "skills/deck-content/SKILL.md",
+        "skills/deck-master/SKILL.md",
+        "skills/deck-review/SKILL.md",
+        "src/deck_master/cli.py",
+        "src/deck_master/collaboration_binding.py",
+        "src/deck_master/content_production.py",
+        "src/deck_master/content_review.py",
+        "src/deck_master/method_library_view.py",
+        "src/deck_master/method_resources.py",
+        "src/deck_master/native_review.py",
+        "src/deck_master/outline_review.py",
+        "src/deck_master/web.py",
+        "tests/rebuild/test_business_method_dispatch.py"
       ],
       "engineering_evidence": [
         "implementation/D02a-validation.md",
         "implementation/D02a-method-bytes.json",
         "implementation/D02a-method-bytes-r2.json",
-        "implementation/D02a-call-plan.json"
+        "implementation/D02a-call-plan.json",
+        "implementation/D02b-validation.md",
+        "implementation/D02b-method-bytes.json",
+        "implementation/D02b-probe-summary.json",
+        "implementation/D02b-call-plan.json"
       ],
       "model_evidence": [
         "implementation/D02a-calibration-r1.json",
@@ -406,12 +437,12 @@
       ],
       "author_acceptance": [],
       "not_run": [
-        "D02b创建与审查选卡接线待实施；没有新增独立内容辅审或R2作者终判",
-        "未运行D08留出或新合同自动生成质量验证；正文、讲稿尚未生成"
+        "D02b新版合同与缩小上下文的四次真实内容校准运行中",
+        "未进行D02b新独立专业评审或作者UI验收；D08未运行"
       ],
       "risks": [
-        "R2解决两个固定开发任务的已知缺口；不外推方法整体优越或客户接受",
-        "实际依赖字节增加，没有上下文减负结论；D02b复验新版打包字节"
+        "R2两固定开发任务的已知缺口已落实，不外推整体方法优越",
+        "D02b实际字节下降，内容效果尚待真实校准；不把字节下降当作验收"
       ]
     },
     {
@@ -910,7 +941,11 @@
         "implementation/D02a-calibration-r2-review.json"
       ],
       "implementation_commit": "7e713582159a3d924941926d6e733faa7538e2ae",
-      "content_gate": "text_ready_for_wiring_not_professional_signoff"
+      "content_gate": "text_ready_for_wiring_not_professional_signoff",
+      "supplemental_commits": [
+        "3e830e24",
+        "ac805029"
+      ]
     },
     {
       "id": "D02b",
@@ -929,7 +964,15 @@
         "D02-AC05",
         "D02-AC06",
         "D02-AC07"
-      ]
+      ],
+      "implementation_commit": "042ecaad2b5949421e5756e4883ad236f2bd3a71",
+      "evidence": [
+        "implementation/D02b-validation.md",
+        "implementation/D02b-method-bytes.json",
+        "implementation/D02b-probe-summary.json",
+        "implementation/D02b-call-plan.json"
+      ],
+      "content_gate": "live_v2_calibration_running"
     },
     {
       "id": "D02",
@@ -1088,22 +1131,27 @@
   "dependency_semantics": "depends_on 引用 work_units；conditional_depends_on 仅在条件成立时加边。卡条目镜像其收口单元；工作单元 acceptance_ids 是 AC 唯一验收归属。",
   "execution_base": "035845f228d1ba4cd7fc9b41cdedd8fd734043df",
   "execution_started_at": "2026-10-29",
-  "current_gate": "D02a R2 four calls complete, two known content gaps resolved in development Host check; method text ready for D02b wiring; D02/I1 professional acceptance open; no further model calls authorized",
+  "current_gate": "D02b v2/minimal-context four-call validation: requests 25-26 framing in flight, two argument requests reserved by authorization; D06a planned",
   "updated_at": "2026-10-30",
   "calibration_budget": {
     "overall_subscription_bound": 32,
     "I0_calls_used": 16,
     "D02a_R1_calls_used": 4,
-    "total_used": 24,
-    "remaining_unassigned": 8,
+    "total_used": 26,
+    "remaining_unassigned": 4,
     "R2_requested_calls": 4,
     "R2_authorization": "用户明确回复：再分配 4 次验证第二轮",
     "new_API_spend_allowed": 0,
     "D08_calls_authorized": false,
     "R2_authorized_calls": 4,
     "R2_calls_used": 4,
-    "authorized_cumulative_bound": 24,
+    "authorized_cumulative_bound": 28,
     "R2_calls_completed": 4,
-    "R2_calls_in_flight": 0
+    "R2_calls_in_flight": 0,
+    "D02b_authorized_calls": 4,
+    "D02b_calls_used": 2,
+    "D02b_authorization": "用户于2026-10-30明确回复：分配 4 次验证 D02b",
+    "D02b_calls_in_flight": 2,
+    "D02b_calls_completed": 0
   }
 }
