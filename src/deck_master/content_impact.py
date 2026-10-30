@@ -9,6 +9,7 @@ unresolved issues / review findings keep their existing channels.
 from __future__ import annotations
 
 from .models import canonical_json_bytes, sha256_bytes
+from .store import StoreError
 
 
 def _source_index(document) -> dict[str, dict]:
@@ -64,11 +65,17 @@ def _page_source_links(page) -> list[dict]:
     return found
 
 
-def _affected_pages(store, document, plan, source_ids) -> tuple[list[str], list[dict]]:
+def _affected_pages(store, document, plan, source_ids, *, unreadable=None) -> tuple[list[str], list[dict]]:
     affected: list[str] = []
     detail: list[dict] = []
     for entry in document.get("pages") or []:
-        page = store.read_object_json(entry["page"])
+        try:
+            page = store.read_object_json(entry["page"])
+        except (OSError, ValueError, StoreError):
+            if unreadable is None:
+                raise
+            unreadable.append(entry['page_id'])
+            continue
         linked = [link for link in _page_source_links(page)
                   if link["source_id"] in source_ids]
         if linked:
@@ -140,7 +147,11 @@ def analyze_input_change(store, before, after) -> dict:
         except Exception:  # noqa: BLE001
             plan = None
     node_ids, node_links = _affected_narrative_nodes(store, after, touched)
-    page_ids, page_detail = _affected_pages(store, after, plan, touched)
+    from .business_recompile import enabled, project_impact
+    business = enabled(store, after)
+    unreadable = []
+    page_ids, page_detail = _affected_pages(store, after, plan, touched,
+        unreadable=unreadable if business else None)
     task_fields = sorted(
         key for key in set(before.get("task") or {}) | set(after.get("task") or {})
         if (before.get("task") or {}).get(key) != (after.get("task") or {}).get(key))
@@ -169,7 +180,7 @@ def analyze_input_change(store, before, after) -> dict:
         "claims": impact["affected_claims"],
         "pages": impact["affected_pages"],
     }))
-    return impact
+    return project_impact(store, before, after, impact, unreadable) if business else impact
 
 
 def impact_summary_text(impact: dict) -> str:
@@ -189,6 +200,13 @@ def impact_summary_text(impact: dict) -> str:
         parts.append("受影响 claim：" + ", ".join(impact["affected_claims"]))
     if impact["affected_pages"]:
         parts.append("受影响页面：" + ", ".join(impact["affected_pages"]))
-    else:
+    elif impact.get('schema_version') != 'content_impact.v2':
         parts.append("没有页面直接引用变化的来源")
+    if impact.get('schema_version') == 'content_impact.v2':
+        labels = {'needs_reassessment': '需要重新判断', 'reusable_after_review': '复核后可复用',
+                  'unverified': '尚未核验'}
+        for state, label in labels.items():
+            ids = [item['page_id'] for item in impact['page_assessments'] if item['state'] == state]
+            if ids:
+                parts.append(label + '：' + ', '.join(ids))
     return "；".join(parts)

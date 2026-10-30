@@ -8,6 +8,18 @@ export const inputField = (label, value = '', rows = 3) => {
   return {input, node:el('label', {class:'stack'}, label, input)};
 };
 
+// A source miss in historical v1 is still unverified, never reviewed reuse.
+export function inputImpactView(info, pages = []) {
+  if (!info) return null;
+  const labels = {affected:'确定受影响', needs_reassessment:'需要重新判断', reusable_after_review:'复核后可复用', unverified:'尚未核验'};
+  const rows = info.schema_version === 'content_impact.v2' ? info.page_assessments || [] : [
+    ...(info.affected_pages || []).map(page_id => ({page_id,state:'affected'})),
+    ...(info.unaffected_pages || []).map(page_id => ({page_id,state:'unverified'}))];
+  return el('div', {class:'stack','aria-label':'内容影响判断'}, el('strong', {}, '内容影响判断'),
+    el('p', {}, '策略变化先复核实际内容；保留页面需要具体依据，不默认整套重写或可复用。'),
+    el('ul', {}, rows.map(row => el('li', {}, `${pages.find(p => p.page_id === row.page_id)?.title || row.page_id}：${labels[row.state] || labels.unverified}${row.reason ? '；'+row.reason : ''}`))));
+}
+
 // Compare with the fixed formal plan, never a restored or later edited draft.
 export function contentPlanDifferences(plan, next, pages, sources = []) {
   const changes = [], previous = plan?.input || plan || {};
@@ -53,6 +65,9 @@ export function contentOperation(app, slot, read, hydrate, ref, onDone, {onPlanC
         if (disposed) return;
         pending = null; impact.replaceChildren();
         receipt.hidden=false;receipt.textContent = result.status === 'dispatched' || result.pending_tasks?.length ? '已保存，内容仍待制作工具阅读并判断影响。' : `修改已保存到 ${version(result.revision_id)}；保留的原图需按新内容核对。`;
+        const inputImpact = inputImpactView(result.content_impact, app.summary.pages);
+        if (inputImpact) receipt.append(inputImpact, actionGroup(button('查看待协调任务', () => app.go({surface:'runs',revision:result.revision_id,
+          task_id:result.pending_tasks?.length === 1 ? result.pending_tasks[0].task_id : null,runs_area:'tasks'}))));
         if (canonical(read()) === typed) onDone?.(result);
         else receipt.append(el('span', {}, '后写输入仍保留在原基准草稿中。'), actionGroup(button('查看已保存版本', () => app.go({revision:result.revision_id}))));
       });

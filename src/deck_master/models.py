@@ -40,6 +40,7 @@ SCHEMA_FILES = {
     "collaboration_authorization": "collaboration-authorization.v1.schema.json",
     "narrative": "narrative.v1.schema.json",
     "narrative_v2": "narrative.v2.schema.json",
+    "content_impact_v2": "content-impact.v2.schema.json",
     "content_plan_input_v2": "content-plan-input.v2.schema.json",
     "content_plan_v2": "content-plan.v2.schema.json",
     "compose_result_v2": "compose-result.v2.schema.json",
@@ -603,7 +604,7 @@ def validate_compose_result_semantics(result: dict[str, Any]) -> None:
 WRITER_RANK = {None: 0, "generation.v1": 1, "content-plan.v1": 2,
                "changes.v1": 3, "candidates.v1": 4, "run-desk.v1": 5, "style-recipes.v1": 6, "content-ops.v1": 7,
                "content-candidates.v1": 8, "icon-quality.v1": 9, "workbench-quality.v1": 10,
-               "collaboration.v1": 11, "rc3.v1": 12, "rc3-entry.v1": 13, "rc4-content.v1": 14, "method-catalog.v1": 15, "design-policy.v1": 16, "asset-inputs.v1": 17, "original-review.v1": 18, "settled-image-reuse.v1": 19, "outline-review.v1": 20, "business-framing.v1": 21, "business-review.v1": 22}
+               "collaboration.v1": 11, "rc3.v1": 12, "rc3-entry.v1": 13, "rc4-content.v1": 14, "method-catalog.v1": 15, "design-policy.v1": 16, "asset-inputs.v1": 17, "original-review.v1": 18, "settled-image-reuse.v1": 19, "outline-review.v1": 20, "business-framing.v1": 21, "business-review.v1": 22, "business-recompile.v1": 23}
 
 
 def require_writer(document, minimum):

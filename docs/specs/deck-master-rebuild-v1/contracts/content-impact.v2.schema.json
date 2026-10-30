@@ -1,0 +1,201 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "content_impact.v2 frozen input projection; not a semantic reuse approval",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "changed_task_fields",
+    "changed_sources",
+    "affected_claims",
+    "claim_links",
+    "affected_pages",
+    "page_links",
+    "unresolved_items",
+    "open_findings",
+    "estimated",
+    "note",
+    "has_impact",
+    "impact_digest",
+    "basis",
+    "strategy_reassessment_required",
+    "page_assessments"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "content_impact.v2"
+    },
+    "changed_task_fields": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "changed_sources": {
+      "type": "object",
+      "required": [
+        "added",
+        "removed",
+        "changed"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "changed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "affected_claims": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "claim_links": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "affected_pages": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "page_links": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "unresolved_items": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "open_findings": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "estimated": {
+      "const": false
+    },
+    "note": {
+      "type": "string"
+    },
+    "has_impact": {
+      "type": "boolean"
+    },
+    "impact_digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "basis": {
+      "type": "object",
+      "required": [
+        "before_input_digest",
+        "after_input_digest",
+        "narrative_ref",
+        "plan_ref",
+        "task_before",
+        "task_after"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "before_input_digest": {
+          "type": "string"
+        },
+        "after_input_digest": {
+          "type": "string"
+        },
+        "narrative_ref": {
+          "anyOf": [
+            {
+              "$ref": "collaboration.v1.schema.json#/$defs/ref"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "plan_ref": {
+          "anyOf": [
+            {
+              "$ref": "collaboration.v1.schema.json#/$defs/ref"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "task_before": {
+          "type": "object"
+        },
+        "task_after": {
+          "type": "object"
+        }
+      }
+    },
+    "strategy_reassessment_required": {
+      "type": "boolean"
+    },
+    "page_assessments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "page_id",
+          "state",
+          "reason_codes",
+          "evidence_refs"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "page_id": {
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "affected",
+              "needs_reassessment",
+              "reusable_after_review",
+              "unverified"
+            ]
+          },
+          "reason_codes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "$ref": "collaboration.v1.schema.json#/$defs/ref"
+            }
+          }
+        }
+      }
+    }
+  }
+}

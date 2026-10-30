@@ -47,6 +47,7 @@ REQUIRED_BASIS: dict[tuple[str, str], tuple[tuple[str, str, str], ...]] = {
     ("task", "page_copy"): (("task_fact", "brief", "value"),
                              ("task_fact", "page_limit", "value")),
     ("task", "speech"): (("task_fact", "presentation_mode", "value"),),
+    ("task", "input_revision"): tuple(("task_fact", field, "value") for field in TASK_FACT_IDENTITIES),
 }
 
 

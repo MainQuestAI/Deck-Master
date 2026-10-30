@@ -121,6 +121,8 @@ export function content(app, data) {
     if(adjustDetails&&!adjustDetails.hidden)openMaterialEditor(editKind,editSourceId,editTrigger);
   }
   operation=contentOperation(app,'content_sources',read,hydrate,ref,result=>{
+    // Keep the actual input-impact projection visible before navigating away.
+    if (result.content_impact) return;
     if (result.task_ids?.length || result.pending_tasks?.length) {
       const ids = result.task_ids || result.pending_tasks.map(task => task.task_id);
       app.go({surface:'runs',revision:result.revision_id,task_id:ids.length === 1 ? ids[0] : null,runs_area:'tasks'});

@@ -390,14 +390,15 @@ class Store:
                 from .models import require_writer
                 document = copy.deepcopy(document)
                 require_writer(document, 'business-framing.v1')
-        if WRITER_RANK.get(document.get('compatibility', {}).get('minimum_writer'), -1) < WRITER_RANK['business-review.v1']:
-            prior = self.load_document(base_revision) if base_revision else {}
-            old_refs = {(ref['path'], ref['sha256']) for ref in prior.get('tasks', [])}
-            if any('business-review.v1' in classified(ref).get('required_capabilities', [])
-                   for ref in document.get('tasks', []) if (ref['path'], ref['sha256']) not in old_refs):
-                from .models import require_writer
-                document = copy.deepcopy(document)
-                require_writer(document, 'business-review.v1')
+        for writer in ('business-review.v1', 'business-recompile.v1'):
+            if WRITER_RANK.get(document.get('compatibility', {}).get('minimum_writer'), -1) < WRITER_RANK[writer]:
+                prior = self.load_document(base_revision) if base_revision else {}
+                old_refs = {(ref['path'], ref['sha256']) for ref in prior.get('tasks', [])}
+                if any(writer in classified(ref).get('required_capabilities', [])
+                       for ref in document.get('tasks', []) if (ref['path'], ref['sha256']) not in old_refs):
+                    from .models import require_writer
+                    document = copy.deepcopy(document)
+                    require_writer(document, writer)
         if (WRITER_RANK.get(document.get("compatibility", {}).get("minimum_writer"), -1)
                 < WRITER_RANK["rc4-content.v1"] and
                 any("method_manifest" in classified(ref) for ref in document.get("tasks") or [])):

@@ -216,7 +216,8 @@ def open_phase_task(store, document, *, operation_id: str, intent: str = "initia
 def build_phase_task(store, document, *, operation_id: str, intent: str = "initial",
                      input_revision_id: str | None = None, phase: str | None = None,
                      adoption_policy: str | None = None, page_ids=None,
-                     instruction: str | None = None, selected_resource_ids=None, business_framing=False) -> dict:
+                     instruction: str | None = None, selected_resource_ids=None, business_framing=False,
+                     input_impact=None) -> dict:
     """Build (without committing) one compose.v2 phase task.
 
     Callers that already own a project transaction — ``inputs_update`` records
@@ -286,14 +287,18 @@ def build_phase_task(store, document, *, operation_id: str, intent: str = "initi
             '本 Task 冻结的方法/hash 与实际结果 JSON pointer；对本次内容方法或案例说明所处理的具体问题，'
             '关联实际主张、框架、取舍或页序；未采用时在策略理由或相关未决项中说明具体原因，不伪造应用引用。'
             '基础协议和来源规程不要求逐项打卡；不以资源返回冒充应用或审查通过。')
+    from .business_recompile import bind_task
+    bind_task(store, document, task, input_impact)
     topics = collaboration_binding.phase_decision_topics(phase)
     binding = collaboration_binding.build_binding(
         store, document, phase=phase, executor_type="host", write_scope=write_scope,
         adoption_policy=policy,
         basis=([dependency_slices.make_dependency_slice(store, document, kind='task_fact', identity=field,
                                                        projection='value')
-                for field in ('brief', 'audience', 'scenario', 'existing_decisions')]
-               if CAPABILITY in task['required_capabilities'] else None),
+                for field in (tuple(item[1] for item in dependency_slices.required_basis('task', 'input_revision'))
+                    if 'business-recompile.v1' in task['required_capabilities']
+                    else ('brief', 'audience', 'scenario', 'existing_decisions'))]
+               if CAPABILITY in task['required_capabilities'] or 'business-recompile.v1' in task['required_capabilities'] else None),
         decision_refs=collaboration_binding.decision_refs_for(store, document, topics))
     task["collaboration_binding"] = binding
     if phase in (PAGE_COPY, SPEECH) and intent != 'input_revision':
@@ -1406,6 +1411,8 @@ def _accept_input_revision(store, *, document, task, envelope, payload, produced
                            result_digest, staged):
     request = _validate_input_revision_request(store, document, task, payload)
     changes = _derive_input_revision_changes(store, document, task, request)
+    from .business_recompile import validate_reconciliation
+    validate_reconciliation(store, document, task, changes)
     from .candidates import is_trial
     finish = _record_input_revision_trial if is_trial(task) else _adopt_input_revision
     return finish(store, document=document, task=task, envelope=envelope, changes=changes,
@@ -1810,6 +1817,8 @@ def _adopt_input_revision(store, *, document, task, envelope, changes,
         response={"status": "accepted", "revision_id": updated["revision_id"], "variant": "input_revision",
             "adopted": True, "changed_layers": changed_layers, "narrative_ref": narrative_ref,
             'impact_summary': summary.strip(),
+            **({'page_assessments': changes.request.diff['page_assessments']}
+               if 'business-recompile.v1' in task.get('required_capabilities', []) else {}),
             **({'unchanged_reason': virtual_update['unchanged_reason']} if 'unchanged_reason' in virtual_update else {}),
             'new_page_hashes': {entry['page_id']: entry['page']['sha256'] for entry in new_pages if entry['page_id'] in changed_pages},
             "plan_ref": updated.get("content_plan"), "page_refs": [entry["page"] for entry in new_pages],

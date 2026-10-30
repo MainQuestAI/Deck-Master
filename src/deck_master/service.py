@@ -262,7 +262,8 @@ def revision_compose_task(store: Store, document, *, operation_id, reason, impac
             instruction += f" 影响分析：{impact_summary_text(impact)}。"
         return build_phase_task(
             store, document, operation_id=_new_operation_id("compose"), intent="input_revision",
-            input_revision_id=operation_id, instruction=instruction, selected_resource_ids=selected_resource_ids)
+            input_revision_id=operation_id, instruction=instruction, selected_resource_ids=selected_resource_ids,
+            input_impact=impact)
     return _input_compose_task(document, operation_id=operation_id, reason=reason, store=store, selected_resource_ids=selected_resource_ids)
 
 
@@ -1859,7 +1860,10 @@ def inputs_update(
                 new_document["tasks"][index] = store.put_json_object(
                     {**task, "status": "superseded", "updated_at": _utc_now_iso()})
         from .content_impact import analyze_input_change
-        content_impact_result = analyze_input_change(store, document, new_document)
+        from .business_recompile import enabled, pending_impact
+        content_impact_result = (pending_impact(store, new_document) if enabled(store, new_document) else None)
+        if content_impact_result is None:
+            content_impact_result = analyze_input_change(store, document, new_document)
         task = revision_compose_task(store, new_document, operation_id=operation_id,
                                      reason=normalized["reason"], impact=content_impact_result,
                                      selected_resource_ids=selected_resource_ids)
@@ -1985,7 +1989,7 @@ def accept_result(
                 "variant", "adopted", "changed_layers", "page_refs", "plan_ref", "narrative_ref", "proposal_refs",
                 "adopted_refs", "invalidated_refs", "invalidated_outputs", "invalidated_reviews",
                 "effective_scope", "plan_note", "page_count", "creates_confirmation",
-                "authorizes_production"):
+                "authorizes_production", "page_assessments"):
         if key in outcome:
             response[key] = outcome[key]
     if response_protocol:
