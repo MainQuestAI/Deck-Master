@@ -81,8 +81,8 @@ def _current_artifact_digests(store, doc, extra_subjects=()):
             # state is written to the Store and legacy file hashes stay intact.
             if role == 'narrative':
                 body = {k: obj.get(k) for k in ('communication_job',
-                        'central_node_id', 'nodes', 'edges', 'issues', 'alternatives',
-                        'business_strategy', 'business_frame')}
+                        'central_node_id', 'nodes', 'edges', 'issues', 'alternatives')}
+                body.update({k: obj[k] for k in ('business_strategy', 'business_frame') if k in obj})
                 body['nodes'] = [{k: v for k, v in node.items() if k != 'source_links'}
                                  for node in obj.get('nodes') or []]
                 body['issues'] = [{k: v for k, v in issue.items()

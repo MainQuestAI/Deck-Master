@@ -20,10 +20,14 @@ P01-A 的导出能力越前表述在新副本的节点与对应计划职责中�
 
 - D01 原指定三文件先收集用例；现有相关四文件首次运行 59 passed。
 - 新增 `test_business_framing.py`，19 项行为检查覆盖 strict v1/v2、引用完整性、旧 Host 拒绝、虚假方法绑定、只读不提级、旧 core 拒绝新指针、限定职责不重开策划、取消保护、原请求关闭后的新有界请求及两步采用间输入变化。
-- 最终相关回归（19 个文件）313 passed，17.72s：新合同、content contracts、dependency slices、collaboration binding、compose phases、content plan、insight、preproduction、RC4 review、outline、package boundary、RC5 selection/catalog、RC3 content methods、design workflows/requirements、request source identity、method preparation、selective review。
+- 相关回归（19 个文件）313 passed，17.72s：新合同、content contracts、dependency slices、collaboration binding、compose phases、content plan、insight、preproduction、RC4 review、outline、package boundary、RC5 selection/catalog、RC3 content methods、design workflows/requirements、request source identity、method preparation、selective review。
 - Ruff 与 `git diff --check` 通过。测试中使用明确合成的机制输入，不将测试 fixture 作为生产或 benchmark 回退。
 
 首次新测试中的异常类型、空指针访问和 Plan projection 预期有误，已按现有真实接口修正；未放宽产品校验。业务合约仍强制注册 projection，并保留真实 Host/决定/basis/CAS 检查。
+
+后续收口修正保留 v1 实质修复摘要的原有字节语义，仅当新字段存在时加入摘要；取消检查实际覆盖已 claim 后取消、再提交晚到结果。晚到结果可正常结算调用事实，但不能发布内容；测试不再错误要求整个 revision 不变。此后相关定向回归 94 passed，6.20s，Ruff 通过。
+
+最终代码与 R2 方法文本上复验上述 19 文件：313 passed，19.23s；`calibrate_d02a.py`、新增合同模块、editing 及新增测试的 Ruff 通过。
 
 ## AC 证据对应
 

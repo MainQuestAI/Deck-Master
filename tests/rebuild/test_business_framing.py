@@ -205,15 +205,26 @@ def test_bounded_work_cannot_opt_into_replanning(tmp_path, intent, content_inten
     assert not target.exists()
 
 
-def test_claimed_v2_cancelled_result_cannot_publish_or_upgrade_legacy_history(tmp_path):
+def test_cancelled_v2_keeps_content_while_recording_late_result(tmp_path):
     path, store = project(tmp_path, business_framing=True)
     task = pending(store)
+    service.task_start(path, task_id=task['task_id'], execution_ref='cancelled-v2-host',
+        supported_protocols=['compose.v2'], capabilities=task['required_capabilities'])
     service.task_cancel(path, task_id=task['task_id'], reason='synthetic author cancelled before result')
-    before = store.current_revision_id()
+    before = store.load_document()
     from deck_master.tasks import TaskConflict
     with pytest.raises(TaskConflict):
-        submit(path, store, task, v2(store.load_document()['project_id'], task=task, maturity='framing'))
-    assert store.current_revision_id() == before
+        service.accept_result(path, task_id=task['task_id'], operation_id=task['operation_id'],
+            produced_against=task['produced_against'], result_payload={'schema_version': 'compose_result.v2',
+                'kind': 'compose', 'variant': 'framing', 'task_id': task['task_id'], 'operation_id': task['operation_id'],
+                'produced_against': task['produced_against'],
+                'eligibility_digest': task['collaboration_binding']['eligibility_digest'],
+                'payload': {'narrative': v2(store.load_document()['project_id'], task=task, maturity='framing')},
+                'usage_events': []})
+    after = store.load_document()
+    assert after.get('narrative') == before.get('narrative') and after.get('content_plan') == before.get('content_plan')
+    assert after['pages'] == before['pages']
+    assert store.read_object_json(after['tasks'][-1])['status'] == 'cancelled'
     assert not content_insight.arguments(path)['data']['items']
 
 
