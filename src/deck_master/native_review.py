@@ -295,7 +295,7 @@ def _failure(store, task, executor, exc):
         service._commit_task_update(store, document, current, updated, "native independent review failed")
 
 
-def run(project, *, task_id=None, force_units=None, subject=None):
+def run(project, *, task_id=None, force_units=None, subject=None, selected_resource_ids=None):
     """Run native review, optionally selecting current units for explicit re-review."""
     store = Store(Path(project).expanduser())
     # A derived operation lock prevents double-clicks/reconnects from issuing a
@@ -308,7 +308,8 @@ def run(project, *, task_id=None, force_units=None, subject=None):
             fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
             return {"status": "running", "next_action": "read current task status; do not launch another native review"}
-        return _run(store, task_id=task_id, force_units=force_units, subject=subject)
+        return _run(store, task_id=task_id, force_units=force_units, subject=subject,
+                    selected_resource_ids=selected_resource_ids)
     finally:
         os.close(handle)
 
@@ -341,10 +342,12 @@ def _session_with_startup_history(store, revision_id):
         session.__exit__(None, None, None)
 
 
-def _run(store, *, task_id, force_units=None, subject=None):
+def _run(store, *, task_id, force_units=None, subject=None, selected_resource_ids=None):
     document = store.load_document()
     if subject not in (None, 'outline'):
         raise review_evidence.EvidenceRejected('native_review/subject', 'unsupported review subject')
+    if task_id and selected_resource_ids is not None:
+        raise review_evidence.EvidenceRejected('selected_resource_ids', 'frozen Task methods cannot be supplemented; use formal reissue')
     from . import outline_review
     if task_id:
         selected = tasks._lookup_task(document, task_id, store)
@@ -380,15 +383,26 @@ def _run(store, *, task_id, force_units=None, subject=None):
         raise review_evidence.EvidenceRejected("native_review/task_id", "select one of the existing preproduction review tasks")
     else:
         task = candidates[0] if candidates else None
+    if task and selected_resource_ids is not None:
+        raise review_evidence.EvidenceRejected('selected_resource_ids', 'pending review methods are frozen; use formal reissue')
     if task and task["status"] == "running":
         return {"status": "running", "task_id": task["task_id"],
                 "next_action": "inspect the existing execution; cancel it explicitly if interrupted before retrying"}
     recoverable = recovery_task_ids(store, document, subject=subject)
     if recoverable:
+        if selected_resource_ids is not None:
+            raise review_evidence.EvidenceRejected('selected_resource_ids', 'recover the original frozen review before selecting methods')
         return {'status': 'recovery_available', 'task_ids': recoverable,
                 'next_action': 'Use review recover --project <project> --task-id <id>; do not repeat the native call.'}
     if gate["status"] == "pass" and not forced and not task_id and task is None:
+        if selected_resource_ids is not None:
+            raise review_evidence.EvidenceRejected('selected_resource_ids', 'select review units for a new review before choosing methods')
         return {"status": "already_reviewed", "preproduction": gate}
+    if selected_resource_ids is not None:
+        units = sorted(set(gate['missing_units']) | {row['kind'] for row in gate['blocking_findings']} | set(forced))
+        method_resources.method_resources('review', intent='preproduction', phase='review', review_units=units,
+            selected_resource_ids=selected_resource_ids,
+            business_framing=models.writer_at_least(document, 'business-framing.v1'))
     with _session_with_startup_history(store, document["revision_id"]) as session:
         provider = _ObservedProvider(session)
         registry = review_evidence.ProviderRegistry()
@@ -397,7 +411,8 @@ def _run(store, *, task_id, force_units=None, subject=None):
             if task is None:
                 dispatch = outline_review.dispatch if subject == 'outline' else content_review.dispatch_preproduction_review
                 dispatched = dispatch(store.project_root,
-                    adapter_context=registry.channel_context(), force_units=force_units)
+                    adapter_context=registry.channel_context(), force_units=force_units,
+                    selected_resource_ids=selected_resource_ids)
                 if not dispatched.get("task"):
                     return dispatched
                 task = dispatched["task"]

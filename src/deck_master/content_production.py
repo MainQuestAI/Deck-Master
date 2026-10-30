@@ -280,7 +280,9 @@ def build_phase_task(store, document, *, operation_id: str, intent: str = "initi
         task['instruction'] += (' 本任务要求 narrative.v2：原始指令仍在 task；business_strategy 记录作者任务、重点与取舍，'
             'business_frame 记录可展开业务主题和需求/能力/场景/约束节点对应。framing 可不形成框架；argument 必须形成框架。'
             'input_basis 绑定本 Task 的 brief、audience、scenario、existing_decisions。method_applications 只引用'
-            '本 Task 冻结的方法/hash 与实际结果 JSON pointer；不以资源返回冒充应用或审查通过。')
+            '本 Task 冻结的方法/hash 与实际结果 JSON pointer；对本次内容方法或案例说明所处理的具体问题，'
+            '关联实际主张、框架、取舍或页序；未采用时在策略理由或相关未决项中说明具体原因，不伪造应用引用。'
+            '基础协议和来源规程不要求逐项打卡；不以资源返回冒充应用或审查通过。')
     topics = collaboration_binding.phase_decision_topics(phase)
     binding = collaboration_binding.build_binding(
         store, document, phase=phase, executor_type="host", write_scope=write_scope,

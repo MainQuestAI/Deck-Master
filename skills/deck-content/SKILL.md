@@ -11,13 +11,13 @@ description: 独立策划、论证、逐页写稿和口播：只做策划、按�
 
 ## Do not use when
 
-只要视觉方案/样页用 Design；只读检查用 Review；要整套作品或跨职责恢复用 Master。已确认稿且只照稿设计时，不强制重建 Narrative。
+只要视觉方案/样页用 Design；只读检查用 Review；要整套作品或跨职责恢复用 Master。已确认稿且只照稿设计时，不强制重建 Narrative。新策划使用 `create --business-framing`；冻结前可用 `methods --business-framing --phase framing|argument --read` 或 `read_skill_methods(..., business_framing=True)` 读取新版起步指引，选择由 Host 根据任务完成，不要求普通作者选择方法编号。
 
 ## 方法与允许产物
 
 读取工作单冻结的基础方法和本次选中方法卡/案例；缺资源时沿正式重派发路径补齐，不在同一冻结 Task 私加文件。按认知缺口选择分析、论证、权衡、叙事或教学操作，先形成成立的内容，再按 page-writing 写完整正文。案例不是客户事实，数字脚本仅检查显式算式；说明页和教学页不强制结论标题或商业 CTA。
 
-实际读取工作单指定的 source-reading、content-methods、content-examples，前审再读 content-calibration。区分事实、推论、建议、未知和权威版本；建立受众的起点、目标、论证关系、页间推进与必要限定。完整表格/流程/例子应承载具体业务对象、归属、条件与异常，不能只有标签、泛化小卡片或用备注藏关键限定。
+实际读取工作单冻结的 source-reading、content-methods 及本次方法；content-examples 或具体案例仅在本 Task 清单包含时读取，前审按实际清单读取 content-calibration。区分事实、推论、建议、未知和权威版本；建立受众的起点、目标、论证关系、页间推进与必要限定。完整表格/流程/例子应承载具体业务对象、归属、条件与异常，不能只有标签、泛化小卡片或用备注藏关键限定。
 
 同一 Runtime request.intent=content_only，下列子意图分别独立接纳，不压为一次不可检查全稿：
 
@@ -64,7 +64,7 @@ deck_master_cli = [str(python), "-I", "-m", "deck_master"]
 四入口共享 [路由与恢复方法](../deck-master/references/collaboration-routing.md)，内容/设计/审查方法只有 `deck-master/references` 一处 canonical；不复制到其他 Skill。
 存在 Task 时，`resolve_task_methods(task)` 返回的冻结有序 `method_manifest` / `method_resources` 是唯一准确清单，逐条读取其真实 path/SHA；上文方法名称是职责提示，不得另加当前角色默认方法。旧 Task 仅按冻结 RC3 selector 与原 digest 可证明的依据读取，不静默补新 Review 方法。`basis_changed`、缺文件或 hash 不符须保留原 Task/草稿，通过 Runtime continue 正式退役并重新派发，先结清未决调用，沿用真实 scope 和授权。新 manifest/policy 持久事实要求 `rc4-content.v1`，只读和旧结果精确重放不升级历史。
 
-用该发布版 Python 调用 `method_resources.read_skill_methods`，传本角色、`entry_mode=named|natural|master|recovery`、真实 project/task_id；自然路由另传原始 text。无 Task 的职责入口按实际 scope selector 返回清单，不自己拼第二套方法。前审涉及 argument/page_copy/progression/speech 时，消费实际范围的完整方法并集，包含 source-reading、content-methods、content-examples、content-calibration、review-and-repair；纯视觉审查按其实际范围读取，不扩大生产权限。
+用该发布版 Python 调用 `method_resources.read_skill_methods`，传本角色、`entry_mode=named|natural|master|recovery`、真实 project/task_id；自然路由另传原始 text。无 Task 的职责入口按实际 scope selector 返回清单，不自己拼第二套方法。前审涉及 argument/page_copy/progression/speech 时，消费实际范围与冻结 manifest 的完整方法并集；新版业务策划不强制携带 content-examples，案例按具体缺口在冻结前选择并展开完整依赖。旧 Task 保留原清单，纯视觉审查按其实际范围读取，不扩大生产权限。
 
 先读 `capabilities.read_protocols`；支持时可用 `read_protocol="work_context.v2", body_mode="full"`，未协商仍是 v1。v2 full 默认返回完整方法和来源，保留全部 Page/notes/限定、原图 refs/尺寸和物理约束；manifest 的 `context_ready=false` 不能执行为上下文已齐。delta 只省略当前受信适配器实际观察到的同一 Host session/context generation 可取回字节；新会话/压缩后或缺观察按冷 full，CLI cache offer 本身不能证明会话。可随时 full 重新取回。
 

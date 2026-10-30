@@ -23,8 +23,11 @@ def catalog():
 
 
 def preview(project, request):
-    if not isinstance(request, dict) or set(request) - {'context', 'selected_resource_ids', 'expected_basis'}:
+    if not isinstance(request, dict) or set(request) - {'context', 'selected_resource_ids', 'expected_basis', 'business_framing'}:
         fail('Invalid preview fields')
+    business_framing = request.get('business_framing', False)
+    if type(business_framing) is not bool:
+        fail('business_framing must be a boolean preparation option')
     ctx = request.get('context'); chosen = request.get('selected_resource_ids')
     if not isinstance(ctx, dict) or not isinstance(chosen, list) or len(chosen) > 100 or any(not isinstance(i, str) for i in chosen):
         fail('Provide context and registered resource IDs')
@@ -52,9 +55,12 @@ def preview(project, request):
         status, dispatch, valid = 'read_only', 'not_applicable', True
         basis = {'context': ctx}
     elif ctx.get('mode') == 'project':
+        if 'business_framing' in request:
+            fail('Project preparation uses the actual project contract; do not override it')
         if set(ctx) != {'mode', 'revision'} or not isinstance(ctx['revision'], str) or not ctx['revision']:
             fail('Project preparation requires a fixed revision')
         store, doc = snapshot(project, ctx['revision'])
+        business_framing = models.writer_at_least(doc, 'business-framing.v1')
         project_id, revision = doc['project_id'], doc['revision_id']
         work = (doc.get('collaboration') or {}).get('request') or {}
         role, kind, intent = 'deck-content', 'compose', work.get('content_intent')
@@ -83,6 +89,8 @@ def preview(project, request):
         basis = {'context': ctx, 'request': work, 'phase': phase_state, 'pending': pending, 'reasons': reasons}
     else:
         fail('Unknown preview mode')
+    if business_framing:
+        basis['business_framing'] = True
     context_digest = digest(basis)
     expected = request.get('expected_basis')
     if expected is not None and expected != {'catalog_digest': catalog_digest, 'context_digest': context_digest}:
@@ -91,10 +99,15 @@ def preview(project, request):
     if valid:
         try:
             selected = select(rows, chosen, role=role, kind=kind, phase=phase, review_units=units)
-            defaults = list(methods.method_ids_for(kind, intent=intent, phase=phase)) if kind else list(
-                ('collaboration-routing', *methods.method_ids_for('review', review_units=units))
-                if role == 'deck-review' else ('collaboration-routing', *methods.method_ids_for('compose', phase=phase))
-                if role == 'deck-content' and phase else methods._ROLE_METHODS[role])
+            defaults = list(methods.method_ids_for(kind, intent=intent, phase=phase,
+                business_framing=business_framing)) if kind else list(
+                ('collaboration-routing', *methods.method_ids_for('review', review_units=units,
+                    business_framing=business_framing))
+                if role == 'deck-review' else ('collaboration-routing', *methods.method_ids_for('compose', phase=phase,
+                    business_framing=business_framing))
+                if role == 'deck-content' and phase else methods.role_method_ids(role, business_framing=business_framing))
+            if business_framing:
+                defaults = list(select(rows, defaults, role=role, kind=kind, phase=phase, review_units=units))
             ids = list(dict.fromkeys([*defaults, *selected]))
             dependencies = [i for i in selected if i not in chosen and i not in defaults]
         except ValueError as exc:
@@ -139,6 +152,11 @@ def preview(project, request):
                      'preview_endpoint': '/api/method-library/preview',
                      'resource_endpoint': '/api/method-library/resources/{id}',
                      'instructions': '重新执行 preview_request 并核对 preview_digest，再按返回 catalog_digest/sha256 读取每个资源。已有 Task 必须读其冻结工作单，不得用此准备覆盖 manifest。'}}
+    if business_framing:
+        handoff['effective_context']['business_framing'] = True
+        if ctx['mode'] == 'independent':
+            handoff['preview_request']['business_framing'] = True
+            handoff['recovery']['business_framing'] = True
     text = ('方法准备，尚未应用；不是任务派发或生产许可。请制作工具先重新核对项目版本、请求、范围和资源字节，再按正式流程处理。\n'
             + f'职责：{role}；阶段：{phase or "未确定"}；审阅范围：{", ".join(units or []) or "不适用"}。\n'
             + ('独立阅读，不绑定项目，不产生派发许可。\n' if ctx['mode'] == 'independent'

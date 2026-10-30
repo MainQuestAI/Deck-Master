@@ -84,7 +84,7 @@ def packet(store, document, units=None):
     return value
 
 
-def dispatch(project, *, adapter_context=None, force_units=None):
+def dispatch(project, *, adapter_context=None, force_units=None, selected_resource_ids=None):
     from . import service, eligibility
     store = Store(project)
     document = store.load_document()
@@ -96,12 +96,16 @@ def dispatch(project, *, adapter_context=None, force_units=None):
     from .native_review import recovery_task_ids
     recoverable = recovery_task_ids(store, document, subject='outline')
     if recoverable:
+        if selected_resource_ids is not None:
+            raise models.ModelError('selected_resource_ids', 'recover the frozen review; selection requires formal reissue')
         return {'status': 'recovery_available', 'task_ids': recoverable, 'outline': gate,
                 'next_action': 'recover the original operation before creating or executing another review'}
     from .tasks import task_inputs_current
     pending = [task for ref in document.get('tasks', [])
                if (task := store.read_object_json(ref)).get('review_subject') == 'outline'
                and task.get('status') in ('running', 'awaiting_host', 'queued')]
+    if pending and selected_resource_ids is not None:
+        raise models.ModelError('selected_resource_ids', 'pending review methods are frozen; use formal reissue')
     for task in pending:
         if (task_inputs_current(store, document, task)
                 and {row['kind'] for row in task.get('review_units', [])} == set(units)):
@@ -111,6 +115,10 @@ def dispatch(project, *, adapter_context=None, force_units=None):
                 'outline': gate, 'next_action': 'query original execution and operation; retire stale task before reissue'}
     if not units:
         return {'status': 'already_reviewed', 'outline': gate}
+    from .method_resources import method_resources
+    method_resources('review', intent='preproduction', phase='review', review_units=units,
+        selected_resource_ids=selected_resource_ids,
+        business_framing=models.writer_at_least(document, 'business-framing.v1'))
     eligibility.guard(store, document, 'dispatch.host_task',
         context={'targets': review_targets(store, document)})
     value = packet(store, document, units)
@@ -124,5 +132,5 @@ def dispatch(project, *, adapter_context=None, force_units=None):
         instruction=value['instruction'], extra_inputs=[store.put_json_object(value)],
         executor_type='external_reviewer' if independent else 'host',
         review_units=[{'kind': unit, 'page_ids': [], 'reason': 'missing'} for unit in units],
-        phase='review', base_revision=document['revision_id'])
+        phase='review', base_revision=document['revision_id'], selected_resource_ids=selected_resource_ids)
     return {'status': 'review_dispatched', 'task': task, 'outline': gate}

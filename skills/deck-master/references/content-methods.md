@@ -25,7 +25,7 @@
 - [method-selection](method-selection.md)：选择与停止条件；M01–M10 分别承载界定、分析、论证、机制、选项、压测、综合、叙事、教学与压缩操作。
 - [page-writing](page-writing.md)：完整可见正文、表格、图内文字与必要限定；制作注释放 internal_only，理解必需的信息不藏 notes。
 - [narrative-patterns](narrative-patterns.md) 与 [writing-profiles](writing-profiles.md)：候选顺序和表达侧重；不强制结论标题、商业 CTA 或固定信息密度。
-- [content-examples](content-examples.md)：短例与六套完整案例索引；全部合成，不是当前客户事实或产品实测结果。
+- [content-examples](content-examples.md)：按需选用的短例与六套完整案例索引；全部合成，不是当前客户事实或产品实测结果。此处导航不产生额外必读清单；实际 Task 只读其冻结 manifest，案例依赖按 catalog 完整展开。
 - [method-review](method-review.md) 与 [content-calibration](content-calibration.md)：按实际来源和正文查论证与推进。Content 在允许范围内完成返修；Review 保持只读。
 
 以上链接是导航，不授权绕过冻结清单直接读取。需要额外资源时通过 Runtime 正式选择/重派发，保存准确字节和当前范围。普通数字检查只证明算式一致；工程通过、模型审阅与人类认可分开记录。
@@ -68,7 +68,7 @@ Task 明确要求 `business-framing.v1` 时按活动 `narrative.v2` 合同产出
 
 ### 完整稿与浅稿的区别
 
-对照 content-examples 四类完整页例，按用途写全单元格、条件、责任、异常、动作与含义。每个实质页能说明“删掉会丢什么、下一页回答什么”；有用途的总结和教学复习可保留。矩阵各格不能都写“高效”，侧栏解释差异/例外/含义，不仅换词复述主图。
+按用途写全单元格、条件、责任、异常、动作与含义；需要示范时在冻结前选择相应案例，对照其完整内容，不要求所有任务都携带案例。每个实质页能说明“删掉会丢什么、下一页回答什么”；有用途的总结和教学复习可保留。矩阵各格不能都写“高效”，侧栏解释差异/例外/含义，不仅换词复述主图。
 
 Narrative、Plan 与 Page 表达同一主线，保留事实到来源与 atom/notes 的映射。只有提出尚未验证的效果、收益或投资回报主张，或当前任务需要据收益作决定时，才说明假设、适用条件及验证办法；单纯解释能力、机制或操作不机械追加“未实测”或收益测量段。必要业务限定在正文，notes 不藏核心论证，内部来源定位、作者核验过程与制作说明留内部追溯或 internal_only，不默认上屏。预算不是加字或缩字的授权。
 

@@ -452,7 +452,7 @@ def validate_force_units(store, document, force_units):
 
 
 def dispatch_preproduction_review(project, *, page_ids=None, adapter_context=None,
-                                  instruction=None, force_units=None) -> dict:
+                                  instruction=None, force_units=None, selected_resource_ids=None) -> dict:
     """Open the preproduction review task, or return an honest needs_reviewer.
 
     ``needs_reviewer`` carries the reviewable draft (the packet) so the caller
@@ -475,6 +475,17 @@ def dispatch_preproduction_review(project, *, page_ids=None, adapter_context=Non
     units = sorted(set(status['missing_units']) | {row['kind'] for row in status['blocking_findings']} | set(forced))
     if not units:
         return {'status': 'already_reviewed', 'stage': STAGE, 'units': [], 'preproduction': status}
+    from .method_resources import method_resources
+    if selected_resource_ids is not None:
+        from .native_review import recovery_task_ids
+        if recovery_task_ids(store, document) or any(
+                (task := store.read_object_json(ref)).get('kind') == 'review'
+                and task.get('review_stage') == STAGE and task.get('review_subject') is None
+                and task['status'] in ('queued', 'awaiting_host', 'running') for ref in document['tasks']):
+            raise ModelError('selected_resource_ids', 'pending/recovery review methods are frozen; use formal reissue')
+    method_resources('review', intent=STAGE, phase='review', review_units=units,
+        selected_resource_ids=selected_resource_ids,
+        business_framing=models.writer_at_least(document, 'business-framing.v1'))
     packet = build_review_packet(store, document, page_ids=pages, required=units,
                                  requirement=state["effective"])
     packet['review_scope'] = {'units': units, 'owners': _review_scope_owners(store, document, units, pages)}
@@ -502,7 +513,7 @@ def dispatch_preproduction_review(project, *, page_ids=None, adapter_context=Non
             "发现必须定位到具体节点/页面/atom 与依据。"),
         extra_inputs=[packet_ref], executor_type=executor_type,
         review_units=[{"kind": kind, "page_ids": pages, "reason": "missing"} for kind in units],
-        phase="review")
+        phase="review", selected_resource_ids=selected_resource_ids)
     return {"status": "review_dispatched", "stage": STAGE, "requirement": state["effective"],
             "requirement_state": state, "review_draft_ref": packet_ref,
             "units": units, "task": task, "executor_type": executor_type,

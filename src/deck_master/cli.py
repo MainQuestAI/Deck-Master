@@ -135,6 +135,7 @@ def build_parser() -> argparse.ArgumentParser:
     methods.add_argument("--project")
     methods.add_argument("--task-id")
     methods.add_argument("--selected-resource-id", dest="selected_resource_ids", action="append")
+    methods.add_argument('--business-framing', action='store_true', help='Read the new planning method package before Task freeze')
     _add_read_options(methods)
     collab = sub.add_parser("collaboration", help="Use existing Runtime collaboration transactions")
     commands = collab.add_subparsers(dest="collaboration_command", required=True)
@@ -201,6 +202,8 @@ def build_parser() -> argparse.ArgumentParser:
     for name in ('outline', 'outline-status', 'outline-packet'):
         outline = review_sub.add_parser(name)
         outline.add_argument('--project', required=True)
+        if name == 'outline':
+            outline.add_argument('--selected-resource-id', dest='selected_resource_ids', action='append')
     original = review_sub.add_parser('original', help='Dispatch independent expression review on original pixels before SVG')
     original.add_argument('--project', required=True)
     original.add_argument('--page-id', required=True)
@@ -214,6 +217,7 @@ def build_parser() -> argparse.ArgumentParser:
     native.add_argument("--project", required=True)
     native.add_argument("--task-id")
     native.add_argument("--subject", choices=("outline",))
+    native.add_argument('--selected-resource-id', dest='selected_resource_ids', action='append')
     native.add_argument("--force-unit", action="append", dest="force_units",
                         help="Explicitly re-review a currently required unit; repeat for multiple units")
 
@@ -538,7 +542,7 @@ def main(argv: list[str] | None = None) -> int:
         if options.command == "methods":
             from .method_resources import method_resources, method_release, read_methods, read_task_methods
             if options.project or options.task_id:
-                if options.selected_resource_ids is not None:
+                if options.selected_resource_ids is not None or options.business_framing:
                     raise ModelError("selected_resource_ids", "frozen Task methods cannot be supplemented; use formal reissue")
                 if not options.project or not options.task_id:
                     raise ModelError("methods", "project and task-id are required together")
@@ -549,15 +553,18 @@ def main(argv: list[str] | None = None) -> int:
                 collector = ResourceCollector(body_mode=options.body_mode or 'full', cache_offer=read_options['cache_offer'])
                 entries = method_resources(options.kind, intent=options.intent, phase=options.phase,
                                            review_units=options.review_unit,
-                                           selected_resource_ids=options.selected_resource_ids)
+                                           selected_resource_ids=options.selected_resource_ids,
+                                           business_framing=options.business_framing)
                 return _emit(collector.envelope({'methods': collector.methods(entries), 'tasks': []}))
-            items = (read_methods if options.read else method_resources)(options.kind, intent=options.intent, phase=options.phase, review_units=options.review_unit, selected_resource_ids=options.selected_resource_ids)
+            items = (read_methods if options.read else method_resources)(options.kind, intent=options.intent,
+                phase=options.phase, review_units=options.review_unit, selected_resource_ids=options.selected_resource_ids,
+                business_framing=options.business_framing)
             return _emit({"status": "ready", "methods": items, "method_release": method_release(items)})
         if options.command == 'review' and options.review_command in ('outline', 'outline-status', 'outline-packet'):
             from . import outline_review
             from .store import Store
             if options.review_command == 'outline':
-                return _emit(outline_review.dispatch(options.project))
+                return _emit(outline_review.dispatch(options.project, selected_resource_ids=options.selected_resource_ids))
             store = Store(options.project)
             operation = outline_review.status if options.review_command == 'outline-status' else outline_review.packet
             return _emit(operation(store, store.load_document()))
@@ -578,7 +585,8 @@ def main(argv: list[str] | None = None) -> int:
             return _emit_and_exit(result, 3) if result['status'] in ('running', 'needs_evidence') else _emit(result)
         if options.command == "review" and options.review_command == "native":
             from .native_review import run
-            result = run(options.project, task_id=options.task_id, force_units=options.force_units, **({"subject": options.subject} if options.subject else {}))
+            result = run(options.project, task_id=options.task_id, force_units=options.force_units,
+                selected_resource_ids=options.selected_resource_ids, **({"subject": options.subject} if options.subject else {}))
             return _emit_and_exit(result, 3) if result["status"] in ("running", "recovery_available") else _emit(result)
         if options.command in ("collaboration", "eligibility", "review"):
             from .collaboration_api import invoke, error_response

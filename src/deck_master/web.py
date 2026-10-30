@@ -257,10 +257,11 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             from . import editing, service
             if self.path == '/api/reviews/native':
                 from .native_review import run
-                if set(data) - {'task_id', 'force_units'} or ('task_id' in data and
+                if set(data) - {'task_id', 'force_units', 'subject', 'selected_resource_ids'} or ('task_id' in data and
                         (not isinstance(data['task_id'], str) or not data['task_id'])):
                     raise ModelError('native_review', 'provide an optional nonempty task_id or explicit force_units')
-                result = run(self.store.project_root, task_id=data.get('task_id'), force_units=data.get('force_units'))
+                result = run(self.store.project_root, task_id=data.get('task_id'), force_units=data.get('force_units'),
+                    subject=data.get('subject'), selected_resource_ids=data.get('selected_resource_ids'))
             elif self.path in ('/api/drafts/save', '/api/drafts/import', '/api/drafts/recovery', '/api/ui-state'):
                 from . import ui_journal
                 action = {'/api/drafts/save': ui_journal.save, '/api/drafts/import': ui_journal.import_recovery,

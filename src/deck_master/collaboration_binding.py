@@ -383,6 +383,10 @@ def stamp_task(store, document, task: dict, *, phase: str, executor_type: str = 
     task["collaboration_binding"] = binding
     task.setdefault("protocol_version", "changes.v1")
     task["required_capabilities"] = list(dict.fromkeys([*task.get("required_capabilities", []), "collaboration.v1", "rc3-entry.v1"]))
+    if (task.get('kind') == 'review' and models.writer_at_least(document, 'business-framing.v1')
+            and any(unit['kind'] in ('content', 'argument', 'page_copy', 'progression', 'speech')
+                    for unit in task.get('review_units', []))):
+        task['required_capabilities'] = list(dict.fromkeys([*task['required_capabilities'], 'business-framing.v1']))
     if "method_manifest" in task:
         # Producer finalization after the actual phase/scope has been bound.
         # Historical Tasks without this field never acquire a new contract.

@@ -18,6 +18,7 @@ from .errors import MethodResourceMissing
 from .models import canonical_json_bytes, sha256_bytes
 
 from . import __version__
+from . import models
 
 
 # Task kind / intent -> method ids (spec §3.4). compose/initial may consult
@@ -115,10 +116,14 @@ _VISUAL_UNITS = {"visual_expression", "blueprint_content", "blueprint_fidelity",
 
 
 def method_ids_for(kind: str, *, intent: str | None = None,
-                   phase: str | None = None, review_units=None) -> tuple[str, ...]:
+                   phase: str | None = None, review_units=None, business_framing=False) -> tuple[str, ...]:
     """Select new dispatch methods from the actual review scope, in stable order."""
     if kind != "review":
         base = rc3_method_ids_for(kind, intent=intent, phase=phase)
+        if business_framing and kind == 'compose' and (phase in ('framing', 'argument') or intent == 'input_revision'):
+            base = ('source-reading', 'content-methods', 'method-selection',
+                    *(('content-m01',) if phase == 'framing' else ('content-m02', 'content-m07', 'content-m08')),
+                    *(('input-update',) if intent == 'input_revision' else ()))
         if kind == 'blueprint':
             # New image production consumes visual design guidance. Keep the
             # RC3 selector above unchanged for historical frozen Tasks.
@@ -165,6 +170,8 @@ def method_ids_for(kind: str, *, intent: str | None = None,
         selected.add("content-methods")
     if intent == "preproduction":
         selected |= {"source-reading", "content-methods", "content-examples", "content-calibration"}
+        if business_framing:
+            selected.discard('content-examples')
     if units & _VISUAL_UNITS:
         selected.add("physical-units")
     result = tuple(method for method in _REVIEW_ORDER if method in selected)
@@ -198,7 +205,8 @@ def freeze_task_methods(task: dict, *, selected_resource_ids=None) -> dict:
         phase = "page_copy"
     items = method_resources(kind, intent=task.get("intent") or task.get("review_stage"),
                              phase=phase, review_units=task.get("review_units"),
-                             selected_resource_ids=selected_resource_ids)
+                             selected_resource_ids=selected_resource_ids,
+                             business_framing='business-framing.v1' in task.get('required_capabilities', []))
     task["method_manifest"] = [{key: item[key] for key in ("id", "relative_path", "sha256")} for item in items]
     task["method_release"] = method_release(items)
     if task.get("protocol_version") == "compose.v2" and (
@@ -266,7 +274,8 @@ def resolve_task_methods(task: dict, *, reader=None) -> dict:
 
 
 def method_resources(kind: str, *, intent: str | None = None,
-                     phase: str | None = None, review_units=None, selected_resource_ids=None) -> list[dict]:
+                     phase: str | None = None, review_units=None, selected_resource_ids=None,
+                     business_framing=False) -> list[dict]:
     """Readable method entries for one task kind: id, path inside the skill, sha256."""
     root = resolve_root()
     items = []
@@ -278,7 +287,11 @@ def method_resources(kind: str, *, intent: str | None = None,
     selected_phase = phase or ('review' if kind == 'review' else
                               'production' if kind in ('blueprint', 'reconstruct', 'style_analyze') else
                               'input_revision' if intent == 'input_revision' else None)
-    for method_id in dict.fromkeys((*method_ids_for(kind, intent=intent, phase=phase, review_units=review_units),
+    defaults = method_ids_for(kind, intent=intent, phase=phase, review_units=review_units,
+                              business_framing=business_framing)
+    if business_framing:
+        defaults = _selected_ids(defaults, kind=kind, phase=selected_phase, review_units=selected_units)
+    for method_id in dict.fromkeys((*defaults,
                                    *_selected_ids(selected_resource_ids, kind=kind, phase=selected_phase, review_units=selected_units))):
         relative = RELATIVE_PATHS[method_id]
         path = root / relative
@@ -312,9 +325,11 @@ def method_release(items: list[dict]) -> dict:
     return {"release_id": release_id, "methods_sha256": methods_sha256(items)}
 
 
-def read_methods(kind: str, *, intent=None, phase=None, review_units=None, selected_resource_ids=None) -> list[dict]:
+def read_methods(kind: str, *, intent=None, phase=None, review_units=None, selected_resource_ids=None,
+                 business_framing=False) -> list[dict]:
     """Return the exact UTF-8 bytes, with no universal-newline conversion."""
-    items = method_resources(kind, intent=intent, phase=phase, review_units=review_units, selected_resource_ids=selected_resource_ids)
+    items = method_resources(kind, intent=intent, phase=phase, review_units=review_units,
+                             selected_resource_ids=selected_resource_ids, business_framing=business_framing)
     for item in items:
         raw = Path(item["path"]).read_bytes()
         if sha256_bytes(raw) != item["sha256"]:
@@ -366,6 +381,16 @@ _ROLE_TASKS = {
     "deck-design": ("style_analyze", "blueprint", "reconstruct", "repair"),
     "deck-review": ("review",),
 }
+
+
+def role_method_ids(skill, *, review_stage=None, review_units=None, business_framing=False):
+    if skill == 'deck-review':
+        return ('collaboration-routing', *method_ids_for('review', intent=review_stage,
+                review_units=review_units, business_framing=business_framing))
+    if skill == 'deck-content' and business_framing:
+        return ('collaboration-routing', 'source-reading', 'content-methods', 'input-update',
+                'method-selection', 'content-m01')
+    return _ROLE_METHODS[skill]
 
 
 def _route_request(text: str) -> tuple[dict, bool]:
@@ -506,7 +531,8 @@ def _read_ids(ids) -> list[dict]:
 
 def read_skill_methods(skill: str, *, entry_mode="named", project=None, task_id=None, text=None,
                        review_units=None, review_stage=None, read_protocol=None, body_mode=None,
-                       cache_offer=None, observed_context=None, selected_resource_ids=None, summary_protocol=None) -> dict:
+                       cache_offer=None, observed_context=None, selected_resource_ids=None, summary_protocol=None,
+                       business_framing=False) -> dict:
     """Read one responsibility's actual bytes plus current, read-only context.
 
     This does not create a project, dispatch a Task, grant scope, claim independent
@@ -543,7 +569,8 @@ def read_skill_methods(skill: str, *, entry_mode="named", project=None, task_id=
     if read_protocol:
         return _read_skill_v2(skill, entry_mode=entry_mode, project=project, task_id=task_id,
                               route=route, review_units=review_units, review_stage=review_stage,
-                              body_mode=body_mode or 'full', cache_offer=cache_offer, observed_context=observed_context, selected=selected, summary_protocol=summary_protocol)
+                              body_mode=body_mode or 'full', cache_offer=cache_offer, observed_context=observed_context,
+                              selected=selected, summary_protocol=summary_protocol, business_framing=business_framing)
     context = None
     dispatch = None
     if project is not None:
@@ -551,6 +578,7 @@ def read_skill_methods(skill: str, *, entry_mode="named", project=None, task_id=
         from .store import Store
         store = Store(Path(project).expanduser())
         document = store.load_document()
+        business_framing = business_framing or models.writer_at_least(document, 'business-framing.v1')
         request = (document.get("collaboration") or {}).get("request")
         context = {"project_id": document["project_id"], "artifact_revision_id": document["revision_id"],
                    "request": request,
@@ -573,9 +601,8 @@ def read_skill_methods(skill: str, *, entry_mode="named", project=None, task_id=
     # A Task consumes its actual manifest verbatim, including a declared missing
     # calibration error. Role entry guidance is separate and never adds a
     # calibration file to an A/B content-method control.
-    items = dispatch["methods"] if dispatch else _read_ids(
-        ("collaboration-routing", *method_ids_for("review", intent=review_stage, review_units=review_units))
-        if skill == "deck-review" else _ROLE_METHODS[skill])
+    items = dispatch["methods"] if dispatch else _read_ids(role_method_ids(skill, review_stage=review_stage,
+        review_units=review_units, business_framing=business_framing))
     if selected:
         items = _read_ids(tuple(item["id"] for item in items) + selected)
     entry_methods = _read_ids(("collaboration-routing",)) if dispatch else []
@@ -588,7 +615,7 @@ def read_skill_methods(skill: str, *, entry_mode="named", project=None, task_id=
 
 
 def _read_skill_v2(skill, *, entry_mode, project, task_id, route, review_units, review_stage,
-                   body_mode, cache_offer, observed_context, selected=(), summary_protocol=None):
+                   body_mode, cache_offer, observed_context, selected=(), summary_protocol=None, business_framing=False):
     from .work_context import ResourceCollector
     from . import service, content_production
     from .store import Store
@@ -597,6 +624,7 @@ def _read_skill_v2(skill, *, entry_mode, project, task_id, route, review_units, 
     if project is not None:
         store = collector.store(Store(Path(project).expanduser()))
         document = store.load_document()
+        business_framing = business_framing or models.writer_at_least(document, 'business-framing.v1')
         payload.update(project_id=document['project_id'], current_revision=document['revision_id'])
         payload['context'] = {'project_id': document['project_id'], 'artifact_revision_id': document['revision_id'],
                               'request': (document.get('collaboration') or {}).get('request'),
@@ -614,9 +642,8 @@ def _read_skill_v2(skill, *, entry_mode, project, task_id, route, review_units, 
             payload['tasks'] = [service.task_summary(store, document, task, collector=collector)]
         from .effective_requirements import reader_requirements
         payload['context']['effective_requirements'] = reader_requirements(store, document, task=task)
-    ids = ('collaboration-routing',) if task_id else (
-        ('collaboration-routing', *method_ids_for('review', intent=review_stage, review_units=review_units))
-        if skill == 'deck-review' else _ROLE_METHODS[skill])
+    ids = ('collaboration-routing',) if task_id else role_method_ids(skill, review_stage=review_stage,
+        review_units=review_units, business_framing=business_framing)
     entries = []
     for mid in dict.fromkeys((*ids, *selected)):
         relative = RELATIVE_PATHS[mid]
