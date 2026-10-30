@@ -1297,7 +1297,7 @@
   "dependency_semantics": "depends_on 引用 work_units；conditional_depends_on 仅在条件成立时加边。卡条目镜像其收口单元；工作单元 acceptance_ids 是 AC 唯一验收归属。",
   "execution_base": "035845f228d1ba4cd7fc9b41cdedd8fd734043df",
   "execution_started_at": "2026-10-29",
-  "current_gate": "D03两份获作者可展开认可，多框架分支保留未验证；D04工程215项回归通过，真实全文与反例验证待独立新预算，原32/32不扩写",
+  "current_gate": "D04 单列最多9次获批，开始前5次试跑；原32次冻结，多框架分支/D08仍未授权",
   "updated_at": "2026-10-30",
   "calibration_budget": {
     "overall_subscription_bound": 32,
@@ -1331,10 +1331,13 @@
     "separate_from_prior_budget": true,
     "proposed_max_calls": 9,
     "alternative_pilot_calls": 5,
-    "authorized_calls": 0,
+    "authorized_calls": 9,
     "calls_used": 0,
     "evidence": "implementation/D04-call-plan.json",
     "new_API_spend_allowed": 0,
-    "D08_authorized": false
+    "D08_authorized": false,
+    "calls_in_flight": 0,
+    "calls_completed": 0,
+    "authorization": "用户于2026-10-30明确回复：最多9次，两份都验证"
   }
 }

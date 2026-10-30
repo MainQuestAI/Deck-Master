@@ -1,7 +1,7 @@
 {
   "date": "2026-10-30",
   "budget_id": "D04-content-validation-20261030",
-  "authorized": false,
+  "authorized": true,
   "scope": "D04 development content validation only; same two approved synthetic outlines plus one deliberately flawed fixture",
   "implementation_base": "6513899aaf84c5f7784cba3bfda7897ae6cbded5",
   "historical_I0_to_D03_budget": {
@@ -219,8 +219,7 @@
     "Any unexpected schema/transport/evidence/finding-location failure preserves the raw result and stops dependent steps; no silent regeneration",
     "Model pass is not author/professional/customer acceptance; multi-frame comparison and D08 remain unverified"
   ],
-  "authorized_new_calls": 0,
-  "spent_new_calls": 0,
+  "authorized_new_calls": 9,
   "review_method_previews": {
     "outline": [
       {
@@ -327,5 +326,65 @@
       }
     ]
   },
-  "execution_request_rule": "Prepared projects/packets are explicitly zero-call preflight only. After budget approval create a new bounded request citing the exact user allocation, retain the preflight request and history, and rebuild the live packet/Task at the actual revision. Preflight packet SHA is evidence for review, never live prompt identity or authority to spend."
+  "execution_request_rule": "Prepared projects/packets are explicitly zero-call preflight only. After budget approval create a new bounded request citing the exact user allocation, retain the preflight request and history, and rebuild the live packet/Task at the actual revision. Preflight packet SHA is evidence for review, never live prompt identity or authority to spend.",
+  "authorization": "用户于2026-10-30明确回复：最多9次，两份都验证",
+  "calls_used_at_freeze": 0,
+  "runner_sha256": "2d584c09ba6a5ad2c3b999f3dba2d2e1660d6221545064f75691a4f13455ccf1",
+  "prepared_projects": {
+    "negative": {
+      "path": "/Users/dingcheng/.codex/tmp/deck-master-business-expression-20261030/d04-zero-call-probe-r2/negative",
+      "refs": [
+        {
+          "path": ".deckmaster/objects/6e/6ec76cfad1dc83455c95bf480c3f3fcfe69f4acab050214db0bfd3144295a00a.json",
+          "sha256": "6ec76cfad1dc83455c95bf480c3f3fcfe69f4acab050214db0bfd3144295a00a"
+        },
+        {
+          "path": ".deckmaster/objects/fb/fb377267e575644d9feaabebdd181c9008ea0ad9abd340f29055d85c5d7f8c57.json",
+          "sha256": "fb377267e575644d9feaabebdd181c9008ea0ad9abd340f29055d85c5d7f8c57"
+        }
+      ],
+      "tree_sha256": "9e2da8f52c22a12a919d0abd161e1c1cfa6018bc11f12a1a5bd3e9b13d99fdb1"
+    },
+    "fixed-framework": {
+      "path": "/Users/dingcheng/.codex/tmp/deck-master-business-expression-20261030/d04-zero-call-probe-r2/fixed-framework",
+      "refs": [
+        {
+          "path": ".deckmaster/objects/f4/f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4.json",
+          "sha256": "f4e2f3eff377e41ec212ea2a567480a33aca7b46860b41cf08dc0c4073ad0eb4"
+        },
+        {
+          "path": ".deckmaster/objects/f3/f3e8fbef1956e7f7311911a8253b0c055facbbe1fa8c3824bef3e279da340c80.json",
+          "sha256": "f3e8fbef1956e7f7311911a8253b0c055facbbe1fa8c3824bef3e279da340c80"
+        }
+      ],
+      "tree_sha256": "87e931541b02b0f7e62a749812854c1480d3439f12fb08f45b0b8edb847c259c"
+    },
+    "bid": {
+      "path": "/Users/dingcheng/.codex/tmp/deck-master-business-expression-20261030/d04-zero-call-probe-r2/bid",
+      "refs": [
+        {
+          "path": ".deckmaster/objects/08/08babed069c993197371e2b216e6b20400a40d26238dd4fa0eedd9f798cca98d.json",
+          "sha256": "08babed069c993197371e2b216e6b20400a40d26238dd4fa0eedd9f798cca98d"
+        },
+        {
+          "path": ".deckmaster/objects/42/42b09b1c76b49f18729e4b6a7d100939db6e9ba07442b14f9a0508a666c278b1.json",
+          "sha256": "42b09b1c76b49f18729e4b6a7d100939db6e9ba07442b14f9a0508a666c278b1"
+        }
+      ],
+      "tree_sha256": "3ee2bf03a4689c1b7a7b27bfed8c4f2667941e1320afe56770f7ec0958970b1a"
+    }
+  },
+  "generation_selected_resource_ids": {
+    "page_copy": [
+      "content-m03",
+      "content-m04",
+      "content-m09",
+      "content-m10"
+    ],
+    "speech": [
+      "page-writing",
+      "writing-profiles"
+    ]
+  },
+  "serialization_rule": "For a single full-page verbatim segment beginning at zero, mechanically set its end_codepoint to Python len(actual speaker_notes); preserve raw response and record before/after offsets. Never change wording, node IDs, kind, estimates, or meanings; all other cases use strict normal contract validation."
 }
