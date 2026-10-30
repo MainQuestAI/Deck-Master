@@ -1,0 +1,29 @@
+{
+  "scope": "author-approved D00 content re-annotated by current Host to exercise D01 contract; not fresh model generation or professional review",
+  "code_baseline": "035845f228d1ba4cd7fc9b41cdedd8fd734043df",
+  "extra_model_calls": 0,
+  "writer_floor": "business-framing.v1",
+  "topic_names": [
+    "活动名单",
+    "门店执行",
+    "跟进复盘"
+  ],
+  "page_count": 0,
+  "old_request_closed": true,
+  "new_request_distinct": true,
+  "fixed_refs": [
+    {
+      "path": ".deckmaster/objects/a0/a0ee0baee52da7d1912971bc2662a04adeaa9a825c814f0a7328f417c2b6944d.json",
+      "sha256": "a0ee0baee52da7d1912971bc2662a04adeaa9a825c814f0a7328f417c2b6944d"
+    },
+    {
+      "path": ".deckmaster/objects/bf/bf88c4995a18a5ba4a67ab34adc99599a30cc8f272402a3cd16860f1f2feec26.json",
+      "sha256": "bf88c4995a18a5ba4a67ab34adc99599a30cc8f272402a3cd16860f1f2feec26"
+    }
+  ],
+  "outline_packet_matches": true,
+  "P01_A_content_corrections": 1,
+  "professional_review": "not_evaluated_for_D01",
+  "ui_interaction": "not_run",
+  "outline_packet_sha256": "26268b2d2ad5e8aa47ae0a999cb59f6d5e8f2df3b42a1b98bfdf922697b95626"
+}

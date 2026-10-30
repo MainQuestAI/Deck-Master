@@ -1,0 +1,290 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "narrative.v2",
+  "description": "Business strategy and expandable frame; original facts stay in nodes and task input. Adoption remains a covering Decision.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "narrative_id",
+    "version",
+    "project_id",
+    "origin",
+    "maturity",
+    "input_basis",
+    "communication_job",
+    "central_node_id",
+    "nodes",
+    "edges",
+    "issues",
+    "alternatives",
+    "previous_ref",
+    "business_strategy",
+    "business_frame",
+    "method_applications"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "narrative.v2"
+    },
+    "narrative_id": {
+      "$ref": "narrative.v1.schema.json#/properties/narrative_id"
+    },
+    "version": {
+      "$ref": "narrative.v1.schema.json#/properties/version"
+    },
+    "project_id": {
+      "$ref": "narrative.v1.schema.json#/properties/project_id"
+    },
+    "origin": {
+      "$ref": "narrative.v1.schema.json#/properties/origin"
+    },
+    "maturity": {
+      "$ref": "narrative.v1.schema.json#/properties/maturity"
+    },
+    "input_basis": {
+      "$ref": "narrative.v1.schema.json#/properties/input_basis"
+    },
+    "communication_job": {
+      "$ref": "narrative.v1.schema.json#/properties/communication_job"
+    },
+    "central_node_id": {
+      "$ref": "narrative.v1.schema.json#/properties/central_node_id"
+    },
+    "nodes": {
+      "$ref": "narrative.v1.schema.json#/properties/nodes"
+    },
+    "edges": {
+      "$ref": "narrative.v1.schema.json#/properties/edges"
+    },
+    "issues": {
+      "$ref": "narrative.v1.schema.json#/properties/issues"
+    },
+    "alternatives": {
+      "$ref": "narrative.v1.schema.json#/properties/alternatives"
+    },
+    "previous_ref": {
+      "$ref": "narrative.v1.schema.json#/properties/previous_ref"
+    },
+    "business_strategy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scenario",
+        "author_goal",
+        "established_node_ids",
+        "focus_node_ids",
+        "support_node_ids",
+        "omitted_node_ids",
+        "rationale"
+      ],
+      "properties": {
+        "scenario": {
+          "type": "string",
+          "minLength": 1
+        },
+        "author_goal": {
+          "type": "string",
+          "minLength": 1
+        },
+        "established_node_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+          }
+        },
+        "focus_node_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+          }
+        },
+        "support_node_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+          }
+        },
+        "omitted_node_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+          }
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "business_frame": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "frame_id",
+            "organizing_basis",
+            "rationale",
+            "topics",
+            "relations"
+          ],
+          "properties": {
+            "frame_id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+            },
+            "organizing_basis": {
+              "type": "string",
+              "minLength": 1
+            },
+            "rationale": {
+              "type": "string",
+              "minLength": 1
+            },
+            "topics": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "topic_id",
+                  "name",
+                  "meaning",
+                  "links",
+                  "placement",
+                  "gap_issue_ids"
+                ],
+                "properties": {
+                  "topic_id": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "meaning": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "links": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "node_id",
+                        "role"
+                      ],
+                      "properties": {
+                        "node_id": {
+                          "type": "string",
+                          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                        },
+                        "role": {
+                          "enum": [
+                            "requirement",
+                            "capability",
+                            "scenario",
+                            "constraint",
+                            "support"
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  "placement": {
+                    "enum": [
+                      "main",
+                      "support",
+                      "omit"
+                    ]
+                  },
+                  "gap_issue_ids": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                    }
+                  }
+                }
+              }
+            },
+            "relations": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "from_topic_id",
+                  "to_topic_id",
+                  "relation"
+                ],
+                "properties": {
+                  "from_topic_id": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                  },
+                  "to_topic_id": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+                  },
+                  "relation": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "method_applications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "task_id",
+          "method_id",
+          "sha256",
+          "result_pointer"
+        ],
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+          },
+          "method_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "result_pointer": {
+            "type": "string",
+            "pattern": "^/(business_strategy|business_frame|nodes|edges|issues|alternatives)(/.*)?$"
+          }
+        }
+      }
+    }
+  }
+}

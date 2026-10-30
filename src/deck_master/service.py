@@ -134,6 +134,7 @@ def create(
     request_input: dict | None = None,
     adapter_context=None,
     selected_resource_ids=None,
+    business_framing: bool = False,
 ) -> dict:
     """Publish a complete RC3 project atomically; no old writer is visible."""
     import shutil
@@ -142,6 +143,11 @@ def create(
     from .project_initialization import collaboration_region, request_defaults
     if project_format not in (None, "workbench.v3"):
         raise ServiceError("project_format", "only the current workbench.v3 format can be created")
+    if type(business_framing) is not bool:
+        raise ServiceError('business_framing', 'expected a boolean contract opt-in')
+    if business_framing and (draft is not None or (request_input or {}).get('content_intent') in ('write_only', 'speech_only')
+                            or (request_input or {}).get('intent', 'full_deck') not in ('full_deck', 'content_only')):
+        raise ServiceError('business_framing', 'business framing is for new planning, not a confirmed or bounded manuscript')
     if draft is not None:
         _validate_draft(draft)
     target = Path(project_dir).expanduser().absolute()
@@ -197,7 +203,8 @@ def create(
                     description='Complete the requested fixed content without production', updated=updated,
                     response={'request_id': updated['collaboration']['request']['request_id'], 'closed_reason': 'completed'})
             else:
-                dispatched_task = content_production.next_phase_task(store, document, selected_resource_ids=selected_resource_ids)
+                dispatched_task = content_production.next_phase_task(store, document, selected_resource_ids=selected_resource_ids,
+                                                                     business_framing=business_framing)
         if selected_resource_ids is not None and dispatched_task is None:
             raise ServiceError("selected_resource_ids", "resource selection requires a new Task dispatch")
         if not target.exists():

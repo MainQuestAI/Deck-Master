@@ -378,6 +378,18 @@ class Store:
             if key not in classification:
                 classification[key] = self.read_object_json(ref)
             return classification[key]
+        if WRITER_RANK.get(document.get('compatibility', {}).get('minimum_writer'), -1) < WRITER_RANK['business-framing.v1']:
+            # A new frozen Task requirement is itself forward-only semantics.
+            # Upgrade atomically on this write, never while reading old runs.
+            previous = self.load_document(base_revision) if base_revision else {}
+            old_tasks = {(ref['path'], ref['sha256']) for ref in previous.get('tasks', [])}
+            business = bool(document.get('narrative') and document.get('narrative') != previous.get('narrative') and
+                            classified(document['narrative']).get('schema_version') == 'narrative.v2')
+            if business or any('business-framing.v1' in classified(ref).get('required_capabilities', [])
+                               for ref in document.get('tasks') or [] if (ref['path'], ref['sha256']) not in old_tasks):
+                from .models import require_writer
+                document = copy.deepcopy(document)
+                require_writer(document, 'business-framing.v1')
         if (WRITER_RANK.get(document.get("compatibility", {}).get("minimum_writer"), -1)
                 < WRITER_RANK["rc4-content.v1"] and
                 any("method_manifest" in classified(ref) for ref in document.get("tasks") or [])):

@@ -19,7 +19,7 @@ from .method_resources import RELATIVE_PATHS, resolve_root, method_release
 from .models import sha256_bytes
 from .review_evidence import context_payload, current_registry
 
-RUNTIME_PROTOCOL_CAPABILITIES = ('collaboration.v1', 'rc3-entry.v1')
+RUNTIME_PROTOCOL_CAPABILITIES = ('collaboration.v1', 'rc3-entry.v1', 'business-framing.v1')
 
 
 def installation_identity():

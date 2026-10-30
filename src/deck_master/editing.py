@@ -1,5 +1,7 @@
 """Versioned edit, review, export and history use cases shared by CLI and UI."""
 from __future__ import annotations
+
+from . import models
 from pathlib import Path
 import copy
 import io
@@ -61,7 +63,7 @@ def _current_artifact_digests(store, doc, extra_subjects=()):
                 content_sha = obj['file']['sha256']
             elif obj.get('schema_version') == 'deck_page_package.v2':
                 role, page_id, content_sha = 'page', obj.get('page_id'), ref['sha256']
-            elif obj.get('schema_version') == 'narrative.v1':
+            elif obj.get('schema_version') in models.NARRATIVE_VERSIONS:
                 role, page_id, content_sha = 'narrative', None, ref['sha256']
             elif obj.get('schema_version') == 'content_plan.v2':
                 role, page_id, content_sha = 'content_plan', None, ref['sha256']
@@ -79,7 +81,8 @@ def _current_artifact_digests(store, doc, extra_subjects=()):
             # state is written to the Store and legacy file hashes stay intact.
             if role == 'narrative':
                 body = {k: obj.get(k) for k in ('communication_job',
-                        'central_node_id', 'nodes', 'edges', 'issues', 'alternatives')}
+                        'central_node_id', 'nodes', 'edges', 'issues', 'alternatives',
+                        'business_strategy', 'business_frame')}
                 body['nodes'] = [{k: v for k, v in node.items() if k != 'source_links'}
                                  for node in obj.get('nodes') or []]
                 body['issues'] = [{k: v for k, v in issue.items()

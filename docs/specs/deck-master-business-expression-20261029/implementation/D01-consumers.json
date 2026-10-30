@@ -1,0 +1,2116 @@
+{
+  "date": "2026-10-30",
+  "search": "rg -n narrative|communication_job|central_node_id|qualification_node_ids src/deck_master --glob *.py",
+  "scope": "Python version dispatch and implicit field/Ref consumers, plus four JS consumers; generic transport preserves full objects; no UI interaction completion claimed",
+  "files": [
+    {
+      "file": "src/deck_master/business_framing.py",
+      "disposition": "adapted",
+      "conclusion": "新策略/框架引用与冻结Task/hash/basis校验；采用时输入重验",
+      "references": [
+        {
+          "line": 6,
+          "excerpt": "CAPABILITY = 'business-framing.v1'"
+        },
+        {
+          "line": 7,
+          "excerpt": "VERSION = 'narrative.v2'"
+        },
+        {
+          "line": 11,
+          "excerpt": "def validate(narrative):"
+        },
+        {
+          "line": 13,
+          "excerpt": "known = {node['node_id'] for node in narrative['nodes']}"
+        },
+        {
+          "line": 14,
+          "excerpt": "issues = {item['issue_id'] for item in narrative['issues']}"
+        },
+        {
+          "line": 15,
+          "excerpt": "strategy = narrative['business_strategy']"
+        },
+        {
+          "line": 19,
+          "excerpt": "raise models.ModelError('narrative/business_strategy/' + field, f'unknown node ids: {sorted(unknown)}')"
+        },
+        {
+          "line": 21,
+          "excerpt": "raise models.ModelError('narrative/business_strategy', 'focus, support and omitted placements must not conflict')"
+        },
+        {
+          "line": 23,
+          "excerpt": "raise models.ModelError('narrative/business_strategy', 'support and omitted placements must not conflict')"
+        },
+        {
+          "line": 24,
+          "excerpt": "frame = narrative['business_frame']"
+        },
+        {
+          "line": 25,
+          "excerpt": "if narrative['maturity'] == 'argument' and (frame is None or not strategy['focus_node_ids']):"
+        },
+        {
+          "line": 26,
+          "excerpt": "raise models.ModelError('narrative/business_frame', 'argument requires an expandable frame and focused nodes')"
+        },
+        {
+          "line": 27,
+          "excerpt": "if narrative['maturity'] == 'argument' and narrative['central_node_id'] not in strategy['focus_node_ids']:"
+        },
+        {
+          "line": 28,
+          "excerpt": "raise models.ModelError('narrative/business_strategy/focus_node_ids', 'the central claim must remain in focus')"
+        },
+        {
+          "line": 32,
+          "excerpt": "raise models.ModelError('narrative/business_frame/topics', 'duplicate topic_id')"
+        },
+        {
+          "line": 35,
+          "excerpt": "raise models.ModelError('narrative/business_frame/topics', 'unknown node or gap issue')"
+        },
+        {
+          "line": 38,
+          "excerpt": "raise models.ModelError('narrative/business_frame/topics', 'duplicate topic link')"
+        },
+        {
+          "line": 41,
+          "excerpt": "raise models.ModelError('narrative/business_frame/relations', 'unknown topic_id')"
+        },
+        {
+          "line": 42,
+          "excerpt": "for application in narrative['method_applications']:"
+        },
+        {
+          "line": 43,
+          "excerpt": "value = narrative"
+        },
+        {
+          "line": 51,
+          "excerpt": "raise models.ModelError('narrative/method_applications/result_pointer', 'result location does not exist') from exc"
+        },
+        {
+          "line": 54,
+          "excerpt": "def validate_task_result(store, document, task, narrative):"
+        },
+        {
+          "line": 57,
+          "excerpt": "if required != (narrative.get('schema_version') == VERSION):"
+        },
+        {
+          "line": 58,
+          "excerpt": "raise models.ModelError('narrative/schema_version', 'result must match the frozen business-framing capability')"
+        },
+        {
+          "line": 61,
+          "excerpt": "basis = narrative['input_basis']"
+        },
+        {
+          "line": 69,
+          "excerpt": "raise models.ModelError('narrative/input_basis', f'current frozen {field} basis is required')"
+        },
+        {
+          "line": 71,
+          "excerpt": "for application in narrative['method_applications']:"
+        },
+        {
+          "line": 73,
+          "excerpt": "raise models.ModelError('narrative/method_applications', 'application must name this frozen Task method/hash')"
+        },
+        {
+          "line": 75,
+          "excerpt": "for node in narrative['nodes']:"
+        },
+        {
+          "line": 76,
+          "excerpt": "validate_source_links(store, document, node['source_links'], 'narrative/nodes/' + node['node_id'])"
+        },
+        {
+          "line": 79,
+          "excerpt": "def validate_adoption_basis(store, document, narrative, decision):"
+        },
+        {
+          "line": 81,
+          "excerpt": "if narrative.get('schema_version') != VERSION:"
+        },
+        {
+          "line": 86,
+          "excerpt": "if expected not in narrative['input_basis'] or expected not in decision.get('basis', []):"
+        },
+        {
+          "line": 89,
+          "excerpt": "for node in narrative['nodes']:"
+        },
+        {
+          "line": 90,
+          "excerpt": "validate_source_links(store, document, node['source_links'], 'narrative/adoption/' + node['node_id'])"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/capabilities.py",
+      "disposition": "adapted",
+      "conclusion": "公布business-framing.v1可协商能力；只读capabilities不提高writer floor",
+      "references": [
+        {
+          "line": 22,
+          "excerpt": "RUNTIME_PROTOCOL_CAPABILITIES = ('collaboration.v1', 'rc3-entry.v1', 'business-framing.v1')"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/cli.py",
+      "disposition": "adapted",
+      "conclusion": "仅新增显式--business-framing；不切换旧默认",
+      "references": [
+        {
+          "line": 259,
+          "excerpt": "create.add_argument('--business-framing', action='store_true',"
+        },
+        {
+          "line": 741,
+          "excerpt": "business_framing=options.business_framing,"
+        },
+        {
+          "line": 1015,
+          "excerpt": "'create-run-from-context-pack', 'prepare-narrative-advice',"
+        },
+        {
+          "line": 1016,
+          "excerpt": "'import-narrative-advice', 'apply-narrative-advice', 'prepare-quality-review',"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/collaboration.py",
+      "disposition": "no_change",
+      "conclusion": "记录direction时merge_required_basis；请求及exact-CAS机制不变",
+      "references": [
+        {
+          "line": 447,
+          "excerpt": "from .variant_requests import shared_narrative_check"
+        },
+        {
+          "line": 449,
+          "excerpt": "check = shared_narrative_check(store, document, group)"
+        },
+        {
+          "line": 451,
+          "excerpt": "raise ModelError(\"collaboration/request/variant/narrative_ref\", check[\"reason\"])"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/collaboration_binding.py",
+      "disposition": "no_change",
+      "conclusion": "通过共享required_basis自动获得新增事实；已冻结binding不改写",
+      "references": [
+        {
+          "line": 100,
+          "excerpt": "for identity in (\"narrative\", \"content_plan\"):"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/content_impact.py",
+      "disposition": "no_change",
+      "conclusion": "D01仅冻结四态v2接口；现v1来源命中投影保留，D05实施策略语义分析",
+      "references": [
+        {
+          "line": 37,
+          "excerpt": "def _affected_narrative_nodes(store, document, source_ids) -> tuple[list[str], list[dict]]:"
+        },
+        {
+          "line": 40,
+          "excerpt": "if not document.get(\"narrative\"):"
+        },
+        {
+          "line": 43,
+          "excerpt": "narrative = store.read_object_json(document[\"narrative\"])"
+        },
+        {
+          "line": 44,
+          "excerpt": "except Exception:  # noqa: BLE001 - an unreadable narrative cannot be mapped"
+        },
+        {
+          "line": 46,
+          "excerpt": "for node in narrative.get(\"nodes\") or []:"
+        },
+        {
+          "line": 92,
+          "excerpt": "if not document.get(\"narrative\"):"
+        },
+        {
+          "line": 95,
+          "excerpt": "narrative = store.read_object_json(document[\"narrative\"])"
+        },
+        {
+          "line": 98,
+          "excerpt": "for issue in narrative.get(\"issues\") or []:"
+        },
+        {
+          "line": 142,
+          "excerpt": "node_ids, node_links = _affected_narrative_nodes(store, after, touched)"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/content_insight.py",
+      "disposition": "adapted",
+      "conclusion": "v1/v2分派；argument API保留完整策略/框架对象",
+      "references": [
+        {
+          "line": 70,
+          "excerpt": "for name in ('narrative', 'content_plan'):"
+        },
+        {
+          "line": 87,
+          "excerpt": "if ref and subject.get('artifact_kind') in ('narrative', 'content_plan'):"
+        },
+        {
+          "line": 93,
+          "excerpt": "if ref == doc.get('narrative'):"
+        },
+        {
+          "line": 94,
+          "excerpt": "return 'narrative'"
+        },
+        {
+          "line": 101,
+          "excerpt": "return 'narrative' if results.index(ref) == 0 else 'plan' if results.index(ref) == 1 else 'object'"
+        },
+        {
+          "line": 113,
+          "excerpt": "models.validate_narrative_semantics(obj)"
+        },
+        {
+          "line": 115,
+          "excerpt": "raise ValueError('foreign narrative')"
+        },
+        {
+          "line": 116,
+          "excerpt": "job = obj.get('communication_job') or {}"
+        },
+        {
+          "line": 117,
+          "excerpt": "central = next((n for n in obj.get('nodes', []) if n.get('node_id') == obj.get('central_node_id')), {})"
+        },
+        {
+          "line": 118,
+          "excerpt": "item = {'ref': ref, 'readable': True, 'narrative_id': obj['narrative_id'], 'maturity': obj['maturity'],"
+        },
+        {
+          "line": 119,
+          "excerpt": "'relation': 'current' if ref == doc.get('narrative') else relation if relation in ('proposal', 'historical') else 'historical',"
+        },
+        {
+          "line": 127,
+          "excerpt": "if relation == 'narrative':"
+        },
+        {
+          "line": 145,
+          "excerpt": "scope['layers'] = ['narrative']"
+        },
+        {
+          "line": 148,
+          "excerpt": "subject = {'artifact_kind': 'narrative', 'artifact_ref': ref, 'projection': 'direction'}"
+        },
+        {
+          "line": 210,
+          "excerpt": "if kind == 'narrative':"
+        },
+        {
+          "line": 214,
+          "excerpt": "if plan.get('schema_version') != 'content_plan.v2' or plan.get('narrative_ref') != item['ref']:"
+        },
+        {
+          "line": 219,
+          "excerpt": "plans.append({'ref': ref, 'readable': True, 'data': {'narrative_ref': item['ref'], 'mode': plan['mode'],"
+        },
+        {
+          "line": 231,
+          "excerpt": "if mapping.get('narrative_ref') == item['ref']:"
+        },
+        {
+          "line": 233,
+          "excerpt": "'node_ids': list(dict.fromkeys(n for l in mapping.get('visible_links', []) for n in l['narrative_node_ids']))})"
+        },
+        {
+          "line": 245,
+          "excerpt": "return envelope(doc, 'argument', {'item': item, 'narrative': obj, 'related_pages': related, 'plans': plans,"
+        },
+        {
+          "line": 267,
+          "excerpt": "ref = mapping.get('narrative_ref'); narrative = {}; gaps = []"
+        },
+        {
+          "line": 270,
+          "excerpt": "narrative = read(store, ref, 'narrative', doc['project_id'])"
+        },
+        {
+          "line": 272,
+          "excerpt": "gaps.append(issue(ref, 'narrative', page_id))"
+        },
+        {
+          "line": 276,
+          "excerpt": "nodes = {n['node_id']: n for n in narrative.get('nodes', [])}; elements = []"
+        },
+        {
+          "line": 298,
+          "excerpt": "narrative_gaps = list(gaps)"
+        },
+        {
+          "line": 303,
+          "excerpt": "local_gaps = list(narrative_gaps) if link else []"
+        },
+        {
+          "line": 304,
+          "excerpt": "selected = [nodes[n] for n in (link or {}).get('narrative_node_ids', []) if n in nodes]"
+        },
+        {
+          "line": 305,
+          "excerpt": "if link and any(n not in nodes for n in link['narrative_node_ids']):"
+        },
+        {
+          "line": 306,
+          "excerpt": "local_gaps.append(issue(ref, 'narrative_node', page_id))"
+        },
+        {
+          "line": 307,
+          "excerpt": "qualification_ids = list(dict.fromkeys([q for n in selected for q in n.get('qualification_node_ids', [])] +"
+        },
+        {
+          "line": 308,
+          "excerpt": "[e['from_node_id'] for e in narrative.get('edges', []) if e['relation'] == 'qualifies' and e['to_node_id'] in {n['node_id'] for n in selected}]))"
+        },
+        {
+          "line": 316,
+          "excerpt": "'nodes': selected, 'edges': [e for e in narrative.get('edges', []) if any(n['node_id'] in e.values() for n in selected)],"
+        },
+        {
+          "line": 320,
+          "excerpt": "return envelope(doc, 'page_evidence', {'page_id': page_id, 'page_ref': entry['page'], 'narrative_ref': ref,"
+        },
+        {
+          "line": 321,
+          "excerpt": "'alignment': 'not_recorded' if not ref else 'current' if ref == doc.get('narrative') else 'bound_to_older_narrative',"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/content_ops.py",
+      "disposition": "no_change",
+      "conclusion": "传递固定Narrative/Plan Ref或原样对象/继承字段；无v1版本过滤和新字段删除，无需修改",
+      "references": [
+        {
+          "line": 34,
+          "excerpt": "if missing and doc.get('narrative') is not None:"
+        },
+        {
+          "line": 37,
+          "excerpt": "{'element_ref': atom, 'narrative_node_ids': [], 'source_links': []} for atom in sorted(atoms)]"
+        },
+        {
+          "line": 196,
+          "excerpt": "plan_input, updated['pages'], narrative_ref=updated.get('narrative'), mode=mode,"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/content_plan.py",
+      "disposition": "no_change",
+      "conclusion": "继承的nodes/SourceLink及固定Narrative Ref；Plan.v2不复制框架",
+      "references": [
+        {
+          "line": 49,
+          "excerpt": "mode = \"imported_mapping\" if previous.get(\"mode\") == \"imported_mapping\" and not document.get(\"narrative\") else \"bound\""
+        },
+        {
+          "line": 50,
+          "excerpt": "return build_v2_plan(store, document, task, value, pages, narrative_ref=document.get(\"narrative\"),"
+        },
+        {
+          "line": 162,
+          "excerpt": "narrative_ref='current') -> None:"
+        },
+        {
+          "line": 170,
+          "excerpt": "\"mode\": mode, \"narrative_ref\": None, \"imported_manuscript\": imported_manuscript,"
+        },
+        {
+          "line": 175,
+          "excerpt": "narrative_ref = document.get('narrative') if narrative_ref == 'current' else narrative_ref"
+        },
+        {
+          "line": 176,
+          "excerpt": "narrative = store.read_object_json(narrative_ref) if narrative_ref else {}"
+        },
+        {
+          "line": 177,
+          "excerpt": "nodes = {node['node_id']: node for node in narrative.get('nodes') or []}"
+        },
+        {
+          "line": 179,
+          "excerpt": "if set(role.get('narrative_node_ids') or []) - set(nodes):"
+        },
+        {
+          "line": 180,
+          "excerpt": "_fail('input/page_roles/' + role['page_id'] + '/narrative_node_ids', 'Plan references nodes outside its adopted Narrative')"
+        },
+        {
+          "line": 189,
+          "excerpt": "narrative_ref, mode: str = \"bound\", imported_manuscript=None,"
+        },
+        {
+          "line": 199,
+          "excerpt": "imported_manuscript=imported_manuscript, narrative_ref=narrative_ref)"
+        },
+        {
+          "line": 238,
+          "excerpt": "\"narrative_ref\": narrative_ref,"
+        },
+        {
+          "line": 368,
+          "excerpt": "changed |= plan.get('narrative_ref') != document.get('narrative')"
+        },
+        {
+          "line": 402,
+          "excerpt": "narrative_ref=plan.get('narrative_ref'), imported_manuscript=copy.deepcopy(plan.get('imported_manuscript')),"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/content_production.py",
+      "disposition": "adapted",
+      "conclusion": "新Task能力、严格结果版本、planned Plan绑定；v2采用及输入修订",
+      "references": [
+        {
+          "line": 10,
+          "excerpt": "SVG, PPTX or a user Decision; narrative stores proposal Refs only; page_copy"
+        },
+        {
+          "line": 47,
+          "excerpt": "PHASE_VARIANT = {FRAMING: \"framing\", ARGUMENT: \"narrative\","
+        },
+        {
+          "line": 54,
+          "excerpt": "FRAMING: {\"layers\": [\"narrative\"], \"purpose\": \"exploratory\","
+        },
+        {
+          "line": 56,
+          "excerpt": "ARGUMENT: {\"layers\": [\"narrative\", \"plan\"], \"purpose\": \"working\","
+        },
+        {
+          "line": 76,
+          "excerpt": "CHANGED_LAYERS = (\"narrative\", \"plan\", \"page_copy\", \"speech\")"
+        },
+        {
+          "line": 88,
+          "excerpt": "\"narrative.v1\": (\"direction\",),"
+        },
+        {
+          "line": 89,
+          "excerpt": "\"narrative.v2\": (\"direction\",),"
+        },
+        {
+          "line": 155,
+          "excerpt": "\"作为提案（payload.narrative）。不得提交完整 Page、图像、SVG 或任何用户决定。\""
+        },
+        {
+          "line": 171,
+          "excerpt": "\"（覆盖全部口播文本、标注 estimated_seconds 与 narrative 节点）。不得改上屏正文、页序或视觉配置。\""
+        },
+        {
+          "line": 188,
+          "excerpt": "instruction: str | None = None, selected_resource_ids=None, business_framing=False) -> dict:"
+        },
+        {
+          "line": 204,
+          "excerpt": "business_framing=business_framing)"
+        },
+        {
+          "line": 219,
+          "excerpt": "instruction: str | None = None, selected_resource_ids=None, business_framing=False) -> dict:"
+        },
+        {
+          "line": 242,
+          "excerpt": "spec = PHASE_SPEC.get(phase, {\"layers\": [\"narrative\"], \"purpose\": \"exploratory\","
+        },
+        {
+          "line": 276,
+          "excerpt": "from .business_framing import CAPABILITY"
+        },
+        {
+          "line": 277,
+          "excerpt": "if ((business_framing or models.writer_at_least(document, CAPABILITY))"
+        },
+        {
+          "line": 278,
+          "excerpt": "and (phase in (FRAMING, ARGUMENT) or intent == 'input_revision' and 'narrative' in write_scope['layers'])):"
+        },
+        {
+          "line": 280,
+          "excerpt": "task['instruction'] += (' 本任务要求 narrative.v2：原始指令仍在 task；business_strategy 记录作者任务、重点与取舍，'"
+        },
+        {
+          "line": 455,
+          "excerpt": "narrative_ref = document.get(\"narrative\")"
+        },
+        {
+          "line": 456,
+          "excerpt": "narrative = None"
+        },
+        {
+          "line": 457,
+          "excerpt": "if narrative_ref:"
+        },
+        {
+          "line": 459,
+          "excerpt": "narrative = store.read_object_json(narrative_ref)"
+        },
+        {
+          "line": 461,
+          "excerpt": "narrative = None"
+        },
+        {
+          "line": 462,
+          "excerpt": "if narrative is None or narrative.get(\"maturity\") == \"framing\":"
+        },
+        {
+          "line": 463,
+          "excerpt": "proposals = _proposals_for_phase(store, document, \"narrative\")"
+        },
+        {
+          "line": 483,
+          "excerpt": "and (plan.get(\"narrative_ref\") or None) == narrative_ref)"
+        },
+        {
+          "line": 510,
+          "excerpt": "proposals = _proposals_for_phase(store, document, \"narrative\")"
+        },
+        {
+          "line": 513,
+          "excerpt": "if planned or (document.get(\"narrative\") and document.get(\"content_plan\")):"
+        },
+        {
+          "line": 538,
+          "excerpt": "if not document.get(\"narrative\"):"
+        },
+        {
+          "line": 604,
+          "excerpt": "refs = ([document[\"narrative\"]] if document.get(\"narrative\") else [])"
+        },
+        {
+          "line": 628,
+          "excerpt": "business_framing=False):"
+        },
+        {
+          "line": 644,
+          "excerpt": "phase=phase, selected_resource_ids=selected_resource_ids, business_framing=business_framing)"
+        },
+        {
+          "line": 705,
+          "excerpt": "acceptors = {\"framing\": _accept_framing, \"narrative\": _accept_narrative,"
+        },
+        {
+          "line": 760,
+          "excerpt": "def _narrative_project_check(narrative, document):"
+        },
+        {
+          "line": 761,
+          "excerpt": "if narrative.get(\"project_id\") != document[\"project_id\"]:"
+        },
+        {
+          "line": 762,
+          "excerpt": "raise tasks_mod.EnvelopeError(\"(result)/payload/narrative/project_id\","
+        },
+        {
+          "line": 763,
+          "excerpt": "\"narrative belongs to another project\")"
+        },
+        {
+          "line": 771,
+          "excerpt": "narrative = _payload_object(payload, \"narrative\", \"narrative\")"
+        },
+        {
+          "line": 772,
+          "excerpt": "if narrative.get(\"maturity\") != \"framing\":"
+        },
+        {
+          "line": 774,
+          "excerpt": "\"(result)/payload/narrative/maturity\","
+        },
+        {
+          "line": 775,
+          "excerpt": "\"the framing variant carries a framing Narrative; an argument narrative is a separate phase\")"
+        },
+        {
+          "line": 776,
+          "excerpt": "models.validate_narrative_semantics(narrative, policy=task.get(\"content_validation_policy\"))"
+        },
+        {
+          "line": 777,
+          "excerpt": "from .business_framing import validate_task_result"
+        },
+        {
+          "line": 778,
+          "excerpt": "validate_task_result(store, document, task, narrative)"
+        },
+        {
+          "line": 779,
+          "excerpt": "_narrative_project_check(narrative, document)"
+        },
+        {
+          "line": 780,
+          "excerpt": "narrative_ref = store.put_json_object(narrative)"
+        },
+        {
+          "line": 784,
+          "excerpt": "\"description\": f\"framing proposal {narrative['narrative_id']}\", \"read_set\": []})"
+        },
+        {
+          "line": 786,
+          "excerpt": "_complete_task(store, updated, task, [narrative_ref])"
+        },
+        {
+          "line": 790,
+          "excerpt": "\"narrative_ref\": narrative_ref, \"proposal_refs\": [narrative_ref],"
+        },
+        {
+          "line": 792,
+          "excerpt": "\"result_refs\": [narrative_ref],"
+        },
+        {
+          "line": 801,
+          "excerpt": "# --- narrative"
+        },
+        {
+          "line": 804,
+          "excerpt": "def _accept_narrative(store, *, document, task, envelope, payload, produced_against,"
+        },
+        {
+          "line": 806,
+          "excerpt": "narrative = _payload_object(payload, \"narrative\", \"narrative\")"
+        },
+        {
+          "line": 807,
+          "excerpt": "if narrative.get(\"maturity\") != \"argument\":"
+        },
+        {
+          "line": 809,
+          "excerpt": "\"(result)/payload/narrative/maturity\","
+        },
+        {
+          "line": 810,
+          "excerpt": "\"the narrative variant carries an argument Narrative with a central node and connected structure\")"
+        },
+        {
+          "line": 811,
+          "excerpt": "models.validate_narrative_semantics(narrative, policy=task.get(\"content_validation_policy\"))"
+        },
+        {
+          "line": 812,
+          "excerpt": "from .business_framing import validate_task_result"
+        },
+        {
+          "line": 813,
+          "excerpt": "validate_task_result(store, document, task, narrative)"
+        },
+        {
+          "line": 814,
+          "excerpt": "_narrative_project_check(narrative, document)"
+        },
+        {
+          "line": 815,
+          "excerpt": "narrative_ref = store.put_json_object(narrative)"
+        },
+        {
+          "line": 816,
+          "excerpt": "result_refs = [narrative_ref]"
+        },
+        {
+          "line": 824,
+          "excerpt": "\"the narrative variant may attach a planned content_plan.v2; bound plans arrive with page_copy\")"
+        },
+        {
+          "line": 828,
+          "excerpt": "if plan.get(\"narrative_ref\") not in (None, narrative_ref):"
+        },
+        {
+          "line": 830,
+          "excerpt": "\"(result)/payload/plan/narrative_ref\","
+        },
+        {
+          "line": 835,
+          "excerpt": "if narrative.get('schema_version') == 'narrative.v2':"
+        },
+        {
+          "line": 840,
+          "excerpt": "validate_plan_input_v2(store, document, plan['input'], narrative_ref=narrative_ref)"
+        },
+        {
+          "line": 843,
+          "excerpt": "plan = {**plan, \"narrative_ref\": narrative_ref}"
+        },
+        {
+          "line": 849,
+          "excerpt": "\"description\": f\"narrative proposal {narrative['narrative_id']}\", \"read_set\": []})"
+        },
+        {
+          "line": 853,
+          "excerpt": "\"variant\": \"narrative\", \"adopted\": False,"
+        },
+        {
+          "line": 854,
+          "excerpt": "\"narrative_ref\": narrative_ref, \"plan_ref\": plan_ref, \"proposal_refs\": result_refs,"
+        },
+        {
+          "line": 876,
+          "excerpt": "unknown = sorted(set(link.get(\"narrative_node_ids\") or []) - known_nodes)"
+        },
+        {
+          "line": 880,
+          "excerpt": "f\"the visible mapping references narrative nodes that are not in the current \""
+        },
+        {
+          "line": 885,
+          "excerpt": "store, document, narrative, narrative_ref, plan_input, page, *, require_role_mapping=True,"
+        },
+        {
+          "line": 901,
+          "excerpt": "if mapping.get(\"narrative_ref\") != narrative_ref:"
+        },
+        {
+          "line": 903,
+          "excerpt": "f\"(result)/payload/pages/{page['page_id']}/content_mapping/narrative_ref\","
+        },
+        {
+          "line": 905,
+          "excerpt": "known_nodes = {node[\"node_id\"] for node in (narrative or {}).get(\"nodes\") or []}"
+        },
+        {
+          "line": 917,
+          "excerpt": "unknown = sorted(set(link.get(\"narrative_node_ids\") or []) - known_nodes)"
+        },
+        {
+          "line": 921,
+          "excerpt": "f\"narrative nodes not present in the adopted Narrative: {unknown}\")"
+        },
+        {
+          "line": 938,
+          "excerpt": "unknown = sorted(set(segment.get(\"narrative_node_ids\") or []) - known_nodes)"
+        },
+        {
+          "line": 942,
+          "excerpt": "f\"narrative nodes not present in the adopted Narrative: {unknown}\")"
+        },
+        {
+          "line": 977,
+          "excerpt": "narrative_ref = document.get(\"narrative\")"
+        },
+        {
+          "line": 978,
+          "excerpt": "if narrative_ref is None:"
+        },
+        {
+          "line": 982,
+          "excerpt": "\"adopt the narrative proposal before writing the copy\")"
+        },
+        {
+          "line": 983,
+          "excerpt": "narrative = store.read_object_json(narrative_ref)"
+        },
+        {
+          "line": 984,
+          "excerpt": "if narrative.get(\"maturity\") != \"argument\":"
+        },
+        {
+          "line": 988,
+          "excerpt": "_check_mapping_against(store, document, narrative, narrative_ref, plan_input, page)"
+        },
+        {
+          "line": 1036,
+          "excerpt": "narrative_ref=narrative_ref, mode=\"bound\")"
+        },
+        {
+          "line": 1050,
+          "excerpt": "\"note\": \"proposal_only keeps the current Document pages, plan and narrative unchanged\","
+        },
+        {
+          "line": 1116,
+          "excerpt": "narrative_ref = document.get(\"narrative\")"
+        },
+        {
+          "line": 1117,
+          "excerpt": "narrative = store.read_object_json(narrative_ref) if narrative_ref else None"
+        },
+        {
+          "line": 1118,
+          "excerpt": "known_nodes = {node[\"node_id\"] for node in (narrative or {}).get(\"nodes\") or []}"
+        },
+        {
+          "line": 1157,
+          "excerpt": "if (plan.get('mode') != 'imported_mapping' or narrative_ref is not None or"
+        },
+        {
+          "line": 1158,
+          "excerpt": "plan.get('narrative_ref') is not None):"
+        },
+        {
+          "line": 1171,
+          "excerpt": "mapping = {'narrative_ref': None, 'plan_role_page_id': page_id,"
+        },
+        {
+          "line": 1172,
+          "excerpt": "'visible_links': [{'element_ref': atom, 'narrative_node_ids': [],"
+        },
+        {
+          "line": 1176,
+          "excerpt": "if mapping.get(\"narrative_ref\") != narrative_ref:"
+        },
+        {
+          "line": 1198,
+          "excerpt": "unknown = sorted(set(segment.get(\"narrative_node_ids\") or []) - known_nodes)"
+        },
+        {
+          "line": 1201,
+          "excerpt": "f\"narrative nodes not in the current Narrative: {unknown}\")"
+        },
+        {
+          "line": 1373,
+          "excerpt": "current_narrative: dict | None"
+        },
+        {
+          "line": 1374,
+          "excerpt": "narrative: dict | None"
+        },
+        {
+          "line": 1375,
+          "excerpt": "narrative_ref: dict | None"
+        },
+        {
+          "line": 1488,
+          "excerpt": "for layer in (\"narrative\", \"plan\"):"
+        },
+        {
+          "line": 1494,
+          "excerpt": "narrative_ref = document.get(\"narrative\")"
+        },
+        {
+          "line": 1495,
+          "excerpt": "current_narrative = store.read_object_json(narrative_ref) if narrative_ref else None"
+        },
+        {
+          "line": 1496,
+          "excerpt": "narrative = current_narrative"
+        },
+        {
+          "line": 1497,
+          "excerpt": "if \"narrative\" in single:"
+        },
+        {
+          "line": 1498,
+          "excerpt": "narrative = single[\"narrative\"]"
+        },
+        {
+          "line": 1499,
+          "excerpt": "models.validate_narrative_semantics(narrative, policy=task.get(\"content_validation_policy\"))"
+        },
+        {
+          "line": 1500,
+          "excerpt": "from .business_framing import validate_task_result"
+        },
+        {
+          "line": 1501,
+          "excerpt": "validate_task_result(store, document, task, narrative)"
+        },
+        {
+          "line": 1502,
+          "excerpt": "_narrative_project_check(narrative, document)"
+        },
+        {
+          "line": 1504,
+          "excerpt": "for node in narrative.get('nodes') or []:"
+        },
+        {
+          "line": 1507,
+          "excerpt": "'(result)/payload/proposals/narrative/nodes/' + node['node_id'] + '/source_links')"
+        },
+        {
+          "line": 1509,
+          "excerpt": "raise tasks_mod.EnvelopeError('(result)/payload/proposals/narrative', str(exc)) from exc"
+        },
+        {
+          "line": 1510,
+          "excerpt": "narrative_ref = proposal_by_layer[\"narrative\"][0][\"ref\"]"
+        },
+        {
+          "line": 1511,
+          "excerpt": "from .variant_requests import require_fixed_narrative"
+        },
+        {
+          "line": 1512,
+          "excerpt": "require_fixed_narrative(store, document, narrative_ref)"
+        },
+        {
+          "line": 1513,
+          "excerpt": "known_nodes = {node[\"node_id\"] for node in (narrative or {}).get(\"nodes\", [])}"
+        },
+        {
+          "line": 1586,
+          "excerpt": "if (plan_input.get(\"narrative_ref\") not in (None, narrative_ref)"
+        },
+        {
+          "line": 1587,
+          "excerpt": "or plan_input[\"mode\"] != \"planned\" and plan_input.get(\"narrative_ref\") != narrative_ref):"
+        },
+        {
+          "line": 1588,
+          "excerpt": "raise tasks_mod.EnvelopeError(\"(result)/payload/proposals/plan/narrative_ref\", \"Plan binds another Narrative\")"
+        },
+        {
+          "line": 1605,
+          "excerpt": "if set(role.get(\"narrative_node_ids\", [])) - known_nodes:"
+        },
+        {
+          "line": 1609,
+          "excerpt": "imported_mapping = bool(old_plan and old_plan.get('mode') == 'imported_mapping' and narrative_ref is None)"
+        },
+        {
+          "line": 1616,
+          "excerpt": "narrative_ref=narrative_ref)"
+        },
+        {
+          "line": 1628,
+          "excerpt": "if \"narrative\" in changed_layers:"
+        },
+        {
+          "line": 1629,
+          "excerpt": "mapping[\"narrative_ref\"] = narrative_ref"
+        },
+        {
+          "line": 1630,
+          "excerpt": "if mapping.get(\"narrative_ref\") != narrative_ref:"
+        },
+        {
+          "line": 1633,
+          "excerpt": "_check_mapping_against(store, document, narrative, narrative_ref, plan_input, page,"
+        },
+        {
+          "line": 1666,
+          "excerpt": "current_narrative=current_narrative,"
+        },
+        {
+          "line": 1667,
+          "excerpt": "narrative=narrative,"
+        },
+        {
+          "line": 1668,
+          "excerpt": "narrative_ref=narrative_ref,"
+        },
+        {
+          "line": 1722,
+          "excerpt": "current_narrative = changes.current_narrative"
+        },
+        {
+          "line": 1723,
+          "excerpt": "narrative = changes.narrative"
+        },
+        {
+          "line": 1724,
+          "excerpt": "narrative_ref = changes.narrative_ref"
+        },
+        {
+          "line": 1740,
+          "excerpt": "and (narrative or {}).get(\"maturity\") == \"argument\""
+        },
+        {
+          "line": 1741,
+          "excerpt": "and (current_narrative or {}).get(\"maturity\") != \"argument\"):"
+        },
+        {
+          "line": 1743,
+          "excerpt": "\"(result)/payload/proposals/narrative\","
+        },
+        {
+          "line": 1765,
+          "excerpt": "updated[\"narrative\"] = narrative_ref"
+        },
+        {
+          "line": 1769,
+          "excerpt": "if \"narrative\" in changed_layers:"
+        },
+        {
+          "line": 1770,
+          "excerpt": "result_refs.append(narrative_ref)"
+        },
+        {
+          "line": 1774,
+          "excerpt": "plan_ref = build_v2_plan(store, document, task, plan_input, new_pages, narrative_ref=narrative_ref,"
+        },
+        {
+          "line": 1785,
+          "excerpt": "or order != list(entries) or narrative_ref != document.get('narrative') or actual_plan_change):"
+        },
+        {
+          "line": 1795,
+          "excerpt": "\"adopted\": True, \"changed_layers\": changed_layers, \"narrative_ref\": narrative_ref,"
+        },
+        {
+          "line": 1809,
+          "excerpt": "def _committed_legacy_narrative(store, document, proposal_ref):"
+        },
+        {
+          "line": 1824,
+          "excerpt": "and response.get(\"variant\") in (\"narrative\", \"input_revision\")"
+        },
+        {
+          "line": 1906,
+          "excerpt": "allowed_topics = {\"narrative.v1\": (\"direction\",),"
+        },
+        {
+          "line": 1907,
+          "excerpt": "\"narrative.v2\": (\"direction\",),"
+        },
+        {
+          "line": 1915,
+          "excerpt": "legacy_accepted = _committed_legacy_narrative(store, document, proposal_ref)"
+        },
+        {
+          "line": 1916,
+          "excerpt": "models.validate_narrative_semantics("
+        },
+        {
+          "line": 1918,
+          "excerpt": "from .business_framing import validate_adoption_basis"
+        },
+        {
+          "line": 1920,
+          "excerpt": "if document.get('narrative') and schema == 'narrative.v1':"
+        },
+        {
+          "line": 1921,
+          "excerpt": "current = store.read_object_json(document['narrative'])"
+        },
+        {
+          "line": 1922,
+          "excerpt": "if current.get('schema_version') == 'narrative.v2':"
+        },
+        {
+          "line": 1932,
+          "excerpt": "if document.get(\"narrative\") and document[\"narrative\"] != proposal_ref:"
+        },
+        {
+          "line": 1933,
+          "excerpt": "invalidated.append({\"ref\": document[\"narrative\"], \"reason\": \"narrative_replaced\"})"
+        },
+        {
+          "line": 1934,
+          "excerpt": "from .variant_requests import require_fixed_narrative"
+        },
+        {
+          "line": 1935,
+          "excerpt": "require_fixed_narrative(store, document, proposal_ref)"
+        },
+        {
+          "line": 1936,
+          "excerpt": "updated[\"narrative\"] = proposal_ref"
+        },
+        {
+          "line": 1941,
+          "excerpt": "and current_plan.get(\"narrative_ref\") not in (None, proposal_ref)):"
+        },
+        {
+          "line": 1942,
+          "excerpt": "invalidated.append({\"ref\": current_plan_ref, \"reason\": \"plan_bound_to_previous_narrative\"})"
+        },
+        {
+          "line": 1950,
+          "excerpt": "narrative_ref = proposal.get(\"narrative_ref\")"
+        },
+        {
+          "line": 1951,
+          "excerpt": "if narrative_ref is not None and narrative_ref != document.get(\"narrative\"):"
+        },
+        {
+          "line": 1954,
+          "excerpt": "if narrative_ref is not None:"
+        },
+        {
+          "line": 1955,
+          "excerpt": "from .business_framing import validate_adoption_basis"
+        },
+        {
+          "line": 1956,
+          "excerpt": "validate_adoption_basis(store, document, store.read_object_json(narrative_ref), decision)"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/content_review.py",
+      "disposition": "adapted",
+      "conclusion": "v2作者沿革含策略与框架；前审packet保持完整原始对象",
+      "references": [
+        {
+          "line": 238,
+          "excerpt": "narrative = None"
+        },
+        {
+          "line": 239,
+          "excerpt": "if document.get(\"narrative\"):"
+        },
+        {
+          "line": 240,
+          "excerpt": "narrative = store.read_object_json(document[\"narrative\"])"
+        },
+        {
+          "line": 271,
+          "excerpt": "\"narrative\": narrative,"
+        },
+        {
+          "line": 345,
+          "excerpt": "retained[(\"narrative\", None)] = tokens(obj)"
+        },
+        {
+          "line": 360,
+          "excerpt": "pointers.update({(role, None): snap[role] for role in (\"narrative\", \"content_plan\") if snap.get(role)})"
+        },
+        {
+          "line": 596,
+          "excerpt": "for pointer in (document.get(\"narrative\"), document.get(\"content_plan\")):"
+        },
+        {
+          "line": 617,
+          "excerpt": "if document.get(\"narrative\"):"
+        },
+        {
+          "line": 618,
+          "excerpt": "expected[\"content:narrative\"] = document[\"narrative\"][\"sha256\"]"
+        },
+        {
+          "line": 661,
+          "excerpt": "or any(dep[\"kind\"] == \"content\" and dep[\"identity\"] not in (\"narrative\", \"content_plan\")"
+        },
+        {
+          "line": 820,
+          "excerpt": "if document.get(\"narrative\") and deps.get(\"content:narrative\") != document[\"narrative\"][\"sha256\"]:"
+        },
+        {
+          "line": 821,
+          "excerpt": "stale.append(\"content:narrative\")"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/current_relationship.py",
+      "disposition": "no_change",
+      "conclusion": "传递固定Narrative/Plan Ref或原样对象/继承字段；无v1版本过滤和新字段删除，无需修改",
+      "references": [
+        {
+          "line": 167,
+          "excerpt": "values.update({(name, ''): document[name] for name in ('narrative', 'content_plan')"
+        },
+        {
+          "line": 179,
+          "excerpt": "# narrative/plan. Unrelated rendering and display metadata do not."
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/current_work.py",
+      "disposition": "no_change",
+      "conclusion": "传递固定Narrative/Plan Ref或原样对象/继承字段；无v1版本过滤和新字段删除，无需修改",
+      "references": [
+        {
+          "line": 96,
+          "excerpt": "if (request.get('content_intent') == 'plan_only' or not artifact.get('pages')) and artifact.get('narrative') and artifact.get('content_plan'):"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/dependency_slices.py",
+      "disposition": "adapted",
+      "conclusion": "注册共识；新任务与direction决定绑定情境和共识",
+      "references": [
+        {
+          "line": 200,
+          "excerpt": "if identity in (\"narrative\", \"content_plan\"):"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/design_recipe.py",
+      "disposition": "no_change",
+      "conclusion": "仅用继承节点做已有可行性判断；不重写Narrative",
+      "references": [
+        {
+          "line": 216,
+          "excerpt": "if value[\"intent\"] == \"feasibility\" and document.get(\"narrative\"):"
+        },
+        {
+          "line": 217,
+          "excerpt": "narrative = store.read_object_json(document[\"narrative\"])"
+        },
+        {
+          "line": 218,
+          "excerpt": "validate_schema(\"narrative\", narrative)"
+        },
+        {
+          "line": 219,
+          "excerpt": "if narrative.get(\"project_id\") != document[\"project_id\"]:"
+        },
+        {
+          "line": 220,
+          "excerpt": "_error(\"narrative\", \"Narrative belongs to another project\")"
+        },
+        {
+          "line": 225,
+          "excerpt": "if value[\"intent\"] == \"feasibility\" and not ids and not (document.get(\"narrative\") or plan):"
+        },
+        {
+          "line": 263,
+          "excerpt": "for identity in (\"narrative\", \"content_plan\"):"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/design_requirements.py",
+      "disposition": "no_change",
+      "conclusion": "通过共享validate_narrative_semantics读取完整对象与继承的节点字段；自动获得v2校验",
+      "references": [
+        {
+          "line": 89,
+          "excerpt": "\"mode\": plan[\"mode\"], \"narrative_ref\": plan[\"narrative_ref\"],"
+        },
+        {
+          "line": 147,
+          "excerpt": "narrative_ref = plan[\"narrative_ref\"]"
+        },
+        {
+          "line": 148,
+          "excerpt": "if narrative_ref != document.get(\"narrative\"):"
+        },
+        {
+          "line": 149,
+          "excerpt": "raise ModelError(\"design_requirements/plan/narrative_ref\","
+        },
+        {
+          "line": 151,
+          "excerpt": "narrative = None"
+        },
+        {
+          "line": 152,
+          "excerpt": "if narrative_ref is not None:"
+        },
+        {
+          "line": 153,
+          "excerpt": "narrative = _read(store, narrative_ref, \"design_requirements/plan/narrative_ref\")"
+        },
+        {
+          "line": 154,
+          "excerpt": "models.validate_narrative_semantics(narrative)"
+        },
+        {
+          "line": 155,
+          "excerpt": "if narrative[\"project_id\"] != document[\"project_id\"]:"
+        },
+        {
+          "line": 156,
+          "excerpt": "raise ModelError(\"design_requirements/plan/narrative_ref\", \"Narrative belongs to another project\")"
+        },
+        {
+          "line": 157,
+          "excerpt": "if plan[\"mode\"] == \"bound\" and narrative is None:"
+        },
+        {
+          "line": 158,
+          "excerpt": "raise ModelError(\"design_requirements/plan/narrative_ref\","
+        },
+        {
+          "line": 175,
+          "excerpt": "elif mapping[\"narrative_ref\"] != narrative_ref or mapping[\"plan_role_page_id\"] != page[\"page_id\"]:"
+        },
+        {
+          "line": 178,
+          "excerpt": "known_nodes = {node[\"node_id\"] for node in narrative[\"nodes\"]} if narrative else set()"
+        },
+        {
+          "line": 188,
+          "excerpt": "unknown = set(record[\"narrative_node_ids\"]) - known_nodes"
+        },
+        {
+          "line": 190,
+          "excerpt": "raise ModelError(where + \"/narrative_node_ids\", f\"unknown current Narrative nodes: {sorted(unknown)}\")"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/editing.py",
+      "disposition": "adapted",
+      "conclusion": "v2主体识别；策略/框架进入修复语义摘要；方法元信息不能充当内容修复",
+      "references": [
+        {
+          "line": 26,
+          "excerpt": "for role in ('narrative', 'content_plan'):"
+        },
+        {
+          "line": 52,
+          "excerpt": "subject_refs += [ref for role in ('narrative', 'content_plan') if (ref := doc.get(role))]"
+        },
+        {
+          "line": 67,
+          "excerpt": "role, page_id, content_sha = 'narrative', None, ref['sha256']"
+        },
+        {
+          "line": 82,
+          "excerpt": "if role == 'narrative':"
+        },
+        {
+          "line": 83,
+          "excerpt": "body = {k: obj.get(k) for k in ('communication_job',"
+        },
+        {
+          "line": 84,
+          "excerpt": "'central_node_id', 'nodes', 'edges', 'issues', 'alternatives',"
+        },
+        {
+          "line": 109,
+          "excerpt": "if role in ('narrative', 'content_plan'):"
+        },
+        {
+          "line": 111,
+          "excerpt": "if role == 'narrative':"
+        },
+        {
+          "line": 117,
+          "excerpt": "if role in ('narrative', 'content_plan'):"
+        },
+        {
+          "line": 172,
+          "excerpt": "'narrative_ref', 'imported_manuscript', 'input', 'basis')"
+        },
+        {
+          "line": 267,
+          "excerpt": "for identity, pointer in (('narrative', doc.get('narrative')),"
+        },
+        {
+          "line": 570,
+          "excerpt": "for pointer, layer in (('narrative', 'narrative'), ('content_plan', 'plan'), ('outputs', 'output')):"
+        },
+        {
+          "line": 597,
+          "excerpt": "if past.get('narrative'):"
+        },
+        {
+          "line": 598,
+          "excerpt": "updated['narrative'] = copy.deepcopy(past['narrative'])"
+        },
+        {
+          "line": 600,
+          "excerpt": "updated.pop('narrative', None)"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/effective_requirements.py",
+      "disposition": "no_change",
+      "conclusion": "传递固定Narrative/Plan Ref或原样对象/继承字段；无v1版本过滤和新字段删除，无需修改",
+      "references": [
+        {
+          "line": 14,
+          "excerpt": "'argument': {'narrative', 'plan', 'page_copy', 'review'},"
+        },
+        {
+          "line": 15,
+          "excerpt": "'page_copy': {'narrative', 'plan', 'page_copy', 'review'},"
+        },
+        {
+          "line": 16,
+          "excerpt": "'progression': {'narrative', 'plan', 'page_copy', 'review'},"
+        },
+        {
+          "line": 17,
+          "excerpt": "'speech': {'narrative', 'plan', 'page_copy', 'speech', 'review'},"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/eligibility.py",
+      "disposition": "no_change",
+      "conclusion": "全对象Ref及控制快照比较，不按v1过滤；方向有效性由已更新basis/采用入口判定",
+      "references": [
+        {
+          "line": 155,
+          "excerpt": "_spec(\"dispatch.compose\", \"creation\", \"deck\", layers=(\"narrative\", \"plan\", \"page_copy\"),"
+        },
+        {
+          "line": 177,
+          "excerpt": "_spec(\"content.inputs_update\", \"adoption\", \"deck\", layers=(\"narrative\",),"
+        },
+        {
+          "line": 946,
+          "excerpt": "or artifact.get('narrative') != control.get('narrative')):"
+        },
+        {
+          "line": 964,
+          "excerpt": "'policy': control['policy'], 'narrative': control.get('narrative'),"
+        },
+        {
+          "line": 1617,
+          "excerpt": "or artifact.get('narrative') != control.get('narrative')):"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/errors.py",
+      "disposition": "no_change",
+      "conclusion": "错误信息命中，无Narrative字段消费",
+      "references": [
+        {
+          "line": 102,
+          "excerpt": "\"narrative_disconnected\": \"connect relevant nodes with genuine support, explanation or qualification relations; move unrelated material out instead of adding meaningless edges\","
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/exports.py",
+      "disposition": "no_change",
+      "conclusion": "公共包只用Page；工程包保存不可变完整对象，作者策略不泄漏到公共正文",
+      "references": [
+        {
+          "line": 451,
+          "excerpt": "\"narrative_ref\": doc.get(\"narrative\"),"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/external_review.py",
+      "disposition": "no_change",
+      "conclusion": "传递固定Narrative/Plan Ref或原样对象/继承字段；无v1版本过滤和新字段删除，无需修改",
+      "references": [
+        {
+          "line": 273,
+          "excerpt": "refs = [document.get('narrative'), document.get('content_plan'), *document['outputs'].values()]"
+        },
+        {
+          "line": 330,
+          "excerpt": "if layers & {'narrative', 'plan', 'page_copy'}:"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/legacy.py",
+      "disposition": "no_change",
+      "conclusion": "退役命令/旧素材映射，非新Narrative writer；不改历史格式",
+      "references": [
+        {
+          "line": 20,
+          "excerpt": "HD_MARKERS = ('preview_manifest.json', 'narrative_plan.json', 'page_tasks.json')"
+        },
+        {
+          "line": 54,
+          "excerpt": "('preview_manifest.json', 'run.json', 'request.json', 'narrative_plan.json'))"
+        },
+        {
+          "line": 107,
+          "excerpt": "if {'preview_manifest', 'narrative_plan', 'page_tasks'} <= set(hd):"
+        },
+        {
+          "line": 113,
+          "excerpt": "f'{root}: 既不是 HD run(缺 {[m for m in (\"preview_manifest\", \"narrative_plan\", \"page_tasks\") if m not in hd]})'"
+        },
+        {
+          "line": 207,
+          "excerpt": "beats = {beat.get('beat_id'): beat for beat in (hd.get('narrative_plan', {}).get('beats') or [])}"
+        },
+        {
+          "line": 228,
+          "excerpt": "'visual_spec': {'intent': f\"legacy hd run page (role {preview.get('narrative_role') or beat.get('role') or 'unknown'})\","
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/method_resources.py",
+      "disposition": "no_change",
+      "conclusion": "已有方法和manifest冻结读取；默认/选择链留D02b，不在旧Task追加资源",
+      "references": [
+        {
+          "line": 206,
+          "excerpt": "\"narrative\" in (task.get(\"collaboration_binding\") or {}).get(\"write_scope\", {}).get(\"layers\", [])):"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/models.py",
+      "disposition": "adapted",
+      "conclusion": "v2 schema注册/分派；共享节点校验；新writer rank",
+      "references": [
+        {
+          "line": 40,
+          "excerpt": "\"narrative\": \"narrative.v1.schema.json\","
+        },
+        {
+          "line": 41,
+          "excerpt": "\"narrative_v2\": \"narrative.v2.schema.json\","
+        },
+        {
+          "line": 179,
+          "excerpt": "NARRATIVE_VERSIONS = (\"narrative.v1\", \"narrative.v2\")"
+        },
+        {
+          "line": 182,
+          "excerpt": "\"narrative\": {\"narrative.v2\": \"narrative_v2\"},"
+        },
+        {
+          "line": 442,
+          "excerpt": "def validate_narrative_semantics(narrative: dict[str, Any], *, policy: str | None = None) -> None:"
+        },
+        {
+          "line": 447,
+          "excerpt": "validate_schema(\"narrative\", narrative)"
+        },
+        {
+          "line": 448,
+          "excerpt": "if narrative.get(\"schema_version\") == \"narrative.v2\":"
+        },
+        {
+          "line": 449,
+          "excerpt": "from .business_framing import validate"
+        },
+        {
+          "line": 450,
+          "excerpt": "validate(narrative)"
+        },
+        {
+          "line": 451,
+          "excerpt": "nodes = narrative.get(\"nodes\") or []"
+        },
+        {
+          "line": 454,
+          "excerpt": "raise ModelError(\"narrative/nodes\", \"duplicate node_id\")"
+        },
+        {
+          "line": 456,
+          "excerpt": "issues = narrative.get(\"issues\") or []"
+        },
+        {
+          "line": 459,
+          "excerpt": "raise ModelError(\"narrative/issues\", \"duplicate issue_id\")"
+        },
+        {
+          "line": 469,
+          "excerpt": "where = f\"narrative/nodes/{node.get('node_id')}\""
+        },
+        {
+          "line": 470,
+          "excerpt": "require_known(node.get(\"qualification_node_ids\") or [], where + \"/qualification_node_ids\")"
+        },
+        {
+          "line": 482,
+          "excerpt": "for index, edge in enumerate(narrative.get(\"edges\") or []):"
+        },
+        {
+          "line": 484,
+          "excerpt": "require_known(endpoints, f\"narrative/edges[{index}]\")"
+        },
+        {
+          "line": 486,
+          "excerpt": "require_known(issue.get(\"affected_node_ids\") or [], f\"narrative/issues/{issue.get('issue_id')}/affected_node_ids\")"
+        },
+        {
+          "line": 487,
+          "excerpt": "for alternative in narrative.get(\"alternatives\") or []:"
+        },
+        {
+          "line": 489,
+          "excerpt": "f\"narrative/alternatives/{alternative.get('option_id')}/affected_node_ids\")"
+        },
+        {
+          "line": 490,
+          "excerpt": "central = narrative.get(\"central_node_id\")"
+        },
+        {
+          "line": 491,
+          "excerpt": "if narrative.get(\"maturity\") == \"argument\":"
+        },
+        {
+          "line": 493,
+          "excerpt": "raise ModelError(\"narrative/central_node_id\","
+        },
+        {
+          "line": 494,
+          "excerpt": "\"an argument narrative needs a central node that exists in nodes\")"
+        },
+        {
+          "line": 496,
+          "excerpt": "raise ModelError(\"narrative/central_node_id\", \"central node id must exist in nodes\")"
+        },
+        {
+          "line": 499,
+          "excerpt": "raise ModelError(\"narrative/policy\", \"unsupported content validation policy\")"
+        },
+        {
+          "line": 500,
+          "excerpt": "if policy == \"argument-connectivity.v1\" and narrative.get(\"maturity\") == \"argument\":"
+        },
+        {
+          "line": 502,
+          "excerpt": "for edge in narrative.get(\"edges\") or []:"
+        },
+        {
+          "line": 507,
+          "excerpt": "for qualifier in node.get(\"qualification_node_ids\") or []:"
+        },
+        {
+          "line": 523,
+          "excerpt": "error_code = \"narrative_disconnected\""
+        },
+        {
+          "line": 527,
+          "excerpt": "super().__init__(\"payload.narrative.nodes\","
+        },
+        {
+          "line": 530,
+          "excerpt": "self.central_node_id = central"
+        },
+        {
+          "line": 533,
+          "excerpt": "self.error_details = {\"central_node_id\": central, \"unreachable_node_ids\": unreachable,"
+        },
+        {
+          "line": 604,
+          "excerpt": "\"collaboration.v1\": 11, \"rc3.v1\": 12, \"rc3-entry.v1\": 13, \"rc4-content.v1\": 14, \"method-catalog.v1\": 15, \"design-policy.v1\": 16, \"asset-inputs.v1\": 17, \"original-review.v1\": 18, \"settled-image-reuse.v1\": 19, \"outline-review.v1\": 20, \"business-framing.v1\": 21}"
+        },
+        {
+          "line": 778,
+          "excerpt": "if document.get(\"narrative\"):"
+        },
+        {
+          "line": 779,
+          "excerpt": "validate_ref(document[\"narrative\"], where=\"document/narrative\")"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/native_review.py",
+      "disposition": "no_change",
+      "conclusion": "传递固定Narrative/Plan Ref或原样对象/继承字段；无v1版本过滤和新字段删除，无需修改",
+      "references": [
+        {
+          "line": 102,
+          "excerpt": "subjects = [document[key] for key in (\"narrative\", \"content_plan\") if document.get(key)]"
+        },
+        {
+          "line": 106,
+          "excerpt": "for key in (\"narrative\", \"content_plan\") if document.get(key)]"
+        },
+        {
+          "line": 412,
+          "excerpt": "subjects = [document[key] for key in (\"narrative\", \"content_plan\") if document.get(key)]"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/outline_review.py",
+      "disposition": "no_change",
+      "conclusion": "通过共享Narrative validator读取固定Narrative/匹配Plan；完整packet不丢字段",
+      "references": [
+        {
+          "line": 14,
+          "excerpt": "refs = [document.get(key) for key in ('narrative', 'content_plan')]"
+        },
+        {
+          "line": 17,
+          "excerpt": "narrative, plan = [store.read_object_json(ref) for ref in refs]"
+        },
+        {
+          "line": 18,
+          "excerpt": "models.validate_narrative_semantics(narrative)"
+        },
+        {
+          "line": 20,
+          "excerpt": "if (not narrative.get('nodes') or not plan.get('input', {}).get('page_order')"
+        },
+        {
+          "line": 21,
+          "excerpt": "or plan.get('narrative_ref') != refs[0]"
+        },
+        {
+          "line": 22,
+          "excerpt": "or any(value.get('project_id') != document['project_id'] for value in (narrative, plan))):"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/project_initialization.py",
+      "disposition": "no_change",
+      "conclusion": "传递固定Narrative/Plan Ref或原样对象/继承字段；无v1版本过滤和新字段删除，无需修改",
+      "references": [
+        {
+          "line": 35,
+          "excerpt": "\"layers\": [\"narrative\", \"plan\", \"page_copy\", \"speech\", \"design\", \"blueprint\", \"svg\", \"review\", \"output\"],"
+        },
+        {
+          "line": 53,
+          "excerpt": "unresolved = [\"Original narrative relationships and source claims were not independently verified; original bytes remain in source_ref\"]"
+        },
+        {
+          "line": 61,
+          "excerpt": "role['narrative_node_ids'] = []"
+        },
+        {
+          "line": 73,
+          "excerpt": "'intended_takeaway': goals[pid]['purpose'], 'narrative_node_ids': [], 'source_links': [],"
+        },
+        {
+          "line": 83,
+          "excerpt": "'narrative_node_ids': [], 'source_links': [], 'required_qualifications': [],"
+        },
+        {
+          "line": 93,
+          "excerpt": "plan_input, pages, narrative_ref=None, mode=\"imported_mapping\", require_role_mapping=False,"
+        },
+        {
+          "line": 112,
+          "excerpt": "segment['narrative_node_ids'] = []"
+        },
+        {
+          "line": 113,
+          "excerpt": "page[\"content_mapping\"] = {\"narrative_ref\": None, \"plan_role_page_id\": page[\"page_id\"],"
+        },
+        {
+          "line": 114,
+          "excerpt": "\"visible_links\": [{\"element_ref\": atom, \"narrative_node_ids\": [], \"source_links\": []}"
+        },
+        {
+          "line": 117,
+          "excerpt": "\"end_codepoint\": len(notes), \"narrative_node_ids\": [], \"kind\": \"cue\","
+        },
+        {
+          "line": 165,
+          "excerpt": "if doc.get('narrative'):"
+        },
+        {
+          "line": 166,
+          "excerpt": "layers.add('narrative')"
+        },
+        {
+          "line": 220,
+          "excerpt": "updated = {**doc, \"pages\": pages, \"content_plan\": plan_ref, \"narrative\": None,"
+        },
+        {
+          "line": 261,
+          "excerpt": "\"narrative_ref\": None, \"creates_confirmation\": False,"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/review.py",
+      "disposition": "no_change",
+      "conclusion": "传递固定Narrative/Plan Ref或原样对象/继承字段；无v1版本过滤和新字段删除，无需修改",
+      "references": [
+        {
+          "line": 119,
+          "excerpt": "expected = ({'content:narrative', 'content:content_plan'} if outline else"
+        },
+        {
+          "line": 124,
+          "excerpt": "if 'content:narrative' in artifacts:"
+        },
+        {
+          "line": 125,
+          "excerpt": "expected.add('content:narrative')"
+        },
+        {
+          "line": 129,
+          "excerpt": "(('narrative', 'content_plan') if outline else ('narrative', 'content_plan', 'page'))}"
+        },
+        {
+          "line": 280,
+          "excerpt": "info.get('role') in ('page', 'narrative', 'content_plan') and"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/review_evidence.py",
+      "disposition": "no_change",
+      "conclusion": "传递固定Narrative/Plan Ref或原样对象/继承字段；无v1版本过滤和新字段删除，无需修改",
+      "references": [
+        {
+          "line": 137,
+          "excerpt": "subjects = ([document[\"narrative\"]] if document.get(\"narrative\") else [])"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/review_import.py",
+      "disposition": "no_change",
+      "conclusion": "传递固定Narrative/Plan Ref或原样对象/继承字段；无v1版本过滤和新字段删除，无需修改",
+      "references": [
+        {
+          "line": 76,
+          "excerpt": "refs = ([artifact[\"narrative\"]] if artifact.get(\"narrative\") else [])"
+        },
+        {
+          "line": 235,
+          "excerpt": "required.update({f\"content:{role}\": artifact[role][\"sha256\"] for role in (\"narrative\", \"content_plan\") if artifact.get(role)})"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/service.py",
+      "disposition": "adapted",
+      "conclusion": "显式新策划opt-in；确认稿及限定范围拒绝重开",
+      "references": [
+        {
+          "line": 137,
+          "excerpt": "business_framing: bool = False,"
+        },
+        {
+          "line": 146,
+          "excerpt": "if type(business_framing) is not bool:"
+        },
+        {
+          "line": 147,
+          "excerpt": "raise ServiceError('business_framing', 'expected a boolean contract opt-in')"
+        },
+        {
+          "line": 148,
+          "excerpt": "if business_framing and (draft is not None or (request_input or {}).get('content_intent') in ('write_only', 'speech_only')"
+        },
+        {
+          "line": 150,
+          "excerpt": "raise ServiceError('business_framing', 'business framing is for new planning, not a confirmed or bounded manuscript')"
+        },
+        {
+          "line": 207,
+          "excerpt": "business_framing=business_framing)"
+        },
+        {
+          "line": 1735,
+          "excerpt": "context={\"targets\": {\"layers\": [\"narrative\"]}})"
+        },
+        {
+          "line": 1981,
+          "excerpt": "\"variant\", \"adopted\", \"changed_layers\", \"page_refs\", \"plan_ref\", \"narrative_ref\", \"proposal_refs\","
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/store.py",
+      "disposition": "adapted",
+      "conclusion": "新Task或v2指针与writer floor原子写入；只读不迁移；仅新/变化refs判定",
+      "references": [
+        {
+          "line": 381,
+          "excerpt": "if WRITER_RANK.get(document.get('compatibility', {}).get('minimum_writer'), -1) < WRITER_RANK['business-framing.v1']:"
+        },
+        {
+          "line": 386,
+          "excerpt": "business = bool(document.get('narrative') and document.get('narrative') != previous.get('narrative') and"
+        },
+        {
+          "line": 387,
+          "excerpt": "classified(document['narrative']).get('schema_version') == 'narrative.v2')"
+        },
+        {
+          "line": 388,
+          "excerpt": "if business or any('business-framing.v1' in classified(ref).get('required_capabilities', [])"
+        },
+        {
+          "line": 392,
+          "excerpt": "require_writer(document, 'business-framing.v1')"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/tasks.py",
+      "disposition": "no_change",
+      "conclusion": "传递固定Narrative/Plan Ref或原样对象/继承字段；无v1版本过滤和新字段删除，无需修改",
+      "references": [
+        {
+          "line": 88,
+          "excerpt": "task.get(\"intent\") == \"input_revision\" and \"narrative\" in"
+        },
+        {
+          "line": 392,
+          "excerpt": "return (all(dispatched.get(key) == document.get(key) for key in ('narrative', 'content_plan'))"
+        },
+        {
+          "line": 1043,
+          "excerpt": "if layer in (\"narrative\", \"plan\", \"page_copy\", \"speech\") and layer not in layers:"
+        },
+        {
+          "line": 1047,
+          "excerpt": "elif variant == \"narrative\":"
+        },
+        {
+          "line": 1048,
+          "excerpt": "layers = [\"narrative\"] if payload.get(\"plan\") is None else [\"narrative\", \"plan\"]"
+        },
+        {
+          "line": 1050,
+          "excerpt": "layers = [\"narrative\"]"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/variant_requests.py",
+      "disposition": "no_change",
+      "conclusion": "传递固定Narrative/Plan Ref或原样对象/继承字段；无v1版本过滤和新字段删除，无需修改",
+      "references": [
+        {
+          "line": 235,
+          "excerpt": "def shared_narrative_check(store, document, group_id: str) -> dict:"
+        },
+        {
+          "line": 241,
+          "excerpt": "narrative_ref = document.get(\"narrative\")"
+        },
+        {
+          "line": 247,
+          "excerpt": "recorded = variant.get(\"narrative_ref\") or recorded"
+        },
+        {
+          "line": 249,
+          "excerpt": "return {\"ok\": True, \"narrative_ref\": narrative_ref, \"reason\": \"no earlier variant export\"}"
+        },
+        {
+          "line": 250,
+          "excerpt": "if narrative_ref != recorded:"
+        },
+        {
+          "line": 251,
+          "excerpt": "return {\"ok\": False, \"narrative_ref\": narrative_ref, \"recorded_narrative_ref\": recorded,"
+        },
+        {
+          "line": 254,
+          "excerpt": "return {\"ok\": True, \"narrative_ref\": narrative_ref, \"reason\": \"reuses the fixed Narrative Ref\"}"
+        },
+        {
+          "line": 261,
+          "excerpt": "def _fixed_narrative(store, document, group_id):"
+        },
+        {
+          "line": 272,
+          "excerpt": "and snap.get(\"narrative\") and snap.get(\"pages\") and snap.get(\"content_plan\")):"
+        },
+        {
+          "line": 273,
+          "excerpt": "values.append(snap[\"narrative\"])"
+        },
+        {
+          "line": 278,
+          "excerpt": "def require_fixed_narrative(store, document, narrative_ref):"
+        },
+        {
+          "line": 282,
+          "excerpt": "fixed = _fixed_narrative(store, document, variant[\"group_id\"])"
+        },
+        {
+          "line": 283,
+          "excerpt": "if fixed is not None and narrative_ref != fixed:"
+        },
+        {
+          "line": 285,
+          "excerpt": "raise ConflictError(\"variant/narrative_ref\", \"same-source variants must preserve their fixed shared Narrative\")"
+        },
+        {
+          "line": 315,
+          "excerpt": "if not records or not snap.get(\"content_plan\") or not snap.get(\"pages\") or not snap.get(\"narrative\"):"
+        },
+        {
+          "line": 318,
+          "excerpt": "if record[\"manifest\"].get(\"variant\", {}).get(\"narrative_ref\") != snap[\"narrative\"]:"
+        },
+        {
+          "line": 322,
+          "excerpt": "fixed = _fixed_narrative(store, document, target[\"group_id\"])"
+        },
+        {
+          "line": 323,
+          "excerpt": "if fixed is not None and snap[\"narrative\"] != fixed:"
+        },
+        {
+          "line": 330,
+          "excerpt": "for key in (\"narrative\", \"content_plan\", \"pages\", \"outputs\", \"content_basis\", \"style_recipes\"):"
+        },
+        {
+          "line": 340,
+          "excerpt": "updated[\"narrative\"] = snap[\"narrative\"]"
+        },
+        {
+          "line": 358,
+          "excerpt": "\"variant\": target, \"narrative_ref\": snap[\"narrative\"], \"preserved_export_ids\": [record[\"export_id\"]],"
+        },
+        {
+          "line": 359,
+          "excerpt": "\"affected_tasks\": retired, \"reused_refs\": [snap[\"narrative\"]], \"detached_refs\": []}"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/resources/static/v2/launcher-ui.js",
+      "disposition": "compatible_shared_fields",
+      "conclusion": "既有Ref/共用节点/任务状态展示不修改Narrative；API保留完整v2字段，专用策略/主题阅读与修正由D06负责；无UI行为改动",
+      "references": [
+        {
+          "line": 186,
+          "excerpt": "layers:work.input.value==='plan_only'?['narrative','plan']:work.input.value==='write_only'?['narrative','plan','page_copy']:work.input.value==='speech_only'?['speech']:['narrative','plan','page_copy','speech'],"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/resources/static/v2/evidence-reading.js",
+      "disposition": "compatible_shared_fields",
+      "conclusion": "既有Ref/共用节点/任务状态展示不修改Narrative；API保留完整v2字段，专用策略/主题阅读与修正由D06负责；无UI行为改动",
+      "references": [
+        {
+          "line": 12,
+          "excerpt": "el('p',{},({current:'页面绑定当前主线。',bound_to_older_narrative:'此页绑定较早主线，以下按原绑定读取。',not_recorded:'此页未绑定论证主线；原子映射和来源关联按下方记录分别展示。'})[d.alignment]),"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/resources/static/v2/insight-reading.js",
+      "disposition": "compatible_shared_fields",
+      "conclusion": "既有Ref/共用节点/任务状态展示不修改Narrative；API保留完整v2字段，专用策略/主题阅读与修正由D06负责；无UI行为改动",
+      "references": [
+        {
+          "line": 24,
+          "excerpt": "export function narrativeBody(value) {"
+        },
+        {
+          "line": 26,
+          "excerpt": "const d=value.data,n=d.narrative;"
+        },
+        {
+          "line": 45,
+          "excerpt": "const select=el('select',{'aria-label':'选择右侧比较主线'},el('option',{value:''},'选择另一份真实主线'),items.filter(i=>i.readable&&i.ref.sha256!==app.route.proposal).map(i=>el('option',{value:i.ref.sha256},i.central_statement||i.narrative_id)));"
+        },
+        {
+          "line": 50,
+          "excerpt": "for(const sha of [app.route.proposal,app.route.compare_proposal].filter(Boolean))reading.append(reader(app,`/api/content/arguments/${sha}`+revisionQuery(revision),value=>el('div',{class:'stack'},narrativeBody(value),value.data&&!app.route.compare_proposal&&adoptionControls(app,value))));"
+        }
+      ]
+    },
+    {
+      "file": "src/deck_master/resources/static/v2/collaboration-desk.js",
+      "disposition": "compatible_shared_fields",
+      "conclusion": "既有Ref/共用节点/任务状态展示不修改Narrative；API保留完整v2字段，专用策略/主题阅读与修正由D06负责；无UI行为改动",
+      "references": [
+        {
+          "line": 10,
+          "excerpt": "const layerLabels = {narrative: '论证主线', plan: '页面大纲', page_copy: '上屏稿', speech: '口播稿', design: '设计要求', blueprint: '原图', svg: 'SVG', review: '审阅', output: '整稿文件'};"
+        },
+        {
+          "line": 216,
+          "excerpt": "const layers = Object.entries(layerLabels).map(([value,label]) => ({value, input:el('input',{type:'checkbox',checked:['narrative','plan'].includes(value)}),label}));"
+        }
+      ]
+    }
+  ]
+}

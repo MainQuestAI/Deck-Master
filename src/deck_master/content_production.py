@@ -86,6 +86,7 @@ _CAPABILITIES = ["compose.v2", "collaboration.v1", "rc3-entry.v1"]
 # a decision may only promote the slice it actually names.
 _ADOPTION_PROJECTIONS = {
     "narrative.v1": ("direction",),
+    "narrative.v2": ("direction",),
     "content_plan.v2": ("page_roles", "page_order"),
 }
 
@@ -184,7 +185,7 @@ def phase_dispatch_targets(document, *, phase=None, intent="initial", page_ids=N
 def open_phase_task(store, document, *, operation_id: str, intent: str = "initial",
                     input_revision_id: str | None = None, phase: str | None = None,
                     adoption_policy: str | None = None, page_ids=None,
-                    instruction: str | None = None, selected_resource_ids=None) -> dict:
+                    instruction: str | None = None, selected_resource_ids=None, business_framing=False) -> dict:
     """Dispatch one compose.v2 phase task carrying its collaboration binding.
 
     This is the real write point for phased content tasks, so it consumes the
@@ -199,7 +200,8 @@ def open_phase_task(store, document, *, operation_id: str, intent: str = "initia
     task = build_phase_task(store, document, operation_id=operation_id, intent=intent,
                             input_revision_id=input_revision_id, phase=phase,
                             adoption_policy=adoption_policy, page_ids=page_ids,
-                            instruction=instruction, selected_resource_ids=selected_resource_ids)
+                            instruction=instruction, selected_resource_ids=selected_resource_ids,
+                            business_framing=business_framing)
     task_ref = store.put_json_object(task)
     bumped = bump_revision(document, {
         "operation_id": f"dispatch-{uuid.uuid4().hex[:12]}", "kind": "task_update",
@@ -214,7 +216,7 @@ def open_phase_task(store, document, *, operation_id: str, intent: str = "initia
 def build_phase_task(store, document, *, operation_id: str, intent: str = "initial",
                      input_revision_id: str | None = None, phase: str | None = None,
                      adoption_policy: str | None = None, page_ids=None,
-                     instruction: str | None = None, selected_resource_ids=None) -> dict:
+                     instruction: str | None = None, selected_resource_ids=None, business_framing=False) -> dict:
     """Build (without committing) one compose.v2 phase task.
 
     Callers that already own a project transaction — ``inputs_update`` records
@@ -271,10 +273,22 @@ def build_phase_task(store, document, *, operation_id: str, intent: str = "initi
     )
     task["protocol_version"] = "compose.v2"
     task["required_capabilities"] = list(_CAPABILITIES)
+    from .business_framing import CAPABILITY
+    if ((business_framing or models.writer_at_least(document, CAPABILITY))
+            and (phase in (FRAMING, ARGUMENT) or intent == 'input_revision' and 'narrative' in write_scope['layers'])):
+        task['required_capabilities'].append(CAPABILITY)
+        task['instruction'] += (' 本任务要求 narrative.v2：原始指令仍在 task；business_strategy 记录作者任务、重点与取舍，'
+            'business_frame 记录可展开业务主题和需求/能力/场景/约束节点对应。framing 可不形成框架；argument 必须形成框架。'
+            'input_basis 绑定本 Task 的 brief、audience、scenario、existing_decisions。method_applications 只引用'
+            '本 Task 冻结的方法/hash 与实际结果 JSON pointer；不以资源返回冒充应用或审查通过。')
     topics = collaboration_binding.phase_decision_topics(phase)
     binding = collaboration_binding.build_binding(
         store, document, phase=phase, executor_type="host", write_scope=write_scope,
         adoption_policy=policy,
+        basis=([dependency_slices.make_dependency_slice(store, document, kind='task_fact', identity=field,
+                                                       projection='value')
+                for field in ('brief', 'audience', 'scenario', 'existing_decisions')]
+               if CAPABILITY in task['required_capabilities'] else None),
         decision_refs=collaboration_binding.decision_refs_for(store, document, topics))
     task["collaboration_binding"] = binding
     from .method_resources import freeze_task_methods
@@ -610,7 +624,8 @@ def completion_status(store, document, *, design_fact=_DESIGN_FACT_UNSET, edit_c
         "next_action": next_action}
 
 
-def next_phase_task(store, document, *, explicit_speech_mode: str | None = None, selected_resource_ids=None):
+def next_phase_task(store, document, *, explicit_speech_mode: str | None = None, selected_resource_ids=None,
+                    business_framing=False):
     """Dispatch the next content phase task, or None when none is due."""
     status = content_phase_status(store, document, explicit_speech_mode=explicit_speech_mode)
     if status.get("action") != "dispatch":
@@ -626,7 +641,7 @@ def next_phase_task(store, document, *, explicit_speech_mode: str | None = None,
         _stamp_speech_kind(store, task, kind)
         return task
     return open_phase_task(store, document, operation_id=f"compose-{uuid.uuid4().hex[:12]}",
-                           phase=phase, selected_resource_ids=selected_resource_ids)
+                           phase=phase, selected_resource_ids=selected_resource_ids, business_framing=business_framing)
 
 
 def _speech_instruction(kind: str, page_ids) -> str:
@@ -759,6 +774,8 @@ def _accept_framing(store, *, document, task, envelope, payload, produced_agains
             "(result)/payload/narrative/maturity",
             "the framing variant carries a framing Narrative; an argument narrative is a separate phase")
     models.validate_narrative_semantics(narrative, policy=task.get("content_validation_policy"))
+    from .business_framing import validate_task_result
+    validate_task_result(store, document, task, narrative)
     _narrative_project_check(narrative, document)
     narrative_ref = store.put_json_object(narrative)
     binding = task.get("collaboration_binding") or {}
@@ -792,6 +809,8 @@ def _accept_narrative(store, *, document, task, envelope, payload, produced_agai
             "(result)/payload/narrative/maturity",
             "the narrative variant carries an argument Narrative with a central node and connected structure")
     models.validate_narrative_semantics(narrative, policy=task.get("content_validation_policy"))
+    from .business_framing import validate_task_result
+    validate_task_result(store, document, task, narrative)
     _narrative_project_check(narrative, document)
     narrative_ref = store.put_json_object(narrative)
     result_refs = [narrative_ref]
@@ -813,6 +832,12 @@ def _accept_narrative(store, *, document, task, envelope, payload, produced_agai
         if plan.get("page_links"):
             raise tasks_mod.EnvelopeError("(result)/payload/plan/page_links",
                                           "a planned plan has no bound page_links")
+        if narrative.get('schema_version') == 'narrative.v2':
+            if (plan.get('task_id') != task['task_id'] or plan.get('basis') != {
+                    'revision_id': task['dispatch_revision'], 'input_digest': task['input_digest']}):
+                raise tasks_mod.EnvelopeError('(result)/payload/plan/basis', 'Plan must bind this frozen Task')
+            from .content_plan import validate_plan_input_v2
+            validate_plan_input_v2(store, document, plan['input'], narrative_ref=narrative_ref)
         # The Host cannot know the Ref of an object it is submitting, so the
         # Runtime fills this structural link with the stored Narrative Ref.
         plan = {**plan, "narrative_ref": narrative_ref}
@@ -1472,6 +1497,8 @@ def _derive_input_revision_changes(store, document, task, request):
     if "narrative" in single:
         narrative = single["narrative"]
         models.validate_narrative_semantics(narrative, policy=task.get("content_validation_policy"))
+        from .business_framing import validate_task_result
+        validate_task_result(store, document, task, narrative)
         _narrative_project_check(narrative, document)
         from .content_plan import ContentPlanError, validate_source_links
         for node in narrative.get('nodes') or []:
@@ -1870,23 +1897,30 @@ def check_proposal_adoption(store, document, *, input):
             f"the decision names this proposal with projection "
             f"{sorted({item.get('projection') for item in matches})}; adopting a {schema} "
             f"needs one of {list(allowed)}")
-    if schema not in ("narrative.v1", "content_plan.v2"):
+    if schema not in (*models.NARRATIVE_VERSIONS, "content_plan.v2"):
         raise ModelError(
             "collaboration/adopt_proposal/proposal_ref",
             "only Narrative and ContentPlan proposals adopt through this action; "
             "Page candidates reuse the existing candidate adoption semantics")
     topic = decision.get("topic")
     allowed_topics = {"narrative.v1": ("direction",),
+    "narrative.v2": ("direction",),
                       "content_plan.v2": ("manuscript", "direction", "tradeoff")}[schema]
     if topic not in allowed_topics:
         raise ModelError("collaboration/adopt_proposal/decision_ref",
                          f"a {schema} proposal is adopted by a {allowed_topics} decision, not {topic!r}")
     invalidated = []
     updated = dict(document)
-    if schema == "narrative.v1":
+    if schema in models.NARRATIVE_VERSIONS:
         legacy_accepted = _committed_legacy_narrative(store, document, proposal_ref)
         models.validate_narrative_semantics(
             proposal, policy=None if legacy_accepted else "argument-connectivity.v1")
+        from .business_framing import validate_adoption_basis
+        validate_adoption_basis(store, document, proposal, decision)
+        if document.get('narrative') and schema == 'narrative.v1':
+            current = store.read_object_json(document['narrative'])
+            if current.get('schema_version') == 'narrative.v2':
+                raise ModelError('collaboration/adopt_proposal', 'a v1 proposal cannot silently replace business strategy')
         if not legacy_accepted:
             models.require_writer(updated, "rc4-content.v1")
         if proposal.get("project_id") != document["project_id"]:
@@ -1917,6 +1951,9 @@ def check_proposal_adoption(store, document, *, input):
         if narrative_ref is not None and narrative_ref != document.get("narrative"):
             raise ModelError("collaboration/adopt_proposal/proposal_ref",
                              "the plan binds a Narrative that is not the current pointer")
+        if narrative_ref is not None:
+            from .business_framing import validate_adoption_basis
+            validate_adoption_basis(store, document, store.read_object_json(narrative_ref), decision)
         if document.get("content_plan") and document["content_plan"] != proposal_ref:
             invalidated.append({"ref": document["content_plan"], "reason": "plan_replaced"})
         updated["content_plan"] = proposal_ref

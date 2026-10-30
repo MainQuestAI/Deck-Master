@@ -256,6 +256,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     create = sub.add_parser("create")
     create.add_argument("--selected-resource-id", dest="selected_resource_ids", action="append")
+    create.add_argument('--business-framing', action='store_true',
+                        help='Opt into Narrative.v2 for new planning; existing runs are never upgraded by reading')
     create.add_argument("--summary-protocol", choices=["workbench_summary.v2"])
     _add_read_options(create)
     create.add_argument("--brief", required=False, help="task brief text (or --brief-file)")
@@ -736,6 +738,7 @@ def main(argv: list[str] | None = None) -> int:
                 project_format=options.project_format,
                 request_input=_declaration_file(options.request_input, request=True),
                 selected_resource_ids=options.selected_resource_ids,
+                business_framing=options.business_framing,
                 summary_protocol=options.summary_protocol,
                 **read_options,
             )

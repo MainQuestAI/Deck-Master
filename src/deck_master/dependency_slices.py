@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from .models import ModelError, canonical_json_bytes, sha256_bytes, parse_authorization_expiry
 from .collaboration_scope import delegation_gaps
 
-TASK_FACT_IDENTITIES = ("audience", "brief", "scenario", "presentation_mode", "page_limit")
+TASK_FACT_IDENTITIES = ("audience", "brief", "scenario", "presentation_mode", "page_limit", "existing_decisions")
 _MAX_PARENT_DEPTH = 8
 
 # Central minimum-basis registry (CONTRACTS §7, TASKS T02 item 4): the service
@@ -24,7 +24,9 @@ _MAX_PARENT_DEPTH = 8
 # registry for read paths.
 REQUIRED_BASIS: dict[tuple[str, str], tuple[tuple[str, str, str], ...]] = {
     ("decision", "direction"): (("task_fact", "audience", "value"),
-                                 ("task_fact", "brief", "value")),
+                                 ("task_fact", "brief", "value"),
+                                 ("task_fact", "scenario", "value"),
+                                 ("task_fact", "existing_decisions", "value")),
     ("decision", "manuscript"): (("task_fact", "brief", "value"),
                                   ("task_fact", "page_limit", "value")),
     ("decision", "speech"): (("task_fact", "presentation_mode", "value"),),
@@ -34,9 +36,14 @@ REQUIRED_BASIS: dict[tuple[str, str], tuple[tuple[str, str, str], ...]] = {
     # Task dispatch basis per content phase (CONTRACTS §7): the facts a phase
     # actually reads. Narrative/Plan pointer slices are appended when they exist
     # (collaboration_binding.binding_basis), never required into absence.
-    ("task", "framing"): (("task_fact", "brief", "value"),),
+    ("task", "framing"): (("task_fact", "brief", "value"),
+                           ("task_fact", "audience", "value"),
+                           ("task_fact", "scenario", "value"),
+                           ("task_fact", "existing_decisions", "value")),
     ("task", "argument"): (("task_fact", "brief", "value"),
-                            ("task_fact", "audience", "value")),
+                            ("task_fact", "audience", "value"),
+                            ("task_fact", "scenario", "value"),
+                            ("task_fact", "existing_decisions", "value")),
     ("task", "page_copy"): (("task_fact", "brief", "value"),
                              ("task_fact", "page_limit", "value")),
     ("task", "speech"): (("task_fact", "presentation_mode", "value"),),

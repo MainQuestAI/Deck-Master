@@ -108,7 +108,7 @@ def argument_objects(store, doc):
     for ref, task, relation in entries:
         try:
             obj = read(store, ref, project_id=doc['project_id'])
-            if obj.get('schema_version') != 'narrative.v1':
+            if obj.get('schema_version') not in models.NARRATIVE_VERSIONS:
                 continue
             models.validate_narrative_semantics(obj)
             if obj['project_id'] != doc['project_id']:

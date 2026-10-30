@@ -38,6 +38,7 @@ SCHEMA_FILES = {
     "collaboration_decision": "collaboration-decision.v1.schema.json",
     "collaboration_authorization": "collaboration-authorization.v1.schema.json",
     "narrative": "narrative.v1.schema.json",
+    "narrative_v2": "narrative.v2.schema.json",
     "content_plan_input_v2": "content-plan-input.v2.schema.json",
     "content_plan_v2": "content-plan.v2.schema.json",
     "compose_result_v2": "compose-result.v2.schema.json",
@@ -175,7 +176,10 @@ def _validator(kind: str) -> Draft202012Validator:
 # schema_version dispatch: the same logical kind maps to newer contract files
 # without replacing the default validator, so old objects stay readable
 # (MIGRATION §2.2). Read-only dispatch; writers are gated by the writer rank.
+NARRATIVE_VERSIONS = ("narrative.v1", "narrative.v2")
+
 _VERSIONED_KINDS = {
+    "narrative": {"narrative.v2": "narrative_v2"},
     "content_plan": {"content_plan.v2": "content_plan_v2"},
     "content_plan_input": {"content_plan_input.v2": "content_plan_input_v2"},
     "review": {"deck_review.v2": "review_v2"},
@@ -441,6 +445,9 @@ def validate_narrative_semantics(narrative: dict[str, Any], *, policy: str | Non
     floor for reported facts and calculations. Source support quality stays a
     content-review question; this checks what can be checked structurally."""
     validate_schema("narrative", narrative)
+    if narrative.get("schema_version") == "narrative.v2":
+        from .business_framing import validate
+        validate(narrative)
     nodes = narrative.get("nodes") or []
     node_ids = [node.get("node_id") for node in nodes]
     if len(node_ids) != len(set(node_ids)):
@@ -594,7 +601,7 @@ def validate_compose_result_semantics(result: dict[str, Any]) -> None:
 WRITER_RANK = {None: 0, "generation.v1": 1, "content-plan.v1": 2,
                "changes.v1": 3, "candidates.v1": 4, "run-desk.v1": 5, "style-recipes.v1": 6, "content-ops.v1": 7,
                "content-candidates.v1": 8, "icon-quality.v1": 9, "workbench-quality.v1": 10,
-               "collaboration.v1": 11, "rc3.v1": 12, "rc3-entry.v1": 13, "rc4-content.v1": 14, "method-catalog.v1": 15, "design-policy.v1": 16, "asset-inputs.v1": 17, "original-review.v1": 18, "settled-image-reuse.v1": 19, "outline-review.v1": 20}
+               "collaboration.v1": 11, "rc3.v1": 12, "rc3-entry.v1": 13, "rc4-content.v1": 14, "method-catalog.v1": 15, "design-policy.v1": 16, "asset-inputs.v1": 17, "original-review.v1": 18, "settled-image-reuse.v1": 19, "outline-review.v1": 20, "business-framing.v1": 21}
 
 
 def require_writer(document, minimum):

@@ -321,8 +321,11 @@ def author_execution_refs(store, document, subjects) -> set[str]:
             if not values:
                 values.add(("visual", canonical_json_bytes(obj.get("visual_spec") or {}).decode()))
             return values
-        if schema == "narrative.v1":
-            return {("node", node["node_id"], canonical_json_bytes(node).decode()) for node in obj.get("nodes", [])}
+        if schema in models.NARRATIVE_VERSIONS:
+            values = {("node", node["node_id"], canonical_json_bytes(node).decode()) for node in obj.get("nodes", [])}
+            values.update((field, canonical_json_bytes(obj[field]).decode())
+                          for field in ("business_strategy", "business_frame") if field in obj)
+            return values
         if schema in ("content_plan.v1", "content_plan.v2"):
             return {("plan_input", canonical_json_bytes(obj.get("input") or {}).decode())}
         return set()
@@ -338,7 +341,7 @@ def author_execution_refs(store, document, subjects) -> set[str]:
             raise ModelError("content_review/author_lineage", "reviewed content is unreadable") from exc
         if obj.get("schema_version") == "deck_page_package.v2":
             retained[("page", obj["page_id"])] = tokens(obj)
-        elif obj.get("schema_version") == "narrative.v1":
+        elif obj.get("schema_version") in models.NARRATIVE_VERSIONS:
             retained[("narrative", None)] = tokens(obj)
         elif obj.get("schema_version") in ("content_plan.v1", "content_plan.v2"):
             retained[("content_plan", None)] = tokens(obj)
