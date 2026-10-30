@@ -547,6 +547,8 @@ def read_skill_methods(skill: str, *, entry_mode="named", project=None, task_id=
     if entry_mode not in ENTRY_MODES:
         raise ValueError("unknown Skill entry mode")
     route, fallback = _route_request(text) if entry_mode == "natural" else (None, False)
+    if skill == 'deck-content' and route and route.get('content_intent') in ('write_only', 'speech_only'):
+        business_framing = False
     # Natural routing is a suggestion, not permission. The coordinator may
     # read ambiguous work without borrowing another role's Task/write rights.
     coordinating = skill == "deck-master" and route and not route["explicit_name"]
@@ -580,6 +582,9 @@ def read_skill_methods(skill: str, *, entry_mode="named", project=None, task_id=
         document = store.load_document()
         business_framing = business_framing or models.writer_at_least(document, 'business-framing.v1')
         request = (document.get("collaboration") or {}).get("request")
+        if skill == 'deck-content' and (not request or request.get('intent') not in ('full_deck', 'content_only')
+                or request.get('content_intent') in ('write_only', 'speech_only')):
+            business_framing = False
         context = {"project_id": document["project_id"], "artifact_revision_id": document["revision_id"],
                    "request": request,
                    "completion": content_production.completion_status(store, document)}
@@ -629,6 +634,10 @@ def _read_skill_v2(skill, *, entry_mode, project, task_id, route, review_units, 
         payload['context'] = {'project_id': document['project_id'], 'artifact_revision_id': document['revision_id'],
                               'request': (document.get('collaboration') or {}).get('request'),
                               'completion': content_production.completion_status(store, document)}
+        request = payload['context']['request']
+        if skill == 'deck-content' and (not request or request.get('intent') not in ('full_deck', 'content_only')
+                or request.get('content_intent') in ('write_only', 'speech_only')):
+            business_framing = False
         if summary_protocol:
             from .current_work import from_snapshot
             payload['context']['current_work'] = from_snapshot(store, document)

@@ -12,6 +12,7 @@ from test_content_preproduction_review import _deck
 from test_native_review import native  # noqa: F401 - shared explicitly synthetic transport fixture
 from test_rc5_resource_catalog import fixture_catalog  # noqa: F401 - isolated canonical method copy
 from synthetic_review_provider import synthetic_context, synthetic_runtime_call
+from test_workbench_reads import commit
 
 
 def ids(items):
@@ -93,6 +94,22 @@ def test_selected_complete_case_keeps_all_dependency_bodies():
         selected_resource_ids=['case-e04-walkthrough'])
     assert ids(rows)[-3:] == ['example-e04-input', 'example-e04-after', 'case-e04-walkthrough']
     assert all(m['content'] and models.sha256_bytes(m['content'].encode()) == m['sha256'] for m in rows)
+
+
+@pytest.mark.parametrize('protocol', [None, 'work_context.v2'])
+def test_existing_new_writer_bounded_entry_does_not_restart_framing(tmp_path, protocol):
+    path, store = _deck(tmp_path)
+    document = store.load_document()
+    models.require_writer(document, 'business-framing.v1')
+    document['collaboration']['request']['content_intent'] = 'speech_only'
+    commit(store, document, 'synthetic-existing-writer-bounded-request')
+    before = store.current_revision_id()
+    value = method_resources.read_skill_methods('deck-content', project=path, read_protocol=protocol)
+    assert 'content-m01' not in ids(value['entry_methods'] if protocol else value['methods'])
+    assert store.current_revision_id() == before
+    natural = method_resources.read_skill_methods('deck-content', entry_mode='natural', text='只写讲稿',
+        business_framing=True, read_protocol=protocol)
+    assert 'content-m01' not in ids(natural['entry_methods'] if protocol else natural['methods'])
 
 
 def test_project_preview_and_dispatch_share_new_contract_and_selection(tmp_path):
