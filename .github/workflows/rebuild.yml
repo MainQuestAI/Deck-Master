@@ -5,26 +5,67 @@ on:
   push:
     branches:
       - main
-      - "codex/**"
-      - "claude/**"
   workflow_dispatch:
+  schedule:
+    - cron: "0 18 * * 5"
 
 permissions:
   contents: read
 
 concurrency:
-  group: deck-master-rebuild-${{ github.ref }}
+  group: deck-master-rebuild-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      legacy: ${{ steps.scope.outputs.legacy }}
+      matrix: ${{ steps.scope.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Select legacy checks
+        id: scope
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          if [ "$EVENT" = pull_request ] || [ "$EVENT" = push ]; then
+            git fetch --no-tags --depth=1 origin "$BASE" "$HEAD"
+          fi
+          python - <<'PY'
+          import json
+          import os
+          import subprocess
+
+          full = os.environ["EVENT"] in {"schedule", "workflow_dispatch"}
+          legacy = full
+          if not full:
+              paths = subprocess.check_output([
+                  "git", "diff", "--name-only", "--no-renames", "-z",
+                  os.environ["BASE"], os.environ["HEAD"],
+              ]).decode().split("\0")
+              separate = ("rust/", "deck-tools/", "deck-skill/", "docs/specs/rust-rebuild/")
+              legacy = any(path and path != ".github/workflows/rust.yml"
+                           and not path.startswith(separate) for path in paths)
+          matrix = {"python-version": ["3.11", "3.12"] if full else ["3.12"],
+                    "node-version": ["22", "24"] if full else ["22"]}
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              print(f"legacy={str(legacy).lower()}", file=output)
+              print("matrix=" + json.dumps(matrix), file=output)
+          PY
+
   unit:
+    needs: changes
+    if: needs.changes.outputs.legacy == 'true'
     name: Unit (Python ${{ matrix.python-version }}, Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        python-version: ["3.11", "3.12"]
-        node-version: ["22", "24"]
+      matrix: ${{ fromJSON(needs.changes.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
       - name: Fetch fixed RC3 writer compatibility baseline
@@ -44,9 +85,11 @@ jobs:
       - name: Ruff (rebuilt core and its tests)
         run: python -m ruff check src/deck_master tests/rebuild
       - name: Unit suite (browser and renderer have separate gates)
-        run: python -m pytest -q tests/rebuild -m "not render and not browser"
+        run: python -m pytest -q tests/rebuild -m "not render and not browser" --basetemp="$RUNNER_TEMP/legacy-unit"
 
   render:
+    needs: changes
+    if: needs.changes.outputs.legacy == 'true'
     name: Real rendering chain (Python 3.12)
     runs-on: ubuntu-latest
     steps:
@@ -63,9 +106,11 @@ jobs:
       - name: Install rebuilt core with dev dependencies
         run: python -m pip install --quiet -e ".[dev]"
       - name: Renderer-dependent tests
-        run: python -m pytest -q tests/rebuild -m render
+        run: python -m pytest -q tests/rebuild -m render --basetemp="$RUNNER_TEMP/legacy-render"
 
   browser:
+    needs: changes
+    if: needs.changes.outputs.legacy == 'true'
     name: Required browser and installed UI (Python 3.12, Node 22)
     runs-on: ubuntu-latest
     steps:
@@ -87,7 +132,7 @@ jobs:
       - name: Install Chromium
         run: python -m playwright install --with-deps chromium
       - name: Required production design regressions (skips fail)
-        run: python -m pytest -q tests/rebuild -m browser --require-browser
+        run: python -m pytest -q tests/rebuild -m browser --require-browser --basetemp="$RUNNER_TEMP/legacy-browser"
       - name: Build and install the wheel (no editable resource borrowing)
         run: |
           python -m pip wheel --no-deps --no-build-isolation -w /tmp/workbench-wheel .
@@ -110,18 +155,28 @@ jobs:
   report:
     name: Group report
     runs-on: ubuntu-latest
-    needs: [unit, render, browser]
+    needs: [changes, unit, render, browser]
     if: always()
     steps:
       - name: Summarise group outcomes
         env:
+          SCOPE: ${{ needs.changes.result }}
+          LEGACY: ${{ needs.changes.outputs.legacy }}
           UNIT: ${{ needs.unit.result }}
           RENDER: ${{ needs.render.result }}
           BROWSER: ${{ needs.browser.result }}
         run: |
           python - "$UNIT" "$RENDER" "$BROWSER" <<'PY'
           import sys
+          import os
           results = dict(zip(("unit", "render", "browser"), sys.argv[1:]))
+          if os.environ["SCOPE"] != "success":
+              sys.exit("change detection failed")
+          if os.environ["LEGACY"] == "false":
+              if all(result == "skipped" for result in results.values()):
+                  print("legacy checks not applicable: only new-line paths changed")
+                  sys.exit(0)
+              sys.exit("unexpected legacy checks for new-line-only changes")
           print("; ".join(f"{name}: {result}" for name, result in results.items()))
           for name, result in results.items():
               if result != "success":
