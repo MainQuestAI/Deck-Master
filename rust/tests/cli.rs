@@ -160,3 +160,93 @@ fn material_errors_have_real_exit_codes_and_no_dangling_version_references() {
     assert_eq!(no_python.status.code(), Some(3));
     assert_eq!(output_json(command(path, &["show"]))["version"], 2);
 }
+
+fn synthetic_pdf() -> Vec<u8> {
+    let stream = "BT /F1 14 Tf 72 720 Td (Synthetic material zero 0) Tj ET\n";
+    let objects = [
+        "<< /Type /Catalog /Pages 2 0 R >>".to_string(),
+        "<< /Type /Pages /Kids [3 0 R] /Count 1 >>".to_string(),
+        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>".to_string(),
+        format!("<< /Length {} >>\nstream\n{stream}endstream", stream.len()),
+        "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>".to_string(),
+    ];
+    let mut pdf = "%PDF-1.4\n".to_string();
+    let mut offsets = Vec::new();
+    for (index, object) in objects.iter().enumerate() {
+        offsets.push(pdf.len());
+        pdf.push_str(&format!("{} 0 obj\n{object}\nendobj\n", index + 1));
+    }
+    let xref = pdf.len();
+    pdf.push_str("xref\n0 6\n0000000000 65535 f \n");
+    for offset in offsets {
+        pdf.push_str(&format!("{offset:010} 00000 n \n"));
+    }
+    pdf.push_str(&format!(
+        "trailer << /Size 6 /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n"
+    ));
+    pdf.into_bytes()
+}
+
+#[test]
+fn duplicate_pdf_add_without_tool_preserves_successful_extraction() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    output_json(command(path, &["new", path.to_str().unwrap()]));
+    let source = path.join("synthetic.pdf");
+    let original = synthetic_pdf();
+    std::fs::write(&source, &original).unwrap();
+    let empty_path = path.join("without-tools");
+    std::fs::create_dir(&empty_path).unwrap();
+    let without_pdf_tool = || {
+        Command::new(env!("CARGO_BIN_EXE_deck"))
+            .env("PATH", &empty_path)
+            .arg("--project")
+            .arg(path)
+            .args(["material", "add"])
+            .arg(&source)
+            .output()
+            .unwrap()
+    };
+
+    assert_eq!(without_pdf_tool().status.code(), Some(3));
+    assert_eq!(
+        output_json(command(path, &["show"]))["materials"][0]["status"],
+        "needs_tool"
+    );
+    let added = output_json(command(
+        path,
+        &["material", "add", source.to_str().unwrap()],
+    ));
+    assert_eq!(added["material"]["status"], "read");
+    assert!(
+        added["extraction"]["text"]
+            .as_str()
+            .unwrap()
+            .contains("Synthetic material zero 0")
+    );
+    let before = output_json(command(path, &["get"]));
+    let history_before = output_json(command(path, &["show"]))["history"].clone();
+    let text_before = output_json(command(path, &["material", "text", "m1"]));
+    let saved_text = std::fs::read(text_before["path"].as_str().unwrap()).unwrap();
+
+    assert_eq!(without_pdf_tool().status.code(), Some(3));
+    assert_eq!(output_json(command(path, &["get"])), before);
+    assert_eq!(
+        output_json(command(path, &["show"]))["history"],
+        history_before
+    );
+    let text_after = output_json(command(path, &["material", "text", "m1"]));
+    assert_eq!(text_after, text_before);
+    assert_eq!(
+        std::fs::read(text_after["path"].as_str().unwrap()).unwrap(),
+        saved_text
+    );
+    assert_eq!(std::fs::read(&source).unwrap(), original);
+    assert_eq!(
+        output_json(command(
+            path,
+            &["material", "add", source.to_str().unwrap()]
+        ))["version"],
+        added["version"]
+    );
+}

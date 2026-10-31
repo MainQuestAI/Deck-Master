@@ -286,6 +286,12 @@ pub fn material_add(project: &Path, source: &Path) -> Result<Value> {
             status: String::new(),
         }
     };
+    if extraction.status == "needs_tool" && material.status == "read" {
+        return Err(Error::NeedsTool(format!(
+            "材料 {} 本次未能重新解析：{}；已保留已有成功解析结果，可继续使用 material text；如需重新解析，请安装对应工具后重试 material add",
+            material.id, extraction.detail
+        )));
+    }
     material.text_file = text_file;
     material.status = if extraction.status == "needs_tool" {
         "needs_tool"
