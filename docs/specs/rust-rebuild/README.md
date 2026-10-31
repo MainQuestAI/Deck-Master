@@ -70,7 +70,7 @@ deck-tools/           Python 包 deck_tools（第 4 节）
 deck-skill/           新 Skill（第 6 节）
 ```
 
-- Rust stable，edition 2024，提交 Cargo.lock。依赖：clap、serde、serde_json、rusqlite（bundled）、axum、tokio、thiserror。
+- Rust stable，edition 2024，提交 Cargo.lock。依赖：clap、serde、serde_json、rusqlite（bundled）、axum、tokio、thiserror、sha2、tempfile。
 - 先在一个包内按文件分模块，出现真实需要时再拆。
 - S1 新增一个独立的 CI workflow，跑 AGENTS.md 第 3 节列出的 Rust 命令和 deck-tools 的 pytest。旧的 `rebuild.yml` 不改。
 

@@ -35,4 +35,4 @@ jobs:
           cargo clippy -- -D warnings
           cargo test
       - name: File tool tests
-        run: .venv/bin/python -m pytest -q deck-tools/tests --basetemp="$HOME/.cache/deck-pytest/tools"
+        run: .venv/bin/python -m pytest -q deck-tools/tests --basetemp="$RUNNER_TEMP/deck-tools"
