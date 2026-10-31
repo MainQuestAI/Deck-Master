@@ -72,7 +72,8 @@ deck-skill/           新 Skill（第 6 节）
 
 - Rust stable，edition 2024，提交 Cargo.lock。依赖：clap、serde、serde_json、rusqlite（bundled）、axum、tokio、thiserror、sha2、tempfile。
 - 先在一个包内按文件分模块，出现真实需要时再拆。
-- S1 新增一个独立的 CI workflow，跑 AGENTS.md 第 3 节列出的 Rust 命令和 deck-tools 的 pytest。旧的 `rebuild.yml` 不改。
+- `rust.yml` 独立执行 AGENTS.md 第 3 节的 Rust 检查与 deck-tools pytest；`rebuild.yml` 执行旧线检查。两者只在 `main` push（包括合并 PR）后自动运行，也保留手动入口；PR、功能分支 push 和定时任务不自动运行 CI，合并前执行相称的本地验证。
+- 旧线按本次主干更新的 before/head 差异分流：只涉及 `rust/`、`deck-tools/`、`deck-skill/`、本开发稿目录或 `rust.yml` 时，跳过旧线测试并由 Group report 返回不适用；其他或混合路径仍执行旧线单元、渲染、浏览器和安装验证。日常单元使用 Python 3.12 / Node 22，手动触发时运行完整 2×2 矩阵。分流失败、适用检查失败或意外跳过，Group report 均返回失败。
 
 ### 3.2 存储
 

@@ -1,13 +1,16 @@
 name: Rust core and deck-tools
 
 on:
-  pull_request:
   push:
-    branches: [main, "rust/**", "tools/**"]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: deck-master-rust-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   core:

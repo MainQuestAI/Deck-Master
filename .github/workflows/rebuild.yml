@@ -1,13 +1,10 @@
 name: Rebuilt Core Gate
 
 on:
-  pull_request:
   push:
     branches:
       - main
   workflow_dispatch:
-  schedule:
-    - cron: "0 18 * * 5"
 
 permissions:
   contents: read
@@ -30,10 +27,10 @@ jobs:
         id: scope
         env:
           EVENT: ${{ github.event_name }}
-          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
-          HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+          BASE: ${{ github.event.before }}
+          HEAD: ${{ github.sha }}
         run: |
-          if [ "$EVENT" = pull_request ] || [ "$EVENT" = push ]; then
+          if [ "$EVENT" = push ]; then
             git fetch --no-tags --depth=1 origin "$BASE" "$HEAD"
           fi
           python - <<'PY'
@@ -41,7 +38,7 @@ jobs:
           import os
           import subprocess
 
-          full = os.environ["EVENT"] in {"schedule", "workflow_dispatch"}
+          full = os.environ["EVENT"] == "workflow_dispatch"
           legacy = full
           if not full:
               paths = subprocess.check_output([
