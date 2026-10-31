@@ -26,14 +26,16 @@ The [Rebuilt Core Gate](.github/workflows/rebuild.yml) remains the CI source of
 truth for the existing Python line. The workflow for `rust/` and `deck-tools/`
 is added with the first Rust slice.
 
-Pull requests and main pushes run the legacy tests only when a changed path
+Automatic CI runs once on each main push, including a merged pull request.
+Pull requests, feature-branch pushes, and schedules do not start CI; run
+appropriate local checks before merging. Both workflows retain a manual entry.
+Main pushes run the legacy tests only when a changed path
 is outside `rust/`, `deck-tools/`, `deck-skill/`, `docs/specs/rust-rebuild/`,
 and the new-line workflow `.github/workflows/rust.yml`.
 Legacy changes run one unit configuration (Python 3.12 / Node 22), plus the
 rendering, browser and installed-package checks. The full Python/Node matrix
-runs weekly and through `workflow_dispatch`. Feature-branch pushes use the PR
-checks instead of starting a duplicate legacy run. Group report still runs for
-every PR and fails if change detection or any applicable check fails.
+runs through `workflow_dispatch`. Group report runs with the legacy workflow
+and fails if change detection or any applicable check fails.
 
 ## DCO
 
