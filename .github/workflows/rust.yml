@@ -1,0 +1,38 @@
+name: Rust core and deck-tools
+
+on:
+  pull_request:
+  push:
+    branches: [main, "rust/**", "tools/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install material tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y poppler-utils
+          python -m venv .venv
+          .venv/bin/python -m pip install -e "./deck-tools[dev]"
+      - name: Rust checks
+        env:
+          DECK_TOOLS_PYTHON: ${{ github.workspace }}/.venv/bin/python
+        working-directory: rust
+        run: |
+          cargo fmt --check
+          cargo clippy -- -D warnings
+          cargo test
+      - name: File tool tests
+        run: .venv/bin/python -m pytest -q deck-tools/tests --basetemp="$HOME/.cache/deck-pytest/tools"
