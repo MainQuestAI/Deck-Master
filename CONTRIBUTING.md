@@ -9,56 +9,22 @@ quality, feature proposals and documentation feedback. Follow the
 Issue → PR → release tracking, and the
 [security policy](SECURITY.md) for sensitive reports.
 
-## Development Setup
+## Development
 
-```bash
-python3.12 -m venv .venv
-. .venv/bin/activate
-python -m pip install -e ".[dev]"
-```
+[AGENTS.md](AGENTS.md) is the single source of development rules: setup, test
+commands, branch and PR scope, verification, data safety and when to ask first.
+It applies to human contributors and coding agents alike.
 
-## Before Opening A Pull Request
+The repository is mid-rewrite. The new core and backend live in `rust/`, the
+production tools in the standalone Python package `deck-tools/`, and the new
+Skill in `deck-skill/`; see the [Rust rebuild plan](docs/specs/rust-rebuild/README.md).
+The existing Python implementation (`src/deck_master/`, `skills/`, `tests/rebuild/`)
+accepts only fixes for data loss, duplicate external consumption, failure to
+open or export, and real security issues, each with a regression test.
 
-Choose collected tests that exercise the changed behavior. For an active
-entrypoint or method-routing change, this is a focused starting point:
-
-```bash
-python -m pytest --collect-only -q tests/rebuild/test_package_boundary.py tests/rebuild/test_entry_capabilities.py tests/rebuild/test_rc3_early_methods.py tests/rebuild/test_rc3_content_methods.py
-python -m pytest -q tests/rebuild/test_package_boundary.py tests/rebuild/test_entry_capabilities.py tests/rebuild/test_rc3_early_methods.py tests/rebuild/test_rc3_content_methods.py
-python -m ruff check src/deck_master tests/rebuild
-```
-
-Add the relevant installation, schema, HTTP or business regression tests for
-your change. `python -m pytest -q` and `python -m pytest -q tests/rebuild` are
-whole suites, not focused checks. Record the exact command, candidate SHA or
-dirty-tree scope, result, deselections and unavailable prerequisites.
-
-The [Rebuilt Core Gate](.github/workflows/rebuild.yml) is the CI source of truth:
-
-- Unit tests and Ruff: Python 3.11/3.12 × Node 22/24; unit selection excludes
-  `render` and `browser` because they have separate required jobs.
-- Real rendering: renderer-marked tests with librsvg, LibreOffice, Poppler
-  and declared fonts.
-- Required browser tests: Chromium with `--require-browser` so missing browser
-  coverage fails. The same job builds and installs a wheel, then runs offline
-  installed UI/download and recovery checks without editable resource borrowing.
-- Group report: succeeds only when unit, rendering and browser jobs succeed.
-
-For local readiness and migration diagnostics, use actual CLI entrypoints:
-
-```bash
-deck-master legacy-map   # confirms retired commands map or refuse explicitly
-deck-master doctor --step render
-deck-master capabilities
-```
-
-Missing tools, isolated installed-wheel checks, actual Host application and
-professional acceptance are distinct evidence. A local focused pass does not
-replace final CI on the published candidate, activate user HOME, or publish a
-Release. Follow the [RC5 methods](docs/specs/content-methods-rc5/README.md) and
-[integrated WebUI](docs/specs/deck-master-webui-content-methods-20261020/README.md)
-contracts and their dated evidence. The [release preparation record](docs/releases/1.0.0-preparation.md)
-tracks final candidate closure; RC4 records retain their historical scope.
+The [Rebuilt Core Gate](.github/workflows/rebuild.yml) remains the CI source of
+truth for the existing Python line. The workflow for `rust/` and `deck-tools/`
+is added with the first Rust slice.
 
 ## DCO
 
