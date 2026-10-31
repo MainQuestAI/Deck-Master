@@ -12,6 +12,10 @@ __pycache__/
 .venv/
 venv/
 
+# Rust core project data and build output
+.deck/
+rust/target/
+
 # Environment and secrets
 .env
 .env.*
