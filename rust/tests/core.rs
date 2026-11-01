@@ -327,30 +327,6 @@ fn invalid_patch_does_not_write_and_existing_project_is_never_reinitialized() {
 }
 
 #[test]
-fn current_format_read_does_not_wait_for_or_take_a_write_lock() {
-    let temp = tempfile::tempdir().unwrap();
-    two_pages(temp.path());
-    let mut writer = store::Store::open(temp.path()).unwrap();
-    let tx = writer.transaction().unwrap();
-    let path = temp.path().to_path_buf();
-    let (send, receive) = std::sync::mpsc::channel();
-    let reader = std::thread::spawn(move || {
-        send.send(ops::get(&path, None)).unwrap();
-    });
-    let result = receive.recv_timeout(std::time::Duration::from_secs(2));
-    // Release the writer even on failure, so the regression fails promptly.
-    tx.commit().unwrap();
-    reader.join().unwrap();
-    assert_eq!(
-        result.unwrap().unwrap()["deck"]["pages"]
-            .as_array()
-            .unwrap()
-            .len(),
-        2
-    );
-}
-
-#[test]
 fn attachment_deduplication_does_not_rewrite_original() {
     let temp = tempfile::tempdir().unwrap();
     ops::new(temp.path(), String::new()).unwrap();

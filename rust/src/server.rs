@@ -29,10 +29,11 @@ fn error_response(error: Error) -> Result<ResponseBox> {
         Error::Io(_) | Error::Sql(_) => 500,
         _ => 400,
     };
-    json_response(
-        status,
-        json!({"error": error.to_string(), "exit_code": error.exit_code()}),
-    )
+    let mut value = json!({"error": error.to_string()});
+    if status == 409 {
+        value["exit_code"] = json!(error.exit_code());
+    }
+    json_response(status, value)
 }
 
 fn local_authority(authority: &str, port: u16) -> bool {
@@ -133,8 +134,7 @@ fn route(project: &Path, request: &mut Request) -> Result<ResponseBox> {
             let mut data = Vec::new();
             request.as_reader().read_to_end(&mut data)?;
             let submitted: Value = serde_json::from_slice(&data)?;
-            let patch: Patch =
-                serde_json::from_value(submitted.get("deck").unwrap_or(&submitted).clone())?;
+            let patch: Patch = serde_json::from_value(submitted.clone())?;
             match ops::put(project, base, patch) {
                 Ok(snapshot) => json_response(200, serde_json::to_value(snapshot)?),
                 Err(Error::Conflict(conflicts)) => json_response(
@@ -178,7 +178,7 @@ fn route(project: &Path, request: &mut Request) -> Result<ResponseBox> {
         }
         (Method::Get, path) if path.starts_with("/api/files/") => {
             let file = ops::project_file(project, &path[11..])?;
-            let mut response = Response::from_file(File::open(&file)?)
+            Ok(Response::from_file(File::open(&file)?)
                 .with_header(header(
                     "Content-Type",
                     content_type(file.to_str().unwrap_or("")),
@@ -186,11 +186,8 @@ fn route(project: &Path, request: &mut Request) -> Result<ResponseBox> {
                 .with_header(header(
                     "Content-Security-Policy",
                     "sandbox; default-src 'none'; img-src data:; style-src 'unsafe-inline'",
-                )?);
-            if file.extension().is_some_and(|ext| ext == "pptx") {
-                response.add_header(status_header(&ops::get(project, None)?["artifact_status"])?)
-            }
-            Ok(response.boxed())
+                )?)
+                .boxed())
         }
         (Method::Post, path) if path.starts_with("/api/restore/") => json_response(
             200,
@@ -202,16 +199,7 @@ fn route(project: &Path, request: &mut Request) -> Result<ResponseBox> {
                 .and_then(|p| p.strip_suffix("/cancel"))
                 .ok_or_else(|| Error::Input("停止任务需要 run 编号".into()))?;
             let id = identifier(text)?;
-            let mut value = ops::run_cancel(project, id)?;
-            if let Some(pages) = value["runs"][0]["pages"].as_array_mut() {
-                for page in pages {
-                    if let Some(object) = page.as_object_mut() {
-                        object.remove("work");
-                        object.remove("findings_path");
-                    }
-                }
-            }
-            json_response(200, value)
+            json_response(200, ops::run_cancel(project, id)?)
         }
         (Method::Get, path) if !path.starts_with("/api/") => {
             let name = if path == "/" {

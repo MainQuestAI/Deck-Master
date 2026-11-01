@@ -23,6 +23,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Embed the entire built directory so hashed JS/CSS assets survive install.
     let root = Path::new(&env::var("CARGO_MANIFEST_DIR")?).join("web-dist");
     println!("cargo:rerun-if-changed=web-dist");
+    let index = root.join("index.html");
+    if !index.is_file() {
+        return Err(format!(
+            "前端首页 {} 不存在或不是文件；请先构建静态资源",
+            index.display()
+        )
+        .into());
+    }
     let mut source = String::from("static ASSETS: &[(&str, &[u8])] = &[\n");
     embed(&root, &root, &mut source)?;
     source.push_str("];\n");

@@ -72,7 +72,7 @@ deck-skill/           新 Skill（第 6 节）
 
 - Rust stable，edition 2024，提交 Cargo.lock。依赖：clap、serde、serde_json、rusqlite（bundled）、tiny_http、thiserror、sha2、tempfile。本地服务用同步请求线程，不引入异步运行时。
 - 先在一个包内按文件分模块，出现真实需要时再拆。
-- `rust.yml` 独立执行 AGENTS.md 第 3 节的 Rust 检查与 deck-tools pytest，在 PR 和 `main` push 上自动运行；`rebuild.yml` 执行旧线检查，只在 `main` push 后自动运行，旧线的 PR 在合并前本地执行第 3 节的命令。两者都保留手动入口，功能分支 push 不单独触发 CI。
+- `rust.yml` 在 PR 和 `main` push 上自动执行 AGENTS.md 第 3 节的 Rust 检查与 deck-tools pytest；pytest 用 `-m "not render"` 排除 67 条需要 rsvg-convert/soffice 的用例，合并前须在本机全量运行。`rebuild.yml` 执行旧线检查，只在 `main` push 后自动运行，旧线的 PR 在合并前本地执行第 3 节的命令。两者都保留手动入口，功能分支 push 不单独触发 CI。
 - 旧线按本次主干更新的 before/head 差异分流：只涉及 `rust/`、`deck-tools/`、`deck-skill/`、本开发稿目录或 `rust.yml` 时，跳过旧线测试并由 Group report 返回不适用；其他或混合路径仍执行旧线单元、渲染、浏览器和安装验证。日常单元使用 Python 3.12 / Node 22，手动触发时运行完整 2×2 矩阵。分流失败、适用检查失败或意外跳过，Group report 均返回失败。
 
 ### 3.2 存储
@@ -205,10 +205,10 @@ S4 必须能用的最低要求：整稿浏览（原图、预览、过期标记�
 后端接口供前端联调的返回形状：
 
 - `GET /api/deck` 返回 `{version, deck, artifact_status, runs, history}`，在同一 SQLite 只读事务中读取。`artifact_status` 含 `missing_pages/stale_pages/stale_images`；runs 含每页状态、未采用原因及 `result_file`，不含本地工作路径；history 按新到旧列出 `id/created_at/summary`。run 状态独立于作品版本变化，轮询时应同时刷新。
-- PUT 接受与 CLI 相同的 patch 或 `{deck: patch}`，成功返回 `{version, deck}`。冲突返回 HTTP 409 与 `{exit_code:5, base, submitted, conflicts:[{unit,current}]}`，整次不写入；`submitted` 原样保留请求 JSON，界面也须保留编辑输入。
+- PUT 接受与 CLI 相同的裸 patch，成功返回 `{version, deck}`。冲突返回 HTTP 409 与 `{exit_code:5, base, submitted, conflicts:[{unit,current}]}`，整次不写入；`submitted` 原样保留裸 patch，界面也须保留编辑输入。
 - `POST /api/build` 返回 `{id, url, findings, missing_pages, stale_pages}`，url 是该次构建文件的 `/api/files/<sha>`。`GET /api/files/<sha>` 只在当前项目的 files 目录内查找，含扩展名的存储引用取点号前的 sha 用于 URL；文件响应禁止脚本执行。
-- `GET /api/export/md` 与 `GET /api/export/pptx` 直接返回下载内容，文件名为 `deck.md/deck.pptx`。`X-Deck-Status` 是 JSON（非 ASCII 字符使用 JSON 转义），含 `missing_pages/stale_pages`；PPTX 另含 `id/input_changed/warning/build_missing_pages`。构建 URL 的 PPTX 文件响应也带当前缺页、过期提示。
-- cancel 返回 `{runs:[目标 run]}`，restore 返回 `{version, deck}`。输入错误为 HTTP 400；非本机请求 403；文件或接口不存在 404；缺工具 503（`exit_code:3`）；工具执行失败 500（`exit_code:4`）。错误响应含 `error` 与对应 CLI `exit_code`（非本机与不存在的接口除外）。
+- `GET /api/export/md` 与 `GET /api/export/pptx` 直接返回下载内容，文件名为 `deck.md/deck.pptx`。`X-Deck-Status` 是 JSON（非 ASCII 字符使用 JSON 转义），含 `missing_pages/stale_pages`；PPTX 另含 `id/input_changed/warning/build_missing_pages`。
+- cancel 返回 `{runs:[目标 run]}`，restore 返回 `{version, deck}`。输入错误为 HTTP 400；非本机请求 403；文件或接口不存在 404；缺工具 503；工具执行失败 500。错误响应含 `error`，仅 HTTP 409 冲突附带 CLI `exit_code:5`。
 
 ### 3.8 错误
 

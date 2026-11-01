@@ -1,4 +1,8 @@
-use deck::{model::Patch, ops, store::Store};
+use deck::{
+    model::{Artifact, Patch},
+    ops,
+    store::{self, Store},
+};
 use serde_json::{Value, json};
 use std::{
     collections::HashMap,
@@ -310,7 +314,49 @@ fn files_are_project_scoped_and_symlinks_cannot_escape() {
                 .status,
             400
         );
+        std::fs::remove_file(second.path().join(".deck/files").join(&foreign)).unwrap();
+        assert_eq!(
+            service
+                .request("GET", &format!("/api/files/{}", &foreign[..64]), &[], "")
+                .status,
+            404
+        );
     }
+}
+
+#[test]
+fn jpeg_result_named_png_downloads_as_jpeg() {
+    let temp = tempfile::tempdir().unwrap();
+    ops::new(temp.path(), String::new()).unwrap();
+    edit(
+        temp.path(),
+        1,
+        json!({"order":["p1"],"pages":[{"id":"p1"}]}),
+    );
+    let bitmap = temp.path().join("result.png");
+    let python = std::env::var_os("DECK_TOOLS_PYTHON").expect("install this worktree's deck-tools");
+    assert!(
+        Command::new(python)
+            .args([
+                "-c",
+                "from PIL import Image; import sys; Image.new('RGB',(8,8)).save(sys.argv[1],format='JPEG')"
+            ])
+            .arg(&bitmap)
+            .status()
+            .unwrap()
+            .success()
+    );
+    let run = ops::run_start(temp.path(), "image", &["p1".into()], None).unwrap();
+    let id = run["runs"][0]["id"].as_i64().unwrap();
+    ops::run_call(temp.path(), id, "p1", false).unwrap();
+    let result = ops::run_result(temp.path(), id, "p1", &bitmap).unwrap();
+    let file = result["file"].as_str().unwrap();
+    assert!(file.ends_with(".jpg"));
+    let service = Service::start(temp.path());
+    let downloaded = service.request("GET", &format!("/api/files/{}", &file[..64]), &[], "");
+    assert_eq!(downloaded.status, 200);
+    assert_eq!(downloaded.headers["content-type"], "image/jpeg");
+    assert_eq!(downloaded.body, std::fs::read(bitmap).unwrap());
 }
 
 #[test]
@@ -382,7 +428,8 @@ fn build_downloads_report_missing_stale_and_changed_inputs_without_gating() {
         1,
         json!({"order":["p1","待补😀"],"pages":[{"id":"p1","content":{"title":"Decision"}},{"id":"待补😀"}]}),
     );
-    let svg = temp.path().join("page.svg");
+    let mut store = Store::open(temp.path()).unwrap();
+    let mut snapshot = store.current().unwrap();
     let font = Command::new("fc-match")
         .args(["-f", "%{family}", "sans-serif"])
         .output()
@@ -390,18 +437,15 @@ fn build_downloads_report_missing_stale_and_changed_inputs_without_gating() {
     assert!(font.status.success());
     let families = String::from_utf8(font.stdout).unwrap();
     let family = families.split(',').next().unwrap().trim();
-    std::fs::write(&svg, format!(r#"<svg viewBox="0 0 1280 720"><text x="64" y="80" font-size="36" font-family="{family}" data-atom-id="atom:p1:title">Decision</text></svg>"#)).unwrap();
-    let run = ops::run_start(temp.path(), "svg", &["p1".into()], None).unwrap();
-    ops::run_result(
-        temp.path(),
-        run["runs"][0]["id"].as_i64().unwrap(),
-        "p1",
-        &svg,
-    )
-    .unwrap();
-    let base = ops::get(temp.path(), None).unwrap()["version"]
-        .as_i64()
-        .unwrap();
+    let svg = format!(
+        r#"<svg viewBox="0 0 1280 720"><text x="64" y="80" font-size="36" font-family="{family}" data-atom-id="atom:p1:title">Decision</text></svg>"#
+    );
+    let file = store.add_file(svg.as_bytes(), "svg").unwrap();
+    let basis = ops::basis("svg", &snapshot.deck, &snapshot.deck.pages[0]).unwrap();
+    snapshot.deck.pages[0].svg = Some(Artifact { file, basis });
+    let tx = store.transaction().unwrap();
+    let base = store::append(&tx, &snapshot.deck, "synthetic compiler fixture").unwrap();
+    tx.commit().unwrap();
     edit(
         temp.path(),
         base,
@@ -421,7 +465,6 @@ fn build_downloads_report_missing_stale_and_changed_inputs_without_gating() {
     let downloaded = service.request("GET", build.json()["url"].as_str().unwrap(), &[], "");
     assert_eq!(downloaded.status, 200);
     assert!(downloaded.body.starts_with(b"PK"));
-    assert_eq!(downloaded.artifact_status()["stale_pages"], json!(["p1"]));
     let base = ops::get(temp.path(), None).unwrap()["version"]
         .as_i64()
         .unwrap();

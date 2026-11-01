@@ -600,7 +600,8 @@ pub fn run_cancel(project: &Path, id: i64) -> Result<Value> {
         "UPDATE runs SET status='cancelled' WHERE id=? AND status='open'",
         [id],
     )?;
-    run_show(project, Some(id))
+    let deck = store.current()?.deck;
+    Ok(json!({"runs": runs(&store.connection, &deck, Some(id))?}))
 }
 
 pub fn run_show(project: &Path, id: Option<i64>) -> Result<Value> {
@@ -741,12 +742,12 @@ pub fn run_result(project: &Path, id: i64, page_id: &str, source: &Path) -> Resu
         // Decode the exact saved bytes, not a mutable Host file.
         let bitmap = temporary.path().join("image");
         std::fs::write(&bitmap, &data)?;
-        crate::tools::invoke("image-info", &json!({"path": bitmap}))?;
-        let ext = source.extension().and_then(|e| e.to_str()).unwrap_or("");
-        if !["png", "jpg", "jpeg"].contains(&ext.to_lowercase().as_str()) {
-            return Err(Error::Input("生图结果必须是 PNG 或 JPEG".into()));
+        let info = crate::tools::invoke("image-info", &json!({"path": bitmap}))?;
+        match info["format"].as_str() {
+            Some("PNG") => "png",
+            Some("JPEG") => "jpg",
+            _ => return Err(Error::Tool("image-info 未返回 PNG 或 JPEG 格式".into())),
         }
-        ext
     };
     let file = store.add_file(&data, extension)?;
     if kind == "svg" {

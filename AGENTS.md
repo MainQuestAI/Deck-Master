@@ -40,6 +40,7 @@ uv venv --python 3.12 --seed .venv                     # 没有 uv 时：python3
 - macOS 上 pytest 默认的临时目录位于 `/private` 下，会触发旧线的 #225，所以始终显式传 `--basetemp`。
 - Rust 通过 `DECK_TOOLS_PYTHON` 找到 Python 解释器，开发时指向本 worktree 的 `.venv/bin/python`。
 - soffice、pdftoppm、fc-match 是否可用，用 `deck doctor` 检查。
+- CI 用 `-m "not render"` 排除 67 条需要 rsvg-convert/soffice 的用例，合并前须在本机全量运行。
 
 ## 4. 工作方式
 
