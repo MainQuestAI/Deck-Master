@@ -5,9 +5,15 @@ fn embed(root: &Path, directory: &Path, source: &mut String) -> io::Result<()> {
     entries.sort_by_key(|entry| entry.file_name());
     for entry in entries {
         let path = entry.path();
-        if entry.file_type()?.is_dir() {
+        let kind = entry.file_type()?;
+        if kind.is_symlink() {
+            return Err(io::Error::other(format!(
+                "静态资源不支持符号链接：{}",
+                path.display()
+            )));
+        } else if kind.is_dir() {
             embed(root, &path, source)?;
-        } else if entry.file_type()?.is_file() {
+        } else if kind.is_file() {
             let name = path.strip_prefix(root).map_err(io::Error::other)?;
             let name = name.to_string_lossy().replace('\\', "/");
             source.push_str(&format!(
