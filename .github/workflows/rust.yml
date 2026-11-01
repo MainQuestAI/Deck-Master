@@ -39,4 +39,5 @@ jobs:
           cargo clippy -- -D warnings
           cargo test
       - name: File tool tests
-        run: .venv/bin/python -m pytest -q deck-tools/tests --basetemp="$RUNNER_TEMP/deck-tools"
+        # The runner lacks rsvg-convert/soffice; render tests run locally only.
+        run: .venv/bin/python -m pytest -q deck-tools/tests -m "not render" --basetemp="$RUNNER_TEMP/deck-tools"
