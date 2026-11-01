@@ -8,6 +8,8 @@
 | [McKinsey 七步问题解决访谈](https://www.mckinsey.com/capabilities/strategy-and-corporate-finance/our-insights/how-to-master-the-seven-step-problem-solving-process) | 多切法拆解、优先分析 | 机构实践；本库的具体算法是适配，不称统一MBB标准 |
 | [Purdue Toulmin 教学](https://owl.purdue.edu/owl/general_writing/academic_writing/historical_perspectives_on_argumentation/toulmin_argument.html) | 主张、根据、理据、支撑、限定与反驳 | 论证理论；理据不必都是因果机制 |
 | [英国MCDA指南](https://analysisfunction.civilservice.gov.uk/policy-store/an-introductory-guide-to-mcda/) | 多准则比较、权重尺度与敏感性 | 规范性决策支持；不据此证明任意符号计分正确 |
+| [Gary Klein 事前验尸](https://www.gary-klein.com/premortem) | 从具体失败路径反推计划调整 | 事前检视方法；失败想象不是已发生事实 |
+| [Shell 情景方法](https://www.shell.com/news-and-insights/scenarios/what-are-shell-scenarios.html) | 用不同外部条件检视行动选择 | 情景实践；情景不是预测或概率估计 |
 | [Bain RAPID](https://www.bain.com/insights/who-has-d-how-clear-decision-roles-enhance-organizational-performance/) | 在确有跨部门决策时澄清角色 | 管理实践；不强制每份Deck增加审批表 |
 | [Stanford A Time for Telling](https://aaalab.stanford.edu/research/inventive-learning/a-time-for-telling/index.html) | 对照可为后续解释建立区分基础 | 学习实验；不外推万能页序、迁移翻倍或企业PPT效果 |
 | [Redis WAIT 官方说明](https://redis.io/docs/latest/commands/wait/) | 库存案例的故障边界修正 | 官方明确不将Redis变成强一致存储；案例不得宣称零超卖已保证 |
