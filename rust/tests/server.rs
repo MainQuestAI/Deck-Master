@@ -281,7 +281,7 @@ fn rejects_rebinding_origins_duplicate_headers_and_path_traversal() {
         assert_eq!(service.request("POST", path, &[], "").status, 400);
     }
     assert_eq!(ops::get(temp.path(), None).unwrap()["version"], 1);
-    assert_eq!(service.request("POST", "/api/reviews", &[], "").status, 404);
+    assert_eq!(service.request("POST", "/api/reviews", &[], "").status, 400);
 }
 
 #[test]
@@ -498,4 +498,423 @@ fn build_downloads_report_missing_stale_and_changed_inputs_without_gating() {
         markdown.artifact_status()["missing_pages"],
         json!(["待补😀"])
     );
+}
+
+#[test]
+fn http_reviews_force_human_filter_resolve_and_poll_without_changing_version() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    ops::new(path, String::new()).unwrap();
+    edit(
+        path,
+        1,
+        json!({"order":["p3","页 4"],"pages":[{"id":"p3"},{"id":"页 4"}]}),
+    );
+    let checked = ops::review_add(path, Some("p3"), "自检原文", "Host", "self_check").unwrap();
+    let service = Service::start(path);
+    let posted = service.request(
+        "POST",
+        "/api/reviews",
+        &[],
+        r#"{"page_id":"p3","text":"收入 100 元 , 复核","reviewer":"editor","method":"self_check"}"#,
+    );
+    assert_eq!(posted.status, 200);
+    assert_eq!(posted.headers["cache-control"], "no-store");
+    assert_eq!(posted.headers["x-content-type-options"], "nosniff");
+    assert_eq!(posted.json()["method"], "human");
+    assert_eq!(posted.json()["reviewer"], "editor");
+    assert_eq!(posted.json()["text"], "收入 100 元 , 复核");
+    let global = service
+        .request("POST", "/api/reviews", &[], r#"{"text":"全稿"}"#)
+        .json();
+    assert_eq!(global["method"], "human");
+    assert_eq!(global["reviewer"], "author");
+    assert_eq!(global["page_id"], Value::Null);
+    let unicode = service
+        .request(
+            "POST",
+            "/api/reviews",
+            &[],
+            r#"{"page_id":"页 4","text":"另页"}"#,
+        )
+        .json();
+    assert_eq!(
+        service
+            .request("GET", "/api/reviews?page=%E9%A1%B5+4&status=open", &[], "")
+            .json()["reviews"],
+        json!([unicode])
+    );
+    let filtered = service.request("GET", "/api/reviews?status=open&page=p3", &[], "");
+    assert_eq!(filtered.status, 200);
+    assert_eq!(filtered.json()["reviews"], json!([checked, posted.json()]));
+    let workspace = service.request("GET", "/api/deck", &[], "").json();
+    assert_eq!(workspace["reviews"].as_array().unwrap().len(), 4);
+    assert_eq!(workspace["reviews"][0]["method"], "self_check");
+    assert_eq!(workspace["deck"]["pages"][0]["open_reviews"], 2);
+    assert_eq!(workspace["deck"]["pages"][1]["open_reviews"], 1);
+    assert_eq!(workspace["open_reviews_total"], 4);
+    assert_eq!(workspace["version"], 2);
+    let url = format!("/api/reviews/{}/resolve", checked.id);
+    let resolved = service.request("POST", &url, &[], "");
+    assert_eq!(resolved.status, 200);
+    assert_eq!(resolved.json()["id"], checked.id);
+    assert_eq!(resolved.json()["status"], "resolved");
+    assert!(resolved.json()["resolved_at"].is_string());
+    assert_eq!(
+        service.request("POST", &url, &[], "").json(),
+        resolved.json()
+    );
+    assert_eq!(
+        service
+            .request("GET", "/api/reviews?status=resolved&page=p3", &[], "")
+            .json()["reviews"],
+        json!([resolved.json()])
+    );
+    assert_eq!(
+        service.request("GET", "/api/deck", &[], "").json()["deck"]["pages"][0]["open_reviews"],
+        1
+    );
+    assert_eq!(
+        service
+            .request("GET", "/api/reviews?status=open&page=p3", &[], "")
+            .json()["reviews"],
+        json!([posted.json()])
+    );
+    for body in [
+        r#"{"text":" "}"#,
+        r#"{"text":"意见","page_id":"missing"}"#,
+        r#"{}"#,
+    ] {
+        assert_eq!(
+            service.request("POST", "/api/reviews", &[], body).status,
+            400
+        );
+    }
+    for url in [
+        "/api/reviews?status=pass",
+        "/api/reviews?page=%GG",
+        "/api/reviews?page=%FF",
+    ] {
+        assert_eq!(service.request("GET", url, &[], "").status, 400);
+    }
+    for url in [
+        "/api/reviews/resolve",
+        "/api/reviews//resolve",
+        "/api/reviews/no/resolve",
+    ] {
+        assert_eq!(service.request("POST", url, &[], "").status, 400);
+    }
+    assert_eq!(
+        service
+            .request("POST", "/api/reviews/999/resolve", &[], "")
+            .status,
+        404
+    );
+    for url in [
+        "/api/reviews",
+        "/api/reviews/2/resolve",
+        "/api/runs/1/adopt/p3",
+    ] {
+        assert_eq!(
+            service
+                .request(
+                    "POST",
+                    url,
+                    &[("Origin", "https://evil.example")],
+                    r#"{"text":"attack"}"#
+                )
+                .status,
+            403
+        );
+        assert_eq!(
+            service
+                .request("POST", url, &[("Host", "evil.example")], "")
+                .status,
+            403
+        );
+    }
+    assert_eq!(ops::get(path, None).unwrap()["version"], 2);
+}
+
+#[test]
+fn http_adopt_matches_cli_with_candidates_and_existing_rejection_semantics() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    ops::new(path, String::new()).unwrap();
+    edit(path, 1, json!({"order":["p3"],"pages":[{"id":"p3"}]}));
+    let bitmap = path.join("candidate.png");
+    let python = std::env::var_os("DECK_TOOLS_PYTHON").unwrap();
+    assert!(
+        Command::new(python)
+            .args([
+                "-c",
+                "from PIL import Image; import sys; Image.new('RGB',(8,8)).save(sys.argv[1])"
+            ])
+            .arg(&bitmap)
+            .status()
+            .unwrap()
+            .success()
+    );
+    let first = ops::run_start(path, "image", &["p3".into()], None).unwrap()["runs"][0]["id"]
+        .as_i64()
+        .unwrap();
+    ops::run_call(path, first, "p3", false).unwrap();
+    let first_result = ops::run_result(path, first, "p3", &bitmap).unwrap();
+    let first_bytes = std::fs::read(&bitmap).unwrap();
+    let id = ops::run_start(path, "image", &["p3".into()], None).unwrap()["runs"][0]["id"]
+        .as_i64()
+        .unwrap();
+    let service = Service::start(path);
+    let url = format!("/api/runs/{id}/adopt/p3");
+    assert_eq!(service.request("POST", &url, &[], "").status, 400);
+    ops::run_call(path, id, "p3", false).unwrap();
+    let base = Store::open(path).unwrap().current().unwrap().version;
+    edit(
+        path,
+        base,
+        json!({"pages":[{"id":"p3","layout":"依据变化"}]}),
+    );
+    assert!(
+        Command::new(std::env::var_os("DECK_TOOLS_PYTHON").unwrap())
+            .args([
+                "-c",
+                "from PIL import Image; import sys; Image.new('RGB',(16,16),'navy').save(sys.argv[1])"
+            ])
+            .arg(&bitmap)
+            .status()
+            .unwrap()
+            .success()
+    );
+    let result = ops::run_result(path, id, "p3", &bitmap).unwrap();
+    assert_eq!(result["adopted"], false);
+    let workspace = service.request("GET", "/api/deck", &[], "").json();
+    assert_eq!(
+        workspace["deck"]["pages"][0]["image"]["file"],
+        first_result["file"]
+    );
+    assert_ne!(first_result["file"], result["file"]);
+    let candidate = &workspace["runs"][0]["pages"][0];
+    assert_eq!(candidate["status"], "unadopted");
+    assert!(!candidate["reason"].as_str().unwrap().is_empty());
+    assert_eq!(candidate["basis_changed"], true);
+    let candidate_bytes = std::fs::read(&bitmap).unwrap();
+    assert_ne!(candidate_bytes, first_bytes);
+    for (key, expected) in [
+        ("result_url", candidate_bytes),
+        ("current_image_url", first_bytes),
+    ] {
+        let image = service.request("GET", candidate[key].as_str().unwrap(), &[], "");
+        assert_eq!(image.status, 200);
+        assert_eq!(image.body, expected);
+        assert!(image.headers["content-security-policy"].contains("sandbox"));
+    }
+    let adopted = service.request("POST", &url, &[], "");
+    assert_eq!(adopted.status, 200);
+    let after = service.request("GET", "/api/deck", &[], "").json();
+    assert_eq!(after["deck"]["pages"][0]["image"]["file"], result["file"]);
+    assert_eq!(
+        after["version"].as_i64().unwrap(),
+        workspace["version"].as_i64().unwrap() + 1
+    );
+    assert_eq!(after["artifact_status"]["stale_images"], json!(["p3"]));
+    let cli = Command::new(env!("CARGO_BIN_EXE_deck"))
+        .arg("--project")
+        .arg(path.canonicalize().unwrap())
+        .args(["run", "adopt", &id.to_string(), "p3"])
+        .output()
+        .unwrap();
+    assert!(cli.status.success());
+    let mut cli: Value = serde_json::from_slice(&cli.stdout).unwrap();
+    for page in cli["runs"][0]["pages"].as_array_mut().unwrap() {
+        let page = page.as_object_mut().unwrap();
+        assert!(page.remove("findings_path").is_some());
+        assert!(page.remove("work").is_some());
+    }
+    assert_eq!(adopted.json(), cli);
+    assert_eq!(adopted.json()["runs"][0], after["runs"][0]);
+    assert_eq!(
+        ops::get(path, None).unwrap()["artifact_status"]["stale_images"],
+        json!(["p3"])
+    );
+    assert_eq!(
+        service
+            .request("POST", "/api/runs/999/adopt/p3", &[], "")
+            .status,
+        400
+    );
+    for url in [
+        "/api/runs/no/adopt/p3",
+        "/api/runs/1/adopt/",
+        "/api/runs/1/adopt/%GG",
+    ] {
+        assert_eq!(service.request("POST", url, &[], "").status, 400);
+    }
+}
+
+#[test]
+fn http_adopts_cancelled_runs_late_result() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    ops::new(path, String::new()).unwrap();
+    edit(path, 1, json!({"order":["p3"],"pages":[{"id":"p3"}]}));
+    let bitmap = path.join("late.png");
+    assert!(
+        Command::new(std::env::var_os("DECK_TOOLS_PYTHON").unwrap())
+            .args([
+                "-c",
+                "from PIL import Image; import sys; Image.new('RGB',(8,8)).save(sys.argv[1])"
+            ])
+            .arg(&bitmap)
+            .status()
+            .unwrap()
+            .success()
+    );
+    let id = ops::run_start(path, "image", &["p3".into()], None).unwrap()["runs"][0]["id"]
+        .as_i64()
+        .unwrap();
+    ops::run_call(path, id, "p3", false).unwrap();
+    let service = Service::start(path);
+    assert_eq!(
+        service
+            .request("POST", &format!("/api/runs/{id}/cancel"), &[], "")
+            .status,
+        200
+    );
+    let result = ops::run_result(path, id, "p3", &bitmap).unwrap();
+    assert_eq!(result["adopted"], false);
+    let before = ops::workspace(path).unwrap();
+    assert_eq!(before["runs"][0]["pages"][0]["status"], "unadopted");
+    assert_eq!(before["deck"]["pages"][0]["image"], Value::Null);
+    let reply = service.request("POST", &format!("/api/runs/{id}/adopt/p3"), &[], "");
+    assert_eq!(reply.status, 200);
+    assert_eq!(reply.json()["runs"][0]["status"], "cancelled");
+    assert_eq!(reply.json()["runs"][0]["pages"][0]["status"], "done");
+    let after = ops::workspace(path).unwrap();
+    assert_eq!(after["deck"]["pages"][0]["image"]["file"], result["file"]);
+    assert_eq!(
+        after["version"].as_i64().unwrap(),
+        before["version"].as_i64().unwrap() + 1
+    );
+}
+
+#[test]
+fn http_adopts_only_selected_page_of_two_page_run() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    ops::new(path, String::new()).unwrap();
+    edit(
+        path,
+        1,
+        json!({"order":["p1","p2"],"pages":[{"id":"p1"},{"id":"p2"}]}),
+    );
+    let bitmap = path.join("current.png");
+    assert!(
+        Command::new(std::env::var_os("DECK_TOOLS_PYTHON").unwrap())
+            .args([
+                "-c",
+                "from PIL import Image; import sys; Image.new('RGB',(8,8)).save(sys.argv[1])"
+            ])
+            .arg(&bitmap)
+            .status()
+            .unwrap()
+            .success()
+    );
+    let pages = ["p1".into(), "p2".into()];
+    let first = ops::run_start(path, "image", &pages, None).unwrap()["runs"][0]["id"]
+        .as_i64()
+        .unwrap();
+    for page in &pages {
+        ops::run_call(path, first, page, false).unwrap();
+        assert_eq!(
+            ops::run_result(path, first, page, &bitmap).unwrap()["adopted"],
+            true
+        );
+    }
+    let id = ops::run_start(path, "image", &pages, None).unwrap()["runs"][0]["id"]
+        .as_i64()
+        .unwrap();
+    for page in &pages {
+        ops::run_call(path, id, page, false).unwrap();
+    }
+    ops::run_cancel(path, id).unwrap();
+    assert!(Command::new(std::env::var_os("DECK_TOOLS_PYTHON").unwrap())
+        .args(["-c", "from PIL import Image; import sys; Image.new('RGB',(16,16),'navy').save(sys.argv[1])"])
+        .arg(&bitmap).status().unwrap().success());
+    for page in &pages {
+        assert_eq!(
+            ops::run_result(path, id, page, &bitmap).unwrap()["adopted"],
+            false
+        );
+    }
+    let before = ops::workspace(path).unwrap();
+    let other = &before["runs"][0]["pages"][1];
+    assert_eq!(other["page_id"], "p2");
+    assert_eq!(other["status"], "unadopted");
+    let store = Store::open(path).unwrap();
+    let other_file = before["deck"]["pages"][1]["image"]["file"]
+        .as_str()
+        .unwrap();
+    let other_bytes = std::fs::read(store.file(other_file).unwrap()).unwrap();
+    let other_result = store.file(other["result_file"].as_str().unwrap()).unwrap();
+    let other_result_bytes = std::fs::read(&other_result).unwrap();
+    let service = Service::start(path);
+    let reply = service.request("POST", &format!("/api/runs/{id}/adopt/p1"), &[], "");
+    assert_eq!(reply.status, 200);
+    assert_eq!(reply.json()["runs"][0]["pages"][0]["status"], "done");
+    assert_eq!(reply.json()["runs"][0]["pages"][1], *other);
+    let after = ops::workspace(path).unwrap();
+    assert_eq!(
+        after["deck"]["pages"][0]["image"]["file"],
+        before["runs"][0]["pages"][0]["result_file"]
+    );
+    assert_ne!(
+        after["deck"]["pages"][0]["image"]["file"],
+        before["deck"]["pages"][0]["image"]["file"]
+    );
+    assert_eq!(after["deck"]["pages"][1], before["deck"]["pages"][1]);
+    assert_eq!(
+        std::fs::read(store.file(other_file).unwrap()).unwrap(),
+        other_bytes
+    );
+    assert_eq!(std::fs::read(other_result).unwrap(), other_result_bytes);
+}
+
+#[test]
+fn http_rejects_adoption_after_page_deleted() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    ops::new(path, String::new()).unwrap();
+    edit(path, 1, json!({"order":["p3"],"pages":[{"id":"p3"}]}));
+    let bitmap = path.join("candidate.png");
+    assert!(
+        Command::new(std::env::var_os("DECK_TOOLS_PYTHON").unwrap())
+            .args([
+                "-c",
+                "from PIL import Image; import sys; Image.new('RGB',(8,8)).save(sys.argv[1])"
+            ])
+            .arg(&bitmap)
+            .status()
+            .unwrap()
+            .success()
+    );
+    let id = ops::run_start(path, "image", &["p3".into()], None).unwrap()["runs"][0]["id"]
+        .as_i64()
+        .unwrap();
+    ops::run_call(path, id, "p3", false).unwrap();
+    ops::run_cancel(path, id).unwrap();
+    assert_eq!(
+        ops::run_result(path, id, "p3", &bitmap).unwrap()["adopted"],
+        false
+    );
+    edit(path, 2, json!({"order":[],"pages":[{"id":"p3"}]}));
+    let before = ops::workspace(path).unwrap();
+    assert_eq!(before["deck"]["pages"], json!([]));
+    let service = Service::start(path);
+    assert_eq!(
+        service
+            .request("POST", &format!("/api/runs/{id}/adopt/p3"), &[], "")
+            .status,
+        400
+    );
+    assert_eq!(ops::workspace(path).unwrap(), before);
 }

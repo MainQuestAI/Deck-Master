@@ -17,6 +17,11 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    #[command(about = "添加、读取和处理页上或整稿意见")]
+    Review {
+        #[command(subcommand)]
+        command: ReviewCommand,
+    },
     #[command(about = "在本机浏览、修改和下载作品")]
     Serve {
         #[arg(value_name = "PROJECT")]
@@ -70,6 +75,29 @@ enum Commands {
         #[command(subcommand)]
         command: ExportCommand,
     },
+}
+
+#[derive(Subcommand)]
+enum ReviewCommand {
+    #[command(about = "记录意见；不修改作品版本")]
+    Add {
+        text: String,
+        #[arg(long)]
+        page: Option<String>,
+        #[arg(long, default_value = "human")]
+        method: String,
+        #[arg(long, default_value = "author")]
+        reviewer: String,
+    },
+    #[command(about = "按状态或页面读取意见")]
+    List {
+        #[arg(long)]
+        status: Option<String>,
+        #[arg(long)]
+        page: Option<String>,
+    },
+    #[command(about = "标记意见已处理")]
+    Resolve { id: i64 },
 }
 
 #[derive(Subcommand)]
@@ -148,6 +176,26 @@ pub fn run() -> Result<()> {
     }
     let cli = Cli::from_arg_matches(&matches).unwrap_or_else(|error| error.exit());
     match cli.command {
+        Commands::Review { command } => match command {
+            ReviewCommand::Add {
+                text,
+                page,
+                method,
+                reviewer,
+            } => print_json(ops::review_add(
+                &cli.project,
+                page.as_deref(),
+                &text,
+                &reviewer,
+                &method,
+            )?),
+            ReviewCommand::List { status, page } => print_json(ops::review_list(
+                &cli.project,
+                status.as_deref(),
+                page.as_deref(),
+            )?),
+            ReviewCommand::Resolve { id } => print_json(ops::review_resolve(&cli.project, id)?),
+        },
         Commands::Serve { directory } => crate::server::serve(&directory),
         Commands::Build => print_json(ops::build(&cli.project)?),
         Commands::Doctor { fonts } => {

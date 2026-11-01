@@ -10,7 +10,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-pub const FORMAT_VERSION: i64 = 2;
+pub const FORMAT_VERSION: i64 = 3;
 
 pub struct Store {
     pub connection: Connection,
@@ -113,6 +113,21 @@ impl Store {
             PRAGMA user_version = 2;",
             )?;
         }
+        if version < 3 {
+            tx.execute_batch(
+                "CREATE TABLE reviews (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                version_id INTEGER NOT NULL, page_id TEXT,
+                reviewer TEXT NOT NULL,
+                method TEXT NOT NULL CHECK (method IN ('self_check','other_model','human')),
+                text TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open','resolved')),
+                created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+                resolved_at TEXT
+            );
+            PRAGMA user_version = 3;",
+            )?;
+        }
         tx.commit()?;
         Ok(())
     }
@@ -187,7 +202,7 @@ pub fn file_path(root: &Path, name: &str) -> Result<PathBuf> {
     }
     let path = root.join("files").join(name);
     if !path.is_file() {
-        return Err(Error::Missing(name.into()));
+        return Err(Error::Missing(format!("附件 {name} 不存在;请先添加附件")));
     }
     Ok(path)
 }
