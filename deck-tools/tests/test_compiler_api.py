@@ -26,6 +26,7 @@ def test_editable_table_and_title_survive_delivery_cleanup(tmp_path):
     svg = tmp_path / 'editable.svg'
     svg.write_text(f'''<svg viewBox="0 0 600 400" font-family="{family}" font-size="24">
       <text id="标题" x="30" y="40" data-atom-id="atom:p1:title">方案比较</text>
+      <text id="流程说明" x="30" y="75">比较后提交</text>
       <rect id="评分项" x="30" y="90" width="500" height="220" fill="none"
             stroke="#333333" data-table-id="评分项" data-native-table="true"/>
       <line x1="30" y1="160" x2="530" y2="160" stroke="#333333" data-table-id="评分项"/>
@@ -45,10 +46,18 @@ def test_editable_table_and_title_survive_delivery_cleanup(tmp_path):
                           tmp_path / 'out')
     source = json.loads(result.manifest_path.read_text())['pages']
     assert readback(result.pptx_path, source, [{'page_id': 'p1', 'customer_visible': {'title': '方案比较'}}])['status'] == 'pass'
+    changed = Presentation(result.pptx_path)
+    next(shape.table for shape in changed.slides[0].shapes if shape.has_table).cell(1, 1).text = '不同结果'
+    changed_path = tmp_path / 'changed.pptx'
+    changed.save(changed_path)
+    findings = readback(changed_path, source, [{'page_id': 'p1', 'customer_visible': {'title': '方案比较'}}])['findings']
+    assert any(finding['code'] == 'svg_ppt_text_mismatch' and finding.get('element') == '评分项'
+               for finding in findings)
     cleaned = pptx(result.pptx_path.read_bytes(), 'deck.pptx')
     delivered = pptx(cleaned, 'deck.pptx')
     slide = Presentation(io.BytesIO(delivered)).slides[0]
     assert slide.shapes.title.text == '方案比较'
+    assert slide.slide_layout.name
     table = next(shape.table for shape in slide.shapes if shape.has_table)
     assert table.first_row
     assert table.cell(1, 0).text == '方案说明\n补充说明'
@@ -58,15 +67,39 @@ def test_editable_table_and_title_survive_delivery_cleanup(tmp_path):
     assert not runs[1].font.bold
     assert [shape.name for shape in slide.shapes] == [shape.name for shape in Presentation(io.BytesIO(cleaned)).slides[0].shapes]
     assert '表格-评分项' in [shape.name for shape in slide.shapes]
+    assert '连线-流程连线' in [shape.name for shape in slide.shapes]
+    assert '正文-流程说明' in [shape.name for shape in slide.shapes]
     ns = {'p': 'http://schemas.openxmlformats.org/presentationml/2006/main',
           'a': 'http://schemas.openxmlformats.org/drawingml/2006/main'}
     with zipfile.ZipFile(io.BytesIO(delivered)) as archive:
         xml = archive.read('ppt/slides/slide1.xml')
     root = ET.fromstring(xml)
-    assert root.find('.//p:graphicFrame', ns) is not None
-    line = root.find('.//p:sp/p:spPr/a:ln', ns)
+    graphic = root.find('.//p:graphicFrame', ns)
+    assert graphic is not None
+    for props in graphic.findall('.//a:tcPr', ns):
+        assert [child.tag.rsplit('}', 1)[-1] for child in props] == [
+            'lnL', 'lnR', 'lnT', 'lnB', 'solidFill']
+    shape = next(sp for sp in root.findall('.//p:sp', ns)
+                 if sp.find('p:nvSpPr/p:cNvPr', ns).get('name') == '连线-流程连线')
+    line = shape.find('p:spPr/a:ln', ns)
     assert line.get('cap') == 'rnd'
     assert line.find('a:bevel', ns) is not None
+
+
+def test_native_table_marker_without_identity_keeps_drawn_shape_readback(tmp_path):
+    family = resolve_host_font()
+    svg = tmp_path / 'drawn.svg'
+    svg.write_text(f'''<svg viewBox="0 0 600 400" font-family="{family}" font-size="24">
+      <rect x="30" y="90" width="500" height="220" fill="none"
+            stroke="#333333" data-native-table="true"/>
+      <text x="50" y="130" data-atom-id="atom:p1:title">方案比较</text>
+    </svg>''')
+    result = compile_deck([SvgInput('p1', svg)],
+                          CompileOptions(width_px=600, height_px=400, fonts=host_fonts()),
+                          tmp_path / 'out')
+    source = json.loads(result.manifest_path.read_text())['pages']
+    assert readback(result.pptx_path, source, [
+        {'page_id': 'p1', 'customer_visible': {'title': '方案比较'}}])['status'] == 'pass'
 
 
 def test_compile_isolated_from_home_cwd_and_repo(monkeypatch, tmp_path):

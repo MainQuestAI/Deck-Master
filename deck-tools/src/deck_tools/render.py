@@ -131,7 +131,8 @@ def readback(pptx_path,pages,expected_pages):
             root=ET.fromstring(z.read(slide_path))
             texts=[e.text or '' for e in root.findall('.//a:t',ns)]
             joined=normalize(''.join(texts))
-            tables = {s['table_id'] for s in source['shapes'] if s.get('native_table')}
+            tables = {s['table_id'] for s in source['shapes']
+                      if s.get('native_table') and s.get('table_frame')}
             for graphic in root.findall('.//p:graphicFrame', ns):
                 table_id = graphic.find('p:nvGraphicFramePr/p:cNvPr', ns).get('name')
                 if table_id not in tables:

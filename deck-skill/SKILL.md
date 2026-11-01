@@ -59,7 +59,7 @@ description: 用 Rust deck 命令将作者任务和指定材料写成 brief、�
 - 可选的 `refs` 保留材料名称与章节定位，`todo` 保留本页实际待补，仅在待补项中展示，不进入页面正文、页脚或讲稿，不阻止保存或导出。
 - 不编造数字、客户现状、报价、政策或已实现能力。样本比例不改写成节时、损失、准确率或 ROI；建议与观察在承担主张的正文中区分。
 
-保存前按 [references/expression-review-humanizer.md](references/expression-review-humanizer.md) 自己审一遍语言，命令只整理空格，语义由你判断；put 会静默整理空格（notes、表格 value 及其 display_text 不动）。按 [writing-profiles.md](references/writing-profiles.md) 保留读者需要的深度，用 [content-calibration.md](references/content-calibration.md) 检查正文是否只剩标签。
+保存前按 [references/expression-review-humanizer.md](references/expression-review-humanizer.md) 自己审一遍语言，命令只整理空格，语义由你判断；put 会静默整理空格，含英文名的版本号后的空格保留（notes、表格 value 及其 display_text 不动）。按 [writing-profiles.md](references/writing-profiles.md) 保留读者需要的深度，用 [content-calibration.md](references/content-calibration.md) 检查正文是否只剩标签。
 
 用 `get` 读取当前版本和所需页，再用 `put --base N <patch.json>` 保存。只交改动单元；brief、framing 和 content 提交完整值。增删页同时提交页面和新 order，块与条目编号由命令补齐。出错按 CLI 的具体信息处理，保存冲突时读取当前内容后重新合并，不覆盖作者的新稿。
 

@@ -400,6 +400,8 @@ def _clean_pptx(data, where, *, keep_notes=False, page_ids=None):
                             if stable_name not in page_ids:
                                 reject(where, 'rebuilt notes lost stable Page identity')
                             parent.set('name', stable_name)
+                        elif re.fullmatch(r'ppt/slideLayouts/slideLayout[0-9]+\.xml', name):
+                            parent.set('name', '版式' + Path(name).stem.removeprefix('slideLayout'))
                     for child in list(parent):
                         local = child.tag.rsplit("}", 1)[-1]
                         if local == "Override" and child.get("PartName", "").lstrip("/") in removed:

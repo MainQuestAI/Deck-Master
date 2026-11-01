@@ -23,7 +23,9 @@ def _role_name(source, page_id):
     role = {'text': '正文', 'image': '图片', 'line': '连线',
             'path': '图形', 'polygon': '箭头', 'polyline': '连线',
             'rect': '底板', 'circle': '图形', 'ellipse': '图形'}[source['kind']]
-    return f"{source.get('group') + '-' if source.get('group') else ''}{role}-{source['id']}"
+    # The parser appends a run index even to a single authored text box.
+    label = source['id'].removesuffix(':0') if source['kind'] == 'text' else source['id']
+    return f"{source.get('group') + '-' if source.get('group') else ''}{role}-{label}"
 
 
 def normalize_notes(text):
@@ -327,12 +329,13 @@ def _editable_tables(slide, page, X, Y, S, native_by_source):
                 cell.margin_top = cell.margin_bottom = S(8)
                 cell.vertical_anchor = MSO_ANCHOR.MIDDLE
                 props = cell._tc.get_or_add_tcPr()
-                paint(props, '#eaf1f6' if r == 0 else '#ffffff', 1)
                 for side in ('L', 'R', 'T', 'B'):
                     line = OxmlElement('a:ln' + side)
                     line.set('w', str(S(frame['stroke_width'])))
                     paint(line, frame['stroke'], 1)
                     props.append(line)
+                # CT_TableCellProperties places all border lines before fill.
+                paint(props, '#eaf1f6' if r == 0 else '#ffffff', 1)
                 texts = [s for s in members if s['kind'] == 'text'
                          and xs[c] <= s['x'] < xs[c + 1] and ys[r] <= s['y'] < ys[r + 1]]
                 if texts:
