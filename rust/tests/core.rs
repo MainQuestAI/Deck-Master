@@ -23,6 +23,31 @@ fn two_pages(path: &Path) -> i64 {
 }
 
 #[test]
+fn missing_attachments_and_reviews_explain_how_to_find_or_add_them() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    ops::new(path, String::new()).unwrap();
+    let sha = "0".repeat(64);
+    let name = format!("{sha}.png");
+    assert_eq!(
+        store::Store::open(path)
+            .unwrap()
+            .file(&name)
+            .unwrap_err()
+            .to_string(),
+        format!("附件 {name} 不存在;请先添加附件")
+    );
+    assert_eq!(
+        ops::project_file(path, &sha).unwrap_err().to_string(),
+        format!("附件 {sha} 不存在;请先添加附件")
+    );
+    assert_eq!(
+        ops::review_resolve(path, 99).unwrap_err().to_string(),
+        "意见 99 不存在;请用 deck review list 查看"
+    );
+}
+
+#[test]
 fn incomplete_deck_can_add_reorder_delete_and_export() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path();

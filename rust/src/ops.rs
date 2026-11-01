@@ -107,7 +107,7 @@ pub fn project_file(project: &Path, sha: &str) -> Result<std::path::PathBuf> {
             return Err(Error::Input("附件必须位于当前项目 files 目录内".into()));
         }
     }
-    Err(Error::Missing(sha))
+    Err(Error::Missing(format!("附件 {sha} 不存在;请先添加附件")))
 }
 
 pub fn show(project: &Path) -> Result<Value> {
@@ -187,7 +187,7 @@ fn review(connection: &rusqlite::Connection, id: i64) -> Result<Review> {
     connection.query_row(
         "SELECT id,version_id,page_id,reviewer,method,text,status,created_at,resolved_at FROM reviews WHERE id=?",
         [id], review_row,
-    ).optional()?.ok_or_else(|| Error::Missing(format!("意见 {id}")))
+    ).optional()?.ok_or_else(|| Error::Missing(format!("意见 {id} 不存在;请用 deck review list 查看")))
 }
 
 fn page_review_count(reviews: &[Review], page: &str) -> usize {

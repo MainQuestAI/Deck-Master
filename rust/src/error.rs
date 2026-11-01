@@ -13,7 +13,7 @@ pub struct Conflict {
 pub enum Error {
     #[error("输入有误：{0}")]
     Input(String),
-    #[error("{0} 不存在；请检查编号或文件引用")]
+    #[error("{0}")]
     Missing(String),
     #[error("缺少依赖：{0}")]
     NeedsTool(String),
