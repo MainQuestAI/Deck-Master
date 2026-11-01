@@ -61,6 +61,17 @@ impl Store {
 
     fn configure(&mut self) -> Result<()> {
         self.connection.busy_timeout(Duration::from_secs(5))?;
+        let version: i64 = self
+            .connection
+            .pragma_query_value(None, "user_version", |row| row.get(0))?;
+        if version == FORMAT_VERSION {
+            return Ok(());
+        }
+        if version > FORMAT_VERSION {
+            return Err(Error::Input(format!(
+                "项目格式为 {version}，当前程序只支持 {FORMAT_VERSION}；请升级 deck"
+            )));
+        }
         // Read the format after acquiring the write transaction: two clients may
         // open the same old project while another client is migrating it.
         let tx = self.transaction()?;
