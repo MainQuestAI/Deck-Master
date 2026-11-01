@@ -1,5 +1,11 @@
 # Deck Master Agent Task Index
 
+> **Scope:** this index covers only the legacy `deck-master` CLI under
+> `src/deck_master/`, which is now maintenance-only. Development rules for the
+> whole repository are in [AGENTS.md](../AGENTS.md); the new `rust/`,
+> `deck-tools/` and `deck-skill/` follow the
+> [Rust rebuild plan](specs/rust-rebuild/README.md). Nothing below applies to them.
+
 This index routes user intent to the rebuilt-core command path (spec 09).
 Prefer these entries over guessing file locations or reading historical specs.
 Legacy v0.9.x commands map onto this surface per spec 09.6; the full table is

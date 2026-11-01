@@ -111,6 +111,15 @@ SCHEMA_FILES = {
 
 ZERO_SHA256 = "0" * 64
 
+# One default policy shape for every newly created Document. Both creation paths
+# read this constant; a second inline copy is how the two drifted apart.
+DEFAULT_POLICY = {
+    "authoring_mode": "image_blueprint",
+    "external_call_limit": None,
+    "user_stop": False,
+    "professional_review_required_for_delivery": False,
+}
+
 
 DEFAULT_CANVAS = {    "width_px": 1600,
     "height_px": 900,
@@ -982,12 +991,7 @@ def _minimal_document_shell() -> dict[str, Any]:
         "tasks": [],
         "reviews": [],
         "outputs": {"pptx": None, "trace": None, "render_report": None},
-        "policy": {
-            "authoring_mode": "image_blueprint",
-            "external_call_limit": None,
-            "user_stop": False,
-            "professional_review_required_for_delivery": False,
-        },
+        "policy": dict(DEFAULT_POLICY),
         "change": {
             "operation_id": uuid.uuid4().hex,
             "kind": "create",
@@ -1099,13 +1103,7 @@ def new_document(
         "tasks": [],
         "reviews": [],
         "outputs": {"pptx": None, "trace": None, "render_report": None},
-        "policy": policy
-        or {
-            "authoring_mode": "image_blueprint",
-            "external_call_limit": None,
-            "user_stop": False,
-            "professional_review_required_for_delivery": False,
-        },
+        "policy": policy or dict(DEFAULT_POLICY),
         "change": {
             "operation_id": operation_id or uuid.uuid4().hex,
             "kind": "create",

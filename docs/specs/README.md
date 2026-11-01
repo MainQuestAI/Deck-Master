@@ -2,7 +2,11 @@
 
 返回 [文档导航](../README.md)。本目录是版本化的开发输入和继承合同，不是安装教程。
 实施/验收状态只能从对应源码、候选台账和实际检查确认；“ready”“最终”“完成”等原文
-限定在其记录时点。保留路径以兼容测试、schema 镜像、冻结清单与开放任务，不批量搬移。
+限定在其记录时点。保留路径以兼容测试、冻结清单与开放任务，不批量搬移。
+2026-10-30 起 `*/contracts/` 下的 schema 副本已全部删除（85 份与运行合同逐字节相同，
+审计见 [overdefense-audit-20261030](../diagnostics/overdefense-audit-20261030.md) OD-D1）；
+活动 schema 只有 [src/deck_master/resources/contracts](../../src/deck_master/resources/contracts/) 一处，
+规格正文引用合同请直接链接该目录，不再建立副本。
 
 ## 当前主线使用的增量与继承合同
 
