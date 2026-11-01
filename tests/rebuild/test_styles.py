@@ -172,13 +172,8 @@ def test_old_host_claim_and_cancelled_late_result_are_rejected(flow):
     assert flow.store.load_document() == before
 
 
-def test_schema_mirrors_and_cli_typed_errors(flow, capsys):
+def test_cli_typed_errors(flow, capsys):
     from deck_master.cli import main
-    root = Path(__file__).resolve().parents[2]
-    for file in (root / 'src/deck_master/resources/contracts').glob('*.schema.json'):
-        mirrors = list((root / 'docs/specs').glob('*/contracts/' + file.name))
-        assert len(mirrors) == 1, file.name
-        assert file.read_bytes() == mirrors[0].read_bytes()
     assert main(['styles', 'list', '--project', str(flow.project)]) == 0
     assert json.loads(capsys.readouterr().out)['recipes'] == []
     assert main(['styles', 'show', '--project', str(flow.project), '--recipe-id', 'missing']) == 2

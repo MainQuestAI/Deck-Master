@@ -258,16 +258,18 @@ def test_active_guard_preserves_explicit_migration_and_negative_context():
     assert all(not active_guidance_issues(line) for line in baseline_rows)
 
 
-def test_spec_contracts_match_packaged_contracts_byte_for_byte() -> None:
-    """Spec mirrors must match the active packaged contracts (P2 parity guard)."""
-    spec_dirs = [REPO_ROOT / "docs" / "specs" / pack / "contracts"
-                 for pack in ("deck-master-rebuild-v1", "deck-master-workbench-v3", "deck-master-webui-usability-v1", "deck-master-v1.0.0-rc3", "deck-master-next-iteration-20261019", "deck-master-webui-content-methods-20261020")]
+def test_contracts_have_exactly_one_active_source() -> None:
+    """Runtime contracts live in the packaged package, and nowhere else.
+
+    2026-10-30: the 85 byte-identical spec mirrors under ``docs/specs/*/contracts``
+    were retired (audit overdefense-audit-20261030, OD-D1). A re-added ``docs``
+    schema copy reopens the drift surface this guard used to police.
+    """
+    from deck_master.models import SCHEMA_FILES
+
     pkg_dir = NEW_PACKAGE / "resources" / "contracts"
-    spec_files = [p for folder in spec_dirs for p in folder.glob("*.json")]
-    spec_names = {p.name for p in spec_files}
-    assert len(spec_names) == len(spec_files), "each contract has exactly one spec mirror"
-    pkg_names = {p.name for p in pkg_dir.glob("*.json")}
-    assert spec_names == pkg_names, f"contract sets differ: {spec_names ^ pkg_names}"
-    for path in spec_files:
-        assert path.read_bytes() == (pkg_dir / path.name).read_bytes(), \
-            f"contract drift: {path.name}"
+    packaged = {path.name for path in pkg_dir.glob("*.schema.json")}
+    assert packaged, "packaged contracts are missing"
+    assert not list((REPO_ROOT / "docs").rglob("*.schema.json")), \
+        "spec schema copies are retired; link src/deck_master/resources/contracts instead"
+    assert set(SCHEMA_FILES.values()) <= packaged

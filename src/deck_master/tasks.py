@@ -1395,7 +1395,7 @@ def _accept_result_locked(
         required = set(PAGE_VISUAL_KINDS)
         reviews_by_kind = {item.get('kind'): item for item in envelope.get('reviews') or []}
         if set(reviews_by_kind) != required or len(envelope.get('reviews') or []) != len(required):
-            raise EnvelopeError('review/kind', 'page_visual requires exactly blueprint_content, blueprint_fidelity and readability')
+            raise EnvelopeError('review/kind', 'page_visual requires exactly ' + ', '.join(PAGE_VISUAL_KINDS))
         entry = next(e for e in document['pages'] if e['page_id'] == task['scope_pages'][0])
         subjects = {(ref['path'], ref['sha256']) for ref in (entry['page'], entry['blueprint'], entry['svg'], entry['svg_preview'])}
         from .editing import _current_artifact_digests

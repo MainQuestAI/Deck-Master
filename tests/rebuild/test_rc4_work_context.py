@@ -251,8 +251,6 @@ def test_v2_schema_serialization_is_registered_and_valid(tmp_path):
     assert SCHEMA_FILES[PROTOCOL] == 'work-context.v2.schema.json'
     root = Path(__file__).resolve().parents[2]
     schema_path = root / 'src/deck_master/resources/contracts/work-context.v2.schema.json'
-    mirror = root / 'docs/specs/deck-master-next-iteration-20261019/contracts/work-context.v2.schema.json'
-    assert schema_path.read_bytes() == mirror.read_bytes()
     schema = json.loads(schema_path.read_bytes())
     for mode in ('full', 'delta', 'manifest'):
         response = service.task_summary(store, document, task, read_protocol=PROTOCOL, body_mode=mode)
