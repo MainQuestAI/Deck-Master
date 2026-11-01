@@ -28,7 +28,7 @@ test('save sends the bare patch and retains submitted input on conflict', async 
 });
 
 test('same-version polling refreshes runs; older polls cannot undo saves', () => {
-  const current = { version: 3, runs: [{ status: 'active' }] };
+  const current = { version: 3, runs: [{ status: 'open' }] };
   const incoming = { version: 3, runs: [{ status: 'cancelled' }] };
   assert.equal(mergeWorkspace(current, incoming), incoming);
   assert.equal(mergeWorkspace(current, { version: 2 }), current);

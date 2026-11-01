@@ -11,7 +11,7 @@ export default function DeliveryView() {
     <section className="s4-panel"><h2>构建与下载</h2><div className="head-actions s4-actions"><button className="primary" onClick={build} disabled={busy.build}>{busy.build ? '正在构建…' : '构建 PPTX'}</button><button className="button" onClick={() => download('md')} disabled={busy['export-md']}>下载 Markdown</button><button className="button" onClick={() => download('pptx')} disabled={busy['export-pptx']}>下载 PPTX</button></div>
       <ArtifactStatus status={workspace.artifact_status} />
       {downloadStatus && <><h3>最近构建或下载的状态</h3><ArtifactStatus status={downloadStatus} /></>}
-      {buildResult && <details><summary>最近构建的回读发现（{buildResult.findings?.length ?? 0}）</summary><pre className="s4-json">{JSON.stringify(buildResult.findings, null, 2)}</pre></details>}
+      {buildResult && <details><summary>最近构建的回读发现（{buildResult.findings?.findings?.length ?? 0}）</summary><pre className="s4-json">{JSON.stringify(buildResult.findings?.findings || [], null, 2)}</pre></details>}
     </section>
     <h2>制作任务</h2>
     {!workspace.runs.length && <p className="s4-empty">暂无制作任务。Host 开始制作后，进度将在这里显示。</p>}

@@ -18,7 +18,7 @@ export default function PresentationModal() {
   }, [presentation, pages]);
   const page = getPage(presentation);
   if (!page) return null;
-  return <div className="presentation-stage s4-presentation" role="dialog" aria-modal="true" aria-label="整稿放映">
+  return <div className="presentation-stage s4-presentation" data-theme="dark" role="dialog" aria-modal="true" aria-label="整稿放映">
     <div className="row between"><h2>第 {getPageNumStr(page.id)} 页 · {page.content.title}</h2><button className="button" autoFocus onClick={() => setPresentation(null)}>退出放映</button></div>
     <div className="s4-projection"><PageArtwork page={page} layer={galleryLayer} /></div>
     <div className="row"><button className="button" disabled={index <= 0} onClick={() => move(-1)}>上一页</button><span>{index + 1} / {pages.length}</span><button className="button" disabled={index >= pages.length - 1} onClick={() => move(1)}>下一页</button></div>

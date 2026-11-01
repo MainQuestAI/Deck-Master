@@ -2575,3 +2575,5 @@ html[data-theme="dark"] .suggested-diff-body {
   .s4-presentation { padding: 12px; }
   .card-foot { flex-wrap: wrap; }
 }
+
+.s4-presentation > .row { flex-wrap: wrap; }
