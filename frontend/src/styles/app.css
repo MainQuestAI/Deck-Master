@@ -2539,3 +2539,39 @@ html[data-theme="dark"] .suggested-diff-body {
   .slide-card:hover { transform: none; }
   .curtain-board:hover .curtain-divider-handle { transform: translate(-50%, -50%); }
 }
+/* S4 live data uses the existing tokens and workspace geometry. */
+.s4-panel { background: var(--dm-color-surface); border: 1px solid var(--dm-color-border); border-radius: var(--dm-radius-panel); padding: 20px; margin: 16px 0; }
+.s4-empty { padding: 36px 20px; text-align: center; color: var(--dm-color-text-muted); }
+.s4-empty button { margin-top: 12px; }
+.s4-message { padding: 16px; margin: 12px 0; border: 1px solid var(--dm-color-warning-border); border-radius: var(--dm-radius-control); background: var(--dm-color-warning-bg); color: #78350f; overflow-wrap: anywhere; }
+.s4-status { margin: 12px 0; overflow-wrap: anywhere; }
+.s4-artwork img { display: block; width: 100%; height: auto; object-fit: contain; }
+.s4-artwork { padding: 12px; }
+.s4-reading { font-size: 16px; line-height: 1.75; white-space: pre-wrap; overflow-wrap: anywhere; }
+.s4-reading section, .s4-reading > p { margin: 16px 0; }
+.s4-reading ul { white-space: normal; }
+.s4-continuous { max-width: 1000px; margin: auto; display: grid; gap: 24px; }
+.s4-field { display: flex; flex-direction: column; }
+.s4-fieldset { padding: 0; border: 0; min-width: 0; }
+.s4-field input, .s4-field textarea { min-height: 44px; width: 100%; }
+.s4-fieldset > button { margin-bottom: 20px; }
+.s4-json { white-space: pre-wrap; overflow-wrap: anywhere; }
+.s4-wrap { overflow-wrap: anywhere; }
+.s4-actions { margin-top: 16px; }
+.s4-panel > .row, .drawer-foot { flex-wrap: wrap; }
+.s4-presentation { padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+.s4-projection { flex: 1; min-height: 0; overflow: auto; width: min(100%, 1200px); margin: auto; }
+.content-area { min-width: 0; }
+@media (max-width: 768px) {
+  .topbar, .crumb, .toolbar, .head-actions, .view-head, .next-banner { flex-wrap: wrap; }
+  .drawer-panel { max-width: 100vw; }
+  .matrix-container { overflow-x: auto; }
+  .s4-panel .row { align-items: flex-start; }
+  .s4-panel .row, .gallery-toolbar { flex-wrap: wrap; }
+  .s4-reading { font-size: 16px; }
+  .sidebar .nav { display: grid; grid-template-columns: 1fr 1fr; }
+  .sidebar .project-card { margin-bottom: 12px; }
+  .sidebar { padding: 12px; }
+  .s4-presentation { padding: 12px; }
+  .card-foot { flex-wrap: wrap; }
+}
