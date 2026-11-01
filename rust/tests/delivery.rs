@@ -182,7 +182,7 @@ fn build_retains_notes_reports_missing_and_export_compares_inputs_after_restore(
     let mut snapshot = store.current().unwrap();
     let svg = store
         .add_file(
-            b"<svg viewBox='0 0 1280 720'><rect width='1280' height='720' fill='#167d9a'/></svg>",
+            b"<svg viewBox='0 0 1280 720'><text x='64' y='80' font-size='36' data-atom-id='atom:p1:title'>Decision</text></svg>",
             "svg",
         )
         .unwrap();

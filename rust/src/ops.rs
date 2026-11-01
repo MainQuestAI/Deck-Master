@@ -183,6 +183,7 @@ pub fn put(project: &Path, version: i64, patch: Patch) -> Result<Snapshot> {
             ..Page::default()
         });
         change.apply(&mut submitted);
+        submitted.content = crate::humanizer::content(&submitted.content)?;
         submitted.content.normalize_ids()?;
         if let Some(now) = pages.get_mut(&change.id) {
             let b = before.map(Page::author);
@@ -616,6 +617,7 @@ pub fn run_show(project: &Path, id: Option<i64>) -> Result<Value> {
 }
 
 fn page_job(store: &Store, deck: &Deck, page: &Page, svg: &Path) -> Result<Value> {
+    let content = crate::humanizer::content(&page.content)?;
     let mut assets = serde_json::Map::new();
     for asset in &deck.style.assets {
         assets.insert(
@@ -624,7 +626,7 @@ fn page_job(store: &Store, deck: &Deck, page: &Page, svg: &Path) -> Result<Value
         );
     }
     Ok(
-        json!({"pages":[{"id":page.id,"content":page.content,"notes":page.notes,"svg":svg.canonicalize()?}],"canvas":deck.style.canvas,"fonts":deck.style.fonts,"assets":assets}),
+        json!({"pages":[{"id":page.id,"content":content,"notes":page.notes,"svg":svg.canonicalize()?}],"canvas":deck.style.canvas,"fonts":deck.style.fonts,"assets":assets,"humanizer":true}),
     )
 }
 
@@ -850,7 +852,7 @@ pub fn build(project: &Path) -> Result<Value> {
     let id = tx.last_insert_rowid();
     tx.commit()?;
     Ok(
-        json!({"id":id,"path":store.file(&file)?,"findings":output["findings"],"missing_pages":status["missing_pages"],"stale_pages":status["stale_pages"]}),
+        json!({"id":id,"path":store.file(&file)?,"findings":output["findings"],"humanizer":output["humanizer"],"missing_pages":status["missing_pages"],"stale_pages":status["stale_pages"]}),
     )
 }
 
@@ -877,4 +879,24 @@ pub fn export_pptx(project: &Path) -> Result<Value> {
 
 pub fn doctor(fonts: &[String]) -> Result<Value> {
     crate::tools::invoke("doctor", &json!({"fonts":fonts}))
+}
+
+pub fn humanize(project: &Path, stage: &str, file: Option<&Path>) -> Result<Value> {
+    let (version, mut deck) = if let Some(path) = file {
+        let mut value: Value = serde_json::from_slice(&std::fs::read(path)?)?;
+        if let Some(nested) = value.get_mut("deck") {
+            value = nested.take();
+        }
+        let _: Patch = serde_json::from_value(value.clone())?;
+        (None, value)
+    } else {
+        let snapshot = Store::open(project)?.current()?;
+        (Some(snapshot.version), serde_json::to_value(snapshot.deck)?)
+    };
+    crate::humanizer::normalize(&mut deck);
+    Ok(
+        json!({"stage":stage,"version":version,"rules":crate::humanizer::RULES,
+        "instruction":"Host 按规则阅读完整正文与来源，修改后用 deck put 保存；命令只整理空格，不代替语义审改。出 PPT 前再次阅读，并在 build 后核对实际文字回读。",
+        "deck":deck}),
+    )
 }

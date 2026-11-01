@@ -1,0 +1,47 @@
+{
+  "purpose": "教学示例，不参与自动授权",
+  "examples": [
+    {
+      "id": "full-deck",
+      "user_request": "根据材料做完整PPT",
+      "skill": "deck-master",
+      "expected_scope": "协调内容、设计、制作与审查",
+      "avoid": "不凭输入一句话跳过关键范围和有效决定"
+    },
+    {
+      "id": "plan-only",
+      "user_request": "先只梳理方向和故事线",
+      "skill": "deck-content",
+      "expected_scope": "plan_only：问题与论证规划",
+      "avoid": "不自动写全稿、生图或制作"
+    },
+    {
+      "id": "write-only",
+      "user_request": "按这份确认大纲补齐正文",
+      "skill": "deck-content",
+      "expected_scope": "write_only：在确认方向内写稿",
+      "avoid": "不重新投票选择路线"
+    },
+    {
+      "id": "speech-only",
+      "user_request": "只给第3页写讲稿，不改页面",
+      "skill": "deck-content",
+      "expected_scope": "speech_only：指定页口播",
+      "avoid": "不修改正文、页序、事实"
+    },
+    {
+      "id": "design-only",
+      "user_request": "按已确认稿做一页样式方案",
+      "skill": "deck-design",
+      "expected_scope": "限定设计与样页",
+      "avoid": "不为了布局改结论或删必要条件"
+    },
+    {
+      "id": "review-only",
+      "user_request": "只审这版稿，不要修改",
+      "skill": "deck-review",
+      "expected_scope": "只读findings",
+      "avoid": "不创建生产项目、不修改来源"
+    }
+  ]
+}

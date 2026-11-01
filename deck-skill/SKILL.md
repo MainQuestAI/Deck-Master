@@ -57,6 +57,8 @@ description: 用 Rust deck 命令将作者任务和指定材料写成 brief、�
 - 可选的 `refs` 保留材料名称与章节定位，`todo` 保留本页实际待补，仅在待补项与讲稿备注中展示，不进入页面正文或页脚，不阻止保存或导出。
 - 不编造数字、客户现状、报价、政策或已实现能力。样本比例不改写成节时、损失、准确率或 ROI；建议与观察在承担主张的正文中区分。
 
+保存前调用 `deck humanize --stage content --file <作者稿.json>`，实际阅读返回的规则与正文，按 [Humanizer 表达自然度与保真](references/expression-review-humanizer.md) 去掉空泛升华、聊天旁白和重复修饰，写清主体与动作。Host 改后核对材料中的数字、范围、否定和条件，再用 put 保存；命令只处理中文、数字和标点间多余空格，不替 Host 判断语义。按 [writing-profiles.md](references/writing-profiles.md) 保留本次读者需要的深度，用 [content-calibration.md](references/content-calibration.md) 检查正文是否只剩标签。
+
 用 `get` 读取当前版本和所需页，再用 `put --base N <patch.json>` 保存。只交改动单元；brief、framing 和 content 提交完整值。增删页同时提交页面和新 order，块与条目编号由命令补齐。出错按 CLI 的具体信息处理，保存冲突时读取当前内容后重新合并，不覆盖作者的新稿。
 
 ## 导出与交稿
@@ -71,6 +73,8 @@ description: 用 Rust deck 命令将作者任务和指定材料写成 brief、�
 ## 原图、SVG 与 PPTX
 
 先用 `deck doctor --fonts <字体名>` 检查本机工具与所选字体。标志、照片等素材用 `deck asset add <素材ID> <文件>` 选择；不要把素材 ID 写成原图里的文字来代替图片。
+
+出图及重建 SVG 前运行 `deck humanize --stage pptx`，按相同规则再读将上屏的整稿。发现语言问题就 put 保存并更新受影响 SVG。build 会再次整理空格并逐 atom 核对实际 PPT 文字是否与处理后的正文相等；不等时报错，按最新正文重建，不用旧 SVG 顶替。不要把 Humanizer 命令成功称为语言质量通过。
 
 1. `deck run start image --pages p1,p2` 准备任务。实际读取返回工作目录的 task.md、content.json、style.json 与 attachments.json。每次调用 ImageGen 前，先 `deck run call <run> <page>`，再把所选素材文件作为真正附件传给 ImageGen。结果未知时先核实，明确决定重试才加 `--retry`；不要自行连续重发。
 2. 生成后用 `deck run result <run> <page> <图片文件>` 交回。取消后或依据已变的结果只保存；确实要用时才 `deck run adopt <run> <page>`。`deck run show` 查看状态，`deck run cancel <run>` 停止调用与自动采用。
