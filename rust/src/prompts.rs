@@ -30,7 +30,7 @@ pub fn write(store: &Store, deck: &Deck, page: &Page, kind: &str, directory: &Pa
         serde_json::to_vec_pretty(&attachments)?,
     )?;
     let common = format!(
-        "画布 {}×{} px，物理尺寸 {}×{} in。\n本页目的：{}\n信息关系：{}\n正文取 content.json，逐字上屏，不增删事实、数字或单位。不编造数字、日期或客户数据；缺口照常写明。\n风格取 style.json；attachments.json 列出的素材文件必须作为 ImageGen 附件传入，不用文字描述代替。\n比较或查阅用表格，时序用步骤，流程用连线与分支，分工用泳道或分区。\n文字、连线、主要业务对象须可拆成可编辑元素；照片、logo、复杂插画只占有边界的位图区域，不承载正文。\n",
+        "画布 {}×{} px，物理尺寸 {}×{} in。\n本页目的：{}\n信息关系：{}\n正文取 content.json，逐字上屏，不增删事实、数字或单位。不编造数字、日期或客户数据；页面文案不含缺口说明；缺口在 todo，不上屏，不放页脚。\n风格取 style.json；attachments.json 列出的素材文件必须作为 ImageGen 附件传入，不用文字描述代替。\n比较或查阅用表格，时序用步骤，流程用连线与分支，分工用泳道或分区。\n文字、连线、主要业务对象须可拆成可编辑元素；照片、logo、复杂插画只占有边界的位图区域，不承载正文。\n",
         deck.style.canvas.width_px,
         deck.style.canvas.height_px,
         deck.style.canvas.slide_width_in,
