@@ -12,3 +12,4 @@ rusqlite = { version = "0.38", features = ["bundled"] }
 thiserror = "2"
 sha2 = "0.10"
 tempfile = "3"
+tiny_http = "0.12"

@@ -17,6 +17,8 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    #[command(about = "在本机浏览、修改和下载作品")]
+    Serve { project: PathBuf },
     #[command(about = "选择图片素材")]
     Asset {
         #[command(subcommand)]
@@ -131,6 +133,7 @@ fn print_json(value: impl Serialize) -> Result<()> {
 pub fn run() -> Result<()> {
     let cli = Cli::parse();
     match cli.command {
+        Commands::Serve { project } => crate::server::serve(&project),
         Commands::Build => print_json(ops::build(&cli.project)?),
         Commands::Doctor { fonts } => {
             let result = ops::doctor(&fonts)?;

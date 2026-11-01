@@ -20,6 +20,10 @@ pub fn new(project: &Path, title: String) -> Result<Snapshot> {
 pub fn get(project: &Path, pages: Option<&[String]>) -> Result<Value> {
     let store = Store::open(project)?;
     let snapshot = store.current()?;
+    snapshot_value(&snapshot, pages)
+}
+
+fn snapshot_value(snapshot: &Snapshot, pages: Option<&[String]>) -> Result<Value> {
     let mut deck = serde_json::to_value(&snapshot.deck)?;
     if let Some(ids) = pages {
         for id in ids {
@@ -51,6 +55,53 @@ pub fn get(project: &Path, pages: Option<&[String]>) -> Result<Value> {
     Ok(
         json!({ "version": snapshot.version, "deck": deck, "artifact_status": artifact_status(&snapshot.deck)? }),
     )
+}
+
+pub fn workspace(project: &Path) -> Result<Value> {
+    let mut store = Store::open(project)?;
+    // A deferred read transaction keeps the polling response on one snapshot,
+    // without reserving SQLite's writer slot.
+    let tx = store.connection.transaction()?;
+    let snapshot = store::current(&tx)?;
+    let mut value = snapshot_value(&snapshot, None)?;
+    value["runs"] = json!(runs(&tx, &snapshot.deck, None)?);
+    let mut query = tx.prepare("SELECT id,created_at,summary FROM versions ORDER BY id DESC")?;
+    value["history"] = json!(
+        query
+            .query_map([], |row| Ok(store::Version {
+                id: row.get(0)?,
+                created_at: row.get(1)?,
+                summary: row.get(2)?
+            }))?
+            .collect::<std::result::Result<Vec<_>, _>>()?
+    );
+    Ok(value)
+}
+
+pub fn project_file(project: &Path, sha: &str) -> Result<std::path::PathBuf> {
+    if sha.len() != 64 || !sha.bytes().all(|c| c.is_ascii_hexdigit()) {
+        return Err(Error::Input("文件 sha 必须是 64 位十六进制".into()));
+    }
+    let store = Store::open(project)?;
+    let directory = store.root.join("files").canonicalize()?;
+    let sha = sha.to_ascii_lowercase();
+    let mut entries = std::fs::read_dir(&directory)?.collect::<std::io::Result<Vec<_>>>()?;
+    entries.sort_by_key(|entry| entry.file_name());
+    for entry in entries {
+        let name = entry.file_name();
+        let Some(name) = name.to_str() else { continue };
+        if name.split_once('.').is_some_and(|(hash, _)| hash == sha) {
+            let path = store.file(name)?.canonicalize()?;
+            if path.starts_with(&directory) {
+                return Ok(path);
+            }
+            return Err(Error::Input("附件必须位于当前项目 files 目录内".into()));
+        }
+    }
+    Err(Error::Io(std::io::Error::new(
+        std::io::ErrorKind::NotFound,
+        "当前项目没有此附件",
+    )))
 }
 
 pub fn show(project: &Path) -> Result<Value> {
@@ -346,9 +397,12 @@ pub fn material_text(project: &Path, id: &str) -> Result<Value> {
 }
 
 pub fn export_md(project: &Path) -> Result<String> {
-    Ok(crate::export::markdown(
-        &Store::open(project)?.current()?.deck,
-    ))
+    Ok(export_markdown(project)?.0)
+}
+
+pub fn export_markdown(project: &Path) -> Result<(String, Value)> {
+    let deck = Store::open(project)?.current()?.deck;
+    Ok((crate::export::markdown(&deck), artifact_status(&deck)?))
 }
 
 pub fn asset_add(project: &Path, id: &str, source: &Path) -> Result<Value> {
@@ -552,10 +606,43 @@ pub fn run_cancel(project: &Path, id: i64) -> Result<Value> {
 pub fn run_show(project: &Path, id: Option<i64>) -> Result<Value> {
     let store = Store::open(project)?;
     let deck = store.current()?.deck;
-    if let Some(id) = id {
-        run_record(&store.connection, id)?;
+    let mut runs = runs(&store.connection, &deck, id)?;
+    // Local work paths are a CLI convenience, not part of the browser API.
+    for run in &mut runs {
+        let Some(id) = run["id"].as_i64() else {
+            continue;
+        };
+        if let Some(pages) = run["pages"].as_array_mut() {
+            for (index, page) in pages.iter_mut().enumerate() {
+                let findings = page["result_file"]
+                    .as_str()
+                    .map(|file| {
+                        store
+                            .root
+                            .join("work")
+                            .join(id.to_string())
+                            .join(format!("readback-{file}.json"))
+                    })
+                    .filter(|p| p.is_file());
+                page["findings_path"] = json!(findings);
+                page["work"] = json!(
+                    store
+                        .root
+                        .join("work")
+                        .join(id.to_string())
+                        .join((index + 1).to_string())
+                );
+            }
+        }
     }
-    let mut query=store.connection.prepare("SELECT id,kind,status,max_calls,calls_used FROM runs WHERE (?1 IS NULL OR id=?1) ORDER BY id DESC")?;
+    Ok(json!({"runs": runs}))
+}
+
+fn runs(connection: &rusqlite::Connection, deck: &Deck, id: Option<i64>) -> Result<Vec<Value>> {
+    if let Some(id) = id {
+        run_record(connection, id)?;
+    }
+    let mut query=connection.prepare("SELECT id,kind,status,max_calls,calls_used FROM runs WHERE (?1 IS NULL OR id=?1) ORDER BY id DESC")?;
     let rows = query
         .query_map([id], |r| {
             Ok((
@@ -569,7 +656,7 @@ pub fn run_show(project: &Path, id: Option<i64>) -> Result<Value> {
         .collect::<std::result::Result<Vec<_>, _>>()?;
     let mut runs = Vec::new();
     for (id, kind, status, max, used) in rows {
-        let mut query = store.connection.prepare(
+        let mut query = connection.prepare(
             "SELECT page_id,basis,status,result_file FROM run_pages WHERE run_id=? ORDER BY rowid",
         )?;
         let rows = query
@@ -583,9 +670,9 @@ pub fn run_show(project: &Path, id: Option<i64>) -> Result<Value> {
             })?
             .collect::<std::result::Result<Vec<_>, _>>()?;
         let mut pages = Vec::new();
-        for (index, (page, old, state, result)) in rows.into_iter().enumerate() {
+        for (page, old, state, result) in rows {
             let changed = match deck.pages.iter().find(|p| p.id == page) {
-                Some(p) => basis(&kind, &deck, p)? != old,
+                Some(p) => basis(&kind, deck, p)? != old,
                 None => true,
             };
             let reason = if state == "unadopted" {
@@ -601,21 +688,11 @@ pub fn run_show(project: &Path, id: Option<i64>) -> Result<Value> {
             } else {
                 ""
             };
-            let findings_path = result
-                .as_ref()
-                .map(|file| {
-                    store
-                        .root
-                        .join("work")
-                        .join(id.to_string())
-                        .join(format!("readback-{file}.json"))
-                })
-                .filter(|path| path.is_file());
-            pages.push(json!({"page_id":page,"status":state,"reason":reason,"basis_changed":changed,"result_file":result,"findings_path":findings_path,"work":store.root.join("work").join(id.to_string()).join((index+1).to_string())}));
+            pages.push(json!({"page_id":page,"status":state,"reason":reason,"basis_changed":changed,"result_file":result}));
         }
         runs.push(json!({"id":id,"kind":kind,"status":status,"max_calls":max,"calls_used":used,"pages":pages}));
     }
-    Ok(json!({"runs":runs}))
+    Ok(runs)
 }
 
 fn page_job(store: &Store, deck: &Deck, page: &Page, svg: &Path) -> Result<Value> {
