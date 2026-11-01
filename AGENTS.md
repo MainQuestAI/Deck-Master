@@ -31,7 +31,7 @@ uv venv --python 3.12 --seed .venv                     # 没有 uv 时：python3
 .venv/bin/python -m pip install -e ".[dev]"            # 旧线
 .venv/bin/python -m pip install -e "./deck-tools[dev]" # 新工具包
 
-(cd frontend && npm ci && npm run build)              # cargo 前构建 WebUI
+(cd frontend && npm ci && npm test && npm run build)  # cargo 前构建 WebUI
 (cd rust && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test)
 .venv/bin/python -m pytest -q deck-tools/tests --basetemp="$HOME/.cache/deck-pytest/tools"
 .venv/bin/python -m pytest -q tests/rebuild -m "not render and not browser" --basetemp="$HOME/.cache/deck-pytest/legacy"
