@@ -276,3 +276,63 @@ fn duplicate_pdf_add_without_tool_preserves_successful_extraction() {
         added["version"]
     );
 }
+
+#[test]
+fn review_commands_default_filter_resolve_count_and_reject_invalid_input() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    output_json(command(path, &["new", path.to_str().unwrap()]));
+    deck::ops::put(
+        path,
+        1,
+        serde_json::from_value(json!({"order":["p3"],"pages":[{"id":"p3"}]})).unwrap(),
+    )
+    .unwrap();
+    let human = output_json(command(path, &["review", "add", "整稿意见"]));
+    assert_eq!(human["method"], "human");
+    assert_eq!(human["reviewer"], "author");
+    let checked = output_json(command(
+        path,
+        &[
+            "review",
+            "add",
+            "自检 100 元",
+            "--page",
+            "p3",
+            "--method",
+            "self_check",
+            "--reviewer",
+            "Host",
+        ],
+    ));
+    assert_eq!(checked["method"], "self_check");
+    assert_eq!(checked["reviewer"], "Host");
+    let show = output_json(command(path, &["show"]));
+    assert_eq!(show["open_reviews_total"], 2);
+    assert_eq!(show["pages"][0]["open_reviews"], 1);
+    let filtered = output_json(command(
+        path,
+        &["review", "list", "--status", "open", "--page", "p3"],
+    ));
+    assert_eq!(filtered["reviews"], json!([checked]));
+    let resolved = output_json(command(path, &["review", "resolve", "2"]));
+    assert_eq!(resolved["status"], "resolved");
+    assert_eq!(
+        output_json(command(path, &["review", "resolve", "2"])),
+        resolved
+    );
+    assert_eq!(
+        output_json(command(path, &["review", "list", "--status", "resolved"]))["reviews"],
+        json!([resolved])
+    );
+    for args in [
+        vec!["review", "add", ""],
+        vec!["review", "add", "意见", "--method", "pass"],
+        vec!["review", "add", "意见", "--page", "p9"],
+        vec!["review", "list", "--status", "pass"],
+        vec!["review", "resolve", "999"],
+    ] {
+        assert_eq!(command(path, &args).status.code(), Some(2));
+    }
+    assert_eq!(output_json(command(path, &["show"]))["version"], 2);
+}
