@@ -138,6 +138,11 @@ fn material_add_uses_real_python_tool_preserves_original_and_deduplicates() {
             .len(),
         1
     );
+    std::fs::remove_file(text["path"].as_str().unwrap()).unwrap();
+    assert_eq!(
+        command(path, &["material", "text", "m1"]).status.code(),
+        Some(2)
+    );
 }
 
 #[test]

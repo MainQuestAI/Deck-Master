@@ -128,6 +128,12 @@ fn http_edits_conflicts_polling_history_restore_and_incomplete_markdown() {
     assert_eq!(first.status, 200);
     assert_eq!(first.json()["history"][0]["id"], 1);
     assert_eq!(first.json()["runs"], json!([]));
+    assert_eq!(
+        service
+            .request("PUT", "/api/deck?base=1", &[], r#"{"deck":{}}"#)
+            .status,
+        400
+    );
     let submitted =
         json!({"brief":{"title":"已保存"},"order":["p1"],"pages":[{"id":"p1","notes":"作者讲稿"}]});
     let saved = service.request("PUT", "/api/deck?base=1", &[], &submitted.to_string());
@@ -297,6 +303,10 @@ fn files_are_project_scoped_and_symlinks_cannot_escape() {
     assert_eq!(downloaded.status, 200);
     assert_eq!(downloaded.body, b"local");
     assert!(downloaded.headers["content-security-policy"].contains("sandbox"));
+    std::fs::remove_file(first.path().join(".deck/files").join(&local)).unwrap();
+    let missing = service.request("GET", &format!("/api/files/{}", &local[..64]), &[], "");
+    assert_eq!(missing.status, 404);
+    assert!(missing.json().get("exit_code").is_none());
     assert_eq!(
         service
             .request("GET", &format!("/api/files/{}", &foreign[..64]), &[], "")

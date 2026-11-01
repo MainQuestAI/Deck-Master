@@ -187,10 +187,7 @@ pub fn file_path(root: &Path, name: &str) -> Result<PathBuf> {
     }
     let path = root.join("files").join(name);
     if !path.is_file() {
-        return Err(Error::Io(std::io::Error::new(
-            std::io::ErrorKind::NotFound,
-            format!("附件 {name} 不存在；请先添加附件"),
-        )));
+        return Err(Error::Missing(name.into()));
     }
     Ok(path)
 }

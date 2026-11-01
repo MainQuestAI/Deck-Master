@@ -98,10 +98,7 @@ pub fn project_file(project: &Path, sha: &str) -> Result<std::path::PathBuf> {
             return Err(Error::Input("附件必须位于当前项目 files 目录内".into()));
         }
     }
-    Err(Error::Io(std::io::Error::new(
-        std::io::ErrorKind::NotFound,
-        "当前项目没有此附件",
-    )))
+    Err(Error::Missing(sha))
 }
 
 pub fn show(project: &Path) -> Result<Value> {

@@ -25,7 +25,7 @@ fn error_response(error: Error) -> Result<ResponseBox> {
         Error::Conflict(_) => 409,
         Error::NeedsTool(_) => 503,
         Error::Tool(_) => 500,
-        Error::Io(e) if e.kind() == std::io::ErrorKind::NotFound => 404,
+        Error::Missing(_) => 404,
         Error::Io(_) | Error::Sql(_) => 500,
         _ => 400,
     };
@@ -34,6 +34,18 @@ fn error_response(error: Error) -> Result<ResponseBox> {
         value["exit_code"] = json!(error.exit_code());
     }
     json_response(status, value)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn io_not_found_is_a_server_error() {
+        let temp = tempfile::tempdir().unwrap();
+        let error = std::fs::read(temp.path().join("missing-tool-output")).unwrap_err();
+        assert_eq!(error_response(error.into()).unwrap().status_code().0, 500);
+    }
 }
 
 fn local_authority(authority: &str, port: u16) -> bool {
