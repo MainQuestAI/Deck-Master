@@ -281,7 +281,7 @@ fn rejects_rebinding_origins_duplicate_headers_and_path_traversal() {
         assert_eq!(service.request("POST", path, &[], "").status, 400);
     }
     assert_eq!(ops::get(temp.path(), None).unwrap()["version"], 1);
-    assert_eq!(service.request("POST", "/api/reviews", &[], "").status, 404);
+    assert_eq!(service.request("POST", "/api/reviews", &[], "").status, 400);
 }
 
 #[test]
@@ -498,4 +498,219 @@ fn build_downloads_report_missing_stale_and_changed_inputs_without_gating() {
         markdown.artifact_status()["missing_pages"],
         json!(["待补😀"])
     );
+}
+
+#[test]
+fn http_reviews_force_human_filter_resolve_and_poll_without_changing_version() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    ops::new(path, String::new()).unwrap();
+    edit(
+        path,
+        1,
+        json!({"order":["p3","页 4"],"pages":[{"id":"p3"},{"id":"页 4"}]}),
+    );
+    let checked = ops::review_add(path, Some("p3"), "自检原文", "Host", "self_check").unwrap();
+    let service = Service::start(path);
+    let posted = service.request(
+        "POST",
+        "/api/reviews",
+        &[],
+        r#"{"page_id":"p3","text":"收入 100 元 , 复核","reviewer":"editor","method":"self_check"}"#,
+    );
+    assert_eq!(posted.status, 200);
+    assert_eq!(posted.headers["cache-control"], "no-store");
+    assert_eq!(posted.headers["x-content-type-options"], "nosniff");
+    assert_eq!(posted.json()["method"], "human");
+    assert_eq!(posted.json()["reviewer"], "editor");
+    assert_eq!(posted.json()["text"], "收入 100 元 , 复核");
+    let global = service
+        .request("POST", "/api/reviews", &[], r#"{"text":"全稿"}"#)
+        .json();
+    assert_eq!(global["method"], "human");
+    assert_eq!(global["reviewer"], "author");
+    assert_eq!(global["page_id"], Value::Null);
+    let unicode = service
+        .request(
+            "POST",
+            "/api/reviews",
+            &[],
+            r#"{"page_id":"页 4","text":"另页"}"#,
+        )
+        .json();
+    assert_eq!(
+        service
+            .request("GET", "/api/reviews?page=%E9%A1%B5+4&status=open", &[], "")
+            .json()["reviews"],
+        json!([unicode])
+    );
+    let filtered = service.request("GET", "/api/reviews?status=open&page=p3", &[], "");
+    assert_eq!(filtered.status, 200);
+    assert_eq!(filtered.json()["reviews"], json!([checked, posted.json()]));
+    let workspace = service.request("GET", "/api/deck", &[], "").json();
+    assert_eq!(workspace["reviews"].as_array().unwrap().len(), 4);
+    assert_eq!(workspace["reviews"][0]["method"], "self_check");
+    assert_eq!(workspace["deck"]["pages"][0]["open_reviews"], 2);
+    assert_eq!(workspace["deck"]["pages"][1]["open_reviews"], 1);
+    assert_eq!(workspace["open_reviews_total"], 4);
+    assert_eq!(workspace["version"], 2);
+    let url = format!("/api/reviews/{}/resolve", checked.id);
+    let resolved = service.request("POST", &url, &[], "");
+    assert_eq!(resolved.status, 200);
+    assert_eq!(resolved.json()["status"], "resolved");
+    assert!(resolved.json()["resolved_at"].is_string());
+    assert_eq!(
+        service.request("POST", &url, &[], "").json(),
+        resolved.json()
+    );
+    assert_eq!(
+        service
+            .request("GET", "/api/reviews?status=resolved&page=p3", &[], "")
+            .json()["reviews"],
+        json!([resolved.json()])
+    );
+    assert_eq!(
+        service.request("GET", "/api/deck", &[], "").json()["deck"]["pages"][0]["open_reviews"],
+        1
+    );
+    for body in [
+        r#"{"text":" "}"#,
+        r#"{"text":"意见","page_id":"missing"}"#,
+        r#"{}"#,
+    ] {
+        assert_eq!(
+            service.request("POST", "/api/reviews", &[], body).status,
+            400
+        );
+    }
+    for url in [
+        "/api/reviews?status=pass",
+        "/api/reviews?page=%GG",
+        "/api/reviews?page=%FF",
+    ] {
+        assert_eq!(service.request("GET", url, &[], "").status, 400);
+    }
+    for url in [
+        "/api/reviews/resolve",
+        "/api/reviews//resolve",
+        "/api/reviews/no/resolve",
+    ] {
+        assert_eq!(service.request("POST", url, &[], "").status, 400);
+    }
+    assert_eq!(
+        service
+            .request("POST", "/api/reviews/999/resolve", &[], "")
+            .status,
+        404
+    );
+    for url in [
+        "/api/reviews",
+        "/api/reviews/2/resolve",
+        "/api/runs/1/adopt/p3",
+    ] {
+        assert_eq!(
+            service
+                .request(
+                    "POST",
+                    url,
+                    &[("Origin", "https://evil.example")],
+                    r#"{"text":"attack"}"#
+                )
+                .status,
+            403
+        );
+        assert_eq!(
+            service
+                .request("POST", url, &[("Host", "evil.example")], "")
+                .status,
+            403
+        );
+    }
+    assert_eq!(ops::get(path, None).unwrap()["version"], 2);
+}
+
+#[test]
+fn http_adopt_matches_cli_with_candidates_and_existing_rejection_semantics() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    ops::new(path, String::new()).unwrap();
+    edit(path, 1, json!({"order":["p3"],"pages":[{"id":"p3"}]}));
+    let bitmap = path.join("candidate.png");
+    let python = std::env::var_os("DECK_TOOLS_PYTHON").unwrap();
+    assert!(
+        Command::new(python)
+            .args([
+                "-c",
+                "from PIL import Image; import sys; Image.new('RGB',(8,8)).save(sys.argv[1])"
+            ])
+            .arg(&bitmap)
+            .status()
+            .unwrap()
+            .success()
+    );
+    let first = ops::run_start(path, "image", &["p3".into()], None).unwrap()["runs"][0]["id"]
+        .as_i64()
+        .unwrap();
+    ops::run_call(path, first, "p3", false).unwrap();
+    ops::run_result(path, first, "p3", &bitmap).unwrap();
+    let id = ops::run_start(path, "image", &["p3".into()], None).unwrap()["runs"][0]["id"]
+        .as_i64()
+        .unwrap();
+    let service = Service::start(path);
+    let url = format!("/api/runs/{id}/adopt/p3");
+    assert_eq!(service.request("POST", &url, &[], "").status, 400);
+    ops::run_call(path, id, "p3", false).unwrap();
+    let base = Store::open(path).unwrap().current().unwrap().version;
+    edit(
+        path,
+        base,
+        json!({"pages":[{"id":"p3","layout":"依据变化"}]}),
+    );
+    let result = ops::run_result(path, id, "p3", &bitmap).unwrap();
+    assert_eq!(result["adopted"], false);
+    let workspace = service.request("GET", "/api/deck", &[], "").json();
+    let candidate = &workspace["runs"][0]["pages"][0];
+    assert_eq!(candidate["status"], "unadopted");
+    assert!(!candidate["reason"].as_str().unwrap().is_empty());
+    assert_eq!(candidate["basis_changed"], true);
+    for key in ["result_url", "current_image_url"] {
+        let image = service.request("GET", candidate[key].as_str().unwrap(), &[], "");
+        assert_eq!(image.status, 200);
+        assert_eq!(image.body, std::fs::read(&bitmap).unwrap());
+        assert!(image.headers["content-security-policy"].contains("sandbox"));
+    }
+    let adopted = service.request("POST", &url, &[], "");
+    assert_eq!(adopted.status, 200);
+    let cli = Command::new(env!("CARGO_BIN_EXE_deck"))
+        .arg("--project")
+        .arg(path.canonicalize().unwrap())
+        .args(["run", "adopt", &id.to_string(), "p3"])
+        .output()
+        .unwrap();
+    assert!(cli.status.success());
+    assert_eq!(
+        adopted.json(),
+        serde_json::from_slice::<Value>(&cli.stdout).unwrap()
+    );
+    assert_eq!(
+        ops::get(path, None).unwrap()["artifact_status"]["stale_images"],
+        json!(["p3"])
+    );
+    let base = Store::open(path).unwrap().current().unwrap().version;
+    edit(path, base, json!({"order":[],"pages":[{"id":"p3"}]}));
+    assert_eq!(service.request("POST", &url, &[], "").status, 400);
+    assert_eq!(
+        service
+            .request("POST", "/api/runs/999/adopt/p3", &[], "")
+            .status,
+        400
+    );
+    for url in [
+        "/api/runs/no/adopt/p3",
+        "/api/runs/1/adopt/",
+        "/api/runs/1/adopt/%GG",
+    ] {
+        assert_eq!(service.request("POST", url, &[], "").status, 400);
+    }
+    assert_eq!(service.request("POST", "/api/runs", &[], "{}").status, 404);
 }

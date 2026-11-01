@@ -89,9 +89,10 @@ deck-skill/           新 Skill（第 6 节）
 | runs | id、kind（image/svg）、status（open/done/cancelled）、max_calls、calls_used、created_at |
 | run_pages | run_id、page_id、basis、status（pending/started/done/unadopted）、result_file |
 | builds | id、version_id、input_digest、pptx_file、findings_json、missing_pages、created_at |
-| reviews | id、version_id、page_id、reviewer、method（self_check/other_model/human，界面显示为 自检/另一模型检查/人工意见）、text、status（open/resolved）、created_at |
+| reviews | id、version_id、page_id、reviewer、method（self_check/other_model/human，界面显示为 自检/另一模型检查/人工意见）、text、status（open/resolved）、created_at、resolved_at（可空） |
 
 - 当前作品就是 id 最大的那个版本。
+- reviews 绑定添加时的版本，page_id 可空表示整稿意见；不修改作品版本。处理意见只将 status 改为 resolved 并记录 resolved_at，重复处理保留首次时间。
 - 写入使用短事务（BEGIN IMMEDIATE），并设 busy_timeout，让 CLI 与服务能同时打开同一个库。
 - 文件按 sha256 命名，同一文件重复加入不会产生新文件。
 - 格式版本记在 `PRAGMA user_version`：库的版本比程序高时，提示升级 deck；比程序低时，按迁移代码升级。
@@ -190,7 +191,7 @@ svg 类没有外部付费调用，不需要 `run call`，也没有 max_calls。�
 
 服务与 CLI 共用 ops，各自直连 SQLite。服务不缓存作品状态，界面按版本号轮询变化。
 
-接口：`GET /api/deck`、`PUT /api/deck?base=N`、`POST /api/runs/{id}/cancel`、`POST /api/build`、`GET /api/files/{sha}`（sha 只接受 64 位十六进制）、`GET /api/export/{md|pptx}`、`GET|POST /api/reviews`（S5 起用）、`POST /api/restore/{version}`。接口以 S4 完成判断所需为限；手动采用被拒收结果的接口（对应 `deck run adopt`）随 S5 补；导出只列出缺失和过期的页，不拦截（见 2.1、3.6）。
+接口：`GET /api/deck`、`PUT /api/deck?base=N`、`POST /api/runs/{id}/cancel`、`POST /api/build`、`GET /api/files/{sha}`（sha 只接受 64 位十六进制）、`GET /api/export/{md|pptx}`、`GET|POST /api/reviews`、`POST /api/reviews/{id}/resolve`、`POST /api/runs/{run}/adopt/{page}`、`POST /api/restore/{version}`。接口以 S4 完成判断所需为限；手动采用接口沿用 `deck run adopt` 的行为与返回；导出只列出缺失和过期的页，不拦截（见 2.1、3.6）。
 
 界面使用 #250 的新版 WebUI（React 18 + Vite，`frontend/`，设计为 S00–S07 八个工作区与 U01–U05 五个共用容器）。#250 目前是不调用任何接口的演示稿，数据在 `constants/data.js` 里。
 
@@ -204,10 +205,11 @@ S4 必须能用的最低要求：整稿浏览（原图、预览、过期标记�
 
 后端接口供前端联调的返回形状：
 
-- `GET /api/deck` 返回 `{version, deck, artifact_status, runs, history}`，在同一 SQLite 只读事务中读取。`artifact_status` 含 `missing_pages/stale_pages/stale_images`；runs 含每页状态、未采用原因及 `result_file`，不含本地工作路径；history 按新到旧列出 `id/created_at/summary`。run 状态独立于作品版本变化，轮询时应同时刷新。
+- `GET /api/deck` 返回 `{version, deck, artifact_status, runs, history, reviews, open_reviews_total}`，在同一 SQLite 只读事务中读取。`artifact_status` 含 `missing_pages/stale_pages/stale_images`；reviews 是全部 open 意见，method 原样返回，deck 每页另带 `open_reviews` 条数（整稿意见只计入总数），不汇总为通过或合格；runs 含每页状态、未采用原因、`result_file`、`result_url` 与 `current_image_url`（无图时为 null），不含本地工作路径；history 按新到旧列出 `id/created_at/summary`。run 状态独立于作品版本变化，轮询时应同时刷新。
 - PUT 请求体是裸 patch（与 put 的 patch 相同，不接受 `{deck:…}` 包装），成功返回 `{version, deck}`。冲突返回 HTTP 409 与 `{exit_code:5, base, submitted, conflicts:[{unit,current}]}`，整次不写入；`submitted` 原样保留裸 patch，界面也须保留编辑输入。
 - `POST /api/build` 返回 `{id, url, findings, missing_pages, stale_pages}`，url 是该次构建文件的 `/api/files/<sha>`。`GET /api/files/<sha>` 只在当前项目的 files 目录内查找，含扩展名的存储引用取点号前的 sha 用于 URL；文件响应禁止脚本执行。
 - `GET /api/export/md` 与 `GET /api/export/pptx` 直接返回下载内容，文件名为 `deck.md/deck.pptx`。`X-Deck-Status` 是 JSON（非 ASCII 字符使用 JSON 转义），含 `missing_pages/stale_pages`；PPTX 另含 `id/input_changed/warning/build_missing_pages`。
+- `GET /api/reviews` 返回 `{reviews:[意见]}`，可用 `status=open|resolved` 与 `page=pN` 过滤，按 id 升序；POST 接受 `{page_id?, text, reviewer?}`，reviewer 默认 author，服务端强制 method=human 并忽略请求中的 method。add 与 resolve 返回该条意见，resolve 幂等；意见不存在返回 404。
 - cancel 返回 `{runs:[目标 run]}`，restore 返回 `{version, deck}`。输入错误为 HTTP 400；非本机请求 403；文件或接口不存在 404；缺工具 503；工具执行失败 500。错误响应含 `error`，仅 HTTP 409 冲突附带 CLI `exit_code:5`。
 
 ### 3.8 错误
@@ -315,7 +317,7 @@ Host 按需读取：`deck show`（摘要）、`deck get --pages p3,p4`（指定�
 | S2 内容主链 | Skill 前半；Codex 用真实材料写 brief、framing 和逐页内容 | 老板阅读 md 稿，判断主张与框架是否成立；首提与竞标按各自需求取舍 | #219 #244 #228 #227 |
 | S3 工具与成品 | 先用一份真实整稿（只在本地，不入库）跑通工具链；deck-tools 的其余部分；`deck run` 全套、`build`、`export pptx`、`doctor`；生图与 SVG 任务；`deck asset add`（logo 等素材） | 用真实材料产出整套 PPTX；取消后迟到的结果不自动采用；依据已变的结果不自动采用；结果未知的调用不自动重发；logo 从选择到 ImageGen 附件、再到 PPT 能一一对应；故意改错一处连线端点，Host 的比对能够发现。如果整稿仍要逐页人工修 SVG，先补 §5.2 的约束与样例，再做 S4 | #226 #231 #229 #164 #237 #141 #233 #217 #242 |
 | S4 界面 | `deck serve` 与 API；接入 #250 的新版 WebUI（`frontend/`），范围与顺序见 3.7 | 无需理解协议即可改字、停止和下载；浏览器存储不可用时停止照样生效；从总览或原图空态可以直接进入制作；窄屏下可读、可操作 | #136 #232 #220 #234 #224 #235 #236 |
-| S5 改稿与审阅 | 页上意见（reviews）；Host 读取未处理意见、改稿并标记已处理；单页重做 | 只改讲稿或第 3 页时，其他页和已有成品不动；作者自检显示为自检，不合成为通过 | #230 #239 |
+| S5 改稿与审阅 | 页上意见（reviews）；Host 读取未处理意见、改稿并标记已处理；单页重做；后端提供 resolve 与手动 adopt 接口，浏览器只写 human 意见 | 只改讲稿或第 3 页时，其他页和已有成品不动；作者自检显示为自检，不合成为通过 | #230 #239 |
 | S6 迁移与切换 | 旧线 `legacy-export`、`deck import`；安装脚本；全稿回归 | 老板指定的旧项目可以打开、编辑和导出，旧目录不变；按 README 新装后能完成首跑；#226 的 22 页整稿复核 | #221 #245 #225 #240 #241 #238 |
 
 ## 8. 旧线、迁移与切换

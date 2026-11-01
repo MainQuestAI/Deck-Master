@@ -106,6 +106,32 @@ fn identifier(text: &str) -> Result<i64> {
         .ok_or_else(|| Error::Input("编号必须是正整数".into()))
 }
 
+fn url_component(text: &str) -> Result<String> {
+    let mut bytes = Vec::new();
+    let mut input = text.bytes();
+    while let Some(byte) = input.next() {
+        match byte {
+            b'%' => {
+                let high = input.next().and_then(|b| char::from(b).to_digit(16));
+                let low = input.next().and_then(|b| char::from(b).to_digit(16));
+                let (Some(high), Some(low)) = (high, low) else {
+                    return Err(Error::Input("URL 编码有误".into()));
+                };
+                bytes.push((high * 16 + low) as u8);
+            }
+            _ => bytes.push(byte),
+        }
+    }
+    String::from_utf8(bytes).map_err(|_| Error::Input("URL 必须使用 UTF-8".into()))
+}
+
+#[derive(serde::Deserialize)]
+struct ReviewInput {
+    page_id: Option<String>,
+    text: String,
+    reviewer: Option<String>,
+}
+
 fn build_response(project: &Path) -> Result<ResponseBox> {
     let mut value = ops::build(project)?;
     let path = value["path"]
@@ -125,6 +151,56 @@ fn route(project: &Path, request: &mut Request) -> Result<ResponseBox> {
     let url = request.url().to_owned();
     let (path, query) = url.split_once('?').unwrap_or((&url, ""));
     match (request.method(), path) {
+        (Method::Get, "/api/reviews") => {
+            let mut status = None;
+            let mut page = None;
+            for pair in query.split('&').filter(|p| !p.is_empty()) {
+                let (key, value) = pair.split_once('=').unwrap_or((pair, ""));
+                let value = url_component(&value.replace('+', " "))?;
+                match key {
+                    "status" => status = Some(value),
+                    "page" => page = Some(value),
+                    _ => return Err(Error::Input("意见查询只接受 status 和 page".into())),
+                }
+            }
+            json_response(
+                200,
+                ops::review_list(project, status.as_deref(), page.as_deref())?,
+            )
+        }
+        (Method::Post, "/api/reviews") => {
+            let input: ReviewInput = serde_json::from_reader(request.as_reader())?;
+            json_response(
+                200,
+                serde_json::to_value(ops::review_add(
+                    project,
+                    input.page_id.as_deref(),
+                    &input.text,
+                    input.reviewer.as_deref().unwrap_or("author"),
+                    "human",
+                )?)?,
+            )
+        }
+        (Method::Post, path) if path.starts_with("/api/reviews/") && path.ends_with("/resolve") => {
+            let text = path
+                .strip_prefix("/api/reviews/")
+                .and_then(|p| p.strip_suffix("/resolve"))
+                .ok_or_else(|| Error::Input("处理意见需要意见编号".into()))?;
+            let id = identifier(text)?;
+            json_response(
+                200,
+                serde_json::to_value(ops::review_resolve(project, id)?)?,
+            )
+        }
+        (Method::Post, path) if path.starts_with("/api/runs/") && path.contains("/adopt/") => {
+            let (run, page) = path[10..]
+                .split_once("/adopt/")
+                .ok_or_else(|| Error::Input("采用结果需要 run 和页面编号".into()))?;
+            json_response(
+                200,
+                ops::run_adopt(project, identifier(run)?, &url_component(page)?)?,
+            )
+        }
         (Method::Get, "/api/deck") => json_response(200, ops::workspace(project)?),
         (Method::Put, "/api/deck") => {
             let base = query
