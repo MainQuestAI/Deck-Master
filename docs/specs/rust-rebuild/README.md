@@ -330,6 +330,27 @@ Host 按需读取：`deck show`（摘要）、`deck get --pages p3,p4`（指定�
   - 旧线新增只读命令 `legacy-export <project> <out>`，复用 `Store.load_document` 与对象读取，导出中性 JSON 和文件，包括 brief、材料、framing 摘要、页 content、讲稿、原图、SVG 和最近一次导出。旧审阅与授权记录原样附带，供查阅。现有的 `export --purpose engineering` 只复制对象树，不产出中性 JSON，所以不能直接拿来代替。
   - `deck import <out> <new>`：目标已存在时报错；无法映射的内容逐项列在报告里；在途调用或结果未知的调用只列出，不恢复。
   - 只迁移老板指定的项目。旧目录不变，所以回退就是继续使用旧目录。
+  - 中性档案是目录，格式名 `legacy-export.v1`：
+
+    | 路径 | 内容 |
+    | --- | --- |
+    | `manifest.json` | 下表字段 |
+    | `files/<sha256>.<ext>` | 材料原件、抽取文本、原图、SVG、最近一次导出 |
+
+    | 字段 | 含义 |
+    | --- | --- |
+    | `format` | 固定 `legacy-export.v1` |
+    | `source` | `{project_id, revision_id}`，不含本机路径 |
+    | `brief` | `title`、`audience`、`task_type`、`goal`、`constraints`、`page_limit` |
+    | `materials[]` | `id`、`name`、`file`、`text_file`、`status`；后两个是 `files/` 下的文件名 |
+    | `framing` | `thesis`、`pillars[{title,points}]`、`facts`、`assumptions`、`questions`，由旧 content_plan / narrative 摘要 |
+    | `style` | `canvas`（保留旧画布）、`palette`、`fonts`、`assets[{id,file}]` |
+    | `pages[]` | `id`、`purpose`、`layout`、`content`（与 page.v2 `customer_visible` 同形）、`notes`、`todo`、`refs`、`image`/`svg` 为 `{file}` 或 null、`preview` |
+    | `last_export` | `{file}` 或 null，最近一次 PPTX |
+    | `reviews` | 旧审阅对象原样 |
+    | `authorizations` | 旧授权对象原样 |
+    | `open_calls[]` | 在途或结果未知的调用：`task_id`、`allowance_id`、`state`、`kind` |
+    | `unmapped[]` | 无法映射的项：`kind`、`id`、`reason` |
 - 安装（S6）：一个脚本，负责安装 `deck`、把 deck-tools 装进独立 venv、把 Skill 链接给 Codex。不移植托管安装的激活与回滚。先支持 macOS，CI 在 Linux 上跑。
 - 切换：老板判定新路径可以替代旧线后，`deck-skill/` 改名为 `skills/deck/` 并成为默认 Skill，安装不再携带旧的四个 Skill。是否删除旧代码另行决定。
 
