@@ -94,6 +94,9 @@ def _parse_svg(data: bytes, *, page_id: str, assets: dict[str, str] | None = Non
             if abs(sx-sy)>1e-6 or abs(a*c+b*d)>1e-6 or a*d-b*c<0:raise SvgError(f"{page_id}/{base['id']}: nonuniform text scaling unsupported")
             base['x'],base['y']=point(base['x'],base['y']);base['font_size']*=sx
             base['rotation']=math.degrees(math.atan2(b,a));base['letter_spacing']*=sx
+            if 'text_width' in base:
+                base['text_width'] *= sx
+                base['text_height'] *= sx
         elif kind in ('circle','ellipse') and abs(sx-sy)<1e-6 and abs(base['width']-base['height'])<1e-6 and abs(a*c+b*d)<1e-6:
             cx,cy=point(base['x']+base['width']/2,base['y']+base['height']/2)
             base.update(x=cx-base['width']*sx/2,y=cy-base['height']*sy/2,width=base['width']*sx,height=base['height']*sy)
@@ -174,6 +177,8 @@ def _parse_svg(data: bytes, *, page_id: str, assets: dict[str, str] | None = Non
         inherited_keys=('fill','stroke','stroke-width','stroke-linecap','stroke-linejoin','stroke-miterlimit','font-family','font-size','font-weight','text-anchor','letter-spacing','opacity','fill-opacity','stroke-opacity')
         if tag in ('svg','g'):
             style={key:attrs[key] for key in inherited_keys if key in attrs}
+            if tag == 'g':
+                style['data-group'] = el.get('id') or inherited.get('data-group', '')
             # SVG group opacity multiplies ancestor opacity.
             if 'opacity' in el.attrib:
                 style['opacity']=str(float(inherited.get('opacity','1'))*float(el.attrib['opacity']))
@@ -202,6 +207,10 @@ def _parse_svg(data: bytes, *, page_id: str, assets: dict[str, str] | None = Non
                 return value
             except ValueError: raise SvgError(f'{page_id}/{identity}: {key} must use unitless pixels')
         base=dict(id=identity,kind=tag,fill=attrs.get('fill','#000000'),stroke=attrs.get('stroke','none'),stroke_width=num('stroke-width',1),stroke_linecap=attrs.get('stroke-linecap','butt'),stroke_linejoin=attrs.get('stroke-linejoin','miter'),stroke_miterlimit=num('stroke-miterlimit',4),opacity=num('opacity',1),fill_opacity=num('fill-opacity',1),stroke_opacity=num('stroke-opacity',1),atom_id=el.get('data-atom-id'),node_ref=el.get('data-node-ref'),edge_ref=el.get('data-edge-ref'))
+        if attrs.get('data-group'):
+            base['group'] = attrs['data-group']
+        if el.get('data-native-table') == 'true':
+            base['native_table'] = True
         if el.get('data-table-id'):
             base['table_id'] = el.get('data-table-id')
             if tag == 'rect':
@@ -265,6 +274,13 @@ def _parse_svg(data: bytes, *, page_id: str, assets: dict[str, str] | None = Non
                 if child.tail and child.tail.strip(): raise SvgError(f'{page_id}/{identity}: trailing inline text unsupported')
             if not any(text.strip() for text, _ in runs):
                 raise SvgError(f'{page_id}/{identity}: empty text has no editable content to deliver')
+            if el.get('data-text-width'):
+                # Explicit author bounds preserve a paragraph as one editable box.
+                text = ''.join(text for text, _ in runs)
+                runs = [(text, {**attrs, 'opacity': str(base['opacity'])})]
+                base['text_width'] = num('data-text-width')
+                base['text_height'] = num('data-text-height', num('font-size', 24) * 3)
+                base['bullet'] = el.get('data-bullet') == 'true'
             for i,(text,a) in enumerate(runs):
                 run_paint = {key:finite(a.get(key.replace('_','-'),base[key]),key)
                              for key in ('opacity','fill_opacity','stroke_opacity')}

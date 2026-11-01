@@ -260,7 +260,7 @@ def check_native_relations(root, source, page):
             ancestor = parents.get(native)
             grouped = False
             while ancestor is not None:
-                grouped |= (ancestor.tag == '{' + NS['p'] + '}grpSp'
+                grouped |= ((ancestor.tag == '{' + NS['p'] + '}grpSp' and not _identity_group(ancestor))
                             or (ancestor.tag == '{' + NS['p'] + '}spTree'
                                 and ancestor.find('p:grpSpPr/a:xfrm', NS) is not None))
                 ancestor = parents.get(ancestor)
@@ -391,3 +391,15 @@ def check_native_relations(root, source, page):
                                      "actual_node_id": assigned if wrong_label else nearest,
                                      "svg_elements": [carrier["element"]], "readback_layer": "native_pptx"})
     return findings
+
+
+def _identity_group(group):
+    transform = group.find('p:grpSpPr/a:xfrm', NS)
+    if transform is None or transform.get('rot', '0') != '0':
+        return False
+    if any(transform.get(key, '0') not in ('0', 'false') for key in ('flipH', 'flipV')):
+        return False
+    off, child_off = transform.find('a:off', NS), transform.find('a:chOff', NS)
+    ext, child_ext = transform.find('a:ext', NS), transform.find('a:chExt', NS)
+    return (off is not None and child_off is not None and ext is not None and child_ext is not None
+            and off.attrib == child_off.attrib and ext.attrib == child_ext.attrib)

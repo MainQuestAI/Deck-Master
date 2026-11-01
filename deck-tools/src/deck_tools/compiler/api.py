@@ -104,31 +104,6 @@ def _compile_prepared(inputs, options, output_dir, prepared=None):
                     if info.filename != f'ppt/slides/slide{index}.xml':
                         continue
                     root = ET.fromstring(data)
-                    # Both compiler exits preserve SVG stroke endings/joins in DrawingML.
-                    # Match emitted order, not SVG IDs (IDs may be absent or duplicated).
-                    native_shapes = root.findall('p:cSld/p:spTree/p:sp', ns)
-                    source_shapes = [shape for shape in page['shapes'] if shape['kind'] != 'image']
-                    if len(native_shapes) != len(source_shapes):
-                        raise ValueError('native shape count differs from SVG; cannot bind stroke properties')
-                    for emitted, source_shape in zip(native_shapes, source_shapes, strict=True):
-                        if source_shape['stroke'] == 'none':
-                            continue
-                        line = emitted.find('p:spPr/a:ln', ns)
-                        if line is None:
-                            raise ValueError('native output omitted an SVG stroke')
-                        caps = {'butt': 'flat', 'round': 'rnd', 'square': 'sq'}
-                        joins = {'round': 'round', 'bevel': 'bevel', 'miter': 'miter'}
-                        cap = source_shape.get('stroke_linecap', 'butt')
-                        join = source_shape.get('stroke_linejoin', 'miter')
-                        if cap not in caps or join not in joins:
-                            raise ValueError('unsupported SVG stroke ending or join')
-                        line.set('cap', caps[cap])
-                        for kind in joins.values():
-                            for child in line.findall('a:' + kind, ns):
-                                line.remove(child)
-                        child = ET.SubElement(line, '{' + ns['a'] + '}' + joins[join])
-                        if join == 'miter':
-                            child.set('lim', str(round(source_shape.get('stroke_miterlimit', 4) * 100000)))
                     spacing = {s['atom_id'] or s['id']: s.get('letter_spacing', 0) for s in page['shapes'] if s['kind'] == 'text'}
                     for shape in root.findall('.//p:sp', ns):
                         name = shape.find('p:nvSpPr/p:cNvPr', ns).get('name')

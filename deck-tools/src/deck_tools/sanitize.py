@@ -386,9 +386,11 @@ def _clean_pptx(data, where, *, keep_notes=False, page_ids=None):
                     if local == "cNvPr":
                         # Non-visible shape labels and accessibility descriptions
                         # can contain generation prompts. Preserve the drawing ID.
+                        readable_name = parent.get("title", "")
+                        text_safe(readable_name, where + "/shape-name")
                         for key in ("name", "descr", "title"):
                             parent.attrib.pop(key, None)
-                        parent.set("name", "Shape " + parent.get("id", ""))
+                        parent.set("name", readable_name or "Shape " + parent.get("id", ""))
                     if local == "cSld":
                         stable_name = parent.get('name')
                         parent.attrib.pop("name", None)

@@ -12,6 +12,7 @@ from pptx.oxml.xmlchemy import OxmlElement
 from pptx.util import Pt
 import io
 import hashlib
+import copy
 
 
 def normalize_notes(text):
@@ -147,6 +148,7 @@ def emit(pages, width, height, fonts, output):
         def Y(y):return round((oy+y*k)*9525)
         def S(v):return round(v*k*9525)
         grid_shapes, text_boxes = [], []
+        native_by_source = {}
         for s in page['shapes']:
             if s['kind']=='image':
                 from PIL import Image
@@ -155,6 +157,7 @@ def emit(pages, width, height, fonts, output):
                     with Image.open(s['asset_path']) as raster:iw,ih=raster.size
                     ratio=min(w/iw,h/ih);x+=(w-iw*ratio)/2;y+=(h-ih*ratio)/2;w=iw*ratio;h=ih*ratio
                 sh=slide.shapes.add_picture(s['asset_path'],X(x),Y(y),S(w),S(h));sh.name=s.get('atom_id') or s['id']
+                native_by_source[id(s)] = sh
                 if s['fit']=='cover':
                     with Image.open(s['asset_path']) as raster:iw,ih=raster.size
                     if iw/ih>w/h:sh.crop_left=sh.crop_right=(1-(w/h)/(iw/ih))/2
@@ -166,7 +169,7 @@ def emit(pages, width, height, fonts, output):
                 if not filename:raise ValueError(f"{page['page_id']}/{s['id']}: font file not supplied: {key}")
                 font=ImageFont.truetype(str(filename),size=1000)
                 text_width=font.getlength(s['text'])/1000*s['font_size']+max(0,len(s['text'])-1)*s.get('letter_spacing',0)
-                w=text_width+s['font_size']*1.0
+                w=s.get('text_width', text_width+s['font_size']*1.0)
                 anchor=s['x']
                 # The extra glyph of slack keeps Office from clipping text, but
                 # should not itself create a false slide-boundary overflow.
@@ -180,17 +183,24 @@ def emit(pages, width, height, fonts, output):
                 x=anchor
                 if s['anchor']=='middle':x-=w/2
                 if s['anchor']=='end':x-=w
-                y=s['y']-s['font_size']*.88;h=s['font_size']*1.5
+                y=s['y']-s['font_size']*.88;h=s.get('text_height', s['font_size']*1.5)
                 # The IR anchor is already in final page coordinates; glyph rotation is
                 # applied once through sh.rotation below, so the box stays at the anchor.
                 sh=slide.shapes.add_textbox(X(x),Y(y),S(w),S(h))
                 text_boxes.append((s, sh, S(text_width), X(anchor)))
-                tf=sh.text_frame;tf.clear();tf.word_wrap=False;tf.vertical_anchor=MSO_ANCHOR.TOP
+                tf=sh.text_frame;tf.clear();tf.word_wrap='text_width' in s;tf.vertical_anchor=MSO_ANCHOR.TOP
                 from pptx.enum.text import MSO_AUTO_SIZE
                 tf.auto_size=MSO_AUTO_SIZE.NONE
                 tf.margin_left=tf.margin_right=tf.margin_top=tf.margin_bottom=0
                 p=tf.paragraphs[0];p.alignment={'middle':PP_ALIGN.CENTER,'end':PP_ALIGN.RIGHT}.get(s['anchor'],PP_ALIGN.LEFT)
                 p.space_before=p.space_after=Pt(0)
+                if s.get('bullet'):
+                    props = p._p.get_or_add_pPr()
+                    props.set('marL', str(S(s['font_size'])))
+                    props.set('indent', str(-S(s['font_size'] * .75)))
+                    bullet = OxmlElement('a:buChar')
+                    bullet.set('char', '•')
+                    props.append(bullet)
                 run=p.add_run();run.text=s['text']
                 props=run._r.get_or_add_rPr()
                 # Fill properties must precede latin/ea/cs in a:rPr.
@@ -225,8 +235,15 @@ def emit(pages, width, height, fonts, output):
                         point=OxmlElement('a:pt');point.set('x',str(S(c[op]['x']-l)));point.set('y',str(S(c[op]['y']-t)));node.append(point)
                     path.append(node)
                 lst.append(path);geom.append(lst);sp.append(geom)
+            native_by_source[id(s)] = sh
             if s.get('rotation'):sh.rotation=s['rotation']
             sh.name=s.get('atom_id') or s['id']
+            identity = sh._element.nvSpPr.cNvPr
+            identity.set('title', s.get('text', s['id'])[:60])
+            if s.get('atom_id') == f"atom:{page['page_id']}:title":
+                placeholder = OxmlElement('p:ph')
+                placeholder.set('type', 'title')
+                sh._element.nvSpPr.nvPr.append(placeholder)
             for node in list(sh._element):
                 if node.tag.rsplit('}',1)[-1]=='style':sh._element.remove(node)
             if s['kind']!='text':
@@ -248,4 +265,75 @@ def emit(pages, width, height, fonts, output):
             if s['kind'] == 'line' or s.get('table_frame'):
                 grid_shapes.append((s, sh))
         _trim_table_text_slack(grid_shapes, text_boxes, page['page_id'])
+        _editable_tables(slide, page, X, Y, S, native_by_source)
+        _module_groups(slide, page, native_by_source)
     pres.save(output)
+
+
+def _editable_tables(slide, page, X, Y, S, native_by_source):
+    """Replace explicitly marked SVG grids with editable PowerPoint tables."""
+    for frame in page['shapes']:
+        if not frame.get('native_table') or not frame.get('table_frame'):
+            continue
+        table_id = frame['table_id']
+        left, top = frame['x'], frame['y']
+        right, bottom = left + frame['width'], top + frame['height']
+        members = [s for s in page['shapes'] if s.get('table_id') == table_id]
+        xs = sorted({left, right, *(s['points'][0][0] for s in members
+                      if s['kind'] == 'line' and s['points'][0][0] == s['points'][1][0])})
+        ys = sorted({top, bottom, *(s['points'][0][1] for s in members
+                      if s['kind'] == 'line' and s['points'][0][1] == s['points'][1][1])})
+        shape = slide.shapes.add_table(len(ys) - 1, len(xs) - 1,
+                                      X(left), Y(top), S(right - left), S(bottom - top))
+        shape.name = table_id
+        shape._element.nvGraphicFramePr.cNvPr.set('title', '对照表')
+        table = shape.table
+        table.first_row = False
+        table.horz_banding = False
+        for col, (a, b) in zip(table.columns, zip(xs, xs[1:])):
+            col.width = S(b - a)
+        for row, (a, b) in zip(table.rows, zip(ys, ys[1:])):
+            row.height = S(b - a)
+        originals = native_by_source
+        for r in range(len(ys) - 1):
+            for c in range(len(xs) - 1):
+                cell = table.cell(r, c)
+                cell.margin_left = cell.margin_right = S(12)
+                cell.margin_top = cell.margin_bottom = S(8)
+                cell.vertical_anchor = MSO_ANCHOR.MIDDLE
+                props = cell._tc.get_or_add_tcPr()
+                paint(props, '#eaf1f6' if r == 0 else '#ffffff', 1)
+                for side in ('L', 'R', 'T', 'B'):
+                    line = OxmlElement('a:ln' + side)
+                    line.set('w', str(S(frame['stroke_width'])))
+                    paint(line, frame['stroke'], 1)
+                    props.append(line)
+                texts = [s for s in members if s['kind'] == 'text'
+                         and xs[c] <= s['x'] < xs[c + 1] and ys[r] <= s['y'] < ys[r + 1]]
+                if texts:
+                    original = originals[id(texts[0])]
+                    body = copy.deepcopy(original._element.txBody)
+                    body.tag = '{http://schemas.openxmlformats.org/drawingml/2006/main}txBody'
+                    body.find('{http://schemas.openxmlformats.org/drawingml/2006/main}bodyPr').set('wrap', 'square')
+                    cell._tc.replace(cell._tc.txBody, body)
+        elements = [originals[id(s)]._element for s in members]
+        first = min(slide.shapes._spTree.index(e) for e in elements)
+        slide.shapes._spTree.remove(shape._element)
+        slide.shapes._spTree.insert(first, shape._element)
+        for element in elements:
+            slide.shapes._spTree.remove(element)
+
+
+def _module_groups(slide, page, native_by_source):
+    groups = {}
+    for source in page['shapes']:
+        if source.get('group') and not source.get('table_id'):
+            groups.setdefault(source['group'], []).append(native_by_source[id(source)])
+    for name, members in groups.items():
+        if members:
+            position = min(slide.shapes._spTree.index(shape._element) for shape in members)
+            group = slide.shapes.add_group_shape(members)
+            group.name = name
+            group._element.nvGrpSpPr.cNvPr.set('title', name)
+            slide.shapes._spTree.remove(group._element)
+            slide.shapes._spTree.insert(position, group._element)
