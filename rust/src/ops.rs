@@ -183,7 +183,9 @@ pub fn put(project: &Path, version: i64, patch: Patch) -> Result<Snapshot> {
             ..Page::default()
         });
         change.apply(&mut submitted);
-        submitted.content = crate::humanizer::content(&submitted.content)?;
+        if change.content.is_some() {
+            submitted.content = crate::humanizer::content(&submitted.content)?;
+        }
         submitted.content.normalize_ids()?;
         if let Some(now) = pages.get_mut(&change.id) {
             let b = before.map(Page::author);

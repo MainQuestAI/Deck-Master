@@ -152,6 +152,11 @@ def readback(pptx_path,pages,expected_pages):
                                            and xs[c] <= s['x'] < xs[c + 1] and ys[r] <= s['y'] < ys[r + 1]),
                                           key=lambda s: (s['y'], s['x']))
                         actual = ''.join(t.text or '' for t in cell.findall('.//a:t', ns))
+                        if any(int(props.get('sz', '600')) < 600
+                               for props in cell.findall('.//a:r/a:rPr', ns)):
+                            findings.append({'page_id': page['page_id'], 'code': 'unreadable_text',
+                                             'element': table_id, 'row': r, 'column': c,
+                                             'detail': 'table cell text is under 6pt'})
                         if normalize(actual) != normalize(''.join(s['text'] for s in expected)):
                             findings.append({'page_id': page['page_id'], 'code': 'svg_ppt_text_mismatch', 'element': table_id})
             # Legacy geometry checks apply to drawn grids, not native cells.

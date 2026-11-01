@@ -78,12 +78,70 @@ def test_editable_table_and_title_survive_delivery_cleanup(tmp_path):
     assert graphic is not None
     for props in graphic.findall('.//a:tcPr', ns):
         assert [child.tag.rsplit('}', 1)[-1] for child in props] == [
-            'lnL', 'lnR', 'lnT', 'lnB', 'solidFill']
+            'lnL', 'lnR', 'lnT', 'lnB', 'noFill']
     shape = next(sp for sp in root.findall('.//p:sp', ns)
                  if sp.find('p:nvSpPr/p:cNvPr', ns).get('name') == '连线-流程连线')
     line = shape.find('p:spPr/a:ln', ns)
     assert line.get('cap') == 'rnd'
     assert line.find('a:bevel', ns) is not None
+
+
+@pytest.mark.parametrize('frame_fill, cell_fill', [
+    ('#102030', None), ('#102030', '#304050'), ('none', None)])
+def test_native_table_preserves_source_backgrounds(tmp_path, frame_fill, cell_fill):
+    family = resolve_host_font()
+    svg = tmp_path / 'table.svg'
+    cell = (f'<rect x="30" y="160" width="250" height="150" fill="{cell_fill}" '
+            'fill-opacity="0.5" data-table-id="comparison"/>' if cell_fill else '')
+    svg.write_text(f'''<svg viewBox="0 0 600 400" font-family="{family}" font-size="24">
+      <rect x="30" y="90" width="500" height="220" fill="{frame_fill}"
+            data-table-id="comparison" data-native-table="true"/>
+      {cell}
+      <line x1="30" y1="160" x2="530" y2="160" data-table-id="comparison"/>
+      <line x1="280" y1="90" x2="280" y2="310" data-table-id="comparison"/>
+      <text x="50" y="130" fill="#ffffff" data-table-id="comparison">Header</text>
+      <text x="50" y="200" fill="#ffffff" data-table-id="comparison">Body</text>
+    </svg>''')
+    result = compile_deck([SvgInput('p1', svg)],
+                          CompileOptions(width_px=600, height_px=400, fonts=host_fonts()),
+                          tmp_path / 'out')
+    table = next(shape.table for shape in Presentation(result.pptx_path).slides[0].shapes
+                 if shape.has_table)
+    for r in range(2):
+        for c in range(2):
+            fill = cell_fill if (r, c) == (1, 0) and cell_fill else frame_fill
+            props = table.cell(r, c)._tc.get_or_add_tcPr()
+            if fill == 'none':
+                assert props.find('{http://schemas.openxmlformats.org/drawingml/2006/main}noFill') is not None
+            else:
+                assert str(table.cell(r, c).fill.fore_color.rgb) == fill[1:].upper()
+                alpha = props.find('.//{http://schemas.openxmlformats.org/drawingml/2006/main}alpha')
+                assert alpha.get('val') == ('50000' if (r, c) == (1, 0) and cell_fill else '100000')
+    assert str(table.cell(1, 0).text_frame.paragraphs[0].runs[0].font.color.rgb) == 'FFFFFF'
+
+
+@pytest.mark.parametrize('font_size, unreadable', [(7, True), (8, False)])
+def test_native_table_readback_checks_actual_cell_font_size(tmp_path, font_size, unreadable):
+    family = resolve_host_font()
+    svg = tmp_path / 'table.svg'
+    svg.write_text(f'''<svg viewBox="0 0 600 400" font-family="{family}">
+      <rect x="30" y="90" width="500" height="220" fill="none"
+            data-table-id="comparison" data-native-table="true"/>
+      <text x="50" y="130" font-size="24" data-table-id="comparison">Header</text>
+    </svg>''')
+    result = compile_deck([SvgInput('p1', svg)],
+                          CompileOptions(width_px=600, height_px=400, fonts=host_fonts()),
+                          tmp_path / 'out')
+    source = json.loads(result.manifest_path.read_text())['pages']
+    presentation = Presentation(result.pptx_path)
+    table = next(shape.table for shape in presentation.slides[0].shapes if shape.has_table)
+    from pptx.util import Pt
+    table.cell(0, 0).text_frame.paragraphs[0].runs[0].font.size = Pt(font_size * .75)
+    presentation.save(result.pptx_path)
+    report = readback(result.pptx_path, source, [{'page_id': 'p1', 'customer_visible': {}}])
+    assert (report['status'] == 'fail') == unreadable, report
+    assert any(f['code'] == 'unreadable_text' and f.get('element') == 'comparison'
+               for f in report['findings']) == unreadable
 
 
 def test_native_table_marker_without_identity_keeps_drawn_shape_readback(tmp_path):

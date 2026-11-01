@@ -4,6 +4,8 @@
 
 元素：svg、g、defs、use、rect、circle、ellipse、line、polyline、polygon、path、text、tspan、image、linearGradient、radialGradient、stop。path 支持 M/L/H/V/C/S/Q/T/A/Z。
 
+不要重复引用 defs 中带 id 的组，以免多个实例合并成同一个 PPT 组并改变叠放顺序。
+
 通用属性：id、transform、fill、stroke、stroke-width、fill-opacity、stroke-opacity、opacity、stroke-linecap、stroke-linejoin、stroke-miterlimit、font-family、font-size、font-weight、text-anchor、letter-spacing，以及编译器的 data-atom-id、data-node-ref、data-edge-ref、data-table-id、data-row-id、data-column-id、data-cell-id。几何属性按元素使用 x/y/width/height/rx/ry/cx/cy/r/x1/y1/x2/y2/points/d，text 使用 x/y，tspan 使用 x/y/dx/dy。实际支持以解析器报错为准。
 
 未列出的属性（包括 class）以及 filter、mask、clip-path 会报错。style 只接受解析器列出的颜色、字体、透明度、描边与字距项，不接受布局 CSS。g 只向下继承颜色与字体；data-atom-id 必须写在文字元素本身。文字不支持非等比缩放；带描边的非等比变换应改为显式轮廓。image 的 href 只能用 assets 中的素材 ID，文件只支持 PNG/JPEG；不能引用任意文件、网络 URL 或内嵌 data URL。

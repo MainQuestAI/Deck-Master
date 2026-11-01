@@ -180,12 +180,17 @@ fn build_retains_notes_reports_missing_and_export_compares_inputs_after_restore(
     setup(path);
     let mut store = Store::open(path).unwrap();
     let mut snapshot = store.current().unwrap();
-    let svg = store
-        .add_file(
-            b"<svg viewBox='0 0 1280 720'><text x='64' y='80' font-size='36' data-atom-id='atom:p1:title'>Decision</text></svg>",
-            "svg",
-        )
+    let font = Command::new("fc-match")
+        .args(["-f", "%{family}", "sans-serif"])
+        .output()
         .unwrap();
+    assert!(font.status.success());
+    let families = String::from_utf8(font.stdout).unwrap();
+    let family = families.split(',').next().unwrap().trim();
+    let svg_text = format!(
+        "<svg viewBox='0 0 1280 720'><text x='64' y='80' font-size='36' font-family=\"{family}\" data-atom-id='atom:p1:title'>Decision</text></svg>"
+    );
+    let svg = store.add_file(svg_text.as_bytes(), "svg").unwrap();
     let basis = ops::basis("svg", &snapshot.deck, &snapshot.deck.pages[0]).unwrap();
     snapshot.deck.pages[0].svg = Some(deck::model::Artifact { file: svg, basis });
     snapshot.deck.pages[0].notes = "Speaker notes\n\nLast line\n".into();

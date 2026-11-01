@@ -335,7 +335,13 @@ def _editable_tables(slide, page, X, Y, S, native_by_source):
                     paint(line, frame['stroke'], 1)
                     props.append(line)
                 # CT_TableCellProperties places all border lines before fill.
-                paint(props, '#eaf1f6' if r == 0 else '#ffffff', 1)
+                background = next((s for s in reversed(members)
+                                   if s['kind'] == 'rect' and s['fill'] != 'none'
+                                   and s['x'] <= xs[c] and s['y'] <= ys[r]
+                                   and s['x'] + s['width'] >= xs[c + 1]
+                                   and s['y'] + s['height'] >= ys[r + 1]), None)
+                paint(props, background['fill'] if background else 'none',
+                      background['opacity'] * background['fill_opacity'] if background else 1)
                 texts = [s for s in members if s['kind'] == 'text'
                          and xs[c] <= s['x'] < xs[c + 1] and ys[r] <= s['y'] < ys[r + 1]]
                 if texts:
