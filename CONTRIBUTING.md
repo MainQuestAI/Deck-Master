@@ -22,20 +22,20 @@ The existing Python implementation (`src/deck_master/`, `skills/`, `tests/rebuil
 accepts only fixes for data loss, duplicate external consumption, failure to
 open or export, and real security issues, each with a regression test.
 
-The [Rebuilt Core Gate](.github/workflows/rebuild.yml) remains the CI source of
-truth for the existing Python line. The workflow for `rust/` and `deck-tools/`
-is added with the first Rust slice.
+Two workflows split the CI. [`rust.yml`](.github/workflows/rust.yml) covers
+`rust/` and `deck-tools/` and runs on every pull request and on each main push.
+The [Rebuilt Core Gate](.github/workflows/rebuild.yml) covers the existing
+Python line and runs on main pushes only.
 
-Automatic CI runs once on each main push, including a merged pull request.
-Pull requests, feature-branch pushes, and schedules do not start CI; run
-appropriate local checks before merging. Both workflows retain a manual entry.
-Main pushes run the legacy tests only when a changed path
-is outside `rust/`, `deck-tools/`, `deck-skill/`, `docs/specs/rust-rebuild/`,
-and the new-line workflow `.github/workflows/rust.yml`.
-Legacy changes run one unit configuration (Python 3.12 / Node 22), plus the
-rendering, browser and installed-package checks. The full Python/Node matrix
-runs through `workflow_dispatch`. Group report runs with the legacy workflow
-and fails if change detection or any applicable check fails.
+Legacy checks are scoped by the change set of the main push: when every changed
+path is inside `rust/`, `deck-tools/`, `deck-skill/`, `docs/specs/rust-rebuild/`
+or `rust.yml`, they are skipped and the group report returns not applicable.
+Otherwise one unit configuration (Python 3.12 / Node 22) runs, together with the
+rendering, browser and installed-package checks. Legacy pull requests get no
+automatic run: execute the legacy commands from AGENTS.md section 3 locally
+before merging. Both workflows keep a manual entry, and the full Python/Node
+matrix runs through `workflow_dispatch`. The group report fails if change
+detection or any applicable legacy check fails.
 
 ## DCO
 
