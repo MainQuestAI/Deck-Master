@@ -190,23 +190,15 @@ svg 类没有外部付费调用，不需要 `run call`，也没有 max_calls。�
 
 服务与 CLI 共用 ops，各自直连 SQLite。服务不缓存作品状态，界面按版本号轮询变化。
 
-接口：`GET /api/deck`、`PUT /api/deck?base=N`、`POST /api/runs/{id}/cancel`、`POST /api/build`、`GET /api/files/{sha}`（sha 只接受 64 位十六进制）、`GET /api/export/{md|pptx}`、`GET|POST /api/reviews`、`POST /api/restore/{version}`。
+接口：`GET /api/deck`、`PUT /api/deck?base=N`、`POST /api/runs/{id}/cancel`、`POST /api/runs/{id}/pages/{page}/adopt`（手动采用被拒收的结果，对应 `deck run adopt`）、`POST /api/build`、`GET /api/files/{sha}`（sha 只接受 64 位十六进制）、`GET /api/export/{md|pptx}`、`GET|POST /api/reviews`、`POST /api/restore/{version}`。接口以 S4 完成判断所需为限；导出只列出缺失和过期的页，不拦截（见 2.1、3.6）。
 
-原首版界面范围（已被下面的 PR #250 新版设计取代，只作为最低功能要求参考）：
+界面使用 #250 的新版 WebUI（React 18 + Vite，`frontend/`，设计为 S00–S07 八个工作区与 U01–U05 五个共用容器）。#250 目前是不调用任何接口的演示稿，数据在 `constants/data.js` 里。
 
-- 整稿浏览：原图、预览、过期标记
-- 改正文与讲稿：冲突时保留作者输入
-- run 状态与停止按钮
-- 构建与下载
-- 版本历史与恢复
+S4 必须能用的最低要求：整稿浏览（原图、预览、过期标记）、改正文与讲稿（冲突时保留作者输入）、run 状态与停止、构建与下载、版本历史与恢复。S4 只接通支撑这几项以及第 7 节完成判断的界面，其余保持 `[演示]`、`[待联调]`、`[等待前置]` 标注。依赖 S5 的部分（页上意见、单页重做、候选比较）在 S5 后接入。以下不接，保持演示或不做：S00 所有项目矩阵（服务一次只服务一个项目，没有项目列表接口）、S04 的阶段推进状态与规范检测列表、S06 的身份切换、S05 的导出门禁交互。旧线 v2 的 api.js、images.js、collaboration-desk 及依赖它的 insight-reading、evidence-reading 不迁移。
 
-**界面以 PR #250 的新版 WebUI 为准。** 本节首版写作时 #250 的 WebUI 重构尚未完成，所以当时写了"复用旧线 v2 组件"；该写法作废。S4 直接接入 #250 的新版 WebUI（React 18 + Vite，代码在该 PR 的 `frontend/` 目录，设计为 S00–S07 八个工作区与 U01–U05 五个共用容器），不再以旧线 `src/deck_master/resources/static/v2/` 的组件为基础，也不再按本节上面列的五项首版界面裁剪范围。
+顺序与 PR：S4 拆成两个 PR。先做 `deck serve` 与上述接口（含静态文件服务）并合入；#250 在接口可联调后由老板决定合入；再在 `frontend/` 上接数据层。
 
-- 接入方式：#250 合入 main 后，S4 在 `frontend/` 上把界面里标 `[演示]`、`[待联调]`、`[等待前置]` 的部分逐项接到 `deck serve` 的接口；接口不够用时按界面需要补接口，不为迁就旧组件改界面。
-- 范围由新版设计决定：S00–S07、U01–U05 里依赖 S5 的部分（页上意见、单页重做、候选比较等）保持标注为"等待前置"，S5 完成后再接；不依赖 S5 的先接。
-- 旧线 v2 的 api.js、images.js 依赖旧会话令牌与缩略图接口，不迁移；collaboration-desk 及依赖它的 insight-reading、evidence-reading 也不迁移。旧 v2 组件只在新版设计缺这个能力、且确实不依赖旧接口时才可借用，借用要在 PR 里写明。
-- 构建与分发：`deck serve` 提供构建后的前端静态文件；Vite 只用于开发与构建，新线不引入其他前端框架。具体的打包位置在 S4 开工时定，写入 AGENTS.md。
-- #250 仍是 Draft，合并时机在后端（S3、S4 的接口）可联调之后；合并由老板决定。
+构建与分发：`deck serve` 提供构建后的前端静态文件，随二进制发布，不依赖磁盘上的相对路径（`cargo install --path rust` 之后也能用）；嵌入方式与依赖在 S4 开工时定。S4 把 `npm ci` 与 `vite build` 加入 `rust.yml` 和 AGENTS.md 第 3 节的检查清单。开发期 Vite 通过代理访问 `deck serve`，不放宽 Host 与 Origin 检查。
 
 ### 3.8 错误
 
@@ -310,7 +302,7 @@ Host 按需读取：`deck show`（摘要）、`deck get --pages p3,p4`（指定�
 | S1 作品核心 | model、store、ops；`deck new / material add / material text / show / get / put / restore / export md`；deck-tools 的 read-source；`show` 与 `get` 的 JSON 字段在本切片定下 | 不完整作品可以直接改、增删和重排页；两路改不同页都能保存，同一页冲突可见；重复提交不产生新版本；restore 之后历史可追溯；在真实项目目录下跑通 | #218 #243 #223 #248 |
 | S2 内容主链 | Skill 前半；Codex 用真实材料写 brief、framing 和逐页内容 | 老板阅读 md 稿，判断主张与框架是否成立；首提与竞标按各自需求取舍 | #219 #244 #228 #227 |
 | S3 工具与成品 | 先用一份真实整稿（只在本地，不入库）跑通工具链；deck-tools 的其余部分；`deck run` 全套、`build`、`export pptx`、`doctor`；生图与 SVG 任务；`deck asset add`（logo 等素材） | 用真实材料产出整套 PPTX；取消后迟到的结果不自动采用；依据已变的结果不自动采用；结果未知的调用不自动重发；logo 从选择到 ImageGen 附件、再到 PPT 能一一对应；故意改错一处连线端点，Host 的比对能够发现。如果整稿仍要逐页人工修 SVG，先补 §5.2 的约束与样例，再做 S4 | #226 #231 #229 #164 #237 #141 #233 #217 #242 |
-| S4 界面 | `deck serve` 与 API；接入 PR #250 的新版 WebUI（`frontend/`，见 3.7），不再复用旧线 v2 组件 | 无需理解协议即可改字、停止和下载；浏览器存储不可用时停止照样生效；从总览或原图空态可以直接进入制作；窄屏下可读、可操作 | #136 #232 #220 #234 #224 #235 #236 |
+| S4 界面 | `deck serve` 与 API；接入 #250 的新版 WebUI（`frontend/`），范围与顺序见 3.7 | 无需理解协议即可改字、停止和下载；浏览器存储不可用时停止照样生效；从总览或原图空态可以直接进入制作；窄屏下可读、可操作 | #136 #232 #220 #234 #224 #235 #236 |
 | S5 改稿与审阅 | 页上意见（reviews）；Host 读取未处理意见、改稿并标记已处理；单页重做 | 只改讲稿或第 3 页时，其他页和已有成品不动；作者自检显示为自检，不合成为通过 | #230 #239 |
 | S6 迁移与切换 | 旧线 `legacy-export`、`deck import`；安装脚本；全稿回归 | 老板指定的旧项目可以打开、编辑和导出，旧目录不变；按 README 新装后能完成首跑；#226 的 22 页整稿复核 | #221 #245 #225 #240 #241 #238 |
 
