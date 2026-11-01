@@ -92,6 +92,58 @@ fn changed_basis_is_not_adopted_but_notes_alone_do_not_stale_images() {
     );
 }
 #[test]
+fn changed_basis_manual_adoption_replaces_existing_image_and_keeps_stale_hint() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    setup(path);
+    let image = path.join("result.png");
+    png(&image);
+    let first = start(path, 1);
+    ops::run_call(path, first, "p1", false).unwrap();
+    let first_result = ops::run_result(path, first, "p1", &image).unwrap();
+    let id = start(path, 1);
+    ops::run_call(path, id, "p1", false).unwrap();
+    edit(path, json!({"pages":[{"id":"p1","layout":"新布局"}]}));
+    let python = std::env::var_os("DECK_TOOLS_PYTHON").unwrap();
+    assert!(
+        Command::new(python)
+            .args([
+                "-c",
+                "from PIL import Image; import sys; Image.new('RGB',(8,8),'navy').save(sys.argv[1])"
+            ])
+            .arg(&image)
+            .status()
+            .unwrap()
+            .success()
+    );
+    let result = ops::run_result(path, id, "p1", &image).unwrap();
+    assert_eq!(result["adopted"], false);
+    assert_ne!(result["file"], first_result["file"]);
+    let before = Store::open(path).unwrap().current().unwrap();
+    assert_eq!(
+        before.deck.pages[0].image.as_ref().unwrap().file,
+        first_result["file"]
+    );
+    let candidate = &ops::workspace(path).unwrap()["runs"][0]["pages"][0];
+    assert_ne!(candidate["result_url"], candidate["current_image_url"]);
+    let store = Store::open(path).unwrap();
+    assert_ne!(
+        std::fs::read(store.file(result["file"].as_str().unwrap()).unwrap()).unwrap(),
+        std::fs::read(store.file(first_result["file"].as_str().unwrap()).unwrap()).unwrap()
+    );
+    ops::run_adopt(path, id, "p1").unwrap();
+    let after = Store::open(path).unwrap().current().unwrap();
+    let mut expected = before.deck;
+    expected.pages[0].image.as_mut().unwrap().file = result["file"].as_str().unwrap().into();
+    assert_eq!(after.deck, expected);
+    assert_eq!(after.version, before.version + 1);
+    assert_eq!(
+        ops::artifact_status(&after.deck).unwrap()["stale_images"],
+        json!(["p1"])
+    );
+}
+
+#[test]
 fn unknown_call_requires_explicit_retry_and_cannot_exceed_limit() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path();

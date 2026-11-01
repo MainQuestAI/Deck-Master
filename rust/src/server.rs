@@ -196,10 +196,18 @@ fn route(project: &Path, request: &mut Request) -> Result<ResponseBox> {
             let (run, page) = path[10..]
                 .split_once("/adopt/")
                 .ok_or_else(|| Error::Input("采用结果需要 run 和页面编号".into()))?;
-            json_response(
-                200,
-                ops::run_adopt(project, identifier(run)?, &url_component(page)?)?,
-            )
+            let mut result = ops::run_adopt(project, identifier(run)?, &url_component(page)?)?;
+            for page in result["runs"][0]["pages"]
+                .as_array_mut()
+                .into_iter()
+                .flatten()
+            {
+                if let Some(page) = page.as_object_mut() {
+                    page.remove("findings_path");
+                    page.remove("work");
+                }
+            }
+            json_response(200, result)
         }
         (Method::Get, "/api/deck") => json_response(200, ops::workspace(project)?),
         (Method::Put, "/api/deck") => {

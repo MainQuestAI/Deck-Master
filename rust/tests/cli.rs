@@ -307,19 +307,32 @@ fn review_commands_default_filter_resolve_count_and_reject_invalid_input() {
     ));
     assert_eq!(checked["method"], "self_check");
     assert_eq!(checked["reviewer"], "Host");
+    let remaining = output_json(command(
+        path,
+        &["review", "add", "另一条页上意见", "--page", "p3"],
+    ));
     let show = output_json(command(path, &["show"]));
-    assert_eq!(show["open_reviews_total"], 2);
-    assert_eq!(show["pages"][0]["open_reviews"], 1);
+    assert_eq!(show["open_reviews_total"], 3);
+    assert_eq!(show["pages"][0]["open_reviews"], 2);
     let filtered = output_json(command(
         path,
         &["review", "list", "--status", "open", "--page", "p3"],
     ));
-    assert_eq!(filtered["reviews"], json!([checked]));
-    let resolved = output_json(command(path, &["review", "resolve", "2"]));
+    assert_eq!(filtered["reviews"], json!([checked, remaining]));
+    let target = checked["id"].to_string();
+    let resolved = output_json(command(path, &["review", "resolve", &target]));
+    assert_eq!(resolved["id"], checked["id"]);
     assert_eq!(resolved["status"], "resolved");
     assert_eq!(
-        output_json(command(path, &["review", "resolve", "2"])),
+        output_json(command(path, &["review", "resolve", &target])),
         resolved
+    );
+    assert_eq!(
+        output_json(command(
+            path,
+            &["review", "list", "--status", "open", "--page", "p3"]
+        ))["reviews"],
+        json!([remaining])
     );
     assert_eq!(
         output_json(command(path, &["review", "list", "--status", "resolved"]))["reviews"],
