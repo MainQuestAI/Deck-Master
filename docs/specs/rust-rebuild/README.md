@@ -190,15 +190,15 @@ svg 类没有外部付费调用，不需要 `run call`，也没有 max_calls。�
 
 服务与 CLI 共用 ops，各自直连 SQLite。服务不缓存作品状态，界面按版本号轮询变化。
 
-接口：`GET /api/deck`、`PUT /api/deck?base=N`、`POST /api/runs/{id}/cancel`、`POST /api/runs/{id}/pages/{page}/adopt`（手动采用被拒收的结果，对应 `deck run adopt`）、`POST /api/build`、`GET /api/files/{sha}`（sha 只接受 64 位十六进制）、`GET /api/export/{md|pptx}`、`GET|POST /api/reviews`、`POST /api/restore/{version}`。接口以 S4 完成判断所需为限；导出只列出缺失和过期的页，不拦截（见 2.1、3.6）。
+接口：`GET /api/deck`、`PUT /api/deck?base=N`、`POST /api/runs/{id}/cancel`、`POST /api/build`、`GET /api/files/{sha}`（sha 只接受 64 位十六进制）、`GET /api/export/{md|pptx}`、`GET|POST /api/reviews`（S5 起用）、`POST /api/restore/{version}`。接口以 S4 完成判断所需为限；手动采用被拒收结果的接口（对应 `deck run adopt`）随 S5 补；导出只列出缺失和过期的页，不拦截（见 2.1、3.6）。
 
 界面使用 #250 的新版 WebUI（React 18 + Vite，`frontend/`，设计为 S00–S07 八个工作区与 U01–U05 五个共用容器）。#250 目前是不调用任何接口的演示稿，数据在 `constants/data.js` 里。
 
-S4 必须能用的最低要求：整稿浏览（原图、预览、过期标记）、改正文与讲稿（冲突时保留作者输入）、run 状态与停止、构建与下载、版本历史与恢复。S4 只接通支撑这几项以及第 7 节完成判断的界面，其余保持 `[演示]`、`[待联调]`、`[等待前置]` 标注。依赖 S5 的部分（页上意见、单页重做、候选比较）在 S5 后接入。以下不接，保持演示或不做：S00 所有项目矩阵（服务一次只服务一个项目，没有项目列表接口）、S04 的阶段推进状态与规范检测列表、S06 的身份切换、S05 的导出门禁交互。旧线 v2 的 api.js、images.js、collaboration-desk 及依赖它的 insight-reading、evidence-reading 不迁移。
+S4 必须能用的最低要求：整稿浏览（原图、预览、过期标记）、改正文与讲稿（冲突时保留作者输入）、run 状态与停止、构建与下载、版本历史与恢复。S4 只接通支撑这几项以及第 7 节完成判断的界面，其余界面在 S4 里隐藏入口，或置灰且不显示假数据；#250 `constants/data.js` 里的演示数据不得与真实作品同屏出现。依赖 S5 的部分（页上意见、单页重做、候选比较）在 S5 后接入。以下不接，隐藏或不做：S00 所有项目矩阵（服务一次只服务一个项目，没有项目列表接口）、S04 的阶段推进状态与规范检测列表、S06 的身份切换、S05 的导出门禁交互。旧线 v2 的 api.js、images.js、collaboration-desk 及依赖它的 insight-reading、evidence-reading 不迁移。
 
 顺序与 PR：S4 拆成两个 PR。先做 `deck serve` 与上述接口（含静态文件服务）并合入；#250 在接口可联调后由老板决定合入；再在 `frontend/` 上接数据层。
 
-构建与分发：`deck serve` 提供构建后的前端静态文件，随二进制发布，不依赖磁盘上的相对路径（`cargo install --path rust` 之后也能用）；嵌入方式与依赖在 S4 开工时定。S4 把 `npm ci` 与 `vite build` 加入 `rust.yml` 和 AGENTS.md 第 3 节的检查清单。开发期 Vite 通过代理访问 `deck serve`，不放宽 Host 与 Origin 检查。
+构建与分发：`deck serve` 提供构建后的前端静态文件，随二进制发布，不依赖磁盘上的相对路径（`cargo install --path rust` 之后也能用）；嵌入方式与依赖在 S4 开工时定。S4 把 `npm ci` 与 `vite build` 加入 `rust.yml` 和 AGENTS.md 第 3 节的检查清单。开发期 Vite 通过代理访问 `deck serve`，代理改写 Host 与 Origin 并读取 `deck serve` 启动时打印的地址，不放宽 Host 与 Origin 检查。
 
 ### 3.8 错误
 
@@ -294,7 +294,7 @@ Host 按需读取：`deck show`（摘要）、`deck get --pages p3,p4`（指定�
 
 ## 7. 切片
 
-每个切片一个 PR，从 origin/main 开分支、合回 main，做法见 AGENTS.md 第 4 节。deck-tools 可以与 S1、S2 并行开发。表中的"完成判断"是可以直接观察的行为；没做到的记在 PR 里，不阻止后续切片开工。
+每个切片一个 PR（S4 例外，分两步提交，见 3.7），从 origin/main 开分支、合回 main，做法见 AGENTS.md 第 4 节。deck-tools 可以与 S1、S2 并行开发。表中的"完成判断"是可以直接观察的行为；没做到的记在 PR 里，不阻止后续切片开工。
 
 | 切片 | 内容 | 完成判断 | 对应 issue |
 | --- | --- | --- | --- |
