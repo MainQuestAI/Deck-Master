@@ -1,6 +1,6 @@
 import { test, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { ApiError, getDeck, putDeck, cancelRun, buildDeck, exportDeck, fileUrl, mergeWorkspace, createDraft, draftPatch } from './api.js';
+import { ApiError, getDeck, putDeck, cancelRun, buildDeck, restoreVersion, exportDeck, fileUrl, mergeWorkspace, createDraft, draftPatch } from './api.js';
 
 const originalFetch = globalThis.fetch;
 afterEach(() => { globalThis.fetch = originalFetch; });
@@ -67,22 +67,70 @@ test('file URLs take the reference before its first dot without render-time vali
   assert.equal(fileUrl('invalid.jpg'), '/api/files/invalid');
 });
 
-test('requests time out after 15 seconds; builds allow 120 seconds', async (t) => {
+test('requests time out after 15 seconds', async (t) => {
   t.mock.timers.enable({ apis: ['setTimeout'] });
-  for (const [call, timeout] of [[getDeck, 15000], [buildDeck, 120000]]) {
-    let signal;
-    globalThis.fetch = async (_url, options) => {
-      signal = options.signal;
-      return new Promise((_resolve, reject) => signal.addEventListener('abort', () => reject(signal.reason), { once: true }));
-    };
-    const pending = call();
-    const rejected = assert.rejects(pending, /超时.*重试/);
-    t.mock.timers.tick(timeout - 1);
-    assert.equal(signal.aborted, false);
-    t.mock.timers.tick(1);
-    await rejected;
-    assert.equal(signal.aborted, true);
-  }
+  let signal;
+  globalThis.fetch = async (_url, options) => {
+    signal = options.signal;
+    return new Promise((_resolve, reject) => signal.addEventListener('abort', () => reject(signal.reason), { once: true }));
+  };
+  const rejected = assert.rejects(getDeck(), /超时.*重试/);
+  t.mock.timers.tick(14999);
+  assert.equal(signal.aborted, false);
+  t.mock.timers.tick(1);
+  await rejected;
+  assert.equal(signal.aborted, true);
+});
+
+test('builds remain pending beyond the default timeout and complete normally', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  let signal;
+  let finish;
+  globalThis.fetch = (url, options) => {
+    assert.equal(url, '/api/build');
+    assert.equal(options.method, 'POST');
+    signal = options.signal;
+    return new Promise((resolve, reject) => {
+      finish = resolve;
+      signal.addEventListener('abort', () => reject(signal.reason), { once: true });
+    });
+  };
+  const pending = buildDeck();
+  t.mock.timers.tick(15000);
+  assert.equal(signal.aborted, false);
+  t.mock.timers.tick(300000);
+  assert.equal(signal.aborted, false);
+  finish(Response.json({ id: 1 }));
+  assert.deepEqual(await pending, { id: 1 });
+});
+
+test('caller cancellation still aborts builds without a client timeout', async () => {
+  globalThis.fetch = async (_url, { signal }) => {
+    signal.throwIfAborted();
+    return new Promise((_resolve, reject) => signal.addEventListener('abort', () => reject(signal.reason), { once: true }));
+  };
+  const controller = new AbortController();
+  const rejected = assert.rejects(buildDeck(controller.signal), (error) => error.name === 'AbortError');
+  controller.abort();
+  await rejected;
+  await assert.rejects(buildDeck(controller.signal), (error) => error.name === 'AbortError');
+});
+
+test('restore timeout reports an unknown result and asks to refresh', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  globalThis.fetch = async (url, { method, signal }) => {
+    assert.equal(url, '/api/restore/2');
+    assert.equal(method, 'POST');
+    return new Promise((_resolve, reject) => signal.addEventListener('abort', () => reject(signal.reason), { once: true }));
+  };
+  const rejected = assert.rejects(restoreVersion(2), (error) => {
+    assert.match(error.message, /结果未知/);
+    assert.match(error.message, /刷新/);
+    assert.doesNotMatch(error.message, /重试/);
+    return true;
+  });
+  t.mock.timers.tick(15000);
+  await rejected;
 });
 
 test('timeout covers response content and caller cancellation still aborts polling', async (t) => {
