@@ -97,6 +97,8 @@ def _parse_svg(data: bytes, *, page_id: str, assets: dict[str, str] | None = Non
             if 'text_width' in base:
                 base['text_width'] *= sx
                 base['text_height'] *= sx
+                for run in base.get('runs', []):
+                    run['font_size'] *= sx
         elif kind in ('circle','ellipse') and abs(sx-sy)<1e-6 and abs(base['width']-base['height'])<1e-6 and abs(a*c+b*d)<1e-6:
             cx,cy=point(base['x']+base['width']/2,base['y']+base['height']/2)
             base.update(x=cx-base['width']*sx/2,y=cy-base['height']*sy/2,width=base['width']*sx,height=base['height']*sy)
@@ -276,6 +278,14 @@ def _parse_svg(data: bytes, *, page_id: str, assets: dict[str, str] | None = Non
                 raise SvgError(f'{page_id}/{identity}: empty text has no editable content to deliver')
             if el.get('data-text-width'):
                 # Explicit author bounds preserve a paragraph as one editable box.
+                base['runs'] = [dict(text=text,
+                    font_size=finite(a.get('font-size', 24), 'font-size'),
+                    font_family=a.get('font-family', 'Noto Sans SC').split(',')[0].strip(' \"\''),
+                    bold=a.get('font-weight', '400') in ('bold', '600', '700', '800', '900'),
+                    fill=gradient(a.get('fill', base['fill']), definitions, f'{page_id}/{identity}'),
+                    opacity=finite(a.get('opacity', base['opacity']), 'opacity'),
+                    fill_opacity=finite(a.get('fill-opacity', base['fill_opacity']), 'fill-opacity'))
+                    for text, a in runs]
                 text = ''.join(text for text, _ in runs)
                 runs = [(text, {**attrs, 'opacity': str(base['opacity'])})]
                 base['text_width'] = num('data-text-width')

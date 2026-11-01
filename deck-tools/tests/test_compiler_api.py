@@ -13,8 +13,60 @@ from PIL import ImageFont
 import deck_tools.compiler.native as native_emit
 from deck_tools.compiler import CompileOptions, SvgInput, compile_deck
 from hostenv import host_fonts, resolve_host_font
+from deck_tools.sanitize import pptx
+from deck_tools.render import readback
+from pptx import Presentation
+import io
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def test_editable_table_and_title_survive_delivery_cleanup(tmp_path):
+    family = resolve_host_font()
+    svg = tmp_path / 'editable.svg'
+    svg.write_text(f'''<svg viewBox="0 0 600 400" font-family="{family}" font-size="24">
+      <text id="标题" x="30" y="40" data-atom-id="atom:p1:title">方案比较</text>
+      <rect id="评分项" x="30" y="90" width="500" height="220" fill="none"
+            stroke="#333333" data-table-id="评分项" data-native-table="true"/>
+      <line x1="30" y1="160" x2="530" y2="160" stroke="#333333" data-table-id="评分项"/>
+      <line x1="300" y1="90" x2="300" y2="310" stroke="#333333" data-table-id="评分项"/>
+      <text x="50" y="130" data-table-id="评分项">评分项</text>
+      <text x="320" y="130" data-table-id="评分项">比较项</text>
+      <text x="50" y="200" data-table-id="评分项" data-text-width="230">
+        <tspan x="50" y="200" font-weight="700" fill="#AA0000">方案</tspan><tspan x="110" y="200">说明</tspan>
+      </text>
+      <text x="50" y="250" data-table-id="评分项">补充说明</text>
+      <text x="320" y="200" data-table-id="评分项">结果</text>
+      <line id="流程连线" x1="30" y1="350" x2="530" y2="350" stroke="#333333"
+            stroke-linecap="round" stroke-linejoin="bevel"/>
+    </svg>''')
+    result = compile_deck([SvgInput('p1', svg)],
+                          CompileOptions(width_px=600, height_px=400, fonts=host_fonts()),
+                          tmp_path / 'out')
+    source = json.loads(result.manifest_path.read_text())['pages']
+    assert readback(result.pptx_path, source, [{'page_id': 'p1', 'customer_visible': {'title': '方案比较'}}])['status'] == 'pass'
+    cleaned = pptx(result.pptx_path.read_bytes(), 'deck.pptx')
+    delivered = pptx(cleaned, 'deck.pptx')
+    slide = Presentation(io.BytesIO(delivered)).slides[0]
+    assert slide.shapes.title.text == '方案比较'
+    table = next(shape.table for shape in slide.shapes if shape.has_table)
+    assert table.first_row
+    assert table.cell(1, 0).text == '方案说明\n补充说明'
+    runs = table.cell(1, 0).text_frame.paragraphs[0].runs
+    assert runs[0].font.bold
+    assert str(runs[0].font.color.rgb) == 'AA0000'
+    assert not runs[1].font.bold
+    assert [shape.name for shape in slide.shapes] == [shape.name for shape in Presentation(io.BytesIO(cleaned)).slides[0].shapes]
+    assert '表格-评分项' in [shape.name for shape in slide.shapes]
+    ns = {'p': 'http://schemas.openxmlformats.org/presentationml/2006/main',
+          'a': 'http://schemas.openxmlformats.org/drawingml/2006/main'}
+    with zipfile.ZipFile(io.BytesIO(delivered)) as archive:
+        xml = archive.read('ppt/slides/slide1.xml')
+    root = ET.fromstring(xml)
+    assert root.find('.//p:graphicFrame', ns) is not None
+    line = root.find('.//p:sp/p:spPr/a:ln', ns)
+    assert line.get('cap') == 'rnd'
+    assert line.find('a:bevel', ns) is not None
 
 
 def test_compile_isolated_from_home_cwd_and_repo(monkeypatch, tmp_path):

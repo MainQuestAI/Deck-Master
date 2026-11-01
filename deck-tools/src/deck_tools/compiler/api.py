@@ -1,5 +1,6 @@
 """Explicit-runtime, SVG-derived native presentation compiler."""
 from dataclasses import dataclass, field
+from collections import Counter
 from pathlib import Path
 import math
 import hashlib
@@ -7,7 +8,7 @@ import json
 import subprocess
 import tempfile
 import zipfile
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from .svg import parse_svg
 
 @dataclass(frozen=True)
@@ -105,11 +106,29 @@ def _compile_prepared(inputs, options, output_dir, prepared=None):
                         continue
                     root = ET.fromstring(data)
                     spacing = {s['atom_id'] or s['id']: s.get('letter_spacing', 0) for s in page['shapes'] if s['kind'] == 'text'}
+                    stroke_names = Counter(s.get('atom_id') or s['id'] for s in page['shapes']
+                                           if s['kind'] not in ('text', 'image'))
+                    strokes = {s.get('atom_id') or s['id']: s for s in page['shapes']
+                               if s['kind'] not in ('text', 'image')
+                               and stroke_names[s.get('atom_id') or s['id']] == 1}
                     for shape in root.findall('.//p:sp', ns):
                         name = shape.find('p:nvSpPr/p:cNvPr', ns).get('name')
                         if spacing.get(name):
                             for props in shape.findall('.//a:rPr', ns) + shape.findall('.//a:defRPr', ns):
                                 props.set('spc', str(round(spacing[name] * min(options.width_px / page['width'], options.height_px / page['height']) * 75)))
+                        # Tables replace their SVG grid objects; bind surviving
+                        # strokes by identity, never by the changed shape order.
+                        source_shape = strokes.get(name)
+                        line = shape.find('p:spPr/a:ln', ns)
+                        if source_shape is not None and line is not None:
+                            caps = {'butt': 'flat', 'round': 'rnd', 'square': 'sq'}
+                            line.set('cap', caps[source_shape['stroke_linecap']])
+                            for old in list(line):
+                                if ET.QName(old).localname in ('miter', 'round', 'bevel'):
+                                    line.remove(old)
+                            join = ET.SubElement(line, '{' + ns['a'] + '}' + source_shape['stroke_linejoin'])
+                            if source_shape['stroke_linejoin'] == 'miter':
+                                join.set('lim', str(round(source_shape['stroke_miterlimit'] * 100000)))
                     data = ET.tostring(root, encoding='utf-8', xml_declaration=True)
                 dest.writestr(info, data)
         for item, page in zip(inputs, pages):

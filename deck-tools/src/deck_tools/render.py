@@ -10,6 +10,7 @@ import subprocess
 import sys
 import zipfile
 import xml.etree.ElementTree as ET
+from copy import deepcopy
 from .atoms import visible_atoms
 class NeedsTool(RuntimeError):
     pass
@@ -39,7 +40,10 @@ def run(args, **kwargs):
 def resolve_fonts(pages):
     fonts={}
     for page in pages:
-        for shape in page['shapes']:
+        for shape in [run for source in page['shapes']
+                      for run in [source, *source.get('runs', [])]]:
+            if 'kind' not in shape:
+                shape = {**shape, 'kind': 'text'}
             if shape['kind']!='text':continue
             name=shape['font_family'];key=name+(':bold' if shape['bold'] else '')
             if key in fonts:continue
@@ -125,18 +129,48 @@ def readback(pptx_path,pages,expected_pages):
                 findings.append({'page_id':page['page_id'],'code':'missing_slide'})
                 continue
             root=ET.fromstring(z.read(slide_path))
-            root = _table_readback(root, source)
             texts=[e.text or '' for e in root.findall('.//a:t',ns)]
             joined=normalize(''.join(texts))
-            svg_texts=[s['text'] for s in source['shapes'] if s['kind']=='text']
-            if texts!=svg_texts:findings.append({'page_id':page['page_id'],'code':'svg_ppt_text_mismatch'})
+            tables = {s['table_id'] for s in source['shapes'] if s.get('native_table')}
+            for graphic in root.findall('.//p:graphicFrame', ns):
+                table_id = graphic.find('p:nvGraphicFramePr/p:cNvPr', ns).get('name')
+                if table_id not in tables:
+                    continue
+                members = [s for s in source['shapes'] if s.get('table_id') == table_id]
+                frame = next(s for s in members if s.get('native_table'))
+                xs = sorted({frame['x'], frame['x'] + frame['width'],
+                             *(s['points'][0][0] for s in members if s['kind'] == 'line'
+                               and s['points'][0][0] == s['points'][1][0])})
+                ys = sorted({frame['y'], frame['y'] + frame['height'],
+                             *(s['points'][0][1] for s in members if s['kind'] == 'line'
+                               and s['points'][0][1] == s['points'][1][1])})
+                for r, row in enumerate(graphic.findall('.//a:tbl/a:tr', ns)):
+                    for c, cell in enumerate(row.findall('a:tc', ns)):
+                        expected = sorted((s for s in members if s['kind'] == 'text'
+                                           and r + 1 < len(ys) and c + 1 < len(xs)
+                                           and xs[c] <= s['x'] < xs[c + 1] and ys[r] <= s['y'] < ys[r + 1]),
+                                          key=lambda s: (s['y'], s['x']))
+                        actual = ''.join(t.text or '' for t in cell.findall('.//a:t', ns))
+                        if normalize(actual) != normalize(''.join(s['text'] for s in expected)):
+                            findings.append({'page_id': page['page_id'], 'code': 'svg_ppt_text_mismatch', 'element': table_id})
+            # Legacy geometry checks apply to drawn grids, not native cells.
+            # Read native table text above without manufacturing shape XML.
+            checked_source = {**source, 'shapes': [s for s in source['shapes'] if s.get('table_id') not in tables]}
+            checked_page = deepcopy(page)
+            checked_page['customer_visible']['body_blocks'] = [b for b in page['customer_visible'].get('body_blocks', [])
+                                                               if b.get('id') not in tables]
+            svg_texts = [s['text'] for s in checked_source['shapes'] if s['kind'] == 'text']
+            native_texts = [''.join(t.text or '' for t in sp.findall('.//a:t', ns))
+                            for sp in root.findall('.//p:sp', ns) if sp.findall('.//a:t', ns)]
+            if native_texts != svg_texts:
+                findings.append({'page_id':page['page_id'],'code':'svg_ppt_text_mismatch'})
             for atom in visible_atoms(page):
                 if atom.get('text') and normalize(atom['text']) not in joined:
                     findings.append({'page_id':page['page_id'],'code':'missing_visible_atom','atom_id':atom['atom_id'],'text':atom['text']})
             from .readback_text import _check_required_text
-            findings.extend(_check_required_text(root, source, page))
+            findings.extend(_check_required_text(root, checked_source, checked_page))
             from .readback_relations import check_native_relations
-            findings.extend(check_native_relations(root, source, page))
+            findings.extend(check_native_relations(root, checked_source, checked_page))
             # AC-K10: real text overflow — a shape box leaving the slide bounds.
             for sp in root.findall('.//p:sp',ns):
                 name_node=sp.find('p:nvSpPr/p:cNvPr',ns)
@@ -245,112 +279,3 @@ def readback(pptx_path,pages,expected_pages):
     return {'status':'fail' if findings else 'pass','findings':findings,'pages':stats,
             'notes': actual_notes, 'notes_newlines': 'LF',
             'visual_review':'not_evaluated','desktop_editing':'not_evaluated'}
-
-
-
-def _table_readback(root, source):
-    """Expose actual native table cells to the existing text/geometry reader."""
-    import copy
-    ns = {'p': 'http://schemas.openxmlformats.org/presentationml/2006/main',
-          'a': 'http://schemas.openxmlformats.org/drawingml/2006/main'}
-    def node(prefix, tag, attrs=None):
-        return ET.Element('{' + ns[prefix] + '}' + tag, attrs or {})
-    for graphic in list(root.findall('.//p:graphicFrame', ns)):
-        table = graphic.find('a:graphic/a:graphicData/a:tbl', ns)
-        if table is None:
-            continue
-        name = graphic.find('p:nvGraphicFramePr/p:cNvPr', ns).get('name')
-        members = [s for s in source['shapes'] if s.get('table_id') == name]
-        frame = next((s for s in members if s.get('native_table') and s.get('table_frame')), None)
-        if frame is None:
-            continue
-        transform = graphic.find('p:xfrm', ns)
-        x = int(transform.find('a:off', ns).get('x'))
-        y = int(transform.find('a:off', ns).get('y'))
-        xs = [x]
-        ys = [y]
-        for col in table.findall('a:tblGrid/a:gridCol', ns):
-            xs.append(xs[-1] + int(col.get('w')))
-        rows = table.findall('a:tr', ns)
-        for row in rows:
-            ys.append(ys[-1] + int(row.get('h')))
-        old_xs = sorted({frame['x'], frame['x'] + frame['width'],
-                         *(s['points'][0][0] for s in members if s['kind'] == 'line'
-                           and s['points'][0][0] == s['points'][1][0])})
-        old_ys = sorted({frame['y'], frame['y'] + frame['height'],
-                         *(s['points'][0][1] for s in members if s['kind'] == 'line'
-                           and s['points'][0][1] == s['points'][1][1])})
-        parent = next(p for p in root.iter() if graphic in list(p))
-        position = list(parent).index(graphic)
-        for index, original in enumerate(members):
-            sp = node('p', 'sp')
-            nv = node('p', 'nvSpPr')
-            nv.append(node('p', 'cNvPr', {'id': str(100000 + index),
-                                         'name': original.get('atom_id') or original['id']}))
-            sp.append(nv)
-            props = node('p', 'spPr')
-            sp.append(props)
-            if original['kind'] == 'text':
-                c = next(i for i in range(len(old_xs) - 1) if old_xs[i] <= original['x'] < old_xs[i + 1])
-                r = next(i for i in range(len(old_ys) - 1) if old_ys[i] <= original['y'] < old_ys[i + 1])
-                if r >= len(rows) or c >= len(xs) - 1:
-                    continue
-                cells = rows[r].findall('a:tc', ns)
-                if c >= len(cells):
-                    continue
-                cell = cells[c]
-                body = copy.deepcopy(cell.find('a:txBody', ns))
-                body.tag = '{' + ns['p'] + '}txBody'
-                sp.append(body)
-                cp = cell.find('a:tcPr', ns)
-                ml = int(cp.get('marL', '91440'))
-                mr = int(cp.get('marR', '91440'))
-                mt = int(cp.get('marT', '45720'))
-                mb = int(cp.get('marB', '45720'))
-                left, top = xs[c] + ml, ys[r] + mt
-                width, height = xs[c + 1] - left - mr, ys[r + 1] - top - mb
-            else:
-                border = table.find('a:tr/a:tc/a:tcPr/a:lnL', ns)
-                if border is None:
-                    continue
-                line = copy.deepcopy(border)
-                line.tag = '{' + ns['a'] + '}ln'
-                props.append(line)
-                if original.get('table_frame'):
-                    left, top = xs[0], ys[0]
-                    width, height = xs[-1] - left, ys[-1] - top
-                    geom = node('a', 'prstGeom', {'prst': 'rect'})
-                    geom.append(node('a', 'avLst'))
-                    props.insert(0, geom)
-                else:
-                    points = original['points']
-                    vertical = points[0][0] == points[1][0]
-                    if vertical:
-                        c = old_xs.index(points[0][0])
-                        if c >= len(xs):
-                            continue
-                        left, top, width, height = xs[c], ys[0], 0, ys[-1] - ys[0]
-                    else:
-                        r = old_ys.index(points[0][1])
-                        if r >= len(ys):
-                            continue
-                        left, top, width, height = xs[0], ys[r], xs[-1] - xs[0], 0
-                    geom = node('a', 'custGeom')
-                    paths = node('a', 'pathLst')
-                    path = node('a', 'path', {'w': str(max(1, width)), 'h': str(max(1, height))})
-                    for op, px, py in [('moveTo', 0, 0), ('lnTo', width, height)]:
-                        command = node('a', op)
-                        command.append(node('a', 'pt', {'x': str(px), 'y': str(py)}))
-                        path.append(command)
-                    paths.append(path)
-                    geom.append(paths)
-                    props.insert(0, geom)
-                    width, height = max(1, width), max(1, height)
-            xfrm = node('a', 'xfrm')
-            xfrm.append(node('a', 'off', {'x': str(left), 'y': str(top)}))
-            xfrm.append(node('a', 'ext', {'cx': str(width), 'cy': str(height)}))
-            props.insert(0, xfrm)
-            parent.insert(position, sp)
-            position += 1
-        parent.remove(graphic)
-    return root

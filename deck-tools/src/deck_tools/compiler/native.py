@@ -15,6 +15,17 @@ import hashlib
 import copy
 
 
+def _role_name(source, page_id):
+    if source.get('atom_id') == f'atom:{page_id}:title':
+        return '标题'
+    if source.get('atom_id') == f'atom:{page_id}:subtitle':
+        return '副标题'
+    role = {'text': '正文', 'image': '图片', 'line': '连线',
+            'path': '图形', 'polygon': '箭头', 'polyline': '连线',
+            'rect': '底板', 'circle': '图形', 'ellipse': '图形'}[source['kind']]
+    return f"{source.get('group') + '-' if source.get('group') else ''}{role}-{source['id']}"
+
+
 def normalize_notes(text):
     """Normalize transport newlines only; never trim speech or blank paragraphs."""
     if not isinstance(text, str):
@@ -157,6 +168,7 @@ def emit(pages, width, height, fonts, output):
                     with Image.open(s['asset_path']) as raster:iw,ih=raster.size
                     ratio=min(w/iw,h/ih);x+=(w-iw*ratio)/2;y+=(h-ih*ratio)/2;w=iw*ratio;h=ih*ratio
                 sh=slide.shapes.add_picture(s['asset_path'],X(x),Y(y),S(w),S(h));sh.name=s.get('atom_id') or s['id']
+                sh._element.nvPicPr.cNvPr.set('title', _role_name(s, page['page_id']))
                 native_by_source[id(s)] = sh
                 if s['fit']=='cover':
                     with Image.open(s['asset_path']) as raster:iw,ih=raster.size
@@ -167,8 +179,15 @@ def emit(pages, width, height, fonts, output):
                 family=s['font_family'];key=family+(':bold' if s['bold'] else '')
                 filename=fonts.get(key,fonts.get(family))
                 if not filename:raise ValueError(f"{page['page_id']}/{s['id']}: font file not supplied: {key}")
-                font=ImageFont.truetype(str(filename),size=1000)
-                text_width=font.getlength(s['text'])/1000*s['font_size']+max(0,len(s['text'])-1)*s.get('letter_spacing',0)
+                text_width = 0
+                for text_run in s.get('runs', [s]):
+                    run_key = text_run['font_family'] + (':bold' if text_run['bold'] else '')
+                    run_file = fonts.get(run_key) or fonts.get(text_run['font_family'])
+                    if not run_file:
+                        raise ValueError(f"{page['page_id']}/{s['id']}: font file not supplied: {run_key}")
+                    run_font = ImageFont.truetype(str(run_file), size=1000)
+                    text_width += run_font.getlength(text_run['text']) / 1000 * text_run['font_size']
+                text_width += max(0, len(s['text']) - 1) * s.get('letter_spacing', 0)
                 w=s.get('text_width', text_width+s['font_size']*1.0)
                 anchor=s['x']
                 # The extra glyph of slack keeps Office from clipping text, but
@@ -201,13 +220,19 @@ def emit(pages, width, height, fonts, output):
                     bullet = OxmlElement('a:buChar')
                     bullet.set('char', '•')
                     props.append(bullet)
-                run=p.add_run();run.text=s['text']
-                props=run._r.get_or_add_rPr()
-                # Fill properties must precede latin/ea/cs in a:rPr.
-                paint(props,s['fill'],s['opacity']*s['fill_opacity'])
-                run.font.size=Pt(s['font_size']*k*.75);run.font.name=family;run.font.bold=s['bold']
-                for name in ('ea','cs'):
-                    e=OxmlElement('a:'+name);e.set('typeface',family);props.append(e)
+                for text_run in s.get('runs', [s]):
+                    run = p.add_run()
+                    run.text = text_run['text']
+                    props = run._r.get_or_add_rPr()
+                    # Fill properties must precede latin/ea/cs in a:rPr.
+                    paint(props, text_run['fill'], text_run['opacity'] * text_run['fill_opacity'])
+                    run.font.size = Pt(text_run['font_size'] * k * .75)
+                    run.font.name = text_run['font_family']
+                    run.font.bold = text_run['bold']
+                    for name in ('ea', 'cs'):
+                        element = OxmlElement('a:' + name)
+                        element.set('typeface', text_run['font_family'])
+                        props.append(element)
                 # Letter spacing is written once by the api.py post-pass, which
                 # keys on the shape name for both native and node emitters.
             elif s['kind'] in ('rect','circle','ellipse'):
@@ -239,7 +264,7 @@ def emit(pages, width, height, fonts, output):
             if s.get('rotation'):sh.rotation=s['rotation']
             sh.name=s.get('atom_id') or s['id']
             identity = sh._element.nvSpPr.cNvPr
-            identity.set('title', s.get('text', s['id'])[:60])
+            identity.set('title', _role_name(s, page['page_id']))
             if s.get('atom_id') == f"atom:{page['page_id']}:title":
                 placeholder = OxmlElement('p:ph')
                 placeholder.set('type', 'title')
@@ -286,9 +311,9 @@ def _editable_tables(slide, page, X, Y, S, native_by_source):
         shape = slide.shapes.add_table(len(ys) - 1, len(xs) - 1,
                                       X(left), Y(top), S(right - left), S(bottom - top))
         shape.name = table_id
-        shape._element.nvGraphicFramePr.cNvPr.set('title', '对照表')
+        shape._element.nvGraphicFramePr.cNvPr.set('title', '表格-' + (frame['id'] if frame['id'] != 'rect' else table_id))
         table = shape.table
-        table.first_row = False
+        table.first_row = True
         table.horz_banding = False
         for col, (a, b) in zip(table.columns, zip(xs, xs[1:])):
             col.width = S(b - a)
@@ -311,10 +336,14 @@ def _editable_tables(slide, page, X, Y, S, native_by_source):
                 texts = [s for s in members if s['kind'] == 'text'
                          and xs[c] <= s['x'] < xs[c + 1] and ys[r] <= s['y'] < ys[r + 1]]
                 if texts:
+                    texts.sort(key=lambda text: (text['y'], text['x']))
                     original = originals[id(texts[0])]
                     body = copy.deepcopy(original._element.txBody)
                     body.tag = '{http://schemas.openxmlformats.org/drawingml/2006/main}txBody'
                     body.find('{http://schemas.openxmlformats.org/drawingml/2006/main}bodyPr').set('wrap', 'square')
+                    for text in texts[1:]:
+                        for paragraph in originals[id(text)]._element.txBody.p_lst:
+                            body.append(copy.deepcopy(paragraph))
                     cell._tc.replace(cell._tc.txBody, body)
         elements = [originals[id(s)]._element for s in members]
         first = min(slide.shapes._spTree.index(e) for e in elements)

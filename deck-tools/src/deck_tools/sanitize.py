@@ -390,7 +390,9 @@ def _clean_pptx(data, where, *, keep_notes=False, page_ids=None):
                         text_safe(readable_name, where + "/shape-name")
                         for key in ("name", "descr", "title"):
                             parent.attrib.pop(key, None)
-                        parent.set("name", readable_name or "Shape " + parent.get("id", ""))
+                        parent.set("name", readable_name or "形状-" + parent.get("id", ""))
+                        # Keep the scrubbed role through a later export pass.
+                        parent.set("title", parent.get("name"))
                     if local == "cSld":
                         stable_name = parent.get('name')
                         parent.attrib.pop("name", None)
