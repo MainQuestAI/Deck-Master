@@ -51,6 +51,26 @@ uv pip install --python .venv/bin/python -e ".[dev]"
 
 安装后的统一命令入口是 `deck-master ...`；源码环境中也可用 `python -m deck_master ...`。激活发行版本时会注册 Master、Content、Design、Review 四个 Codex Skill，详见[安装说明](skills/deck-master/references/installation.md)。
 
+## 新装
+
+从源码同时安装 Rust 命令、生产工具和 Codex Skill：
+
+```bash
+./scripts/install.sh
+```
+
+脚本会构建 Web UI，把 `deck` 装到 `~/.local/bin`，用 Python 3.12 在
+`~/.local/share/deck/venv` 建立独立的 deck-tools 环境，并把 `deck-skill/`
+链接到 `~/.codex/skills/deck`。不执行托管安装的激活或回滚。
+
+可选参数：`--prefix DIR`、`--skill-dir PATH`、`--dry-run`。若
+`~/.local/bin` 不在 PATH 中，请加入，或用该目录下 `deck` 的完整路径。
+Skill 路径必须是新的，或已经是指向本仓库 `deck-skill/` 的同一链接；已有
+其他文件或链接时脚本报错，不会覆盖。
+
+安装后用 `deck new ./my-deck --title '方案标题'` 新建作品目录。链接的
+Skill 说明首跑命令。
+
 ## 快速开始
 
 使用自己的完整材料与任务说明。以下命令分阶段执行；请用实际返回 Task 中的 ID 和 hash 替换占位符，不能直接将尖括号内容作为参数。

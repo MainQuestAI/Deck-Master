@@ -88,6 +88,27 @@ The only command surface is the rebuilt CLI: `deck-master ...` after install,
 or `python -m deck_master ...` from a source checkout. Release activation also
 registers all four Codex Skills (Master, Content, Design, Review); see [installation](skills/deck-master/references/installation.md).
 
+## New install
+
+The Rust CLI, file tools, and Codex skill install from a source checkout:
+
+```bash
+./scripts/install.sh
+```
+
+The script builds the Web UI, installs `deck` into `~/.local/bin`, creates a
+Python 3.12 venv for `deck-tools` at `~/.local/share/deck/venv`, and links
+`deck-skill/` to `~/.codex/skills/deck`. It does not activate or roll back a
+managed release.
+
+Options: `--prefix DIR`, `--skill-dir PATH`, `--dry-run`. If
+`~/.local/bin` is not on `PATH`, add it or call that `deck` by its full path.
+The skill path must be new, or already the same link; the script leaves a
+different file or link unchanged and exits with an error.
+
+After install, `deck new ./my-deck --title '方案标题'` creates a work
+directory. The linked skill describes the first-run commands.
+
 ## Quick Start
 
 Use your own complete material and brief. The commands below are staged:

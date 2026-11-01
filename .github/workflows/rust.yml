@@ -52,3 +52,15 @@ jobs:
       - name: File tool tests
         # The runner lacks rsvg-convert/soffice; render tests run locally only.
         run: .venv/bin/python -m pytest -q deck-tools/tests -m "not render" --basetemp="$RUNNER_TEMP/deck-tools"
+      - name: Install script
+        run: |
+          python -m pip install uv
+          .venv/bin/python -m pytest -q tests/install --basetemp="$RUNNER_TEMP/install-script"
+          bash scripts/install.sh --dry-run --prefix "$RUNNER_TEMP/deck-prefix" --skill-dir "$RUNNER_TEMP/codex-skills/deck"
+          bash scripts/install.sh --prefix "$RUNNER_TEMP/deck-prefix" --skill-dir "$RUNNER_TEMP/codex-skills/deck"
+          test -x "$RUNNER_TEMP/deck-prefix/bin/deck"
+          test -x "$RUNNER_TEMP/deck-prefix/share/deck/venv/bin/python"
+          "$RUNNER_TEMP/deck-prefix/share/deck/venv/bin/python" -c "import deck_tools"
+          test -L "$RUNNER_TEMP/codex-skills/deck"
+          test "$(readlink "$RUNNER_TEMP/codex-skills/deck")" = "${{ github.workspace }}/deck-skill"
+          "$RUNNER_TEMP/deck-prefix/bin/deck" --help >/dev/null
