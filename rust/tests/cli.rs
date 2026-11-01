@@ -21,6 +21,27 @@ fn output_json(output: Output) -> Value {
 }
 
 #[test]
+fn serve_rejects_project_option_before_or_after_subcommand() {
+    let without_option = Command::new(env!("CARGO_BIN_EXE_deck"))
+        .args(["serve", "synthetic"])
+        .output()
+        .unwrap();
+    for args in [
+        ["serve", "synthetic", "--project", "other"],
+        ["--project", "other", "serve", "synthetic"],
+    ] {
+        let output = Command::new(env!("CARGO_BIN_EXE_deck"))
+            .args(args)
+            .output()
+            .unwrap();
+        assert_eq!(output.status.code(), Some(2));
+        assert!(output.stdout.is_empty());
+        assert!(!output.stderr.is_empty());
+        assert_ne!(output.stderr, without_option.stderr);
+    }
+}
+
+#[test]
 fn cli_partial_edit_conflict_and_markdown_export() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path();
@@ -116,6 +137,11 @@ fn material_add_uses_real_python_tool_preserves_original_and_deduplicates() {
             .unwrap()
             .len(),
         1
+    );
+    std::fs::remove_file(text["path"].as_str().unwrap()).unwrap();
+    assert_eq!(
+        command(path, &["material", "text", "m1"]).status.code(),
+        Some(2)
     );
 }
 

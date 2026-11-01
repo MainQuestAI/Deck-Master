@@ -70,9 +70,9 @@ deck-tools/           Python 包 deck_tools（第 4 节）
 deck-skill/           新 Skill（第 6 节）
 ```
 
-- Rust stable，edition 2024，提交 Cargo.lock。依赖：clap、serde、serde_json、rusqlite（bundled）、axum、tokio、thiserror、sha2、tempfile。
+- Rust stable，edition 2024，提交 Cargo.lock。依赖：clap、serde、serde_json、rusqlite（bundled）、tiny_http、thiserror、sha2、tempfile。本地服务用同步请求线程，不引入异步运行时。
 - 先在一个包内按文件分模块，出现真实需要时再拆。
-- `rust.yml` 独立执行 AGENTS.md 第 3 节的 Rust 检查与 deck-tools pytest，在 PR 和 `main` push 上自动运行；`rebuild.yml` 执行旧线检查，只在 `main` push 后自动运行，旧线的 PR 在合并前本地执行第 3 节的命令。两者都保留手动入口，功能分支 push 不单独触发 CI。
+- `rust.yml` 在 PR 和 `main` push 上自动执行 AGENTS.md 第 3 节的 Rust 检查与 deck-tools pytest；pytest 用 `-m "not render"` 排除 67 条需要 rsvg-convert/soffice 的用例，合并前须在本机全量运行。`rebuild.yml` 执行旧线检查，只在 `main` push 后自动运行，旧线的 PR 在合并前本地执行第 3 节的命令。两者都保留手动入口，功能分支 push 不单独触发 CI。
 - 旧线按本次主干更新的 before/head 差异分流：只涉及 `rust/`、`deck-tools/`、`deck-skill/`、本开发稿目录或 `rust.yml` 时，跳过旧线测试并由 Group report 返回不适用；其他或混合路径仍执行旧线单元、渲染、浏览器和安装验证。日常单元使用 Python 3.12 / Node 22，手动触发时运行完整 2×2 矩阵。分流失败、适用检查失败或意外跳过，Group report 均返回失败。
 
 ### 3.2 存储
@@ -148,7 +148,7 @@ deck-skill/           新 Skill（第 6 节）
 
 - `show` 返回 `{version, title, thesis, materials, pages, history}`。materials 只有 `id/name/status`；pages 只有 `id/title/purpose/todo`，不展开正文；history 按新到旧列出 `id/created_at/summary`。
 - `get` 返回 `{version, deck}`，deck 是 §3.3 的完整作品，另带从 pages 计算出的 `order: [page_id, ...]`。`get --pages p3,p4` 保留 brief、materials、framing、style，只返回选中的页，并省略 order，防止局部改稿误删未读取的页。
-- `put --base N file.json` 接受 deck 对象，也接受 get 的完整输出。顶层可以只交 brief、framing、style、order 或 pages；brief、framing、style 各自是完整单元，省略的内部字段按空值或默认值处理。pages 是带 id 的页列表，每页省略的作者字段沿用基线；同页作者字段仍作为一个单元比较。materials、image、svg、preview 即使回传也不写入。成功返回 `{version, deck}`；发生冲突时退出码为 5，stderr 中附 `{unit, current}` 列表。
+- `put --base N file.json` 接受 deck 对象，也接受 get 的完整输出。顶层可以只交 brief、framing、style、order 或 pages；brief、framing、style 各自是完整单元，省略的内部字段按空值或默认值处理。pages 是带 id 的页列表，每页省略的作者字段沿用基线；同页作者字段仍作为一个单元比较。materials、image、svg、preview 即使回传也不写入。补丁带 content 时，`put` 会静默整理中文与数字、标点之间多余的空格，含英文名的版本号后的空格保留（如“Windows 11 专业版”；notes、表格 value 及其 display_text 不动），没有独立命令或校验。成功返回 `{version, deck}`；发生冲突时退出码为 5，stderr 中附 `{unit, current}` 列表。
 - 新增页必须同时交该页及包含它的 order；删除页必须同时交该页（`{id}` 即可）及去掉它的 order；只重排时交 order 即可。块、条目、列、行和单元格的 id 由保存补齐或去重，表格列引用随之修正。
 - `material add <file>` 保存原件，再从该不可变副本解析，返回 `{version, material, extraction}`。extraction 保留工具的 text、locators、tables、image_pages、detail、status；`pending_visual` 表示 Host 仍须读图，material 的 `read` 只表示文件已解析。缺解析工具时保留原件并记录 `needs_tool`，退出码为 3；安装工具后重新 add 可补齐文本。相同文件重复加入不新增材料或版本。
 - `material text <id>` 返回 `{id, status, path}`，path 是抽取文本的本地路径；未完成解析时退出码为 3。持久作品只记录相对文件名，不记录材料源路径。
@@ -180,7 +180,7 @@ svg 类没有外部付费调用，不需要 `run call`，也没有 max_calls。�
 - `deck build`：取每页当前的 SVG，调用 `deck_tools build`（编译、回读、清洗），并记录输入摘要：页序，加每页 svg 与 notes 的哈希。缺 SVG 的页不进入 PPTX；SVG 已过期的页照常编入，回读会报出文字不一致。
 - `deck export md`：任何时候都可以导出可读稿，包括未完成的作品，待补项照常显示。
 - `deck export pptx`：给出最近一次构建。该构建的输入摘要与当前作品不一致时给出提示。不用版本号判断，因为 restore 会产生编号更大、内容更旧的版本。
-- build 和 export 的输出里，以及界面的下载按钮旁，都列出缺 SVG 的页和 SVG 已过期的页。
+- build 和 export 的输出里，以及界面的下载按钮旁，都列出缺 SVG 的页和 SVG 已过期的页。界面取 `POST /api/build` 的响应或轮询得到的 `artifact_status`。
 - 编译只在执行 `deck build` 时发生。读取、摘要、列表都不会触发编译。
 - 构建是一次本地命令，需要中断时用 Ctrl-C，不经过 run 机制。
 
@@ -199,6 +199,16 @@ S4 必须能用的最低要求：整稿浏览（原图、预览、过期标记�
 顺序与 PR：S4 拆成两个 PR。先做 `deck serve` 与上述接口（含静态文件服务）并合入；#250 在接口可联调后由老板决定合入；再在 `frontend/` 上接数据层。
 
 构建与分发：`deck serve` 提供构建后的前端静态文件，随二进制发布，不依赖磁盘上的相对路径（`cargo install --path rust` 之后也能用）；嵌入方式与依赖在 S4 开工时定。S4 把 `npm ci` 与 `vite build` 加入 `rust.yml` 和 AGENTS.md 第 3 节的检查清单。开发期 Vite 通过代理访问 `deck serve`，代理改写 Host 与 Origin 并读取 `deck serve` 启动时打印的地址，不放宽 Host 与 Origin 检查。
+
+首个后端 PR 使用 `rust/web-dist/` 作为静态构建目录，当前仅含占位首页；`build.rs` 用标准库遍历目录，生成 `include_bytes!` 资源表，不增加嵌入依赖。前端 PR 再接入构建、CI 与上述命令清单。Host 只接受 `127.0.0.1:<本次端口>` 或 `localhost:<本次端口>`；Origin 可以省略，提供时只接受对应的 `http://` 本机地址。重复 Host/Origin 也拒绝，不返回 CORS 放行头。
+
+后端接口供前端联调的返回形状：
+
+- `GET /api/deck` 返回 `{version, deck, artifact_status, runs, history}`，在同一 SQLite 只读事务中读取。`artifact_status` 含 `missing_pages/stale_pages/stale_images`；runs 含每页状态、未采用原因及 `result_file`，不含本地工作路径；history 按新到旧列出 `id/created_at/summary`。run 状态独立于作品版本变化，轮询时应同时刷新。
+- PUT 请求体是裸 patch（与 put 的 patch 相同，不接受 `{deck:…}` 包装），成功返回 `{version, deck}`。冲突返回 HTTP 409 与 `{exit_code:5, base, submitted, conflicts:[{unit,current}]}`，整次不写入；`submitted` 原样保留裸 patch，界面也须保留编辑输入。
+- `POST /api/build` 返回 `{id, url, findings, missing_pages, stale_pages}`，url 是该次构建文件的 `/api/files/<sha>`。`GET /api/files/<sha>` 只在当前项目的 files 目录内查找，含扩展名的存储引用取点号前的 sha 用于 URL；文件响应禁止脚本执行。
+- `GET /api/export/md` 与 `GET /api/export/pptx` 直接返回下载内容，文件名为 `deck.md/deck.pptx`。`X-Deck-Status` 是 JSON（非 ASCII 字符使用 JSON 转义），含 `missing_pages/stale_pages`；PPTX 另含 `id/input_changed/warning/build_missing_pages`。
+- cancel 返回 `{runs:[目标 run]}`，restore 返回 `{version, deck}`。输入错误为 HTTP 400；非本机请求 403；文件或接口不存在 404；缺工具 503；工具执行失败 500。错误响应含 `error`，仅 HTTP 409 冲突附带 CLI `exit_code:5`。
 
 ### 3.8 错误
 

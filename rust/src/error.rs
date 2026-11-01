@@ -13,6 +13,8 @@ pub struct Conflict {
 pub enum Error {
     #[error("输入有误：{0}")]
     Input(String),
+    #[error("附件 {0} 不存在;请先添加附件")]
+    Missing(String),
     #[error("缺少依赖：{0}")]
     NeedsTool(String),
     #[error("工具执行失败：{0}")]
