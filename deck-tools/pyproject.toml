@@ -7,10 +7,16 @@ name = "deck-tools"
 version = "0.1.0"
 description = "Standalone file tools for Deck Master"
 requires-python = ">=3.11,<3.14"
-dependencies = ["python-pptx>=1.0"]
+dependencies = ["python-pptx>=1.0", "Pillow>=10", "lxml>=5"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+deck_tools = ["resources/icons/lucide/*"]
+
+[tool.pytest.ini_options]
+markers = ["render: real local rendering tools"]

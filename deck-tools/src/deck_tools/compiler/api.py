@@ -1,0 +1,154 @@
+"""Explicit-runtime, SVG-derived native presentation compiler."""
+from dataclasses import dataclass, field
+from pathlib import Path
+import math
+import hashlib
+import json
+import subprocess
+import tempfile
+import zipfile
+import xml.etree.ElementTree as ET
+from .svg import parse_svg
+
+@dataclass(frozen=True)
+class SvgInput:
+    page_id: str
+    path: Path
+    speaker_notes: str = ''
+
+@dataclass(frozen=True)
+class CompileOptions:
+    node_executable: str | None = None
+    artifact_module: str | None = None
+    width_px: float = 1280
+    height_px: float = 720
+    fonts: dict[str, str] = field(default_factory=dict)
+    assets: dict[str, dict[str, str]] = field(default_factory=dict)
+    timeout_seconds: int = 120
+
+@dataclass(frozen=True)
+class CompileResult:
+    """Real compile output. ``manifest_path`` doubles as the object trace: the
+    compile-input JSON records every page IR, font and input digest used."""
+
+    pptx_path: Path
+    manifest_path: Path
+    diagnostics: tuple[dict, ...] = ()
+
+def compile_deck(inputs: list[SvgInput], options: CompileOptions, output_dir: Path) -> CompileResult:
+    if not inputs:
+        raise ValueError('At least one SVG is required')
+    return _compile_prepared(inputs, options, output_dir)
+
+
+def _prepare_inputs(inputs, assets):
+    """Single internal parsing boundary; callers retain these inputs for emission."""
+    asset_hashes = {path: hashlib.sha256(Path(path).read_bytes()).hexdigest() for mapping in assets.values() for path in mapping.values()}
+    pages = []
+    icon_license = False
+    if any(not isinstance(item.page_id, str) or not item.page_id for item in inputs):
+        raise ValueError('SVG page_id must be a nonempty string')
+    if len({item.page_id for item in inputs}) != len(inputs):
+        raise ValueError('SVG page_id must be unique')
+    for item in inputs:
+        data = Path(item.path).read_bytes()
+        page = parse_svg(data, page_id=item.page_id, assets=assets.get(item.page_id, {}))
+        icon_license = icon_license or b'data-icon-license="lucide-1.49.0"' in data
+        page['sha256'] = hashlib.sha256(data).hexdigest()
+        from .native import normalize_notes
+        page['speaker_notes'] = normalize_notes(item.speaker_notes)
+        page['notes_sha256'] = hashlib.sha256(page['speaker_notes'].encode('utf-8')).hexdigest()
+        page['slide_index'] = len(pages) + 1
+        pages.append(page)
+    return pages, asset_hashes, icon_license
+
+
+def _compile_prepared(inputs, options, output_dir, prepared=None):
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=False)
+    target = output_dir / 'deck.pptx'
+    if target.exists():
+        raise FileExistsError(target)
+    if not all(math.isfinite(v) and v > 0 for v in (options.width_px, options.height_px)):
+        raise ValueError("slide dimensions must be positive")
+    pages, asset_hashes, icon_license = prepared if prepared is not None else _prepare_inputs(inputs, options.assets)
+    diagnostics = []
+    for page in pages:
+        scale = min(options.width_px / page['width'], options.height_px / page['height'])
+        horizontal = (options.width_px - scale * page['width']) / 2
+        vertical = (options.height_px - scale * page['height']) / 2
+        if max(horizontal, vertical) > .01:
+            diagnostics.append({'page_id': page['page_id'], 'code': 'contained_with_letterbox', 'scale': scale, 'horizontal_margin_px': horizontal, 'vertical_margin_px': vertical})
+    manifest = output_dir / 'compile-input.json'
+    manifest.write_text(json.dumps({'pages': pages, 'width': options.width_px, 'height': options.height_px, 'diagnostics': diagnostics, 'compiler_version': 'python-native-v1', 'fonts': {k: {'sha256': hashlib.sha256(Path(v).read_bytes()).hexdigest()} for k,v in options.fonts.items()}}, ensure_ascii=False, indent=2))
+    script = Path(__file__).parents[1] / 'resources' / 'compiler' / 'native.mjs'
+    with tempfile.TemporaryDirectory(prefix='compile-', dir=output_dir) as temporary:
+        candidate = Path(temporary) / 'candidate.pptx'
+        from .native import emit
+        emit(pages, options.width_px, options.height_px, options.fonts, candidate)
+        # Explicit SVG letter spacing becomes editable DrawingML character spacing.
+        patched = Path(temporary) / 'patched.pptx'
+        ns = {'p': 'http://schemas.openxmlformats.org/presentationml/2006/main', 'a': 'http://schemas.openxmlformats.org/drawingml/2006/main'}
+        with zipfile.ZipFile(candidate) as source, zipfile.ZipFile(patched, 'w', zipfile.ZIP_DEFLATED) as dest:
+            for info in source.infolist():
+                data = source.read(info.filename)
+                if icon_license and info.filename == 'docProps/core.xml':
+                    core = ET.fromstring(data)
+                    key = '{http://purl.org/dc/elements/1.1/}description'
+                    description = core.find(key)
+                    if description is None: description = ET.SubElement(core, key)
+                    license_path = Path(__file__).parents[1] / 'resources/icons/lucide/LICENSE.txt'
+                    description.text = (description.text or '') + '\nLucide 1.49.0 icon license:\n' + license_path.read_text()
+                    data = ET.tostring(core, encoding='utf-8', xml_declaration=True)
+                for index, page in enumerate(pages, 1):
+                    if info.filename != f'ppt/slides/slide{index}.xml':
+                        continue
+                    root = ET.fromstring(data)
+                    # Both compiler exits preserve SVG stroke endings/joins in DrawingML.
+                    # Match emitted order, not SVG IDs (IDs may be absent or duplicated).
+                    native_shapes = root.findall('p:cSld/p:spTree/p:sp', ns)
+                    source_shapes = [shape for shape in page['shapes'] if shape['kind'] != 'image']
+                    if len(native_shapes) != len(source_shapes):
+                        raise ValueError('native shape count differs from SVG; cannot bind stroke properties')
+                    for emitted, source_shape in zip(native_shapes, source_shapes, strict=True):
+                        if source_shape['stroke'] == 'none':
+                            continue
+                        line = emitted.find('p:spPr/a:ln', ns)
+                        if line is None:
+                            raise ValueError('native output omitted an SVG stroke')
+                        caps = {'butt': 'flat', 'round': 'rnd', 'square': 'sq'}
+                        joins = {'round': 'round', 'bevel': 'bevel', 'miter': 'miter'}
+                        cap = source_shape.get('stroke_linecap', 'butt')
+                        join = source_shape.get('stroke_linejoin', 'miter')
+                        if cap not in caps or join not in joins:
+                            raise ValueError('unsupported SVG stroke ending or join')
+                        line.set('cap', caps[cap])
+                        for kind in joins.values():
+                            for child in line.findall('a:' + kind, ns):
+                                line.remove(child)
+                        child = ET.SubElement(line, '{' + ns['a'] + '}' + joins[join])
+                        if join == 'miter':
+                            child.set('lim', str(round(source_shape.get('stroke_miterlimit', 4) * 100000)))
+                    spacing = {s['atom_id'] or s['id']: s.get('letter_spacing', 0) for s in page['shapes'] if s['kind'] == 'text'}
+                    for shape in root.findall('.//p:sp', ns):
+                        name = shape.find('p:nvSpPr/p:cNvPr', ns).get('name')
+                        if spacing.get(name):
+                            for props in shape.findall('.//a:rPr', ns) + shape.findall('.//a:defRPr', ns):
+                                props.set('spc', str(round(spacing[name] * min(options.width_px / page['width'], options.height_px / page['height']) * 75)))
+                    data = ET.tostring(root, encoding='utf-8', xml_declaration=True)
+                dest.writestr(info, data)
+        for item, page in zip(inputs, pages):
+            if hashlib.sha256(Path(item.path).read_bytes()).hexdigest() != page['sha256']:
+                raise ValueError(f'{item.page_id}: input changed during compilation')
+        for path, digest in asset_hashes.items():
+            if hashlib.sha256(Path(path).read_bytes()).hexdigest() != digest:
+                raise ValueError('approved asset changed during compilation')
+        from .native import notes_records
+        actual = notes_records(patched)
+        if any(row['page_id'] != page['page_id'] or row['notes'] != page['speaker_notes']
+               for row, page in zip(actual, pages, strict=True)):
+            raise ValueError('actual PPTX notes differ from compile input')
+        # Exclusive publication also protects against a competing output writer.
+        import os
+        os.link(patched, target)
+    return CompileResult(target, manifest, tuple(diagnostics))
