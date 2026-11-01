@@ -278,6 +278,8 @@ SVG 支持子集说明由 S3 依据 `compiler/svg.py` 实际接受的元素与�
 - `<g>` 只向下继承颜色与字体，`data-atom-id` 要写在文字元素本身上。
 - 文字不支持非等比缩放。
 
+重建时使用 [SVG 子集与关系样例](../../../deck-skill/references/svg-subset.md)：箭头用显式几何；表格分隔线用完整的 line 元素并与外框相接；侧栏限定保留在正文中。原图出现正文之外的装饰文字时，以 content 为准，不能把装饰文字变成新事实。单页回读发现保存在 run 工作目录，`run show` 给出可用路径；工作目录删除后可重新检查。
+
 ### 5.3 上下文
 
 Host 按需读取：`deck show`（摘要）、`deck get --pages p3,p4`（指定页，外加 brief、framing、style）、`deck material text m1`（抽取文本的路径）。不一次性展开历史审阅或全部材料（#217、#242）。

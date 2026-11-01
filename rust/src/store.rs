@@ -10,7 +10,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-pub const FORMAT_VERSION: i64 = 1;
+pub const FORMAT_VERSION: i64 = 2;
 
 pub struct Store {
     pub connection: Connection,
@@ -61,26 +61,48 @@ impl Store {
 
     fn configure(&mut self) -> Result<()> {
         self.connection.busy_timeout(Duration::from_secs(5))?;
-        let version: i64 = self
-            .connection
-            .pragma_query_value(None, "user_version", |row| row.get(0))?;
+        // Read the format after acquiring the write transaction: two clients may
+        // open the same old project while another client is migrating it.
+        let tx = self.transaction()?;
+        let version: i64 = tx.pragma_query_value(None, "user_version", |row| row.get(0))?;
         if version > FORMAT_VERSION {
             return Err(Error::Input(format!(
                 "项目格式为 {version}，当前程序只支持 {FORMAT_VERSION}；请升级 deck"
             )));
         }
         if version == 0 {
-            let tx = self.transaction()?;
             tx.execute_batch(
                 "CREATE TABLE IF NOT EXISTS versions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
                 summary TEXT NOT NULL,
                 deck_json TEXT NOT NULL
-            ); PRAGMA user_version = 1;",
+            );",
             )?;
-            tx.commit()?;
         }
+        if version < 2 {
+            tx.execute_batch(
+                "CREATE TABLE runs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                kind TEXT NOT NULL, status TEXT NOT NULL,
+                max_calls INTEGER, calls_used INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+            );
+            CREATE TABLE run_pages (
+                run_id INTEGER NOT NULL, page_id TEXT NOT NULL, basis TEXT NOT NULL,
+                status TEXT NOT NULL, result_file TEXT,
+                PRIMARY KEY (run_id, page_id)
+            );
+            CREATE TABLE builds (
+                id INTEGER PRIMARY KEY AUTOINCREMENT, version_id INTEGER NOT NULL,
+                input_digest TEXT NOT NULL, pptx_file TEXT NOT NULL,
+                findings_json TEXT NOT NULL, missing_pages TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+            );
+            PRAGMA user_version = 2;",
+            )?;
+        }
+        tx.commit()?;
         Ok(())
     }
 

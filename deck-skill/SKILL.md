@@ -1,11 +1,11 @@
 ---
 name: deck
-description: 用 Rust deck 命令将作者任务和指定材料写成 brief、主张框架与逐页正文，并导出可读 Markdown；适用于首提、竞标和内容改稿。
+description: 用 Rust deck 命令将作者任务和指定材料写成 brief、主张框架与逐页正文，并导出可读 Markdown 与可编辑 PPTX；适用于首提、竞标和内容改稿。
 ---
 
 # Deck 内容写作
 
-帮助作者围绕一次商业任务，把材料写成有主张、可修改、可独立阅读的方案稿。当前实现到 Markdown 可读稿，作品质量由作者阅读判断。
+帮助作者围绕一次商业任务，把材料写成有主张、可修改、可独立阅读的方案稿。可从可读稿继续生成原图、重建 SVG 和构建可编辑 PPTX；作品质量由作者阅读与看图判断。
 
 ## 作者任务
 
@@ -65,4 +65,17 @@ description: 用 Rust deck 命令将作者任务和指定材料写成 brief、�
 
 运行 `deck --project <project> export md > <新的可读稿.md>`，再实际打开导出文件核对正文、表格、待补和出处。不完整作品也可导出，不用占位正文补齐。原材料、作品数据库与导出稿保存在作者指定目录，不进入代码仓库、PR 或 issue。
 
-交给作者可点击的稿件，说明核心主张和仍影响判断的缺口。命令成功说明保存和导出可用；它不等于作者接受主张或作品。到这份可读稿收尾，后续图像、SVG、PPTX 与界面由对应切片处理。
+交给作者可点击的稿件，说明核心主张和仍影响判断的缺口。命令成功说明保存和导出可用；它不等于作者接受主张或作品。明确只要可读稿时到此收尾；需要 PPTX 时继续下面的生产步骤。
+
+
+## 原图、SVG 与 PPTX
+
+先用 `deck doctor --fonts <字体名>` 检查本机工具与所选字体。标志、照片等素材用 `deck asset add <素材ID> <文件>` 选择；不要把素材 ID 写成原图里的文字来代替图片。
+
+1. `deck run start image --pages p1,p2` 准备任务。实际读取返回工作目录的 task.md、content.json、style.json 与 attachments.json。每次调用 ImageGen 前，先 `deck run call <run> <page>`，再把所选素材文件作为真正附件传给 ImageGen。结果未知时先核实，明确决定重试才加 `--retry`；不要自行连续重发。
+2. 生成后用 `deck run result <run> <page> <图片文件>` 交回。取消后或依据已变的结果只保存；确实要用时才 `deck run adopt <run> <page>`。`deck run show` 查看状态，`deck run cancel <run>` 停止调用与自动采用。
+3. `deck run start svg --pages p1,p2` 准备 SVG 任务。按原图的布局、层级和关系重建，正文取 content.json，文字绑定 atoms.json。先读 [SVG 子集与比对样例](references/svg-subset.md)。改字通常沿用原图，按新正文重建 SVG；内容或布局大改时判断是否重新生图。
+4. 用 `deck run result <run> <page> <SVG文件>` 编译、渲染并回读。工具报错就修正具体元素；返回的文字或几何发现逐项核对。Host 必须实际打开预览 PNG，与原图比对端点、方向、分支、层级、侧栏及阅读顺序。文字回读通过不能代替比对。
+5. 用 `deck build` 构建整套 PPTX，`deck export pptx` 取最近构建路径。输出列出的缺页、过期页与输入变化照实告知作者；不要把部分 PPTX 称为整套，也不要把较早构建当成当前稿。讲稿变化后重新构建；无需重新生图。
+
+交付可读稿、PPTX 与必要预览；说明整稿范围、未补内容和真实执行失败。机制测试、真实工具执行、真实 Host 执行与作品判断分别汇报。没有实际执行的写“未执行”及原因。

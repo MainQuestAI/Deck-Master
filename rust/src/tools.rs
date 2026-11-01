@@ -15,7 +15,7 @@ pub struct Extraction {
     pub detail: String,
 }
 
-pub fn read_source(path: &Path) -> Result<Extraction> {
+pub fn invoke(command: &str, value: &Value) -> Result<Value> {
     let python = std::env::var_os("DECK_TOOLS_PYTHON").ok_or_else(|| {
         Error::NeedsTool(
             "请把 deck-tools 安装到独立 venv，并设置 DECK_TOOLS_PYTHON 为该环境的 Python 路径"
@@ -23,10 +23,10 @@ pub fn read_source(path: &Path) -> Result<Extraction> {
         )
     })?;
     let mut job = tempfile::NamedTempFile::new()?;
-    serde_json::to_writer(&mut job, &serde_json::json!({"path": path.canonicalize()?}))?;
+    serde_json::to_writer(&mut job, value)?;
     job.flush()?;
     let output = Command::new(python)
-        .args(["-m", "deck_tools", "read-source"])
+        .args(["-m", "deck_tools", command])
         .arg(job.path())
         .output()
         .map_err(|e| {
@@ -42,14 +42,21 @@ pub fn read_source(path: &Path) -> Result<Extraction> {
             _ if detail.contains("No module named deck_tools") => Error::NeedsTool(
                 "当前解释器没有 deck-tools；请在 DECK_TOOLS_PYTHON 对应环境安装 deck-tools".into(),
             ),
-            _ => Error::Tool(format!("read-source：{detail}；请修复工具后重试")),
+            _ => Error::Tool(format!("{command}：{detail}；请修复工具后重试")),
         });
     }
-    let extraction: Extraction = serde_json::from_slice(&output.stdout).map_err(|e| {
+    serde_json::from_slice(&output.stdout).map_err(|e| {
         Error::Tool(format!(
-            "read-source 返回无效 JSON：{e}；请检查 deck-tools 安装"
+            "{command} 返回无效 JSON：{e}；请检查 deck-tools 安装"
         ))
-    })?;
+    })
+}
+
+pub fn read_source(path: &Path) -> Result<Extraction> {
+    let extraction: Extraction = serde_json::from_value(invoke(
+        "read-source",
+        &serde_json::json!({"path": path.canonicalize()?}),
+    )?)?;
     if !["read", "pending_visual", "needs_tool"].contains(&extraction.status.as_str()) {
         return Err(Error::Tool(
             "read-source 返回未知读取状态；请检查 deck-tools 安装".into(),
