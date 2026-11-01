@@ -65,6 +65,15 @@ pub fn workspace(project: &Path) -> Result<Value> {
     let snapshot = store::current(&tx)?;
     let mut value = snapshot_value(&snapshot, None)?;
     value["runs"] = json!(runs(&tx, &snapshot.deck, None)?);
+    let reviews = reviews(&tx, Some("open"), None)?;
+    for page in value["deck"]["pages"].as_array_mut().into_iter().flatten() {
+        page["open_reviews"] = json!(page_review_count(
+            &reviews,
+            page["id"].as_str().unwrap_or("")
+        ));
+    }
+    value["open_reviews_total"] = json!(reviews.len());
+    value["reviews"] = json!(reviews);
     let mut query = tx.prepare("SELECT id,created_at,summary FROM versions ORDER BY id DESC")?;
     value["history"] = json!(
         query
@@ -102,17 +111,139 @@ pub fn project_file(project: &Path, sha: &str) -> Result<std::path::PathBuf> {
 }
 
 pub fn show(project: &Path) -> Result<Value> {
-    let store = Store::open(project)?;
-    let snapshot = store.current()?;
+    let mut store = Store::open(project)?;
+    let tx = store.connection.transaction()?;
+    let snapshot = store::current(&tx)?;
+    let reviews = reviews(&tx, Some("open"), None)?;
+    let mut query = tx.prepare("SELECT id,created_at,summary FROM versions ORDER BY id DESC")?;
+    let history = query
+        .query_map([], |row| {
+            Ok(store::Version {
+                id: row.get(0)?,
+                created_at: row.get(1)?,
+                summary: row.get(2)?,
+            })
+        })?
+        .collect::<std::result::Result<Vec<_>, _>>()?;
     Ok(json!({
         "version": snapshot.version,
         "title": snapshot.deck.brief.title,
         "thesis": snapshot.deck.framing.thesis,
         "materials": snapshot.deck.materials.iter().map(|m| json!({"id": m.id, "name": m.name, "status": m.status})).collect::<Vec<_>>(),
-        "pages": snapshot.deck.pages.iter().map(|p| json!({"id": p.id, "title": p.content.title, "purpose": p.purpose, "todo": p.todo})).collect::<Vec<_>>(),
+        "pages": snapshot.deck.pages.iter().map(|p| json!({"id": p.id, "title": p.content.title, "purpose": p.purpose, "todo": p.todo, "open_reviews": page_review_count(&reviews, &p.id)})).collect::<Vec<_>>(),
+        "open_reviews_total": reviews.len(),
         "artifact_status": artifact_status(&snapshot.deck)?,
-        "history": store.history()?
+        "history": history
     }))
+}
+
+#[derive(Debug, Serialize)]
+pub struct Review {
+    pub id: i64,
+    pub version_id: i64,
+    pub page_id: Option<String>,
+    pub reviewer: String,
+    pub method: String,
+    pub text: String,
+    pub status: String,
+    pub created_at: String,
+    pub resolved_at: Option<String>,
+}
+
+fn review_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<Review> {
+    Ok(Review {
+        id: row.get(0)?,
+        version_id: row.get(1)?,
+        page_id: row.get(2)?,
+        reviewer: row.get(3)?,
+        method: row.get(4)?,
+        text: row.get(5)?,
+        status: row.get(6)?,
+        created_at: row.get(7)?,
+        resolved_at: row.get(8)?,
+    })
+}
+
+fn reviews(
+    connection: &rusqlite::Connection,
+    status: Option<&str>,
+    page: Option<&str>,
+) -> Result<Vec<Review>> {
+    use rusqlite::params;
+    if status.is_some_and(|s| !["open", "resolved"].contains(&s)) {
+        return Err(Error::Input("意见状态只接受 open 或 resolved".into()));
+    }
+    let mut query = connection.prepare(
+        "SELECT id,version_id,page_id,reviewer,method,text,status,created_at,resolved_at
+         FROM reviews WHERE (?1 IS NULL OR status=?1) AND (?2 IS NULL OR page_id=?2) ORDER BY id",
+    )?;
+    Ok(query
+        .query_map(params![status, page], review_row)?
+        .collect::<std::result::Result<_, _>>()?)
+}
+
+fn review(connection: &rusqlite::Connection, id: i64) -> Result<Review> {
+    use rusqlite::OptionalExtension;
+    connection.query_row(
+        "SELECT id,version_id,page_id,reviewer,method,text,status,created_at,resolved_at FROM reviews WHERE id=?",
+        [id], review_row,
+    ).optional()?.ok_or_else(|| Error::Missing(format!("意见 {id}")))
+}
+
+fn page_review_count(reviews: &[Review], page: &str) -> usize {
+    reviews
+        .iter()
+        .filter(|r| r.page_id.as_deref() == Some(page))
+        .count()
+}
+
+pub fn review_add(
+    project: &Path,
+    page: Option<&str>,
+    text: &str,
+    reviewer: &str,
+    method: &str,
+) -> Result<Review> {
+    use rusqlite::params;
+    if text.trim().is_empty() {
+        return Err(Error::Input("意见内容不能为空".into()));
+    }
+    if !["self_check", "other_model", "human"].contains(&method) {
+        return Err(Error::Input(
+            "意见方法只接受 self_check、other_model 或 human".into(),
+        ));
+    }
+    let mut store = Store::open(project)?;
+    let tx = store.transaction()?;
+    let snapshot = store::current(&tx)?;
+    if let Some(page) = page
+        && !snapshot.deck.pages.iter().any(|p| p.id == page)
+    {
+        return Err(Error::Input(format!(
+            "页面 {page} 不存在；请用 deck show 查看页面"
+        )));
+    }
+    tx.execute(
+        "INSERT INTO reviews(version_id,page_id,reviewer,method,text) VALUES (?,?,?,?,?)",
+        params![snapshot.version, page, reviewer, method, text],
+    )?;
+    let value = review(&tx, tx.last_insert_rowid())?;
+    tx.commit()?;
+    Ok(value)
+}
+
+pub fn review_list(project: &Path, status: Option<&str>, page: Option<&str>) -> Result<Value> {
+    let store = Store::open(project)?;
+    Ok(json!({"reviews": reviews(&store.connection, status, page)?}))
+}
+
+pub fn review_resolve(project: &Path, id: i64) -> Result<Review> {
+    let mut store = Store::open(project)?;
+    let tx = store.transaction()?;
+    tx.execute("UPDATE reviews SET status='resolved',resolved_at=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id=? AND status='open'", [id])?;
+    let value = review(&tx, id)?;
+    tx.commit()?;
+    Ok(value)
 }
 
 fn merge<T: PartialEq + Clone + Serialize>(
@@ -636,6 +767,10 @@ pub fn run_show(project: &Path, id: Option<i64>) -> Result<Value> {
     Ok(json!({"runs": runs}))
 }
 
+fn file_url(file: &str) -> String {
+    format!("/api/files/{}", file.split('.').next().unwrap_or(""))
+}
+
 fn runs(connection: &rusqlite::Connection, deck: &Deck, id: Option<i64>) -> Result<Vec<Value>> {
     if let Some(id) = id {
         run_record(connection, id)?;
@@ -686,7 +821,14 @@ fn runs(connection: &rusqlite::Connection, deck: &Deck, id: Option<i64>) -> Resu
             } else {
                 ""
             };
-            pages.push(json!({"page_id":page,"status":state,"reason":reason,"basis_changed":changed,"result_file":result}));
+            let current_image = deck
+                .pages
+                .iter()
+                .find(|p| p.id == page)
+                .and_then(|p| p.image.as_ref())
+                .map(|image| file_url(&image.file));
+            let result_url = result.as_deref().map(file_url);
+            pages.push(json!({"page_id":page,"status":state,"reason":reason,"basis_changed":changed,"result_file":result,"result_url":result_url,"current_image_url":current_image}));
         }
         runs.push(json!({"id":id,"kind":kind,"status":status,"max_calls":max,"calls_used":used,"pages":pages}));
     }

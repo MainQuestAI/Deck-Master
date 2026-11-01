@@ -273,7 +273,7 @@ fn older_database_migrates_without_losing_versions_and_newer_database_is_refused
     store
         .connection
         .execute_batch(
-            "DROP TABLE run_pages; DROP TABLE runs; DROP TABLE builds; PRAGMA user_version=0;",
+            "DROP TABLE reviews; DROP TABLE run_pages; DROP TABLE runs; DROP TABLE builds; PRAGMA user_version=0;",
         )
         .unwrap();
     drop(store);
