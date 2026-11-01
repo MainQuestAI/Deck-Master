@@ -30,13 +30,24 @@ jobs:
           sudo apt-get install --no-install-recommends -y poppler-utils
           python -m venv .venv
           .venv/bin/python -m pip install -e "./deck-tools[dev]"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Build WebUI
+        working-directory: frontend
+        run: |
+          npm ci
+          npm test
+          npm run build
       - name: Rust checks
         env:
           DECK_TOOLS_PYTHON: ${{ github.workspace }}/.venv/bin/python
         working-directory: rust
         run: |
           cargo fmt --check
-          cargo clippy -- -D warnings
+          cargo clippy --all-targets -- -D warnings
           cargo test
       - name: File tool tests
         # The runner lacks rsvg-convert/soffice; render tests run locally only.

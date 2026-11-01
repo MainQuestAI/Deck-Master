@@ -38,3 +38,7 @@ src/deck_master/resources/skills-references/
 
 # Build output only: the build hook copies skills/deck-master here (T7 single source).
 src/deck_master/resources/skill/
+
+# Vite assets are embedded by cargo after the frontend build.
+rust/web-dist/*
+!rust/web-dist/index.html

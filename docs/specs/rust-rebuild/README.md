@@ -200,7 +200,7 @@ S4 必须能用的最低要求：整稿浏览（原图、预览、过期标记�
 
 构建与分发：`deck serve` 提供构建后的前端静态文件，随二进制发布，不依赖磁盘上的相对路径（`cargo install --path rust` 之后也能用）；嵌入方式与依赖在 S4 开工时定。S4 把 `npm ci` 与 `vite build` 加入 `rust.yml` 和 AGENTS.md 第 3 节的检查清单。开发期 Vite 通过代理访问 `deck serve`，代理改写 Host 与 Origin 并读取 `deck serve` 启动时打印的地址，不放宽 Host 与 Origin 检查。
 
-首个后端 PR 使用 `rust/web-dist/` 作为静态构建目录，当前仅含占位首页；`build.rs` 用标准库遍历目录，生成 `include_bytes!` 资源表，不增加嵌入依赖。前端 PR 再接入构建、CI 与上述命令清单。Host 只接受 `127.0.0.1:<本次端口>` 或 `localhost:<本次端口>`；Origin 可以省略，提供时只接受对应的 `http://` 本机地址。重复 Host/Origin 也拒绝，不返回 CORS 放行头。
+`rust/web-dist/` 是静态构建目录：`index.html` 入库，固定引用 `assets/deck.js` 与 `assets/deck.css`；assets 由 Vite 生成并由 gitignore 排除。`build.rs` 用标准库遍历目录，生成 `include_bytes!` 资源表，不增加嵌入依赖。未构建前端时 cargo 仍可通过，此时首页显示构建提示；完整分发须先在 frontend 执行 `npm ci && npm run build`，再 cargo build/install。构建、CI 与上述命令清单已接入。Host 只接受 `127.0.0.1:<本次端口>` 或 `localhost:<本次端口>`；Origin 可以省略，提供时只接受对应的 `http://` 本机地址。重复 Host/Origin 也拒绝，不返回 CORS 放行头。
 
 后端接口供前端联调的返回形状：
 
