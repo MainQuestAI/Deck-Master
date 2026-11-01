@@ -280,15 +280,7 @@ SVG 支持子集说明由 S3 依据 `compiler/svg.py` 实际接受的元素与�
 
 重建时使用 [SVG 子集与关系样例](../../../deck-skill/references/svg-subset.md)：箭头用显式几何；表格分隔线用完整的 line 元素并与外框相接；侧栏限定保留在正文中。原图出现正文之外的装饰文字时，以 content 为准，不能把装饰文字变成新事实。单页回读发现保存在 run 工作目录，`run show` 给出可用路径；工作目录删除后可重新检查。
 
-### 5.3 Humanizer 语言处理
-
-旧线 Humanizer 是表达审阅参考文档与资源入口，未包含 SQL 或内核语言改写实现。新线复用其自然度与保真规则，消除套话和重复修饰，保护数字、条件、范围与因果强度；不用词表机械删句。
-
-Host 写稿后运行 `deck humanize --stage content --file <作者稿.json>`，读规则、正文和材料，完成语义审改，再经 `deck put` 保存。出图与重建 SVG 前运行 `deck humanize --stage pptx`，再读将上屏的文字；修改仍用 put，随后更新受影响的 SVG。命令返回现有作品或作者稿的投影，不新增审阅状态或持久字段。
-
-put 和编译任务都整理中文、数字、标点间的多余空格；英文词间空格、数字、条件和 notes 不改。编译回读逐 atom 对照 PPT 原生文字与处理后正文，防止旧 SVG 将改前文案带回交付。Host 的语义判断与工具文字相等分别报告。
-
-### 5.4 上下文
+### 5.3 上下文
 
 Host 按需读取：`deck show`（摘要）、`deck get --pages p3,p4`（指定页，外加 brief、framing、style）、`deck material text m1`（抽取文本的路径）。不一次性展开历史审阅或全部材料（#217、#242）。
 

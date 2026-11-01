@@ -33,6 +33,8 @@ description: 用 Rust deck 命令将作者任务和指定材料写成 brief、�
 
 方法按实际困难选择，见 [method-selection.md](references/method-selection.md)：
 
+写稿前先判断当前缺的是任务边界、证据推理、选项比较还是页间推进，再选下面对应的方法卡，实际读卡后用于这次稿件。已有结构能完成读者任务时，直接改稿，不为套方法重写。需要正文示范时再读相近案例，保留当前材料自己的事实。语言在保存前按下文的 Humanizer 参考审一遍。
+
 | 要解决什么 | 按需阅读 |
 | --- | --- |
 | 任务含混、难以选料 | [M01 界定](references/methods/M01-framing.md) |
@@ -53,11 +55,11 @@ description: 用 Rust deck 命令将作者任务和指定材料写成 brief、�
 - `purpose` 写本页要说明的业务问题；`layout` 写信息关系，如“核对步骤与异常交接”。两项也会分别以“本页目的”和“布局”出现在导出稿里，按读者能读懂的方式写，不放内部制作指令。
 - `content` 写全部可见正文：标题、副标题、段落、要点、表格、补充或必要脚注。不能交“此处放结论”“展示三大价值”这样的制作注释。
 - 比较与查阅才用表格；顺序写步骤，因果写清作用环节，责任交接写触发条件、动作与接手信息。不要把每一页都排成同样的表格，也不用“高效、精准、闭环”填满单元格。
-- 对客户可见的页面只写能力、做法、计划和验收方式；缺口、缺材料、未验证事项写入 `todo` 与讲稿备注，不上屏，不放页脚。核心理由和会改变判断的条件留在正文；`notes` 补充讲述提示。
-- 可选的 `refs` 保留材料名称与章节定位，`todo` 保留本页实际待补，仅在待补项与讲稿备注中展示，不进入页面正文或页脚，不阻止保存或导出。
+- 对客户可见的页面只写能力、做法、计划和验收方式；缺口、缺材料、未验证事项写入 `todo`，不上屏，不放页脚。核心理由和会改变判断的条件留在正文；`notes` 只写讲述与过渡提示，不放方法编号或内部制作说明。
+- 可选的 `refs` 保留材料名称与章节定位，`todo` 保留本页实际待补，仅在待补项中展示，不进入页面正文、页脚或讲稿，不阻止保存或导出。
 - 不编造数字、客户现状、报价、政策或已实现能力。样本比例不改写成节时、损失、准确率或 ROI；建议与观察在承担主张的正文中区分。
 
-保存前调用 `deck humanize --stage content --file <作者稿.json>`，实际阅读返回的规则与正文，按 [Humanizer 表达自然度与保真](references/expression-review-humanizer.md) 去掉空泛升华、聊天旁白和重复修饰，写清主体与动作。Host 改后核对材料中的数字、范围、否定和条件，再用 put 保存；命令只处理中文、数字和标点间多余空格，不替 Host 判断语义。按 [writing-profiles.md](references/writing-profiles.md) 保留本次读者需要的深度，用 [content-calibration.md](references/content-calibration.md) 检查正文是否只剩标签。
+保存前按 [references/expression-review-humanizer.md](references/expression-review-humanizer.md) 自己审一遍语言，命令只整理空格，语义由你判断；put 会静默整理空格（notes、表格 value 及其 display_text 不动）。按 [writing-profiles.md](references/writing-profiles.md) 保留读者需要的深度，用 [content-calibration.md](references/content-calibration.md) 检查正文是否只剩标签。
 
 用 `get` 读取当前版本和所需页，再用 `put --base N <patch.json>` 保存。只交改动单元；brief、framing 和 content 提交完整值。增删页同时提交页面和新 order，块与条目编号由命令补齐。出错按 CLI 的具体信息处理，保存冲突时读取当前内容后重新合并，不覆盖作者的新稿。
 
@@ -67,14 +69,14 @@ description: 用 Rust deck 命令将作者任务和指定材料写成 brief、�
 
 运行 `deck --project <project> export md > <新的可读稿.md>`，再实际打开导出文件核对正文、表格、待补和出处。不完整作品也可导出，不用占位正文补齐。原材料、作品数据库与导出稿保存在作者指定目录，不进入代码仓库、PR 或 issue。
 
-交给作者可点击的稿件，说明核心主张和仍影响判断的缺口。命令成功说明保存和导出可用；它不等于作者接受主张或作品。明确只要可读稿时到此收尾；需要 PPTX 时继续下面的生产步骤。
+交给作者可点击的稿件，说明核心主张和仍影响判断的缺口。明确只要可读稿时到此收尾；需要 PPTX 时继续下面的生产步骤。
 
 
 ## 原图、SVG 与 PPTX
 
 先用 `deck doctor --fonts <字体名>` 检查本机工具与所选字体。标志、照片等素材用 `deck asset add <素材ID> <文件>` 选择；不要把素材 ID 写成原图里的文字来代替图片。
 
-出图及重建 SVG 前运行 `deck humanize --stage pptx`，按相同规则再读将上屏的整稿。发现语言问题就 put 保存并更新受影响 SVG。build 会再次整理空格并逐 atom 核对实际 PPT 文字是否与处理后的正文相等；不等时报错，按最新正文重建，不用旧 SVG 顶替。不要把 Humanizer 命令成功称为语言质量通过。
+出图及重建 SVG 前再读将上屏的整稿，发现语言问题就 put 保存并更新受影响 SVG。
 
 1. `deck run start image --pages p1,p2` 准备任务。实际读取返回工作目录的 task.md、content.json、style.json 与 attachments.json。每次调用 ImageGen 前，先 `deck run call <run> <page>`，再把所选素材文件作为真正附件传给 ImageGen。结果未知时先核实，明确决定重试才加 `--retry`；不要自行连续重发。
 2. 生成后用 `deck run result <run> <page> <图片文件>` 交回。取消后或依据已变的结果只保存；确实要用时才 `deck run adopt <run> <page>`。`deck run show` 查看状态，`deck run cancel <run>` 停止调用与自动采用。

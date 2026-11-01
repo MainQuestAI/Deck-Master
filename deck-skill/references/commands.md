@@ -131,15 +131,3 @@ deck --project "$DECK_PROJECT" export md > "$DECK_PROJECT/manuscript.md"
 - `deck --project "$DECK_PROJECT" restore N` 把历史稿恢复为新版本，不删除后来的历史。
 
 `export md` 向 stdout 输出正文、讲稿、待补与出处，不要求稿件完整。重定向前选一个新文件名；交稿前实际阅读该文件。当前内容阶段无需渲染器、生图、编译或界面。
-
-
-## Humanizer 语言审改
-
-```bash
-deck --project "$DECK_PROJECT" humanize --stage content --file "$DECK_PROJECT/pages.json" > "$DECK_PROJECT/content-review.json"
-# Host 实际读规则、来源和稿件，改写 pages.json，再 put 保存。
-deck --project "$DECK_PROJECT" humanize --stage pptx > "$DECK_PROJECT/pptx-review.json"
-# Host 再读将上屏的文字，必要时 put 修改并重建 SVG，随后 build。
-```
-
-两个阶段只复用同一组语言规则，不增加持久审阅状态。主页稿在 put 时整理空格；PPT 在编译前整理同一份正文，并回读实际文字。语义改写必须由 Host 按材料完成，命令不会制造案例或承诺。

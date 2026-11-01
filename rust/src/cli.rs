@@ -17,13 +17,6 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    #[command(about = "准备 Humanizer 语言审改，返回规则与整理后的正文")]
-    Humanize {
-        #[arg(long, value_parser = ["content", "pptx"], help = "主页稿或出 PPT 前审改")]
-        stage: String,
-        #[arg(long, help = "待保存的作者 JSON；省略时读取当前作品")]
-        file: Option<PathBuf>,
-    },
     #[command(about = "选择图片素材")]
     Asset {
         #[command(subcommand)]
@@ -138,9 +131,6 @@ fn print_json(value: impl Serialize) -> Result<()> {
 pub fn run() -> Result<()> {
     let cli = Cli::parse();
     match cli.command {
-        Commands::Humanize { stage, file } => {
-            print_json(ops::humanize(&cli.project, &stage, file.as_deref())?)
-        }
         Commands::Build => print_json(ops::build(&cli.project)?),
         Commands::Doctor { fonts } => {
             let result = ops::doctor(&fonts)?;

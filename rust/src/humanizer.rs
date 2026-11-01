@@ -2,8 +2,6 @@ use crate::error::Result;
 use crate::model::Content;
 use serde_json::Value;
 
-pub const RULES: &str = include_str!("../../deck-skill/references/expression-review-humanizer.md");
-
 fn han(c: char) -> bool {
     ('\u{3400}'..='\u{9fff}').contains(&c)
 }
@@ -24,10 +22,16 @@ pub fn text(input: &str) -> String {
             }
             let left = start.checked_sub(1).map(|i| chars[i]);
             let right = chars.get(index).copied();
+            // A Latin product token may include a separate version number.
+            let product = chars[..start]
+                .iter()
+                .rev()
+                .take_while(|c| c.is_ascii_alphanumeric() || matches!(c, ' ' | '.' | '-'))
+                .any(|c| c.is_ascii_alphabetic());
             let remove = match (left, right) {
                 (Some(a), Some(b)) => {
                     (han(a) && b.is_ascii_digit())
-                        || (a.is_ascii_digit() && han(b))
+                        || (a.is_ascii_digit() && han(b) && !product)
                         || punctuation(b)
                         || ("（【《".contains(a))
                 }
@@ -48,7 +52,12 @@ pub fn normalize(value: &mut Value) {
     match value {
         Value::Array(values) => values.iter_mut().for_each(normalize),
         Value::Object(fields) => {
+            let has_value = fields.contains_key("value");
             for (key, value) in fields {
+                // Preserve the cell's stored value and displayed spelling together.
+                if key == "value" || (has_value && key == "display_text") {
+                    continue;
+                }
                 if matches!(
                     key.as_str(),
                     "title" | "subtitle" | "heading" | "text" | "label" | "display_text"
@@ -56,7 +65,7 @@ pub fn normalize(value: &mut Value) {
                     if let Value::String(original) = value {
                         *original = text(original);
                     }
-                } else if key != "value" {
+                } else {
                     normalize(value);
                 }
             }
