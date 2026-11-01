@@ -58,6 +58,7 @@ export default function DrawerPanel() {
       {drawer === 'history' ? <>{workspace.history.map(version => <article key={version.id} className="s4-panel"><h3>版本 {version.id}{version.id === workspace.version && ' · 当前'}</h3><p>{version.created_at}</p><p className="s4-wrap">{version.summary}</p><button className="button" disabled={busy.restore || version.id === workspace.version} onClick={() => restore(version.id)}>恢复此版本</button></article>)}</> : page && <>
         {draft.conflict && <section className="s4-message" role="alert"><h3>保存冲突，您的输入仍保留</h3><p>当前内容已被修改。比较后，可基于当前版本再次保存；不会自动覆盖。</p>
           {(() => { const current = workspace.deck.pages.find(item => item.id === page.id); return <details><summary>查看当前保存内容（版本 {workspace.version}）</summary>{current ? <><PageContent content={current.content} /><p>讲稿：{current.notes}</p><p>目的：{current.purpose}</p><p>布局：{current.layout}</p></> : <p>页面已移除或页序已改变。请保留输入，返回作品核对。</p>}</details>; })()}
+          <p>继续保存会用您打开时的正文替换当前正文，请先在上方对比。</p>
           <button className="button" disabled={!workspace.deck.pages.some(item => item.id === page.id)} onClick={rebaseDraft}>保留我的修改，以当前版本继续</button>
         </section>}
         <fieldset disabled={busy.save} className="s4-fieldset"><ContentFields content={page.content} change={content => updateDraft({ ...page, content })} />
@@ -67,6 +68,6 @@ export default function DrawerPanel() {
         </fieldset>
       </>}
     </div>
-    {drawer === 'editor' && page && <div className="drawer-foot"><button className="button" disabled={busy.save} onClick={discardDraft}>放弃本地修改</button><button className="primary" disabled={busy.save || !!draft.conflict} onClick={saveDraft}>{busy.save ? '正在保存…' : '保存正文与讲稿'}</button></div>}
+    {drawer === 'editor' && page && <div className="drawer-foot"><button className="button" disabled={busy.save} onClick={() => { if (!draft.conflict || window.confirm('确定放弃本地修改？未保存的输入将丢失。')) discardDraft(); }}>放弃本地修改</button><button className="primary" disabled={busy.save || !!draft.conflict} onClick={saveDraft}>{busy.save ? '正在保存…' : '保存正文与讲稿'}</button></div>}
   </section></div>;
 }

@@ -6,45 +6,55 @@ export class ApiError extends Error {
   }
 }
 
-async function request(path, options) {
-  let response;
+async function request(path, options = {}, timeout = 15000, read = response => response.json()) {
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  if (options.signal?.aborted) abort();
+  else options.signal?.addEventListener('abort', abort, { once: true });
+  const timer = setTimeout(abort, timeout);
   try {
-    response = await fetch(path, options);
-  } catch {
-    throw new Error('无法连接本地服务，请检查 deck serve 是否仍在运行后重试');
+    const response = await fetch(path, { ...options, signal: controller.signal }).catch(error => {
+      if (options.signal?.aborted) throw error;
+      throw new Error('无法连接本地服务，请检查 deck serve 是否仍在运行后重试');
+    });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({ error: `请求失败（${response.status}），请重试` }));
+      throw new ApiError(response.status, data);
+    }
+    return await read(response);
+  } catch (error) {
+    if (options.signal?.aborted) throw error;
+    if (controller.signal.aborted) throw new Error('请求本地服务超时，请检查服务状态后重试');
+    throw error;
+  } finally {
+    clearTimeout(timer);
+    options.signal?.removeEventListener('abort', abort);
   }
-  if (!response.ok) {
-    const data = await response.json().catch(() => ({ error: `请求失败（${response.status}），请重试` }));
-    throw new ApiError(response.status, data);
-  }
-  return response;
 }
 
-const json = async (path, options) => (await request(path, options)).json();
-const post = (path) => json(path, { method: 'POST' });
+const post = (path, timeout) => request(path, { method: 'POST' }, timeout);
 
-export const getDeck = (signal) => json('/api/deck', { signal });
-export const putDeck = (base, patch) => json(`/api/deck?base=${base}`, {
+export const getDeck = (signal) => request('/api/deck', { signal });
+export const putDeck = (base, patch) => request(`/api/deck?base=${base}`, {
   method: 'PUT',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify(patch),
 });
 export const cancelRun = (id) => post(`/api/runs/${encodeURIComponent(id)}/cancel`);
-export const buildDeck = () => post('/api/build');
+export const buildDeck = () => post('/api/build', 120000);
 export const restoreVersion = (version) => post(`/api/restore/${version}`);
 
 export function fileUrl(reference) {
   if (!reference) return null;
   const sha = reference.split('.')[0];
-  if (!/^[a-f0-9]{64}$/i.test(sha)) throw new Error('作品附件编号有误，请重新读取作品');
   return `/api/files/${sha}`;
 }
 
 export async function exportDeck(format) {
-  if (!['md', 'pptx'].includes(format)) throw new Error('请选择 Markdown 或 PPTX');
-  const response = await request(`/api/export/${format}`);
-  const status = JSON.parse(response.headers.get('X-Deck-Status') || '{}');
-  return { blob: await response.blob(), filename: `deck.${format}`, status };
+  return request(`/api/export/${format}`, {}, 15000, async response => {
+    const status = JSON.parse(response.headers.get('X-Deck-Status') || '{}');
+    return { blob: await response.blob(), filename: `deck.${format}`, status };
+  });
 }
 
 // Runs can change without a new deck version. A late poll must not undo a save.

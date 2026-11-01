@@ -48,10 +48,18 @@ export function DeckMasterProvider({ children }) {
   useEffect(() => {
     const controller = new AbortController();
     let timer;
+    let retryDelay = 1500;
     const poll = async () => {
-      try { await refresh(controller.signal); }
-      catch (error) { if (!controller.signal.aborted) setConnectionError(error.message); }
-      if (!controller.signal.aborted) timer = setTimeout(poll, 1500);
+      let delay = 1500;
+      try {
+        await refresh(controller.signal);
+        retryDelay = 1500;
+      } catch (error) {
+        if (!controller.signal.aborted) setConnectionError(`与本地服务断开，正在重试。${error.message}`);
+        delay = retryDelay;
+        retryDelay = Math.min(retryDelay * 2, 15000);
+      }
+      if (!controller.signal.aborted) timer = setTimeout(poll, delay);
     };
     poll();
     return () => { controller.abort(); clearTimeout(timer); };
