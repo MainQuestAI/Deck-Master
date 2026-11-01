@@ -36,18 +36,6 @@ fn error_response(error: Error) -> Result<ResponseBox> {
     json_response(status, value)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn io_not_found_is_a_server_error() {
-        let temp = tempfile::tempdir().unwrap();
-        let error = std::fs::read(temp.path().join("missing-tool-output")).unwrap_err();
-        assert_eq!(error_response(error.into()).unwrap().status_code().0, 500);
-    }
-}
-
 fn local_authority(authority: &str, port: u16) -> bool {
     let Some((host, supplied_port)) = authority.rsplit_once(':') else {
         return false;
@@ -260,5 +248,17 @@ pub fn serve(project: &Path) -> Result<()> {
                 Err(error) => eprintln!("本地请求失败：{error}"),
             }
         });
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn io_not_found_is_a_server_error() {
+        let temp = tempfile::tempdir().unwrap();
+        let error = std::fs::read(temp.path().join("missing-tool-output")).unwrap_err();
+        assert_eq!(error_response(error.into()).unwrap().status_code().0, 500);
     }
 }
