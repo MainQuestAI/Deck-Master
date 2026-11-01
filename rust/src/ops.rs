@@ -6,6 +6,10 @@ use serde_json::{Value, json};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
+pub fn import(source: &Path, destination: &Path) -> Result<Value> {
+    crate::import::from_archive(source, destination)
+}
+
 pub fn new(project: &Path, title: String) -> Result<Snapshot> {
     let deck = Deck {
         brief: Brief {

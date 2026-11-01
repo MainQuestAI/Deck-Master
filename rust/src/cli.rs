@@ -50,6 +50,13 @@ enum Commands {
         #[arg(long, default_value = "", help = "作品标题")]
         title: String,
     },
+    #[command(about = "从旧项目导出档案创建新作品")]
+    Import {
+        #[arg(value_name = "OUT")]
+        source: PathBuf,
+        #[arg(value_name = "NEW")]
+        destination: PathBuf,
+    },
     #[command(about = "添加或读取材料")]
     Material {
         #[command(subcommand)]
@@ -231,6 +238,10 @@ pub fn run() -> Result<()> {
             command: ExportCommand::Pptx,
         } => print_json(ops::export_pptx(&cli.project)?),
         Commands::New { project, title } => print_json(ops::new(&project, title)?),
+        Commands::Import {
+            source,
+            destination,
+        } => print_json(ops::import(&source, &destination)?),
         Commands::Show => print_json(ops::show(&cli.project)?),
         Commands::Get { pages } => print_json(ops::get(&cli.project, pages.as_deref())?),
         Commands::Put { base, file } => {
