@@ -1,7 +1,7 @@
 use crate::error::Result;
 use crate::model::Patch;
 use crate::ops;
-use clap::{Parser, Subcommand};
+use clap::{CommandFactory, FromArgMatches, Parser, Subcommand, parser::ValueSource};
 use serde::Serialize;
 use std::io::Write;
 use std::path::PathBuf;
@@ -134,7 +134,19 @@ fn print_json(value: impl Serialize) -> Result<()> {
 }
 
 pub fn run() -> Result<()> {
-    let cli = Cli::parse();
+    let mut command = Cli::command();
+    let matches = command.get_matches_mut();
+    if matches.subcommand_name() == Some("serve")
+        && matches.value_source("project") == Some(ValueSource::CommandLine)
+    {
+        command
+            .error(
+                clap::error::ErrorKind::ArgumentConflict,
+                "serve 不接受 --project",
+            )
+            .exit();
+    }
+    let cli = Cli::from_arg_matches(&matches).unwrap_or_else(|error| error.exit());
     match cli.command {
         Commands::Serve { directory } => crate::server::serve(&directory),
         Commands::Build => print_json(ops::build(&cli.project)?),

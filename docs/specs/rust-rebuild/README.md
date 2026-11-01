@@ -148,7 +148,7 @@ deck-skill/           新 Skill（第 6 节）
 
 - `show` 返回 `{version, title, thesis, materials, pages, history}`。materials 只有 `id/name/status`；pages 只有 `id/title/purpose/todo`，不展开正文；history 按新到旧列出 `id/created_at/summary`。
 - `get` 返回 `{version, deck}`，deck 是 §3.3 的完整作品，另带从 pages 计算出的 `order: [page_id, ...]`。`get --pages p3,p4` 保留 brief、materials、framing、style，只返回选中的页，并省略 order，防止局部改稿误删未读取的页。
-- `put --base N file.json` 接受 deck 对象，也接受 get 的完整输出。顶层可以只交 brief、framing、style、order 或 pages；brief、framing、style 各自是完整单元，省略的内部字段按空值或默认值处理。pages 是带 id 的页列表，每页省略的作者字段沿用基线；同页作者字段仍作为一个单元比较。materials、image、svg、preview 即使回传也不写入。成功返回 `{version, deck}`；发生冲突时退出码为 5，stderr 中附 `{unit, current}` 列表。
+- `put --base N file.json` 接受 deck 对象，也接受 get 的完整输出。顶层可以只交 brief、framing、style、order 或 pages；brief、framing、style 各自是完整单元，省略的内部字段按空值或默认值处理。pages 是带 id 的页列表，每页省略的作者字段沿用基线；同页作者字段仍作为一个单元比较。materials、image、svg、preview 即使回传也不写入。补丁带 content 时，`put` 会静默整理中文与数字、标点之间多余的空格，含英文名的版本号后的空格保留（如“Windows 11 专业版”；notes、表格 value 及其 display_text 不动），没有独立命令或校验。成功返回 `{version, deck}`；发生冲突时退出码为 5，stderr 中附 `{unit, current}` 列表。
 - 新增页必须同时交该页及包含它的 order；删除页必须同时交该页（`{id}` 即可）及去掉它的 order；只重排时交 order 即可。块、条目、列、行和单元格的 id 由保存补齐或去重，表格列引用随之修正。
 - `material add <file>` 保存原件，再从该不可变副本解析，返回 `{version, material, extraction}`。extraction 保留工具的 text、locators、tables、image_pages、detail、status；`pending_visual` 表示 Host 仍须读图，material 的 `read` 只表示文件已解析。缺解析工具时保留原件并记录 `needs_tool`，退出码为 3；安装工具后重新 add 可补齐文本。相同文件重复加入不新增材料或版本。
 - `material text <id>` 返回 `{id, status, path}`，path 是抽取文本的本地路径；未完成解析时退出码为 3。持久作品只记录相对文件名，不记录材料源路径。
