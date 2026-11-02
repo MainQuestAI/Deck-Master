@@ -60,22 +60,6 @@ need() {
 
 need cargo
 need npm
-need_rustc() {
-  command -v rustc >/dev/null 2>&1 || {
-    echo "install.sh: 缺少 rustc；请安装 Rust 1.88.0 或更新版本后再运行" >&2
-    exit 3
-  }
-  # edition 2024 needs 1.85; `if let` chains in rust/src/tools.rs need 1.88.
-  version=$(rustc --version | awk '{print $2}')
-  major=${version%%.*}
-  minor=${version#*.}
-  minor=${minor%%.*}
-  if [ "${major:-0}" -lt 1 ] || { [ "${major:-0}" -eq 1 ] && [ "${minor:-0}" -lt 88 ]; }; then
-    echo "install.sh: 需要 rustc 1.88.0 或更新（edition 2024 与 let 链）；当前是 ${version:-未知}" >&2
-    exit 3
-  fi
-}
-need_rustc
 if command -v uv >/dev/null 2>&1; then
   venv_python=uv
 elif command -v python3.12 >/dev/null 2>&1; then
