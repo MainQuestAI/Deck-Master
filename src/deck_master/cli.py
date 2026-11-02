@@ -223,6 +223,12 @@ def build_parser() -> argparse.ArgumentParser:
     doctor.add_argument("--host-imagegen", action="store_true", help="Host reports tool availability; not provider verification")
 
     sub.add_parser("legacy-map", help="List every pre-rebuild command and its mapping class (spec 09.6)")
+    legacy_export = sub.add_parser(
+        "legacy-export",
+        help="只读导出旧项目为中性档案，供 deck import 使用",
+    )
+    legacy_export.add_argument("project")
+    legacy_export.add_argument("out")
 
     workbench_cmd = sub.add_parser("workbench", help="Open the independent project launcher or an explicit project")
     workbench_cmd.add_argument("--project")
@@ -637,6 +643,9 @@ def main(argv: list[str] | None = None) -> int:
             return 3 if result["status"] == "core_ready_ui_unavailable" else 0
         if options.command == 'legacy-map':
             return _emit(legacy_mapping_table())
+        if options.command == "legacy-export":
+            from .legacy_export import export_project
+            return _emit(export_project(options.project, options.out))
         if options.command == 'install':
             from .install import install_candidate,activate,rollback,transaction_status,recover_transaction
             from .errors import InstallationTransactionError

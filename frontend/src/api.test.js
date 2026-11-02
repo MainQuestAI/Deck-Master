@@ -1,45 +1,28 @@
 import { test, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { ApiError, getDeck, putDeck, cancelRun, buildDeck, restoreVersion, exportDeck, fileUrl, mergeWorkspace, createDraft, createPageId, draftPatch } from './api.js';
+import { ApiError, getDeck, putDeck, cancelRun, buildDeck, restoreVersion, exportDeck, fileUrl, mergeWorkspace, createDraft, createPageId, draftPatch, formatFinding } from './api.js';
 
 const originalFetch = globalThis.fetch;
 afterEach(() => { globalThis.fetch = originalFetch; });
 
-test('Card B: deleting a page then creating another preserves unsaved drafts', async () => {
-  const page = { id: 'p1', content: { title: '原稿', body_blocks: [] }, notes: '讲稿' };
-  const drafts = { p1: createDraft(page, 1) };
-  drafts.p1.page.content.title = '作者未保存的输入';
-  drafts.p1.page.notes = '作者未保存的讲稿';
-  const before = structuredClone(drafts.p1);
-  // The Host deletes the page; polling must not remove its local draft.
-  globalThis.fetch = async () => Response.json({ version: 2, deck: { pages: [] } });
-  const workspace = await getDeck();
-  const id = createPageId(workspace.deck.pages, drafts);
-  assert.match(id, /^p[0-9a-f]{8}$/);
-  assert.equal(Object.hasOwn(drafts, id), false);
-  globalThis.fetch = async (_url, options) => {
-    const patch = JSON.parse(options.body);
-    assert.deepEqual(patch, { order: [id], pages: [{ id }] });
-    return Response.json({ version: 3, deck: { pages: [{ ...page, id }] } });
-  };
-  const result = await putDeck(workspace.version, { order: [id], pages: [{ id }] });
-  drafts[id] = createDraft(result.deck.pages[0], result.version);
-  assert.deepEqual(drafts.p1, before);
-  assert.notEqual(drafts[id], drafts.p1);
-  assert.equal(result.deck.pages.some(item => item.id === 'p1'), false);
-  assert.equal(drafts.p1.page.content.title, '作者未保存的输入');
-  assert.equal(drafts.p1.page.notes, '作者未保存的讲稿');
+test('table findings show the cell location and expected and actual text', () => {
+  const output = formatFinding({
+    code: 'table_cell_text_mismatch', table_id: 't1', row_id: 'r2', column_id: 'c3',
+    expected: '合成原文', actual: '回读文字',
+  });
+  for (const detail of ['表格单元格文字不一致', '表格 t1', '行 r2', '列 c3', '期望："合成原文"', '实际："回读文字"']) {
+    assert.ok(output.includes(detail), output);
+  }
 });
 
-test('Card B: page IDs retry collisions with both saved pages and draft keys', () => {
-  const pages = [{ id: 'p11111111' }];
-  const drafts = { p22222222: createDraft({ id: 'p22222222' }, 1) };
-  const candidates = ['11111111-aaaa', '22222222-bbbb', '33333333-cccc'];
-  const id = createPageId(pages, drafts, () => candidates.shift());
-  assert.equal(id, 'p33333333');
-  assert.equal(candidates.length, 0);
-  assert.deepEqual(pages, [{ id: 'p11111111' }]);
-  assert.deepEqual(Object.keys(drafts), ['p22222222']);
+test('finding details retain empty values and support partial table locations', () => {
+  const output = formatFinding({ code: 'table_cell_text_mismatch', table_id: 't1', expected: ' ', actual: '' });
+  assert.ok(output.includes('表格 t1'));
+  assert.ok(output.includes('期望：" "'));
+  assert.ok(output.includes('实际：""'));
+  assert.ok(!output.includes('undefined'));
+  assert.equal(formatFinding({ code: 'missing_node', text: '正文', element: 'n1' }), '缺少节点：正文（n1）');
+  assert.equal(formatFinding({ code: 'new_code' }), 'new_code');
 });
 
 test('save sends the bare patch and retains submitted input on conflict', async () => {
@@ -191,4 +174,41 @@ test('timeout covers response content and caller cancellation still aborts polli
   await Promise.resolve();
   controller.abort();
   await aborted;
+});
+
+test('Card B: deleting a page then creating another preserves unsaved drafts', async () => {
+  const page = { id: 'p1', content: { title: '原稿', body_blocks: [] }, notes: '讲稿' };
+  const drafts = { p1: createDraft(page, 1) };
+  drafts.p1.page.content.title = '作者未保存的输入';
+  drafts.p1.page.notes = '作者未保存的讲稿';
+  const before = structuredClone(drafts.p1);
+  // The Host deletes the page; polling must not remove its local draft.
+  globalThis.fetch = async () => Response.json({ version: 2, deck: { pages: [] } });
+  const workspace = await getDeck();
+  const id = createPageId(workspace.deck.pages, drafts);
+  assert.match(id, /^p[0-9a-f]{8}$/);
+  assert.equal(Object.hasOwn(drafts, id), false);
+  globalThis.fetch = async (_url, options) => {
+    const patch = JSON.parse(options.body);
+    assert.deepEqual(patch, { order: [id], pages: [{ id }] });
+    return Response.json({ version: 3, deck: { pages: [{ ...page, id }] } });
+  };
+  const result = await putDeck(workspace.version, { order: [id], pages: [{ id }] });
+  drafts[id] = createDraft(result.deck.pages[0], result.version);
+  assert.deepEqual(drafts.p1, before);
+  assert.notEqual(drafts[id], drafts.p1);
+  assert.equal(result.deck.pages.some(item => item.id === 'p1'), false);
+  assert.equal(drafts.p1.page.content.title, '作者未保存的输入');
+  assert.equal(drafts.p1.page.notes, '作者未保存的讲稿');
+});
+
+test('Card B: page IDs retry collisions with both saved pages and draft keys', () => {
+  const pages = [{ id: 'p11111111' }];
+  const drafts = { p22222222: createDraft({ id: 'p22222222' }, 1) };
+  const candidates = ['11111111-aaaa', '22222222-bbbb', '33333333-cccc'];
+  const id = createPageId(pages, drafts, () => candidates.shift());
+  assert.equal(id, 'p33333333');
+  assert.equal(candidates.length, 0);
+  assert.deepEqual(pages, [{ id: 'p11111111' }]);
+  assert.deepEqual(Object.keys(drafts), ['p22222222']);
 });

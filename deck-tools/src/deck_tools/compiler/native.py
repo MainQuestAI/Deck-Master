@@ -68,7 +68,7 @@ def attach_notes(data, records):
     if len(deck.slides) != len(records):
         raise ValueError('notes page count differs from actual slides')
     for slide, record in zip(deck.slides, records, strict=True):
-        slide.name = record['page_id']
+        slide.name = record['page_id'] or ''
         text = normalize_notes(record['notes'])
         if text:
             _write_notes(slide, text)

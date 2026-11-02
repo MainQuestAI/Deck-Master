@@ -49,7 +49,46 @@ uv venv --python 3.12 .venv
 uv pip install --python .venv/bin/python -e ".[dev]"
 ```
 
-安装后的统一命令入口是 `deck-master ...`；源码环境中也可用 `python -m deck_master ...`。激活发行版本时会注册 Master、Content、Design、Review 四个 Codex Skill，详见[安装说明](skills/deck-master/references/installation.md)。
+旧工作台的命令是 `deck-master ...`；源码环境中也可用 `python -m deck_master ...`。`scripts/install.sh` 安装的 Rust 命令是 `deck`。激活发行版本时会注册 Master、Content、Design、Review 四个 Codex Skill，详见[安装说明](skills/deck-master/references/installation.md)。
+
+## 新装
+
+从源码同时安装 Rust 命令、生产工具和 Codex Skill：
+
+需要 Rust 1.88 或更新版本，最低版本由 Cargo 检查。
+
+```bash
+./scripts/install.sh
+```
+
+脚本会构建 Web UI，把 `deck` 装到 `~/.local/bin`，用 Python 3.12 在
+`~/.local/share/deck/venv` 建立独立的 deck-tools 环境，并把 `deck-skill/`
+链接到 `~/.codex/skills/deck`。不执行托管安装的激活或回滚。
+
+可选参数：`--prefix DIR`、`--skill-dir PATH`、`--dry-run`。若
+`~/.local/bin` 不在 PATH 中，请加入，或用该目录下 `deck` 的完整路径。
+Skill 路径必须是新的，或已经是指向本仓库 `deck-skill/` 的同一链接；已有
+其他文件或链接时脚本报错，不会覆盖。
+
+安装后用 `deck new ./my-deck --title '方案标题'` 新建作品目录。链接的
+Skill 说明首跑命令。
+
+新装用户不用设置 `DECK_TOOLS_PYTHON`：`deck` 使用安装前缀里的 venv。
+`cargo install --force` 会换掉 `PREFIX/bin` 里已有的 `deck`。deck-tools 是对当前
+checkout 的可编辑安装，移动或删除这份 checkout 后，该 venv 会无法导入 deck-tools。
+
+把旧项目迁到新目录，旧目录保持原样：
+
+```bash
+deck-master legacy-export <project> <out>
+deck import <out> <new>
+```
+
+`<out>` 必须在 `<project>` 之外。导入后的原图和 SVG 以 `basis` `imported` 写入，总览里这些页显示为已过期。`deck export pptx` 会报告 `input_changed`。
+
+最近 PPTX 清洗成功后才可下载，保留其自身的页序和讲稿。清洗失败或缺工具时，
+正文仍可导入、编辑；报告中的 `last_export:false` 与 `unmapped` 会说明最近 PPTX
+未迁入的原因及下一步。未清洗文件仍留在旧项目和迁移档案中。
 
 ## 快速开始
 

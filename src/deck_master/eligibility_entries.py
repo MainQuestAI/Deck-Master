@@ -353,6 +353,7 @@ CLI_ENTRIES: dict[str, tuple[str | None, str, str | None]] = {
     # -- read-only / non-project
     "doctor": (None, "-", READ_REASONS["install"]),
     "legacy-map": (None, "-", READ_REASONS["read_model"]),
+    "legacy-export": (None, "-", READ_REASONS["external_report"]),
     "view": (None, "-", READ_REASONS["read_model"]),
     "workbench": (None, "-", READ_REASONS["install"]),
     "install candidate": (None, "-", READ_REASONS["install"]),

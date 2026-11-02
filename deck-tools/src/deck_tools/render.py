@@ -133,10 +133,10 @@ def readback(pptx_path,pages,expected_pages):
             joined=normalize(''.join(texts))
             tables = {s['table_id'] for s in source['shapes']
                       if s.get('native_table') and s.get('table_frame')}
-            for graphic in root.findall('.//p:graphicFrame', ns):
-                table_id = graphic.find('p:nvGraphicFramePr/p:cNvPr', ns).get('name')
-                if table_id not in tables:
-                    continue
+            graphics = {graphic.find('p:nvGraphicFramePr/p:cNvPr', ns).get('name'): graphic
+                        for graphic in root.findall('.//p:graphicFrame', ns)}
+            for table_id in sorted(tables):
+                graphic = graphics.get(table_id)
                 members = [s for s in source['shapes'] if s.get('table_id') == table_id]
                 frame = next(s for s in members if s.get('native_table'))
                 xs = sorted({frame['x'], frame['x'] + frame['width'],
@@ -145,20 +145,31 @@ def readback(pptx_path,pages,expected_pages):
                 ys = sorted({frame['y'], frame['y'] + frame['height'],
                              *(s['points'][0][1] for s in members if s['kind'] == 'line'
                                and s['points'][0][1] == s['points'][1][1])})
-                for r, row in enumerate(graphic.findall('.//a:tbl/a:tr', ns)):
+                cells = {}
+                svg_findings = {}
+                native_rows = graphic.findall('.//a:tbl/a:tr', ns) if graphic is not None else []
+                for r, row in enumerate(native_rows):
                     for c, cell in enumerate(row.findall('a:tc', ns)):
                         expected = sorted((s for s in members if s['kind'] == 'text'
                                            and r + 1 < len(ys) and c + 1 < len(xs)
                                            and xs[c] <= s['x'] < xs[c + 1] and ys[r] <= s['y'] < ys[r + 1]),
                                           key=lambda s: (s['y'], s['x']))
                         actual = ''.join(t.text or '' for t in cell.findall('.//a:t', ns))
+                        cells[r, c] = {'text': actual, 'members': expected}
                         if any(int(props.get('sz', '600')) < 600
                                for props in cell.findall('.//a:r/a:rPr', ns)):
                             findings.append({'page_id': page['page_id'], 'code': 'unreadable_text',
                                              'element': table_id, 'row': r, 'column': c,
                                              'detail': 'table cell text is under 6pt'})
                         if normalize(actual) != normalize(''.join(s['text'] for s in expected)):
-                            findings.append({'page_id': page['page_id'], 'code': 'svg_ppt_text_mismatch', 'element': table_id})
+                            svg_findings[r, c] = {'page_id': page['page_id'], 'code': 'svg_ppt_text_mismatch',
+                                                  'element': table_id, 'row': r, 'column': c}
+                from .readback_relations import check_native_table_content
+                content_findings = check_native_table_content(page, table_id, cells)
+                for finding in content_findings:
+                    svg_findings.pop((finding['row'], finding['column']), None)
+                findings.extend(content_findings)
+                findings.extend(svg_findings.values())
             # Legacy geometry checks apply to drawn grids, not native cells.
             # Read native table text above without manufacturing shape XML.
             checked_source = {**source, 'shapes': [s for s in source['shapes'] if s.get('table_id') not in tables]}
@@ -170,7 +181,7 @@ def readback(pptx_path,pages,expected_pages):
                             for sp in root.findall('.//p:sp', ns) if sp.findall('.//a:t', ns)]
             if native_texts != svg_texts:
                 findings.append({'page_id':page['page_id'],'code':'svg_ppt_text_mismatch'})
-            for atom in visible_atoms(page):
+            for atom in visible_atoms(checked_page):
                 if atom.get('text') and normalize(atom['text']) not in joined:
                     findings.append({'page_id':page['page_id'],'code':'missing_visible_atom','atom_id':atom['atom_id'],'text':atom['text']})
             from .readback_text import _check_required_text
