@@ -55,6 +55,8 @@ uv pip install --python .venv/bin/python -e ".[dev]"
 
 从源码同时安装 Rust 命令、生产工具和 Codex Skill：
 
+需要 Rust 1.88 或更新版本，最低版本由 Cargo 检查。
+
 ```bash
 ./scripts/install.sh
 ```
@@ -83,6 +85,10 @@ deck import <out> <new>
 ```
 
 `<out>` 必须在 `<project>` 之外。导入后的原图和 SVG 以 `basis` `imported` 写入，总览里这些页显示为已过期。`deck export pptx` 会报告 `input_changed`。
+
+最近 PPTX 清洗成功后才可下载，保留其自身的页序和讲稿。清洗失败或缺工具时，
+正文仍可导入、编辑；报告中的 `last_export:false` 与 `unmapped` 会说明最近 PPTX
+未迁入的原因及下一步。未清洗文件仍留在旧项目和迁移档案中。
 
 ## 快速开始
 

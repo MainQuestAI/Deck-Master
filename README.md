@@ -93,6 +93,8 @@ Codex Skills (Master, Content, Design, Review); see [installation](skills/deck-m
 
 The Rust CLI, file tools, and Codex skill install from a source checkout:
 
+Rust 1.88 or later is required; Cargo checks the declared minimum version.
+
 ```bash
 ./scripts/install.sh
 ```
@@ -125,6 +127,12 @@ deck import <out> <new>
 `<out>` has to sit outside `<project>`. Imported images and SVG are stored with
 `basis` `imported`, so the overview shows those pages as stale. `deck export pptx`
 reports `input_changed`.
+
+The most recent PPTX is cleaned before becoming downloadable, preserving its own
+slide order and speaker notes. If that cleanup fails or its tool is unavailable,
+the editable content still imports; `last_export:false` and `unmapped` identify
+the unavailable PPTX and explain the next step. The uncleaned file stays in the
+old project and archive.
 
 ## Quick Start
 

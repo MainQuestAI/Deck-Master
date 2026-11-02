@@ -70,7 +70,7 @@ deck-tools/           Python 包 deck_tools（第 4 节）
 deck-skill/           新 Skill（第 6 节）
 ```
 
-- Rust stable，edition 2024，提交 Cargo.lock。依赖：clap、serde、serde_json、rusqlite（bundled）、tiny_http、thiserror、sha2、tempfile。本地服务用同步请求线程，不引入异步运行时。
+- Rust stable（最低 1.88，由 Cargo.toml 的 rust-version 声明），edition 2024，提交 Cargo.lock。依赖：clap、serde、serde_json、rusqlite（bundled）、tiny_http、thiserror、sha2、tempfile。本地服务用同步请求线程，不引入异步运行时。
 - 先在一个包内按文件分模块，出现真实需要时再拆。
 - `rust.yml` 在 PR 和 `main` push 上自动执行 AGENTS.md 第 3 节的 Rust 检查与 deck-tools pytest；pytest 用 `-m "not render"` 排除 67 条需要 rsvg-convert/soffice 的用例，合并前须在本机全量运行。`rebuild.yml` 执行旧线检查，只在 `main` push 后自动运行，旧线的 PR 在合并前本地执行第 3 节的命令。两者都保留手动入口，功能分支 push 不单独触发 CI。
 - 旧线按本次主干更新的 before/head 差异分流：只涉及 `rust/`、`deck-tools/`、`deck-skill/`、本开发稿目录或 `rust.yml` 时，跳过旧线测试并由 Group report 返回不适用；其他或混合路径仍执行旧线单元、渲染、浏览器和安装验证。日常单元使用 Python 3.12 / Node 22，手动触发时运行完整 2×2 矩阵。分流失败、适用检查失败或意外跳过，Group report 均返回失败。
@@ -176,12 +176,15 @@ svg 类没有外部付费调用，不需要 `run call`，也没有 max_calls。�
 
 全部页面都已采用时，run 自动变为 done。
 
+手动采用在工具检查后、写事务内重读候选文件名。候选已变化时返回冲突（CLI 5 / HTTP 409），不写作品版本或 done；候选未变时正常采用。已取消 run 和依据过期的结果仍可手动采用。
+
 ### 3.6 构建与导出
 
 - `deck build`：取每页当前的 SVG，调用 `deck_tools build`（编译、回读、清洗），并记录输入摘要：页序，加每页 svg 与 notes 的哈希。缺 SVG 的页不进入 PPTX；SVG 已过期的页照常编入，回读会报出文字不一致。
 - `deck export md`：任何时候都可以导出可读稿，包括未完成的作品，待补项照常显示。
 - `deck export pptx`：给出最近一次构建。该构建的输入摘要与当前作品不一致时给出提示。不用版本号判断，因为 restore 会产生编号更大、内容更旧的版本。
 - build 和 export 的输出里，以及界面的下载按钮旁，都列出缺 SVG 的页和 SVG 已过期的页。界面取 `POST /api/build` 的响应或轮询得到的 `artifact_status`。
+- 原生表格回读按稳定行列身份核对 content 与实际单元格文字，并保留 SVG → PPT 的转换检查；同一原因不重复报告。发现项仍只报告，不增加采用或导出门槛。
 - 编译只在执行 `deck build` 时发生。读取、摘要、列表都不会触发编译。
 - 构建是一次本地命令，需要中断时用 Ctrl-C，不经过 run 机制。
 
@@ -329,6 +332,8 @@ Host 按需读取：`deck show`（摘要）、`deck get --pages p3,p4`（指定�
 - 迁移：
   - 旧线新增只读命令 `deck-master legacy-export <project> <out>`，复用 `Store.load_document` 与对象读取，导出中性 JSON 和文件，包括 brief、材料、framing 摘要、页 content、讲稿、原图、SVG 和最近一次导出。旧审阅与授权记录原样附带，供查阅。现有的 `export --purpose engineering` 只复制对象树，不产出中性 JSON，所以不能直接拿来代替。`<out>` 必须在旧项目目录之外。
   - `deck import <out> <new>`：目标已存在时报错；无法映射的内容逐项列在报告里；档案里缺文件或文件名越出 `files/` 时导入失败，并且不留下目标目录。在途调用或结果未知的调用只列出，不恢复。
+  - 最近 PPTX 先生成清洗副本，按原 PPTX 页序保留其正文和讲稿；只把清洗后的文件存入附件并登记构建。文件名为空，或该 PPTX 清洗拒绝、损坏、缺工具时，内容继续导入并返回 `last_export:false`，在 `unmapped` 说明位置、原因和处理方式。原件保留在旧目录和档案中。路径、文件读取、附件落盘及数据库错误照常返回。
+  - framing 优先保留 narrative 的中心主张，没有中心主张时使用 v1 input_summary，沟通目标不代填。reported_fact 和 calculation 进入 facts，hypothesis 进入 assumptions，角色不改变 authority；原陈述、限定和开放问题保留。未映射节点及已处理问题的原文、状态列入 unmapped。
   - 导入后的原图和 SVG 写入 `basis` 为 `imported`。总览把这些页标为已过期。`deck export pptx` 读到的构建摘要是字面量 `imported`，因此报告 `input_changed`。
   - 只迁移老板指定的项目。旧目录不变，所以回退就是继续使用旧目录。迁移步骤是 `deck-master legacy-export <project> <out>`，然后 `deck import <out> <new>`。
   - 中性档案是目录，格式名 `legacy-export.v1`：
