@@ -6,6 +6,10 @@ use serde_json::{Value, json};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
+pub fn import(source: &Path, destination: &Path) -> Result<Value> {
+    crate::import::from_archive(source, destination)
+}
+
 pub fn new(project: &Path, title: String) -> Result<Snapshot> {
     let deck = Deck {
         brief: Brief {
@@ -975,6 +979,11 @@ pub fn run_adopt(project: &Path, id: i64, page_id: &str) -> Result<Value> {
         );
     }
     let tx = store.transaction()?;
+    if run_page(&tx, id, page_id)?.2.as_deref() != Some(file.as_str()) {
+        return Err(Error::Conflict(
+            "候选已更新；请读取当前候选后重新采用".into(),
+        ));
+    }
     let mut snapshot = store::current(&tx)?;
     let page = snapshot
         .deck

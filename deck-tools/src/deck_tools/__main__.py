@@ -41,8 +41,10 @@ def main():
         elif args.command == "sanitize":
             path = Path(job["path"])
             output = Path(job["output"])
+            cleaned = sanitize(path.read_bytes(), path.suffix, path.name,
+                               preserve_notes=job.get("preserve_notes", False))
             with output.open("xb") as stream:
-                stream.write(sanitize(path.read_bytes(), path.suffix, path.name))
+                stream.write(cleaned)
             result = {"path": str(output)}
         else:
             result = compile_job(job, preview=args.command == "check-page")

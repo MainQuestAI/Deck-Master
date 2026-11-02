@@ -43,7 +43,15 @@ impl Reply {
 
 impl Service {
     fn start(project: &Path) -> Self {
-        let mut child = Command::new(env!("CARGO_BIN_EXE_deck"))
+        Self::with_env(project, &[])
+    }
+
+    fn with_env(project: &Path, environment: &[(&str, &std::ffi::OsStr)]) -> Self {
+        let mut command = Command::new(env!("CARGO_BIN_EXE_deck"));
+        for (name, value) in environment {
+            command.env(name, value);
+        }
+        let mut child = command
             .arg("serve")
             .arg(project)
             .current_dir(project)
@@ -109,6 +117,145 @@ impl Service {
             status,
             headers,
             body: bytes[end + 4..].to_vec(),
+        }
+    }
+}
+
+#[test]
+fn adopt_rechecks_candidate_after_tool_work_for_cli_and_http() {
+    use std::{net::TcpListener, os::unix::fs::PermissionsExt, sync::mpsc, thread};
+    for http in [false, true] {
+        for replaced in [false, true] {
+            let temp = tempfile::tempdir().unwrap();
+            let project = temp.path().join("project");
+            ops::new(&project, "Synthetic adoption race".into()).unwrap();
+            edit(
+                &project,
+                1,
+                json!({"order":["p1"],"pages":[{"id":"p1","content":{"title":"Main"}}]}),
+            );
+            let id =
+                ops::run_start(&project, "svg", &["p1".into()], None).unwrap()["runs"][0]["id"]
+                    .as_i64()
+                    .unwrap();
+            ops::run_cancel(&project, id).unwrap();
+            let store = Store::open(&project).unwrap();
+            let a = store.add_file(b"<svg>A</svg>", "svg").unwrap();
+            let b = if replaced {
+                store.add_file(b"<svg>B</svg>", "svg").unwrap()
+            } else {
+                a.clone()
+            };
+            // Seed saved candidates; the wrapper isolates adoption from rendering.
+            store
+                .connection
+                .execute(
+                    "UPDATE run_pages SET result_file=?,status='unadopted' WHERE run_id=?",
+                    rusqlite::params![a, id],
+                )
+                .unwrap();
+            let before = ops::get(&project, None).unwrap();
+            let wrapper = temp.path().join("python-wrapper");
+            let script = temp.path().join("tool.py");
+            std::fs::write(
+                &wrapper,
+                "#!/bin/sh\nexec \"$DECK_TEST_PYTHON\" \"$DECK_TEST_WRAPPER\" \"$@\"\n",
+            )
+            .unwrap();
+            std::fs::set_permissions(&wrapper, std::fs::Permissions::from_mode(0o755)).unwrap();
+            std::fs::write(
+                &script,
+                r#"import json, os, socket, sys
+from pathlib import Path
+from PIL import Image
+job = json.loads(Path(sys.argv[-1]).read_text())
+preview = Path(job['output']) / 'preview.png'
+preview.parent.mkdir(parents=True)
+Image.new('RGB', (8, 8), 'navy').save(preview)
+host, port = os.environ['DECK_TEST_BARRIER'].split(':')
+with socket.create_connection((host, int(port)), timeout=30) as channel:
+    assert channel.recv(1) == b'1'
+print(json.dumps({'preview':str(preview),'findings':[]}))
+"#,
+            )
+            .unwrap();
+            let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+            let address = listener.local_addr().unwrap().to_string();
+            let (sender, receiver) = mpsc::channel();
+            thread::spawn(move || sender.send(listener.accept().unwrap().0).unwrap());
+            let python = std::env::var_os("DECK_TOOLS_PYTHON").unwrap();
+            let environment = [
+                ("DECK_TOOLS_PYTHON", wrapper.as_os_str()),
+                ("DECK_TEST_PYTHON", python.as_os_str()),
+                ("DECK_TEST_WRAPPER", script.as_os_str()),
+                ("DECK_TEST_BARRIER", std::ffi::OsStr::new(&address)),
+            ];
+            let operation = if http {
+                let service = Service::with_env(&project, &environment);
+                thread::spawn(move || {
+                    let reply =
+                        service.request("POST", &format!("/api/runs/{id}/adopt/p1"), &[], "{}");
+                    (
+                        i32::from(reply.status),
+                        String::from_utf8(reply.body).unwrap(),
+                    )
+                })
+            } else {
+                let mut command = Command::new(env!("CARGO_BIN_EXE_deck"));
+                for (name, value) in environment {
+                    command.env(name, value);
+                }
+                let child = command
+                    .arg("--project")
+                    .arg(&project)
+                    .args(["run", "adopt", &id.to_string(), "p1"])
+                    .stdout(Stdio::piped())
+                    .stderr(Stdio::piped())
+                    .spawn()
+                    .unwrap();
+                thread::spawn(move || {
+                    let output = child.wait_with_output().unwrap();
+                    (
+                        output.status.code().unwrap(),
+                        String::from_utf8(output.stderr).unwrap(),
+                    )
+                })
+            };
+            let mut barrier = receiver.recv_timeout(Duration::from_secs(30)).unwrap();
+            store
+                .connection
+                .execute(
+                    "UPDATE run_pages SET result_file=?,status='unadopted' WHERE run_id=?",
+                    rusqlite::params![b, id],
+                )
+                .unwrap();
+            barrier.write_all(b"1").unwrap();
+            let (status, message) = operation.join().unwrap();
+            let expected = match (http, replaced) {
+                (true, true) => 409,
+                (true, false) => 200,
+                (false, true) => 5,
+                (false, false) => 0,
+            };
+            assert_eq!(status, expected, "{message}");
+            let current = ops::get(&project, None).unwrap();
+            let run = ops::run_show(&project, Some(id)).unwrap();
+            let page = &run["runs"][0]["pages"][0];
+            assert_eq!(page["result_file"], b);
+            if replaced {
+                assert_eq!(current, before);
+                assert_eq!(page["status"], "unadopted");
+                assert!(message.contains("候选"), "{message}");
+                if http {
+                    assert_eq!(
+                        serde_json::from_str::<Value>(&message).unwrap()["exit_code"],
+                        5
+                    );
+                }
+            } else {
+                assert_eq!(current["deck"]["pages"][0]["svg"]["file"], a);
+                assert_eq!(page["status"], "done");
+            }
         }
     }
 }
