@@ -17,6 +17,7 @@ class OperationError(ValueError):
 PRIVATE = re.compile(
     r"(?:file://|/(?:Users|home|workspace|codex|root|mnt|opt|etc|var|private/tmp|tmp)/|[A-Za-z]:\\|\bBearer\s+[A-Za-z0-9_.-]{8,}|\bsk-[A-Za-z0-9_-]{16,})", re.I
 )
+HTTP_URL = re.compile(r'https?://[^\s<>"\']+', re.I)
 
 
 def reject(where, reason):
@@ -24,9 +25,14 @@ def reject(where, reason):
 
 
 def text_safe(value, where):
-    match = PRIVATE.search(value) if value else None
-    if match:
-        rule = "凭据样式" if match.group().lower().startswith(("bearer", "sk-")) else "本机路径"
+    if not value:
+        return
+    urls = [match.span() for match in HTTP_URL.finditer(value)]
+    for match in PRIVATE.finditer(value):
+        credential = match.group().lower().startswith(("bearer", "sk-"))
+        if not credential and any(start <= match.start() and match.end() <= end for start, end in urls):
+            continue
+        rule = "凭据样式" if credential else "本机路径"
         reject(where, f"命中{rule}规则；请修改该字段后重试")
 
 
@@ -47,7 +53,7 @@ def public_projection_safe(value, where):
     """Scan every string in a public projection, including identity metadata."""
     if isinstance(value, str):
         text_safe(value, where)
-        for url in re.findall(r'https?://[^\s<>]+', value, re.I):
+        for url in HTTP_URL.findall(value):
             link_safe(url, where + '/link')
     elif isinstance(value, dict):
         for key, child in value.items():
