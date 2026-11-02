@@ -31,8 +31,13 @@ class LegacyExportError(ValueError):
 
 
 def export_project(project: str | Path, out: str | Path) -> dict[str, Any]:
-    root = Path(project).expanduser()
+    root = Path(project).expanduser().resolve()
     destination = Path(out).expanduser()
+    resolved_out = destination.resolve()
+    if resolved_out.is_relative_to(root):
+        raise LegacyExportError(
+            f"输出目录位于旧项目之内：{resolved_out}；请写到项目目录之外"
+        )
     if destination.exists():
         raise LegacyExportError(f"输出目录已存在：{destination}；请指定新目录")
     store = Store(root)
@@ -158,47 +163,87 @@ def _framing(
         "assumptions": [],
         "questions": [],
     }
-    plan = _read_json(store, document.get("content_plan"), "content_plan", "", unmapped)
-    if plan is not None:
-        _apply_plan(plan, framing)
-    narrative = _read_json(store, document.get("narrative"), "narrative", "", unmapped)
-    if narrative is not None:
-        _apply_narrative(narrative, framing, unmapped)
+    if document.get("content_plan"):
+        plan = _read_json(store, document.get("content_plan"), "content_plan", "", unmapped)
+        if plan is not None:
+            _apply_plan(plan, framing)
+    if document.get("narrative"):
+        narrative = _read_json(store, document.get("narrative"), "narrative", "", unmapped)
+        if narrative is not None:
+            _apply_narrative(narrative, framing, unmapped)
     return framing
 
 
+def _append_text(items: list[str], text: Any) -> None:
+    if isinstance(text, str) and text and text not in items:
+        items.append(text)
+
+
+def _append_open_questions(questions: list[str], issues: Any) -> None:
+    for issue in issues or []:
+        if not isinstance(issue, dict) or issue.get("resolution") != "open":
+            continue
+        _append_text(questions, issue.get("question"))
+
+
+def _ref_labels(links: Any) -> list[str]:
+    labels = []
+    for link in links or []:
+        if not isinstance(link, dict):
+            continue
+        label = f"{link.get('source_id') or ''} {link.get('locator') or ''}".strip()
+        if label:
+            labels.append(label)
+    return labels
+
+
 def _apply_plan(plan: dict[str, Any], framing: dict[str, Any]) -> None:
-    payload = plan.get("input") or {}
+    payload = plan.get("input") if isinstance(plan.get("input"), dict) else {}
     summary = payload.get("input_summary")
     if isinstance(summary, str) and summary:
         framing["thesis"] = summary
-    goals = {goal.get("goal_id"): goal for goal in payload.get("goals") or []}
+    goals = {
+        goal.get("goal_id"): goal
+        for goal in payload.get("goals") or []
+        if isinstance(goal, dict)
+    }
+    roles = [
+        role for role in payload.get("page_roles") or [] if isinstance(role, dict)
+    ]
+    roles_by_page = {role.get("page_id"): role for role in roles}
     chapters = payload.get("chapters") or []
     if chapters:
         pillars = []
         for chapter in chapters:
-            points = []
+            if not isinstance(chapter, dict):
+                continue
+            points: list[str] = []
             for goal_id in chapter.get("goal_ids") or []:
-                purpose = (goals.get(goal_id) or {}).get("purpose")
-                if purpose:
-                    points.append(purpose)
+                _append_text(points, (goals.get(goal_id) or {}).get("purpose"))
             for page_id in chapter.get("page_ids") or []:
+                role = roles_by_page.get(page_id) or {}
+                _append_text(points, role.get("intended_takeaway"))
                 for goal in goals.values():
-                    if goal.get("page_id") == page_id and goal.get("purpose"):
-                        points.append(goal["purpose"])
+                    if goal.get("page_id") == page_id:
+                        _append_text(points, goal.get("purpose"))
             pillars.append({"title": chapter.get("title") or "", "points": points})
         framing["pillars"] = pillars
-    elif payload.get("page_roles"):
+    elif roles:
         framing["pillars"] = [
             {
                 "title": role.get("role") or role.get("intended_takeaway") or "",
                 "points": [role["intended_takeaway"]] if role.get("intended_takeaway") else [],
             }
-            for role in payload.get("page_roles") or []
+            for role in roles
         ]
-    questions = list(payload.get("unresolved_facts") or [])
+    questions: list[str] = []
+    for fact in payload.get("unresolved_facts") or []:
+        _append_text(questions, fact)
     for goal in payload.get("goals") or []:
-        questions.extend(goal.get("unresolved_facts") or [])
+        if isinstance(goal, dict):
+            for fact in goal.get("unresolved_facts") or []:
+                _append_text(questions, fact)
+    _append_open_questions(questions, payload.get("issues"))
     if questions:
         framing["questions"] = questions
 
@@ -235,10 +280,7 @@ def _apply_narrative(
                 "reason": "主张图节点无法映射到 framing 的摘要字段",
             }
         )
-    for issue in narrative.get("issues") or []:
-        text = issue.get("statement") or issue.get("issue_id") or ""
-        if text:
-            framing["questions"].append(text)
+    _append_open_questions(framing["questions"], narrative.get("issues"))
     if narrative.get("edges"):
         unmapped.append(
             {
@@ -277,13 +319,14 @@ def _style(
         if artifact is not None:
             file_name = _copy_ref(store, artifact.get("file"), files_dir)
         if not file_name:
-            unmapped.append(
-                {
-                    "kind": "asset",
-                    "id": asset_id,
-                    "reason": "素材文件无法复制",
-                }
-            )
+            if artifact is not None:
+                unmapped.append(
+                    {
+                        "kind": "asset",
+                        "id": asset_id,
+                        "reason": "素材文件无法复制",
+                    }
+                )
             continue
         assets.append({"id": asset_id, "file": file_name})
     if canvas.get("fit"):
@@ -313,7 +356,7 @@ def _pages(
     files_dir: Path,
     unmapped: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
-    purposes, layouts, todos, refs = _page_plan_fields(store, document)
+    purposes, todos, refs = _page_plan_fields(store, document)
     pages = []
     for entry in document.get("pages") or []:
         page_id = entry.get("page_id") or ""
@@ -350,7 +393,7 @@ def _pages(
             {
                 "id": page_id,
                 "purpose": purposes.get(page_id) or visual.get("intent") or "",
-                "layout": layouts.get(page_id) or visual.get("layout_hint") or "",
+                "layout": visual.get("layout_hint") or "",
                 "content": {
                     "title": visible.get("title") or "",
                     "subtitle": visible.get("subtitle") or "",
@@ -373,32 +416,55 @@ def _pages(
 def _page_plan_fields(
     store: Store,
     document: dict[str, Any],
-) -> tuple[dict[str, str], dict[str, str], dict[str, list[str]], dict[str, list[str]]]:
+) -> tuple[dict[str, str], dict[str, list[str]], dict[str, list[str]]]:
     purposes: dict[str, str] = {}
-    layouts: dict[str, str] = {}
     todos: dict[str, list[str]] = {}
     refs: dict[str, list[str]] = {}
     plan = _load(store, document.get("content_plan"))
     if plan is None:
-        return purposes, layouts, todos, refs
-    payload = plan.get("input") or {}
+        return purposes, todos, refs
+    payload = plan.get("input") if isinstance(plan.get("input"), dict) else {}
     for goal in payload.get("goals") or []:
+        if not isinstance(goal, dict):
+            continue
         page_id = goal.get("page_id") or ""
         if not page_id:
             continue
         if goal.get("purpose"):
             purposes[page_id] = goal["purpose"]
-        todos[page_id] = list(goal.get("unresolved_facts") or [])
-        refs[page_id] = [
-            f"{link.get('source_id')} {link.get('locator')}".strip()
-            for link in goal.get("source_links") or []
-            if link.get("source_id") or link.get("locator")
+        todos[page_id] = [
+            fact for fact in goal.get("unresolved_facts") or [] if isinstance(fact, str) and fact
         ]
+        labels = _ref_labels(goal.get("source_links"))
+        if labels:
+            refs[page_id] = labels
     for role in payload.get("page_roles") or []:
+        if not isinstance(role, dict):
+            continue
         page_id = role.get("page_id") or ""
-        if page_id and role.get("role") and page_id not in purposes:
+        if not page_id:
+            continue
+        if page_id not in purposes and role.get("role"):
             purposes[page_id] = role["role"]
-    return purposes, layouts, todos, refs
+        elif page_id not in purposes and role.get("intended_takeaway"):
+            purposes[page_id] = role["intended_takeaway"]
+        if page_id not in refs:
+            labels = _ref_labels(role.get("source_links"))
+            if labels:
+                refs[page_id] = labels
+    for issue in payload.get("issues") or []:
+        if not isinstance(issue, dict) or issue.get("resolution") != "open":
+            continue
+        question = issue.get("question")
+        if not isinstance(question, str) or not question:
+            continue
+        for page_id in issue.get("affected_page_ids") or []:
+            if not isinstance(page_id, str) or not page_id:
+                continue
+            bucket = todos.setdefault(page_id, [])
+            if question not in bucket:
+                bucket.append(question)
+    return purposes, todos, refs
 
 
 def _last_export(
@@ -558,6 +624,13 @@ def _read_json(
     unmapped: list[dict[str, Any]],
 ) -> Any | None:
     if not ref:
+        unmapped.append(
+            {
+                "kind": kind,
+                "id": item_id,
+                "reason": "引用为空，对象未写入档案",
+            }
+        )
         return None
     try:
         return store.read_object_json(ref)
