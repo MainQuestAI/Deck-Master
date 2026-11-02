@@ -262,7 +262,17 @@ print(json.dumps({'preview':str(preview),'findings':[]}))
 
 #[test]
 fn result_rechecks_candidate_after_tool_work_and_preserves_identical_status() {
-    use std::{net::TcpListener, os::unix::fs::PermissionsExt, sync::mpsc, thread};
+    use std::{ffi::OsStr, net::TcpListener, os::unix::fs::PermissionsExt, sync::mpsc, thread};
+    fn deck(project: &Path, wrapper: &Path, script: &Path, python: &OsStr) -> Command {
+        let mut command = Command::new(env!("CARGO_BIN_EXE_deck"));
+        command
+            .arg("--project")
+            .arg(project)
+            .env("DECK_TOOLS_PYTHON", wrapper)
+            .env("DECK_TEST_PYTHON", python)
+            .env("DECK_TEST_WRAPPER", script);
+        command
+    }
     for replaced in [false, true] {
         let temp = tempfile::tempdir().unwrap();
         let project = temp.path().join("project");
@@ -275,20 +285,30 @@ fn result_rechecks_candidate_after_tool_work_and_preserves_identical_status() {
         let id = ops::run_start(&project, "svg", &["p1".into()], None).unwrap()["runs"][0]["id"]
             .as_i64()
             .unwrap();
-        let source_a = temp.path().join("a.svg");
-        let source_b = temp.path().join("b.svg");
-        for (source, color) in [(&source_a, "navy"), (&source_b, "red")] {
-            std::fs::write(
-                source,
-                format!(
-                    r#"<svg viewBox="0 0 1280 720"><rect width="1280" height="720" fill="{color}"/></svg>"#
-                ),
+        ops::run_cancel(&project, id).unwrap();
+        // Seed a stored candidate and adopt it through the real CLI, so the
+        // run page reads (A, done) before the race. The wrapper isolates every
+        // call from rendering, like the adoption race test, so this also runs
+        // where rsvg-convert and soffice are unavailable.
+        let store = Store::open(&project).unwrap();
+        let a = store.add_file(b"<svg>A</svg>", "svg").unwrap();
+        let b = if replaced {
+            store.add_file(b"<svg>B</svg>", "svg").unwrap()
+        } else {
+            a.clone()
+        };
+        store
+            .connection
+            .execute(
+                "UPDATE run_pages SET result_file=?,status='unadopted' WHERE run_id=?",
+                rusqlite::params![a, id],
             )
             .unwrap();
-        }
-        let first = ops::run_result(&project, id, "p1", &source_a).unwrap();
-        assert_eq!(first["adopted"], true);
-        let a = first["file"].as_str().unwrap();
+        drop(store);
+        let source_a = temp.path().join("a.svg");
+        let source_b = temp.path().join("b.svg");
+        std::fs::write(&source_a, b"<svg>A</svg>").unwrap();
+        std::fs::write(&source_b, b"<svg>B</svg>").unwrap();
         let wrapper = temp.path().join("python-wrapper");
         let script = temp.path().join("tool.py");
         std::fs::write(
@@ -299,27 +319,38 @@ fn result_rechecks_candidate_after_tool_work_and_preserves_identical_status() {
         std::fs::set_permissions(&wrapper, std::fs::Permissions::from_mode(0o755)).unwrap();
         std::fs::write(
             &script,
-            r#"import os, socket, sys
-host, port = os.environ['DECK_TEST_BARRIER'].split(':')
-with socket.create_connection((host, int(port)), timeout=30) as channel:
-    assert channel.recv(1) == b'1'
-python = os.environ['DECK_TEST_PYTHON']
-os.execv(python, [python, *sys.argv[1:]])
+            r#"import json, os, socket, sys
+from pathlib import Path
+from PIL import Image
+job = json.loads(Path(sys.argv[-1]).read_text())
+preview = Path(job['output']) / 'preview.png'
+preview.parent.mkdir(parents=True)
+Image.new('RGB', (8, 8), 'navy').save(preview)
+barrier = os.environ.get('DECK_TEST_BARRIER')
+if barrier:
+    host, port = barrier.split(':')
+    with socket.create_connection((host, int(port)), timeout=30) as channel:
+        assert channel.recv(1) == b'1'
+print(json.dumps({'preview': str(preview), 'findings': []}))
 "#,
         )
         .unwrap();
+        let python = std::env::var_os("DECK_TOOLS_PYTHON").unwrap();
+        let adopted_a = deck(&project, &wrapper, &script, &python)
+            .args(["run", "adopt", &id.to_string(), "p1"])
+            .output()
+            .unwrap();
+        assert!(
+            adopted_a.status.success(),
+            "{}",
+            String::from_utf8_lossy(&adopted_a.stderr)
+        );
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let address = listener.local_addr().unwrap().to_string();
         let (sender, receiver) = mpsc::channel();
         thread::spawn(move || sender.send(listener.accept().unwrap().0).unwrap());
-        let python = std::env::var_os("DECK_TOOLS_PYTHON").unwrap();
-        let child = Command::new(env!("CARGO_BIN_EXE_deck"))
-            .env("DECK_TOOLS_PYTHON", &wrapper)
-            .env("DECK_TEST_PYTHON", python)
-            .env("DECK_TEST_WRAPPER", &script)
+        let child = deck(&project, &wrapper, &script, &python)
             .env("DECK_TEST_BARRIER", address)
-            .arg("--project")
-            .arg(&project)
             .args(["run", "result", &id.to_string(), "p1"])
             .arg(&source_a)
             .stdout(Stdio::piped())
@@ -328,12 +359,28 @@ os.execv(python, [python, *sys.argv[1:]])
             .unwrap();
         let mut barrier = receiver.recv_timeout(Duration::from_secs(30)).unwrap();
         let adopted_file = if replaced {
-            let second = ops::run_result(&project, id, "p1", &source_b).unwrap();
-            assert_eq!(second["adopted"], false);
-            ops::run_adopt(&project, id, "p1").unwrap();
-            second["file"].as_str().unwrap().to_string()
+            let submitted = deck(&project, &wrapper, &script, &python)
+                .args(["run", "result", &id.to_string(), "p1"])
+                .arg(&source_b)
+                .output()
+                .unwrap();
+            assert!(
+                submitted.status.success(),
+                "{}",
+                String::from_utf8_lossy(&submitted.stderr)
+            );
+            let adopted_b = deck(&project, &wrapper, &script, &python)
+                .args(["run", "adopt", &id.to_string(), "p1"])
+                .output()
+                .unwrap();
+            assert!(
+                adopted_b.status.success(),
+                "{}",
+                String::from_utf8_lossy(&adopted_b.stderr)
+            );
+            b.clone()
         } else {
-            a.to_string()
+            a.clone()
         };
         let before = ops::get(&project, None).unwrap();
         let before_run = ops::run_show(&project, Some(id)).unwrap();
