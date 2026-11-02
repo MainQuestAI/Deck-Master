@@ -90,6 +90,27 @@ pub fn from_archive(source: &Path, destination: &Path) -> Result<Value> {
             archive.format
         )));
     }
+    // Build beside the destination and rename into place. A failure before the
+    // rename drops the temporary directory, so a half-written project is not left
+    // at the path the caller asked for.
+    let parent = destination
+        .parent()
+        .filter(|parent| !parent.as_os_str().is_empty())
+        .unwrap_or_else(|| Path::new("."));
+    std::fs::create_dir_all(parent)?;
+    let staging = tempfile::Builder::new()
+        .prefix(".deck-import-")
+        .tempdir_in(parent)?;
+    let report = import_staged(source, staging.path(), archive)?;
+    let kept = staging.keep();
+    if let Err(error) = std::fs::rename(&kept, destination) {
+        let _ = std::fs::remove_dir_all(&kept);
+        return Err(error.into());
+    }
+    Ok(report)
+}
+
+fn import_staged(source: &Path, destination: &Path, archive: Archive) -> Result<Value> {
     let mut unmapped = archive.unmapped;
     let mut deck = Deck {
         brief: archive.brief,
@@ -118,13 +139,6 @@ pub fn from_archive(source: &Path, destination: &Path) -> Result<Value> {
         } else {
             "read".into()
         };
-        if file.is_empty() && !spec.file.is_empty() {
-            unmapped.push(json!({
-                "kind": "material_file",
-                "id": spec.id,
-                "reason": "材料原件无法从档案复制"
-            }));
-        }
         materials.push(Material {
             id: spec.id,
             name: spec.name,
@@ -136,15 +150,13 @@ pub fn from_archive(source: &Path, destination: &Path) -> Result<Value> {
     deck.materials = materials;
     let mut assets = Vec::new();
     for asset in deck.style.assets.drain(..) {
-        let file = ingest(&store, source, &asset.file, &mut files)?;
-        if file.is_empty() {
-            unmapped.push(json!({
-                "kind": "asset",
-                "id": asset.id,
-                "reason": "素材文件无法从档案复制"
-            }));
-            continue;
+        if asset.file.is_empty() {
+            return Err(Error::Input(format!(
+                "素材 {} 缺少文件名；文件必须位于 files/ 下",
+                asset.id
+            )));
         }
+        let file = ingest(&store, source, &asset.file, &mut files)?;
         assets.push(Asset { id: asset.id, file });
     }
     deck.style.assets = assets;
@@ -187,53 +199,26 @@ pub fn from_archive(source: &Path, destination: &Path) -> Result<Value> {
             preview: None,
         };
         page.content.normalize_ids()?;
-        page.image = artifact(
-            &store,
-            source,
-            spec.image,
-            &mut files,
-            &mut unmapped,
-            "image",
-            &page.id,
-        )?;
-        page.svg = artifact(
-            &store,
-            source,
-            spec.svg,
-            &mut files,
-            &mut unmapped,
-            "svg",
-            &page.id,
-        )?;
+        page.image = artifact(&store, source, spec.image, &mut files, "原图")?;
+        page.svg = artifact(&store, source, spec.svg, &mut files, "SVG")?;
         if let Some(name) = spec.preview {
-            let file = ingest(&store, source, &name, &mut files)?;
-            if file.is_empty() {
-                unmapped.push(json!({
-                    "kind": "preview",
-                    "id": page.id,
-                    "reason": "预览文件无法从档案复制"
-                }));
-            } else {
-                page.preview = Some(file);
+            if name.is_empty() {
+                return Err(Error::Input(
+                    "预览文件名为空；文件必须位于 files/ 下".into(),
+                ));
             }
+            page.preview = Some(ingest(&store, source, &name, &mut files)?);
         }
         pages.push(page);
     }
     deck.pages = pages;
     let last_export = match archive.last_export {
-        Some(FileRef { file }) => {
-            let name = ingest(&store, source, &file, &mut files)?;
-            if name.is_empty() {
-                unmapped.push(json!({
-                    "kind": "last_export",
-                    "id": "",
-                    "reason": "最近一次导出无法从档案复制"
-                }));
-                None
-            } else {
-                Some(name)
-            }
+        Some(FileRef { file }) if file.is_empty() => {
+            return Err(Error::Input(
+                "最近一次导出的文件名为空；文件必须位于 files/ 下".into(),
+            ));
         }
+        Some(FileRef { file }) => Some(ingest(&store, source, &file, &mut files)?),
         None => None,
     };
     for review in &archive.reviews {
@@ -287,22 +272,17 @@ fn artifact(
     source: &Path,
     spec: Option<FileRef>,
     files: &mut HashMap<String, String>,
-    unmapped: &mut Vec<Value>,
-    kind: &str,
-    page_id: &str,
+    label: &str,
 ) -> Result<Option<Artifact>> {
     let Some(FileRef { file }) = spec else {
         return Ok(None);
     };
-    let name = ingest(store, source, &file, files)?;
-    if name.is_empty() {
-        unmapped.push(json!({
-            "kind": kind,
-            "id": page_id,
-            "reason": "产物文件无法从档案复制"
-        }));
-        return Ok(None);
+    if file.is_empty() {
+        return Err(Error::Input(format!(
+            "{label}的文件名为空；文件必须位于 files/ 下"
+        )));
     }
+    let name = ingest(store, source, &file, files)?;
     Ok(Some(Artifact {
         file: name,
         basis: "imported".into(),

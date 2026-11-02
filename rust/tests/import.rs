@@ -124,6 +124,18 @@ fn import_maps_archive_and_lists_unmapped_and_open_calls() {
     assert_eq!(snapshot["deck"]["brief"]["title"], "合成导入");
     assert_eq!(snapshot["deck"]["framing"]["thesis"], "先导入再改稿");
     assert_eq!(snapshot["deck"]["style"]["canvas"]["width_px"], 1600);
+    assert_eq!(snapshot["deck"]["style"]["canvas"]["height_px"], 900);
+    assert_eq!(
+        snapshot["deck"]["style"]["palette"],
+        json!(["#FFFFFF", "#14213D"])
+    );
+    assert_eq!(
+        snapshot["deck"]["style"]["fonts"],
+        json!(["Noto Sans CJK SC"])
+    );
+    assert_eq!(snapshot["deck"]["pages"][0]["layout"], "先结论后材料");
+    assert_eq!(snapshot["deck"]["pages"][0]["image"]["basis"], "imported");
+    assert_eq!(snapshot["deck"]["pages"][0]["svg"]["basis"], "imported");
     assert_eq!(
         snapshot["deck"]["pages"][0]["content"]["title"],
         "合成页标题"
@@ -153,6 +165,86 @@ fn import_maps_archive_and_lists_unmapped_and_open_calls() {
     assert_eq!(reviews, 0);
     let exported = ops::export_pptx(&dest).unwrap();
     assert_eq!(exported["input_changed"], true);
+    let shown = ops::show(&dest).unwrap();
+    assert_eq!(shown["artifact_status"]["stale_images"], json!(["p1"]));
+    assert_eq!(shown["artifact_status"]["stale_pages"], json!(["p1"]));
+}
+
+fn run_import(source: &Path, dest: &Path) -> std::process::Output {
+    Command::new(env!("CARGO_BIN_EXE_deck"))
+        .args(["import", source.to_str().unwrap(), dest.to_str().unwrap()])
+        .output()
+        .unwrap()
+}
+
+fn assert_import_rejected(output: &std::process::Output, dest: &Path, parent: &Path) {
+    assert_eq!(
+        output.status.code(),
+        Some(2),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(!dest.exists());
+    let leftovers: Vec<_> = fs::read_dir(parent)
+        .unwrap()
+        .filter_map(|entry| entry.ok())
+        .map(|entry| entry.file_name())
+        .filter(|name| {
+            name.to_str()
+                .is_some_and(|text| text.starts_with(".deck-import-"))
+        })
+        .collect();
+    assert!(leftovers.is_empty(), "{leftovers:?}");
+}
+
+#[test]
+fn import_missing_file_exits_2_without_destination() {
+    let temp = tempfile::tempdir().unwrap();
+    let source = temp.path().join("archive");
+    fs::create_dir(&source).unwrap();
+    write_archive(&source);
+    fs::remove_file(source.join("files").join("page.png")).unwrap();
+    let dest = temp.path().join("new-deck");
+    let output = run_import(&source, &dest);
+    assert_import_rejected(&output, &dest, temp.path());
+    assert!(String::from_utf8_lossy(&output.stderr).contains("page.png"));
+}
+
+#[test]
+fn import_wrong_format_exits_2_without_destination() {
+    let temp = tempfile::tempdir().unwrap();
+    let source = temp.path().join("archive");
+    fs::create_dir(&source).unwrap();
+    let mut manifest = archive(&source);
+    manifest["format"] = json!("legacy-export.v0");
+    fs::write(
+        source.join("manifest.json"),
+        serde_json::to_vec_pretty(&manifest).unwrap(),
+    )
+    .unwrap();
+    let dest = temp.path().join("new-deck");
+    let output = run_import(&source, &dest);
+    assert_import_rejected(&output, &dest, temp.path());
+    assert!(String::from_utf8_lossy(&output.stderr).contains("legacy-export.v0"));
+}
+
+#[test]
+fn import_parent_path_filename_exits_2_without_destination() {
+    let temp = tempfile::tempdir().unwrap();
+    let source = temp.path().join("archive");
+    fs::create_dir(&source).unwrap();
+    let mut manifest = archive(&source);
+    manifest["materials"][0]["file"] = json!("../secret.txt");
+    fs::write(
+        source.join("manifest.json"),
+        serde_json::to_vec_pretty(&manifest).unwrap(),
+    )
+    .unwrap();
+    let dest = temp.path().join("new-deck");
+    let output = run_import(&source, &dest);
+    assert_import_rejected(&output, &dest, temp.path());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("../secret.txt"), "{stderr}");
 }
 
 #[test]
