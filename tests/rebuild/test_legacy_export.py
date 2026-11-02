@@ -13,7 +13,8 @@ import pytest
 from deck_master import cli
 from deck_master.content import check_page
 from deck_master.legacy_export import FORMAT, LegacyExportError, export_project
-from deck_master.models import new_document, require_writer
+from deck_master.models import (new_document, require_writer, validate_content_plan_semantics,
+                                validate_narrative_semantics)
 from deck_master.pipeline import artifact
 from deck_master.project_initialization import collaboration_region
 from deck_master.store import Store
@@ -24,6 +25,53 @@ PNG = bytes.fromhex(
 )
 SVG = b'<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"></svg>'
 MATERIAL = "合成材料第一行\n"
+
+
+def _narrative(nodes, *, central=None, issues=None):
+    return {
+        "schema_version": "narrative.v1", "narrative_id": "synthetic-narrative",
+        "version": 1, "project_id": "synthetic-export", "origin": "user_imported",
+        "maturity": "argument" if central else "framing", "input_basis": [],
+        "communication_job": {"mode": "explain", "audience_fact_key": "audience",
+                              "audience_question": "What is supported?", "desired_outcome": "Approve the next step",
+                              "observable_success": "Choose the next step", "use_mode": "live", "primary_use": "live"},
+        "central_node_id": central, "nodes": nodes, "edges": [], "issues": issues or [],
+        "alternatives": [], "previous_ref": None,
+    }
+
+
+def _node(node_id, authority, *, role="evidence", links=None, issues=None):
+    return {"node_id": node_id, "role": role, "statement": f"Synthetic {node_id} statement",
+            "authority": authority, "source_links": links or [],
+            "qualification_node_ids": [], "unresolved_issue_ids": issues or []}
+
+
+def _issue(issue_id, resolution="open", *, affected=None):
+    return {"issue_id": issue_id, "question": f"Which scope applies to {issue_id}?",
+            "impact": "blocker", "affected_node_ids": affected or [],
+            "resolution": resolution, "resolution_ref": None}
+
+
+def _complete_v2_plan(plan):
+    ref = {"path": ".deckmaster/objects/aa/" + "a" * 64 + ".json", "sha256": "a" * 64}
+    plan.update({"plan_id": "synthetic-plan", "version": 1, "project_id": "synthetic-export",
+                 "task_id": None, "origin": "user_imported", "basis": {"revision_id": "rev-1", "input_digest": "b" * 64},
+                 "previous_ref": None, "mode": "bound", "narrative_ref": None, "imported_manuscript": None,
+                 "page_links": [{"page_id": "p1", "page_ref": ref, "plan_role_page_id": "p1"}]})
+    plan["input"].update({"page_order": ["p1"], "page_budget": {"exact": 1, "target": 1, "max": 1},
+                          "time_budget": {"total_seconds": 60, "speaking_seconds": 60, "interaction_seconds": 0, "constraint": "soft"},
+                          "speech_policy": {"mode": "cues", "source": "provided", "output": "pptx_notes"},
+                          "tradeoff_issue_ids": []})
+    for role in plan["input"]["page_roles"]:
+        role.update({"audience_question": "What is supported?", "narrative_node_ids": [],
+                     "required_qualifications": [], "content_profile": "evidence", "density_rationale": "One fact",
+                     "timing_seconds": 60, "transition_to_next": None})
+        for link in role["source_links"]:
+            link["source_version"] = {"original_sha256": "c" * 64, "extract": ref}
+    for issue in plan["input"]["issues"]:
+        issue.update({"impact": "needs_judgment", "resolution_ref": None})
+    validate_content_plan_semantics(plan)
+    return plan
 
 
 def _page() -> dict:
@@ -130,7 +178,12 @@ def _synthetic_project(
     svg_path = tmp_path / "page.svg"
     svg_path.write_bytes(SVG)
     pptx_path = tmp_path / "deck.pptx"
-    pptx_path.write_bytes(b"PK\x03\x04synthetic-pptx")
+    from pptx import Presentation
+
+    pptx = Presentation()
+    slide = pptx.slides.add_slide(pptx.slide_layouts[6])
+    slide.notes_slide.notes_text_frame.text = "Historical synthetic notes"
+    pptx.save(pptx_path)
     blueprint = artifact(
         store,
         image_path,
@@ -386,7 +439,7 @@ def test_legacy_export_maps_content_plan_v2_page_roles(tmp_path: Path) -> None:
             ],
         },
     }
-    project = _synthetic_project(tmp_path, plan=plan)
+    project = _synthetic_project(tmp_path, plan=_complete_v2_plan(plan))
     out = tmp_path / "archive"
     export_project(project, out)
     manifest = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
@@ -400,67 +453,63 @@ def test_legacy_export_maps_content_plan_v2_page_roles(tmp_path: Path) -> None:
     assert page["todo"] == ["待补出处"]
     assert "已解决的问题" not in manifest["framing"]["questions"]
     assert "接受的限制" not in page["todo"]
+    for question in ("已解决的问题", "接受的限制"):
+        assert any(question in item["reason"] for item in manifest["unmapped"])
 
 
 def test_legacy_export_maps_open_narrative_questions(tmp_path: Path) -> None:
-    narrative = {
-        "schema_version": "narrative.v1",
-        "communication_job": {"desired_outcome": "读者接受材料进入正文"},
-        "central_node_id": "n-claim",
-        "nodes": [
-            {
-                "node_id": "n-claim",
-                "role": "claim",
-                "statement": "材料应当进入正文",
-                "authority": "recommendation",
-            },
-            {
-                "node_id": "n-fact",
-                "role": "evidence",
-                "statement": "材料第一行存在",
-                "authority": "reported_fact",
-            },
-            {
-                "node_id": "n-guess",
-                "role": "claim",
-                "statement": "成效尚未测量",
-                "authority": "hypothesis",
-            },
-        ],
-        "edges": [
-            {"from_node_id": "n-fact", "to_node_id": "n-claim", "relation": "supports"}
-        ],
-        "issues": [
-            {
-                "issue_id": "iss-open",
-                "question": "出处是否完整",
-                "resolution": "open",
-                "statement": "这条 statement 不该进入问题",
-            },
-            {
-                "issue_id": "iss-done",
-                "question": "已经核对的问题",
-                "resolution": "resolved",
-            },
-            {
-                "issue_id": "iss-limit",
-                "question": "接受不再追问",
-                "resolution": "accepted_limit",
-            },
-        ],
-    }
+    nodes = [_node("central", "hypothesis", role="claim"),
+             _node("fact", "reported_fact", issues=["open"])]
+    narrative = _narrative(nodes, central="central", issues=[
+        _issue("open", affected=["fact"]), _issue("done", "resolved"), _issue("limit", "accepted_limit")])
+    validate_narrative_semantics(narrative)
     project = _synthetic_project(tmp_path, narrative=narrative)
     out = tmp_path / "archive"
     export_project(project, out)
-    framing = json.loads((out / "manifest.json").read_text(encoding="utf-8"))["framing"]
-    assert framing["thesis"] == "合成主张：材料应进入正文。"
-    assert "出处是否完整" in framing["questions"]
-    assert "已经核对的问题" not in framing["questions"]
-    assert "接受不再追问" not in framing["questions"]
-    assert "这条 statement 不该进入问题" not in framing["questions"]
-    assert "iss-open" not in framing["questions"]
-    assert "材料第一行存在" in framing["facts"]
-    assert "成效尚未测量" in framing["assumptions"]
+    manifest = json.loads((out / "manifest.json").read_text())
+    framing = manifest["framing"]
+    assert framing["thesis"] == nodes[0]["statement"]
+    assert framing["assumptions"] == [nodes[0]["statement"]]
+    assert framing["facts"] == [nodes[1]["statement"]]
+    assert framing["questions"] == ["整稿待补", "待补一项", narrative["issues"][0]["question"]]
+    for issue in narrative["issues"][1:]:
+        assert any(issue["question"] in item["reason"] and issue["resolution"] in item["reason"]
+                   for item in manifest["unmapped"])
+
+
+@pytest.mark.parametrize("authority", ["reported_fact", "calculation", "hypothesis", "inference", "recommendation", "target", "instruction"])
+@pytest.mark.parametrize("role", ["evidence", "claim"])
+def test_migration_classifies_authority_independently_of_role(tmp_path, authority, role):
+    node = _node("value", authority, role=role, issues=["pending"])
+    narrative = _narrative([node], issues=[_issue("pending", affected=["value"])])
+    validate_narrative_semantics(narrative)
+    project = _synthetic_project(tmp_path, narrative=narrative)
+    archive = tmp_path / "archive"
+    export_project(project, archive)
+    result = json.loads((archive / "manifest.json").read_text())
+    framing = result["framing"]
+    assert framing["facts"] == ([node["statement"]] if authority in ("reported_fact", "calculation") else [])
+    assert framing["assumptions"] == ([node["statement"]] if authority == "hypothesis" else [])
+    assert narrative["issues"][0]["question"] in framing["questions"]
+    if authority not in ("reported_fact", "calculation", "hypothesis"):
+        assert any(node["statement"] in item["reason"] and authority in item["reason"]
+                   for item in result["unmapped"])
+
+
+def test_sourced_calculation_and_empty_framing_keep_their_meaning():
+    from deck_master.legacy_export import _apply_narrative
+
+    link = {"source_id": "s1", "source_version": {"original_sha256": "a" * 64,
+            "extract": {"path": ".deckmaster/objects/bb/" + "b" * 64 + ".json", "sha256": "b" * 64}}, "locator": "L1"}
+    node = _node("calculation", "calculation", links=[link])
+    narrative = _narrative([node])
+    validate_narrative_semantics(narrative)
+    framing = {"thesis": "", "pillars": [], "facts": [], "assumptions": [], "questions": []}
+    unmapped = []
+    _apply_narrative(narrative, framing, unmapped)
+    assert framing["thesis"] == ""
+    assert framing["facts"] == [node["statement"]]
+    assert any(narrative["communication_job"]["desired_outcome"] in item["reason"] for item in unmapped)
 
 
 def test_legacy_export_records_empty_extract_ref(tmp_path: Path) -> None:

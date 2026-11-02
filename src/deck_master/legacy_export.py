@@ -166,7 +166,7 @@ def _framing(
     if document.get("content_plan"):
         plan = _read_json(store, document.get("content_plan"), "content_plan", "", unmapped)
         if plan is not None:
-            _apply_plan(plan, framing)
+            _apply_plan(plan, framing, unmapped)
     if document.get("narrative"):
         narrative = _read_json(store, document.get("narrative"), "narrative", "", unmapped)
         if narrative is not None:
@@ -179,11 +179,17 @@ def _append_text(items: list[str], text: Any) -> None:
         items.append(text)
 
 
-def _append_open_questions(questions: list[str], issues: Any) -> None:
+def _append_open_questions(
+    questions: list[str], issues: Any, unmapped: list[dict[str, Any]], kind: str,
+) -> None:
     for issue in issues or []:
-        if not isinstance(issue, dict) or issue.get("resolution") != "open":
+        if not isinstance(issue, dict):
             continue
-        _append_text(questions, issue.get("question"))
+        if issue.get("resolution") == "open":
+            _append_text(questions, issue.get("question"))
+        else:
+            unmapped.append({"kind": kind, "id": issue.get("issue_id") or "",
+                             "reason": f"已处理问题的状态未映射：{issue.get('resolution')}；{issue.get('question') or ''}"})
 
 
 def _ref_labels(links: Any) -> list[str]:
@@ -197,7 +203,7 @@ def _ref_labels(links: Any) -> list[str]:
     return labels
 
 
-def _apply_plan(plan: dict[str, Any], framing: dict[str, Any]) -> None:
+def _apply_plan(plan: dict[str, Any], framing: dict[str, Any], unmapped: list[dict[str, Any]]) -> None:
     payload = plan.get("input") if isinstance(plan.get("input"), dict) else {}
     summary = payload.get("input_summary")
     if isinstance(summary, str) and summary:
@@ -243,7 +249,7 @@ def _apply_plan(plan: dict[str, Any], framing: dict[str, Any]) -> None:
         if isinstance(goal, dict):
             for fact in goal.get("unresolved_facts") or []:
                 _append_text(questions, fact)
-    _append_open_questions(questions, payload.get("issues"))
+    _append_open_questions(questions, payload.get("issues"), unmapped, "content_plan_issue")
     if questions:
         framing["questions"] = questions
 
@@ -253,34 +259,32 @@ def _apply_narrative(
     framing: dict[str, Any],
     unmapped: list[dict[str, Any]],
 ) -> None:
-    job = narrative.get("communication_job") or {}
-    if not framing["thesis"] and job.get("desired_outcome"):
-        framing["thesis"] = job["desired_outcome"]
     central = narrative.get("central_node_id")
     for node in narrative.get("nodes") or []:
         statement = node.get("statement") or ""
         node_id = node.get("node_id") or ""
-        role = node.get("role")
         authority = node.get("authority")
-        if node_id == central and statement and not framing["thesis"]:
+        mapped = False
+        if node_id == central and statement:
+            if framing["thesis"] and framing["thesis"] != statement:
+                unmapped.append({"kind": "content_plan_summary", "id": "",
+                                 "reason": f"中心主张优先，原计划摘要保留于此：{framing['thesis']}"})
             framing["thesis"] = statement
-            continue
-        if authority == "reported_fact" or role == "evidence":
-            if statement:
-                framing["facts"].append(statement)
-            continue
-        if authority == "hypothesis":
-            if statement:
-                framing["assumptions"].append(statement)
-            continue
-        unmapped.append(
-            {
-                "kind": "narrative_node",
-                "id": node_id,
-                "reason": "主张图节点无法映射到 framing 的摘要字段",
-            }
-        )
-    _append_open_questions(framing["questions"], narrative.get("issues"))
+            mapped = True
+        if authority in ("reported_fact", "calculation"):
+            _append_text(framing["facts"], statement)
+            mapped = True
+        elif authority == "hypothesis":
+            _append_text(framing["assumptions"], statement)
+            mapped = True
+        if not mapped:
+            unmapped.append({"kind": "narrative_node", "id": node_id,
+                             "reason": f"主张图节点未映射：authority={authority}；{statement}"})
+    outcome = (narrative.get("communication_job") or {}).get("desired_outcome")
+    if outcome:
+        unmapped.append({"kind": "communication_job", "id": "",
+                         "reason": f"沟通目标保留于此，不代填中心主张：{outcome}"})
+    _append_open_questions(framing["questions"], narrative.get("issues"), unmapped, "narrative_issue")
     if narrative.get("edges"):
         unmapped.append(
             {

@@ -50,6 +50,8 @@ jobs:
           cargo clippy --all-targets -- -D warnings
           cargo test
       - name: Legacy export tests
+        env:
+          DECK_TOOLS_PYTHON: ${{ github.workspace }}/.venv/bin/python
         run: |
           .venv/bin/python -m pip install jsonschema 'numpy>=1.26,<3'
           test -x rust/target/debug/deck
