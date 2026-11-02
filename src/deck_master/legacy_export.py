@@ -367,15 +367,19 @@ def _pages(
         page = _read_json(store, entry.get("page"), "page", page_id, unmapped)
         if page is None:
             continue
-        citations = page.get("citations") or []
+        raw_citations = page.get("citations")
+        citations = raw_citations if isinstance(raw_citations, list) else []
         page_refs = list(dict.fromkeys([*refs.get(page_id, []), *_ref_labels(citations)]))
-        internal = page.get("internal_only") or {}
+        internal = page.get("internal_only")
+        internal = internal if isinstance(internal, dict) else {}
         page_todo = list(dict.fromkeys([
             *todos.get(page_id, []),
             *(question for question in internal.get("unresolved_questions") or []
               if isinstance(question, str) and question),
         ]))
         for citation in citations:
+            if not isinstance(citation, dict):
+                continue
             if any(key in citation for key in ("supports", "claim_kind", "expression", "input_refs")):
                 unmapped.append({
                     "kind": "page_citation",

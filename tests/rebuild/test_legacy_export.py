@@ -151,6 +151,7 @@ def _synthetic_project(
     plan: dict | None = None,
     narrative: dict | None = None,
     page: dict | None = None,
+    raw_page: dict | None = None,
     unread_source: bool = False,
 ) -> Path:
     project = tmp_path / "old-project"
@@ -172,7 +173,10 @@ def _synthetic_project(
             "original_file": original,
         }
     )
-    page = _page() if page is None else check_page(page)
+    if raw_page is not None:
+        page = raw_page
+    else:
+        page = _page() if page is None else check_page(page)
     page_ref = store.put_json_object(page)
     image_path = tmp_path / "page.png"
     image_path.write_bytes(PNG)
@@ -411,6 +415,22 @@ def test_legacy_export_preserves_page_citations_and_internal_questions(tmp_path,
     assert page["internal_only"]["production_notes"] in internal["reason"]
     assert page["internal_only"]["source_private_refs"][0] in internal["reason"]
     assert _tree_snapshot(project) == before
+
+
+def test_legacy_export_degrades_dirty_citations_and_internal_only(tmp_path: Path) -> None:
+    dirty = _page()
+    dirty["citations"] = [42, "字符串引用", {"id": "cite-1", "source_id": "s1", "locator": "L1",
+                                         "supports": "支持说明"}]
+    dirty["internal_only"] = "畸形制作备注"
+    project = _synthetic_project(tmp_path, raw_page=dirty)
+    out = tmp_path / "archive"
+    result = export_project(project, out)
+    assert result["status"] == "exported"
+    manifest = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
+    assert manifest["pages"][0]["refs"] == ["s1 L1"]
+    assert manifest["pages"][0]["todo"] == ["待补一项"]
+    citations = {item["id"] for item in manifest["unmapped"] if item["kind"] == "page_citation"}
+    assert citations == {"p1/cite-1"}
 
 
 def test_legacy_export_cli_refuses_existing_out_and_missing_project(tmp_path, capsys) -> None:
