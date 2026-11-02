@@ -76,3 +76,30 @@ export function draftPatch(draft) {
   }
   return { pages: [page] };
 }
+
+const findingLabels = {
+  notes_page_identity_mismatch: '讲稿对应的页面不一致', speaker_notes_mismatch: '讲稿内容不一致',
+  slide_count_mismatch: '幻灯片数量不一致', missing_slide: '缺少幻灯片',
+  unreadable_text: '文字不可读', svg_ppt_text_mismatch: 'SVG 与 PPTX 文字不一致',
+  missing_visible_atom: '缺少正文文字', shape_outside_slide: '元素超出页面',
+  missing_node: '缺少节点', missing_edge: '缺少连线',
+  unverifiable_edge_geometry: '无法核对连线位置', reversed_arrow: '箭头方向相反', edge_not_connected: '连线未连接到节点',
+  unverifiable_text_mapping: '无法核对文字对应关系', hidden_or_tiny_text: '文字隐藏或过小',
+  unverifiable_table_ownership: '无法核对表格归属', table_cell_ownership_mismatch: '表格单元格归属不一致',
+  table_cell_text_mismatch: '表格单元格文字不一致',
+  node_atom_ownership_mismatch: '节点与正文归属不一致',
+};
+
+export function formatFinding(finding) {
+  const parts = [
+    `${findingLabels[finding.code] || finding.code}${finding.text ? `：${finding.text}` : ''}${finding.element ? `（${finding.element}）` : ''}`,
+  ];
+  if (finding.table_id != null) {
+    parts.push(`表格 ${finding.table_id}`);
+    if (finding.row_id != null) parts.push(`行 ${finding.row_id}`);
+    if (finding.column_id != null) parts.push(`列 ${finding.column_id}`);
+  }
+  if ('expected' in finding) parts.push(`期望：${JSON.stringify(finding.expected)}`);
+  if ('actual' in finding) parts.push(`实际：${JSON.stringify(finding.actual)}`);
+  return parts.join(' · ');
+}
