@@ -192,7 +192,7 @@ svg 类没有外部付费调用，不需要 `run call`，也没有 max_calls。�
 
 `deck serve <project>`：只绑定 127.0.0.1，端口由系统分配，启动时打印地址；Host 或 Origin 不是本机的请求一律拒绝。不设登录或会话。
 
-服务与 CLI 共用 ops，各自直连 SQLite。服务不缓存作品状态，界面按版本号轮询变化。
+服务与 CLI 共用 ops，各自直连 SQLite。服务不跨请求缓存作品状态；同次 run 列表读取按页面 ID 查找作品，并复用每页每种任务的依据摘要，历史 run 不重复计算相同依据。界面按版本号轮询作品变化，run 与意见在同版本时也刷新。
 
 接口：`GET /api/deck`、`PUT /api/deck?base=N`、`POST /api/runs/{id}/cancel`、`POST /api/build`、`GET /api/files/{sha}`（sha 只接受 64 位十六进制）、`GET /api/export/{md|pptx}`、`GET|POST /api/reviews`、`POST /api/reviews/{id}/resolve`、`POST /api/runs/{run}/adopt/{page}`、`POST /api/restore/{version}`。接口以 S4 完成判断所需为限；手动采用接口沿用 `deck run adopt` 的行为与返回；导出只列出缺失和过期的页，不拦截（见 2.1、3.6）。
 

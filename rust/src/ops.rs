@@ -791,6 +791,13 @@ fn runs(connection: &rusqlite::Connection, deck: &Deck, id: Option<i64>) -> Resu
             ))
         })?
         .collect::<std::result::Result<Vec<_>, _>>()?;
+    let current_pages: HashMap<_, _> = deck
+        .pages
+        .iter()
+        .map(|page| (page.id.as_str(), page))
+        .collect();
+    // Reuse each page/kind basis only during this read; later polls read a fresh deck.
+    let mut current_bases = HashMap::new();
     let mut runs = Vec::new();
     for (id, kind, status, max, used) in rows {
         let mut query = connection.prepare(
@@ -808,8 +815,18 @@ fn runs(connection: &rusqlite::Connection, deck: &Deck, id: Option<i64>) -> Resu
             .collect::<std::result::Result<Vec<_>, _>>()?;
         let mut pages = Vec::new();
         for (page, old, state, result) in rows {
-            let changed = match deck.pages.iter().find(|p| p.id == page) {
-                Some(p) => basis(&kind, deck, p)? != old,
+            let current_page = current_pages.get(page.as_str());
+            let changed = match current_page {
+                Some(p) => {
+                    let key = (if kind == "image" { "image" } else { "svg" }, p.id.as_str());
+                    let current = match current_bases.entry(key) {
+                        std::collections::hash_map::Entry::Occupied(entry) => entry.into_mut(),
+                        std::collections::hash_map::Entry::Vacant(entry) => {
+                            entry.insert(basis(&kind, deck, p)?)
+                        }
+                    };
+                    *current != old
+                }
                 None => true,
             };
             let reason = if state == "unadopted" {
@@ -825,10 +842,7 @@ fn runs(connection: &rusqlite::Connection, deck: &Deck, id: Option<i64>) -> Resu
             } else {
                 ""
             };
-            let current_image = deck
-                .pages
-                .iter()
-                .find(|p| p.id == page)
+            let current_image = current_page
                 .and_then(|p| p.image.as_ref())
                 .map(|image| file_url(&image.file));
             let result_url = result.as_deref().map(file_url);
