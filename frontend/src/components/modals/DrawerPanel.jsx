@@ -2,8 +2,8 @@ import React, { useEffect, useRef } from 'react';
 import { useDeckMaster } from '../../context/DeckMasterContext';
 import PageContent from '../common/PageContent';
 
-function Field({ label, value, onChange, multiline = false }) {
-  return <label className="form-group s4-field"><span>{label}</span>{multiline ? <textarea rows={3} value={value || ''} onChange={event => onChange(event.target.value)} /> : <input value={value || ''} onChange={event => onChange(event.target.value)} />}</label>;
+function Field({ label, value, onChange, multiline = false, readOnly = false }) {
+  return <label className="form-group s4-field"><span>{label}</span>{multiline ? <textarea rows={3} value={value || ''} readOnly={readOnly} onChange={onChange && (event => onChange(event.target.value))} /> : <input value={value || ''} readOnly={readOnly} onChange={onChange && (event => onChange(event.target.value))} />}</label>;
 }
 function ItemFields({ items, change, label }) {
   return items.map((item, index) => <div key={item.id || index}>
@@ -51,11 +51,19 @@ export default function DrawerPanel() {
   if (!drawer || !workspace) return null;
   const draft = drafts[currentPage];
   const page = draft?.page;
-  return <div className="drawer-backdrop open"><section ref={panel} tabIndex={-1} className="drawer-panel open wide" role="dialog" aria-modal="true" aria-label={drawer === 'history' ? '版本历史与恢复' : '修改正文与讲稿'}>
-    <div className="drawer-head"><h2>{drawer === 'history' ? '版本历史与恢复' : '修改正文与讲稿'}</h2><button className="button" onClick={closeDrawer}>{drawer === 'editor' ? '收起并保留输入' : '关闭'}</button></div>
+  const deleted = page && !workspace.deck.pages.some(item => item.id === page.id);
+  const title = drawer === 'history' ? '版本历史与恢复' : deleted ? '查看未保存输入' : '修改正文与讲稿';
+  return <div className="drawer-backdrop open"><section ref={panel} tabIndex={-1} className="drawer-panel open wide" role="dialog" aria-modal="true" aria-label={title}>
+    <div className="drawer-head"><h2>{title}</h2><button className="button" onClick={closeDrawer}>{drawer === 'editor' ? '收起并保留输入' : '关闭'}</button></div>
     <div className="drawer-body">
       {actionError && <p className="s4-message" role="alert">{actionError}</p>}
-      {drawer === 'history' ? <>{workspace.history.map(version => <article key={version.id} className="s4-panel"><h3>版本 {version.id}{version.id === workspace.version && ' · 当前'}</h3><p>{version.created_at}</p><p className="s4-wrap">{version.summary}</p><button className="button" disabled={busy.restore || version.id === workspace.version} onClick={() => restore(version.id)}>恢复此版本</button></article>)}</> : page && <>
+      {drawer === 'history' ? <>{workspace.history.map(version => <article key={version.id} className="s4-panel"><h3>版本 {version.id}{version.id === workspace.version && ' · 当前'}</h3><p>{version.created_at}</p><p className="s4-wrap">{version.summary}</p><button className="button" disabled={busy.restore || version.id === workspace.version} onClick={() => restore(version.id)}>恢复此版本</button></article>)}</> : deleted ? <>
+        <p className="s4-message">当前页面已不存在。以下输入只读，可选中复制，转移后再放弃。</p>
+        <PageContent content={page.content} />
+        <Field label="本页目的" value={page.purpose} multiline readOnly />
+        <Field label="版式要求" value={page.layout} multiline readOnly />
+        <Field label="讲稿" value={page.notes} multiline readOnly />
+      </> : page && <>
         {draft.conflict && <section className="s4-message" role="alert"><h3>保存冲突，您的输入仍保留</h3><p>当前内容已被修改。比较后，可基于当前版本再次保存；不会自动覆盖。</p>
           {(() => { const current = workspace.deck.pages.find(item => item.id === page.id); return <details><summary>查看当前保存内容（版本 {workspace.version}）</summary>{current ? <><PageContent content={current.content} /><p>讲稿：{current.notes}</p><p>目的：{current.purpose}</p><p>布局：{current.layout}</p></> : <p>页面已移除或页序已改变。请保留输入，返回作品核对。</p>}</details>; })()}
           <p>继续保存会用您打开时的正文替换当前正文，请先在上方对比。</p>
@@ -68,6 +76,6 @@ export default function DrawerPanel() {
         </fieldset>
       </>}
     </div>
-    {drawer === 'editor' && page && <div className="drawer-foot"><button className="button" disabled={busy.save} onClick={() => { if (!draft.conflict || window.confirm('确定放弃本地修改？未保存的输入将丢失。')) discardDraft(); }}>放弃本地修改</button><button className="primary" disabled={busy.save || !!draft.conflict} onClick={saveDraft}>{busy.save ? '正在保存…' : '保存正文与讲稿'}</button></div>}
+    {drawer === 'editor' && page && <div className="drawer-foot"><button className="button" disabled={busy.save} onClick={() => { if ((!deleted && !draft.conflict) || window.confirm('确定放弃本地修改？未保存的输入将丢失。')) discardDraft(); }}>放弃本地修改</button>{!deleted && <button className="primary" disabled={busy.save || !!draft.conflict} onClick={saveDraft}>{busy.save ? '正在保存…' : '保存正文与讲稿'}</button>}</div>}
   </section></div>;
 }
