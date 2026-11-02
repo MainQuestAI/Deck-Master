@@ -79,9 +79,9 @@ description: 用 Rust deck 命令将作者任务和指定材料写成 brief、�
 出图及重建 SVG 前再读将上屏的整稿，发现语言问题就 put 保存并更新受影响 SVG。
 
 1. `deck run start image --pages p1,p2` 准备任务。实际读取返回工作目录的 task.md、content.json、style.json 与 attachments.json。每次调用 ImageGen 前，先 `deck run call <run> <page>`，再把所选素材文件作为真正附件传给 ImageGen。结果未知时先核实，明确决定重试才加 `--retry`；不要自行连续重发。
-2. 生成后用 `deck run result <run> <page> <图片文件>` 交回。取消后或依据已变的结果只保存；确实要用时才 `deck run adopt <run> <page>`。`deck run show` 查看状态，`deck run cancel <run>` 停止调用与自动采用。
+2. 生成后用 `deck run result <run> <page> <图片文件>` 交回。每页首次结果可自动采用；同一任务内重交的修正版、取消后或依据已变的结果只保存。比较当前稿与候选，确定要使用后执行 `deck run adopt <run> <page>`。`deck run show` 查看状态，`deck run cancel <run>` 停止调用与自动采用。
 3. `deck run start svg --pages p1,p2` 准备 SVG 任务。按原图的布局、层级和关系重建，正文取 content.json，文字绑定 atoms.json。先读 [SVG 子集与比对样例](references/svg-subset.md)。改字通常沿用原图，按新正文重建 SVG；内容或布局大改时判断是否重新生图。
-4. 用 `deck run result <run> <page> <SVG文件>` 编译、渲染并回读。工具报错就修正具体元素；返回的文字或几何发现逐项核对。Host 必须实际打开预览 PNG，与原图比对端点、方向、分支、层级、侧栏及阅读顺序。文字回读通过不能代替比对。
+4. 用 `deck run result <run> <page> <SVG文件>` 编译、渲染并回读。工具报错就修正具体元素；返回的文字或几何发现逐项核对。重交修正版后，确认采用时执行 `deck run adopt <run> <page>`。Host 必须实际打开预览 PNG，与原图比对端点、方向、分支、层级、侧栏及阅读顺序。文字回读通过不能代替比对。
 5. 用 `deck build` 构建整套 PPTX，`deck export pptx` 取最近构建路径。输出列出的缺页、过期页与输入变化照实告知作者；不要把部分 PPTX 称为整套，也不要把较早构建当成当前稿。讲稿变化后重新构建；无需重新生图。
 
 交付可读稿、PPTX 与必要预览；说明整稿范围、未补内容和真实执行失败。机制测试、真实工具执行、真实 Host 执行与作品判断分别汇报。没有实际执行的写“未执行”及原因。

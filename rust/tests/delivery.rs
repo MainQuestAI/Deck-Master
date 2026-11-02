@@ -92,6 +92,67 @@ fn changed_basis_is_not_adopted_but_notes_alone_do_not_stale_images() {
     );
 }
 #[test]
+fn open_multi_page_run_keeps_replacements_and_delayed_results_as_candidates() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    setup(path);
+    let a = path.join("a.png");
+    let b = path.join("b.png");
+    png(&a);
+    let python = std::env::var_os("DECK_TOOLS_PYTHON").unwrap();
+    assert!(
+        Command::new(python)
+            .args([
+                "-c",
+                "from PIL import Image; import sys; Image.new('RGB',(8,8),'navy').save(sys.argv[1])"
+            ])
+            .arg(&b)
+            .status()
+            .unwrap()
+            .success()
+    );
+    let id = ops::run_start(path, "image", &["p1".into(), "p2".into()], Some(4)).unwrap()["runs"]
+        [0]["id"]
+        .as_i64()
+        .unwrap();
+    ops::run_call(path, id, "p1", false).unwrap();
+    let first = ops::run_result(path, id, "p1", &a).unwrap();
+    assert_eq!(first["adopted"], true);
+    assert_eq!(first["run"]["runs"][0]["status"], "open");
+    let original = ops::get(path, None).unwrap();
+    ops::run_result(path, id, "p1", &a).unwrap();
+    assert_eq!(ops::get(path, None).unwrap(), original);
+    // A fresh call can set started, but cannot make a replacement the first result.
+    ops::run_call(path, id, "p1", false).unwrap();
+    let candidate = ops::run_result(path, id, "p1", &b).unwrap();
+    assert_eq!(candidate["adopted"], false);
+    assert_eq!(
+        candidate["run"]["runs"][0]["pages"][0]["status"],
+        "unadopted"
+    );
+    assert_eq!(ops::get(path, None).unwrap(), original);
+    ops::run_adopt(path, id, "p1").unwrap();
+    let chosen = ops::get(path, None).unwrap();
+    assert_eq!(
+        chosen["deck"]["pages"][0]["image"]["file"],
+        candidate["file"]
+    );
+    let delayed = ops::run_result(path, id, "p1", &a).unwrap();
+    assert_eq!(delayed["adopted"], false);
+    assert_eq!(delayed["run"]["runs"][0]["pages"][0]["status"], "unadopted");
+    assert_eq!(ops::get(path, None).unwrap(), chosen);
+    ops::run_result(path, id, "p1", &a).unwrap();
+    assert_eq!(ops::get(path, None).unwrap(), chosen);
+    ops::run_call(path, id, "p1", false).unwrap();
+    let returned = ops::run_result(path, id, "p1", &a).unwrap();
+    assert_eq!(
+        returned["run"]["runs"][0]["pages"][0]["status"],
+        "unadopted"
+    );
+    assert_eq!(ops::get(path, None).unwrap(), chosen);
+}
+
+#[test]
 fn changed_basis_manual_adoption_replaces_existing_image_and_keeps_stale_hint() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path();

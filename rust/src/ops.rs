@@ -818,7 +818,7 @@ fn runs(connection: &rusqlite::Connection, deck: &Deck, id: Option<i64>) -> Resu
                 } else if changed {
                     "依据已变，结果仅保存"
                 } else {
-                    "结果未采用"
+                    "结果仅保存，请比较后手动采用"
                 }
             } else if state == "started" {
                 "结果未知"
@@ -908,7 +908,10 @@ pub fn run_result(project: &Path, id: i64, page_id: &str, source: &Path) -> Resu
         Some(p) => basis(&kind, &snapshot.deck, p)? == old,
         None => false,
     };
-    let adopted = status == "open" && eligible;
+    let (_, current_state, previous) = run_page(&tx, id, page_id)?;
+    // Only the first result may write the page automatically. Later files can
+    // arrive out of order while another page keeps this run open.
+    let adopted = status == "open" && eligible && previous.is_none();
     if adopted {
         let page = snapshot
             .deck
@@ -931,10 +934,9 @@ pub fn run_result(project: &Path, id: i64, page_id: &str, source: &Path) -> Resu
         }
     }
     // An identical result can be returned safely after the final page closed the run.
-    let (_, current_state, previous) = run_page(&tx, id, page_id)?;
     let state = if adopted {
         "done".to_string()
-    } else if previous.as_ref() == Some(&file) {
+    } else if previous.as_ref() == Some(&file) && current_state != "started" {
         current_state
     } else {
         "unadopted".to_string()

@@ -163,7 +163,7 @@ run 用于需要 Host 执行、作者可以中途停止的工作：生图（imag
 
 1. `deck run start image --pages p3,p4 [--max-calls N]`：记录每页当时的依据，写好 `work/<run_id>/` 下的提示词与附件。`max-calls` 默认为页数 × 2，作者可以改。
 2. `deck run call <run> <page>`：run 已取消或已达上限时拒绝；否则计数加一，该页标为 started。Host 在每次调用 ImageGen 之前执行这一步。该页已有结果未知的调用时，要加 `--retry` 才会登记，避免盲目重发。
-3. `deck run result <run> <page> <file>`：保存文件。run 仍为 open 且该页依据未变时，自动采用到页面；否则只保存，标为 unadopted，界面写明原因，作者可以用 `deck run adopt` 手动采用。
+3. `deck run result <run> <page> <file>`：保存文件。同一 run-page 首次结果在 run 仍为 open 且该页依据未变时自动采用；已有结果后的不同文件重交只保存为 unadopted，比较后用 `deck run adopt` 手动采用。相同文件重交不回写作品、不新增版本；若刚登记了新调用，交回后结束“结果未知”，保留为待采用。判断使用写事务内的当前候选，其他页尚未完成不会让迟到结果覆盖本页。
 4. `deck run cancel <run>`：直接改状态，不需要填写说明。之后的 call 被拒绝，迟到的 result 只保存、不自动采用。
 5. `deck run show [<run>]`：列出每页状态。started 但没有结果的页显示为"结果未知"，是否重试由作者或 Host 决定；重试同样计数。
 
