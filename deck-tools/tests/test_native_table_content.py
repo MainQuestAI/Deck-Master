@@ -3,6 +3,7 @@
 import json
 
 from pptx import Presentation
+from lxml import etree as ET
 import pytest
 
 from deck_tools.compiler import CompileOptions, SvgInput, compile_deck
@@ -10,7 +11,7 @@ from deck_tools.render import readback
 from hostenv import host_fonts, resolve_host_font
 
 
-def table_case(tmp_path, variant="correct", count=1):
+def table_case(tmp_path, variant="correct", count=1, title="", render_title=True):
     blocks = []
     markup = ['<text x="30" y="40" data-atom-id="atom:p1:title">Comparison</text>']
     for index in range(count):
@@ -21,6 +22,9 @@ def table_case(tmp_path, variant="correct", count=1):
             "rows": [{"id": row, "cells": [{"column_id": "name", "display_text": row.upper()},
                      {"column_id": "value", "display_text": value}]} for row, value in
                      [("a", "" if variant == "empty" else "10"), ("b", "10" if variant == "rich-repeat" else "20")]]})
+        blocks[-1]["title"] = title
+        if title and render_title:
+            markup.append(f'<text x="{left}" y="70" data-atom-id="atom:p1:table:{table_id}:title">{title}</text>')
         markup.append(f'<rect x="{left}" y="90" width="500" height="240" fill="none" stroke="#333" data-table-id="{table_id}" data-native-table="true"/>')
         markup.extend(f'<line x1="{left}" y1="{y}" x2="{left + 500}" y2="{y}" stroke="#333" data-table-id="{table_id}"/>' for y in (160, 240))
         markup.append(f'<line x1="{left + 270}" y1="90" x2="{left + 270}" y2="330" stroke="#333" data-table-id="{table_id}"/>')
@@ -84,3 +88,35 @@ def test_ppt_cell_edit_is_located_once_and_svg_fidelity_stays_checked(tmp_path):
     # A table not declared by content still gets SVG-to-PPT fidelity checking.
     pages[0]["customer_visible"]["body_blocks"] = []
     assert any(item["code"] == "svg_ppt_text_mismatch" for item in readback(changed, sources, pages)["findings"])
+
+
+@pytest.mark.parametrize("fill,code", [("transparent", "unreadable_text"),
+                                       ("none", "unreadable_text"),
+                                       ("inherited", "unverifiable_text_mapping")])
+def test_native_cell_uses_the_same_visibility_rules_as_normal_text(tmp_path, fill, code):
+    path, sources, pages = table_case(tmp_path)
+    deck = Presentation(path)
+    table = next(shape.table for shape in deck.slides[0].shapes if shape.has_table)
+    ns = {"a": "http://schemas.openxmlformats.org/drawingml/2006/main"}
+    props = table.cell(1, 1)._tc.find(".//a:r/a:rPr", ns)
+    paint = props.find("a:solidFill", ns)
+    if fill == "transparent":
+        ET.SubElement(paint[0], "{" + ns["a"] + "}alpha").set("val", "0")
+    else:
+        props.remove(paint)
+        if fill == "none":
+            ET.SubElement(props, "{" + ns["a"] + "}noFill")
+    deck.save(path)
+    findings = readback(path, sources, pages)["findings"]
+    assert len(findings) == 1, findings
+    assert findings[0]["code"] == code
+    assert (findings[0]["table_id"], findings[0]["row"], findings[0]["column"]) == ("t0", 1, 1)
+
+
+@pytest.mark.parametrize("title,render_title,passes", [("", False, True),
+    ("Table heading", True, True), ("Table heading", False, False)])
+def test_native_table_title_remains_in_required_text_readback(tmp_path, title, render_title, passes):
+    report = readback(*table_case(tmp_path, title=title, render_title=render_title))
+    assert (report["status"] == "pass") is passes, report
+    if not passes:
+        assert any(finding.get("atom_id") == "atom:p1:table:t0:title" for finding in report["findings"])

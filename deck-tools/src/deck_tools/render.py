@@ -147,6 +147,7 @@ def readback(pptx_path,pages,expected_pages):
                                and s['points'][0][1] == s['points'][1][1])})
                 cells = {}
                 svg_findings = {}
+                visibility_findings = {}
                 native_rows = graphic.findall('.//a:tbl/a:tr', ns) if graphic is not None else []
                 for r, row in enumerate(native_rows):
                     for c, cell in enumerate(row.findall('a:tc', ns)):
@@ -156,11 +157,14 @@ def readback(pptx_path,pages,expected_pages):
                                           key=lambda s: (s['y'], s['x']))
                         actual = ''.join(t.text or '' for t in cell.findall('.//a:t', ns))
                         cells[r, c] = {'text': actual, 'members': expected}
-                        if any(int(props.get('sz', '600')) < 600
-                               for props in cell.findall('.//a:r/a:rPr', ns)):
-                            findings.append({'page_id': page['page_id'], 'code': 'unreadable_text',
-                                             'element': table_id, 'row': r, 'column': c,
-                                             'detail': 'table cell text is under 6pt'})
+                        from .readback_text import _run_state
+                        states = {_run_state(run.find('a:rPr', ns)) for run in cell.findall('.//a:r', ns)
+                                  if normalize(''.join(t.text or '' for t in run.findall('a:t', ns)))}
+                        if states - {'visible'}:
+                            code = 'unreadable_text' if 'unreadable' in states else 'unverifiable_text_mapping'
+                            visibility_findings[r, c] = {'page_id': page['page_id'], 'code': code,
+                                             'table_id': table_id, 'element': table_id, 'row': r, 'column': c,
+                                             'detail': 'table cell text has no provable readable native fill or size'}
                         if normalize(actual) != normalize(''.join(s['text'] for s in expected)):
                             svg_findings[r, c] = {'page_id': page['page_id'], 'code': 'svg_ppt_text_mismatch',
                                                   'element': table_id, 'row': r, 'column': c}
@@ -168,14 +172,19 @@ def readback(pptx_path,pages,expected_pages):
                 content_findings = check_native_table_content(page, table_id, cells)
                 for finding in content_findings:
                     svg_findings.pop((finding['row'], finding['column']), None)
+                    # Establish the required text's cell before judging its readability.
+                    visibility_findings.pop((finding['row'], finding['column']), None)
                 findings.extend(content_findings)
                 findings.extend(svg_findings.values())
+                findings.extend(visibility_findings.values())
             # Legacy geometry checks apply to drawn grids, not native cells.
             # Read native table text above without manufacturing shape XML.
             checked_source = {**source, 'shapes': [s for s in source['shapes'] if s.get('table_id') not in tables]}
             checked_page = deepcopy(page)
-            checked_page['customer_visible']['body_blocks'] = [b for b in page['customer_visible'].get('body_blocks', [])
-                                                               if b.get('id') not in tables]
+            # Native cells have their own reader, but table titles remain normal text.
+            checked_page['customer_visible']['body_blocks'] = [
+                {**b, 'columns': [], 'rows': []} if b.get('id') in tables else b
+                for b in page['customer_visible'].get('body_blocks', [])]
             svg_texts = [s['text'] for s in checked_source['shapes'] if s['kind'] == 'text']
             native_texts = [''.join(t.text or '' for t in sp.findall('.//a:t', ns))
                             for sp in root.findall('.//p:sp', ns) if sp.findall('.//a:t', ns)]
