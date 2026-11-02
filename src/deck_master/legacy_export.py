@@ -367,6 +367,28 @@ def _pages(
         page = _read_json(store, entry.get("page"), "page", page_id, unmapped)
         if page is None:
             continue
+        citations = page.get("citations") or []
+        page_refs = list(dict.fromkeys([*refs.get(page_id, []), *_ref_labels(citations)]))
+        internal = page.get("internal_only") or {}
+        page_todo = list(dict.fromkeys([
+            *todos.get(page_id, []),
+            *(question for question in internal.get("unresolved_questions") or []
+              if isinstance(question, str) and question),
+        ]))
+        for citation in citations:
+            if any(key in citation for key in ("supports", "claim_kind", "expression", "input_refs")):
+                unmapped.append({
+                    "kind": "page_citation",
+                    "id": f"{page_id}/{citation.get('id') or ''}",
+                    "reason": "出处已并入 refs，其余字段未迁移：" + json.dumps(citation, ensure_ascii=False),
+                })
+        private = {key: internal[key] for key in ("production_notes", "source_private_refs") if key in internal}
+        if private:
+            unmapped.append({
+                "kind": "page_internal_only",
+                "id": page_id,
+                "reason": "页内制作信息未迁移：" + json.dumps(private, ensure_ascii=False),
+            })
         visible = page.get("customer_visible") or {}
         extra = [key for key in visible if key not in {
             "title",
@@ -407,8 +429,8 @@ def _pages(
                     "callouts": visible.get("callouts") or [],
                 },
                 "notes": page.get("speaker_notes") or "",
-                "todo": todos.get(page_id) or [],
-                "refs": refs.get(page_id) or [],
+                "todo": page_todo,
+                "refs": page_refs,
                 "image": _artifact_file(store, entry.get("blueprint"), files_dir, "image", page_id, unmapped),
                 "svg": _artifact_file(store, entry.get("svg"), files_dir, "svg", page_id, unmapped),
                 "preview": _preview_file(store, entry.get("svg_preview"), files_dir, page_id, unmapped),

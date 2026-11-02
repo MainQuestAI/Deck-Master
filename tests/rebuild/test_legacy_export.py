@@ -150,6 +150,7 @@ def _synthetic_project(
     *,
     plan: dict | None = None,
     narrative: dict | None = None,
+    page: dict | None = None,
     unread_source: bool = False,
 ) -> Path:
     project = tmp_path / "old-project"
@@ -171,7 +172,7 @@ def _synthetic_project(
             "original_file": original,
         }
     )
-    page = _page()
+    page = _page() if page is None else check_page(page)
     page_ref = store.put_json_object(page)
     image_path = tmp_path / "page.png"
     image_path.write_bytes(PNG)
@@ -363,6 +364,53 @@ def test_legacy_export_writes_neutral_archive_and_leaves_project_unread(tmp_path
     kinds = {item["kind"] for item in manifest["unmapped"]}
     assert "visual_spec" in kinds
     assert "task" in kinds
+
+
+@pytest.mark.parametrize("plan_version", [1, 2])
+def test_legacy_export_preserves_page_citations_and_internal_questions(tmp_path, plan_version):
+    plan = _default_plan()
+    if plan_version == 2:
+        plan = _complete_v2_plan({
+            "schema_version": "content_plan.v2",
+            "input": {
+                "schema_version": "content_plan_input.v2",
+                "chapters": [{"chapter_id": "c1", "title": "材料", "page_ids": ["p1"]}],
+                "page_roles": [{"page_id": "p1", "role": "说明页", "intended_takeaway": "材料进入正文",
+                                "source_links": [{"source_id": "s1", "locator": "L1"}]}],
+                "issues": [{"issue_id": "i1", "question": "待补一项", "resolution": "open",
+                            "affected_page_ids": ["p1"]}],
+            },
+        })
+    page = _page()
+    page["citations"] = [
+        {"id": "cite-1", "source_id": "s1", "locator": "L1", "supports": "合成正文",
+         "claim_kind": "calculation", "expression": "2 + 3", "input_refs": ["input-1"]},
+        {"id": "cite-2", "source_id": "s1", "locator": "L2", "supports": "副题",
+         "claim_kind": "reported_fact"},
+        {"id": "cite-3", "source_id": "s1", "locator": "L2", "supports": "合成页标题",
+         "claim_kind": "reported_fact"},
+    ]
+    page["internal_only"] = {
+        "unresolved_questions": ["待补一项", "页级待补", "页级待补", ""],
+        "production_notes": "合成制作备注",
+        "source_private_refs": ["合成内部出处"],
+    }
+    project = _synthetic_project(tmp_path, plan=plan, page=page)
+    before = _tree_snapshot(project)
+    out = tmp_path / "archive"
+    export_project(project, out)
+    manifest = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
+    assert manifest["pages"][0]["refs"] == ["s1 L1", "s1 L2"]
+    assert manifest["pages"][0]["todo"] == ["待补一项", "页级待补"]
+    citations = {item["id"]: item for item in manifest["unmapped"] if item["kind"] == "page_citation"}
+    for citation in page["citations"]:
+        reason = citations[f"p1/{citation['id']}"]["reason"]
+        assert json.loads(reason[reason.index("{"):]) == citation
+    internal = next(item for item in manifest["unmapped"] if item["kind"] == "page_internal_only")
+    assert internal["id"] == "p1"
+    assert page["internal_only"]["production_notes"] in internal["reason"]
+    assert page["internal_only"]["source_private_refs"][0] in internal["reason"]
+    assert _tree_snapshot(project) == before
 
 
 def test_legacy_export_cli_refuses_existing_out_and_missing_project(tmp_path, capsys) -> None:
