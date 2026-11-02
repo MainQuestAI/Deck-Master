@@ -225,6 +225,48 @@ def _table_grid(records, table_id, columns, rows, atoms, page_id, incomplete):
     return next(iter(grids)) if len(grids) == 1 else None
 
 
+def _table_identity(table, index):
+    table_id = table.get("id") or f"table-{index + 1}"
+    columns = [column.get("id") or f"col-{i + 1}" for i, column in enumerate(table["columns"])]
+    rows = [{**row, "id": row.get("id") or f"row-{i + 1}"} for i, row in enumerate(table["rows"])]
+    return table_id, columns, rows
+
+
+def check_native_table_content(page, table_id, cells):
+    """Reuse the native reader's cell membership; content supplies the text truth."""
+    positions = defaultdict(set)
+    for position, cell in cells.items():
+        for member in cell['members']:
+            if member.get('atom_id'):
+                positions[member['atom_id']].add(position)
+    page_id = page['page_id']
+    findings = []
+    for index, table in enumerate(page['customer_visible'].get('body_blocks', [])):
+        if table['type'] != 'table' or (table.get('id') or f'table-{index + 1}') != table_id:
+            continue
+        _, columns, rows = _table_identity(table, index)
+        expected = [(f'atom:{page_id}:column:{table_id}:{column}:label', None, column, 0, c,
+                     table['columns'][c].get('label') or '') for c, column in enumerate(columns)]
+        for r, row in enumerate(rows, 1):
+            for cell in row['cells']:
+                column = cell['column_id']
+                expected.append((f"atom:{page_id}:cell:{table_id}:{row['id']}:{column}:display_text",
+                                 row['id'], column, r, columns.index(column), cell.get('display_text') or ''))
+        for atom, row_id, column, r, c, text in expected:
+            location = {'page_id': page_id, 'table_id': table_id, 'row_id': row_id,
+                        'column_id': column, 'atom_id': atom, 'row': r, 'column': c}
+            if not text and (r, c) in cells and not cells[r, c]['text'].strip():
+                continue
+            if not positions[atom] or (r, c) not in cells:
+                findings.append({**location, 'code': 'unverifiable_table_ownership'})
+            elif positions[atom] != {(r, c)}:
+                findings.append({**location, 'code': 'table_cell_ownership_mismatch'})
+            elif ''.join(text.split()) != ''.join(cells[r, c]['text'].split()):
+                findings.append({**location, 'code': 'table_cell_text_mismatch',
+                                 'expected': text, 'actual': cells[r, c]['text']})
+    return findings
+
+
 def check_native_relations(root, source, page):
     parents = {child: parent for parent in root.iter() for child in parent}
     shapes = defaultdict(list)
@@ -287,10 +329,7 @@ def check_native_relations(root, source, page):
     for table_index, table in enumerate(page["customer_visible"].get("body_blocks", [])):
         if table["type"] != "table" or not table.get("columns") or not table.get("rows"):
             continue
-        table_id = table.get("id") or f"table-{table_index + 1}"
-        columns = [column.get("id") or f"col-{index + 1}" for index, column in enumerate(table["columns"])]
-        rows = [{**row, "id": row.get("id") or f"row-{index + 1}"}
-                for index, row in enumerate(table["rows"])]
+        table_id, columns, rows = _table_identity(table, table_index)
         declared_grid = any(item.get('table_id') == table_id and item.get('table_frame')
                             for item in source['shapes'])
         grid = _table_grid(records, table_id, columns, rows, atoms, page_id, incomplete) if declared_grid else None
