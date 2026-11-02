@@ -30,7 +30,7 @@ jobs:
           sudo apt-get install --no-install-recommends -y poppler-utils
           python -m venv .venv
           .venv/bin/python -m pip install -e "./deck-tools[dev]"
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: npm
