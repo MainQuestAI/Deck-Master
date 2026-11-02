@@ -6,6 +6,10 @@ use serde_json::{Value, json};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
+pub fn import(source: &Path, destination: &Path) -> Result<Value> {
+    crate::import::from_archive(source, destination)
+}
+
 pub fn new(project: &Path, title: String) -> Result<Snapshot> {
     let deck = Deck {
         brief: Brief {
@@ -852,7 +856,7 @@ pub fn run_result(project: &Path, id: i64, page_id: &str, source: &Path) -> Resu
     use rusqlite::params;
     let mut store = Store::open(project)?;
     let (kind, _, _, _) = run_record(&store.connection, id)?;
-    let (old, _, previous) = run_page(&store.connection, id, page_id)?;
+    let (old, _, _) = run_page(&store.connection, id, page_id)?;
     let snapshot = store.current()?;
     let data = std::fs::read(source)?;
     let temporary = tempfile::tempdir()?;
@@ -927,10 +931,11 @@ pub fn run_result(project: &Path, id: i64, page_id: &str, source: &Path) -> Resu
         }
     }
     // An identical result can be returned safely after the final page closed the run.
+    let (_, current_state, previous) = run_page(&tx, id, page_id)?;
     let state = if adopted {
         "done".to_string()
     } else if previous.as_ref() == Some(&file) {
-        run_page(&tx, id, page_id)?.1
+        current_state
     } else {
         "unadopted".to_string()
     };
@@ -975,6 +980,11 @@ pub fn run_adopt(project: &Path, id: i64, page_id: &str) -> Result<Value> {
         );
     }
     let tx = store.transaction()?;
+    if run_page(&tx, id, page_id)?.2.as_deref() != Some(file.as_str()) {
+        return Err(Error::Conflict(
+            "候选已更新；请读取当前候选后重新采用".into(),
+        ));
+    }
     let mut snapshot = store::current(&tx)?;
     let page = snapshot
         .deck

@@ -1,9 +1,29 @@
 import { test, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { ApiError, getDeck, putDeck, cancelRun, buildDeck, restoreVersion, exportDeck, fileUrl, mergeWorkspace, createDraft, draftPatch } from './api.js';
+import { ApiError, getDeck, putDeck, cancelRun, buildDeck, restoreVersion, exportDeck, fileUrl, mergeWorkspace, createDraft, draftPatch, formatFinding } from './api.js';
 
 const originalFetch = globalThis.fetch;
 afterEach(() => { globalThis.fetch = originalFetch; });
+
+test('table findings show the cell location and expected and actual text', () => {
+  const output = formatFinding({
+    code: 'table_cell_text_mismatch', table_id: 't1', row_id: 'r2', column_id: 'c3',
+    expected: '合成原文', actual: '回读文字',
+  });
+  for (const detail of ['表格单元格文字不一致', '表格 t1', '行 r2', '列 c3', '期望："合成原文"', '实际："回读文字"']) {
+    assert.ok(output.includes(detail), output);
+  }
+});
+
+test('finding details retain empty values and support partial table locations', () => {
+  const output = formatFinding({ code: 'table_cell_text_mismatch', table_id: 't1', expected: ' ', actual: '' });
+  assert.ok(output.includes('表格 t1'));
+  assert.ok(output.includes('期望：" "'));
+  assert.ok(output.includes('实际：""'));
+  assert.ok(!output.includes('undefined'));
+  assert.equal(formatFinding({ code: 'missing_node', text: '正文', element: 'n1' }), '缺少节点：正文（n1）');
+  assert.equal(formatFinding({ code: 'new_code' }), 'new_code');
+});
 
 test('save sends the bare patch and retains submitted input on conflict', async () => {
   const page = { id: 'p1', content: { title: '原稿', body_blocks: [] }, notes: '讲稿' };
