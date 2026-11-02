@@ -1015,11 +1015,19 @@ pub fn run_adopt(project: &Path, id: i64, page_id: &str) -> Result<Value> {
 
 fn build_digest(deck: &Deck) -> Result<String> {
     use sha2::{Digest, Sha256};
-    let inputs: Vec<_> = deck
+    let pages: Vec<_> = deck
         .pages
         .iter()
         .map(|p| json!([p.id, p.svg.as_ref().map(|s| &s.file), p.notes]))
         .collect();
+    let assets: std::collections::BTreeMap<_, _> = deck
+        .style
+        .assets
+        .iter()
+        .map(|asset| (&asset.id, &asset.file))
+        .collect();
+    let inputs =
+        json!({"pages":pages,"canvas":deck.style.canvas,"fonts":deck.style.fonts,"assets":assets});
     Ok(format!(
         "{:x}",
         Sha256::digest(serde_json::to_vec(&inputs)?)
@@ -1103,7 +1111,7 @@ pub fn export_pptx(project: &Path) -> Result<Value> {
     let status = artifact_status(&deck)?;
     let changed = digest != build_digest(&deck)?;
     Ok(
-        json!({"id":id,"path":store.file(&file)?,"input_changed":changed,"warning":if changed {"当前 SVG 或讲稿已变化；下载的是最近构建，请按需重新 build"} else {""},"missing_pages":status["missing_pages"],"stale_pages":status["stale_pages"],"build_missing_pages":serde_json::from_str::<Value>(&missing)?}),
+        json!({"id":id,"path":store.file(&file)?,"input_changed":changed,"warning":if changed {"当前 SVG、讲稿或构建设置已变化；下载的是最近构建，请按需重新 build"} else {""},"missing_pages":status["missing_pages"],"stale_pages":status["stale_pages"],"build_missing_pages":serde_json::from_str::<Value>(&missing)?}),
     )
 }
 

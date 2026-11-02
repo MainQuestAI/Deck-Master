@@ -325,6 +325,21 @@ fn build_retains_notes_reports_missing_and_export_compares_inputs_after_restore(
     assert_eq!(ops::export_pptx(path).unwrap()["input_changed"], true);
     ops::restore(path, baseline).unwrap();
     assert_eq!(ops::export_pptx(path).unwrap()["input_changed"], false);
+    for patch in [
+        json!({"style":{"canvas":{"width_px":1440,"height_px":900,"slide_width_in":12.0,"slide_height_in":7.5}}}),
+        json!({"style":{"fonts":[family]}}),
+    ] {
+        edit(path, patch);
+        assert_eq!(ops::export_pptx(path).unwrap()["input_changed"], true);
+        ops::restore(path, baseline).unwrap();
+        assert_eq!(ops::export_pptx(path).unwrap()["input_changed"], false);
+    }
+    let asset = path.join("logo.png");
+    png(&asset);
+    ops::asset_add(path, "logo", &asset).unwrap();
+    assert_eq!(ops::export_pptx(path).unwrap()["input_changed"], true);
+    ops::restore(path, baseline).unwrap();
+    assert_eq!(ops::export_pptx(path).unwrap()["input_changed"], false);
 }
 #[test]
 fn version_one_database_keeps_versions_files_and_gains_delivery_tables() {
