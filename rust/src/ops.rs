@@ -856,7 +856,7 @@ pub fn run_result(project: &Path, id: i64, page_id: &str, source: &Path) -> Resu
     use rusqlite::params;
     let mut store = Store::open(project)?;
     let (kind, _, _, _) = run_record(&store.connection, id)?;
-    let (old, _, previous) = run_page(&store.connection, id, page_id)?;
+    let (old, _, _) = run_page(&store.connection, id, page_id)?;
     let snapshot = store.current()?;
     let data = std::fs::read(source)?;
     let temporary = tempfile::tempdir()?;
@@ -931,10 +931,11 @@ pub fn run_result(project: &Path, id: i64, page_id: &str, source: &Path) -> Resu
         }
     }
     // An identical result can be returned safely after the final page closed the run.
+    let (_, current_state, previous) = run_page(&tx, id, page_id)?;
     let state = if adopted {
         "done".to_string()
     } else if previous.as_ref() == Some(&file) {
-        run_page(&tx, id, page_id)?.1
+        current_state
     } else {
         "unadopted".to_string()
     };

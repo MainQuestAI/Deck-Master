@@ -260,6 +260,110 @@ print(json.dumps({'preview':str(preview),'findings':[]}))
     }
 }
 
+#[test]
+fn result_rechecks_candidate_after_tool_work_and_preserves_identical_status() {
+    use std::{net::TcpListener, os::unix::fs::PermissionsExt, sync::mpsc, thread};
+    for replaced in [false, true] {
+        let temp = tempfile::tempdir().unwrap();
+        let project = temp.path().join("project");
+        ops::new(&project, "Synthetic result race".into()).unwrap();
+        edit(
+            &project,
+            1,
+            json!({"order":["p1"],"pages":[{"id":"p1","content":{"title":"Main"}}]}),
+        );
+        let id = ops::run_start(&project, "svg", &["p1".into()], None).unwrap()["runs"][0]["id"]
+            .as_i64()
+            .unwrap();
+        let source_a = temp.path().join("a.svg");
+        let source_b = temp.path().join("b.svg");
+        for (source, color) in [(&source_a, "navy"), (&source_b, "red")] {
+            std::fs::write(
+                source,
+                format!(
+                    r#"<svg viewBox="0 0 1280 720"><rect width="1280" height="720" fill="{color}"/></svg>"#
+                ),
+            )
+            .unwrap();
+        }
+        let first = ops::run_result(&project, id, "p1", &source_a).unwrap();
+        assert_eq!(first["adopted"], true);
+        let a = first["file"].as_str().unwrap();
+        let wrapper = temp.path().join("python-wrapper");
+        let script = temp.path().join("tool.py");
+        std::fs::write(
+            &wrapper,
+            "#!/bin/sh\nexec \"$DECK_TEST_PYTHON\" \"$DECK_TEST_WRAPPER\" \"$@\"\n",
+        )
+        .unwrap();
+        std::fs::set_permissions(&wrapper, std::fs::Permissions::from_mode(0o755)).unwrap();
+        std::fs::write(
+            &script,
+            r#"import os, socket, sys
+host, port = os.environ['DECK_TEST_BARRIER'].split(':')
+with socket.create_connection((host, int(port)), timeout=30) as channel:
+    assert channel.recv(1) == b'1'
+python = os.environ['DECK_TEST_PYTHON']
+os.execv(python, [python, *sys.argv[1:]])
+"#,
+        )
+        .unwrap();
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let address = listener.local_addr().unwrap().to_string();
+        let (sender, receiver) = mpsc::channel();
+        thread::spawn(move || sender.send(listener.accept().unwrap().0).unwrap());
+        let python = std::env::var_os("DECK_TOOLS_PYTHON").unwrap();
+        let child = Command::new(env!("CARGO_BIN_EXE_deck"))
+            .env("DECK_TOOLS_PYTHON", &wrapper)
+            .env("DECK_TEST_PYTHON", python)
+            .env("DECK_TEST_WRAPPER", &script)
+            .env("DECK_TEST_BARRIER", address)
+            .arg("--project")
+            .arg(&project)
+            .args(["run", "result", &id.to_string(), "p1"])
+            .arg(&source_a)
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap();
+        let mut barrier = receiver.recv_timeout(Duration::from_secs(30)).unwrap();
+        let adopted_file = if replaced {
+            let second = ops::run_result(&project, id, "p1", &source_b).unwrap();
+            assert_eq!(second["adopted"], false);
+            ops::run_adopt(&project, id, "p1").unwrap();
+            second["file"].as_str().unwrap().to_string()
+        } else {
+            a.to_string()
+        };
+        let before = ops::get(&project, None).unwrap();
+        let before_run = ops::run_show(&project, Some(id)).unwrap();
+        assert_eq!(before_run["runs"][0]["pages"][0]["status"], "done");
+        assert_eq!(
+            before_run["runs"][0]["pages"][0]["result_file"],
+            adopted_file
+        );
+        assert_eq!(before["deck"]["pages"][0]["svg"]["file"], adopted_file);
+        barrier.write_all(b"1").unwrap();
+        let output = child.wait_with_output().unwrap();
+        assert_eq!(
+            output.status.code(),
+            Some(0),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let returned: Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(returned["adopted"], false);
+        assert_eq!(returned["file"], a);
+        let current = ops::get(&project, None).unwrap();
+        let run = ops::run_show(&project, Some(id)).unwrap();
+        let page = &run["runs"][0]["pages"][0];
+        assert_eq!(page["result_file"], a);
+        assert_eq!(page["status"], if replaced { "unadopted" } else { "done" });
+        assert_eq!(current["deck"]["pages"][0]["svg"]["file"], adopted_file);
+        assert_eq!(current, before);
+    }
+}
+
 fn edit(project: &Path, base: i64, value: Value) -> i64 {
     let patch: Patch = serde_json::from_value(value).unwrap();
     ops::put(project, base, patch).unwrap().version
