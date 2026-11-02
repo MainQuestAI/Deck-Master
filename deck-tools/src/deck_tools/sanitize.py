@@ -20,25 +20,27 @@ PRIVATE = re.compile(
 
 
 def reject(where, reason):
-    raise OperationError("export_privacy_blocked", where, reason, exit_code=3, http_status=409)
+    raise OperationError(f"{where}：{reason}")
 
 
 def text_safe(value, where):
-    if value and PRIVATE.search(value):
-        reject(where, "public copy contains a local path or credential-like value; review the named content")
+    match = PRIVATE.search(value) if value else None
+    if match:
+        rule = "凭据样式" if match.group().lower().startswith(("bearer", "sk-")) else "本机路径"
+        reject(where, f"命中{rule}规则；请修改该字段后重试")
 
 
 def link_safe(value, where):
     text_safe(value, where)
     parsed = urlparse(value)
     if parsed.scheme and parsed.scheme not in ("https", "http", "mailto"):
-        reject(where, "unsupported external link scheme")
+        reject(where, "命中不允许的链接协议规则；请修改链接后重试")
     if (
         parsed.username
         or parsed.password
         or {key.lower() for key in parse_qs(parsed.query)} & {"token", "access_token", "api_key", "signature", "authorization"}
     ):
-        reject(where, "external link contains authentication data")
+        reject(where, "链接含认证信息；请移除认证信息后重试")
 
 
 def public_projection_safe(value, where):
@@ -318,9 +320,11 @@ def pptx(data, where, *, notes=None, include_notes=True):
         for row, record in zip(actual, notes, strict=True):
             text = normalize_notes(record['notes'])
             if include_notes:
-                text_safe(text, where + '/notes')
-                for url in re.findall(r'https?://[^\s<>]+', text, re.I):
-                    link_safe(url, where + '/notes/link')
+                for paragraph, body in enumerate(text.split('\n'), 1):
+                    location = f"{where}/第 {row['slide']} 页/讲稿第 {paragraph} 段（notes.body）"
+                    text_safe(body, location)
+                    for url in re.findall(r'https?://[^\s<>]+', body, re.I):
+                        link_safe(url, location + '/link')
             if row['notes'] != text or row['page_id'] != record['page_id']:
                 reject(where, 'actual PPTX notes differ from selected Page text or stable identity')
     clean = _clean_pptx(data, where)
@@ -334,6 +338,25 @@ def pptx(data, where, *, notes=None, include_notes=True):
                 for row, record in zip(actual, projected, strict=True)):
             reject(where, 'final public PPTX failed full notes readback')
     return clean
+
+
+def _slide_locations(source, where):
+    """Use presentation order, which need not match slide part filenames."""
+    import posixpath
+
+    ns = {'p': 'http://schemas.openxmlformats.org/presentationml/2006/main',
+          'r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'}
+    presentation = xml(source.read('ppt/presentation.xml'), where + '/ppt/presentation.xml')
+    relationships = xml(source.read('ppt/_rels/presentation.xml.rels'), where + '/presentation.xml.rels')
+    targets = {item.get('Id'): item.get('Target') for item in relationships
+               if item.get('TargetMode') != 'External'}
+    locations = {}
+    for index, slide in enumerate(presentation.findall('p:sldIdLst/p:sldId', ns), 1):
+        target = targets.get(slide.get('{' + ns['r'] + '}id'))
+        if target:
+            part = posixpath.normpath(posixpath.join('ppt', target)).lstrip('/')
+            locations[part] = f'{where}/第 {index} 页'
+    return locations
 
 
 def _clean_pptx(data, where, *, keep_notes=False, page_ids=None):
@@ -370,6 +393,7 @@ def _clean_pptx(data, where, *, keep_notes=False, page_ids=None):
     if icon_license: removed.discard('docProps/core.xml')
     output = io.BytesIO()
     with source, zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as target:
+        locations = _slide_locations(source, where)
         for name in names:
             if name in removed or name.endswith("/"):
                 continue
@@ -382,24 +406,27 @@ def _clean_pptx(data, where, *, keep_notes=False, page_ids=None):
             if name.endswith((".xml", ".rels")):
                 root = xml(raw, where + "/" + name)
                 for parent in root.iter():
+                    location = locations.get(name, where + '/' + name)
+                    field = location + '/' + root.getroottree().getpath(parent)
                     local = parent.tag.rsplit("}", 1)[-1]
                     if local == "cNvPr":
                         # Non-visible shape labels and accessibility descriptions
                         # can contain generation prompts. Preserve the drawing ID.
                         readable_name = parent.get("title", "")
-                        text_safe(readable_name, where + "/shape-name")
+                        text_safe(readable_name, f"{location}/形状 {parent.get('id', '')}/cNvPr.title")
                         for key in ("name", "descr", "title"):
                             parent.attrib.pop(key, None)
                         parent.set("name", readable_name or "形状-" + parent.get("id", ""))
                         # Keep the scrubbed role through a later export pass.
                         parent.set("title", parent.get("name"))
                     if local == "cSld":
-                        stable_name = parent.get('name')
+                        stable_name = parent.get('name') or None
                         parent.attrib.pop("name", None)
                         if keep_notes and re.fullmatch(r'ppt/slides/slide[0-9]+\.xml', name):
                             if stable_name not in page_ids:
                                 reject(where, 'rebuilt notes lost stable Page identity')
-                            parent.set('name', stable_name)
+                            if stable_name is not None:
+                                parent.set('name', stable_name)
                         elif re.fullmatch(r'ppt/slideLayouts/slideLayout[0-9]+\.xml', name):
                             parent.set('name', '版式' + Path(name).stem.removeprefix('slideLayout'))
                     for child in list(parent):
@@ -409,7 +436,7 @@ def _clean_pptx(data, where, *, keep_notes=False, page_ids=None):
                         elif local == "Relationship":
                             uri = child.get("Target", "")
                             if child.get("TargetMode") == "External":
-                                link_safe(uri, where + "/" + name)
+                                link_safe(uri, field + '/Target')
                             else:
                                 base = posixpath.dirname(posixpath.dirname(name)) if "/_rels/" in name else ""
                                 resolved = posixpath.normpath(posixpath.join(base, uri)).lstrip("/")
@@ -417,10 +444,10 @@ def _clean_pptx(data, where, *, keep_notes=False, page_ids=None):
                                     parent.remove(child)
                         elif not keep_notes and local in ("notesMasterIdLst", "notesMasterId"):
                             parent.remove(child)
-                    text_safe(parent.text, where + "/" + name)
-                    text_safe(parent.tail, where + "/" + name)
-                    for value in parent.attrib.values():
-                        text_safe(value, where + "/" + name)
+                    text_safe(parent.text, field + '/text')
+                    text_safe(parent.tail, field + '/tail')
+                    for key, value in parent.attrib.items():
+                        text_safe(value, field + '/@' + key)
                 raw = ET.tostring(root, encoding="utf-8", xml_declaration=True)
                 text_safe(raw.decode("utf-8"), where + "/" + name)
             elif name.lower().endswith(".png"):
@@ -437,8 +464,18 @@ def _clean_pptx(data, where, *, keep_notes=False, page_ids=None):
     return output.getvalue()
 
 
-def sanitize(data, suffix, where):
+def sanitize(data, suffix, where, *, preserve_notes=False):
     handlers = {".png": png, ".jpg": jpeg, ".jpeg": jpeg, ".svg": svg, ".pptx": pptx}
     if suffix.lower() not in handlers:
         reject(where, "unsupported public artifact format")
+    if suffix.lower() == '.pptx':
+        from .compiler.native import notes_records
+
+        try:
+            notes = notes_records(data) if preserve_notes else None
+            return pptx(data, where, notes=notes)
+        except OperationError:
+            raise
+        except (zipfile.BadZipFile, KeyError, ValueError, ET.XMLSyntaxError) as exc:
+            reject(where, f'PPTX 包无法读取：{exc}；请检查原文件后重试')
     return handlers[suffix.lower()](data, where)

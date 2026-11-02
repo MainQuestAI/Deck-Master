@@ -112,6 +112,7 @@ pub fn from_archive(source: &Path, destination: &Path) -> Result<Value> {
 
 fn import_staged(source: &Path, destination: &Path, archive: Archive) -> Result<Value> {
     let mut unmapped = archive.unmapped;
+    let cleaned_export = clean_last_export(source, archive.last_export.as_ref(), &mut unmapped)?;
     let mut deck = Deck {
         brief: archive.brief,
         framing: archive.framing,
@@ -130,8 +131,16 @@ fn import_staged(source: &Path, destination: &Path, archive: Archive) -> Result<
             }));
             continue;
         }
-        let file = ingest(&store, source, &spec.file, &mut files)?;
-        let text_file = ingest(&store, source, &spec.text_file, &mut files)?;
+        let file = if spec.file.is_empty() {
+            String::new()
+        } else {
+            ingest(&store, source, &spec.file, &mut files)?
+        };
+        let text_file = if spec.text_file.is_empty() {
+            String::new()
+        } else {
+            ingest(&store, source, &spec.text_file, &mut files)?
+        };
         let status = if !spec.status.is_empty() {
             spec.status
         } else if text_file.is_empty() {
@@ -150,12 +159,6 @@ fn import_staged(source: &Path, destination: &Path, archive: Archive) -> Result<
     deck.materials = materials;
     let mut assets = Vec::new();
     for asset in deck.style.assets.drain(..) {
-        if asset.file.is_empty() {
-            return Err(Error::Input(format!(
-                "素材 {} 缺少文件名；文件必须位于 files/ 下",
-                asset.id
-            )));
-        }
         let file = ingest(&store, source, &asset.file, &mut files)?;
         assets.push(Asset { id: asset.id, file });
     }
@@ -199,28 +202,17 @@ fn import_staged(source: &Path, destination: &Path, archive: Archive) -> Result<
             preview: None,
         };
         page.content.normalize_ids()?;
-        page.image = artifact(&store, source, spec.image, &mut files, "原图")?;
-        page.svg = artifact(&store, source, spec.svg, &mut files, "SVG")?;
+        page.image = artifact(&store, source, spec.image, &mut files)?;
+        page.svg = artifact(&store, source, spec.svg, &mut files)?;
         if let Some(name) = spec.preview {
-            if name.is_empty() {
-                return Err(Error::Input(
-                    "预览文件名为空；文件必须位于 files/ 下".into(),
-                ));
-            }
             page.preview = Some(ingest(&store, source, &name, &mut files)?);
         }
         pages.push(page);
     }
     deck.pages = pages;
-    let last_export = match archive.last_export {
-        Some(FileRef { file }) if file.is_empty() => {
-            return Err(Error::Input(
-                "最近一次导出的文件名为空；文件必须位于 files/ 下".into(),
-            ));
-        }
-        Some(FileRef { file }) => Some(ingest(&store, source, &file, &mut files)?),
-        None => None,
-    };
+    let last_export = cleaned_export
+        .map(|data| store.add_file(&data, "pptx"))
+        .transpose()?;
     for review in &archive.reviews {
         unmapped.push(json!({
             "kind": "review",
@@ -267,21 +259,51 @@ fn import_staged(source: &Path, destination: &Path, archive: Archive) -> Result<
     }))
 }
 
+fn clean_last_export(
+    source: &Path,
+    spec: Option<&FileRef>,
+    unmapped: &mut Vec<Value>,
+) -> Result<Option<Vec<u8>>> {
+    let Some(FileRef { file }) = spec else {
+        return Ok(None);
+    };
+    if file.is_empty() {
+        unmapped.push(json!({"kind":"last_export", "id":"", "reason":"最近 PPTX 文件名为空，未迁入；项目内容可继续编辑"}));
+        return Ok(None);
+    }
+    let path = named_file(source, file)?;
+    let data = std::fs::read(path)?;
+    let temp = tempfile::tempdir()?;
+    let input = temp.path().join("input.pptx");
+    let output = temp.path().join("clean.pptx");
+    std::fs::write(&input, data)?;
+    // Never ingest the original: project attachments can be downloaded even
+    // without a builds row. Only the sanitized copy belongs in the new project.
+    match crate::tools::invoke(
+        "sanitize",
+        &json!({"path":input, "output":output, "preserve_notes":true}),
+    ) {
+        Ok(_) => Ok(Some(std::fs::read(output)?)),
+        Err(error @ (Error::Tool(_) | Error::NeedsTool(_))) => {
+            unmapped.push(json!({
+                "kind":"last_export", "id":file,
+                "reason":format!("最近 PPTX 未迁入：{error}。项目内容可继续编辑并重新构建；如需该历史 PPTX，请修正旧稿或工具，重新导出档案并导入新目录")
+            }));
+            Ok(None)
+        }
+        Err(error) => Err(error),
+    }
+}
+
 fn artifact(
     store: &Store,
     source: &Path,
     spec: Option<FileRef>,
     files: &mut HashMap<String, String>,
-    label: &str,
 ) -> Result<Option<Artifact>> {
     let Some(FileRef { file }) = spec else {
         return Ok(None);
     };
-    if file.is_empty() {
-        return Err(Error::Input(format!(
-            "{label}的文件名为空；文件必须位于 files/ 下"
-        )));
-    }
     let name = ingest(store, source, &file, files)?;
     Ok(Some(Artifact {
         file: name,
@@ -295,9 +317,6 @@ fn ingest(
     name: &str,
     files: &mut HashMap<String, String>,
 ) -> Result<String> {
-    if name.is_empty() {
-        return Ok(String::new());
-    }
     if let Some(existing) = files.get(name) {
         return Ok(existing.clone());
     }
@@ -317,7 +336,7 @@ fn named_file(root: &Path, name: &str) -> Result<PathBuf> {
         Path::new(name).components().collect::<Vec<_>>().as_slice(),
         [Component::Normal(_)]
     );
-    if name.is_empty() || !normal {
+    if !normal {
         return Err(Error::Input(format!(
             "档案文件名无效：{name}；文件必须位于 files/ 下"
         )));

@@ -4,6 +4,27 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
+fn pptx_fixture(action: &str, path: &Path, variant: &str) -> Value {
+    let output = Command::new(std::env::var_os("DECK_TOOLS_PYTHON").expect("install deck-tools"))
+        .arg(
+            Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../deck-tools/tests/legacy_pptx_fixture.py"),
+        )
+        .args([action, path.to_str().unwrap(), variant])
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    if action == "inspect" {
+        serde_json::from_slice(&output.stdout).unwrap()
+    } else {
+        Value::Null
+    }
+}
+
 fn write_file(root: &Path, name: &str, data: &[u8]) {
     fs::create_dir_all(root.join("files")).unwrap();
     fs::write(root.join("files").join(name), data).unwrap();
@@ -17,7 +38,7 @@ fn archive(root: &Path) -> Value {
         "page.svg",
         b"<svg xmlns=\"http://www.w3.org/2000/svg\"></svg>",
     );
-    write_file(root, "deck.pptx", b"PK\x03\x04synthetic");
+    pptx_fixture("make", &root.join("files/deck.pptx"), "metadata");
     json!({
         "format": "legacy-export.v1",
         "source": {"project_id": "synthetic-export", "revision_id": "rev-1"},
@@ -165,6 +186,12 @@ fn import_maps_archive_and_lists_unmapped_and_open_calls() {
     assert_eq!(reviews, 0);
     let exported = ops::export_pptx(&dest).unwrap();
     assert_eq!(exported["input_changed"], true);
+    let original = pptx_fixture("inspect", &source.join("files/deck.pptx"), "");
+    let cleaned = pptx_fixture("inspect", Path::new(exported["path"].as_str().unwrap()), "");
+    assert_eq!(cleaned["slides"], original["slides"]);
+    assert_eq!(cleaned["notes"], original["notes"]);
+    assert_eq!(cleaned["private"], false);
+    assert_eq!(cleaned["atoms"], false);
     let shown = ops::show(&dest).unwrap();
     assert_eq!(shown["artifact_status"]["stale_images"], json!(["p1"]));
     assert_eq!(shown["artifact_status"]["stale_pages"], json!(["p1"]));
@@ -175,6 +202,108 @@ fn run_import(source: &Path, dest: &Path) -> std::process::Output {
         .args(["import", source.to_str().unwrap(), dest.to_str().unwrap()])
         .output()
         .unwrap()
+}
+
+#[test]
+fn unsafe_or_unavailable_last_export_does_not_block_editable_content() {
+    use sha2::{Digest, Sha256};
+    for variant in ["private-notes", "private-title", "damaged", "missing-tool"] {
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("archive");
+        fs::create_dir(&source).unwrap();
+        write_archive(&source);
+        let original = source.join("files/deck.pptx");
+        if variant == "damaged" {
+            fs::write(&original, b"damaged PPTX package").unwrap();
+        } else if variant != "missing-tool" {
+            pptx_fixture("make", &original, variant);
+        }
+        let bytes = fs::read(&original).unwrap();
+        let digest = format!("{:x}", Sha256::digest(&bytes));
+        let dest = temp.path().join("new-deck");
+        let mut command = Command::new(env!("CARGO_BIN_EXE_deck"));
+        command.arg("import").arg(&source).arg(&dest);
+        if variant == "missing-tool" {
+            command.env("DECK_TOOLS_PYTHON", temp.path().join("missing-python"));
+        }
+        let output = command.output().unwrap();
+        assert!(
+            output.status.success(),
+            "{variant}: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let report: Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(report["last_export"], false, "{variant}");
+        let reason = report["unmapped"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|row| row["kind"] == "last_export")
+            .unwrap()["reason"]
+            .as_str()
+            .unwrap();
+        if variant.starts_with("private-") {
+            assert!(
+                reason.contains("第 2 页") && reason.contains("本机路径"),
+                "{reason}"
+            );
+            assert!(!reason.contains("TypeError"));
+        }
+        assert!(ops::project_file(&dest, &digest).is_err());
+        assert!(ops::export_pptx(&dest).is_err());
+        let snapshot = ops::get(&dest, None).unwrap();
+        assert_eq!(snapshot["deck"]["pages"][0]["notes"], "合成讲稿");
+        ops::put(
+            &dest,
+            report["version"].as_i64().unwrap(),
+            serde_json::from_value(json!({"pages":[{"id":"p1","notes":"导入后继续编辑"}]}))
+                .unwrap(),
+        )
+        .unwrap();
+        assert!(ops::export_md(&dest).unwrap().contains("导入后继续编辑"));
+        assert_eq!(fs::read(original).unwrap(), bytes);
+    }
+}
+
+#[test]
+fn empty_optional_last_export_is_reported_and_required_filenames_are_rejected() {
+    for field in ["last_export", "image", "preview", "asset"] {
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("archive");
+        fs::create_dir(&source).unwrap();
+        let mut manifest = archive(&source);
+        match field {
+            "last_export" => manifest["last_export"]["file"] = json!(""),
+            "image" => manifest["pages"][0]["image"]["file"] = json!(""),
+            "preview" => manifest["pages"][0]["preview"] = json!(""),
+            _ => manifest["style"]["assets"] = json!([{"id":"asset","file":""}]),
+        }
+        fs::write(
+            source.join("manifest.json"),
+            serde_json::to_vec(&manifest).unwrap(),
+        )
+        .unwrap();
+        let dest = temp.path().join("new-deck");
+        let output = run_import(&source, &dest);
+        if field == "last_export" {
+            assert!(
+                output.status.success(),
+                "{}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+            let report: Value = serde_json::from_slice(&output.stdout).unwrap();
+            assert_eq!(report["last_export"], false);
+            assert!(
+                report["unmapped"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .any(|row| row["kind"] == "last_export")
+            );
+        } else {
+            assert_import_rejected(&output, &dest, temp.path());
+        }
+    }
 }
 
 fn assert_import_rejected(output: &std::process::Output, dest: &Path, parent: &Path) {
