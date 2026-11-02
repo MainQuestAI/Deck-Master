@@ -115,6 +115,13 @@ def _collect_items(atoms: list, page_id: str, items: list, path: list, parent_id
 
 def _collect_table(atoms: list, page_id: str, block: dict, block_index: int) -> None:
     table_id = _stable_id(block, f"table-{block_index + 1}")
+    if block.get("title"):
+        atoms.append({
+            "atom_id": _atom_id(page_id, "table", table_id, "title"),
+            "pointer": _pointer("customer_visible", "body_blocks", block_index, "title"),
+            "text": block["title"],
+            "kind": "table_title",
+        })
     columns = block.get("columns") or []
     for column_index, column in enumerate(columns):
         column_id = _stable_id(column, f"col-{column_index + 1}")

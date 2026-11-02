@@ -92,12 +92,14 @@ const findingLabels = {
 
 export function formatFinding(finding) {
   const parts = [
-    `${findingLabels[finding.code] || finding.code}${finding.text ? `：${finding.text}` : ''}${finding.element ? `（${finding.element}）` : ''}`,
+    `${findingLabels[finding.code] || finding.code}${finding.text ? `：${finding.text}` : ''}${finding.element && finding.element !== finding.table_id ? `（${finding.element}）` : ''}`,
   ];
   if (finding.table_id != null) {
     parts.push(`表格 ${finding.table_id}`);
     if (finding.row_id != null) parts.push(`行 ${finding.row_id}`);
+    else if (Number.isInteger(finding.row)) parts.push(`第 ${finding.row + 1} 行`);
     if (finding.column_id != null) parts.push(`列 ${finding.column_id}`);
+    else if (Number.isInteger(finding.column)) parts.push(`第 ${finding.column + 1} 列`);
   }
   if ('expected' in finding) parts.push(`期望：${JSON.stringify(finding.expected)}`);
   if ('actual' in finding) parts.push(`实际：${JSON.stringify(finding.actual)}`);

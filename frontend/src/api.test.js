@@ -23,6 +23,8 @@ test('finding details retain empty values and support partial table locations', 
   assert.ok(!output.includes('undefined'));
   assert.equal(formatFinding({ code: 'missing_node', text: '正文', element: 'n1' }), '缺少节点：正文（n1）');
   assert.equal(formatFinding({ code: 'new_code' }), 'new_code');
+  const cell = formatFinding({ code: 'unreadable_text', table_id: 't1', row: 1, column: 0 });
+  assert.ok(cell.includes('第 2 行') && cell.includes('第 1 列'));
 });
 
 test('save sends the bare patch and retains submitted input on conflict', async () => {
