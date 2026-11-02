@@ -327,9 +327,10 @@ Host 按需读取：`deck show`（摘要）、`deck get --pages p3,p4`（指定�
 - PR #247、#249 按各自的内容和状态另行决定，不属于本稿。
 - issue 在新路径解决后逐条关闭，不随旧代码退役而批量关闭。
 - 迁移：
-  - 旧线新增只读命令 `legacy-export <project> <out>`，复用 `Store.load_document` 与对象读取，导出中性 JSON 和文件，包括 brief、材料、framing 摘要、页 content、讲稿、原图、SVG 和最近一次导出。旧审阅与授权记录原样附带，供查阅。现有的 `export --purpose engineering` 只复制对象树，不产出中性 JSON，所以不能直接拿来代替。
-  - `deck import <out> <new>`：目标已存在时报错；无法映射的内容逐项列在报告里；在途调用或结果未知的调用只列出，不恢复。
-  - 只迁移老板指定的项目。旧目录不变，所以回退就是继续使用旧目录。
+  - 旧线新增只读命令 `deck-master legacy-export <project> <out>`，复用 `Store.load_document` 与对象读取，导出中性 JSON 和文件，包括 brief、材料、framing 摘要、页 content、讲稿、原图、SVG 和最近一次导出。旧审阅与授权记录原样附带，供查阅。现有的 `export --purpose engineering` 只复制对象树，不产出中性 JSON，所以不能直接拿来代替。`<out>` 必须在旧项目目录之外。
+  - `deck import <out> <new>`：目标已存在时报错；无法映射的内容逐项列在报告里；档案里缺文件或文件名越出 `files/` 时导入失败，并且不留下目标目录。在途调用或结果未知的调用只列出，不恢复。
+  - 导入后的原图和 SVG 写入 `basis` 为 `imported`。总览把这些页标为已过期。`deck export pptx` 读到的构建摘要是字面量 `imported`，因此报告 `input_changed`。
+  - 只迁移老板指定的项目。旧目录不变，所以回退就是继续使用旧目录。迁移步骤是 `deck-master legacy-export <project> <out>`，然后 `deck import <out> <new>`。
   - 中性档案是目录，格式名 `legacy-export.v1`：
 
     | 路径 | 内容 |
@@ -342,10 +343,10 @@ Host 按需读取：`deck show`（摘要）、`deck get --pages p3,p4`（指定�
     | `format` | 固定 `legacy-export.v1` |
     | `source` | `{project_id, revision_id}`，不含本机路径 |
     | `brief` | `title`、`audience`、`task_type`、`goal`、`constraints`、`page_limit` |
-    | `materials[]` | `id`、`name`、`file`、`text_file`、`status`；后两个是 `files/` 下的文件名 |
-    | `framing` | `thesis`、`pillars[{title,points}]`、`facts`、`assumptions`、`questions`，由旧 content_plan / narrative 摘要 |
+    | `materials[]` | `id`、`name`、`file`、`text_file`、`status`。`file` 和 `text_file` 是 `files/` 下的文件名，可以是空字符串 |
+    | `framing` | `thesis`、`pillars[{title,points}]`、`facts`、`assumptions`、`questions`，由旧 content_plan / narrative 摘要。v1 读 `input_summary`、`goals`、`unresolved_facts`；v2 读章节 `page_ids` 对应的 `page_roles`（`intended_takeaway`、`source_links`）以及 `resolution` 为 `open` 的 `issues`。narrative 的 `issues` 只取 `question`，且只收 `open` |
     | `style` | `canvas`（保留旧画布）、`palette`、`fonts`、`assets[{id,file}]` |
-    | `pages[]` | `id`、`purpose`、`layout`、`content`（与 page.v2 `customer_visible` 同形）、`notes`、`todo`、`refs`、`image`/`svg` 为 `{file}` 或 null、`preview` |
+    | `pages[]` | `id`、`purpose`、`layout`、`content`（与 page.v2 `customer_visible` 同形）、`notes`、`todo`、`refs`。`image` 和 `svg` 是 `{file}` 或 null。`preview` 是 `files/` 下的文件名字符串，或 null |
     | `last_export` | `{file}` 或 null，最近一次 PPTX |
     | `reviews` | 旧审阅对象原样 |
     | `authorizations` | 旧授权对象原样 |

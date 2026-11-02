@@ -49,7 +49,7 @@ uv venv --python 3.12 .venv
 uv pip install --python .venv/bin/python -e ".[dev]"
 ```
 
-安装后的统一命令入口是 `deck-master ...`；源码环境中也可用 `python -m deck_master ...`。激活发行版本时会注册 Master、Content、Design、Review 四个 Codex Skill，详见[安装说明](skills/deck-master/references/installation.md)。
+旧工作台的命令是 `deck-master ...`；源码环境中也可用 `python -m deck_master ...`。`scripts/install.sh` 安装的 Rust 命令是 `deck`。激活发行版本时会注册 Master、Content、Design、Review 四个 Codex Skill，详见[安装说明](skills/deck-master/references/installation.md)。
 
 ## 新装
 
@@ -70,6 +70,19 @@ Skill 路径必须是新的，或已经是指向本仓库 `deck-skill/` 的同�
 
 安装后用 `deck new ./my-deck --title '方案标题'` 新建作品目录。链接的
 Skill 说明首跑命令。
+
+新装用户不用设置 `DECK_TOOLS_PYTHON`：`deck` 使用安装前缀里的 venv。
+`cargo install --force` 会换掉 `PREFIX/bin` 里已有的 `deck`。deck-tools 是对当前
+checkout 的可编辑安装，移动或删除这份 checkout 后，该 venv 会无法导入 deck-tools。
+
+把旧项目迁到新目录，旧目录保持原样：
+
+```bash
+deck-master legacy-export <project> <out>
+deck import <out> <new>
+```
+
+`<out>` 必须在 `<project>` 之外。导入后的原图和 SVG 以 `basis` `imported` 写入，总览里这些页显示为已过期。`deck export pptx` 会报告 `input_changed`。
 
 ## 快速开始
 

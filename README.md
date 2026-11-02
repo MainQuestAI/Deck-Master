@@ -84,9 +84,10 @@ uv venv --python 3.12 .venv
 uv pip install --python .venv/bin/python -e ".[dev]"
 ```
 
-The only command surface is the rebuilt CLI: `deck-master ...` after install,
-or `python -m deck_master ...` from a source checkout. Release activation also
-registers all four Codex Skills (Master, Content, Design, Review); see [installation](skills/deck-master/references/installation.md).
+The legacy workbench command is `deck-master ...` after that install, or
+`python -m deck_master ...` from a source checkout. The Rust command installed
+by `scripts/install.sh` is `deck`. Release activation also registers all four
+Codex Skills (Master, Content, Design, Review); see [installation](skills/deck-master/references/installation.md).
 
 ## New install
 
@@ -108,6 +109,22 @@ different file or link unchanged and exits with an error.
 
 After install, `deck new ./my-deck --title '方案标题'` creates a work
 directory. The linked skill describes the first-run commands.
+
+A fresh install finds deck-tools in the prefix venv, so it does not need
+`DECK_TOOLS_PYTHON`. `cargo install --force` replaces a `deck` binary already
+present in `PREFIX/bin`. deck-tools is an editable install of this checkout;
+moving or deleting the checkout leaves that venv unable to import it.
+
+Migrate an old project into a new directory. The old directory stays as it is:
+
+```bash
+deck-master legacy-export <project> <out>
+deck import <out> <new>
+```
+
+`<out>` has to sit outside `<project>`. Imported images and SVG are stored with
+`basis` `imported`, so the overview shows those pages as stale. `deck export pptx`
+reports `input_changed`.
 
 ## Quick Start
 
