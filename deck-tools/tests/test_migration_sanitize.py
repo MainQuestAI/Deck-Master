@@ -5,6 +5,30 @@ import sys
 import pytest
 
 from legacy_pptx_fixture import PRIVATE_PATH, inspect_pptx, make_pptx
+from deck_tools.sanitize import OperationError, public_projection_safe
+
+
+@pytest.mark.parametrize("value", [
+    "https://example.com/home/products",
+    '资料见 "https://example.com/Users/guide"，正文继续。',
+    "参考 https://example.com/root/guide 和 http://example.com/opt/catalog",
+])
+def test_public_urls_are_not_local_paths(value):
+    public_projection_safe({"title": value}, "page")
+
+
+@pytest.mark.parametrize("value", [
+    "https://example.com/home/products /Users/example/document.txt",
+    "/home/example/document.txt https://example.com/home/products",
+    "https://example.com/sk-abcdefghijklmnop123456",
+    "https://example.com/home/products Bearer abcdefghijklmnop",
+    "https://example.com/home/products?api_key=secret",
+    "https://user:password@example.com/home/products",
+    "file:///Users/example/document.txt",
+])
+def test_url_exemption_preserves_path_and_credential_checks(value):
+    with pytest.raises(OperationError):
+        public_projection_safe({"title": value}, "page")
 
 
 def clean(tmp_path, source, name, **options):
