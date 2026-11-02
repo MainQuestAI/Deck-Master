@@ -1,9 +1,42 @@
 import { test, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { ApiError, getDeck, putDeck, cancelRun, buildDeck, restoreVersion, exportDeck, fileUrl, mergeWorkspace, createDraft, createPageId, draftPatch, formatFinding } from './api.js';
+import { ApiError, getDeck, putDeck, cancelRun, buildDeck, restoreVersion, exportDeck, fileUrl, mergeWorkspace, createDraft, createPageId, draftPatch, formatFinding, addReview, resolveReview, adoptCandidate, comparisonSnapshot } from './api.js';
 
 const originalFetch = globalThis.fetch;
 afterEach(() => { globalThis.fetch = originalFetch; });
+
+test('review writes preserve original text and keep global and page scopes distinct', async () => {
+  const requests = [];
+  globalThis.fetch = async (url, options) => {
+    requests.push([url, options.method, options.body && JSON.parse(options.body)]);
+    return Response.json({ id: 3 });
+  };
+  await addReview('全稿意见\n原文');
+  await addReview('本页意见', '页/3');
+  await resolveReview(3);
+  assert.deepEqual(requests, [
+    ['/api/reviews', 'POST', { text: '全稿意见\n原文' }],
+    ['/api/reviews', 'POST', { text: '本页意见', page_id: '页/3' }],
+    ['/api/reviews/3/resolve', 'POST', undefined],
+  ]);
+});
+
+test('comparison freezes the same layer and adopts the displayed file even after polling changes the candidate', async () => {
+  const page = { id: '页/3', content: { title: '原稿' }, image: { file: 'image.png' }, svg: { file: 'old.svg' } };
+  const result = { page_id: page.id, result_file: 'candidate.svg' };
+  const selected = comparisonSnapshot({ id: 4, kind: 'svg' }, result, page, 2);
+  page.svg.file = 'new-current.svg';
+  result.result_file = 'late.svg';
+  assert.equal(selected.currentFile, 'old.svg');
+  assert.equal(selected.candidateFile, 'candidate.svg');
+  assert.equal(comparisonSnapshot({ id: 5, kind: 'image' }, result, page, 3).currentFile, 'image.png');
+  globalThis.fetch = async (url, options) => {
+    assert.equal(url, '/api/runs/4/adopt/%E9%A1%B5%2F3');
+    assert.deepEqual(JSON.parse(options.body), { expected_file: 'candidate.svg' });
+    return Response.json({ error: '候选已更新' }, { status: 409 });
+  };
+  await assert.rejects(adoptCandidate(selected.runId, selected.pageId, selected.candidateFile), error => error.status === 409);
+});
 
 test('table findings show the cell location and expected and actual text', () => {
   const output = formatFinding({

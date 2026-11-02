@@ -7,6 +7,7 @@ import ContentView from './components/scenes/ContentView';
 import GalleryView from './components/scenes/GalleryView';
 import DeliveryView from './components/scenes/DeliveryView';
 import PageReaderView from './components/scenes/PageReaderView';
+import CompareView from './components/scenes/CompareView';
 import DrawerPanel from './components/modals/DrawerPanel';
 import PresentationModal from './components/modals/PresentationModal';
 import Toast from './components/common/Toast';
@@ -14,7 +15,7 @@ import { useDeckMaster } from './context/DeckMasterContext';
 
 export default function App() {
   const { scene, workspace, connectionError, actionError, refresh } = useDeckMaster();
-  const scenes = { overview: OverviewView, content: ContentView, gallery: GalleryView, delivery: DeliveryView, page: PageReaderView };
+  const scenes = { overview: OverviewView, content: ContentView, gallery: GalleryView, delivery: DeliveryView, page: PageReaderView, compare: CompareView };
   const Scene = scenes[scene] || OverviewView;
   return <>
     <a className="skip-link" href="#main-view">跳至主要工作区内容</a>

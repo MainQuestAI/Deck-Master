@@ -2577,3 +2577,7 @@ html[data-theme="dark"] .suggested-diff-body {
 }
 
 .s4-presentation > .row { flex-wrap: wrap; }
+.s5-reviews { list-style: none; padding: 0; }
+.s5-reviews li { padding: 16px 0; border-bottom: 1px solid var(--dm-color-border); }
+.s5-reviews li:last-child { border-bottom: 0; }
+.s5-reviews .s4-reading { margin: 8px 0 12px; }

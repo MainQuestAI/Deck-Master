@@ -43,6 +43,23 @@ export const putDeck = (base, patch) => request(`/api/deck?base=${base}`, {
 export const cancelRun = (id) => post(`/api/runs/${encodeURIComponent(id)}/cancel`);
 export const buildDeck = (signal) => request('/api/build', { method: 'POST', signal }, null);
 export const restoreVersion = (version) => post(`/api/restore/${version}`, undefined, '结果未知，请刷新查看当前版本');
+export const addReview = (text, pageId) => request('/api/reviews', {
+  method: 'POST', headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ text, ...(pageId ? { page_id: pageId } : {}) }),
+});
+export const resolveReview = (id) => post(`/api/reviews/${id}/resolve`);
+export const adoptCandidate = (runId, pageId, file) => request(`/api/runs/${runId}/adopt/${encodeURIComponent(pageId)}`, {
+  method: 'POST', headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ expected_file: file }),
+}, null);
+
+export function comparisonSnapshot(run, result, page, version) {
+  return {
+    runId: run.id, pageId: page.id, kind: run.kind, title: page.content.title,
+    currentFile: page[run.kind]?.file || null, candidateFile: result.result_file,
+    version, reason: result.reason, basisChanged: result.basis_changed,
+  };
+}
 
 export function fileUrl(reference) {
   if (!reference) return null;

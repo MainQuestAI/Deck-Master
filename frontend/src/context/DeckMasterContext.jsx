@@ -20,6 +20,8 @@ export function DeckMasterProvider({ children }) {
   const [galleryView, setGalleryView] = useState('grid');
   const [query, setQuery] = useState('');
   const [presentation, setPresentation] = useState(null);
+  const [comparison, setComparison] = useState(null);
+  const [reviewDrafts, setReviewDrafts] = useState({});
   const [toast, setToast] = useState(null);
   const [theme, setTheme] = useState(() => {
     try { return localStorage.getItem('deck-master-theme') || 'light'; }
@@ -70,7 +72,7 @@ export function DeckMasterProvider({ children }) {
     locks.current.add(key);
     setBusy(value => ({ ...value, [key]: true }));
     setActionError('');
-    try { await work(); }
+    try { return await work(); }
     catch (error) { setActionError(error.message); }
     finally {
       locks.current.delete(key);
@@ -161,6 +163,29 @@ export function DeckMasterProvider({ children }) {
     setToast('已恢复为新版本，历史和未保存输入仍保留');
     await reload();
   });
+  const addReview = (text, pageId) => perform(`review-add-${pageId ? `page:${pageId}` : 'deck'}`, async () => {
+    const review = await api.addReview(text, pageId);
+    setReviewDrafts(value => ({ ...value, [pageId ? `page:${pageId}` : 'deck']: '' }));
+    setToast('意见已保存');
+    await reload();
+    return review;
+  });
+  const resolveReview = (id) => perform(`review-resolve-${id}`, async () => {
+    await api.resolveReview(id);
+    setToast('意见已标记为已处理');
+    await reload();
+  });
+  const compareCandidate = (run, result) => {
+    const page = getPage(result.page_id);
+    if (!page || !result.result_file) return;
+    setComparison(api.comparisonSnapshot(run, result, page, workspace.version));
+    setScene('compare');
+  };
+  const adoptCandidate = () => perform('adopt', async () => {
+    await api.adoptCandidate(comparison.runId, comparison.pageId, comparison.candidateFile);
+    setToast('候选已采用');
+    await reload();
+  });
 
   return <DeckMasterContext.Provider value={{
     workspace, pages, revision: workspace?.version, activeProject: workspace?.deck.brief.title || '未命名作品',
@@ -168,6 +193,8 @@ export function DeckMasterProvider({ children }) {
     getPage, getPageNumStr, openPage, editPage, createPage, drafts, updateDraft, saveDraft, rebaseDraft, discardDraft,
     drawer, openDrawer: setDrawer, closeDrawer: () => setDrawer(null),
     stopRun, build, buildResult, download, downloadStatus, restore,
+    addReview, resolveReview, reviewDrafts, setReviewDrafts,
+    comparison, compareCandidate, adoptCandidate,
     galleryLayer, setGalleryLayer, galleryView, setGalleryView, query, setQuery,
     presentation, setPresentation, toast, theme, toggleTheme: () => setTheme(value => value === 'dark' ? 'light' : 'dark'),
   }}>{children}</DeckMasterContext.Provider>;
