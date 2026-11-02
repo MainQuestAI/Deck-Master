@@ -273,19 +273,23 @@ fn result_rechecks_candidate_after_tool_work_and_preserves_identical_status() {
             .env("DECK_TEST_WRAPPER", script);
         command
     }
-    for replaced in [false, true] {
+    for (cancelled, replaced) in [(false, false), (false, true), (true, false), (true, true)] {
         let temp = tempfile::tempdir().unwrap();
         let project = temp.path().join("project");
         ops::new(&project, "Synthetic result race".into()).unwrap();
         edit(
             &project,
             1,
-            json!({"order":["p1"],"pages":[{"id":"p1","content":{"title":"Main"}}]}),
+            json!({"order":["p1","p2"],"pages":[{"id":"p1","content":{"title":"Main"}},{"id":"p2"}]}),
         );
-        let id = ops::run_start(&project, "svg", &["p1".into()], None).unwrap()["runs"][0]["id"]
-            .as_i64()
-            .unwrap();
-        ops::run_cancel(&project, id).unwrap();
+        let id =
+            ops::run_start(&project, "svg", &["p1".into(), "p2".into()], None).unwrap()["runs"][0]
+                ["id"]
+                .as_i64()
+                .unwrap();
+        if cancelled {
+            ops::run_cancel(&project, id).unwrap();
+        }
         // Seed a stored candidate and adopt it through the real CLI, so the
         // run page reads (A, done) before the race. The wrapper isolates every
         // call from rendering, like the adoption race test, so this also runs
