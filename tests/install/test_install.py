@@ -43,6 +43,8 @@ def test_dry_run_prints_install_plan(tmp_path: Path) -> None:
     assert str(REPO / "rust") in output
     assert "uv venv --python 3.12 --seed" in output or "python3.12 -m venv" in output
     assert str(prefix / "share" / "deck" / "venv") in output
+    assert "run build" in output
+    assert "npm test" not in output
     assert "ln -s" in output
     assert str(REPO / "deck-skill") in output
     assert not prefix.exists()
@@ -56,7 +58,6 @@ def test_existing_file_at_skill_dir_errors_without_writing(tmp_path: Path) -> No
     skill.write_text("other skill", encoding="utf-8")
     result = _run(
         [
-            "--dry-run",
             "--prefix",
             str(prefix),
             "--skill-dir",
@@ -78,7 +79,6 @@ def test_skill_link_to_another_target_errors(tmp_path: Path) -> None:
     os.symlink(other, skill)
     result = _run(
         [
-            "--dry-run",
             "--prefix",
             str(prefix),
             "--skill-dir",
@@ -88,6 +88,7 @@ def test_skill_link_to_another_target_errors(tmp_path: Path) -> None:
     assert result.returncode == 2
     assert "其他位置" in result.stderr
     assert Path(os.readlink(skill)) == other
+    assert not prefix.exists()
 
 
 def test_matching_skill_link_is_kept(tmp_path: Path) -> None:

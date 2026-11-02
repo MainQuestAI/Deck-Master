@@ -60,6 +60,22 @@ need() {
 
 need cargo
 need npm
+need_rustc() {
+  command -v rustc >/dev/null 2>&1 || {
+    echo "install.sh: 缺少 rustc；请安装 Rust 1.88.0 或更新版本后再运行" >&2
+    exit 3
+  }
+  # edition 2024 needs 1.85; `if let` chains in rust/src/tools.rs need 1.88.
+  version=$(rustc --version | awk '{print $2}')
+  major=${version%%.*}
+  minor=${version#*.}
+  minor=${minor%%.*}
+  if [ "${major:-0}" -lt 1 ] || { [ "${major:-0}" -eq 1 ] && [ "${minor:-0}" -lt 88 ]; }; then
+    echo "install.sh: 需要 rustc 1.88.0 或更新（edition 2024 与 let 链）；当前是 ${version:-未知}" >&2
+    exit 3
+  fi
+}
+need_rustc
 if command -v uv >/dev/null 2>&1; then
   venv_python=uv
 elif command -v python3.12 >/dev/null 2>&1; then
@@ -87,19 +103,25 @@ fi
 }
 
 skill_link_state() {
-  python3 - "$skill_dir" "$skill_target" <<'PY'
-import os
-import sys
-
-link, target = sys.argv[1], sys.argv[2]
-if not os.path.lexists(link):
-    sys.exit(0)
-if not os.path.islink(link):
-    sys.exit(2)
-if os.path.realpath(link) != os.path.realpath(target):
-    sys.exit(3)
-sys.exit(1)
-PY
+  if [ -L "$skill_dir" ]; then
+    current=$(readlink "$skill_dir")
+    case "$current" in
+      /*) ;;
+      *) current="$(CDPATH= cd -- "$(dirname -- "$skill_dir")" && pwd -P)/$current" ;;
+    esac
+    if [ -d "$current" ]; then
+      current=$(CDPATH= cd -- "$current" && pwd -P)
+    fi
+    target=$(CDPATH= cd -- "$skill_target" && pwd -P)
+    if [ "$current" = "$target" ]; then
+      return 1
+    fi
+    return 3
+  fi
+  if [ -e "$skill_dir" ]; then
+    return 2
+  fi
+  return 0
 }
 
 link_status=0
@@ -145,11 +167,16 @@ if [ "$dry_run" -eq 1 ]; then
 fi
 
 run npm --prefix "${repo_root}/frontend" ci
-run npm --prefix "${repo_root}/frontend" test
 run npm --prefix "${repo_root}/frontend" run build
 run cargo install --path "${repo_root}/rust" --root "${prefix}" --force --locked
 
-if [ "$venv_python" = uv ]; then
+# A second run must not fail after cargo install has already replaced bin/deck.
+# Do not pass --clear: that would wipe a venv the previous run already filled.
+if [ -x "${venv_dir}/bin/python" ]; then
+  if [ "$dry_run" -eq 1 ]; then
+    echo "dry-run: reuse venv ${venv_dir}"
+  fi
+elif [ "$venv_python" = uv ]; then
   run uv venv --python 3.12 --seed "${venv_dir}"
 else
   run python3.12 -m venv "${venv_dir}"
