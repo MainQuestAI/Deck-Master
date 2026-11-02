@@ -951,11 +951,25 @@ pub fn run_result(project: &Path, id: i64, page_id: &str, source: &Path) -> Resu
 }
 
 pub fn run_adopt(project: &Path, id: i64, page_id: &str) -> Result<Value> {
+    run_adopt_candidate(project, id, page_id, None)
+}
+
+pub fn run_adopt_candidate(
+    project: &Path,
+    id: i64,
+    page_id: &str,
+    expected_file: Option<&str>,
+) -> Result<Value> {
     use rusqlite::params;
     let mut store = Store::open(project)?;
     let (kind, _, _, _) = run_record(&store.connection, id)?;
     let (old, _, file) = run_page(&store.connection, id, page_id)?;
     let file = file.ok_or_else(|| Error::Input("此页尚无结果；请先交回文件".into()))?;
+    if expected_file.is_some_and(|expected| expected != file) {
+        return Err(Error::Conflict(
+            "候选已更新；请读取当前候选后重新采用".into(),
+        ));
+    }
     store.file(&file)?;
     let mut preview = None;
     if kind == "svg" {

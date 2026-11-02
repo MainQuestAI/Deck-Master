@@ -1010,7 +1010,23 @@ fn http_adopt_matches_cli_with_candidates_and_existing_rejection_semantics() {
         assert_eq!(image.body, expected);
         assert!(image.headers["content-security-policy"].contains("sandbox"));
     }
-    let adopted = service.request("POST", &url, &[], "");
+    let stale_selection = service.request(
+        "POST",
+        &url,
+        &[],
+        &json!({"expected_file":first_result["file"]}).to_string(),
+    );
+    assert_eq!(stale_selection.status, 409);
+    assert_eq!(
+        service.request("GET", "/api/deck", &[], "").json(),
+        workspace
+    );
+    let adopted = service.request(
+        "POST",
+        &url,
+        &[],
+        &json!({"expected_file":result["file"]}).to_string(),
+    );
     assert_eq!(adopted.status, 200);
     let after = service.request("GET", "/api/deck", &[], "").json();
     assert_eq!(after["deck"]["pages"][0]["image"]["file"], result["file"]);

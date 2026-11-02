@@ -196,7 +196,24 @@ fn route(project: &Path, request: &mut Request) -> Result<ResponseBox> {
             let (run, page) = path[10..]
                 .split_once("/adopt/")
                 .ok_or_else(|| Error::Input("采用结果需要 run 和页面编号".into()))?;
-            let mut result = ops::run_adopt(project, identifier(run)?, &url_component(page)?)?;
+            #[derive(Default, serde::Deserialize)]
+            #[serde(deny_unknown_fields)]
+            struct AdoptInput {
+                expected_file: Option<String>,
+            }
+            let mut body = Vec::new();
+            request.as_reader().read_to_end(&mut body)?;
+            let input: AdoptInput = if body.is_empty() {
+                AdoptInput::default()
+            } else {
+                serde_json::from_slice(&body)?
+            };
+            let mut result = ops::run_adopt_candidate(
+                project,
+                identifier(run)?,
+                &url_component(page)?,
+                input.expected_file.as_deref(),
+            )?;
             for page in result["runs"][0]["pages"]
                 .as_array_mut()
                 .into_iter()

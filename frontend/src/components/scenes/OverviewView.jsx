@@ -1,5 +1,6 @@
 import React from 'react';
 import Icon from '../common/Icon';
+import ReviewPanel from '../common/ReviewPanel';
 import { useDeckMaster } from '../../context/DeckMasterContext';
 
 export default function OverviewView() {
@@ -21,5 +22,6 @@ export default function OverviewView() {
         <td><button className="button tiny quiet" onClick={() => openPage(page.id)}>打开</button></td>
       </tr>)}</tbody></table>{filtered.length === 0 && <p className="s4-empty">没有匹配的页面</p>}</div>
     </>}
+    <ReviewPanel />
   </div>;
 }
