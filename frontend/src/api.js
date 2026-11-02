@@ -67,6 +67,13 @@ export function createDraft(page, base) {
   return { base, original: structuredClone(page), page: structuredClone(page), conflict: null };
 }
 
+export function createPageId(pages, drafts, randomUUID = () => crypto.randomUUID()) {
+  const used = new Set([...pages.map(page => page.id), ...Object.keys(drafts)]);
+  let id;
+  do { id = `p${randomUUID().slice(0, 8)}`; } while (used.has(id));
+  return id;
+}
+
 export function draftPatch(draft) {
   const page = { id: draft.page.id };
   for (const field of ['content', 'purpose', 'layout', 'notes']) {

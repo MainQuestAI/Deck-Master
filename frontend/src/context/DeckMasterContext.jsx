@@ -91,7 +91,7 @@ export function DeckMasterProvider({ children }) {
   const openPage = (id) => { setCurrentPage(id); setScene('page'); setDrawer(null); };
   const editPage = (id) => {
     const page = getPage(id);
-    if (!page) return;
+    if (!page && !drafts[id]) return;
     setCurrentPage(id);
     setDrafts(value => value[id] ? value : { ...value, [id]: api.createDraft(page, workspace.version) });
     setDrawer('editor');
@@ -121,9 +121,7 @@ export function DeckMasterProvider({ children }) {
     setDrawer(null);
   };
   const createPage = () => perform('create', async () => {
-    let n = 1;
-    while (pages.some(page => page.id === `p${n}`)) n++;
-    const id = `p${n}`;
+    const id = api.createPageId(pages, drafts);
     const result = await api.putDeck(workspace.version, { order: [...pages.map(page => page.id), id], pages: [{ id }] });
     acceptSave(result);
     const page = result.deck.pages.find(page => page.id === id);
