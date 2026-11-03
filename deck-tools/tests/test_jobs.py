@@ -4,10 +4,12 @@ import subprocess
 import sys
 import zipfile
 
+import pytest
 from PIL import Image, PngImagePlugin
 from deck_tools.jobs import compile_job, projection
 from deck_tools.atoms import visible_atoms
 from deck_tools.compiler.native import notes_records
+from deck_tools.sanitize import OperationError
 from hostenv import resolve_host_font
 
 
@@ -56,6 +58,41 @@ def test_check_page_compiles_and_returns_readback_without_gating_text_findings(t
     assert result["preview"] == str(preview)
     assert result["findings"]["status"] == "fail"
     assert any(f["code"] == "missing_visible_atom" for f in result["findings"]["findings"])
+
+
+def _text_export_job(tmp_path, body, notes=""):
+    family = resolve_host_font()
+    svg = tmp_path / "page.svg"
+    svg.write_text(
+        '<svg viewBox="0 0 1280 720"><rect width="1280" height="720" fill="#ffffff"/>'
+        f'<text data-atom-id="atom:p1:title" x="40" y="80" font-family="{family}" font-size="12">{body}</text></svg>',
+        encoding="utf-8",
+    )
+    return {"pages": [{"id": "p1", "content": {"title": body}, "notes": notes, "svg": str(svg)}],
+            "canvas": {"width_px": 1280, "height_px": 720, "slide_width_in": 13.333, "slide_height_in": 7.5},
+            "fonts": [family], "assets": {}, "output": str(tmp_path / "out")}
+
+
+def _part_text(pptx_path, name):
+    with zipfile.ZipFile(pptx_path) as archive:
+        return archive.read(name).decode("utf-8")
+
+
+@pytest.mark.parametrize("body", [
+    "https://example.com/open?source=file:///Users/synthetic/private/project.txt",
+    "https://example.com/open?source=C:\\Users\\synthetic\\private\\project.txt",
+])
+def test_exported_http_text_rejects_embedded_local_paths(tmp_path, body):
+    with pytest.raises(OperationError):
+        compile_job(_text_export_job(tmp_path, body, notes="Public note"))
+
+
+def test_exported_http_text_keeps_ordinary_site_paths(tmp_path):
+    body = "https://example.com/home/products"
+    result = compile_job(_text_export_job(tmp_path, body, notes=body))
+    assert result["findings"]["status"] == "pass"
+    assert body in _part_text(result["pptx"], "ppt/slides/slide1.xml")
+    assert body in _part_text(result["pptx"], "ppt/notesSlides/notesSlide1.xml")
 
 
 def test_invalid_svg_cli_reports_element_without_publishing_file(tmp_path):

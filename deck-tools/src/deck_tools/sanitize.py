@@ -18,6 +18,9 @@ PRIVATE = re.compile(
     r"(?:file://|/(?:Users|home|workspace|codex|root|mnt|opt|etc|var|private/tmp|tmp)/|[A-Za-z]:\\|\bBearer\s+[A-Za-z0-9_.-]{8,}|\bsk-[A-Za-z0-9_-]{16,})", re.I
 )
 HTTP_URL = re.compile(r'https?://[^\s<>"\']+', re.I)
+# Directory prefixes such as /home/products are ordinary site paths. file:// and
+# Windows drive paths stay local even when they sit inside an HTTP string.
+LOCAL_URL_EMBED = re.compile(r"^(?:file://|[A-Za-z]:\\)", re.I)
 
 
 def reject(where, reason):
@@ -29,8 +32,10 @@ def text_safe(value, where):
         return
     urls = [match.span() for match in HTTP_URL.finditer(value)]
     for match in PRIVATE.finditer(value):
-        credential = match.group().lower().startswith(("bearer", "sk-"))
-        if not credential and any(start <= match.start() and match.end() <= end for start, end in urls):
+        token = match.group()
+        credential = token.lower().startswith(("bearer", "sk-"))
+        inside_http = any(start <= match.start() and match.end() <= end for start, end in urls)
+        if not credential and not LOCAL_URL_EMBED.match(token) and inside_http:
             continue
         rule = "凭据样式" if credential else "本机路径"
         reject(where, f"命中{rule}规则；请修改该字段后重试")
