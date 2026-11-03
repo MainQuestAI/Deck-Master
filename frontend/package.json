@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "test": "node --test src/api.test.js src/components/modals/useDialogFocus.test.js",
+    "test": "node --import ./src/test/register-jsx.js --test src/api.test.js src/components/modals/useDialogFocus.test.js src/components/modals/PresentationModal.test.js",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -15,6 +15,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",
+    "jsdom": "^30.1.3",
     "vite": "^6.0.7"
   }
 }

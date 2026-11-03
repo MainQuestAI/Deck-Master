@@ -10,7 +10,12 @@ export default function PresentationModal() {
   const page = getPage(presentation);
   const dialog = useDialogFocus(!!page, () => setPresentation(null));
   useEffect(() => {
-    if (!presentation) return;
+    // The stage renders only while the presented page still exists. Key handling uses that
+    // same condition, and a deleted page must not leave its id armed for the next arrow.
+    if (!page) {
+      if (presentation) setPresentation(null);
+      return;
+    }
     const listener = event => {
       const step = presentationMove(event);
       if (!step) return;
@@ -19,7 +24,7 @@ export default function PresentationModal() {
     };
     window.addEventListener('keydown', listener);
     return () => window.removeEventListener('keydown', listener);
-  }, [presentation, pages]);
+  }, [page, presentation, pages]);
   if (!page) return null;
   return <div ref={dialog} tabIndex={-1} className="presentation-stage s4-presentation" data-theme="dark" role="dialog" aria-modal="true" aria-label="整稿放映">
     <div className="row between"><h2>第 {getPageNumStr(page.id)} 页 · {page.content.title}</h2><button className="button" data-dialog-initial-focus onClick={() => setPresentation(null)}>退出放映</button></div>
