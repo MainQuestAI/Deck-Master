@@ -1,9 +1,10 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { useDeckMaster } from '../../context/DeckMasterContext';
 import PageContent from '../common/PageContent';
+import useDialogFocus from './useDialogFocus';
 
 function Field({ label, value, onChange, multiline = false, readOnly = false }) {
-  return <label className="form-group s4-field"><span>{label}</span>{multiline ? <textarea rows={3} value={value || ''} readOnly={readOnly} onChange={onChange && (event => onChange(event.target.value))} /> : <input value={value || ''} readOnly={readOnly} onChange={onChange && (event => onChange(event.target.value))} />}</label>;
+  return <label className="form-group s4-field"><span>{label}</span>{multiline ? <textarea rows={3} value={value || ''} readOnly={readOnly} onChange={onChange && (event => onChange(event.target.value))} /> : <input type="text" value={value || ''} readOnly={readOnly} onChange={onChange && (event => onChange(event.target.value))} />}</label>;
 }
 function ItemFields({ items, change, label }) {
   return items.map((item, index) => <div key={item.id || index}>
@@ -30,24 +31,7 @@ function ContentFields({ content, change }) {
 
 export default function DrawerPanel() {
   const { drawer, closeDrawer, drafts, currentPage, updateDraft, saveDraft, rebaseDraft, discardDraft, workspace, busy, restore, actionError } = useDeckMaster();
-  const panel = useRef(null);
-  useEffect(() => {
-    if (!drawer) return;
-    const previous = document.activeElement;
-    panel.current?.focus();
-    const keydown = event => {
-      if (event.key === 'Escape') closeDrawer();
-      if (event.key === 'Tab') {
-        const controls = [...panel.current.querySelectorAll('button:not(:disabled), input:not(:disabled), textarea:not(:disabled), summary')];
-        const first = controls[0];
-        const last = controls.at(-1);
-        if (event.shiftKey && (document.activeElement === first || document.activeElement === panel.current)) { event.preventDefault(); last?.focus(); }
-        else if (!event.shiftKey && (document.activeElement === last || document.activeElement === panel.current)) { event.preventDefault(); first?.focus(); }
-      }
-    };
-    document.addEventListener('keydown', keydown);
-    return () => { document.removeEventListener('keydown', keydown); previous?.focus(); };
-  }, [drawer]);
+  const panel = useDialogFocus(!!(drawer && workspace), closeDrawer);
   if (!drawer || !workspace) return null;
   const draft = drafts[currentPage];
   const page = draft?.page;
