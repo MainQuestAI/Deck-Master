@@ -89,6 +89,65 @@ test('same-version polling refreshes runs; older polls cannot undo saves', () =>
   assert.equal(mergeWorkspace(current, { version: 2 }), current);
 });
 
+test('polling replaces workspace runs and reviews without rewriting local drafts', () => {
+  const page1 = { id: 'p1', content: { title: '原稿一', body_blocks: [] }, notes: '讲稿一' };
+  const page2 = { id: 'p2', content: { title: '原稿二', body_blocks: [] }, notes: '讲稿二' };
+  const drafts = {
+    p1: createDraft(page1, 3),
+    p2: createDraft(page2, 3),
+  };
+  drafts.p1.page.content.title = '第 1 页未保存标题';
+  drafts.p2.page.notes = '第 2 页未保存讲稿';
+  const before = { p1: structuredClone(drafts.p1), p2: structuredClone(drafts.p2) };
+  const current = { version: 3, deck: { pages: [page1, page2] }, runs: [{ id: 1, status: 'open' }], reviews: [] };
+  const incoming = {
+    version: 3,
+    deck: { pages: [
+      { ...page1, content: { title: '服务端仍是原稿一', body_blocks: [] } },
+      { ...page2, notes: '服务端仍是讲稿二' },
+    ] },
+    runs: [{ id: 1, status: 'cancelled' }],
+    reviews: [{ id: 9, text: '新意见' }],
+  };
+  const merged = mergeWorkspace(current, incoming);
+  assert.equal(merged, incoming);
+  assert.equal(merged.runs[0].status, 'cancelled');
+  assert.equal(merged.reviews[0].text, '新意见');
+  assert.deepEqual(drafts.p1, before.p1);
+  assert.deepEqual(drafts.p2, before.p2);
+  assert.notEqual(drafts.p1.page, merged.deck.pages[0]);
+  assert.notEqual(drafts.p2.page, merged.deck.pages[1]);
+});
+
+test('createDraft clones the page so a later workspace replacement cannot rewrite author input', () => {
+  const page = { id: 'p16', content: { title: '原稿', body_blocks: [] }, notes: '讲稿' };
+  const draft = createDraft(page, 1);
+  page.content.title = '轮询后的服务端标题';
+  page.notes = '轮询后的讲稿';
+  assert.equal(draft.page.content.title, '原稿');
+  assert.equal(draft.original.content.title, '原稿');
+  draft.page.content.title = '作者草稿';
+  assert.equal(page.content.title, '轮询后的服务端标题');
+  assert.equal(draft.original.content.title, '原稿');
+});
+
+test('editing one page draft leaves the other page draft and its patch unchanged', () => {
+  const page1 = { id: 'p1', content: { title: '原稿一', body_blocks: [] }, notes: '讲稿一' };
+  const page2 = { id: 'p2', content: { title: '原稿二', body_blocks: [] }, notes: '讲稿二' };
+  const drafts = {
+    p1: createDraft(page1, 1),
+    p2: createDraft(page2, 1),
+  };
+  drafts.p2.page.notes = '第 2 页未保存讲稿';
+  const other = structuredClone(drafts.p2);
+  drafts.p1.page.content.title = '只改第一页';
+  assert.deepEqual(drafts.p2, other);
+  assert.deepEqual(draftPatch(drafts.p1), { pages: [{ id: 'p1', content: drafts.p1.page.content }] });
+  assert.deepEqual(draftPatch(drafts.p2), { pages: [{ id: 'p2', notes: '第 2 页未保存讲稿' }] });
+  assert.equal(JSON.stringify(draftPatch(drafts.p1)).includes('p2'), false);
+  assert.equal(JSON.stringify(draftPatch(drafts.p2)).includes('p1'), false);
+});
+
 test('cancel posts to the selected run endpoint', async () => {
   globalThis.fetch = async (url, options) => {
     assert.equal(url, '/api/runs/7/cancel');
