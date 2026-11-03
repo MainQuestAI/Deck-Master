@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { trapDialogTab } from './useDialogFocus.js';
+import { trapDialogTab, presentationMove } from './useDialogFocus.js';
 
 function dialogHarness(names) {
   const focused = [];
@@ -47,6 +47,16 @@ test('presentation tab loop skips disabled previous and next controls', () => {
   focused.length = 0;
   trapDialogTab(dialog, tab(true), exit);
   assert.deepEqual(focused, ['previous']);
+});
+
+test('space advances the presentation except when a control already handles it', () => {
+  const control = { closest: selector => selector.split(',').some(item => item.trim().startsWith('button')) ? {} : null };
+  const stage = { closest: () => null };
+  assert.equal(presentationMove({ key: ' ', target: stage }), 1);
+  assert.equal(presentationMove({ key: ' ', target: control }), 0);
+  assert.equal(presentationMove({ key: 'ArrowRight', target: control }), 1);
+  assert.equal(presentationMove({ key: 'ArrowLeft', target: control }), -1);
+  assert.equal(presentationMove({ key: 'Escape', target: stage }), 0);
 });
 
 test('dialog tab loop recaptures background focus without trapping ordinary traversal', () => {

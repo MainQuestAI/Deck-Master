@@ -2,6 +2,16 @@ import { useEffect, useRef } from 'react';
 
 const FOCUSABLE = 'button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), summary, a[href], [tabindex]:not([tabindex="-1"])';
 
+const CONTROLS = 'button, input, textarea, select, a[href], summary';
+
+export function presentationMove(event) {
+  if (event.key === 'ArrowLeft') return -1;
+  if (event.key === 'ArrowRight') return 1;
+  // Space activates the focused control; only the empty stage uses it to advance.
+  if (event.key === ' ' && !event.target?.closest?.(CONTROLS)) return 1;
+  return 0;
+}
+
 export function trapDialogTab(dialog, event, active = document.activeElement) {
   if (event.key !== 'Tab') return;
   const controls = [...dialog.querySelectorAll(FOCUSABLE)];

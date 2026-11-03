@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useDeckMaster } from '../../context/DeckMasterContext';
 import PageArtwork from '../common/PageArtwork';
-import useDialogFocus from './useDialogFocus';
+import useDialogFocus, { presentationMove } from './useDialogFocus';
 
 export default function PresentationModal() {
   const { presentation, setPresentation, pages, getPage, getPageNumStr, galleryLayer } = useDeckMaster();
@@ -12,8 +12,10 @@ export default function PresentationModal() {
   useEffect(() => {
     if (!presentation) return;
     const listener = event => {
-      if (['ArrowRight', ' '].includes(event.key)) { event.preventDefault(); move(1); }
-      if (event.key === 'ArrowLeft') { event.preventDefault(); move(-1); }
+      const step = presentationMove(event);
+      if (!step) return;
+      event.preventDefault();
+      move(step);
     };
     window.addEventListener('keydown', listener);
     return () => window.removeEventListener('keydown', listener);
