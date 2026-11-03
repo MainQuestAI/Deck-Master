@@ -368,7 +368,7 @@ fn version_one_database_keeps_versions_files_and_gains_delivery_tables() {
             .connection
             .pragma_query_value(None, "user_version", |r| r.get::<_, i64>(0))
             .unwrap(),
-        3
+        store::FORMAT_VERSION
     );
     start(path, 1);
 }

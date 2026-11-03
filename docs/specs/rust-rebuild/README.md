@@ -172,7 +172,7 @@ run 用于需要 Host 执行、作者可以中途停止的工作：生图（imag
 svg 类没有外部付费调用，不需要 `run call`，也没有 max_calls。它的 result 先经过 `deck_tools check-page`：
 
 - 编译失败：不保存，返回出错的元素与原因，Host 修改后重新提交。
-- 编译成功：保存 SVG、单页预览 PNG 和回读发现。回读发现只报告，不阻止采用。
+- 编译成功：保存 SVG、单页预览 PNG 和回读发现。回读发现只报告，不阻止采用。未采用的候选同样保留这次 check-page 的 PNG 文件引用；之后读取 run 只返回该引用，不重新编译。
 
 全部页面都已采用时，run 自动变为 done。
 
@@ -213,7 +213,7 @@ S5 界面接入：制作总览展示整稿待处理意见，单页工作区展�
 
 后端接口供前端联调的返回形状：
 
-- `GET /api/deck` 返回 `{version, deck, artifact_status, runs, history, reviews, open_reviews_total}`，在同一 SQLite 只读事务中读取。`artifact_status` 含 `missing_pages/stale_pages/stale_images`；reviews 是全部 open 意见，method 原样返回，deck 每页另带 `open_reviews` 条数（整稿意见只计入总数），不汇总为通过或合格；runs 含每页状态、未采用原因、`result_file`、`result_url` 与 `current_image_url`（无图时为 null），不含本地工作路径；history 按新到旧列出 `id/created_at/summary`。run 状态独立于作品版本变化，轮询时应同时刷新。
+- `GET /api/deck` 返回 `{version, deck, artifact_status, runs, history, reviews, open_reviews_total}`，在同一 SQLite 只读事务中读取。`artifact_status` 含 `missing_pages/stale_pages/stale_images`；reviews 是全部 open 意见，method 原样返回，deck 每页另带 `open_reviews` 条数（整稿意见只计入总数），不汇总为通过或合格；runs 含每页状态、未采用原因、`result_file`、`result_url`、`result_preview` 与 `current_image_url`（无图时为 null），不含本地工作路径。`result_preview` 是 SVG 候选在交回时保存的 check-page PNG 文件名；原图任务、尚未交回或旧记录没有该预览时为 null。轮询和 `run show` 只返回已保存的引用，不调用 check-page。history 按新到旧列出 `id/created_at/summary`。run 状态独立于作品版本变化，轮询时应同时刷新。
 - PUT 请求体是裸 patch（与 put 的 patch 相同，不接受 `{deck:…}` 包装），成功返回 `{version, deck}`。冲突返回 HTTP 409 与 `{exit_code:5, base, submitted, conflicts:[{unit,current}]}`，整次不写入；`submitted` 原样保留裸 patch，界面也须保留编辑输入。
 - `POST /api/build` 返回 `{id, url, findings, missing_pages, stale_pages}`，url 是该次构建文件的 `/api/files/<sha>`。`GET /api/files/<sha>` 只在当前项目的 files 目录内查找，含扩展名的存储引用取点号前的 sha 用于 URL；文件响应禁止脚本执行。
 - `GET /api/export/md` 与 `GET /api/export/pptx` 直接返回下载内容，文件名为 `deck.md/deck.pptx`。`X-Deck-Status` 是 JSON（非 ASCII 字符使用 JSON 转义），含 `missing_pages/stale_pages`；PPTX 另含 `id/input_changed/warning/build_missing_pages`。
