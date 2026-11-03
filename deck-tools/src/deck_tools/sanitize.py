@@ -54,6 +54,20 @@ def link_safe(value, where):
         reject(where, "链接含认证信息；请移除认证信息后重试")
 
 
+def _copy_text(value, where, *, links):
+    """Slide body and speaker notes reuse the external-link authentication rule."""
+    text_safe(value, where)
+    if links and value:
+        for url in HTTP_URL.findall(value):
+            link_safe(url, where + "/link")
+
+
+def _slide_or_notes_part(name):
+    return re.fullmatch(r"ppt/slides/slide[0-9]+\.xml", name) is not None or re.fullmatch(
+        r"ppt/notesSlides/notesSlide[0-9]+\.xml", name
+    ) is not None
+
+
 def public_projection_safe(value, where):
     """Scan every string in a public projection, including identity metadata."""
     if isinstance(value, str):
@@ -416,6 +430,7 @@ def _clean_pptx(data, where, *, keep_notes=False, page_ids=None):
                 raw = ET.tostring(root, encoding='utf-8', xml_declaration=True)
             if name.endswith((".xml", ".rels")):
                 root = xml(raw, where + "/" + name)
+                copy_links = _slide_or_notes_part(name)
                 for parent in root.iter():
                     location = locations.get(name, where + '/' + name)
                     field = location + '/' + root.getroottree().getpath(parent)
@@ -455,8 +470,8 @@ def _clean_pptx(data, where, *, keep_notes=False, page_ids=None):
                                     parent.remove(child)
                         elif not keep_notes and local in ("notesMasterIdLst", "notesMasterId"):
                             parent.remove(child)
-                    text_safe(parent.text, field + '/text')
-                    text_safe(parent.tail, field + '/tail')
+                    _copy_text(parent.text, field + '/text', links=copy_links)
+                    _copy_text(parent.tail, field + '/tail', links=copy_links)
                     for key, value in parent.attrib.items():
                         text_safe(value, field + '/@' + key)
                 raw = ET.tostring(root, encoding="utf-8", xml_declaration=True)

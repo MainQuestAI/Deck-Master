@@ -95,6 +95,25 @@ def test_exported_http_text_keeps_ordinary_site_paths(tmp_path):
     assert body in _part_text(result["pptx"], "ppt/notesSlides/notesSlide1.xml")
 
 
+@pytest.mark.parametrize("body,notes", [
+    ("https://example.com/open?api_key=synthetic_secret", "Public note"),
+    ("https://user:password@example.com/home/products", "Public note"),
+    ("Visible title", "https://example.com/open?api_key=synthetic_secret"),
+    ("Visible title", "https://user:password@example.com/home/products"),
+])
+def test_exported_text_rejects_url_credentials(tmp_path, body, notes):
+    with pytest.raises(OperationError):
+        compile_job(_text_export_job(tmp_path, body, notes=notes))
+
+
+def test_exported_text_keeps_urls_without_credentials(tmp_path):
+    body = "https://example.com/open?source=catalog"
+    result = compile_job(_text_export_job(tmp_path, body, notes=body))
+    assert result["findings"]["status"] == "pass"
+    assert body in _part_text(result["pptx"], "ppt/slides/slide1.xml")
+    assert body in _part_text(result["pptx"], "ppt/notesSlides/notesSlide1.xml")
+
+
 def test_invalid_svg_cli_reports_element_without_publishing_file(tmp_path):
     job = job_fixture(tmp_path)
     Path(job["pages"][0]["svg"]).write_text('<svg viewBox="0 0 1280 720"><rect id="broken" width="40" height="40" class="unsupported"/></svg>')
