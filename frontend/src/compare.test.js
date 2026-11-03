@@ -197,6 +197,57 @@ test('svg comparison shows the compiled previews and adopts the svg file', async
   assert.deepEqual(JSON.parse(request.body), { expected_file: 'candidate.svg' });
 });
 
+function messageText() {
+  return [...document.querySelectorAll('.s4-message')].map(node => node.textContent).join('\n');
+}
+
+async function replaceWorkspace(t, next) {
+  payload = next;
+  await act(async () => { t.mock.timers.tick(1500); });
+  await settle();
+}
+
+test('svg comparison asks to reopen when that page basis changes and still allows adoption', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  await openComparison(workspace({ body: '预期增长 10%', currentBasis: 'basis-10', basisChanged: false }));
+  const sources = imageSources();
+  assert.equal(messageText().includes('请重新打开'), false);
+  await replaceWorkspace(t, workspace({
+    version: 9, body: '预期增长 10%', otherNotes: '改了另一页讲稿', currentBasis: 'basis-10', basisChanged: false,
+  }));
+  assert.equal(messageText().includes('请重新打开'), false);
+  assert.deepEqual(imageSources(), sources);
+  await replaceWorkspace(t, workspace({
+    version: 10, body: '预期增长 10%', notes: '只改本页讲稿', currentBasis: 'basis-10', basisChanged: false,
+  }));
+  assert.equal(messageText().includes('请重新打开'), false);
+  assert.deepEqual(imageSources(), sources);
+  await replaceWorkspace(t, workspace({
+    version: 11, body: '预期增长 5%', notes: '只改本页讲稿', currentBasis: 'basis-5', basisChanged: true,
+  }));
+  assert.match(messageText(), /当前作品已变化/);
+  assert.match(messageText(), /请重新打开/);
+  assert.deepEqual(imageSources(), sources);
+  const adopt = [...document.querySelectorAll('button')].find(button => button.textContent.includes('采用此候选'));
+  assert.equal(adopt.disabled, false);
+  await act(async () => { adopt.click(); });
+  const request = calls.find(call => call.url.includes('/adopt/'));
+  assert.deepEqual(JSON.parse(request.body), { expected_file: 'candidate.svg' });
+});
+
+test('a further basis change still asks to reopen when the flag was already true', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  await openComparison(workspace({ body: '预期增长 10%', currentBasis: 'basis-stale', basisChanged: true }));
+  assert.equal(messageText().includes('请重新打开'), false);
+  await replaceWorkspace(t, workspace({
+    version: 9, body: '预期增长 5%', currentBasis: 'basis-stale-2', basisChanged: true,
+  }));
+  assert.match(messageText(), /请重新打开/);
+  assert.deepEqual(imageSources(), ['/api/files/current-preview', '/api/files/candidate-preview']);
+  const adopt = [...document.querySelectorAll('button')].find(button => button.textContent.includes('采用此候选'));
+  assert.equal(adopt.disabled, false);
+});
+
 test('image comparison keeps the bitmap files on both sides', async () => {
   await openComparison(workspace({
     kind: 'image',

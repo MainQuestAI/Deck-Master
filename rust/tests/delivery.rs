@@ -545,3 +545,101 @@ fn page_three_redo_and_notes_only_edits_preserve_other_pages_and_existing_build(
         assert_eq!(std::fs::read(file).unwrap(), bytes);
     }
 }
+
+#[test]
+fn polled_basis_tracks_only_the_inputs_that_task_uses() {
+    use std::os::unix::fs::PermissionsExt;
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    setup(path);
+    edit(
+        path,
+        json!({"pages":[{"id":"p1","content":{"title":"增长","body_blocks":[{"type":"paragraph","id":"a1","text":"预期增长 10%"}]}}]}),
+    );
+    let wrapper = temp.path().join("python-wrapper");
+    let script = temp.path().join("tool.py");
+    std::fs::write(
+        &wrapper,
+        "#!/bin/sh\nexec /usr/bin/python3 \"$DECK_TEST_WRAPPER\" \"$@\"\n",
+    )
+    .unwrap();
+    std::fs::set_permissions(&wrapper, std::fs::Permissions::from_mode(0o755)).unwrap();
+    std::fs::write(
+        &script,
+        r#"import sys
+if sys.argv[-2] == "atoms":
+    print("[]")
+else:
+    print("unexpected", sys.argv[-2], file=sys.stderr)
+    raise SystemExit(1)
+"#,
+    )
+    .unwrap();
+    let started = Command::new(env!("CARGO_BIN_EXE_deck"))
+        .arg("--project")
+        .arg(path)
+        .args(["run", "start", "svg", "--pages", "p1,p2"])
+        .env("DECK_TOOLS_PYTHON", &wrapper)
+        .env("DECK_TEST_WRAPPER", &script)
+        .output()
+        .unwrap();
+    assert!(
+        started.status.success(),
+        "{}",
+        String::from_utf8_lossy(&started.stderr)
+    );
+    let page = |kind: &str, id: &str| {
+        let workspace = ops::workspace(path).unwrap();
+        let run = workspace["runs"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|run| run["kind"] == kind)
+            .unwrap()
+            .clone();
+        let page = run["pages"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|page| page["page_id"] == id)
+            .unwrap()
+            .clone();
+        (workspace["version"].clone(), page)
+    };
+    let (version, svg) = page("svg", "p1");
+    let svg_basis = svg["current_basis"]
+        .as_str()
+        .expect("current_basis")
+        .to_string();
+    assert_eq!(svg["basis_changed"], false);
+    edit(path, json!({"pages":[{"id":"p2","notes":"另一页讲稿"}]}));
+    let (after_other, svg) = page("svg", "p1");
+    assert_ne!(after_other, version);
+    assert_eq!(svg["current_basis"], svg_basis);
+    assert_eq!(svg["basis_changed"], false);
+    edit(path, json!({"pages":[{"id":"p1","notes":"只改本页讲稿"}]}));
+    let (_, svg) = page("svg", "p1");
+    assert_eq!(svg["current_basis"], svg_basis);
+    assert_eq!(svg["basis_changed"], false);
+    ops::run_start(path, "image", &["p1".into(), "p2".into()], None).unwrap();
+    let (_, image) = page("image", "p1");
+    let image_basis = image["current_basis"]
+        .as_str()
+        .expect("current_basis")
+        .to_string();
+    assert_eq!(image["basis_changed"], false);
+    edit(path, json!({"pages":[{"id":"p1","layout":"改为两栏"}]}));
+    let (_, image) = page("image", "p1");
+    let (_, svg) = page("svg", "p1");
+    assert_ne!(image["current_basis"], image_basis);
+    assert_eq!(image["basis_changed"], true);
+    assert_eq!(svg["current_basis"], svg_basis);
+    assert_eq!(svg["basis_changed"], false);
+    edit(
+        path,
+        json!({"pages":[{"id":"p1","content":{"title":"增长","body_blocks":[{"type":"paragraph","id":"a1","text":"预期增长 5%"}]}}]}),
+    );
+    let (_, svg) = page("svg", "p1");
+    assert_ne!(svg["current_basis"], svg_basis);
+    assert_eq!(svg["basis_changed"], true);
+}

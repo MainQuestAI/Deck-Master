@@ -817,6 +817,7 @@ fn runs(connection: &rusqlite::Connection, deck: &Deck, id: Option<i64>) -> Resu
         let mut pages = Vec::new();
         for (page, old, state, result, preview) in rows {
             let current_page = current_pages.get(page.as_str());
+            let mut current_basis = None;
             let changed = match current_page {
                 Some(p) => {
                     let key = (if kind == "image" { "image" } else { "svg" }, p.id.as_str());
@@ -826,6 +827,7 @@ fn runs(connection: &rusqlite::Connection, deck: &Deck, id: Option<i64>) -> Resu
                             entry.insert(basis(&kind, deck, p)?)
                         }
                     };
+                    current_basis = Some(current.clone());
                     *current != old
                 }
                 None => true,
@@ -847,7 +849,7 @@ fn runs(connection: &rusqlite::Connection, deck: &Deck, id: Option<i64>) -> Resu
                 .and_then(|p| p.image.as_ref())
                 .map(|image| file_url(&image.file));
             let result_url = result.as_deref().map(file_url);
-            pages.push(json!({"page_id":page,"status":state,"reason":reason,"basis_changed":changed,"result_file":result,"result_url":result_url,"result_preview":preview,"current_image_url":current_image}));
+            pages.push(json!({"page_id":page,"status":state,"reason":reason,"basis_changed":changed,"current_basis":current_basis,"result_file":result,"result_url":result_url,"result_preview":preview,"current_image_url":current_image}));
         }
         runs.push(json!({"id":id,"kind":kind,"status":status,"max_calls":max,"calls_used":used,"pages":pages}));
     }

@@ -23,16 +23,18 @@ test('review writes preserve original text and keep global and page scopes disti
 
 test('comparison freezes the same layer and adopts the displayed file even after polling changes the candidate', async () => {
   const page = { id: '页/3', content: { title: '原稿' }, image: { file: 'image.png' }, svg: { file: 'old.svg' }, preview: 'current.png' };
-  const result = { page_id: page.id, result_file: 'candidate.svg', result_preview: 'candidate.png' };
+  const result = { page_id: page.id, result_file: 'candidate.svg', result_preview: 'candidate.png', current_basis: 'basis-a' };
   const selected = comparisonSnapshot({ id: 4, kind: 'svg' }, result, page, 2);
   page.svg.file = 'new-current.svg';
   page.preview = 'later.png';
   result.result_file = 'late.svg';
   result.result_preview = 'late.png';
+  result.current_basis = 'basis-b';
   assert.equal(selected.currentFile, 'old.svg');
   assert.equal(selected.candidateFile, 'candidate.svg');
   assert.equal(selected.currentView, 'current.png');
   assert.equal(selected.candidateView, 'candidate.png');
+  assert.equal(selected.currentBasis, 'basis-a');
   const image = comparisonSnapshot({ id: 5, kind: 'image' }, result, page, 3);
   assert.equal(image.currentFile, 'image.png');
   assert.equal(image.currentView, 'image.png');

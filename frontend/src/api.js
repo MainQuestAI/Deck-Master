@@ -62,6 +62,7 @@ export function comparisonSnapshot(run, result, page, version) {
     currentView: svg ? page.preview || null : page[run.kind]?.file || null,
     candidateView: svg ? result.result_preview || null : result.result_file,
     version, reason: result.reason, basisChanged: result.basis_changed,
+    currentBasis: result.current_basis ?? null,
   };
 }
 
