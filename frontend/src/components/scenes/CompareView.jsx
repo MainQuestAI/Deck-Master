@@ -13,13 +13,14 @@ export default function CompareView() {
   const adopted = currentFile === comparison.candidateFile;
   const currentChanged = currentFile !== comparison.currentFile && !adopted;
   const label = comparison.kind === 'image' ? '原图' : 'SVG';
+  const viewLabel = comparison.kind === 'svg' ? '预览' : label;
   return <div>
     <div className="view-head"><div><h1>{comparison.title || '未命名页面'} · {label}比对</h1><p>左侧为打开时的作品，右侧为选中的候选。</p></div><button className="button" onClick={() => setScene('delivery')}>返回制作任务</button></div>
     {!page && <p className="s4-message">页面已移除，无法采用此候选。</p>}
     {(!selected || currentChanged) && <div className="s4-message">{!selected ? '候选已更新。' : '当前作品已变化。'}本次比对画面保持不变，请重新打开后决定。{page && result?.result_file && <button className="button" onClick={() => compareCandidate(run, result)}>打开最新比对</button>}</div>}
     {comparison.reason && <p className="muted">交回时：{comparison.reason}{comparison.basisChanged ? ' · 制作依据已变，请核对内容。' : ''}</p>}
     <div className="compare-grid-board">
-      {[['打开时的作品', comparison.currentFile], ['选中的候选', comparison.candidateFile]].map(([title, file]) => <section className="s4-panel" key={title}><h2>{title}</h2><div className="s4-artwork">{file ? <img src={fileUrl(file)} alt={`${title} · ${label}`} /> : <p className="s4-empty">尚无{label}</p>}</div></section>)}
+      {[['打开时的作品', comparison.currentView], ['选中的候选', comparison.candidateView]].map(([title, file]) => <section className="s4-panel" key={title}><h2>{title}</h2><div className="s4-artwork">{file ? <img src={fileUrl(file)} alt={`${title} · ${viewLabel}`} /> : <p className="s4-empty">尚无{viewLabel}</p>}</div></section>)}
     </div>
     <div className="head-actions s4-actions">
       {adopted ? <p role="status">当前作品已采用此候选</p> : <button className="primary" disabled={!page || !selected || currentChanged || busy.adopt} onClick={adoptCandidate}>{busy.adopt ? '正在采用…' : '采用此候选'}</button>}

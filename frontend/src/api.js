@@ -54,9 +54,13 @@ export const adoptCandidate = (runId, pageId, file) => request(`/api/runs/${runI
 }, null);
 
 export function comparisonSnapshot(run, result, page, version) {
+  const svg = run.kind === 'svg';
   return {
     runId: run.id, pageId: page.id, kind: run.kind, title: page.content.title,
     currentFile: page[run.kind]?.file || null, candidateFile: result.result_file,
+    // SVG sides are the compiled previews captured now. Adoption still uses candidateFile.
+    currentView: svg ? page.preview || null : page[run.kind]?.file || null,
+    candidateView: svg ? result.result_preview || null : result.result_file,
     version, reason: result.reason, basisChanged: result.basis_changed,
   };
 }
