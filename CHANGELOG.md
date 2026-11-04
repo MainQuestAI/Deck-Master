@@ -57,8 +57,8 @@ Slice design remains in the [Rust rebuild plan](docs/specs/rust-rebuild/README.m
 - **#263**: new pages no longer reuse deleted page ids.
 - **#264**: a second result for the same run page is kept as an explicit
   candidate instead of replacing the first.
-- **#265**: export sanitizer treats ordinary public URL paths as public, and
-  still rejects local-file embeddings (`file:/`, Windows drive paths).
+- **#265**: export sanitizer treats ordinary public URL paths (for example
+  `/home/products`) as public instead of local paths.
 - **#266**: native-table readback checks cell visibility and non-empty titles
   against declared content.
 - **#267**: build input digest includes compiler settings, so a settings-only
@@ -66,9 +66,10 @@ Slice design remains in the [Rust rebuild plan](docs/specs/rust-rebuild/README.m
 - **#268**: run listing reuses per-page basis digests within one poll instead
   of recomputing them for every historical run.
 - **#269**: WebUI connects reviews and fixed left/right candidate comparison
-  (current work on the left, selected candidate on the right). SVG comparison
-  uses compiled previews. Polling does not replace an open comparison.
+  (current work on the left, selected candidate on the right). Polling does
+  not replace an open comparison.
 - **#272** (R1–R6):
+  - candidate comparison shows compiled previews instead of raw SVG;
   - candidate comparison prompts a reopen when that page's production basis
     changes (image: content/layout/purpose/style; svg: content/image/style);
   - export sanitizer rejects credential-bearing URLs, including credentials
@@ -112,6 +113,13 @@ line; they are not the 1.1.0 authoring path.
 - PPTX has been rechecked through LibreOffice rendering in the tool tests.
   Desktop editing in WPS and Microsoft PowerPoint was not repeated for this
   source line.
+- `scripts/install.sh` is verified only on Linux CI (`ubuntu-latest`); it was
+  not verified on macOS.
+- The legacy test
+  `test_small_json_cache_detects_corruption_and_returns_independent_objects`
+  can fail on Linux: the cache signature includes ctime and the test rewrites
+  the file within one clock tick. It is a test-timing issue in the old line and
+  was not changed here.
 - Native editable PPT still uses shapes and text. Tables and charts are
   composed shapes/text, not Office-native spreadsheet-backed objects.
 - `doctor` finding a font family does not prove LibreOffice can render every

@@ -77,6 +77,11 @@ deck import <out> <new>
 [1.1.0 notes](releases/1.1.0.md#upgrade-and-migration). v0.9.x run directories
 still follow [migration-to-rebuilt-core.md](migration-to-rebuilt-core.md).
 
+### Upgrade
+
+Re-running `scripts/install.sh` upgrades an existing install. An existing
+venv is reused and the `deck` binary is overwritten.
+
 ## Legacy Python workbench (1.0.0)
 
 The 1.0.0 managed installer and `deck-master` CLI are the previous source
