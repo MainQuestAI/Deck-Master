@@ -82,6 +82,9 @@ def _part_text(pptx_path, name):
 @pytest.mark.parametrize("body", [
     "https://example.com/open?source=file:///Users/synthetic/private/project.txt",
     "https://example.com/open?source=C:\\Users\\synthetic\\private\\project.txt",
+    "https://example.com/open?source=file:/Users/synthetic/private/project.txt",
+    "https://example.com/open?source=C:/Users/synthetic/private/project.txt",
+    "https://example.com/open?source=C:/synthetic/private/project.txt",
 ])
 def test_exported_http_text_rejects_embedded_local_paths(tmp_path, body):
     with pytest.raises(OperationError):
@@ -90,6 +93,14 @@ def test_exported_http_text_rejects_embedded_local_paths(tmp_path, body):
 
 def test_exported_http_text_keeps_ordinary_site_paths(tmp_path):
     body = "https://example.com/home/products"
+    result = compile_job(_text_export_job(tmp_path, body, notes=body))
+    assert result["findings"]["status"] == "pass"
+    assert body in _part_text(result["pptx"], "ppt/slides/slide1.xml")
+    assert body in _part_text(result["pptx"], "ppt/notesSlides/notesSlide1.xml")
+
+
+def test_exported_http_text_keeps_query_paths_that_only_look_local(tmp_path):
+    body = "https://example.com/open?src=/Users/x"
     result = compile_job(_text_export_job(tmp_path, body, notes=body))
     assert result["findings"]["status"] == "pass"
     assert body in _part_text(result["pptx"], "ppt/slides/slide1.xml")

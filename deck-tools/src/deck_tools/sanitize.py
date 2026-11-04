@@ -15,12 +15,14 @@ class OperationError(ValueError):
     pass
 
 PRIVATE = re.compile(
-    r"(?:file://|/(?:Users|home|workspace|codex|root|mnt|opt|etc|var|private/tmp|tmp)/|[A-Za-z]:\\|\bBearer\s+[A-Za-z0-9_.-]{8,}|\bsk-[A-Za-z0-9_-]{16,})", re.I
+    r"(?:file:/|/(?:Users|home|workspace|codex|root|mnt|opt|etc|var|private/tmp|tmp)/|(?<![A-Za-z])[A-Za-z]:/|[A-Za-z]:\\|\bBearer\s+[A-Za-z0-9_.-]{8,}|\bsk-[A-Za-z0-9_-]{16,})", re.I
 )
 HTTP_URL = re.compile(r'https?://[^\s<>"\']+', re.I)
-# Directory prefixes such as /home/products are ordinary site paths. file:// and
-# Windows drive paths stay local even when they sit inside an HTTP string.
-LOCAL_URL_EMBED = re.compile(r"^(?:file://|[A-Za-z]:\\)", re.I)
+# Directory prefixes such as /home/products, and a query such as ?src=/Users/x,
+# are ordinary site paths. file:/ covers one or more slashes. A Windows drive
+# uses either slash. The forward-slash letter must not continue a word, so the
+# :// of an http(s) scheme is not a drive.
+LOCAL_URL_EMBED = re.compile(r"^(?:file:/|[A-Za-z]:[/\\])", re.I)
 
 
 def reject(where, reason):
