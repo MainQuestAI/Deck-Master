@@ -58,7 +58,7 @@ except SystemExit as exc: assert exc.code == 0
 print(json.dumps([name for name in sys.modules if name.startswith('deck_master.')]))
 """
     lines = subprocess.check_output([sys.executable, '-c', code], text=True).splitlines()
-    assert lines[0] == 'deck-master 1.0.0'
+    assert lines[0] == 'deck-master 1.1.0'
     modules = json.loads(lines[1])
     assert 'deck_master.service' not in modules
     assert 'deck_master.pipeline' not in modules
