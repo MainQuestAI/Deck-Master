@@ -3,6 +3,7 @@ from pathlib import Path
 import subprocess
 import sys
 import zipfile
+import xml.etree.ElementTree as ET
 
 import pytest
 from PIL import Image, PngImagePlugin
@@ -111,6 +112,67 @@ def test_exported_text_keeps_urls_without_credentials(tmp_path):
     result = compile_job(_text_export_job(tmp_path, body, notes=body))
     assert result["findings"]["status"] == "pass"
     assert body in _part_text(result["pptx"], "ppt/slides/slide1.xml")
+    assert body in _part_text(result["pptx"], "ppt/notesSlides/notesSlide1.xml")
+
+
+def _rich_text_export_job(tmp_path, runs, notes="Public note"):
+    """One SVG text box whose tspans compile to styled runs in one paragraph."""
+    family = resolve_host_font()
+    body = "".join(text for text, _bold in runs)
+    first, *rest = runs
+    weight = ' font-weight="700"' if first[1] else ""
+    tspans = []
+    for text, bold in rest:
+        span_weight = ' font-weight="700"' if bold else ""
+        tspans.append(f'<tspan x="40" dy="0"{span_weight}>{text}</tspan>')
+    svg = tmp_path / "page.svg"
+    svg.write_text(
+        '<svg viewBox="0 0 1280 720"><rect width="1280" height="720" fill="#ffffff"/>'
+        f'<text data-atom-id="atom:p1:title" x="40" y="80" font-family="{family}" font-size="18"'
+        f' data-text-width="1200" data-text-height="48"{weight}>{first[0]}{"".join(tspans)}</text></svg>',
+        encoding="utf-8",
+    )
+    return {"pages": [{"id": "p1", "content": {"title": body}, "notes": notes, "svg": str(svg)}],
+            "canvas": {"width_px": 1280, "height_px": 720, "slide_width_in": 13.333, "slide_height_in": 7.5},
+            "fonts": [family], "assets": {}, "output": str(tmp_path / "out")}
+
+
+def _slide_paragraphs(pptx_path):
+    """Visible run text of each slide paragraph, split at hard line breaks."""
+    namespace = {"a": "http://schemas.openxmlformats.org/drawingml/2006/main"}
+    with zipfile.ZipFile(pptx_path) as archive:
+        root = ET.fromstring(archive.read("ppt/slides/slide1.xml"))
+    paragraphs = []
+    for paragraph in root.findall(".//a:p", namespace):
+        segments = []
+        chunks = []
+        for child in paragraph:
+            kind = child.tag.rsplit("}", 1)[-1]
+            if kind == "br":
+                segments.append("".join(chunks))
+                chunks = []
+            elif kind in ("r", "fld"):
+                chunks.append("".join(node.text or "" for node in child.iter() if node.tag.rsplit("}", 1)[-1] == "t"))
+        segments.append("".join(chunks))
+        paragraphs.extend(segment for segment in segments if segment)
+    return paragraphs
+
+
+@pytest.mark.parametrize("runs", [
+    [("https://example.com/open?api_key=", False), ("synthetic_secret", True)],
+    [("https://example.com/open?api_", False), ("key=synthetic_secret", True)],
+])
+def test_exported_rich_text_rejects_url_credentials_split_across_runs(tmp_path, runs):
+    with pytest.raises(OperationError):
+        compile_job(_rich_text_export_job(tmp_path, runs))
+
+
+def test_exported_rich_text_keeps_public_url(tmp_path):
+    body = "https://example.com/open?source=catalog"
+    runs = [("https://example.com/open?source=", False), ("catalog", True)]
+    result = compile_job(_rich_text_export_job(tmp_path, runs, notes=body))
+    assert result["findings"]["status"] == "pass"
+    assert body in _slide_paragraphs(result["pptx"])
     assert body in _part_text(result["pptx"], "ppt/notesSlides/notesSlide1.xml")
 
 

@@ -68,6 +68,50 @@ def _slide_or_notes_part(name):
     ) is not None
 
 
+def _run_text(node):
+    parts = []
+    for child in node.iter():
+        if child.tag.rsplit("}", 1)[-1] == "t" and child.text:
+            parts.append(child.text)
+    return "".join(parts)
+
+
+def _paragraph_run_segments(paragraph):
+    """Join styled runs so one URL reaches the existing link check.
+
+    A hard line break ends the segment. The break is not a character of the
+    URL, and joining across it would check a token the paragraph does not
+    contain. The next paragraph stays a separate boundary.
+    """
+    segments = []
+    chunks = []
+
+    def flush():
+        if chunks:
+            segments.append("".join(chunks))
+            chunks.clear()
+
+    for child in paragraph:
+        kind = child.tag.rsplit("}", 1)[-1]
+        if kind == "br":
+            flush()
+        elif kind in ("r", "fld"):
+            text = _run_text(child)
+            if text:
+                chunks.append(text)
+    flush()
+    return segments
+
+
+def _reject_urls_split_across_runs(root, where):
+    drawing_paragraph = "{http://schemas.openxmlformats.org/drawingml/2006/main}p"
+    for paragraph in root.iter(drawing_paragraph):
+        field = where + "/" + root.getroottree().getpath(paragraph)
+        for segment in _paragraph_run_segments(paragraph):
+            for url in HTTP_URL.findall(segment):
+                link_safe(url, field + "/text/link")
+
+
 def public_projection_safe(value, where):
     """Scan every string in a public projection, including identity metadata."""
     if isinstance(value, str):
@@ -431,6 +475,11 @@ def _clean_pptx(data, where, *, keep_notes=False, page_ids=None):
             if name.endswith((".xml", ".rels")):
                 root = xml(raw, where + "/" + name)
                 copy_links = _slide_or_notes_part(name)
+                # Notes already join each paragraph before link_safe. Slide body
+                # text is stored per run, so a styled URL is checked only after
+                # those runs are joined.
+                if re.fullmatch(r"ppt/slides/slide[0-9]+\.xml", name):
+                    _reject_urls_split_across_runs(root, locations.get(name, where + "/" + name))
                 for parent in root.iter():
                     location = locations.get(name, where + '/' + name)
                     field = location + '/' + root.getroottree().getpath(parent)
