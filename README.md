@@ -26,35 +26,23 @@ Three principles guide the product:
   serve that purpose.
 
 These principles guide product development. The current workbench connects
-content planning, editable SVG/PPT production, review and revision through a CLI
-and local Web UI. See the [capability boundaries](#capability-boundaries) for
-current implementation limits.
+content planning, editable SVG/PPT production, review and revision through the
+`deck` CLI and a local Web UI. See the [capability boundaries](#capability-boundaries)
+for current implementation limits.
 
-**Version:** Python package `1.0.0`, in release preparation. Published assets
-and publication status are listed in [GitHub Releases](https://github.com/MainQuestAI/Deck-Master/releases).
-Start with the [installation and first-run guide](docs/getting-started.md).
-The [RC4 increment](docs/specs/deck-master-next-iteration-20261019/README.md)
-and its [single ledger](tests/rebuild/fixtures/history/rc4/iteration-20261019/execution-ledger.json)
-retain their original candidate evidence. A source version, built wheel,
-active installation and published Release are separate facts.
-The source includes the RC5 content-method catalog and bounded Host selection,
-PR130's content/method/evidence reading and recoverable handoffs, plus support
-and documentation governance. See the [release preparation record](docs/releases/1.0.0-preparation.md)
-for validation scope and remaining publication steps.
-**License:** Apache-2.0.
+**Version:** `1.1.0` (Rust CLI `deck`, Python packages `deck-master` and
+`deck-tools`, WebUI). Source version, built artifacts, an active install and a
+published GitHub Release are separate facts. Start with the
+[installation and first-run guide](docs/getting-started.md). See
+[1.1.0 release notes](docs/releases/1.1.0.md) for migration, tests and known
+limits. **License:** Apache-2.0.
 
-The core inherits RC4 extensions to the RC3 and Flow Quality contracts with recoverable input
-and installation operations, frozen Task methods, scoped content validation
-and negotiated reading contexts. Engineering checks, actual Host application
-and professional/user acceptance are recorded separately.
-
-The rebuilt core does not require a PPT Master backend binding, a slide
-library installation, or any first-run workspace setup: a plain material
-directory is enough to start. Legacy v0.9.x material and runs are handled by
-the migration notes in [docs/migration-to-rebuilt-core.md](docs/migration-to-rebuilt-core.md);
-the old command surface maps onto the new CLI per
-[spec 09.6](docs/specs/deck-master-rebuild-v1/specs/09-cli-and-host-protocol.md)
-(`deck-master legacy-map` lists every mapping).
+The 1.1.0 authoring path is the Rust core in `rust/`, file tools in
+`deck-tools/`, the WebUI in `frontend/` served by `deck serve`, and the Codex
+Skill in `deck-skill/`. A plain material directory is enough to start; no PPT
+Master backend or slide library is required. The previous Python workbench
+(`deck-master` in `src/deck_master/`, four Skills under `skills/`) remains for
+maintenance only.
 
 ## Who It Is For
 
@@ -65,35 +53,11 @@ producing, reviewing and revising the deck.
 
 ## Install
 
-Python 3.11 and 3.12 are tested in CI. Package metadata permits Python 3.13,
-which is outside the tested matrix, and excludes Python 3.14.
-For a release installation, download its wheel and `release.json` together,
-then follow [managed installation](docs/getting-started.md#install-a-release).
-The commands below are for source development:
+Rust 1.88 or later is required; Cargo checks the declared minimum. File tools
+use Python 3.11 or 3.12 (3.12 in CI and in `scripts/install.sh`). Package
+metadata for `deck-tools` allows 3.13 and excludes 3.14.
 
-```bash
-python3.12 -m venv .venv
-. .venv/bin/activate
-python -m pip install -e ".[dev]"
-```
-
-If local Python cannot bootstrap pip in a venv, use the equivalent uv path:
-
-```bash
-uv venv --python 3.12 .venv
-uv pip install --python .venv/bin/python -e ".[dev]"
-```
-
-The legacy workbench command is `deck-master ...` after that install, or
-`python -m deck_master ...` from a source checkout. The Rust command installed
-by `scripts/install.sh` is `deck`. Release activation also registers all four
-Codex Skills (Master, Content, Design, Review); see [installation](skills/deck-master/references/installation.md).
-
-## New install
-
-The Rust CLI, file tools, and Codex skill install from a source checkout:
-
-Rust 1.88 or later is required; Cargo checks the declared minimum version.
+From a source checkout:
 
 ```bash
 ./scripts/install.sh
@@ -102,12 +66,12 @@ Rust 1.88 or later is required; Cargo checks the declared minimum version.
 The script builds the Web UI, installs `deck` into `~/.local/bin`, creates a
 Python 3.12 venv for `deck-tools` at `~/.local/share/deck/venv`, and links
 `deck-skill/` to `~/.codex/skills/deck`. It does not activate or roll back a
-managed release.
+managed Python release.
 
-Options: `--prefix DIR`, `--skill-dir PATH`, `--dry-run`. If
-`~/.local/bin` is not on `PATH`, add it or call that `deck` by its full path.
-The skill path must be new, or already the same link; the script leaves a
-different file or link unchanged and exits with an error.
+Options: `--prefix DIR`, `--skill-dir PATH`, `--dry-run`. If `~/.local/bin` is
+not on `PATH`, add it or call that `deck` by its full path. The skill path must
+be new, or already the same link; the script leaves a different file or link
+unchanged and exits with an error.
 
 After install, `deck new ./my-deck --title '方案标题'` creates a work
 directory. The linked skill describes the first-run commands.
@@ -117,7 +81,23 @@ A fresh install finds deck-tools in the prefix venv, so it does not need
 present in `PREFIX/bin`. deck-tools is an editable install of this checkout;
 moving or deleting the checkout leaves that venv unable to import it.
 
-Migrate an old project into a new directory. The old directory stays as it is:
+Development in a worktree (do not reuse another checkout's venv):
+
+```bash
+uv venv --python 3.12 --seed .venv
+.venv/bin/python -m pip install -e "./deck-tools[dev]"
+export DECK_TOOLS_PYTHON="$PWD/.venv/bin/python"
+(cd frontend && npm ci && npm test && npm run build)
+(cd rust && cargo test)
+```
+
+The legacy Python workbench still installs with `pip install -e ".[dev]"` and
+the command `deck-master`. That line is maintenance-only; see
+[AGENTS.md](AGENTS.md) section 12.
+
+## Migrate an old project
+
+Move an old Python project into a new directory. The old directory stays as it is:
 
 ```bash
 deck-master legacy-export <project> <out>
@@ -134,180 +114,109 @@ the editable content still imports; `last_export:false` and `unmapped` identify
 the unavailable PPTX and explain the next step. The uncleaned file stays in the
 old project and archive.
 
+v0.9.x run directories follow
+[docs/migration-to-rebuilt-core.md](docs/migration-to-rebuilt-core.md).
+
 ## Quick Start
 
-Use your own complete material and brief. The commands below are staged:
-substitute IDs and hashes from the actual returned Task; do not paste the
-angle-bracket placeholders as values.
-They assume `deck-master` is on PATH, for example after activating the source
-venv above. For a managed release, substitute the selected prefix's absolute
-`.deck-master/bin/deck-master` launcher or add that directory to PATH first.
+Use your own complete material and brief. Substitute paths and IDs returned by
+the commands; do not paste the placeholders as values. Examples assume `deck`
+is on `PATH` after `scripts/install.sh`.
 
 ```bash
-# 1. New projects default to workbench.v3, with instruction evidence and
-#    proposal-only initial work; create does not grant production authority.
-deck-master capabilities
-deck-master create --brief-file ./brief.txt --source ./materials \
-  --out ./my-deck --no-open
-deck-master continue --project ./my-deck --no-open
+# 1. Create a work directory and add author-specified source files only.
+deck new ./my-deck --title '方案标题'
+deck --project ./my-deck material add ./materials/brief.pdf
+deck --project ./my-deck material text m1
 
-# 2. Read the Task's exact frozen methods and complete source/context.
-#    Use v2 only if capabilities.read_protocols declares it; otherwise omit
-#    the read options for v1. v2 defaults to full bodies.
-deck-master methods --project ./my-deck --task-id <task_id> --read \
-  --read-protocol work_context.v2 --body-mode full
+# 2. Read, edit, and save. put compares against --base and writes only
+#    changed units. Conflicts exit 5 and leave the current version unchanged.
+deck --project ./my-deck get > ./my-deck/current.json
+deck --project ./my-deck put --base <version> ./my-deck/patch.json
+deck --project ./my-deck show
+deck --project ./my-deck export md > ./my-deck/manuscript.md
 
-# 3. Claim the actual Task before executing it. Repeat --capability for
-#    every required_capabilities value, declaring only actual Host support.
-deck-master task start --project ./my-deck --task-id <task_id> \
-  --execution-ref <actual_Host_execution> --supported-protocol <protocol_version> \
-  --capability <required_capability>
+# 3. Check local tools and selected fonts before image / SVG / PPTX work.
+deck --project ./my-deck doctor --fonts 'Source Han Sans SC'
 
-# 4. Execute the returned scope, then submit its actual result envelope.
-deck-master task accept --project ./my-deck --task-id <task_id> \
-  --operation-id <operation_id> --produced-against <produced_against> \
-  --result ./result.json
-deck-master continue --project ./my-deck --no-open
+# 4. Image then SVG, then build PPTX. Hosts register each ImageGen call.
+deck --project ./my-deck run start image --pages p1,p2
+deck --project ./my-deck run call <run> p1
+deck --project ./my-deck run result <run> p1 ./page.png
+deck --project ./my-deck run start svg --pages p1,p2
+deck --project ./my-deck run result <run> p1 ./page.svg
+deck --project ./my-deck build
+deck --project ./my-deck export pptx
 
-# 5. Open readable work and export the selected purpose.
-deck-master view --open --project ./my-deck
-deck-master export --project ./my-deck --out ./out --purpose review
+# 5. Open the local UI. It binds 127.0.0.1 only.
+deck serve ./my-deck
 ```
 
-Follow each `continue` result: framing and argument are proposals, then
-page_copy, applicable speech and reviews proceed according to the current
-request. A `compose.v2` result uses `schema_version=compose_result.v2`, the
-Task's variant/IDs/produced_against/eligibility_digest, and that variant's
-payload; do not submit all phases as one draft. Inspect the actual
-[result contracts](src/deck_master/resources/contracts/) and
-[collaboration method](skills/deck-master/references/collaboration-routing.md).
-When `continue` asks for a direction decision, record the real decision via
-`collaboration decision --input decision.json`, then use
-`collaboration adopt-proposal --input adoption.json` with the current CAS
-and the exact proposal. A grant uses `collaboration grant` only when there
-is actual covering authorization. A copied handoff or a claim is not approval.
-Missing authority or a trusted independent review channel remains a named gap.
-
-For content alone, pass `create --request-input request.json` with
-`intent=content_only`, the requested `content_intent`
-(`plan_only|write_only|speech_only|content_full`), actual scope and instruction
-evidence. Follow `completion.state/outputs/checks/missing`; completed content
-returns its requested artifacts without starting design or PPT. A confirmed
-complete manuscript can use `create --draft draft.json` or `import-draft`
-with its real import instruction and `imported_mapping`; it need not invent
-a new Narrative. Teaching content need not contain a sales CTA.
-
-For `full_deck`, continue only within the actual production scope. Generation
-requires its frozen request, allocated call, begin → real tool call → settle
-→ accept chain. Inspect actual original images and PPT previews, page and
-final reviews, then run `final-readiness`, export `--purpose delivery`, and
-check the actual exported PPTX with `handoff-check --purpose delivery`.
-`review` can return an unfinished readable copy with its unresolved list.
-`needs_tool` and `needs_reviewer` must retain their actual reasons.
-
-Explicit local `--file` verification accepts stable regular files only, including
-copies outside the project. Symlinks, devices, FIFOs and directories are refused;
-the HTTP delivery checker does not accept local file paths. Reads are bounded by
-known output lengths and checked again for replacement or growth.
-Review-purpose `handoff-check` can identify an exact committed historical original
-as `historical_output`, listing every matched revision and output reference. This
-remains blocked for current delivery. Historical sanitized copies are not recreated
-for identification. An incomplete history index is reported as a gap; a complete
-index does not mean every historical PPTX body was reread—only matching originals
-are byte-verified.
-
-Personal-state clearing retains its operation and request before submission. If a
-response is lost, reopen the personal-state and recovery panel and use its
-verify-and-retry action for the original cleanup; the same request
-is replayed and later drafts are preserved. Historical clear receipts without an
-input digest remain readable and their backups usable, but cannot prove an exact
-request replay; they are not treated as a new cleanup instruction.
-
-Preproduction review reports preserve every blocking review record and expose
-both `blocking_record_count` and `logical_finding_count`. The latter follows an
-explicit same-owner replacement chain and never merges unrelated findings merely
-because their local IDs match. The existing eligibility `open_findings` field
-remains a record-count alias for compatibility; the UI labels the two counts
-separately. Neither count relaxes the production gate.
-
-Persist changed requirements or materials before continuing the same project:
-
-```bash
-deck-master inputs show --project ./my-deck
-deck-master inputs update --project ./my-deck --patch update.json \
-  --base-revision <original_revision_id> --operation-id <saved_unique_id>
-deck-master operations show --project ./my-deck --operation-id <saved_unique_id>
-```
-
-After a lost response, preserve the original payload, base, ID and relative
-path context. Exact replay returns the original result alongside the current
-revision; use a fresh `continue` for current pending work. `unknown` does not
-permit retrying under a new ID. New unchanged input updates may advance a
-receipt-only revision while preserving Page/input basis and tasks. Ordinary
-`inputs update` and `content inputs` have distinct ID/digest contracts. Read
-[input recovery](skills/deck-master/references/input-update.md) before retrying.
-
-The [N6 normal-task evidence](https://github.com/MainQuestAI/Deck-Master/blob/62dfcfc5637f0bee2358074c4458047689dd5299/docs/reports/rc4/iteration-20261019/N6-evidence.md)
-preserves its original staged observations. Subsequent actual installed Host
-validation at PR125 head `d7ec4530` completed native independent review,
-two-page native-image observation, SVG/PPT, real rendering and formal delivery,
-with `ready` and `handoff-check verified`. This is one observed complete task;
-see the [validation scope and known limitations](docs/getting-started.md#known-limitations)
-for the font workaround and unverified WPS editing.
+The Skill in `deck-skill/` describes judgment and which command to run. Worked
+command examples are in
+[deck-skill/references/commands.md](deck-skill/references/commands.md).
+Page reviews: `deck review add` / `list` / `resolve`. Restore a historical
+version with `deck restore <version>` (it writes a new version; files, runs and
+builds are not deleted).
 
 ## Workbench
 
-For current use, follow the [installation and first-run guide](docs/getting-started.md).
-The [RC3 tryout](docs/rc3-tryout.md) is a historical compatibility entry, not
-the current installation or release instructions.
+`deck serve <project>` starts the local UI for that one project, prints a
+loopback URL, and serves the embedded WebUI. Host or Origin that is not this
+process's loopback address is rejected. There is no login or session token.
 
-The workbench provides a project launcher, production overview, content and
-sources, gallery, style calibration, tasks and delivery. Each page retains its
-source, content, prompts, original image, SVG and PPT views. `deck-master view --open --project <dir>`
-starts (or reuses) one loopback service per project.
+The UI shows the overview and gallery (originals, compiled previews, stale
+marks), copy and speaker-notes editing, open reviews, run status and cancel,
+candidate comparison and manual adopt, build and Markdown/PPTX download, and
+version restore. The browser does not start image or SVG runs; the Host uses
+`deck run` on the CLI. The UI does not list every project: one `deck serve`
+process serves one project.
 
-The workbench is the only UI. The retired `/legacy/` interface and `--ui legacy`
-option have been removed; existing project data and CLI workflows remain supported.
-
-Workbench writes require a per-server session token and same-origin origin
-check; reads are open on loopback. The server binds to `127.0.0.1` only.
+Keep the printed URL private. The server binds `127.0.0.1` only.
 
 ## Capability Boundaries
 
-The rebuilt core guarantees:
+1. Produced PPTX contains editable shapes and text. Tables and charts are
+   shape/text compositions, not Office-native spreadsheet-backed data objects.
+2. Incomplete work can be saved, exported as Markdown, and built. Missing or
+   stale SVG pages are listed next to download; export is not blocked.
+3. Cancelled runs and results whose page basis has changed are stored and not
+   adopted automatically. A later result for the same run page is an explicit
+   candidate.
+4. Renderer and font gaps surface as exit code 3 (`needs_tool`) with the
+   actual reason.
+5. Reviews are stored on the version at add time. The UI writes human reviews;
+   CLI `self_check` is the current Host's own check.
 
-1. Real editable shapes and text in the produced PPTX (`editability=editable_shapes_and_text`); tables and charts are shape/text compositions, not Office-native data objects.
-2. Honest status at every step: pending Host tasks show `awaiting_host` (never fake running); export `review` purpose ships unfinished decks with the real unresolved list; `delivery` requires passing current checks.
-3. Renderer and font gaps surface as `needs_tool` with the actual reason.
-4. The review workbench serves the four real views (content / blueprint / SVG / PPT) from project-relative objects only.
-
-Professional human review and desktop-editing evidence stay `not_evaluated` until actually performed.
+Professional human review and desktop-editing evidence stay unevaluated until
+actually performed. See
+[known limitations](docs/getting-started.md#known-limitations).
 
 ## Diagnostics
 
 ```bash
-deck-master doctor --step compose   # content inputs
-deck-master doctor --step render    # renderer toolchain (soffice/pdftoppm/rsvg-convert)
-deck-master doctor --step export    # delivery-time checks
+deck doctor --fonts 'Source Han Sans SC'
 ```
 
-Renderer or font gaps are reported per step as `needs_tool` with the real
-reason; nothing silently falls back to fixtures.
+Checks the deck-tools interpreter, `soffice`, `pdftoppm`, `fc-match`, and the
+named fonts. Missing tools keep the real reason; nothing falls back to a
+fixture.
 
 ## Project Docs
 
-Start with the [documentation index](docs/README.md) for user guides, inherited
-engineering specifications and dated evidence. Historical reports do not certify
-the current candidate; see the [archive index](docs/archive/README.md).
+Start with the [documentation index](docs/README.md). Historical reports do not
+certify the current source line; see the [archive index](docs/archive/README.md).
 
-- [Installation, First Run, Host Requirements and Upgrade](docs/getting-started.md)
+- [Installation, first run, Host requirements and known limitations](docs/getting-started.md)
+- [1.1.0 release notes](docs/releases/1.1.0.md)
+- [Rust rebuild plan (current architecture)](docs/specs/rust-rebuild/README.md)
 - [Product Philosophy (Chinese)](docs/product-philosophy.md)
-- [Next Iteration: Business Expression Plan and Development Cards (Chinese)](docs/specs/deck-master-business-expression-20261029/README.md)
-- [Agent Entry](AGENTS.md)
-- [Agent Task Index](docs/agent-task-index.md)
-- [Agent Recovery Playbook](docs/agent-recovery-playbook.md)
-- [Inherited RC4 Increment](docs/specs/deck-master-next-iteration-20261019/README.md)
-- [Migration to the Rebuilt Core](docs/migration-to-rebuilt-core.md)
+- [Next iteration: business expression plan (Chinese)](docs/specs/deck-master-business-expression-20261029/README.md)
+- [Agent entry](AGENTS.md)
+- [New Skill](deck-skill/SKILL.md)
+- [Legacy Python task index](docs/agent-task-index.md)
+- [Legacy recovery playbook](docs/agent-recovery-playbook.md)
+- [v0.9 migration to the previous rebuilt core](docs/migration-to-rebuilt-core.md)
 - [Support and Feedback](SUPPORT.md)
 - [Issue Maintenance](docs/issue-maintenance.md)
 - [Contributing](CONTRIBUTING.md)

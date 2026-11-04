@@ -1,49 +1,92 @@
-# Install and use Deck Master 1.0.0
+# Install and use Deck Master 1.1.0
 
-Deck Master provides the local CLI, Workbench, project history and four Codex
-Skills. It does not bundle a model, Codex account, image-generation service,
-desktop office application, renderer binaries or fonts. A plain material
-directory is enough to start; no PPT Master backend or slide library is needed.
+Deck Master 1.1.0 provides the Rust CLI `deck`, a loopback Web UI (`deck serve`),
+file tools (`deck-tools`), and one Codex Skill (`deck-skill/`). It does not
+bundle a model, Codex account, image-generation service, desktop office
+application, renderer binaries or fonts. A plain material directory is enough
+to start; no PPT Master backend or slide library is needed.
+
+The previous Python workbench (`deck-master`) and its four Skills remain in the
+tree for maintenance. Their managed-wheel install is in
+[Legacy Python workbench (1.0.0)](#legacy-python-workbench-100) below.
 
 ## Requirements
 
-- Python 3.11 or 3.12, the versions exercised in CI. Metadata allows 3.13;
-  that version is outside the tested matrix. Python 3.14 is excluded.
-- For actual content/design work, an external Host able to read the frozen
-  Task methods, execute the requested scope and return its actual results.
-  Install and authenticate [Codex CLI](https://developers.openai.com/codex/cli)
-  separately if using the managed Codex Skills.
-- The normal native independent reviewer requires `codex` on PATH, an existing
-  ChatGPT-authenticated CLI session, and a working `codex app-server` protocol.
-  Inspect `codex --version` and `codex login status`. An API-key-only login is
-  not a substitute for this runner; no provider credential is added by Deck Master.
-  The maintainer's complete local validation used Codex CLI 0.163.0; other
-  versions are not a promised compatibility matrix.
-- Blueprint/image tasks need the actual image-generation and observation
-  capabilities declared by the Host. Installing the Python wheel does not
-  supply them or authorize their calls.
+- Rust 1.88 or later. Cargo enforces `rust-version` in `rust/Cargo.toml`.
+- Python 3.12 for the `scripts/install.sh` deck-tools venv. `deck-tools`
+  metadata allows 3.11–3.13 and excludes 3.14. CI uses 3.12.
+- Node 22 to build the WebUI (`frontend/`). The install script runs
+  `npm ci` and `npm run build`; the binary embeds that output.
+- For content and image work, an external Host (first Host: Codex). Install
+  and authenticate [Codex CLI](https://developers.openai.com/codex/cli)
+  separately if using the linked Skill.
 - Real previews/rendering require `rsvg-convert`, LibreOffice `soffice`,
   Poppler `pdftoppm`, Fontconfig `fc-match`, and the fonts selected by the
-  design. Use the installed launcher's
-  `doctor --step render --font "<actual font family>"` command.
-  The normal Python PPT compiler does not require an external PPT backend.
+  design. `deck doctor --fonts "<family>"` reports what is present.
+  Compiling SVG to PPTX does not require an external PPT application.
 
-CLI inspection and the bundled read-only sample need no model call. Genuine
-model/image work uses the external Host's account and permissions; follow the
-actual request's authorization and call allowance.
+CLI inspection needs no model call. Image generation uses the Host's account
+and permissions.
 
-## Install a release
+## Install from source
 
-Python `1.0.0` maps to tag `v1.0.0`. Source version alone does not establish
-that the release or its assets have been published.
+```bash
+./scripts/install.sh
+```
+
+The script builds the Web UI, installs `deck` into `~/.local/bin` (override
+with `--prefix DIR`), creates a Python 3.12 venv for `deck-tools` at
+`<prefix>/share/deck/venv`, and links `deck-skill/` to
+`~/.codex/skills/deck` (override with `--skill-dir PATH`). `--dry-run`
+prints the plan and checks the skill path without writing.
+
+If `~/.local/bin` is not on `PATH`, add it or call that `deck` by its full
+path. The skill path must be new, or already the same link; a different file
+or link is left unchanged and the script exits 2.
+
+A fresh install finds deck-tools in the prefix venv, so it does not need
+`DECK_TOOLS_PYTHON`. deck-tools is an editable install of this checkout;
+moving or deleting the checkout leaves that venv unable to import it.
+
+After install:
+
+```bash
+deck new ./my-deck --title '方案标题'
+deck --project ./my-deck doctor --fonts 'Source Han Sans SC'
+deck serve ./my-deck
+```
+
+`deck serve` prints a loopback URL and binds `127.0.0.1` only. Host or Origin
+that is not this process's loopback address is rejected. Keep the URL private.
+One process serves one project.
+
+Command examples: [README Quick Start](../README.md#quick-start) and
+[deck-skill/references/commands.md](../deck-skill/references/commands.md).
+Release scope: [1.1.0 notes](releases/1.1.0.md).
+
+## Upgrade an old Python project
+
+Do not create `.deck/` inside an old project directory.
+
+```bash
+deck-master legacy-export <project> <out>
+deck import <out> <new>
+```
+
+`<out>` must sit outside `<project>`. The old directory is unchanged. See
+[1.1.0 notes](releases/1.1.0.md#upgrade-and-migration). v0.9.x run directories
+still follow [migration-to-rebuilt-core.md](migration-to-rebuilt-core.md).
+
+## Legacy Python workbench (1.0.0)
+
+The 1.0.0 managed installer and `deck-master` CLI are the previous source
+line. They are not the 1.1.0 authoring path. Python `1.0.0` mapped to tag
+`v1.0.0`. Source version alone does not establish that a release or its
+assets have been published.
 
 Download the wheel and `release.json` from the same
-[GitHub Release](https://github.com/MainQuestAI/Deck-Master/releases).
-Keep them in one directory. The source archive is optional for ordinary use.
-Check the published SHA256 sums; the managed installer also verifies the wheel
-against its manifest. No PyPI publication is assumed by these instructions.
-
-Bootstrap the CLI in a separate environment, using the downloaded wheel:
+[GitHub Release](https://github.com/MainQuestAI/Deck-Master/releases) if you
+need that line. Keep them in one directory. No PyPI publication is assumed.
 
 ```bash
 python3.12 -m venv ./deck-master-bootstrap
@@ -59,87 +102,26 @@ Read its returned `release_id`. If its checks pass and you want to activate it:
 ./deck-master-bootstrap/bin/python -m deck_master install activate \
   --prefix "$HOME" --release-id <returned_release_id> --transaction-id <UUIDv4>
 "$HOME/.deck-master/bin/deck-master" doctor --step compose
-"$HOME/.deck-master/bin/deck-master" capabilities
 ```
 
-Substitute actual returned IDs; do not paste placeholders.
-Generate a transaction UUIDv4 with `python -c 'import uuid; print(uuid.uuid4())'`.
-Activation changes the selected prefix and registers all four managed Skills under
-`$CODEX_HOME/skills` (default `~/.codex/skills`). Existing foreign files/links
-are preserved and reported as conflicts. Use another prefix for an isolated
-installation, and `--no-host-registration` if you explicitly want CLI-only
-activation. The remaining examples use the default prefix's absolute launcher,
-`"$HOME/.deck-master/bin/deck-master"`; substitute your chosen prefix's launcher
-if different. Adding `.deck-master/bin` to PATH is optional for these examples.
-Start a new Codex session or reload its
-Skills, then use the Python belonging to the actual loaded Skill release.
-See the [installation and recovery reference](../skills/deck-master/references/installation.md).
+Substitute actual returned IDs. Activation registers the four managed Skills
+under `$CODEX_HOME/skills` (default `~/.codex/skills`). See the
+[installation and recovery reference](../skills/deck-master/references/installation.md).
+Rolling back a managed 1.0.0 prefix does not install `deck`.
 
-## First run
-
-Open the local launcher with a registry you choose:
-
-```bash
-"$HOME/.deck-master/bin/deck-master" workbench --registry ./deck-master-projects.json --no-open
-```
-
-Open the returned loopback URL. **打开只读示例** displays a bundled synthetic
-example without generating or approving real work. **新建项目** and **选择项目文件夹**
-operate on your own material and projects. The UI is local; keep its returned
-URL/token private and preserve the registry and project directories.
-
-For a real task, give the external Host your brief, full material location and
-requested output. Use `deck-master` for coordination, `deck-content` for
-content alone, `deck-design` for scoped design, or `deck-review` for read-only
-review. A copied handoff does not start a model. Follow the returned scope,
-decisions and Tasks; the [CLI quick start](../README.md#quick-start) shows the
-manual claim/accept sequence.
-
-When a current authorized full-deck/edit request needs independent content
-review, use **独立审阅当前内容** in the Workbench or:
-
-```bash
-"$HOME/.deck-master/bin/deck-master" review native --project ./my-deck --json
-"$HOME/.deck-master/bin/deck-master" continue --project ./my-deck --no-open
-```
-
-The runner performs an actual independent native session; it accepts no
-handwritten receipt JSON. A failed/unavailable session remains a named gap.
-Inspect its Task before retrying an uncertain or running call.
-
-Before formal delivery, complete the current image/page/final reviews, run
-`final-readiness`, export `--purpose delivery`, and check the actual file with
-an explicit delivery purpose:
-
-```bash
-"$HOME/.deck-master/bin/deck-master" handoff-check --project ./my-deck \
-  --file /path/to/actual-exported.pptx --purpose delivery --json
-```
-
-Replace the file path with the actual PPTX returned by your delivery export.
-Always pass `--purpose delivery` for this check; the CLI defaults to `review`.
-`--purpose review` can produce an unfinished
-reading copy with its real unresolved list. Content-only completion does not
-start design or PPT production. See the [task index](agent-task-index.md).
-
-## Upgrade and rollback
-
-Download the new release's matching wheel and manifest, install that wheel into
-the bootstrap environment, then repeat `install candidate` and `install activate`
-using the new returned release ID and a new transaction ID. Reload the Host's
-Skill entry after switching. Keep each transaction's original ID and arguments
-for exact recovery after interruption; a timeout is not proof of failure.
-
-`"$HOME/.deck-master/bin/deck-master" install rollback --prefix "$HOME" --transaction-id <new_UUIDv4>`
-switches to the recorded previous managed release. It does not roll back project
-data, recorded calls or writer floors. An older runtime may refuse a project
-that has acquired newer protocol facts. Follow the
-[transaction recovery reference](../skills/deck-master/references/installation.md#durable-transaction-recovery).
-For v0.9 runs, use the [migration guide](migration-to-rebuilt-core.md); never
-initialize a new-format project in the old run directory.
+Workbench on that line: `"$HOME/.deck-master/bin/deck-master" view --open --project <dir>`.
+Task routing: [agent-task-index.md](agent-task-index.md).
 
 ## Known limitations
 
+- UNC paths (`\\server\share`) are not covered by local-path sanitization in
+  `deck-tools`.
+- `GET /api/export/md` does not run the credential check used on exported
+  PPTX slide text.
+- PPTX has been rechecked through LibreOffice (`soffice`) rendering in the
+  tool tests. Desktop editing in WPS and Microsoft PowerPoint was not
+  repeated for 1.1.0. Actual WPS editing was also not verified on the PR125
+  1.0.0 observation because the Mac device locked.
 - Native editable PPT output uses shapes and text. Tables/charts are composed
   shapes/text rather than Office-native spreadsheet-backed data objects.
 - `doctor` finding a font family does not prove LibreOffice can render every
@@ -151,8 +133,8 @@ initialize a new-format project in the old run directory.
   command applies the same known configuration and a task-local cache to one
   pending render operation. Use the actual complete working configuration on
   your machine; do not blindly set nonexistent paths or replace it with a
-  partial font list. For UI-triggered rendering, start the Workbench process
-  with the same environment; an already-running server keeps its old environment.
+  partial font list. For UI-triggered rendering, start `deck serve` with the
+  same environment; an already-running server keeps its old environment.
 
 ```bash
 if [ -r /opt/homebrew/etc/fonts/fonts.conf ] && [ -d /opt/homebrew/etc/fonts ]; then
@@ -160,23 +142,26 @@ if [ -r /opt/homebrew/etc/fonts/fonts.conf ] && [ -d /opt/homebrew/etc/fonts ]; 
   FONTCONFIG_FILE=/opt/homebrew/etc/fonts/fonts.conf \
   FONTCONFIG_PATH=/opt/homebrew/etc/fonts \
   XDG_CACHE_HOME="$PWD/render-cache" \
-    "$HOME/.deck-master/bin/deck-master" continue --project ./my-deck --no-open
+    deck --project ./my-deck build
 fi
 ```
 
 These are [Fontconfig's process environment overrides](https://fontconfig.pages.freedesktop.org/fontconfig/fontconfig-user.html).
-Use the same environment for `doctor --step render --font ...` and the command
-that creates the actual renders. This changes no global configuration and
-installs no fonts. Inspect the resulting real previews; existing cached
-previews are not automatically replaced by setting environment variables.
+Use the same environment for `deck doctor --fonts ...` and the command that
+creates the actual renders. This changes no global configuration and installs
+no fonts. Inspect the resulting real previews; existing cached previews are
+not automatically replaced by setting environment variables.
 
-The maintainer's actual installed PR125 task at `d7ec4530` passed native review,
-trusted native-image observations on two pages, SVG/PPT, real rendering and
-formal delivery, reporting `ready` and `handoff-check verified` with no missing
-Task. This is one complete observed task, not broad OS or model certification.
-Actual editing in WPS was not verified because the Mac device locked.
+The maintainer's actual installed PR125 task at `d7ec4530` (Python 1.0.0 line)
+passed native review, trusted native-image observations on two pages, SVG/PPT,
+real rendering and formal delivery, reporting `ready` and `handoff-check verified`
+with no missing Task. This is one complete observed task, not broad OS or model
+certification, and it is not a 1.1.0 `deck` install observation.
 Professional human review and application-specific desktop editing remain
 separate observations and are never inferred from CI or a generated PPTX.
+
+The browser does not start image or SVG runs. Hosts use `deck run` on the CLI.
+`codex app-server` ImageGen from the WebUI is not claimed.
 
 Report reproducible issues with neutral material and actual version/diagnostic
 results using the [contribution guide](../CONTRIBUTING.md). Keep credentials,
