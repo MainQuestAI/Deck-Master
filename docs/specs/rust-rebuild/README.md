@@ -2,6 +2,20 @@
 
 日期 2026-10-31，源码基线 `main@035845f228d1`。本稿合成自三份文件：《DeckMaster Rust 核心与后端全面重构方案》v1.1（PDF）、10-31 合并讨论稿和 Claude 的评审，三份都没有入库。之后又并入了 10-31 对 v1.2 的评审中经过核实的条目。本稿替代 v1.1 作为开发依据；开发规范以 [AGENTS.md](../../../AGENTS.md) 为准，两者冲突时以 AGENTS.md 为准。
 
+## 现状（1.1.0，2026-11-04）
+
+S0–S6 已合入 `main`，源码基线 `abb785eb`（PR #272 之后）。现行运行时是：
+
+| 目录 | 职责 | 入口 |
+| --- | --- | --- |
+| `rust/` | 作品模型、存储、用例、CLI、本地 HTTP | `deck`、`deck serve <project>` |
+| `deck-tools/` | SVG→PPTX 编译、渲染、回读、字体、材料解析、导出清洗 | 由 `deck` 子进程调用 |
+| `frontend/` | #250 WebUI，由 `build.rs` 嵌入二进制 | `deck serve` 提供静态文件 |
+| `deck-skill/` | 新 Skill（尚未改名为 `skills/deck/`） | `scripts/install.sh` 链接到 Codex |
+| `src/deck_master/`、`skills/` | 旧 Python 线，只做维护（AGENTS.md 第 12 节） | `deck-master` |
+
+安装：`scripts/install.sh`。发版说明：[1.1.0](../../releases/1.1.0.md)。下文第 7 节是开发时的切片完成判断；合入 PR 为 S0 #251、S1 #252、S2 #256、S3 #258、S4 #259/#250/#257/#260、S5 #261、S6 #262。第 3–6 节合同仍是实现依据，不以历史“未验证”清单覆盖已合入行为。
+
 ## 0. 相对 v1.1 的变化
 
 - 写入：不设单写入服务。CLI 与本地服务调用同一套用例，各自直连 SQLite。
@@ -367,8 +381,11 @@ Host 按需读取：`deck show`（摘要）、`deck get --pages p3,p4`（指定�
 
 ## 9. 未验证
 
-- 带表格、图标、图片素材的页面，以及 22 页规模，在新工具包上的表现（S3 验证）。
-- `codex app-server` 能否调用 ImageGen。这决定界面能否直接触发生成。Host 不能生图时，作者可以用别的工具出图，再经 `deck run result` 交回。
-- SQLite 项目文件放在 iCloud 等同步目录时的表现（S1 在真实项目位置试）。
-- 旧线全量测试本轮没有跑，不影响新线开发。
+开发时写下的条目。1.1.0 源码线上的状态：
+
+- 带表格、图标、图片素材的页面：`deck-tools` 与 `rust/tests/delivery.rs` 覆盖编译、回读和原生表格；22 页整稿规模未作为本仓库 CI 用例。
+- `codex app-server` 调用 ImageGen：界面仍不启动生图或 SVG 任务；Host 走 `deck run`。此项仍未验证。
+- SQLite 项目文件放在 iCloud 等同步目录：未在 1.1.0 准备中重测。
+- 旧线全量测试：`rebuild.yml` 在 `main` 更新后运行；功能分支 PR 不自动跑旧线。
 - 已确认：本机 rustc / cargo 1.99.1 与 sqlite3 可用。
+- UNC 路径（`\\server\share`）未纳入本机路径清洗；`GET /api/export/md` 不做 PPTX 那套凭据检查；PPTX 只在 LibreOffice 渲染路径上复验，未做 WPS / PowerPoint 桌面复验。
