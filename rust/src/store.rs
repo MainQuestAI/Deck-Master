@@ -10,7 +10,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-pub const FORMAT_VERSION: i64 = 3;
+pub const FORMAT_VERSION: i64 = 4;
 
 pub struct Store {
     pub connection: Connection,
@@ -126,6 +126,13 @@ impl Store {
                 resolved_at TEXT
             );
             PRAGMA user_version = 3;",
+            )?;
+        }
+        if version < 4 {
+            // Candidate previews are recorded at check-page time. Reads only return the name.
+            tx.execute_batch(
+                "ALTER TABLE run_pages ADD COLUMN preview_file TEXT;
+            PRAGMA user_version = 4;",
             )?;
         }
         tx.commit()?;

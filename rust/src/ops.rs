@@ -801,7 +801,7 @@ fn runs(connection: &rusqlite::Connection, deck: &Deck, id: Option<i64>) -> Resu
     let mut runs = Vec::new();
     for (id, kind, status, max, used) in rows {
         let mut query = connection.prepare(
-            "SELECT page_id,basis,status,result_file FROM run_pages WHERE run_id=? ORDER BY rowid",
+            "SELECT page_id,basis,status,result_file,preview_file FROM run_pages WHERE run_id=? ORDER BY rowid",
         )?;
         let rows = query
             .query_map([id], |r| {
@@ -810,12 +810,14 @@ fn runs(connection: &rusqlite::Connection, deck: &Deck, id: Option<i64>) -> Resu
                     r.get::<_, String>(1)?,
                     r.get::<_, String>(2)?,
                     r.get::<_, Option<String>>(3)?,
+                    r.get::<_, Option<String>>(4)?,
                 ))
             })?
             .collect::<std::result::Result<Vec<_>, _>>()?;
         let mut pages = Vec::new();
-        for (page, old, state, result) in rows {
+        for (page, old, state, result, preview) in rows {
             let current_page = current_pages.get(page.as_str());
+            let mut current_basis = None;
             let changed = match current_page {
                 Some(p) => {
                     let key = (if kind == "image" { "image" } else { "svg" }, p.id.as_str());
@@ -825,6 +827,7 @@ fn runs(connection: &rusqlite::Connection, deck: &Deck, id: Option<i64>) -> Resu
                             entry.insert(basis(&kind, deck, p)?)
                         }
                     };
+                    current_basis = Some(current.clone());
                     *current != old
                 }
                 None => true,
@@ -846,7 +849,7 @@ fn runs(connection: &rusqlite::Connection, deck: &Deck, id: Option<i64>) -> Resu
                 .and_then(|p| p.image.as_ref())
                 .map(|image| file_url(&image.file));
             let result_url = result.as_deref().map(file_url);
-            pages.push(json!({"page_id":page,"status":state,"reason":reason,"basis_changed":changed,"result_file":result,"result_url":result_url,"current_image_url":current_image}));
+            pages.push(json!({"page_id":page,"status":state,"reason":reason,"basis_changed":changed,"current_basis":current_basis,"result_file":result,"result_url":result_url,"result_preview":preview,"current_image_url":current_image}));
         }
         runs.push(json!({"id":id,"kind":kind,"status":status,"max_calls":max,"calls_used":used,"pages":pages}));
     }
@@ -941,7 +944,7 @@ pub fn run_result(project: &Path, id: i64, page_id: &str, source: &Path) -> Resu
             page.image = artifact;
         } else {
             page.svg = artifact;
-            page.preview = preview;
+            page.preview = preview.clone();
         }
         if snapshot.deck != store::current(&tx)?.deck {
             store::append(&tx, &snapshot.deck, "采用生成结果")?;
@@ -955,9 +958,11 @@ pub fn run_result(project: &Path, id: i64, page_id: &str, source: &Path) -> Resu
     } else {
         "unadopted".to_string()
     };
+    // Persist the check-page PNG for candidates that are not written onto the page.
+    // Later reads return this name and do not render again.
     tx.execute(
-        "UPDATE run_pages SET status=?,result_file=? WHERE run_id=? AND page_id=?",
-        params![state, file, id, page_id],
+        "UPDATE run_pages SET status=?,result_file=?,preview_file=? WHERE run_id=? AND page_id=?",
+        params![state, file, preview, id, page_id],
     )?;
     tx.execute("UPDATE runs SET status='done' WHERE id=? AND status='open' AND NOT EXISTS (SELECT 1 FROM run_pages WHERE run_id=? AND status!='done')",params![id,id])?;
     tx.commit()?;

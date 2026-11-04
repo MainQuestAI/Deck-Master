@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Reviewbar from './components/layout/Reviewbar';
 import Sidebar from './components/layout/Sidebar';
 import Topbar from './components/layout/Topbar';
@@ -14,7 +14,10 @@ import Toast from './components/common/Toast';
 import { useDeckMaster } from './context/DeckMasterContext';
 
 export default function App() {
-  const { scene, workspace, connectionError, actionError, refresh } = useDeckMaster();
+  const { scene, workspace, connectionError, actionError, refresh, currentPage } = useDeckMaster();
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [scene, currentPage]);
   const scenes = { overview: OverviewView, content: ContentView, gallery: GalleryView, delivery: DeliveryView, page: PageReaderView, compare: CompareView };
   const Scene = scenes[scene] || OverviewView;
   return <>

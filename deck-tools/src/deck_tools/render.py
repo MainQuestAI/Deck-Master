@@ -197,16 +197,28 @@ def readback(pptx_path,pages,expected_pages):
             findings.extend(_check_required_text(root, checked_source, checked_page))
             from .readback_relations import check_native_relations
             findings.extend(check_native_relations(root, checked_source, checked_page))
-            # AC-K10: real text overflow — a shape box leaving the slide bounds.
-            for sp in root.findall('.//p:sp',ns):
-                name_node=sp.find('p:nvSpPr/p:cNvPr',ns)
-                xfrm=sp.find('p:spPr/a:xfrm',ns)
-                if name_node is None or xfrm is None:continue
-                off=xfrm.find('a:off',ns);ext=xfrm.find('a:ext',ns)
-                if off is None or ext is None:continue
-                x,y=int(off.get('x')),int(off.get('y'));w,h=int(ext.get('cx')),int(ext.get('cy'))
-                if x<0 or y<0 or x+w>slide_cx or y+h>slide_cy:
-                    findings.append({'page_id':page['page_id'],'code':'shape_outside_slide','element':name_node.get('name'),'bounds':[x,y,w,h],'slide':[slide_cx,slide_cy]})
+            # AC-K10: a shape box leaving the slide. Native tables are graphic
+            # frames: the compiler removes their frame, rules and cell text, so
+            # the p:sp walk never sees the table's on-slide transform.
+            carriers = [(sp.find('p:nvSpPr/p:cNvPr', ns), sp.find('p:spPr/a:xfrm', ns))
+                        for sp in root.findall('.//p:sp', ns)]
+            carriers.extend((graphic.find('p:nvGraphicFramePr/p:cNvPr', ns), graphic.find('p:xfrm', ns))
+                            for graphic in root.findall('.//p:graphicFrame', ns))
+            for name_node, xfrm in carriers:
+                if name_node is None or xfrm is None:
+                    continue
+                off = xfrm.find('a:off', ns)
+                ext = xfrm.find('a:ext', ns)
+                if off is None or ext is None:
+                    continue
+                x = int(off.get('x'))
+                y = int(off.get('y'))
+                w = int(ext.get('cx'))
+                h = int(ext.get('cy'))
+                if x < 0 or y < 0 or x + w > slide_cx or y + h > slide_cy:
+                    findings.append({'page_id': page['page_id'], 'code': 'shape_outside_slide',
+                                     'element': name_node.get('name'), 'bounds': [x, y, w, h],
+                                     'slide': [slide_cx, slide_cy]})
             # AC-K08: verify declared node/edge relations against the actual
             # slide geometry, located via data-node-ref/data-edge-ref bindings.
             visual=page.get('visual_spec') or {}

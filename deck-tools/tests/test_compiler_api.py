@@ -144,6 +144,83 @@ def test_native_table_readback_checks_actual_cell_font_size(tmp_path, font_size,
                for f in report['findings']) == unreadable
 
 
+def _comparison_table_svg(family, dx=0):
+    """The normal editable-table fixture, with frame, rules and cell text shifted."""
+    def x(value):
+        return value + dx
+    return f'''<svg viewBox="0 0 600 400" font-family="{family}" font-size="24">
+      <text id="标题" x="30" y="40" data-atom-id="atom:p1:title">方案比较</text>
+      <text id="流程说明" x="30" y="75">比较后提交</text>
+      <rect id="评分项" x="{x(30)}" y="90" width="500" height="220" fill="none"
+            stroke="#333333" data-table-id="评分项" data-native-table="true"/>
+      <line x1="{x(30)}" y1="160" x2="{x(530)}" y2="160" stroke="#333333" data-table-id="评分项"/>
+      <line x1="{x(300)}" y1="90" x2="{x(300)}" y2="310" stroke="#333333" data-table-id="评分项"/>
+      <text x="{x(50)}" y="130" data-table-id="评分项">评分项</text>
+      <text x="{x(320)}" y="130" data-table-id="评分项">比较项</text>
+      <text x="{x(50)}" y="200" data-table-id="评分项" data-text-width="230">
+        <tspan x="{x(50)}" y="200" font-weight="700" fill="#AA0000">方案</tspan><tspan x="{x(110)}" y="200">说明</tspan>
+      </text>
+      <text x="{x(50)}" y="250" data-table-id="评分项">补充说明</text>
+      <text x="{x(320)}" y="200" data-table-id="评分项">结果</text>
+      <line id="流程连线" x1="30" y1="350" x2="530" y2="350" stroke="#333333"
+            stroke-linecap="round" stroke-linejoin="bevel"/>
+    </svg>'''
+
+
+def _compiled_table_frame(pptx_path):
+    ns = {'p': 'http://schemas.openxmlformats.org/presentationml/2006/main',
+          'a': 'http://schemas.openxmlformats.org/drawingml/2006/main'}
+    with zipfile.ZipFile(pptx_path) as archive:
+        presentation = ET.fromstring(archive.read('ppt/presentation.xml'))
+        slide = ET.fromstring(archive.read('ppt/slides/slide1.xml'))
+    size = presentation.find('p:sldSz', ns)
+    graphic = slide.find('.//p:graphicFrame', ns)
+    off = graphic.find('p:xfrm/a:off', ns)
+    ext = graphic.find('p:xfrm/a:ext', ns)
+    return {
+        'name': graphic.find('p:nvGraphicFramePr/p:cNvPr', ns).get('name'),
+        'bounds': [int(off.get('x')), int(off.get('y')), int(ext.get('cx')), int(ext.get('cy'))],
+        'slide': [int(size.get('cx')), int(size.get('cy'))],
+    }
+
+
+def _compile_comparison_table(tmp_path, family, dx, name):
+    svg = tmp_path / f'{name}.svg'
+    svg.write_text(_comparison_table_svg(family, dx))
+    result = compile_deck([SvgInput('p1', svg)],
+                          CompileOptions(width_px=600, height_px=400, fonts=host_fonts()),
+                          tmp_path / name)
+    source = json.loads(result.manifest_path.read_text())['pages']
+    report = readback(result.pptx_path, source, [
+        {'page_id': 'p1', 'customer_visible': {'title': '方案比较'}}])
+    return _compiled_table_frame(result.pptx_path), report
+
+
+def test_native_table_graphic_frame_outside_slide_is_located(tmp_path):
+    # A normal native table stays inside the slide. The same fixture with the
+    # frame, rules and cell text shifted +650px compiles a graphicFrame whose
+    # left edge is past the 600px slide; readback must report that frame.
+    family = resolve_host_font()
+    inside_frame, inside = _compile_comparison_table(tmp_path, family, 0, 'inside')
+    assert inside_frame['slide'][0] == 5_715_000
+    assert inside_frame['bounds'][0] + inside_frame['bounds'][2] <= inside_frame['slide'][0]
+    assert inside['status'] == 'pass'
+    assert inside['findings'] == []
+
+    frame, report = _compile_comparison_table(tmp_path, family, 650, 'outside')
+    assert frame['slide'][0] == 5_715_000
+    assert frame['bounds'][0] == 6_477_000
+    finding = {
+        'page_id': 'p1',
+        'code': 'shape_outside_slide',
+        'element': frame['name'],
+        'bounds': frame['bounds'],
+        'slide': frame['slide'],
+    }
+    assert report['status'] == 'fail'
+    assert report['findings'] == [finding]
+
+
 def test_native_table_marker_without_identity_keeps_drawn_shape_readback(tmp_path):
     family = resolve_host_font()
     svg = tmp_path / 'drawn.svg'

@@ -172,7 +172,7 @@ run 用于需要 Host 执行、作者可以中途停止的工作：生图（imag
 svg 类没有外部付费调用，不需要 `run call`，也没有 max_calls。它的 result 先经过 `deck_tools check-page`：
 
 - 编译失败：不保存，返回出错的元素与原因，Host 修改后重新提交。
-- 编译成功：保存 SVG、单页预览 PNG 和回读发现。回读发现只报告，不阻止采用。
+- 编译成功：保存 SVG、单页预览 PNG 和回读发现。回读发现只报告，不阻止采用。未采用的候选同样保留这次 check-page 的 PNG 文件引用；之后读取 run 只返回该引用，不重新编译。
 
 全部页面都已采用时，run 自动变为 done。
 
@@ -201,9 +201,11 @@ svg 类没有外部付费调用，不需要 `run call`，也没有 max_calls。�
 
 S4 必须能用的最低要求：整稿浏览（原图、预览、过期标记）、改正文与讲稿（冲突时保留作者输入）、run 状态与停止、构建与下载、版本历史与恢复。S4 只接通支撑这几项以及第 7 节完成判断的界面，其余界面在 S4 里隐藏入口，或置灰且不显示假数据；#250 `constants/data.js` 里的演示数据不得与真实作品同屏出现。依赖 S5 的部分（页上意见、单页重做、候选比较）在 S5 后接入。以下不接，隐藏或不做：S00 所有项目矩阵（服务一次只服务一个项目，没有项目列表接口）、S04 的阶段推进状态与规范检测列表、S06 的身份切换、S05 的导出门禁交互。旧线 v2 的 api.js、images.js、collaboration-desk 及依赖它的 insight-reading、evidence-reading 不迁移。
 
+工作面导航或选页后从主要标题开始，轮询不改变滚动位置或草稿。总览只保留一个黑色主行动；普通表格行高至少 64px，长标题可以继续增高；编辑单行输入沿用既有表单边框、6px 圆角与焦点样式，Logo 使用实心填充。放映按扣除标题、状态和翻页控件后的可用宽高完整显示画布，Tab/Shift+Tab 在当前可用控件中循环，退出后焦点回到触发按钮。
+
 顺序与 PR：S4 拆成两个 PR。先做 `deck serve` 与上述接口（含静态文件服务）并合入；#250 在接口可联调后由老板决定合入；再在 `frontend/` 上接数据层。
 
-S5 界面接入：制作总览展示整稿待处理意见，单页工作区展示本页待处理意见，支持保存和标记已处理；意见原文与来源方法如实展示。输入失败时保留草稿，轮询无需等待作品版本变化。制作任务中可打开同页同层（原图或 SVG）的固定比对，基准左、候选右；轮询不替换已打开的画面，候选或当前作品变化时提示重新打开。采用请求携带选中文件，保留当前作品只返回任务列表。浏览器不直接调用 ImageGen，Host 按意见与原有 run 命令继续改稿。
+S5 界面接入：制作总览展示整稿待处理意见，单页工作区展示本页待处理意见，支持保存和标记已处理；意见原文与来源方法如实展示。输入失败时保留草稿，轮询无需等待作品版本变化。制作任务中可打开同页同层（原图或 SVG）的固定比对，基准左、候选右。原图两侧是图片文件；SVG 两侧是编译预览（打开比较时的 `page.preview`，以及该候选交回时保存的 `result_preview`），不展示原始 SVG。采用请求仍携带候选 SVG 或原图文件。轮询不替换已打开的画面。候选结果文件变化、当前产物文件变化，或该页该任务类型的制作依据相对打开比较时变化，都提示重新打开。制作依据与 run 相同：image 为该页 content、layout、purpose 与 style；svg 为该页 content、image 文件与 style。比较界面用轮询返回的 `current_basis` 与打开时冻结的摘要比较。全稿版本号增加、其他页的改动，以及不在该依据中的字段（如讲稿），不单独提示。依据变化时仍可手动采用。候选结果文件或当前产物文件与打开时不一致时，采用按钮保持禁用，直到重新打开比对。保留当前作品只返回任务列表。浏览器不直接调用 ImageGen，Host 按意见与原有 run 命令继续改稿。
 
 构建与分发：`deck serve` 提供构建后的前端静态文件，随二进制发布，不依赖磁盘上的相对路径（`cargo install --path rust` 之后也能用）；嵌入方式与依赖在 S4 开工时定。S4 把 `npm ci` 与 `vite build` 加入 `rust.yml` 和 AGENTS.md 第 3 节的检查清单。开发期 Vite 通过代理访问 `deck serve`，代理改写 Host 与 Origin 并读取 `deck serve` 启动时打印的地址，不放宽 Host 与 Origin 检查。
 
@@ -211,7 +213,7 @@ S5 界面接入：制作总览展示整稿待处理意见，单页工作区展�
 
 后端接口供前端联调的返回形状：
 
-- `GET /api/deck` 返回 `{version, deck, artifact_status, runs, history, reviews, open_reviews_total}`，在同一 SQLite 只读事务中读取。`artifact_status` 含 `missing_pages/stale_pages/stale_images`；reviews 是全部 open 意见，method 原样返回，deck 每页另带 `open_reviews` 条数（整稿意见只计入总数），不汇总为通过或合格；runs 含每页状态、未采用原因、`result_file`、`result_url` 与 `current_image_url`（无图时为 null），不含本地工作路径；history 按新到旧列出 `id/created_at/summary`。run 状态独立于作品版本变化，轮询时应同时刷新。
+- `GET /api/deck` 返回 `{version, deck, artifact_status, runs, history, reviews, open_reviews_total}`，在同一 SQLite 只读事务中读取。`artifact_status` 含 `missing_pages/stale_pages/stale_images`；reviews 是全部 open 意见，method 原样返回，deck 每页另带 `open_reviews` 条数（整稿意见只计入总数），不汇总为通过或合格；runs 含每页状态、未采用原因、`result_file`、`result_url`、`result_preview`、`current_basis` 与 `current_image_url`（无图时为 null），不含本地工作路径。`result_preview` 是 SVG 候选在交回时保存的 check-page PNG 文件名；原图任务、尚未交回或旧记录没有该预览时为 null。`current_basis` 是该页该任务类型当前制作依据的摘要，页面已删除时为 null。轮询和 `run show` 只返回已保存的预览引用和这次读到的依据摘要，不调用 check-page。history 按新到旧列出 `id/created_at/summary`。run 状态独立于作品版本变化，轮询时应同时刷新。
 - PUT 请求体是裸 patch（与 put 的 patch 相同，不接受 `{deck:…}` 包装），成功返回 `{version, deck}`。冲突返回 HTTP 409 与 `{exit_code:5, base, submitted, conflicts:[{unit,current}]}`，整次不写入；`submitted` 原样保留裸 patch，界面也须保留编辑输入。
 - `POST /api/build` 返回 `{id, url, findings, missing_pages, stale_pages}`，url 是该次构建文件的 `/api/files/<sha>`。`GET /api/files/<sha>` 只在当前项目的 files 目录内查找，含扩展名的存储引用取点号前的 sha 用于 URL；文件响应禁止脚本执行。
 - `GET /api/export/md` 与 `GET /api/export/pptx` 直接返回下载内容，文件名为 `deck.md/deck.pptx`。`X-Deck-Status` 是 JSON（非 ASCII 字符使用 JSON 转义），含 `missing_pages/stale_pages`；PPTX 另含 `id/input_changed/warning/build_missing_pages`。

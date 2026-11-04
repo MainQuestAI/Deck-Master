@@ -15,9 +15,14 @@ class OperationError(ValueError):
     pass
 
 PRIVATE = re.compile(
-    r"(?:file://|/(?:Users|home|workspace|codex|root|mnt|opt|etc|var|private/tmp|tmp)/|[A-Za-z]:\\|\bBearer\s+[A-Za-z0-9_.-]{8,}|\bsk-[A-Za-z0-9_-]{16,})", re.I
+    r"(?:file:/|/(?:Users|home|workspace|codex|root|mnt|opt|etc|var|private/tmp|tmp)/|(?<![A-Za-z])[A-Za-z]:/|[A-Za-z]:\\|\bBearer\s+[A-Za-z0-9_.-]{8,}|\bsk-[A-Za-z0-9_-]{16,})", re.I
 )
 HTTP_URL = re.compile(r'https?://[^\s<>"\']+', re.I)
+# Directory prefixes such as /home/products, and a query such as ?src=/Users/x,
+# are ordinary site paths. file:/ covers one or more slashes. A Windows drive
+# uses either slash. The forward-slash letter must not continue a word, so the
+# :// of an http(s) scheme is not a drive.
+LOCAL_URL_EMBED = re.compile(r"^(?:file:/|[A-Za-z]:[/\\])", re.I)
 
 
 def reject(where, reason):
@@ -29,8 +34,10 @@ def text_safe(value, where):
         return
     urls = [match.span() for match in HTTP_URL.finditer(value)]
     for match in PRIVATE.finditer(value):
-        credential = match.group().lower().startswith(("bearer", "sk-"))
-        if not credential and any(start <= match.start() and match.end() <= end for start, end in urls):
+        token = match.group()
+        credential = token.lower().startswith(("bearer", "sk-"))
+        inside_http = any(start <= match.start() and match.end() <= end for start, end in urls)
+        if not credential and not LOCAL_URL_EMBED.match(token) and inside_http:
             continue
         rule = "凭据样式" if credential else "本机路径"
         reject(where, f"命中{rule}规则；请修改该字段后重试")
@@ -47,6 +54,64 @@ def link_safe(value, where):
         or {key.lower() for key in parse_qs(parsed.query)} & {"token", "access_token", "api_key", "signature", "authorization"}
     ):
         reject(where, "链接含认证信息；请移除认证信息后重试")
+
+
+def _copy_text(value, where, *, links):
+    """Slide body and speaker notes reuse the external-link authentication rule."""
+    text_safe(value, where)
+    if links and value:
+        for url in HTTP_URL.findall(value):
+            link_safe(url, where + "/link")
+
+
+def _slide_or_notes_part(name):
+    return re.fullmatch(r"ppt/slides/slide[0-9]+\.xml", name) is not None or re.fullmatch(
+        r"ppt/notesSlides/notesSlide[0-9]+\.xml", name
+    ) is not None
+
+
+def _run_text(node):
+    parts = []
+    for child in node.iter():
+        if child.tag.rsplit("}", 1)[-1] == "t" and child.text:
+            parts.append(child.text)
+    return "".join(parts)
+
+
+def _paragraph_run_segments(paragraph):
+    """Join styled runs so one URL reaches the existing link check.
+
+    A hard line break ends the segment. The break is not a character of the
+    URL, and joining across it would check a token the paragraph does not
+    contain. The next paragraph stays a separate boundary.
+    """
+    segments = []
+    chunks = []
+
+    def flush():
+        if chunks:
+            segments.append("".join(chunks))
+            chunks.clear()
+
+    for child in paragraph:
+        kind = child.tag.rsplit("}", 1)[-1]
+        if kind == "br":
+            flush()
+        elif kind in ("r", "fld"):
+            text = _run_text(child)
+            if text:
+                chunks.append(text)
+    flush()
+    return segments
+
+
+def _reject_urls_split_across_runs(root, where):
+    drawing_paragraph = "{http://schemas.openxmlformats.org/drawingml/2006/main}p"
+    for paragraph in root.iter(drawing_paragraph):
+        field = where + "/" + root.getroottree().getpath(paragraph)
+        for segment in _paragraph_run_segments(paragraph):
+            for url in HTTP_URL.findall(segment):
+                link_safe(url, field + "/text/link")
 
 
 def public_projection_safe(value, where):
@@ -411,6 +476,12 @@ def _clean_pptx(data, where, *, keep_notes=False, page_ids=None):
                 raw = ET.tostring(root, encoding='utf-8', xml_declaration=True)
             if name.endswith((".xml", ".rels")):
                 root = xml(raw, where + "/" + name)
+                copy_links = _slide_or_notes_part(name)
+                # Notes already join each paragraph before link_safe. Slide body
+                # text is stored per run, so a styled URL is checked only after
+                # those runs are joined.
+                if re.fullmatch(r"ppt/slides/slide[0-9]+\.xml", name):
+                    _reject_urls_split_across_runs(root, locations.get(name, where + "/" + name))
                 for parent in root.iter():
                     location = locations.get(name, where + '/' + name)
                     field = location + '/' + root.getroottree().getpath(parent)
@@ -450,8 +521,8 @@ def _clean_pptx(data, where, *, keep_notes=False, page_ids=None):
                                     parent.remove(child)
                         elif not keep_notes and local in ("notesMasterIdLst", "notesMasterId"):
                             parent.remove(child)
-                    text_safe(parent.text, field + '/text')
-                    text_safe(parent.tail, field + '/tail')
+                    _copy_text(parent.text, field + '/text', links=copy_links)
+                    _copy_text(parent.tail, field + '/tail', links=copy_links)
                     for key, value in parent.attrib.items():
                         text_safe(value, field + '/@' + key)
                 raw = ET.tostring(root, encoding="utf-8", xml_declaration=True)

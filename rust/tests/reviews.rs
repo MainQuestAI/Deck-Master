@@ -143,7 +143,7 @@ fn concurrent_v2_upgrade_preserves_versions_runs_builds_and_files() {
     let before = ops::get(path, None).unwrap();
     let history: Value = serde_json::to_value(store.history().unwrap()).unwrap();
     let file = store.add_file(b"retained build", "pptx").unwrap();
-    store.connection.execute_batch("DROP TABLE reviews; PRAGMA user_version=2;
+    store.connection.execute_batch("DROP TABLE reviews; ALTER TABLE run_pages DROP COLUMN preview_file; PRAGMA user_version=2;
         INSERT INTO runs(id,kind,status,max_calls,calls_used) VALUES (5,'image','cancelled',2,1);
         INSERT INTO run_pages(run_id,page_id,basis,status,result_file) VALUES (5,'p3','basis','unadopted','saved.png');").unwrap();
     store.connection.execute("INSERT INTO builds(id,version_id,input_digest,pptx_file,findings_json,missing_pages) VALUES (7,2,'digest',?,'[]','[\"p1\"]')", [&file]).unwrap();
@@ -193,9 +193,18 @@ fn concurrent_v2_upgrade_preserves_versions_runs_builds_and_files() {
             .unwrap(),
         store::FORMAT_VERSION
     );
-    for (table, expected) in tables.iter().zip(rows) {
+    for (table, mut expected) in tables.iter().zip(rows) {
+        if *table == "run_pages" {
+            for row in &mut expected {
+                row.push(rusqlite::types::Value::Null);
+            }
+        }
         assert_eq!(dump(&store, table), expected);
     }
+    assert_eq!(
+        ops::run_show(path, Some(5)).unwrap()["runs"][0]["pages"][0]["result_preview"],
+        Value::Null
+    );
     assert_eq!(
         std::fs::read(store.file(&file).unwrap()).unwrap(),
         b"retained build"

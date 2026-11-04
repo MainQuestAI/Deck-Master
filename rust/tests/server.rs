@@ -1236,3 +1236,133 @@ fn http_rejects_adoption_after_page_deleted() {
     );
     assert_eq!(ops::workspace(path).unwrap(), before);
 }
+
+#[test]
+fn unadopted_svg_candidate_preview_is_served_and_reads_do_not_render() {
+    use std::os::unix::fs::PermissionsExt;
+    let temp = tempfile::tempdir().unwrap();
+    let project = temp.path().join("project");
+    ops::new(&project, "合成比较".into()).unwrap();
+    edit(
+        &project,
+        1,
+        json!({"order":["p1"],"pages":[{"id":"p1","content":{"title":"增长","body_blocks":[{"type":"paragraph","text":"预期增长 10%"}]}}]}),
+    );
+    let wrapper = temp.path().join("python-wrapper");
+    let script = temp.path().join("tool.py");
+    let bomb = temp.path().join("bomb.sh");
+    let marker = temp.path().join("rendered");
+    std::fs::write(
+        &wrapper,
+        "#!/bin/sh\nexec /usr/bin/python3 \"$DECK_TEST_WRAPPER\" \"$@\"\n",
+    )
+    .unwrap();
+    std::fs::set_permissions(&wrapper, std::fs::Permissions::from_mode(0o755)).unwrap();
+    std::fs::write(
+        &script,
+        r#"import json, sys
+from pathlib import Path
+command, job_path = sys.argv[-2], sys.argv[-1]
+if command == "atoms":
+    print("[]")
+    raise SystemExit(0)
+if command != "check-page":
+    print("unexpected", command, file=sys.stderr)
+    raise SystemExit(1)
+job = json.loads(Path(job_path).read_text())
+svg = Path(job["pages"][0]["svg"]).read_bytes()
+preview = Path(job["output"]) / "preview.png"
+preview.parent.mkdir(parents=True, exist_ok=True)
+preview.write_bytes(b"PNG-CANDIDATE" if b"CANDIDATE" in svg else b"PNG-CURRENT")
+print(json.dumps({"preview": str(preview), "findings": []}))
+"#,
+    )
+    .unwrap();
+    std::fs::write(
+        &bomb,
+        "#!/bin/sh\necho rendered >> \"$DECK_TEST_MARKER\"\nexit 1\n",
+    )
+    .unwrap();
+    std::fs::set_permissions(&bomb, std::fs::Permissions::from_mode(0o755)).unwrap();
+    let run = |args: &[&str]| {
+        let output = Command::new(env!("CARGO_BIN_EXE_deck"))
+            .arg("--project")
+            .arg(&project)
+            .args(args)
+            .env("DECK_TOOLS_PYTHON", &wrapper)
+            .env("DECK_TEST_WRAPPER", &script)
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        serde_json::from_slice::<Value>(&output.stdout).unwrap()
+    };
+    let id = run(&["run", "start", "svg", "--pages", "p1"])["runs"][0]["id"]
+        .as_i64()
+        .unwrap();
+    let current = temp.path().join("current.svg");
+    let candidate = temp.path().join("candidate.svg");
+    std::fs::write(&current, b"<svg>CURRENT</svg>").unwrap();
+    std::fs::write(&candidate, b"<svg>CANDIDATE</svg>").unwrap();
+    let id_text = id.to_string();
+    let adopted = run(&["run", "result", &id_text, "p1", current.to_str().unwrap()]);
+    assert_eq!(adopted["adopted"], true);
+    let saved = run(&["run", "result", &id_text, "p1", candidate.to_str().unwrap()]);
+    assert_eq!(saved["adopted"], false);
+    let service = Service::with_env(
+        &project,
+        &[
+            ("DECK_TOOLS_PYTHON", bomb.as_os_str()),
+            ("DECK_TEST_MARKER", marker.as_os_str()),
+        ],
+    );
+    let reply = service.request("GET", "/api/deck", &[], "");
+    assert_eq!(
+        reply.status,
+        200,
+        "{}",
+        String::from_utf8_lossy(&reply.body)
+    );
+    let workspace = reply.json();
+    let page = &workspace["deck"]["pages"][0];
+    let run_page = &workspace["runs"][0]["pages"][0];
+    let current_svg = adopted["file"].as_str().unwrap();
+    let candidate_svg = saved["file"].as_str().unwrap();
+    assert_eq!(page["svg"]["file"], current_svg);
+    assert_ne!(page["preview"], candidate_svg);
+    assert_eq!(run_page["status"], "unadopted");
+    assert_eq!(run_page["result_file"], candidate_svg);
+    let preview = run_page["result_preview"]
+        .as_str()
+        .expect("candidate check-page preview");
+    assert_ne!(preview, candidate_svg);
+    assert_ne!(preview, page["preview"].as_str().unwrap());
+    assert!(preview.ends_with(".png"), "{preview}");
+    let fetch = |name: &str| {
+        let sha = name.split('.').next().unwrap();
+        let response = service.request("GET", &format!("/api/files/{sha}"), &[], "");
+        assert_eq!(response.status, 200, "{name}");
+        response.body
+    };
+    assert_eq!(fetch(preview), b"PNG-CANDIDATE");
+    assert_eq!(fetch(page["preview"].as_str().unwrap()), b"PNG-CURRENT");
+    let shown = Command::new(env!("CARGO_BIN_EXE_deck"))
+        .arg("--project")
+        .arg(&project)
+        .args(["run", "show", &id_text])
+        .env("DECK_TOOLS_PYTHON", &bomb)
+        .env("DECK_TEST_MARKER", &marker)
+        .output()
+        .unwrap();
+    assert!(
+        shown.status.success(),
+        "{}",
+        String::from_utf8_lossy(&shown.stderr)
+    );
+    let shown: Value = serde_json::from_slice(&shown.stdout).unwrap();
+    assert_eq!(shown["runs"][0]["pages"][0]["result_preview"], preview);
+    assert!(!marker.exists(), "reading a run rendered a preview");
+}
