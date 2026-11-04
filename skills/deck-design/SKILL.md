@@ -5,6 +5,8 @@ description: 独立设计方案、版式可行性与限定样页试作；消费�
 
 # Deck Design
 
+> 1.1.0 作者入口是 [`deck-skill/SKILL.md`](../../deck-skill/SKILL.md)，命令为 `deck`。本 Skill 是维护中的旧 Python 线，调用 `deck-master`（见 [RESOLVER.md](../RESOLVER.md)）。
+
 ## Use when
 
 只做视觉方案、模板/品牌分析、代表页布局、密度与阅读距离判断、先试一页或限定样页。

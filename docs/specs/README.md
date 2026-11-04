@@ -10,12 +10,15 @@
 
 ## 当前主线使用的增量与继承合同
 
+现行实现（1.1.0）：[Rust 重写开发稿](rust-rebuild/README.md)。核心在 `rust/`，生产工具在 `deck-tools/`，WebUI 在 `frontend/` 并由 `deck serve` 提供，新 Skill 在 `deck-skill/`。切片 S0–S6 已合入；发版说明见 [1.1.0](../releases/1.1.0.md)。
+
 下一轮规划入口：[商业表达能力开发套件](deck-master-business-expression-20261029/README.md)。
 这是 2026-10-29 整理的开发输入，包含 D00–D08 与条件卡 X01，尚未实施；
 不改变下列现行合同或证明新能力已经通过验收。
 
 | 目录 | 定位 |
 | --- | --- |
+| [Rust 重写](rust-rebuild/README.md) | 1.1.0 现行架构与切片合同；S0–S6 已合入 `main@abb785eb` |
 | [Content WebUI](deck-master-webui-content-methods-20261020/README.md) | PR130 已合入；固定版本读取、方向采用及审阅交接，原记录保留时点 |
 | [RC5 content methods](content-methods-rc5/README.md) | PR127 已合入；资源目录、Host 选择及冻结方法合同，实际证据按 SHA 读取 |
 | [RC4 increment](deck-master-next-iteration-20261019/README.md) | 继承的增量入口；N1–N6台账与方法/恢复合同，报告保持原候选身份 |

@@ -1,5 +1,7 @@
 # Deck Master 职责路由
 
+1.1.0 作者入口是单一 Skill [`deck-skill/SKILL.md`](../deck-skill/SKILL.md)，命令为 `deck`（见 [commands.md](../deck-skill/references/commands.md)）。本文件的四个入口仍对应维护中的旧 Python 线 `deck-master`（AGENTS.md 第 12 节），不调用 `deck`。
+
 | 原始意图 | 公开入口 | Runtime 范围 |
 | --- | --- | --- |
 | 新任务、完整作品、跨职责续作/修改、职责不明 | deck-master | 原始要求对应的 full_deck/content_only/design_trial/review_only/edit |

@@ -5,6 +5,8 @@ description: 从任务、材料或已有项目协调内容、设计、制作和�
 
 # Deck Master
 
+> 1.1.0 作者入口是 [`deck-skill/SKILL.md`](../../deck-skill/SKILL.md)，命令为 `deck`。本 Skill 是维护中的旧 Python 线，调用 `deck-master`（见 [RESOLVER.md](../RESOLVER.md)）。
+
 ## Use when
 
 新任务、完整制作、续作、局部修改或职责未明；需协调 Content、Design、Review 与授权内 Producer。

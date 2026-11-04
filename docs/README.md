@@ -6,13 +6,15 @@
 
 ## 使用 Deck Master
 
-1. [安装与首次运行](getting-started.md)：依赖、Host 要求、安装验证、只读示例与升级。
-   先用明确标注的只读示例理解界面；它不调用模型，也不代表真实制作验收。
-2. [README Quick Start](../README.md#quick-start)：有实际材料与外部 Host 时的任务流程；
-   Task ID、结果与授权必须来自真实执行，不能直接粘贴占位符或把复制交接当作模型调用。
-3. [任务索引](agent-task-index.md)：按内容、设计、审查、续作、修改、导出找到当前命令。
-4. [恢复手册](agent-recovery-playbook.md)：缺工具、冲突、未知回执、中断和历史版本的处理。
-5. [迁移说明](migration-to-rebuilt-core.md)：旧项目与旧命令的边界；不在旧 run 上直接初始化新格式。
+1.1.0 作者入口是 Rust 命令 `deck`、本机 `deck serve` 和 [deck-skill](../deck-skill/SKILL.md)。
+安装与命令见 [1.1.0 发版说明](releases/1.1.0.md) 和 [README Quick Start](../README.md#quick-start)。
+
+1. [安装与首次运行](getting-started.md)：`scripts/install.sh`、`deck serve`、Host 与渲染依赖、已知限制。
+2. [README Quick Start](../README.md#quick-start)：`deck new` / `put` / `run` / `build` / `serve`；ID 与路径必须来自真实执行。
+3. [Rust 重写开发稿](specs/rust-rebuild/README.md)：现行架构（Rust 核心 + deck-tools + WebUI）。
+4. [旧线任务索引](agent-task-index.md)：维护中的 `deck-master` CLI，不适用于 `deck`。
+5. [恢复手册](agent-recovery-playbook.md)：旧线缺工具、冲突、未知回执、中断和历史版本。
+6. [迁移说明](migration-to-rebuilt-core.md)：v0.9 旧 run 边界。Python 项目迁到 `deck` 用 `legacy-export` 再 `deck import`，见发版说明。
 
 没有模型、工具或审查能力时保留实际缺口。只读演示、工程检查、实际 Host 制作、
 专业认可与正式交付是不同证据，不承诺几分钟内生成任意完整成品。
@@ -25,13 +27,15 @@
 
 | 目的 | 入口 | 如何使用 |
 | --- | --- | --- |
-| 贡献和验证 | [CONTRIBUTING](../CONTRIBUTING.md)、[现行 CI](../.github/workflows/rebuild.yml) | 按修改范围运行必要检查；旧日志不能替代候选检查 |
+| 贡献和验证 | [CONTRIBUTING](../CONTRIBUTING.md)、[新线 CI](../.github/workflows/rust.yml)、[旧线 CI](../.github/workflows/rebuild.yml) | 新线改动看 rust.yml；旧线只在 main 更新后自动跑 |
 | 敏感安全问题 | [SECURITY](../SECURITY.md) | 按实际可用私密渠道处理，不在公开反馈中贴敏感证据 |
 | Agent 工作规则 | [AGENTS](../AGENTS.md) | 开发任务路由与安全边界，不是用户安装教程 |
-| 四职责入口 | [Skill resolver](../skills/RESOLVER.md) | Master / Content / Design / Review 共用方法源与 Runtime |
-| 运行时 schema | [活动合同目录](../src/deck_master/resources/contracts/) | 唯一活动 schema 来源；历史镜像不得反向覆盖 |
+| 1.1.0 Skill | [deck-skill](../deck-skill/SKILL.md) | 调用 `deck`；命令见 [commands.md](../deck-skill/references/commands.md) |
+| 旧四职责入口 | [Skill resolver](../skills/RESOLVER.md) | 维护中的 Master / Content / Design / Review |
+| 旧线 schema | [活动合同目录](../src/deck_master/resources/contracts/) | 旧 Python 线唯一活动 schema；历史镜像不得反向覆盖 |
 | 设计约束 | [DESIGN](../DESIGN.md) | 由该入口选择当前设计；旧原型和模拟按钮不证明已有服务 |
-| 工程规格与依赖 | [Spec 索引](specs/README.md) | 先读分配任务所需的增量和继承合同，不按全部历史卡重新实施 |
+| 工程规格与依赖 | [Spec 索引](specs/README.md) | 现行架构先读 rust-rebuild，再读分配任务所需的继承合同 |
+| 发版记录 | [releases](releases/README.md) | 1.1.0 与 1.0.0 源码准备记录；有无 tag/Release 另核实 |
 | 测试与审查证据 | [报告索引](reports/README.md) | 先核对日期、源码 SHA、范围、未执行项及是否同一发行文件 |
 | 历史/归档 | [归档索引](archive/README.md) | 追溯原始决定，不能充当当前命令说明 |
 
