@@ -2,6 +2,124 @@
 
 ## Unreleased
 
+## 1.1.0 — 2026-11-04
+
+Source versions: Python package `deck-master` `1.1.0`, Rust crate `deck` `1.1.0`,
+file-tools package `deck-tools` `1.1.0`, WebUI package `1.1.0`. Intended tag
+`v1.1.0`. Publication, tagging and GitHub Release remain separate from this
+source preparation. Basis is `main` after PR #272 (`abb785eb`).
+
+The authoring path is the Rust CLI `deck`, the standalone `deck-tools` Python
+package, `deck serve` with the embedded WebUI in `frontend/`, and the Codex
+Skill in `deck-skill/`. The previous Python workbench (`src/deck_master/`,
+`skills/`) stays in the tree for maintenance only.
+
+See [1.1.0 release notes](docs/releases/1.1.0.md).
+
+### Rust rebuild
+
+- **S1 core** (PR #252): `deck new`, `material add` / `material text`, `show`,
+  `get`, `put --base`, `restore`, and `export md`. Works live in
+  `<project>/.deck/` (SQLite + content-addressed files). Partial `put` merges
+  by unit; conflicts exit 5 and leave the current version unchanged.
+- **S2 content skill** (PR #256): `deck-skill/` content workflow for brief,
+  framing and page copy, calling the S1 commands.
+- **S3 tools and delivery** (PR #258): `deck-tools` compile / render / readback
+  / sanitize / doctor; `deck run` (image and svg), `deck build`,
+  `deck export pptx`, `deck doctor`, `deck asset add`. Late results after
+  cancel, and results whose page basis has changed, are stored and not adopted
+  automatically. Author spacing is applied on save and delivery (Humanizer);
+  semantic wording stays with the Host.
+- **S4 serve, API and WebUI** (PR #259, #250, #257, #260): `deck serve <project>`
+  binds `127.0.0.1` only and rejects non-local Host / Origin. HTTP covers deck
+  read/write, runs, build, file download, Markdown/PPTX export, restore, and
+  static assets. The #250 React 18 + Vite WebUI in `frontend/` is embedded by
+  `rust/build.rs` and shipped with the binary. Overview, gallery, copy/notes
+  editing, run status and cancel, build/download, and version restore are
+  wired to live project state. Browser storage failure does not block cancel.
+- **S5 page reviews and manual adoption** (PR #261): `deck review add` / `list`
+  / `resolve`; HTTP `GET|POST /api/reviews` and resolve. The WebUI lists open
+  reviews on the overview and on the page, saves human reviews, and marks them
+  resolved. Same-page image or SVG candidate comparison and `run adopt` are
+  available from the UI; adoption re-reads the candidate inside the write
+  transaction.
+- **S6 migration and install** (PR #262): `deck-master legacy-export` writes a
+  `legacy-export.v1` archive outside the old project; `deck import` creates a
+  new `.deck` project. The old directory is not modified. `scripts/install.sh`
+  builds the WebUI, installs `deck`, creates a dedicated deck-tools venv, and
+  links `deck-skill/` for Codex. It does not activate or roll back a managed
+  Python release.
+
+Slice design remains in the [Rust rebuild plan](docs/specs/rust-rebuild/README.md).
+
+### Fixes
+
+- **#263**: new pages no longer reuse deleted page ids.
+- **#264**: a second result for the same run page is kept as an explicit
+  candidate instead of replacing the first.
+- **#265**: export sanitizer treats ordinary public URL paths as public, and
+  still rejects local-file embeddings (`file:/`, Windows drive paths).
+- **#266**: native-table readback checks cell visibility and non-empty titles
+  against declared content.
+- **#267**: build input digest includes compiler settings, so a settings-only
+  change is reported as `input_changed`.
+- **#268**: run listing reuses per-page basis digests within one poll instead
+  of recomputing them for every historical run.
+- **#269**: WebUI connects reviews and fixed left/right candidate comparison
+  (current work on the left, selected candidate on the right). SVG comparison
+  uses compiled previews. Polling does not replace an open comparison.
+- **#272** (R1–R6):
+  - candidate comparison prompts a reopen when that page's production basis
+    changes (image: content/layout/purpose/style; svg: content/image/style);
+  - export sanitizer rejects credential-bearing URLs, including credentials
+    split across styled runs, and single-slash `file:` / forward-slash drive
+    URLs embedded in public links;
+  - native tables that leave the slide are reported on readback;
+  - presentation mode ends when its page is gone, and Space stays with the
+    focused presentation controls.
+
+### CI and cleanup
+
+- **#251**: `AGENTS.md` is the single development standard; rust-rebuild plan
+  v1.2 is in-tree.
+- **#253**: routine legacy CI is scoped and the default matrix is reduced.
+- **#254**: automatic legacy checks run after `main` updates, not on every
+  feature-branch push.
+- **#255**: `rust.yml` checks the new line on pull requests.
+- **#249**: remove byte-identical spec schema mirrors (overdefense P0).
+
+Two workflows: [`rust.yml`](.github/workflows/rust.yml) covers `rust/` and
+`deck-tools/` on pull requests and `main`; [`rebuild.yml`](.github/workflows/rebuild.yml)
+covers the Python line on `main` only. Render tests that need
+rsvg-convert/soffice stay local (`-m "not render"` in CI).
+
+### Also on this source line (after v1.0.0, Python workbench)
+
+These landed on `main` after `v1.0.0` and remain in the maintenance Python
+line; they are not the 1.1.0 authoring path.
+
+- PR #189 integration closeout; PR #209 performance v1.2; PR #211 optional
+  Humanizer review; PR #197 verified Pillow 13.
+- PR #212 content-completion handoff; PR #213 reap owned runtime; PR #214
+  content delivery guidance; PR #215 main iteration 2026-10-27; PR #216
+  business-expression suite v0.2.
+
+### Known limitations
+
+- UNC paths (`\\server\share`) are not covered by local-path sanitization.
+- `GET /api/export/md` does not run the export credential check used on PPTX
+  slide text.
+- PPTX has been rechecked through LibreOffice rendering in the tool tests.
+  Desktop editing in WPS and Microsoft PowerPoint was not repeated for this
+  source line.
+- Native editable PPT still uses shapes and text. Tables and charts are
+  composed shapes/text, not Office-native spreadsheet-backed objects.
+- `doctor` finding a font family does not prove LibreOffice can render every
+  glyph. Fontconfig/LibreOffice Chinese glyph substitution remains as
+  documented in the [first-run guide](docs/getting-started.md#known-limitations).
+- Professional human review and application-specific desktop editing stay
+  unevaluated until actually performed.
+
 ## 1.0.0 — release preparation, 2026-10-21
 
 Python package `1.0.0`; intended tag `v1.0.0`. Publication and final candidate
