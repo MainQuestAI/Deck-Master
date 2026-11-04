@@ -5,6 +5,8 @@ description: 独立策划、论证、逐页写稿和口播：只做策划、按�
 
 # Deck Content
 
+> 1.1.0 作者入口是 [`deck-skill/SKILL.md`](../../deck-skill/SKILL.md)，命令为 `deck`。本 Skill 是维护中的旧 Python 线，调用 `deck-master`（见 [RESOLVER.md](../RESOLVER.md)）。
+
 ## Use when
 
 材料研究、受众目标、内容规划、完整逐页稿、确认稿改写、限定页/字段局改、只写 cues/verbatim 口播，或 content_full。

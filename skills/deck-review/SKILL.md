@@ -5,6 +5,8 @@ description: 只读审查项目快照、外部PPTX或明确文件集，检查内
 
 # Deck Review
 
+> 1.1.0 作者入口是 [`deck-skill/SKILL.md`](../../deck-skill/SKILL.md)，命令为 `deck`。本 Skill 是维护中的旧 Python 线，调用 `deck-master`（见 [RESOLVER.md](../RESOLVER.md)）。
+
 ## Use when
 
 用户只要审稿、批评、检查事实/推论/页序/视觉/口播/转换/隐私或核对交付文件；源可以是固定项目快照、外部文件或明确文件集。
