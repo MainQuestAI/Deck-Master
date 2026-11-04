@@ -70,10 +70,9 @@ managed Python release.
 
 Options: `--prefix DIR`, `--skill-dir PATH`, `--dry-run`. If `~/.local/bin` is
 not on `PATH`, add it or call that `deck` by its full path. The skill path must
-be new, or already a link to this checkout's `deck-skill/`. The script leaves
-a different file or link unchanged and exits 2. A symlink that points
-elsewhere prints `已存在且指向其他位置`; remove it and run the script again, or
-pass another `--skill-dir`. See the [first-run guide](docs/getting-started.md#upgrade).
+be new, or already the same link; the script leaves a different file or link
+unchanged and exits with an error. The stale-symlink case is in the
+[1.1.0 notes](docs/releases/1.1.0.md#skill-link-already-points-elsewhere).
 
 After install, `deck new ./my-deck --title '方案标题'` creates a work
 directory. The linked skill describes the first-run commands.
@@ -190,12 +189,8 @@ Keep the printed URL private. The server binds `127.0.0.1` only.
 5. Reviews are stored on the version at add time. The UI writes human reviews;
    CLI `self_check` is the current Host's own check.
 
-The 2026-11-04 macOS check is in the
+The 2026-11-04 maintainer check is in the
 [1.1.0 release notes](docs/releases/1.1.0.md#maintainer-acceptance-2026-11-04).
-It is not a full acceptance. Professional content review, WPS, and PowerPoint
-desktop editing were not part of it. See
-[known limitations](docs/getting-started.md#known-limitations).
-Follow-ups: [#274](https://github.com/MainQuestAI/Deck-Master/issues/274).
 
 ## Diagnostics
 
