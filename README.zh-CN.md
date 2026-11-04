@@ -16,7 +16,7 @@ Deck Master 是面向商业方案创作与表达的 AI 原生工作台，帮助�
 
 这些原则指导产品发展。当前工作台通过 `deck` 命令和本机 Web UI 连接内容策划、可编辑 SVG/PPT 制作、审查与修改。现阶段的实现范围见[能力边界](#能力边界)。
 
-**版本：** `1.1.0`（Rust 命令 `deck`、Python 包 `deck-master` 与 `deck-tools`、WebUI）。源码版本、构建产物、当前安装和公开 GitHub Release 分别记录。使用前请阅读[安装与首次运行指南](docs/getting-started.md)。迁移、验证与已知限制见[1.1.0 发版说明](docs/releases/1.1.0.md)。**许可证：** Apache-2.0。
+**版本：** `1.1.0`（Rust 命令 `deck`、Python 包 `deck-master` 与 `deck-tools`、WebUI）。源码版本、构建产物、当前安装和公开 GitHub Release 分别记录。使用前请阅读[安装与首次运行指南](docs/getting-started.md)。迁移、2026-11-04 维护者核对与已知限制见[1.1.0 发版说明](docs/releases/1.1.0.md)。**许可证：** Apache-2.0。
 
 1.1.0 的作者路径是 `rust/` 核心、`deck-tools/` 生产工具、`frontend/` 中由 `deck serve` 提供的 WebUI，以及 `deck-skill/` 中的 Codex Skill。从普通材料目录即可开始，无须 PPT Master 后端或页面库。旧 Python 工作台（`src/deck_master/` 的 `deck-master`，以及 `skills/` 下四个 Skill）只做维护。
 
@@ -40,8 +40,11 @@ Deck Master 服务于需要讲清商业方案的人：解决方案架构师、�
 
 可选参数：`--prefix DIR`、`--skill-dir PATH`、`--dry-run`。若
 `~/.local/bin` 不在 PATH 中，请加入，或用该目录下 `deck` 的完整路径。
-Skill 路径必须是新的，或已经是指向本仓库 `deck-skill/` 的同一链接；已有
-其他文件或链接时脚本报错，不会覆盖。
+Skill 路径必须是新的，或已经是指向本仓库 `deck-skill/` 的同一链接。已有
+其他文件或链接时脚本以退出码 2 停下，不会覆盖。若 `~/.codex/skills/deck`
+已是指向别处的软链接，脚本打印「已存在且指向其他位置」。移走该链接后重新
+运行 `scripts/install.sh`，或改用 `--skill-dir`。2026-11-04 维护者的 macOS
+安装在移走这条旧链接后完成。见[首次运行指南](docs/getting-started.md#upgrade)。
 
 安装后用 `deck new ./my-deck --title '方案标题'` 新建作品目录。链接的
 Skill 说明首跑命令。
@@ -138,7 +141,7 @@ run 状态与停止、候选比较与手动采用、构建与 Markdown/PPTX 下�
 4. 渲染器与字体缺口以退出码 3（`needs_tool`）报告实际原因。
 5. 意见绑定添加时的版本。界面写入人工意见；CLI 的 `self_check` 只表示当前 Host 自检。
 
-专业人工审查与桌面编辑验证，在实际执行前保持未评估。见[已知限制](docs/getting-started.md#known-limitations)。
+2026-11-04 维护者在 macOS 上核对过命令安装、旧项目迁移，以及 LibreOffice / officecli 的结构校验；Codex 能自己触发 Skill 并导出可读稿。这不是整版验收通过。官方 SVG→`deck build`→`deck export pptx` 全链路、WPS / PowerPoint 打开效果、候选比较的浏览器路径，以及 #226 这类 22 页客户稿，仍待人工确认。记录见[1.1.0 发版说明](docs/releases/1.1.0.md#maintainer-acceptance-2026-11-04)，后续在 [#274](https://github.com/MainQuestAI/Deck-Master/issues/274)。专业内容审查不在该次核对里。见[已知限制](docs/getting-started.md#known-limitations)。
 
 ## 诊断
 

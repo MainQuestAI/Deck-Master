@@ -2,19 +2,26 @@
 
 ## Unreleased
 
+- Record the 2026-11-04 maintainer acceptance of tag `v1.1.0`: what that macOS
+  check verified, and what it left open. Follow-ups stay on #274. The published
+  Release body still says "Intended tag" and that publication is separate from
+  source preparation; that sentence is stale and this entry does not edit the
+  Release.
+
 ## 1.1.0 — 2026-11-04
 
 Source versions: Python package `deck-master` `1.1.0`, Rust crate `deck` `1.1.0`,
-file-tools package `deck-tools` `1.1.0`, WebUI package `1.1.0`. Intended tag
-`v1.1.0`. Publication, tagging and GitHub Release remain separate from this
-source preparation. Basis is `main` after PR #272 (`abb785eb`).
+file-tools package `deck-tools` `1.1.0`, WebUI package `1.1.0`. Tag `v1.1.0`
+is `292fb60a`. Basis is `main` after PR #272 (`abb785eb`), which that tag
+contains.
 
 The authoring path is the Rust CLI `deck`, the standalone `deck-tools` Python
 package, `deck serve` with the embedded WebUI in `frontend/`, and the Codex
 Skill in `deck-skill/`. The previous Python workbench (`src/deck_master/`,
 `skills/`) stays in the tree for maintenance only.
 
-See [1.1.0 release notes](docs/releases/1.1.0.md).
+See [1.1.0 release notes](docs/releases/1.1.0.md), including the
+[2026-11-04 maintainer acceptance](docs/releases/1.1.0.md#maintainer-acceptance-2026-11-04).
 
 ### Rust rebuild
 
@@ -111,10 +118,18 @@ line; they are not the 1.1.0 authoring path.
 - `GET /api/export/md` does not run the export credential check used on PPTX
   slide text.
 - PPTX has been rechecked through LibreOffice rendering in the tool tests.
-  Desktop editing in WPS and Microsoft PowerPoint was not repeated for this
-  source line.
-- `scripts/install.sh` is verified only on Linux CI (`ubuntu-latest`); it was
-  not verified on macOS.
+  The 2026-11-04 macOS check also compared a LibreOffice render of an imported
+  15-page build with its sample (pixel difference at most 0.02%) and ran
+  `officecli validate` (0 errors; edit, save, and re-validate on a copy).
+  Desktop editing in WPS and Microsoft PowerPoint was not run in that check.
+- `scripts/install.sh` runs on Linux CI (`ubuntu-latest`). One maintainer
+  macOS install on 2026-11-04 completed after a stale `~/.codex/skills/deck`
+  symlink was removed. With that symlink present the script exits 2
+  (`已存在且指向其他位置`) and does not replace the link.
+- That same check did not run the candidate-comparison browser UI, the
+  official Skill path `deck build` / `deck export pptx` after a successful
+  svg, or the 22-page manuscript in #226. `visual_spec.intent` and old
+  revisions were not migrated. Follow-ups: #274.
 - The legacy test
   `test_small_json_cache_detects_corruption_and_returns_independent_objects`
   can fail on Linux: the cache signature includes ctime and the test rewrites
@@ -125,8 +140,7 @@ line; they are not the 1.1.0 authoring path.
 - `doctor` finding a font family does not prove LibreOffice can render every
   glyph. Fontconfig/LibreOffice Chinese glyph substitution remains as
   documented in the [first-run guide](docs/getting-started.md#known-limitations).
-- Professional human review and application-specific desktop editing stay
-  unevaluated until actually performed.
+- Professional content review was not part of the 2026-11-04 check.
 
 ## 1.0.0 — release preparation, 2026-10-21
 

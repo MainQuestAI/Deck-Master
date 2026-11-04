@@ -41,8 +41,10 @@ with `--prefix DIR`), creates a Python 3.12 venv for `deck-tools` at
 prints the plan and checks the skill path without writing.
 
 If `~/.local/bin` is not on `PATH`, add it or call that `deck` by its full
-path. The skill path must be new, or already the same link; a different file
-or link is left unchanged and the script exits 2.
+path. The skill path must be new, or already a link to this checkout's
+`deck-skill/`. A different file or link is left unchanged and the script
+exits 2. A symlink that points somewhere else prints `已存在且指向其他位置`.
+See [Upgrade](#upgrade).
 
 A fresh install finds deck-tools in the prefix venv, so it does not need
 `DECK_TOOLS_PYTHON`. deck-tools is an editable install of this checkout;
@@ -81,6 +83,13 @@ still follow [migration-to-rebuilt-core.md](migration-to-rebuilt-core.md).
 
 Re-running `scripts/install.sh` upgrades an existing install. An existing
 venv is reused and the `deck` binary is overwritten.
+
+If `~/.codex/skills/deck` (or the path given to `--skill-dir`) is a symlink
+to somewhere other than this checkout's `deck-skill/`, the script exits 2 and
+prints `已存在且指向其他位置`. It leaves the link in place. Remove that
+symlink and run the script again, or pass a different `--skill-dir`. The
+2026-11-04 maintainer macOS install hit this exit and completed after the
+stale symlink was removed.
 
 ## Legacy Python workbench (1.0.0)
 
@@ -124,9 +133,13 @@ Task routing: [agent-task-index.md](agent-task-index.md).
 - `GET /api/export/md` does not run the credential check used on exported
   PPTX slide text.
 - PPTX has been rechecked through LibreOffice (`soffice`) rendering in the
-  tool tests. Desktop editing in WPS and Microsoft PowerPoint was not
-  repeated for 1.1.0. Actual WPS editing was also not verified on the PR125
-  1.0.0 observation because the Mac device locked.
+  tool tests. The 2026-11-04 maintainer check on one Mac also compared a
+  LibreOffice render of an imported 15-page build with its sample (pixel
+  difference at most 0.02%) and ran `officecli validate` (0 errors; edit,
+  save, and re-validate on a copy). Desktop open and edit in WPS and
+  Microsoft PowerPoint was not run in that check. Actual WPS editing was also
+  not verified on the PR125 1.0.0 observation because the Mac device locked.
+  Scope of that check: [1.1.0 notes](releases/1.1.0.md#maintainer-acceptance-2026-11-04).
 - Native editable PPT output uses shapes and text. Tables/charts are composed
   shapes/text rather than Office-native spreadsheet-backed data objects.
 - `doctor` finding a font family does not prove LibreOffice can render every

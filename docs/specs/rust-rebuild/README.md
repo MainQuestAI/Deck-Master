@@ -381,9 +381,9 @@ Host 按需读取：`deck show`（摘要）、`deck get --pages p3,p4`（指定�
 
 ## 9. 未验证
 
-开发时写下的条目。1.1.0 源码线上的状态：
+开发时写下的条目。1.1.0 源码线上的状态见下列各项。2026-11-04 维护者在 macOS 上的核对写在[1.1.0 发版说明](../../releases/1.1.0.md#maintainer-acceptance-2026-11-04)，后续在 [#274](https://github.com/MainQuestAI/Deck-Master/issues/274)。那次核对不是整版通过。
 
-- 带表格、图标、图片素材的页面：`deck-tools` 与 `rust/tests/delivery.rs` 覆盖编译、回读和原生表格；22 页整稿规模未作为本仓库 CI 用例。
+- 带表格、图标、图片素材的页面：`deck-tools` 与 `rust/tests/delivery.rs` 覆盖编译、回读和原生表格；22 页整稿规模未作为本仓库 CI 用例。#226 的 22 页客户稿不在 2026-11-04 那台机器上，验收用的是 15 页和 20 页替代稿。
 - `codex app-server` 调用 ImageGen：界面仍不启动生图或 SVG 任务；Host 走 `deck run`。此项仍未验证。
 - SQLite 项目文件放在 iCloud 等同步目录：未在 1.1.0 准备中重测。
 - 旧线全量测试：`rebuild.yml` 在 `main` 更新后运行；功能分支 PR 不自动跑旧线。
