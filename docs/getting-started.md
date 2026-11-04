@@ -127,7 +127,7 @@ Task routing: [agent-task-index.md](agent-task-index.md).
 - PPTX has been rechecked through LibreOffice (`soffice`) rendering in the
   tool tests. The 2026-11-04 maintainer check is in the
   [1.1.0 notes](releases/1.1.0.md#maintainer-acceptance-2026-11-04).
-  Actual WPS editing was also not verified on the PR125 1.0.0 observation
+  Actual WPS editing was not verified on the PR125 1.0.0 observation
   because the Mac device locked.
 - Native editable PPT output uses shapes and text. Tables/charts are composed
   shapes/text rather than Office-native spreadsheet-backed data objects.
