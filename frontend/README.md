@@ -48,4 +48,4 @@ npm test
 npm ci && npm run build
 ```
 
-纯逻辑测试使用 Node 内置 `node --test`，无新增依赖。浏览器联调使用仓库外临时合成项目；不将截图、运行日志或作品提交入库。
+测试使用 Node 内置 `node --test`。组件测试另外使用开发依赖 jsdom（DOM）和 esbuild（JSX 加载）。浏览器联调使用仓库外临时合成项目；不将截图、运行日志或作品提交入库。
