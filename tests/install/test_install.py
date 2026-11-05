@@ -47,6 +47,7 @@ def test_dry_run_prints_install_plan(tmp_path: Path) -> None:
     assert "npm test" not in output
     assert "ln -s" in output
     assert str(REPO / "deck-skill") in output
+    assert f"deck-bin={prefix / 'bin' / 'deck'}" in output
     assert not prefix.exists()
     assert not skill.exists()
 
@@ -86,7 +87,8 @@ def test_skill_link_to_another_target_errors(tmp_path: Path) -> None:
         ]
     )
     assert result.returncode == 2
-    assert "其他位置" in result.stderr
+    assert "已存在且指向其他位置" in result.stderr
+    assert "不要删除它指向的目录" in result.stderr
     assert Path(os.readlink(skill)) == other
     assert not prefix.exists()
 
