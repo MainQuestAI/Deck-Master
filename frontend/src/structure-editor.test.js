@@ -134,6 +134,63 @@ test('todo/refs save sends only those page fields', async t => {
   }]);
 });
 
+test('mounted structure drawer retains a 409 draft through polling and reopening until explicit rebase and save', async t => {
+  await mount(t);
+  await click('添加列');
+  await fill('表格 1 列标题 3', '负责人');
+  await fill('表格 1 第 1 行 第 3 列', '晚班团队');
+  await click('删除表格 1 第 2 行');
+  const mine = structuredClone(state.drafts.p1);
+  payload.version = 8;
+  payload.deck.pages[0].content.title = '另一入口更新的标题';
+  payload.deck.pages[0].notes = '另一入口更新的讲稿';
+  const server = structuredClone(payload.deck.pages[0]);
+  const currentAuthor = structuredClone(server);
+  for (const key of ['image', 'svg', 'preview']) delete currentAuthor[key];
+  const fetchDeck = globalThis.fetch;
+  const conflict = { exit_code: 5, base: 7, submitted: { pages: [{ id: 'p1', content: mine.page.content }] }, conflicts: [{ unit: 'pages/p1', current: currentAuthor }] };
+  globalThis.fetch = async (url, options = {}) => {
+    if (options.method !== 'PUT') return fetchDeck(url, options);
+    writes.push({ url, patch: JSON.parse(options.body) });
+    return Response.json(conflict, { status: 409 });
+  };
+  await click('保存正文与讲稿');
+  assert.deepEqual(writes, [{ url: '/api/deck?base=7', patch: conflict.submitted }]);
+  assert.deepEqual(state.drafts.p1, { ...mine, conflict });
+  const saveButton = () => [...document.querySelectorAll('button')].find(node => node.textContent === '保存正文与讲稿');
+  assert.equal(saveButton().disabled, true);
+  const current = document.querySelector('[role="alert"] details');
+  assert.ok(current.textContent.includes(server.content.title));
+  assert.ok(current.textContent.includes(server.notes));
+  await click('收起并保留输入');
+  payload.version = 9;
+  payload.deck.pages[0].content.title = '另一入口再次更新的标题';
+  for (let i = 0; i < 3; i++) await act(async () => { t.mock.timers.tick(1500); });
+  assert.equal(state.workspace.version, 9);
+  await act(async () => { state.editPage('p1'); });
+  assert.deepEqual(state.drafts.p1, { ...mine, conflict });
+  assert.equal(input('表格 1 列标题 3').value, '负责人');
+  assert.equal(input('表格 1 第 1 行 第 3 列').value, '晚班团队');
+  assert.ok(document.querySelector('[role="alert"] details').textContent.includes(payload.deck.pages[0].content.title));
+  assert.equal(saveButton().disabled, true);
+  await act(async () => { t.mock.timers.tick(1500); });
+  assert.equal(writes.length, 1);
+  await click('保留我的修改，以当前版本继续');
+  assert.equal(state.drafts.p1.base, 9);
+  assert.equal(state.drafts.p1.conflict, null);
+  assert.deepEqual(draft(), mine.page);
+  assert.equal(saveButton().disabled, false);
+  assert.equal(writes.length, 1);
+  globalThis.fetch = fetchDeck;
+  await click('保存正文与讲稿');
+  assert.deepEqual(writes[1], { url: '/api/deck?base=9', patch: conflict.submitted });
+  assert.equal(writes.length, 2);
+  assert.deepEqual(payload.deck.pages[0].content, mine.page.content);
+  assert.equal(payload.deck.pages[0].notes, server.notes);
+  assert.equal(state.drafts.p1, undefined);
+  assert.equal(state.drawer, null);
+});
+
 test('notes-only save excludes content and all unrelated fields', async t => {
   await mount(t);
   await fill('讲稿', '只更新讲稿');
