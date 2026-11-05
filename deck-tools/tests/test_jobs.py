@@ -1,4 +1,5 @@
 import json
+from io import BytesIO
 from pathlib import Path
 import subprocess
 import sys
@@ -7,10 +8,12 @@ import xml.etree.ElementTree as ET
 
 import pytest
 from PIL import Image, PngImagePlugin
+from pptx import Presentation
+from pptx.util import Inches
 from deck_tools.jobs import compile_job, projection
 from deck_tools.atoms import visible_atoms
 from deck_tools.compiler.native import notes_records
-from deck_tools.sanitize import OperationError
+from deck_tools.sanitize import OperationError, pptx
 from hostenv import resolve_host_font
 
 
@@ -193,6 +196,81 @@ def test_exported_rich_text_keeps_url_whose_path_is_bold(tmp_path):
     result = compile_job(_rich_text_export_job(tmp_path, runs, notes=body))
     assert result["findings"]["status"] == "pass"
     assert body in _slide_paragraphs(result["pptx"])
+    namespace = {"a": "http://schemas.openxmlformats.org/drawingml/2006/main"}
+    root = ET.fromstring(_part_text(result["pptx"], "ppt/slides/slide1.xml"))
+    bold_run = root.find('.//a:r[a:t="/home/products"]', namespace)
+    assert bold_run is not None
+    assert bold_run.find("a:rPr", namespace).get("b") == "1"
+
+
+def test_exported_rich_text_keeps_bold_query_path_that_only_looks_local(tmp_path):
+    body = "https://example.com/open?src=/Users/x"
+    runs = [("https://example.com/open?src=", False), ("/Users/x", True)]
+    result = compile_job(_rich_text_export_job(tmp_path, runs))
+    assert result["findings"]["status"] == "pass"
+    assert body in _slide_paragraphs(result["pptx"])
+    namespace = {"a": "http://schemas.openxmlformats.org/drawingml/2006/main"}
+    root = ET.fromstring(_part_text(result["pptx"], "ppt/slides/slide1.xml"))
+    bold_run = root.find('.//a:r[a:t="/Users/x"]', namespace)
+    assert bold_run is not None
+    assert bold_run.find("a:rPr", namespace).get("b") == "1"
+
+
+def test_exported_rich_text_rejects_local_path_after_public_url(tmp_path):
+    runs = [("https://example.com/home/products ", False),
+            ("/Users/example/document.txt", True)]
+    with pytest.raises(OperationError):
+        compile_job(_rich_text_export_job(tmp_path, runs))
+
+
+def _pptx_with_text_boundary(tmp_path, before, after, boundary="br"):
+    presentation = Presentation()
+    slide = presentation.slides.add_slide(presentation.slide_layouts[6])
+    text_frame = slide.shapes.add_textbox(Inches(1), Inches(1), Inches(8), Inches(2)).text_frame
+    paragraph = text_frame.paragraphs[0]
+    paragraph.add_run().text = before
+    if boundary == "br":
+        paragraph.add_line_break()
+    elif boundary == "paragraph":
+        paragraph = text_frame.add_paragraph()
+    elif boundary == "textbox":
+        paragraph = slide.shapes.add_textbox(Inches(1), Inches(3), Inches(8), Inches(2)).text_frame.paragraphs[0]
+    paragraph.add_run().text = after
+    source = tmp_path / "boundary.pptx"
+    presentation.save(source)
+    return source
+
+
+# Related counterexamples: test_exported_rich_text_still_rejects_local_path_across_runs
+# and test_exported_text_rejects_url_credentials (including notes). Migration tests
+# test_cleanup_rejection_names_actual_slide_field_and_rule cover attributes;
+# test_url_exemption_preserves_path_and_credential_checks covers link-rule samples.
+# Keep hard breaks, paragraphs and textboxes separate so they cannot invent a URL.
+@pytest.mark.parametrize("boundary", ["br", "paragraph", "textbox"])
+def test_sanitize_does_not_join_url_credentials_across_text_boundaries(tmp_path, boundary):
+    fragments = ["https://example.com/open?api_", "key=synthetic_secret"]
+    source = _pptx_with_text_boundary(tmp_path, *fragments, boundary=boundary)
+    namespace = {"a": "http://schemas.openxmlformats.org/drawingml/2006/main"}
+    root = ET.fromstring(_part_text(source, "ppt/slides/slide1.xml"))
+    if boundary == "br":
+        paragraphs = root.findall(".//a:p", namespace)
+        assert len(paragraphs) == 1
+        assert [node.tag.rsplit("}", 1)[-1] for node in paragraphs[0]] == ["r", "br", "r"]
+    clean = BytesIO(pptx(source.read_bytes(), "boundary.pptx"))
+    assert _slide_paragraphs(clean) == fragments
+    clean.seek(0)
+    root = ET.fromstring(_part_text(clean, "ppt/slides/slide1.xml"))
+    assert len(root.findall(".//a:br", namespace)) == (1 if boundary == "br" else 0)
+
+
+@pytest.mark.parametrize("fragments", [
+    ["https://example.com/open?api_key=synthetic_secret", "Public text"],
+    ["Public text", "https://example.com/open?api_key=synthetic_secret"],
+])
+def test_sanitize_rejects_url_credentials_on_either_side_of_hard_break(tmp_path, fragments):
+    source = _pptx_with_text_boundary(tmp_path, *fragments)
+    with pytest.raises(OperationError):
+        pptx(source.read_bytes(), "boundary.pptx")
 
 
 @pytest.mark.parametrize("runs", [
