@@ -34,15 +34,17 @@ Deck Master 服务于需要讲清商业方案的人：解决方案架构师、�
 ./scripts/install.sh
 ```
 
-脚本会构建 Web UI，把 `deck` 装到 `~/.local/bin`，用 Python 3.12 在
-`~/.local/share/deck/venv` 建立独立的 deck-tools 环境，并把 `deck-skill/`
+脚本会构建 Web UI，把 `deck` 装到 `~/.local/bin/deck`（`--prefix` 时为
+`<prefix>/bin/deck`，不是 `<prefix>/deck`），用 Python 3.12 在
+`<prefix>/share/deck/venv` 建立独立的 deck-tools 环境，并把 `deck-skill/`
 链接到 `~/.codex/skills/deck`。不执行托管 Python 发行版的激活或回滚。
 
 可选参数：`--prefix DIR`、`--skill-dir PATH`、`--dry-run`。若
-`~/.local/bin` 不在 PATH 中，请加入，或用该目录下 `deck` 的完整路径。
-Skill 路径必须是新的，或已经是指向本仓库 `deck-skill/` 的同一链接；已有
-其他文件或链接时脚本报错，不会覆盖。旧软链接的情况见
-[1.1.0 发版说明](docs/releases/1.1.0.md#skill-link-already-points-elsewhere)。
+`<prefix>/bin` 不在 PATH 中，请加入，或直接运行 `<prefix>/bin/deck`。
+Skill 路径必须是新的，或已经是指向本仓库 `deck-skill/` 的同一链接。
+指向其他位置的软链接会使脚本退出 2，并提示「已存在且指向其他位置」；
+只删除该软链接后再运行。步骤见
+[安装说明](docs/getting-started.md#install-from-source)。
 
 安装后用 `deck new ./my-deck --title '方案标题'` 新建作品目录。链接的
 Skill 说明首跑命令。
@@ -73,7 +75,7 @@ deck-master legacy-export <project> <out>
 deck import <out> <new>
 ```
 
-`<out>` 必须在 `<project>` 之外。导入后的原图和 SVG 以 `basis` `imported` 写入，总览里这些页显示为已过期。`deck export pptx` 会报告 `input_changed`。
+`<out>` 必须在 `<project>` 之外。导入后的原图和 SVG 以 `basis` `imported` 写入，总览里这些页显示为依据已变。`deck export pptx` 会报告 `input_changed`。未写入 purpose 的 `visual_spec.intent`，以及当前修订以外的旧修订，会出现在 `unmapped`。
 
 最近 PPTX 清洗成功后才可下载，保留其自身的页序和讲稿。清洗失败或缺工具时，
 正文仍可导入、编辑；报告中的 `last_export:false` 与 `unmapped` 会说明最近 PPTX

@@ -14,7 +14,9 @@ export DECK_TOOLS_PYTHON="$PWD/.venv/bin/python"
 ln -s "$PWD/deck-skill" ~/.codex/skills/deck
 ```
 
-软链接目标已存在时，先查看它，不覆盖其他 Skill。下文的 `deck` 指 `~/.local/bin/deck`；若它不在 PATH，直接用完整命令路径。`DECK_PROJECT` 是作者指定的新作品目录，`SOURCE_FILE` 是作者指定的一份原材料；不要根据示例搜索 HOME 或补读相邻目录。
+软链接 `~/.codex/skills/deck` 已存在且指向其他位置时，`scripts/install.sh` 退出 2，并打印「已存在且指向其他位置」。只删除该软链接，不要删除它指向的目录，然后重新运行；或者改用 `--skill-dir`。
+
+下文的 `deck` 指 `~/.local/bin/deck`。安装用了非默认 `--prefix` 时，二进制在 `<prefix>/bin/deck`，不在 `<prefix>/deck`。`<prefix>/bin` 不在 PATH 时，每条命令都用这个完整路径。`DECK_PROJECT` 是作者指定的新作品目录，`SOURCE_FILE` 是作者指定的一份原材料；不要根据示例搜索 HOME 或补读相邻目录。
 
 ## 新建与读材料
 

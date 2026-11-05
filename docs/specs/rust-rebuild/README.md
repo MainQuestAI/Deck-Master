@@ -194,7 +194,7 @@ svg 类没有外部付费调用，不需要 `run call`，也没有 max_calls。�
 
 ### 3.6 构建与导出
 
-- `deck build`：取每页当前的 SVG，调用 `deck_tools build`（编译、回读、清洗），并记录输入摘要：页序、每页 svg 与 notes、画布、字体、素材 ID 对应的不可变文件。素材映射按 ID 排序，不包含本机绝对路径；正文变化单独通过 SVG 过期提示。缺 SVG 的页不进入 PPTX；SVG 已过期的页照常编入，回读会报出文字不一致。
+- `deck build`：取每页当前的 SVG，调用 `deck_tools build`（编译、回读、清洗），并记录输入摘要：页序、每页 svg 与 notes、画布、字体、素材 ID 对应的不可变文件。素材映射按 ID 排序，不包含本机绝对路径；正文变化单独通过 SVG 过期提示。缺 SVG 的页不进入 PPTX；SVG 已过期的页照常编入，回读会报出文字不一致。刚完成的 build 仍可能列出 `stale_pages`：它比较的是 SVG basis 与当前依据，不是这次 PPTX 文件的新旧。`stale_images` 只比较原图 basis，构建不会清掉它。`export pptx` 的 `input_changed` 才表示 SVG 文件、讲稿或构建设置在该次构建之后变了。
 - `deck export md`：任何时候都可以导出可读稿，包括未完成的作品，待补项照常显示。
 - `deck export pptx`：给出最近一次构建。该构建的输入摘要与当前作品不一致时给出提示。不用版本号判断，因为 restore 会产生编号更大、内容更旧的版本。
 - build 和 export 的输出里，以及界面的下载按钮旁，都列出缺 SVG 的页和 SVG 已过期的页。界面取 `POST /api/build` 的响应或轮询得到的 `artifact_status`。
@@ -254,11 +254,11 @@ S5 界面接入：制作总览展示整稿待处理意见，单页工作区展�
 | `atoms.py` | `content.visible_atoms` 及 `_atom_id / _pointer / _stable_id / _collect_items / _collect_table` | 不带 models；`NeedsNormalization`（未知块类型）改为本地定义 |
 | `sources.py` | 原样 | 3 个错误类改为本地定义 |
 | `sanitize.py` | `export_sanitize.py` | OperationError 改为本地定义。两处 Lucide 许可分支（`:296-299`、`:375-379`）直接读工具包内的 `resources/icons/lucide/LICENSE.txt`。`icons.py` 不复制，它对每个文件的哈希复核也不保留 |
-| `doctor.py` | 新写 | 旧 `doctor.py` 依赖 method_resources 与 pipeline，不复制。新的只检查 soffice、pdftoppm、fc-match、指定字体和当前解释器 |
+| `doctor.py` | 新写 | 旧 `doctor.py` 依赖 method_resources 与 pipeline，不复制。新的检查 soffice、pdftoppm、fc-match、rsvg-convert、指定字体和当前解释器；未指定字体时只给一条警告 |
 | `__main__.py` | 新写 | `python -m deck_tools <命令>` 的入口 |
 | `tests/` | `tests/rebuild/` 中只测工具的文件：test_compiler_api、test_svg_parser、test_svg_compiler、test_geometry、test_paint、test_drawingml、test_text、test_readback、test_render、test_renderer_environment、test_native_table_geometry、test_native_table_path_evidence、test_rc3_table_text_slack、test_deep_quality_compiler、test_deep_quality_render、test_main_iteration_sources，以及 `hostenv.py` | 只改导入。conftest 新写，因为旧的导入了 models 与 Store。依赖旧 Store、models 或 Node 的单个用例删除（例如 `test_svg_compiler.py:20-24`、`test_deep_quality_compiler.py:108-111`），其余保留 |
 
-- `deck-tools/pyproject.toml` 按实际导入声明依赖，包括 python-pptx、Pillow、lxml。系统工具：soffice、pdftoppm、fc-match。
+- `deck-tools/pyproject.toml` 按实际导入声明依赖，包括 python-pptx、Pillow、lxml。系统工具：soffice、pdftoppm、fc-match、rsvg-convert。
 - 工具包不导入 deck_master。
 - 保留下来的测试通过，就视为与旧实现等价；S3 的第一份真实整稿构建是第二道检验。不另做新旧产物的逐份对比。
 - 两套代码共存期间，编译问题只在 deck-tools 里修。旧线的编译器冻结，除非问题属于 AGENTS.md 第 12 节的四类。
@@ -274,7 +274,7 @@ S5 界面接入：制作总览展示整稿待处理意见，单页工作区展�
 | check-page | 单页 SVG、页投影、画布、字体名、素材路径 | 编译错误；或预览 PNG 与回读发现 |
 | build | 各页 SVG、页投影、画布、字体名、素材路径 | 清洗后的 PPTX 与回读发现 |
 | sanitize | 文件路径 | 清洗后的文件 |
-| doctor | 可选的字体名列表 | soffice、pdftoppm、fc-match、字体和当前解释器的可用情况 |
+| doctor | 可选的字体名列表 | soffice、pdftoppm、fc-match、rsvg-convert、字体和当前解释器的可用情况。未指定字体时 `fonts` 为 warn，不单独把 status 打成 needs_tool |
 
 - 字体名由工具用 fc-match 解析为文件。
 - 页投影为 `{page_id, customer_visible: content, speaker_notes: notes, visual_spec: {}}`，由工具内一个固定的适配函数根据 Rust 传来的 id、content 和 notes 生成。回读需要两份输入：编译 manifest 里的 pages（已实测可以直接使用），以及这份页投影。只传 content 时，关系检查会出错，文字检查会被静默跳过。
@@ -353,7 +353,8 @@ Host 按需读取：`deck show`（摘要）、`deck get --pages p3,p4`（指定�
   - `deck import <out> <new>`：目标已存在时报错；无法映射的内容逐项列在报告里；档案里缺文件或文件名越出 `files/` 时导入失败，并且不留下目标目录。在途调用或结果未知的调用只列出，不恢复。
   - 最近 PPTX 先生成清洗副本，按原 PPTX 页序保留其正文和讲稿；只把清洗后的文件存入附件并登记构建。文件名为空，或该 PPTX 清洗拒绝、损坏、缺工具时，内容继续导入并返回 `last_export:false`，在 `unmapped` 说明位置、原因和处理方式。原件保留在旧目录和档案中。路径、文件读取、附件落盘及数据库错误照常返回。
   - framing 优先保留 narrative 的中心主张，没有中心主张时使用 v1 input_summary，沟通目标不代填。reported_fact 和 calculation 进入 facts，hypothesis 进入 assumptions，角色不改变 authority；原陈述、限定和开放问题保留。未映射节点及已处理问题的原文、状态列入 unmapped。
-  - 导入后的原图和 SVG 写入 `basis` 为 `imported`。总览把这些页标为已过期。`deck export pptx` 读到的构建摘要是字面量 `imported`，因此报告 `input_changed`。
+  - 导入后的原图和 SVG 写入 `basis` 为 `imported`。总览把这些页标为依据已变。`deck export pptx` 读到的构建摘要是字面量 `imported`，因此报告 `input_changed`。
+  - `visual_spec.intent` 与写入的 purpose 不同时列入 `unmapped`（kind `visual_spec_intent`）；相同则算已写入 purpose。当前修订以外的 `.deckmaster/revisions/*.json` 不迁移，每条列入 `unmapped`（kind `revision`）。
   - 只迁移老板指定的项目。旧目录不变，所以回退就是继续使用旧目录。迁移步骤是 `deck-master legacy-export <project> <out>`，然后 `deck import <out> <new>`。
   - 中性档案是目录，格式名 `legacy-export.v1`：
 

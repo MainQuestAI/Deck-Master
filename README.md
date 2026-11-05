@@ -63,16 +63,17 @@ From a source checkout:
 ./scripts/install.sh
 ```
 
-The script builds the Web UI, installs `deck` into `~/.local/bin`, creates a
-Python 3.12 venv for `deck-tools` at `~/.local/share/deck/venv`, and links
-`deck-skill/` to `~/.codex/skills/deck`. It does not activate or roll back a
-managed Python release.
+The script builds the Web UI, installs `deck` at `~/.local/bin/deck` (or
+`<prefix>/bin/deck` with `--prefix`), creates a Python 3.12 venv for
+`deck-tools` at `<prefix>/share/deck/venv`, and links `deck-skill/` to
+`~/.codex/skills/deck`. It does not activate or roll back a managed Python
+release. The binary is not `<prefix>/deck`.
 
-Options: `--prefix DIR`, `--skill-dir PATH`, `--dry-run`. If `~/.local/bin` is
-not on `PATH`, add it or call that `deck` by its full path. The skill path must
-be new, or already the same link; the script leaves a different file or link
-unchanged and exits with an error. The stale-symlink case is in the
-[1.1.0 notes](docs/releases/1.1.0.md#skill-link-already-points-elsewhere).
+Options: `--prefix DIR`, `--skill-dir PATH`, `--dry-run`. If `<prefix>/bin` is
+not on `PATH`, add it or call `<prefix>/bin/deck`. The skill path must be new,
+or already the same link. A symlink that points elsewhere exits 2 with
+`已存在且指向其他位置`; remove only that symlink and rerun. Steps are in the
+[install guide](docs/getting-started.md#install-from-source).
 
 After install, `deck new ./my-deck --title '方案标题'` creates a work
 directory. The linked skill describes the first-run commands.
@@ -106,8 +107,10 @@ deck import <out> <new>
 ```
 
 `<out>` has to sit outside `<project>`. Imported images and SVG are stored with
-`basis` `imported`, so the overview shows those pages as stale. `deck export pptx`
-reports `input_changed`.
+`basis` `imported`, so the overview shows those pages as basis-changed.
+`deck export pptx` reports `input_changed`. A `visual_spec.intent` that is not
+the page purpose, and every old revision except the current one, appear in
+`unmapped`.
 
 The most recent PPTX is cleaned before becoming downloadable, preserving its own
 slide order and speaker notes. If that cleanup fails or its tool is unavailable,

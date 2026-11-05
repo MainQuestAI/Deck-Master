@@ -37,11 +37,17 @@ enum Commands {
         #[command(subcommand)]
         command: RunCommand,
     },
-    #[command(about = "将当前 SVG 编译为可编辑 PPTX")]
+    #[command(
+        about = "将当前 SVG 编译为可编辑 PPTX。stale_pages 是 SVG 依据已变，不是这次 PPTX 已过期"
+    )]
     Build,
-    #[command(about = "检查解释器、生产工具与字体")]
+    #[command(about = "检查解释器、rsvg-convert、soffice、pdftoppm、fc-match；未指定字体时只警告")]
     Doctor {
-        #[arg(long, value_delimiter = ',')]
+        #[arg(
+            long,
+            value_delimiter = ',',
+            help = "要检查的字体名；省略时只警告未检查字体"
+        )]
         fonts: Vec<String>,
     },
     #[command(about = "新建不完整作品")]
@@ -154,7 +160,9 @@ enum RunCommand {
 
 #[derive(Subcommand)]
 enum ExportCommand {
-    #[command(about = "返回最近构建的 PPTX 路径与缺页、过期提示")]
+    #[command(
+        about = "返回最近构建的 PPTX。stale_pages 表示 SVG 依据已变；input_changed 才表示构建之后输入又变了"
+    )]
     Pptx,
     #[command(about = "输出 Markdown，包括未完成内容")]
     Md,
