@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-### #274 follow-ups
+## 1.1.1 — 2026-11-05
+
+See [1.1.1 release notes](docs/releases/1.1.1.md).
 
 Follow-ups from the 2026-11-04 maintainer acceptance
 ([#274](https://github.com/MainQuestAI/Deck-Master/issues/274)).
