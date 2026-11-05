@@ -211,10 +211,11 @@ Start with the [documentation index](docs/README.md). Historical reports do not
 certify the current source line; see the [archive index](docs/archive/README.md).
 
 - [Installation, first run, Host requirements and known limitations](docs/getting-started.md)
-- [1.1.0 release notes](docs/releases/1.1.0.md)
+- [1.1.1 release notes](docs/releases/1.1.1.md)
 - [Rust rebuild plan (current architecture)](docs/specs/rust-rebuild/README.md)
 - [Product Philosophy (Chinese)](docs/product-philosophy.md)
-- [Next iteration: business expression plan (Chinese)](docs/specs/deck-master-business-expression-20261029/README.md)
+- [下一轮拟实施：商业表达与专家共创改稿闭环（版本号未定）](docs/specs/README.md#当前架构与下一轮拟实施主题)
+- [2026-10-29 商业表达历史规划与产品目的](docs/specs/deck-master-business-expression-20261029/README.md)
 - [Agent entry](AGENTS.md)
 - [New Skill](deck-skill/SKILL.md)
 - [Legacy Python task index](docs/agent-task-index.md)
