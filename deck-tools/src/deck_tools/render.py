@@ -20,10 +20,26 @@ class RendererError(RuntimeError):
     pass
 
 
+def missing_tool_message(name):
+    env_name = "DECK_MASTER_" + name.upper().replace("-", "_")
+    if name == "soffice":
+        return (
+            "缺少 LibreOffice 的 soffice，SVG 交回的预览和回读无法继续。"
+            "macOS：brew install --cask libreoffice；"
+            "Debian/Ubuntu：sudo apt-get install -y libreoffice；"
+            "装好后确认 soffice --version 可以运行。"
+            f"也可以把 soffice 的路径写入 {env_name}。"
+            "不要改调 compile_job，也不要手写 PPTX 绕过 deck build 和 deck export pptx。"
+            "装好后重试失败的命令，仍失败就停下来报告。"
+        )
+    return f"{name} unavailable; configure {env_name}"
+
+
 def executable(name):
-    configured=os.environ.get('DECK_MASTER_'+name.upper().replace('-','_'))
-    path=shutil.which(configured or name)
-    if not path:raise NeedsTool(f'{name} unavailable; configure DECK_MASTER_{name.upper().replace("-","_")}')
+    configured = os.environ.get("DECK_MASTER_" + name.upper().replace("-", "_"))
+    path = shutil.which(configured or name)
+    if not path:
+        raise NeedsTool(missing_tool_message(name))
     return path
 
 

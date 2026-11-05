@@ -77,6 +77,7 @@ def export_project(project: str | Path, out: str | Path) -> dict[str, Any]:
             "unmapped": unmapped,
         }
         _note_unmapped_document(document, unmapped)
+        _note_old_revisions(store, document, unmapped)
         (staging / "manifest.json").write_text(
             json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
@@ -419,10 +420,20 @@ def _pages(
                     "reason": "页上关系图不映射到新作品",
                 }
             )
+        intent = visual.get("intent") if isinstance(visual.get("intent"), str) else ""
+        purpose = purposes.get(page_id) or intent or ""
+        if intent and intent != purpose:
+            unmapped.append(
+                {
+                    "kind": "visual_spec_intent",
+                    "id": page_id,
+                    "reason": "设计意图未写入 purpose：" + intent,
+                }
+            )
         pages.append(
             {
                 "id": page_id,
-                "purpose": purposes.get(page_id) or visual.get("intent") or "",
+                "purpose": purpose,
                 "layout": visual.get("layout_hint") or "",
                 "content": {
                     "title": visible.get("title") or "",
@@ -605,6 +616,28 @@ def _open_calls(
             }
         )
     return calls
+
+
+def _note_old_revisions(
+    store: Store,
+    document: dict[str, Any],
+    unmapped: list[dict[str, Any]],
+) -> None:
+    # Only the current revision is imported; list older ones in unmapped.
+    current = document.get("revision_id") or ""
+    if not store.revisions_dir.is_dir():
+        return
+    for path in sorted(store.revisions_dir.glob("*.json")):
+        revision_id = path.stem
+        if not revision_id or revision_id == current:
+            continue
+        unmapped.append(
+            {
+                "kind": "revision",
+                "id": revision_id,
+                "reason": "旧修订未迁移；导入的是当前修订",
+            }
+        )
 
 
 def _note_unmapped_document(document: dict[str, Any], unmapped: list[dict[str, Any]]) -> None:

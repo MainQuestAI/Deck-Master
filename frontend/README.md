@@ -14,6 +14,8 @@ cargo build
 # 或 cargo install --path .
 ```
 
+`package.json` 的 `allowScripts` 允许锁定版本的 esbuild 与 fsevents 运行安装脚本。npm 12 默认拦截未列出的依赖安装脚本，并打印 `install-scripts` 警告；esbuild 的 postinstall 被拦截后，平台二进制不会装上，`npm run build` 随后失败。npm 10 忽略该字段，脚本仍会执行。
+
 Vite 输出至 `rust/web-dist/`，`build.rs` 将该目录全部嵌入二进制，安装后无需依赖磁盘上的前端目录。生成的 `assets/deck.js` 与 `assets/deck.css` 不入库。生产入口是入库并由构建保留的 `rust/web-dist/index.html`，固定引用 `assets/deck.js`、`assets/deck.css`；它同时是未构建时的提示页和已构建界面的入口，因此未运行 npm 时 Cargo 仍能编译。此时只能显示构建提示，完整分发必须先构建前端。入口文件名固定，服务端既有的 `Cache-Control: no-store` 防止旧资源缓存。
 
 `frontend/index.html` 只用于 Vite 开发/构建入口，不作为生产首页。两份 HTML 的 head 元信息需保持一致；生产首页额外引用构建后的 `assets/deck.css`。

@@ -15,7 +15,7 @@ description: 用 Rust deck 命令将作者任务和指定材料写成 brief、�
 - **竞标**：围绕实际提供的 RFP 与评审要求组织响应、可证明的经验、差异和交付边界；缺口写入待补项。没有 RFP 就不声称逐项响应，不把首提稿强改成投标目录。
 - **内容改稿**：沿用已有受众、主张和决定，只修改本次指定范围；不因局部修改重新策划全稿。
 
-用 `brief` 保存标题、受众、任务类型、目标和实际约束。`brief` 与 `framing` 都会原样出现在导出的可读稿里，按读者能读懂的方式写；内部推进条件不写进 `brief`。页数上限只来自作者要求，不为凑页数增删内容。命令用法与可运行示例见 [commands.md](references/commands.md)。
+用 `brief` 保存标题、受众、任务类型、目标和实际约束。`brief` 与 `framing` 都会原样出现在导出的可读稿里，按读者能读懂的方式写；内部推进条件不写进 `brief`。页数上限只来自作者要求，不为凑页数增删内容。命令用法与可运行示例见 [commands.md](references/commands.md)。默认安装的命令是 `~/.local/bin/deck`。非默认 `--prefix` 时用 `<prefix>/bin/deck`。
 
 ## 材料与主张框架
 
@@ -88,6 +88,8 @@ description: 用 Rust deck 命令将作者任务和指定材料写成 brief、�
 2. 生成后用 `deck run result <run> <page> <图片文件>` 交回。每页首次结果可自动采用；同一任务内重交的修正版、取消后或依据已变的结果只保存。比较当前稿与候选，确定要使用后执行 `deck run adopt <run> <page>`。`deck run show` 查看状态，`deck run cancel <run>` 停止调用与自动采用。
 3. `deck run start svg --pages p1,p2` 准备 SVG 任务。按原图的布局、层级和关系重建，正文取 content.json，文字绑定 atoms.json。先读 [SVG 子集与比对样例](references/svg-subset.md)。改字通常沿用原图，按新正文重建 SVG；内容或布局大改时判断是否重新生图。
 4. 用 `deck run result <run> <page> <SVG文件>` 编译、渲染并回读。工具报错就修正具体元素；返回的文字或几何发现逐项核对。重交修正版后，确认采用时执行 `deck run adopt <run> <page>`。Host 必须实际打开预览 PNG，与原图比对端点、方向、分支、层级、侧栏及阅读顺序。文字回读通过不能代替比对。
-5. 用 `deck build` 构建整套 PPTX，`deck export pptx` 取最近构建路径。输出列出的缺页、过期页与输入变化照实告知作者；不要把部分 PPTX 称为整套，也不要把较早构建当成当前稿。讲稿变化后重新构建；无需重新生图。
+5. 用 `deck build` 构建整套 PPTX，`deck export pptx` 取最近构建路径。`missing_pages` 是没有 SVG、因此没有进入这次 PPTX 的页。`stale_pages` 是 SVG 依据与当前正文、原图或样式不一致的页（导入页的 `basis` 为 `imported` 时也会列出）；`stale_images` 在 `deck show` 的 `artifact_status` 里，指原图依据与当前正文、布局、目的或样式不一致，只改讲稿不会让原图过期。两者只说明依据变了，不说明这份 PPTX 过期：刚构建成功时 `stale_pages` 仍会列出，构建也不会清掉 `stale_images`。`export pptx` 的 `input_changed` 才表示构建之后 SVG、讲稿或构建设置又变了。照实告知作者。不要把部分 PPTX 称为整套，也不要把较早构建当成当前稿。讲稿变化后重新构建；无需重新生图。
+
+`soffice` 不可用时，SVG 的 `deck run result` 会失败并说明如何安装 LibreOffice。停在这一步，向作者报告缺少 soffice。不要改调 `compile_job`，不要手写 PPTX，不要绕过 `deck build` 和 `deck export pptx`。
 
 交付可读稿、PPTX 与必要预览；说明整稿范围、未补内容和真实执行失败。机制测试、真实工具执行、真实 Host 执行与作品判断分别汇报。没有实际执行的写“未执行”及原因。

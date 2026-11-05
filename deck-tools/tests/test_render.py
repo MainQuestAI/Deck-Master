@@ -73,5 +73,19 @@ def test_missing_renderer_is_reported_not_silent(tmp_path, monkeypatch):
     # (recorded upstream as not evaluated) instead of fabricating previews.
     monkeypatch.setenv('PATH', '')
     for tool in REQUIRED_TOOLS:
+        monkeypatch.delenv('DECK_MASTER_' + tool.upper().replace('-', '_'), raising=False)
         with pytest.raises(NeedsTool, match=tool):
             executable(tool)
+
+
+def test_missing_soffice_names_the_install_and_forbids_bypass(monkeypatch):
+    monkeypatch.setenv('PATH', '')
+    monkeypatch.delenv('DECK_MASTER_SOFFICE', raising=False)
+    with pytest.raises(NeedsTool, match='soffice') as caught:
+        executable('soffice')
+    text = str(caught.value)
+    assert 'LibreOffice' in text
+    assert 'brew install --cask libreoffice' in text
+    assert 'compile_job' in text
+    assert 'deck build' in text
+    assert 'deck export pptx' in text

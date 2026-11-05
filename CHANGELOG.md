@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+### #274 follow-ups
+
+Follow-ups from the 2026-11-04 maintainer acceptance
+([#274](https://github.com/MainQuestAI/Deck-Master/issues/274)).
+
+- `scripts/install.sh` still exits 2 with `已存在且指向其他位置` when the skill
+  symlink points elsewhere, and the message now says to remove only that symlink.
+  A finished install prints `<prefix>/bin/deck` and the `deck` found on `PATH`.
+- `deck doctor` now checks `rsvg-convert`. Without `--fonts`, the font line is
+  only a warning and does not by itself turn `ready` into `needs_tool`.
+- `legacy-export` now lists in `unmapped` any `visual_spec.intent` that differs
+  from the page purpose, and every old revision except the current one.
+- `stale_pages` and `stale_images` mean the SVG or original-image basis differs
+  from the current page. A successful build does not clear them.
+- `frontend/package.json` `allowScripts` now lists the locked esbuild and fsevents
+  versions, so npm 12 no longer blocks their install scripts.
+- When `soffice` is missing, the error gives the install step and says not to
+  bypass `deck build` / `deck export pptx` by calling `compile_job`.
+
 - Record the 2026-11-04 maintainer acceptance in the
   [1.1.0 release notes](docs/releases/1.1.0.md#maintainer-acceptance-2026-11-04).
   Follow-ups: #274.

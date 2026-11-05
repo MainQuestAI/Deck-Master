@@ -51,6 +51,7 @@ done
 
 skill_target="${repo_root}/deck-skill"
 venv_dir="${prefix}/share/deck/venv"
+deck_bin="${prefix}/bin/deck"
 need() {
   command -v "$1" >/dev/null 2>&1 || {
     echo "install.sh: 缺少 $1；请安装后再运行" >&2
@@ -115,7 +116,7 @@ if [ "$link_status" -eq 2 ]; then
   exit 2
 fi
 if [ "$link_status" -eq 3 ]; then
-  echo "install.sh: ${skill_dir} 已存在且指向其他位置；请改用 --skill-dir 或先移走该链接" >&2
+  echo "install.sh: ${skill_dir} 已存在且指向其他位置；请改用 --skill-dir，或只删除该软链接（不要删除它指向的目录）后重新运行" >&2
   exit 2
 fi
 
@@ -135,6 +136,7 @@ run() {
 
 if [ "$dry_run" -eq 1 ]; then
   echo "prefix=${prefix}"
+  echo "deck-bin=${deck_bin}"
   echo "venv=${venv_dir}"
   echo "skill-dir=${skill_dir}"
   echo "skill-target=${skill_target}"
@@ -177,8 +179,12 @@ else
 fi
 
 if [ "$dry_run" -eq 0 ]; then
-  echo "已安装 deck：${prefix}/bin/deck"
+  echo "已安装 deck：${deck_bin}"
+  if command -v deck >/dev/null 2>&1; then
+    echo "PATH 解析到的 deck：$(command -v deck)"
+  else
+    echo "PATH 中没有 deck。请把 ${prefix}/bin 加入 PATH，或直接运行 ${deck_bin}。"
+  fi
   echo "deck-tools 环境：${venv_dir}"
   echo "Skill 链接：${skill_dir} -> ${skill_target}"
-  echo "如 ${prefix}/bin 不在 PATH 中，请加入后再运行 deck。"
 fi
