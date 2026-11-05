@@ -187,6 +187,24 @@ def test_exported_rich_text_keeps_public_url(tmp_path):
     assert body in _part_text(result["pptx"], "ppt/notesSlides/notesSlide1.xml")
 
 
+def test_exported_rich_text_keeps_url_whose_path_is_bold(tmp_path):
+    body = "https://example.com/home/products"
+    runs = [("https://example.com", False), ("/home/products", True)]
+    result = compile_job(_rich_text_export_job(tmp_path, runs, notes=body))
+    assert result["findings"]["status"] == "pass"
+    assert body in _slide_paragraphs(result["pptx"])
+
+
+@pytest.mark.parametrize("runs", [
+    [("see ", False), ("/home/products", True)],
+    [("C:", False), ("/Users/x", True)],
+    [("/ho", False), ("me/products", True)],
+])
+def test_exported_rich_text_still_rejects_local_path_across_runs(tmp_path, runs):
+    with pytest.raises(OperationError):
+        compile_job(_rich_text_export_job(tmp_path, runs))
+
+
 def test_invalid_svg_cli_reports_element_without_publishing_file(tmp_path):
     job = job_fixture(tmp_path)
     Path(job["pages"][0]["svg"]).write_text('<svg viewBox="0 0 1280 720"><rect id="broken" width="40" height="40" class="unsupported"/></svg>')

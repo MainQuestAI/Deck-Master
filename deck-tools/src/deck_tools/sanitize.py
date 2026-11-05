@@ -106,12 +106,27 @@ def _paragraph_run_segments(paragraph):
 
 
 def _reject_urls_split_across_runs(root, where):
+    """Check each visible slide paragraph segment as one string.
+
+    A styled run can hold only part of a URL (for example a bold /home/products
+    after a plain https://example.com). Checking runs one by one would see a
+    bare local path, so the joined segment is the unit for both the local-path
+    rule and the link rule. Returns the text nodes this check already covered.
+    """
     drawing_paragraph = "{http://schemas.openxmlformats.org/drawingml/2006/main}p"
+    covered = set()
     for paragraph in root.iter(drawing_paragraph):
         field = where + "/" + root.getroottree().getpath(paragraph)
+        for child in paragraph:
+            if child.tag.rsplit("}", 1)[-1] in ("r", "fld"):
+                covered.update(
+                    node for node in child.iter() if node.tag.rsplit("}", 1)[-1] == "t"
+                )
         for segment in _paragraph_run_segments(paragraph):
+            text_safe(segment, field + "/text")
             for url in HTTP_URL.findall(segment):
                 link_safe(url, field + "/text/link")
+    return covered
 
 
 def public_projection_safe(value, where):
@@ -480,8 +495,9 @@ def _clean_pptx(data, where, *, keep_notes=False, page_ids=None):
                 # Notes already join each paragraph before link_safe. Slide body
                 # text is stored per run, so a styled URL is checked only after
                 # those runs are joined.
+                covered = set()
                 if re.fullmatch(r"ppt/slides/slide[0-9]+\.xml", name):
-                    _reject_urls_split_across_runs(root, locations.get(name, where + "/" + name))
+                    covered = _reject_urls_split_across_runs(root, locations.get(name, where + "/" + name))
                 for parent in root.iter():
                     location = locations.get(name, where + '/' + name)
                     field = location + '/' + root.getroottree().getpath(parent)
@@ -521,12 +537,23 @@ def _clean_pptx(data, where, *, keep_notes=False, page_ids=None):
                                     parent.remove(child)
                         elif not keep_notes and local in ("notesMasterIdLst", "notesMasterId"):
                             parent.remove(child)
-                    _copy_text(parent.text, field + '/text', links=copy_links)
+                    if parent not in covered:
+                        _copy_text(parent.text, field + '/text', links=copy_links)
                     _copy_text(parent.tail, field + '/tail', links=copy_links)
                     for key, value in parent.attrib.items():
                         text_safe(value, field + '/@' + key)
                 raw = ET.tostring(root, encoding="utf-8", xml_declaration=True)
-                text_safe(raw.decode("utf-8"), where + "/" + name)
+                if covered:
+                    # Whole-part scan without the run texts already checked as
+                    # joined paragraph segments.
+                    scan = ET.fromstring(raw)
+                    originals = list(root.iter())
+                    for node, twin in zip(originals, scan.iter()):
+                        if node in covered:
+                            twin.text = None
+                    text_safe(ET.tostring(scan, encoding="utf-8").decode("utf-8"), where + "/" + name)
+                else:
+                    text_safe(raw.decode("utf-8"), where + "/" + name)
             elif name.lower().endswith(".png"):
                 raw = png(raw, where + "/" + name)
             elif name.lower().endswith((".jpg", ".jpeg")):
