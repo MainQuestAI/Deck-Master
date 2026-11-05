@@ -6,7 +6,7 @@
 
 ## 使用 Deck Master
 
-1.1.0 作者入口是 Rust 命令 `deck`、本机 `deck serve` 和 [deck-skill](../deck-skill/SKILL.md)。
+1.1.1 作者入口是 Rust 命令 `deck`、本机 `deck serve` 和 [deck-skill](../deck-skill/SKILL.md)。
 安装与命令见 [1.1.1 发版说明](releases/1.1.1.md) 和 [README Quick Start](../README.md#quick-start)。
 
 1. [安装与首次运行](getting-started.md)：`scripts/install.sh`、`deck serve`、Host 与渲染依赖、已知限制。
@@ -32,7 +32,7 @@ D00–D08、Narrative.v2 与 execution-index 不作为现行开工清单。
 | 贡献和验证 | [CONTRIBUTING](../CONTRIBUTING.md)、[新线 CI](../.github/workflows/rust.yml)、[旧线 CI](../.github/workflows/rebuild.yml) | 新线改动看 rust.yml；旧线只在 main 更新后自动跑 |
 | 敏感安全问题 | [SECURITY](../SECURITY.md) | 按实际可用私密渠道处理，不在公开反馈中贴敏感证据 |
 | Agent 工作规则 | [AGENTS](../AGENTS.md) | 与 Rust 开发稿共同确定当前架构与操作边界；AGENTS 为最高开发规范 |
-| 1.1.0 Skill | [deck-skill](../deck-skill/SKILL.md) | 调用 `deck`；命令见 [commands.md](../deck-skill/references/commands.md) |
+| 1.1.1 Skill | [deck-skill](../deck-skill/SKILL.md) | 调用 `deck`；命令见 [commands.md](../deck-skill/references/commands.md) |
 | 旧四职责入口 | [Skill resolver](../skills/RESOLVER.md) | 维护中的 Master / Content / Design / Review |
 | 旧线 schema | [活动合同目录](../src/deck_master/resources/contracts/) | 旧 Python 线唯一活动 schema；历史镜像不得反向覆盖 |
 | 设计约束 | [DESIGN](../DESIGN.md) | 由该入口选择当前设计；旧原型和模拟按钮不证明已有服务 |
