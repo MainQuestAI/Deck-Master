@@ -98,7 +98,7 @@ export function createPageId(pages, drafts, randomUUID = () => crypto.randomUUID
 
 export function draftPatch(draft) {
   const page = { id: draft.page.id };
-  for (const field of ['content', 'purpose', 'layout', 'notes']) {
+  for (const field of ['content', 'purpose', 'layout', 'notes', 'todo', 'refs']) {
     if (JSON.stringify(draft.original[field]) !== JSON.stringify(draft.page[field])) {
       page[field] = draft.page[field];
     }

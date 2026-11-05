@@ -2559,6 +2559,12 @@ html[data-theme="dark"] .suggested-diff-body {
 .s4-json { white-space: pre-wrap; overflow-wrap: anywhere; }
 .s4-wrap { overflow-wrap: anywhere; }
 .s4-actions { margin-top: 16px; }
+.s4-structure-table { table-layout: auto; }
+.s4-structure-table th, .s4-structure-table td { min-width: 240px; }
+.s4-structure-table th:first-child, .s4-structure-table th:last-child { width: auto; }
+.s4-structure-table th:last-child, .s4-structure-table td:last-child { text-align: left; }
+.s4-structure-table .row { flex-wrap: wrap; }
+.s4-structure-table select { min-height: 44px; }
 .s4-panel > .row, .drawer-foot { flex-wrap: wrap; }
 .s4-presentation { padding: 24px; overflow: hidden; display: flex; flex-direction: column; gap: 16px; }
 .s4-presentation > .row { flex: none; }

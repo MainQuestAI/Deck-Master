@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "test": "node --import ./src/test/register-jsx.js --test src/api.test.js src/context-ui.test.js src/page-ops.test.js src/compare.test.js src/historyDiff.test.js src/history-ui.test.js src/components/modals/useDialogFocus.test.js src/components/modals/PresentationModal.test.js",
+    "test": "node --import ./src/test/register-jsx.js --test src/api.test.js src/context-ui.test.js src/page-ops.test.js src/compare.test.js src/historyDiff.test.js src/history-ui.test.js src/components/modals/useDialogFocus.test.js src/components/modals/PresentationModal.test.js src/content-structure.test.js src/structure-editor.test.js",
     "preview": "vite preview"
   },
   "dependencies": {
