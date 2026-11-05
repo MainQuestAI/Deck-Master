@@ -368,6 +368,8 @@ def test_legacy_export_writes_neutral_archive_and_leaves_project_unread(tmp_path
     kinds = {item["kind"] for item in manifest["unmapped"]}
     assert "visual_spec" in kinds
     assert "task" in kinds
+    assert "visual_spec_intent" not in kinds
+    assert "revision" not in kinds
 
 
 @pytest.mark.parametrize("plan_version", [1, 2])
@@ -431,6 +433,26 @@ def test_legacy_export_degrades_dirty_citations_and_internal_only(tmp_path: Path
     assert manifest["pages"][0]["todo"] == ["待补一项"]
     citations = {item["id"] for item in manifest["unmapped"] if item["kind"] == "page_citation"}
     assert citations == {"p1/cite-1"}
+
+
+def test_legacy_export_unmaps_unused_intent_and_old_revisions(tmp_path: Path) -> None:
+    page = _page()
+    page["visual_spec"]["intent"] = "另一套设计意图"
+    project = _synthetic_project(tmp_path, page=page)
+    current = Store(project).current_revision_id()
+    (project / ".deckmaster" / "revisions" / "old-revision.json").write_text("{}", encoding="utf-8")
+    out = tmp_path / "archive"
+    export_project(project, out)
+    manifest = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
+    assert manifest["pages"][0]["purpose"] == "说明材料如何进入正文"
+    intents = [item for item in manifest["unmapped"] if item["kind"] == "visual_spec_intent"]
+    assert len(intents) == 1
+    assert intents[0]["id"] == "p1"
+    assert "另一套设计意图" in intents[0]["reason"]
+    revisions = [item for item in manifest["unmapped"] if item["kind"] == "revision"]
+    assert [item["id"] for item in revisions] == ["old-revision"]
+    assert current not in {item["id"] for item in revisions}
+    assert "旧修订未迁移" in revisions[0]["reason"]
 
 
 def test_legacy_export_cli_refuses_existing_out_and_missing_project(tmp_path, capsys) -> None:
