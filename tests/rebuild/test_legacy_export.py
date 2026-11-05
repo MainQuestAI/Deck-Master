@@ -435,6 +435,20 @@ def test_legacy_export_degrades_dirty_citations_and_internal_only(tmp_path: Path
     assert citations == {"p1/cite-1"}
 
 
+def test_legacy_export_copies_intent_into_purpose_when_purpose_is_absent(tmp_path: Path) -> None:
+    page = _page()
+    page["visual_spec"]["intent"] = "只有设计意图"
+    plan = _default_plan()
+    del plan["input"]["goals"][0]["purpose"]
+    project = _synthetic_project(tmp_path, page=page, plan=plan)
+    out = tmp_path / "archive"
+    export_project(project, out)
+    manifest = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
+    assert manifest["pages"][0]["purpose"] == "只有设计意图"
+    assert not any(item["kind"] == "visual_spec_intent" for item in manifest["unmapped"])
+    assert not any("只有设计意图" in item["reason"] for item in manifest["unmapped"])
+
+
 def test_legacy_export_unmaps_unused_intent_and_old_revisions(tmp_path: Path) -> None:
     page = _page()
     page["visual_spec"]["intent"] = "另一套设计意图"

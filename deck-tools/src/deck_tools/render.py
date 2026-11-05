@@ -23,16 +23,14 @@ class RendererError(RuntimeError):
 def missing_tool_message(name):
     env_name = "DECK_MASTER_" + name.upper().replace("-", "_")
     if name == "soffice":
-        # The acceptance run bypassed deck build after this failure was only
-        # "configure DECK_MASTER_SOFFICE", and wrote a PPTX through compile_job.
         return (
-            "缺少 LibreOffice 的 soffice，SVG 交回预览与回读无法继续。"
+            "缺少 LibreOffice 的 soffice，SVG 交回的预览和回读无法继续。"
             "macOS：brew install --cask libreoffice；"
             "Debian/Ubuntu：sudo apt-get install -y libreoffice；"
             "装好后确认 soffice --version 可以运行。"
-            f"也可把可执行文件路径写入 {env_name}。"
-            "不要改调 compile_job，不要手写 PPTX 绕过 deck build 和 deck export pptx；"
-            "装好后从失败的命令重试，仍然失败就停下来报告。"
+            f"也可以把 soffice 的路径写入 {env_name}。"
+            "不要改调 compile_job，也不要手写 PPTX 绕过 deck build 和 deck export pptx。"
+            "装好后重试失败的命令，仍失败就停下来报告。"
         )
     return f"{name} unavailable; configure {env_name}"
 

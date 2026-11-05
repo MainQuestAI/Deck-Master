@@ -34,8 +34,7 @@ Deck Master 服务于需要讲清商业方案的人：解决方案架构师、�
 ./scripts/install.sh
 ```
 
-脚本会构建 Web UI，把 `deck` 装到 `~/.local/bin/deck`（`--prefix` 时为
-`<prefix>/bin/deck`，不是 `<prefix>/deck`），用 Python 3.12 在
+脚本会构建 Web UI，把 `deck` 装到 `~/.local/bin/deck`（`--prefix` 时为 `<prefix>/bin/deck`），用 Python 3.12 在
 `<prefix>/share/deck/venv` 建立独立的 deck-tools 环境，并把 `deck-skill/`
 链接到 `~/.codex/skills/deck`。不执行托管 Python 发行版的激活或回滚。
 

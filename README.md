@@ -67,7 +67,7 @@ The script builds the Web UI, installs `deck` at `~/.local/bin/deck` (or
 `<prefix>/bin/deck` with `--prefix`), creates a Python 3.12 venv for
 `deck-tools` at `<prefix>/share/deck/venv`, and links `deck-skill/` to
 `~/.codex/skills/deck`. It does not activate or roll back a managed Python
-release. The binary is not `<prefix>/deck`.
+release.
 
 Options: `--prefix DIR`, `--skill-dir PATH`, `--dry-run`. If `<prefix>/bin` is
 not on `PATH`, add it or call `<prefix>/bin/deck`. The skill path must be new,

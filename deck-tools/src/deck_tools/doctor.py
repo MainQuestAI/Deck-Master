@@ -2,17 +2,15 @@
 import sys
 from .render import NeedsTool, executable, renderer_environment, resolve_fonts
 
-# SVG raster checks and the skill's preview path call rsvg-convert directly.
-# A doctor that never looks for it reports ready on a machine that cannot run them.
+# rsvg-convert is called directly by SVG raster checks and the preview path, so doctor must check it.
 RSVG_FIX = (
     "缺少 rsvg-convert。macOS：brew install librsvg；"
     "Debian/Ubuntu：sudo apt-get install -y librsvg2-bin。"
     "装好后重新运行 deck doctor。"
 )
-# Omitting --fonts used to look the same as "fonts are fine".
 FONT_HINT = (
     "未检查字体。请运行 deck doctor --fonts <设计里的字体名>；"
-    "缺字体时用 fc-list : family 选出已安装字体，并在设计与 SVG 里写这个名字。"
+    "字体缺失时，用 fc-list : family 选一个已安装的字体，设计和 SVG 里都改用它的名字。"
 )
 
 

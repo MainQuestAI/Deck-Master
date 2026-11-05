@@ -185,7 +185,6 @@ if [ "$dry_run" -eq 0 ]; then
   else
     echo "PATH 中没有 deck。请把 ${prefix}/bin 加入 PATH，或直接运行 ${deck_bin}。"
   fi
-  echo "二进制在 ${prefix}/bin/deck，不在 ${prefix}/deck。"
   echo "deck-tools 环境：${venv_dir}"
   echo "Skill 链接：${skill_dir} -> ${skill_target}"
 fi

@@ -623,8 +623,7 @@ def _note_old_revisions(
     document: dict[str, Any],
     unmapped: list[dict[str, Any]],
 ) -> None:
-    # Import copies the current document only. Older snapshots stay in the old
-    # project; the report has to name them or the archive looks complete.
+    # Only the current revision is imported; list older ones in unmapped.
     current = document.get("revision_id") or ""
     if not store.revisions_dir.is_dir():
         return

@@ -23,12 +23,12 @@ tree for maintenance. Their managed-wheel install is in
 - Real previews/rendering require `rsvg-convert`, LibreOffice `soffice`,
   Poppler `pdftoppm`, Fontconfig `fc-match`, and the fonts selected by the
   design. `deck doctor` checks those four tools. `deck doctor --fonts "<family>"`
-  also checks the named fonts; without `--fonts` the font line is a warning
-  and does not by itself make the status `needs_tool`.
+  also checks the named fonts. Without `--fonts`, the font line is only a
+  warning and does not by itself make the status `needs_tool`.
   Compiling SVG to PPTX does not require an external PPT application.
   SVG handoff (`deck run result`) needs `soffice` for the preview. If it is
-  missing, the error says how to install it and says to stop instead of
-  calling `compile_job`.
+  missing, the error gives the install steps and says to stop rather than call
+  `compile_job`.
 
 CLI inspection needs no model call. Image generation uses the Host's account
 and permissions.
@@ -53,7 +53,7 @@ non-default `--prefix` means the skill and
 
 The skill path must be new, or already a link to this checkout's `deck-skill/`.
 If `~/.codex/skills/deck` is a symlink to somewhere else, the script prints
-`已存在且指向其他位置` and exits 2. It does not replace the link. Remount:
+`已存在且指向其他位置` and exits 2. It does not replace the link. To fix it:
 `ls -l ~/.codex/skills/deck`, remove only that symlink (`rm ~/.codex/skills/deck`,
 not the directory it points at), then run `./scripts/install.sh` again. Or pass
 a different `--skill-dir`. A path that exists and is not a symlink exits 2 with
@@ -148,9 +148,9 @@ Task routing: [agent-task-index.md](agent-task-index.md).
   `deck-tools`.
 - `GET /api/export/md` does not run the credential check used on exported
   PPTX slide text.
-- After `deck build`, `stale_pages` still lists pages whose SVG basis differs
-  from the current content, image, or style (including `imported`). That list
-  is not "this PPTX file is already old." `stale_images` on `deck show` is the
+- After `deck build`, `stale_pages` can still list pages whose SVG basis differs
+  from the current content, image, or style (including `imported`). That does
+  not mean the PPTX is out of date. `stale_images` on `deck show` is the
   same comparison for original images. `deck export pptx` sets `input_changed`
   only when the SVG files, notes, or build settings changed after that build.
 - PPTX has been rechecked through LibreOffice (`soffice`) rendering in the
