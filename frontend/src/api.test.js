@@ -1,9 +1,36 @@
 import { test, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { ApiError, getDeck, putDeck, cancelRun, buildDeck, restoreVersion, exportDeck, fileUrl, mergeWorkspace, createDraft, createPageId, draftPatch, createContextDraft, contextUnitPatch, formatFinding, addReview, resolveReview, adoptCandidate, comparisonSnapshot } from './api.js';
+import { ApiError, getDeck, putDeck, cancelRun, buildDeck, restoreVersion, exportDeck, fileUrl, mergeWorkspace, createDraft, createPageId, draftPatch, createContextDraft, contextUnitPatch, formatFinding, addReview, resolveReview, adoptCandidate, comparisonSnapshot, reorderPages, movePageRelative, removePagePatch } from './api.js';
 
 const originalFetch = globalThis.fetch;
 afterEach(() => { globalThis.fetch = originalFetch; });
+
+test('page moves return the full order with stable IDs without mutating the original', () => {
+  const order = ['p1', 'p2', 'p3', 'p4'];
+  assert.deepEqual(reorderPages(order, 'p3', 0), ['p3', 'p1', 'p2', 'p4']);
+  assert.deepEqual(reorderPages(order, 'p2', 3), ['p1', 'p3', 'p4', 'p2']);
+  assert.deepEqual(reorderPages(order, 'p2', -10), ['p2', 'p1', 'p3', 'p4']);
+  assert.deepEqual(reorderPages(order, 'p2', 20), ['p1', 'p3', 'p4', 'p2']);
+  assert.deepEqual(order, ['p1', 'p2', 'p3', 'p4']);
+  assert.equal(reorderPages(order, 'p2', 1), order);
+  assert.equal(reorderPages(order, 'missing', 0), order);
+  assert.equal(reorderPages([], 'missing', 0).length, 0);
+});
+
+test('relative page moves clamp at the first and last positions', () => {
+  const order = ['p1', 'p2', 'p3'];
+  assert.deepEqual(movePageRelative(order, 'p2', -1), ['p2', 'p1', 'p3']);
+  assert.deepEqual(movePageRelative(order, 'p2', 1), ['p1', 'p3', 'p2']);
+  assert.equal(movePageRelative(order, 'p1', -1), order);
+  assert.equal(movePageRelative(order, 'p3', 1), order);
+});
+
+test('page removal pairs the remaining full order with an id-only page patch', () => {
+  const order = ['p1', 'p2', 'p3'];
+  assert.deepEqual(removePagePatch(order, 'p2'), { order: ['p1', 'p3'], pages: [{ id: 'p2' }] });
+  assert.deepEqual(order, ['p1', 'p2', 'p3']);
+  assert.deepEqual(removePagePatch(['p1'], 'p1'), { order: [], pages: [{ id: 'p1' }] });
+});
 
 test('review writes preserve original text and keep global and page scopes distinct', async () => {
   const requests = [];

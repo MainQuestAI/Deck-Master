@@ -114,6 +114,25 @@ export function contextUnitPatch(kind, draft) {
   return JSON.stringify(draft.original) === JSON.stringify(draft.value) ? null : { [kind]: structuredClone(draft.value) };
 }
 
+export function reorderPages(order, pageId, toIndex) {
+  const fromIndex = order.indexOf(pageId);
+  if (fromIndex < 0 || !Number.isFinite(toIndex)) return order;
+  const target = Math.max(0, Math.min(order.length - 1, Math.trunc(toIndex)));
+  if (fromIndex === target) return order;
+  const next = [...order];
+  next.splice(fromIndex, 1);
+  next.splice(target, 0, pageId);
+  return next;
+}
+
+export function movePageRelative(order, pageId, delta) {
+  return reorderPages(order, pageId, order.indexOf(pageId) + delta);
+}
+
+export function removePagePatch(order, pageId) {
+  return { order: order.filter(id => id !== pageId), pages: [{ id: pageId }] };
+}
+
 const findingLabels = {
   notes_page_identity_mismatch: '讲稿对应的页面不一致', speaker_notes_mismatch: '讲稿内容不一致',
   slide_count_mismatch: '幻灯片数量不一致', missing_slide: '缺少幻灯片',

@@ -22,6 +22,9 @@ export function DeckMasterProvider({ children }) {
   const [query, setQuery] = useState('');
   const [presentation, setPresentation] = useState(null);
   const [comparison, setComparison] = useState(null);
+  // Removal can finish after the author has opened another page or comparison.
+  const pageNavigation = useRef({ currentPage, comparison });
+  useEffect(() => { pageNavigation.current = { currentPage, comparison }; }, [currentPage, comparison]);
   const [reviewDrafts, setReviewDrafts] = useState({});
   const [toast, setToast] = useState(null);
   const [theme, setTheme] = useState(() => {
@@ -179,6 +182,45 @@ export function DeckMasterProvider({ children }) {
     setDrawer('editor');
     await reload();
   });
+  const savePageOrder = async (patch) => {
+    try {
+      const result = await api.putDeck(workspace.version, patch);
+      acceptSave(result);
+      return result;
+    } catch (error) {
+      if (error.status === 409) {
+        setToast('页面或页序已变化，请核对最新内容后重新操作');
+        await reload();
+      }
+      throw error;
+    }
+  };
+  const movePage = (pageId, toIndex) => perform('page-order', async () => {
+    const order = pages.map(page => page.id);
+    const nextOrder = api.reorderPages(order, pageId, toIndex);
+    if (nextOrder === order) return;
+    await savePageOrder({ order: nextOrder });
+    setToast('页序已保存');
+    await reload();
+    return true;
+  });
+  const removePage = (pageId) => perform('page-order', async () => {
+    const index = pages.findIndex(page => page.id === pageId);
+    if (index < 0) return;
+    const result = await savePageOrder(api.removePagePatch(pages.map(page => page.id), pageId));
+    const remaining = new Set(result.deck.pages.map(page => page.id));
+    const neighbor = [...pages.slice(0, index).reverse(), ...pages.slice(index + 1)]
+      .find(page => remaining.has(page.id))?.id || result.deck.pages[0]?.id || null;
+    const navigation = pageNavigation.current;
+    setCurrentPage(current => current === pageId ? neighbor : current);
+    setPresentation(current => current === pageId ? null : current);
+    setComparison(current => current?.pageId === pageId ? null : current);
+    if (navigation.currentPage === pageId) setDrawer(null);
+    setScene(current => (current === 'compare' && navigation.comparison?.pageId === pageId)
+      || (['page', 'presentation'].includes(current) && navigation.currentPage === pageId && !neighbor) ? 'content' : current);
+    setToast('已从当前稿件移除（历史仍保留）');
+    await reload();
+  });
   const stopRun = (id) => perform(`cancel-${id}`, async () => {
     const result = await api.cancelRun(id);
     ++readId.current;
@@ -236,7 +278,7 @@ export function DeckMasterProvider({ children }) {
   return <DeckMasterContext.Provider value={{
     workspace, pages, revision: workspace?.version, activeProject: workspace?.deck.brief.title || '未命名作品',
     connectionError, actionError, busy, refresh: reload, scene, setScene, currentPage,
-    getPage, getPageNumStr, openPage, editPage, createPage, drafts, updateDraft, saveDraft, rebaseDraft, discardDraft,
+    getPage, getPageNumStr, openPage, editPage, createPage, movePage, removePage, drafts, updateDraft, saveDraft, rebaseDraft, discardDraft,
     contextDrafts, openContextEdit, updateContextDraft, saveContext, refreshContextConflict, resolveContextConflict,
     drawer, openDrawer: setDrawer, closeDrawer: () => setDrawer(null),
     stopRun, build, buildResult, download, downloadStatus, restore,
