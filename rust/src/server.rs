@@ -227,6 +227,13 @@ fn route(project: &Path, request: &mut Request) -> Result<ResponseBox> {
             json_response(200, result)
         }
         (Method::Get, "/api/deck") => json_response(200, ops::workspace(project)?),
+        (Method::Get, path) if path.starts_with("/api/versions/") => {
+            let version = identifier(&path[14..])?;
+            json_response(
+                200,
+                serde_json::to_value(ops::version_get(project, version)?)?,
+            )
+        }
         (Method::Put, "/api/deck") => {
             let base = query
                 .strip_prefix("base=")
@@ -355,6 +362,44 @@ pub fn serve(project: &Path) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn historical_version_route_uses_saved_content_and_existing_error_mapping() {
+        let temp = tempfile::tempdir().unwrap();
+        let path = temp.path();
+        let saved = ops::new(path, "历史标题".into()).unwrap();
+        ops::put(
+            path,
+            saved.version,
+            serde_json::from_value(json!({"brief":{"title":"当前标题"}})).unwrap(),
+        )
+        .unwrap();
+        for (method, url, expected_status) in [
+            (Method::Get, "/api/versions/1", 200),
+            (Method::Get, "/api/versions/99", 404),
+            (Method::Get, "/api/versions/0", 400),
+            (Method::Get, "/api/versions/-1", 400),
+            (Method::Get, "/api/versions/invalid", 400),
+            (Method::Get, "/api/versions/9223372036854775808", 400),
+            (Method::Put, "/api/deck?base=99", 400),
+            (Method::Post, "/api/restore/99", 400),
+        ] {
+            let mut request = tiny_http::TestRequest::new()
+                .with_method(method)
+                .with_path(url)
+                .with_body("{}")
+                .into();
+            let response = route(path, &mut request).or_else(error_response).unwrap();
+            assert_eq!(response.status_code().0, expected_status, "{url}");
+            let body: Value = serde_json::from_reader(response.into_reader()).unwrap();
+            if expected_status == 200 {
+                assert_eq!(body, serde_json::to_value(&saved).unwrap());
+            } else {
+                assert!(body["error"].is_string());
+                assert!(body.get("deck").is_none());
+            }
+        }
+    }
 
     #[test]
     fn io_not_found_is_a_server_error() {

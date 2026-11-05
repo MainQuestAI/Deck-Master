@@ -27,6 +27,16 @@ pub fn get(project: &Path, pages: Option<&[String]>) -> Result<Value> {
     snapshot_value(&snapshot, pages)
 }
 
+pub fn version_get(project: &Path, version: i64) -> Result<Snapshot> {
+    if version <= 0 {
+        return Err(Error::Input("版本编号必须是正整数".into()));
+    }
+    let store = Store::open(project)?;
+    let deck = store::load_optional(&store.connection, version)?
+        .ok_or_else(|| Error::Missing(format!("版本 {version} 不存在；请从版本历史中重新选择")))?;
+    Ok(Snapshot { version, deck })
+}
+
 fn snapshot_value(snapshot: &Snapshot, pages: Option<&[String]>) -> Result<Value> {
     let mut deck = serde_json::to_value(&snapshot.deck)?;
     if let Some(ids) = pages {

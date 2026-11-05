@@ -231,6 +231,11 @@ pub fn current(connection: &Connection) -> Result<Snapshot> {
 }
 
 pub fn load(connection: &Connection, version: i64) -> Result<Deck> {
+    load_optional(connection, version)?
+        .ok_or_else(|| Error::Input(format!("版本 {version} 不存在；请用 deck show 查看历史")))
+}
+
+pub(crate) fn load_optional(connection: &Connection, version: i64) -> Result<Option<Deck>> {
     let json: Option<String> = connection
         .query_row(
             "SELECT deck_json FROM versions WHERE id = ?",
@@ -238,9 +243,9 @@ pub fn load(connection: &Connection, version: i64) -> Result<Deck> {
             |row| row.get(0),
         )
         .optional()?;
-    Ok(serde_json::from_str(&json.ok_or_else(|| {
-        Error::Input(format!("版本 {version} 不存在；请用 deck show 查看历史"))
-    })?)?)
+    json.map(|json| serde_json::from_str(&json))
+        .transpose()
+        .map_err(Error::from)
 }
 
 pub fn append(connection: &Connection, deck: &Deck, summary: &str) -> Result<i64> {
