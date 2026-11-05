@@ -54,7 +54,11 @@ function page(id, title) {
 function workspace(pages, version) {
   return {
     version,
-    deck: { brief: { title: '验收作品' }, pages },
+    deck: {
+      brief: { title: '验收作品', audience: '', task_type: '', goal: '', constraints: [], page_limit: null },
+      framing: { thesis: '', pillars: [], facts: [], assumptions: [], questions: [] },
+      pages,
+    },
     artifact_status: { missing_pages: [], stale_pages: [], stale_images: [] },
     runs: [],
     history: [],

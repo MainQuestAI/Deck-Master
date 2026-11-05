@@ -1,6 +1,6 @@
 import { test, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { ApiError, getDeck, putDeck, cancelRun, buildDeck, restoreVersion, exportDeck, fileUrl, mergeWorkspace, createDraft, createPageId, draftPatch, formatFinding, addReview, resolveReview, adoptCandidate, comparisonSnapshot } from './api.js';
+import { ApiError, getDeck, putDeck, cancelRun, buildDeck, restoreVersion, exportDeck, fileUrl, mergeWorkspace, createDraft, createPageId, draftPatch, createContextDraft, contextUnitPatch, formatFinding, addReview, resolveReview, adoptCandidate, comparisonSnapshot } from './api.js';
 
 const originalFetch = globalThis.fetch;
 afterEach(() => { globalThis.fetch = originalFetch; });
@@ -314,4 +314,44 @@ test('Card B: page IDs retry collisions with both saved pages and draft keys', (
   assert.equal(candidates.length, 0);
   assert.deepEqual(pages, [{ id: 'p11111111' }]);
   assert.deepEqual(Object.keys(drafts), ['p22222222']);
+});
+
+
+test('editing only the goal sends the complete brief and keeps the patch independent', async () => {
+  const brief = { title: '合成方案', audience: '业务团队', task_type: '首提', goal: '确认范围', constraints: ['只用公开材料'], page_limit: 12 };
+  const draft = createContextDraft(brief, 7);
+  draft.value.goal = '确认试点';
+  const patch = contextUnitPatch('brief', draft);
+  assert.deepEqual(patch, { brief: { ...brief, goal: '确认试点' } });
+  patch.brief.constraints.push('另一个值');
+  assert.deepEqual(draft.value.constraints, brief.constraints);
+  assert.deepEqual(draft.original, brief);
+  globalThis.fetch = async (url, options) => {
+    assert.equal(url, '/api/deck?base=7');
+    assert.deepEqual(JSON.parse(options.body), { brief: { ...brief, goal: '确认试点' } });
+    return Response.json({ version: 8, deck: { brief: draft.value } });
+  };
+  await putDeck(draft.base, contextUnitPatch('brief', draft));
+});
+
+test('editing one pillar preserves other pillars and all framing lists', () => {
+  const framing = { thesis: '先试点', pillars: [{ title: '范围', points: ['小范围'] }, { title: '行动', points: ['落实负责人'] }], facts: ['已有流程'], assumptions: ['有负责人'], questions: ['何时开始？'] };
+  const draft = createContextDraft(framing, 7);
+  draft.value.pillars[0].points[0] = '分两批试点';
+  assert.deepEqual(contextUnitPatch('framing', draft), { framing: {
+    ...framing, pillars: [{ title: '范围', points: ['分两批试点'] }, framing.pillars[1]],
+  } });
+  assert.deepEqual(draft.original, framing);
+});
+
+test('context drafts clone nested inputs independently and unchanged units produce no patch', () => {
+  const framing = { thesis: '', pillars: [{ title: '', points: ['支持点'] }], facts: [], assumptions: [], questions: [] };
+  const draft = createContextDraft(framing, 1);
+  assert.equal(contextUnitPatch('framing', draft), null);
+  framing.pillars[0].points.push('外部修改');
+  assert.deepEqual(draft.original.pillars[0].points, ['支持点']);
+  draft.value.pillars[0].points[0] = '草稿修改';
+  assert.deepEqual(draft.original.pillars[0].points, ['支持点']);
+  draft.value = structuredClone(draft.original);
+  assert.equal(contextUnitPatch('framing', draft), null);
 });
