@@ -118,6 +118,17 @@ test('save sends the bare patch and retains submitted input on conflict', async 
   assert.equal(patch.pages[0].notes, undefined);
 });
 
+test('draftPatch includes todo and refs when they change, and omits them when notes-only', () => {
+  const page = { id: 'p1', content: { title: '原稿', body_blocks: [] }, notes: '讲稿', todo: ['旧待补'], refs: ['旧出处'] };
+  const draft = createDraft(page, 2);
+  draft.page.todo = ['新待补'];
+  draft.page.refs = ['新出处', '第二出处'];
+  assert.deepEqual(draftPatch(draft), { pages: [{ id: 'p1', todo: ['新待补'], refs: ['新出处', '第二出处'] }] });
+  const notesOnly = createDraft(page, 2);
+  notesOnly.page.notes = '只改讲稿';
+  assert.deepEqual(draftPatch(notesOnly), { pages: [{ id: 'p1', notes: '只改讲稿' }] });
+});
+
 test('same-version polling refreshes runs; older polls cannot undo saves', () => {
   const current = { version: 3, runs: [{ status: 'open' }] };
   const incoming = { version: 3, runs: [{ status: 'cancelled' }] };
