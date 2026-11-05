@@ -421,6 +421,98 @@ fn edit(project: &Path, base: i64, value: Value) -> i64 {
 }
 
 #[test]
+fn historical_version_get_returns_saved_snapshot_without_business_writes() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    ops::new(path, "合成历史方案".into()).unwrap();
+    let historical = ops::put(
+        path,
+        1,
+        serde_json::from_value(json!({
+            "framing":{"thesis":"历史主张"},
+            "order":["p1"],
+            "pages":[{"id":"p1","content":{
+                "title":"历史标题",
+                "body_blocks":[{"type":"paragraph","id":"a1","text":"历史正文"}]
+            },"notes":"历史讲稿"}]
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    let current = edit(
+        path,
+        historical.version,
+        json!({
+            "brief":{"title":"当前方案"},
+            "framing":{"thesis":"当前主张"},
+            "pages":[{"id":"p1","content":{"title":"当前标题"},"notes":"当前讲稿"}]
+        }),
+    );
+    ops::review_add(path, Some("p1"), "当前意见", "author", "human").unwrap();
+    ops::run_start(path, "image", &["p1".into()], Some(1)).unwrap();
+    let store = Store::open(path).unwrap();
+    let counts = || -> Vec<i64> {
+        ["versions", "runs", "run_pages", "reviews", "builds"]
+            .iter()
+            .map(|table| {
+                store
+                    .connection
+                    .query_row(&format!("SELECT COUNT(*) FROM {table}"), [], |row| {
+                        row.get(0)
+                    })
+                    .unwrap()
+            })
+            .collect()
+    };
+    let before_counts = counts();
+    let before = ops::workspace(path).unwrap();
+    let service = Service::start(path);
+    let response = service.request(
+        "GET",
+        &format!("/api/versions/{}", historical.version),
+        &[],
+        "",
+    );
+    assert_eq!(response.status, 200);
+    assert!(response.headers["content-type"].starts_with("application/json"));
+    assert_eq!(response.json(), serde_json::to_value(&historical).unwrap());
+    let initial = service.request("GET", "/api/versions/1", &[], "");
+    assert_eq!(initial.status, 200);
+    assert_eq!(initial.json()["version"], 1);
+    assert_eq!(initial.json()["deck"]["pages"], json!([]));
+    assert_eq!(store.current().unwrap().version, current);
+    assert_eq!(counts(), before_counts);
+    assert_eq!(ops::workspace(path).unwrap(), before);
+}
+
+#[test]
+fn historical_version_get_errors_do_not_fall_back_to_current_or_change_write_errors() {
+    let temp = tempfile::tempdir().unwrap();
+    ops::new(temp.path(), "合成方案".into()).unwrap();
+    let service = Service::start(temp.path());
+    let missing = service.request("GET", "/api/versions/99", &[], "");
+    assert_eq!(missing.status, 404);
+    assert!(missing.json()["error"].is_string());
+    assert!(missing.json().get("deck").is_none());
+    assert!(missing.json().get("version").is_none());
+    for version in ["0", "-1", "invalid", "9223372036854775808"] {
+        let response = service.request("GET", &format!("/api/versions/{version}"), &[], "");
+        assert_eq!(response.status, 400, "{version}");
+        assert!(response.json().get("deck").is_none());
+    }
+    assert_eq!(
+        service
+            .request("PUT", "/api/deck?base=99", &[], "{}")
+            .status,
+        400
+    );
+    assert_eq!(
+        service.request("POST", "/api/restore/99", &[], "").status,
+        400
+    );
+}
+
+#[test]
 fn http_edits_conflicts_polling_history_restore_and_incomplete_markdown() {
     let temp = tempfile::tempdir().unwrap();
     ops::new(temp.path(), "合成方案".into()).unwrap();

@@ -224,6 +224,59 @@ fn edit_of_deleted_page_conflicts_but_unchanged_snapshot_can_be_replayed() {
 }
 
 #[test]
+fn version_get_distinguishes_missing_from_invalid_without_changing_put_or_restore() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    let base = two_pages(path);
+    let store = store::Store::open(path).unwrap();
+    let saved = store.current().unwrap();
+    ops::put(
+        path,
+        base,
+        patch(json!({"pages":[{"id":"p1","notes":"新讲稿"}]})),
+    )
+    .unwrap();
+    ops::review_add(path, Some("p1"), "当前意见", "author", "human").unwrap();
+    ops::run_start(path, "image", &["p1".into()], Some(1)).unwrap();
+    let before = ops::workspace(path).unwrap();
+    let counts = || -> Vec<i64> {
+        ["versions", "runs", "run_pages", "reviews", "builds"]
+            .iter()
+            .map(|table| {
+                store
+                    .connection
+                    .query_row(&format!("SELECT COUNT(*) FROM {table}"), [], |row| {
+                        row.get(0)
+                    })
+                    .unwrap()
+            })
+            .collect()
+    };
+    let before_counts = counts();
+    let historical = ops::version_get(path, base).unwrap();
+    assert_eq!(historical.version, base);
+    assert_eq!(historical.deck, saved.deck);
+    assert!(matches!(ops::version_get(path, 99), Err(Error::Missing(_))));
+    for version in [0, -1, i64::MIN] {
+        assert!(matches!(
+            ops::version_get(path, version),
+            Err(Error::Input(_))
+        ));
+    }
+    assert!(matches!(
+        store::load(&store.connection, 99),
+        Err(Error::Input(_))
+    ));
+    assert!(matches!(
+        ops::put(path, 99, patch(json!({}))),
+        Err(Error::Input(_))
+    ));
+    assert!(matches!(ops::restore(path, 99), Err(Error::Input(_))));
+    assert_eq!(counts(), before_counts);
+    assert_eq!(ops::workspace(path).unwrap(), before);
+}
+
+#[test]
 fn restore_appends_and_keeps_history_and_files() {
     let temp = tempfile::tempdir().unwrap();
     let base = two_pages(temp.path());
