@@ -1,6 +1,6 @@
 import { test, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { ApiError, getDeck, putDeck, cancelRun, buildDeck, restoreVersion, exportDeck, fileUrl, mergeWorkspace, createDraft, createPageId, draftPatch, createContextDraft, contextUnitPatch, formatFinding, addReview, resolveReview, adoptCandidate, comparisonSnapshot, reorderPages, movePageRelative, removePagePatch } from './api.js';
+import { ApiError, getVersion, getDeck, putDeck, cancelRun, buildDeck, restoreVersion, exportDeck, fileUrl, mergeWorkspace, createDraft, createPageId, draftPatch, createContextDraft, contextUnitPatch, formatFinding, addReview, resolveReview, adoptCandidate, comparisonSnapshot, reorderPages, movePageRelative, removePagePatch } from './api.js';
 
 const originalFetch = globalThis.fetch;
 afterEach(() => { globalThis.fetch = originalFetch; });
@@ -381,4 +381,20 @@ test('context drafts clone nested inputs independently and unchanged units produ
   assert.deepEqual(draft.original.pillars[0].points, ['支持点']);
   draft.value = structuredClone(draft.original);
   assert.equal(contextUnitPatch('framing', draft), null);
+});
+
+
+test('version reads use the exact snapshot endpoint and preserve error statuses', async () => {
+  const snapshot = { version: 6, deck: { brief: { title: '历史方案' }, pages: [] } };
+  const requests = [];
+  globalThis.fetch = async (url, options) => {
+    requests.push([url, options.method || 'GET']);
+    return Response.json(snapshot);
+  };
+  assert.deepEqual(await getVersion(6), snapshot);
+  assert.deepEqual(requests, [['/api/versions/6', 'GET']]);
+  for (const status of [400, 404, 500]) {
+    globalThis.fetch = async () => Response.json({ error: '无法读取版本' }, { status });
+    await assert.rejects(getVersion(6), error => error instanceof ApiError && error.status === status && !!error.data.error);
+  }
 });

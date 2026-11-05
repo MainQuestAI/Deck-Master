@@ -211,7 +211,7 @@ svg 类没有外部付费调用，不需要 `run call`，也没有 max_calls。�
 
 接口：`GET /api/deck`、`GET /api/versions/{version}`、`PUT /api/deck?base=N`、`POST /api/runs/{id}/cancel`、`POST /api/build`、`GET /api/files/{sha}`（sha 只接受 64 位十六进制）、`GET /api/export/{md|pptx}`、`GET|POST /api/reviews`、`POST /api/reviews/{id}/resolve`、`POST /api/runs/{run}/adopt/{page}`、`POST /api/restore/{version}`。接口以 S4 完成判断所需为限；手动采用接口沿用 `deck run adopt` 的行为与返回；导出只列出缺失和过期的页，不拦截（见 2.1、3.6）。
 
-`GET /api/versions/{version}`（#281）只读指定历史版本，成功返回现有 Snapshot 形状 `{version, deck}`；版本不存在返回 404，非法编号返回 400，不触发恢复或构建。
+`GET /api/versions/{version}`（#281）只读指定历史版本，成功返回现有 Snapshot 形状 `{version, deck}`，不含当前 live reviews/runs；版本不存在返回 404，非法编号返回 400，不触发恢复或构建。
 
 界面使用 #250 的新版 WebUI（React 18 + Vite，`frontend/`，设计为 S00–S07 八个工作区与 U01–U05 五个共用容器）。#250 目前是不调用任何接口的演示稿，数据在 `constants/data.js` 里。
 
