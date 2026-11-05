@@ -6,7 +6,7 @@ import { useDeckMaster } from '../../context/DeckMasterContext';
 
 function Field({ label, value, onChange, multiline = false, ...props }) {
   return <label className="form-group s4-field"><span>{label}</span>{multiline
-    ? <textarea rows={3} value={value} onChange={event => onChange(event.target.value)} {...props} />
+    ? <textarea rows={3} value={value ?? ''} onChange={event => onChange(event.target.value)} {...props} />
     : <input type="text" value={value ?? ''} onChange={event => onChange(event.target.value)} {...props} />}</label>;
 }
 

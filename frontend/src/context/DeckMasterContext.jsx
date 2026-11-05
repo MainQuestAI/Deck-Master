@@ -124,7 +124,11 @@ export function DeckMasterProvider({ children }) {
     setDrawer(null);
   };
   const openContextEdit = (kind) => {
-    setContextDrafts(value => value[kind] ? value : { ...value, [kind]: api.createContextDraft(workspace.deck[kind], workspace.version) });
+    setContextDrafts(value => {
+      const draft = value[kind];
+      if (draft && (draft.conflict || api.contextUnitPatch(kind, draft) !== null)) return value;
+      return { ...value, [kind]: api.createContextDraft(workspace.deck[kind], workspace.version) };
+    });
   };
   const updateContextDraft = (kind, next) => {
     setContextDrafts(value => ({ ...value, [kind]: { ...value[kind], value: next } }));

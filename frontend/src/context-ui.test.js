@@ -109,6 +109,40 @@ test('overview keeps draft input through collapse, polling, scene changes and fa
   assert.deepEqual(requests[0], { url: '/api/deck?base=7', patch: { brief: { ...brief, goal: '确认试点' } } });
 });
 
+for (const kind of ['brief', 'framing']) {
+  for (const saved of [false, true]) {
+    test(`${kind} reopens a clean draft from the polled workspace after ${saved ? 'saving' : 'closing without edits'}`, async t => {
+      await mount(t);
+      const title = kind === 'brief' ? '任务信息' : '业务框架';
+      const field = kind === 'brief' ? '希望对方理解或做出什么判断' : '中心主张';
+      const key = kind === 'brief' ? 'goal' : 'thesis';
+      await click(`编辑${title}`);
+      if (saved) {
+        await fill(field, '已保存的输入');
+        await click(`保存${title}`);
+      }
+      await click('收起编辑', section(kind));
+      payload.version++;
+      payload.deck[kind][key] = '服务器更新的内容';
+      const server = structuredClone(payload.deck[kind]);
+      const version = payload.version;
+      await poll(t);
+      assert.ok(section(kind).textContent.includes('服务器更新的内容'));
+      await click(`编辑${title}`);
+      assert.equal(input(field).value, '服务器更新的内容');
+      assert.equal(state.contextDrafts[kind].base, version);
+      assert.deepEqual(state.contextDrafts[kind].original, server);
+      assert.deepEqual(state.contextDrafts[kind].value, server);
+      assert.equal(section(kind).querySelector('button[type="submit"]').disabled, true);
+      await fill(field, '基于服务器更新继续修改');
+      await click(`保存${title}`);
+      assert.deepEqual(requests.at(-1), {
+        url: `/api/deck?base=${version}`, patch: { [kind]: { ...server, [key]: '基于服务器更新继续修改' } },
+      });
+    });
+  }
+}
+
 test('brief accepts custom tasks, list ordering and an empty page limit, then accepts the server result', async t => {
   await mount(t);
   await click('编辑任务信息');
@@ -209,6 +243,29 @@ test('a failed read after 409 keeps both inputs and requires a successful read b
   await click('保留我的整单元，核对后再保存');
   assert.equal(state.contextDrafts.brief.base, 8);
   assert.equal(state.contextDrafts.brief.value.goal, '我的待保存目标');
+});
+
+test('reopening retains an unresolved conflict even when input matches the original', async t => {
+  await mount(t);
+  await click('编辑任务信息');
+  await fill('希望对方理解或做出什么判断', '我的输入');
+  payload.version++;
+  payload.deck.brief.goal = '服务器输入';
+  write = async () => Response.json({ exit_code: 5, conflicts: [{ unit: 'brief', current: payload.deck.brief }] }, { status: 409 });
+  await click('保存任务信息');
+  await fill('希望对方理解或做出什么判断', brief.goal);
+  const draft = state.contextDrafts.brief;
+  assert.deepEqual(draft.value, draft.original);
+  assert.ok(draft.conflict);
+  await click('收起编辑', section('brief'));
+  payload.version++;
+  payload.deck.brief.goal = '服务器再次更新';
+  await poll(t);
+  await click('编辑任务信息');
+  assert.equal(state.contextDrafts.brief, draft);
+  assert.equal(input('希望对方理解或做出什么判断').value, brief.goal);
+  assert.equal(section('brief').querySelector('button[type="submit"]').disabled, true);
+  assert.ok(section('brief').querySelector('[aria-label="服务器当前整单元"]').textContent.includes('服务器输入'));
 });
 
 test('new framing groups and supporting lists remain editable and preserve existing context', async t => {
