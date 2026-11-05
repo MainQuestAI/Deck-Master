@@ -112,6 +112,26 @@ test('block type changes are replacements and table structure, text, value and u
   assert.ok(allChanges(diffDecks(before, after)).some(item => item.kind === 'replaced'));
 });
 
+test('removed table cells retain the deleted column label and column changes use each snapshot', () => {
+  const before = deck();
+  before.pages[0].content.body_blocks = [{
+    id: 'table', type: 'table', columns: [{ id: 'c0', label: '税费' }, { id: 'c1', label: '金额' }, { id: 'c2', label: '说明' }],
+    rows: [{ id: 'r1', cells: [
+      { id: 's1', column_id: 'c0', display_text: '10 元' },
+      { id: 's2', column_id: 'c1', display_text: '补充' },
+    ] }],
+  }];
+  const after = structuredClone(before);
+  const table = after.pages[0].content.body_blocks[0];
+  table.columns.splice(0, 2);
+  table.rows[0].cells.shift();
+  table.rows[0].cells[0].column_id = 'c2';
+  const changes = allChanges(diffDecks(before, after));
+  const removed = changes.find(item => item.kind === 'removed' && item.before.id === 's1');
+  assert.equal(removed.label, '单元格 1：税费');
+  assert.ok(changes.some(item => item.label === '所属列' && item.before === '金额' && item.after === '说明'));
+});
+
 test('artifact and workspace presentation churn alone is not a body change', () => {
   const before = deck();
   const after = structuredClone(before);

@@ -39,19 +39,19 @@ function sequence(label, before = [], after = [], compare, name = (_, index) => 
   const newCommon = after.filter(item => oldById.has(item.id)).map(item => item.id);
   const changes = [];
   for (const [index, item] of before.entries()) {
-    if (!newById.has(item.id)) changes.push({ label: name(item, index), before: item, after: undefined, kind: 'removed' });
+    if (!newById.has(item.id)) changes.push({ label: name(item, index, 'before'), before: item, after: undefined, kind: 'removed' });
   }
   for (const [index, item] of after.entries()) {
     const old = oldById.get(item.id);
     if (!old) {
-      changes.push({ label: name(item, index), before: undefined, after: item, kind: 'added' });
+      changes.push({ label: name(item, index, 'after'), before: undefined, after: item, kind: 'added' });
       continue;
     }
     const children = compare(old.item, item);
     if (oldCommon.indexOf(item.id) !== newCommon.indexOf(item.id)) {
       children.unshift({ label: '位置变化', before: old.index + 1, after: index + 1, kind: 'moved' });
     }
-    if (children.length) changes.push({ label: name(item, index), kind: 'changed', children });
+    if (children.length) changes.push({ label: name(item, index, 'after'), kind: 'changed', children });
   }
   return changes.length ? [{ label, kind: 'changed', children: changes }] : [];
 }
@@ -80,7 +80,7 @@ function blockChanges(left, right) {
       ...field('显示文字', old.display_text, next.display_text),
       ...field('原始值变化', old.value, next.value, 'metadata'),
       ...field('单位变化', old.unit, next.unit, 'metadata'),
-    ], (cell, index) => `单元格 ${index + 1}：${right.columns?.find(column => column.id === cell.column_id)?.label || '未命名列'}`)),
+    ], (cell, index, side) => `单元格 ${index + 1}：${(side === 'before' ? left : right).columns?.find(column => column.id === cell.column_id)?.label || '未命名列'}`)),
   ];
   return field('正文块', left, right, 'full');
 }

@@ -14,28 +14,29 @@ export default function HistoryPanel() {
   const history = workspace.history || [];
   const metadata = version => structuredClone(history.find(item => item.id === version) || null);
 
-  const open = async (mode, leftVersion, rightVersion = workspace.version) => {
+  const open = async (mode, leftVersion, rightVersion = workspace.version, rightFollowsCurrent = mode === 'compare' && rightVersion === workspace.version) => {
     const id = ++requestId.current;
     const leftMeta = metadata(leftVersion);
     const rightMeta = metadata(rightVersion);
-    retry.current = () => open(mode, leftVersion, rightVersion);
-    setReading({ mode, leftVersion, rightVersion, loading: true, error: '', left: null, right: null });
+    retry.current = () => open(mode, leftVersion, rightVersion, rightFollowsCurrent);
+    setReading({ mode, leftVersion, rightVersion, rightFollowsCurrent, loading: true, error: '', left: null, right: null });
     try {
       const [left, right] = await Promise.all([
         getVersion(leftVersion), mode === 'compare' ? getVersion(rightVersion) : Promise.resolve(null),
       ]);
       if (id !== requestId.current) return;
-      setReading({ mode, leftVersion, rightVersion, left, right, leftMeta, rightMeta, loading: false, error: '' });
+      setReading({ mode, leftVersion, rightVersion, rightFollowsCurrent, left, right, leftMeta, rightMeta, loading: false, error: '' });
     } catch (error) {
       if (id === requestId.current) setReading(value => ({ ...value, loading: false, error: error.message }));
     }
   };
 
-  const readSide = async (side, version) => {
+  const readSide = async (side, version, followsCurrent = version === workspace.version) => {
     const id = ++requestId.current;
     const meta = metadata(version);
-    retry.current = () => readSide(side, version);
-    setReading(value => ({ ...value, [`${side}Version`]: version, loading: true, error: '' }));
+    retry.current = () => readSide(side, version, followsCurrent);
+    setReading(value => ({ ...value, [`${side}Version`]: version,
+      rightFollowsCurrent: side === 'right' ? followsCurrent : value.rightFollowsCurrent, loading: true, error: '' }));
     try {
       const snapshot = await getVersion(version);
       if (id !== requestId.current) return;
@@ -51,7 +52,8 @@ export default function HistoryPanel() {
     <select disabled={reading.loading && !!reading.left} value={reading[`${side}Version`]} onChange={event => {
       const version = Number(event.target.value);
       if (reading.left && (reading.mode === 'view' || reading.right)) readSide(side, version);
-      else open(reading.mode, side === 'left' ? version : reading.leftVersion, side === 'right' ? version : reading.rightVersion);
+      else open(reading.mode, side === 'left' ? version : reading.leftVersion, side === 'right' ? version : reading.rightVersion,
+        side === 'right' ? version === workspace.version : reading.rightFollowsCurrent);
     }}>
       {!history.some(item => item.id === reading[`${side}Version`]) && <option value={reading[`${side}Version`]}>版本 {reading[`${side}Version`]}</option>}
       {history.map(item => <option key={item.id} value={item.id}>版本 {item.id} · {item.summary}</option>)}
@@ -65,11 +67,11 @@ export default function HistoryPanel() {
       <button className="button" onClick={back}>返回历史列表</button>
       {reading.mode === 'view' && <button className="button" onClick={() => open('compare', reading.leftVersion)}>与当前稿对比</button>}
       <button className="button" disabled={busy.restore || reading.loading || !!reading.error || !reading.left || reading.left.version === workspace.version}
-        onClick={() => restore(reading.left.version)}>整稿恢复到此版本</button>
+        onClick={() => restore(reading.left.version)}>整稿恢复到版本 {reading.left?.version ?? reading.leftVersion}</button>
     </div>
     <p>这里阅读和比较的是已保存版本，未保存输入仍保留。</p>
     <div className="history-columns">{versionSelect('left')}{reading.mode === 'compare' && versionSelect('right')}</div>
-    {reading.mode === 'compare' && reading.right && workspace.version > reading.right.version && <div className="s4-message" role="status">
+    {reading.mode === 'compare' && reading.rightFollowsCurrent && reading.right && workspace.version > reading.right.version && <div className="s4-message" role="status">
       当前稿件已更新至版本 {workspace.version}，可刷新右侧比较。
       <button className="button" disabled={reading.loading} onClick={() => readSide('right', workspace.version)}>刷新右侧比较</button>
     </div>}

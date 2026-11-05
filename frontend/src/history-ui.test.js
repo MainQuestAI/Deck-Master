@@ -125,6 +125,9 @@ test('view reads a frozen historical body; only the explicit whole-deck restore 
   assert.ok(reading().textContent.includes('正文 3'));
   assert.ok(reading().textContent.includes('讲稿 3'));
   assert.ok(reading().textContent.includes('3 元'));
+  const fieldLabels = [...reading().querySelectorAll('dt')].map(node => node.textContent);
+  assert.ok(fieldLabels.includes('作品名称'));
+  assert.ok(fieldLabels.includes('页面标题'));
   assert.equal(reading().textContent.includes('正文 7'), false);
   assert.deepEqual(calls.filter(call => call.url.startsWith('/api/versions/')), [{ url: '/api/versions/3', method: 'GET' }]);
   assert.deepEqual(writes(), []);
@@ -133,7 +136,7 @@ test('view reads a frozen historical body; only the explicit whole-deck restore 
   await poll(t);
   assert.equal(reading().innerHTML, frozen);
   assert.deepEqual(writes(), []);
-  await click('整稿恢复到此版本');
+  await click('整稿恢复到版本 3');
   assert.deepEqual(writes(), [{ url: '/api/restore/3', method: 'POST' }]);
   assert.equal(state.workspace.version, 9);
   assert.equal(state.workspace.deck.pages[0].notes, '讲稿 3');
@@ -174,11 +177,34 @@ test('comparison freezes both exact versions and scroll position on poll, then r
   assert.equal(document.querySelector('.history-panel > .s4-message'), null);
   assert.equal(state.workspace.version, 8);
   assert.deepEqual(writes(), []);
+  await poll(t, 9);
+  assert.ok(document.querySelector('.history-panel > .s4-message'));
   await choose('左侧版本', 7);
   assert.ok(comparison().textContent.includes('正文 7'));
   assert.ok(comparison().textContent.includes('正文 8'));
   await choose('右侧版本', 3);
   assert.ok(comparison().textContent.includes('正文 3'));
+  assert.deepEqual(writes(), []);
+});
+
+test('a deliberate historical right selection stops following current until current is selected again', async t => {
+  await mount(t);
+  await click('与当前稿对比', entry(3));
+  await choose('右侧版本', 3);
+  const refreshButton = () => [...document.querySelectorAll('button')].find(node => node.textContent === '刷新右侧比较');
+  assert.equal(document.querySelector('.history-panel > .s4-message'), null);
+  assert.equal(refreshButton(), undefined);
+  const frozen = comparison().innerHTML;
+  await poll(t);
+  assert.equal(comparison().innerHTML, frozen);
+  assert.equal(document.querySelector('.history-panel > .s4-message'), null);
+  assert.equal(refreshButton(), undefined);
+  await choose('左侧版本', 7);
+  assert.equal(document.querySelector('.history-panel > .s4-message'), null);
+  await choose('右侧版本', 8);
+  await poll(t, 9);
+  assert.ok(document.querySelector('.history-panel > .s4-message'));
+  assert.ok(refreshButton());
   assert.deepEqual(writes(), []);
 });
 
