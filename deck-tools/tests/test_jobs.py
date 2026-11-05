@@ -204,6 +204,7 @@ def test_exported_rich_text_keeps_url_whose_path_is_bold(tmp_path):
 
 
 def test_exported_rich_text_keeps_bold_query_path_that_only_looks_local(tmp_path):
+    # This regression checks bold preservation; it does not assert run color.
     body = "https://example.com/open?src=/Users/x"
     runs = [("https://example.com/open?src=", False), ("/Users/x", True)]
     result = compile_job(_rich_text_export_job(tmp_path, runs))
