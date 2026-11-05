@@ -2,14 +2,17 @@
 
 ## Unreleased
 
-### #274 follow-ups
+## 1.1.1 — 2026-11-05
+
+See [1.1.1 release notes](docs/releases/1.1.1.md).
 
 Follow-ups from the 2026-11-04 maintainer acceptance
 ([#274](https://github.com/MainQuestAI/Deck-Master/issues/274)).
 
 - `scripts/install.sh` still exits 2 with `已存在且指向其他位置` when the skill
   symlink points elsewhere, and the message now says to remove only that symlink.
-  A finished install prints `<prefix>/bin/deck` and the `deck` found on `PATH`.
+  A finished install always prints `<prefix>/bin/deck`; if `deck` is on `PATH`
+  it also prints that path, otherwise it says there is no `deck` on `PATH`.
 - `deck doctor` now checks `rsvg-convert`. Without `--fonts`, the font line is
   only a warning and does not by itself turn `ready` into `needs_tool`.
 - `legacy-export` now lists in `unmapped` any `visual_spec.intent` that differs
