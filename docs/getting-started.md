@@ -42,7 +42,8 @@ prints the plan and checks the skill path without writing.
 
 If `~/.local/bin` is not on `PATH`, add it or call that `deck` by its full
 path. The skill path must be new, or already the same link; a different file
-or link is left unchanged and the script exits 2.
+or link is left unchanged and the script exits 2. The stale-symlink case is
+in the [1.1.0 notes](releases/1.1.0.md#skill-link-already-points-elsewhere).
 
 A fresh install finds deck-tools in the prefix venv, so it does not need
 `DECK_TOOLS_PYTHON`. deck-tools is an editable install of this checkout;
@@ -124,9 +125,10 @@ Task routing: [agent-task-index.md](agent-task-index.md).
 - `GET /api/export/md` does not run the credential check used on exported
   PPTX slide text.
 - PPTX has been rechecked through LibreOffice (`soffice`) rendering in the
-  tool tests. Desktop editing in WPS and Microsoft PowerPoint was not
-  repeated for 1.1.0. Actual WPS editing was also not verified on the PR125
-  1.0.0 observation because the Mac device locked.
+  tool tests. The 2026-11-04 maintainer check is in the
+  [1.1.0 notes](releases/1.1.0.md#maintainer-acceptance-2026-11-04).
+  Actual WPS editing was not verified on the PR125 1.0.0 observation
+  because the Mac device locked.
 - Native editable PPT output uses shapes and text. Tables/charts are composed
   shapes/text rather than Office-native spreadsheet-backed data objects.
 - `doctor` finding a font family does not prove LibreOffice can render every

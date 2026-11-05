@@ -34,8 +34,8 @@ for current implementation limits.
 `deck-tools`, WebUI). Source version, built artifacts, an active install and a
 published GitHub Release are separate facts. Start with the
 [installation and first-run guide](docs/getting-started.md). See
-[1.1.0 release notes](docs/releases/1.1.0.md) for migration, tests and known
-limits. **License:** Apache-2.0.
+[1.1.0 release notes](docs/releases/1.1.0.md) for migration, the 2026-11-04
+maintainer check, and known limits. **License:** Apache-2.0.
 
 The 1.1.0 authoring path is the Rust core in `rust/`, file tools in
 `deck-tools/`, the WebUI in `frontend/` served by `deck serve`, and the Codex
@@ -71,7 +71,8 @@ managed Python release.
 Options: `--prefix DIR`, `--skill-dir PATH`, `--dry-run`. If `~/.local/bin` is
 not on `PATH`, add it or call that `deck` by its full path. The skill path must
 be new, or already the same link; the script leaves a different file or link
-unchanged and exits with an error.
+unchanged and exits with an error. The stale-symlink case is in the
+[1.1.0 notes](docs/releases/1.1.0.md#skill-link-already-points-elsewhere).
 
 After install, `deck new ./my-deck --title '方案标题'` creates a work
 directory. The linked skill describes the first-run commands.
@@ -188,9 +189,8 @@ Keep the printed URL private. The server binds `127.0.0.1` only.
 5. Reviews are stored on the version at add time. The UI writes human reviews;
    CLI `self_check` is the current Host's own check.
 
-Professional human review and desktop-editing evidence stay unevaluated until
-actually performed. See
-[known limitations](docs/getting-started.md#known-limitations).
+The 2026-11-04 maintainer check is in the
+[1.1.0 release notes](docs/releases/1.1.0.md#maintainer-acceptance-2026-11-04).
 
 ## Diagnostics
 

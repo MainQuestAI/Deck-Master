@@ -35,7 +35,7 @@
 | 旧线 schema | [活动合同目录](../src/deck_master/resources/contracts/) | 旧 Python 线唯一活动 schema；历史镜像不得反向覆盖 |
 | 设计约束 | [DESIGN](../DESIGN.md) | 由该入口选择当前设计；旧原型和模拟按钮不证明已有服务 |
 | 工程规格与依赖 | [Spec 索引](specs/README.md) | 现行架构先读 rust-rebuild，再读分配任务所需的继承合同 |
-| 发版记录 | [releases](releases/README.md) | 1.1.0 与 1.0.0 源码准备记录；有无 tag/Release 另核实 |
+| 发版记录 | [releases](releases/README.md) | `v1.1.0` 已是 tag `292fb60a`；验收范围见 [1.1.0 说明](releases/1.1.0.md)。1.0.0 仍是准备记录 |
 | 测试与审查证据 | [报告索引](reports/README.md) | 先核对日期、源码 SHA、范围、未执行项及是否同一发行文件 |
 | 历史/归档 | [归档索引](archive/README.md) | 追溯原始决定，不能充当当前命令说明 |
 
