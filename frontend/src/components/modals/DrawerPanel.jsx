@@ -2,6 +2,7 @@ import React from 'react';
 import { useDeckMaster } from '../../context/DeckMasterContext';
 import PageContent from '../common/PageContent';
 import useDialogFocus from './useDialogFocus';
+import HistoryPanel from '../history/HistoryPanel.jsx';
 
 function Field({ label, value, onChange, multiline = false, readOnly = false }) {
   return <label className="form-group s4-field"><span>{label}</span>{multiline ? <textarea rows={3} value={value || ''} readOnly={readOnly} onChange={onChange && (event => onChange(event.target.value))} /> : <input type="text" value={value || ''} readOnly={readOnly} onChange={onChange && (event => onChange(event.target.value))} />}</label>;
@@ -30,18 +31,18 @@ function ContentFields({ content, change }) {
 }
 
 export default function DrawerPanel() {
-  const { drawer, closeDrawer, drafts, currentPage, updateDraft, saveDraft, rebaseDraft, discardDraft, workspace, busy, restore, actionError } = useDeckMaster();
+  const { drawer, closeDrawer, drafts, currentPage, updateDraft, saveDraft, rebaseDraft, discardDraft, workspace, busy, actionError } = useDeckMaster();
   const panel = useDialogFocus(!!(drawer && workspace), closeDrawer);
   if (!drawer || !workspace) return null;
   const draft = drafts[currentPage];
   const page = draft?.page;
   const deleted = page && !workspace.deck.pages.some(item => item.id === page.id);
-  const title = drawer === 'history' ? '版本历史与恢复' : deleted ? '查看未保存输入' : '修改正文与讲稿';
+  const title = drawer === 'history' ? '版本历史与正文对比' : deleted ? '查看未保存输入' : '修改正文与讲稿';
   return <div className="drawer-backdrop open"><section ref={panel} tabIndex={-1} className="drawer-panel open wide" role="dialog" aria-modal="true" aria-label={title}>
     <div className="drawer-head"><h2>{title}</h2><button className="button" onClick={closeDrawer}>{drawer === 'editor' ? '收起并保留输入' : '关闭'}</button></div>
     <div className="drawer-body">
       {actionError && <p className="s4-message" role="alert">{actionError}</p>}
-      {drawer === 'history' ? <>{workspace.history.map(version => <article key={version.id} className="s4-panel"><h3>版本 {version.id}{version.id === workspace.version && ' · 当前'}</h3><p>{version.created_at}</p><p className="s4-wrap">{version.summary}</p><button className="button" disabled={busy.restore || version.id === workspace.version} onClick={() => restore(version.id)}>恢复此版本</button></article>)}</> : deleted ? <>
+      {drawer === 'history' ? <HistoryPanel /> : deleted ? <>
         <p className="s4-message">当前页面已不存在。以下输入只读，可选中复制，转移后再放弃。</p>
         <PageContent content={page.content} />
         <Field label="本页目的" value={page.purpose} multiline readOnly />

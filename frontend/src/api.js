@@ -161,3 +161,5 @@ export function formatFinding(finding) {
   if ('actual' in finding) parts.push(`实际：${JSON.stringify(finding.actual)}`);
   return parts.join(' · ');
 }
+
+export const getVersion = (version, signal) => request(`/api/versions/${encodeURIComponent(version)}`, { signal });
