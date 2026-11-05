@@ -106,6 +106,14 @@ export function draftPatch(draft) {
   return { pages: [page] };
 }
 
+export function createContextDraft(value, base) {
+  return { base, original: structuredClone(value), value: structuredClone(value), conflict: null, error: '' };
+}
+
+export function contextUnitPatch(kind, draft) {
+  return JSON.stringify(draft.original) === JSON.stringify(draft.value) ? null : { [kind]: structuredClone(draft.value) };
+}
+
 const findingLabels = {
   notes_page_identity_mismatch: '讲稿对应的页面不一致', speaker_notes_mismatch: '讲稿内容不一致',
   slide_count_mismatch: '幻灯片数量不一致', missing_slide: '缺少幻灯片',

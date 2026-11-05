@@ -11,6 +11,7 @@ export function DeckMasterProvider({ children }) {
   const [currentPage, setCurrentPage] = useState(null);
   const [drawer, setDrawer] = useState(null);
   const [drafts, setDrafts] = useState({});
+  const [contextDrafts, setContextDrafts] = useState({ brief: null, framing: null });
   const [busy, setBusy] = useState({});
   const locks = useRef(new Set());
   const readId = useRef(0);
@@ -122,6 +123,47 @@ export function DeckMasterProvider({ children }) {
     setDrafts(value => { const next = { ...value }; delete next[currentPage]; return next; });
     setDrawer(null);
   };
+  const openContextEdit = (kind) => {
+    setContextDrafts(value => value[kind] ? value : { ...value, [kind]: api.createContextDraft(workspace.deck[kind], workspace.version) });
+  };
+  const updateContextDraft = (kind, next) => {
+    setContextDrafts(value => ({ ...value, [kind]: { ...value[kind], value: next } }));
+  };
+  const refreshContextConflict = async (kind) => {
+    try {
+      const snapshot = await refresh();
+      setContextDrafts(value => ({ ...value, [kind]: { ...value[kind], error: '', conflict: { ...value[kind].conflict, snapshot } } }));
+    } catch (error) {
+      setContextDrafts(value => ({ ...value, [kind]: { ...value[kind], error: error.message } }));
+    }
+  };
+  const resolveContextConflict = (kind, keepMine) => {
+    setContextDrafts(value => {
+      const draft = value[kind];
+      const snapshot = draft.conflict?.snapshot;
+      if (!snapshot) return value;
+      const next = api.createContextDraft(snapshot.deck[kind], snapshot.version);
+      return { ...value, [kind]: keepMine ? { ...next, value: draft.value } : next };
+    });
+  };
+  const saveContext = (kind) => perform(`save-${kind}`, async () => {
+    const draft = contextDrafts[kind];
+    const patch = api.contextUnitPatch(kind, draft);
+    if (!patch || draft.conflict) return;
+    setContextDrafts(value => ({ ...value, [kind]: { ...value[kind], error: '' } }));
+    try {
+      const result = await api.putDeck(draft.base, patch);
+      acceptSave(result);
+      setContextDrafts(value => ({ ...value, [kind]: api.createContextDraft(result.deck[kind], result.version) }));
+      setToast(kind === 'brief'
+        ? (result.deck.pages.length ? '任务信息已保存，可在当前 Codex 会话中据此调整正文' : '任务信息已保存')
+        : (result.deck.pages.length ? '框架已修改；正文如需按新框架调整，请在当前 Codex 会话继续' : '框架已保存'));
+      await reload();
+    } catch (error) {
+      setContextDrafts(value => ({ ...value, [kind]: { ...value[kind], error: error.status === 409 ? '' : error.message, conflict: error.status === 409 ? error.data : value[kind].conflict } }));
+      if (error.status === 409) await refreshContextConflict(kind);
+    }
+  });
   const createPage = () => perform('create', async () => {
     const id = api.createPageId(pages, drafts);
     const result = await api.putDeck(workspace.version, { order: [...pages.map(page => page.id), id], pages: [{ id }] });
@@ -191,6 +233,7 @@ export function DeckMasterProvider({ children }) {
     workspace, pages, revision: workspace?.version, activeProject: workspace?.deck.brief.title || '未命名作品',
     connectionError, actionError, busy, refresh: reload, scene, setScene, currentPage,
     getPage, getPageNumStr, openPage, editPage, createPage, drafts, updateDraft, saveDraft, rebaseDraft, discardDraft,
+    contextDrafts, openContextEdit, updateContextDraft, saveContext, refreshContextConflict, resolveContextConflict,
     drawer, openDrawer: setDrawer, closeDrawer: () => setDrawer(null),
     stopRun, build, buildResult, download, downloadStatus, restore,
     addReview, resolveReview, reviewDrafts, setReviewDrafts,
