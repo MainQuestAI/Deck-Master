@@ -2,7 +2,7 @@
 
 性质：synthetic 教学案例的方法讲解；输入与前后稿均为虚构或手写编辑示范，不是模型实验结果。
 
-[输入](../../assets/content/examples/E04-saas-retention/input.md) · [普通稿](../../assets/content/examples/E04-saas-retention/before.md) · [改进稿](../../assets/content/examples/E04-saas-retention/after.md)
+[输入](../../assets/content/examples/E04-saas-retention/input.md) · [普通稿](../../assets/content/examples/E04-saas-retention/before.md) · [改进稿](../../assets/content/examples/E04-saas-retention/after.md) · [合成算术](../../assets/content/examples/E04-saas-retention/numbers.json)
 
 主要调用：M02、M03、M04、M05、M08、M10。
 
@@ -17,4 +17,4 @@
 NRR分母和Logo续约指标不混用；月活不当开户或激活；1260/1420只解释金额构成；ToC中每一个箭头都可以提出证据需求，不把顺序画出来就认为证明成立。
 
 
-这些文件是同一案例的不同用途，按当前任务需要读取；案例事实不得成为新客户项目来源。
+这些文件是同一案例的不同用途，按当前任务需要读取；案例事实不得成为新客户项目来源。合成算术可用 `python -m deck_tools.case_numbers` 复算该 `numbers.json`。算式通过只说明文件内的式子一致，不证明来源、归因或 ROI，也不是写稿前置。

@@ -74,7 +74,17 @@ jobs:
           "$RUNNER_TEMP/deck-prefix/share/deck/venv/bin/python" -c "import deck_tools"
           test -L "$RUNNER_TEMP/codex-skills/deck"
           test "$(readlink "$RUNNER_TEMP/codex-skills/deck")" = "${{ github.workspace }}/deck-skill"
+          test ! -e "$RUNNER_TEMP/codex-skills/deck-master"
           "$RUNNER_TEMP/deck-prefix/bin/deck" --help >/dev/null
+          set -o pipefail
+          bash scripts/install.sh --dry-run --prefix "$RUNNER_TEMP/deck-prefix" --skills-root "$RUNNER_TEMP/skills-root" | tee "$RUNNER_TEMP/skills-root-plan"
+          set +o pipefail
+          grep -q 'skill-mode=roles' "$RUNNER_TEMP/skills-root-plan"
+          grep -q 'deck-master.md' "$RUNNER_TEMP/skills-root-plan"
+          if bash scripts/install.sh --dry-run --prefix "$RUNNER_TEMP/deck-prefix" --skill-dir "$RUNNER_TEMP/codex-skills/deck" --skills-root "$RUNNER_TEMP/skills-root"; then
+            echo "skill flags must be mutually exclusive" >&2
+            exit 1
+          fi
       - name: Installed deck imports a legacy archive
         run: |
           export DECK_BIN="$RUNNER_TEMP/deck-prefix/bin/deck"

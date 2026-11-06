@@ -1,47 +1,54 @@
 {
-  "purpose": "教学示例，不参与自动授权",
+  "status": "rewritten-historical-reference",
+  "note": "这些条目来自旧路由示例，已改写成 deck-master、deck-content、deck-design、deck-review 的当前职责。本文件不是新线命令，不要求运行旧协议、旧范围名或 Python deck-master。",
   "examples": [
     {
       "id": "full-deck",
       "user_request": "根据材料做完整PPT",
       "skill": "deck-master",
-      "expected_scope": "协调内容、设计、制作与审查",
-      "avoid": "不凭输入一句话跳过关键范围和有效决定"
+      "duty": "理解任务后，在授权范围内协调内容、设计和必要审查，直到指定作品完成",
+      "handoff": "内容交主张、正文和关系；设计交主视觉与范围内的蓝图或 PPT；审查只返回问题",
+      "stop": "作者中途改成只要其中一项时，到该项结果即返回"
     },
     {
       "id": "plan-only",
       "user_request": "先只梳理方向和故事线",
       "skill": "deck-content",
-      "expected_scope": "plan_only：问题与论证规划",
-      "avoid": "不自动写全稿、生图或制作"
+      "duty": "只策划：写出主张、框架和取舍",
+      "handoff": "不自动写完全部正文，不生图，不制作",
+      "stop": "框架足以支撑下一步时结束"
     },
     {
-      "id": "write-only",
-      "user_request": "按这份确认大纲补齐正文",
+      "id": "write-from-direction",
+      "user_request": "按这份确认方向补齐正文",
       "skill": "deck-content",
-      "expected_scope": "write_only：在确认方向内写稿",
-      "avoid": "不重新投票选择路线"
+      "duty": "沿用已确认的方向写实际逐页正文和页序",
+      "handoff": "不重新选择故事线，不生图",
+      "stop": "正文和页序写完即结束；需要画面时再交设计"
     },
     {
-      "id": "speech-only",
+      "id": "notes-only",
       "user_request": "只给第3页写讲稿，不改页面",
       "skill": "deck-content",
-      "expected_scope": "speech_only：指定页口播",
-      "avoid": "不修改正文、页序、事实"
+      "duty": "只提交该页讲稿",
+      "handoff": "不改正文、页序和事实，不启动 image 或 SVG",
+      "stop": "讲稿写完即结束"
     },
     {
-      "id": "design-only",
+      "id": "design-sample",
       "user_request": "按已确认稿做一页样式方案",
       "skill": "deck-design",
-      "expected_scope": "限定设计与样页",
-      "avoid": "不为了布局改结论或删必要条件"
+      "duty": "在已有正文上做约定页的主视觉、蓝图或样页",
+      "handoff": "不为了版式改结论或删必要条件；正文必须改时退回内容",
+      "stop": "样页完成即停，不扩成全稿"
     },
     {
       "id": "review-only",
       "user_request": "只审这版稿，不要修改",
       "skill": "deck-review",
-      "expected_scope": "只读findings",
-      "avoid": "不创建生产项目、不修改来源"
+      "duty": "只读，按页或区域返回问题、影响、建议和未验证维度",
+      "handoff": "不改正文，不生图，不采用候选，不新建作品",
+      "stop": "报告交回即结束；作者没有要求保存意见时不写 review"
     }
   ]
 }

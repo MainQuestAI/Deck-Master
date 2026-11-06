@@ -2,7 +2,7 @@
 
 性质：synthetic 教学案例的方法讲解；输入与前后稿均为虚构或手写编辑示范，不是模型实验结果。
 
-[输入](../../assets/content/examples/E03-policy-training/input.md) · [普通稿](../../assets/content/examples/E03-policy-training/before.md) · [改进稿](../../assets/content/examples/E03-policy-training/after.md)
+[输入](../../assets/content/examples/E03-policy-training/input.md) · [普通稿](../../assets/content/examples/E03-policy-training/before.md) · [改进稿](../../assets/content/examples/E03-policy-training/after.md) · [合成算术](../../assets/content/examples/E03-policy-training/numbers.json)
 
 主要调用：M01、M03、M08、M09、M10。
 
@@ -17,4 +17,4 @@ M09用同来源可信、不同适用范围构成对照，再给完整示范和�
 不把最新当适用；不创造额外义务或承诺；练习有材料可判，反馈解释为什么；样本5.5%不能外推总体；不强制咨询收尾。
 
 
-这些文件是同一案例的不同用途，按当前任务需要读取；案例事实不得成为新客户项目来源。
+这些文件是同一案例的不同用途，按当前任务需要读取；案例事实不得成为新客户项目来源。合成算术可用 `python -m deck_tools.case_numbers` 复算该 `numbers.json`。算式通过只说明文件内的式子一致，不证明来源、归因或 ROI，也不是写稿前置。

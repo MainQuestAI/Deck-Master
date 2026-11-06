@@ -64,16 +64,23 @@ From a source checkout:
 ```
 
 The script builds the Web UI, installs `deck` at `~/.local/bin/deck` (or
-`<prefix>/bin/deck` with `--prefix`), creates a Python 3.12 venv for
-`deck-tools` at `<prefix>/share/deck/venv`, and links `deck-skill/` to
-`~/.codex/skills/deck`. It does not activate or roll back a managed Python
-release.
+`<prefix>/bin/deck` with `--prefix`), and creates a Python 3.12 venv for
+`deck-tools` at `<prefix>/share/deck/venv`. It does not activate or roll back a
+managed Python release.
 
-Options: `--prefix DIR`, `--skill-dir PATH`, `--dry-run`. If `<prefix>/bin` is
-not on `PATH`, add it or call `<prefix>/bin/deck`. The skill path must be new,
-or already the same link. A symlink that points elsewhere exits 2 with
-`已存在且指向其他位置`; remove only that symlink and rerun. Steps are in the
-[install guide](docs/getting-started.md#install-from-source).
+During the move to the four role entries, a run with no skill flag still links
+only the compatibility entry `deck-skill/` to `~/.codex/skills/deck`.
+`--skill-dir PATH` does the same at `PATH`. `--prefix DIR` sets the install root.
+`--dry-run` prints the plan and does not write. `--skills-root DIR` also links
+`deck-master`, `deck-content`, `deck-design`, and `deck-review` under `DIR`,
+each `SKILL.md` pointing at its source file and `references` / `assets` pointing
+at the shared directories. The two skill flags cannot be used together.
+
+A selected entry that already points at this source is left as-is, including
+any extra files in a role directory. Any other symlink or directory on that
+name exits 2 and prints the path and target. Nothing is overwritten or deleted.
+If `<prefix>/bin` is not on `PATH`, add it or call `<prefix>/bin/deck`.
+Steps are in the [install guide](docs/getting-started.md#install-from-source).
 
 After install, `deck new ./my-deck --title '方案标题'` creates a work
 directory. The linked skill describes the first-run commands.
@@ -156,8 +163,10 @@ deck --project ./my-deck export pptx
 deck serve ./my-deck
 ```
 
-The Skill in `deck-skill/` describes judgment and which command to run. Worked
-command examples are in
+The compatibility Skill in `deck-skill/SKILL.md` describes judgment and which
+command to run. `deck-master`, `deck-content`, `deck-design`, and `deck-review`
+are separate entries over the same `references/` and `assets/`. All of them call
+the Rust `deck` CLI. Worked command examples are in
 [deck-skill/references/commands.md](deck-skill/references/commands.md).
 Page reviews: `deck review add` / `list` / `resolve`. Restore a historical
 version with `deck restore <version>` (it writes a new version; files, runs and
@@ -217,7 +226,8 @@ certify the current source line; see the [archive index](docs/archive/README.md)
 - [下一轮拟实施：商业表达与专家共创改稿闭环（版本号未定）](docs/specs/README.md#当前架构与下一轮拟实施主题)
 - [2026-10-29 商业表达历史规划与产品目的](docs/specs/deck-master-business-expression-20261029/README.md)
 - [Agent entry](AGENTS.md)
-- [New Skill](deck-skill/SKILL.md)
+- [Compatibility Skill](deck-skill/SKILL.md)
+- [deck-master](deck-skill/deck-master.md), [deck-content](deck-skill/deck-content.md), [deck-design](deck-skill/deck-design.md), [deck-review](deck-skill/deck-review.md)
 - [Legacy Python task index](docs/agent-task-index.md)
 - [Legacy recovery playbook](docs/agent-recovery-playbook.md)
 - [v0.9 migration to the previous rebuilt core](docs/migration-to-rebuilt-core.md)

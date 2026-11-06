@@ -2,6 +2,8 @@
 
 仅使用 compiler/svg.py 接受的子集。数值（包括 font-size）不带单位；根元素使用从 0 0 开始的正数 viewBox。
 
+画布取作品 style.canvas 的逻辑像素和物理英寸。编译比例 `k = min(slide_width_in × 96 / width_px, slide_height_in × 96 / height_px)`。新作品默认 1280×720 px、13.333×7.5 in，k 约为 1。可见字号 `pt = font-size × 元素及其祖先 transform 的缩放 × k × 0.75`。回读把小于 6pt 的文字判为不可读。按当前画布计算，不用另一套冻结样式或转换常数代替。
+
 元素：svg、g、defs、use、rect、circle、ellipse、line、polyline、polygon、path、text、tspan、image、linearGradient、radialGradient、stop。path 支持 M/L/H/V/C/S/Q/T/A/Z。
 
 不要重复引用 defs 中带 id 的组，以免多个实例合并成同一个 PPT 组并改变叠放顺序。

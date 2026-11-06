@@ -2,7 +2,7 @@
 
 性质：synthetic 教学案例的方法讲解；输入与前后稿均为虚构或手写编辑示范，不是模型实验结果。
 
-[输入](../../assets/content/examples/E02-technical-choice/input.md) · [普通稿](../../assets/content/examples/E02-technical-choice/before.md) · [改进稿](../../assets/content/examples/E02-technical-choice/after.md)
+[输入](../../assets/content/examples/E02-technical-choice/input.md) · [普通稿](../../assets/content/examples/E02-technical-choice/before.md) · [改进稿](../../assets/content/examples/E02-technical-choice/after.md) · [合成算术](../../assets/content/examples/E02-technical-choice/numbers.json)
 
 主要调用：M01、M03、M04、M05、M06、M07、M08。
 
@@ -17,4 +17,4 @@ M05先剥离共同底座再比增量；M06检查工期、预算和摘要价值�
 C全实施30万元与B28万元的差额正确；不是“第6周交所有功能”；比较的是同口径路线，生成并不独占版本过滤；现有能力/新增设计不混写。
 
 
-这些文件是同一案例的不同用途，按当前任务需要读取；案例事实不得成为新客户项目来源。
+这些文件是同一案例的不同用途，按当前任务需要读取；案例事实不得成为新客户项目来源。合成算术可用 `python -m deck_tools.case_numbers` 复算该 `numbers.json`。算式通过只说明文件内的式子一致，不证明来源、归因或 ROI，也不是写稿前置。

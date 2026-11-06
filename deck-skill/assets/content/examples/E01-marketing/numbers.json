@@ -1,0 +1,93 @@
+{
+  "schema_version": "case-arithmetic.v1",
+  "scope": "虚构输入、给定顺序的算术分解，不是因果归因",
+  "values": {
+    "visits0": "100000",
+    "visits1": "112000",
+    "orders0": "3100",
+    "orders1": "2852",
+    "aov": "200",
+    "rev0": "620000",
+    "rev1": "570400",
+    "paid0": "1000",
+    "paid1": "728",
+    "other0": "2100",
+    "other1": "2124",
+    "volume_effect": "300",
+    "paid_rate_effect": "-572",
+    "other_rate_effect": "24"
+  },
+  "checks": [
+    {
+      "id": "visits-growth",
+      "operator": "percent_change",
+      "operands": [
+        "visits0",
+        "visits1"
+      ],
+      "expected": "12",
+      "tolerance": "0"
+    },
+    {
+      "id": "revenue-old",
+      "operator": "multiply",
+      "operands": [
+        "orders0",
+        "aov"
+      ],
+      "expected": "620000",
+      "tolerance": "0"
+    },
+    {
+      "id": "revenue-new",
+      "operator": "multiply",
+      "operands": [
+        "orders1",
+        "aov"
+      ],
+      "expected": "570400",
+      "tolerance": "0"
+    },
+    {
+      "id": "revenue-change",
+      "operator": "percent_change",
+      "operands": [
+        "rev0",
+        "rev1"
+      ],
+      "expected": "-8",
+      "tolerance": "0"
+    },
+    {
+      "id": "paid-orders-diff",
+      "operator": "subtract",
+      "operands": [
+        "paid1",
+        "paid0"
+      ],
+      "expected": "-272",
+      "tolerance": "0"
+    },
+    {
+      "id": "other-orders-diff",
+      "operator": "subtract",
+      "operands": [
+        "other1",
+        "other0"
+      ],
+      "expected": "24",
+      "tolerance": "0"
+    },
+    {
+      "id": "decomposition-closes",
+      "operator": "add",
+      "operands": [
+        "volume_effect",
+        "paid_rate_effect",
+        "other_rate_effect"
+      ],
+      "expected": "-248",
+      "tolerance": "0"
+    }
+  ]
+}

@@ -17,6 +17,12 @@
 
 三种语义示例见 [semantic-layout-examples](../assets/design/semantic-layout-examples.md)。完整案例after稿是内容依据示范，不是排版尺寸标准。画布与字号取自实际任务和 [SVG 子集](svg-subset.md) 的换算说明。
 
+## 主视觉与提交
+
+先用一句写明这一页必须让读者看出的对象、方向和分支。类别名不能代替这句决定。比较和查阅可以继续以表为主视觉。
+
+Host 读取 `deck run start image` 生成的 task.md，原文作为 ImageGen 的 prompt，附件按 attachments.json 传入。不要另写一份较短提示词覆盖。新的意见先改作品中的正文或 layout，再准备新的 run。提交是否与文件一致、原图是否成立，分开记录。没有实际阅图，不称视觉通过。
+
 ## 上屏边界与可编辑对象
 
 上屏文字只取作品 content；todo、内部方法依据与制作说明不上屏。notes 放讲述提示，影响结论的业务条件仍留正文。标题、要点、表格和流程应能拆成可编辑对象；位图只用于照片、标志或复杂插画，不能整页嵌图代替原生正文。

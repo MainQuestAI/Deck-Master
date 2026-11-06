@@ -1,11 +1,17 @@
 ---
 name: deck
-description: 用 Rust deck 命令将作者任务和指定材料写成 brief、主张框架与逐页正文，并导出可读 Markdown 与可编辑 PPTX；适用于首提、竞标和内容改稿。
+description: 兼容入口。用 Rust deck 把作者任务和材料做成可修改的方案稿，并可继续原图、SVG、PPTX 与审查；适用于首提、竞标、改稿和跨职责续作。
 ---
 
 # Deck 内容写作
 
 帮助作者围绕一次商业任务，把材料写成有主张、可修改、可独立阅读的方案稿。可从可读稿继续生成原图、重建 SVG 和构建可编辑 PPTX；作品质量由作者阅读与看图判断。
+
+## 四个职责入口
+
+本文件是兼容入口 `deck`，仍按下文完成从任务到导出的整项工作。`deck-master`、`deck-content`、`deck-design`、`deck-review` 分担任务理解、内容、设计和审查，不另建第五套方法。四项都调用 Rust `deck`，方法正文只维护 `references/` 和 `assets/` 这一份。
+
+叙事路径、可选模板、语义示例和路由样例可以从本入口直接打开：[叙事路径](references/narrative-patterns.md)、[页面草稿](assets/content/templates/page-draft.md)、[选项比较](assets/content/templates/options-comparison.md)、[教学序列](assets/content/templates/teaching-sequence.md)、[语义示例](assets/design/semantic-layout-examples.md)、[路由样例](assets/master/routing-examples.json)。路由样例只对照当前职责，不是要执行的命令。
 
 ## 作者任务
 
@@ -46,7 +52,7 @@ description: 用 Rust deck 命令将作者任务和指定材料写成 brief、�
 | 材料像拼接，页间没有推进 | [M07 综合](references/methods/M07-synthesis.md)、[M08 叙事](references/methods/M08-narrative.md) |
 | 培训需要示范与迁移，或全稿需要删改 | [M09 教学](references/methods/M09-teaching.md)、[M10 压缩](references/methods/M10-compression.md) |
 
-需要完整正文对照时，读相近的合成案例：营销诊断 [E01](references/cases/E01-marketing.md)、路线选择 [E02](references/cases/E02-technical-choice.md)、政策培训 [E03](references/cases/E03-policy-training.md)、续约诊断 [E04](references/cases/E04-saas-retention.md)、库存方案 [E05](references/cases/E05-inventory-review.md)、检索教学 [E06](references/cases/E06-rag-teaching.md)。每份都有输入、成稿与讲解，示例数字不能进入当前项目事实。方法出处见 [method-sources.md](references/method-sources.md)。
+需要完整正文对照时，读相近的合成案例：营销诊断 [E01](references/cases/E01-marketing.md)、路线选择 [E02](references/cases/E02-technical-choice.md)、政策培训 [E03](references/cases/E03-policy-training.md)、续约诊断 [E04](references/cases/E04-saas-retention.md)、库存方案 [E05](references/cases/E05-inventory-review.md)、检索教学 [E06](references/cases/E06-rag-teaching.md)。每份都有输入、成稿与讲解，示例数字不能进入当前项目事实。E01–E04 的合成算术在各案例 `numbers.json`，可选 `python -m deck_tools.case_numbers` 复算；算式通过不证明归因，也不是写稿前置。叙事路径见 [narrative-patterns.md](references/narrative-patterns.md)。方法出处见 [method-sources.md](references/method-sources.md)。
 
 框架写到能支撑下一步正文即可保存，不用等待作者逐步确认；明确要求只交框架时到此收尾。
 

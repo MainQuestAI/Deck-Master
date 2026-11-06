@@ -14,7 +14,9 @@ export DECK_TOOLS_PYTHON="$PWD/.venv/bin/python"
 ln -s "$PWD/deck-skill" ~/.codex/skills/deck
 ```
 
-软链接 `~/.codex/skills/deck` 已存在且指向其他位置时，`scripts/install.sh` 退出 2，并打印「已存在且指向其他位置」。只删除该软链接，不要删除它指向的目录，然后重新运行；或者改用 `--skill-dir`。
+`scripts/install.sh` 在迁移期默认只链接兼容入口 `deck`。`--skill-dir PATH` 同样只链接这一个入口。`--skills-root DIR` 才会在该目录下同时链接 `deck`、`deck-master`、`deck-content`、`deck-design` 和 `deck-review`，两个参数不能一起用。
+
+软链接已指向本源时，重复安装不改链接。指向其他位置、或同名路径是普通目录时，脚本退出 2，并打印该路径和目标。只移走这一项，不要删除它指向的目录，然后重新运行；或者换一个安装路径。不要静默覆盖。
 
 下文的 `deck` 指 `~/.local/bin/deck`。安装用了非默认 `--prefix` 时，二进制在 `<prefix>/bin/deck`。`<prefix>/bin` 不在 PATH 时，每条命令都用这个完整路径。`DECK_PROJECT` 是作者指定的新作品目录，`SOURCE_FILE` 是作者指定的一份原材料；不要根据示例搜索 HOME 或补读相邻目录。
 
@@ -133,3 +135,35 @@ deck --project "$DECK_PROJECT" export md > "$DECK_PROJECT/manuscript.md"
 - `deck --project "$DECK_PROJECT" restore N` 把历史稿恢复为新版本，不删除后来的历史。
 
 `export md` 向 stdout 输出正文、讲稿、待补与出处，不要求稿件完整。重定向前选一个新文件名；交稿前实际阅读该文件。当前内容阶段无需渲染器、生图、编译或界面。
+
+## 原图、SVG 与构建
+
+内容完成不自动进入这一节。设计或兼容入口在授权范围内使用。
+
+1. `deck run start image --pages p1,p2` 准备任务。读取该次工作目录里的完整 task.md，按 attachments.json 定位素材。每次调用前 `deck run call <run> <page>`，再把 task.md 原文作为 ImageGen 的 prompt，把清单中的文件作为附件。结果未知时先核实，决定重试才加 `--retry`。
+2. `deck run result <run> <page> <图片文件>` 交回。首次结果可以自动采用；重交的修正版、取消后或依据已变的结果只保存。确认使用后 `deck run adopt <run> <page>`。`deck run show` 看状态，`deck run cancel <run>` 停止后续调用和自动采用。
+3. `deck run start svg --pages p1,p2` 准备 SVG。按原图的布局和关系重建，正文取 content.json，文字绑定 atoms.json。先读 [svg-subset.md](svg-subset.md)。错漏文字、局部排版和依据明确的连线可以沿用原图直接改。主结构要重排时先改蓝图。
+4. `deck run result <run> <page> <SVG文件>` 编译、渲染并回读。工具报错就改具体元素。Host 打开预览 PNG，对照原图检查端点、方向、分支、层级、侧栏和阅读顺序。
+5. `deck build` 构建 PPTX，`deck export pptx` 取最近构建路径。`missing_pages` 是没有 SVG、因此没有进入这次 PPTX 的页。`stale_pages` 是 SVG 依据与当前正文、原图或样式不一致。`stale_images` 在 `deck show` 的 `artifact_status` 里，指原图依据已变；只改讲稿不会让原图过期。构建成功不会清掉这两项。`export pptx` 的 `input_changed` 才表示构建之后 SVG、讲稿或构建设置又变了。
+
+`soffice` 不可用时，SVG 的 `deck run result` 失败并说明如何安装 LibreOffice。停在这一步。不要改调 `compile_job`，不要手写 PPTX。
+
+## 意见
+
+`deck review list --status open` 读取未处理意见，可用 `--page` 限定。作者明确要求保存时：
+
+```bash
+deck review add --method self_check --page p3 '这一页的问题'
+```
+
+当前 Host 自查用 `self_check`，另一执行或模型用 `other_model`，真人用 `human`。不要省略 `--method`，默认值是 `human`。落实并核对之后才 `deck review resolve <意见ID>`。审查默认只返回报告，不因为开了审查入口就改稿或生图。
+
+## 可选：核对案例算式
+
+用装有 deck-tools 的解释器：
+
+```bash
+python -m deck_tools.case_numbers path/to/numbers.json
+```
+
+只读该文件。退出码 0 表示显式算式与期望一致，1 表示不一致，2 表示输入无效。不写回文件，也不判断来源、归因或 ROI。写稿、导出和审查都不依赖这次运行。
