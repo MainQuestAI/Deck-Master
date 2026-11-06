@@ -225,6 +225,90 @@ fn unknown_call_requires_explicit_retry_and_cannot_exceed_limit() {
     );
 }
 #[test]
+fn image_run_inlines_readable_page_inputs_and_keeps_svg_inputs_separate() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    setup(path);
+    edit(
+        path,
+        json!({
+            "style":{"palette":["#164267"],"fonts":["Noto Sans CJK SC"]},
+            "pages":[{
+                "id":"p1",
+                "purpose":"看清处理边界",
+                "layout":"预检→执行→完成或退回",
+                "notes":"讲稿不入图",
+                "todo":["内部待核项"],
+                "refs":["材料定位"],
+                "content":{
+                    "title":"请求处理",
+                    "subtitle":"处理容量与状态",
+                    "body_blocks":[
+                        {"type":"paragraph","text":"完成与退回是互斥结果"},
+                        {"type":"bullets","heading":"处理条件","items":[
+                            {"text":"满足校验要求","children":[{"text":"校验失败单独记录"}]}
+                        ]},
+                        {"type":"table","title":"容量上限",
+                         "columns":[{"id":"kind","label":"项目"},{"id":"cap","label":"限额"}],
+                         "rows":[{"cells":[
+                            {"column_id":"cap","display_text":"1,200","unit":"次/日","value":1200},
+                            {"column_id":"kind","display_text":"提交"}
+                         ]}]}
+                    ],
+                    "labels":[{"text":"退回"}],
+                    "callouts":[{"text":"容量限制按日计算"}],
+                    "footnotes":[{"text":"仅适用于正常工作时段"}]
+                }
+            }]
+        }),
+    );
+    let id = start(path, 1);
+    let task = ops::run_show(path, Some(id)).unwrap();
+    let work = Path::new(task["runs"][0]["pages"][0]["work"].as_str().unwrap());
+    let image = std::fs::read_to_string(work.join("task.md")).unwrap();
+    for text in [
+        "1280×720",
+        "看清处理边界",
+        "预检→执行→完成或退回",
+        "#164267",
+        "Noto Sans CJK SC",
+        "请求处理",
+        "处理容量与状态",
+        "完成与退回是互斥结果",
+        "处理条件",
+        "- 满足校验要求\n  - 校验失败单独记录",
+        "容量上限",
+        "| 项目 | 限额 |",
+        "| 提交 | 1,200 |",
+        "次/日",
+        "退回",
+        "容量限制按日计算",
+        "仅适用于正常工作时段",
+    ] {
+        assert!(image.contains(text), "image task omits {text}");
+    }
+    for text in [
+        "讲稿不入图",
+        "内部待核项",
+        "材料定位",
+        "content.json",
+        "style.json",
+    ] {
+        assert!(!image.contains(text), "image task contains {text}");
+    }
+    let attachments: Value =
+        serde_json::from_slice(&std::fs::read(work.join("attachments.json")).unwrap()).unwrap();
+    assert_eq!(attachments, json!([]));
+
+    let svg = ops::run_start(path, "svg", &["p1".into()], None).unwrap();
+    let work = Path::new(svg["runs"][0]["pages"][0]["work"].as_str().unwrap());
+    let svg = std::fs::read_to_string(work.join("task.md")).unwrap();
+    assert!(svg.contains("content.json") && svg.contains("atoms.json"));
+    assert!(!svg.contains("完成与退回是互斥结果"));
+    assert!(work.join("atoms.json").is_file());
+}
+
+#[test]
 fn asset_bytes_are_attached_to_host_task_without_using_ids_as_paths() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path();

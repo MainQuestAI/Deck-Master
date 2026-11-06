@@ -15,6 +15,7 @@
 | [Redis WAIT 官方说明](https://redis.io/docs/latest/commands/wait/) | 库存案例的故障边界修正 | 官方明确不将Redis变成强一致存储；案例不得宣称零超卖已保证 |
 | [Anthropic Contextual Retrieval](https://www.anthropic.com/engineering/contextual-retrieval) | 为检索片段添加上下文的候选方式 | 厂商实验与工程实践；不继承其效果到虚构合同样本 |
 | [Agent Skills 规范](https://agentskills.io/specification) | SKILL入口与可选scripts/references/assets | 文件组织规范，不要求每个目录必须存在 |
+| [CyberPPT storyline](https://github.com/crazyykhllc-bit/CyberPPT/blob/980e5576565f0673c67ee41b01d20ed66cb8417c/references/storyline.md) | 叙事候选比较的操作思路，写入 narrative-patterns 与 M08 | 该仓库根许可证为 MIT。根许可证不覆盖上游图标和其他素材；本库不复制图标库 |
 
 Pugh、ACH、变化理论、类比、示例学习、事前验尸等原始来源见各卡来源段。本库借用操作思想，不把“使用广泛”当成效果证明。不能把研究综述、机构经验、理论解释和实证结果统称强实证。
 

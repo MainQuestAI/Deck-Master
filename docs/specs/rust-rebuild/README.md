@@ -11,7 +11,7 @@ S0–S6 已合入 `main`，源码基线 `abb785eb`（PR #272 之后）。现行�
 | `rust/` | 作品模型、存储、用例、CLI、本地 HTTP | `deck`、`deck serve <project>` |
 | `deck-tools/` | SVG→PPTX 编译、渲染、回读、字体、材料解析、导出清洗 | 由 `deck` 子进程调用 |
 | `frontend/` | #250 WebUI，由 `build.rs` 嵌入二进制 | `deck serve` 提供静态文件 |
-| `deck-skill/` | 新 Skill（尚未改名为 `skills/deck/`） | `scripts/install.sh` 链接到 Codex |
+| `deck-skill/` | 兼容入口 `deck` 与四个职责入口；方法源一份 | `scripts/install.sh`；四入口要显式 `--skills-root` |
 | `src/deck_master/`、`skills/` | 旧 Python 线，只做维护（AGENTS.md 第 12 节） | `deck-master` |
 
 安装：`scripts/install.sh`。发版说明：[1.1.0](../../releases/1.1.0.md)。下文第 7 节是开发时的切片完成判断；合入 PR 为 S0 #251、S1 #252、S2 #256、S3 #258、S4 #259/#250/#257/#260、S5 #261、S6 #262。第 3–6 节合同仍是实现依据，不以历史“未验证”清单覆盖已合入行为。
@@ -286,14 +286,16 @@ S5 界面接入：制作总览展示整稿待处理意见，单页工作区展�
 
 ### 5.1 生图提示词（prompts.rs）
 
-保留旧提示词中已经验证有效的要求，去掉其中的协议说明：
+image 的 `task.md` 是可直接提交的完整提示词。Host 使用文件原文作为 ImageGen 的 prompt，按 `attachments.json` 传入实际文件。调用参数可观察时，先导对照提交内容与任务文件。原图由实际阅图判断。
 
 - 画布像素与物理尺寸；本页目的与 layout。
-- content 逐字上屏，不增删事实、数字或单位。
+- 内联全部可见 content，复用可读稿的正文结构。表格保留显示值和列归属，已声明的单位另作理解上下文。讲稿、待补、出处和内部编号留在作品中。
 - 风格：配色与字体；选中的素材以附件形式传给 ImageGen，不用文字替代。
-- 按信息关系选择表达：比较或查阅用表格，时序用步骤或时间线，流程用连线与分支，分工用泳道或分区。不要把非比较内容画成表格（#226、#227）。
+- 按本页阅读任务和 layout 表达主视觉。正文块的分组用于组织信息。比较和查阅可用表格，流程保留明确的方向和分支，分工可用分区或泳道（#226、#227）。
 - 文字、连线和主要业务对象要能拆成可编辑元素；照片、logo、复杂插画可以占有边界的位图区域，但不承载正文。
 - 不编造数字、日期或客户数据；页面文案不含缺口说明；缺口在 todo，不上屏，不放页脚，不画示意数据。
+
+提示词模板调整沿用现有 basis。存量原图的制作依据仍由页面输入决定。
 
 ### 5.2 SVG 任务（`work/<run_id>/<page>/`）
 
@@ -302,7 +304,7 @@ S5 界面接入：制作总览展示整稿待处理意见，单页工作区展�
 Host 的做法：
 
 1. 按原图的布局、层级和关系写 SVG；正文取自 content，每段文字带上对应的 `data-atom-id`。页面文案不含缺口说明；缺口在 todo，不上屏，不放页脚。
-2. 交回后，对照预览与原图检查端点、方向、分支、层级、侧栏和阅读顺序（#229、#231）；有问题就修改后重交。
+2. 交回后对照预览、原图与正式关系，检查端点、方向、分支、层级、侧栏和阅读顺序（#229、#231）。依据明确的局部箭头、文字和排版可直接修 SVG，再检查渲染。业务关系有歧义时向内容作者厘清，主结构需要重排时调整蓝图。
 
 SVG 支持子集说明由 S3 依据 `compiler/svg.py` 实际接受的元素与属性整理，放入 Skill 的 references。至少写明以下几点：
 
@@ -320,15 +322,43 @@ Host 按需读取：`deck show`（摘要）、`deck get --pages p3,p4`（指定�
 
 ## 6. Skill（deck-skill，切换时改名为 skills/deck）
 
+开发期源根仍是 `deck-skill/`。切换时整体改为 `skills/deck/`，并重建安装器产生的链接，不保留两份可编辑方法。源根里是兼容入口和四份职责入口，方法与案例只在 `references/`、`assets/`：
+
+```text
+deck-skill/
+  SKILL.md           # name: deck
+  deck-master.md     # name: deck-master
+  deck-content.md    # name: deck-content
+  deck-design.md     # name: deck-design
+  deck-review.md     # name: deck-review
+  references/
+  assets/
+```
+
+安装不依赖源根里的嵌套 `SKILL.md` 自动发现，也不在源根里再声明同名 Skill。职责文件在安装时才成为各自目录下的 `SKILL.md`。
+
+`scripts/install.sh`：
+
+- 无技能参数：安装或更新 CLI、deck-tools 环境，以及兼容入口 `deck`（默认 `~/.codex/skills/deck`）。不安装四个职责入口。
+- `--skill-dir PATH`：只把兼容入口链接到该路径。与 `--skills-root` 互斥。
+- `--skills-root DIR`：在该目录下链接 `deck`（整个源根）以及 `deck-master`、`deck-content`、`deck-design`、`deck-review`。职责目录的 `SKILL.md` 指向对应源文件，`references` 和 `assets` 指向共享目录。
+- 本次选中的入口若已指向这一源，重复执行不改链接，并保留职责目录里的其他文件。其余同名旧入口、外来链接或普通目录都报告路径和目标后退出，不覆盖、不删除。旧线安装器会把这些同名入口看成外来占用；回切要自行处理链接，两条同名安装不会叠在同一路径上。
+
+四个职责入口写明边界、默认读物和交接，正文规则引用共享源。都调用 Rust `deck`，不调用旧 Python `deck-master`。兼容入口保留整项工作的说明。Master 只做任务理解、路由、交接和完成判断。
+
+内容默认读 source-reading、method-selection、page-writing，并按任务读 M01–M10、叙事路径和案例。设计默认读 content-to-visual、作品 style 与 svg-subset。审查默认读 method-review、校准例和实际产物。叙事路径与三个可选模板从内容入口进入，语义示例从设计入口进入，路由样例从 Master 进入。路由样例标明是历史参考的改写，不作为新线命令。
+
+52 项资源与旧目录其余 15 项的去向沿用视觉生产 Spec v1.3 附录 A/B，不另建台账。E01–E04 的合成 `numbers.json` 在原来的相对路径。算术辅助是 `python -m deck_tools.case_numbers`，只读文件、显式算式、错误即返回；不是写稿或导出的前置条件。旧线 `skills/deck-master/scripts/check_case_numbers.py` 仍留给旧线测试，新线不调用它。
+
 - 步骤：作者任务 → 材料与主张框架 → 逐页内容 → 原图 → SVG → 构建 → 改稿 → 导出。每一步写明做什么判断、调用哪条命令。
 - 内容方法：
   - 区分事实、建议、假设和缺口。只为影响方向的缺口补问，其余照常写。
   - 先定本页目的与信息关系，再定写法。
   - 不编造数字。
   - 按需读 M01–M10 和 E01–E06。
-- 把 `skills/deck-master/references/` 中仍然有用的方法复制到 `deck-skill/references/`，删去其中的协议、writer、冻结清单等段落。此后新线只改这一份。
+- 有用的方法已经在 `deck-skill/references/`。协议、writer 和冻结清单不迁回。此后新线只改这一份。
 - 出错时按 CLI 的错误信息处理。
-- 开发期：用软链接把 Skill 装进 Codex；用 `cargo install --path rust` 安装 `deck` 命令。
+- 开发期也可以用软链接安装；用 `cargo install --path rust` 安装 `deck` 命令。切换源根时同时改安装器、Rust `include_str!`、README 和本节。本次源根未改，`prompts.rs` 仍引用 `deck-skill/references/svg-subset.md`。
 
 ## 7. 切片
 
@@ -379,8 +409,8 @@ Host 按需读取：`deck show`（摘要）、`deck get --pages p3,p4`（指定�
     | `authorizations` | 旧授权对象原样 |
     | `open_calls[]` | 在途或结果未知的调用：`task_id`、`allowance_id`、`state`、`kind` |
     | `unmapped[]` | 无法映射的项：`kind`、`id`、`reason` |
-- 安装（S6）：一个脚本，负责安装 `deck`、把 deck-tools 装进独立 venv、把 Skill 链接给 Codex。不移植托管安装的激活与回滚。先支持 macOS，CI 在 Linux 上跑。
-- 切换：老板判定新路径可以替代旧线后，`deck-skill/` 改名为 `skills/deck/` 并成为默认 Skill，安装不再携带旧的四个 Skill。是否删除旧代码另行决定。
+- 安装（迁移期）：一个脚本安装 `deck`、独立 deck-tools venv，以及 Skill 链接。不移植托管安装的激活与回滚。先支持 macOS，CI 在 Linux 上跑。无参数或 `--skill-dir` 只链接兼容入口 `deck`。`--skills-root` 另链接四个职责入口，二者互斥。同名冲突只报告路径和目标并退出。
+- 切换：老板判定新路径可以替代旧线后，把 `deck-skill/` 改名为 `skills/deck/`，重建本安装器产生的链接，并按当时的实际使用决定无参数时是否默认安装四个职责入口。安装不再携带旧 Python 线的四个 Skill。是否删除旧代码另行决定。在那之前，仓库里的 `skills/deck-*` 仍是旧线。
 
 ## 9. 未验证
 

@@ -1,11 +1,17 @@
 ---
 name: deck
-description: 用 Rust deck 命令将作者任务和指定材料写成 brief、主张框架与逐页正文，并导出可读 Markdown 与可编辑 PPTX；适用于首提、竞标和内容改稿。
+description: 兼容入口。用 Rust deck 把作者任务和材料做成可修改的方案稿，并可继续原图、SVG、PPTX 与审查；适用于首提、竞标、改稿和跨职责续作。
 ---
 
 # Deck 内容写作
 
 帮助作者围绕一次商业任务，把材料写成有主张、可修改、可独立阅读的方案稿。可从可读稿继续生成原图、重建 SVG 和构建可编辑 PPTX；作品质量由作者阅读与看图判断。
+
+## 四个职责入口
+
+本文件是兼容入口 `deck`，仍按下文完成从任务到导出的整项工作。`deck-master`、`deck-content`、`deck-design`、`deck-review` 分担任务理解、内容、设计和审查，不另建第五套方法。四项都调用 Rust `deck`，方法正文只维护 `references/` 和 `assets/` 这一份。
+
+叙事路径、可选模板、语义示例和路由样例可以从本入口直接打开：[叙事路径](references/narrative-patterns.md)、[页面草稿](assets/content/templates/page-draft.md)、[选项比较](assets/content/templates/options-comparison.md)、[教学序列](assets/content/templates/teaching-sequence.md)、[语义示例](assets/design/semantic-layout-examples.md)、[路由样例](assets/master/routing-examples.json)。路由样例只对照当前职责，不是要执行的命令。
 
 ## 作者任务
 
@@ -46,7 +52,7 @@ description: 用 Rust deck 命令将作者任务和指定材料写成 brief、�
 | 材料像拼接，页间没有推进 | [M07 综合](references/methods/M07-synthesis.md)、[M08 叙事](references/methods/M08-narrative.md) |
 | 培训需要示范与迁移，或全稿需要删改 | [M09 教学](references/methods/M09-teaching.md)、[M10 压缩](references/methods/M10-compression.md) |
 
-需要完整正文对照时，读相近的合成案例：营销诊断 [E01](references/cases/E01-marketing.md)、路线选择 [E02](references/cases/E02-technical-choice.md)、政策培训 [E03](references/cases/E03-policy-training.md)、续约诊断 [E04](references/cases/E04-saas-retention.md)、库存方案 [E05](references/cases/E05-inventory-review.md)、检索教学 [E06](references/cases/E06-rag-teaching.md)。每份都有输入、成稿与讲解，示例数字不能进入当前项目事实。方法出处见 [method-sources.md](references/method-sources.md)。
+需要完整正文对照时，读相近的合成案例：营销诊断 [E01](references/cases/E01-marketing.md)、路线选择 [E02](references/cases/E02-technical-choice.md)、政策培训 [E03](references/cases/E03-policy-training.md)、续约诊断 [E04](references/cases/E04-saas-retention.md)、库存方案 [E05](references/cases/E05-inventory-review.md)、检索教学 [E06](references/cases/E06-rag-teaching.md)。每份都有输入、成稿与讲解，示例数字不能进入当前项目事实。E01–E04 的合成算术在各案例 `numbers.json`，可选 `python -m deck_tools.case_numbers` 复算；算式通过不证明归因，也不是写稿前置。叙事路径见 [narrative-patterns.md](references/narrative-patterns.md)。方法出处见 [method-sources.md](references/method-sources.md)。
 
 框架写到能支撑下一步正文即可保存，不用等待作者逐步确认；明确要求只交框架时到此收尾。
 
@@ -56,7 +62,7 @@ description: 用 Rust deck 命令将作者任务和指定材料写成 brief、�
 
 - `purpose` 写本页要说明的业务问题；`layout` 写信息关系，如“核对步骤与异常交接”。两项也会分别以“本页目的”和“布局”出现在导出稿里，按读者能读懂的方式写，不放内部制作指令。
 - `content` 写全部可见正文：标题、副标题、段落、要点、表格、补充或必要脚注。不能交“此处放结论”“展示三大价值”这样的制作注释。
-- 比较与查阅才用表格；顺序写步骤，因果写清作用环节，责任交接写触发条件、动作与接手信息。不要把每一页都排成同样的表格，也不用“高效、精准、闭环”填满单元格。
+- 按 [内容到设计](references/content-to-visual.md) 和阅读任务选择表达。逐行核对可以用表格，时序写清先后，机制写清方向和分支，责任交接写清触发条件、动作与接手信息。
 - 对客户可见的页面写能力、做法、计划和验收方式；具体材料待补和内部核实事项写入 `todo`，不上屏，不放页脚。核心理由、能力边界和会改变判断的条件留在正文，例如实时接口尚需开发，不能藏进待补；`notes` 只写讲述与过渡提示，不放方法编号或内部制作说明。
 - 可选的 `refs` 保留材料名称与章节定位，`todo` 保留本页实际待补，仅在待补项中展示，不进入页面正文、页脚或讲稿，不阻止保存或导出。
 - 不编造数字、客户现状、报价、政策或已实现能力。样本比例不改写成节时、损失、准确率或 ROI；建议与观察在承担主张的正文中区分。
@@ -94,9 +100,9 @@ description: 用 Rust deck 命令将作者任务和指定材料写成 brief、�
 
 出图及重建 SVG 前再读将上屏的整稿，发现语言问题就 put 保存并更新受影响 SVG。
 
-1. `deck run start image --pages p1,p2` 准备任务。实际读取返回工作目录的 task.md、content.json、style.json 与 attachments.json。每次调用 ImageGen 前，先 `deck run call <run> <page>`，再把所选素材文件作为真正附件传给 ImageGen。结果未知时先核实，明确决定重试才加 `--retry`；不要自行连续重发。
+1. `deck run start image --pages p1,p2` 准备任务。读取工作目录中的完整 task.md，并按 attachments.json 定位素材。每次调用前用 `deck run call <run> <page>` 登记，再以 task.md 的原文作为 ImageGen 的 prompt，将清单中的文件作为实际附件传入。结果未知时先核实，明确决定重试才加 `--retry`；不要自行连续重发。
 2. 生成后用 `deck run result <run> <page> <图片文件>` 交回。每页首次结果可自动采用；同一任务内重交的修正版、取消后或依据已变的结果只保存。比较当前稿与候选，确定要使用后执行 `deck run adopt <run> <page>`。`deck run show` 查看状态，`deck run cancel <run>` 停止调用与自动采用。
-3. `deck run start svg --pages p1,p2` 准备 SVG 任务。按原图的布局、层级和关系重建，正文取 content.json，文字绑定 atoms.json。先读 [SVG 子集与比对样例](references/svg-subset.md)。改字通常沿用原图，按新正文重建 SVG；内容或布局大改时判断是否重新生图。
+3. `deck run start svg --pages p1,p2` 准备 SVG 任务。按原图的布局、层级和关系重建，正文取 content.json，文字绑定 atoms.json。先读 [SVG 子集与比对样例](references/svg-subset.md)。错漏文字、局部排版和依据明确的连线修正可沿用原图，按正文与 layout 修 SVG 并复核渲染。主结构需要重排时调整蓝图。
 4. 用 `deck run result <run> <page> <SVG文件>` 编译、渲染并回读。工具报错就修正具体元素；返回的文字或几何发现逐项核对。重交修正版后，确认采用时执行 `deck run adopt <run> <page>`。Host 必须实际打开预览 PNG，与原图比对端点、方向、分支、层级、侧栏及阅读顺序。文字回读通过不能代替比对。
 5. 用 `deck build` 构建整套 PPTX，`deck export pptx` 取最近构建路径。`missing_pages` 是没有 SVG、因此没有进入这次 PPTX 的页。`stale_pages` 是 SVG 依据与当前正文、原图或样式不一致的页（导入页的 `basis` 为 `imported` 时也会列出）；`stale_images` 在 `deck show` 的 `artifact_status` 里，指原图依据与当前正文、布局、目的或样式不一致，只改讲稿不会让原图过期。两者只说明依据变了，不说明这份 PPTX 过期：刚构建成功时 `stale_pages` 仍会列出，构建也不会清掉 `stale_images`。`export pptx` 的 `input_changed` 才表示构建之后 SVG、讲稿或构建设置又变了。照实告知作者。不要把部分 PPTX 称为整套，也不要把较早构建当成当前稿。讲稿变化后重新构建；无需重新生图。
 

@@ -1,4 +1,4 @@
-use crate::model::{Block, Deck, TextItem};
+use crate::model::{Block, Content, Deck, TextItem};
 
 fn bullets(output: &mut String, values: &[TextItem], depth: usize) {
     for item in values {
@@ -18,6 +18,69 @@ fn list(output: &mut String, label: &str, values: &[String]) {
 
 fn cell(text: &str) -> String {
     text.replace('|', "\\|").replace('\n', "<br>")
+}
+
+pub(crate) fn page_content(output: &mut String, content: &Content) {
+    if !content.subtitle.is_empty() {
+        output.push_str(&format!("{}\n\n", content.subtitle));
+    }
+    for block in &content.body_blocks {
+        match block {
+            Block::Paragraph { text, .. } => output.push_str(&format!("{text}\n\n")),
+            Block::Bullets { heading, items, .. } => {
+                if !heading.is_empty() {
+                    output.push_str(&format!("**{heading}**\n\n"));
+                }
+                bullets(output, items, 0);
+                output.push('\n');
+            }
+            Block::Table {
+                title,
+                columns,
+                rows,
+                ..
+            } => {
+                if !title.is_empty() {
+                    output.push_str(&format!("**{title}**\n\n"));
+                }
+                if !columns.is_empty() {
+                    output.push_str(&format!(
+                        "| {} |\n",
+                        columns
+                            .iter()
+                            .map(|c| cell(&c.label))
+                            .collect::<Vec<_>>()
+                            .join(" | ")
+                    ));
+                    output.push_str(&format!("| {} |\n", vec!["---"; columns.len()].join(" | ")));
+                    for row in rows {
+                        let values: Vec<_> = columns
+                            .iter()
+                            .map(|column| {
+                                row.cells
+                                    .iter()
+                                    .find(|c| c.column_id == column.id)
+                                    .map(|c| cell(&c.display_text))
+                                    .unwrap_or_default()
+                            })
+                            .collect();
+                        output.push_str(&format!("| {} |\n", values.join(" | ")));
+                    }
+                    output.push('\n');
+                }
+            }
+        }
+    }
+    for (label, items) in [
+        ("标签", &content.labels),
+        ("补充", &content.callouts),
+        ("脚注", &content.footnotes),
+    ] {
+        if !items.is_empty() {
+            output.push_str(&format!("**{label}**\n\n"));
+            bullets(output, items, 0);
+        }
+    }
 }
 
 pub fn markdown(deck: &Deck) -> String {
@@ -55,67 +118,7 @@ pub fn markdown(deck: &Deck) -> String {
         if !page.layout.is_empty() {
             output.push_str(&format!("**布局**：{}\n\n", page.layout));
         }
-        if !page.content.subtitle.is_empty() {
-            output.push_str(&format!("{}\n\n", page.content.subtitle));
-        }
-        for block in &page.content.body_blocks {
-            match block {
-                Block::Paragraph { text, .. } => output.push_str(&format!("{text}\n\n")),
-                Block::Bullets { heading, items, .. } => {
-                    if !heading.is_empty() {
-                        output.push_str(&format!("**{heading}**\n\n"));
-                    }
-                    bullets(&mut output, items, 0);
-                    output.push('\n');
-                }
-                Block::Table {
-                    title,
-                    columns,
-                    rows,
-                    ..
-                } => {
-                    if !title.is_empty() {
-                        output.push_str(&format!("**{title}**\n\n"));
-                    }
-                    if !columns.is_empty() {
-                        output.push_str(&format!(
-                            "| {} |\n",
-                            columns
-                                .iter()
-                                .map(|c| cell(&c.label))
-                                .collect::<Vec<_>>()
-                                .join(" | ")
-                        ));
-                        output
-                            .push_str(&format!("| {} |\n", vec!["---"; columns.len()].join(" | ")));
-                        for row in rows {
-                            let values: Vec<_> = columns
-                                .iter()
-                                .map(|column| {
-                                    row.cells
-                                        .iter()
-                                        .find(|c| c.column_id == column.id)
-                                        .map(|c| cell(&c.display_text))
-                                        .unwrap_or_default()
-                                })
-                                .collect();
-                            output.push_str(&format!("| {} |\n", values.join(" | ")));
-                        }
-                        output.push('\n');
-                    }
-                }
-            }
-        }
-        for (label, items) in [
-            ("标签", &page.content.labels),
-            ("补充", &page.content.callouts),
-            ("脚注", &page.content.footnotes),
-        ] {
-            if !items.is_empty() {
-                output.push_str(&format!("**{label}**\n\n"));
-                bullets(&mut output, items, 0);
-            }
-        }
+        page_content(&mut output, &page.content);
         if !page.notes.is_empty() {
             output.push_str(&format!("\n**讲稿**\n\n{}\n", page.notes));
         }

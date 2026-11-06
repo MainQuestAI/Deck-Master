@@ -35,7 +35,32 @@
 可直接复算的先算，缺原始分母的不算；可以解释原理但缺结果数据的，写清作用机制和条件；多解释仍兼容的，给最有区分力的下一观察；已有方向但成本未知的，写定性权衡和待确认成本项。不得把样例数字、常识先验权重或模型补出的客户事实填进空位。缺结果数据不自动使机制说明成为待验收益主张；仅在声称效果、收益或以其作投资判断时补充对应假设和验证办法。
 
 ## 什么时候读完整案例
-在方法操作不熟悉、第一次写该类核心页面、或修稿需要看到完整正文时，选一个相近案例。案例文件包含输入、完整正文示范和方法讲解，按需阅读。复制的是比较和论证动作，不是数字、术语或结论。
+在方法操作不熟悉、第一次写该类核心页面、或修稿需要看到完整正文时，从下面的案例索引选一个相近案例。案例文件包含输入、完整正文示范和方法讲解，按需阅读。复制的是比较和论证动作，不是数字、术语或结论。
+
+## 案例索引
+
+| 案例 | 讲解 |
+| --- | --- |
+| 营销诊断 | [E01](cases/E01-marketing.md) |
+| 路线选择 | [E02](cases/E02-technical-choice.md) |
+| 政策培训 | [E03](cases/E03-policy-training.md) |
+| 续约诊断 | [E04](cases/E04-saas-retention.md) |
+| 库存方案 | [E05](cases/E05-inventory-review.md) |
+| 检索教学 | [E06](cases/E06-rag-teaching.md) |
+
+E01–E04 的合成算术在各案例目录的 `numbers.json`。可选复算：`python -m deck_tools.case_numbers <该文件>`。这只核对文件里的显式算式，不证明来源、归因或 ROI，也不是写稿前置。E05、E06 没有这份算术文件。
+
+## 叙事路径与可选模板
+
+路径表见 [narrative-patterns](narrative-patterns.md)。下列模板可选，不是必填合同：
+
+- [选项比较](../assets/content/templates/options-comparison.md)
+- [页面草稿](../assets/content/templates/page-draft.md)
+- [教学序列](../assets/content/templates/teaching-sequence.md)
+
+## 四职责与视觉交接
+
+内容把结果写入现有 framing、正文、页序和必要讲稿。需要画面时交主张、完整内容和关系，不在内容步骤里生图。设计先读 [content-to-visual](content-to-visual.md)。审查只读，见 [method-review](method-review.md)。只策划、只写正文、只写讲稿或局部改稿时，停在 [page-writing](page-writing.md) 的对应边界。
 
 ## 什么时候停止分析
 当本次允许范围内的受众问题已有可用回答，核心判断的依据与条件明确，未决项不会被伪装成结论，即转入写作。不是等所有未知消失。若用户只要策划，到策划成果停止；只要口播或设计，不重启诊断。

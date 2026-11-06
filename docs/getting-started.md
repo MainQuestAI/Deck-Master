@@ -1,8 +1,10 @@
 # Install and use Deck Master 1.1.0
 
 Deck Master 1.1.0 provides the Rust CLI `deck`, a loopback Web UI (`deck serve`),
-file tools (`deck-tools`), and one Codex Skill (`deck-skill/`). It does not
-bundle a model, Codex account, image-generation service, desktop office
+file tools (`deck-tools`), and the Codex Skill tree in `deck-skill/`. The
+default install still links the compatibility entry `deck`. `--skills-root`
+also links `deck-master`, `deck-content`, `deck-design`, and `deck-review`.
+It does not bundle a model, Codex account, image-generation service, desktop office
 application, renderer binaries or fonts. A plain material directory is enough
 to start; no PPT Master backend or slide library is needed.
 
@@ -40,24 +42,35 @@ and permissions.
 ```
 
 The script builds the Web UI, installs the `deck` binary at `<prefix>/bin/deck`
-(default prefix `~/.local`, so `~/.local/bin/deck`), creates a Python 3.12 venv
-for `deck-tools` at `<prefix>/share/deck/venv`, and links `deck-skill/` to
-`~/.codex/skills/deck` (override with `--skill-dir PATH`). The binary is not
+(default prefix `~/.local`, so `~/.local/bin/deck`), and creates a Python 3.12
+venv for `deck-tools` at `<prefix>/share/deck/venv`. The binary is not
 `<prefix>/deck`. `--dry-run` prints the plan, including `deck-bin`, and checks
-the skill path without writing. A finished install prints that same `deck` path
-and the `deck` currently resolved on `PATH`.
+the selected skill paths without writing. A finished install prints that same
+`deck` path and the `deck` currently resolved on `PATH`.
 
 If `<prefix>/bin` is not on `PATH`, add it or call `<prefix>/bin/deck`. A
 non-default `--prefix` means the skill and
 [commands.md](../deck-skill/references/commands.md) must use that full path.
 
-The skill path must be new, or already a link to this checkout's `deck-skill/`.
-If `~/.codex/skills/deck` is a symlink to somewhere else, the script prints
-`已存在且指向其他位置` and exits 2. It does not replace the link. To fix it:
-`ls -l ~/.codex/skills/deck`, remove only that symlink (`rm ~/.codex/skills/deck`,
-not the directory it points at), then run `./scripts/install.sh` again. Or pass
-a different `--skill-dir`. A path that exists and is not a symlink exits 2 with
-`已存在且不是指向 deck-skill 的软链接`.
+Skill flags during this migration:
+
+- No skill flag: install or update the CLI, the tool environment, and the
+  compatibility entry at `~/.codex/skills/deck`. The four role entries are not
+  installed.
+- `--skill-dir PATH`: install only that compatibility entry at `PATH`.
+- `--skills-root DIR`: install `deck`, `deck-master`, `deck-content`,
+  `deck-design`, and `deck-review` under `DIR`. `deck` links the whole
+  `deck-skill/` tree. Each role directory's `SKILL.md` links the matching
+  source file, and its `references` and `assets` link the shared directories.
+
+`--skill-dir` and `--skills-root` cannot be used together. An entry that
+already points at this source is left unchanged, including other files in a
+role directory. Any other symlink or directory on the selected name exits 2
+and prints the path and target. The script does not replace or delete it.
+Remove only that symlink (`rm` the link, not the directory it points at) or
+move the directory aside, then rerun. Or pass a different path. The old
+installer treats these same-name entries as foreign; switching back requires
+handling the links explicitly. The two installs do not stack on one path.
 
 npm 12 blocks dependency install scripts unless `allowScripts` lists them, and
 prints an `install-scripts` warning for the rest. `frontend/package.json`
