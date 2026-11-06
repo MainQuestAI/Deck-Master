@@ -85,6 +85,22 @@ jobs:
             echo "skill flags must be mutually exclusive" >&2
             exit 1
           fi
+          # Write roles into a different directory from the --skill-dir compat install above.
+          bash scripts/install.sh --prefix "$RUNNER_TEMP/deck-prefix" --skills-root "$RUNNER_TEMP/skills-root-write"
+          test -L "$RUNNER_TEMP/skills-root-write/deck"
+          test "$(readlink "$RUNNER_TEMP/skills-root-write/deck")" = "${{ github.workspace }}/deck-skill"
+          for role in deck-master deck-content deck-design deck-review; do
+            test -L "$RUNNER_TEMP/skills-root-write/$role/SKILL.md"
+            test "$(readlink "$RUNNER_TEMP/skills-root-write/$role/SKILL.md")" = "${{ github.workspace }}/deck-skill/${role}.md"
+            test -L "$RUNNER_TEMP/skills-root-write/$role/references"
+            test "$(readlink "$RUNNER_TEMP/skills-root-write/$role/references")" = "${{ github.workspace }}/deck-skill/references"
+            test -L "$RUNNER_TEMP/skills-root-write/$role/assets"
+            test "$(readlink "$RUNNER_TEMP/skills-root-write/$role/assets")" = "${{ github.workspace }}/deck-skill/assets"
+          done
+          test ! -e "$RUNNER_TEMP/codex-skills/deck-master"
+          test ! -e "$RUNNER_TEMP/codex-skills/deck-content"
+          test ! -e "$RUNNER_TEMP/codex-skills/deck-design"
+          test ! -e "$RUNNER_TEMP/codex-skills/deck-review"
       - name: Installed deck imports a legacy archive
         run: |
           export DECK_BIN="$RUNNER_TEMP/deck-prefix/bin/deck"
