@@ -25,9 +25,17 @@ description: 用 Rust deck 审查当前作品、外部可读稿或 PPTX。默认
 
 校准例见 [calibration-cases.json](assets/review/calibration-cases.json)，按问题选用，不当成关键词裁判。表达是否只剩标签，见 [content-calibration](references/content-calibration.md)。不必先读完整的内容长文。
 
+有 PPT 和回读时，先读现有 findings 的页和对象定位，再做专业阅图。沿用的机械问题代码与预期关系不足时的边界见 [method-review](references/method-review.md#机械发现与阅图定位)。
+
+## 三层 QA
+
+分别报告 Q1 业务语义、Q2 视觉保真／可读性／专业完成度、Q3 可编辑性与 Office 兼容；三个判断相互独立，不能合成一个 boolean。具体判断方法见 [method-review](references/method-review.md#三层-qa)。
+
+回读 `status=pass` 只说明本次有依据的机械检查，不等于视觉通过，也不等于 Office／桌面编辑通过；现有 `visual_review`、`desktop_editing` 保持 `not_evaluated`。原图与最终 PPT 的判断各附实际证据，缺失或没有看过的那一项分别记未执行，不能相互代替。
+
 ## 怎样返回
 
-每一条都写明页或区域、实际问题、影响、修改建议，以及这次没有验证的维度。内容关系错，建议交内容；主视觉选错或正式提示词漏了关系，建议交设计；蓝图里关系还在、重建或编译丢了，建议交重建。只建议复审受影响的范围。
+每一条都写明页及对象／区域（错归因附原句）、实际问题、影响、修改建议、分级（Critical／Major／Minor）和参考依据，以及这次没有验证的维度。分级按 [method-review](references/method-review.md#缺陷分级) 判断，依据指出对应正文、提示词或实际产物的具体位置。内容关系错，建议交内容；主视觉选错或正式提示词漏了关系，建议交设计；蓝图里关系还在、重建或编译丢了，建议交重建。只建议复审受影响的范围。
 
 作者明确要求把意见保存进作品时，使用 `deck review add`，并写上 method：
 
