@@ -40,7 +40,14 @@ description: 用 Rust deck 协调完整制作、续作和跨职责返修。接�
 - 设计将 D03 生成的 task.md 原文交给 ImageGen，按 attachments.json 传附件，不另写短提示词，不追加“扁平色块方便还原”等要求；代码当前不会拦截 Host 改写提示词，原样提交靠真实会话观察。设计交回主视觉决定，以及本次范围内的蓝图、SVG 或可编辑 PPT，还有和正文的比对。只要样页就不扩成全稿。正文必须改时退回内容。
 - 设计从蓝图重建 SVG 时，按共享的 [还原策略](references/reconstruction.md) 保留可编辑对象与空间关系，元素与绑定见 [SVG 子集](references/svg-subset.md)。局部错漏沿用原图修 SVG，业务关系有歧义先问内容，主结构重排先更新蓝图再重建。
 - 审查默认只交回按页或区域写明的问题、影响、修改建议和未验证维度。作者明确要求留下意见时，用 `deck review add`，并且显式传入 method：当前 Host 自查是 `self_check`，换成本入口自己看稿也仍是 `self_check`；另一执行或模型阅稿是 `other_model`；真人是 `human`。命令的默认 method 是 `human`，自查不能省略这个参数。
-- 审查不改正文、不生图、不采用候选。修复交回内容或设计，之后只复审受影响的范围。没有实际阅图，不称视觉通过。
+- 审查不改正文、不生图、不采用候选。修复按下列原因交接，之后只复审受影响的范围，沿用 D10 的[三层 QA](references/method-review.md#三层-qa)。没有实际阅图，不称视觉通过。
+
+将用户或审查指出的问题落到页及对象／区域、实际问题、参考依据和推荐动作，按原因分流：
+
+- 内容：正文、`purpose`、`layout` 或 `notes` 要改时交内容，用 `deck put --base` 保存；内容完成不自动生图。
+- 设计：主视觉决定或视觉计划要改时交设计，必要时才进入调用。
+- 调用：需要新蓝图时，用 `deck run start image --pages <页ID>`，按上述 task.md 原文与 attachments.json 提交，不另写短提示词。
+- 重建：蓝图仍可用时，沿用上述[还原策略](references/reconstruction.md#何时直接修-svg)直接修 SVG；主结构需要重排时先更新蓝图再重建。
 
 ## 完成
 
