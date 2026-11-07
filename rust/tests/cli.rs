@@ -98,6 +98,74 @@ fn cli_partial_edit_conflict_and_markdown_export() {
 }
 
 #[test]
+fn planned_page_survives_image_task_and_readable_export() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    output_json(command(
+        path,
+        &["new", path.to_str().unwrap(), "--title", "合成任务方案"],
+    ));
+    let fixture = include_str!("fixtures/page-planning.json");
+    let input = path.join("input.json");
+    std::fs::write(&input, fixture).unwrap();
+    output_json(command(
+        path,
+        &["put", "--base", "1", input.to_str().unwrap()],
+    ));
+    let expected: Value = serde_json::from_str(fixture).unwrap();
+    let page = &expected["pages"][0];
+    let run = output_json(command(
+        path,
+        &["run", "start", "image", "--pages", "p1", "--max-calls", "1"],
+    ));
+    let work = Path::new(run["runs"][0]["pages"][0]["work"].as_str().unwrap());
+    let task = std::fs::read_to_string(work.join("task.md")).unwrap();
+    let exported = command(path, &["export", "md"]);
+    assert!(
+        exported.status.success(),
+        "{}",
+        String::from_utf8_lossy(&exported.stderr)
+    );
+    let markdown = String::from_utf8(exported.stdout).unwrap();
+    for text in [
+        page["content"]["title"].as_str().unwrap(),
+        page["purpose"].as_str().unwrap(),
+        page["layout"].as_str().unwrap(),
+    ] {
+        assert!(task.contains(text), "image task omits {text}");
+        assert!(markdown.contains(text), "readable export omits {text}");
+    }
+    for field in ["palette", "fonts"] {
+        for value in expected["style"][field].as_array().unwrap() {
+            let text = value.as_str().unwrap();
+            assert!(task.contains(text), "image task omits style {text}");
+        }
+    }
+    assert!(markdown.contains(&format!(
+        "**本页目的**：{}",
+        page["purpose"].as_str().unwrap()
+    )));
+    assert!(markdown.contains(&format!("**布局**：{}", page["layout"].as_str().unwrap())));
+    // Verify body hierarchy separately so facts mentioned in layout cannot hide lost body blocks.
+    let body = "**状态与分支**\n\n\
+- 校验通过后，有执行空位的任务进入执行，无空位的任务进入排队。\n\
+- 空位释放后，排队任务进入执行。\n\
+- 执行后分为互斥的两种结果：\n  - 成功：记录输出。\n  - 失败：记录原因。\n\n\
+**容量条件**\n\n- 50指执行中并发目标，不是排队人数。\n\n\
+**验收证据**\n\n- 分别记录排队数、执行数和成功或失败的结果。\n";
+    assert!(task.contains(body), "image task loses content organization");
+    assert!(
+        markdown.contains(body),
+        "readable export loses content organization"
+    );
+    for label in page["content"]["labels"].as_array().unwrap() {
+        let text = label["text"].as_str().unwrap();
+        assert!(task.contains(&format!("- {text}\n")));
+        assert!(markdown.contains(&format!("- {text}\n")));
+    }
+}
+
+#[test]
 fn material_add_uses_real_python_tool_preserves_original_and_deduplicates() {
     assert!(
         std::env::var_os("DECK_TOOLS_PYTHON").is_some(),
