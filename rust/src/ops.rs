@@ -591,6 +591,13 @@ pub fn basis(kind: &str, deck: &Deck, page: &Page) -> Result<String> {
     Ok(format!("{:x}", Sha256::digest(serde_json::to_vec(&value)?)))
 }
 
+fn image_is_stale(deck: &Deck, page: &Page) -> Result<bool> {
+    match &page.image {
+        Some(image) => Ok(image.basis != basis("image", deck, page)?),
+        None => Ok(false),
+    }
+}
+
 fn run_record(
     connection: &rusqlite::Connection,
     id: i64,
@@ -843,7 +850,8 @@ fn runs(connection: &rusqlite::Connection, deck: &Deck, id: Option<i64>) -> Resu
                         }
                     };
                     current_basis = Some(current.clone());
-                    *current != old
+                    // Derive image staleness without changing stored SVG hash inputs.
+                    *current != old || (kind == "svg" && image_is_stale(deck, p)?)
                 }
                 None => true,
             };
@@ -1092,13 +1100,12 @@ pub fn artifact_status(deck: &Deck) -> Result<Value> {
     let mut stale = Vec::new();
     let mut stale_images = Vec::new();
     for page in &deck.pages {
-        if let Some(image) = &page.image
-            && image.basis != basis("image", deck, page)?
-        {
+        let image_stale = image_is_stale(deck, page)?;
+        if image_stale {
             stale_images.push(&page.id);
         }
         if let Some(svg) = &page.svg
-            && svg.basis != basis("svg", deck, page)?
+            && (svg.basis != basis("svg", deck, page)? || image_stale)
         {
             stale.push(&page.id);
         }

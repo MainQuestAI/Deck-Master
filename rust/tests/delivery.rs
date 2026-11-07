@@ -306,6 +306,10 @@ fn image_run_inlines_readable_page_inputs_and_keeps_svg_inputs_separate() {
         "退回",
         "容量限制按日计算",
         "仅适用于正常工作时段",
+        "让主要文字、连线和业务对象可以分开重建",
+        "不要为了方便转 SVG 先画成扁平色块",
+        "不要把整页当成最后必须压成零张图",
+        "pictures=0 不是目标，也不是失败",
     ] {
         assert!(image.contains(text), "image task omits {text}");
     }
@@ -325,9 +329,42 @@ fn image_run_inlines_readable_page_inputs_and_keeps_svg_inputs_separate() {
     let svg = ops::run_start(path, "svg", &["p1".into()], None).unwrap();
     let work = Path::new(svg["runs"][0]["pages"][0]["work"].as_str().unwrap());
     let svg = std::fs::read_to_string(work.join("task.md")).unwrap();
-    assert!(svg.contains("content.json") && svg.contains("atoms.json"));
-    assert!(!svg.contains("完成与退回是互斥结果"));
+    for requirement in [
+        "正文取 content.json",
+        "绑定 atoms.json 的 data-atom-id",
+        "主要文字、节点、连线、分区、表格和标签必须成为可编辑对象",
+        "插画、质感、人物、复杂曲线可保留为有边界的图",
+        "图片不能承载唯一正文",
+        "禁止把整页原图或蓝图当背景",
+        "禁止为了方便转 SVG 先压成扁平色块",
+        "禁止为了零张图（pictures=0）把流线或空间关系改成普通矩形或默认流程图",
+        "pictures=0 不是目标，也不是失败",
+        "对象计数、图片数不能代表质量",
+        "流程图、架构图、路径图只用于还原阶段的空间锚点和标签避让",
+        "不是规划菜单，也不替代构图句",
+        "错漏文字、局部排版和依据明确的连线可沿用原图",
+        "业务关系有歧义先问内容",
+        "主结构需要重排时先更新蓝图再重建",
+    ] {
+        assert!(svg.contains(requirement), "SVG task omits {requirement}");
+    }
+    for text in [
+        "完成与退回是互斥结果",
+        "校验失败单独记录",
+        "1,200",
+        "容量限制按日计算",
+        "仅适用于正常工作时段",
+        "讲稿不入图",
+        "内部待核项",
+        "材料定位",
+    ] {
+        assert!(!svg.contains(text), "SVG task inlines {text}");
+    }
     assert!(work.join("atoms.json").is_file());
+    assert_eq!(
+        std::fs::read_to_string(work.join("reconstruction.md")).unwrap(),
+        include_str!("../../deck-skill/references/reconstruction.md")
+    );
 }
 
 #[test]
@@ -643,7 +680,8 @@ fn page_three_redo_and_notes_only_edits_preserve_other_pages_and_existing_build(
 }
 
 #[test]
-fn polled_basis_tracks_only_the_inputs_that_task_uses() {
+fn polled_svg_staleness_inherits_image_staleness_without_changing_basis() {
+    use sha2::{Digest, Sha256};
     use std::os::unix::fs::PermissionsExt;
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path();
@@ -652,6 +690,38 @@ fn polled_basis_tracks_only_the_inputs_that_task_uses() {
         path,
         json!({"pages":[{"id":"p1","content":{"title":"增长","body_blocks":[{"type":"paragraph","id":"a1","text":"预期增长 10%"}]}}]}),
     );
+    let image = path.join("original.png");
+    png(&image);
+    let image_run = start(path, 1);
+    ops::run_call(path, image_run, "p1", false).unwrap();
+    assert_eq!(
+        ops::run_result(path, image_run, "p1", &image).unwrap()["adopted"],
+        true
+    );
+    let mut store = Store::open(path).unwrap();
+    let mut snapshot = store.current().unwrap();
+    let svg_file = store
+        .add_file(b"<svg viewBox='0 0 1280 720'/>", "svg")
+        .unwrap();
+    // Seed the pre-cut persisted formula to detect accidental hash migrations.
+    for index in 0..snapshot.deck.pages.len() {
+        let page = &snapshot.deck.pages[index];
+        let legacy_inputs = json!([
+            page.content,
+            page.image.as_ref().map(|image| &image.file),
+            snapshot.deck.style
+        ]);
+        snapshot.deck.pages[index].svg = Some(deck::model::Artifact {
+            file: svg_file.clone(),
+            basis: format!(
+                "{:x}",
+                Sha256::digest(serde_json::to_vec(&legacy_inputs).unwrap())
+            ),
+        });
+    }
+    let tx = store.transaction().unwrap();
+    store::append(&tx, &snapshot.deck, "synthetic legacy SVG bases").unwrap();
+    tx.commit().unwrap();
     let wrapper = temp.path().join("python-wrapper");
     let script = temp.path().join("tool.py");
     std::fs::write(
@@ -708,29 +778,72 @@ else:
         .expect("current_basis")
         .to_string();
     assert_eq!(svg["basis_changed"], false);
-    edit(path, json!({"pages":[{"id":"p2","notes":"另一页讲稿"}]}));
-    let (after_other, svg) = page("svg", "p1");
-    assert_ne!(after_other, version);
-    assert_eq!(svg["current_basis"], svg_basis);
-    assert_eq!(svg["basis_changed"], false);
-    edit(path, json!({"pages":[{"id":"p1","notes":"只改本页讲稿"}]}));
-    let (_, svg) = page("svg", "p1");
-    assert_eq!(svg["current_basis"], svg_basis);
-    assert_eq!(svg["basis_changed"], false);
     ops::run_start(path, "image", &["p1".into(), "p2".into()], None).unwrap();
     let (_, image) = page("image", "p1");
     let image_basis = image["current_basis"]
         .as_str()
         .expect("current_basis")
         .to_string();
+    let assert_artifacts = |stale: Value| {
+        let status = ops::workspace(path).unwrap()["artifact_status"].clone();
+        assert_eq!(status["stale_pages"], stale);
+        assert_eq!(status["stale_images"], stale);
+    };
+    assert_artifacts(json!([]));
+    edit(path, json!({"pages":[{"id":"p2","notes":"另一页讲稿"}]}));
+    let (after_other, svg) = page("svg", "p1");
+    assert_ne!(after_other, version);
+    assert_eq!(svg["current_basis"], svg_basis);
+    assert_eq!(svg["basis_changed"], false);
+    assert_eq!(page("image", "p1").1["basis_changed"], false);
+    assert_artifacts(json!([]));
+    edit(path, json!({"pages":[{"id":"p1","notes":"只改本页讲稿"}]}));
+    let (_, svg) = page("svg", "p1");
+    assert_eq!(svg["current_basis"], svg_basis);
+    assert_eq!(svg["basis_changed"], false);
+    let (_, image) = page("image", "p1");
+    assert_eq!(image["current_basis"], image_basis);
     assert_eq!(image["basis_changed"], false);
+    assert_artifacts(json!([]));
+
+    // Without an original image, layout and purpose remain outside SVG basis.
+    let (_, svg) = page("svg", "p2");
+    let no_image_basis = svg["current_basis"].clone();
+    edit(
+        path,
+        json!({"pages":[{"id":"p2","layout":"左侧说明，右侧结论","purpose":"查阅下一步"}]}),
+    );
+    let (_, svg) = page("svg", "p2");
+    assert_eq!(svg["current_basis"], no_image_basis);
+    assert_eq!(svg["basis_changed"], false);
+    assert_artifacts(json!([]));
+
     edit(path, json!({"pages":[{"id":"p1","layout":"改为两栏"}]}));
     let (_, image) = page("image", "p1");
     let (_, svg) = page("svg", "p1");
     assert_ne!(image["current_basis"], image_basis);
     assert_eq!(image["basis_changed"], true);
     assert_eq!(svg["current_basis"], svg_basis);
-    assert_eq!(svg["basis_changed"], false);
+    assert_eq!(svg["basis_changed"], true);
+    assert_artifacts(json!(["p1"]));
+
+    edit(path, json!({"pages":[{"id":"p1","layout":""}]}));
+    assert_eq!(page("svg", "p1").1["basis_changed"], false);
+    assert_artifacts(json!([]));
+    edit(
+        path,
+        json!({"pages":[{"id":"p1","purpose":"评估增长预期"}]}),
+    );
+    let (_, image) = page("image", "p1");
+    let (_, svg) = page("svg", "p1");
+    assert_ne!(image["current_basis"], image_basis);
+    assert_eq!(image["basis_changed"], true);
+    assert_eq!(svg["current_basis"], svg_basis);
+    assert_eq!(svg["basis_changed"], true);
+    assert_artifacts(json!(["p1"]));
+
+    edit(path, json!({"pages":[{"id":"p1","purpose":""}]}));
+    assert_artifacts(json!([]));
     edit(
         path,
         json!({"pages":[{"id":"p1","content":{"title":"增长","body_blocks":[{"type":"paragraph","id":"a1","text":"预期增长 5%"}]}}]}),
@@ -738,4 +851,5 @@ else:
     let (_, svg) = page("svg", "p1");
     assert_ne!(svg["current_basis"], svg_basis);
     assert_eq!(svg["basis_changed"], true);
+    assert_artifacts(json!(["p1"]));
 }
