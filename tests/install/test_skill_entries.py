@@ -6,6 +6,8 @@ import os
 import re
 from pathlib import Path
 
+import pytest
+
 REPO = Path(__file__).resolve().parents[2]
 SOURCE = REPO / "deck-skill"
 ROLES = ("deck-master", "deck-content", "deck-design", "deck-review")
@@ -73,3 +75,18 @@ def test_method_markdown_links_resolve() -> None:
         for link in _local_links(path.read_text(encoding="utf-8")):
             target = (path.parent / link).resolve()
             assert target.is_file() or target.is_dir(), f"{path} -> {link}"
+
+
+@pytest.mark.parametrize("relative", ["deck-content.md", "references/page-writing.md"])
+def test_title_policy_preserves_page_roles(relative: str) -> None:
+    text = (SOURCE / relative).read_text(encoding="utf-8")
+    paragraphs = re.split(r"\n\s*\n", text)
+    for role in ("说明", "教学"):
+        policies = [paragraph for paragraph in paragraphs if re.search(rf"{role}(?:页|页面)", paragraph)]
+        assert any(
+            re.search(r"(?:不(?:强制|要求|必)|无[需须]).{0,30}(?:结论|判断).{0,8}标题", policy)
+            and re.search(r"(?:不(?:强制|要求|必)|无[需须]).{0,40}(?:商业\s*)?CTA", policy)
+            for policy in policies
+        ), f"{relative}: {role} pages need title and CTA exceptions"
+    assert re.search(r"判断页.{0,30}判断句", text)
+    assert re.search(r"查阅页.{0,30}查阅职责", text)

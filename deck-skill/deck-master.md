@@ -35,7 +35,7 @@ description: 用 Rust deck 协调完整制作、续作和跨职责返修。接�
 
 先读出作者要表达的判断、希望争取的结果、已经有的决定，以及这次的修改范围。只在不同答案会把方向做成相反、且无法按条件继续时集中补问。
 
-- 内容交回主张、页序，以及每页阅读任务 `purpose`、判断句或明确查阅职责 `content.title`、构图句 `layout` 和按结构组织的正文。构图句须有本页关系、对象与方向或分支、分区职责、表的作用及拍扁会丢的关键事实；方法见 [page-writing](references/page-writing.md)。缺任一项先补写，不调用 `run start image`；内容完成不自动生图。
+- 内容交回主张、页序，以及每页阅读任务 `purpose`、按 [page-writing](references/page-writing.md) 的页职责写的标题 `content.title`、构图句 `layout` 和按结构组织的正文。构图句须有本页关系、对象与方向或分支、分区职责、表的作用及拍扁会丢的关键事实；方法见 [page-writing](references/page-writing.md)。缺任一项先补写，不调用 `run start image`；内容完成不自动生图。
 - 生图前按 [视觉系统](references/design-system.md) 读取并锁定作品 style，至少确定 palette 和 fonts，画布沿用默认；有品牌规范时用 `deck put` 写入同一字段，无品牌用默认值。构建前若本机没有该默认字体，用 `deck doctor` 换成已安装字体。风格口号进共享设计参考，不进 purpose / layout；不设八张样张确认硬门，不给模型追加任务里没有、模型里也不存在的风格前缀。
 - 设计将 D03 生成的 task.md 原文交给 ImageGen，按 attachments.json 传附件，不另写短提示词，不追加“扁平色块方便还原”等要求；代码当前不会拦截 Host 改写提示词，原样提交靠真实会话观察。设计交回主视觉决定，以及本次范围内的蓝图、SVG 或可编辑 PPT，还有和正文的比对。只要样页就不扩成全稿。正文必须改时退回内容。
 - 设计从蓝图重建 SVG 时，按共享的 [还原策略](references/reconstruction.md) 保留可编辑对象与空间关系，元素与绑定见 [SVG 子集](references/svg-subset.md)。局部错漏沿用原图修 SVG，业务关系有歧义先问内容，主结构重排先更新蓝图再重建。

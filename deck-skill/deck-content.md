@@ -42,7 +42,7 @@ description: 用 Rust deck 只做内容。可独立完成策划、按既定方�
 
 `brief` 保存标题、受众、任务类型、目标和实际约束。`framing` 保存 `thesis`、`pillars`、`facts`、`assumptions`、`questions`。先给这次的主问题一个有依据的回答，再写框架。事实、建议、假设和缺口分开。
 
-每页先写阅读任务 `purpose`、判断句或明确查阅职责 `content.title`、构图句 `layout`，再按结构组织 `content` 正文。构图句写清本页关系、对象与方向或分支、分区职责、表是主视觉还是取材，以及拍扁会丢的关键事实。方法和状态流改写、查阅页留表两类对照见 [page-writing](references/page-writing.md)，表达见 [content-to-visual](references/content-to-visual.md)。关键事实留正文，必要短名放 `content.labels`。不讲的内容删或后移；目的和布局会导出，不放制作备忘、风格口号或百分比。待补放 `todo`，不上屏。`notes` 只写讲述，不放方法编号。
+每页先写阅读任务 `purpose`、按页职责写的标题 `content.title`、构图句 `layout`，再按结构组织 `content` 正文。判断页用完整判断句，查阅页明确查阅职责；说明页和教学页不强制结论标题或商业 CTA。构图句写清本页关系、对象与方向或分支、分区职责、表是主视觉还是取材，以及拍扁会丢的关键事实。方法和状态流改写、查阅页留表两类对照见 [page-writing](references/page-writing.md)，表达见 [content-to-visual](references/content-to-visual.md)。关键事实留正文，必要短名放 `content.labels`。不讲的内容删或后移；目的和布局会导出，不放制作备忘、风格口号或百分比。待补放 `todo`，不上屏。`notes` 只写讲述，不放方法编号。
 
 用 `get` 取版本，用 `put --base` 保存。冲突时先读当前内容再合并，不盖住作者的新稿。交可读稿时 `export md`，并打开导出的文件看一遍。
 
@@ -50,4 +50,4 @@ E01–E04 的合成算术在各案例的 `numbers.json`。要用时运行 `pytho
 
 ## 交接
 
-交给设计的是主张、页序，以及每页阅读任务、判断句或查阅标题、构图句和按结构组织的完整正文。缺任一项先补写，不调用 `run start image`；内容完成不自动生图。交可读稿时用 `export md` 实际核对标题、“本页目的”、“布局”和正文组织，查阅页留表算成功。不交一份更短的画面提示词。设计若发现必须改正文，退回这一入口，在原范围内改。
+交给设计的是主张、页序，以及每页阅读任务、按 [page-writing](references/page-writing.md) 的页职责写的标题、构图句和按结构组织的完整正文。缺任一项先补写，不调用 `run start image`；内容完成不自动生图。交可读稿时用 `export md` 实际核对标题、“本页目的”、“布局”和正文组织，查阅页留表算成功。不交一份更短的画面提示词。设计若发现必须改正文，退回这一入口，在原范围内改。
