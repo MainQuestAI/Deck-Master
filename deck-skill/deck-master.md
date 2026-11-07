@@ -27,6 +27,8 @@ description: 用 Rust deck 协调完整制作、续作和跨职责返修。接�
 2. [commands.md](references/commands.md)。
 3. 按这次真正要做的事，转读内容的 [source-reading](references/source-reading.md)、[method-selection](references/method-selection.md)、[page-writing](references/page-writing.md)，设计的 [content-to-visual](references/content-to-visual.md)，或审查的 [method-review](references/method-review.md)。
 
+设计涉及图标、界面或场景时，共用 [视觉资产](references/visual-assets.md) 的选用、许可和按页登记方法。
+
 不要为了凑齐流程把四份长文一次读完。
 
 ## 交接

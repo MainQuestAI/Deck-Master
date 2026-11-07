@@ -160,7 +160,7 @@ fn import_staged(source: &Path, destination: &Path, archive: Archive) -> Result<
     let mut assets = Vec::new();
     for asset in deck.style.assets.drain(..) {
         let file = ingest(&store, source, &asset.file, &mut files)?;
-        assets.push(Asset { id: asset.id, file });
+        assets.push(Asset { file, ..asset });
     }
     deck.style.assets = assets;
     let mut pages = Vec::new();

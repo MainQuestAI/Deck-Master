@@ -374,7 +374,7 @@ fn asset_bytes_are_attached_to_host_task_without_using_ids_as_paths() {
     setup(path);
     let image = path.join("logo.png");
     png(&image);
-    let asset = ops::asset_add(path, "../logo", &image).unwrap();
+    let asset = ops::asset_add(path, "../logo", &image, &[], "", "").unwrap();
     let id = start(path, 2);
     let task = ops::run_show(path, Some(id)).unwrap();
     let directory = Path::new(task["runs"][0]["pages"][0]["work"].as_str().unwrap());
@@ -474,7 +474,7 @@ fn build_retains_notes_reports_missing_and_export_compares_inputs_after_restore(
     }
     let asset = path.join("logo.png");
     png(&asset);
-    ops::asset_add(path, "logo", &asset).unwrap();
+    ops::asset_add(path, "logo", &asset, &[], "", "").unwrap();
     assert_eq!(ops::export_pptx(path).unwrap()["input_changed"], true);
     ops::restore(path, baseline).unwrap();
     assert_eq!(ops::export_pptx(path).unwrap()["input_changed"], false);

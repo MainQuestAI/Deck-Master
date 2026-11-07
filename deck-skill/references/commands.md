@@ -140,6 +140,8 @@ deck --project "$DECK_PROJECT" export md > "$DECK_PROJECT/manuscript.md"
 
 内容完成不自动进入这一节。设计或兼容入口在授权范围内使用。
 
+按 [视觉资产](visual-assets.md) 选择实际需要的资源：`deck asset add <素材ID> <文件> --page p1 --page p3 --source <来源> --license <许可>`。`--page` 可重复，省略则为公共素材；同 ID 替换整条记录，保留的范围、来源和许可需一起传入。SVG 添加时渲染成 PNG，PNG/JPEG 保持原样。任务只附上本页有效素材，以 attachments.json 为准。
+
 1. `deck run start image --pages p1,p2` 准备任务。读取该次工作目录里的完整 task.md，按 attachments.json 定位素材。每次调用前 `deck run call <run> <page>`，再把 task.md 原文作为 ImageGen 的 prompt，把清单中的文件作为附件。结果未知时先核实，决定重试才加 `--retry`。
 2. `deck run result <run> <page> <图片文件>` 交回。首次结果可以自动采用；重交的修正版、取消后或依据已变的结果只保存。确认使用后 `deck run adopt <run> <page>`。`deck run show` 看状态，`deck run cancel <run>` 停止后续调用和自动采用。
 3. `deck run start svg --pages p1,p2` 准备 SVG。按原图的布局和关系重建，正文取 content.json，文字绑定 atoms.json。先读 [svg-subset.md](svg-subset.md)。错漏文字、局部排版和依据明确的连线可以沿用原图直接改。主结构要重排时先改蓝图。

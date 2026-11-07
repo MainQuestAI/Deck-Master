@@ -124,7 +124,16 @@ enum MaterialCommand {
 #[derive(Subcommand)]
 enum AssetCommand {
     #[command(about = "添加素材；同 ID 替换当前选择，原文件保留")]
-    Add { id: String, file: PathBuf },
+    Add {
+        id: String,
+        file: PathBuf,
+        #[arg(long = "page", help = "只供指定页使用；可重复，省略则为公共素材")]
+        pages: Vec<String>,
+        #[arg(long, default_value = "", help = "所选素材的来源")]
+        source: String,
+        #[arg(long, default_value = "", help = "所选素材的许可")]
+        license: String,
+    },
 }
 
 #[derive(Subcommand)]
@@ -224,8 +233,22 @@ pub fn run() -> Result<()> {
             Ok(())
         }
         Commands::Asset {
-            command: AssetCommand::Add { id, file },
-        } => print_json(ops::asset_add(&cli.project, &id, &file)?),
+            command:
+                AssetCommand::Add {
+                    id,
+                    file,
+                    pages,
+                    source,
+                    license,
+                },
+        } => print_json(ops::asset_add(
+            &cli.project,
+            &id,
+            &file,
+            &pages,
+            &source,
+            &license,
+        )?),
         Commands::Run { command } => print_json(match command {
             RunCommand::Start {
                 kind,
