@@ -33,7 +33,7 @@ description: 用 Rust deck 做已有正文的页面设计、样页和指定页�
 
 先用一句写明这一页的画面必须让读者看出的对象、方向和分支。比较和查阅可以继续以表为主视觉。状态、路径、闭环和旅程让关系成为主视觉，表可以留下作明细。
 
-然后按 [commands.md](references/commands.md) 的制作顺序：
+再按实际需要进入 [commands.md](references/commands.md) 的相应制作步骤；蓝图仍可用的局部返修直接进入 SVG 修正，需要新蓝图时才从生图开始：
 
 1. `deck run start image` 之后，读取该次 task.md 的原文作为 ImageGen 的 prompt，附件只使用 attachments.json 里的文件。
 2. 交回、比对、需要时 `deck run adopt`。取消后或依据已变的结果只保存。
