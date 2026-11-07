@@ -2595,6 +2595,31 @@ html[data-theme="dark"] .suggested-diff-body {
 .s5-reviews li:last-child { border-bottom: 0; }
 .s5-reviews .s4-reading { margin: 8px 0 12px; }
 
+.reader-layers { flex-wrap: wrap; }
+.page-comparison-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 24px; }
+.page-comparison-controls label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+.page-comparison-controls input { min-height: 44px; max-width: 100%; }
+.page-comparison-panes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
+.page-comparison-panes > section { min-width: 0; }
+.page-comparison-panes h2 { font-size: 16px; }
+.page-comparison-viewport { position: relative; overflow: hidden; background: var(--dm-color-surface-hover); }
+.page-comparison-viewport .s4-artwork { padding: 0; height: 100%; }
+.page-comparison-viewport .s4-artwork > img {
+  position: absolute; max-width: none;
+  width: calc(100% * var(--compare-scale)); height: calc(100% * var(--compare-scale));
+  left: var(--compare-left); top: var(--compare-top);
+}
+.page-comparison-viewport .s4-artwork > p { position: absolute; top: 8px; left: 8px; z-index: 1; margin: 0; }
+.page-comparison-viewport .s4-empty { height: 100%; overflow: auto; }
+.page-comparison-findings { padding-left: 24px; overflow-wrap: anywhere; }
+.page-comparison-findings > li { padding: 12px 0; border-bottom: 1px solid var(--dm-color-border); }
+.page-comparison-findings dl { display: flex; flex-wrap: wrap; gap: 12px 24px; margin: 12px 0; }
+.page-comparison-findings dt { color: var(--dm-color-text-muted); font-size: 13px; }
+.page-comparison-findings dd { margin: 4px 0 0; }
+@media (max-width: 768px) {
+  .page-comparison-panes { grid-template-columns: minmax(0, 1fr); }
+}
+
 .history-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 12px 0; }
 .history-columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; margin: 12px 0; }
 .history-columns > * { min-width: 0; overflow-wrap: anywhere; }
