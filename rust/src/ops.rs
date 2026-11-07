@@ -593,12 +593,23 @@ pub fn asset_add(
     let asset = crate::model::Asset {
         id: id.into(),
         file,
-        pages: pages.into(),
+        pages: pages
+            .iter()
+            .flat_map(|value| value.split(','))
+            .map(str::to_owned)
+            .collect(),
         source: source.into(),
         license: license.into(),
     };
     let tx = store.transaction()?;
     let mut snapshot = store::current(&tx)?;
+    for page in &asset.pages {
+        if !snapshot.deck.pages.iter().any(|p| &p.id == page) {
+            return Err(Error::Input(format!(
+                "页面 {page} 不存在；请用 deck show 查看页面"
+            )));
+        }
+    }
     if let Some(old) = snapshot.deck.style.assets.iter_mut().find(|a| a.id == id) {
         *old = asset.clone();
     } else {

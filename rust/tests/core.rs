@@ -26,11 +26,29 @@ fn two_pages(path: &Path) -> i64 {
 fn explicit_style_put_preserves_caller_palette_and_fonts() {
     let temp = tempfile::tempdir().unwrap();
     let created = ops::new(temp.path(), "合成作品".into()).unwrap();
-    let style = json!({"palette":["#FFFFFF","#14213D"],"fonts":["serif"]});
-    ops::put(temp.path(), created.version, patch(json!({"style":style}))).unwrap();
+    let file = store::Store::open(temp.path())
+        .unwrap()
+        .add_file(b"synthetic mark", "bin")
+        .unwrap();
+    let prior = json!({
+        "canvas":{"width_px":960,"height_px":720,"slide_width_in":10.0,"slide_height_in":7.5},
+        "palette":["#164267","#F5F7FA","#D97706"],
+        "fonts":["Noto Sans CJK SC"],
+        "assets":[{"id":"mark","file":file,"source":"synthetic","license":"CC0"}]
+    });
+    let seeded = ops::put(temp.path(), created.version, patch(json!({"style":prior}))).unwrap();
+    let style = json!({
+        "canvas":prior["canvas"],
+        "palette":["#FFFFFF","#14213D"],
+        "fonts":["serif"],
+        "assets":prior["assets"]
+    });
+    ops::put(temp.path(), seeded.version, patch(json!({"style":style}))).unwrap();
     let saved = ops::get(temp.path(), None).unwrap();
     assert_eq!(saved["deck"]["style"]["palette"], style["palette"]);
     assert_eq!(saved["deck"]["style"]["fonts"], style["fonts"]);
+    assert_eq!(saved["deck"]["style"]["canvas"], prior["canvas"]);
+    assert_eq!(saved["deck"]["style"]["assets"], prior["assets"]);
 }
 
 #[test]

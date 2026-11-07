@@ -1,0 +1,36 @@
+{
+  "order": ["p1"],
+  "pages": [
+    {
+      "id": "p1",
+      "purpose": "逐条核对要求、响应要点与展开位置。",
+      "layout": "主图就是查阅表：主区按要求、响应要点、展开位置逐行对照；每项要求与响应及位置保持同一行。",
+      "content": {
+        "title": "要求与响应对照",
+        "body_blocks": [
+          {
+            "type": "table",
+            "columns": [
+              {"id": "requirement", "label": "要求"},
+              {"id": "response", "label": "响应要点"},
+              {"id": "location", "label": "展开位置"}
+            ],
+            "rows": [
+              {"cells": [
+                {"column_id": "requirement", "display_text": "异常记录"},
+                {"column_id": "response", "display_text": "拟记录失败原因"},
+                {"column_id": "location", "display_text": "异常处理章节"}
+              ]},
+              {"cells": [
+                {"column_id": "location", "display_text": "导出说明章节"},
+                {"column_id": "requirement", "display_text": "结果导出"},
+                {"column_id": "response", "display_text": "拟支持按任务导出"}
+              ]}
+            ]
+          },
+          {"type": "paragraph", "text": "拟议响应不表示已经交付。"}
+        ]
+      }
+    }
+  ]
+}

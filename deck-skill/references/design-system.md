@@ -21,12 +21,14 @@
 
 ```json
 {
+  "canvas": {"width_px": 1280, "height_px": 720, "slide_width_in": 13.333, "slide_height_in": 7.5},
   "palette": ["#164267", "#F5F7FA", "#D97706"],
-  "fonts": ["Noto Sans CJK SC"]
+  "fonts": ["Noto Sans CJK SC"],
+  "assets": []
 }
 ```
 
-这是色板和字体的示例；`put` 的 style 是完整单元，修改已有作品时保留其 canvas 与 assets。新建作品自动带上默认色板和字体；旧稿缺省仍为空，不会自动补写。构建前若本机没有该默认字体，用 `deck doctor` 换成已安装字体。字体层级、网格等共享参考不会自动成为 task.md 的新字段，也不授权 Host 另加风格前缀。
+这是完整 style 的示例；`put` 的 style 是完整单元，修改已有作品时必须回传原有 canvas 与 assets，不要用示例的默认画布和空素材覆盖它们。新建作品自动带上默认色板和字体；旧稿缺省仍为空，不会自动补写。构建前若本机没有该默认字体，用 `deck doctor` 换成已安装字体。字体层级、网格等共享参考不会自动成为 task.md 的新字段，也不授权 Host 另加风格前缀。
 
 ## 字体与层级
 

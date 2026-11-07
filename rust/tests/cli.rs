@@ -139,6 +139,35 @@ fn new_deck_defaults_reach_image_task_without_putting_style() {
 }
 
 #[test]
+fn lookup_page_table_survives_readable_export() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    output_json(command(path, &["new", path.to_str().unwrap()]));
+    let input = path.join("input.json");
+    std::fs::write(&input, include_str!("fixtures/lookup-page.json")).unwrap();
+    output_json(command(
+        path,
+        &["put", "--base", "1", input.to_str().unwrap()],
+    ));
+    let exported = command(path, &["export", "md"]);
+    assert!(
+        exported.status.success(),
+        "{}",
+        String::from_utf8_lossy(&exported.stderr)
+    );
+    let markdown = String::from_utf8(exported.stdout).unwrap();
+    let table = "| 要求 | 响应要点 | 展开位置 |\n\
+| --- | --- | --- |\n\
+| 异常记录 | 拟记录失败原因 | 异常处理章节 |\n\
+| 结果导出 | 拟支持按任务导出 | 导出说明章节 |\n\n\
+拟议响应不表示已经交付。\n";
+    assert!(
+        markdown.contains(table),
+        "readable export loses lookup rows"
+    );
+}
+
+#[test]
 fn planned_page_survives_image_task_and_readable_export() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path();

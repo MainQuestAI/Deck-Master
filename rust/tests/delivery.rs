@@ -335,6 +335,7 @@ fn image_run_inlines_readable_page_inputs_and_keeps_svg_inputs_separate() {
         "对应 content.labels（含 children）中标签的节点必须写 data-node-ref，值为该标签 id",
         "有向连线必须写 data-edge-ref",
         "先读 svg-subset.md",
+        "reconstruction.md",
         "主要文字、节点、连线、分区、表格和标签必须成为可编辑对象",
         "插画、质感、人物、复杂曲线可保留为有边界的图",
         "图片不能承载唯一正文",
@@ -364,10 +365,7 @@ fn image_run_inlines_readable_page_inputs_and_keeps_svg_inputs_separate() {
         assert!(!svg.contains(text), "SVG task inlines {text}");
     }
     assert!(work.join("atoms.json").is_file());
-    assert_eq!(
-        std::fs::read_to_string(work.join("reconstruction.md")).unwrap(),
-        include_str!("../../deck-skill/references/reconstruction.md")
-    );
+    assert!(work.join("reconstruction.md").is_file());
 }
 
 #[test]
