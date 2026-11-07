@@ -86,9 +86,7 @@ def _compile_prepared(inputs, options, output_dir, prepared=None):
         candidate = Path(temporary) / 'candidate.pptx'
         from .native import emit
         emit(pages, options.width_px, options.height_px, options.fonts, candidate)
-        # Explicit SVG letter spacing becomes editable DrawingML character spacing.
         patched = Path(temporary) / 'patched.pptx'
-        ns = {'p': 'http://schemas.openxmlformats.org/presentationml/2006/main', 'a': 'http://schemas.openxmlformats.org/drawingml/2006/main'}
         with zipfile.ZipFile(candidate) as source, zipfile.ZipFile(patched, 'w', zipfile.ZIP_DEFLATED) as dest:
             for info in source.infolist():
                 data = source.read(info.filename)
@@ -100,17 +98,6 @@ def _compile_prepared(inputs, options, output_dir, prepared=None):
                     license_path = Path(__file__).parents[1] / 'resources/icons/lucide/LICENSE.txt'
                     description.text = (description.text or '') + '\nLucide 1.49.0 icon license:\n' + license_path.read_text()
                     data = ET.tostring(core, encoding='utf-8', xml_declaration=True)
-                for index, page in enumerate(pages, 1):
-                    if info.filename != f'ppt/slides/slide{index}.xml':
-                        continue
-                    root = ET.fromstring(data)
-                    spacing = {s['atom_id'] or s['id']: s.get('letter_spacing', 0) for s in page['shapes'] if s['kind'] == 'text'}
-                    for shape in root.findall('.//p:sp', ns):
-                        name = shape.find('p:nvSpPr/p:cNvPr', ns).get('name')
-                        if spacing.get(name):
-                            for props in shape.findall('.//a:rPr', ns) + shape.findall('.//a:defRPr', ns):
-                                props.set('spc', str(round(spacing[name] * min(options.width_px / page['width'], options.height_px / page['height']) * 75)))
-                    data = ET.tostring(root, encoding='utf-8', xml_declaration=True)
                 dest.writestr(info, data)
         for item, page in zip(inputs, pages):
             if hashlib.sha256(Path(item.path).read_bytes()).hexdigest() != page['sha256']:

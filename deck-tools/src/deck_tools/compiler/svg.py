@@ -334,8 +334,16 @@ def parse_path(d: str, identity: str) -> list:
         out.append({'lineTo':dict(x=p[0],y=p[1])})
     def curve(points,depth=0):
         a,b=points[0],points[-1]
-        dx,dy=b[0]-a[0],b[1]-a[1]; length=(dx*dx+dy*dy)**.5
-        error=max(((abs(dx*(a[1]-p[1])-(a[0]-p[0])*dy)/length) if length else ((p[0]-a[0])**2+(p[1]-a[1])**2)**.5) for p in points[1:-1])
+        dx, dy = b[0] - a[0], b[1] - a[1]
+        length_squared = dx * dx + dy * dy
+        distances = []
+        for p in points[1:-1]:
+            # Distance to the finite chord also detects collinear backtracking.
+            projection = ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / length_squared if length_squared else 0
+            projection = max(0, min(1, projection))
+            distances.append(math.hypot(p[0] - a[0] - projection * dx,
+                                        p[1] - a[1] - projection * dy))
+        error = max(distances)
         if error<=.2 or depth>=16: emit(b);return
         levels=[points]
         while len(levels[-1])>1:

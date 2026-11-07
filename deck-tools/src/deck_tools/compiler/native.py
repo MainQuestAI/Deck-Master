@@ -226,6 +226,9 @@ def emit(pages, width, height, fonts, output):
                     run = p.add_run()
                     run.text = text_run['text']
                     props = run._r.get_or_add_rPr()
+                    # Write before table conversion copies the editable text body.
+                    if s.get('letter_spacing'):
+                        props.set('spc', str(round(s['letter_spacing'] * k * 75)))
                     # Fill properties must precede latin/ea/cs in a:rPr.
                     paint(props, text_run['fill'], text_run['opacity'] * text_run['fill_opacity'])
                     run.font.size = Pt(text_run['font_size'] * k * .75)
@@ -235,8 +238,6 @@ def emit(pages, width, height, fonts, output):
                         element = OxmlElement('a:' + name)
                         element.set('typeface', text_run['font_family'])
                         props.append(element)
-                # Letter spacing is written once by the api.py post-pass, which
-                # keys on the shape name for both native and node emitters.
             elif s['kind'] in ('rect','circle','ellipse'):
                 shape=MSO_SHAPE.OVAL if s['kind']!='rect' else MSO_SHAPE.ROUNDED_RECTANGLE if s.get('rx') else MSO_SHAPE.RECTANGLE
                 sh=slide.shapes.add_shape(shape,X(s['x']),Y(s['y']),S(s['width']),S(s['height']))
@@ -306,6 +307,14 @@ def _editable_tables(slide, page, X, Y, S, native_by_source):
         left, top = frame['x'], frame['y']
         right, bottom = left + frame['width'], top + frame['height']
         members = [s for s in page['shapes'] if s.get('table_id') == table_id]
+        rules = [s for s in members if s['kind'] == 'line']
+        def border_source(axis, position, start, end):
+            # Both cells sharing an edge resolve the same source line. Only
+            # edges without an independent covering rule inherit the frame.
+            return next((s for s in reversed(rules)
+                         if all(p[axis] == position for p in s['points'])
+                         and min(p[1 - axis] for p in s['points']) <= start
+                         and max(p[1 - axis] for p in s['points']) >= end), frame)
         xs = sorted({left, right, *(s['points'][0][0] for s in members
                       if s['kind'] == 'line' and s['points'][0][0] == s['points'][1][0])})
         ys = sorted({top, bottom, *(s['points'][0][1] for s in members
@@ -329,10 +338,15 @@ def _editable_tables(slide, page, X, Y, S, native_by_source):
                 cell.margin_top = cell.margin_bottom = S(8)
                 cell.vertical_anchor = MSO_ANCHOR.MIDDLE
                 props = cell._tc.get_or_add_tcPr()
-                for side in ('L', 'R', 'T', 'B'):
+                borders = {'L': (0, xs[c], ys[r], ys[r + 1]),
+                           'R': (0, xs[c + 1], ys[r], ys[r + 1]),
+                           'T': (1, ys[r], xs[c], xs[c + 1]),
+                           'B': (1, ys[r + 1], xs[c], xs[c + 1])}
+                for side, edge in borders.items():
+                    source = border_source(*edge)
                     line = OxmlElement('a:ln' + side)
-                    line.set('w', str(S(frame['stroke_width'])))
-                    paint(line, frame['stroke'], 1)
+                    line.set('w', str(S(source['stroke_width'])))
+                    paint(line, source['stroke'], source['opacity'] * source['stroke_opacity'])
                     props.append(line)
                 # CT_TableCellProperties places all border lines before fill.
                 background = next((s for s in reversed(members)

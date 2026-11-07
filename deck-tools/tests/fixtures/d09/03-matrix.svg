@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" font-family="Noto Sans CJK SC" font-size="22" fill="#16324f">
+<rect id="背景" width="1280" height="720" fill="#ffffff"/>
+<text id="标题" x="50" y="65" font-size="32" data-atom-id="atom:03-matrix:title">大型查阅矩阵</text>
+<rect id="矩阵外框" x="60" y="130" width="1160" height="504" fill="#ffffff" stroke="#52758b" stroke-width="2" stroke-opacity="0.5" data-table-id="review-matrix" data-native-table="true"/>
+<rect id="矩阵表头" x="60" y="130" width="1160" height="42" fill="#dbeaf0" data-table-id="review-matrix"/>
+<line id="列线-200" x1="200" y1="130" x2="200" y2="634" stroke="#9aabb9" stroke-width="1" data-table-id="review-matrix"/>
+<line id="列线-560" x1="560" y1="130" x2="560" y2="634" stroke="#9aabb9" stroke-width="1" data-table-id="review-matrix"/>
+<line id="列线-800" x1="800" y1="130" x2="800" y2="634" stroke="#9aabb9" stroke-width="1" data-table-id="review-matrix"/>
+<line id="列线-1010" x1="1010" y1="130" x2="1010" y2="634" stroke="#9aabb9" stroke-width="1" data-table-id="review-matrix"/>
+<line id="行线-0" x1="60" y1="172" x2="1220" y2="172" stroke="#16324f" stroke-width="3" data-table-id="review-matrix"/>
+<line id="行线-1" x1="60" y1="214" x2="1220" y2="214" stroke="#9aabb9" stroke-width="1" data-table-id="review-matrix"/>
+<line id="行线-2" x1="60" y1="256" x2="1220" y2="256" stroke="#9aabb9" stroke-width="1" data-table-id="review-matrix"/>
+<line id="行线-3" x1="60" y1="298" x2="1220" y2="298" stroke="#9aabb9" stroke-width="1" data-table-id="review-matrix"/>
+<line id="行线-4" x1="60" y1="340" x2="1220" y2="340" stroke="#9aabb9" stroke-width="1" data-table-id="review-matrix"/>
+<line id="行线-5" x1="60" y1="382" x2="1220" y2="382" stroke="#9aabb9" stroke-width="1" data-table-id="review-matrix"/>
+<line id="行线-6" x1="60" y1="424" x2="1220" y2="424" stroke="#9aabb9" stroke-width="1" data-table-id="review-matrix"/>
+<line id="行线-7" x1="60" y1="466" x2="1220" y2="466" stroke="#9aabb9" stroke-width="1" data-table-id="review-matrix"/>
+<line id="行线-8" x1="60" y1="508" x2="1220" y2="508" stroke="#9aabb9" stroke-width="1" data-table-id="review-matrix"/>
+<line id="行线-9" x1="60" y1="550" x2="1220" y2="550" stroke="#9aabb9" stroke-width="1" data-table-id="review-matrix"/>
+<line id="行线-10" x1="60" y1="592" x2="1220" y2="592" stroke="#9aabb9" stroke-width="1" data-table-id="review-matrix"/>
+<text id="单元格-0-0" x="74" y="158" font-size="18" data-text-width="112" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:column:review-matrix:id:label" letter-spacing="2">编号</text>
+<text id="单元格-0-1" x="214" y="158" font-size="18" data-text-width="332" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:column:review-matrix:requirement:label">要求</text>
+<text id="单元格-0-2" x="574" y="158" font-size="18" data-text-width="212" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:column:review-matrix:response:label">响应</text>
+<text id="单元格-0-3" x="814" y="158" font-size="18" data-text-width="182" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:column:review-matrix:owner:label">责任</text>
+<text id="单元格-0-4" x="1024" y="158" font-size="18" data-text-width="182" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:column:review-matrix:reference:label">展开页</text>
+<text id="单元格-1-0" x="74" y="200" font-size="18" data-text-width="112" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r01:id:display_text" letter-spacing="2">R01</text>
+<text id="单元格-1-1" x="214" y="200" font-size="18" data-text-width="332" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r01:requirement:display_text">合成要求 01：核对范围</text>
+<text id="单元格-1-2" x="574" y="200" font-size="18" data-text-width="212" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r01:response:display_text">响应 01 已说明</text>
+<text id="单元格-1-3" x="814" y="200" font-size="18" data-text-width="182" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r01:owner:display_text">角色 01</text>
+<text id="单元格-1-4" x="1024" y="200" font-size="18" data-text-width="182" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r01:reference:display_text">第 3 页</text>
+<text id="单元格-2-0" x="74" y="242" font-size="18" data-text-width="112" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r02:id:display_text" letter-spacing="2">R02</text>
+<text id="单元格-2-1" x="214" y="242" font-size="18" data-text-width="332" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r02:requirement:display_text">合成要求 02：核对范围</text>
+<text id="单元格-2-2" x="574" y="242" font-size="18" data-text-width="212" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r02:response:display_text">响应 02 已说明</text>
+<text id="单元格-2-3" x="814" y="242" font-size="18" data-text-width="182" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r02:owner:display_text">角色 02</text>
+<text id="单元格-2-4" x="1024" y="242" font-size="18" data-text-width="182" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r02:reference:display_text">第 4 页</text>
+<text id="单元格-3-0" x="74" y="284" font-size="18" data-text-width="112" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r03:id:display_text" letter-spacing="2">R03</text>
+<text id="单元格-3-1" x="214" y="284" font-size="18" data-text-width="332" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r03:requirement:display_text">合成要求 03：核对范围</text>
+<text id="单元格-3-2" x="574" y="284" font-size="18" data-text-width="212" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r03:response:display_text">响应 03 已说明</text>
+<text id="单元格-3-3" x="814" y="284" font-size="18" data-text-width="182" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r03:owner:display_text">角色 03</text>
+<text id="单元格-3-4" x="1024" y="284" font-size="18" data-text-width="182" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r03:reference:display_text">第 5 页</text>
+<text id="单元格-4-0" x="74" y="326" font-size="18" data-text-width="112" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r04:id:display_text" letter-spacing="2">R04</text>
+<text id="单元格-4-1" x="214" y="326" font-size="18" data-text-width="332" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r04:requirement:display_text">合成要求 04：核对范围</text>
+<text id="单元格-4-2" x="574" y="326" font-size="18" data-text-width="212" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r04:response:display_text">响应 04 已说明</text>
+<text id="单元格-4-3" x="814" y="326" font-size="18" data-text-width="182" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r04:owner:display_text">角色 04</text>
+<text id="单元格-4-4" x="1024" y="326" font-size="18" data-text-width="182" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r04:reference:display_text">第 6 页</text>
+<text id="单元格-5-0" x="74" y="368" font-size="18" data-text-width="112" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r05:id:display_text" letter-spacing="2">R05</text>
+<text id="单元格-5-1" x="214" y="368" font-size="18" data-text-width="332" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r05:requirement:display_text">合成要求 05：核对范围</text>
+<text id="单元格-5-2" x="574" y="368" font-size="18" data-text-width="212" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r05:response:display_text">响应 05 已说明</text>
+<text id="单元格-5-3" x="814" y="368" font-size="18" data-text-width="182" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r05:owner:display_text">角色 05</text>
+<text id="单元格-5-4" x="1024" y="368" font-size="18" data-text-width="182" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r05:reference:display_text">第 7 页</text>
+<text id="单元格-6-0" x="74" y="410" font-size="18" data-text-width="112" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r06:id:display_text" letter-spacing="2">R06</text>
+<text id="单元格-6-1" x="214" y="410" font-size="18" data-text-width="332" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r06:requirement:display_text">合成要求 06：核对范围</text>
+<text id="单元格-6-2" x="574" y="410" font-size="18" data-text-width="212" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r06:response:display_text">响应 06 已说明</text>
+<text id="单元格-6-3" x="814" y="410" font-size="18" data-text-width="182" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r06:owner:display_text">角色 06</text>
+<text id="单元格-6-4" x="1024" y="410" font-size="18" data-text-width="182" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r06:reference:display_text">第 8 页</text>
+<text id="单元格-7-0" x="74" y="452" font-size="18" data-text-width="112" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r07:id:display_text" letter-spacing="2">R07</text>
+<text id="单元格-7-1" x="214" y="452" font-size="18" data-text-width="332" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r07:requirement:display_text">合成要求 07：核对范围</text>
+<text id="单元格-7-2" x="574" y="452" font-size="18" data-text-width="212" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r07:response:display_text">响应 07 已说明</text>
+<text id="单元格-7-3" x="814" y="452" font-size="18" data-text-width="182" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r07:owner:display_text">角色 07</text>
+<text id="单元格-7-4" x="1024" y="452" font-size="18" data-text-width="182" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r07:reference:display_text">第 9 页</text>
+<text id="单元格-8-0" x="74" y="494" font-size="18" data-text-width="112" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r08:id:display_text" letter-spacing="2">R08</text>
+<text id="单元格-8-1" x="214" y="494" font-size="18" data-text-width="332" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r08:requirement:display_text">合成要求 08：核对范围</text>
+<text id="单元格-8-2" x="574" y="494" font-size="18" data-text-width="212" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r08:response:display_text">响应 08 已说明</text>
+<text id="单元格-8-3" x="814" y="494" font-size="18" data-text-width="182" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r08:owner:display_text">角色 08</text>
+<text id="单元格-8-4" x="1024" y="494" font-size="18" data-text-width="182" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r08:reference:display_text">第 10 页</text>
+<text id="单元格-9-0" x="74" y="536" font-size="18" data-text-width="112" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r09:id:display_text" letter-spacing="2">R09</text>
+<text id="单元格-9-1" x="214" y="536" font-size="18" data-text-width="332" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r09:requirement:display_text">合成要求 09：核对范围</text>
+<text id="单元格-9-2" x="574" y="536" font-size="18" data-text-width="212" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r09:response:display_text">响应 09 已说明</text>
+<text id="单元格-9-3" x="814" y="536" font-size="18" data-text-width="182" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r09:owner:display_text">角色 09</text>
+<text id="单元格-9-4" x="1024" y="536" font-size="18" data-text-width="182" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r09:reference:display_text">第 11 页</text>
+<text id="单元格-10-0" x="74" y="578" font-size="18" data-text-width="112" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r10:id:display_text" letter-spacing="2">R10</text>
+<text id="单元格-10-1" x="214" y="578" font-size="18" data-text-width="332" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r10:requirement:display_text">合成要求 10：核对范围</text>
+<text id="单元格-10-2" x="574" y="578" font-size="18" data-text-width="212" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r10:response:display_text">响应 10 已说明</text>
+<text id="单元格-10-3" x="814" y="578" font-size="18" data-text-width="182" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r10:owner:display_text">角色 10</text>
+<text id="单元格-10-4" x="1024" y="578" font-size="18" data-text-width="182" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r10:reference:display_text">第 12 页</text>
+<text id="单元格-11-0" x="74" y="620" font-size="18" data-text-width="112" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r11:id:display_text" letter-spacing="2">R11</text>
+<text id="单元格-11-1" x="214" y="620" font-size="18" data-text-width="332" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r11:requirement:display_text">合成要求 11：核对范围</text>
+<text id="单元格-11-2" x="574" y="620" font-size="18" data-text-width="212" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r11:response:display_text">响应 11 已说明</text>
+<text id="单元格-11-3" x="814" y="620" font-size="18" data-text-width="182" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r11:owner:display_text">角色 11</text>
+<text id="单元格-11-4" x="1024" y="620" font-size="18" data-text-width="182" data-text-height="30" data-table-id="review-matrix" data-atom-id="atom:03-matrix:cell:review-matrix:r11:reference:display_text">第 13 页</text>
+</svg>
