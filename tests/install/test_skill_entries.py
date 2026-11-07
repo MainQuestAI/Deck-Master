@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import os
 import re
 from pathlib import Path
@@ -90,3 +91,73 @@ def test_title_policy_preserves_page_roles(relative: str) -> None:
         ), f"{relative}: {role} pages need title and CTA exceptions"
     assert re.search(r"判断页.{0,30}判断句", text)
     assert re.search(r"查阅页.{0,30}查阅职责", text)
+
+
+@pytest.mark.parametrize("relative", ["deck-review.md", "references/method-review.md"])
+def test_review_guidance_separates_qa_layers(relative: str) -> None:
+    text = (SOURCE / relative).read_text(encoding="utf-8")
+    for layer, topics in (
+        ("Q1", ("业务", "语义")),
+        ("Q2", ("保真", "可读", "完成度")),
+        ("Q3", ("可编辑", "Office")),
+    ):
+        assert any(
+            layer in line and all(topic in line for topic in topics)
+            for line in text.splitlines()
+        ), f"{relative}: {layer}"
+    assert re.search(r"(?:独立|分别).{0,40}(?:boolean|布尔)", text)
+    boundary = next((p for p in re.split(r"\n\s*\n", text) if "status=pass" in p), "")
+    assert all(token in boundary for token in ("视觉", "Office", "visual_review", "desktop_editing", "not_evaluated"))
+    assert re.search(r"不(?:等于|代表|证明)", boundary)
+
+
+def test_review_entry_requires_located_graded_evidence() -> None:
+    entry = (SOURCE / "deck-review.md").read_text(encoding="utf-8")
+    report = next(p for p in re.split(r"\n\s*\n", entry) if "每一条" in p)
+    assert all(token in report for token in ("页", "对象", "区域", "原句", "问题", "影响", "建议", "分级", "依据", "验证"))
+    method = (SOURCE / "references/method-review.md").read_text(encoding="utf-8")
+    for grade, examples in (
+        ("Critical", ("事实", "数字", "方向", "分支", "能力", "打开", "正文")),
+        ("Major", ("文字墙", "主视觉", "关系", "失真")),
+        ("Minor", ("位置", "行距", "图标", "装饰")),
+    ):
+        line = next((line for line in method.splitlines() if grade in line), "")
+        assert all(example in line for example in examples), grade
+
+
+def test_review_consumes_supported_readback_findings_without_inventing_edges() -> None:
+    entry = (SOURCE / "deck-review.md").read_text(encoding="utf-8")
+    assert re.search(r"先.{0,30}findings.{0,60}再.{0,15}(?:阅图|画面)", entry)
+    method = (SOURCE / "references/method-review.md").read_text(encoding="utf-8")
+    documented = set(re.findall(r"`([a-z]+(?:_[a-z]+)+)`", method))
+    codes = {
+        "reversed_arrow", "missing_edge", "missing_node", "edge_not_connected",
+        "unreadable_text", "hidden_or_tiny_text", "missing_visible_atom",
+    }
+    assert codes <= documented
+    supported = set()
+    for name in ("render.py", "readback_text.py", "readback_relations.py"):
+        tree = ast.parse((REPO / "deck-tools/src/deck_tools" / name).read_text(encoding="utf-8"))
+        supported.update(node.value for node in ast.walk(tree) if isinstance(node, ast.Constant) and isinstance(node.value, str))
+    assert codes <= supported
+    assert re.search(r"(?:没有|缺少)预期边[^\n]*(?:未检查|依据不足)", method)
+    assert re.search(r"不[^\n]*layout[^\n]*边", method)
+    assert re.search(r"不[^\n]*(?:编造|发明)[^\n]*code", method)
+    assert re.search(r"bbox[^\n]*pixel diff[^\n]*定位[^\n]*不[^\n]*依据", method)
+
+
+def test_review_requires_separate_blueprint_and_ppt_evidence() -> None:
+    text = (SOURCE / "references/method-review.md").read_text(encoding="utf-8")
+    for artifact in ("原图", "最终 PPT"):
+        assert re.search(rf"{artifact}[^\n]*证据[^\n]*未执行", text)
+    assert re.search(r"证据[^\n]*不能互相替代", text)
+
+
+def test_review_protects_lookup_comparisons_and_synthetic_numbers() -> None:
+    text = (SOURCE / "references/method-review.md").read_text(encoding="utf-8")
+    assert re.search(r"查阅[^\n]*表[^\n]*(?:保留|保护)", text)
+    assert re.search(r"E02[^\n]*同[^\n]*口径", text)
+    assert re.search(r"(?:合成|教学)[^\n]*数字[^\n]*不[^\n]*项目事实", text)
+    entry = (SOURCE / "deck-review.md").read_text(encoding="utf-8")
+    arithmetic = next(p for p in re.split(r"\n\s*\n", entry) if "case_numbers" in p)
+    assert all(token in arithmetic for token in ("算式", "来源", "归因", "ROI"))
