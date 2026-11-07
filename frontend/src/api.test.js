@@ -39,11 +39,11 @@ test('review writes preserve original text and keep global and page scopes disti
     return Response.json({ id: 3 });
   };
   await addReview('全稿意见\n原文');
-  await addReview('本页意见', '页/3');
+  await addReview('不够像流程\n节点 4 应连接 2', '页/3');
   await resolveReview(3);
   assert.deepEqual(requests, [
     ['/api/reviews', 'POST', { text: '全稿意见\n原文' }],
-    ['/api/reviews', 'POST', { text: '本页意见', page_id: '页/3' }],
+    ['/api/reviews', 'POST', { text: '不够像流程\n节点 4 应连接 2', page_id: '页/3' }],
     ['/api/reviews/3/resolve', 'POST', undefined],
   ]);
 });
