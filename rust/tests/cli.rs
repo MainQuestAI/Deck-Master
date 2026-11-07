@@ -98,6 +98,47 @@ fn cli_partial_edit_conflict_and_markdown_export() {
 }
 
 #[test]
+fn new_deck_defaults_reach_image_task_without_putting_style() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    output_json(command(path, &["new", path.to_str().unwrap()]));
+    let created = output_json(command(path, &["get"]));
+    assert_eq!(
+        created["deck"]["style"]["palette"],
+        json!(["#164267", "#F5F7FA", "#D97706"])
+    );
+    assert_eq!(
+        created["deck"]["style"]["fonts"],
+        json!(["Noto Sans CJK SC"])
+    );
+    let input = path.join("page.json");
+    std::fs::write(
+        &input,
+        json!({"order":["p1"],"pages":[{
+            "id":"p1",
+            "purpose":"看清校验与执行的先后。",
+            "layout":"主图从左向右连接校验与执行；校验通过后进入执行。",
+            "content":{
+                "title":"校验通过后才进入执行",
+                "body_blocks":[{"type":"paragraph","text":"校验通过后进入执行。"}]
+            }
+        }]})
+        .to_string(),
+    )
+    .unwrap();
+    output_json(command(
+        path,
+        &["put", "--base", "1", input.to_str().unwrap()],
+    ));
+    let run = output_json(command(path, &["run", "start", "image", "--pages", "p1"]));
+    let work = Path::new(run["runs"][0]["pages"][0]["work"].as_str().unwrap());
+    let task = std::fs::read_to_string(work.join("task.md")).unwrap();
+    for text in ["#164267", "#F5F7FA", "#D97706", "Noto Sans CJK SC"] {
+        assert!(task.contains(text), "image task omits default style {text}");
+    }
+}
+
+#[test]
 fn planned_page_survives_image_task_and_readable_export() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path();

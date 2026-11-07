@@ -23,11 +23,11 @@ description: 用 Rust deck 做已有正文的页面设计、样页和指定页�
 
 ## 默认阅读
 
-先读 [content-to-visual](references/content-to-visual.md)，再看当前作品的 style，以及 [svg-subset](references/svg-subset.md)。
+先读 [content-to-visual](references/content-to-visual.md)，再看当前作品的 style、[视觉系统](references/design-system.md) 和 [svg-subset](references/svg-subset.md)。
 
 语义对照见 [semantic-layout-examples](assets/design/semantic-layout-examples.md)。不必先读完整的内容长文。方法卡只在要核对某个关系从哪来时再打开。
 
-当前设计语言就是这份作品的 style：画布、配色、字体和已选素材。用 `deck get` 读取，不另建一套风格字段。
+生图前先用 `deck get` 读取并锁定作品 style，至少确定 palette 和 fonts，画布沿用默认；有品牌规范时用 `deck put` 写入同一字段，无品牌用默认值。风格口号只进共享设计参考，不进 purpose / layout；不设八张样张确认硬门。不给模型追加任务里没有、模型里也不存在的风格前缀。
 
 ## 主视觉与制作
 
