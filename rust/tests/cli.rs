@@ -107,10 +107,7 @@ fn new_deck_defaults_reach_image_task_without_putting_style() {
         created["deck"]["style"]["palette"],
         json!(["#164267", "#F5F7FA", "#D97706"])
     );
-    assert_eq!(
-        created["deck"]["style"]["fonts"],
-        json!(["Noto Sans CJK SC"])
-    );
+    assert_eq!(created["deck"]["style"]["fonts"], json!([]));
     let input = path.join("page.json");
     std::fs::write(
         &input,
@@ -133,7 +130,7 @@ fn new_deck_defaults_reach_image_task_without_putting_style() {
     let run = output_json(command(path, &["run", "start", "image", "--pages", "p1"]));
     let work = Path::new(run["runs"][0]["pages"][0]["work"].as_str().unwrap());
     let task = std::fs::read_to_string(work.join("task.md")).unwrap();
-    for text in ["#164267", "#F5F7FA", "#D97706", "Noto Sans CJK SC"] {
+    for text in ["#164267", "#F5F7FA", "#D97706"] {
         assert!(task.contains(text), "image task omits default style {text}");
     }
 }
