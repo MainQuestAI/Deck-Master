@@ -26,6 +26,30 @@ def test_rust_nested_bullets_keep_every_visible_atom():
     assert json.dumps(page) == original
 
 
+def test_projection_uses_label_ids_as_expected_nodes():
+    page = {"id": "p1", "content": {"labels": [
+        {"id": "n1", "text": "Input"}, {"id": "n2", "text": "Output"}]},
+        "layout": "Input → Output", "notes": "Explain the transition"}
+    assert projection(page) == {
+        "page_id": "p1", "customer_visible": page["content"],
+        "speaker_notes": page["notes"],
+        "visual_spec": {"nodes": [{"node_id": "n1"}, {"node_id": "n2"}], "edges": []}}
+
+
+def test_projection_recurses_labels_even_below_empty_or_missing_ids():
+    page = {"id": "p1", "content": {"labels": [
+        {"id": "n1", "text": "Parent", "children": [
+            {"id": "", "text": "Group", "children": [
+                {"id": "n2", "text": "Child"}]}]},
+        {"text": "Group", "children": [{"id": "n3", "text": "Other child"}]}]}}
+    original = json.dumps(page)
+    projected = projection(page)
+    assert projected["visual_spec"] == {
+        "nodes": [{"node_id": "n1"}, {"node_id": "n2"}, {"node_id": "n3"}], "edges": []}
+    assert projected["customer_visible"] == page["content"]
+    assert json.dumps(page) == original
+
+
 def job_fixture(tmp_path):
     family = resolve_host_font()
     logo = tmp_path / "logo.png"
@@ -42,14 +66,37 @@ def job_fixture(tmp_path):
 
 
 def test_native_build_reads_projection_preserves_notes_and_cleans_asset_metadata(tmp_path):
-    result = compile_job(job_fixture(tmp_path))
+    job = job_fixture(tmp_path)
+    assert projection(job["pages"][0])["visual_spec"] == {"nodes": [], "edges": []}
+    result = compile_job(job)
     assert result["findings"]["status"] == "pass"
+    assert result["findings"]["findings"] == []
     assert notes_records(Path(result["pptx"]))[0]["notes"] == "First\n\nLast\n"
     with zipfile.ZipFile(result["pptx"]) as archive:
         for name in archive.namelist():
             assert b"/Users/private" not in archive.read(name)
         assert "docProps/custom.xml" not in archive.namelist()
         assert any(name.startswith("ppt/media/") for name in archive.namelist())
+
+
+@pytest.mark.parametrize("missing_ref", [None, "n2"])
+def test_build_checks_projected_label_nodes(tmp_path, missing_ref):
+    job = job_fixture(tmp_path)
+    page = job["pages"][0]
+    page["content"]["labels"] = [
+        {"id": "n1", "text": "Input"}, {"id": "n2", "text": "Output"}]
+    svg = Path(page["svg"])
+    body = ""
+    for x, label in zip((60, 360), page["content"]["labels"]):
+        node_id = label["id"]
+        ref = "" if node_id == missing_ref else f' data-node-ref="{node_id}"'
+        body += f'<rect id="{node_id}" x="{x}" y="180" width="200" height="80"{ref}/>'
+        body += (f'<text data-atom-id="atom:p1:label:{node_id}:text" x="{x}" y="300" '
+                 f'font-family="{job["fonts"][0]}" font-size="24">{label["text"]}</text>')
+    svg.write_text(svg.read_text().replace("</svg>", body + "</svg>"))
+    report = compile_job(job)["findings"]
+    assert report["findings"] == ([] if missing_ref is None else [
+        {"page_id": "p1", "code": "missing_node", "node_id": missing_ref}])
 
 
 def test_check_page_compiles_and_returns_readback_without_gating_text_findings(tmp_path, monkeypatch):
