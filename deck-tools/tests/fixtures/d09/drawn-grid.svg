@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" font-family="Noto Sans CJK SC" font-size="24">
+<rect id="frame" x="80" y="100" width="600" height="240" fill="#ffffff" stroke="#52758b" stroke-width="2" stroke-opacity="0.5" data-table-id="table" />
+<line id="vertical" x1="380" y1="100" x2="380" y2="340" stroke="#0000ff" stroke-width="1" data-table-id="table"/>
+<line id="horizontal" x1="80" y1="220" x2="680" y2="220" stroke="#ff0000" stroke-width="4" data-table-id="table"/>
+<text id="spaced" x="100" y="150" letter-spacing="2" data-table-id="table">ABCD</text>
+<text id="normal" x="400" y="270" data-table-id="table">规则</text>
+</svg>

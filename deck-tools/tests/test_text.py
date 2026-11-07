@@ -202,7 +202,7 @@ def test_rotated_text_stays_at_ir_anchor_in_slide_xml(tmp_path):
 
 
 def test_letter_spacing_written_exactly_once(tmp_path):
-    # The api post-pass owns spc writing; the emitter must not duplicate it.
+    # Native text emission owns spc writing, including text copied into tables.
     regular, _ = resolve_fonts()
     root, _ = compile_slide(tmp_path,
                             f'<text id="spc" x="10" y="30" font-family="{FAMILY}" '
