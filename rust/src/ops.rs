@@ -552,16 +552,50 @@ pub fn export_markdown(project: &Path) -> Result<(String, Value)> {
     Ok((crate::export::markdown(&deck), artifact_status(&deck)?))
 }
 
-pub fn asset_add(project: &Path, id: &str, source: &Path) -> Result<Value> {
+pub fn asset_add(
+    project: &Path,
+    id: &str,
+    input: &Path,
+    pages: &[String],
+    source: &str,
+    license: &str,
+) -> Result<Value> {
     if id.is_empty() {
         return Err(Error::Input("素材 ID 不能为空".into()));
     }
     let mut store = Store::open(project)?;
-    let ext = source.extension().and_then(|v| v.to_str()).unwrap_or("bin");
-    let file = store.add_file(&std::fs::read(source)?, ext)?;
+    let ext = input.extension().and_then(|v| v.to_str()).unwrap_or("bin");
+    let file = if ext.eq_ignore_ascii_case("svg") {
+        let output = std::process::Command::new("rsvg-convert")
+            .arg("--format=png")
+            .arg(input.canonicalize()?)
+            .output()
+            .map_err(|error| {
+                if error.kind() == std::io::ErrorKind::NotFound {
+                    Error::NeedsTool(
+                        "SVG 素材需要 rsvg-convert；请安装 librsvg 后重新添加，或先转成 PNG/JPEG"
+                            .into(),
+                    )
+                } else {
+                    Error::Tool(format!("无法运行 rsvg-convert：{error}"))
+                }
+            })?;
+        if !output.status.success() || !output.stdout.starts_with(b"\x89PNG\r\n\x1a\n") {
+            return Err(Error::Tool(format!(
+                "SVG 素材转 PNG 失败；请检查 SVG 后重新添加：{}",
+                String::from_utf8_lossy(&output.stderr).trim()
+            )));
+        }
+        store.add_file(&output.stdout, "png")?
+    } else {
+        store.add_file(&std::fs::read(input)?, ext)?
+    };
     let asset = crate::model::Asset {
         id: id.into(),
         file,
+        pages: pages.into(),
+        source: source.into(),
+        license: license.into(),
     };
     let tx = store.transaction()?;
     let mut snapshot = store::current(&tx)?;
@@ -579,14 +613,14 @@ pub fn asset_add(project: &Path, id: &str, source: &Path) -> Result<Value> {
 
 pub fn basis(kind: &str, deck: &Deck, page: &Page) -> Result<String> {
     use sha2::{Digest, Sha256};
+    let mut style = deck.style.clone();
+    style
+        .assets
+        .retain(|asset| asset.is_effective_for(&page.id));
     let value = if kind == "image" {
-        json!([page.content, page.layout, page.purpose, deck.style])
+        json!([page.content, page.layout, page.purpose, style])
     } else {
-        json!([
-            page.content,
-            page.image.as_ref().map(|i| &i.file),
-            deck.style
-        ])
+        json!([page.content, page.image.as_ref().map(|i| &i.file), style])
     };
     Ok(format!("{:x}", Sha256::digest(serde_json::to_vec(&value)?)))
 }

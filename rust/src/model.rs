@@ -55,6 +55,18 @@ impl Default for Canvas {
 pub struct Asset {
     pub id: String,
     pub file: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub pages: Vec<String>,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub source: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub license: String,
+}
+
+impl Asset {
+    pub fn is_effective_for(&self, page_id: &str) -> bool {
+        self.pages.is_empty() || self.pages.iter().any(|id| id == page_id)
+    }
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]

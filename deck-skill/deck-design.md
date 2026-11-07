@@ -23,7 +23,7 @@ description: 用 Rust deck 做已有正文的页面设计、样页和指定页�
 
 ## 默认阅读
 
-先读 [content-to-visual](references/content-to-visual.md)，再看当前作品的 style、[视觉系统](references/design-system.md) 和 [svg-subset](references/svg-subset.md)。
+先读 [content-to-visual](references/content-to-visual.md)，再看当前作品的 style、[视觉系统](references/design-system.md) 和 [svg-subset](references/svg-subset.md)。需要图标、界面或场景时按 [视觉资产](references/visual-assets.md) 选用并登记页范围、来源与许可。
 
 语义对照见 [semantic-layout-examples](assets/design/semantic-layout-examples.md)。不必先读完整的内容长文。方法卡只在要核对某个关系从哪来时再打开。
 

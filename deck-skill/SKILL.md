@@ -106,7 +106,7 @@ description: 兼容入口。用 Rust deck 把作者任务和材料做成可修�
 
 ## 原图、SVG 与 PPTX
 
-先用 `deck doctor --fonts <字体名>` 检查本机工具与所选字体。标志、照片等素材用 `deck asset add <素材ID> <文件>` 选择；不要把素材 ID 写成原图里的文字来代替图片。
+先用 `deck doctor --fonts <字体名>` 检查本机工具与所选字体。按 [视觉资产](references/visual-assets.md) 选择实际需要的标志、图标或照片，用 `deck asset add <素材ID> <文件> --page <页ID> --source <来源> --license <许可>` 登记；公共标志省略 `--page`。不要把素材 ID 写成原图里的文字来代替图片。
 
 出图及重建 SVG 前再读将上屏的整稿，发现语言问题就 put 保存并更新受影响 SVG。
 
