@@ -127,7 +127,10 @@ enum AssetCommand {
     Add {
         id: String,
         file: PathBuf,
-        #[arg(long = "page", help = "只供指定页使用；可重复，省略则为公共素材")]
+        #[arg(
+            long = "page",
+            help = "只供指定页使用；可重复或逗号分隔，省略则为公共素材"
+        )]
         pages: Vec<String>,
         #[arg(long, default_value = "", help = "所选素材的来源")]
         source: String,

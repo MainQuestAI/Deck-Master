@@ -361,7 +361,30 @@ fn svg_registration_produces_decodable_png_or_reports_missing_renderer_and_never
 }
 
 #[test]
-fn cli_repeated_pages_and_metadata_replace_as_a_unit_and_missing_svg_tool_is_actionable() {
+fn comma_separated_asset_pages_apply_to_each_page_and_unknown_pages_do_not_replace() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    setup(path);
+    let image = path.join("selected.png");
+    bitmap(&image, "teal");
+    let value = ops::asset_add(path, "selected", &image, &["p1,p2".into()], "", "").unwrap();
+    assert_eq!(value["asset"]["pages"], json!(["p1", "p2"]));
+    attached_run(path, "image", [vec!["selected"], vec!["selected"]]);
+    let before = ops::get(path, None).unwrap();
+    for pages in [
+        vec!["p1,unknown".into()],
+        vec!["p1".into(), "unknown".into()],
+    ] {
+        let error = ops::asset_add(path, "selected", &image, &pages, "changed", "").unwrap_err();
+        assert!(matches!(error, deck::error::Error::Input(_)));
+        assert!(error.to_string().contains("unknown"));
+        assert!(error.to_string().contains("deck show"));
+        assert_eq!(ops::get(path, None).unwrap(), before);
+    }
+}
+
+#[test]
+fn cli_comma_and_repeated_pages_replace_as_a_unit_and_missing_svg_tool_is_actionable() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path();
     setup(path);
@@ -393,6 +416,49 @@ fn cli_repeated_pages_and_metadata_replace_as_a_unit_and_missing_svg_tool_is_act
     assert_eq!(value["asset"]["pages"], json!(["p1", "p2"]));
     assert_eq!(value["asset"]["source"], "synthetic");
     assert_eq!(value["asset"]["license"], "CC0");
+    edit(
+        path,
+        json!({"order":["p1","p2","p3"],"pages":[{"id":"p3"}]}),
+    );
+    for (args, pages) in [
+        (vec!["--page", "p1,p2"], json!(["p1", "p2"])),
+        (vec!["--page", "p1", "--page", "p2"], json!(["p1", "p2"])),
+        (
+            vec!["--page", "p1,p2", "--page", "p3"],
+            json!(["p1", "p2", "p3"]),
+        ),
+    ] {
+        let output = Command::new(env!("CARGO_BIN_EXE_deck"))
+            .arg("--project")
+            .arg(path)
+            .args(["asset", "add", "selected-icon"])
+            .arg(&image)
+            .args(args)
+            .output()
+            .unwrap();
+        assert!(output.status.success());
+        let value: Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(value["asset"]["pages"], pages);
+    }
+    let before = ops::get(path, None).unwrap();
+    for args in [
+        vec!["--page", "p1,unknown"],
+        vec!["--page", "p1", "--page", "unknown"],
+    ] {
+        let output = Command::new(env!("CARGO_BIN_EXE_deck"))
+            .arg("--project")
+            .arg(path)
+            .args(["asset", "add", "selected-icon"])
+            .arg(&image)
+            .args(args)
+            .output()
+            .unwrap();
+        assert_eq!(output.status.code(), Some(2));
+        let message = String::from_utf8_lossy(&output.stderr);
+        assert!(message.contains("unknown"));
+        assert!(message.contains("deck show"));
+        assert_eq!(ops::get(path, None).unwrap(), before);
+    }
     let output = Command::new(env!("CARGO_BIN_EXE_deck"))
         .arg("--project")
         .arg(path)
