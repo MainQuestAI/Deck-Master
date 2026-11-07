@@ -823,6 +823,28 @@ fn polling_can_read_beside_a_cli_writer_and_releases_its_read_transaction() {
     assert_eq!(service.request("GET", "/missing.js", &[], "").status, 404);
 }
 
+fn available_font() -> String {
+    let font = Command::new("fc-match")
+        .args(["-f", "%{family}", "sans-serif"])
+        .output()
+        .unwrap();
+    assert!(font.status.success());
+    let families = String::from_utf8(font.stdout).unwrap();
+    families.split(',').next().unwrap().trim().to_string()
+}
+
+fn put_available_build_font(path: &Path) {
+    let snapshot = Store::open(path).unwrap().current().unwrap();
+    let mut style = serde_json::to_value(&snapshot.deck.style).unwrap();
+    style["fonts"] = json!([available_font()]);
+    ops::put(
+        path,
+        snapshot.version,
+        serde_json::from_value(json!({"style": style})).unwrap(),
+    )
+    .unwrap();
+}
+
 #[test]
 fn build_downloads_report_missing_stale_and_changed_inputs_without_gating() {
     let temp = tempfile::tempdir().unwrap();
@@ -832,15 +854,10 @@ fn build_downloads_report_missing_stale_and_changed_inputs_without_gating() {
         1,
         json!({"order":["p1","待补😀"],"pages":[{"id":"p1","content":{"title":"Decision"}},{"id":"待补😀"}]}),
     );
+    put_available_build_font(temp.path());
     let mut store = Store::open(temp.path()).unwrap();
     let mut snapshot = store.current().unwrap();
-    let font = Command::new("fc-match")
-        .args(["-f", "%{family}", "sans-serif"])
-        .output()
-        .unwrap();
-    assert!(font.status.success());
-    let families = String::from_utf8(font.stdout).unwrap();
-    let family = families.split(',').next().unwrap().trim();
+    let family = available_font();
     let svg = format!(
         r#"<svg viewBox="0 0 1280 720"><text x="64" y="80" font-size="36" font-family="{family}" data-atom-id="atom:p1:title">Decision</text></svg>"#
     );

@@ -25,6 +25,28 @@ fn start(path: &Path, max: i64) -> i64 {
         .as_i64()
         .unwrap()
 }
+
+fn available_font() -> String {
+    let font = Command::new("fc-match")
+        .args(["-f", "%{family}", "sans-serif"])
+        .output()
+        .unwrap();
+    assert!(font.status.success());
+    let families = String::from_utf8(font.stdout).unwrap();
+    families.split(',').next().unwrap().trim().to_string()
+}
+
+fn put_available_build_font(path: &Path) {
+    let snapshot = Store::open(path).unwrap().current().unwrap();
+    let mut style = serde_json::to_value(&snapshot.deck.style).unwrap();
+    style["fonts"] = json!([available_font()]);
+    ops::put(
+        path,
+        snapshot.version,
+        serde_json::from_value(json!({"style": style})).unwrap(),
+    )
+    .unwrap();
+}
 #[test]
 fn cancelled_late_result_is_saved_and_manual_adoption_keeps_author_edits() {
     let temp = tempfile::tempdir().unwrap();
@@ -375,15 +397,10 @@ fn build_retains_notes_reports_missing_and_export_compares_inputs_after_restore(
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path();
     setup(path);
+    put_available_build_font(path);
     let mut store = Store::open(path).unwrap();
     let mut snapshot = store.current().unwrap();
-    let font = Command::new("fc-match")
-        .args(["-f", "%{family}", "sans-serif"])
-        .output()
-        .unwrap();
-    assert!(font.status.success());
-    let families = String::from_utf8(font.stdout).unwrap();
-    let family = families.split(',').next().unwrap().trim();
+    let family = available_font();
     let svg_text = format!(
         "<svg viewBox='0 0 1280 720'><text x='64' y='80' font-size='36' font-family=\"{family}\" data-atom-id='atom:p1:title'>Decision</text></svg>"
     );
@@ -411,7 +428,7 @@ fn build_retains_notes_reports_missing_and_export_compares_inputs_after_restore(
     assert_eq!(ops::export_pptx(path).unwrap()["input_changed"], false);
     for patch in [
         json!({"style":{"canvas":{"width_px":1440,"height_px":900,"slide_width_in":12.0,"slide_height_in":7.5}}}),
-        json!({"style":{"fonts":[family]}}),
+        json!({"style":{"fonts":["Changed Font"]}}),
     ] {
         edit(path, patch);
         assert_eq!(ops::export_pptx(path).unwrap()["input_changed"], true);
@@ -509,6 +526,7 @@ fn page_three_redo_and_notes_only_edits_preserve_other_pages_and_existing_build(
         .unwrap(),
     )
     .unwrap();
+    put_available_build_font(path);
     let image = path.join("new.png");
     png(&image);
     let mut store = Store::open(path).unwrap();
@@ -519,13 +537,7 @@ fn page_three_redo_and_notes_only_edits_preserve_other_pages_and_existing_build(
     let preview = store
         .add_file(&std::fs::read(&image).unwrap(), "png")
         .unwrap();
-    let font = Command::new("fc-match")
-        .args(["-f", "%{family}", "sans-serif"])
-        .output()
-        .unwrap();
-    assert!(font.status.success());
-    let families = String::from_utf8(font.stdout).unwrap();
-    let family = families.split(',').next().unwrap().trim();
+    let family = available_font();
     for index in 0..3 {
         let basis = ops::basis("image", &snapshot.deck, &snapshot.deck.pages[index]).unwrap();
         snapshot.deck.pages[index].image = Some(deck::model::Artifact {

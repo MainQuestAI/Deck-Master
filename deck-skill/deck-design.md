@@ -27,7 +27,7 @@ description: 用 Rust deck 做已有正文的页面设计、样页和指定页�
 
 语义对照见 [semantic-layout-examples](assets/design/semantic-layout-examples.md)。不必先读完整的内容长文。方法卡只在要核对某个关系从哪来时再打开。
 
-生图前先用 `deck get` 读取并锁定作品 style，至少确定 palette 和 fonts，画布沿用默认；有品牌规范时用 `deck put` 写入同一字段。无品牌时沿用新建写入的默认色板；空的 fonts 保持原样，由 Design 按 `deck doctor` 在已安装字体里选定后再写入（安装后优先用 Noto Sans CJK SC）。风格口号只进共享设计参考，不进 purpose / layout；不设八张样张确认硬门。不给模型追加任务里没有、模型里也不存在的风格前缀。
+生图前先用 `deck get` 读取并锁定作品 style，至少确定 palette 和 fonts，画布沿用默认；有品牌规范时用 `deck put` 写入同一字段，无品牌用默认值。构建前若本机没有该默认字体，用 `deck doctor` 换成已安装字体。风格口号只进共享设计参考，不进 purpose / layout；不设八张样张确认硬门。不给模型追加任务里没有、模型里也不存在的风格前缀。
 
 ## 主视觉与制作
 

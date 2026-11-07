@@ -18,6 +18,7 @@ pub fn new(project: &Path, title: String) -> Result<Snapshot> {
         },
         style: Style {
             palette: ["#164267", "#F5F7FA", "#D97706"].map(String::from).into(),
+            fonts: vec!["Noto Sans CJK SC".into()],
             ..Style::default()
         },
         ..Deck::default()
