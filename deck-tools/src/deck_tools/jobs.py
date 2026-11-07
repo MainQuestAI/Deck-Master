@@ -20,8 +20,16 @@ def projection(page):
     for block in content.get("body_blocks", []):
         if block["type"] == "bullets":
             nested(block.get("items", []))
+    nodes = []
+    def label_nodes(labels):
+        for label in labels:
+            if label.get("id"):
+                nodes.append({"node_id": label["id"]})
+            label_nodes(label.get("children", []))
+    label_nodes(content.get("labels", []))
     return {"page_id": page["id"], "customer_visible": content,
-            "speaker_notes": page.get("notes", ""), "visual_spec": {}}
+            "speaker_notes": page.get("notes", ""),
+            "visual_spec": {"nodes": nodes, "edges": []}}
 
 
 def compile_job(job, *, preview=False):

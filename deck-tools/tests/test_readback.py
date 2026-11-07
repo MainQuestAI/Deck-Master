@@ -79,6 +79,18 @@ def test_reversed_arrow_is_located(tmp_path):
     assert finding['element'] == 'link'
 
 
+def test_edge_connected_to_wrong_node_is_located(tmp_path):
+    page = expected_page(nodes=('n1', 'n2', 'n3'), edges=[forward_edge()])
+    body = DIAGRAM_SVG.format(x1=30, x2=80)
+    body += '<rect id="node-c" x="60" y="10" width="40" height="30" data-node-ref="n3"/>'
+    report = compile_and_readback(tmp_path, body, page)
+    finding = next(f for f in report['findings'] if f['code'] == 'edge_not_connected')
+    assert finding['page_id'] == 'p1'
+    assert finding['edge_id'] == 'e1'
+    assert finding['from'] == 'n1' and finding['to'] == 'n2'
+    assert finding['element'] == 'link'
+
+
 def test_undirected_edge_skips_direction_but_checks_existence(tmp_path):
     page = expected_page(nodes=('n1', 'n2'),
                          edges=[{'edge_id': 'e1', 'from': 'n1', 'to': 'n2',

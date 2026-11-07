@@ -332,6 +332,9 @@ fn image_run_inlines_readable_page_inputs_and_keeps_svg_inputs_separate() {
     for requirement in [
         "正文取 content.json",
         "绑定 atoms.json 的 data-atom-id",
+        "对应 content.labels（含 children）中标签的节点必须写 data-node-ref，值为该标签 id",
+        "有向连线必须写 data-edge-ref",
+        "先读 svg-subset.md",
         "主要文字、节点、连线、分区、表格和标签必须成为可编辑对象",
         "插画、质感、人物、复杂曲线可保留为有边界的图",
         "图片不能承载唯一正文",
