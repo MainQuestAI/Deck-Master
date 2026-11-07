@@ -145,10 +145,7 @@ fn planned_page_survives_image_task_and_readable_export() {
         "**本页目的**：{}",
         page["purpose"].as_str().unwrap()
     )));
-    assert!(markdown.contains(&format!(
-        "**布局**：{}",
-        page["layout"].as_str().unwrap()
-    )));
+    assert!(markdown.contains(&format!("**布局**：{}", page["layout"].as_str().unwrap())));
     // Verify body hierarchy separately so facts mentioned in layout cannot hide lost body blocks.
     let body = "**状态与分支**\n\n\
 - 校验通过后，有执行空位的任务进入执行，无空位的任务进入排队。\n\
