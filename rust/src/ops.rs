@@ -1,5 +1,5 @@
 use crate::error::{Conflict, Error, Result};
-use crate::model::{Brief, Deck, Page, Patch, Snapshot};
+use crate::model::{Brief, Deck, Page, Patch, Snapshot, Style};
 use crate::store::{self, Store};
 use serde::Serialize;
 use serde_json::{Value, json};
@@ -15,6 +15,11 @@ pub fn new(project: &Path, title: String) -> Result<Snapshot> {
         brief: Brief {
             title,
             ..Brief::default()
+        },
+        style: Style {
+            palette: ["#164267", "#F5F7FA", "#D97706"].map(String::from).into(),
+            fonts: vec!["Noto Sans CJK SC".into()],
+            ..Style::default()
         },
         ..Deck::default()
     };

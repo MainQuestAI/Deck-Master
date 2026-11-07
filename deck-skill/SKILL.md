@@ -96,6 +96,8 @@ description: 兼容入口。用 Rust deck 把作者任务和材料做成可修�
 
 ## 生图前顺序
 
+先按 [视觉系统](references/design-system.md) 读取并锁定作品 style，至少确定 palette 和 fonts，画布沿用默认；有品牌规范时用 `deck put` 写入同一字段，无品牌用默认值。构建前若本机没有该默认字体，用 `deck doctor` 换成已安装字体。风格口号进共享设计参考，不进 purpose / layout；不设八张样张确认硬门，不给模型追加任务里没有、模型里也不存在的风格前缀。
+
 每个目标页先写好并保存：阅读任务 `purpose`、判断句或明确查阅职责 `content.title`、构图句 `layout`，以及按该结构组织的正文。构图句必须具体到本页关系、对象与方向或分支、分区职责、表的作用及拍扁会丢的关键事实；“闭环图”或字段非空不能代替这些判断。方法和两类对照见 [page-writing](references/page-writing.md)。
 
 缺以上任一项，Host 不要调用 `deck run start image`，先补写；草稿可照常保存、导出。写好后按作者已授权范围继续生成原图，并用 `deck export md` 读取标题、“本页目的”、“布局”与按结构组织的正文，确认读者仍看得见关键事实。查阅页留表算成功。这里是技能的工作顺序，当前 CLI 不会因空 purpose/layout 拒图，也不替 Host 判断规划质量。

@@ -1,5 +1,5 @@
 use deck::error::Error;
-use deck::model::Patch;
+use deck::model::{Patch, Style};
 use deck::{ops, store};
 use serde_json::{Value, json};
 use std::path::Path;
@@ -20,6 +20,24 @@ fn two_pages(path: &Path) -> i64 {
     )
     .unwrap()
     .version
+}
+
+#[test]
+fn explicit_style_put_preserves_caller_palette_and_fonts() {
+    let temp = tempfile::tempdir().unwrap();
+    let created = ops::new(temp.path(), "合成作品".into()).unwrap();
+    let style = json!({"palette":["#FFFFFF","#14213D"],"fonts":["serif"]});
+    ops::put(temp.path(), created.version, patch(json!({"style":style}))).unwrap();
+    let saved = ops::get(temp.path(), None).unwrap();
+    assert_eq!(saved["deck"]["style"]["palette"], style["palette"]);
+    assert_eq!(saved["deck"]["style"]["fonts"], style["fonts"]);
+}
+
+#[test]
+fn legacy_style_without_palette_or_fonts_still_deserializes_to_empty() {
+    let style: Style = serde_json::from_str("{}").unwrap();
+    assert!(style.palette.is_empty());
+    assert!(style.fonts.is_empty());
 }
 
 #[test]
