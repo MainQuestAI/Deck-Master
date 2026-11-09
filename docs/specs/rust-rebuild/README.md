@@ -423,3 +423,9 @@ deck-skill/
 - SQLite 项目文件放在 iCloud 等同步目录：未在 1.1.0 准备中重测。
 - 已确认：本机 rustc / cargo 1.99.1 与 sqlite3 可用。
 - UNC 路径（`\\server\share`）未纳入本机路径清洗；`GET /api/export/md` 不做 PPTX 那套凭据检查；PPTX 工具测试走 LibreOffice 渲染。桌面打开见[1.1.0 发版说明](../../releases/1.1.0.md#maintainer-acceptance-2026-11-04)。
+
+### 当前增量：嵌套文字完整性
+
+labels、footnotes、callouts 的 children 与孙项递归进入同一 atoms 投影和文字回读。
+沿用保存时分配的稳定 ID，pointer 指向实际子项；空父项不截断子项遍历。
+文字缺失与节点绑定分别报告，机械结果不代表视觉或桌面验收。

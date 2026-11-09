@@ -68,30 +68,19 @@ def visible_atoms(page: dict) -> list[dict]:
                 f"unknown body block type {block_type!r}; map it to paragraph/bullets/table explicitly",
             )
 
-    for label_index, label in enumerate(visible.get("labels") or []):
-        label_id = _stable_id(label, f"label-{label_index + 1}")
-        push(
-            "label",
-            _atom_id(page_id, "label", label_id, "text"),
-            _pointer("customer_visible", "labels", label_index, "text"),
-            label.get("text"),
-        )
-    for note_index, footnote in enumerate(visible.get("footnotes") or []):
-        note_id = _stable_id(footnote, f"footnote-{note_index + 1}")
-        push(
-            "footnote",
-            _atom_id(page_id, "footnote", note_id, "text"),
-            _pointer("customer_visible", "footnotes", note_index, "text"),
-            footnote.get("text"),
-        )
-    for callout_index, callout in enumerate(visible.get("callouts") or []):
-        callout_id = _stable_id(callout, f"callout-{callout_index + 1}")
-        push(
-            "callout",
-            _atom_id(page_id, "callout", callout_id, "text"),
-            _pointer("customer_visible", "callouts", callout_index, "text"),
-            callout.get("text"),
-        )
+    def collect_text_items(kind: str, items: list, path: list, parent: str = "") -> None:
+        for index, item in enumerate(items):
+            fallback = f"{parent}-child-{index + 1}" if parent else f"{kind}-{index + 1}"
+            stable_id = _stable_id(item, fallback)
+            item_path = [*path, index]
+            if item.get("text") is not None:
+                push(kind, _atom_id(page_id, kind, stable_id, "text"),
+                     _pointer("customer_visible", *item_path, "text"), item["text"])
+            collect_text_items(kind, item.get("children") or [],
+                               [*item_path, "children"], stable_id)
+
+    for group, kind in (("labels", "label"), ("footnotes", "footnote"), ("callouts", "callout")):
+        collect_text_items(kind, visible.get(group) or [], [group])
     return atoms
 
 
