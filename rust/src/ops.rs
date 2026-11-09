@@ -563,7 +563,8 @@ pub fn asset_add(
     if id.is_empty() {
         return Err(Error::Input("素材 ID 不能为空".into()));
     }
-    let mut store = Store::open(project)?;
+    let store = Store::open(project)?;
+    let has_page_scope = !pages.is_empty();
     let mut seen = HashSet::new();
     let pages: Vec<String> = pages
         .iter()
@@ -572,6 +573,11 @@ pub fn asset_add(
         .filter(|page| !page.is_empty() && seen.insert((*page).to_owned()))
         .map(str::to_owned)
         .collect();
+    if has_page_scope && pages.is_empty() {
+        return Err(Error::Input(
+            "--page 未包含有效页面 ID；请指定页面，公共素材请省略 --page".into(),
+        ));
+    }
     // Reject unknown pages before copying files or invoking the SVG renderer.
     let snapshot = store.current()?;
     for page in &pages {
@@ -582,7 +588,7 @@ pub fn asset_add(
         }
     }
     let ext = input.extension().and_then(|v| v.to_str()).unwrap_or("bin");
-    let file = if ext.eq_ignore_ascii_case("svg") {
+    let (data, ext) = if ext.eq_ignore_ascii_case("svg") {
         let output = std::process::Command::new("rsvg-convert")
             .arg("--format=png")
             .arg(input.canonicalize()?)
@@ -603,10 +609,24 @@ pub fn asset_add(
                 String::from_utf8_lossy(&output.stderr).trim()
             )));
         }
-        store.add_file(&output.stdout, "png")?
+        (output.stdout, "png")
     } else {
-        store.add_file(&std::fs::read(input)?, ext)?
+        (std::fs::read(input)?, ext)
     };
+    // Share the connection borrow so content can be persisted after the page recheck.
+    let tx = rusqlite::Transaction::new_unchecked(
+        &store.connection,
+        rusqlite::TransactionBehavior::Immediate,
+    )?;
+    let mut snapshot = store::current(&tx)?;
+    for page in &pages {
+        if !snapshot.deck.pages.iter().any(|p| &p.id == page) {
+            return Err(Error::Input(format!(
+                "页面 {page} 不存在；请用 deck show 查看页面"
+            )));
+        }
+    }
+    let file = store.add_file(&data, ext)?;
     let asset = crate::model::Asset {
         id: id.into(),
         file,
@@ -614,15 +634,6 @@ pub fn asset_add(
         source: source.into(),
         license: license.into(),
     };
-    let tx = store.transaction()?;
-    let mut snapshot = store::current(&tx)?;
-    for page in &asset.pages {
-        if !snapshot.deck.pages.iter().any(|p| &p.id == page) {
-            return Err(Error::Input(format!(
-                "页面 {page} 不存在；请用 deck show 查看页面"
-            )));
-        }
-    }
     if let Some(old) = snapshot.deck.style.assets.iter_mut().find(|a| a.id == id) {
         *old = asset.clone();
     } else {
