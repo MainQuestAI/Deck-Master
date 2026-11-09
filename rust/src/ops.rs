@@ -564,6 +564,23 @@ pub fn asset_add(
         return Err(Error::Input("素材 ID 不能为空".into()));
     }
     let mut store = Store::open(project)?;
+    let mut seen = HashSet::new();
+    let pages: Vec<String> = pages
+        .iter()
+        .flat_map(|value| value.split(','))
+        .map(str::trim)
+        .filter(|page| !page.is_empty() && seen.insert((*page).to_owned()))
+        .map(str::to_owned)
+        .collect();
+    // Reject unknown pages before copying files or invoking the SVG renderer.
+    let snapshot = store.current()?;
+    for page in &pages {
+        if !snapshot.deck.pages.iter().any(|p| &p.id == page) {
+            return Err(Error::Input(format!(
+                "页面 {page} 不存在；请用 deck show 查看页面"
+            )));
+        }
+    }
     let ext = input.extension().and_then(|v| v.to_str()).unwrap_or("bin");
     let file = if ext.eq_ignore_ascii_case("svg") {
         let output = std::process::Command::new("rsvg-convert")
@@ -593,11 +610,7 @@ pub fn asset_add(
     let asset = crate::model::Asset {
         id: id.into(),
         file,
-        pages: pages
-            .iter()
-            .flat_map(|value| value.split(','))
-            .map(str::to_owned)
-            .collect(),
+        pages,
         source: source.into(),
         license: license.into(),
     };

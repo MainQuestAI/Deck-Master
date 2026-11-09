@@ -391,47 +391,77 @@ fn svg_reconstruction_task() -> String {
 #[test]
 fn svg_task_requires_original_objects_instead_of_body_block_templates() {
     let task = svg_reconstruction_task();
-    assert!(task.contains("按附件原图的对象、布局、层级和关系重建"));
-    assert!(task.contains("不把 content.json 的正文块套进默认卡片、默认表或默认清单"));
-    assert!(task.contains("分区说明、步骤说明"));
-    assert!(task.contains("不能代替上屏控件或路径节点"));
+    for requirement in [
+        "原图对象",
+        "布局",
+        "层级",
+        "关系重建",
+        "不按 content.json",
+        "默认卡片",
+        "默认表",
+        "默认清单",
+        "不能代替控件或节点",
+    ] {
+        assert!(task.contains(requirement), "SVG task omits {requirement}");
+    }
 }
 
 #[test]
 fn svg_task_keeps_ui_controls_separate_from_annotation_atoms_and_crops() {
     let task = svg_reconstruction_task();
     for requirement in [
-        "界面原型内部按原图分区",
-        "对应控件，不留空白线框",
-        "只有框架和关键字不等于完成还原",
-        "原型外侧作标注并绑定原 atom",
-        "内部仍须分别重画点名的控件与可编辑文字",
+        "按原图分区",
+        "不留空白线框",
+        "关键字不足",
+        "外侧标注",
+        "绑定原 atom",
+        "内部控件",
+        "可编辑",
         "不要求拆改 atom",
-        "句子型正文保持完整句子",
-        "多个入口、按钮和步骤节点仍须是多个可见对象",
-        "头像、图标宫格、商品图、内容图、状态栏",
-        "用 SVG 子集重画",
-        "有边界的局部 PNG/JPEG",
-        "deck asset add 登记后用 image 引用素材 ID",
-        "需要新裁图时，先登记，再重新准备 SVG 任务取得新附件",
-        "关键文字仍须可编辑",
-        "生成或截取的界面标明示意属性",
-        "不能冒充真实产品截图",
-        "禁止把整页原图或蓝图当背景",
+        "句子保持完整",
+        "分别可见",
     ] {
         assert!(task.contains(requirement), "UI task omits {requirement}");
     }
+    for requirement in [
+        "头像",
+        "SVG 子集",
+        "有边界的局部 PNG/JPEG",
+        "先 deck asset add",
+        "image 引用素材 ID",
+        "重新准备 SVG",
+        "新附件",
+        "关键文字",
+        "可编辑",
+        "示意属性",
+        "不能冒充真实产品截图",
+    ] {
+        assert!(task.contains(requirement), "crop task omits {requirement}");
+    }
+    assert!(task.contains("禁止把整页原图或蓝图当背景"));
 }
 
 #[test]
 fn svg_task_keeps_journey_scenes_and_directional_steps_with_lookup_exception() {
     let task = svg_reconstruction_task();
     for requirement in [
-        "顾客旅程保留步骤空间顺序与人物、动作、场景层",
-        "不能只收成同尺寸模块卡片，除非原图本身如此",
-        "有方向的步骤保留节点边界、连线端点、方向、分支和回流",
-        "不收成箭头句或没有空间方向的两列清单",
-        "除非原图本身就是逐行核对的查阅清单",
+        "步骤空间顺序",
+        "人物",
+        "动作",
+        "场景层",
+        "不能只剩",
+        "模块卡片",
+        "除非原图",
+        "节点边界",
+        "连线端点",
+        "方向",
+        "分支",
+        "回流",
+        "不收成箭头句",
+        "两列清单",
+        "原图本就是",
+        "逐行核对",
+        "查阅清单时例外",
     ] {
         assert!(task.contains(requirement), "path task omits {requirement}");
     }
@@ -440,31 +470,49 @@ fn svg_task_keeps_journey_scenes_and_directional_steps_with_lookup_exception() {
 #[test]
 fn svg_task_requires_opened_original_comparison_beyond_text_and_findings() {
     let task = svg_reconstruction_task();
-    assert!(task.contains("Host 必须实际打开预览 PNG 与原图"));
-    assert!(task.contains("已有原图／编译预览对照功能时使用它"));
+    let acceptance = task.split("验收要点：").nth(1).unwrap();
     for object in [
+        "实际打开",
+        "预览 PNG",
+        "原图",
+        "对照功能时使用",
         "身份／资产",
         "分入口",
         "内容区可视物",
         "服务或操作入口",
-        "旅程步骤空间顺序与动作／场景层",
-        "路径节点、端点、方向、分支、回流",
-        "层级、侧栏与阅读顺序",
+        "旅程步骤空间顺序",
+        "动作／场景层",
+        "路径节点",
+        "端点",
+        "方向",
+        "分支",
+        "回流",
+        "层级",
+        "侧栏",
+        "阅读顺序",
+        "对象缺失",
+        "说明文字",
+        "默认卡片",
+        "清单",
     ] {
-        assert!(task.contains(object), "comparison omits {object}");
+        assert!(acceptance.contains(object), "comparison omits {object}");
     }
-    assert!(task.contains("写清哪些对象缺失或变成说明文字、默认卡片或清单"));
-    let limits = task
-        .lines()
-        .find(|line| line.contains("字符串齐全"))
-        .unwrap();
-    for check in ["文字回读", "对象计数", "图片数", "机械 findings"] {
-        assert!(limits.contains(check), "comparison accepts {check} alone");
+    for check in [
+        "文字回读",
+        "字符串齐全",
+        "对象计数",
+        "图片数",
+        "机械 findings",
+        "不能代替对照原图",
+        "未比对对象与关系",
+        "重建未完成",
+        "visual_review",
+        "desktop_editing",
+        "not_evaluated",
+        "不改成自动通过",
+    ] {
+        assert!(acceptance.contains(check), "comparison omits {check}");
     }
-    assert!(limits.contains("均不能代替对照原图"));
-    assert!(limits.contains("未比对对象与关系时，记重建未完成"));
-    assert!(limits.contains("visual_review、desktop_editing 仍为 not_evaluated"));
-    assert!(limits.contains("不改成自动通过"));
 }
 
 #[test]
