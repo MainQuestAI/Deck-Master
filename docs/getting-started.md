@@ -2,8 +2,9 @@
 
 Deck Master 1.1.2 provides the Rust CLI `deck`, a loopback Web UI (`deck serve`),
 file tools (`deck-tools`), and the Codex Skill tree in `deck-skill/`. The
-default install still links the compatibility entry `deck`. `--skills-root`
-also links `deck-master`, `deck-content`, `deck-design`, and `deck-review`.
+default install links the complete `deck-master`, `deck-content`, `deck-design`,
+and `deck-review` directories into `~/.codex/skills`. `--skills-root` changes
+that directory; the compatibility entry `deck` is no longer installed.
 It does not bundle a model, Codex account, image-generation service, desktop office
 application, renderer binaries or fonts. A plain material directory is enough
 to start; no PPT Master backend or slide library is needed.
@@ -52,25 +53,32 @@ If `<prefix>/bin` is not on `PATH`, add it or call `<prefix>/bin/deck`. A
 non-default `--prefix` means the skill and
 [commands.md](../deck-skill/references/commands.md) must use that full path.
 
-Skill flags during this migration:
+Skill installation:
 
-- No skill flag: install or update the CLI, the tool environment, and the
-  compatibility entry at `~/.codex/skills/deck`. The four role entries are not
-  installed.
-- `--skill-dir PATH`: install only that compatibility entry at `PATH`.
-- `--skills-root DIR`: install `deck`, `deck-master`, `deck-content`,
-  `deck-design`, and `deck-review` under `DIR`. `deck` links the whole
-  `deck-skill/` tree. Each role directory's `SKILL.md` links the matching
-  source file, and its `references` and `assets` link the shared directories.
+- With no skill flag, install the four role entries `deck-master`,
+  `deck-content`, `deck-design`, and `deck-review` into `~/.codex/skills`.
+- `--skills-root DIR` installs the same four entries into `DIR` instead.
+- Each entry is a symlink to the complete `deck-skill/<role>` directory.
+  Its `SKILL.md` is a regular file; relative `references` and `assets` links
+  resolve to the shared method source. Codex can discover these directories.
+- The compatibility entry `deck` is no longer installed. `--skill-dir` has
+  been removed; use `--skills-root` to choose a skill directory.
 
-`--skill-dir` and `--skills-root` cannot be used together. An entry that
-already points at this source is left unchanged, including other files in a
-role directory. Any other symlink or directory on the selected name exits 2
-and prints the path and target. The script does not replace or delete it.
-Remove only that symlink (`rm` the link, not the directory it points at) or
-move the directory aside, then rerun. Or pass a different path. The old
-installer treats these same-name entries as foreign; switching back requires
-handling the links explicitly. The two installs do not stack on one path.
+For users with only `deck`, rerun the script: it removes that symlink only
+if it points at this source's `deck-skill/`, and installs the four roles.
+For users with `deck` plus old role wrappers, rerunning also upgrades wrappers
+that contain only the three managed `SKILL.md`, `references`, and `assets`
+symlinks. It replaces each wrapper with a whole-directory symlink. Existing
+whole-directory links to this source are kept.
+
+Any extra file in a wrapper, or another entry occupying a role name, causes
+exit 2 before any writes; the script prints the path and target. This includes
+same-name links from the old Python installer. Move those links away first
+(remove the symlink only, never its target directory), or move a regular
+directory aside, then rerun. An unmanaged `deck` entry is preserved with a
+warning that it may compete with the four roles for triggering; it does not
+block installation. The old installer treats the new role links as foreign,
+so switching back also requires handling these links explicitly.
 
 npm 12 blocks dependency install scripts unless `allowScripts` lists them, and
 prints an `install-scripts` warning for the rest. `frontend/package.json`

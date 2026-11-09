@@ -48,38 +48,43 @@ def _frontmatter_name(path: Path) -> str:
     raise AssertionError(f"missing name in {path}")
 
 
-def test_source_has_one_skill_manifest_and_unique_names() -> None:
-    manifests = [path for path in SOURCE.rglob("SKILL.md")]
-    assert manifests == [SOURCE / "SKILL.md"]
-    names = [_frontmatter_name(SOURCE / "SKILL.md")]
-    names.extend(_frontmatter_name(SOURCE / f"{role}.md") for role in ROLES)
-    assert names == ["deck", *ROLES]
+def test_source_has_four_real_manifests_and_unique_names() -> None:
+    manifests = list(SOURCE.rglob("SKILL.md"))
+    assert set(manifests) == {SOURCE / role / "SKILL.md" for role in ROLES}
+    assert {_frontmatter_name(path) for path in manifests} == set(ROLES)
+    assert not (SOURCE / "SKILL.md").exists()
+    assert not list(SOURCE.glob("deck-*.md"))
+    for path in manifests:
+        assert path.is_file() and not path.is_symlink()
 
 
 def test_role_entries_call_rust_deck() -> None:
     for role in ROLES:
-        text = (SOURCE / f"{role}.md").read_text(encoding="utf-8")
+        text = (SOURCE / role / "SKILL.md").read_text(encoding="utf-8")
         assert "`deck`" in text
         assert "deck_master" not in text
         assert "python -m deck_master" not in text
+        assert "`deck-master " not in text
         for link in _local_links(text):
             assert link.startswith(("references/", "assets/"))
 
 
-def test_shared_links_resolve_from_source_and_from_role_directory(tmp_path: Path) -> None:
+def test_shared_links_resolve_from_source_and_installed_directory(tmp_path: Path) -> None:
     install = tmp_path / "skills"
+    install.mkdir()
     for role in ROLES:
+        source = SOURCE / role
         directory = install / role
-        directory.mkdir(parents=True)
-        os.symlink(SOURCE / f"{role}.md", directory / "SKILL.md")
-        os.symlink(SOURCE / "references", directory / "references")
-        os.symlink(SOURCE / "assets", directory / "assets")
-        source_text = (SOURCE / f"{role}.md").read_text(encoding="utf-8")
+        directory.symlink_to(source, target_is_directory=True)
+        for name in ("references", "assets"):
+            assert (source / name).is_symlink()
+            assert os.readlink(source / name) == f"../{name}"
+            assert (directory / name).resolve() == SOURCE / name
+        source_text = (source / "SKILL.md").read_text(encoding="utf-8")
         for link in _local_links(source_text):
-            from_source = (SOURCE / link).resolve()
-            from_install = (directory / link).resolve()
-            assert from_source.is_file() or from_source.is_dir()
-            assert from_install == from_source
+            from_source = (source / link).resolve()
+            assert from_source.exists()
+            assert (directory / link).resolve() == from_source
 
 
 def test_method_markdown_links_resolve() -> None:
@@ -89,7 +94,7 @@ def test_method_markdown_links_resolve() -> None:
             assert target.is_file() or target.is_dir(), f"{path} -> {link}"
 
 
-@pytest.mark.parametrize("relative", ["deck-content.md", "references/page-writing.md"])
+@pytest.mark.parametrize("relative", ["deck-content/SKILL.md", "references/page-writing.md"])
 def test_title_policy_preserves_page_roles(relative: str) -> None:
     text = (SOURCE / relative).read_text(encoding="utf-8")
     paragraphs = re.split(r"\n\s*\n", text)
@@ -104,12 +109,12 @@ def test_title_policy_preserves_page_roles(relative: str) -> None:
     assert re.search(r"查阅页.{0,30}查阅职责", text)
 
 
-@pytest.mark.parametrize("relative", ["deck-review.md", "references/method-review.md"])
+@pytest.mark.parametrize("relative", ["deck-review/SKILL.md", "references/method-review.md"])
 def test_review_guidance_separates_qa_layers(relative: str) -> None:
     text = (SOURCE / relative).read_text(encoding="utf-8")
     qa = _section(text, "三层 QA")
     _has(qa, r"Q1.*业务.*语义", r"Q2.*保真.*可读", r"Q3.*可编辑.*Office", r"独立")
-    if relative == "deck-review.md":
+    if relative == "deck-review/SKILL.md":
         assert "references/method-review.md#三层-qa" in LINK.findall(qa)
     else:
         _has(qa, r"不能.*(?:boolean|布尔)", r"status=pass.*不(?:等于|代表|证明)")
@@ -117,7 +122,7 @@ def test_review_guidance_separates_qa_layers(relative: str) -> None:
 
 
 def test_review_entry_requires_located_graded_evidence() -> None:
-    entry = (SOURCE / "deck-review.md").read_text(encoding="utf-8")
+    entry = (SOURCE / "deck-review/SKILL.md").read_text(encoding="utf-8")
     report = _section(entry, "怎样返回")
     _has(report, r"页.*(?:对象|区域)", r"问题", r"影响", r"建议", r"分级", r"依据", r"原句", r"没有验证|未验证")
     method = (SOURCE / "references/method-review.md").read_text(encoding="utf-8")
@@ -129,7 +134,7 @@ def test_review_entry_requires_located_graded_evidence() -> None:
 
 
 def test_review_consumes_supported_readback_findings_without_inventing_edges() -> None:
-    entry = (SOURCE / "deck-review.md").read_text(encoding="utf-8")
+    entry = (SOURCE / "deck-review/SKILL.md").read_text(encoding="utf-8")
     _has(entry, r"先.*findings.*再.*(?:阅图|画面)")
     method = (SOURCE / "references/method-review.md").read_text(encoding="utf-8")
     documented = set(re.findall(r"`([a-z]+(?:_[a-z]+)+)`", method))
@@ -167,7 +172,7 @@ def test_review_protects_lookup_comparisons_and_synthetic_numbers() -> None:
 
 
 def test_master_turns_feedback_into_four_local_repair_paths() -> None:
-    text = (SOURCE / "deck-master.md").read_text(encoding="utf-8")
+    text = (SOURCE / "deck-master/SKILL.md").read_text(encoding="utf-8")
     routes = dict(re.findall(r"^- (内容|设计|调用|重建)：([\s\S]*?)(?=^-[ ]|^## |\Z)", text, re.MULTILINE))
     assert set(routes) == {"内容", "设计", "调用", "重建"}
     _has(routes["内容"], r"正文", r"purpose", r"layout", r"notes", r"deck put --base", r"不.*自动.*生图")
@@ -178,7 +183,7 @@ def test_master_turns_feedback_into_four_local_repair_paths() -> None:
 
 
 def test_design_can_enter_svg_repair_without_new_image() -> None:
-    text = (SOURCE / "deck-design.md").read_text(encoding="utf-8")
+    text = (SOURCE / "deck-design/SKILL.md").read_text(encoding="utf-8")
     production = _section(text, "主视觉与制作")
     _has(production, r"蓝图.*可用.*直接.*SVG", r"需要新蓝图.*生图")
     steps = re.findall(r"^[12]\. (.+)$", production, re.MULTILINE)
@@ -187,14 +192,14 @@ def test_design_can_enter_svg_repair_without_new_image() -> None:
 
 
 def test_review_routes_submission_faults_separately_from_design() -> None:
-    text = (SOURCE / "deck-review.md").read_text(encoding="utf-8")
+    text = (SOURCE / "deck-review/SKILL.md").read_text(encoding="utf-8")
     report = _section(text, "怎样返回")
     _has(report, r"task.md.*附件.*正确", r"实际调用.*(?:改写|漏传).*交调用")
     _has(report, r"task.md.*原文", r"attachments.json.*提交", r"主视觉.*交设计")
 
 
 def test_repair_rereview_links_to_existing_qa_judgments() -> None:
-    text = (SOURCE / "deck-master.md").read_text(encoding="utf-8")
+    text = (SOURCE / "deck-master/SKILL.md").read_text(encoding="utf-8")
     rereview = next(p for p in re.split(r"\n\s*\n", text) if "复审" in p)
     _has(rereview, r"只.*复审.*受影响.*范围")
     qa = next(link for link in LINK.findall(rereview) if link.startswith("references/method-review.md#"))
@@ -206,7 +211,7 @@ def test_repair_rereview_links_to_existing_qa_judgments() -> None:
 
 
 @pytest.mark.parametrize("relative", [
-    "SKILL.md", "deck-content.md", "deck-master.md",
+    "deck-content/SKILL.md", "deck-master/SKILL.md",
     "references/methods/M08-narrative.md", "references/page-writing.md",
 ])
 def test_lookup_success_requires_reading_task_and_table_composition(relative: str) -> None:
@@ -229,7 +234,7 @@ def test_lookup_choice_uses_task_instead_of_keywords_or_drawing_ability() -> Non
 
 
 @pytest.mark.parametrize("relative", [
-    "SKILL.md", "references/page-writing.md", "references/content-to-visual.md",
+    "references/page-writing.md", "references/content-to-visual.md",
 ])
 def test_declared_relations_require_body_rewrite_before_image_run(relative: str) -> None:
     text = (SOURCE / relative).read_text(encoding="utf-8")
@@ -242,18 +247,14 @@ def test_declared_relations_require_body_rewrite_before_image_run(relative: str)
     assert re.search(r"正文[^；。]*按关系重组", policy)
     assert re.search(r"表[^；。]*最多[^；。]*取材", policy)
     assert re.search(r"先改[^；。]*构图句[^；。]*正文[^；。]*再调用[^；。]*run start image", policy)
-    if relative == "SKILL.md":
-        preimage = text.split("## 生图前顺序", 1)[1].split("\n## ", 1)[0]
-        assert policy in preimage
 
 
 @pytest.mark.parametrize("entry,chain", [
-    ("SKILL.md", ("references/page-writing.md",)),
     ("references/methods/M08-narrative.md", ("../page-writing.md",)),
-    ("deck-master.md", ("references/page-writing.md",)),
-    ("deck-content.md", ("references/page-writing.md",)),
-    ("deck-design.md", ("references/content-to-visual.md", "page-writing.md")),
-    ("deck-review.md", ("references/method-review.md", "page-writing.md")),
+    ("deck-master/SKILL.md", ("references/page-writing.md",)),
+    ("deck-content/SKILL.md", ("references/page-writing.md",)),
+    ("deck-design/SKILL.md", ("references/content-to-visual.md", "page-writing.md")),
+    ("deck-review/SKILL.md", ("references/method-review.md", "page-writing.md")),
 ])
 def test_entry_methods_reach_shared_relation_constraint(entry: str, chain: tuple[str, ...]) -> None:
     path = SOURCE / entry
@@ -266,7 +267,7 @@ def test_entry_methods_reach_shared_relation_constraint(entry: str, chain: tuple
     assert "run start image" in shared
 
 
-@pytest.mark.parametrize("relative", ["references/page-writing.md", "deck-design.md"])
+@pytest.mark.parametrize("relative", ["references/page-writing.md", "deck-design/SKILL.md"])
 def test_table_choice_is_not_a_title_or_block_type_ban(relative: str) -> None:
     text = (SOURCE / relative).read_text(encoding="utf-8")
     policy = next((line for line in text.splitlines() if "自动禁表" in line), "")
@@ -312,7 +313,7 @@ def test_review_routes_declared_relation_table_contradiction_to_design() -> None
     _has(protection, r"查阅.*保留查阅效率", r"不因.*表格.*判失败")
 
 
-@pytest.mark.parametrize("entry", ["SKILL.md", "deck-design.md", "deck-master.md"])
+@pytest.mark.parametrize("entry", ["deck-design/SKILL.md", "deck-master/SKILL.md"])
 def test_reconstruction_entries_share_object_preservation_rules(entry: str) -> None:
     text = (SOURCE / entry).read_text(encoding="utf-8")
     assert "references/reconstruction.md" in _local_links(text)
@@ -378,15 +379,14 @@ def test_sentence_text_rule_cannot_collapse_multiple_visible_objects() -> None:
 
 
 @pytest.mark.parametrize("relative", [
-    "SKILL.md", "references/reconstruction.md", "references/method-review.md",
+    "references/reconstruction.md", "references/method-review.md",
 ])
 def test_reconstruction_acceptance_requires_actual_object_comparison(relative: str) -> None:
     text = (SOURCE / relative).read_text(encoding="utf-8")
     _has(text, r"实际打开.*预览.*原图", r"文字(?:回读|覆盖)", r"字符串齐全", r"(?:不能|未对照).*?(?:比对|对象|重建通过)")
     assert "重建未完成" in text
     if relative != "references/reconstruction.md":
-        target = "references/reconstruction.md" if relative == "SKILL.md" else "reconstruction.md"
-        assert f"{target}#对照原图验收" in LINK.findall(text)
+        assert "reconstruction.md#对照原图验收" in LINK.findall(text)
 
 
 def test_original_comparison_checks_screen_journey_and_path_objects() -> None:

@@ -63,44 +63,46 @@ jobs:
         run: |
           python -m pip install uv
           .venv/bin/python -m pytest -q tests/install --basetemp="$RUNNER_TEMP/install-script"
-          bash scripts/install.sh --dry-run --prefix "$RUNNER_TEMP/deck-prefix" --skill-dir "$RUNNER_TEMP/codex-skills/deck"
-          bash scripts/install.sh --prefix "$RUNNER_TEMP/deck-prefix" --skill-dir "$RUNNER_TEMP/codex-skills/deck"
+          export RUSTUP_HOME="${RUSTUP_HOME:-$HOME/.rustup}"
+          export CARGO_HOME="${CARGO_HOME:-$HOME/.cargo}"
+          export HOME="$(mktemp -d)"
+          bash scripts/install.sh --dry-run --prefix "$RUNNER_TEMP/deck-prefix" | tee "$RUNNER_TEMP/default-plan"
+          bash scripts/install.sh --prefix "$RUNNER_TEMP/deck-prefix"
           test -x "$RUNNER_TEMP/deck-prefix/bin/deck"
           test -x "$RUNNER_TEMP/deck-prefix/share/deck/venv/bin/python"
           "$RUNNER_TEMP/deck-prefix/share/deck/venv/bin/python" -c "import deck_tools"
-          bash scripts/install.sh --prefix "$RUNNER_TEMP/deck-prefix" --skill-dir "$RUNNER_TEMP/codex-skills/deck"
-          test -x "$RUNNER_TEMP/deck-prefix/bin/deck"
-          test -x "$RUNNER_TEMP/deck-prefix/share/deck/venv/bin/python"
-          "$RUNNER_TEMP/deck-prefix/share/deck/venv/bin/python" -c "import deck_tools"
-          test -L "$RUNNER_TEMP/codex-skills/deck"
-          test "$(readlink "$RUNNER_TEMP/codex-skills/deck")" = "${{ github.workspace }}/deck-skill"
-          test ! -e "$RUNNER_TEMP/codex-skills/deck-master"
+          bash scripts/install.sh --prefix "$RUNNER_TEMP/deck-prefix"
           "$RUNNER_TEMP/deck-prefix/bin/deck" --help >/dev/null
-          set -o pipefail
+          for role in deck-master deck-content deck-design deck-review; do
+            test -L "$HOME/.codex/skills/$role"
+            test "$(readlink "$HOME/.codex/skills/$role")" = "${{ github.workspace }}/deck-skill/$role"
+            test -f "$HOME/.codex/skills/$role/SKILL.md"
+            test ! -L "$HOME/.codex/skills/$role/SKILL.md"
+          done
+          test ! -e "$HOME/.codex/skills/deck"
+          test ! -L "$HOME/.codex/skills/deck"
           bash scripts/install.sh --dry-run --prefix "$RUNNER_TEMP/deck-prefix" --skills-root "$RUNNER_TEMP/skills-root" | tee "$RUNNER_TEMP/skills-root-plan"
-          set +o pipefail
-          grep -q 'skill-mode=roles' "$RUNNER_TEMP/skills-root-plan"
-          grep -q 'deck-master.md' "$RUNNER_TEMP/skills-root-plan"
-          if bash scripts/install.sh --dry-run --prefix "$RUNNER_TEMP/deck-prefix" --skill-dir "$RUNNER_TEMP/codex-skills/deck" --skills-root "$RUNNER_TEMP/skills-root"; then
-            echo "skill flags must be mutually exclusive" >&2
+          grep -q 'skill-entry=deck-master action=create' "$RUNNER_TEMP/skills-root-plan"
+          grep -q '/deck-skill/deck-master' "$RUNNER_TEMP/skills-root-plan"
+          if bash scripts/install.sh --dry-run --prefix "$RUNNER_TEMP/deck-prefix" --skill-dir "$RUNNER_TEMP/removed-deck"; then
+            echo "--skill-dir 已取消，应拒绝该参数" >&2
             exit 1
           fi
-          # Write roles into a different directory from the --skill-dir compat install above.
           bash scripts/install.sh --prefix "$RUNNER_TEMP/deck-prefix" --skills-root "$RUNNER_TEMP/skills-root-write"
-          test -L "$RUNNER_TEMP/skills-root-write/deck"
-          test "$(readlink "$RUNNER_TEMP/skills-root-write/deck")" = "${{ github.workspace }}/deck-skill"
           for role in deck-master deck-content deck-design deck-review; do
-            test -L "$RUNNER_TEMP/skills-root-write/$role/SKILL.md"
-            test "$(readlink "$RUNNER_TEMP/skills-root-write/$role/SKILL.md")" = "${{ github.workspace }}/deck-skill/${role}.md"
+            test -L "$RUNNER_TEMP/skills-root-write/$role"
+            test "$(readlink "$RUNNER_TEMP/skills-root-write/$role")" = "${{ github.workspace }}/deck-skill/$role"
+            test -f "$RUNNER_TEMP/skills-root-write/$role/SKILL.md"
+            test ! -L "$RUNNER_TEMP/skills-root-write/$role/SKILL.md"
             test -L "$RUNNER_TEMP/skills-root-write/$role/references"
-            test "$(readlink "$RUNNER_TEMP/skills-root-write/$role/references")" = "${{ github.workspace }}/deck-skill/references"
+            test "$(readlink "$RUNNER_TEMP/skills-root-write/$role/references")" = "../references"
+            test -d "$RUNNER_TEMP/skills-root-write/$role/references"
             test -L "$RUNNER_TEMP/skills-root-write/$role/assets"
-            test "$(readlink "$RUNNER_TEMP/skills-root-write/$role/assets")" = "${{ github.workspace }}/deck-skill/assets"
+            test "$(readlink "$RUNNER_TEMP/skills-root-write/$role/assets")" = "../assets"
+            test -d "$RUNNER_TEMP/skills-root-write/$role/assets"
           done
-          test ! -e "$RUNNER_TEMP/codex-skills/deck-master"
-          test ! -e "$RUNNER_TEMP/codex-skills/deck-content"
-          test ! -e "$RUNNER_TEMP/codex-skills/deck-design"
-          test ! -e "$RUNNER_TEMP/codex-skills/deck-review"
+          test ! -e "$RUNNER_TEMP/skills-root-write/deck"
+          test ! -L "$RUNNER_TEMP/skills-root-write/deck"
       - name: Installed deck imports a legacy archive
         run: |
           export DECK_BIN="$RUNNER_TEMP/deck-prefix/bin/deck"

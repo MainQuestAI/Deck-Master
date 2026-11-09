@@ -11,12 +11,15 @@ uv venv --python 3.12 --seed .venv
 .venv/bin/python -m pip install -e './deck-tools[dev]'
 cargo install --path rust --root ~/.local
 export DECK_TOOLS_PYTHON="$PWD/.venv/bin/python"
-ln -s "$PWD/deck-skill" ~/.codex/skills/deck
+mkdir -p ~/.codex/skills
+for role in deck-master deck-content deck-design deck-review; do
+  ln -s "$PWD/deck-skill/$role" "$HOME/.codex/skills/$role"
+done
 ```
 
-`scripts/install.sh` 在迁移期默认只链接兼容入口 `deck`。`--skill-dir PATH` 同样只链接这一个入口。`--skills-root DIR` 才会在该目录下同时链接 `deck`、`deck-master`、`deck-content`、`deck-design` 和 `deck-review`，两个参数不能一起用。
+`scripts/install.sh` 默认将四个职责目录整体软链接到 `~/.codex/skills`，`--skills-root DIR` 更换目录。不再安装兼容入口 `deck`，`--skill-dir` 已取消。上面的手动链接示例适用于尚无同名入口的开发环境；升级请运行安装脚本。
 
-软链接已指向本源时，重复安装不改链接。指向其他位置、或同名路径是普通目录时，脚本退出 2，并打印该路径和目标。只移走这一项，不要删除它指向的目录，然后重新运行；或者换一个安装路径。不要静默覆盖。
+重复安装保留已指向本源职责目录的链接；只删除指向本源 `deck-skill/` 的旧 `deck` 软链接，并将仅含三条托管链接的旧包装目录升级为整目录软链接。包装目录有用户文件，或同名路径被其他入口（包括旧 Python 线）占用时，脚本在写入前退出 2，打印路径和目标。先移走该项；若为软链接，只删链接，不删目标目录，再安装。非本源的 `deck` 保留并提示可能抢触发。
 
 下文的 `deck` 指 `~/.local/bin/deck`。安装用了非默认 `--prefix` 时，二进制在 `<prefix>/bin/deck`。`<prefix>/bin` 不在 PATH 时，每条命令都用这个完整路径。`DECK_PROJECT` 是作者指定的新作品目录，`SOURCE_FILE` 是作者指定的一份原材料；不要根据示例搜索 HOME 或补读相邻目录。
 
@@ -138,7 +141,7 @@ deck --project "$DECK_PROJECT" export md > "$DECK_PROJECT/manuscript.md"
 
 ## 原图、SVG 与构建
 
-内容完成不自动进入这一节。设计或兼容入口在授权范围内使用。
+内容完成不自动进入这一节。设计入口在授权范围内使用。
 
 按 [视觉资产](visual-assets.md) 选择实际需要的资源：`deck asset add <素材ID> <文件> --page p1 --page p3 --source <来源> --license <许可>`。`--page` 可重复或逗号分隔，省略则为公共素材；同 ID 替换整条记录，保留的范围、来源和许可需一起传入。SVG 添加时渲染成 PNG，PNG/JPEG 保持原样。任务只附上本页有效素材，以 attachments.json 为准。
 

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- 默认安装 `deck-master`、`deck-content`、`deck-design`、`deck-review` 四个职责入口到 `~/.codex/skills`，不再安装 `deck` 入口；`--skills-root` 可更换目录，`--skill-dir` 已取消。
+- 每个入口改为整个职责目录的软链接，目录内保留真实 `SKILL.md`，让 Codex 能发现这些技能。
+- 再次运行安装脚本会只移除指向本源的旧 `deck` 软链接，并将仅含三条托管链接的旧职责包装目录升级为整目录软链接；含用户文件的目录会保留并报冲突。
+- 若同名旧 Python 线入口仍占用安装位置，脚本在写入前退出并打印路径和目标；请先移走该软链接（只删链接，不删目标目录）再安装。
+
 ## 1.1.2 — 2026-11-09
 
 See [1.1.2 release notes](docs/releases/1.1.2.md) for the changes merged after
