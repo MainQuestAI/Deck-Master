@@ -143,9 +143,12 @@ def test_review_consumes_supported_readback_findings_without_inventing_edges() -
         tree = ast.parse((REPO / "deck-tools/src/deck_tools" / name).read_text(encoding="utf-8"))
         supported.update(node.value for node in ast.walk(tree) if isinstance(node, ast.Constant) and isinstance(node.value, str))
     assert codes <= supported
-    _has(method, r"(?:没有|缺少)预期边.*(?:未检查|依据不足)")
-    _has(method, r"不.*layout.*边")
-    _has(method, r"不.*(?:编造|发明).*code")
+    findings = _section(method, "机械发现与阅图定位")
+    edges = next(line for line in findings.splitlines() if line.startswith("- 反箭头、漏分支："))
+    _has(edges, r"(?:没有|缺少)预期边[^。]*(?:未检查|依据不足)")
+    _has(edges, r"不从 layout[^。]*(?:解析|发明)边")
+    guidance = findings.split("\n- ", 1)[0]
+    _has(guidance, r"不(?:编造|发明) code")
     _has(_section(method, "三层 QA"), r"bbox.*pixel diff.*定位", r"不是唯一判断依据")
 
 
@@ -314,42 +317,56 @@ def test_reconstruction_entries_share_object_preservation_rules(entry: str) -> N
     text = (SOURCE / entry).read_text(encoding="utf-8")
     assert "references/reconstruction.md" in _local_links(text)
     shared = (SOURCE / "references/reconstruction.md").read_text(encoding="utf-8")
-    policy = shared.split("\n## ", 1)[0]
+    introduction = shared.split("\n## ", 1)[0]
+    policy = next(p for p in re.split(r"\n\s*\n", introduction) if "重建依据" in p)
     _has(policy, r"原图.*对象和关系", r"不是.*正文块类型.*默认", r"说明文字.*不算还原")
 
 
 def test_ui_annotations_keep_atoms_outside_and_controls_inside() -> None:
     ui = _section((SOURCE / "references/reconstruction.md").read_text(encoding="utf-8"), "界面原型")
-    _has(ui, r"内部必须出现.*对应控件", r"不留空白线框")
-    _has(ui, r"外侧.*标注.*绑定.*atom", r"内部.*可编辑控件", r"不能.*说明句.*唯一内容")
-    _has(ui, r"不要求.*拆成多个 atom", r"不改 atom 结构")
+    controls = next(p for p in re.split(r"\n\s*\n", ui) if "内部必须出现" in p)
+    annotations = next(p for p in re.split(r"\n\s*\n", ui) if "分区说明" in p)
+    _has(controls, r"内部必须出现[^。]*对应控件", r"不留空白线框")
+    _has(annotations, r"外侧[^。]*标注[^。]*绑定[^。]*atom", r"内部[^。]*可编辑控件", r"不能[^。]*说明句[^。]*唯一内容")
+    _has(annotations, r"不要求[^。]*拆成多个 atom", r"不改 atom 结构")
 
 
 @pytest.mark.parametrize("relative", ["references/reconstruction.md", "references/visual-assets.md"])
 def test_ui_nontext_assets_survive_with_editable_text_and_illustrative_status(relative: str) -> None:
     text = (SOURCE / relative).read_text(encoding="utf-8")
-    _has(text, r"头像", r"SVG 子集.*重画", r"有边界的局部 PNG/JPEG", r"asset add", r"image")
-    _has(text, r"关键文字.*可编辑", r"(?:截图|截取).*生成|生成.*截取")
-    _has(text, r"示意属性.*不能冒充真实产品截图", r"只有框架和关键字.*不等于完成")
     if relative.endswith("reconstruction.md"):
-        _has(text, r"先登记局部图.*再准备 SVG 任务", r"补图.*重新准备任务.*attachments.json")
+        ui = _section(text, "界面原型")
     else:
-        _has(text, r"主正文.*原生对象", r"选用前.*不得.*删掉")
+        ui = text.split("\n## ", 1)[0]
+    assets = next(p for p in re.split(r"\n\s*\n", ui) if "头像" in p)
+    _has(assets, r"头像[^。]*SVG 子集[^。]*重画")
+    _has(assets, r"有边界的局部 PNG/JPEG", r"asset add[^。]*image[^。]*引用")
+    _has(assets, r"关键文字[^。]*可编辑", r"(?:生成或截取|截图或生成)[^。]*界面[^。]*示意属性")
+    _has(assets, r"示意属性[^。]*不能冒充真实产品截图")
+    if relative.endswith("reconstruction.md"):
+        _has(ui, r"只有框架和关键字[^。]*不等于完成")
+        _has(assets, r"先登记局部图[^。]*再准备 SVG 任务", r"补图[^。]*重新准备任务[^。]*attachments.json")
+    else:
+        _has(assets, r"只有框架和关键字[^。]*不等于完成", r"主正文[^。]*原生对象")
+        selection = next(p for p in re.split(r"\n\s*\n", ui) if "选用前" in p)
+        _has(selection, r"选用前[^。]*不得[^。]*删掉")
         assert "优先保留可编辑的关键文字与框架" not in text
 
 
 def test_journeys_keep_spatial_order_and_action_scene_layer() -> None:
     text = _section((SOURCE / "references/reconstruction.md").read_text(encoding="utf-8"), "旅程与有方向的步骤")
-    _has(text, r"步骤的空间顺序", r"人物.*动作.*场景", r"重画.*有边界的局部图")
-    _has(text, r"不能.*模块卡片.*除非原图")
+    journey = next(p for p in re.split(r"\n\s*\n", text) if "原图是带人物或场景" in p)
+    _has(journey, r"保留步骤的空间顺序", r"人物[^。]*动作[^。]*场景", r"重画[^。]*有边界的局部图")
+    _has(journey, r"不能[^。]*模块卡片[^。]*除非原图")
 
 
 def test_directional_paths_keep_nodes_and_connections_with_lookup_exception() -> None:
     text = _section((SOURCE / "references/reconstruction.md").read_text(encoding="utf-8"), "旅程与有方向的步骤")
-    for token in ("节点边界", "连线端点", "方向", "分支", "回流"):
-        assert token in text
-    _has(text, r"不能.*箭头.*句子", r"没有空间方向.*清单", r"只有原图.*查阅清单.*逐[行条]核对")
-    _has(text, r"构图句.*表是主视觉", r"purpose.*layout.*不得把表当主视觉", r"不按.*标题.*禁表")
+    path = next(p for p in re.split(r"\n\s*\n", text) if "原图是横向" in p)
+    _has(path, r"沿原图[^。]*节点边界[^。]*连线端点[^。]*方向[^。]*分支[^。]*回流")
+    _has(path, r"不能[^。]*箭头[^。]*句子", r"没有空间方向[^。]*清单", r"只有原图[^。]*查阅清单[^。]*逐[行条]核对")
+    lookup = next(p for p in re.split(r"\n\s*\n", text) if "查阅表本身" in p)
+    _has(lookup, r"构图句[^。]*表是主视觉", r"purpose[^。]*layout[^。]*不得把表当主视觉", r"不按[^。]*标题[^。]*禁表")
 
 
 def test_sentence_text_rule_cannot_collapse_multiple_visible_objects() -> None:

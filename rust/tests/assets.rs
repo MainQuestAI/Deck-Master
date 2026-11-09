@@ -390,6 +390,61 @@ fn comma_separated_asset_pages_apply_to_each_page_and_unknown_pages_do_not_repla
 }
 
 #[test]
+fn cli_empty_page_segments_fail_while_trailing_comma_and_absent_page_keep_scope() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    setup(path);
+    let image = path.join("selected.png");
+    bitmap(&image, "teal");
+    let before = ops::get(path, None).unwrap();
+    for pages in [",", " , "] {
+        let output = Command::new(env!("CARGO_BIN_EXE_deck"))
+            .arg("--project")
+            .arg(path)
+            .args(["asset", "add", "selected"])
+            .arg(&image)
+            .args(["--page", pages])
+            .output()
+            .unwrap();
+        assert_eq!(output.status.code(), Some(2), "page scope: {pages:?}");
+        assert!(!output.stderr.is_empty());
+        assert_eq!(ops::get(path, None).unwrap(), before);
+        assert_eq!(
+            std::fs::read_dir(path.join(".deck/files")).unwrap().count(),
+            0
+        );
+    }
+    for (args, expected) in [(vec!["--page", "p1,"], vec!["p1"]), (vec![], vec![])] {
+        let output = Command::new(env!("CARGO_BIN_EXE_deck"))
+            .arg("--project")
+            .arg(path)
+            .args(["asset", "add", "selected"])
+            .arg(&image)
+            .args(args)
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let value: Value = serde_json::from_slice(&output.stdout).unwrap();
+        let asset: Asset = serde_json::from_value(value["asset"].clone()).unwrap();
+        assert_eq!(asset.pages, expected);
+        assert_eq!(
+            Store::open(path)
+                .unwrap()
+                .current()
+                .unwrap()
+                .deck
+                .style
+                .assets,
+            vec![asset]
+        );
+    }
+}
+
+#[test]
 fn cli_comma_and_repeated_pages_replace_as_a_unit_and_missing_svg_tool_is_actionable() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path();
@@ -601,45 +656,76 @@ fn unknown_asset_pages_leave_no_files_or_conversion() {
 #[test]
 fn asset_registration_rechecks_pages_deleted_during_conversion() {
     use std::os::unix::fs::PermissionsExt;
-    let temp = tempfile::tempdir().unwrap();
-    let path = temp.path();
-    setup(path);
-    let before = Store::open(path).unwrap().current().unwrap().version;
-    let patch = path.join("remove.json");
-    std::fs::write(&patch, r#"{"order":["p1"],"pages":[{"id":"p2"}]}"#).unwrap();
-    let image = path.join("selected.png");
-    bitmap(&image, "teal");
-    let svg = path.join("icon.svg");
-    std::fs::write(&svg, "<svg xmlns='http://www.w3.org/2000/svg'/>").unwrap();
-    let bin = path.join("bin");
-    std::fs::create_dir(&bin).unwrap();
-    let converter = bin.join("rsvg-convert");
-    // Remove the preflighted page through a second process before returning PNG bytes.
-    std::fs::write(&converter, "#!/bin/sh\n\"$DECK_TEST_BIN\" --project \"$DECK_TEST_PROJECT\" put --base \"$DECK_TEST_BASE\" \"$DECK_TEST_PATCH\" >/dev/null || exit 1\n/bin/cat \"$DECK_TEST_IMAGE\"\n").unwrap();
-    std::fs::set_permissions(&converter, std::fs::Permissions::from_mode(0o755)).unwrap();
-    let output = Command::new(env!("CARGO_BIN_EXE_deck"))
-        .arg("--project")
-        .arg(path)
-        .args(["asset", "add", "raced-icon"])
-        .arg(&svg)
-        .args(["--page", "p2"])
-        .env("PATH", &bin)
-        .env("DECK_TEST_BIN", env!("CARGO_BIN_EXE_deck"))
-        .env("DECK_TEST_PROJECT", path)
-        .env("DECK_TEST_BASE", before.to_string())
-        .env("DECK_TEST_PATCH", &patch)
-        .env("DECK_TEST_IMAGE", &image)
-        .output()
-        .unwrap();
-    assert_eq!(
-        output.status.code(),
-        Some(2),
-        "{}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-    assert!(String::from_utf8_lossy(&output.stderr).contains("p2"));
-    let snapshot = Store::open(path).unwrap().current().unwrap();
-    assert_eq!(snapshot.deck.pages.len(), 1);
-    assert!(snapshot.deck.style.assets.is_empty());
-    assert_eq!(snapshot.version, before + 1);
+    for existing in ["new", "preexisting", "shared"] {
+        let temp = tempfile::tempdir().unwrap();
+        let path = temp.path();
+        setup(path);
+        let patch = path.join("remove.json");
+        std::fs::write(&patch, r#"{"order":["p1"],"pages":[{"id":"p2"}]}"#).unwrap();
+        let image = path.join("selected.png");
+        bitmap(&image, "teal");
+        if existing == "preexisting" {
+            Store::open(path)
+                .unwrap()
+                .add_file(&std::fs::read(&image).unwrap(), "png")
+                .unwrap();
+        } else if existing == "shared" {
+            for id in ["shared-a", "shared-b"] {
+                ops::asset_add(path, id, &image, &[], "", "").unwrap();
+            }
+        }
+        let snapshot_before = Store::open(path).unwrap().current().unwrap();
+        let before = snapshot_before.version;
+        let file_contents = || {
+            std::fs::read_dir(path.join(".deck/files"))
+                .unwrap()
+                .map(|entry| {
+                    let entry = entry.unwrap();
+                    (entry.file_name(), std::fs::read(entry.path()).unwrap())
+                })
+                .collect::<std::collections::BTreeMap<_, _>>()
+        };
+        let before_files = file_contents();
+        let svg = path.join("icon.svg");
+        std::fs::write(&svg, "<svg xmlns='http://www.w3.org/2000/svg'/>").unwrap();
+        let bin = path.join("bin");
+        std::fs::create_dir(&bin).unwrap();
+        let converter = bin.join("rsvg-convert");
+        // Remove the preflighted page through a second process before returning PNG bytes.
+        std::fs::write(&converter, "#!/bin/sh\n\"$DECK_TEST_BIN\" --project \"$DECK_TEST_PROJECT\" put --base \"$DECK_TEST_BASE\" \"$DECK_TEST_PATCH\" >/dev/null || exit 1\n/bin/cat \"$DECK_TEST_IMAGE\"\n").unwrap();
+        std::fs::set_permissions(&converter, std::fs::Permissions::from_mode(0o755)).unwrap();
+        let output = Command::new(env!("CARGO_BIN_EXE_deck"))
+            .arg("--project")
+            .arg(path)
+            .args(["asset", "add", "raced-icon"])
+            .arg(&svg)
+            .args(["--page", "p2"])
+            .env("PATH", &bin)
+            .env("DECK_TEST_BIN", env!("CARGO_BIN_EXE_deck"))
+            .env("DECK_TEST_PROJECT", path)
+            .env("DECK_TEST_BASE", before.to_string())
+            .env("DECK_TEST_PATCH", &patch)
+            .env("DECK_TEST_IMAGE", &image)
+            .output()
+            .unwrap();
+        assert_eq!(
+            output.status.code(),
+            Some(2),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert!(String::from_utf8_lossy(&output.stderr).contains("p2"));
+        let snapshot = Store::open(path).unwrap().current().unwrap();
+        assert_eq!(snapshot.deck.pages.len(), 1);
+        assert_eq!(
+            snapshot.deck.style.assets,
+            snapshot_before.deck.style.assets
+        );
+        assert_eq!(snapshot.version, before + 1);
+        assert_eq!(
+            file_contents(),
+            before_files,
+            "existing content: {existing}"
+        );
+    }
 }

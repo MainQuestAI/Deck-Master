@@ -391,6 +391,10 @@ fn svg_reconstruction_task() -> String {
 #[test]
 fn svg_task_requires_original_objects_instead_of_body_block_templates() {
     let task = svg_reconstruction_task();
+    let policy = task
+        .lines()
+        .find(|line| line.starts_with("- 按原图"))
+        .unwrap();
     for requirement in [
         "原图对象",
         "布局",
@@ -402,27 +406,34 @@ fn svg_task_requires_original_objects_instead_of_body_block_templates() {
         "默认清单",
         "不能代替控件或节点",
     ] {
-        assert!(task.contains(requirement), "SVG task omits {requirement}");
+        assert!(policy.contains(requirement), "SVG task omits {requirement}");
     }
 }
 
 #[test]
 fn svg_task_keeps_ui_controls_separate_from_annotation_atoms_and_crops() {
     let task = svg_reconstruction_task();
+    let ui = task
+        .lines()
+        .find(|line| line.starts_with("- 界面："))
+        .unwrap();
     for requirement in [
         "按原图分区",
         "不留空白线框",
         "关键字不足",
         "外侧标注",
         "绑定原 atom",
-        "内部控件",
-        "可编辑",
+        "内部控件与文字分别可编辑",
         "不要求拆改 atom",
         "句子保持完整",
         "分别可见",
     ] {
-        assert!(task.contains(requirement), "UI task omits {requirement}");
+        assert!(ui.contains(requirement), "UI task omits {requirement}");
     }
+    let crops = task
+        .lines()
+        .find(|line| line.starts_with("- 局部素材："))
+        .unwrap();
     for requirement in [
         "头像",
         "SVG 子集",
@@ -431,12 +442,11 @@ fn svg_task_keeps_ui_controls_separate_from_annotation_atoms_and_crops() {
         "image 引用素材 ID",
         "重新准备 SVG",
         "新附件",
-        "关键文字",
-        "可编辑",
+        "关键文字须可编辑",
         "示意属性",
         "不能冒充真实产品截图",
     ] {
-        assert!(task.contains(requirement), "crop task omits {requirement}");
+        assert!(crops.contains(requirement), "crop task omits {requirement}");
     }
     assert!(task.contains("禁止把整页原图或蓝图当背景"));
 }
@@ -444,14 +454,24 @@ fn svg_task_keeps_ui_controls_separate_from_annotation_atoms_and_crops() {
 #[test]
 fn svg_task_keeps_journey_scenes_and_directional_steps_with_lookup_exception() {
     let task = svg_reconstruction_task();
+    let journey = task
+        .lines()
+        .find(|line| line.starts_with("- 顾客旅程："))
+        .unwrap();
+    let (scenes, path) = journey.split_once("有方向的步骤").unwrap();
     for requirement in [
         "步骤空间顺序",
-        "人物",
-        "动作",
-        "场景层",
+        "人物、动作、场景层",
         "不能只剩",
         "模块卡片",
         "除非原图",
+    ] {
+        assert!(
+            scenes.contains(requirement),
+            "journey task omits {requirement}"
+        );
+    }
+    for requirement in [
         "节点边界",
         "连线端点",
         "方向",
@@ -463,7 +483,7 @@ fn svg_task_keeps_journey_scenes_and_directional_steps_with_lookup_exception() {
         "逐行核对",
         "查阅清单时例外",
     ] {
-        assert!(task.contains(requirement), "path task omits {requirement}");
+        assert!(path.contains(requirement), "path task omits {requirement}");
     }
 }
 
