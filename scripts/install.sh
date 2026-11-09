@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Install the Rust CLI, a dedicated deck-tools venv, and Codex skill links.
-# Does not activate or roll back a managed release.
+# Prepare a complete local component group before switching one current link.
 set -euo pipefail
 
 usage() {
@@ -60,10 +60,18 @@ done
 while [ "$skills_root" != / ] && [ "${skills_root%/}" != "$skills_root" ]; do
   skills_root=${skills_root%/}
 done
+[ -n "$prefix" ] || { echo "install.sh: --prefix 需要目录" >&2; exit 2; }
+case "$prefix" in /*) ;; *) prefix="$PWD/$prefix" ;; esac
+case "$skills_root" in /*) ;; *) skills_root="$PWD/$skills_root" ;; esac
+[ -n "$prefix" ] || { echo "install.sh: --prefix 需要目录" >&2; exit 2; }
+while [ "$prefix" != / ] && [ "${prefix%/}" != "$prefix" ]; do prefix=${prefix%/}; done
 skill_target="${repo_root}/deck-skill"
 compat_dir="${skills_root}/deck"
 roles=(deck-master deck-content deck-design deck-review)
-venv_dir="${prefix}/share/deck/venv"
+current="${prefix}/share/deck/current"
+installations="${prefix}/share/deck/installations"
+installation="${installations}/$(date +%Y%m%d%H%M%S)-$$"
+venv_dir="${installation}/share/deck/venv"
 deck_bin="${prefix}/bin/deck"
 
 need() {
@@ -77,8 +85,10 @@ need cargo
 need npm
 if command -v uv >/dev/null 2>&1; then
   venv_python=uv
+  host_python=$(uv python find 3.12)
 elif command -v python3.12 >/dev/null 2>&1; then
   venv_python=python3.12
+  host_python=$(command -v python3.12)
 else
   echo "install.sh: 需要 uv 或 python3.12 才能创建 deck-tools 环境" >&2
   exit 3
@@ -158,6 +168,33 @@ describe_entry() {
   fi
 }
 
+# Cargo metadata plus the associated built artifact identify an old managed
+# binary. A stale Cargo record alone must not authorize replacing another tool.
+legacy_source=""
+if [ -f "$deck_bin" ] && [ ! -L "$deck_bin" ]; then
+  legacy_source=$("$host_python" - "$prefix" <<'LEGACY_SOURCE' || true
+import hashlib, json, pathlib, sys, urllib.parse
+prefix = pathlib.Path(sys.argv[1])
+try:
+    installs = json.loads((prefix / '.crates2.json').read_text())['installs']
+    for key, value in installs.items():
+        if not key.startswith('deck ') or value.get('bins') != ['deck']:
+            continue
+        crate = pathlib.Path(urllib.parse.unquote(key.split('(path+file://', 1)[1].rstrip(')')))
+        repo = crate.parent
+        built = crate / 'target/release/deck'
+        if ((crate / 'Cargo.toml').is_file() and (repo / 'deck-tools/pyproject.toml').is_file()
+                and (repo / 'deck-skill/deck-master/SKILL.md').is_file() and built.is_file()
+                and hashlib.sha256(built.read_bytes()).digest() == hashlib.sha256((prefix / 'bin/deck').read_bytes()).digest()):
+            print(repo.resolve())
+            raise SystemExit(0)
+except (OSError, ValueError, KeyError, IndexError):
+    pass
+raise SystemExit(1)
+LEGACY_SOURCE
+  )
+fi
+
 conflicts=0
 note_conflict() {
   conflicts=1
@@ -165,22 +202,23 @@ note_conflict() {
 }
 
 action_deck=absent
-if same_link "$compat_dir" "$skill_target"; then
+if same_link "$compat_dir" "$skill_target" || { [ -n "$legacy_source" ] && same_link "$compat_dir" "$legacy_source/deck-skill"; }; then
   action_deck=remove
 elif [ -e "$compat_dir" ] || [ -L "$compat_dir" ]; then
   action_deck=unmanaged
   echo "install.sh: ${compat_dir} 还有一个非本安装器管理的 deck（$(describe_entry "$compat_dir")），可能与四个职责入口抢触发；保留该路径并继续安装。" >&2
 fi
 
-managed_wrapper() {
+wrapper_for_source() {
   local dir=$1
   local role=$2
+  local source_root=$3
   local entry
   [ -d "$dir" ] && [ ! -L "$dir" ] || return 1
-  { same_link "${dir}/SKILL.md" "${skill_target}/${role}.md" \
-    || same_link "${dir}/SKILL.md" "${skill_target}/${role}/SKILL.md"; } \
-    && same_link "${dir}/references" "${skill_target}/references" \
-    && same_link "${dir}/assets" "${skill_target}/assets" || return 1
+  { same_link "${dir}/SKILL.md" "${source_root}/${role}.md" \
+    || same_link "${dir}/SKILL.md" "${source_root}/${role}/SKILL.md"; } \
+    && same_link "${dir}/references" "${source_root}/references" \
+    && same_link "${dir}/assets" "${source_root}/assets" || return 1
   # Include hidden entries so upgrading never discards an author's extra files.
   for entry in "$dir"/* "$dir"/.[!.]* "$dir"/..?*; do
     [ -e "$entry" ] || [ -L "$entry" ] || continue
@@ -191,12 +229,20 @@ managed_wrapper() {
   done
 }
 
+managed_wrapper() {
+  wrapper_for_source "$1" "$2" "$skill_target" || {
+    [ -n "$legacy_source" ] && wrapper_for_source "$1" "$2" "$legacy_source/deck-skill"
+  }
+}
+
 actions=()
 check_role() {
   local role=$1
   local dir="${skills_root}/${role}"
-  if same_link "$dir" "${skill_target}/${role}"; then
+  if same_link "$dir" "${current}/deck-skill/${role}"; then
     actions+=(keep)
+  elif same_link "$dir" "${skill_target}/${role}" || { [ -n "$legacy_source" ] && same_link "$dir" "$legacy_source/deck-skill/$role"; }; then
+    actions+=(replace)
   elif [ ! -e "$dir" ] && [ ! -L "$dir" ]; then
     actions+=(create)
   elif managed_wrapper "$dir" "$role"; then
@@ -215,6 +261,52 @@ for role in "${roles[@]}"; do
   check_role "$role"
 done
 
+entry_text() {
+  cat <<'ENTRY'
+#!/usr/bin/env bash
+set -euo pipefail
+prefix=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd -P)
+installation=$(CDPATH= cd -- "$prefix/share/deck/current" && pwd -P)
+exec "$installation/bin/deck" "$@"
+ENTRY
+}
+
+entry_action=create
+if [ -e "$deck_bin" ] || [ -L "$deck_bin" ]; then
+  if [ -f "$deck_bin" ] && [ ! -L "$deck_bin" ] && cmp -s "$deck_bin" <(entry_text); then
+    entry_action=keep
+  elif [ -n "$legacy_source" ]; then
+    entry_action=migrate
+  else
+    note_conflict "install.sh: ${deck_bin} 已占用且无法确认归属；请手工移走此入口后重试，未改写该路径。"
+  fi
+fi
+if [ -e "$current" ] || [ -L "$current" ]; then
+  if [ ! -L "$current" ]; then
+    note_conflict "install.sh: ${current} 不是受管软链接；未改写该路径。"
+  else
+    resolved_current=$(resolve_path "$current")
+    resolved_installations=$(resolve_path "$installations")
+    case "$resolved_current" in
+      "$resolved_installations"/*) ;;
+      *) note_conflict "install.sh: ${current} 指向其他位置；请手工处理，未改写该路径。" ;;
+    esac
+  fi
+fi
+
+check_writable_parent() {
+  local path=$1 parent
+  parent=$(dirname -- "$path")
+  while [ ! -e "$parent" ] && [ "$parent" != / ]; do parent=$(dirname -- "$parent"); done
+  if [ ! -d "$parent" ] || [ ! -w "$parent" ]; then
+    note_conflict "install.sh: ${path} 的父目录不可写；请检查权限，未切换安装。"
+  fi
+}
+check_writable_parent "$installation"
+if [ "$entry_action" != keep ]; then check_writable_parent "$deck_bin"; fi
+for i in "${!roles[@]}"; do
+  if [ "${actions[$i]}" != keep ]; then check_writable_parent "$skills_root/${roles[$i]}"; fi
+done
 if [ "$conflicts" -ne 0 ]; then
   exit 2
 fi
@@ -249,57 +341,96 @@ if [ "$dry_run" -eq 1 ]; then
   fi
 fi
 
+phase=prepare
+trap 'code=$?; echo "install.sh: ${phase} 阶段失败（${code}）；未自动回滚或清理安装。请按相同参数重试。" >&2; exit "$code"' ERR
+run mkdir -p "$installation"
 run npm --prefix "${repo_root}/frontend" ci
 run npm --prefix "${repo_root}/frontend" run build
-run cargo install --path "${repo_root}/rust" --root "${prefix}" --force --locked
-
-# A second run must not fail after cargo install has already replaced bin/deck.
-# Do not pass --clear: that would wipe a venv the previous run already filled.
-if [ -x "${venv_dir}/bin/python" ]; then
-  if [ "$dry_run" -eq 1 ]; then
-    echo "dry-run: reuse venv ${venv_dir}"
-  fi
-elif [ "$venv_python" = uv ]; then
-  run uv venv --python 3.12 --seed "${venv_dir}"
+run cargo install --path "${repo_root}/rust" --root "$installation" --locked
+if [ "$venv_python" = uv ]; then
+  run uv venv --python 3.12 --seed "$venv_dir"
 else
-  run python3.12 -m venv "${venv_dir}"
+  run python3.12 -m venv "$venv_dir"
 fi
-run "${venv_dir}/bin/python" -m pip install -e "${repo_root}/deck-tools"
+run "$venv_dir/bin/python" -m pip install "${repo_root}/deck-tools"
+run cp -R "$skill_target" "$installation/deck-skill"
 
+phase=validate
+if [ "$dry_run" -eq 0 ]; then
+  env -u DECK_TOOLS_PYTHON -u PYTHONPATH "$installation/bin/deck" --help >/dev/null
+  env -u PYTHONPATH "$venv_dir/bin/python" -c '
+import importlib.metadata, json, pathlib, sys, deck_tools
+root = pathlib.Path(sys.argv[1]).resolve()
+assert pathlib.Path(deck_tools.__file__).resolve().is_relative_to(root)
+direct = importlib.metadata.distribution("deck-tools").read_text("direct_url.json")
+assert not direct or not json.loads(direct).get("dir_info", {}).get("editable", False)
+for role in ("deck-master", "deck-content", "deck-design", "deck-review"):
+    directory = root / "deck-skill" / role
+    assert (directory / "SKILL.md").is_file() and not (directory / "SKILL.md").is_symlink()
+    for name in ("references", "assets"):
+        assert (directory / name).is_symlink()
+        assert (directory / name).resolve() == root / "deck-skill" / name
+' "$installation"
+  probe_project=$(mktemp -d "${TMPDIR:-/tmp}/deck-install-check.XXXXXXXX")
+  printf 'Deck installation material check' > "$probe_project/source.txt"
+  env -u DECK_TOOLS_PYTHON -u PYTHONPATH "$installation/bin/deck" new "$probe_project" >/dev/null
+  env -u DECK_TOOLS_PYTHON -u PYTHONPATH "$installation/bin/deck" --project "$probe_project" material add "$probe_project/source.txt" |
+    "$venv_dir/bin/python" -c 'import json,sys; assert json.load(sys.stdin)["extraction"]["text"] == "Deck installation material check"'
+fi
+
+# Normal upgrades only replace this pointer; the prepared venv never moves.
+phase=switch-current
+if [ "$dry_run" -eq 1 ]; then
+  plan atomic-replace-current "$current" "$installation"
+else
+  "$host_python" - "$current" "$installation" <<'SWITCH'
+import os, pathlib, sys, tempfile
+current = pathlib.Path(sys.argv[1])
+import secrets
+link = current.with_name('.current-' + secrets.token_hex(16))
+link.symlink_to(sys.argv[2])
+try:
+    os.replace(link, current)
+finally:
+    link.unlink(missing_ok=True)
+SWITCH
+fi
+
+phase=install-entries
+run mkdir -p "${prefix}/bin" "$skills_root"
+if [ "$entry_action" != keep ]; then
+  if [ "$dry_run" -eq 1 ]; then
+    plan install-fixed-entry "$deck_bin"
+  else
+    "$host_python" - "$deck_bin" <(entry_text) <<'ENTRY_INSTALL'
+import os, pathlib, sys, tempfile
+entry = pathlib.Path(sys.argv[1])
+with tempfile.NamedTemporaryFile(dir=entry.parent, prefix='.deck-entry-', delete=False) as output:
+    output.write(pathlib.Path(sys.argv[2]).read_bytes())
+    temporary = output.name
+os.chmod(temporary, 0o755)
+os.replace(temporary, entry)
+ENTRY_INSTALL
+  fi
+fi
 link_role() {
-  local role=$1
-  local action=$2
-  local dir="${skills_root}/${role}"
-  if [ "$action" = keep ]; then
-    if [ "$dry_run" -eq 1 ]; then
-      echo "dry-run: keep ${dir} -> ${skill_target}/${role}"
-    fi
-    return 0
-  fi
+  local role=$1 action=$2 dir="${skills_root}/$1"
+  if [ "$action" = keep ]; then return; fi
   if [ "$action" = upgrade ]; then
-    run rm -- "${dir}/SKILL.md" "${dir}/references" "${dir}/assets"
+    run rm -- "$dir/SKILL.md" "$dir/references" "$dir/assets"
     run rmdir -- "$dir"
+  elif [ "$action" = replace ]; then
+    run rm -- "$dir"
   fi
-  run ln -s "${skill_target}/${role}" "$dir"
+  run ln -s "$current/deck-skill/$role" "$dir"
 }
-
-if [ "$action_deck" = remove ]; then
-  run rm -- "$compat_dir"
-fi
-run mkdir -p "$skills_root"
-for i in "${!roles[@]}"; do
-  link_role "${roles[$i]}" "${actions[$i]}"
-done
-
+if [ "$action_deck" = remove ]; then run rm -- "$compat_dir"; fi
+for i in "${!roles[@]}"; do link_role "${roles[$i]}" "${actions[$i]}"; done
 if [ "$dry_run" -eq 0 ]; then
   echo "已安装 deck：${deck_bin}"
-  if command -v deck >/dev/null 2>&1; then
-    echo "PATH 解析到的 deck：$(command -v deck)"
-  else
-    echo "PATH 中没有 deck。请把 ${prefix}/bin 加入 PATH，或直接运行 ${deck_bin}。"
+  echo "完整组件目录：${installation}"
+  echo "四个职责入口：${skills_root}"
+  if [ "$entry_action" = migrate ]; then
+    echo "旧布局 venv 和源码保留供旧进程使用；停止旧进程后可另行处理。"
   fi
-  echo "deck-tools 环境：${venv_dir}"
-  for role in "${roles[@]}"; do
-    echo "Skill 链接：${skills_root}/${role} -> ${skill_target}/${role}"
-  done
 fi

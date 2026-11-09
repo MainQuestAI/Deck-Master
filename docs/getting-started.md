@@ -41,12 +41,13 @@ and permissions.
 ./scripts/install.sh
 ```
 
-The script builds the Web UI, installs the `deck` binary at `<prefix>/bin/deck`
-(default prefix `~/.local`, so `~/.local/bin/deck`), and creates a Python 3.12
-venv for `deck-tools` at `<prefix>/share/deck/venv`. The binary is not
-`<prefix>/deck`. `--dry-run` prints the plan, including `deck-bin`, and checks
-the selected skill paths without writing. A finished install prints that same
-`deck` path and the `deck` currently resolved on `PATH`.
+The script prepares the CLI, embedded frontend, non-editable Python package and
+four role resource directories together in `<prefix>/share/deck/installations/`.
+A single `<prefix>/share/deck/current` link selects the completed directory.
+`<prefix>/bin/deck` is the fixed entry and resolves the physical installation
+before executing it. The venv is created in its final position. Failed
+preparation leaves the old installation selected; old directories are retained
+for existing processes. `--dry-run` prints the plan without writing.
 
 If `<prefix>/bin` is not on `PATH`, add it or call `<prefix>/bin/deck`. A
 non-default `--prefix` means the skill and
@@ -57,7 +58,7 @@ Skill installation:
 - With no skill flag, install the four role entries `deck-master`,
   `deck-content`, `deck-design`, and `deck-review` into `~/.codex/skills`.
 - `--skills-root DIR` installs the same four entries into `DIR` instead.
-- Each entry is a symlink to the complete `deck-skill/<role>` directory.
+- Each entry is a symlink through `current/deck-skill/<role>` to the installed copy.
   Its `SKILL.md` is a regular file; relative `references` and `assets` links
   resolve to the shared method source. Codex can discover these directories.
 - The compatibility entry `deck` is no longer installed. `--skill-dir` has
@@ -68,7 +69,7 @@ if it points at this source's `deck-skill/`, and installs the four roles.
 For users with `deck` plus old role wrappers, rerunning also upgrades wrappers
 that contain only the three managed `SKILL.md`, `references`, and `assets`
 symlinks. It replaces each wrapper with a whole-directory symlink. Existing
-whole-directory links to this source are kept.
+links to this source migrate to current; current links are kept.
 
 Any extra file in a wrapper, or another entry occupying a role name, causes
 exit 2 before any writes; the script prints the path and target. This includes
@@ -83,9 +84,18 @@ prints an `install-scripts` warning for the rest. `frontend/package.json`
 allows the locked `esbuild` and `fsevents` versions so `npm ci` can install
 esbuild's platform binary. npm 10 ignores that field and still runs the scripts.
 
-A fresh install finds deck-tools in the prefix venv, so it does not need
-`DECK_TOOLS_PYTHON`. deck-tools is an editable install of this checkout;
-moving or deleting the checkout leaves that venv unable to import it.
+Standard installs do not need `DECK_TOOLS_PYTHON` and survive moving the source
+checkout. Use `scripts/install.sh` for upgrades. Unknown CLI entries are retained
+and reported; supported Cargo installations migrate using their installation
+records. Old venvs and source directories are not moved or removed.
+
+For development, use an independent prefix and this worktree's Python:
+
+```bash
+export DECK_TOOLS_PYTHON="$PWD/.venv/bin/python"
+cargo install --path rust --root "$PWD/.dev-prefix"
+export PATH="$PWD/.dev-prefix/bin:$PATH"
+```
 
 After install:
 
@@ -111,8 +121,10 @@ still imports an existing `legacy-export.v1` archive into a new directory.
 
 ## Upgrade
 
-Re-running `scripts/install.sh` upgrades an existing install. An existing
-venv is reused and the `deck` binary is overwritten.
+Re-running `scripts/install.sh` prepares a new complete directory and switches
+`current` after validation. It creates a new venv; existing processes retain their
+old tools. A supported legacy Cargo binary is migrated only when its installation
+record and associated built artifact agree. Unknown entries are preserved.
 
 ## Known limitations
 

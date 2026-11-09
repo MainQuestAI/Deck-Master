@@ -48,7 +48,7 @@ S0–S6 已合入 `main`，源码基线 `abb785eb`（PR #272 之后）。现行�
 - 通用读集、操作信封、请求编号、通用恢复引擎、租约与代次、审阅 pass 汇总、审阅者独立性判定
 - 内容寻址版本、对象仓库、跨存储事务、单写入服务、实例锁、服务发现、跨进程业务锁
 - 讲稿码点分段、强制估时、`table_roles`、`design_policy`、Narrative 节点映射、材料证据等级
-- 工具协议版本、能力协商、插件平台、沙箱、托管安装的激活与回滚事务
+- 工具协议版本、能力协商、插件平台、沙箱、通用托管安装的激活状态机与回滚事务（允许第 8 节限定的本地完整组件目录和单指针切换）
 - 数字配额（模块数、行数、schema 行数、命令比例、零协议词、零确认点、点击数）、复杂度棘轮测试、固定措辞断言、整组验收门
 - 同页自动合并、每次读取都重新校验全部文件
 - 项目级"结果未知"冻结、attempts 表、build 对缺页或过期页的硬拒、新旧产物逐份对比、扩展旧线的边界测试或豁免清单
@@ -169,7 +169,7 @@ deck-skill/           新 Skill（第 6 节）
 - `material text <id>` 返回 `{id, status, path, original_path}`，path 是抽取文本的本地路径，original_path 为加入时保存的不可变原件副本路径（真实缺失时 null）；未完成解析时退出码为 3。持久作品只记录相对文件名，不记录材料源路径。
 - `restore <version>` 返回新版本的 `{version, deck}`。`export md` 包含任务、主张、页面正文、讲稿、待补项和可选出处，不要求作品完整。
 
-开发时先按 AGENTS.md 创建本 worktree 的 venv，安装 `./deck-tools[dev]`，再设置 `DECK_TOOLS_PYTHON`。Rust 的跨语言命令测试也使用此解释器，不跳过缺依赖的测试。安装 CLI 可以使用 `cargo install --path rust --root ~/.local`，通过 `~/.local/bin/deck` 调用，无需修改 shell 配置。S1 只建立 versions 表；后续切片在引入实际用例时增加其所需表和格式迁移。
+开发时先按 AGENTS.md 创建本 worktree 的 venv，安装 `./deck-tools[dev]`，再设置 `DECK_TOOLS_PYTHON`。Rust 的跨语言命令测试也使用此解释器，不跳过缺依赖的测试。开发 CLI 使用 `cargo install --path rust --root "$PWD/.dev-prefix"`，并显式设置本 worktree 的 DECK_TOOLS_PYTHON；标准安装升级使用 install.sh，不能覆盖其固定薄入口，无需修改 shell 配置。S1 只建立 versions 表；后续切片在引入实际用例时增加其所需表和格式迁移。
 
 ### 3.5 后台工作（run）
 
@@ -342,9 +342,9 @@ deck-skill/
 
 `scripts/install.sh`：
 
-- 无技能参数：安装或更新 CLI、deck-tools 环境，并将四个完整职责目录软链接到 `~/.codex/skills`。不再安装兼容入口 `deck`。
+- 无技能参数：安装或更新 CLI、deck-tools 环境，并将四个已复制的职责目录经 current 软链接到 `~/.codex/skills`。不再安装兼容入口 `deck`。
 - `--skills-root DIR`：将同样四个入口安装到该目录，去掉目录末尾斜杠。`--skill-dir` 已取消。
-- 已指向本源职责目录的链接保持原样。再次安装只删除指向本源 `deck-skill/` 的旧 `deck` 软链接，不删目标目录；其他 `deck` 保留并提示可能抢触发，继续安装。
+- 已指向 current 的链接保持原样，本源链接迁移到 current。再次安装只删除指向本源 `deck-skill/` 的旧 `deck` 软链接，不删目标目录；其他 `deck` 保留并提示可能抢触发，继续安装。
 - 旧职责包装目录仅含三条指向本源的托管链接（`SKILL.md`、`references`、`assets`）时，升级为整目录软链接。含额外文件或被外来路径占用（包括旧 Python 线）时，在写入前报告路径和目标并退出 2。先自行移走占用的软链接，只删链接、不删目标目录，再安装。旧线安装器已移出仓库。
 
 四个职责入口写明边界、默认读物和交接，正文规则引用共享源。都调用 Rust `deck`，不调用旧 Python `deck-master`。Master 只做任务理解、路由、交接和完成判断。
@@ -411,7 +411,7 @@ deck-skill/
     | `authorizations` | 旧授权对象原样 |
     | `open_calls[]` | 在途或结果未知的调用：`task_id`、`allowance_id`、`state`、`kind` |
     | `unmapped[]` | 无法映射的项：`kind`、`id`、`reason` |
-- 安装：一个脚本安装 `deck`、独立 deck-tools venv，以及四个职责目录的整目录软链接，默认放到 `~/.codex/skills`，`--skills-root` 更换目录。不安装 `deck` Skill，`--skill-dir` 已取消。不移植托管安装的激活与回滚。先支持 macOS，CI 在 Linux 上跑。升级与冲突处理见第 6 节。
+- 安装：一个脚本安装 `deck`、独立 deck-tools venv，以及四个职责目录的整目录软链接，默认放到 `~/.codex/skills`，`--skills-root` 更换目录。不安装 `deck` Skill，`--skill-dir` 已取消。只允许本地完整组件组的单指针切换，不实现激活状态机、自动回滚或恢复事务。先支持 macOS，CI 在 Linux 上跑。升级与冲突处理见第 6 节。
 - 后续切换尚未执行：老板判定新路径可以替代旧线后，把 `deck-skill/` 改名为 `skills/deck/`，重建本安装器产生的链接。默认安装四个职责入口已在本次安装调整中完成。安装不携带旧 Python 线的四个 Skill；旧代码及 `skills/` 已删除，安装源仍为 `deck-skill/`。
 
 ## 9. 未验证
@@ -443,3 +443,10 @@ Store::open（含读取）会升级；升级前结束旧程序在途操作，旧
 正常交回按检查时读取的正文回读，不代表原任务启动时的历史检查。
 
 共享纯绘图规则已在编译时加入 image task；实际色板、字体与画布仍由作品动态提供，旧任务文件与图片依据不因软件更新改写。SVG 还原服从已选蓝图。
+
+### 本地自包含安装
+
+每次在 prefix/share/deck/installations 下的最终目录构建 CLI（含前端），建立 venv，非 editable 安装同次源码的工具包并复制四角色及共享资源。检查实际模块位置、共享链接及真实 TXT 材料读取后，原子替换 current。
+固定 prefix/bin/deck 入口先解析 current 的物理目录再 exec，新进程使用新组件，旧进程继续使用原目录。标准升级只切换 current，不移动 venv、不清理旧安装。
+旧普通二进制通过 Cargo 记录、关联源码布局及已构建二进制内容一致性确认归属；未知入口不执行、不覆盖。首次迁移多个入口不保证崩溃原子性，失败报告所处阶段并支持按原参数重试，保留旧 venv 和源码。
+本云环境已实际验证 Linux 新装、旧布局迁移、升级后旧进程工具固定、真实 pip 准备失败不切换及源码移走；macOS 安装未执行。
