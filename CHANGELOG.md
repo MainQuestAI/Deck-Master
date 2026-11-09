@@ -2,6 +2,35 @@
 
 ## Unreleased
 
+## 1.1.2 — 2026-11-09
+
+See [1.1.2 release notes](docs/releases/1.1.2.md) for the changes merged after
+`v1.1.1` (`542e1bce`) through `main` after #306 (`32c66bad`). Python
+`deck-master`, Rust `deck`, `deck-tools` and WebUI source versions are `1.1.2`.
+The release PR prepares these notes; tag `v1.1.2` and the GitHub Release follow
+separately after merge. Published status is recorded on
+[GitHub Releases](https://github.com/MainQuestAI/Deck-Master/releases), with no
+PyPI publication implied.
+
+- Authoring UI: edit task/framing, move/delete pages, edit blocks/bullets/tables,
+  read historical versions and compare with current; retain drafts on 409
+  without automatic replay (#279–#288).
+- Skills: four role entries share one method source; page logic, composition,
+  visual systems, reconstruction choices, page-scoped assets and SVG relation
+  checks guide production (#289–#293, #295–#296, #298–#299).
+- Delivery and revision: fix native-table borders, table letter spacing and
+  backtracking curves; add three-layer QA, scoped repair, same-page original /
+  compiled-preview comparison, row-by-row lookup-table tasks and reconstruction
+  object preservation (#297, #300–#304).
+- Follow-ups: refine method guidance and comparison/asset behavior; reject empty
+  `--page`, scope tests to the relevant behavior, and avoid new orphan files
+  when a page is deleted during conversion (#305–#306).
+- D13 has not started; T07 visual human judgment remains open. `visual_review`
+  and `desktop_editing` do not auto-pass. Desktop WPS/PowerPoint, officecli,
+  full real-install acceptance, the 22-page sample, real Host/ImageGen, browser
+  adopt and MA02/MA03 are not claimed verified. LibreOffice cannot replace WPS.
+  PPTX-to-deck import remains unimplemented.
+
 ## 1.1.1 — 2026-11-05
 
 See [1.1.1 release notes](docs/releases/1.1.1.md).

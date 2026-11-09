@@ -2,7 +2,7 @@
 
 当前架构与操作边界以 [AGENTS.md](AGENTS.md) 和 [Rust 重写开发稿](docs/specs/rust-rebuild/README.md) 为准。
 作者入口是 Rust `deck`、独立 `deck-tools`、WebUI 与 `deck-skill/`；旧 Python 线只做维护。
-安装与首次运行见 [getting-started](docs/getting-started.md)，当前跟进与限制见 [1.1.1 说明](docs/releases/1.1.1.md)。
+安装与首次运行见 [getting-started](docs/getting-started.md)，当前跟进与限制见 [1.1.2 说明](docs/releases/1.1.2.md)。
 
 下一轮「商业表达与专家共创改稿闭环」为**拟实施**，版本号未定。
 通过会话与分文件包按切片推进，采用的设计并回既有 Rust 开发稿段落，不整包复制进仓库另建第二套权威；
