@@ -38,15 +38,18 @@ Deck Master 服务于需要讲清商业方案的人：解决方案架构师、�
 `<prefix>/bin/deck`），并用 Python 3.12 在 `<prefix>/share/deck/venv` 建立独立的
 deck-tools 环境。不执行托管 Python 发行版的激活或回滚。
 
-迁移期内，不带技能参数时仍只把兼容入口 `deck-skill/` 链接到
-`~/.codex/skills/deck`。`--skill-dir PATH` 也只链接这一个入口。`--prefix DIR` 指定安装根。
-`--dry-run` 只打印计划，不写入。
-`--skills-root DIR` 才会在该目录下同时链接 `deck-master`、`deck-content`、
-`deck-design`、`deck-review` 和兼容入口 `deck`。两个参数不能一起用。
+默认把 `deck-master`、`deck-content`、`deck-design`、`deck-review` 四个完整职责目录
+软链接到 `~/.codex/skills`，让 Codex 能发现入口。每个目录有真实的 `SKILL.md`，
+并链接到共享 `references/` 与 `assets/`。`--skills-root DIR` 更换技能根目录，
+`--prefix DIR` 指定 CLI 安装根，`--dry-run` 只打印计划、不写入。
+不再安装兼容入口 `deck`，`--skill-dir` 已取消。
 
-已经指向本源的入口会保持原样，职责目录里的其他文件也保留。其余同名软链接或目录
-使脚本退出 2，并打印路径和目标，不覆盖、不删除。若 `<prefix>/bin` 不在 PATH
-中，请加入，或直接运行 `<prefix>/bin/deck`。步骤见
+再次安装会只删除指向本源 `deck-skill/` 的旧 `deck` 软链接，并把仅含三条托管链接的
+旧职责包装目录升级为整目录软链接；已有的新形态链接保持原样。
+包装目录里有其他文件，或同名路径被外来入口占用时，脚本会在任何写入前退出 2，
+打印路径和目标。若是旧 Python 线留下的同名软链接，先移走该链接（只删链接，
+不删它指向的目录）再安装。非本源管理的 `deck` 会保留，并提示可能抢触发。
+若 `<prefix>/bin` 不在 PATH 中，请加入，或直接运行 `<prefix>/bin/deck`。步骤见
 [安装说明](docs/getting-started.md#install-from-source)。
 
 安装后用 `deck new ./my-deck --title '方案标题'` 新建作品目录。链接的
@@ -119,7 +122,7 @@ deck --project ./my-deck export pptx
 deck serve ./my-deck
 ```
 
-`deck-skill/SKILL.md` 是兼容入口。`deck-master`、`deck-content`、`deck-design`、
+`deck-master`、`deck-content`、`deck-design`、
 `deck-review` 是同一份 `references/` 和 `assets/` 上的四个职责入口，都调用
 Rust `deck`。可运行示例如 [commands.md](deck-skill/references/commands.md)。
 页上意见：`deck review add` / `list` / `resolve`。用 `deck restore <version>`
@@ -165,8 +168,7 @@ deck doctor --fonts 'Source Han Sans SC'
 - [核心理念：从业务判断到商业表达](docs/product-philosophy.md)
 - [下一轮商业表达能力：总方案与开发卡](docs/specs/deck-master-business-expression-20261029/README.md)
 - [Agent 入口](AGENTS.md)
-- [兼容入口 Skill](deck-skill/SKILL.md)
-- [deck-master](deck-skill/deck-master.md)、[deck-content](deck-skill/deck-content.md)、[deck-design](deck-skill/deck-design.md)、[deck-review](deck-skill/deck-review.md)
+- [deck-master](deck-skill/deck-master/SKILL.md)、[deck-content](deck-skill/deck-content/SKILL.md)、[deck-design](deck-skill/deck-design/SKILL.md)、[deck-review](deck-skill/deck-review/SKILL.md)
 - [旧 Python 任务索引](docs/agent-task-index.md)
 - [旧线恢复手册](docs/agent-recovery-playbook.md)
 - [v0.9 迁到上一版重建核心](docs/migration-to-rebuilt-core.md)

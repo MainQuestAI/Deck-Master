@@ -67,17 +67,22 @@ The script builds the Web UI, installs `deck` at `~/.local/bin/deck` (or
 `deck-tools` at `<prefix>/share/deck/venv`. It does not activate or roll back a
 managed Python release.
 
-During the move to the four role entries, a run with no skill flag still links
-only the compatibility entry `deck-skill/` to `~/.codex/skills/deck`.
-`--skill-dir PATH` does the same at `PATH`. `--prefix DIR` sets the install root.
-`--dry-run` prints the plan and does not write. `--skills-root DIR` also links
-`deck-master`, `deck-content`, `deck-design`, and `deck-review` under `DIR`,
-each `SKILL.md` pointing at its source file and `references` / `assets` pointing
-at the shared directories. The two skill flags cannot be used together.
+By default the script links `deck-master`, `deck-content`, `deck-design`, and
+`deck-review` into `~/.codex/skills`. Each link points to a complete role
+directory in `deck-skill/`, with a regular `SKILL.md` and links to shared
+`references` / `assets`, so Codex can discover it. `--skills-root DIR` changes
+the skill directory. `--prefix DIR` sets the CLI install root; `--dry-run`
+prints the plan without writing. The compatibility entry `deck` is no longer
+installed, and `--skill-dir` has been removed.
 
-A selected entry that already points at this source is left as-is, including
-any extra files in a role directory. Any other symlink or directory on that
-name exits 2 and prints the path and target. Nothing is overwritten or deleted.
+Rerunning removes only a leftover `deck` symlink pointing at this source's
+`deck-skill/`. Old role wrappers containing exactly the three managed links
+are upgraded to whole-directory symlinks; current role links are kept.
+Wrappers with extra files and other same-name entries cause exit 2 before
+any writes, with the path and target printed. If old Python-line links occupy
+these names, move those links away first (remove only the links, never their
+target directories), then rerun. An unmanaged `deck` is preserved with a
+warning that it may compete with the four role entries for triggering.
 If `<prefix>/bin` is not on `PATH`, add it or call `<prefix>/bin/deck`.
 Steps are in the [install guide](docs/getting-started.md#install-from-source).
 
@@ -162,10 +167,9 @@ deck --project ./my-deck export pptx
 deck serve ./my-deck
 ```
 
-The compatibility Skill in `deck-skill/SKILL.md` describes judgment and which
-command to run. `deck-master`, `deck-content`, `deck-design`, and `deck-review`
-are separate entries over the same `references/` and `assets/`. All of them call
-the Rust `deck` CLI. Worked command examples are in
+The four Skills `deck-master`, `deck-content`, `deck-design`, and `deck-review`
+describe judgment and which command to run. They share the same `references/`
+and `assets/` and call the Rust `deck` CLI. Worked command examples are in
 [deck-skill/references/commands.md](deck-skill/references/commands.md).
 Page reviews: `deck review add` / `list` / `resolve`. Restore a historical
 version with `deck restore <version>` (it writes a new version; files, runs and
@@ -225,8 +229,7 @@ certify the current source line; see the [archive index](docs/archive/README.md)
 - [下一轮拟实施：商业表达与专家共创改稿闭环（版本号未定）](docs/specs/README.md#当前架构与下一轮拟实施主题)
 - [2026-10-29 商业表达历史规划与产品目的](docs/specs/deck-master-business-expression-20261029/README.md)
 - [Agent entry](AGENTS.md)
-- [Compatibility Skill](deck-skill/SKILL.md)
-- [deck-master](deck-skill/deck-master.md), [deck-content](deck-skill/deck-content.md), [deck-design](deck-skill/deck-design.md), [deck-review](deck-skill/deck-review.md)
+- [deck-master](deck-skill/deck-master/SKILL.md), [deck-content](deck-skill/deck-content/SKILL.md), [deck-design](deck-skill/deck-design/SKILL.md), [deck-review](deck-skill/deck-review/SKILL.md)
 - [Legacy Python task index](docs/agent-task-index.md)
 - [Legacy recovery playbook](docs/agent-recovery-playbook.md)
 - [v0.9 migration to the previous rebuilt core](docs/migration-to-rebuilt-core.md)
