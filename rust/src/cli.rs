@@ -117,7 +117,7 @@ enum ReviewCommand {
 enum MaterialCommand {
     #[command(about = "保存原件并抽取文字")]
     Add { file: PathBuf },
-    #[command(about = "返回抽取文本的路径（JSON）")]
+    #[command(about = "返回抽取文本及保存原件的路径（JSON）")]
     Text { id: String },
 }
 

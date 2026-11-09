@@ -172,3 +172,7 @@ python -m deck_tools.case_numbers path/to/numbers.json
 ```
 
 只读该文件。退出码 0 表示显式算式与期望一致，1 表示不一致，2 表示输入无效。不写回文件，也不判断来源、归因或 ROI。写稿、导出和审查都不依赖这次运行。
+
+`deck material text <id>` 返回抽取文本 path 和项目内不可变原件副本 original_path。
+原件缺失时 original_path 为 null，已有文本仍可读；解析未完成仍报 needs_tool。
+解析成功不代表已看过图，系统不保存历史视觉阅读是否完成；按本次任务查看必要图表、流程或扫描页，纯 TXT/MD 不增加看图要求。

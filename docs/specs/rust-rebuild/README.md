@@ -166,7 +166,7 @@ deck-skill/           新 Skill（第 6 节）
 - `put --base N file.json` 接受 deck 对象，也接受 get 的完整输出。顶层可以只交 brief、framing、style、order 或 pages；brief、framing、style 各自是完整单元，省略的内部字段按空值或默认值处理。pages 是带 id 的页列表，每页省略的作者字段沿用基线；同页作者字段仍作为一个单元比较。materials、image、svg、preview 即使回传也不写入。补丁带 content 时，`put` 会静默整理中文与数字、标点之间多余的空格，含英文名的版本号后的空格保留（如“Windows 11 专业版”；notes、表格 value 及其 display_text 不动），没有独立命令或校验。成功返回 `{version, deck}`；发生冲突时退出码为 5，stderr 中附 `{unit, current}` 列表。
 - 新增页必须同时交该页及包含它的 order；删除页必须同时交该页（`{id}` 即可）及去掉它的 order；只重排时交 order 即可。块、条目、列、行和单元格的 id 由保存补齐或去重，表格列引用随之修正。
 - `material add <file>` 保存原件，再从该不可变副本解析，返回 `{version, material, extraction}`。extraction 保留工具的 text、locators、tables、image_pages、detail、status；`pending_visual` 表示 Host 仍须读图，material 的 `read` 只表示文件已解析。缺解析工具时保留原件并记录 `needs_tool`，退出码为 3；安装工具后重新 add 可补齐文本。相同文件重复加入不新增材料或版本。
-- `material text <id>` 返回 `{id, status, path}`，path 是抽取文本的本地路径；未完成解析时退出码为 3。持久作品只记录相对文件名，不记录材料源路径。
+- `material text <id>` 返回 `{id, status, path, original_path}`，path 是抽取文本的本地路径，original_path 为加入时保存的不可变原件副本路径（真实缺失时 null）；未完成解析时退出码为 3。持久作品只记录相对文件名，不记录材料源路径。
 - `restore <version>` 返回新版本的 `{version, deck}`。`export md` 包含任务、主张、页面正文、讲稿、待补项和可选出处，不要求作品完整。
 
 开发时先按 AGENTS.md 创建本 worktree 的 venv，安装 `./deck-tools[dev]`，再设置 `DECK_TOOLS_PYTHON`。Rust 的跨语言命令测试也使用此解释器，不跳过缺依赖的测试。安装 CLI 可以使用 `cargo install --path rust --root ~/.local`，通过 `~/.local/bin/deck` 调用，无需修改 shell 配置。S1 只建立 versions 表；后续切片在引入实际用例时增加其所需表和格式迁移。
@@ -429,3 +429,6 @@ deck-skill/
 labels、footnotes、callouts 的 children 与孙项递归进入同一 atoms 投影和文字回读。
 沿用保存时分配的稳定 ID，pointer 指向实际子项；空父项不截断子项遍历。
 文字缺失与节点绑定分别报告，机械结果不代表视觉或桌面验收。
+
+材料续作：material text 增加 original_path，指向加入时保存的不可变副本。
+缺原件不阻断已有文本，非法引用保持错误；needs_tool 保持失败退出并说明可用原件位置。

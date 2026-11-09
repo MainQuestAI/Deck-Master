@@ -535,12 +535,27 @@ pub fn material_text(project: &Path, id: &str) -> Result<Value> {
         .iter()
         .find(|m| m.id == id)
         .ok_or_else(|| Error::Input(format!("材料 {id} 不存在；请用 deck show 查看材料")))?;
+    let original = if material.file.is_empty() {
+        None
+    } else {
+        match store.file(&material.file) {
+            Ok(path) => Some(path),
+            Err(Error::Missing(_)) => None,
+            Err(error) => return Err(error),
+        }
+    };
     if material.status == "needs_tool" {
-        return Err(Error::NeedsTool(
-            "材料尚未完成解析；请安装对应工具，再次运行 material add".into(),
-        ));
+        return Err(Error::NeedsTool(format!(
+            "材料尚未完成解析；原件：{}；请安装对应工具，再次运行 material add",
+            original
+                .as_ref()
+                .map(|path| path.display().to_string())
+                .unwrap_or_else(|| "不可用".into())
+        )));
     }
-    Ok(json!({ "id": id, "status": material.status, "path": store.file(&material.text_file)? }))
+    Ok(
+        json!({ "id": id, "status": material.status, "path": store.file(&material.text_file)?, "original_path": original }),
+    )
 }
 
 pub fn export_md(project: &Path) -> Result<String> {
