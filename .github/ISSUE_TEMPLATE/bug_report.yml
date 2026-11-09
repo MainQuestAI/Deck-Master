@@ -39,6 +39,6 @@ body:
   id: evidence
   attributes:
     label: 可选诊断摘录
-    description: 仅贴相关错误码与脱敏片段。可参考 deck-master doctor --step render 或 deck-master capabilities 的相关字段；不要求完整日志。
+    description: 仅贴相关错误码与脱敏片段。可参考 deck doctor 的相关字段；不要求完整日志。
   validations:
     required: false

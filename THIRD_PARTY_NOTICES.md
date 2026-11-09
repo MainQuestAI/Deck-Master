@@ -27,37 +27,27 @@ before each release.
 
 ## Bundled Non-Code Resources
 
-- `src/deck_master/resources/static/` and the packaged `skill/` copy are
-  first-party Deck Master assets except for the third-party adaptations and
-  licensed assets identified below.
+- `frontend/` and `deck-skill/` contain first-party Deck Master assets except
+  for the third-party adaptations and licensed assets identified below.
 - No font binaries are bundled or required; fonts resolve from the host system
-  at compile/render time (see `docs/migration-to-rebuilt-core.md`).
+  at compile/render time (see `docs/getting-started.md`).
 - Compiler geometry functions carry first-party provenance headers extracted
   from the pinned B0 baseline; see `compiler-extraction.json` in the spec pack
-  and the headers in `src/deck_master/compiler/geometry.py` / `native.py`.
+  and the headers in `deck-tools/src/deck_tools/compiler/geometry.py` / `native.py`.
 
 This inventory is maintained per release candidate; it is not a claim of a
 completed third-party legal audit beyond the package metadata above.
 
-## Deck Master wordmark
-
-The user-supplied horizontal wordmark contains IBM Plex Mono glyph outlines.
-The accompanying SIL Open Font License 1.1 is distributed at
-`src/deck_master/resources/static/v2/assets/deck-master-logo/IBMPlexMono-OFL.txt`.
-No font binary or external font service is used.
-
 ## Lucide 1.49.0 icon subset
 
-24 offline SVG assets under `src/deck_master/resources/icons/lucide/`. Upstream: https://github.com/lucide-icons/lucide/tree/1.49.0. Full ISC and applicable Feather MIT copyright/permission notices are retained in `LICENSE.txt`; `manifest.json` records source URLs and SHA-256.
+24 offline SVG assets under `deck-tools/src/deck_tools/resources/icons/lucide/`. Upstream: https://github.com/lucide-icons/lucide/tree/1.49.0. Full ISC and applicable Feather MIT copyright/permission notices are retained in `LICENSE.txt`; `manifest.json` records source URLs and SHA-256.
 
 ## Humanizer expression-review adaptation
 
-`skills/deck-master/references/expression-review-humanizer.md` adapts selected
+`deck-skill/references/expression-review-humanizer.md` adapts selected
 editorial guidance from [blader/humanizer](https://github.com/blader/humanizer/tree/8c307f367c91bd974002f10f2be2965d642c13df),
 SKILL version 3.1.0, commit `8c307f367c91bd974002f10f2be2965d642c13df`.
 Copyright (c) 2025 Siqi Chen; MIT License. The canonical reference includes the
 complete upstream copyright and license text plus SHA-256 hashes of the fixed
-SKILL.md, README.md and LICENSE. The same reference ships under
-`deck_master/resources/skill/references/expression-review-humanizer.md` and is
-verified byte-for-byte by the shared catalog/build/install inventory.
+SKILL.md, README.md and LICENSE. The four role Skills share this reference from `deck-skill/references/`.
 This is a bounded Chinese PPT adaptation, not an installed third-party Skill.

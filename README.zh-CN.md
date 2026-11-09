@@ -16,9 +16,9 @@ Deck Master 是面向商业方案创作与表达的 AI 原生工作台，帮助�
 
 这些原则指导产品发展。当前工作台通过 `deck` 命令和本机 Web UI 连接内容策划、可编辑 SVG/PPT 制作、审查与修改。现阶段的实现范围见[能力边界](#能力边界)。
 
-**版本：** `1.1.2`（Rust 命令 `deck`、Python 包 `deck-master` 与 `deck-tools`、WebUI）。源码版本、构建产物、当前安装和公开 GitHub Release 分别记录。使用前请阅读[安装与首次运行指南](docs/getting-started.md)。本版改动与已知限制见[1.1.2 发版说明](docs/releases/1.1.2.md)。**许可证：** Apache-2.0。
+**版本：** `1.1.2`（Rust 命令 `deck`、Python 生产工具包 `deck-tools`、WebUI）。源码版本、构建产物、当前安装和公开 GitHub Release 分别记录。使用前请阅读[安装与首次运行指南](docs/getting-started.md)。本版改动与已知限制见[1.1.2 发版说明](docs/releases/1.1.2.md)。**许可证：** Apache-2.0。
 
-1.1.0 的作者路径是 `rust/` 核心、`deck-tools/` 生产工具、`frontend/` 中由 `deck serve` 提供的 WebUI，以及 `deck-skill/` 中的 Codex Skill。从普通材料目录即可开始，无须 PPT Master 后端或页面库。旧 Python 工作台（`src/deck_master/` 的 `deck-master`，以及 `skills/` 下四个 Skill）只做维护。
+现行作者路径是 `rust/` 核心、`deck-tools/` 生产工具、`frontend/` 中由 `deck serve` 提供的 WebUI，以及 `deck-skill/` 中的 Codex Skill。从普通材料目录即可开始，无须 PPT Master 后端或页面库。旧 Python 工作台与官方导出器已移出仓库。
 
 ## 适用人群
 
@@ -69,25 +69,11 @@ export DECK_TOOLS_PYTHON="$PWD/.venv/bin/python"
 (cd rust && cargo test)
 ```
 
-旧 Python 工作台仍可用 `pip install -e ".[dev]"` 安装，命令为 `deck-master`。
-该线只做维护，见 [AGENTS.md](AGENTS.md) 第 12 节。
+## 导入已有档案
 
-## 迁移旧项目
+旧 Python 工作台、`deck-master` 命令及其 `legacy-export` 导出器已删除，旧项目不再提供官方导出。历史说明见已发布的 [1.1.0 发版页](docs/releases/1.1.0.md#upgrade-and-migration)。
 
-把旧 Python 项目迁到新目录，旧目录保持原样：
-
-```bash
-deck-master legacy-export <project> <out>
-deck import <out> <new>
-```
-
-`<out>` 必须在 `<project>` 之外。导入后的原图和 SVG 以 `basis` `imported` 写入，总览里这些页显示为依据已变。`deck export pptx` 会报告 `input_changed`。未写入 purpose 的 `visual_spec.intent`，以及当前修订以外的旧修订，会出现在 `unmapped`。
-
-最近 PPTX 清洗成功后才可下载，保留其自身的页序和讲稿。清洗失败或缺工具时，
-正文仍可导入、编辑；报告中的 `last_export:false` 与 `unmapped` 会说明最近 PPTX
-未迁入的原因及下一步。未清洗文件仍留在旧项目和迁移档案中。
-
-v0.9.x 运行目录仍按[迁移说明](docs/migration-to-rebuilt-core.md)处理。
+`deck import <archive> <new>` 仍可把已有的 `legacy-export.v1` 档案导入新目录，不改写档案。
 
 ## 快速开始
 
@@ -169,9 +155,6 @@ deck doctor --fonts 'Source Han Sans SC'
 - [下一轮商业表达能力：总方案与开发卡](docs/specs/deck-master-business-expression-20261029/README.md)
 - [Agent 入口](AGENTS.md)
 - [deck-master](deck-skill/deck-master/SKILL.md)、[deck-content](deck-skill/deck-content/SKILL.md)、[deck-design](deck-skill/deck-design/SKILL.md)、[deck-review](deck-skill/deck-review/SKILL.md)
-- [旧 Python 任务索引](docs/agent-task-index.md)
-- [旧线恢复手册](docs/agent-recovery-playbook.md)
-- [v0.9 迁到上一版重建核心](docs/migration-to-rebuilt-core.md)
 - [支持与反馈](SUPPORT.md)
 - [Issue 维护](docs/issue-maintenance.md)
 - [贡献指南](CONTRIBUTING.md)

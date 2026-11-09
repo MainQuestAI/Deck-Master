@@ -15,27 +15,16 @@ Issue → PR → release tracking, and the
 commands, branch and PR scope, verification, data safety and when to ask first.
 It applies to human contributors and coding agents alike.
 
-The repository is mid-rewrite. The new core and backend live in `rust/`, the
-production tools in the standalone Python package `deck-tools/`, and the new
-Skill in `deck-skill/`; see the [Rust rebuild plan](docs/specs/rust-rebuild/README.md).
-The existing Python implementation (`src/deck_master/`, `skills/`, `tests/rebuild/`)
-accepts only fixes for data loss, duplicate external consumption, failure to
-open or export, and real security issues, each with a regression test.
+The core and backend live in `rust/`, production tools in the standalone
+Python package `deck-tools/`, WebUI in `frontend/`, and the four role Skills
+in `deck-skill/`; see the [Rust rebuild plan](docs/specs/rust-rebuild/README.md).
+The previous Python workbench and official old-project exporter have been removed.
+`deck import` still accepts existing `legacy-export.v1` archives.
 
-Two workflows split the CI. [`rust.yml`](.github/workflows/rust.yml) covers
-`rust/` and `deck-tools/` and runs on every pull request and on each main push.
-The [Rebuilt Core Gate](.github/workflows/rebuild.yml) covers the existing
-Python line and runs on main pushes only.
-
-Legacy checks are scoped by the change set of the main push: when every changed
-path is inside `rust/`, `deck-tools/`, `deck-skill/`, `docs/specs/rust-rebuild/`
-or `rust.yml`, they are skipped and the group report returns not applicable.
-Otherwise one unit configuration (Python 3.12 / Node 22) runs, together with the
-rendering, browser and installed-package checks. Legacy pull requests get no
-automatic run: execute the legacy commands from AGENTS.md section 3 locally
-before merging. Both workflows keep a manual entry, and the full Python/Node
-matrix runs through `workflow_dispatch`. The group report fails if change
-detection or any applicable legacy check fails.
+[`rust.yml`](.github/workflows/rust.yml) runs Rust checks, deck-tools tests,
+WebUI checks and install-script checks on pull requests and main pushes, with
+a manual entry. Run the commands in AGENTS.md section 3 locally; CI excludes
+render tests, so real rendering needs separate local verification.
 
 ## DCO
 
@@ -79,15 +68,12 @@ Automated checks are supporting evidence, not user acceptance. Reuse existing
 [benchmark guidance](benchmarks/README.md) when promoting a representative case;
 do not commit customer originals.
 
-## Convenience entry points
+## Development entry points
 
-The dev extra includes `setuptools>=77` and `wheel` for the release builder,
-which runs without build isolation (matching CI). After installing development dependencies, `make smoke` inspects the actual
-CLI and runs package/entry checks. `make test` runs core unit tests; the
-renderer, required-browser and installed/offline gates remain in the workflow.
-`make preview REGISTRY=./deck-master-projects.json` starts the loopback launcher.
-`make package OUT=<new-directory>` creates wheel/sdist/provenance; it does
-not publish them. Legacy release and RC targets now stop with a retirement message.
+Install the file tools with `uv venv --python 3.12 --seed .venv` and
+`.venv/bin/python -m pip install -e "./deck-tools[dev]"`. Build the frontend
+before running Cargo. Test commands are in [AGENTS.md](AGENTS.md#3-环境与命令);
+installation and upgrades use `scripts/install.sh`.
 
 ## Retired container entry point
 
@@ -96,8 +82,8 @@ Their [last mainline versions](https://github.com/MainQuestAI/Deck-Master/tree/4
 They referenced the retired preview server and did not install the rebuilt
 src-layout package correctly. A replacement image has not passed an actual
 build and runtime check, so container support is not part of this release.
-Use the Python virtual-environment instructions in [README](README.md#install)
+Use the source-install instructions in [README](README.md#install)
 and the [first-run guide](docs/getting-started.md) for the supported local CLI
-and loopback Workbench. CI provisions its own renderer and browser dependencies.
+and loopback Workbench. CI installs the dependencies listed in `rust.yml`.
 A future container entry must validate installation, CLI startup and its stated
 renderer/browser scope before it is offered as a supported path.

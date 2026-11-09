@@ -49,13 +49,6 @@ jobs:
           cargo fmt --check
           cargo clippy --all-targets -- -D warnings
           cargo test
-      - name: Legacy export tests
-        env:
-          DECK_TOOLS_PYTHON: ${{ github.workspace }}/.venv/bin/python
-        run: |
-          .venv/bin/python -m pip install jsonschema 'numpy>=1.26,<3'
-          test -x rust/target/debug/deck
-          .venv/bin/python -m pytest -q tests/rebuild/test_legacy_export.py --basetemp="$RUNNER_TEMP/legacy-export"
       - name: File tool tests
         # The runner lacks rsvg-convert/soffice; render tests run locally only.
         run: .venv/bin/python -m pytest -q deck-tools/tests -m "not render" --basetemp="$RUNNER_TEMP/deck-tools"
@@ -103,8 +96,3 @@ jobs:
           done
           test ! -e "$RUNNER_TEMP/skills-root-write/deck"
           test ! -L "$RUNNER_TEMP/skills-root-write/deck"
-      - name: Installed deck imports a legacy archive
-        run: |
-          export DECK_BIN="$RUNNER_TEMP/deck-prefix/bin/deck"
-          test -x "$DECK_BIN"
-          .venv/bin/python -m pytest -q tests/rebuild/test_legacy_export.py::test_exported_archive_imports_with_deck --basetemp="$RUNNER_TEMP/legacy-import"

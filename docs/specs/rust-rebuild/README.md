@@ -12,7 +12,8 @@ S0–S6 已合入 `main`，源码基线 `abb785eb`（PR #272 之后）。现行�
 | `deck-tools/` | SVG→PPTX 编译、渲染、回读、字体、材料解析、导出清洗 | 由 `deck` 子进程调用 |
 | `frontend/` | #250 WebUI，由 `build.rs` 嵌入二进制 | `deck serve` 提供静态文件 |
 | `deck-skill/` | 四个职责入口；方法源一份 | `scripts/install.sh`；默认安装到 `~/.codex/skills` |
-| `src/deck_master/`、`skills/` | 旧 Python 线，只做维护（AGENTS.md 第 12 节） | `deck-master` |
+
+旧 Python 工作台与官方旧项目导出器已移出仓库；`deck import` 保留对已有 `legacy-export.v1` 档案的导入。
 
 安装：`scripts/install.sh`。发版说明：[1.1.0](../../releases/1.1.0.md)。下文第 7 节是开发时的切片完成判断；合入 PR 为 S0 #251、S1 #252、S2 #256、S3 #258、S4 #259/#250/#257/#260、S5 #261、S6 #262。第 3–6 节合同仍是实现依据，不以历史“未验证”清单覆盖已合入行为。
 
@@ -23,12 +24,12 @@ S0–S6 已合入 `main`，源码基线 `abb785eb`（PR #272 之后）。现行�
 - SVG 的文字编号只由工具计算，Rust 不重复实现。
 - 首切片由 Codex 会话主导；界面按钮直接触发生成，等验证 `codex app-server` 能调用 ImageGen 后再做。
 - 改字后按原图和新正文重建该页 SVG，不重新生图。
-- 不移植托管安装；旧项目经旧线一次性导出，再由 Rust 导入。
+- 不移植托管安装；Rust 可导入已有的 `legacy-export.v1` 档案，旧项目不再提供官方导出。
 - 人工保存与生成结果的采用分开处理依据变化（讨论稿）。
 - 去掉请求编号：保存与交回结果本身可以安全重试（3.4、3.5）。
 - v1.1 的 D01–D16、A01–A20 改为第 2.2 节的 8 条保护和各切片的完成判断。
-- 新 Skill 在切换前放在 `deck-skill/`。旧打包钩子会拒绝 `skills/` 下未登记的文件，切换时再改名为 `skills/deck/`。
-- 每个切片从 main 开分支、合回 main，不设长期集成分支。新代码放在独立目录，旧线的打包不会把它们收进去。
+- 新 Skill 在切换前放在 `deck-skill/`。后续改名为 `skills/deck/` 的切换尚未执行（第 8 节）。
+- 每个切片从 main 开分支、合回 main，不设长期集成分支。核心、生产工具与 Skill 放在独立目录。
 
 ## 1. 目标
 
@@ -86,8 +87,7 @@ deck-skill/           新 Skill（第 6 节）
 
 - Rust stable（最低 1.88，由 Cargo.toml 的 rust-version 声明），edition 2024，提交 Cargo.lock。依赖：clap、serde、serde_json、rusqlite（bundled）、tiny_http、thiserror、sha2、tempfile。本地服务用同步请求线程，不引入异步运行时。
 - 先在一个包内按文件分模块，出现真实需要时再拆。
-- `rust.yml` 在 PR 和 `main` push 上自动执行 AGENTS.md 第 3 节的 Rust 检查与 deck-tools pytest；pytest 用 `-m "not render"` 排除 67 条需要 rsvg-convert/soffice 的用例，合并前须在本机全量运行。`rebuild.yml` 执行旧线检查，只在 `main` push 后自动运行，旧线的 PR 在合并前本地执行第 3 节的命令。两者都保留手动入口，功能分支 push 不单独触发 CI。
-- 旧线按本次主干更新的 before/head 差异分流：只涉及 `rust/`、`deck-tools/`、`deck-skill/`、本开发稿目录或 `rust.yml` 时，跳过旧线测试并由 Group report 返回不适用；其他或混合路径仍执行旧线单元、渲染、浏览器和安装验证。日常单元使用 Python 3.12 / Node 22，手动触发时运行完整 2×2 矩阵。分流失败、适用检查失败或意外跳过，Group report 均返回失败。
+- `rust.yml` 在 PR 和 `main` push 上自动执行 AGENTS.md 第 3 节的 Rust 检查、WebUI 检查、deck-tools pytest 与安装脚本检查；pytest 用 `-m "not render"` 排除需要 rsvg-convert/soffice 的用例，合并前须在本机全量运行。保留手动入口，功能分支 push 不单独触发 CI。旧线 CI 已随旧线删除。
 
 ### 3.2 存储
 
@@ -126,7 +126,7 @@ deck-skill/           新 Skill（第 6 节）
 ```
 
 - `task_type` 是自由文本（首提、竞标、改稿、培训……），Skill 据此决定加工重点。
-- `content` 与旧 page.v2 的 `customer_visible` 同形：title、subtitle、body_blocks（paragraph / bullets / table）、labels、footnotes、callouts。块与条目的字段见 `src/deck_master/resources/contracts/page.v2.schema.json`。回读工具和旧项目导入都直接使用这个形状。
+- `content` 与旧 page.v2 的 `customer_visible` 同形：title、subtitle、body_blocks（paragraph / bullets / table）、labels、footnotes、callouts。块与条目的现行形状见 `rust/src/model.rs`，文字编号由 `deck-tools/src/deck_tools/atoms.py` 计算。回读工具和旧项目导入都直接使用这个形状。
 - 块与条目（包括表格的列、行和单元格）缺少 id 时，由保存补齐；页内出现重复 id 时，由保存重新分配，不因此拒绝保存。模型不手写 id。
 - 新作品的画布默认是 1280×720 px，即 13.333×7.5 in 乘以 96。这样 SVG 的 px 换算成 PPT 的 pt 只需乘 0.75。旧项目导入时保留原画布。
 - `todo` 记录本页待补项，`refs` 记录可选的材料出处，例如"m1 第 3 页"。两者只用于展示，不阻止任何动作。
@@ -245,7 +245,7 @@ S5 界面接入：制作总览展示整稿待处理意见，单页工作区展�
 
 ## 4. 生产工具包 deck-tools
 
-### 4.1 来源（从 035845f2 复制，旧线文件不改）
+### 4.1 来源（历史：从 035845f2 复制，旧线现已移除）
 
 | 目标 | 来源 | 改动 |
 | --- | --- | --- |
@@ -263,7 +263,7 @@ S5 界面接入：制作总览展示整稿待处理意见，单页工作区展�
 - `deck-tools/pyproject.toml` 按实际导入声明依赖，包括 python-pptx、Pillow、lxml。系统工具：soffice、pdftoppm、fc-match、rsvg-convert。
 - 工具包不导入 deck_master。
 - 保留下来的测试通过，就视为与旧实现等价；S3 的第一份真实整稿构建是第二道检验。不另做新旧产物的逐份对比。
-- 两套代码共存期间，编译问题只在 deck-tools 里修。旧线的编译器冻结，除非问题属于 AGENTS.md 第 12 节的四类。
+- 编译问题在 deck-tools 里修；旧线编译器已随旧线移出仓库。
 
 ### 4.2 命令
 
@@ -345,13 +345,13 @@ deck-skill/
 - 无技能参数：安装或更新 CLI、deck-tools 环境，并将四个完整职责目录软链接到 `~/.codex/skills`。不再安装兼容入口 `deck`。
 - `--skills-root DIR`：将同样四个入口安装到该目录，去掉目录末尾斜杠。`--skill-dir` 已取消。
 - 已指向本源职责目录的链接保持原样。再次安装只删除指向本源 `deck-skill/` 的旧 `deck` 软链接，不删目标目录；其他 `deck` 保留并提示可能抢触发，继续安装。
-- 旧职责包装目录仅含三条指向本源的托管链接（`SKILL.md`、`references`、`assets`）时，升级为整目录软链接。含额外文件或被外来路径占用（包括旧 Python 线）时，在写入前报告路径和目标并退出 2。先自行移走占用的软链接，只删链接、不删目标目录，再安装。旧线安装器也将新链接视为外来占用，回切须自行处理链接。
+- 旧职责包装目录仅含三条指向本源的托管链接（`SKILL.md`、`references`、`assets`）时，升级为整目录软链接。含额外文件或被外来路径占用（包括旧 Python 线）时，在写入前报告路径和目标并退出 2。先自行移走占用的软链接，只删链接、不删目标目录，再安装。旧线安装器已移出仓库。
 
 四个职责入口写明边界、默认读物和交接，正文规则引用共享源。都调用 Rust `deck`，不调用旧 Python `deck-master`。Master 只做任务理解、路由、交接和完成判断。
 
 内容默认读 source-reading、method-selection、page-writing，并按任务读 M01–M10、叙事路径和案例。设计默认读 content-to-visual、作品 style 与 svg-subset。审查默认读 method-review、校准例和实际产物。叙事路径与三个可选模板从内容入口进入，语义示例从设计入口进入，路由样例从 Master 进入。路由样例标明是历史参考的改写，不作为新线命令。
 
-52 项资源与旧目录其余 15 项的去向沿用视觉生产 Spec v1.3 附录 A/B，不另建台账。E01–E04 的合成 `numbers.json` 在原来的相对路径。算术辅助是 `python -m deck_tools.case_numbers`，只读文件、显式算式、错误即返回；不是写稿或导出的前置条件。旧线 `skills/deck-master/scripts/check_case_numbers.py` 仍留给旧线测试，新线不调用它。
+52 项资源与旧目录其余 15 项的去向沿用视觉生产 Spec v1.3 附录 A/B，不另建台账。E01–E04 的合成 `numbers.json` 在原来的相对路径。算术辅助是 `python -m deck_tools.case_numbers`，只读文件、显式算式、错误即返回；不是写稿或导出的前置条件。旧线算术脚本与旧线测试已移除。
 
 - 步骤：作者任务 → 材料与主张框架 → 逐页内容 → 原图 → SVG → 构建 → 改稿 → 导出。每一步写明做什么判断、调用哪条命令。
 - 内容方法：
@@ -375,22 +375,21 @@ deck-skill/
 | S3 工具与成品 | 先用一份真实整稿（只在本地，不入库）跑通工具链；deck-tools 的其余部分；`deck run` 全套、`build`、`export pptx`、`doctor`；生图与 SVG 任务；`deck asset add`（logo 等素材） | 用真实材料产出整套 PPTX；取消后迟到的结果不自动采用；依据已变的结果不自动采用；结果未知的调用不自动重发；logo 从选择到 ImageGen 附件、再到 PPT 能一一对应；故意改错一处连线端点，Host 的比对能够发现。如果整稿仍要逐页人工修 SVG，先补 §5.2 的约束与样例，再做 S4 | #226 #231 #229 #164 #237 #141 #233 #217 #242 |
 | S4 界面 | `deck serve` 与 API；接入 #250 的新版 WebUI（`frontend/`），范围与顺序见 3.7 | 无需理解协议即可改字、停止和下载；浏览器存储不可用时停止照样生效；从总览或原图空态可以直接进入制作；窄屏下可读、可操作 | #136 #232 #220 #234 #224 #235 #236 |
 | S5 改稿与审阅 | 页上意见（reviews）；Host 读取未处理意见、改稿并标记已处理；单页重做；后端提供 resolve 与手动 adopt 接口，浏览器只写 human 意见 | 只改讲稿或第 3 页时，其他页和已有成品不动；作者自检显示为自检，不合成为通过 | #230 #239 |
-| S6 迁移与切换 | 旧线 `legacy-export`、`deck import`；安装脚本；全稿回归 | 老板指定的旧项目可以打开、编辑和导出，旧目录不变；按 README 新装后能完成首跑；#226 的 22 页整稿复核 | #221 #245 #225 #240 #241 #238 |
+| S6 迁移与切换（原切片） | 当时实现旧线导出、`deck import` 与安装脚本；官方导出器现已移除，保留已有档案导入 | 老板指定的旧项目可以打开、编辑和导出，旧目录不变；按 README 新装后能完成首跑；#226 的 22 页整稿复核 | #221 #245 #225 #240 #241 #238 |
 
 ## 8. 旧线、迁移与切换
 
-- 旧线 `src/deck_master/` 不再加能力，只修数据丢失、重复消耗、打不开或导不出、真实安全问题。
-- 若重建期间旧线还要出真实客户稿，就把 `production.py:532` 的表格默认改为按内容关系判断，作为 #227 的止血；否则旧线不动。
+- 旧 Python 工作台、旧 Skill、旧线测试、根 Python 包装和旧 CI 已移出仓库。`deck-master` 命令及其 `legacy-export` 已删除，旧项目不再提供官方导出。历史安装与导出说明见已发布的 [1.1.0 发版页](../../releases/1.1.0.md#upgrade-and-migration)。
 - PR #247、#249 按各自的内容和状态另行决定，不属于本稿。
 - issue 在新路径解决后逐条关闭，不随旧代码退役而批量关闭。
 - 迁移：
-  - 旧线新增只读命令 `deck-master legacy-export <project> <out>`，复用 `Store.load_document` 与对象读取，导出中性 JSON 和文件，包括 brief、材料、framing 摘要、页 content、讲稿、原图、SVG 和最近一次导出。旧审阅与授权记录原样附带，供查阅。现有的 `export --purpose engineering` 只复制对象树，不产出中性 JSON，所以不能直接拿来代替。`<out>` 必须在旧项目目录之外。
+  - 仅导入已经存在的 `legacy-export.v1` 档案，不再提供从旧项目生成档案的官方命令。
   - `deck import <out> <new>`：目标已存在时报错；无法映射的内容逐项列在报告里；档案里缺文件或文件名越出 `files/` 时导入失败，并且不留下目标目录。在途调用或结果未知的调用只列出，不恢复。
   - 最近 PPTX 先生成清洗副本，按原 PPTX 页序保留其正文和讲稿；只把清洗后的文件存入附件并登记构建。文件名为空，或该 PPTX 清洗拒绝、损坏、缺工具时，内容继续导入并返回 `last_export:false`，在 `unmapped` 说明位置、原因和处理方式。原件保留在旧目录和档案中。路径、文件读取、附件落盘及数据库错误照常返回。
   - framing 优先保留 narrative 的中心主张，没有中心主张时使用 v1 input_summary，沟通目标不代填。reported_fact 和 calculation 进入 facts，hypothesis 进入 assumptions，角色不改变 authority；原陈述、限定和开放问题保留。未映射节点及已处理问题的原文、状态列入 unmapped。
   - 导入后的原图和 SVG 写入 `basis` 为 `imported`。总览把这些页标为依据已变。`deck export pptx` 读到的构建摘要是字面量 `imported`，因此报告 `input_changed`。
   - `visual_spec.intent` 与写入的 purpose 不同时列入 `unmapped`（kind `visual_spec_intent`）；相同则算已写入 purpose。当前修订以外的 `.deckmaster/revisions/*.json` 不迁移，每条列入 `unmapped`（kind `revision`）。
-  - 只迁移老板指定的项目。旧目录不变，所以回退就是继续使用旧目录。迁移步骤是 `deck-master legacy-export <project> <out>`，然后 `deck import <out> <new>`。
+  - 只导入老板指定的已有档案，执行 `deck import <out> <new>`。导入只读档案、写入新目录，不改写旧项目。
   - 中性档案是目录，格式名 `legacy-export.v1`：
 
     | 路径 | 内容 |
@@ -413,7 +412,7 @@ deck-skill/
     | `open_calls[]` | 在途或结果未知的调用：`task_id`、`allowance_id`、`state`、`kind` |
     | `unmapped[]` | 无法映射的项：`kind`、`id`、`reason` |
 - 安装：一个脚本安装 `deck`、独立 deck-tools venv，以及四个职责目录的整目录软链接，默认放到 `~/.codex/skills`，`--skills-root` 更换目录。不安装 `deck` Skill，`--skill-dir` 已取消。不移植托管安装的激活与回滚。先支持 macOS，CI 在 Linux 上跑。升级与冲突处理见第 6 节。
-- 后续切换尚未执行：老板判定新路径可以替代旧线后，把 `deck-skill/` 改名为 `skills/deck/`，重建本安装器产生的链接。默认安装四个职责入口已在本次安装调整中完成。安装不携带旧 Python 线的四个 Skill。是否删除旧代码另行决定。在那之前，仓库里的 `skills/deck-*` 仍是旧线。
+- 后续切换尚未执行：老板判定新路径可以替代旧线后，把 `deck-skill/` 改名为 `skills/deck/`，重建本安装器产生的链接。默认安装四个职责入口已在本次安装调整中完成。安装不携带旧 Python 线的四个 Skill；旧代码及 `skills/` 已删除，安装源仍为 `deck-skill/`。
 
 ## 9. 未验证
 
@@ -422,6 +421,5 @@ deck-skill/
 - 带表格、图标、图片素材的页面：`deck-tools` 与 `rust/tests/delivery.rs` 覆盖编译、回读和原生表格；22 页整稿规模未作为本仓库 CI 用例。
 - `codex app-server` 调用 ImageGen：界面仍不启动生图或 SVG 任务；Host 走 `deck run`。此项仍未验证。
 - SQLite 项目文件放在 iCloud 等同步目录：未在 1.1.0 准备中重测。
-- 旧线全量测试：`rebuild.yml` 在 `main` 更新后运行；功能分支 PR 不自动跑旧线。
 - 已确认：本机 rustc / cargo 1.99.1 与 sqlite3 可用。
 - UNC 路径（`\\server\share`）未纳入本机路径清洗；`GET /api/export/md` 不做 PPTX 那套凭据检查；PPTX 工具测试走 LibreOffice 渲染。桌面打开见[1.1.0 发版说明](../../releases/1.1.0.md#maintainer-acceptance-2026-11-04)。

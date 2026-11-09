@@ -14,8 +14,8 @@ ZIP条目沿用原仓库路径，原始JSON、日志、图片、旧方案及其�
 ZIP内部的ARCHIVE-MANIFEST.csv与外部清单相同，可用标准解压工具读取，不需要运行归档脚本或联网服务。
 永久链接方便在线阅读；离线阅读从上面的 release asset 下载同一字节的 ZIP，不再依赖仓库内副本。
 
-测试直接读取的原始向量现位于[fixtures/history](../../tests/rebuild/fixtures/history/)，其原SHA与断言保持不变。
-旧CLI仍直接读取的[历史manifest](../archive/pre-rebuild/product-capability-manifest.v09.json)继续原位保留。
+旧线测试与夹具已随 Python 工作台移除，原始历史材料仍按上述归档查阅。
+[历史 manifest](../archive/pre-rebuild/product-capability-manifest.v09.json)继续原位保留，读取它的旧 CLI 已移除。
 活跃文本减少不等于信息删除；该归档于 2026-10-30 上传为 release asset，随后由 #247 移出 git 树（release asset 保留原件），因此不再计入当前仓库字节与文件统计，git 历史 `035845f2` 仍可检出该 blob。
 本轮实施及验收状态见[逐卡台账](../iterations/MAIN-ITER-20261027/ledger.json)。
 JSON/CSV保留的历史路径由[机器引用映射](machine-references.json)逐项追溯同SHA原件。真实消费者需要的[W12记录](../reports/workbench-v3-execution-20260926/W12.md)保留原位。

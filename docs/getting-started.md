@@ -9,9 +9,8 @@ It does not bundle a model, Codex account, image-generation service, desktop off
 application, renderer binaries or fonts. A plain material directory is enough
 to start; no PPT Master backend or slide library is needed.
 
-The previous Python workbench (`deck-master`) and its four Skills remain in the
-tree for maintenance. Their managed-wheel install is in
-[Legacy Python workbench (1.0.0)](#legacy-python-workbench-100) below.
+The previous Python workbench and its official exporter have been removed.
+Historical notes are in the published [1.1.0 release page](releases/1.1.0.md#upgrade-and-migration).
 
 ## Requirements
 
@@ -77,8 +76,7 @@ same-name links from the old Python installer. Move those links away first
 (remove the symlink only, never its target directory), or move a regular
 directory aside, then rerun. An unmanaged `deck` entry is preserved with a
 warning that it may compete with the four roles for triggering; it does not
-block installation. The old installer treats the new role links as foreign,
-so switching back also requires handling these links explicitly.
+block installation.
 
 npm 12 blocks dependency install scripts unless `allowScripts` lists them, and
 prints an `install-scripts` warning for the rest. `frontend/package.json`
@@ -105,63 +103,16 @@ Command examples: [README Quick Start](../README.md#quick-start) and
 [deck-skill/references/commands.md](../deck-skill/references/commands.md).
 Release scope: [1.1.2 notes](releases/1.1.2.md).
 
-## Upgrade an old Python project
+## Import an existing archive
 
-Do not create `.deck/` inside an old project directory.
+The `deck-master` command and its `legacy-export` exporter have been deleted;
+old projects no longer have an official exporter. `deck import <archive> <new>`
+still imports an existing `legacy-export.v1` archive into a new directory.
 
-```bash
-deck-master legacy-export <project> <out>
-deck import <out> <new>
-```
-
-`<out>` must sit outside `<project>`. The old directory is unchanged.
-`visual_spec.intent` is copied into `purpose` only when that page has no
-purpose of its own; otherwise the intent text is an `unmapped` item of kind
-`visual_spec_intent`. Old revisions are not migrated: each
-`.deckmaster/revisions/*.json` other than the current revision is an
-`unmapped` item of kind `revision`. See
-[1.1.0 notes](releases/1.1.0.md#upgrade-and-migration). v0.9.x run directories
-still follow [migration-to-rebuilt-core.md](migration-to-rebuilt-core.md).
-
-### Upgrade
+## Upgrade
 
 Re-running `scripts/install.sh` upgrades an existing install. An existing
 venv is reused and the `deck` binary is overwritten.
-
-## Legacy Python workbench (1.0.0)
-
-The 1.0.0 managed installer and `deck-master` CLI are the previous source
-line. They are not the 1.1.0 authoring path. Python `1.0.0` mapped to tag
-`v1.0.0`. Source version alone does not establish that a release or its
-assets have been published.
-
-Download the wheel and `release.json` from the same
-[GitHub Release](https://github.com/MainQuestAI/Deck-Master/releases) if you
-need that line. Keep them in one directory. No PyPI publication is assumed.
-
-```bash
-python3.12 -m venv ./deck-master-bootstrap
-./deck-master-bootstrap/bin/python -m pip install ./deck_master-1.0.0-py3-none-any.whl
-./deck-master-bootstrap/bin/python -m deck_master install candidate \
-  --prefix "$HOME" --manifest ./release.json
-```
-
-`candidate` creates and checks an isolated managed release without activation.
-Read its returned `release_id`. If its checks pass and you want to activate it:
-
-```bash
-./deck-master-bootstrap/bin/python -m deck_master install activate \
-  --prefix "$HOME" --release-id <returned_release_id> --transaction-id <UUIDv4>
-"$HOME/.deck-master/bin/deck-master" doctor --step compose
-```
-
-Substitute actual returned IDs. Activation registers the four managed Skills
-under `$CODEX_HOME/skills` (default `~/.codex/skills`). See the
-[installation and recovery reference](../skills/deck-master/references/installation.md).
-Rolling back a managed 1.0.0 prefix does not install `deck`.
-
-Workbench on that line: `"$HOME/.deck-master/bin/deck-master" view --open --project <dir>`.
-Task routing: [agent-task-index.md](agent-task-index.md).
 
 ## Known limitations
 
