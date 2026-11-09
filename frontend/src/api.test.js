@@ -409,3 +409,24 @@ test('version reads use the exact snapshot endpoint and preserve error statuses'
     await assert.rejects(getVersion(6), error => error instanceof ApiError && error.status === status && !!error.data.error);
   }
 });
+
+
+test('dirty tracks author changes across all draft areas without treating draft existence as edits', async () => {
+  const { createDraft, createContextDraft, isPageDraftDirty, hasUnsavedInputs } = await import('./api.js');
+  const page = { id: 'p1', content: { title: 'Original' }, notes: '', purpose: '', layout: '', todo: [], refs: [] };
+  const draft = createDraft(page, 1);
+  const contexts = { brief: createContextDraft({ title: 'Task' }, 1), framing: null };
+  assert.equal(isPageDraftDirty(draft), false);
+  draft.conflict = { error: 'Conflict' };
+  assert.equal(isPageDraftDirty(draft), false);
+  draft.page.notes = 'Notes';
+  assert.equal(isPageDraftDirty(draft), true);
+  draft.page.notes = '';
+  assert.equal(isPageDraftDirty(draft), false);
+  assert.equal(hasUnsavedInputs({ p1: draft }, contexts, { deck: '  ' }), false);
+  contexts.brief.value.title = 'New task';
+  assert.equal(hasUnsavedInputs({}, contexts, {}), true);
+  assert.equal(hasUnsavedInputs({}, {}, { deck: 'Actual review' }), true);
+  draft.page.notes = 'Notes';
+  assert.equal(hasUnsavedInputs({ p1: draft }, {}, { deck: '' }), true);
+});

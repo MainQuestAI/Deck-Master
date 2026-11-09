@@ -42,6 +42,17 @@ export function DeckMasterProvider({ children }) {
     return () => clearTimeout(timer);
   }, [toast]);
 
+  const hasUnsavedInputs = api.hasUnsavedInputs(drafts, contextDrafts, reviewDrafts);
+  useEffect(() => {
+    if (!hasUnsavedInputs) return;
+    const warn = event => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [hasUnsavedInputs]);
+
   const refresh = useCallback(async (signal) => {
     const id = ++readId.current;
     const incoming = await api.getDeck(signal);

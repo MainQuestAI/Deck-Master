@@ -163,3 +163,14 @@ export function formatFinding(finding) {
 }
 
 export const getVersion = (version, signal) => request(`/api/versions/${encodeURIComponent(version)}`, { signal });
+
+
+export function isPageDraftDirty(draft) {
+  return !!draft && Object.keys(draftPatch(draft).pages[0]).some(key => key !== 'id');
+}
+
+export function hasUnsavedInputs(drafts, contextDrafts, reviewDrafts) {
+  return Object.values(drafts).some(isPageDraftDirty)
+    || Object.entries(contextDrafts).some(([kind, draft]) => draft && contextUnitPatch(kind, draft) !== null)
+    || Object.values(reviewDrafts).some(text => text.trim().length > 0);
+}
