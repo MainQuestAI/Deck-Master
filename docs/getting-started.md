@@ -1,6 +1,6 @@
-# Install and use Deck Master 1.1.0
+# Install and use Deck Master 1.1.2
 
-Deck Master 1.1.0 provides the Rust CLI `deck`, a loopback Web UI (`deck serve`),
+Deck Master 1.1.2 provides the Rust CLI `deck`, a loopback Web UI (`deck serve`),
 file tools (`deck-tools`), and the Codex Skill tree in `deck-skill/`. The
 default install still links the compatibility entry `deck`. `--skills-root`
 also links `deck-master`, `deck-content`, `deck-design`, and `deck-review`.
@@ -95,7 +95,7 @@ One process serves one project.
 
 Command examples: [README Quick Start](../README.md#quick-start) and
 [deck-skill/references/commands.md](../deck-skill/references/commands.md).
-Release scope: [1.1.0 notes](releases/1.1.0.md).
+Release scope: [1.1.2 notes](releases/1.1.2.md).
 
 ## Upgrade an old Python project
 
