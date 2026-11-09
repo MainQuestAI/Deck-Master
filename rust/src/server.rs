@@ -226,6 +226,9 @@ fn route(project: &Path, request: &mut Request) -> Result<ResponseBox> {
             }
             json_response(200, result)
         }
+        (Method::Get, path) if path.starts_with("/api/builds/") => {
+            json_response(200, ops::build_detail(project, identifier(&path[12..])?)?)
+        }
         (Method::Get, "/api/deck") => json_response(200, ops::workspace(project)?),
         (Method::Get, path) if path.starts_with("/api/versions/") => {
             let version = identifier(&path[14..])?;

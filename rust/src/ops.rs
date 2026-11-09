@@ -83,6 +83,13 @@ pub fn workspace(project: &Path) -> Result<Value> {
     let tx = store.connection.transaction()?;
     let snapshot = store::current(&tx)?;
     let mut value = snapshot_value(&snapshot, None)?;
+    value["default_build"] = match default_build(&tx, &snapshot.deck)? {
+        Some(mut selected) => {
+            selected.as_object_mut().map(|value| value.remove("file"));
+            selected
+        }
+        None => Value::Null,
+    };
     value["runs"] = json!(runs(&tx, &snapshot.deck, None)?);
     let reviews = reviews(&tx, Some("open"), None)?;
     for page in value["deck"]["pages"].as_array_mut().into_iter().flatten() {
@@ -1327,6 +1334,50 @@ fn default_build(connection: &rusqlite::Connection, deck: &Deck) -> Result<Optio
     }).transpose()
 }
 
+pub fn build_detail(project: &Path, id: i64) -> Result<Value> {
+    use rusqlite::OptionalExtension;
+    let mut store = Store::open(project)?;
+    let tx = store.connection.transaction()?;
+    let current = store::current(&tx)?;
+    let row = tx.query_row(
+        "SELECT version_id,input_digest,pptx_file,findings_json,missing_pages,created_at FROM builds WHERE id=?",
+        [id], |r| Ok((r.get::<_,i64>(0)?,r.get::<_,String>(1)?,r.get::<_,String>(2)?,r.get::<_,String>(3)?,r.get::<_,String>(4)?,r.get::<_,String>(5)?)),
+    ).optional()?.ok_or_else(|| Error::Missing(format!("构建 {id} 不存在")))?;
+    let (version_id, digest, file, findings, missing, created_at) = row;
+    let findings: Value = serde_json::from_str(&findings)?;
+    let source = store::load(&tx, version_id)?;
+    let imported = digest == "imported";
+    if !imported
+        && (!findings.is_object()
+            || !findings["findings"].is_array()
+            || !matches!(findings["status"].as_str(), Some("pass" | "fail")))
+    {
+        return Err(Error::Tool(
+            "构建回读结果不可读取；请保留原始产物并按需重新构建".into(),
+        ));
+    }
+    let mut pages = Vec::new();
+    let mut content_matches = true;
+    for (index, page) in source.pages.iter().enumerate() {
+        if page.svg.is_none() {
+            continue;
+        }
+        content_matches &= current
+            .deck
+            .pages
+            .iter()
+            .any(|now| now.id == page.id && now.content == page.content);
+        pages.push(json!({"page_id":page.id,"title":page.content.title,"source_order":index+1,"pptx_slide":pages.len()+1}));
+    }
+    let input_changed = digest != build_digest(&current.deck)?;
+    Ok(
+        json!({"id":id,"version_id":version_id,"created_at":created_at,"pptx_url":file_url(&file),
+        "findings":findings,"pages":pages,"build_missing_pages":serde_json::from_str::<Value>(&missing)?,
+        "current_version":current.version,"input_changed":input_changed,"readback_available":!imported,
+        "readback_matches_current":if imported {Value::Null} else {json!(!input_changed && content_matches)}}),
+    )
+}
+
 pub fn export_pptx(project: &Path) -> Result<Value> {
     let mut store = Store::open(project)?;
     let tx = store.connection.transaction()?;
@@ -1402,6 +1453,57 @@ mod build_selection_tests {
         let status = artifact_status(&deck).unwrap();
         assert_eq!(status["stale_pages"], json!([]));
         assert_eq!(status["incomplete_basis_pages"], json!(["p1"]));
+    }
+
+    #[test]
+    fn persisted_readback_compares_content_and_preserves_import_and_corruption_identity() {
+        let temp = tempfile::tempdir().unwrap();
+        let mut store = Store::create(temp.path(), &Deck::default()).unwrap();
+        let file = store.add_file(b"synthetic SVG", "svg").unwrap();
+        let mut deck = Deck::default();
+        deck.pages.push(Page {
+            id: "p1".into(),
+            ..Page::default()
+        });
+        deck.pages[0].svg = Some(crate::model::Artifact {
+            file,
+            basis: basis("svg", &deck, &deck.pages[0]).unwrap(),
+        });
+        let tx = store.transaction().unwrap();
+        let source = store::append(&tx, &deck, "Source").unwrap();
+        tx.commit().unwrap();
+        let report = json!({"status":"pass","findings":[],"visual_review":"not_evaluated","desktop_editing":"not_evaluated"});
+        store.connection.execute("INSERT INTO builds(version_id,input_digest,pptx_file,findings_json,missing_pages) VALUES (?,?, 'synthetic.pptx',?, '[]')",rusqlite::params![source,build_digest(&deck).unwrap(),report.to_string()]).unwrap();
+        let detail = build_detail(temp.path(), 1).unwrap();
+        assert_eq!(detail["readback_matches_current"], true);
+        assert_eq!(detail["pages"][0]["pptx_slide"], 1);
+        deck.pages[0].content.title = "Changed text".into();
+        let tx = store.transaction().unwrap();
+        store::append(&tx, &deck, "Content only").unwrap();
+        tx.commit().unwrap();
+        let detail = build_detail(temp.path(), 1).unwrap();
+        assert_eq!(detail["input_changed"], false);
+        assert_eq!(detail["readback_matches_current"], false);
+        store
+            .connection
+            .execute("UPDATE builds SET findings_json='broken' WHERE id=1", [])
+            .unwrap();
+        assert!(build_detail(temp.path(), 1).is_err());
+        assert_eq!(workspace(temp.path()).unwrap()["default_build"]["id"], 1);
+        store
+            .connection
+            .execute(
+                "UPDATE builds SET input_digest='imported',findings_json='[]' WHERE id=1",
+                [],
+            )
+            .unwrap();
+        let detail = build_detail(temp.path(), 1).unwrap();
+        assert_eq!(detail["readback_available"], false);
+        assert!(detail["readback_matches_current"].is_null());
+        assert!(matches!(
+            build_detail(temp.path(), 99),
+            Err(Error::Missing(_))
+        ));
     }
 
     #[test]

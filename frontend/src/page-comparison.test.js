@@ -55,7 +55,8 @@ async function mount(t, first = page('p1')) {
     const method = options.method || 'GET';
     const body = options.body && JSON.parse(options.body);
     requests.push({ url, method, body });
-    if (url === '/api/build') return Response.json({ id: 1, findings: { findings: buildFindings } });
+    if (url === '/api/build') { payload.default_build = { id: 1, version_id: 7 }; return Response.json({ id: 1 }); }
+    if (url === '/api/builds/1') return Response.json({ id: 1, version_id: 7, current_version: payload.version, readback_available: true, readback_matches_current: true, pages: payload.deck.pages.map((page, index) => ({ page_id: page.id, source_order: index + 1 })), findings: { findings: buildFindings } });
     if (url === '/api/reviews') {
       if (reviewFails) return Response.json({ error: '暂时无法保存' }, { status: 500 });
       const review = { id: 12, version_id: 7, page_id: null, method: 'human', ...body };
@@ -234,3 +235,64 @@ test('natural-language review from comparison uses the existing page scope and r
   assert.equal(requests.filter(request => request.url === '/api/reviews/12/resolve').length, 1);
   assert.equal(state.workspace.version, 7);
 });
+
+
+test('persistent details refresh for changed default IDs and ignore a late older detail', async t => {
+  await mount(t);
+  const previousFetch = globalThis.fetch;
+  let finishOld;
+  const details = [];
+  globalThis.fetch = async (url, options) => {
+    if (url.startsWith('/api/builds/')) {
+      details.push(url);
+      if (url === '/api/builds/1') return new Promise(resolve => { finishOld = resolve; });
+      return Response.json({ id: 2, version_id: 7, current_version: payload.version, readback_matches_current: true, readback_available: true, pages: [], findings: { findings: [] } });
+    }
+    return previousFetch(url, options);
+  };
+  payload.default_build = { id: 1, version_id: 7 };
+  await act(async () => { await state.refresh(); });
+  assert.equal(typeof finishOld, 'function');
+  payload.default_build = { id: 2, version_id: 7 };
+  await act(async () => { await state.refresh(); });
+  assert.equal(state.buildResult.id, 2);
+  await act(async () => { finishOld(Response.json({ id: 1, current_version: 7, readback_matches_current: true })); });
+  assert.equal(state.buildResult.id, 2);
+  await act(async () => { await state.refresh(); await state.refresh(); });
+  assert.deepEqual(details, ['/api/builds/1', '/api/builds/2']);
+  payload.version += 1;
+  await act(async () => { await state.refresh(); });
+  assert.equal(details.length, 3);
+  assert.equal(state.buildResult.current_version, payload.version);
+});
+
+test('detail transport errors remain visible and do not become empty passing findings', async t => {
+  await mount(t);
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = (url, options) => url.startsWith('/api/builds/')
+    ? Promise.resolve(Response.json({ error: 'Stored readback is unreadable' }, { status: 500 }))
+    : previousFetch(url, options);
+  payload.default_build = { id: 1, version_id: 7 };
+  await act(async () => { await state.refresh(); });
+  await click('原图／编译预览对照');
+  assert.equal(state.buildResult, null);
+  assert.equal(state.buildError, 'Stored readback is unreadable');
+  assert.ok(document.querySelector('[role="alert"]').textContent.includes('Stored readback is unreadable'));
+});
+
+for (const imported of [true, false]) {
+  test(`a page without a stored report is not shown as zero findings (imported=${imported})`, async t => {
+    await mount(t);
+    const previousFetch = globalThis.fetch;
+    globalThis.fetch = (url, options) => url.startsWith('/api/builds/')
+      ? Promise.resolve(Response.json({ id: 1, version_id: 7, current_version: 7, readback_available: !imported, pages: [], findings: { findings: [] } }))
+      : previousFetch(url, options);
+    payload.default_build = { id: 1, version_id: 7 };
+    await act(async () => { await state.refresh(); });
+    await click('原图／编译预览对照');
+    const panel = document.querySelector('.page-comparison-readback');
+    assert.equal(panel.querySelector('h2').textContent.includes('（0）'), false);
+    assert.equal(panel.querySelectorAll('.page-comparison-findings').length, 0);
+    assert.ok(panel.textContent.includes(imported ? '该导入成品没有构建回读' : '本页未参与该次构建'));
+  });
+}

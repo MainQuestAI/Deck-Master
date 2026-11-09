@@ -209,7 +209,7 @@ svg 类没有外部付费调用，不需要 `run call`，也没有 max_calls。�
 
 服务与 CLI 共用 ops，各自直连 SQLite。服务不跨请求缓存作品状态；同次 run 列表读取按页面 ID 查找作品，并复用每页每种任务的依据摘要，历史 run 不重复计算相同依据。界面按版本号轮询作品变化，run 与意见在同版本时也刷新。
 
-接口：`GET /api/deck`、`GET /api/versions/{version}`、`PUT /api/deck?base=N`、`POST /api/runs/{id}/cancel`、`POST /api/build`、`GET /api/files/{sha}`（sha 只接受 64 位十六进制）、`GET /api/export/{md|pptx}`、`GET|POST /api/reviews`、`POST /api/reviews/{id}/resolve`、`POST /api/runs/{run}/adopt/{page}`、`POST /api/restore/{version}`。接口以 S4 完成判断所需为限；手动采用接口沿用 `deck run adopt` 的行为与返回；导出只列出缺失和过期的页，不拦截（见 2.1、3.6）。
+接口：`GET /api/deck`、`GET /api/builds/{id}`、`GET /api/versions/{version}`、`PUT /api/deck?base=N`、`POST /api/runs/{id}/cancel`、`POST /api/build`、`GET /api/files/{sha}`（sha 只接受 64 位十六进制）、`GET /api/export/{md|pptx}`、`GET|POST /api/reviews`、`POST /api/reviews/{id}/resolve`、`POST /api/runs/{run}/adopt/{page}`、`POST /api/restore/{version}`。接口以 S4 完成判断所需为限；手动采用接口沿用 `deck run adopt` 的行为与返回；导出只列出缺失和过期的页，不拦截（见 2.1、3.6）。
 
 `GET /api/versions/{version}`（#281）只读指定历史版本，成功返回现有 Snapshot 形状 `{version, deck}`，不含当前 live reviews/runs；版本不存在返回 404，非法编号返回 400，不触发恢复或构建。
 
@@ -453,3 +453,7 @@ Store::open（含读取）会升级；升级前结束旧程序在途操作，旧
 
 未保存编辑：正文、任务/框架、意见按实际内容差异统一判断 dirty；内容列表、单页阅读、放弃确认及 beforeunload 共用该判断。
 不新增草稿持久化，收起保留不确认，冲突和已删页输入继续保留。
+
+GET /api/deck 返回 default_build 小摘要（含该次缺页）；GET /api/builds/{id} 按需返回回读、来源版本、历史页映射、current_version 及 readback_matches_current。
+适用性复用 build_digest 并比较实际参建页 content；导入记录没有有效回读，坏记录保留读取错误。
+正文变化、默认构建变化时刷新详情，稳定轮询不重复读取详情。历史检查、当前输入匹配及视觉验收分别展示。

@@ -17,6 +17,7 @@ export function DeckMasterProvider({ children }) {
   const readId = useRef(0);
   const [downloadStatus, setDownloadStatus] = useState(null);
   const [buildResult, setBuildResult] = useState(null);
+  const [buildError, setBuildError] = useState('');
   const [galleryLayer, setGalleryLayer] = useState('original');
   const [galleryView, setGalleryView] = useState('grid');
   const [query, setQuery] = useState('');
@@ -81,6 +82,26 @@ export function DeckMasterProvider({ children }) {
     poll();
     return () => { controller.abort(); clearTimeout(timer); };
   }, [refresh]);
+
+  const defaultBuildId = workspace?.default_build?.id;
+  const workspaceVersion = workspace?.version;
+  const needsReadback = scene === 'delivery' || scene === 'page';
+  useEffect(() => {
+    if (!needsReadback || !defaultBuildId) {
+      setBuildResult(null);
+      setBuildError('');
+      return;
+    }
+    const controller = new AbortController();
+    setBuildResult(null);
+    setBuildError('');
+    api.getBuild(defaultBuildId, controller.signal).then(result => {
+      if (!controller.signal.aborted) setBuildResult(result);
+    }).catch(error => {
+      if (!controller.signal.aborted) setBuildError(error.message);
+    });
+    return () => controller.abort();
+  }, [defaultBuildId, workspaceVersion, needsReadback]);
 
   const perform = async (key, work) => {
     if (locks.current.has(key)) return;
@@ -241,7 +262,6 @@ export function DeckMasterProvider({ children }) {
   });
   const build = () => perform('build', async () => {
     const result = await api.buildDeck();
-    setBuildResult(result);
     setDownloadStatus(result);
     setToast('PPTX 已构建，可下载');
     await reload();
@@ -292,7 +312,7 @@ export function DeckMasterProvider({ children }) {
     getPage, getPageNumStr, openPage, editPage, createPage, movePage, removePage, drafts, updateDraft, saveDraft, rebaseDraft, discardDraft,
     contextDrafts, openContextEdit, updateContextDraft, saveContext, refreshContextConflict, resolveContextConflict,
     drawer, openDrawer: setDrawer, closeDrawer: () => setDrawer(null),
-    stopRun, build, buildResult, download, downloadStatus, restore,
+    stopRun, build, buildResult: buildResult && { ...buildResult, readback_matches_current: buildResult.current_version === workspace?.version ? buildResult.readback_matches_current : null }, buildError, defaultBuild: workspace?.default_build, download, downloadStatus, restore,
     addReview, resolveReview, reviewDrafts, setReviewDrafts,
     comparison, compareCandidate, adoptCandidate,
     galleryLayer, setGalleryLayer, galleryView, setGalleryView, query, setQuery,
