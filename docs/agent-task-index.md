@@ -1,10 +1,11 @@
 # Deck Master Agent Task Index
 
-> **Scope:** this index covers only the legacy `deck-master` CLI under
-> `src/deck_master/`, which is now maintenance-only. Development rules for the
-> whole repository are in [AGENTS.md](../AGENTS.md); the new `rust/`,
-> `deck-tools/` and `deck-skill/` follow the
-> [Rust rebuild plan](specs/rust-rebuild/README.md). Nothing below applies to them.
+> **Historical reference:** the Python `deck-master` workbench and its official
+> exporter have been removed from the repository. The commands and paths below
+> describe that retired line. Current routing is in the four role Skills under
+> [deck-skill](../deck-skill/deck-master/SKILL.md), with runnable commands in
+> [commands.md](../deck-skill/references/commands.md); development rules are in
+> [AGENTS.md](../AGENTS.md).
 
 This index routes user intent to the rebuilt-core command path (spec 09).
 Prefer these entries over guessing file locations or reading historical specs.
@@ -16,7 +17,7 @@ The content-method entry is the [RC5 increment](specs/content-methods-rc5/README
 For inherited work, use the
 [RC4 increment](specs/deck-master-next-iteration-20261019/README.md), inherited
 contracts then the assigned N1–N6 card. Its
-[single candidate ledger](../tests/rebuild/fixtures/history/rc4/iteration-20261019/execution-ledger.json)
+[single candidate ledger](https://github.com/MainQuestAI/Deck-Master/blob/111bf8fae9e9995d2fa14ab8f23c9d746bed553a/tests/rebuild/fixtures/history/rc4/iteration-20261019/execution-ledger.json)
 records that RC4 candidate's dated verification. RC3, Web UI v4 and rebuild reports preserve their
 own date/SHA; read those only for the contract needed by this task.
 
@@ -44,11 +45,11 @@ decision that affects this task.
 | Read the content plan | `deck-master view --project … --content-plan --revision …` | Stored chapters/goals/source versions; absent plans show a labeled derived outline without writing |
 | Save version-bound opinions | `deck-master annotations save --project … --input notes.json --base-revision … --operation-id <UUIDv4>` | Saves opinions only; no task dispatch or output invalidation |
 | Preview and dispatch a bounded change | `deck-master changes plan --project … --input changes.json`, then `changes commit --plan-id … --base-revision … --operation-id <UUIDv4>` | Exact plan, page/layer targets and call bound; changing the basis requires a new plan |
-| Recover an uncertain operation | `deck-master operations show --project … --operation-id …` | Committed ancestry is authoritative; preserve original payload/base/ID/path context; unknown is not absence; [input recovery](../skills/deck-master/references/input-update.md) |
-| Trial one page without replacing current | `changes plan/commit` with `mode=trial` and explicit target/stage | [Candidate/Host protocol](../skills/deck-master/references/candidates-and-stages.md); candidate_result capability required |
+| Recover an uncertain operation | `deck-master operations show --project … --operation-id …` | Committed ancestry is authoritative; preserve original payload/base/ID/path context; unknown is not absence; [input recovery](https://github.com/MainQuestAI/Deck-Master/blob/111bf8fae9e9995d2fa14ab8f23c9d746bed553a/skills/deck-master/references/input-update.md) |
+| Trial one page without replacing current | `changes plan/commit` with `mode=trial` and explicit target/stage | [Candidate/Host protocol](https://github.com/MainQuestAI/Deck-Master/blob/111bf8fae9e9995d2fa14ab8f23c9d746bed553a/skills/deck-master/references/candidates-and-stages.md); candidate_result capability required |
 | Inspect and adopt selected candidates | `candidates list/show/plan/adopt --project …` | Length-one and batch selections share all-or-none CAS; no image call during adoption |
-| Plan initial design or restyle selected pages | `styles propose/confirm/plan`, then existing `changes commit/handoff` | [Style recipe protocol](../skills/deck-master/references/style-calibration.md); v3 permits an explicitly authorized first one-or-two-page candidate batch |
-| Refine selected icon objects and reuse an adopted sample | `icons inspect/catalog/propose/confirm/plan`, then existing zero-call `changes commit/handoff` | [Icon quality protocol](../skills/deck-master/references/icon-quality.md); faithful redraw first, fixed object scope, icon_repair Host capability |
+| Plan initial design or restyle selected pages | `styles propose/confirm/plan`, then existing `changes commit/handoff` | [Style recipe protocol](https://github.com/MainQuestAI/Deck-Master/blob/111bf8fae9e9995d2fa14ab8f23c9d746bed553a/skills/deck-master/references/style-calibration.md); v3 permits an explicitly authorized first one-or-two-page candidate batch |
+| Refine selected icon objects and reuse an adopted sample | `icons inspect/catalog/propose/confirm/plan`, then existing zero-call `changes commit/handoff` | [Icon quality protocol](https://github.com/MainQuestAI/Deck-Master/blob/111bf8fae9e9995d2fa14ab8f23c9d746bed553a/skills/deck-master/references/icon-quality.md); faithful redraw first, fixed object scope, icon_repair Host capability |
 | Check actual candidate PPT before icon adoption | `candidate-preview request/status --project … --candidate-id …` | Isolated single-page compile/render/readback; engineering check and human visual approval are separate |
 | Review original-image expression before SVG | `deck-master review original --project … --page-id … [--candidate-id …]`; `review original-status --project … --page-id … --use expand` | Fixed image/requirements, authenticated independent receipt and explicit graph checks; view/compare/repair_reference are separate from expansion permission |
 | Explicitly assemble reviewed current SVGs | `stages assemble --project … --base-revision … --operation-id <UUIDv4>` | Same normal pipeline, all current page visual gates required; final review still required |
@@ -114,7 +115,7 @@ recover --prefix … --transaction-id … --action resume|rollback|abandon`.
 `abandon` requires `--reason …`, preserves managed paths, backups and the journal,
 and clears only its own verified pending pointer. It leaves current health marked
 as conflict; a corrupt journal has no force-unlock path. See the
-[installation recovery controls](../skills/deck-master/references/installation.md#inspect-or-resolve-an-interrupted-transaction).
+[installation recovery controls](https://github.com/MainQuestAI/Deck-Master/blob/111bf8fae9e9995d2fa14ab8f23c9d746bed553a/skills/deck-master/references/installation.md#inspect-or-resolve-an-interrupted-transaction).
 
 ## Workbench content operations
 
@@ -132,7 +133,7 @@ Flow Quality and W01-W12 records keep their original names and evidence.
 Route explicit planning/writing/speech/content packages to `deck-content`,
 visual plans and bounded sample pages to `deck-design`, strict read-only
 project/external-file review to `deck-review`, and full-deck coordination or
-cross-role continuation to `deck-master`. See `skills/RESOLVER.md` and the
+cross-role continuation to `deck-master`. See the current [Master entry](../deck-skill/deck-master/SKILL.md) and the
 single shared `references/collaboration-routing.md` method.
 
 Named, natural-language, Master handoff and recovery paths use the same Runtime

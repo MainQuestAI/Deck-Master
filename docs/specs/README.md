@@ -3,11 +3,11 @@
 返回 [文档导航](../README.md)。本目录收录现行开发稿与历史规划，不是安装教程。
 当前架构与操作边界以 [AGENTS.md](../../AGENTS.md) 和 [Rust 重写开发稿](rust-rebuild/README.md) 为准。
 实施/验收状态从对应源码和实际检查确认；历史材料中的“ready”“最终”“完成”等原文
-限定在其记录时点。保留历史路径供追溯和旧线维护，不据此恢复旧任务或前置手续。
+限定在其记录时点。保留历史路径供追溯，不据此恢复旧任务或前置手续。
 2026-10-30 起 `*/contracts/` 下的 schema 副本已全部删除（85 份与运行合同逐字节相同，
 审计见 [overdefense-audit-20261030](../diagnostics/overdefense-audit-20261030.md) OD-D1）；
-旧 Python 线的活动 schema 只有 [src/deck_master/resources/contracts](../../src/deck_master/resources/contracts/) 一处，
-旧线规格正文引用合同请直接链接该目录，不再建立副本；它不是 Rust 线的协议入口。
+旧 Python 工作台及其运行合同已移出仓库，不再有活动的旧线 schema；旧规格只供历史追溯，
+不再建立副本。现行模型与导入边界见 [Rust 开发稿](rust-rebuild/README.md)。
 
 ## 当前架构与下一轮拟实施主题
 
@@ -22,16 +22,16 @@
 [2026-10-29 商业表达能力套件](deck-master-business-expression-20261029/README.md) 是可借鉴的产品目的与历史规划材料，
 其中 D00–D08、Narrative.v2 与 execution-index 不是当前任务队列。
 下列 RC4/RC5 等材料保留已合入时点与旧线合同；旧 Narrative 合同、writer 等级、方法冻结与证明链已在 Rust 线退役，
-不是新开发前置。现行边界见开发稿 §2.1；维护旧线按 AGENTS.md 第 12 节。
+不是新开发前置。旧线已移除，现行边界见开发稿 §2.1。
 
 | 目录 | 定位 |
 | --- | --- |
 | [Content WebUI](deck-master-webui-content-methods-20261020/README.md) | PR130 已合入；固定版本读取、方向采用及审阅交接，原记录保留时点 |
 | [RC5 content methods](content-methods-rc5/README.md) | PR127 已合入；资源目录、Host 选择及冻结方法合同，实际证据按 SHA 读取 |
 | [RC4 increment](deck-master-next-iteration-20261019/README.md) | 旧线增量记录；N1–N6 台账与方法/恢复合同，报告保持原候选身份 |
-| [rebuild v1](deck-master-rebuild-v1/README.md) | 旧线 src-layout 和运行核心基线；库存/镜像/示例被测试引用，不移动 |
+| [rebuild v1](deck-master-rebuild-v1/README.md) | 旧线 src-layout 和运行核心历史基线；规格与示例保留，旧线测试已移除 |
 | [Flow Quality](deck-master-flow-quality-v1.1/README.md) | 旧线内容/生产链合同与兼容样例，内含不可变项目对象 |
-| [Content Collaboration](deck-master-content-collaboration-v1.2/README.md) | 旧线协作/权限/范围与审阅合同，按旧线维护范围使用 |
+| [Content Collaboration](deck-master-content-collaboration-v1.2/README.md) | 旧线协作/权限/范围与审阅合同，仅供历史追溯 |
 | [Workbench v3](deck-master-workbench-v3/README.md) | 原 W01–W12 实施输入及协议/示例；不是当前全部工作面能力清单 |
 | [RC3](deck-master-v1.0.0-rc3/README.md) | 四职责与 RC3 实施/兼容基线；旧卡的开放状态不等于当前主线状态 |
 | [WebUI v4](deck-master-webui-v4-20260930/README.md) | 原 UI 接线与能力合同，按 DESIGN 的现行设计源解释 |
@@ -56,5 +56,4 @@ RC5 方法库已由 PR127 合入；规格及旧报告中的开放状态保留原
 ## 更早的架构
 
 退役架构的 Spec 已在 [pre-rebuild archive](https://github.com/MainQuestAI/Deck-Master/blob/62dfcfc5637f0bee2358074c4458047689dd5299/docs/archive/pre-rebuild/README.md)。
-旧路径、旧截图、旧测试结论用于追溯；旧 Python 线活动 schema 仍以
-[src/deck_master/resources/contracts](../../src/deck_master/resources/contracts/) 为准。
+旧路径、旧截图、旧测试结论用于追溯；旧 Python 工作台及其 schema 已移除。

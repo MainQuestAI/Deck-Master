@@ -23,16 +23,14 @@ Explain root cause (or unknown), affected users, scope and non-goals. -->
 <!-- Commands you ran and their result. Do not claim production readiness. -->
 
 - [ ] Relevant focused tests collected and executed; exact commands, results and missing prerequisites recorded
-- [ ] `python -m ruff check src/deck_master tests/rebuild` passes
-- [ ] Final candidate [Rebuilt Core Gate](workflows/rebuild.yml) verified: unit matrix, real rendering, required browser, installed wheel/offline UI and recovery
-- [ ] Actual `deck-master doctor --step <affected_step>` / `deck-master capabilities` results recorded where relevant
+- [ ] Relevant [Rust core and deck-tools checks](workflows/rust.yml) verified; skipped checks and missing tools recorded
+- [ ] Actual `deck doctor` results recorded where relevant
 - [ ] No new absolute local paths, private customer names, tokens, or raw customer material in committed artifacts
 
 ## Contracts / schemas
 
-<!-- Runtime schema truth is src/deck_master/resources/contracts/. Name changed
-contracts, their sole registered spec mirrors and compatibility/writer-floor
-behavior. Check tests/rebuild/test_package_boundary.py. -->
+<!-- Describe persistent-format changes and migrations when relevant; follow
+AGENTS.md and the Rust rebuild plan. -->
 
 ## Compatibility / documentation / delivery
 

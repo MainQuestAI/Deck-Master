@@ -8,16 +8,9 @@
 
 # Runtime truth and contracts — high-trust surfaces, require careful review.
 
-/src/deck_master/resources/contracts/ @zangqing828-ux
-/skills/deck-master/schemas/ @zangqing828-ux
 /AGENTS.md                  @zangqing828-ux
 /DESIGN.md                  @zangqing828-ux
 
-# Release tooling and CI (rebuilt core).
+# CI.
 
 /.github/workflows/         @zangqing828-ux
-/tools/                     @zangqing828-ux
-
-# Review workbench UI.
-
-/src/deck_master/resources/static/ @zangqing828-ux

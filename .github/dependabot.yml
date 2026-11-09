@@ -1,8 +1,8 @@
 version: 2
 updates:
-  # Python dependencies (pyproject.toml).
+  # Python dependencies (deck-tools/pyproject.toml).
   - package-ecosystem: "pip"
-    directory: "/"
+    directory: "/deck-tools"
     schedule:
       interval: "weekly"
       day: "monday"

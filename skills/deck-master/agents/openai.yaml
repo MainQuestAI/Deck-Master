@@ -1,6 +1,0 @@
-interface:
-  display_name: "Deck Master"
-  short_description: "从任务、材料或已有项目协调内容、设计、制作和审查，按有效范围连续推进及恢复；需要策划、写稿、样页或只读审查时分配到对应职责。"
-  default_prompt: "Use $deck-master for the requested responsibility and preserve the current scope."
-policy:
-  allow_implicit_invocation: true

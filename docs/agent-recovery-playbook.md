@@ -1,5 +1,10 @@
 # Deck Master Agent Recovery Playbook
 
+> **Historical reference:** the Python workbench and official exporter have been
+> removed. Commands below are retired. Use the current
+> [install guide](getting-started.md) and
+> [Rust command reference](../deck-skill/references/commands.md).
+
 Use this playbook when a rebuilt-core command returns a non-zero exit, a
 `blocked`/`fail` status, or an unexpected state. Do not repair by editing
 project objects by hand; every fix goes through the CLI/service layer.
@@ -370,7 +375,7 @@ Legacy logs retain their original contract: `legacy_recorded` no-op IDs stay
 occupied; damaged or unverifiable old bindings are not upgraded to atomic
 receipts. A completely lost old log-only no-op cannot be distinguished from
 an unused ID. The exact limitations and retry steps live in
-[input-update](../skills/deck-master/references/input-update.md#并发恢复与等待).
+[input-update](https://github.com/MainQuestAI/Deck-Master/blob/111bf8fae9e9995d2fa14ab8f23c9d746bed553a/skills/deck-master/references/input-update.md#并发恢复与等待).
 
 ## Frozen Task methods and reading context
 
@@ -466,7 +471,7 @@ coordinate managed switches. `--no-host-registration` never resolves, locks,
 scans, reads or writes Host, including migration recovery. Rollback can retire
 managed links absent from an older release; it does not downgrade project
 writer floors or call facts. Exact command and journal details live in
-[installation](../skills/deck-master/references/installation.md#durable-transaction-recovery).
+[installation](https://github.com/MainQuestAI/Deck-Master/blob/111bf8fae9e9995d2fa14ab8f23c9d746bed553a/skills/deck-master/references/installation.md#durable-transaction-recovery).
 
 Use `install transaction status --prefix … [--transaction-id …]` for read-only
 phase, conflict, action and cleanup evidence. `install transaction recover

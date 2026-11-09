@@ -1,5 +1,10 @@
 # Migration to the Rebuilt Core
 
+> **Historical reference:** the Python workbench and official exporter have been
+> removed. Commands below are retired. Use the current
+> [install guide](getting-started.md) and
+> [Rust command reference](../deck-skill/references/commands.md).
+
 The rebuilt core (spec pack v1.1) replaces the v0.9.x Run OS. This note is the
 single place that explains what moved, what retired, and how to treat old
 runs. Nothing here deletes files; retirement and cleanup follow task T24.
@@ -91,7 +96,7 @@ Import semantics:
 
 旧入口退役的历史不代表当前只提供一个 Skill。现行四职责为 `deck-master`、
 `deck-content`、`deck-design`、`deck-review`，共用同一 Runtime 与 canonical 方法。
-当前职责和边界见 [Skill 路由](../skills/RESOLVER.md)；不要重新安装退役入口。
+现行职责和边界见 [Master](../deck-skill/deck-master/SKILL.md) 和[命令参考](../deck-skill/references/commands.md)；不要重新安装退役入口。
 旧入口到新命令的对照见 [Flow Quality 迁移说明](specs/deck-master-flow-quality-v1.1/MIGRATION.md)。
 本机第三方 Skill 保持原样；安装器只迁移已识别的旧 companion 目录和属于该目录的失效链接。
 
@@ -99,7 +104,7 @@ Import semantics:
 
 - Routing: [docs/agent-task-index.md](agent-task-index.md)
 - Blocked states: [docs/agent-recovery-playbook.md](agent-recovery-playbook.md)
-- Contracts: [src/deck_master/resources/contracts/](../src/deck_master/resources/contracts/)
+- Contracts: [src/deck_master/resources/contracts/](https://github.com/MainQuestAI/Deck-Master/tree/111bf8fae9e9995d2fa14ab8f23c9d746bed553a/src/deck_master/resources/contracts/)
 - Rebuild baseline: [docs/specs/deck-master-rebuild-v1/](specs/deck-master-rebuild-v1/)
 - Historical spec packs under `docs/` are archived references, not current
   truth.

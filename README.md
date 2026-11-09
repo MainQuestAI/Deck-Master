@@ -30,18 +30,17 @@ content planning, editable SVG/PPT production, review and revision through the
 `deck` CLI and a local Web UI. See the [capability boundaries](#capability-boundaries)
 for current implementation limits.
 
-**Version:** `1.1.2` (Rust CLI `deck`, Python packages `deck-master` and
-`deck-tools`, WebUI). Source version, built artifacts, an active install and a
-published GitHub Release are separate facts. Start with the
+**Version:** `1.1.2` (Rust CLI `deck`, Python file tools `deck-tools`, WebUI).
+Source version, built artifacts, an active install and a published GitHub
+Release are separate facts. Start with the
 [installation and first-run guide](docs/getting-started.md). See
 [1.1.2 release notes](docs/releases/1.1.2.md) for changes and known limits. **License:** Apache-2.0.
 
-The 1.1.0 authoring path is the Rust core in `rust/`, file tools in
+The current authoring path is the Rust core in `rust/`, file tools in
 `deck-tools/`, the WebUI in `frontend/` served by `deck serve`, and the Codex
 Skill in `deck-skill/`. A plain material directory is enough to start; no PPT
 Master backend or slide library is required. The previous Python workbench
-(`deck-master` in `src/deck_master/`, four Skills under `skills/`) remains for
-maintenance only.
+and its official exporter have been removed from the repository.
 
 ## Who It Is For
 
@@ -104,33 +103,15 @@ export DECK_TOOLS_PYTHON="$PWD/.venv/bin/python"
 (cd rust && cargo test)
 ```
 
-The legacy Python workbench still installs with `pip install -e ".[dev]"` and
-the command `deck-master`. That line is maintenance-only; see
-[AGENTS.md](AGENTS.md) section 12.
+## Import an existing archive
 
-## Migrate an old project
+The old Python workbench, the `deck-master` command and its `legacy-export`
+exporter have been removed. There is no longer an official exporter for old
+projects. Historical instructions are in the published
+[1.1.0 release notes](docs/releases/1.1.0.md#upgrade-and-migration).
 
-Move an old Python project into a new directory. The old directory stays as it is:
-
-```bash
-deck-master legacy-export <project> <out>
-deck import <out> <new>
-```
-
-`<out>` has to sit outside `<project>`. Imported images and SVG are stored with
-`basis` `imported`, so the overview shows those pages as basis-changed.
-`deck export pptx` reports `input_changed`. A `visual_spec.intent` that is not
-the page purpose, and every old revision except the current one, appear in
-`unmapped`.
-
-The most recent PPTX is cleaned before becoming downloadable, preserving its own
-slide order and speaker notes. If that cleanup fails or its tool is unavailable,
-the editable content still imports; `last_export:false` and `unmapped` identify
-the unavailable PPTX and explain the next step. The uncleaned file stays in the
-old project and archive.
-
-v0.9.x run directories follow
-[docs/migration-to-rebuilt-core.md](docs/migration-to-rebuilt-core.md).
+`deck import <archive> <new>` still imports an existing `legacy-export.v1`
+archive into a new directory. The archive is read without modification.
 
 ## Quick Start
 
@@ -230,9 +211,6 @@ certify the current source line; see the [archive index](docs/archive/README.md)
 - [2026-10-29 商业表达历史规划与产品目的](docs/specs/deck-master-business-expression-20261029/README.md)
 - [Agent entry](AGENTS.md)
 - [deck-master](deck-skill/deck-master/SKILL.md), [deck-content](deck-skill/deck-content/SKILL.md), [deck-design](deck-skill/deck-design/SKILL.md), [deck-review](deck-skill/deck-review/SKILL.md)
-- [Legacy Python task index](docs/agent-task-index.md)
-- [Legacy recovery playbook](docs/agent-recovery-playbook.md)
-- [v0.9 migration to the previous rebuilt core](docs/migration-to-rebuilt-core.md)
 - [Support and Feedback](SUPPORT.md)
 - [Issue Maintenance](docs/issue-maintenance.md)
 - [Contributing](CONTRIBUTING.md)

@@ -1,7 +1,7 @@
 # Deck Master roadmap
 
 当前架构与操作边界以 [AGENTS.md](AGENTS.md) 和 [Rust 重写开发稿](docs/specs/rust-rebuild/README.md) 为准。
-作者入口是 Rust `deck`、独立 `deck-tools`、WebUI 与 `deck-skill/`；旧 Python 线只做维护。
+作者入口是 Rust `deck`、独立 `deck-tools`、WebUI 与 `deck-skill/`；旧 Python 工作台与官方旧项目导出器已移出仓库。
 安装与首次运行见 [getting-started](docs/getting-started.md)，当前跟进与限制见 [1.1.2 说明](docs/releases/1.1.2.md)。
 
 下一轮「商业表达与专家共创改稿闭环」为**拟实施**，版本号未定。
@@ -17,7 +17,7 @@
 The 1.0.0 source line includes the merged RC4 increment (PR124) and normal
 installed native independent review (PR125). The
 [RC4 specification](docs/specs/deck-master-next-iteration-20261019/README.md)
-and [candidate ledger](tests/rebuild/fixtures/history/rc4/iteration-20261019/execution-ledger.json)
+and [candidate ledger](https://github.com/MainQuestAI/Deck-Master/blob/111bf8fae9e9995d2fa14ab8f23c9d746bed553a/tests/rebuild/fixtures/history/rc4/iteration-20261019/execution-ledger.json)
 retain that increment's historical development contract and dated evidence.
 Current installation, Host requirements and known limitations are in the
 [first-run guide](docs/getting-started.md).

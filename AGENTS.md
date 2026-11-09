@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Deck Master 帮助作者围绕一次商业任务，把材料做成有主张、可修改的方案 deck。仓库正在重写：核心与后端业务改用 Rust，生产工具保留为独立的 Python 包，旧 Python 实现只做维护。设计与切片见[开发稿](docs/specs/rust-rebuild/README.md)。
+Deck Master 帮助作者围绕一次商业任务，把材料做成有主张、可修改的方案 deck。仓库正在重写：核心与后端业务改用 Rust，生产工具保留为独立的 Python 包，旧 Python 工作台已移出仓库，旧项目不再提供官方导出。设计与切片见[开发稿](docs/specs/rust-rebuild/README.md)。
 
 本文件是本仓库的最高开发规范。其他文档、旧代码或 issue 文字与本文件冲突时，以本文件为准。认为规则不对时，提出修改，不要绕过。
 
@@ -16,8 +16,8 @@ Deck Master 帮助作者围绕一次商业任务，把材料做成有主张、�
 | --- | --- |
 | `rust/` | 作品模型、存储、用例、CLI、本地服务 |
 | `deck-tools/` | 生产工具：SVG 编译为 PPTX、渲染、回读、字体、材料解析、导出清洗。只处理文件，不持有项目状态 |
-| `deck-skill/` | 新 Skill。旧打包钩子会拒绝 `skills/` 下未登记的文件，所以切换前放在这里 |
-| `src/deck_master/`、`skills/`、`tests/rebuild/`、`tools/` | 旧线，只做维护（第 12 节） |
+| `frontend/` | WebUI，由 `deck serve` 提供 |
+| `deck-skill/` | 四个职责 Skill 入口，共享 references 与 assets；安装源路径暂不改名 |
 
 - Rust 只通过子进程调用 `deck_tools`。`deck-tools` 不导入 `deck_master`。新代码不调用、不嵌入（PyO3/FFI）旧 Python 内核。
 - `rust/`、`deck-tools/`、`deck-skill/` 由 S1、S2 创建。
@@ -28,13 +28,12 @@ Deck Master 帮助作者围绕一次商业任务，把材料做成有主张、�
 
 ```bash
 uv venv --python 3.12 --seed .venv                     # 没有 uv 时：python3.12 -m venv .venv
-.venv/bin/python -m pip install -e ".[dev]"            # 旧线
 .venv/bin/python -m pip install -e "./deck-tools[dev]" # 新工具包
 
 (cd frontend && npm ci && npm test && npm run build)  # cargo 前构建 WebUI
 (cd rust && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test)
 .venv/bin/python -m pytest -q deck-tools/tests --basetemp="$HOME/.cache/deck-pytest/tools"
-.venv/bin/python -m pytest -q tests/rebuild -m "not render and not browser" --basetemp="$HOME/.cache/deck-pytest/legacy"
+.venv/bin/python -m pytest -q tests/install --basetemp="$HOME/.cache/deck-pytest/install"
 ```
 
 - Python 由 uv 管理时，直接用 `python3.12 -m venv` 建出的环境找不到标准库（本机实测），所以优先用 `uv venv`。
@@ -49,7 +48,7 @@ uv venv --python 3.12 --seed .venv                     # 没有 uv 时：python3
 - 一个 PR 只做一个切片或一个修复，不夹带顺手的修改。
 - PR 描述写清：改了什么、没改什么、怎么验证的（命令和结果）、还剩什么。不要求统一模板。
 - 提交信息用英文 conventional commits，按 CONTRIBUTING 加 `Signed-off-by`。
-- 新线改动由 `rust.yml` 在 PR 上自动检查；旧线不在 PR 上运行，只在 `main` 更新后自动检查，改动旧线时合并前本地执行第 3 节的旧线命令。功能分支 push 不单独触发 CI，完整矩阵通过手动触发运行。推送、开 PR、合并和发布都按老板的实际授权进行。
+- `rust.yml` 在 PR 和 `main` 更新后自动检查 Rust、deck-tools、WebUI 和安装脚本，并保留手动入口。功能分支 push 不单独触发 CI。推送、开 PR、合并和发布都按老板的实际授权进行。
 
 ## 5. 完成的标准
 
@@ -129,11 +128,3 @@ Python（deck-tools）：
 - 要推送、合并、发布、删除数据或改写历史
 
 其余情况（命名、拆分文件、开发稿与代码之间的小出入）自行判断，并在 PR 里写明。
-
-## 12. 旧线维护
-
-范围：`src/deck_master/`、`skills/`、`tests/rebuild/`、`tools/`。
-
-- 只修四类问题：数据丢失、重复消耗、打不开或导不出、真实安全漏洞。另外允许开发稿 §8 写明的止血项和迁移导出命令。
-- 每个修复配一个回归测试，不新增能力，不与新线改动放进同一个 PR。
-- 旧线的命令与恢复手续见[重写前的 AGENTS.md](https://github.com/MainQuestAI/Deck-Master/blob/035845f228d1ba4cd7fc9b41cdedd8fd734043df/AGENTS.md)。其中的规则只约束旧线，不带进新线。
