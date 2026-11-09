@@ -168,11 +168,22 @@ fn legacy_asset_payload_round_trips_and_public_style_keeps_both_hash_formulas() 
             ),
             (
                 "svg",
-                json!([page.content, page.image.as_ref().map(|i| &i.file), style]),
+                json!([
+                    page.content,
+                    page.purpose,
+                    page.layout,
+                    page.image.as_ref().map(|i| &i.file),
+                    style
+                ]),
             ),
         ] {
             let original = format!("{:x}", Sha256::digest(serde_json::to_vec(&inputs).unwrap()));
-            assert_eq!(ops::basis(kind, &deck, page).unwrap(), original);
+            let expected = if kind == "svg" {
+                format!("svg-v2:{original}")
+            } else {
+                original
+            };
+            assert_eq!(ops::basis(kind, &deck, page).unwrap(), expected);
         }
     }
 }
@@ -280,7 +291,7 @@ fn scoped_add_replace_and_notes_preserve_unaffected_page_and_public_assets_join_
 }
 
 #[test]
-fn scoped_stale_original_also_stales_svg_even_when_its_own_hash_matches() {
+fn scoped_stale_original_is_separate_from_current_svg() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path();
     setup(path);
@@ -290,12 +301,14 @@ fn scoped_stale_original_also_stales_svg_even_when_its_own_hash_matches() {
     ops::asset_add(path, "selected-b", &image, &["p2".into()], "", "").unwrap();
     let mut store = Store::open(path).unwrap();
     let mut deck = store.current().unwrap().deck;
-    // A current SVG hash alone must not hide an original made before this asset selection.
+    // A rebuilt SVG is current even when the retained original has stale inputs.
     deck.pages[1].svg.as_mut().unwrap().basis = ops::basis("svg", &deck, &deck.pages[1]).unwrap();
     let tx = store.transaction().unwrap();
     store::append(&tx, &deck, "synthetic current SVG basis").unwrap();
     tx.commit().unwrap();
-    assert_stale(path, json!(["p2"]));
+    let status = ops::artifact_status(&deck).unwrap();
+    assert_eq!(status["stale_images"], json!(["p2"]));
+    assert_eq!(status["stale_pages"], json!([]));
     let run = attached_run(path, "svg", [vec![], vec!["selected-b"]]);
     let pages = run_pages(path, run);
     assert_eq!(pages[0]["basis_changed"], false);
@@ -303,7 +316,7 @@ fn scoped_stale_original_also_stales_svg_even_when_its_own_hash_matches() {
         pages[1]["current_basis"],
         deck.pages[1].svg.as_ref().unwrap().basis
     );
-    assert_eq!(pages[1]["basis_changed"], true);
+    assert_eq!(pages[1]["basis_changed"], false);
 }
 
 #[test]

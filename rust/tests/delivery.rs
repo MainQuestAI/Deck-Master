@@ -848,7 +848,7 @@ fn page_three_redo_and_notes_only_edits_preserve_other_pages_and_existing_build(
 }
 
 #[test]
-fn polled_svg_staleness_inherits_image_staleness_without_changing_basis() {
+fn legacy_artifacts_keep_coverage_while_new_runs_include_purpose_and_layout() {
     use sha2::{Digest, Sha256};
     use std::os::unix::fs::PermissionsExt;
     let temp = tempfile::tempdir().unwrap();
@@ -952,19 +952,19 @@ else:
         .as_str()
         .expect("current_basis")
         .to_string();
-    let assert_artifacts = |stale: Value| {
+    let assert_artifacts = |svg_stale: Value, image_stale: Value| {
         let status = ops::workspace(path).unwrap()["artifact_status"].clone();
-        assert_eq!(status["stale_pages"], stale);
-        assert_eq!(status["stale_images"], stale);
+        assert_eq!(status["stale_pages"], svg_stale);
+        assert_eq!(status["stale_images"], image_stale);
     };
-    assert_artifacts(json!([]));
+    assert_artifacts(json!([]), json!([]));
     edit(path, json!({"pages":[{"id":"p2","notes":"另一页讲稿"}]}));
     let (after_other, svg) = page("svg", "p1");
     assert_ne!(after_other, version);
     assert_eq!(svg["current_basis"], svg_basis);
     assert_eq!(svg["basis_changed"], false);
     assert_eq!(page("image", "p1").1["basis_changed"], false);
-    assert_artifacts(json!([]));
+    assert_artifacts(json!([]), json!([]));
     edit(path, json!({"pages":[{"id":"p1","notes":"只改本页讲稿"}]}));
     let (_, svg) = page("svg", "p1");
     assert_eq!(svg["current_basis"], svg_basis);
@@ -972,9 +972,9 @@ else:
     let (_, image) = page("image", "p1");
     assert_eq!(image["current_basis"], image_basis);
     assert_eq!(image["basis_changed"], false);
-    assert_artifacts(json!([]));
+    assert_artifacts(json!([]), json!([]));
 
-    // Without an original image, layout and purpose remain outside SVG basis.
+    // New tasks include purpose and layout even without an original image.
     let (_, svg) = page("svg", "p2");
     let no_image_basis = svg["current_basis"].clone();
     edit(
@@ -982,22 +982,22 @@ else:
         json!({"pages":[{"id":"p2","layout":"左侧说明，右侧结论","purpose":"查阅下一步"}]}),
     );
     let (_, svg) = page("svg", "p2");
-    assert_eq!(svg["current_basis"], no_image_basis);
-    assert_eq!(svg["basis_changed"], false);
-    assert_artifacts(json!([]));
+    assert_ne!(svg["current_basis"], no_image_basis);
+    assert_eq!(svg["basis_changed"], true);
+    assert_artifacts(json!([]), json!([]));
 
     edit(path, json!({"pages":[{"id":"p1","layout":"改为两栏"}]}));
     let (_, image) = page("image", "p1");
     let (_, svg) = page("svg", "p1");
     assert_ne!(image["current_basis"], image_basis);
     assert_eq!(image["basis_changed"], true);
-    assert_eq!(svg["current_basis"], svg_basis);
+    assert_ne!(svg["current_basis"], svg_basis);
     assert_eq!(svg["basis_changed"], true);
-    assert_artifacts(json!(["p1"]));
+    assert_artifacts(json!([]), json!(["p1"]));
 
     edit(path, json!({"pages":[{"id":"p1","layout":""}]}));
     assert_eq!(page("svg", "p1").1["basis_changed"], false);
-    assert_artifacts(json!([]));
+    assert_artifacts(json!([]), json!([]));
     edit(
         path,
         json!({"pages":[{"id":"p1","purpose":"评估增长预期"}]}),
@@ -1006,12 +1006,12 @@ else:
     let (_, svg) = page("svg", "p1");
     assert_ne!(image["current_basis"], image_basis);
     assert_eq!(image["basis_changed"], true);
-    assert_eq!(svg["current_basis"], svg_basis);
+    assert_ne!(svg["current_basis"], svg_basis);
     assert_eq!(svg["basis_changed"], true);
-    assert_artifacts(json!(["p1"]));
+    assert_artifacts(json!([]), json!(["p1"]));
 
     edit(path, json!({"pages":[{"id":"p1","purpose":""}]}));
-    assert_artifacts(json!([]));
+    assert_artifacts(json!([]), json!([]));
     edit(
         path,
         json!({"pages":[{"id":"p1","content":{"title":"增长","body_blocks":[{"type":"paragraph","id":"a1","text":"预期增长 5%"}]}}]}),
@@ -1019,5 +1019,5 @@ else:
     let (_, svg) = page("svg", "p1");
     assert_ne!(svg["current_basis"], svg_basis);
     assert_eq!(svg["basis_changed"], true);
-    assert_artifacts(json!(["p1"]));
+    assert_artifacts(json!(["p1"]), json!(["p1"]));
 }

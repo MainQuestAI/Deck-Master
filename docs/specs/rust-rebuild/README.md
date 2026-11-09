@@ -181,7 +181,7 @@ run 用于需要 Host 执行、作者可以中途停止的工作：生图（imag
 4. `deck run cancel <run>`：直接改状态，不需要填写说明。之后的 call 被拒绝，迟到的 result 只保存、不自动采用。
 5. `deck run show [<run>]`：列出每页状态。started 但没有结果的页显示为"结果未知"，是否重试由作者或 Host 决定；重试同样计数。
 
-依据的组成：image 取该页的 content、layout、purpose 与 style；svg 取该页的 content、image 文件与 style。
+依据的组成：image 取该页的 content、layout、purpose 与 style；新 svg 取该页的 content、purpose、layout、image 文件与本页有效 style，保存为 svg-v2:<sha256>。旧裸 hash 仍按 content、image 文件与本页有效 style 比较，展示旧依据未记录目的和布局；imported 保留导入身份。
 
 svg 类没有外部付费调用，不需要 `run call`，也没有 max_calls。它的 result 先经过 `deck_tools check-page`：
 
@@ -432,3 +432,12 @@ labels、footnotes、callouts 的 children 与孙项递归进入同一 atoms 投
 
 材料续作：material text 增加 original_path，指向加入时保存的不可变副本。
 缺原件不阻断已有文本，非法引用保持错误；needs_tool 保持失败退出并说明可用原件位置。
+
+### 当前增量：依据兼容
+
+数据库格式提升到 5，只提升 user_version，不重写旧版本、文件或依据。
+Store::open（含读取）会升级；升级前结束旧程序在途操作，旧程序后续打开由高版本保护拒绝。
+恢复作品版本不降低数据库格式。需要回旧软件时使用升级前另行保留的完整项目副本；不提供原地降级。
+新 SVG 任务使用 svg-v2，旧在途 SVG 只保存候选，人工采用保留旧依据。
+已 done 的同文件交回沿用既有发现（缺临时记录返回不可用），不重复编译或宣称重新检查。
+正常交回按检查时读取的正文回读，不代表原任务启动时的历史检查。

@@ -18,7 +18,7 @@ export default function DeliveryView() {
     <h2>制作任务</h2>
     {!workspace.runs.length && <p className="s4-empty">暂无制作任务。Host 开始制作后，进度将在这里显示。</p>}
     {workspace.runs.map(run => <section className="s4-panel" key={run.id}><div className="row between"><h3>{run.kind === 'image' ? '原图制作' : 'SVG 制作'} · {states[run.status] || run.status}</h3>{run.status === 'open' && <button className="button" disabled={busy[`cancel-${run.id}`]} onClick={() => stopRun(run.id)}>{busy[`cancel-${run.id}`] ? '正在停止…' : '停止任务'}</button>}</div>
-      <ul>{run.pages.map(page => <li key={page.page_id}>{getPage(page.page_id) ? `第 ${getPageNumStr(page.page_id)} 页` : '已移除页面'} · {states[page.status] || page.status}{page.reason && ` · ${page.reason}`}{page.basis_changed && ' · 依据已变'}{page.result_file && <>{getPage(page.page_id) && <button className="button tiny" onClick={() => compareCandidate(run, page)}>比对与采用</button>}<a className="button tiny quiet" href={fileUrl(page.result_file)} target="_blank" rel="noreferrer">查看结果</a></>}</li>)}</ul>
+      <ul>{run.pages.map(page => <li key={page.page_id}>{getPage(page.page_id) ? `第 ${getPageNumStr(page.page_id)} 页` : '已移除页面'} · {states[page.status] || page.status}{page.reason && ` · ${page.reason}`}{page.basis_changed && ' · 依据已变'}{page.basis_incomplete && ' · 旧依据未记录目的和布局'}{page.result_file && <>{getPage(page.page_id) && <button className="button tiny" onClick={() => compareCandidate(run, page)}>比对与采用</button>}<a className="button tiny quiet" href={fileUrl(page.result_file)} target="_blank" rel="noreferrer">查看结果</a></>}</li>)}</ul>
     </section>)}
   </div>;
 }

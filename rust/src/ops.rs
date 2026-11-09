@@ -662,6 +662,10 @@ pub fn asset_add(
 }
 
 pub fn basis(kind: &str, deck: &Deck, page: &Page) -> Result<String> {
+    calculate_basis(kind, deck, page, false)
+}
+
+fn calculate_basis(kind: &str, deck: &Deck, page: &Page, legacy: bool) -> Result<String> {
     use sha2::{Digest, Sha256};
     let mut style = deck.style.clone();
     style
@@ -669,10 +673,40 @@ pub fn basis(kind: &str, deck: &Deck, page: &Page) -> Result<String> {
         .retain(|asset| asset.is_effective_for(&page.id));
     let value = if kind == "image" {
         json!([page.content, page.layout, page.purpose, style])
-    } else {
+    } else if legacy {
         json!([page.content, page.image.as_ref().map(|i| &i.file), style])
+    } else {
+        json!([
+            page.content,
+            page.purpose,
+            page.layout,
+            page.image.as_ref().map(|i| &i.file),
+            style
+        ])
     };
-    Ok(format!("{:x}", Sha256::digest(serde_json::to_vec(&value)?)))
+    let hash = format!("{:x}", Sha256::digest(serde_json::to_vec(&value)?));
+    Ok(if kind == "svg" && !legacy {
+        format!("svg-v2:{hash}")
+    } else {
+        hash
+    })
+}
+
+fn current_basis_for(kind: &str, saved: &str, deck: &Deck, page: &Page) -> Result<String> {
+    let valid_hash =
+        |value: &str| value.len() == 64 && value.bytes().all(|c| c.is_ascii_hexdigit());
+    if kind == "image" {
+        return basis(kind, deck, page);
+    }
+    if saved.strip_prefix("svg-v2:").is_some_and(valid_hash) {
+        return basis(kind, deck, page);
+    }
+    if saved == "imported" || valid_hash(saved) {
+        return calculate_basis(kind, deck, page, true);
+    }
+    Err(Error::Input(
+        "无法识别 SVG 制作依据；请保留原件并重新准备任务".into(),
+    ))
 }
 
 fn image_is_stale(deck: &Deck, page: &Page) -> Result<bool> {
@@ -926,16 +960,23 @@ fn runs(connection: &rusqlite::Connection, deck: &Deck, id: Option<i64>) -> Resu
             let mut current_basis = None;
             let changed = match current_page {
                 Some(p) => {
-                    let key = (if kind == "image" { "image" } else { "svg" }, p.id.as_str());
+                    let algorithm = if kind == "image" {
+                        "image"
+                    } else if old.starts_with("svg-v2:") {
+                        "svg-v2"
+                    } else {
+                        "svg-legacy"
+                    };
+                    let key = (algorithm, p.id.as_str());
                     let current = match current_bases.entry(key) {
                         std::collections::hash_map::Entry::Occupied(entry) => entry.into_mut(),
                         std::collections::hash_map::Entry::Vacant(entry) => {
-                            entry.insert(basis(&kind, deck, p)?)
+                            entry.insert(current_basis_for(&kind, &old, deck, p)?)
                         }
                     };
                     current_basis = Some(current.clone());
                     // Derive image staleness without changing stored SVG hash inputs.
-                    *current != old || (kind == "svg" && image_is_stale(deck, p)?)
+                    *current != old
                 }
                 None => true,
             };
@@ -956,7 +997,7 @@ fn runs(connection: &rusqlite::Connection, deck: &Deck, id: Option<i64>) -> Resu
                 .and_then(|p| p.image.as_ref())
                 .map(|image| file_url(&image.file));
             let result_url = result.as_deref().map(file_url);
-            pages.push(json!({"page_id":page,"status":state,"reason":reason,"basis_changed":changed,"current_basis":current_basis,"result_file":result,"result_url":result_url,"result_preview":preview,"current_image_url":current_image}));
+            pages.push(json!({"page_id":page,"status":state,"reason":reason,"basis_changed":changed,"basis_incomplete":kind == "svg" && !old.starts_with("svg-v2:"),"current_basis":current_basis,"result_file":result,"result_url":result_url,"result_preview":preview,"current_image_url":current_image}));
         }
         runs.push(json!({"id":id,"kind":kind,"status":status,"max_calls":max,"calls_used":used,"pages":pages}));
     }
@@ -982,7 +1023,28 @@ pub fn run_result(project: &Path, id: i64, page_id: &str, source: &Path) -> Resu
     let (kind, _, _, _) = run_record(&store.connection, id)?;
     let (old, _, _) = run_page(&store.connection, id, page_id)?;
     let snapshot = store.current()?;
+    let checked_version = snapshot.version;
     let data = std::fs::read(source)?;
+    if kind == "svg" {
+        use sha2::{Digest, Sha256};
+        let identity = format!("{:x}.svg", Sha256::digest(&data));
+        let (_, state, previous) = run_page(&store.connection, id, page_id)?;
+        if state == "done" && previous.as_deref() == Some(identity.as_str()) {
+            let path = store
+                .root
+                .join("work")
+                .join(id.to_string())
+                .join(format!("readback-{identity}.json"));
+            let findings: Value = match std::fs::read(&path) {
+                Ok(bytes) => serde_json::from_slice(&bytes)?,
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => Value::Null,
+                Err(error) => return Err(error.into()),
+            };
+            return Ok(
+                json!({"file":identity,"adopted":false,"reused":true,"findings":findings,"run":run_show(project,Some(id))?}),
+            );
+        }
+    }
     let temporary = tempfile::tempdir()?;
     let mut preview = None;
     let mut findings = Value::Null;
@@ -1029,7 +1091,9 @@ pub fn run_result(project: &Path, id: i64, page_id: &str, source: &Path) -> Resu
     let (_, status, _, _) = run_record(&tx, id)?;
     let mut snapshot = store::current(&tx)?;
     let eligible = match snapshot.deck.pages.iter().find(|p| p.id == page_id) {
-        Some(p) => basis(&kind, &snapshot.deck, p)? == old,
+        Some(p) => {
+            (kind != "svg" || old.starts_with("svg-v2:")) && basis(&kind, &snapshot.deck, p)? == old
+        }
         None => false,
     };
     let (_, current_state, previous) = run_page(&tx, id, page_id)?;
@@ -1073,7 +1137,9 @@ pub fn run_result(project: &Path, id: i64, page_id: &str, source: &Path) -> Resu
     )?;
     tx.execute("UPDATE runs SET status='done' WHERE id=? AND status='open' AND NOT EXISTS (SELECT 1 FROM run_pages WHERE run_id=? AND status!='done')",params![id,id])?;
     tx.commit()?;
-    Ok(json!({"file":file,"adopted":adopted,"findings":findings,"run":run_show(project,Some(id))?}))
+    Ok(
+        json!({"file":file,"adopted":adopted,"checked_version":checked_version,"findings":findings,"run":run_show(project,Some(id))?}),
+    )
 }
 
 pub fn run_adopt(project: &Path, id: i64, page_id: &str) -> Result<Value> {
@@ -1183,18 +1249,28 @@ pub fn artifact_status(deck: &Deck) -> Result<Value> {
         .collect();
     let mut stale = Vec::new();
     let mut stale_images = Vec::new();
+    let mut incomplete_basis_pages = Vec::new();
     for page in &deck.pages {
+        if page
+            .svg
+            .as_ref()
+            .is_some_and(|svg| !svg.basis.starts_with("svg-v2:"))
+        {
+            incomplete_basis_pages.push(&page.id);
+        }
         let image_stale = image_is_stale(deck, page)?;
         if image_stale {
             stale_images.push(&page.id);
         }
         if let Some(svg) = &page.svg
-            && (svg.basis != basis("svg", deck, page)? || image_stale)
+            && (svg.basis != current_basis_for("svg", &svg.basis, deck, page)?)
         {
             stale.push(&page.id);
         }
     }
-    Ok(json!({"missing_pages":missing,"stale_pages":stale,"stale_images":stale_images}))
+    Ok(
+        json!({"missing_pages":missing,"stale_pages":stale,"stale_images":stale_images,"incomplete_basis_pages":incomplete_basis_pages}),
+    )
 }
 
 pub fn build(project: &Path) -> Result<Value> {
@@ -1256,4 +1332,59 @@ pub fn export_pptx(project: &Path) -> Result<Value> {
 
 pub fn doctor(fonts: &[String]) -> Result<Value> {
     crate::tools::invoke("doctor", &json!({"fonts":fonts}))
+}
+
+#[cfg(test)]
+mod build_selection_tests {
+    use super::*;
+
+    #[test]
+    fn legacy_basis_survives_format_upgrade_and_does_not_claim_purpose_coverage() {
+        let temp = tempfile::tempdir().unwrap();
+        let mut store = Store::create(temp.path(), &Deck::default()).unwrap();
+        let mut deck = Deck::default();
+        deck.pages.push(Page {
+            id: "p1".into(),
+            ..Page::default()
+        });
+        let legacy = calculate_basis("svg", &deck, &deck.pages[0], true).unwrap();
+        deck.pages[0].svg = Some(crate::model::Artifact {
+            file: "historical.svg".into(),
+            basis: legacy.clone(),
+        });
+        let tx = store.transaction().unwrap();
+        store::append(&tx, &deck, "Legacy fixture").unwrap();
+        tx.commit().unwrap();
+        store
+            .connection
+            .pragma_update(None, "user_version", 4)
+            .unwrap();
+        drop(store);
+        let upgraded = Store::open(temp.path()).unwrap();
+        assert_eq!(
+            upgraded
+                .connection
+                .pragma_query_value(None, "user_version", |r| r.get::<_, i64>(0))
+                .unwrap(),
+            5
+        );
+        assert_eq!(
+            upgraded.current().unwrap().deck.pages[0]
+                .svg
+                .as_ref()
+                .unwrap()
+                .basis,
+            legacy
+        );
+        let old_v2 = basis("svg", &deck, &deck.pages[0]).unwrap();
+        deck.pages[0].purpose = "Changed purpose".into();
+        assert_eq!(
+            current_basis_for("svg", &legacy, &deck, &deck.pages[0]).unwrap(),
+            legacy
+        );
+        assert_ne!(basis("svg", &deck, &deck.pages[0]).unwrap(), old_v2);
+        let status = artifact_status(&deck).unwrap();
+        assert_eq!(status["stale_pages"], json!([]));
+        assert_eq!(status["incomplete_basis_pages"], json!(["p1"]));
+    }
 }
