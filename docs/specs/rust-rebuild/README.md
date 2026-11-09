@@ -87,7 +87,7 @@ deck-skill/           新 Skill（第 6 节）
 
 - Rust stable（最低 1.88，由 Cargo.toml 的 rust-version 声明），edition 2024，提交 Cargo.lock。依赖：clap、serde、serde_json、rusqlite（bundled）、tiny_http、thiserror、sha2、tempfile。本地服务用同步请求线程，不引入异步运行时。
 - 先在一个包内按文件分模块，出现真实需要时再拆。
-- `rust.yml` 在 PR 和 `main` push 上自动执行 AGENTS.md 第 3 节的 Rust 检查、WebUI 检查、deck-tools pytest 与安装脚本检查；pytest 用 `-m "not render"` 排除需要 rsvg-convert/soffice 的用例，合并前须在本机全量运行。保留手动入口，功能分支 push 不单独触发 CI。旧线 CI 已随旧线删除。
+- `rust.yml` 在 PR 和 `main` push 上自动执行 AGENTS.md 第 3 节的 Rust 检查、WebUI 检查、deck-tools pytest 与安装脚本检查；core 的 pytest 用 `-m "not render"` 排除真实渲染用例，独立 Ubuntu 24.04 render job 执行 `-m render`；合并前仍须在本机全量运行。保留手动入口，功能分支 push 不单独触发 CI。旧线 CI 已随旧线删除。
 
 ### 3.2 存储
 
@@ -457,3 +457,5 @@ Store::open（含读取）会升级；升级前结束旧程序在途操作，旧
 GET /api/deck 返回 default_build 小摘要（含该次缺页）；GET /api/builds/{id} 按需返回回读、来源版本、历史页映射、current_version 及 readback_matches_current。
 适用性复用 build_digest 并比较实际参建页 content；导入记录没有有效回读，坏记录保留读取错误。
 正文变化、默认构建变化时刷新详情，稳定轮询不重复读取详情。历史检查、当前输入匹配及视觉验收分别展示。
+
+独立 render CI 已配置，本候选尚未推送运行 CI；机制与作品效果不能相互替代。

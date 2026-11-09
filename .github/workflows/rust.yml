@@ -50,7 +50,7 @@ jobs:
           cargo clippy --all-targets -- -D warnings
           cargo test
       - name: File tool tests
-        # rsvg-convert/soffice tests run locally before merge.
+        # Render tests run in the independent render job.
         run: .venv/bin/python -m pytest -q deck-tools/tests -m "not render" --basetemp="$RUNNER_TEMP/deck-tools"
       - name: Install script
         run: |
@@ -96,3 +96,29 @@ jobs:
           done
           test ! -e "$RUNNER_TEMP/skills-root-write/deck"
           test ! -L "$RUNNER_TEMP/skills-root-write/deck"
+
+  render:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install render toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y librsvg2-bin libreoffice-impress poppler-utils fontconfig fonts-noto-cjk fonts-dejavu-core
+          python -m venv .venv
+          .venv/bin/python -m pip install -e "./deck-tools[dev]"
+          rsvg-convert --version
+          soffice --version
+          pdftoppm -v
+          fc-match 'Noto Sans CJK SC'
+          git rev-parse HEAD
+      - name: Real rendering tests
+        run: .venv/bin/python -m pytest -q deck-tools/tests -m render --basetemp="$RUNNER_TEMP/deck-render"
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: render-failure
+          path: ${{ runner.temp }}/deck-render
