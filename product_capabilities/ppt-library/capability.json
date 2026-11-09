@@ -4,8 +4,8 @@
   "kind": "product_capability",
   "required": true,
   "runtime": {
-    "operations": ["status", "search", "select-slides", "doctor", "schema", "smoke --fixture", "writeback"],
-    "default_command": "deck-master search-library"
+    "operations": [],
+    "default_command": null
   },
   "contracts": {
     "outputs": [
@@ -31,5 +31,18 @@
     "selection_output": "deck_master_ppt_library_selection.v2",
     "library_status": "deck_master_library_status.v2",
     "feedback_input": "deck_master_ppt_library_feedback.v1"
+  },
+  "status": "historical",
+  "historical_runtime": {
+    "operations": [
+      "status",
+      "search",
+      "select-slides",
+      "doctor",
+      "schema",
+      "smoke --fixture",
+      "writeback"
+    ],
+    "default_command": "deck-master search-library"
   }
 }

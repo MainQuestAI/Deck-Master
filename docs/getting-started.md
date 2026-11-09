@@ -142,8 +142,10 @@ record and associated built artifact agree. Unknown entries are preserved.
   [1.1.0 notes](releases/1.1.0.md#maintainer-acceptance-2026-11-04).
   Actual WPS editing was not verified on the PR125 1.0.0 observation
   because the Mac device locked.
-- Native editable PPT output uses shapes and text. Tables/charts are composed
-  shapes/text rather than Office-native spreadsheet-backed data objects.
+- Native output uses editable shapes and text. Supported tables marked
+  `data-native-table="true"` with complete grid and ownership bindings become
+  native PPT tables; ordinary drawn tables remain shapes/text. Charts are not
+  Office-native spreadsheet-backed data charts.
 - `doctor` finding a font family does not prove LibreOffice can render every
   glyph. In the maintainer's macOS 27.0.1 arm64 / LibreOffice 26.8.1.1 run,
   `fc-match` found Noto CJK but default PDF rendering substituted unrelated

@@ -181,8 +181,10 @@ Keep the printed URL private. The server binds `127.0.0.1` only.
 
 ## Capability Boundaries
 
-1. Produced PPTX contains editable shapes and text. Tables and charts are
-   shape/text compositions, not Office-native spreadsheet-backed data objects.
+1. Produced PPTX contains editable shapes and text. Supported tables explicitly
+   marked `data-native-table="true"` with complete grid and ownership bindings
+   become native PPT tables; ordinary drawn tables remain shapes/text. Charts
+   are not Office-native spreadsheet-backed data charts.
 2. Incomplete work can be saved, exported as Markdown, and built. Missing or
    stale SVG pages are listed next to download; export is not blocked.
 3. Cancelled runs and results whose page basis has changed are stored and not

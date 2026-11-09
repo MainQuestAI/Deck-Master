@@ -4,14 +4,28 @@
   "kind": "product_capability",
   "required": true,
   "runtime": {
-    "operations": ["status", "doctor", "schema", "smoke --fixture", "writeback"],
-    "default_command": "deck-master render"
+    "operations": [],
+    "default_command": null
   },
   "contracts": {
-    "outputs": ["deck_render_result.v1", "deck_render_result.v2"]
+    "outputs": [
+      "deck_render_result.v1",
+      "deck_render_result.v2"
+    ]
   },
   "state_policy": {
     "active_run_outputs_must_import": true,
     "canonical_artifact": "render_results/render_result.json"
+  },
+  "status": "historical",
+  "historical_runtime": {
+    "operations": [
+      "status",
+      "doctor",
+      "schema",
+      "smoke --fixture",
+      "writeback"
+    ],
+    "default_command": "deck-master render"
   }
 }
