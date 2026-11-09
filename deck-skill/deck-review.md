@@ -29,9 +29,7 @@ description: 用 Rust deck 审查当前作品、外部可读稿或 PPTX。默认
 
 ## 三层 QA
 
-分别报告 Q1 业务语义、Q2 视觉保真／可读性／专业完成度、Q3 可编辑性与 Office 兼容；三个判断相互独立，不能合成一个 boolean。具体判断方法见 [method-review](references/method-review.md#三层-qa)。
-
-回读 `status=pass` 只说明本次有依据的机械检查，不等于视觉通过，也不等于 Office／桌面编辑通过；现有 `visual_review`、`desktop_editing` 保持 `not_evaluated`。原图与最终 PPT 的判断各附实际证据，缺失或没有看过的那一项分别记未执行，不能相互代替。
+分别报告 Q1 业务语义、Q2 视觉保真／可读性／专业完成度、Q3 可编辑性与 Office 兼容。独立判断、回读边界及原图／成品证据分开记录的执行口径见 [三层 QA](references/method-review.md#三层-qa) 与 [成品证据](references/method-review.md#内容主视觉与成品)。
 
 ## 怎样返回
 

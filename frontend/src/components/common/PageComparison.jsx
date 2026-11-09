@@ -4,6 +4,7 @@ import { formatFinding } from '../../api.js';
 import PageArtwork from './PageArtwork';
 
 const locatorLabels = [
+  ['table_id', '表格'], ['row_id', '行'], ['column_id', '列'], ['element', 'SVG 元素'],
   ['atom_id', '文字对象'], ['node_id', '节点'], ['actual_node_id', '实际节点'],
   ['edge_id', '连线'], ['from', '起点'], ['to', '终点'],
   ['svg_elements', 'SVG 对象'], ['native_shape_ids', 'PPT 对象'],
@@ -30,7 +31,7 @@ export default function PageComparison({ page }) {
     '--compare-top': `${-(zoom - 100) * vertical / 100}%`,
   };
   return <section className="page-comparison" aria-label="本页原图与编译预览对照">
-    <p className="muted">两侧共用缩放和查看位置。放大后，调整横向、纵向位置查看同一区域。</p>
+    <p className="muted">两侧共用缩放和查看位置。放大后，调整横向、纵向位置查看同一区域。讲稿见正文层。</p>
     <div className="page-comparison-controls">
       <label>缩放 · {zoom}%<input type="range" aria-label="对照缩放" min="100" max="400" step="25" value={zoom} onChange={event => setZoom(Number(event.target.value))} /></label>
       <label>横向 · 左至右<input type="range" aria-label="横向查看位置" min="0" max="100" value={horizontal} disabled={zoom === 100} onChange={event => setHorizontal(Number(event.target.value))} /></label>

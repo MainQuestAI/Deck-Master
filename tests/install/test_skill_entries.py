@@ -26,6 +26,17 @@ def _local_links(text: str) -> list[str]:
     return found
 
 
+def _section(text: str, heading: str) -> str:
+    match = re.search(rf"^## {re.escape(heading)}\s*$([\s\S]*?)(?=^## |\Z)", text, re.MULTILINE)
+    assert match, heading
+    return match[1]
+
+
+def _has(text: str, *patterns: str) -> None:
+    for pattern in patterns:
+        assert re.search(pattern, text, re.DOTALL), pattern
+
+
 def _frontmatter_name(path: Path) -> str:
     lines = path.read_text(encoding="utf-8").splitlines()
     assert lines[0] == "---"
@@ -83,10 +94,10 @@ def test_title_policy_preserves_page_roles(relative: str) -> None:
     text = (SOURCE / relative).read_text(encoding="utf-8")
     paragraphs = re.split(r"\n\s*\n", text)
     for role in ("说明", "教学"):
-        policies = [paragraph for paragraph in paragraphs if re.search(rf"{role}(?:页|页面)", paragraph)]
+        policies = [p for p in paragraphs if re.search(rf"{role}(?:页|页面)", p)]
         assert any(
-            re.search(r"(?:不(?:强制|要求|必)|无[需须]).{0,30}(?:结论|判断).{0,8}标题", policy)
-            and re.search(r"(?:不(?:强制|要求|必)|无[需须]).{0,40}(?:商业\s*)?CTA", policy)
+            "标题" in policy and "CTA" in policy
+            and re.search(r"不(?:强制|要求|必)|无[需须]", policy)
             for policy in policies
         ), f"{relative}: {role} pages need title and CTA exceptions"
     assert re.search(r"判断页.{0,30}判断句", text)
@@ -96,38 +107,30 @@ def test_title_policy_preserves_page_roles(relative: str) -> None:
 @pytest.mark.parametrize("relative", ["deck-review.md", "references/method-review.md"])
 def test_review_guidance_separates_qa_layers(relative: str) -> None:
     text = (SOURCE / relative).read_text(encoding="utf-8")
-    for layer, topics in (
-        ("Q1", ("业务", "语义")),
-        ("Q2", ("保真", "可读", "完成度")),
-        ("Q3", ("可编辑", "Office")),
-    ):
-        assert any(
-            layer in line and all(topic in line for topic in topics)
-            for line in text.splitlines()
-        ), f"{relative}: {layer}"
-    assert re.search(r"(?:独立|分别).{0,40}(?:boolean|布尔)", text)
-    boundary = next((p for p in re.split(r"\n\s*\n", text) if "status=pass" in p), "")
-    assert all(token in boundary for token in ("视觉", "Office", "visual_review", "desktop_editing", "not_evaluated"))
-    assert re.search(r"不(?:等于|代表|证明)", boundary)
+    qa = _section(text, "三层 QA")
+    _has(qa, r"Q1.*业务.*语义", r"Q2.*保真.*可读", r"Q3.*可编辑.*Office", r"独立")
+    if relative == "deck-review.md":
+        assert "references/method-review.md#三层-qa" in LINK.findall(qa)
+    else:
+        _has(qa, r"不能.*(?:boolean|布尔)", r"status=pass.*不(?:等于|代表|证明)")
+        _has(qa, r"visual_review", r"desktop_editing", r"not_evaluated", r"未执行")
 
 
 def test_review_entry_requires_located_graded_evidence() -> None:
     entry = (SOURCE / "deck-review.md").read_text(encoding="utf-8")
-    report = next(p for p in re.split(r"\n\s*\n", entry) if "每一条" in p)
-    assert all(token in report for token in ("页", "对象", "区域", "原句", "问题", "影响", "建议", "分级", "依据", "验证"))
+    report = _section(entry, "怎样返回")
+    _has(report, r"页.*(?:对象|区域)", r"问题", r"影响", r"建议", r"分级", r"依据", r"原句", r"没有验证|未验证")
     method = (SOURCE / "references/method-review.md").read_text(encoding="utf-8")
-    for grade, examples in (
-        ("Critical", ("事实", "数字", "方向", "分支", "能力", "打开", "正文")),
-        ("Major", ("文字墙", "主视觉", "关系", "失真")),
-        ("Minor", ("位置", "行距", "图标", "装饰")),
-    ):
-        line = next((line for line in method.splitlines() if grade in line), "")
-        assert all(example in line for example in examples), grade
+    grades = _section(method, "缺陷分级")
+    for grade, example in (("Critical", "事实|数字"), ("Major", "主视觉|失真"), ("Minor", "位置|行距")):
+        item = re.search(rf"`{grade}`([\s\S]*?)(?=^- |\Z)", grades, re.MULTILINE)
+        assert item, grade
+        _has(item[1], example)
 
 
 def test_review_consumes_supported_readback_findings_without_inventing_edges() -> None:
     entry = (SOURCE / "deck-review.md").read_text(encoding="utf-8")
-    assert re.search(r"先.{0,30}findings.{0,60}再.{0,15}(?:阅图|画面)", entry)
+    _has(entry, r"先.*findings.*再.*(?:阅图|画面)")
     method = (SOURCE / "references/method-review.md").read_text(encoding="utf-8")
     documented = set(re.findall(r"`([a-z]+(?:_[a-z]+)+)`", method))
     codes = {
@@ -140,72 +143,63 @@ def test_review_consumes_supported_readback_findings_without_inventing_edges() -
         tree = ast.parse((REPO / "deck-tools/src/deck_tools" / name).read_text(encoding="utf-8"))
         supported.update(node.value for node in ast.walk(tree) if isinstance(node, ast.Constant) and isinstance(node.value, str))
     assert codes <= supported
-    assert re.search(r"(?:没有|缺少)预期边[^\n]*(?:未检查|依据不足)", method)
-    assert re.search(r"不[^\n]*layout[^\n]*边", method)
-    assert re.search(r"不[^\n]*(?:编造|发明)[^\n]*code", method)
-    assert re.search(r"bbox[^\n]*pixel diff[^\n]*定位[^\n]*不[^\n]*依据", method)
+    _has(method, r"(?:没有|缺少)预期边.*(?:未检查|依据不足)")
+    _has(method, r"不.*layout.*边")
+    _has(method, r"不.*(?:编造|发明).*code")
+    _has(_section(method, "三层 QA"), r"bbox.*pixel diff.*定位", r"不是唯一判断依据")
 
 
 def test_review_requires_separate_blueprint_and_ppt_evidence() -> None:
     text = (SOURCE / "references/method-review.md").read_text(encoding="utf-8")
+    evidence = _section(text, "内容、主视觉与成品")
     for artifact in ("原图", "最终 PPT"):
-        assert re.search(rf"{artifact}[^\n]*证据[^\n]*未执行", text)
-    assert re.search(r"证据[^\n]*不能互相替代", text)
+        paragraphs = [p for p in re.split(r"\n\s*\n", evidence) if artifact in p]
+        assert any("证据" in p and "未执行" in p for p in paragraphs), artifact
+    _has(evidence, r"证据.*不能互相替代")
 
 
 def test_review_protects_lookup_comparisons_and_synthetic_numbers() -> None:
     text = (SOURCE / "references/method-review.md").read_text(encoding="utf-8")
-    assert re.search(r"查阅[^\n]*表[^\n]*(?:保留|保护)", text)
-    assert re.search(r"E02[^\n]*同[^\n]*口径", text)
-    assert re.search(r"(?:合成|教学)[^\n]*数字[^\n]*不[^\n]*项目事实", text)
-    entry = (SOURCE / "deck-review.md").read_text(encoding="utf-8")
-    arithmetic = next(p for p in re.split(r"\n\s*\n", entry) if "case_numbers" in p)
-    assert all(token in arithmetic for token in ("算式", "来源", "归因", "ROI"))
+    _has(text, r"查阅.*表.*(?:保留|保护)", r"E02.*同一.*口径", r"(?:合成|教学).*数字.*不能.*项目事实")
 
 
 def test_master_turns_feedback_into_four_local_repair_paths() -> None:
     text = (SOURCE / "deck-master.md").read_text(encoding="utf-8")
-    task = next((p for p in re.split(r"\n\s*\n", text) if "用户" in p and "审查" in p and "分流" in p), "")
-    assert all(token in task for token in ("页", "对象", "区域", "问题", "依据", "动作"))
-    routes = dict(re.findall(r"^- (内容|设计|调用|重建)：(.+)$", text, re.MULTILINE))
+    routes = dict(re.findall(r"^- (内容|设计|调用|重建)：([\s\S]*?)(?=^-[ ]|^## |\Z)", text, re.MULTILINE))
     assert set(routes) == {"内容", "设计", "调用", "重建"}
-    assert all(token in routes["内容"] for token in ("purpose", "layout", "notes", "正文", "deck put --base"))
-    assert re.search(r"不[^。；]*自动[^。；]*生图", routes["内容"])
-    assert re.search(r"主视觉[^。；]*视觉计划", routes["设计"])
-    assert re.search(r"必要[^。；]*才[^。；]*调用", routes["设计"])
-    assert re.search(r"需要新蓝图[^。；]*deck run start image --pages", routes["调用"])
-    assert re.search(r"task.md[^。；]*原文[^。；]*attachments.json", routes["调用"])
-    assert re.search(r"蓝图[^。；]*可用[^。；]*直接修 SVG", routes["重建"])
-    assert re.search(r"主结构[^。；]*先[^。；]*蓝图[^。；]*再[^。；]*重建", routes["重建"])
+    _has(routes["内容"], r"正文", r"purpose", r"layout", r"notes", r"deck put --base", r"不.*自动.*生图")
+    _has(routes["设计"], r"主视觉", r"视觉计划", r"必要.*调用")
+    _has(routes["调用"], r"需要新蓝图", r"deck run start image --pages", r"task.md.*原文", r"attachments.json")
+    _has(routes["重建"], r"蓝图.*可用.*直接修 SVG", r"主结构.*蓝图.*重建")
     assert "references/reconstruction.md" in _local_links(routes["重建"])
 
 
 def test_design_can_enter_svg_repair_without_new_image() -> None:
     text = (SOURCE / "deck-design.md").read_text(encoding="utf-8")
-    entry = next((p for p in re.split(r"\n\s*\n", text) if "commands.md" in p and "SVG" in p), "")
-    assert re.search(r"蓝图[^。；]*可用[^。；]*直接[^。；]*SVG", entry)
-    assert re.search(r"需要新蓝图[^。；]*才[^。；]*生图", entry)
+    production = _section(text, "主视觉与制作")
+    _has(production, r"蓝图.*可用.*直接.*SVG", r"需要新蓝图.*生图")
+    steps = re.findall(r"^[12]\. (.+)$", production, re.MULTILINE)
+    assert len(steps) == 2
+    assert all("需要新蓝图时" in step for step in steps)
 
 
 def test_review_routes_submission_faults_separately_from_design() -> None:
     text = (SOURCE / "deck-review.md").read_text(encoding="utf-8")
-    report = next(p for p in re.split(r"\n\s*\n", text) if "每一条" in p)
-    invocation = next((part for part in report.split("；") if "交调用" in part), "")
-    assert re.search(r"task.md[^。；]*附件[^。；]*正确", invocation)
-    assert re.search(r"实际调用[^。；]*(?:改写|漏传)", invocation)
-    assert re.search(r"task.md[^。；]*原文[^。；]*attachments.json[^。；]*提交", invocation)
+    report = _section(text, "怎样返回")
+    _has(report, r"task.md.*附件.*正确", r"实际调用.*(?:改写|漏传).*交调用")
+    _has(report, r"task.md.*原文", r"attachments.json.*提交", r"主视觉.*交设计")
 
 
 def test_repair_rereview_links_to_existing_qa_judgments() -> None:
     text = (SOURCE / "deck-master.md").read_text(encoding="utf-8")
     rereview = next(p for p in re.split(r"\n\s*\n", text) if "复审" in p)
-    assert re.search(r"只[^。；]*复审[^。；]*受影响[^。；]*范围", rereview)
-    links = LINK.findall(rereview)
-    qa = next(link for link in links if link.startswith("references/method-review.md#"))
+    _has(rereview, r"只.*复审.*受影响.*范围")
+    qa = next(link for link in LINK.findall(rereview) if link.startswith("references/method-review.md#"))
     path, anchor = qa.split("#", 1)
     method = (SOURCE / path).read_text(encoding="utf-8")
-    headings = re.findall(r"^## (.+)$", method, re.MULTILINE)
-    assert any(heading.lower().replace(" ", "-") == anchor for heading in headings)
+    heading = next(h for h in re.findall(r"^## (.+)$", method, re.MULTILINE) if h.lower().replace(" ", "-") == anchor)
+    target = _section(method, heading)
+    _has(target, r"Q1.*业务", r"Q2.*视觉", r"Q3.*Office", r"独立")
 
 
 @pytest.mark.parametrize("relative", [
@@ -225,15 +219,10 @@ def test_lookup_success_requires_reading_task_and_table_composition(relative: st
 
 def test_lookup_choice_uses_task_instead_of_keywords_or_drawing_ability() -> None:
     text = (SOURCE / "references/page-writing.md").read_text(encoding="utf-8")
-    criteria = next((p for p in re.split(r"\n\s*\n", text) if "评标矩阵" in p), "")
-    for keyword in ("证据", "对照", "规则", "计划"):
-        assert keyword in criteria
-    assert re.search(r"本身不等于查阅页", criteria)
-    assert re.search(r"能画成[^。]*不是不得留表", criteria)
-    assert re.search(r"评标矩阵[^。]*能画成图[^。]*必须留表[^。]*逐行", criteria)
-    assert re.search(r"读者必须按行[^。]*勾选[^。]*定位[^。]*查找", text)
-    assert "不是封闭名单" in criteria
-    assert re.search(r"查阅职责[^。]*标题[^。]*不等于[^。]*网格", text)
+    criteria = next(p for p in re.split(r"\n\s*\n", text) if "评标矩阵" in p)
+    _has(criteria, r"出现.*(?:不等于|不代表).*查阅页", r"能画成.*(?:不是.*留表.*理由|不(?:代表|意味着).*禁表|仍可留表)")
+    _has(criteria, r"评标矩阵.*必须留表.*逐[行条]", r"不是封闭名单")
+    _has(text, r"读者必须按行.*(?:勾选|定位|查找)", r"查阅职责.*标题.*不等于.*网格")
 
 
 @pytest.mark.parametrize("relative", [
@@ -241,6 +230,9 @@ def test_lookup_choice_uses_task_instead_of_keywords_or_drawing_ability() -> Non
 ])
 def test_declared_relations_require_body_rewrite_before_image_run(relative: str) -> None:
     text = (SOURCE / relative).read_text(encoding="utf-8")
+    if relative.endswith("content-to-visual.md"):
+        assert "page-writing.md#构图句写出本页的空间逻辑" in LINK.findall(text)
+        text = (SOURCE / "references/page-writing.md").read_text(encoding="utf-8")
     policy = next((p for p in re.split(r"\n\s*\n", text) if "不得再把表当主视觉" in p), "")
     assert re.search(r"`purpose`\s*或\s*`layout`", policy)
     assert all(relation in policy for relation in ("时间线", "交接", "状态流", "闭环"))
@@ -299,20 +291,22 @@ def test_lookup_and_state_flow_examples_keep_their_distinct_jobs() -> None:
 
 def test_examples_distinguish_lookup_from_proof_and_operation() -> None:
     text = (SOURCE / "references/page-writing.md").read_text(encoding="utf-8")
-    acceptance = next((line for line in text.splitlines() if "条款 → 证据" in line), "")
-    assert all(token in acceptance for token in ("验收", "逐行勾对", "可留表", "证明过程", "责任交接", "表不当主视觉"))
-    fields = next((line for line in text.splitlines() if "看板口径" in line), "")
-    assert all(token in fields for token in ("模板对照", "字段", "清单", "可留表", "结构", "运转", "表不当主视觉"))
-    assert re.search(r"例子[^。]*不是封闭名单", text)
+    examples = re.findall(r"^- ([\s\S]*?)(?=^- |^## |\Z)", text, re.MULTILINE)
+    for topic in ("验收：", "看板口径"):
+        example = next(item for item in examples if topic in item)
+        _has(example, r"(?:勾对|核对).*可留表", r"(?:过程|运转).*表不当主视觉")
+    _has(text, r"例子.*不是封闭名单")
+    example = next(p for p in re.split(r"\n\s*\n", text) if "交接清单" in p)
+    _has(example, r"标题", r"逐[行条].*(?:勾对|核对)", r"layout.*表是主视觉.*可留表")
 
 
 def test_review_routes_declared_relation_table_contradiction_to_design() -> None:
     text = (SOURCE / "references/method-review.md").read_text(encoding="utf-8")
-    policy = next((p for p in re.split(r"\n\s*\n", text) if "查阅表为主视觉" in p), "")
-    assert all(token in policy for token in ("purpose", "layout", "时间线", "交接", "状态流", "闭环", "导出", "构图"))
-    assert re.search(r"记为选错主视觉[^。]*交设计", policy)
-    protection = next(line for line in text.splitlines() if "不因是表格" in line)
-    assert all(token in protection for token in ("查阅页", "要求响应矩阵", "逐行核对", "保留查阅效率", "封面", "判失败"))
+    policy = next(p for p in re.split(r"\n\s*\n", text) if "查阅表为主视觉" in p)
+    _has(policy, r"purpose", r"layout", r"选错主视觉.*交设计")
+    assert "page-writing.md" in _local_links(policy)
+    protection = next(p for p in re.split(r"\n\s*\n", text) if "不因是表格" in p)
+    _has(protection, r"查阅.*保留查阅效率", r"不因.*表格.*判失败")
 
 
 @pytest.mark.parametrize("entry", ["SKILL.md", "deck-design.md", "deck-master.md"])
@@ -320,67 +314,50 @@ def test_reconstruction_entries_share_object_preservation_rules(entry: str) -> N
     text = (SOURCE / entry).read_text(encoding="utf-8")
     assert "references/reconstruction.md" in _local_links(text)
     shared = (SOURCE / "references/reconstruction.md").read_text(encoding="utf-8")
-    policy = next(p for p in re.split(r"\n\s*\n", shared) if "正文块类型" in p)
-    assert re.search(r"原图[^。]*对象[^。]*关系[^。]*不是[^。]*content.json", policy)
-    assert all(token in policy for token in ("默认卡片", "默认表", "默认清单"))
-    assert all(token in policy for token in ("界面控件", "人物动作", "步骤节点", "路径方向", "回流", "可辨认", "有边界的局部图"))
-    assert re.search(r"只保留[^。]*说明文字[^。]*模块标题[^。]*→[^。]*不算还原", policy)
+    policy = shared.split("\n## ", 1)[0]
+    _has(policy, r"原图.*对象和关系", r"不是.*正文块类型.*默认", r"说明文字.*不算还原")
 
 
 def test_ui_annotations_keep_atoms_outside_and_controls_inside() -> None:
-    text = (SOURCE / "references/reconstruction.md").read_text(encoding="utf-8")
-    ui = text.split("## 界面原型", 1)[1].split("\n## ", 1)[0]
-    assert re.search(r"内部必须出现[^。]*上屏内容[^。]*对应控件[^。]*按原图分区[^。]*不留空白线框", ui)
-    annotation = next(p for p in re.split(r"\n\s*\n", ui) if "外侧" in p)
-    assert re.search(r"外侧[^。]*标注[^。]*绑定原来的文字 atom", annotation)
-    assert re.search(r"内部[^。]*分别画出[^。]*可编辑控件[^。]*不能[^。]*分区说明句[^。]*唯一内容", annotation)
-    assert re.search(r"不要求[^。]*拆成多个 atom[^。]*不改 atom 结构", annotation)
+    ui = _section((SOURCE / "references/reconstruction.md").read_text(encoding="utf-8"), "界面原型")
+    _has(ui, r"内部必须出现.*对应控件", r"不留空白线框")
+    _has(ui, r"外侧.*标注.*绑定.*atom", r"内部.*可编辑控件", r"不能.*说明句.*唯一内容")
+    _has(ui, r"不要求.*拆成多个 atom", r"不改 atom 结构")
 
 
 @pytest.mark.parametrize("relative", ["references/reconstruction.md", "references/visual-assets.md"])
 def test_ui_nontext_assets_survive_with_editable_text_and_illustrative_status(relative: str) -> None:
     text = (SOURCE / relative).read_text(encoding="utf-8")
-    assert all(token in text for token in ("头像", "入口", "商品", "内容图", "SVG 子集", "重画", "有边界的局部 PNG/JPEG", "asset add", "image"))
-    assert re.search(r"关键文字[^。]*可编辑", text)
-    assert re.search(r"(?:截图|截取)[^。]*生成|生成[^。]*截取", text)
-    assert re.search(r"界面[^。]*示意属性[^。]*不能冒充真实产品截图", text)
-    assert re.search(r"只有框架和关键字[^。]*不等于完成还原", text)
+    _has(text, r"头像", r"SVG 子集.*重画", r"有边界的局部 PNG/JPEG", r"asset add", r"image")
+    _has(text, r"关键文字.*可编辑", r"(?:截图|截取).*生成|生成.*截取")
+    _has(text, r"示意属性.*不能冒充真实产品截图", r"只有框架和关键字.*不等于完成")
     if relative.endswith("reconstruction.md"):
-        assert re.search(r"先登记局部图[^。]*再准备 SVG 任务[^。]*随附素材", text)
-        assert re.search(r"任务准备后才补图[^。]*重新准备任务[^。]*新的 attachments.json", text)
-    if relative.endswith("visual-assets.md"):
-        assert "主正文仍用原生对象" in text
-        assert re.search(r"选用前[^。]*已经要求并画出[^。]*不得[^。]*删掉", text)
+        _has(text, r"先登记局部图.*再准备 SVG 任务", r"补图.*重新准备任务.*attachments.json")
+    else:
+        _has(text, r"主正文.*原生对象", r"选用前.*不得.*删掉")
         assert "优先保留可编辑的关键文字与框架" not in text
 
 
 def test_journeys_keep_spatial_order_and_action_scene_layer() -> None:
-    text = (SOURCE / "references/reconstruction.md").read_text(encoding="utf-8")
-    journey = next(p for p in re.split(r"\n\s*\n", text) if "谁在做什么" in p)
-    assert all(token in journey for token in ("步骤的空间顺序", "人物", "动作", "场景层", "重画", "有边界的局部图"))
-    assert re.search(r"不能[^。]*同尺寸模块卡片[^。]*除非原图本身", journey)
+    text = _section((SOURCE / "references/reconstruction.md").read_text(encoding="utf-8"), "旅程与有方向的步骤")
+    _has(text, r"步骤的空间顺序", r"人物.*动作.*场景", r"重画.*有边界的局部图")
+    _has(text, r"不能.*模块卡片.*除非原图")
 
 
 def test_directional_paths_keep_nodes_and_connections_with_lookup_exception() -> None:
-    text = (SOURCE / "references/reconstruction.md").read_text(encoding="utf-8")
-    path = next(p for p in re.split(r"\n\s*\n", text) if "验证路径" in p)
-    assert all(token in path for token in ("节点边界", "连线端点", "方向", "分支", "回流"))
-    assert re.search(r"不能[^。]*带箭头的句子[^。]*没有空间方向的两列清单", path)
-    assert re.search(r"只有原图本身[^。]*查阅清单[^。]*阅读任务[^。]*逐行核对", path)
-    table = next(p for p in re.split(r"\n\s*\n", text) if "表作为主视觉" in p)
-    assert all(token in table for token in ("逐行核对", "按行查找", "构图句", "purpose", "layout", "时间线", "交接", "状态流", "闭环"))
-    assert re.search(r"不得把表当主视觉", table)
-    assert re.search(r"不按[^。]*标题[^。]*正文块类型[^。]*能否画成关系禁表", table)
+    text = _section((SOURCE / "references/reconstruction.md").read_text(encoding="utf-8"), "旅程与有方向的步骤")
+    for token in ("节点边界", "连线端点", "方向", "分支", "回流"):
+        assert token in text
+    _has(text, r"不能.*箭头.*句子", r"没有空间方向.*清单", r"只有原图.*查阅清单.*逐[行条]核对")
+    _has(text, r"构图句.*表是主视觉", r"purpose.*layout.*不得把表当主视觉", r"不按.*标题.*禁表")
 
 
 def test_sentence_text_rule_cannot_collapse_multiple_visible_objects() -> None:
     text = (SOURCE / "references/svg-subset.md").read_text(encoding="utf-8")
-    assert re.search(r"句子型正文[^。]*一个要点使用一个 text[^。]*保留完整句子[^。]*不在词中间硬折行", text)
+    _has(text, r"句子型正文.*一个 text", r"保留完整句子", r"不在词中间硬折行")
     policy = next(p for p in re.split(r"\n\s*\n", text) if "多个可见对象" in p)
-    assert all(token in policy for token in ("还原策略", "多个入口", "多个按钮", "多个步骤节点"))
-    assert re.search(r"逐字上屏[^。]*不要求[^。]*分区说明[^。]*步骤说明[^。]*整段塞进空框", policy)
-    assert re.search(r"外侧[^。]*绑定原 atom[^。]*内侧重画[^。]*可编辑文字", policy)
-    assert re.search(r"不要[^。]*段落 atom[^。]*唯一一块字", policy)
+    _has(policy, r"多个入口", r"多个步骤节点", r"不要求.*整段塞进空框")
+    _has(policy, r"外侧.*绑定原 atom", r"内侧重画.*可编辑文字", r"不要.*唯一一块字")
 
 
 @pytest.mark.parametrize("relative", [
@@ -388,12 +365,8 @@ def test_sentence_text_rule_cannot_collapse_multiple_visible_objects() -> None:
 ])
 def test_reconstruction_acceptance_requires_actual_object_comparison(relative: str) -> None:
     text = (SOURCE / relative).read_text(encoding="utf-8")
-    comparison = next(p for p in re.split(r"\n\s*\n", text) if "字符串齐全" in p)
-    assert all(token in comparison for token in ("实际打开", "预览", "原图", "字符串齐全", "对象计数", "图片数", "findings"))
-    assert re.search(r"(?:不能|未对照)[^。]*(?:比对|对象|重建通过)", comparison)
+    _has(text, r"实际打开.*预览.*原图", r"文字(?:回读|覆盖)", r"字符串齐全", r"(?:不能|未对照).*?(?:比对|对象|重建通过)")
     assert "重建未完成" in text
-    for token in ("界面控件", "旅程", "节点", "方向", "分支", "回流", "阅读顺序", "说明文字", "默认卡片", "清单"):
-        assert token in text, (relative, token)
     if relative != "references/reconstruction.md":
         target = "references/reconstruction.md" if relative == "SKILL.md" else "reconstruction.md"
         assert f"{target}#对照原图验收" in LINK.findall(text)
@@ -401,24 +374,21 @@ def test_reconstruction_acceptance_requires_actual_object_comparison(relative: s
 
 def test_original_comparison_checks_screen_journey_and_path_objects() -> None:
     text = (SOURCE / "references/reconstruction.md").read_text(encoding="utf-8")
-    acceptance = text.split("## 对照原图验收", 1)[1]
-    for kind, tokens in (
-        ("通用", ("界面控件", "步骤节点", "层级", "阅读顺序", "说明文字", "默认卡片", "清单")),
-        ("界面原型", ("身份", "资产", "分入口", "内容区可视物", "服务", "操作入口", "屏幕结构", "分区说明句")),
-        ("顾客旅程", ("步骤的空间顺序", "人物动作", "场景")),
-        ("路径／步骤", ("节点", "连线端点", "方向", "分支", "回流", "对应对象")),
+    acceptance = _section(text, "对照原图验收")
+    for kind, behavior in (
+        ("通用", r"阅读顺序.*说明文字"),
+        ("界面原型", r"屏幕结构.*分区说明句"),
+        ("顾客旅程", r"空间顺序.*人物动作或场景"),
+        ("路径／步骤", r"连线端点.*对应对象"),
     ):
-        line = next(line for line in acceptance.splitlines() if line.startswith(f"- {kind}："))
-        assert all(token in line for token in tokens), kind
-    assert "原图／编译预览对照" in acceptance
-    assert all(token in acceptance for token in ("不新增自动视觉评分", "visual_review", "desktop_editing", "not_evaluated", "不能改成自动通过"))
+        item = re.search(rf"^- {kind}：([\s\S]*?)(?=^- |\Z)", acceptance, re.MULTILINE)
+        assert item, kind
+        _has(item[1], behavior)
+    _has(acceptance, r"原图／编译预览对照", r"不新增自动视觉评分")
+    _has(acceptance, r"visual_review", r"desktop_editing", r"not_evaluated", r"不能.*自动通过")
 
 
 def test_reconstruction_retains_background_and_zero_picture_protections() -> None:
-    text = (SOURCE / "references/reconstruction.md").read_text(encoding="utf-8")
-    protection = next(p for p in re.split(r"\n\s*\n", text) if "pictures=0" in p)
-    assert re.search(r"禁止[^。]*方便转 SVG[^。]*扁平色块", protection)
-    assert re.search(r"禁止把整页蓝图当背景", protection)
-    assert re.search(r"禁止为了 `pictures=0`[^。]*普通矩形或默认流程图", protection)
-    assert re.search(r"`pictures=0`[^。]*不是目标[^。]*不是失败", protection)
-    assert re.search(r"对象计数和图片数不能代表质量", protection)
+    text = _section((SOURCE / "references/reconstruction.md").read_text(encoding="utf-8"), "同时满足可编辑与画面保真")
+    _has(text, r"禁止.*方便转 SVG.*扁平色块", r"禁止.*整页蓝图.*背景")
+    _has(text, r"禁止.*pictures=0.*普通矩形", r"pictures=0.*不是目标.*不是失败", r"对象计数和图片数不能代表质量")

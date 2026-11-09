@@ -13,7 +13,6 @@ const { createElement, act } = await import('react');
 const { createRoot } = await import('react-dom/client');
 const { DeckMasterProvider, useDeckMaster } = await import('./context/DeckMasterContext.jsx');
 const { default: PageReaderView } = await import('./components/scenes/PageReaderView.jsx');
-const { default: GalleryView } = await import('./components/scenes/GalleryView.jsx');
 const { formatFinding, fileUrl } = await import('./api.js');
 const originalFetch = globalThis.fetch;
 let root;
@@ -38,7 +37,7 @@ function Probe() {
   if (!state.workspace) return null;
   return createElement('div', null,
     state.actionError && createElement('p', { role: 'alert' }, state.actionError),
-    createElement(state.scene === 'gallery' ? GalleryView : PageReaderView));
+    createElement(PageReaderView));
 }
 
 async function mount(t, first = page('p1')) {
@@ -112,6 +111,8 @@ test('same selected page compares original on the left and adopted preview on th
   assert.equal(document.querySelectorAll('.page-comparison .badge.warn').length, 2);
   assert.equal(requests.some(request => request.method !== 'GET'), false);
   assert.equal(state.comparison, null);
+  assert.ok(document.querySelector('.page-comparison').textContent.includes('讲稿见正文层'));
+  assert.ok([...document.querySelectorAll('button')].some(node => node.textContent === '修改正文与讲稿'));
 });
 
 test('zoom and horizontal/vertical region controls share one view and reset on a different selected page', async t => {
@@ -176,12 +177,14 @@ test('comparison filters build findings by page and retains real object and regi
   const findings = [...document.querySelectorAll('.page-comparison-findings > li')];
   assert.equal(findings.length, 3);
   for (const [index, finding] of buildFindings.slice(0, 3).entries()) assert.ok(findings[index].textContent.includes(formatFinding(finding)));
-  for (const locator of ['edge-4', 'node-4', 'node-2', 'atom-1', 'text-1', '144', '216', '300', '400', '12192000']) {
-    assert.ok(document.querySelector('.page-comparison-findings').textContent.includes(locator), locator);
+  const fields = finding => Object.fromEntries([...finding.querySelectorAll('dl > div')].map(row => [row.querySelector('dt').textContent, row.querySelector('dd').textContent]));
+  for (const [label, value] of Object.entries({ 表格: 'table-1', 行: 'row-2', 列: 'col-3', 文字对象: 'atom-1' })) {
+    assert.equal(fields(findings[1])[label], value);
   }
+  assert.equal(fields(findings[2])['SVG 元素'], 'text-2');
   assert.equal(document.querySelector('.page-comparison-findings').textContent.includes('other-page-node'), false);
   assert.deepEqual([...findings[0].querySelectorAll('dd')].map(node => node.textContent), ['edge-4', 'node-4', 'node-2']);
-  assert.equal(findings[0].querySelectorAll('svg, rect, [data-bbox]').length, 0);
+  assert.equal(document.querySelectorAll('.page-comparison-findings svg, .page-comparison-findings rect, .page-comparison-findings [data-bbox]').length, 0);
   await act(async () => { state.openPage('p2'); });
   assert.equal(document.querySelectorAll('.page-comparison-findings > li').length, 1);
   assert.ok(document.querySelector('.page-comparison-findings').textContent.includes('other-page-node'));
@@ -197,7 +200,7 @@ test('no session readback is distinguished from a build with no same-page findin
   assert.equal(document.querySelectorAll('.page-comparison-findings > li').length, 0);
 });
 
-test('reader and gallery keep original single-layer switches', async t => {
+test('reader keeps original single-layer switches', async t => {
   await mount(t);
   await click('原图');
   assert.deepEqual([...document.querySelectorAll('img')].map(node => node.getAttribute('src')), [fileUrl(payload.deck.pages[0].image.file)]);
@@ -205,11 +208,6 @@ test('reader and gallery keep original single-layer switches', async t => {
   assert.deepEqual([...document.querySelectorAll('img')].map(node => node.getAttribute('src')), [fileUrl(payload.deck.pages[0].preview)]);
   await click('正文');
   assert.equal(document.querySelectorAll('img').length, 0);
-  await act(async () => { state.setScene('gallery'); });
-  assert.equal(document.querySelector('select').options.length, 3);
-  assert.deepEqual([...document.querySelectorAll('img')].map(node => node.getAttribute('src')), payload.deck.pages.map(item => fileUrl(item.image.file)));
-  await act(async () => { state.setGalleryLayer('svg'); });
-  assert.deepEqual([...document.querySelectorAll('img')].map(node => node.getAttribute('src')), payload.deck.pages.map(item => fileUrl(item.preview)));
 });
 
 test('natural-language review from comparison uses the existing page scope and resolve chain, retaining failed drafts', async t => {

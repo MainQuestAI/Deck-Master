@@ -35,8 +35,8 @@ description: 用 Rust deck 做已有正文的页面设计、样页和指定页�
 
 再按实际需要进入 [commands.md](references/commands.md) 的相应制作步骤；蓝图仍可用的局部返修直接进入 SVG 修正，需要新蓝图时才从生图开始：
 
-1. `deck run start image` 之后，读取该次 task.md 的原文作为 ImageGen 的 prompt，附件只使用 attachments.json 里的文件。
-2. 交回、比对、需要时 `deck run adopt`。取消后或依据已变的结果只保存。
+1. **需要新蓝图时：** `deck run start image` 之后，读取该次 task.md 的原文作为 ImageGen 的 prompt，附件只使用 attachments.json 里的文件。
+2. **需要新蓝图时：** 交回、比对、需要时 `deck run adopt`。取消后或依据已变的结果只保存。
 3. 重建 SVG 前读共享的 [还原策略](references/reconstruction.md)，元素与绑定按 [SVG 子集](references/svg-subset.md)。SVG 按原图的布局和关系重建，正文取 content，文字绑定 atoms。错漏文字、局部排版和依据明确的连线可以沿用原图直接改 SVG。业务关系有歧义时问内容，主结构要重排时先改蓝图再重建。
 4. 在范围内 `deck build`，再用 `deck export pptx`。缺页、依据已变和构建之后又改过，按命令输出里的字段照实说明。
 

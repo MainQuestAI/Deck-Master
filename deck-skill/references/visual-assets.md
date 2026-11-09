@@ -8,7 +8,7 @@
 
 ## 登记与使用范围
 
-按页选用时带上实际 page id，多个页面重复传 `--page`；作品级标志、logo 等公共素材不限制页：
+按页选用时带上实际 page id，多个页面可重复传 `--page` 或用逗号分隔；作品级标志、logo 等公共素材不限制页：
 
 ```bash
 deck --project <project> asset add delivery-icon <icon.png> --page p1 --page p3 --source <来源> --license <许可>
