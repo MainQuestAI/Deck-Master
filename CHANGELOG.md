@@ -20,8 +20,9 @@ PyPI publication implied.
   checks guide production (#289–#293, #295–#296, #298–#299).
 - Delivery and revision: fix native-table borders, table letter spacing and
   backtracking curves; add three-layer QA, scoped repair, same-page original /
-  compiled-preview comparison, row-by-row lookup-table tasks and reconstruction
-  object preservation (#297, #300–#304).
+  compiled-preview comparison and reconstruction object preservation; tighten
+  lookup-table success to genuine row-by-row reading tasks whose layout names
+  the table as the main visual (#297, #300–#304).
 - Follow-ups: refine method guidance and comparison/asset behavior; reject empty
   `--page`, scope tests to the relevant behavior, and avoid new orphan files
   when a page is deleted during conversion (#305–#306).
