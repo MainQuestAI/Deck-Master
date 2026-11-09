@@ -306,10 +306,6 @@ fn image_run_inlines_readable_page_inputs_and_keeps_svg_inputs_separate() {
         "退回",
         "容量限制按日计算",
         "仅适用于正常工作时段",
-        "让主要文字、连线和业务对象可以分开重建",
-        "不要为了方便转 SVG 先画成扁平色块",
-        "不要把整页当成最后必须压成零张图",
-        "pictures=0 不是目标，也不是失败",
     ] {
         assert!(image.contains(text), "image task omits {text}");
     }
@@ -1020,4 +1016,55 @@ else:
     assert_ne!(svg["current_basis"], svg_basis);
     assert_eq!(svg["basis_changed"], true);
     assert_artifacts(json!(["p1"]), json!(["p1"]));
+}
+
+#[test]
+fn image_tasks_inline_shared_rules_without_competing_defaults_or_rewriting_author_text() {
+    for (width, height, physical_width, palette) in [
+        (1280, 720, 13.333, vec![]),
+        (2560, 1440, 13.333, vec!["#123456"]),
+        (1000, 1000, 7.5, vec!["#123456", "#ffffff"]),
+    ] {
+        let temp = tempfile::tempdir().unwrap();
+        let path = temp.path();
+        setup(path);
+        let mut style = ops::get(path, None).unwrap()["deck"]["style"].clone();
+        style["canvas"] = json!({"width_px":width,"height_px":height,"slide_width_in":physical_width,"slide_height_in":7.5});
+        style["palette"] = json!(palette);
+        style["fonts"] = json!(["BrandFont"]);
+        let text = "作者正文保留 #164267、1280×720 和 Noto Sans CJK SC";
+        edit(
+            path,
+            json!({"style":style,"pages":[{"id":"p1","content":{"title":text}}]}),
+        );
+        let run = ops::run_start(path, "image", &["p1".into()], None).unwrap();
+        let directory = Path::new(run["runs"][0]["pages"][0]["work"].as_str().unwrap());
+        let original_task = std::fs::read(directory.join("task.md")).unwrap();
+        let prompt = String::from_utf8(original_task.clone()).unwrap();
+        let rules = include_str!("../../deck-skill/references/design-system.md");
+        assert!(prompt.contains(rules));
+        let saved = ops::get(path, None).unwrap();
+        assert!(
+            prompt.contains(
+                saved["deck"]["pages"][0]["content"]["title"]
+                    .as_str()
+                    .unwrap()
+            )
+        );
+        assert!(prompt.contains("BrandFont"));
+        let guidance = prompt.split("## 可见文字").next().unwrap();
+        for default in ["#164267", "Noto Sans CJK SC", "deck doctor", "deck put"] {
+            assert!(
+                !guidance.contains(default),
+                "unrelated default in guidance: {default}"
+            );
+        }
+        assert_eq!(ops::get(path, None).unwrap()["deck"]["style"], style);
+        ops::run_cancel(path, run["runs"][0]["id"].as_i64().unwrap()).unwrap();
+        ops::run_start(path, "image", &["p1".into()], None).unwrap();
+        assert_eq!(
+            std::fs::read(directory.join("task.md")).unwrap(),
+            original_task
+        );
+    }
 }

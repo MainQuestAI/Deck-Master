@@ -176,3 +176,26 @@ python -m deck_tools.case_numbers path/to/numbers.json
 `deck material text <id>` 返回抽取文本 path 和项目内不可变原件副本 original_path。
 原件缺失时 original_path 为 null，已有文本仍可读；解析未完成仍报 needs_tool。
 解析成功不代表已看过图，系统不保存历史视觉阅读是否完成；按本次任务查看必要图表、流程或扫描页，纯 TXT/MD 不增加看图要求。
+
+## 读取和修改作品风格
+
+标准安装会自动定位自己的工具环境，无需设置开发用 DECK_TOOLS_PYTHON。
+先读取完整作品，保留当前 canvas、fonts 和 assets，再修改需要的字段：
+
+```bash
+deck get > snapshot.json
+python3 - <<'PYTHON'
+import json
+from pathlib import Path
+snapshot = json.loads(Path("snapshot.json").read_text())
+style = snapshot["deck"]["style"]
+style["palette"] = ["#164267", "#F5F7FA", "#D97706"]
+Path("style-patch.json").write_text(json.dumps({"style": style}, ensure_ascii=False))
+print(snapshot["version"])
+PYTHON
+deck put --base <上一步输出的版本号> style-patch.json
+deck doctor --fonts "Noto Sans CJK SC"
+```
+
+色板为无品牌示例；品牌项目使用自己的值。doctor 的字体参数换成当前实际选用的字体；缺工具或字体按错误提示处理。修改已有作品时不能用默认画布、默认字体或空 assets 覆盖原值。
+共享视觉规则只提供绘图语言；实际 palette/fonts/canvas 由作品动态进入任务。既有 task.md 不后台更新，软件更新也不批量使历史图片过期，需要新风格时显式准备新任务。

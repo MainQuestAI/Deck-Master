@@ -10,8 +10,12 @@ const IMAGE_GUIDANCE: &str = "让读者从主视觉看出上述信息关系。�
 让主要文字、连线和业务对象可以分开重建。照片、标志和复杂插画可放在边界清晰的区域。
 不要为了方便转 SVG 先画成扁平色块；不要把整页当成最后必须压成零张图，pictures=0 不是目标，也不是失败。";
 
+const DESIGN_RULES: &str = include_str!("../../deck-skill/references/design-system.md");
+
 fn image_prompt(deck: &Deck, page: &Page, context: &str) -> String {
-    let mut prompt = format!("生成一张演示文稿页面原图。\n{context}\n{IMAGE_GUIDANCE}\n");
+    let mut prompt = format!(
+        "生成一张演示文稿页面原图。\n{context}\n{IMAGE_GUIDANCE}\n\n## 绘图规则\n{DESIGN_RULES}\n"
+    );
     for (name, values) in [("色板", &deck.style.palette), ("字体", &deck.style.fonts)] {
         if !values.is_empty() {
             let _ = writeln!(prompt, "{name}　{}", values.join("、"));
