@@ -150,7 +150,7 @@ deck --project "$DECK_PROJECT" export md > "$DECK_PROJECT/manuscript.md"
 2. `deck run result <run> <page> <图片文件>` 交回。首次结果可以自动采用；重交的修正版、取消后或依据已变的结果只保存。确认使用后 `deck run adopt <run> <page>`。`deck run show` 看状态，`deck run cancel <run>` 停止后续调用和自动采用。
 3. `deck run start svg --pages p1,p2` 准备 SVG。按原图的布局和关系重建，正文取 content.json，文字绑定 atoms.json。先读 [svg-subset.md](svg-subset.md)。错漏文字、局部排版和依据明确的连线可以沿用原图直接改。主结构要重排时先改蓝图。
 4. `deck run result <run> <page> <SVG文件>` 编译、渲染并回读。工具报错就改具体元素。Host 打开预览 PNG，对照原图检查端点、方向、分支、层级、侧栏和阅读顺序。
-5. `deck build` 构建 PPTX，`deck export pptx` 取最近构建路径。`missing_pages` 是没有 SVG、因此没有进入这次 PPTX 的页。`stale_pages` 是 SVG 依据与当前正文、原图或样式不一致。`stale_images` 在 `deck show` 的 `artifact_status` 里，指原图依据已变；只改讲稿不会让原图过期。构建成功不会清掉这两项。`export pptx` 的 `input_changed` 才表示构建之后 SVG、讲稿或构建设置又变了。
+5. `deck build` 构建 PPTX，`deck export pptx` 优先取当前构建输入匹配的成品路径，没有匹配时取最近历史成品并提示。`missing_pages` 是没有 SVG、因此没有进入这次 PPTX 的页。`stale_pages` 是 SVG 依据与当前正文、原图或样式不一致。`stale_images` 在 `deck show` 的 `artifact_status` 里，指原图依据已变；只改讲稿不会让原图过期。构建成功不会清掉这两项。`export pptx` 的 `input_changed` 才表示构建之后 SVG、讲稿或构建设置又变了。
 
 `soffice` 不可用时，SVG 的 `deck run result` 失败并说明如何安装 LibreOffice。停在这一步。不要改调 `compile_job`，不要手写 PPTX。
 
@@ -200,3 +200,6 @@ deck doctor --fonts "Noto Sans CJK SC"
 
 色板为无品牌示例；品牌项目使用自己的值。doctor 的字体参数换成当前实际选用的字体；缺工具或字体按错误提示处理。修改已有作品时不能用默认画布、默认字体或空 assets 覆盖原值。
 共享视觉规则只提供绘图语言；实际 palette/fonts/canvas 由作品动态进入任务。既有 task.md 不后台更新，软件更新也不批量使历史图片过期，需要新风格时显式准备新任务。
+
+PPTX 默认优先下载与当前构建输入匹配的成品，没有匹配时下载最近可用历史成品并提示。
+input_changed 只表示构建输入匹配，不表示正文或视觉已最新；来源 version_id 标识构建时作品版本。

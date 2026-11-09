@@ -196,7 +196,7 @@ svg 类没有外部付费调用，不需要 `run call`，也没有 max_calls。�
 
 - `deck build`：取每页当前的 SVG，调用 `deck_tools build`（编译、回读、清洗），并记录输入摘要：页序、每页 svg 与 notes、画布、字体、素材 ID 对应的不可变文件。素材映射按 ID 排序，不包含本机绝对路径；正文变化单独通过 SVG 过期提示。缺 SVG 的页不进入 PPTX；SVG 已过期的页照常编入，回读会报出文字不一致。刚完成的 build 仍可能列出 `stale_pages`：它比较的是 SVG basis 与当前依据，不是这次 PPTX 文件的新旧。`stale_images` 只比较原图 basis，构建不会清掉它。`export pptx` 的 `input_changed` 才表示 SVG 文件、讲稿或构建设置在该次构建之后变了。
 - `deck export md`：任何时候都可以导出可读稿，包括未完成的作品，待补项照常显示。
-- `deck export pptx`：给出最近一次构建。该构建的输入摘要与当前作品不一致时给出提示。不用版本号判断，因为 restore 会产生编号更大、内容更旧的版本。
+- `deck export pptx`：优先选择当前 build_digest 匹配的最大构建 ID，否则选择最新历史构建；选中文件缺失时报错，不悄悄替换为另一份。返回来源 version_id，HTTP 仍返回 PPTX 字节与 X-Deck-Status 元数据。该构建的输入摘要与当前作品不一致时给出提示。不用版本号判断，因为 restore 会产生编号更大、内容更旧的版本。
 - build 和 export 的输出里，以及界面的下载按钮旁，都列出缺 SVG 的页和 SVG 已过期的页。界面取 `POST /api/build` 的响应或轮询得到的 `artifact_status`。
 - 原生表格回读按稳定行列身份核对 content 与实际单元格文字，并保留 SVG → PPT 的转换检查；同一原因不重复报告。发现项仍只报告，不增加采用或导出门槛。
 - 原生单元格与普通文字使用同一字号、填充和透明度可见性判据；非空表格标题继续做普通文字覆盖检查，空标题与空单元格不制造缺字发现。

@@ -173,7 +173,7 @@ enum RunCommand {
 #[derive(Subcommand)]
 enum ExportCommand {
     #[command(
-        about = "返回最近构建的 PPTX。stale_pages 表示 SVG 依据已变；input_changed 才表示构建之后输入又变了"
+        about = "优先下载当前输入匹配的 PPTX；无匹配时下载最近可用历史成品。stale_pages 表示 SVG 依据已变"
     )]
     Pptx,
     #[command(about = "输出 Markdown，包括未完成内容")]

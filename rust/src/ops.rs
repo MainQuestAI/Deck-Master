@@ -1309,25 +1309,41 @@ pub fn build(project: &Path) -> Result<Value> {
     )
 }
 
-pub fn export_pptx(project: &Path) -> Result<Value> {
+// Selection and its metadata share the caller's read transaction.
+fn default_build(connection: &rusqlite::Connection, deck: &Deck) -> Result<Option<Value>> {
     use rusqlite::OptionalExtension;
-    let store = Store::open(project)?;
-    let deck = store.current()?.deck;
-    let build: Option<(i64, String, String, String)> = store
-        .connection
-        .query_row(
-            "SELECT id,input_digest,pptx_file,missing_pages FROM builds ORDER BY id DESC LIMIT 1",
-            [],
-            |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?)),
-        )
-        .optional()?;
-    let (id, digest, file, missing) =
-        build.ok_or_else(|| Error::Input("尚无构建；请先运行 deck build".into()))?;
+    let digest = build_digest(deck)?;
+    let row = connection.query_row(
+        "SELECT id,version_id,input_digest,pptx_file,missing_pages,created_at FROM builds ORDER BY (input_digest=?1) DESC,id DESC LIMIT 1",
+        [&digest],
+        |r| Ok((r.get::<_,i64>(0)?,r.get::<_,i64>(1)?,r.get::<_,String>(2)?,r.get::<_,String>(3)?,r.get::<_,String>(4)?,r.get::<_,String>(5)?)),
+    ).optional()?;
+    row.map(|(id,version_id,input,file,missing,created)| {
+        let changed = input != digest;
+        Ok(json!({"id":id,"version_id":version_id,"file":file,"created_at":created,
+            "input_changed":changed,
+            "warning":if changed {"当前构建输入没有匹配的成品；下载的是最近可用历史成品，请按需重新构建"} else {""},
+            "build_missing_pages":serde_json::from_str::<Value>(&missing)?}))
+    }).transpose()
+}
+
+pub fn export_pptx(project: &Path) -> Result<Value> {
+    let mut store = Store::open(project)?;
+    let tx = store.connection.transaction()?;
+    let deck = store::current(&tx)?.deck;
+    let mut selected = default_build(&tx, &deck)?
+        .ok_or_else(|| Error::Input("尚无构建；请先运行 deck build".into()))?;
+    let file = selected["file"]
+        .as_str()
+        .ok_or_else(|| Error::Tool("构建缺少文件引用".into()))?;
+    selected["path"] = json!(store::file_path(&store.root, file)?);
+    selected.as_object_mut().map(|value| value.remove("file"));
     let status = artifact_status(&deck)?;
-    let changed = digest != build_digest(&deck)?;
-    Ok(
-        json!({"id":id,"path":store.file(&file)?,"input_changed":changed,"warning":if changed {"当前 SVG、讲稿或构建设置已变化；下载的是最近构建，请按需重新 build"} else {""},"missing_pages":status["missing_pages"],"stale_pages":status["stale_pages"],"build_missing_pages":serde_json::from_str::<Value>(&missing)?}),
-    )
+    selected["missing_pages"] = status["missing_pages"].clone();
+    selected["stale_pages"] = status["stale_pages"].clone();
+    selected["stale_images"] = status["stale_images"].clone();
+    selected["incomplete_basis_pages"] = status["incomplete_basis_pages"].clone();
+    Ok(selected)
 }
 
 pub fn doctor(fonts: &[String]) -> Result<Value> {
@@ -1386,5 +1402,52 @@ mod build_selection_tests {
         let status = artifact_status(&deck).unwrap();
         assert_eq!(status["stale_pages"], json!([]));
         assert_eq!(status["incomplete_basis_pages"], json!(["p1"]));
+    }
+
+    #[test]
+    fn matching_build_wins_over_later_completion_and_restore_can_select_older_id() {
+        let temp = tempfile::tempdir().unwrap();
+        let mut store = Store::create(temp.path(), &Deck::default()).unwrap();
+        let mut older = Deck::default();
+        older.pages.push(Page {
+            id: "p1".into(),
+            notes: "old".into(),
+            ..Page::default()
+        });
+        let mut current = older.clone();
+        current.pages[0].notes = "new".into();
+        let old_file = store.add_file(b"old build", "pptx").unwrap();
+        let current_file = store.add_file(b"current build", "pptx").unwrap();
+        for (deck, file) in [
+            (&older, &old_file),
+            (&current, &current_file),
+            (&older, &old_file),
+        ] {
+            store.connection.execute("INSERT INTO builds(version_id,input_digest,pptx_file,findings_json,missing_pages) VALUES (1,?,?, '{}','[]')", rusqlite::params![build_digest(deck).unwrap(), file]).unwrap();
+        }
+        assert_eq!(
+            default_build(&store.connection, &current).unwrap().unwrap()["id"],
+            2
+        );
+        assert_eq!(
+            default_build(&store.connection, &older).unwrap().unwrap()["id"],
+            3
+        );
+        let tx = store.transaction().unwrap();
+        store::append(&tx, &current, "Current inputs").unwrap();
+        tx.commit().unwrap();
+        let export = export_pptx(temp.path()).unwrap();
+        assert_eq!(export["id"], 2);
+        assert_eq!(export["input_changed"], false);
+        assert_eq!(
+            std::fs::read(export["path"].as_str().unwrap()).unwrap(),
+            b"current build"
+        );
+        current.pages[0].notes = "unbuilt".into();
+        let fallback = default_build(&store.connection, &current).unwrap().unwrap();
+        assert_eq!(fallback["id"], 3);
+        assert_eq!(fallback["input_changed"], true);
+        std::fs::remove_file(store.file(&current_file).unwrap()).unwrap();
+        assert!(matches!(export_pptx(temp.path()), Err(Error::Missing(_))));
     }
 }
