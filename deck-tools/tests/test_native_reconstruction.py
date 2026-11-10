@@ -14,6 +14,7 @@ import pytest
 
 from deck_tools import native
 from deck_tools.atoms import visible_atoms
+from deck_tools.compiler.native import notes_records
 from deck_tools.render import RendererError
 from deck_tools.jobs import projection
 from deck_tools.vendor.cyberppt.test_select_icon import SelectIconTests  # noqa: F401
@@ -53,9 +54,50 @@ def sample(tmp_path):
     return tmp_path, page, plan
 
 
+def _second_page(page, plan):
+    second = {**page, 'id': 'p2', 'plan': str(Path(page['plan']).with_name('second.json')),
+              'notes': '整套第二页合成讲稿'}
+    atoms = dict(zip(
+        (a['atom_id'] for a in visible_atoms(projection(page))),
+        (a['atom_id'] for a in visible_atoms(projection(second))), strict=True))
+    plan = deepcopy(plan)
+    plan['page'] = second['id']
+    for op in plan['ops']:
+        items = [cell for row in op['cells'] for cell in row] if op['op'] == 'table' else [op]
+        for item in items:
+            if 'atom_id' in item:
+                item['atom_id'] = atoms[item['atom_id']]
+    native.write_json(second['plan'], plan)
+    return second
+
+
 def test_validate_plan_covers_current_content(sample):
     _, page, plan = sample
     assert native.validate_plan(plan, page)['atoms'] == 5
+
+
+@pytest.mark.parametrize('radius', [0, 8])
+def test_validate_plan_rejects_radius_on_ellipse(sample, radius):
+    _, page, plan = sample
+    plan['ops'][0].update(type='ellipse', radius=radius)
+    with pytest.raises(ValueError):
+        native.validate_plan(plan, page)
+
+
+@pytest.mark.parametrize('shape_type', ['rect', 'roundRect'])
+@pytest.mark.parametrize('dimension', [2, 3])
+def test_generator_skips_radius_adjustment_for_zero_size(sample, shape_type, dimension):
+    work, page, plan = sample
+    plan['ops'][0]['type'] = shape_type
+    plan['ops'][0]['bbox'][dimension] = 0
+    native.write_json(page['plan'], plan)
+    output = native.generate([page], work / 'zero-size.pptx', mode='single')
+    with zipfile.ZipFile(output) as archive:
+        root = etree.fromstring(archive.read('ppt/slides/slide1.xml'))
+    shape = root.xpath('//p:sp[p:nvSpPr/p:cNvPr/@name="native_0"]', namespaces=native.NS)[0]
+    geometry = shape.find('p:spPr/a:prstGeom', native.NS)
+    assert geometry.get('prst') == shape_type
+    assert geometry.find('a:avLst/a:gd', native.NS) is None
 
 
 @pytest.mark.parametrize('target', ['table', 'header', 'cell'])
@@ -94,17 +136,19 @@ def test_validate_plan_rejects_invalid_input(sample, fault):
 @pytest.mark.parametrize('mode', ['single', 'deck'])
 def test_generator_readback_and_shared_xml_postprocessing(sample, mode):
     work, page, plan = sample
-    pages = [page] if mode == 'single' else [page, {**page, 'notes': '整套第二页合成讲稿'}]
+    pages = [page] if mode == 'single' else [page, _second_page(page, plan)]
     output = native.generate(pages, work / f'{mode}.pptx', mode=mode)
     presentation = Presentation(output)
     assert len(presentation.slides) == len(pages)
     with zipfile.ZipFile(output) as archive:
+        assert 'ppt/embeddings/' not in archive.namelist()
         for i, (slide, expected) in enumerate(zip(presentation.slides, pages), 1):
             root = etree.fromstring(archive.read(f'ppt/slides/slide{i}.xml'))
             assert root.findall('.//a:t', native.NS)
             assert [e.text for e in root.findall('.//a:t', native.NS)] == [a['text'] for a in visible_atoms(projection(page))]
             assert len(root.findall('.//p:pic', native.NS)) == sum(op['op'] in ('icon', 'image') for op in plan['ops'])
             assert slide.notes_slide.notes_text_frame.text == expected['notes']
+            assert slide.name == expected['id']
             assert {e.get('typeface') for e in root.findall('.//a:rPr/a:latin', native.NS)} == {'Noto Sans CJK SC'}
             assert {tc.get('anchor') for tc in root.findall('.//a:tcPr', native.NS)} == {'ctr'}
             for row, margins in zip(root.findall('.//a:tr', native.NS), ([5, 8, 5, 8], [7, 9, 7, 9])):
@@ -237,6 +281,23 @@ def test_crop_and_validate_plan_json_entrypoint(sample):
     assert invoke('validate-plan', {'page': page})['atoms'] == 5
 
 
+def test_assemble_rejects_private_notes_with_adapter_error(sample):
+    work, page, _ = sample
+    page['notes'] = '合成路径 /Users/x/demo'
+    directory = Path(page['plan']).parent
+    native.write_json(directory / 'status.json', {
+        'plan_sha256': hashlib.sha256(Path(page['plan']).read_bytes()).hexdigest(),
+        'render_png': page['source_image'], 'side_by_side': page['source_image'], 'note': '合成对照结论',
+    })
+    job = work / 'job.json'
+    native.write_json(job, {'work': str(work), 'pages': [page]})
+    result = subprocess.run([sys.executable, '-m', 'deck_tools', 'assemble', str(job)], capture_output=True, text=True)
+    assert result.returncode == 4
+    assert 'notes.body' in result.stderr
+    assert 'Traceback' not in result.stderr
+    assert not result.stdout
+
+
 def test_generator_lookup_installed_then_development(tmp_path, monkeypatch):
     installed = tmp_path / 'share/deck/native-pptx'
     installed.mkdir(parents=True)
@@ -250,27 +311,42 @@ def test_generator_lookup_installed_then_development(tmp_path, monkeypatch):
 
 @pytest.mark.render
 def test_render_and_assemble_real_synthetic_source(sample):
-    work, page, _ = sample
+    work, page, plan = sample
+    pages = [page, _second_page(page, plan)]
     job = work / 'job.json'
-    native.write_json(job, {'work': str(work), 'page': page})
-    result = subprocess.run([sys.executable, '-m', 'deck_tools', 'render', str(job)], capture_output=True, text=True)
-    assert result.returncode == 0, result.stderr
-    answer = json.loads(result.stdout)
-    for key in ('render_png', 'side_by_side'):
-        with Image.open(answer[key]) as image:
-            assert image.width > 0 and image.height > 0
-    with Image.open(answer['side_by_side']) as image:
-        assert image.size == (1600, 480)
-    status_path = Path(page['plan']).parent / 'status.json'
-    status = native.read_json(status_path)
-    assert not status['note']
-    status['note'] = '合成页已逐项对照；此测试只验证生产链，不评价作品。'
-    native.write_json(status_path, status)
-    native.write_json(job, {'work': str(work), 'pages': [page]})
+    for current in pages:
+        native.write_json(job, {'work': str(work), 'page': current})
+        result = subprocess.run([sys.executable, '-m', 'deck_tools', 'render', str(job)], capture_output=True, text=True)
+        assert result.returncode == 0, result.stderr
+        answer = json.loads(result.stdout)
+        for key in ('render_png', 'side_by_side'):
+            with Image.open(answer[key]) as image:
+                assert image.width > 0 and image.height > 0
+        with Image.open(answer['side_by_side']) as image:
+            assert image.size == (1600, 480)
+        status_path = native.page_directory(work, current['id']) / 'status.json'
+        status = native.read_json(status_path)
+        assert not status['note']
+        status['note'] = '合成页已逐项对照；此测试只验证生产链，不评价作品。'
+        native.write_json(status_path, status)
+    native.write_json(job, {'work': str(work), 'pages': pages})
     result = subprocess.run([sys.executable, '-m', 'deck_tools', 'assemble', str(job)], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
     answer = json.loads(result.stdout)
     assert Path(answer['pptx']) == work / 'native/deck.pptx'
-    assert len(answer['render_pngs']) == 1
-    assert Path(answer['render_pngs'][0]).is_file()
-    assert Presentation(answer['pptx']).slides[0].notes_slide.notes_text_frame.text == page['notes']
+    assert len(answer['render_pngs']) == 2
+    assert all(Path(image).is_file() for image in answer['render_pngs'])
+    output = Path(answer['pptx'])
+    assert [(r['page_id'], r['notes']) for r in notes_records(output.read_bytes())] == [
+        (p['id'], p['notes']) for p in pages]
+    presentation = Presentation(output)
+    assert all(any(shape.has_table for shape in slide.shapes) for slide in presentation.slides)
+    with zipfile.ZipFile(output) as archive:
+        assert not any(name.startswith('docProps/') for name in archive.namelist())
+        icons = [name for name in archive.namelist() if name.startswith('ppt/media/') and name.endswith('.svg')]
+        assert len(icons) == 2
+        source = etree.fromstring(native.icon_file('tabler-outline/anchor').read_bytes())
+        for name in icons:
+            icon = etree.fromstring(archive.read(name))
+            assert icon.tag == source.tag
+            assert icon.xpath('//*[local-name()="path"]/@d') == source.xpath('//*[local-name()="path"]/@d')

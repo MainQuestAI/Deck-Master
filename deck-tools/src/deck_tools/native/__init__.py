@@ -12,6 +12,7 @@ import zipfile
 from lxml import etree
 from PIL import Image, ImageDraw
 
+from .. import sanitize
 from ..atoms import visible_atoms
 from ..jobs import projection
 from ..render import NeedsTool, executable, render_deck, run
@@ -108,6 +109,8 @@ def validate_plan(plan, page):
                 inside_box([*point, 0, 0], w, h)
         else:
             inside_box(op['bbox'], w, h)
+        if kind == 'shape' and 'radius' in op and op['type'] not in ('rect', 'roundRect'):
+            raise ValueError('圆角只用于矩形')
         if kind == 'text':
             text(op)
         elif kind == 'table':
@@ -148,11 +151,13 @@ def validate_plan(plan, page):
 
 def postprocess(pptx_path, plans):
     with zipfile.ZipFile(pptx_path) as archive:
-        files = {item.filename: archive.read(item) for item in archive.infolist()}
+        # PptxGenJS emits an empty embeddings directory even without embedded files.
+        files = {item.filename: archive.read(item) for item in archive.infolist() if not item.is_dir()}
     for index, plan in enumerate(plans, 1):
         emu = emu_per_px(plan)
         name = f'ppt/slides/slide{index}.xml'
         root = etree.fromstring(files[name])
+        root.find('p:cSld', NS).set('name', plan['page'])
         for para in root.findall('.//a:p', NS):
             for duplicate in para.findall('a:pPr', NS)[1:]:
                 para.remove(duplicate)
@@ -191,7 +196,7 @@ def postprocess(pptx_path, plans):
                 if op.get('closed'):
                     etree.SubElement(path, f'{{{NS["a"]}}}close')
                 props.insert(1, geometry)
-            elif op.get('radius'):
+            elif op['type'] in ('rect', 'roundRect') and op.get('radius') and min(op['bbox'][2:]) > 0:
                 geometry = props.find('a:prstGeom', NS)
                 geometry.set('prst', 'roundRect')
                 adjustments = geometry.find('a:avLst', NS)
@@ -292,6 +297,9 @@ def assemble(job):
         if not isinstance(status.get('note'), str) or not status['note'].strip():
             raise ValueError(f'{page["id"]} 缺少对照结论，请先看并排图并填写 note')
     output = generate(job['pages'], Path(job['work']) / 'native' / 'deck.pptx', mode='deck')
+    output.write_bytes(sanitize.pptx(
+        output.read_bytes(), 'deck.pptx',
+        notes=[{'page_id': p['id'], 'notes': p.get('notes', '')} for p in job['pages']]))
     directory = output.parent / 'deck-render'
     with tempfile.TemporaryDirectory(prefix='deck-native-deck-') as temp:
         images = render_deck(output, temp, fonts={})
