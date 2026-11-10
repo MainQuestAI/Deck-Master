@@ -54,8 +54,7 @@ Deck Master 服务于需要讲清商业方案的人：解决方案架构师、�
 若 `<prefix>/bin` 不在 PATH 中，请加入，或直接运行 `<prefix>/bin/deck`。步骤见
 [安装说明](docs/getting-started.md#install-from-source)。
 
-安装后用 `deck new ./my-deck --title '方案标题'` 新建作品目录。链接的
-Skill 说明首跑命令。
+安装后按[快速开始](#快速开始)制作第一份方案。
 
 标准安装和升级都使用 `scripts/install.sh`，不用设置 `DECK_TOOLS_PYTHON`。
 无法确认归属的 CLI 入口保留并报冲突；旧 Cargo 安装通过安装记录及关联构建产物一致性判断，不执行未知二进制。
@@ -81,7 +80,15 @@ export PATH="$PWD/.dev-prefix/bin:$PATH"
 
 ## 快速开始
 
-使用自己的完整材料与任务说明。请用命令实际返回的路径和 ID 替换占位符，不能直接将尖括号内容作为参数。示例假定 `scripts/install.sh` 之后 `deck` 已在 PATH 中。
+1. 在本仓库目录运行 `bash scripts/install.sh` 安装，详见[安装](#安装)和[安装指南](docs/getting-started.md#install-from-source)。确保 `deck` 已在 PATH 中。
+2. 在本仓库目录打开 Codex，输入：
+
+   > 用 examples/first-run/zh/material.md 按 examples/first-run/zh/brief.md 做一份 6 页方案，放在 ./first-deck。
+
+   Skill 会处理所需命令。[样例](examples/first-run/README.md)完全由合成材料构成。
+3. 运行 `deck serve ./first-deck` 查看草稿。服务绑定 `127.0.0.1`，并打印可打开的 URL。
+
+**手动命令 / 使用自己的材料：** 准备自己的完整材料与任务说明，用命令实际返回的路径和 ID 替换占位符，不能直接将尖括号内容作为参数。以下命令假定安装后 `deck` 已在 PATH 中。
 
 ```bash
 # 1. 新建作品目录，只添加作者指定的材料。
