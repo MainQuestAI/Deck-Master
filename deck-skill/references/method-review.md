@@ -59,7 +59,7 @@ Review保持只读；提供具体findings与修改建议，实际修稿按既有
 
 沿用问题、影响、建议和尚未验证维度的报告格式，每条补充分级、页及对象／区域（语义问题附原句）、参考依据和推荐返修动作。分级写在报告或作者要求保存的意见正文，不另建状态或审批步骤。
 
-作者明确要求保存时用 `deck review add`，method 取 `self_check`、`other_model` 或 `human`，与真实身份一致。不改正文，不生图，不执行 `deck run adopt`。算式文件可用 `python -m deck_tools.case_numbers` 复算；通过只说明算式，不说明归因。
+作者明确要求保存时用 `deck review add`，`--method` 必填，没有默认值，取 `self_check`、`other_model` 或 `human`，与真实身份一致。不改正文，不生图，不执行 `deck run adopt`。算式文件可用 `python -m deck_tools.case_numbers` 复算；通过只说明算式，不说明归因。
 
 ## 校准样例
 [12个短例](../assets/review/calibration-cases.json)含错误、修订及原因。它们是教学参照，不是自动关键词裁判，不强制每稿12项全部出现；缺少商业CTA的好培训稿不因此失败。

@@ -9,6 +9,14 @@
 - 旧 Python 工作台（`src/deck_master/`、`skills/deck-*`、旧线测试与 `rebuild.yml`）已移出仓库。
 - 删除 `deck-master` 命令及其 `legacy-export`，旧项目不再提供官方导出。
 - Rust `deck import` 仍可导入已经存在的 `legacy-export.v1` 档案。
+- 项目格式 4 → 5：升级会提升 user_version，保留旧版本、文件和历史依据；旧程序遇到高版本格式会拒绝打开；不提供原地降级，回退需要使用升级前保留的完整项目副本。(#310)
+- 新增 `GET /api/builds/{id}`，按需持久读取构建详情；workspace 仍只返回构建摘要。(#310)
+- 安装布局：`scripts/install.sh` 在 `<prefix>/share/deck/installations/` 下准备完整目录（CLI 与内嵌 WebUI、非 editable 的 deck-tools venv、四个职责 Skill 及共享资源），验证后切换 `<prefix>/share/deck/current` 指针；职责入口链接经由 current；升级保留旧目录。首次多入口迁移中断时，`entry-migrations` 保存已确认入口的迁移凭据，供同参数重试，成功后删除。(#310)
+- 嵌套 labels/footnotes/callouts 的子项进入文字回读；材料保留不可变原件副本，`deck material text` 返回该副本路径，原件缺失时为 null。(#310)
+- 新 SVG 依据为 svg-v2，纳入 purpose/layout；历史依据保持兼容，原图过期单独显示。(#310)
+- 三类编辑共用同一套 draft dirty 判断。(#310)
+- 新增 `frontend/browser-smoke.mjs` 浏览器冒烟脚本；CI 新增独立 render job，安装 rsvg/LibreOffice/poppler/CJK 字体后运行 `pytest -m render`。(#310)
+- **行为变更**：`deck review add` 的 `--method` 改为必填，不再默认 `human`；漏写时报错并列出 `self_check`、`other_model`、`human`。依赖旧默认值的脚本需显式传入 `--method human`。
 
 ## 1.1.2 — 2026-11-09
 

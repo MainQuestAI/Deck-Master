@@ -97,7 +97,12 @@ enum ReviewCommand {
         text: String,
         #[arg(long)]
         page: Option<String>,
-        #[arg(long, default_value = "human")]
+        #[arg(
+            long,
+            value_parser = ["self_check", "other_model", "human"],
+            value_name = "self_check|other_model|human",
+            help = "审阅方式（必填）：self_check、other_model、human"
+        )]
         method: String,
         #[arg(long, default_value = "author")]
         reviewer: String,
