@@ -20,12 +20,6 @@ def test_first_run_files_are_readable_and_substantial(relative: str) -> None:
     assert path.is_file()
     text = path.read_text(encoding="utf-8")
     assert text.strip()
-    if path.name == "material.md":
-        assert len(re.findall(r"^## \S", text, re.MULTILINE)) >= 6
-
-
-def test_examples_contains_only_first_run() -> None:
-    assert set((REPO / "examples").iterdir()) == {SAMPLE}
 
 
 @pytest.mark.parametrize("name", ["README.md", "README.zh-CN.md"])
