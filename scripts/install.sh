@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Install the Rust CLI, a dedicated deck-tools venv, and Codex skill links.
 # Prepare a complete local component group before switching one current link.
-set -euo pipefail
+set -Eeuo pipefail
 
 usage() {
   cat <<'EOF'
@@ -201,8 +201,14 @@ note_conflict() {
   printf '%s\n' "$1" >&2
 }
 
+entry_receipt() {
+  "$host_python" "$script_dir/install_entry.py" "$1" "$prefix" "$2" "$3" \
+    "$skill_target" "$legacy_source" "${4:-}"
+}
+
 action_deck=absent
-if same_link "$compat_dir" "$skill_target" || { [ -n "$legacy_source" ] && same_link "$compat_dir" "$legacy_source/deck-skill"; }; then
+if same_link "$compat_dir" "$skill_target" || { [ -n "$legacy_source" ] && same_link "$compat_dir" "$legacy_source/deck-skill"; } \
+  || [ "$(entry_receipt check "$compat_dir" deck)" = replace ]; then
   action_deck=remove
 elif [ -e "$compat_dir" ] || [ -L "$compat_dir" ]; then
   action_deck=unmanaged
@@ -238,7 +244,7 @@ managed_wrapper() {
 actions=()
 check_role() {
   local role=$1
-  local dir="${skills_root}/${role}"
+  local dir="${skills_root}/${role}" saved_action
   if same_link "$dir" "${current}/deck-skill/${role}"; then
     actions+=(keep)
   elif same_link "$dir" "${skill_target}/${role}" || { [ -n "$legacy_source" ] && same_link "$dir" "$legacy_source/deck-skill/$role"; }; then
@@ -247,6 +253,8 @@ check_role() {
     actions+=(create)
   elif managed_wrapper "$dir" "$role"; then
     actions+=(upgrade)
+  elif saved_action=$(entry_receipt check "$dir" "$role"); then
+    actions+=("$saved_action")
   else
     note_conflict "install.sh: ${dir} 已占用，不能作为 ${role} 安装。路径：${dir}；目标：$(describe_entry "$dir")。
 SKILL.md：$(describe_entry "${dir}/SKILL.md")
@@ -398,6 +406,16 @@ fi
 
 phase=install-entries
 run mkdir -p "${prefix}/bin" "$skills_root"
+# Preserve ownership before replacing the binary or removing any old link.
+# The record binds each entry's inode and link targets, not stale Cargo data.
+if [ "$dry_run" -eq 0 ]; then
+  if [ "$action_deck" = remove ]; then entry_receipt record "$compat_dir" deck replace; fi
+  for i in "${!roles[@]}"; do
+    case "${actions[$i]}" in
+      replace|upgrade) entry_receipt record "$skills_root/${roles[$i]}" "${roles[$i]}" "${actions[$i]}" ;;
+    esac
+  done
+fi
 if [ "$entry_action" != keep ]; then
   if [ "$dry_run" -eq 1 ]; then
     plan install-fixed-entry "$deck_bin"
@@ -416,17 +434,25 @@ fi
 link_role() {
   local role=$1 action=$2 dir="${skills_root}/$1"
   if [ "$action" = keep ]; then return; fi
+  if [ "$dry_run" -eq 0 ] && { [ "$action" = upgrade ] || [ "$action" = replace ]; }; then
+    entry_receipt check "$dir" "$role" >/dev/null
+  fi
   if [ "$action" = upgrade ]; then
-    run rm -- "$dir/SKILL.md" "$dir/references" "$dir/assets"
+    run rm -f -- "$dir/SKILL.md" "$dir/references" "$dir/assets"
     run rmdir -- "$dir"
   elif [ "$action" = replace ]; then
     run rm -- "$dir"
   fi
   run ln -s "$current/deck-skill/$role" "$dir"
 }
-if [ "$action_deck" = remove ]; then run rm -- "$compat_dir"; fi
+if [ "$action_deck" = remove ]; then
+  if [ "$dry_run" -eq 0 ]; then entry_receipt check "$compat_dir" deck >/dev/null; fi
+  run rm -- "$compat_dir"
+fi
 for i in "${!roles[@]}"; do link_role "${roles[$i]}" "${actions[$i]}"; done
 if [ "$dry_run" -eq 0 ]; then
+  entry_receipt clear "$compat_dir" deck
+  for role in "${roles[@]}"; do entry_receipt clear "$skills_root/$role" "$role"; done
   echo "已安装 deck：${deck_bin}"
   echo "完整组件目录：${installation}"
   echo "四个职责入口：${skills_root}"

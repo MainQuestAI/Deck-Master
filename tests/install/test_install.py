@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import os
+import shutil
 import stat
-import sys
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -26,6 +27,7 @@ def _run(args: list[str], *, env: dict[str, str] | None = None) -> subprocess.Co
         text=True,
         capture_output=True,
         env=merged,
+        check=False,
     )
 
 
@@ -279,6 +281,7 @@ def test_preparation_failure_keeps_current_and_all_entries(tmp_path: Path, stage
         env["DECK_TEST_FAIL"] = stage
     result = _run(args, env=env)
     assert result.returncode != 0
+    assert ("validate" if stage == "validate" else "prepare") in result.stderr
     assert current.readlink() == target
     assert (prefix / "bin/deck").read_bytes() == entry
     assert {role: (root / role).readlink() for role in ROLES} == links
@@ -313,7 +316,6 @@ def _owned_legacy_source(tmp_path: Path, prefix: Path) -> Path:
 
 
 def test_cargo_owned_binary_and_source_links_migrate_without_touching_old_venv(tmp_path: Path) -> None:
-    import json
     prefix = tmp_path / "prefix"
     entry = prefix / "bin/deck"
     entry.parent.mkdir(parents=True)
@@ -337,12 +339,11 @@ def test_cargo_owned_binary_and_source_links_migrate_without_touching_old_venv(t
 
 
 def test_interrupted_first_migration_reports_stage_and_can_retry(tmp_path: Path) -> None:
-    import json
     prefix = tmp_path / "prefix"
     entry = prefix / "bin/deck"
     entry.parent.mkdir(parents=True)
     entry.write_text("owned old binary")
-    legacy = _owned_legacy_source(tmp_path, prefix)
+    _owned_legacy_source(tmp_path, prefix)
     root = tmp_path / "roles"
     root.mkdir()
     for role in ROLES:
@@ -376,3 +377,129 @@ def test_stale_cargo_record_does_not_authorize_replacing_foreign_binary(tmp_path
     result = _run(["--prefix", str(prefix), "--skills-root", str(tmp_path / "roles")], env=_stub_env(tmp_path))
     assert result.returncode == 2
     assert entry.read_text() == "foreign replacement"
+
+
+def _interrupt_entry(tmp_path: Path, root: Path, point: str) -> Path:
+    tool = "ln" if point == "role-link" else "rm" if point == "wrapper-links" else "rmdir"
+    real = shutil.which(tool)
+    assert real is not None
+    target = root / ("deck-content" if point == "role-link" else "deck-master")
+    failure = tmp_path / "stub-bin" / tool
+    if point == "wrapper-links":
+        operation = f'"{real}" -- "{target}/SKILL.md"\nexit 17'
+        match = target / "SKILL.md"
+    else:
+        operation = "exit 17"
+        match = target
+    failure.write_text(f'''#!/bin/sh
+for arg do
+  if [ "$arg" = "{match}" ]; then
+    {operation}
+  fi
+done
+exec "{real}" "$@"
+''')
+    failure.chmod(0o755)
+    return failure
+
+
+@pytest.mark.parametrize("point", ["role-link", "wrapper-links", "wrapper-directory"])
+def test_entry_migration_retry_after_destructive_step(tmp_path: Path, point: str) -> None:
+    prefix = tmp_path / "prefix"
+    entry = prefix / "bin/deck"
+    entry.parent.mkdir(parents=True)
+    entry.write_text("owned old binary")
+    legacy = _owned_legacy_source(tmp_path, prefix)
+    old_venv = prefix / "share/deck/venv"
+    old_venv.mkdir(parents=True)
+    (old_venv / "author-path").write_text("keep old environment")
+    root = tmp_path / "roles"
+    root.mkdir()
+    if point == "role-link":
+        for role in ROLES:
+            (root / role).symlink_to(legacy / "deck-skill" / role)
+    else:
+        for role in ROLES:
+            _wrapper(root, role)
+    env = _stub_env(tmp_path)
+    args = ["--prefix", str(prefix), "--skills-root", str(root)]
+    failure = _interrupt_entry(tmp_path, root, point)
+    interrupted = _run(args, env=env)
+    assert interrupted.returncode == 17, interrupted.stderr
+    assert entry.read_text().startswith("#!/usr/bin/env bash")
+    if point == "role-link":
+        assert (root / "deck-master").readlink() == prefix / "share/deck/current/deck-skill/deck-master"
+        assert not (root / "deck-content").exists()
+    else:
+        wrapper = root / "deck-master"
+        assert wrapper.is_dir() and not wrapper.is_symlink()
+        assert {path.name for path in wrapper.iterdir()} == (
+            {"references", "assets"} if point == "wrapper-links" else set()
+        )
+    failure.unlink()
+    retry = _run(args, env=env)
+    assert retry.returncode == 0, retry.stderr
+    _assert_roles(root)
+    assert (old_venv / "author-path").read_text() == "keep old environment"
+    assert (legacy / "rust/target/release/deck").read_text() == "owned old binary"
+    assert "install-entries" in interrupted.stderr
+    assert not list((prefix / "share/deck/entry-migrations").glob("*.json"))
+
+
+@pytest.mark.parametrize("mutation", ["extra", "hidden", "retarget", "file", "directory"])
+def test_migration_receipt_does_not_authorize_changed_wrapper(tmp_path: Path, mutation: str) -> None:
+    root = tmp_path / "roles"
+    for role in ROLES:
+        _wrapper(root, role)
+    prefix = tmp_path / "prefix"
+    env = _stub_env(tmp_path)
+    args = ["--prefix", str(prefix), "--skills-root", str(root)]
+    failure = _interrupt_entry(tmp_path, root, "wrapper-links")
+    assert _run(args, env=env).returncode == 17
+    failure.unlink()
+    wrapper = root / "deck-master"
+    if mutation in ("extra", "hidden"):
+        (wrapper / (".notes" if mutation == "hidden" else "NOTES")).write_text("author note")
+    elif mutation == "retarget":
+        (wrapper / "assets").unlink()
+        (wrapper / "assets").symlink_to(tmp_path / "foreign")
+    elif mutation == "file":
+        (wrapper / "assets").unlink()
+        (wrapper / "assets").write_text("author asset")
+    else:
+        wrapper.rename(root / "preserved-wrapper")
+        wrapper.mkdir()
+    before = {str(p): os.readlink(p) if p.is_symlink() else p.read_bytes() if p.is_file() else None
+              for p in root.rglob("*")}
+    current = (prefix / "share/deck/current").readlink()
+    retry = _run(args, env=env)
+    assert retry.returncode == 2, retry.stderr
+    assert str(wrapper) in retry.stderr
+    assert not wrapper.is_symlink()
+    assert before == {str(p): os.readlink(p) if p.is_symlink() else p.read_bytes() if p.is_file() else None
+                      for p in root.rglob("*")}
+    assert (prefix / "share/deck/current").readlink() == current
+
+
+def test_migration_receipt_does_not_authorize_retargeted_cross_checkout_link(tmp_path: Path) -> None:
+    prefix = tmp_path / "prefix"
+    entry = prefix / "bin/deck"
+    entry.parent.mkdir(parents=True)
+    entry.write_text("owned old binary")
+    legacy = _owned_legacy_source(tmp_path, prefix)
+    root = tmp_path / "roles"
+    root.mkdir()
+    for role in ROLES:
+        (root / role).symlink_to(legacy / "deck-skill" / role)
+    env = _stub_env(tmp_path)
+    args = ["--prefix", str(prefix), "--skills-root", str(root)]
+    failure = _interrupt_entry(tmp_path, root, "role-link")
+    assert _run(args, env=env).returncode == 17
+    failure.unlink()
+    changed = root / "deck-design"
+    changed.unlink()
+    changed.symlink_to(tmp_path / "foreign")
+    retry = _run(args, env=env)
+    assert retry.returncode == 2, retry.stderr
+    assert changed.readlink() == tmp_path / "foreign"
+    assert not (root / "deck-content").is_symlink()
