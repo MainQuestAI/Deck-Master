@@ -13,6 +13,7 @@ const { createElement, act } = await import('react');
 const { createRoot } = await import('react-dom/client');
 const { DeckMasterProvider, useDeckMaster } = await import('./context/DeckMasterContext.jsx');
 const { default: PageReaderView } = await import('./components/scenes/PageReaderView.jsx');
+const { default: DeliveryView } = await import('./components/scenes/DeliveryView.jsx');
 const { formatFinding, fileUrl } = await import('./api.js');
 const originalFetch = globalThis.fetch;
 let root;
@@ -37,7 +38,7 @@ function Probe() {
   if (!state.workspace) return null;
   return createElement('div', null,
     state.actionError && createElement('p', { role: 'alert' }, state.actionError),
-    createElement(PageReaderView));
+    createElement(state.scene === 'delivery' ? DeliveryView : PageReaderView));
 }
 
 async function mount(t, first = page('p1')) {
@@ -102,6 +103,27 @@ afterEach(async () => {
   globalThis.fetch = originalFetch;
   document.body.innerHTML = '<div id="root"></div>';
 });
+
+for (const [missing, stale, historicalMissing, changed] of [
+  [['p2'], ['p1'], ['p2'], false],
+  [[], [], ['p2'], true],
+  [[], [], [], false],
+]) {
+  test(`delivery separates current SVG status from build summary (${missing}/${historicalMissing}/${changed})`, async t => {
+    await mount(t);
+    payload.artifact_status = { missing_pages: missing, stale_pages: stale, stale_images: [] };
+    payload.default_build = { id: 1, version_id: 6, build_missing_pages: historicalMissing,
+      input_changed: changed, warning: changed ? 'Historical build inputs differ' : '' };
+    await act(async () => { await state.refresh(); state.setScene('delivery'); });
+    const [current, summary] = document.querySelectorAll('.s4-status');
+    assert.ok(current.textContent.includes(`缺 SVG：${missing.length ? '第 02 页' : '无'}`));
+    assert.ok(current.textContent.includes(`SVG 依据已变：${stale.length ? '第 01 页' : '无'}`));
+    assert.equal(summary.textContent.includes('缺 SVG'), false);
+    assert.equal(summary.textContent.includes('SVG 依据已变'), false);
+    assert.equal(summary.textContent.includes('该次构建未包含：第 02 页'), historicalMissing.length > 0);
+    assert.equal(summary.textContent.includes('Historical build inputs differ'), changed);
+  });
+}
 
 test('same selected page compares original on the left and adopted preview on the right with stale status', async t => {
   await mount(t);

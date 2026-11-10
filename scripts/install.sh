@@ -63,7 +63,6 @@ done
 [ -n "$prefix" ] || { echo "install.sh: --prefix 需要目录" >&2; exit 2; }
 case "$prefix" in /*) ;; *) prefix="$PWD/$prefix" ;; esac
 case "$skills_root" in /*) ;; *) skills_root="$PWD/$skills_root" ;; esac
-[ -n "$prefix" ] || { echo "install.sh: --prefix 需要目录" >&2; exit 2; }
 while [ "$prefix" != / ] && [ "${prefix%/}" != "$prefix" ]; do prefix=${prefix%/}; done
 skill_target="${repo_root}/deck-skill"
 compat_dir="${skills_root}/deck"
@@ -83,14 +82,31 @@ need() {
 
 need cargo
 need npm
+phase=prepare-python
+trap 'code=$?; echo "install.sh: ${phase} 阶段失败（${code}）；未自动回滚或清理安装。请按相同参数重试。" >&2; exit "$code"' ERR
 if command -v uv >/dev/null 2>&1; then
   venv_python=uv
-  host_python=$(uv python find 3.12)
+  if ! host_python=$(uv python find --offline --no-python-downloads --no-cache 3.12 2>/dev/null); then
+    if [ "$dry_run" -eq 1 ]; then
+      echo "install.sh: Python 3.12 尚未安装；--dry-run 不下载或写入。请先运行 uv python install 3.12，或执行不带 --dry-run 的安装。" >&2
+      exit 3
+    fi
+    echo "install.sh: 正在用 uv 准备 Python 3.12。" >&2
+    uv python install 3.12
+    if ! host_python=$(uv python find --offline --no-python-downloads --no-cache 3.12 2>/dev/null); then
+      echo "install.sh: prepare-python 阶段失败：uv 准备后仍找不到 Python 3.12；请检查 uv 配置后重试。" >&2
+      exit 3
+    fi
+  fi
 elif command -v python3.12 >/dev/null 2>&1; then
   venv_python=python3.12
   host_python=$(command -v python3.12)
 else
   echo "install.sh: 需要 uv 或 python3.12 才能创建 deck-tools 环境" >&2
+  exit 3
+fi
+if ! "$host_python" -c 'import sys; sys.exit(0 if sys.version_info[:2] == (3, 12) else 1)' >/dev/null 2>&1; then
+  echo "install.sh: prepare-python 阶段失败：需要可运行的 Python 3.12；请检查解释器后重试。" >&2
   exit 3
 fi
 
@@ -350,7 +366,6 @@ if [ "$dry_run" -eq 1 ]; then
 fi
 
 phase=prepare
-trap 'code=$?; echo "install.sh: ${phase} 阶段失败（${code}）；未自动回滚或清理安装。请按相同参数重试。" >&2; exit "$code"' ERR
 run mkdir -p "$installation"
 run npm --prefix "${repo_root}/frontend" ci
 run npm --prefix "${repo_root}/frontend" run build
@@ -392,7 +407,7 @@ if [ "$dry_run" -eq 1 ]; then
   plan atomic-replace-current "$current" "$installation"
 else
   "$host_python" - "$current" "$installation" <<'SWITCH'
-import os, pathlib, sys, tempfile
+import os, pathlib, sys
 current = pathlib.Path(sys.argv[1])
 import secrets
 link = current.with_name('.current-' + secrets.token_hex(16))

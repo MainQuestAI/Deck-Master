@@ -280,7 +280,7 @@ def test_preparation_failure_keeps_current_and_all_entries(tmp_path: Path, stage
     else:
         env["DECK_TEST_FAIL"] = stage
     result = _run(args, env=env)
-    assert result.returncode != 0
+    assert result.returncode == 17, result.stderr
     assert ("validate" if stage == "validate" else "prepare") in result.stderr
     assert current.readlink() == target
     assert (prefix / "bin/deck").read_bytes() == entry
@@ -503,3 +503,84 @@ def test_migration_receipt_does_not_authorize_retargeted_cross_checkout_link(tmp
     assert retry.returncode == 2, retry.stderr
     assert changed.readlink() == tmp_path / "foreign"
     assert not (root / "deck-content").is_symlink()
+
+
+def _uv_missing_python(tmp_path: Path, *, failure: str = "") -> Path:
+    tool = tmp_path / "stub-bin/uv"
+    builder = tool.with_name("uv-builder")
+    tool.rename(builder)
+    downloaded = tmp_path / "downloaded-python"
+    tool.write_text(f'''#!{sys.executable}
+import os, pathlib, sys
+downloaded = pathlib.Path({str(downloaded)!r})
+if sys.argv[1:3] == ['python', 'find']:
+    if not downloaded.exists() or {failure == 'find'!r}:
+        raise SystemExit(2)
+    print({sys.executable!r})
+elif sys.argv[1:3] == ['python', 'install']:
+    if {failure == 'install'!r}:
+        raise SystemExit(17)
+    downloaded.write_text('3.12')
+else:
+    os.execv({str(builder)!r}, [{str(builder)!r}, *sys.argv[1:]])
+''')
+    tool.chmod(0o755)
+    return downloaded
+
+
+def test_uv_installs_missing_python_before_installing_components(tmp_path: Path) -> None:
+    env = _stub_env(tmp_path)
+    downloaded = _uv_missing_python(tmp_path)
+    root = tmp_path / "roles"
+    result = _run(["--prefix", str(tmp_path / "prefix"), "--skills-root", str(root)], env=env)
+    assert result.returncode == 0, result.stderr
+    assert downloaded.read_text() == "3.12"
+    _assert_roles(root)
+
+
+def test_dry_run_with_missing_python_never_downloads_or_writes(tmp_path: Path) -> None:
+    env = _stub_env(tmp_path)
+    downloaded = _uv_missing_python(tmp_path)
+    prefix = tmp_path / "prefix"
+    root = tmp_path / "roles"
+    result = _run(["--dry-run", "--prefix", str(prefix), "--skills-root", str(root)], env=env)
+    assert result.returncode == 3, result.stderr
+    assert "3.12" in result.stderr and "--dry-run" in result.stderr
+    assert "uv python install 3.12" in result.stderr
+    assert not downloaded.exists() and not prefix.exists() and not root.exists()
+
+
+@pytest.mark.parametrize("failure", ["install", "find"])
+def test_python_preparation_failure_reports_phase_without_installing_entries(tmp_path: Path, failure: str) -> None:
+    env = _stub_env(tmp_path)
+    _uv_missing_python(tmp_path, failure=failure)
+    prefix = tmp_path / "prefix"
+    root = tmp_path / "roles"
+    result = _run(["--prefix", str(prefix), "--skills-root", str(root)], env=env)
+    assert result.returncode == (17 if failure == "install" else 3), result.stderr
+    assert "prepare-python" in result.stderr
+    assert not prefix.exists() and not root.exists()
+
+
+def test_install_without_uv_uses_python312(tmp_path: Path) -> None:
+    env = _stub_env(tmp_path)
+    bin_dir = tmp_path / "stub-bin"
+    builder = bin_dir / "venv-builder"
+    (bin_dir / "uv").rename(builder)
+    python = bin_dir / "python3.12"
+    python.write_text(f'''#!{sys.executable}
+import os, sys
+if sys.argv[1:3] == ['-m', 'venv']:
+    os.execv({str(builder)!r}, [{str(builder)!r}, 'venv', sys.argv[-1]])
+os.execv({sys.executable!r}, [{sys.executable!r}, *sys.argv[1:]])
+''')
+    python.chmod(0o755)
+    for name in ("bash", "dirname", "date", "readlink", "cat", "cmp", "mkdir", "cp", "mktemp", "env", "rm", "rmdir", "ln", "chmod"):
+        executable = shutil.which(name)
+        assert executable is not None
+        (bin_dir / name).symlink_to(executable)
+    env["PATH"] = str(bin_dir)
+    root = tmp_path / "roles"
+    result = _run(["--prefix", str(tmp_path / "prefix"), "--skills-root", str(root)], env=env)
+    assert result.returncode == 0, result.stderr
+    _assert_roles(root)

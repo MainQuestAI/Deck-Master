@@ -153,6 +153,7 @@ deck --project "$DECK_PROJECT" export md > "$DECK_PROJECT/manuscript.md"
 5. `deck build` 构建 PPTX，`deck export pptx` 优先取当前构建输入匹配的成品路径，没有匹配时取最近历史成品并提示。`missing_pages` 是没有 SVG、因此没有进入这次 PPTX 的页。`stale_pages` 是 SVG 依据与当前正文、原图或样式不一致。`stale_images` 在 `deck show` 的 `artifact_status` 里，指原图依据已变；只改讲稿不会让原图过期。构建成功不会清掉这两项。`export pptx` 的 `input_changed` 才表示构建之后 SVG、讲稿或构建设置又变了。
 
 `soffice` 不可用时，SVG 的 `deck run result` 失败并说明如何安装 LibreOffice。停在这一步。不要改调 `compile_job`，不要手写 PPTX。
+已完成的 SVG 任务重交同一文件时，返回 `reused: true` 并沿用原回读，不重新检查，也不返回本次 `checked_version`；缺原回读时 findings 为 null。该返回不表示当前正文已经重新检查。
 
 ## 意见
 

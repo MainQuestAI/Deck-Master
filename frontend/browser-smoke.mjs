@@ -57,9 +57,14 @@ try {
   await page.locator('#nav-delivery').click();
   await page.getByText(`默认构建 #${built.id}`, { exact: false }).waitFor();
   await page.getByText('该次构建未包含：第 02 页', { exact: false }).waitFor();
+  const currentStatus = page.locator('.s4-status').first();
+  const buildSummary = page.locator('.s4-status').nth(1);
+  assert.match(await currentStatus.innerText(), /缺 SVG：第 02 页/);
+  assert.doesNotMatch(await buildSummary.innerText(), /缺 SVG|SVG 依据已变/);
   await page.reload();
   await page.locator('#nav-delivery').click();
   await page.getByText(`默认构建 #${built.id}`, { exact: false }).waitFor();
+  assert.doesNotMatch(await buildSummary.innerText(), /缺 SVG|SVG 依据已变/);
   observations.push('CLI build survives first open and browser reload, including missing pages');
   await page.getByRole('button', { name: '比对与采用', exact: true }).first().click();
   await page.getByRole('button', { name: '采用此候选', exact: false }).click();
