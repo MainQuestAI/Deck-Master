@@ -1492,7 +1492,7 @@ print(json.dumps({"preview": str(preview), "findings": []}))
 }
 
 #[test]
-fn candidate_only_native_build_reports_missing_pages_without_a_download() {
+fn candidate_only_native_build_fails_with_missing_pages_and_no_build_record() {
     let temp = tempfile::tempdir().unwrap();
     ops::new(temp.path(), String::new()).unwrap();
     edit(
@@ -1504,14 +1504,11 @@ fn candidate_only_native_build_reports_missing_pages_without_a_download() {
         .as_i64()
         .unwrap();
     let store = Store::open(temp.path()).unwrap();
-    // The build reads candidate presence, never the unadopted pack contents.
     store.connection.execute("UPDATE run_pages SET status='unadopted',result_file='candidate.native.json' WHERE run_id=?", [run]).unwrap();
     let service = Service::start(temp.path());
     let build = service.request("POST", "/api/build", &[], "");
-    assert_eq!(build.status, 200);
-    assert_eq!(build.json()["missing_pages"], json!(["p1"]));
-    assert!(build.json()["path"].is_null());
-    assert!(build.json().get("url").is_none());
+    assert_eq!(build.status, 400);
+    assert!(build.json()["error"].as_str().unwrap().contains("p1"));
     assert_eq!(
         store
             .connection

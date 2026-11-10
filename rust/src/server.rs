@@ -134,9 +134,6 @@ struct ReviewInput {
 
 fn build_response(project: &Path) -> Result<ResponseBox> {
     let mut value = ops::build(project)?;
-    if value.get("path") == Some(&Value::Null) {
-        return json_response(200, value);
-    }
     let path = value["path"]
         .as_str()
         .ok_or_else(|| Error::Tool("构建缺少文件路径".into()))?;

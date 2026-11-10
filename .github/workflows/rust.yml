@@ -104,6 +104,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -123,6 +124,11 @@ jobs:
           node-version: "22"
       - name: Install native PPTX dependencies
         run: npm ci --prefix deck-tools/native-pptx
+      - name: Native end-to-end test
+        env:
+          DECK_TOOLS_PYTHON: ${{ github.workspace }}/.venv/bin/python
+        working-directory: rust
+        run: cargo test --test native -- --ignored
       - name: Real rendering tests
         run: .venv/bin/python -m pytest -q deck-tools/tests -m render --basetemp="$RUNNER_TEMP/deck-render"
       - uses: actions/upload-artifact@v4

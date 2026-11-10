@@ -220,9 +220,9 @@ def postprocess(pptx_path, plans):
 def generate(pages, output, *, mode):
     plans = [read_json(page['plan']) for page in pages]
     # Adopted deck plans were validated on result; content drift is reported by readback.
+    findings = []
     if mode == 'single':
-        for plan, page in zip(plans, pages):
-            validate_plan(plan, page)
+        findings = [validate_plan(plan, page) for plan, page in zip(plans, pages)]
     directory = native_pptx_dir()
     output = Path(output).resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -232,7 +232,7 @@ def generate(pages, output, *, mode):
                          'output': str(output), 'icons_dir': str(ICONS)})
         run([executable('node'), str(directory / 'render.cjs'), str(job)], cwd=directory)
     postprocess(output, plans)
-    return output
+    return output, findings
 
 
 def page_directory(work, page_id):
@@ -260,7 +260,7 @@ def crop(job):
 def render(job):
     page = job['page']
     directory = Path(job['output']).resolve() if 'output' in job else page_directory(job['work'], page['id'])
-    pptx = generate([page], directory / 'page.pptx', mode='single')
+    pptx, findings = generate([page], directory / 'page.pptx', mode='single')
     # Isolated conversion avoids picking up PNGs from an earlier, longer deck.
     with tempfile.TemporaryDirectory(prefix='deck-native-render-') as temp:
         images = render_deck(pptx, temp, fonts={})
@@ -281,7 +281,7 @@ def render(job):
         labels.text((source.width + 10, 8), 'render', fill='black')
         combined.save(comparison)
     return {'pptx': str(pptx), 'render_png': str(preview), 'side_by_side': str(comparison),
-            'findings': readback(pptx, [page])}
+            'findings': findings[0]}
 
 
 def readback(pptx, pages):

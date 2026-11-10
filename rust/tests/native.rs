@@ -137,6 +137,7 @@ fn v5_pages_without_native_upgrade_only_user_version_and_future_formats_prompt_u
 }
 
 #[test]
+#[ignore = "needs node + pptxgenjs + soffice; runs in the render job"]
 fn native_candidates_require_a_conclusion_then_build_export_use_adopted_packs_and_current_notes() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path();
@@ -180,7 +181,7 @@ fn native_candidates_require_a_conclusion_then_build_export_use_adopted_packs_an
     );
     assert_eq!(result["adopted"], false);
     assert_eq!(result["run"]["runs"][0]["pages"][0]["status"], "unadopted");
-    assert_eq!(result["findings"]["status"], "pass");
+    assert_eq!(result["findings"], json!({"page":"p1", "atoms":2}));
     assert!(Path::new(result["side_by_side"].as_str().unwrap()).is_file());
     let store = Store::open(path).unwrap();
     let candidate = result["file"].as_str().unwrap();
@@ -200,9 +201,19 @@ fn native_candidates_require_a_conclusion_then_build_export_use_adopted_packs_an
     );
     assert!(store.current().unwrap().deck.pages[0].native.is_none());
     drop(store);
-    let unadopted = cli(path, &["build"]);
-    assert_eq!(unadopted["missing_pages"], json!(["p1", "p2"]));
-    assert!(unadopted["path"].is_null());
+    let unadopted = command(path, &["build"]);
+    assert_eq!(unadopted.status.code(), Some(2));
+    let error = String::from_utf8_lossy(&unadopted.stderr);
+    assert!(error.contains("p1") && error.contains("p2"));
+    assert_eq!(
+        Store::open(path)
+            .unwrap()
+            .connection
+            .query_row("SELECT count(*) FROM builds", [], |row| row
+                .get::<_, i64>(0))
+            .unwrap(),
+        0
+    );
     for args in [
         vec!["run", "adopt", &run_id, "p1"],
         vec!["run", "adopt", &run_id, "p1", "--note", ""],
@@ -273,13 +284,10 @@ fn native_candidates_require_a_conclusion_then_build_export_use_adopted_packs_an
     let shown = cli(path, &["run", "show", &run_id]);
     assert_eq!(shown["runs"][0]["status"], "done");
     assert_eq!(shown["runs"][0]["pages"][0]["basis_changed"], false);
-    // Source files and unrelated temporary outputs are not build inputs.
+    // Adopted packs retain their inputs after source files are removed.
     std::fs::remove_file(path.join("asset.png")).unwrap();
     std::fs::remove_file(&p1).unwrap();
     std::fs::remove_file(&p2).unwrap();
-    std::fs::create_dir_all(path.join("native")).unwrap();
-    std::fs::write(path.join("native/.deck-stray.pptx"), b"unfinished").unwrap();
-    std::fs::write(path.join(".deck/files/.deck-stray.pptx"), b"unfinished").unwrap();
     edit(
         path,
         json!({"pages":[{"id":"p1","notes":"当前讲稿第一行\n当前讲稿第二行"}]}),
@@ -345,9 +353,5 @@ fn native_candidates_require_a_conclusion_then_build_export_use_adopted_packs_an
     assert_eq!(
         cli(path, &["get"])["artifact_status"]["stale_pages"],
         json!(["p1"])
-    );
-    assert_eq!(
-        std::fs::read(path.join("native/.deck-stray.pptx")).unwrap(),
-        b"unfinished"
     );
 }

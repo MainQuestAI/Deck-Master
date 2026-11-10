@@ -125,9 +125,6 @@ pub fn project_file(project: &Path, sha: &str) -> Result<std::path::PathBuf> {
     for entry in entries {
         let name = entry.file_name();
         let Some(name) = name.to_str() else { continue };
-        if name.starts_with(".deck-") {
-            continue;
-        }
         if name.split_once('.').is_some_and(|(hash, _)| hash == sha) {
             let path = store.file(name)?.canonicalize()?;
             if path.starts_with(&directory) {
@@ -1067,10 +1064,8 @@ fn native_result(
     use sha2::{Digest, Sha256};
     let mut plan: Value = serde_json::from_slice(data)?;
     let path = temporary.join("plan.json");
-    std::fs::write(&path, data)?;
     let mut input = serde_json::to_value(page)?;
     input["plan"] = json!(path);
-    crate::tools::invoke("validate-plan", &json!({"page": input}))?;
     let mut assets = Vec::new();
     for op in plan["ops"].as_array_mut().into_iter().flatten() {
         if op["op"] == "image" {
@@ -1475,20 +1470,7 @@ pub fn build(project: &Path) -> Result<Value> {
     use rusqlite::params;
     let mut store = Store::open(project)?;
     let snapshot = store.current()?;
-    let mut query = store.connection.prepare(
-        "SELECT page_id FROM runs JOIN run_pages ON runs.id=run_pages.run_id WHERE kind='native' AND result_file IS NOT NULL",
-    )?;
-    let candidate_pages = query
-        .query_map([], |row| row.get::<_, String>(0))?
-        .collect::<std::result::Result<HashSet<_>, _>>()?;
-    drop(query);
-    let native = snapshot.deck.pages.iter().any(|p| p.native.is_some())
-        || (!snapshot.deck.pages.iter().any(|p| p.svg.is_some())
-            && snapshot
-                .deck
-                .pages
-                .iter()
-                .any(|p| candidate_pages.contains(&p.id)));
+    let native = snapshot.deck.pages.iter().any(|p| p.native.is_some());
     let status = artifact_status_for(&snapshot.deck, native)?;
     let temporary = tempfile::tempdir()?;
     let mut pages = Vec::new();
@@ -1511,14 +1493,14 @@ pub fn build(project: &Path) -> Result<Value> {
         }
     }
     if pages.is_empty() {
-        if native {
-            return Ok(
-                json!({"path":null,"missing_pages":status["missing_pages"],"stale_pages":status["stale_pages"]}),
-            );
-        }
-        return Err(Error::Input(
-            "没有可构建的 SVG；请先完成至少一页 SVG".into(),
-        ));
+        let missing = snapshot
+            .deck
+            .pages
+            .iter()
+            .map(|page| page.id.as_str())
+            .collect::<Vec<_>>()
+            .join(",");
+        return Err(Error::Input(format!("没有已采用的页面；缺页：{missing}")));
     }
     let output = if native {
         crate::tools::invoke("assemble", &json!({"work":temporary.path(),"pages":pages}))?

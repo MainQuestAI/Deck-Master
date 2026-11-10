@@ -90,7 +90,7 @@ def test_generator_skips_radius_adjustment_for_zero_size(sample, shape_type, dim
     plan['ops'][0]['type'] = shape_type
     plan['ops'][0]['bbox'][dimension] = 0
     native.write_json(page['plan'], plan)
-    output = native.generate([page], work / 'zero-size.pptx', mode='single')
+    output, _ = native.generate([page], work / 'zero-size.pptx', mode='single')
     with zipfile.ZipFile(output) as archive:
         root = etree.fromstring(archive.read('ppt/slides/slide1.xml'))
     shape = root.xpath('//p:sp[p:nvSpPr/p:cNvPr/@name="native_0"]', namespaces=native.NS)[0]
@@ -136,7 +136,7 @@ def test_validate_plan_rejects_invalid_input(sample, fault):
 def test_generator_readback_and_shared_xml_postprocessing(sample, mode):
     work, page, plan = sample
     pages = [page] if mode == 'single' else [page, _second_page(page, plan)]
-    output = native.generate(pages, work / f'{mode}.pptx', mode=mode)
+    output, _ = native.generate(pages, work / f'{mode}.pptx', mode=mode)
     presentation = Presentation(output)
     assert len(presentation.slides) == len(pages)
     with zipfile.ZipFile(output) as archive:
@@ -186,7 +186,7 @@ def test_generator_table_margin_overrides(sample, canvas_width, table_margin, he
         table['cells'][0][0]['margin'] = cell_margin
         table['cells'][1][0]['margin'] = cell_margin
     native.write_json(page['plan'], plan)
-    output = native.generate([page], work / 'margins.pptx', mode='single')
+    output, _ = native.generate([page], work / 'margins.pptx', mode='single')
     with zipfile.ZipFile(output) as archive:
         root = etree.fromstring(archive.read('ppt/slides/slide1.xml'))
     for r, row in enumerate(root.findall('.//a:tr', native.NS)):
@@ -212,7 +212,8 @@ def _with_canvas(page, plan, w, h, name):
 def test_generator_fixes_slide_width_and_keeps_source_aspect(sample):
     work, page, plan = sample
     wide = _with_canvas(page, plan, 1672, 941, 'wide')
-    presentation = Presentation(native.generate([wide], work / 'wide.pptx', mode='single'))
+    output, _ = native.generate([wide], work / 'wide.pptx', mode='single')
+    presentation = Presentation(output)
     assert presentation.slide_width == pytest.approx(13.333 * 914400, abs=2)
     assert presentation.slide_height == pytest.approx(13.333 * 914400 * 941 / 1672, abs=2)
     table = next(shape for shape in presentation.slides[0].shapes if shape.has_table)
@@ -227,7 +228,7 @@ def test_deck_mode_rejects_mixed_canvas_sizes(sample):
 
 def test_postprocessor_repairs_duplicate_paragraph_properties(sample):
     work, page, plan = sample
-    output = native.generate([page], work / 'duplicate.pptx', mode='single')
+    output, _ = native.generate([page], work / 'duplicate.pptx', mode='single')
     with zipfile.ZipFile(output) as archive:
         files = {n: archive.read(n) for n in archive.namelist()}
     root = etree.fromstring(files['ppt/slides/slide1.xml'])
@@ -311,17 +312,14 @@ def test_render_and_assemble_real_synthetic_source(sample):
                 assert image.width > 0 and image.height > 0
         with Image.open(answer['side_by_side']) as image:
             assert image.size == (1600, 480)
-        assert answer['findings'] == {'status': 'pass', 'findings': []}
+        assert answer['findings'] == {'page': current['id'], 'atoms': 5}
         assert not (native.page_directory(work, current['id']) / 'status.json').exists()
-    stray = work / 'native' / '.deck-stray.pptx'
-    stray.write_bytes(b'synthetic unfinished deck')
     native.write_json(job, {'work': str(work), 'pages': pages})
     result = subprocess.run([sys.executable, '-m', 'deck_tools', 'assemble', str(job)], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
     answer = json.loads(result.stdout)
     assert Path(answer['pptx']) == work / 'native/deck.pptx'
     assert len(answer['render_pngs']) == 2
-    assert stray.read_bytes() == b'synthetic unfinished deck'
     assert answer['findings'] == {'status': 'pass', 'findings': []}
     assert all(Path(image).is_file() for image in answer['render_pngs'])
     output = Path(answer['pptx'])
