@@ -188,7 +188,7 @@ def test_design_can_repair_plan_without_new_image() -> None:
     steps = re.findall(r"^[12]\. (.+)$", production, re.MULTILINE)
     assert len(steps) == 2
     assert all("需要新蓝图时" in step for step in steps)
-    _has(production, r"native/deck\.pptx", r"deck export pptx.*不包含")
+    _has(production, r"deck build", r"deck export pptx", r"deck run adopt --note")
 
 
 def test_review_routes_submission_faults_separately_from_design() -> None:

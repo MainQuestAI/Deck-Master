@@ -199,6 +199,7 @@ fn import_staged(source: &Path, destination: &Path, archive: Archive) -> Result<
             refs: spec.refs,
             image: None,
             svg: None,
+            native: None,
             preview: None,
         };
         page.content.normalize_ids()?;

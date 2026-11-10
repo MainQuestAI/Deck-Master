@@ -10,7 +10,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-pub const FORMAT_VERSION: i64 = 5;
+pub const FORMAT_VERSION: i64 = 6;
 
 pub struct Store {
     pub connection: Connection,
@@ -138,6 +138,9 @@ impl Store {
         if version < 5 {
             tx.pragma_update(None, "user_version", 5)?;
         }
+        if version < 6 {
+            tx.pragma_update(None, "user_version", 6)?;
+        }
         tx.commit()?;
         Ok(())
     }
@@ -168,11 +171,15 @@ impl Store {
     }
 
     pub fn add_file(&self, data: &[u8], extension: &str) -> Result<String> {
-        let extension: String = extension
-            .chars()
-            .filter(char::is_ascii_alphanumeric)
-            .take(16)
-            .collect();
+        let extension: String = if extension == "native.json" {
+            extension.into()
+        } else {
+            extension
+                .chars()
+                .filter(char::is_ascii_alphanumeric)
+                .take(16)
+                .collect()
+        };
         let extension = if extension.is_empty() {
             "bin"
         } else {
@@ -203,7 +210,7 @@ pub fn file_path(root: &Path, name: &str) -> Result<PathBuf> {
         hash.len() == 64
             && hash.bytes().all(|c| c.is_ascii_hexdigit())
             && !ext.is_empty()
-            && ext.bytes().all(|c| c.is_ascii_alphanumeric())
+            && (ext == "native.json" || ext.bytes().all(|c| c.is_ascii_alphanumeric()))
     });
     if !valid {
         return Err(Error::Input(

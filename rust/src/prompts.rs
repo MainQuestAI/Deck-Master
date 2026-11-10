@@ -106,7 +106,20 @@ pub fn write(store: &Store, deck: &Deck, page: &Page, kind: &str, directory: &Pa
         page.purpose,
         page.layout
     );
-    let text = if kind == "svg" {
+    let text = if kind == "native" {
+        let atoms = crate::tools::invoke("atoms", &json!({"page": page}))?;
+        std::fs::write(
+            directory.join("atoms.json"),
+            serde_json::to_vec_pretty(&atoms)?,
+        )?;
+        std::fs::write(
+            directory.join("native-reconstruction.md"),
+            include_str!("../../deck-skill/references/native-reconstruction.md"),
+        )?;
+        format!(
+            "{context}\n按 native-reconstruction.md 逐页还原，正文取 content.json，文字绑定 atoms.json，坐标取 attachments.json 的已采用原图。用 deck run result 交回 plan.json，查看返回的并排图，再用 deck run adopt --note 写入实际对照结论并采用。\n"
+        )
+    } else if kind == "svg" {
         let atoms = crate::tools::invoke("atoms", &json!({"page": page}))?;
         std::fs::write(
             directory.join("atoms.json"),

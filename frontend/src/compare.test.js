@@ -256,3 +256,21 @@ test('image comparison keeps the bitmap files on both sides', async () => {
   }));
   assert.deepEqual(imageSources(), ['/api/files/current-image', '/api/files/candidate-image']);
 });
+
+
+test('native runs are skipped in overview, delivery and comparison', async () => {
+  const { comparisonSnapshot } = await import('./api.js');
+  payload = workspace({ kind: 'native', candidateFile: 'candidate.native.json' });
+  payload.deck.pages[0].native = { file: 'current.native.json', basis: 'svg-v2:basis' };
+  assert.equal(comparisonSnapshot(payload.runs[0], payload.runs[0].pages[0], payload.deck.pages[0], 8), null);
+  installFetch();
+  root = createRoot(document.getElementById('root'));
+  await act(async () => { root.render(createElement(DeckMasterProvider, null, createElement(App))); });
+  await settle();
+  const metric = [...document.querySelectorAll('.metric-item')].find(node => node.textContent.includes('进行中任务'));
+  assert.equal(metric.querySelector('strong').textContent, '0');
+  await act(async () => { click('#nav-delivery'); });
+  assert.equal(document.querySelector('[href="/api/files/candidate"]'), null);
+  assert.equal(document.body.textContent.includes('比对与采用'), false);
+  assert.equal(document.body.textContent.includes('暂无制作任务'), true);
+});

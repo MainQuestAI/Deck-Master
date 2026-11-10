@@ -2,7 +2,8 @@
 
 ## Unreleased
 
-- 新增 native 逐页还原文件工具、Tabler outline 图标库与 pptxgenjs 生成器；本阶段成品为 `<作品>/native/deck.pptx`，`deck export pptx` 尚不包含它。
+- native 逐页还原接入 `deck run`、`deck build` 与 `deck export pptx`；候选须用非空 `--note` 明确采用，包含 Tabler outline 图标与局部裁图。
+- 项目格式 5 → 6：仅提升 user_version，保留历史数据与文件；新增可选 native 产物引用，旧程序会提示升级 deck。
 - 默认安装 `deck-master`、`deck-content`、`deck-design`、`deck-review` 四个职责入口到 `~/.codex/skills`，不再安装 `deck` 入口；`--skills-root` 可更换目录，`--skill-dir` 已取消。
 - 每个入口改为整个职责目录的软链接，目录内保留真实 `SKILL.md`，让 Codex 能发现这些技能。
 - 再次运行安装脚本会只移除指向本源的旧 `deck` 软链接，并将仅含三条托管链接的旧职责包装目录升级为整目录软链接；含用户文件的目录会保留并报冲突。

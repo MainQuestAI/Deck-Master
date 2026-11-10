@@ -134,7 +134,7 @@ deck --project "$DECK_PROJECT" export md > "$DECK_PROJECT/manuscript.md"
 
 - 只改文字时，提交该页完整 `content`；只改讲稿时，只交该页 id 与 notes。
 - 新增页：交新页面及包含它的完整 order；删除页：交 `{id}` 和去掉该页的完整 order；重排只交 order。
-- `put` 也接受 get 的完整输出。不改 materials、image、svg 或 preview；保存不会用它们更新材料或产物。
+- `put` 也接受 get 的完整输出。不改 materials、image、svg、native 或 preview；保存不会用它们更新材料或产物。
 - 同一提交可以安全重试，没有实质变化就不新增版本。冲突时命令退出 5 并给当前冲突单元，先读取后合并作者意图，再保存。
 - `deck --project "$DECK_PROJECT" restore N` 把历史稿恢复为新版本，不删除后来的历史。
 
@@ -208,20 +208,32 @@ deck doctor --fonts "Noto Sans CJK SC"
 色板为无品牌示例；品牌项目使用自己的值。doctor 的字体参数换成当前实际选用的字体；缺工具或字体按错误提示处理。修改已有作品时不能用默认画布、默认字体或空 assets 覆盖原值。
 共享视觉规则只提供绘图语言；实际 palette/fonts/canvas 由作品动态进入任务。既有 task.md 不后台更新，软件更新也不批量使历史图片过期，需要新风格时显式准备新任务。
 
-## native 还原文件工具
+## native 还原
 
-当前只提供文件适配层，不接入 `deck run` / `deck build`。最终成品为 `<work>/native/deck.pptx`，这一阶段的 `deck export pptx` 不包含它。方法见 [native 还原](native-reconstruction.md)。
+新作品按 [native 还原](native-reconstruction.md) 逐页制作。内容规划、生图与原图采用沿用上文流程。
 
-用 deck-tools 所在 venv 的 Python 调用，stdout 返回 JSON：
+```bash
+deck run start native --pages p1,p2
+deck run result <run> p1 <p1-plan.json>
+deck run adopt <run> p1 --note '逐项对照后的实际结论'
+deck run result <run> p2 <p2-plan.json>
+deck run adopt <run> p2 --note '逐项对照后的实际结论'
+deck build
+deck export pptx
+```
+
+任务目录提供 content.json、atoms.json、style.json、attachments.json 与还原方法。坐标来自本页已采用原图，image op 的 file 相对 plan 所在目录。`run result` 先校验再渲染，返回 findings 与 side_by_side 路径；打开并排图，修正后再交回。native 只生成候选，必须用非空 `--note` 明确采用。`run show` 查看状态，`run cancel` 停止任务。
+
+原图或正文、目的、布局、样式变化后，已采用页面列在 stale_pages；只改讲稿不使页面过期，但需要重新 build。native 作品缺页列在 missing_pages，不回退 SVG。build 只收已采用的 plan，讲稿取当前 page.notes；export 仍优先匹配当前构建输入。
+
+validate-plan 与 crop 保留为文件辅助工具，用 deck-tools 所在 venv 的 Python 调用：
 
 ```bash
 python -m deck_tools validate-plan <page-job.json>
 python -m deck_tools crop <crop-job.json>
-python -m deck_tools render <page-job.json>
-python -m deck_tools assemble <deck-job.json>
 ```
 
-单页 job 为 `{work, page}`；page 含 `id`、当前 `content`、`notes`、`source_image`（已采用原图文件路径）、`plan`（本页 plan.json 路径）。content 与 `deck get` 的正文同形。路径使用完整路径；image op 的 file 相对 plan 文件所在目录。整套 job 为 `{work, pages:[page,...]}`，数组顺序即页序。crop job 在单页 job 上加 `id`（裁图名）和 `box:[x,y,w,h]`，等价于从该页原图按指定框裁图，输出 `native/<页>/assets/<id>.png`。
+辅助 job 的 page 含 `id`、当前 `content`、`notes`、`source_image`（已采用原图路径）、`plan`（plan.json 路径），路径用完整路径。crop job 为 `{work, page, id, box:[x,y,w,h]}`，把本页原图指定区域裁到 `native/<页>/assets/<id>.png`，由 plan 引用。裁片在交回时随候选保存，不依赖源文件之后仍在原处。
 
 plan v1 的固定外形：
 
@@ -242,7 +254,7 @@ plan v1 的固定外形：
 
 文字和表格单元格必须逐项匹配当前 content 的 atoms；用现有 `atoms` 文件命令取得编号。讲稿只放 page.notes，不放 plan。表格的行列尺寸合计等于 bbox；空字符串正文也可作为对应 atom 的原生文本。
 
-render 自动执行 validate-plan，输出本页 page.pptx、render.png、side-by-side.png 和 status.json。打开并排图对照后，只填写 status.json 的 `note` 一行结论，保留其余生成值。重新 render 会清空结论；assemble 只接受 plan 摘要匹配且渲染图、并排图、结论齐全的页。组装后还返回整套渲染 PNG 路径供阅图。
+`deck run result` 保存候选和素材，并返回渲染 PNG 与并排图；每次重交后重新看图。`deck run adopt --note` 保存本次结论并采用；构建后检查整套输出。
 
 图标索引与搜索可直接调用随包的工具；`<icons>` 是 deck_tools 包内的 `resources/icons/tabler-outline`：
 

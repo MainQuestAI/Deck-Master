@@ -54,6 +54,7 @@ export const adoptCandidate = (runId, pageId, file) => request(`/api/runs/${runI
 }, null);
 
 export function comparisonSnapshot(run, result, page, version) {
+  if (run.kind === 'native') return null;
   const svg = run.kind === 'svg';
   return {
     runId: run.id, pageId: page.id, kind: run.kind, title: page.content.title,

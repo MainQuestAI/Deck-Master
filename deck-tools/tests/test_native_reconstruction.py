@@ -1,6 +1,5 @@
 """Synthetic file-only reconstruction, including the actual Node generator."""
 from copy import deepcopy
-import hashlib
 import json
 from pathlib import Path
 import subprocess
@@ -91,7 +90,7 @@ def test_generator_skips_radius_adjustment_for_zero_size(sample, shape_type, dim
     plan['ops'][0]['type'] = shape_type
     plan['ops'][0]['bbox'][dimension] = 0
     native.write_json(page['plan'], plan)
-    output = native.generate([page], work / 'zero-size.pptx', mode='single')
+    output, _ = native.generate([page], work / 'zero-size.pptx', mode='single')
     with zipfile.ZipFile(output) as archive:
         root = etree.fromstring(archive.read('ppt/slides/slide1.xml'))
     shape = root.xpath('//p:sp[p:nvSpPr/p:cNvPr/@name="native_0"]', namespaces=native.NS)[0]
@@ -137,7 +136,7 @@ def test_validate_plan_rejects_invalid_input(sample, fault):
 def test_generator_readback_and_shared_xml_postprocessing(sample, mode):
     work, page, plan = sample
     pages = [page] if mode == 'single' else [page, _second_page(page, plan)]
-    output = native.generate(pages, work / f'{mode}.pptx', mode=mode)
+    output, _ = native.generate(pages, work / f'{mode}.pptx', mode=mode)
     presentation = Presentation(output)
     assert len(presentation.slides) == len(pages)
     with zipfile.ZipFile(output) as archive:
@@ -187,7 +186,7 @@ def test_generator_table_margin_overrides(sample, canvas_width, table_margin, he
         table['cells'][0][0]['margin'] = cell_margin
         table['cells'][1][0]['margin'] = cell_margin
     native.write_json(page['plan'], plan)
-    output = native.generate([page], work / 'margins.pptx', mode='single')
+    output, _ = native.generate([page], work / 'margins.pptx', mode='single')
     with zipfile.ZipFile(output) as archive:
         root = etree.fromstring(archive.read('ppt/slides/slide1.xml'))
     for r, row in enumerate(root.findall('.//a:tr', native.NS)):
@@ -213,7 +212,8 @@ def _with_canvas(page, plan, w, h, name):
 def test_generator_fixes_slide_width_and_keeps_source_aspect(sample):
     work, page, plan = sample
     wide = _with_canvas(page, plan, 1672, 941, 'wide')
-    presentation = Presentation(native.generate([wide], work / 'wide.pptx', mode='single'))
+    output, _ = native.generate([wide], work / 'wide.pptx', mode='single')
+    presentation = Presentation(output)
     assert presentation.slide_width == pytest.approx(13.333 * 914400, abs=2)
     assert presentation.slide_height == pytest.approx(13.333 * 914400 * 941 / 1672, abs=2)
     table = next(shape for shape in presentation.slides[0].shapes if shape.has_table)
@@ -228,7 +228,7 @@ def test_deck_mode_rejects_mixed_canvas_sizes(sample):
 
 def test_postprocessor_repairs_duplicate_paragraph_properties(sample):
     work, page, plan = sample
-    output = native.generate([page], work / 'duplicate.pptx', mode='single')
+    output, _ = native.generate([page], work / 'duplicate.pptx', mode='single')
     with zipfile.ZipFile(output) as archive:
         files = {n: archive.read(n) for n in archive.namelist()}
     root = etree.fromstring(files['ppt/slides/slide1.xml'])
@@ -247,23 +247,6 @@ def test_postprocessor_repairs_duplicate_paragraph_properties(sample):
     assert all(len(p.findall('a:pPr', native.NS)) <= 1 for p in root.findall('.//a:p', native.NS))
     assert root.find('.//a:tcPr', native.NS).get('anchor') == 'ctr'
     assert int(root.find('.//a:tr', native.NS).get('h')) == round(45 * native.emu_per_px(plan))
-
-
-@pytest.mark.parametrize('fault', ['side_by_side', 'note', 'plan_sha256'])
-def test_assemble_rejects_unreviewed_or_changed_page(sample, fault):
-    work, page, _ = sample
-    directory = Path(page['plan']).parent
-    status = {'plan_sha256': hashlib.sha256(Path(page['plan']).read_bytes()).hexdigest(),
-              'render_png': 'render.png', 'side_by_side': 'side-by-side.png', 'note': '合成页对照完成'}
-    (directory / 'render.png').write_bytes(b'synthetic render')
-    (directory / 'side-by-side.png').write_bytes(b'synthetic comparison')
-    if fault == 'side_by_side':
-        (directory / 'side-by-side.png').unlink()
-    else:
-        status[fault] = ''
-    native.write_json(directory / 'status.json', status)
-    with pytest.raises(ValueError):
-        native.assemble({'work': str(work), 'pages': [page]})
 
 
 def test_crop_and_validate_plan_json_entrypoint(sample):
@@ -285,11 +268,6 @@ def test_crop_and_validate_plan_json_entrypoint(sample):
 def test_assemble_rejects_private_notes_with_adapter_error(sample, existing_deck):
     work, page, _ = sample
     page['notes'] = '合成路径 /Users/x/demo'
-    directory = Path(page['plan']).parent
-    native.write_json(directory / 'status.json', {
-        'plan_sha256': hashlib.sha256(Path(page['plan']).read_bytes()).hexdigest(),
-        'render_png': page['source_image'], 'side_by_side': page['source_image'], 'note': '合成对照结论',
-    })
     job = work / 'job.json'
     native.write_json(job, {'work': str(work), 'pages': [page]})
     output = work / 'native' / 'deck.pptx'
@@ -334,17 +312,15 @@ def test_render_and_assemble_real_synthetic_source(sample):
                 assert image.width > 0 and image.height > 0
         with Image.open(answer['side_by_side']) as image:
             assert image.size == (1600, 480)
-        status_path = native.page_directory(work, current['id']) / 'status.json'
-        status = native.read_json(status_path)
-        assert not status['note']
-        status['note'] = '合成页已逐项对照；此测试只验证生产链，不评价作品。'
-        native.write_json(status_path, status)
+        assert answer['findings'] == {'page': current['id'], 'atoms': 5}
+        assert not (native.page_directory(work, current['id']) / 'status.json').exists()
     native.write_json(job, {'work': str(work), 'pages': pages})
     result = subprocess.run([sys.executable, '-m', 'deck_tools', 'assemble', str(job)], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
     answer = json.loads(result.stdout)
     assert Path(answer['pptx']) == work / 'native/deck.pptx'
     assert len(answer['render_pngs']) == 2
+    assert answer['findings'] == {'status': 'pass', 'findings': []}
     assert all(Path(image).is_file() for image in answer['render_pngs'])
     output = Path(answer['pptx'])
     assert [(r['page_id'], r['notes']) for r in notes_records(output.read_bytes())] == [

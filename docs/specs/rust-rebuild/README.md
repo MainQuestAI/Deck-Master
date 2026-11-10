@@ -192,9 +192,15 @@ svg 类没有外部付费调用，不需要 `run call`，也没有 max_calls。�
 
 手动采用在工具检查后、写事务内重读候选文件名。候选已变化时返回冲突（CLI 5 / HTTP 409），不写作品版本或 done；候选未变时正常采用。HTTP 比对界面另提交 `expected_file`，在开始检查前核对用户正在查看的文件，防止点击前候选已经替换；不传该字段的调用与 CLI 继续采用读取时的最新候选。已取消 run 和依据过期的结果仍可手动采用。
 
+native 还原沿用同一 run 记录（Refs #231）：`run start native --pages ...` 准备正文、atoms、原图附件与还原方法；`run result` 调用 render，由 render 先校验 plan，再渲染并返回校验 findings 和并排图，仅保存 unadopted 候选。`run adopt --note` 必须带非空对照结论，才写入 page.native 和 page.preview。native 无 max_calls，basis 复用 svg-v2 的全部输入和前缀。
+
+Page 新增默认空的 `native: Option<Artifact>`，Artifact 仍为 file/basis。native 候选存为 `.deck/files/<sha>.native.json`，包含 plan、assets（id/file/sha256）、render_png、note；素材与渲染 PNG 同样按摘要保存。采用时写入结论会生成新包，不修改旧包。PagePatch 接受但忽略 native，与其他产物字段一致。项目格式从 5 升到 6，仅更新 user_version，不改历史 JSON；高版本仍在反序列化前提示升级。Python 不再保存或检查 status.json，采用与过期判断由 run 记录、page.native 和 basis 负责。
+
 ### 3.6 构建与导出
 
 - `deck build`：取每页当前的 SVG，调用 `deck_tools build`（编译、回读、清洗），并记录输入摘要：页序、每页 svg 与 notes、画布、字体、素材 ID 对应的不可变文件。素材映射按 ID 排序，不包含本机绝对路径；正文变化单独通过 SVG 过期提示。缺 SVG 的页不进入 PPTX；SVG 已过期的页照常编入，回读会报出文字不一致。刚完成的 build 仍可能列出 `stale_pages`：它比较的是 SVG basis 与当前依据，不是这次 PPTX 文件的新旧。`stale_images` 只比较原图 basis，构建不会清掉它。`export pptx` 的 `input_changed` 才表示 SVG 文件、讲稿或构建设置在该次构建之后变了。
+- 有已采用 native 的作品按 native 构建：只读各页包中明确引用的 plan 与素材，用 assemble 一次生成整稿，讲稿取当前 page.notes；缺 native 的页列在 missing_pages，不回退 SVG。没有可参建页面时报输入错误并列出缺页，不写 builds；有参建页时沿用部分构建和 builds 表记录方式。组装不重查 Python 状态或按当前正文拒收已采用的旧 plan，正文差异由回读和 stale_pages 报告。
+- native 的 build_digest 取页序、native 文件与保存依据、当前 svg-v2 依据及 notes，加现有构建设置；当前依据使改正文或原图后的成品匹配状态发生变化。纯 SVG 的摘要和构建／导出路径保持原算法。默认导出继续用同一 default_build 匹配，不另设选择规则。build 在临时目录组装，只用明确引用，不扫描目录。
 - `deck export md`：任何时候都可以导出可读稿，包括未完成的作品，待补项照常显示。
 - `deck export pptx`：优先选择当前 build_digest 匹配的最大构建 ID，否则选择最新历史构建；选中文件缺失时报错，不悄悄替换为另一份。返回来源 version_id，HTTP 仍返回 PPTX 字节与 X-Deck-Status 元数据。该构建的输入摘要与当前作品不一致时给出提示。不用版本号判断，因为 restore 会产生编号更大、内容更旧的版本。
 - build 和 export 的输出里，以及界面的下载按钮旁，都列出缺 SVG 的页和 SVG 已过期的页。界面取 `POST /api/build` 的响应或轮询得到的 `artifact_status`。

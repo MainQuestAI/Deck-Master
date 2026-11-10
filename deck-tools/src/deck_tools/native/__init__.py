@@ -1,7 +1,6 @@
 """File-only native reconstruction: no project database or adoption state."""
 from __future__ import annotations
 
-import hashlib
 import json
 import math
 import os
@@ -220,8 +219,10 @@ def postprocess(pptx_path, plans):
 
 def generate(pages, output, *, mode):
     plans = [read_json(page['plan']) for page in pages]
-    for plan, page in zip(plans, pages):
-        validate_plan(plan, page)
+    # Adopted deck plans were validated on result; content drift is reported by readback.
+    findings = []
+    if mode == 'single':
+        findings = [validate_plan(plan, page) for plan, page in zip(plans, pages)]
     directory = native_pptx_dir()
     output = Path(output).resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -231,7 +232,7 @@ def generate(pages, output, *, mode):
                          'output': str(output), 'icons_dir': str(ICONS)})
         run([executable('node'), str(directory / 'render.cjs'), str(job)], cwd=directory)
     postprocess(output, plans)
-    return output
+    return output, findings
 
 
 def page_directory(work, page_id):
@@ -258,8 +259,8 @@ def crop(job):
 
 def render(job):
     page = job['page']
-    directory = page_directory(job['work'], page['id'])
-    pptx = generate([page], directory / 'page.pptx', mode='single')
+    directory = Path(job['output']).resolve() if 'output' in job else page_directory(job['work'], page['id'])
+    pptx, findings = generate([page], directory / 'page.pptx', mode='single')
     # Isolated conversion avoids picking up PNGs from an earlier, longer deck.
     with tempfile.TemporaryDirectory(prefix='deck-native-render-') as temp:
         images = render_deck(pptx, temp, fonts={})
@@ -279,24 +280,32 @@ def render(job):
         labels.text((10, 8), 'source', fill='black')
         labels.text((source.width + 10, 8), 'render', fill='black')
         combined.save(comparison)
-    status = {'plan_sha256': hashlib.sha256(Path(page['plan']).read_bytes()).hexdigest(),
-              'render_png': str(preview), 'side_by_side': str(comparison), 'note': ''}
-    write_json(directory / 'status.json', status)
-    return {'pptx': str(pptx), **status}
+    return {'pptx': str(pptx), 'render_png': str(preview), 'side_by_side': str(comparison),
+            'findings': findings[0]}
+
+
+def readback(pptx, pages):
+    from ..compiler.native import notes_records, normalize_notes
+    findings = []
+    notes = notes_records(Path(pptx).read_bytes())
+    if len(notes) != len(pages):
+        findings.append({'code': 'slide_count_mismatch', 'actual': len(notes), 'expected': len(pages)})
+    with zipfile.ZipFile(pptx) as archive:
+        for index, (page, actual) in enumerate(zip(pages, notes), 1):
+            if actual['page_id'] != page['id']:
+                findings.append({'page_id': page['id'], 'code': 'notes_page_identity_mismatch'})
+            if actual['notes'] != normalize_notes(page.get('notes', '')):
+                findings.append({'page_id': page['id'], 'code': 'speaker_notes_mismatch'})
+            root = etree.fromstring(archive.read(f'ppt/slides/slide{index}.xml'))
+            text = ''.join(''.join(root.xpath('//a:t/text()', namespaces=NS)).split())
+            for atom in visible_atoms(projection(page)):
+                if atom['text'] and ''.join(atom['text'].split()) not in text:
+                    findings.append({'page_id': page['id'], 'code': 'missing_visible_atom',
+                                     'atom_id': atom['atom_id'], 'text': atom['text']})
+    return {'status': 'fail' if findings else 'pass', 'findings': findings}
 
 
 def assemble(job):
-    for page in job['pages']:
-        directory = page_directory(job['work'], page['id'])
-        status = read_json(directory / 'status.json')
-        if status.get('plan_sha256') != hashlib.sha256(Path(page['plan']).read_bytes()).hexdigest():
-            raise ValueError(f'{page["id"]} 的 plan 已变化，请重新渲染并对照')
-        for key in ('render_png', 'side_by_side'):
-            filename = status.get(key)
-            if not filename or not (directory / filename).is_file():
-                raise ValueError(f'{page["id"]} 缺少渲染图或并排图，请先 render')
-        if not isinstance(status.get('note'), str) or not status['note'].strip():
-            raise ValueError(f'{page["id"]} 缺少对照结论，请先看并排图并填写 note')
     output = (Path(job['work']) / 'native' / 'deck.pptx').resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(dir=output.parent, prefix='.deck-', suffix='.pptx', delete=False) as temp:
@@ -320,7 +329,7 @@ def assemble(job):
             target = directory / f'page-{i}.png'
             target.write_bytes(image.read_bytes())
             previews.append(str(target))
-    return {'pptx': str(output), 'render_pngs': previews}
+    return {'pptx': str(output), 'render_pngs': previews, 'findings': readback(output, job['pages'])}
 
 
 def dispatch(command, job):

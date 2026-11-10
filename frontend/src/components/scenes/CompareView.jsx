@@ -4,7 +4,7 @@ import { fileUrl } from '../../api.js';
 
 export default function CompareView() {
   const { comparison, workspace, getPage, compareCandidate, adoptCandidate, setScene, busy } = useDeckMaster();
-  if (!comparison) return <p className="s4-empty">请从制作任务中选择候选</p>;
+  if (!comparison || comparison.kind === 'native') return <p className="s4-empty">请从制作任务中选择候选</p>;
   const page = getPage(comparison.pageId);
   const run = workspace.runs.find(item => item.id === comparison.runId);
   const result = run?.pages.find(item => item.page_id === comparison.pageId);
