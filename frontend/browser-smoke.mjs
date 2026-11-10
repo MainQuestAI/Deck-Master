@@ -70,10 +70,16 @@ try {
   let releaseReadback;
   const heldReadback = new Promise(resolve => { releaseReadback = resolve; });
   const detailPattern = '**/api/builds/*';
+  let detailFailure = null;
   const delayDetail = async route => {
-    const response = await route.fetch();
-    await heldReadback;
-    await route.fulfill({ response });
+    try {
+      const response = await route.fetch();
+      await heldReadback;
+      await route.fulfill({ response });
+    } catch (error) {
+      detailFailure = error;
+      await route.abort().catch(() => {});
+    }
   };
   await page.route(detailPattern, delayDetail);
   try {
@@ -84,8 +90,9 @@ try {
     assert.equal(await page.getByText('尚无可展示的构建回读', { exact: false }).count(), 0);
   } finally {
     releaseReadback();
-    await page.unroute(detailPattern, delayDetail);
+    await page.unrouteAll({ behavior: 'wait' });
   }
+  assert.ifError(detailFailure);
   await page.locator('details summary').filter({ hasText: '默认构建的回读发现' }).waitFor();
   await page.getByText('历史检查，不代表当前正文已检查', { exact: false }).waitFor();
   observations.push('A real version change keeps the old readback labelled while the next HTTP detail response is delayed');
@@ -162,7 +169,10 @@ try {
   if (page) { await page.screenshot({path:join(output,'failure.png'),fullPage:true}); writeFileSync(join(output,'failure.html'),await page.content()); }
   throw error;
 } finally {
-  await browser?.close();
-  lines.close();
-  service.kill('SIGTERM');
+  try {
+    await browser?.close();
+  } finally {
+    lines.close();
+    service.kill('SIGTERM');
+  }
 }
