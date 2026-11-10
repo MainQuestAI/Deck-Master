@@ -41,7 +41,7 @@ description: 用 Rust deck 审查当前作品、外部可读稿或 PPTX。默认
 - 另一个执行或模型看稿：`--method other_model`
 - 真人：`--method human`
 
-不要省略 `--method`。这条命令的默认值是 `human`，不能用来记录自查。意见落实后才 `deck review resolve`；不能采纳的说明原因，不为了清零去改稿。
+`--method` 必填，没有默认值，省略会报错。意见落实后才 `deck review resolve`；不能采纳的说明原因，不为了清零去改稿。
 
 案例或作者给出的算式文件，可以用 `python -m deck_tools.case_numbers` 复算。退出码只说明算式，不说明归因、来源或 ROI，也不是审查通过的条件。
 

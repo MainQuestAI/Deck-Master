@@ -163,7 +163,7 @@ deck --project "$DECK_PROJECT" export md > "$DECK_PROJECT/manuscript.md"
 deck review add --method self_check --page p3 '这一页的问题'
 ```
 
-当前 Host 自查用 `self_check`，另一执行或模型用 `other_model`，真人用 `human`。不要省略 `--method`，默认值是 `human`。落实并核对之后才 `deck review resolve <意见ID>`。审查默认只返回报告，不因为开了审查入口就改稿或生图。
+当前 Host 自查用 `self_check`，另一执行或模型用 `other_model`，真人用 `human`。`--method` 必填，没有默认值，省略会报错。落实并核对之后才 `deck review resolve <意见ID>`。审查默认只返回报告，不因为开了审查入口就改稿或生图。
 
 ## 可选：核对案例算式
 

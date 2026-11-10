@@ -417,6 +417,44 @@ fn duplicate_pdf_add_without_tool_preserves_successful_extraction() {
 }
 
 #[test]
+fn review_add_requires_method_without_writing_a_review() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    output_json(command(path, &["new", path.to_str().unwrap()]));
+
+    let output = command(path, &["review", "add", "整稿意见"]);
+    assert_eq!(output.status.code(), Some(2));
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    for method in ["self_check", "other_model", "human"] {
+        assert!(stderr.contains(method), "{stderr}");
+    }
+    assert_eq!(
+        output_json(command(path, &["review", "list"]))["reviews"],
+        json!([])
+    );
+    assert_eq!(
+        output_json(command(path, &["show"]))["open_reviews_total"],
+        0
+    );
+}
+
+#[test]
+fn review_add_round_trips_each_explicit_method() {
+    for method in ["self_check", "other_model", "human"] {
+        let temp = tempfile::tempdir().unwrap();
+        let path = temp.path();
+        output_json(command(path, &["new", path.to_str().unwrap()]));
+
+        let text = "整稿意见";
+        let added = output_json(command(path, &["review", "add", text, "--method", method]));
+        assert_eq!(added["method"], method);
+        assert_eq!(added["text"], text);
+        let listed = output_json(command(path, &["review", "list"]));
+        assert_eq!(listed["reviews"], json!([added]));
+    }
+}
+
+#[test]
 fn review_commands_default_filter_resolve_count_and_reject_invalid_input() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path();
@@ -427,7 +465,10 @@ fn review_commands_default_filter_resolve_count_and_reject_invalid_input() {
         serde_json::from_value(json!({"order":["p3"],"pages":[{"id":"p3"}]})).unwrap(),
     )
     .unwrap();
-    let human = output_json(command(path, &["review", "add", "整稿意见"]));
+    let human = output_json(command(
+        path,
+        &["review", "add", "整稿意见", "--method", "human"],
+    ));
     assert_eq!(human["method"], "human");
     assert_eq!(human["reviewer"], "author");
     let checked = output_json(command(
@@ -448,7 +489,15 @@ fn review_commands_default_filter_resolve_count_and_reject_invalid_input() {
     assert_eq!(checked["reviewer"], "Host");
     let remaining = output_json(command(
         path,
-        &["review", "add", "另一条页上意见", "--page", "p3"],
+        &[
+            "review",
+            "add",
+            "另一条页上意见",
+            "--page",
+            "p3",
+            "--method",
+            "human",
+        ],
     ));
     let show = output_json(command(path, &["show"]));
     assert_eq!(show["open_reviews_total"], 3);
@@ -478,9 +527,9 @@ fn review_commands_default_filter_resolve_count_and_reject_invalid_input() {
         json!([resolved])
     );
     for args in [
-        vec!["review", "add", ""],
+        vec!["review", "add", "", "--method", "human"],
         vec!["review", "add", "意见", "--method", "pass"],
-        vec!["review", "add", "意见", "--page", "p9"],
+        vec!["review", "add", "意见", "--page", "p9", "--method", "human"],
         vec!["review", "list", "--status", "pass"],
         vec!["review", "resolve", "999"],
     ] {
