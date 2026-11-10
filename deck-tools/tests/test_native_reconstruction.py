@@ -93,11 +93,14 @@ def test_generator_readback_and_shared_xml_postprocessing(sample, mode):
             assert [e.text for e in root.findall('.//a:t', native.NS)] == [a['text'] for a in visible_atoms(projection(page))]
             assert len(root.findall('.//p:pic', native.NS)) == sum(op['op'] in ('icon', 'image') for op in plan['ops'])
             assert slide.notes_slide.notes_text_frame.text == expected['notes']
+            assert {e.get('typeface') for e in root.findall('.//a:rPr/a:latin', native.NS)} == {'Noto Sans CJK SC'}
             assert {tc.get('anchor') for tc in root.findall('.//a:tcPr', native.NS)} == {'ctr'}
             assert [int(tr.get('h')) for tr in root.findall('.//a:tr', native.NS)] == [round(h * native.EMU_PX) for h in [45, 75]]
             custom = root.xpath('//p:sp[p:nvSpPr/p:cNvPr/@name="native_6"]', namespaces=native.NS)[0]
             assert custom.find('p:spPr/a:custGeom', native.NS) is not None
             assert custom.find('p:spPr/a:ln/a:tailEnd', native.NS).get('type') == 'triangle'
+        theme = archive.read('ppt/theme/theme1.xml').decode()
+        assert theme.count('typeface="Noto Sans CJK SC"') >= 2
         pres = etree.fromstring(archive.read('ppt/presentation.xml'))
         assert list(pres).index(pres.find('p:notesMasterIdLst', native.NS)) < list(pres).index(pres.find('p:sldIdLst', native.NS))
 

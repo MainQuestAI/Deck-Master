@@ -5,6 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const PptxGenJS = require('pptxgenjs');
 
+const DEFAULT_FONT = 'Noto Sans CJK SC';
 const color = value => String(value).replace(/^#/, '');
 const box = ([x, y, w, h]) => ({ x: x / 96, y: y / 96, w: w / 96, h: h / 96 });
 const line = (value = {}) => ({
@@ -14,7 +15,7 @@ const line = (value = {}) => ({
 });
 function textStyle(op) {
   return {
-    fontSize: (op.size ?? 16) * 0.75, fontFace: op.font || 'Arial',
+    fontSize: (op.size ?? 16) * 0.75, fontFace: op.font || DEFAULT_FONT,
     color: color(op.color || '000000'), bold: op.weight === 'bold' || op.weight >= 600,
     align: op.align || 'left', valign: { center: 'mid', bottom: 'bottom', top: 'top' }[op.valign || 'top'],
     margin: 0, paraSpaceAfterPt: 0, breakLine: false,
@@ -99,6 +100,8 @@ async function main() {
   const canvas = JSON.parse(fs.readFileSync(job.pages[0].plan, 'utf8')).canvas_px;
   pptx.defineLayout({ name: 'native', width: canvas.w / 96, height: canvas.h / 96 });
   pptx.layout = 'native';
+  pptx.lang = 'zh-CN';
+  pptx.theme = { headFontFace: DEFAULT_FONT, bodyFontFace: DEFAULT_FONT, lang: 'zh-CN' };
   for (const page of job.pages) {
     const plan = JSON.parse(fs.readFileSync(page.plan, 'utf8'));
     const slide = pptx.addSlide();

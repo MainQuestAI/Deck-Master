@@ -233,7 +233,7 @@ plan v1 的固定外形：
 
 | op | 字段 |
 | --- | --- |
-| text | `text, atom_id, bbox:[x,y,w,h], size, color, weight`（`bold` 或数值），`align`（left/center/right），`valign`（top/center/bottom）；可用 `font` 指定已安装字体，默认 Arial |
+| text | `text, atom_id, bbox:[x,y,w,h], size, color, weight`（`bold` 或数值），`align`（left/center/right），`valign`（top/center/bottom）；可用 `font` 指定已安装字体，默认 Noto Sans CJK SC |
 | shape | `type`（pptxgenjs 形状名，或 custom），`bbox, fill, line:{color,width,arrowheads?}, transparency`（0–100），`radius, flip:{h,v}`；custom 加 `points:[[x,y],...]`（bbox 内局部点），可用 `closed:true` 闭合，`fill:"none"` 不填充 |
 | arrow | `start:[x,y], end:[x,y], color, width, arrowheads:{start?,end?}`；箭头端用 pptxgenjs 名称，如 triangle |
 | icon | `icon_id:"tabler-outline/<名称>", bbox, color` |
