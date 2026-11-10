@@ -90,8 +90,7 @@ warning that it may compete with the four role entries for triggering.
 If `<prefix>/bin` is not on `PATH`, add it or call `<prefix>/bin/deck`.
 Steps are in the [install guide](docs/getting-started.md#install-from-source).
 
-After install, `deck new ./my-deck --title '方案标题'` creates a work
-directory. The linked skill describes the first-run commands.
+After install, follow the [Quick Start](#quick-start) to make your first deck.
 
 Standard installation and upgrades use `scripts/install.sh`, without
 `DECK_TOOLS_PYTHON`. Unknown CLI entries are preserved and reported as conflicts;
@@ -123,9 +122,18 @@ archive into a new directory. The archive is read without modification.
 
 ## Quick Start
 
-Use your own complete material and brief. Substitute paths and IDs returned by
-the commands; do not paste the placeholders as values. Examples assume `deck`
-is on `PATH` after `scripts/install.sh`.
+1. From this checkout, install with `bash scripts/install.sh`; see [Install](#install)
+   and the [install guide](docs/getting-started.md#install-from-source). Ensure `deck` is on `PATH`.
+2. Open Codex in this checkout and type:
+
+   > Make a 6-page deck from examples/first-run/en/material.md following examples/first-run/en/brief.md, in ./first-deck.
+
+   The Skills handle the commands. The [sample](examples/first-run/README.md) is fully synthetic.
+3. View the draft with `deck serve ./first-deck`. It binds `127.0.0.1` and prints the URL to open.
+
+**Manual commands / using your own material:** use your own complete material and
+brief, and substitute paths and IDs returned by the commands; do not paste the
+placeholders as values. These commands assume `deck` is on `PATH` after installation.
 
 ```bash
 # 1. Create a work directory and add author-specified source files only.
