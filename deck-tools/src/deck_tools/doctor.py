@@ -1,5 +1,7 @@
 """Discover only the tools and fonts used by the file pipeline."""
 import sys
+from . import native
+from .render import run, RendererError
 from .render import NeedsTool, executable, renderer_environment, resolve_fonts
 
 # rsvg-convert is called directly by SVG raster checks and the preview path, so doctor must check it.
@@ -22,6 +24,21 @@ def diagnose(fonts):
         except NeedsTool as exc:
             detail = RSVG_FIX if name == "rsvg-convert" else str(exc)
             checks.append({"name": name, "available": False, "detail": detail})
+    try:
+        node = executable("node")
+        version = run([node, "--version"]).stdout.decode().strip()
+        available = int(version.lstrip("v").split(".")[0]) >= 18
+        checks.append({"name": "node", "available": available, "path": node,
+                       "detail": version if available else "需要 node 18 或以上版本"})
+    except (NeedsTool, RendererError, OSError, ValueError) as exc:
+        checks.append({"name": "node", "available": False, "detail": str(exc)})
+    try:
+        directory = native.native_pptx_dir()
+        run([executable("node"), "-e", "require('pptxgenjs')"], cwd=directory)
+        checks.append({"name": "pptxgenjs", "available": True, "path": str(directory)})
+    except (NeedsTool, RendererError, OSError) as exc:
+        checks.append({"name": "pptxgenjs", "available": False,
+                       "detail": f"{exc}；请重新运行安装脚本以安装 native-pptx 依赖"})
     try:
         renderer_environment()
         checks.append({"name": "renderer_fontconfig", "available": True})

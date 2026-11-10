@@ -207,3 +207,45 @@ deck doctor --fonts "Noto Sans CJK SC"
 
 色板为无品牌示例；品牌项目使用自己的值。doctor 的字体参数换成当前实际选用的字体；缺工具或字体按错误提示处理。修改已有作品时不能用默认画布、默认字体或空 assets 覆盖原值。
 共享视觉规则只提供绘图语言；实际 palette/fonts/canvas 由作品动态进入任务。既有 task.md 不后台更新，软件更新也不批量使历史图片过期，需要新风格时显式准备新任务。
+
+## native 还原文件工具
+
+当前只提供文件适配层，不接入 `deck run` / `deck build`。最终成品为 `<work>/native/deck.pptx`，这一阶段的 `deck export pptx` 不包含它。方法见 [native 还原](native-reconstruction.md)。
+
+用 deck-tools 所在 venv 的 Python 调用，stdout 返回 JSON：
+
+```bash
+python -m deck_tools validate-plan <page-job.json>
+python -m deck_tools crop <crop-job.json>
+python -m deck_tools render <page-job.json>
+python -m deck_tools assemble <deck-job.json>
+```
+
+单页 job 为 `{work, page}`；page 含 `id`、当前 `content`、`notes`、`source_image`（已采用原图文件路径）、`plan`（本页 plan.json 路径）。content 与 `deck get` 的正文同形。路径使用完整路径；image op 的 file 相对 plan 文件所在目录。整套 job 为 `{work, pages:[page,...]}`，数组顺序即页序。crop job 在单页 job 上加 `id`（裁图名）和 `box:[x,y,w,h]`，等价于从该页原图按指定框裁图，输出 `native/<页>/assets/<id>.png`。
+
+plan v1 的固定外形：
+
+```json
+{"schema":"deck.native_plan.v1","page":"p1","canvas_px":{"w":800,"h":450},"background":"FFFFFF","ops":[]}
+```
+
+六类原语均以 `op` 区分。所有坐标、字号、线宽、圆角、列宽和行高用原图像素；整套画布取首页尺寸，后续页按自身画布映射到同一输出画布。颜色为 RGB 十六进制，可带 `#`。
+
+| op | 字段 |
+| --- | --- |
+| text | `text, atom_id, bbox:[x,y,w,h], size, color, weight`（`bold` 或数值），`align`（left/center/right），`valign`（top/center/bottom）；可用 `font` 指定已安装字体，默认 Arial |
+| shape | `type`（pptxgenjs 形状名，或 custom），`bbox, fill, line:{color,width,arrowheads?}, transparency`（0–100），`radius, flip:{h,v}`；custom 加 `points:[[x,y],...]`（bbox 内局部点），可用 `closed:true` 闭合，`fill:"none"` 不填充 |
+| arrow | `start:[x,y], end:[x,y], color, width, arrowheads:{start?,end?}`；箭头端用 pptxgenjs 名称，如 triangle |
+| icon | `icon_id:"tabler-outline/<名称>", bbox, color` |
+| image | `file, bbox`；不得附正文或 atom，每张面积不超过画布 40% |
+| table | `bbox, col_widths:[...], row_heights:[...], header_style:{size,color,fill,weight,align,valign}, cells:[[{text,atom_id},...],...]`；表头算第一行，可指定与 text 同形的文字样式及 `line:{color,width}` |
+
+文字和表格单元格必须逐项匹配当前 content 的 atoms；用现有 `atoms` 文件命令取得编号。讲稿只放 page.notes，不放 plan。表格的行列尺寸合计等于 bbox；空字符串正文也可作为对应 atom 的原生文本。
+
+render 自动执行 validate-plan，输出本页 page.pptx、render.png、side-by-side.png 和 status.json。打开并排图对照后，只填写 status.json 的 `note` 一行结论，保留其余生成值。重新 render 会清空结论；assemble 只接受 plan 摘要匹配且渲染图、并排图、结论齐全的页。组装后还返回整套渲染 PNG 路径供阅图。
+
+图标索引与搜索可直接调用随包的工具；`<icons>` 是 deck_tools 包内的 `resources/icons/tabler-outline`：
+
+```bash
+python -m deck_tools.vendor.cyberppt.select_icon search --index <icons>/index.json --query "anchor" --limit 5
+```

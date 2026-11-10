@@ -48,6 +48,9 @@ def _assert_roles(root: Path) -> None:
         assert target.parts[-3:] == ("current", "deck-skill", role)
         installation = directory.resolve().parent.parent
         assert installation.parent.name == "installations"
+        native = installation / "share/deck/native-pptx"
+        for filename in ("render.cjs", "package.json", "package-lock.json"):
+            assert (native / filename).read_bytes() == (REPO / "deck-tools/native-pptx" / filename).read_bytes()
         assert (directory / "SKILL.md").is_file()
         assert not (directory / "SKILL.md").is_symlink()
         assert (directory / "SKILL.md").read_bytes() == (SOURCE / role / "SKILL.md").read_bytes()
@@ -108,6 +111,8 @@ def test_default_dry_run_prints_four_entry_plan_without_writing(tmp_path: Path) 
     assert "cargo install" in output and str(REPO / "rust") in output
     assert "uv venv --python 3.12 --seed" in output or "python3.12 -m venv" in output
     assert str(prefix / "share/deck/installations") in output and "/share/deck/venv" in output
+    assert "ci --omit=dev" in output
+    assert "/share/deck/native-pptx" in output
     assert "run build" in output
     assert f"deck-bin={prefix / 'bin/deck'}" in output
     assert f"skills-root={root}" in output

@@ -178,17 +178,17 @@ def test_master_turns_feedback_into_four_local_repair_paths() -> None:
     _has(routes["内容"], r"正文", r"purpose", r"layout", r"notes", r"deck put --base", r"不.*自动.*生图")
     _has(routes["设计"], r"主视觉", r"视觉计划", r"必要.*调用")
     _has(routes["调用"], r"需要新蓝图", r"deck run start image --pages", r"task.md.*原文", r"attachments.json")
-    _has(routes["重建"], r"蓝图.*可用.*直接修 SVG", r"主结构.*蓝图.*重建")
-    assert "references/reconstruction.md" in _local_links(routes["重建"])
+    _has(routes["重建"], r"蓝图.*可用.*native-reconstruction.*plan", r"旧作品.*SVG", r"主结构.*蓝图.*重建")
 
 
-def test_design_can_enter_svg_repair_without_new_image() -> None:
+def test_design_can_repair_plan_without_new_image() -> None:
     text = (SOURCE / "deck-design/SKILL.md").read_text(encoding="utf-8")
     production = _section(text, "主视觉与制作")
-    _has(production, r"蓝图.*可用.*直接.*SVG", r"需要新蓝图.*生图")
+    _has(production, r"蓝图.*可用.*直接修该页 plan", r"需要新蓝图.*生图")
     steps = re.findall(r"^[12]\. (.+)$", production, re.MULTILINE)
     assert len(steps) == 2
     assert all("需要新蓝图时" in step for step in steps)
+    _has(production, r"native/deck\.pptx", r"deck export pptx.*不包含")
 
 
 def test_review_routes_submission_faults_separately_from_design() -> None:
@@ -314,11 +314,15 @@ def test_review_routes_declared_relation_table_contradiction_to_design() -> None
 @pytest.mark.parametrize("entry", ["deck-design/SKILL.md", "deck-master/SKILL.md"])
 def test_reconstruction_entries_share_object_preservation_rules(entry: str) -> None:
     text = (SOURCE / entry).read_text(encoding="utf-8")
-    assert "references/reconstruction.md" in _local_links(text)
-    shared = (SOURCE / "references/reconstruction.md").read_text(encoding="utf-8")
-    introduction = shared.split("\n## ", 1)[0]
-    policy = next(p for p in re.split(r"\n\s*\n", introduction) if "重建依据" in p)
-    _has(policy, r"原图.*对象和关系", r"不是.*正文块类型.*默认", r"说明文字.*不算还原")
+    assert "references/native-reconstruction.md" in _local_links(text)
+    native = (SOURCE / "references/native-reconstruction.md").read_text(encoding="utf-8")
+    _has(native, r"坐标.*原图", r"不先造整套模板", r"图片面积不能超过画布的 40%", r"并排图.*一行结论")
+    if entry == "deck-master/SKILL.md":
+        assert "references/reconstruction.md" in _local_links(text)
+        shared = (SOURCE / "references/reconstruction.md").read_text(encoding="utf-8")
+        introduction = shared.split("\n## ", 1)[0]
+        policy = next(p for p in re.split(r"\n\s*\n", introduction) if "重建依据" in p)
+        _has(policy, r"原图.*对象和关系", r"不是.*正文块类型.*默认", r"说明文字.*不算还原")
 
 
 def test_ui_annotations_keep_atoms_outside_and_controls_inside() -> None:
