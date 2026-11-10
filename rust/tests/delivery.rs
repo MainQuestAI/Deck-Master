@@ -594,6 +594,167 @@ fn failed_svg_and_corrupt_bitmap_publish_no_artifact() {
     );
 }
 #[test]
+fn slow_old_build_finishing_after_fast_current_build_keeps_matching_export() {
+    use std::{
+        io::{BufRead, BufReader, Write},
+        net::TcpListener,
+        os::unix::fs::PermissionsExt,
+        process::{Output, Stdio},
+        sync::mpsc,
+        thread,
+        time::Duration,
+    };
+
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path().join("project");
+    setup(&path);
+    put_available_build_font(&path);
+    let family = available_font();
+    let publish = |title: &str, notes: &str| {
+        let mut store = Store::open(&path).unwrap();
+        let mut snapshot = store.current().unwrap();
+        snapshot.deck.pages[0].content.title = title.into();
+        snapshot.deck.pages[0].notes = notes.into();
+        let svg = format!(
+            "<svg viewBox='0 0 1280 720'><text x='64' y='80' font-size='36' font-family=\"{family}\" data-atom-id='atom:p1:title'>{title}</text></svg>"
+        );
+        let file = store.add_file(svg.as_bytes(), "svg").unwrap();
+        let basis = ops::basis("svg", &snapshot.deck, &snapshot.deck.pages[0]).unwrap();
+        snapshot.deck.pages[0].svg = Some(deck::model::Artifact { file, basis });
+        let tx = store.transaction().unwrap();
+        let version =
+            store::append(&tx, &snapshot.deck, "synthetic concurrent build input").unwrap();
+        tx.commit().unwrap();
+        version
+    };
+    let version_a = publish("Slow A", "Slow A notes");
+    let python = std::env::var_os("DECK_TOOLS_PYTHON").expect("install deck-tools");
+    let wrapper = temp.path().join("python-wrapper");
+    let script = temp.path().join("delayed-build.py");
+    std::fs::write(
+        &wrapper,
+        "#!/bin/sh\nexec \"$DECK_TEST_PYTHON\" \"$DECK_TEST_WRAPPER\" \"$@\"\n",
+    )
+    .unwrap();
+    std::fs::set_permissions(&wrapper, std::fs::Permissions::from_mode(0o755)).unwrap();
+    std::fs::write(
+        &script,
+        r#"import json, os, socket, sys
+from pathlib import Path
+assert sys.argv[1:4] == ['-m', 'deck_tools', 'build']
+job = json.loads(Path(sys.argv[-1]).read_text())
+host, port = os.environ['DECK_TEST_BARRIER'].split(':')
+with socket.create_connection((host, int(port)), timeout=30) as channel:
+    captured = {'title': job['pages'][0]['content']['title'], 'notes': job['pages'][0]['notes']}
+    channel.sendall(json.dumps(captured).encode() + b'\n')
+    assert channel.recv(1) == b'1'
+# Delay the real tool invocation; do not replace its compilation or output.
+os.execv(os.environ['DECK_TEST_PYTHON'], [os.environ['DECK_TEST_PYTHON'], *sys.argv[1:]])
+"#,
+    )
+    .unwrap();
+    let cli = || {
+        let mut command = Command::new(env!("CARGO_BIN_EXE_deck"));
+        command.arg("--project").arg(&path);
+        command
+    };
+    let parsed = |output: Output| -> Value {
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        serde_json::from_slice(&output.stdout).unwrap()
+    };
+    let content = |build: &Value| -> Value {
+        parsed(
+            Command::new(&python)
+                .args([
+                    "-c",
+                    "import json,sys,zipfile; from xml.etree import ElementTree as E; z=zipfile.ZipFile(sys.argv[1]); text=lambda name: ' '.join(n.text or '' for n in E.fromstring(z.read(name)).iter('{http://schemas.openxmlformats.org/drawingml/2006/main}t')); print(json.dumps({'slide':text('ppt/slides/slide1.xml'),'notes':text('ppt/notesSlides/notesSlide1.xml')}))",
+                ])
+                .arg(build["path"].as_str().unwrap())
+                .output()
+                .unwrap(),
+        )
+    };
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let address = listener.local_addr().unwrap().to_string();
+    let (sender, receiver) = mpsc::channel();
+    thread::spawn(move || sender.send(listener.accept().unwrap().0).unwrap());
+    let mut slow = cli()
+        .arg("build")
+        .env("DECK_TOOLS_PYTHON", &wrapper)
+        .env("DECK_TEST_PYTHON", &python)
+        .env("DECK_TEST_WRAPPER", &script)
+        .env("DECK_TEST_BARRIER", address)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    let mut barrier = receiver.recv_timeout(Duration::from_secs(30)).unwrap();
+    barrier
+        .set_read_timeout(Some(Duration::from_secs(30)))
+        .unwrap();
+    let mut captured = String::new();
+    BufReader::new(&mut barrier)
+        .read_line(&mut captured)
+        .unwrap();
+    assert_eq!(
+        serde_json::from_str::<Value>(&captured).unwrap(),
+        json!({"title":"Slow A", "notes":"Slow A notes"})
+    );
+    let version_b = publish("Fast B", "Fast B notes");
+    let fast = parsed(cli().arg("build").output().unwrap());
+    assert!(slow.try_wait().unwrap().is_none());
+    assert_eq!(
+        ops::build_detail(&path, fast["id"].as_i64().unwrap()).unwrap()["version_id"],
+        version_b
+    );
+    let fast_content = content(&fast);
+    assert_eq!(fast_content["slide"], "Fast B");
+    assert!(
+        fast_content["notes"]
+            .as_str()
+            .unwrap()
+            .contains("Fast B notes")
+    );
+
+    barrier.write_all(b"1").unwrap();
+    let late = parsed(slow.wait_with_output().unwrap());
+    assert!(late["id"].as_i64().unwrap() > fast["id"].as_i64().unwrap());
+    assert_eq!(
+        ops::build_detail(&path, late["id"].as_i64().unwrap()).unwrap()["version_id"],
+        version_a
+    );
+    let slow_content = content(&late);
+    assert_eq!(slow_content["slide"], "Slow A");
+    assert!(
+        slow_content["notes"]
+            .as_str()
+            .unwrap()
+            .contains("Slow A notes")
+    );
+    let exported = parsed(cli().args(["export", "pptx"]).output().unwrap());
+    assert_eq!(exported["id"], fast["id"]);
+    assert_eq!(exported["input_changed"], false);
+    assert_eq!(content(&exported), fast_content);
+    assert_eq!(
+        std::fs::read(exported["path"].as_str().unwrap()).unwrap(),
+        std::fs::read(fast["path"].as_str().unwrap()).unwrap()
+    );
+    assert_eq!(
+        ops::workspace(&path).unwrap()["default_build"]["id"],
+        fast["id"]
+    );
+    ops::restore(&path, version_a).unwrap();
+    let restored = parsed(cli().args(["export", "pptx"]).output().unwrap());
+    assert_eq!(restored["id"], late["id"]);
+    assert_eq!(restored["input_changed"], false);
+    assert_eq!(content(&restored), slow_content);
+}
+
+#[test]
 fn build_retains_notes_reports_missing_and_export_compares_inputs_after_restore() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path();

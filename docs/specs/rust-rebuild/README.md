@@ -448,6 +448,7 @@ Store::open（含读取）会升级；升级前结束旧程序在途操作，旧
 正常交回按检查时读取的正文回读，不代表原任务启动时的历史检查。
 
 GET /api/deck 返回 default_build 小摘要（含该次缺页）；GET /api/builds/{id} 按需返回回读、来源版本、历史页映射、current_version 及 readback_matches_current。
+Q03 的并发回归 `slow_old_build_finishing_after_fast_current_build_keeps_matching_export` 启动两个真实 CLI 构建，用 TCP 屏障在 A 取得旧输入后等待，待新输入 B 编译完成再释放 A。两次均调用真实 deck-tools；断言 A 后完成而 id 更大，默认导出仍为 B，并读取导出 PPTX 的页面文字和讲稿、核对字节；恢复 A 后再核对导出 A。顺序插入记录的选择测试仅证明查询规则，不代替该并发执行。
 适用性复用 build_digest 并比较实际参建页 content；导入记录没有有效回读，坏记录保留读取错误。
 正文变化、默认构建变化时刷新详情，稳定轮询不重复读取详情。历史检查、当前输入匹配及视觉验收分别展示。
 独立 render CI 已在原候选 `a1bc6b9e` 的 [run 42734375301](https://github.com/MainQuestAI/Deck-Master/actions/runs/42734375301) 通过。后续修复须分别核对其最终提交的 core 与 render 结果；机制与作品效果不能相互替代。默认构建摘要只展示该次缺页和输入变化，不把摘要中未提供的当前 SVG 状态显示为“无”。
