@@ -281,7 +281,8 @@ def test_crop_and_validate_plan_json_entrypoint(sample):
     assert invoke('validate-plan', {'page': page})['atoms'] == 5
 
 
-def test_assemble_rejects_private_notes_with_adapter_error(sample):
+@pytest.mark.parametrize('existing_deck', [None, b'synthetic existing deck'])
+def test_assemble_rejects_private_notes_with_adapter_error(sample, existing_deck):
     work, page, _ = sample
     page['notes'] = '合成路径 /Users/x/demo'
     directory = Path(page['plan']).parent
@@ -291,11 +292,20 @@ def test_assemble_rejects_private_notes_with_adapter_error(sample):
     })
     job = work / 'job.json'
     native.write_json(job, {'work': str(work), 'pages': [page]})
+    output = work / 'native' / 'deck.pptx'
+    if existing_deck is not None:
+        output.write_bytes(existing_deck)
     result = subprocess.run([sys.executable, '-m', 'deck_tools', 'assemble', str(job)], capture_output=True, text=True)
     assert result.returncode == 4
     assert 'notes.body' in result.stderr
     assert 'Traceback' not in result.stderr
     assert not result.stdout
+    if existing_deck is None:
+        assert not output.exists()
+        assert not list(output.parent.glob('*.pptx'))
+    else:
+        assert output.read_bytes() == existing_deck
+        assert list(output.parent.glob('*.pptx')) == [output]
 
 
 def test_generator_lookup_installed_then_development(tmp_path, monkeypatch):

@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
 import sys
 import tempfile
@@ -296,10 +297,18 @@ def assemble(job):
                 raise ValueError(f'{page["id"]} 缺少渲染图或并排图，请先 render')
         if not isinstance(status.get('note'), str) or not status['note'].strip():
             raise ValueError(f'{page["id"]} 缺少对照结论，请先看并排图并填写 note')
-    output = generate(job['pages'], Path(job['work']) / 'native' / 'deck.pptx', mode='deck')
-    output.write_bytes(sanitize.pptx(
-        output.read_bytes(), 'deck.pptx',
-        notes=[{'page_id': p['id'], 'notes': p.get('notes', '')} for p in job['pages']]))
+    output = (Path(job['work']) / 'native' / 'deck.pptx').resolve()
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(dir=output.parent, prefix='.deck-', suffix='.pptx', delete=False) as temp:
+        temporary = Path(temp.name)
+    try:
+        generate(job['pages'], temporary, mode='deck')
+        temporary.write_bytes(sanitize.pptx(
+            temporary.read_bytes(), 'deck.pptx',
+            notes=[{'page_id': p['id'], 'notes': p.get('notes', '')} for p in job['pages']]))
+        os.replace(temporary, output)
+    finally:
+        temporary.unlink(missing_ok=True)
     directory = output.parent / 'deck-render'
     with tempfile.TemporaryDirectory(prefix='deck-native-deck-') as temp:
         images = render_deck(output, temp, fonts={})
