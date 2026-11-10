@@ -1,6 +1,5 @@
 """Synthetic file-only reconstruction, including the actual Node generator."""
 from copy import deepcopy
-import hashlib
 import json
 from pathlib import Path
 import subprocess
@@ -249,23 +248,6 @@ def test_postprocessor_repairs_duplicate_paragraph_properties(sample):
     assert int(root.find('.//a:tr', native.NS).get('h')) == round(45 * native.emu_per_px(plan))
 
 
-@pytest.mark.parametrize('fault', ['side_by_side', 'note', 'plan_sha256'])
-def test_assemble_rejects_unreviewed_or_changed_page(sample, fault):
-    work, page, _ = sample
-    directory = Path(page['plan']).parent
-    status = {'plan_sha256': hashlib.sha256(Path(page['plan']).read_bytes()).hexdigest(),
-              'render_png': 'render.png', 'side_by_side': 'side-by-side.png', 'note': '合成页对照完成'}
-    (directory / 'render.png').write_bytes(b'synthetic render')
-    (directory / 'side-by-side.png').write_bytes(b'synthetic comparison')
-    if fault == 'side_by_side':
-        (directory / 'side-by-side.png').unlink()
-    else:
-        status[fault] = ''
-    native.write_json(directory / 'status.json', status)
-    with pytest.raises(ValueError):
-        native.assemble({'work': str(work), 'pages': [page]})
-
-
 def test_crop_and_validate_plan_json_entrypoint(sample):
     work, page, _ = sample
     def invoke(command, job):
@@ -285,11 +267,6 @@ def test_crop_and_validate_plan_json_entrypoint(sample):
 def test_assemble_rejects_private_notes_with_adapter_error(sample, existing_deck):
     work, page, _ = sample
     page['notes'] = '合成路径 /Users/x/demo'
-    directory = Path(page['plan']).parent
-    native.write_json(directory / 'status.json', {
-        'plan_sha256': hashlib.sha256(Path(page['plan']).read_bytes()).hexdigest(),
-        'render_png': page['source_image'], 'side_by_side': page['source_image'], 'note': '合成对照结论',
-    })
     job = work / 'job.json'
     native.write_json(job, {'work': str(work), 'pages': [page]})
     output = work / 'native' / 'deck.pptx'
@@ -334,17 +311,18 @@ def test_render_and_assemble_real_synthetic_source(sample):
                 assert image.width > 0 and image.height > 0
         with Image.open(answer['side_by_side']) as image:
             assert image.size == (1600, 480)
-        status_path = native.page_directory(work, current['id']) / 'status.json'
-        status = native.read_json(status_path)
-        assert not status['note']
-        status['note'] = '合成页已逐项对照；此测试只验证生产链，不评价作品。'
-        native.write_json(status_path, status)
+        assert answer['findings'] == {'status': 'pass', 'findings': []}
+        assert not (native.page_directory(work, current['id']) / 'status.json').exists()
+    stray = work / 'native' / '.deck-stray.pptx'
+    stray.write_bytes(b'synthetic unfinished deck')
     native.write_json(job, {'work': str(work), 'pages': pages})
     result = subprocess.run([sys.executable, '-m', 'deck_tools', 'assemble', str(job)], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
     answer = json.loads(result.stdout)
     assert Path(answer['pptx']) == work / 'native/deck.pptx'
     assert len(answer['render_pngs']) == 2
+    assert stray.read_bytes() == b'synthetic unfinished deck'
+    assert answer['findings'] == {'status': 'pass', 'findings': []}
     assert all(Path(image).is_file() for image in answer['render_pngs'])
     output = Path(answer['pptx'])
     assert [(r['page_id'], r['notes']) for r in notes_records(output.read_bytes())] == [

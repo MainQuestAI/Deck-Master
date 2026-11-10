@@ -37,9 +37,7 @@ enum Commands {
         #[command(subcommand)]
         command: RunCommand,
     },
-    #[command(
-        about = "将当前 SVG 编译为可编辑 PPTX。stale_pages 是 SVG 依据已变，不是这次 PPTX 已过期"
-    )]
+    #[command(about = "将已采用的页面构建为可编辑 PPTX。stale_pages 表示页面依据已变")]
     Build,
     #[command(about = "检查解释器、rsvg-convert、soffice、pdftoppm、fc-match；未指定字体时只警告")]
     Doctor {
@@ -146,7 +144,7 @@ enum AssetCommand {
 
 #[derive(Subcommand)]
 enum RunCommand {
-    #[command(about = "准备指定页的生图或 SVG 任务")]
+    #[command(about = "准备指定页的生图、SVG 或 native 任务")]
     Start {
         kind: String,
         #[arg(long, value_delimiter = ',', required = true)]
@@ -172,13 +170,18 @@ enum RunCommand {
     #[command(about = "读取任务状态与工作目录")]
     Show { run: Option<i64> },
     #[command(about = "手动采用已保存结果")]
-    Adopt { run: i64, page: String },
+    Adopt {
+        run: i64,
+        page: String,
+        #[arg(long, help = "native 必填：本页并排图的对照结论")]
+        note: Option<String>,
+    },
 }
 
 #[derive(Subcommand)]
 enum ExportCommand {
     #[command(
-        about = "优先下载当前输入匹配的 PPTX；无匹配时下载最近可用历史成品。stale_pages 表示 SVG 依据已变"
+        about = "优先下载当前输入匹配的 PPTX；无匹配时下载最近可用历史成品。stale_pages 表示页面依据已变"
     )]
     Pptx,
     #[command(about = "输出 Markdown，包括未完成内容")]
@@ -271,7 +274,9 @@ pub fn run() -> Result<()> {
             }
             RunCommand::Cancel { run } => ops::run_cancel(&cli.project, run)?,
             RunCommand::Show { run } => ops::run_show(&cli.project, run)?,
-            RunCommand::Adopt { run, page } => ops::run_adopt(&cli.project, run, &page)?,
+            RunCommand::Adopt { run, page, note } => {
+                ops::run_adopt_with_note(&cli.project, run, &page, note.as_deref())?
+            }
         }),
         Commands::Export {
             command: ExportCommand::Pptx,

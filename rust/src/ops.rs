@@ -125,6 +125,9 @@ pub fn project_file(project: &Path, sha: &str) -> Result<std::path::PathBuf> {
     for entry in entries {
         let name = entry.file_name();
         let Some(name) = name.to_str() else { continue };
+        if name.starts_with(".deck-") {
+            continue;
+        }
         if name.split_once('.').is_some_and(|(hash, _)| hash == sha) {
             let path = store.file(name)?.canonicalize()?;
             if path.starts_with(&directory) {
@@ -692,7 +695,7 @@ fn calculate_basis(kind: &str, deck: &Deck, page: &Page, legacy: bool) -> Result
         ])
     };
     let hash = format!("{:x}", Sha256::digest(serde_json::to_vec(&value)?));
-    Ok(if kind == "svg" && !legacy {
+    Ok(if matches!(kind, "svg" | "native") && !legacy {
         format!("svg-v2:{hash}")
     } else {
         hash
@@ -761,17 +764,17 @@ pub fn run_start(
     max_calls: Option<i64>,
 ) -> Result<Value> {
     use rusqlite::{OptionalExtension, params};
-    if !["image", "svg"].contains(&kind)
+    if !["image", "svg", "native"].contains(&kind)
         || ids.is_empty()
         || ids.iter().collect::<HashSet<_>>().len() != ids.len()
     {
         return Err(Error::Input(
-            "请选择 image 或 svg，并指定不重复的页面".into(),
+            "请选择 image、svg 或 native，并指定不重复的页面".into(),
         ));
     }
-    if max_calls.is_some_and(|n| n < 1) || (kind == "svg" && max_calls.is_some()) {
+    if max_calls.is_some_and(|n| n < 1) || (kind != "image" && max_calls.is_some()) {
         return Err(Error::Input(
-            "生图调用上限必须为正整数；SVG 不设调用上限".into(),
+            "生图调用上限必须为正整数；SVG 和 native 不设调用上限".into(),
         ));
     }
     let mut store = Store::open(project)?;
@@ -1024,6 +1027,108 @@ fn page_job(store: &Store, deck: &Deck, page: &Page, svg: &Path) -> Result<Value
     )
 }
 
+#[derive(serde::Serialize, serde::Deserialize)]
+struct NativeAsset {
+    id: String,
+    file: String,
+    sha256: String,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+struct NativePack {
+    plan: Value,
+    assets: Vec<NativeAsset>,
+    render_png: String,
+    note: String,
+}
+
+fn native_plan_path(store: &Store, pack: &NativePack, path: &Path) -> Result<()> {
+    let mut plan = pack.plan.clone();
+    for op in plan["ops"].as_array_mut().into_iter().flatten() {
+        if op["op"] == "image" {
+            let file = op["file"]
+                .as_str()
+                .ok_or_else(|| Error::Input("image 缺少素材文件".into()))?;
+            op["file"] = json!(store.file(file)?.canonicalize()?);
+        }
+    }
+    std::fs::write(path, serde_json::to_vec(&plan)?)?;
+    Ok(())
+}
+
+fn native_result(
+    store: &Store,
+    id: i64,
+    page: &Page,
+    source: &Path,
+    data: &[u8],
+    temporary: &Path,
+) -> Result<(Vec<u8>, String, Value, Value)> {
+    use sha2::{Digest, Sha256};
+    let mut plan: Value = serde_json::from_slice(data)?;
+    let path = temporary.join("plan.json");
+    std::fs::write(&path, data)?;
+    let mut input = serde_json::to_value(page)?;
+    input["plan"] = json!(path);
+    crate::tools::invoke("validate-plan", &json!({"page": input}))?;
+    let mut assets = Vec::new();
+    for op in plan["ops"].as_array_mut().into_iter().flatten() {
+        if op["op"] == "image" {
+            let name = op["file"]
+                .as_str()
+                .ok_or_else(|| Error::Input("image 缺少素材文件".into()))?;
+            let asset = source.parent().unwrap_or(Path::new(".")).join(name);
+            let bytes = std::fs::read(&asset)?;
+            let file = store.add_file(
+                &bytes,
+                asset.extension().and_then(|s| s.to_str()).unwrap_or("bin"),
+            )?;
+            assets.push(NativeAsset {
+                id: name.into(),
+                file: file.clone(),
+                sha256: format!("{:x}", Sha256::digest(&bytes)),
+            });
+            op["file"] = json!(file);
+        }
+    }
+    let mut pack = NativePack {
+        plan,
+        assets,
+        render_png: String::new(),
+        note: String::new(),
+    };
+    native_plan_path(store, &pack, &path)?;
+    let image = page
+        .image
+        .as_ref()
+        .ok_or_else(|| Error::Input("本页没有已采用的原图；请先交回并采用原图".into()))?;
+    input["source_image"] = json!(store.file(&image.file)?.canonicalize()?);
+    let work = store.root.canonicalize()?.join("work").join(id.to_string());
+    std::fs::create_dir_all(&work)?;
+    // Each check keeps its own comparison, including concurrent or repeated results.
+    let directory = tempfile::Builder::new()
+        .prefix("native-")
+        .tempdir_in(work)?
+        .keep();
+    let output = crate::tools::invoke(
+        "render",
+        &json!({
+            "page": input,
+            "output": directory,
+        }),
+    )?;
+    let preview = output["render_png"]
+        .as_str()
+        .ok_or_else(|| Error::Tool("render 缺少预览路径".into()))?;
+    pack.render_png = store.add_file(&std::fs::read(preview)?, "png")?;
+    Ok((
+        serde_json::to_vec(&pack)?,
+        pack.render_png,
+        output["findings"].clone(),
+        output["side_by_side"].clone(),
+    ))
+}
+
 pub fn run_result(project: &Path, id: i64, page_id: &str, source: &Path) -> Result<Value> {
     use rusqlite::params;
     let mut store = Store::open(project)?;
@@ -1031,7 +1136,7 @@ pub fn run_result(project: &Path, id: i64, page_id: &str, source: &Path) -> Resu
     let (old, _, _) = run_page(&store.connection, id, page_id)?;
     let snapshot = store.current()?;
     let checked_version = snapshot.version;
-    let data = std::fs::read(source)?;
+    let mut data = std::fs::read(source)?;
     if kind == "svg" {
         use sha2::{Digest, Sha256};
         let identity = format!("{:x}.svg", Sha256::digest(&data));
@@ -1055,7 +1160,22 @@ pub fn run_result(project: &Path, id: i64, page_id: &str, source: &Path) -> Resu
     let temporary = tempfile::tempdir()?;
     let mut preview = None;
     let mut findings = Value::Null;
-    let extension = if kind == "svg" {
+    let mut side_by_side = Value::Null;
+    let extension = if kind == "native" {
+        let page = snapshot
+            .deck
+            .pages
+            .iter()
+            .find(|p| p.id == page_id)
+            .ok_or_else(|| Error::Input("页面已删除；请保留原文件".into()))?;
+        let (packed, png, checked, comparison) =
+            native_result(&store, id, page, source, &data, temporary.path())?;
+        data = packed;
+        preview = Some(png);
+        findings = checked;
+        side_by_side = comparison;
+        "native.json"
+    } else if kind == "svg" {
         // Compile the exact bytes later saved, even if the Host rewrites its source.
         let path = temporary.path().join("page.svg");
         std::fs::write(&path, &data)?;
@@ -1086,7 +1206,7 @@ pub fn run_result(project: &Path, id: i64, page_id: &str, source: &Path) -> Resu
         }
     };
     let file = store.add_file(&data, extension)?;
-    if kind == "svg" {
+    if matches!(kind.as_str(), "svg" | "native") {
         let directory = store.root.join("work").join(id.to_string());
         std::fs::create_dir_all(&directory)?;
         std::fs::write(
@@ -1106,7 +1226,7 @@ pub fn run_result(project: &Path, id: i64, page_id: &str, source: &Path) -> Resu
     let (_, current_state, previous) = run_page(&tx, id, page_id)?;
     // Only the first result may write the page automatically. Later files can
     // arrive out of order while another page keeps this run open.
-    let adopted = status == "open" && eligible && previous.is_none();
+    let adopted = kind != "native" && status == "open" && eligible && previous.is_none();
     if adopted {
         let page = snapshot
             .deck
@@ -1145,7 +1265,7 @@ pub fn run_result(project: &Path, id: i64, page_id: &str, source: &Path) -> Resu
     tx.execute("UPDATE runs SET status='done' WHERE id=? AND status='open' AND NOT EXISTS (SELECT 1 FROM run_pages WHERE run_id=? AND status!='done')",params![id,id])?;
     tx.commit()?;
     Ok(
-        json!({"file":file,"adopted":adopted,"checked_version":checked_version,"findings":findings,"run":run_show(project,Some(id))?}),
+        json!({"file":file,"adopted":adopted,"checked_version":checked_version,"findings":findings,"side_by_side":side_by_side,"run":run_show(project,Some(id))?}),
     )
 }
 
@@ -1159,9 +1279,39 @@ pub fn run_adopt_candidate(
     page_id: &str,
     expected_file: Option<&str>,
 ) -> Result<Value> {
+    run_adopt_with_options(project, id, page_id, expected_file, None)
+}
+
+pub fn run_adopt_with_note(
+    project: &Path,
+    id: i64,
+    page_id: &str,
+    note: Option<&str>,
+) -> Result<Value> {
+    run_adopt_with_options(project, id, page_id, None, note)
+}
+
+fn run_adopt_with_options(
+    project: &Path,
+    id: i64,
+    page_id: &str,
+    expected_file: Option<&str>,
+    note: Option<&str>,
+) -> Result<Value> {
     use rusqlite::params;
-    let mut store = Store::open(project)?;
+    let store = Store::open(project)?;
     let (kind, _, _, _) = run_record(&store.connection, id)?;
+    let note = if kind == "native" {
+        Some(
+            note.map(str::trim)
+                .filter(|text| !text.is_empty())
+                .ok_or_else(|| {
+                    Error::Input("采用 native 结果必须用 --note 填写非空的本页对照结论".into())
+                })?,
+        )
+    } else {
+        None
+    };
     let (old, _, file) = run_page(&store.connection, id, page_id)?;
     let file = file.ok_or_else(|| Error::Input("此页尚无结果；请先交回文件".into()))?;
     if expected_file.is_some_and(|expected| expected != file) {
@@ -1194,7 +1344,19 @@ pub fn run_adopt_candidate(
             )?,
         );
     }
-    let tx = store.transaction()?;
+    let adopted_file = if let Some(note) = note {
+        let mut pack: NativePack = serde_json::from_slice(&std::fs::read(store.file(&file)?)?)?;
+        pack.note = note.into();
+        store.file(&pack.render_png)?;
+        preview = Some(pack.render_png.clone());
+        store.add_file(&serde_json::to_vec(&pack)?, "native.json")?
+    } else {
+        file.clone()
+    };
+    let tx = rusqlite::Transaction::new_unchecked(
+        &store.connection,
+        rusqlite::TransactionBehavior::Immediate,
+    )?;
     if run_page(&tx, id, page_id)?.2.as_deref() != Some(file.as_str()) {
         return Err(Error::Conflict(
             "候选已更新；请读取当前候选后重新采用".into(),
@@ -1207,15 +1369,27 @@ pub fn run_adopt_candidate(
         .iter_mut()
         .find(|p| p.id == page_id)
         .ok_or_else(|| Error::Input("页面已删除；不能采用".into()))?;
-    let artifact = Some(crate::model::Artifact { file, basis: old });
+    let artifact = Some(crate::model::Artifact {
+        file: adopted_file.clone(),
+        basis: old,
+    });
     if kind == "image" {
         page.image = artifact;
+    } else if kind == "native" {
+        page.native = artifact;
+        page.preview = preview.clone();
     } else {
         page.svg = artifact;
-        page.preview = preview;
+        page.preview = preview.clone();
     }
     if snapshot.deck != store::current(&tx)?.deck {
         store::append(&tx, &snapshot.deck, "手动采用生成结果")?;
+    }
+    if kind == "native" {
+        tx.execute(
+            "UPDATE run_pages SET result_file=? WHERE run_id=? AND page_id=?",
+            params![adopted_file, id, page_id],
+        )?;
     }
     tx.execute(
         "UPDATE run_pages SET status='done' WHERE run_id=? AND page_id=?",
@@ -1228,11 +1402,18 @@ pub fn run_adopt_candidate(
 
 fn build_digest(deck: &Deck) -> Result<String> {
     use sha2::{Digest, Sha256};
+    let native = deck.pages.iter().any(|p| p.native.is_some());
     let pages: Vec<_> = deck
         .pages
         .iter()
-        .map(|p| json!([p.id, p.svg.as_ref().map(|s| &s.file), p.notes]))
-        .collect();
+        .map(|p| {
+            if native {
+                Ok(json!([p.id, p.native, basis("native", deck, p)?, p.notes]))
+            } else {
+                Ok(json!([p.id, p.svg.as_ref().map(|s| &s.file), p.notes]))
+            }
+        })
+        .collect::<Result<_>>()?;
     let assets: std::collections::BTreeMap<_, _> = deck
         .style
         .assets
@@ -1248,18 +1429,28 @@ fn build_digest(deck: &Deck) -> Result<String> {
 }
 
 pub fn artifact_status(deck: &Deck) -> Result<Value> {
+    artifact_status_for(deck, deck.pages.iter().any(|p| p.native.is_some()))
+}
+
+fn artifact_status_for(deck: &Deck, native: bool) -> Result<Value> {
     let missing: Vec<_> = deck
         .pages
         .iter()
-        .filter(|p| p.svg.is_none())
+        .filter(|p| {
+            if native {
+                p.native.is_none()
+            } else {
+                p.svg.is_none()
+            }
+        })
         .map(|p| &p.id)
         .collect();
     let mut stale = Vec::new();
     let mut stale_images = Vec::new();
     let mut incomplete_basis_pages = Vec::new();
     for page in &deck.pages {
-        if page
-            .svg
+        let artifact = if native { &page.native } else { &page.svg };
+        if artifact
             .as_ref()
             .is_some_and(|svg| !svg.basis.starts_with("svg-v2:"))
         {
@@ -1269,7 +1460,7 @@ pub fn artifact_status(deck: &Deck) -> Result<Value> {
         if image_stale {
             stale_images.push(&page.id);
         }
-        if let Some(svg) = &page.svg
+        if let Some(svg) = artifact
             && (svg.basis != current_basis_for("svg", &svg.basis, deck, page)?)
         {
             stale.push(&page.id);
@@ -1284,29 +1475,62 @@ pub fn build(project: &Path) -> Result<Value> {
     use rusqlite::params;
     let mut store = Store::open(project)?;
     let snapshot = store.current()?;
+    let mut query = store.connection.prepare(
+        "SELECT page_id FROM runs JOIN run_pages ON runs.id=run_pages.run_id WHERE kind='native' AND result_file IS NOT NULL",
+    )?;
+    let candidate_pages = query
+        .query_map([], |row| row.get::<_, String>(0))?
+        .collect::<std::result::Result<HashSet<_>, _>>()?;
+    drop(query);
+    let native = snapshot.deck.pages.iter().any(|p| p.native.is_some())
+        || (!snapshot.deck.pages.iter().any(|p| p.svg.is_some())
+            && snapshot
+                .deck
+                .pages
+                .iter()
+                .any(|p| candidate_pages.contains(&p.id)));
+    let status = artifact_status_for(&snapshot.deck, native)?;
+    let temporary = tempfile::tempdir()?;
     let mut pages = Vec::new();
     let mut job = Value::Null;
-    for page in &snapshot.deck.pages {
-        if let Some(svg) = &page.svg {
+    for (index, page) in snapshot.deck.pages.iter().enumerate() {
+        if native {
+            if let Some(artifact) = &page.native {
+                let pack: NativePack =
+                    serde_json::from_slice(&std::fs::read(store.file(&artifact.file)?)?)?;
+                let plan = temporary.path().join(format!("{index}.json"));
+                native_plan_path(&store, &pack, &plan)?;
+                pages.push(
+                    json!({"id":page.id,"content":page.content,"notes":page.notes,"plan":plan}),
+                );
+            }
+        } else if let Some(svg) = &page.svg {
             let input = page_job(&store, &snapshot.deck, page, &store.file(&svg.file)?)?;
             pages.push(input["pages"][0].clone());
             job = input;
         }
     }
     if pages.is_empty() {
+        if native {
+            return Ok(
+                json!({"path":null,"missing_pages":status["missing_pages"],"stale_pages":status["stale_pages"]}),
+            );
+        }
         return Err(Error::Input(
             "没有可构建的 SVG；请先完成至少一页 SVG".into(),
         ));
     }
-    let temporary = tempfile::tempdir()?;
-    job["pages"] = json!(pages);
-    job["output"] = json!(temporary.path().join("build"));
-    let output = crate::tools::invoke("build", &job)?;
+    let output = if native {
+        crate::tools::invoke("assemble", &json!({"work":temporary.path(),"pages":pages}))?
+    } else {
+        job["pages"] = json!(pages);
+        job["output"] = json!(temporary.path().join("build"));
+        crate::tools::invoke("build", &job)?
+    };
     let path = output["pptx"]
         .as_str()
         .ok_or_else(|| Error::Tool("build 缺少 PPTX 路径".into()))?;
     let file = store.add_file(&std::fs::read(path)?, "pptx")?;
-    let status = artifact_status(&snapshot.deck)?;
     let tx = store.transaction()?;
     tx.execute("INSERT INTO builds(version_id,input_digest,pptx_file,findings_json,missing_pages) VALUES (?,?,?,?,?)",params![snapshot.version,build_digest(&snapshot.deck)?,file,serde_json::to_string(&output["findings"])?,serde_json::to_string(&status["missing_pages"])?])?;
     let id = tx.last_insert_rowid();
@@ -1358,8 +1582,13 @@ pub fn build_detail(project: &Path, id: i64) -> Result<Value> {
     }
     let mut pages = Vec::new();
     let mut content_matches = true;
+    let native = source.pages.iter().any(|p| p.native.is_some());
     for (index, page) in source.pages.iter().enumerate() {
-        if page.svg.is_none() {
+        if if native {
+            page.native.is_none()
+        } else {
+            page.svg.is_none()
+        } {
             continue;
         }
         content_matches &= current
@@ -1433,7 +1662,7 @@ mod build_selection_tests {
                 .connection
                 .pragma_query_value(None, "user_version", |r| r.get::<_, i64>(0))
                 .unwrap(),
-            5
+            store::FORMAT_VERSION
         );
         assert_eq!(
             upgraded.current().unwrap().deck.pages[0]

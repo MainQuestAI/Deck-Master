@@ -277,6 +277,8 @@ pub struct Page {
     pub refs: Vec<String>,
     pub image: Option<Artifact>,
     pub svg: Option<Artifact>,
+    #[serde(default)]
+    pub native: Option<Artifact>,
     pub preview: Option<String>,
 }
 
@@ -292,6 +294,7 @@ impl Page {
             refs: Some(self.refs.clone()),
             image: None,
             svg: None,
+            native: None,
             preview: None,
         }
     }
@@ -321,6 +324,8 @@ pub struct PagePatch {
     pub image: Option<Value>,
     #[serde(skip_serializing)]
     pub svg: Option<Value>,
+    #[serde(skip_serializing)]
+    pub native: Option<Value>,
     #[serde(skip_serializing)]
     pub preview: Option<Value>,
 }

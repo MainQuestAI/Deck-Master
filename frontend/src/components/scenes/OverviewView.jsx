@@ -140,7 +140,7 @@ export default function OverviewView() {
     <ContextSection kind="brief" title="任务信息" Reading={BriefReading} Fields={BriefFields} />
     <ContextSection kind="framing" title="业务框架" Reading={FramingReading} Fields={FramingFields} />
     <div className="metric-summary">
-      {[[pages.length, '逐页稿'], [pages.filter(page => page.image).length, '原图'], [pages.filter(page => page.svg).length, 'SVG'], [workspace.runs.filter(run => run.status === 'open').length, '进行中任务']].map(([value, label]) => <div className="metric-item" key={label}><strong>{value}</strong><p>{label}</p></div>)}
+      {[[pages.length, '逐页稿'], [pages.filter(page => page.image).length, '原图'], [pages.filter(page => page.svg).length, 'SVG'], [workspace.runs.filter(run => run.kind !== 'native' && run.status === 'open').length, '进行中任务']].map(([value, label]) => <div className="metric-item" key={label}><strong>{value}</strong><p>{label}</p></div>)}
     </div>
     <section className="next-banner"><div className="mark-icon"><Icon name="page" /></div><div className="grow"><h2>{pages.length ? '查看逐页稿并继续制作' : '作品还是空的'}</h2><p>{pages.length ? '正文、讲稿与产物按页保存。' : '新增第一页，开始写正文与讲稿。'}</p></div><button className="primary" disabled={busy.create} onClick={() => pages.length ? openPage(pages[0].id) : createPage()}>{pages.length ? '进入制作' : '新增第一页'}</button></section>
     {pages.length > 0 && <>
