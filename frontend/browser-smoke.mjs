@@ -1,0 +1,178 @@
+import assert from 'node:assert/strict';
+import { execFileSync, spawn } from 'node:child_process';
+import { once } from 'node:events';
+import { createInterface } from 'node:readline';
+import { mkdtempSync, writeFileSync, readFileSync, mkdirSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { resolve, join } from 'node:path';
+import { parseArgs } from 'node:util';
+import { chromium } from 'playwright';
+
+const { values } = parseArgs({ options: { deck: { type: 'string' }, browser: { type: 'string' }, out: { type: 'string' } } });
+assert.ok(values.deck, 'Pass the installed CLI with --deck /prefix/bin/deck');
+const deck = resolve(values.deck);
+const output = values.out ? resolve(values.out) : mkdtempSync(join(tmpdir(), 'deck-browser-'));
+mkdirSync(output, { recursive: true });
+const project = mkdtempSync(join(tmpdir(), 'deck-browser-project-'));
+const environment = { ...process.env };
+delete environment.DECK_TOOLS_PYTHON;
+delete environment.PYTHONPATH;
+const command = (...args) => JSON.parse(execFileSync(deck, ['--project', project, ...args.map(String)], { env: environment, encoding: 'utf8', timeout: 120000 }));
+function patch(value) {
+  const path = join(output, 'patch.json');
+  writeFileSync(path, JSON.stringify(value));
+  return command('put', '--base', command('get').version, path);
+}
+command('new', project, '--title', 'Installed browser smoke');
+patch({ order: ['p1', 'p2'], pages: [{ id: 'p1', content: { title: 'Browser workflow' }, notes: 'Speaker notes' }, { id: 'p2', content: { title: 'Second page' } }] });
+const style = command('get').deck.style;
+const family = execFileSync('fc-match', ['-f', '%{family}', 'sans-serif'], { encoding: 'utf8' }).split(',')[0];
+style.fonts = [family];
+patch({ style });
+const source = join(output, 'source.png');
+writeFileSync(source, Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAFElEQVR4nGNkaGhgwAaYsIoOWgkAzIgBEFCQDcoAAAAASUVORK5CYII=', 'base64'));
+const imageRun = command('run', 'start', 'image', '--pages', 'p1').runs[0].id;
+command('run', 'call', imageRun, 'p1');
+command('run', 'result', imageRun, 'p1', source);
+const svgRun = command('run', 'start', 'svg', '--pages', 'p1').runs[0].id;
+const svg = join(output, 'page.svg');
+function submit(color) {
+  writeFileSync(svg, `<svg viewBox="0 0 1280 720"><rect width="1280" height="720" fill="${color}"/><text data-atom-id="atom:p1:title" x="80" y="100" font-family="${family}" font-size="36">Browser workflow</text></svg>`);
+  return command('run', 'result', svgRun, 'p1', svg);
+}
+submit('#ffffff');
+const candidate = submit('#f0f0f0');
+assert.equal(candidate.adopted, false);
+const built = command('build');
+const service = spawn(deck, ['serve', project], { env: environment, stdio: ['ignore', 'pipe', 'inherit'] });
+const lines = createInterface({ input: service.stdout });
+const url = await Promise.race([once(lines, 'line').then(([line]) => line), once(service, 'exit').then(([code]) => { throw new Error(`Service exited ${code}`); })]);
+let browser;
+const observations = [];
+try {
+  browser = await chromium.launch({ executablePath: values.browser, headless: true, args: ['--no-sandbox'] });
+  const context = await browser.newContext({ acceptDownloads: true, viewport: { width: 1440, height: 1000 } });
+  const page = await context.newPage();
+  await page.goto(url);
+  await page.locator('#nav-delivery').click();
+  await page.getByText(`默认构建 #${built.id}`, { exact: false }).waitFor();
+  await page.getByText('该次构建未包含：第 02 页', { exact: false }).waitFor();
+  const currentStatus = page.locator('.s4-status').first();
+  const buildSummary = page.locator('.s4-status').nth(1);
+  assert.match(await currentStatus.innerText(), /缺 SVG：第 02 页/);
+  assert.doesNotMatch(await buildSummary.innerText(), /缺 SVG|SVG 依据已变/);
+  await page.reload();
+  await page.locator('#nav-delivery').click();
+  await page.getByText(`默认构建 #${built.id}`, { exact: false }).waitFor();
+  assert.doesNotMatch(await buildSummary.innerText(), /缺 SVG|SVG 依据已变/);
+  observations.push('CLI build survives first open and browser reload, including missing pages');
+  await page.locator('details summary').filter({ hasText: '默认构建的回读发现' }).waitFor();
+  let releaseReadback;
+  const heldReadback = new Promise(resolve => { releaseReadback = resolve; });
+  const detailPattern = '**/api/builds/*';
+  let detailFailure = null;
+  const delayDetail = async route => {
+    try {
+      const response = await route.fetch();
+      await heldReadback;
+      await route.fulfill({ response });
+    } catch (error) {
+      detailFailure = error;
+      await route.abort().catch(() => {});
+    }
+  };
+  await page.route(detailPattern, delayDetail);
+  try {
+    patch({ pages: [{ id: 'p1', notes: 'Changed while readback refresh waits' }] });
+    await page.getByRole('status').filter({ hasText: '正在刷新构建回读' }).waitFor();
+    assert.match(await page.getByRole('status').filter({ hasText: '正在刷新构建回读' }).innerText(), new RegExp(`暂留构建 #${built.id}`));
+    assert.match(await page.locator('details summary').innerText(), new RegExp(`上次读取构建 #${built.id}`));
+    assert.equal(await page.getByText('尚无可展示的构建回读', { exact: false }).count(), 0);
+  } finally {
+    releaseReadback();
+    await page.unrouteAll({ behavior: 'wait' });
+  }
+  assert.ifError(detailFailure);
+  await page.locator('details summary').filter({ hasText: '默认构建的回读发现' }).waitFor();
+  await page.getByText('历史检查，不代表当前正文已检查', { exact: false }).waitFor();
+  observations.push('A real version change keeps the old readback labelled while the next HTTP detail response is delayed');
+  await page.getByRole('button', { name: '比对与采用', exact: true }).first().click();
+  await page.getByRole('button', { name: '采用此候选', exact: false }).click();
+  await page.waitForFunction(async file => (await (await fetch('/api/deck')).json()).deck.pages[0].svg.file === file, candidate.file);
+  assert.equal(command('get').deck.pages[1].svg, null);
+  observations.push('Browser adopts the selected candidate without changing another page');
+  await page.locator('#nav-content').click();
+  await page.getByRole('button', { name: '阅读', exact: true }).first().click();
+  await page.getByRole('button', { name: '修改正文与讲稿', exact: true }).click();
+  const notes = page.locator('label').filter({ has: page.locator('span').filter({ hasText: /^讲稿$/ }) }).locator('textarea');
+  await notes.fill('Saved by installed browser');
+  await page.getByRole('button', { name: '保存正文与讲稿', exact: true }).click();
+  await page.getByRole('button', { name: '修改正文与讲稿', exact: true }).waitFor();
+  assert.equal(command('get').deck.pages[0].notes, 'Saved by installed browser');
+  observations.push('Browser save is visible to the CLI');
+  await page.getByRole('button', { name: '修改正文与讲稿', exact: true }).click();
+  await notes.fill('Keep this draft');
+  const dismiss = page.waitForEvent('dialog').then(dialog => { assert.equal(dialog.type(), 'beforeunload'); return dialog.dismiss(); });
+  await page.reload().catch(() => {});
+  await dismiss;
+  assert.equal(await notes.inputValue(), 'Keep this draft');
+  let dialog = page.waitForEvent('dialog').then(dialog => dialog.dismiss());
+  await page.getByRole('button', { name: '放弃本地修改', exact: true }).click();
+  await dialog;
+  assert.equal(await notes.inputValue(), 'Keep this draft');
+  dialog = page.waitForEvent('dialog').then(dialog => dialog.accept());
+  await page.getByRole('button', { name: '放弃本地修改', exact: true }).click();
+  await dialog;
+  observations.push('Real beforeunload and explicit discard cancellation preserve the draft');
+  await page.getByRole('button', { name: '修改正文与讲稿', exact: true }).click();
+  await notes.fill('Conflicting draft');
+  patch({ pages: [{ id: 'p1', notes: 'Saved by CLI concurrently' }] });
+  await page.getByRole('button', { name: '保存正文与讲稿', exact: true }).click();
+  await page.getByRole('heading', { name: '保存冲突，您的输入仍保留' }).waitFor();
+  assert.equal(await notes.inputValue(), 'Conflicting draft');
+  assert.equal(command('get').deck.pages[0].notes, 'Saved by CLI concurrently');
+  dialog = page.waitForEvent('dialog').then(dialog => dialog.accept());
+  await page.getByRole('button', { name: '放弃本地修改', exact: true }).click();
+  await dialog;
+  observations.push('A real save conflict retains local text without replaying it');
+  await page.getByRole('button', { name: '修改正文与讲稿', exact: true }).click();
+  await notes.fill('Discard on reload');
+  const confirmLeave = page.waitForEvent('dialog').then(dialog => {
+    assert.equal(dialog.type(), 'beforeunload');
+    return dialog.accept();
+  });
+  await page.reload();
+  await confirmLeave;
+  assert.equal(command('get').deck.pages[0].notes, 'Saved by CLI concurrently');
+  assert.equal(await page.locator('.drawer-panel').count(), 0);
+  observations.push('Confirming real beforeunload discards only the unsaved in-memory draft');
+  const finalBuild = command('build');
+  await page.locator('#nav-delivery').click();
+  await page.getByText(`默认构建 #${finalBuild.id}`, { exact: false }).waitFor();
+  const responsePromise = page.waitForResponse(response => response.url().endsWith('/api/export/pptx'));
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: '下载 PPTX', exact: true }).click();
+  const response = await responsePromise;
+  const download = await downloadPromise;
+  const downloaded = join(output, 'download.pptx');
+  await download.saveAs(downloaded);
+  const status = JSON.parse(response.headers()['x-deck-status']);
+  assert.equal(status.id, finalBuild.id);
+  assert.deepEqual(readFileSync(downloaded), readFileSync(finalBuild.path));
+  execFileSync(process.env.DECK_INSPECT_PYTHON || 'python3', ['-c', 'import sys,zipfile; z=zipfile.ZipFile(sys.argv[1]); s=z.read("ppt/slides/slide1.xml"); assert b"Browser workflow" in s; assert b"Saved by CLI concurrently" in z.read("ppt/notesSlides/notesSlide1.xml"); assert "ppt/slides/slide2.xml" not in z.namelist()', downloaded]);
+  observations.push('Downloaded bytes, X-Deck-Status, slide count, text and notes match the selected build');
+  await page.screenshot({ path: join(output, 'delivery.png'), fullPage: true });
+  await context.close();
+  console.log(JSON.stringify({ deck, output, observations }, null, 2));
+} catch (error) {
+  const page = browser?.contexts()[0]?.pages()[0];
+  if (page) { await page.screenshot({path:join(output,'failure.png'),fullPage:true}); writeFileSync(join(output,'failure.html'),await page.content()); }
+  throw error;
+} finally {
+  try {
+    await browser?.close();
+  } finally {
+    lines.close();
+    service.kill('SIGTERM');
+  }
+}

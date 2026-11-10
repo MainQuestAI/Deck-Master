@@ -300,3 +300,39 @@ test('failed move shows the error, retains its target and unlocks for an explici
   assert.deepEqual(ids(), ['p2', 'p3', 'p1']);
   assert.equal(state.actionError, '');
 });
+
+test('list and reader hints agree with unload protection for clean, dirty and restored drafts', async t => {
+  await mount(t);
+  const unloading = () => {
+    const event = new window.Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(event);
+    return event.defaultPrevented;
+  };
+  await act(async () => { state.editPage('p1'); state.closeDrawer(); });
+  assert.equal(row(0).textContent.includes('有未保存的修改'), false);
+  assert.equal(unloading(), false);
+  await draft('p1', 'Changed notes');
+  assert.equal(row(0).textContent.includes('有未保存的修改'), true);
+  assert.equal(unloading(), true);
+  showReader = true;
+  await act(async () => { state.openPage('p1'); });
+  assert.ok(button('继续未保存的修改'));
+  await act(async () => { state.updateDraft({ ...state.drafts.p1.page, notes: 'p1 讲稿' }); });
+  assert.ok(button('修改正文与讲稿'));
+  assert.equal(unloading(), false);
+  showReader = false;
+  await act(async () => { state.setScene('content'); });
+  assert.equal(row(0).textContent.includes('有未保存的修改'), false);
+});
+
+test('ordinary dirty discard requires confirmation and cancellation preserves inputs', async t => {
+  await mount(t);
+  showReader = true;
+  await draft('p1', 'Keep this input');
+  window.confirm = () => false;
+  await click('放弃本地修改');
+  assert.equal(state.drafts.p1.page.notes, 'Keep this input');
+  window.confirm = () => true;
+  await click('放弃本地修改');
+  assert.equal(state.drafts.p1, undefined);
+});

@@ -48,7 +48,7 @@ S0–S6 已合入 `main`，源码基线 `abb785eb`（PR #272 之后）。现行�
 - 通用读集、操作信封、请求编号、通用恢复引擎、租约与代次、审阅 pass 汇总、审阅者独立性判定
 - 内容寻址版本、对象仓库、跨存储事务、单写入服务、实例锁、服务发现、跨进程业务锁
 - 讲稿码点分段、强制估时、`table_roles`、`design_policy`、Narrative 节点映射、材料证据等级
-- 工具协议版本、能力协商、插件平台、沙箱、托管安装的激活与回滚事务
+- 工具协议版本、能力协商、插件平台、沙箱、通用托管安装的激活状态机与回滚事务（允许第 8 节限定的本地完整组件目录和单指针切换）
 - 数字配额（模块数、行数、schema 行数、命令比例、零协议词、零确认点、点击数）、复杂度棘轮测试、固定措辞断言、整组验收门
 - 同页自动合并、每次读取都重新校验全部文件
 - 项目级"结果未知"冻结、attempts 表、build 对缺页或过期页的硬拒、新旧产物逐份对比、扩展旧线的边界测试或豁免清单
@@ -87,7 +87,7 @@ deck-skill/           新 Skill（第 6 节）
 
 - Rust stable（最低 1.88，由 Cargo.toml 的 rust-version 声明），edition 2024，提交 Cargo.lock。依赖：clap、serde、serde_json、rusqlite（bundled）、tiny_http、thiserror、sha2、tempfile。本地服务用同步请求线程，不引入异步运行时。
 - 先在一个包内按文件分模块，出现真实需要时再拆。
-- `rust.yml` 在 PR 和 `main` push 上自动执行 AGENTS.md 第 3 节的 Rust 检查、WebUI 检查、deck-tools pytest 与安装脚本检查；pytest 用 `-m "not render"` 排除需要 rsvg-convert/soffice 的用例，合并前须在本机全量运行。保留手动入口，功能分支 push 不单独触发 CI。旧线 CI 已随旧线删除。
+- `rust.yml` 在 PR 和 `main` push 上自动执行 AGENTS.md 第 3 节的 Rust 检查、WebUI 检查、deck-tools pytest 与安装脚本检查；core 的 pytest 用 `-m "not render"` 排除真实渲染用例，独立 Ubuntu 24.04 render job 执行 `-m render`；合并前仍须在本机全量运行。保留手动入口，功能分支 push 不单独触发 CI。旧线 CI 已随旧线删除。
 
 ### 3.2 存储
 
@@ -166,10 +166,10 @@ deck-skill/           新 Skill（第 6 节）
 - `put --base N file.json` 接受 deck 对象，也接受 get 的完整输出。顶层可以只交 brief、framing、style、order 或 pages；brief、framing、style 各自是完整单元，省略的内部字段按空值或默认值处理。pages 是带 id 的页列表，每页省略的作者字段沿用基线；同页作者字段仍作为一个单元比较。materials、image、svg、preview 即使回传也不写入。补丁带 content 时，`put` 会静默整理中文与数字、标点之间多余的空格，含英文名的版本号后的空格保留（如“Windows 11 专业版”；notes、表格 value 及其 display_text 不动），没有独立命令或校验。成功返回 `{version, deck}`；发生冲突时退出码为 5，stderr 中附 `{unit, current}` 列表。
 - 新增页必须同时交该页及包含它的 order；删除页必须同时交该页（`{id}` 即可）及去掉它的 order；只重排时交 order 即可。块、条目、列、行和单元格的 id 由保存补齐或去重，表格列引用随之修正。
 - `material add <file>` 保存原件，再从该不可变副本解析，返回 `{version, material, extraction}`。extraction 保留工具的 text、locators、tables、image_pages、detail、status；`pending_visual` 表示 Host 仍须读图，material 的 `read` 只表示文件已解析。缺解析工具时保留原件并记录 `needs_tool`，退出码为 3；安装工具后重新 add 可补齐文本。相同文件重复加入不新增材料或版本。
-- `material text <id>` 返回 `{id, status, path}`，path 是抽取文本的本地路径；未完成解析时退出码为 3。持久作品只记录相对文件名，不记录材料源路径。
+- `material text <id>` 返回 `{id, status, path, original_path}`，path 是抽取文本的本地路径，original_path 为加入时保存的不可变原件副本路径（真实缺失时 null）；未完成解析时退出码为 3。持久作品只记录相对文件名，不记录材料源路径。
 - `restore <version>` 返回新版本的 `{version, deck}`。`export md` 包含任务、主张、页面正文、讲稿、待补项和可选出处，不要求作品完整。
 
-开发时先按 AGENTS.md 创建本 worktree 的 venv，安装 `./deck-tools[dev]`，再设置 `DECK_TOOLS_PYTHON`。Rust 的跨语言命令测试也使用此解释器，不跳过缺依赖的测试。安装 CLI 可以使用 `cargo install --path rust --root ~/.local`，通过 `~/.local/bin/deck` 调用，无需修改 shell 配置。S1 只建立 versions 表；后续切片在引入实际用例时增加其所需表和格式迁移。
+开发时先按 AGENTS.md 创建本 worktree 的 venv，安装 `./deck-tools[dev]`，再设置 `DECK_TOOLS_PYTHON`。Rust 的跨语言命令测试也使用此解释器，不跳过缺依赖的测试。开发 CLI 使用 `cargo install --path rust --root "$PWD/.dev-prefix"`，并显式设置本 worktree 的 DECK_TOOLS_PYTHON；标准安装升级使用 install.sh，不能覆盖其固定薄入口，无需修改 shell 配置。S1 只建立 versions 表；后续切片在引入实际用例时增加其所需表和格式迁移。
 
 ### 3.5 后台工作（run）
 
@@ -181,7 +181,7 @@ run 用于需要 Host 执行、作者可以中途停止的工作：生图（imag
 4. `deck run cancel <run>`：直接改状态，不需要填写说明。之后的 call 被拒绝，迟到的 result 只保存、不自动采用。
 5. `deck run show [<run>]`：列出每页状态。started 但没有结果的页显示为"结果未知"，是否重试由作者或 Host 决定；重试同样计数。
 
-依据的组成：image 取该页的 content、layout、purpose 与 style；svg 取该页的 content、image 文件与 style。
+依据的组成：image 取该页的 content、layout、purpose 与 style；新 svg 取该页的 content、purpose、layout、image 文件与本页有效 style，保存为 svg-v2:<sha256>。旧裸 hash 仍按 content、image 文件与本页有效 style 比较，展示旧依据未记录目的和布局；imported 保留导入身份。
 
 svg 类没有外部付费调用，不需要 `run call`，也没有 max_calls。它的 result 先经过 `deck_tools check-page`：
 
@@ -196,11 +196,11 @@ svg 类没有外部付费调用，不需要 `run call`，也没有 max_calls。�
 
 - `deck build`：取每页当前的 SVG，调用 `deck_tools build`（编译、回读、清洗），并记录输入摘要：页序、每页 svg 与 notes、画布、字体、素材 ID 对应的不可变文件。素材映射按 ID 排序，不包含本机绝对路径；正文变化单独通过 SVG 过期提示。缺 SVG 的页不进入 PPTX；SVG 已过期的页照常编入，回读会报出文字不一致。刚完成的 build 仍可能列出 `stale_pages`：它比较的是 SVG basis 与当前依据，不是这次 PPTX 文件的新旧。`stale_images` 只比较原图 basis，构建不会清掉它。`export pptx` 的 `input_changed` 才表示 SVG 文件、讲稿或构建设置在该次构建之后变了。
 - `deck export md`：任何时候都可以导出可读稿，包括未完成的作品，待补项照常显示。
-- `deck export pptx`：给出最近一次构建。该构建的输入摘要与当前作品不一致时给出提示。不用版本号判断，因为 restore 会产生编号更大、内容更旧的版本。
+- `deck export pptx`：优先选择当前 build_digest 匹配的最大构建 ID，否则选择最新历史构建；选中文件缺失时报错，不悄悄替换为另一份。返回来源 version_id，HTTP 仍返回 PPTX 字节与 X-Deck-Status 元数据。该构建的输入摘要与当前作品不一致时给出提示。不用版本号判断，因为 restore 会产生编号更大、内容更旧的版本。
 - build 和 export 的输出里，以及界面的下载按钮旁，都列出缺 SVG 的页和 SVG 已过期的页。界面取 `POST /api/build` 的响应或轮询得到的 `artifact_status`。
 - 原生表格回读按稳定行列身份核对 content 与实际单元格文字，并保留 SVG → PPT 的转换检查；同一原因不重复报告。发现项仍只报告，不增加采用或导出门槛。
 - 原生单元格与普通文字使用同一字号、填充和透明度可见性判据；非空表格标题继续做普通文字覆盖检查，空标题与空单元格不制造缺字发现。
-- 编译只在执行 `deck build` 时发生。读取、摘要、列表都不会触发编译。
+- SVG result/adopt 执行单页编译、渲染及回读，build 编译整稿；读取、摘要、列表都不会触发编译。
 - 构建是一次本地命令，需要中断时用 Ctrl-C，不经过 run 机制。
 
 ### 3.7 本地服务与界面
@@ -209,11 +209,11 @@ svg 类没有外部付费调用，不需要 `run call`，也没有 max_calls。�
 
 服务与 CLI 共用 ops，各自直连 SQLite。服务不跨请求缓存作品状态；同次 run 列表读取按页面 ID 查找作品，并复用每页每种任务的依据摘要，历史 run 不重复计算相同依据。界面按版本号轮询作品变化，run 与意见在同版本时也刷新。
 
-接口：`GET /api/deck`、`GET /api/versions/{version}`、`PUT /api/deck?base=N`、`POST /api/runs/{id}/cancel`、`POST /api/build`、`GET /api/files/{sha}`（sha 只接受 64 位十六进制）、`GET /api/export/{md|pptx}`、`GET|POST /api/reviews`、`POST /api/reviews/{id}/resolve`、`POST /api/runs/{run}/adopt/{page}`、`POST /api/restore/{version}`。接口以 S4 完成判断所需为限；手动采用接口沿用 `deck run adopt` 的行为与返回；导出只列出缺失和过期的页，不拦截（见 2.1、3.6）。
+接口：`GET /api/deck`、`GET /api/builds/{id}`、`GET /api/versions/{version}`、`PUT /api/deck?base=N`、`POST /api/runs/{id}/cancel`、`POST /api/build`、`GET /api/files/{sha}`（sha 只接受 64 位十六进制）、`GET /api/export/{md|pptx}`、`GET|POST /api/reviews`、`POST /api/reviews/{id}/resolve`、`POST /api/runs/{run}/adopt/{page}`、`POST /api/restore/{version}`。接口以 S4 完成判断所需为限；手动采用接口沿用 `deck run adopt` 的行为与返回；导出只列出缺失和过期的页，不拦截（见 2.1、3.6）。
 
 `GET /api/versions/{version}`（#281）只读指定历史版本，成功返回现有 Snapshot 形状 `{version, deck}`，不含当前 live reviews/runs；版本不存在返回 404，非法编号返回 400，不触发恢复或构建。
 
-界面使用 #250 的新版 WebUI（React 18 + Vite，`frontend/`，设计为 S00–S07 八个工作区与 U01–U05 五个共用容器）。#250 目前是不调用任何接口的演示稿，数据在 `constants/data.js` 里。
+界面使用 #250 的新版 WebUI（React 18 + Vite，`frontend/`，设计为 S00–S07 八个工作区与 U01–U05 五个共用容器）。当前活动入口已接 Rust 本地服务；`constants/data.js` 保留历史演示数据，未由活动入口导入。
 
 S4 必须能用的最低要求：整稿浏览（原图、预览、过期标记）、改正文与讲稿（冲突时保留作者输入）、run 状态与停止、构建与下载、版本历史与恢复。S4 只接通支撑这几项以及第 7 节完成判断的界面，其余界面在 S4 里隐藏入口，或置灰且不显示假数据；#250 `constants/data.js` 里的演示数据不得与真实作品同屏出现。依赖 S5 的部分（页上意见、单页重做、候选比较）在 S5 后接入。以下不接，隐藏或不做：S00 所有项目矩阵（服务一次只服务一个项目，没有项目列表接口）、S04 的阶段推进状态与规范检测列表、S06 的身份切换、S05 的导出门禁交互。旧线 v2 的 api.js、images.js、collaboration-desk 及依赖它的 insight-reading、evidence-reading 不迁移。
 
@@ -221,7 +221,7 @@ S4 必须能用的最低要求：整稿浏览（原图、预览、过期标记�
 
 顺序与 PR：S4 拆成两个 PR。先做 `deck serve` 与上述接口（含静态文件服务）并合入；#250 在接口可联调后由老板决定合入；再在 `frontend/` 上接数据层。
 
-S5 界面接入：制作总览展示整稿待处理意见，单页工作区展示本页待处理意见，支持保存和标记已处理；意见原文与来源方法如实展示。输入失败时保留草稿，轮询无需等待作品版本变化。制作任务中可打开同页同层（原图或 SVG）的固定比对，基准左、候选右。原图两侧是图片文件；SVG 两侧是编译预览（打开比较时的 `page.preview`，以及该候选交回时保存的 `result_preview`），不展示原始 SVG。采用请求仍携带候选 SVG 或原图文件。轮询不替换已打开的画面。候选结果文件变化、当前产物文件变化，或该页该任务类型的制作依据相对打开比较时变化，都提示重新打开。制作依据与 run 相同：image 为该页 content、layout、purpose 与 style；svg 为该页 content、image 文件与 style。比较界面用轮询返回的 `current_basis` 与打开时冻结的摘要比较。全稿版本号增加、其他页的改动，以及不在该依据中的字段（如讲稿），不单独提示。依据变化时仍可手动采用。候选结果文件或当前产物文件与打开时不一致时，采用按钮保持禁用，直到重新打开比对。保留当前作品只返回任务列表。浏览器不直接调用 ImageGen，Host 按意见与原有 run 命令继续改稿。
+S5 界面接入：制作总览展示整稿待处理意见，单页工作区展示本页待处理意见，支持保存和标记已处理；意见原文与来源方法如实展示。输入失败时保留草稿，轮询无需等待作品版本变化。制作任务中可打开同页同层（原图或 SVG）的固定比对，基准左、候选右。原图两侧是图片文件；SVG 两侧是编译预览（打开比较时的 `page.preview`，以及该候选交回时保存的 `result_preview`），不展示原始 SVG。采用请求仍携带候选 SVG 或原图文件。轮询不替换已打开的画面。候选结果文件变化、当前产物文件变化，或该页该任务类型的制作依据相对打开比较时变化，都提示重新打开。制作依据与 run 相同：image 为该页 content、layout、purpose 与 style；svg 新任务为该页 content、purpose、layout、image 文件与本页有效 style；旧任务按已存依据形式解释。比较界面用轮询返回的 `current_basis` 与打开时冻结的摘要比较。全稿版本号增加、其他页的改动，以及不在该依据中的字段（如讲稿），不单独提示。依据变化时仍可手动采用。候选结果文件或当前产物文件与打开时不一致时，采用按钮保持禁用，直到重新打开比对。保留当前作品只返回任务列表。浏览器不直接调用 ImageGen，Host 按意见与原有 run 命令继续改稿。
 
 构建与分发：`deck serve` 提供构建后的前端静态文件，随二进制发布，不依赖磁盘上的相对路径（`cargo install --path rust` 之后也能用）；嵌入方式与依赖在 S4 开工时定。S4 把 `npm ci` 与 `vite build` 加入 `rust.yml` 和 AGENTS.md 第 3 节的检查清单。开发期 Vite 通过代理访问 `deck serve`，代理改写 Host 与 Origin 并读取 `deck serve` 启动时打印的地址，不放宽 Host 与 Origin 检查。
 
@@ -280,7 +280,7 @@ S5 界面接入：制作总览展示整稿待处理意见，单页工作区展�
 
 - 字体名由工具用 fc-match 解析为文件。
 - 页投影为 `{page_id, customer_visible: content, speaker_notes: notes, visual_spec: {}}`，由工具内一个固定的适配函数根据 Rust 传来的 id、content 和 notes 生成。回读需要两份输入：编译 manifest 里的 pages（已实测可以直接使用），以及这份页投影。只传 content 时，关系检查会出错，文字检查会被静默跳过。
-- Rust 用 `DECK_TOOLS_PYTHON` 找解释器。没有设置时，使用安装脚本建好的固定 venv；两者都没有就报错（退出码 3），并给出设置方法。不默认使用 `python3`：本机的 `python3` 是 3.15，没有装 deck_tools。开发时按 AGENTS.md 第 3 节装进本 worktree 的 venv。
+- Rust 用 `DECK_TOOLS_PYTHON` 找解释器。没有设置时，只使用当前真实二进制所在 installations 目录内的 venv；不回退到残留旧布局 venv；两者都没有就报错（退出码 3），并给出设置方法。不默认使用 `python3`：本机的 `python3` 是 3.15，没有装 deck_tools。开发时按 AGENTS.md 第 3 节装进本 worktree 的 venv。
 
 ## 5. 交给 Host 的任务
 
@@ -291,7 +291,7 @@ image 的 `task.md` 是可直接提交的完整提示词。Host 使用文件原�
 - 画布像素与物理尺寸；本页目的与 layout。
 - 内联全部可见 content，复用可读稿的正文结构。表格保留显示值和列归属，已声明的单位另作理解上下文。讲稿、待补、出处和内部编号留在作品中。
 - 风格：配色与字体；选中的素材以附件形式传给 ImageGen，不用文字替代。
-- 素材按 [视觉资产](../../../deck-skill/references/visual-assets.md) 登记：`asset add` 可重复 `--page`，省略则为公共素材；`source`、`license` 为空时不写入，旧 `{id,file}` 记录不变。同 ID 替换整条记录，style put 仍为完整单元。SVG 添加时经 rsvg-convert 转成 PNG，缺工具或渲染失败就报错；PNG/JPEG 原样保存。每页附件与 image/svg basis 的 Style 都只取公共素材和绑定本页的素材，canvas、palette、fonts 及原有输入槽位不变；全公共素材保留原完整 Style 的哈希。工作目录的 style.json 可保留完整作品清单，实际只使用 attachments.json 已随附文件，素材 ID 不代替附件。按页素材只让绑定页依据变化，公共素材影响所有页，不自动重做；只改讲稿不过期，原图过期仍使该页 SVG 报告过期。不改 Page / PagePatch 或格式版本。
+- 素材按 [视觉资产](../../../deck-skill/references/visual-assets.md) 登记：`asset add` 可重复 `--page`，省略则为公共素材；`source`、`license` 为空时不写入，旧 `{id,file}` 记录不变。同 ID 替换整条记录，style put 仍为完整单元。SVG 添加时经 rsvg-convert 转成 PNG，缺工具或渲染失败就报错；PNG/JPEG 原样保存。每页附件与 image/svg basis 的 Style 都只取公共素材和绑定本页的素材，canvas、palette、fonts 及原有输入槽位不变；全公共素材保留原完整 Style 的哈希。工作目录的 style.json 可保留完整作品清单，实际只使用 attachments.json 已随附文件，素材 ID 不代替附件。按页素材只让绑定页依据变化，公共素材影响所有页，不自动重做；只改讲稿不过期，原图依据变化独立提示，不直接使已按当前输入重建的 SVG 过期。不改 Page / PagePatch 或格式版本。
 - 按本页阅读任务和 layout 表达主视觉。正文块的分组用于组织信息。比较和查阅可用表格，流程保留明确的方向和分支，分工可用分区或泳道（#226、#227）。
 - 文字、连线和主要业务对象要能拆成可编辑元素；照片、logo、复杂插画可以占有边界的位图区域，但不承载正文。
 - 不编造数字、日期或客户数据；页面文案不含缺口说明；缺口在 todo，不上屏，不放页脚，不画示意数据。
@@ -342,9 +342,9 @@ deck-skill/
 
 `scripts/install.sh`：
 
-- 无技能参数：安装或更新 CLI、deck-tools 环境，并将四个完整职责目录软链接到 `~/.codex/skills`。不再安装兼容入口 `deck`。
+- 无技能参数：安装或更新 CLI、deck-tools 环境，并将四个已复制的职责目录经 current 软链接到 `~/.codex/skills`。不再安装兼容入口 `deck`。
 - `--skills-root DIR`：将同样四个入口安装到该目录，去掉目录末尾斜杠。`--skill-dir` 已取消。
-- 已指向本源职责目录的链接保持原样。再次安装只删除指向本源 `deck-skill/` 的旧 `deck` 软链接，不删目标目录；其他 `deck` 保留并提示可能抢触发，继续安装。
+- 已指向 current 的链接保持原样，本源链接迁移到 current。再次安装只删除指向本源 `deck-skill/` 的旧 `deck` 软链接，不删目标目录；其他 `deck` 保留并提示可能抢触发，继续安装。
 - 旧职责包装目录仅含三条指向本源的托管链接（`SKILL.md`、`references`、`assets`）时，升级为整目录软链接。含额外文件或被外来路径占用（包括旧 Python 线）时，在写入前报告路径和目标并退出 2。先自行移走占用的软链接，只删链接、不删目标目录，再安装。旧线安装器已移出仓库。
 
 四个职责入口写明边界、默认读物和交接，正文规则引用共享源。都调用 Rust `deck`，不调用旧 Python `deck-master`。Master 只做任务理解、路由、交接和完成判断。
@@ -411,7 +411,7 @@ deck-skill/
     | `authorizations` | 旧授权对象原样 |
     | `open_calls[]` | 在途或结果未知的调用：`task_id`、`allowance_id`、`state`、`kind` |
     | `unmapped[]` | 无法映射的项：`kind`、`id`、`reason` |
-- 安装：一个脚本安装 `deck`、独立 deck-tools venv，以及四个职责目录的整目录软链接，默认放到 `~/.codex/skills`，`--skills-root` 更换目录。不安装 `deck` Skill，`--skill-dir` 已取消。不移植托管安装的激活与回滚。先支持 macOS，CI 在 Linux 上跑。升级与冲突处理见第 6 节。
+- 安装：一个脚本安装 `deck`、独立 deck-tools venv，以及四个职责目录的整目录软链接，默认放到 `~/.codex/skills`，`--skills-root` 更换目录。不安装 `deck` Skill，`--skill-dir` 已取消。只允许本地完整组件组的单指针切换，不实现激活状态机、自动回滚或恢复事务。先支持 macOS，CI 在 Linux 上跑。升级与冲突处理见第 6 节。
 - 后续切换尚未执行：老板判定新路径可以替代旧线后，把 `deck-skill/` 改名为 `skills/deck/`，重建本安装器产生的链接。默认安装四个职责入口已在本次安装调整中完成。安装不携带旧 Python 线的四个 Skill；旧代码及 `skills/` 已删除，安装源仍为 `deck-skill/`。
 
 ## 9. 未验证
@@ -423,3 +423,85 @@ deck-skill/
 - SQLite 项目文件放在 iCloud 等同步目录：未在 1.1.0 准备中重测。
 - 已确认：本机 rustc / cargo 1.99.1 与 sqlite3 可用。
 - UNC 路径（`\\server\share`）未纳入本机路径清洗；`GET /api/export/md` 不做 PPTX 那套凭据检查；PPTX 工具测试走 LibreOffice 渲染。桌面打开见[1.1.0 发版说明](../../releases/1.1.0.md#maintainer-acceptance-2026-11-04)。
+
+
+### 当前增量：嵌套文字完整性
+
+labels、footnotes、callouts 的 children 与孙项递归进入同一 atoms 投影和文字回读。
+沿用保存时分配的稳定 ID，pointer 指向实际子项；空父项不截断子项遍历。
+文字缺失与节点绑定分别报告，机械结果不代表视觉或桌面验收。
+
+
+材料续作：material text 增加 original_path，指向加入时保存的不可变副本。
+缺原件不阻断已有文本，非法引用保持错误；needs_tool 保持失败退出并说明可用原件位置。
+未保存编辑：正文、任务/框架、意见按实际内容差异统一判断 dirty；内容列表、单页阅读、放弃确认及 beforeunload 共用该判断。
+不新增草稿持久化，收起保留不确认，冲突和已删页输入继续保留。
+
+
+### 当前增量：依据兼容与构建回读
+
+数据库格式提升到 5，只提升 user_version，不重写旧版本、文件或依据。
+Store::open（含读取）会升级；升级前结束旧程序在途操作，旧程序后续打开由高版本保护拒绝。
+恢复作品版本不降低数据库格式。需要回旧软件时使用升级前另行保留的完整项目副本；不提供原地降级。
+新 SVG 任务使用 svg-v2，旧在途 SVG 只保存候选，人工采用保留旧依据。
+已 done 的同文件交回沿用既有发现（缺临时记录返回不可用），不重复编译或宣称重新检查。
+正常交回按检查时读取的正文回读，不代表原任务启动时的历史检查。
+
+GET /api/deck 返回 default_build 小摘要（含该次缺页）；GET /api/builds/{id} 按需返回回读、来源版本、历史页映射、current_version 及 readback_matches_current。
+Q03 的并发回归 `slow_old_build_finishing_after_fast_current_build_keeps_matching_export` 启动两个真实 CLI 构建，用 TCP 屏障在 A 取得旧输入后等待，待新输入 B 编译完成再释放 A。两次均调用真实 deck-tools；断言 A 后完成而 id 更大，默认导出仍为 B，并读取导出 PPTX 的页面文字和讲稿、核对字节；恢复 A 后再核对导出 A。顺序插入记录的选择测试仅证明查询规则，不代替该并发执行。
+适用性复用 build_digest 并比较实际参建页 content；导入记录没有有效回读，坏记录保留读取错误。
+正文变化、默认构建变化时刷新详情，稳定轮询不重复读取详情。历史检查、当前输入匹配及视觉验收分别展示。
+刷新构建回读时保留上次结果并显示“正在刷新”、旧构建及来源版本，不闪成“尚无回读”，也不把旧结果当作新默认。新结果到达后替换；失败时撤下旧结果并显示错误；取消和迟到响应不能覆盖新请求，稳定版本的展示对象保持引用不变。
+独立 render CI 已在原候选 `a1bc6b9e` 的 [run 42734375301](https://github.com/MainQuestAI/Deck-Master/actions/runs/42734375301) 通过。后续修复须分别核对其最终提交的 core 与 render 结果；机制与作品效果不能相互替代。默认构建摘要只展示该次缺页和输入变化，不把摘要中未提供的当前 SVG 状态显示为“无”。
+
+
+### 本地自包含安装
+
+每次在 prefix/share/deck/installations 下的最终目录构建 CLI（含前端），建立 venv，非 editable 安装同次源码的工具包并复制四角色及共享资源。检查实际模块位置、共享链接及真实 TXT 材料读取后，原子替换 current。
+固定 prefix/bin/deck 入口先解析 current 的物理目录再 exec，新进程使用新组件，旧进程继续使用原目录。标准升级只切换 current，不移动 venv、不清理旧安装。
+旧普通二进制通过 Cargo 记录、关联源码布局及已构建二进制内容一致性确认归属；未知入口不执行、不覆盖。首次迁移多个入口不保证崩溃原子性，失败报告所处阶段并支持按原参数重试，保留旧 venv 和源码。
+首次清理前，在 prefix/share/deck/entry-migrations 原子保存已确认旧入口的目录或链接身份（设备号、inode）及链接目标，防止入口替换或包装目录部分清理后丢失归属。整目录软链接替换仅核对解析后的目标，允许重建到同一目标的链接；包装目录及其剩余内部链接仍核对设备号、inode 与目标。用户新增文件、改指其他目标、替换包装目录及没有凭据的空目录仍拒绝。全部入口安装成功后删除对应凭据；此记录只供首次入口迁移重试，不提供自动回滚或历史安装清理。函数及命令替换失败保留原退出码，由主 shell 报告一次实际阶段；正常的无凭据探测保持静默，清理前强制校验失败说明入口已变化。成功验证后只清理本次 mktemp 创建的探针项目。
+有 uv 但缺 Python 3.12 时，普通安装先用 uv 准备 3.12，再建工具环境；准备失败保留退出码并报告 prepare-python 阶段。dry-run 只离线查询已有的 3.12，禁用下载和缓存写入；缺解释器时退出 3 并提示先准备，不回退到任意 python3。无 uv 时使用并核实 python3.12。
+本云环境已实际验证 Linux 新装、旧布局迁移、升级后旧进程工具固定、真实 pip 准备失败不切换及源码移走；macOS 安装未执行。
+共享纯绘图规则已在编译时加入 image task；实际色板、字体与画布仍由作品动态提供，旧任务文件与图片依据不因软件更新改写。SVG 还原服从已选蓝图。
+
+### Q10 本轮性能诊断（Linux，2026-11-09）
+
+比较 Q03 完成、Q04 尚未加入的 `767acf70` 与工程候选 `220fde2b`，使用同一 release 配置、工具 venv、字体、渲染器和七页合成 E02 项目。候选较前者增加 Q04 以及测试／说明变更。两份二进制与 ops 源码摘要在仓库外的测量产物保留，测量前后确认候选输入未变。
+
+每组增加 40 条历史版本；多候选场景加入 100 个已取消 SVG run、每个引用七页既有文件。这些是诊断数据，不是 Host 调用记录。每场景连续读取 40 次；编辑场景通过独立 CLI 改讲稿；构建场景并发实际 build，首尾轮询均发生在 build 完成之前。
+
+| 场景 | 修改前中位数 / p95（ms） | 修改后中位数 / p95（ms） | 修改后最大响应字节 |
+| --- | --- | --- | --- |
+| 静置 | 4.479 / 7.538 | 2.751 / 4.032 | 30073 |
+| 持续改讲稿 | 4.65 / 9.175 | 4.279 / 7.974 | 33091 |
+| 700 个合成候选记录 | 17.662 / 29.487 | 14.838 / 22.197 | 447695 |
+| 实际构建中 | 16.884 / 26.969 | 16.832 / 21.498 | 447695 |
+
+固定每 1.5 秒轮询、四个间隔的观测中，服务进程 CPU 为修改前 0.06 秒／6.10 秒，修改后 0.04 秒／6.09 秒。详情首次约 1.45 ms、重复中位约 1.13 ms、3217 字节；详情按需读取，稳定前端轮询不会反复请求。默认构建摘要在本样本增加约 141—242 字节，没有把完整回读塞进 workspace。
+
+本次没有支持“稳定轮询形成严重热点”的证据，未增加缓存、全局锁或新索引。云环境单次测量有噪声，不能把中位数变动或 build 的 2.02→1.52 秒解释为普遍提速。实际构建均完成真实回读；性能结果不代表视觉质量或目标桌面验收。
+
+### Q11／Q12 本轮实际执行（2026-11-09）
+
+工程代码来源 `220fde2b`（基于 `f51ebcb1`），后续提交记录诊断与执行观察。原候选 `a1bc6b9e` 本地前端 114 项、Rust 92 项、deck-tools 全量 307 项（含真实 render）、安装 76 项通过，fmt、clippy 与前端构建通过；远端 [run 42734375301](https://github.com/MainQuestAI/Deck-Master/actions/runs/42734375301) 的 core 与 render 也已通过。后续修复的测试和 CI 按各自最终提交核验，这些旧结果不覆盖后续改动。
+
+实际环境为 Linux、Python 3.12、Rust 1.99.1、rsvg-convert 2.60.0、LibreOfficeDev 26.8、pdftoppm 26.05、Noto Sans CJK SC 与 Chromium。Playwright 使用锁定版本和显式安装版 CLI，覆盖保存、候选采用、持久回读首开／刷新、部分构建、真实下载字节及来源头、保存冲突、放弃确认，以及 beforeunload 的取消和确认；没有用 mock 代替该浏览器执行。独立完整七页稿也完成安装版浏览器读取／刷新／构建／实际下载；单独复制项目验证只改 notes 保留全部原图、SVG 和预览，并正确区分旧回读与新构建。
+
+作品使用明确标注的合成 E02 输入，旧版 `f51ebcb1` 与新版使用独立项目；旧项目保持格式 4，新项目格式 5。两组采用同一七页正文、任务和测试修订：面向业务／IT 负责人，在 8 周、30 万元约束下比较 A/B/C；修订改为本次批准 A，6 周、18 万元，摘要另议。同步第 1、5、6、7 页，第 2、3、4 页的正文和视觉文件保持不变。保留两组完整首稿、改稿 Markdown/PPTX、实际生成蓝图、正式任务、SVG、真实编译预览及回读。
+
+本会话实际使用正式 image run/call/result，经 ImageGen 生成蓝图，再沿正式 SVG result/adopt/build/export 形成可编辑文字、形状、连线；两组第 4 页均使用支持的原生 PPT Table；这不是新版新增能力。实际工具调用可观察到任务提示和原图附件；未获知 ImageGen 内部模型版本。旧版生成 7 张首稿和 4 张改稿；新版额外修复首稿第 7 页的时间表达，合计 12 次对 11 次，不能当成完全等投入的随机对照。蓝图到 SVG 由同一执行方人工还原，没有由此证明自动还原或完整创作能力普遍改善。
+
+执行方逐页检查并修正了实际问题：新版首稿第 7 页把 C 的 6＋4 周重新表达为两阶段，保留错误首尝试；改稿后缩短旧版第 6 页被裁切的插图标签，移开新版第 7 页贴近栏头的分支文字。两组修订后七页构建回读均无发现。文字与范围改善来自明确的测试修订，两组同步执行；新版第 4 页表格布局更紧、换行更多；两组均可原生编辑，不能仅凭布局差异认定更好。相对质量提升目前未获实际专业／作者判断支持。
+
+Q05 另用合成含图材料验证不可变原件：外部源文件移走后，独立安装版 CLI 进程仍能经 original_path 查看加入时副本，按图中“仅适用于 version2 的 Input→Review→Output”续写正文。此项只确认跨 CLI 进程与当前 Host 看图；不冒称已完成另一个已认证 Host 会话的续作。
+
+未执行项分别保留：
+
+- 新启动的 Codex 会话发现安装后的四角色 Skill：本环境的 Codex 凭据在请求时返回 HTTP 401，刷新登录失败；磁盘入口和资源验证通过不代替新会话发现。
+- PowerPoint／WPS 实际编辑、保存并重开：本环境无可用目标软件；LibreOffice 渲染不替代。
+- 独立专业阅稿、作者是否接受本次用途：尚未执行；测试修订不是客户反馈或作者认可。
+- 原 22 页问题稿回归：未取得指定材料位置及授权；合成 E02 不关闭该历史问题。
+- macOS 安装实测：未执行；Linux 实测和本地全量不能代替。远端 CI 按上文区分原候选与后续修复。
+
+本轮工程实现、实际工具和当前 Host 制作已具备可复核产物；新会话发现与完整作品交付验收仍有上述缺项。不用自动回读、提交或合并替代作品验收，也不将一次案例外推为普遍质量提升。

@@ -34,9 +34,11 @@ Deck Master 服务于需要讲清商业方案的人：解决方案架构师、�
 ./scripts/install.sh
 ```
 
-脚本会构建 Web UI，把 `deck` 装到 `~/.local/bin/deck`（`--prefix` 时为
-`<prefix>/bin/deck`），并用 Python 3.12 在 `<prefix>/share/deck/venv` 建立独立的
-deck-tools 环境。不执行托管 Python 发行版的激活或回滚。
+脚本先在 `<prefix>/share/deck/installations/` 准备完整组件目录：含内嵌前端的 CLI、
+非 editable 的 deck-tools venv、四个职责 Skill 及共享资源副本。`<prefix>/share/deck/current`
+指向选中的目录，`<prefix>/bin/deck` 解析一次物理目录后执行真实二进制。
+准备失败不切换当前安装，旧进程继续使用旧目录工具；venv 在最终位置创建，不移动。
+安装不依赖源码 checkout；Python、字体、渲染器和外部 Host 仍需环境提供。
 
 默认把 `deck-master`、`deck-content`、`deck-design`、`deck-review` 四个完整职责目录
 软链接到 `~/.codex/skills`，让 Codex 能发现入口。每个目录有真实的 `SKILL.md`，
@@ -55,9 +57,9 @@ deck-tools 环境。不执行托管 Python 发行版的激活或回滚。
 安装后用 `deck new ./my-deck --title '方案标题'` 新建作品目录。链接的
 Skill 说明首跑命令。
 
-新装用户不用设置 `DECK_TOOLS_PYTHON`：`deck` 使用安装前缀里的 venv。
-`cargo install --force` 会换掉 `PREFIX/bin` 里已有的 `deck`。deck-tools 是对当前
-checkout 的可编辑安装，移动或删除这份 checkout 后，该 venv 会无法导入 deck-tools。
+标准安装和升级都使用 `scripts/install.sh`，不用设置 `DECK_TOOLS_PYTHON`。
+无法确认归属的 CLI 入口保留并报冲突；旧 Cargo 安装通过安装记录及关联构建产物一致性判断，不执行未知二进制。
+迁移时保留旧 venv 和源码供旧进程使用；停止旧进程后可另行处理，不自动删除。
 
 在 worktree 中开发（不要共用另一个 checkout 的 venv）：
 
@@ -65,6 +67,8 @@ checkout 的可编辑安装，移动或删除这份 checkout 后，该 venv 会�
 uv venv --python 3.12 --seed .venv
 .venv/bin/python -m pip install -e "./deck-tools[dev]"
 export DECK_TOOLS_PYTHON="$PWD/.venv/bin/python"
+cargo install --path rust --root "$PWD/.dev-prefix"
+export PATH="$PWD/.dev-prefix/bin:$PATH"
 (cd frontend && npm ci && npm test && npm run build)
 (cd rust && cargo test)
 ```
@@ -128,7 +132,7 @@ run 状态与停止、候选比较与手动采用、构建与 Markdown/PPTX 下�
 
 ## 能力边界
 
-1. 生成的 PPTX 含可编辑的形状和文本。表格和图表由形状与文本组合，不是 Office 原生数据对象。
+1. 生成的 PPTX 含可编辑的形状和文本。带 `data-native-table="true"`、完整直线网格与归属绑定的支持表格可成为原生 PPT Table；普通绘制表格仍是形状和文字。图表不保证成为 Office 原生数据图表。
 2. 不完整作品可以保存、导出 Markdown 并构建。缺 SVG 或 SVG 已过期的页列在下载旁，不拦截导出。
 3. 取消后的结果、以及依据已变的结果只保存、不自动采用。同一 run 页的后续结果作为显式候选。
 4. 渲染器与字体缺口以退出码 3（`needs_tool`）报告实际原因。

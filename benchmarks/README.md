@@ -1,12 +1,14 @@
-# Deck Master Benchmarks
+# Deck Master Benchmarks（历史归档）
 
-This directory stores local benchmark cases and generated benchmark reports.
+This directory preserves historical benchmark cases and reports. The old Python
+commands below have been removed; they are not current usage instructions.
+Current commands and validation boundaries are in [AGENTS.md](../AGENTS.md).
 
 Deck Master benchmark runs are designed for local workflow validation. They do
 not call external LLMs, do not upload customer data, and do not claim v1.0.0
 10x readiness by themselves.
 
-## Commands
+## 历史命令（已删除，不可执行）
 
 ```bash
 python3 scripts/deck_master.py validate-benchmark-case \

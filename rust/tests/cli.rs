@@ -265,6 +265,7 @@ fn material_add_uses_real_python_tool_preserves_original_and_deduplicates() {
     assert_eq!(std::fs::read_to_string(file).unwrap(), data);
     std::fs::remove_file(&source).unwrap();
     let text = output_json(command(path, &["material", "text", "m1"]));
+    assert!(std::path::Path::new(text["original_path"].as_str().unwrap()).is_file());
     assert_eq!(
         std::fs::read_to_string(text["path"].as_str().unwrap()).unwrap(),
         data
@@ -486,4 +487,41 @@ fn review_commands_default_filter_resolve_count_and_reject_invalid_input() {
         assert_eq!(command(path, &args).status.code(), Some(2));
     }
     assert_eq!(output_json(command(path, &["show"]))["version"], 2);
+}
+
+#[test]
+fn material_original_is_immutable_optional_and_invalid_references_are_errors() {
+    use deck::{
+        ops,
+        store::{self, Store},
+    };
+    let temp = tempfile::tempdir().unwrap();
+    let project = temp.path();
+    ops::new(project, "Synthetic material".into()).unwrap();
+    let source = project.join("source.md");
+    std::fs::write(&source, "Original text").unwrap();
+    ops::material_add(project, &source).unwrap();
+    let read = ops::material_text(project, "m1").unwrap();
+    let original = read["original_path"].as_str().unwrap();
+    std::fs::write(&source, "Changed external source").unwrap();
+    assert_eq!(std::fs::read_to_string(original).unwrap(), "Original text");
+    let version = ops::get(project, None).unwrap()["version"].clone();
+    std::fs::remove_file(original).unwrap();
+    let read = ops::material_text(project, "m1").unwrap();
+    assert!(read["original_path"].is_null());
+    assert_eq!(
+        std::fs::read_to_string(read["path"].as_str().unwrap()).unwrap(),
+        "Original text"
+    );
+    assert_eq!(ops::get(project, None).unwrap()["version"], version);
+    let mut store = Store::open(project).unwrap();
+    let mut snapshot = store.current().unwrap();
+    snapshot.deck.materials[0].file = "../invalid.md".into();
+    let tx = store.transaction().unwrap();
+    store::append(&tx, &snapshot.deck, "Synthetic invalid reference").unwrap();
+    tx.commit().unwrap();
+    assert!(matches!(
+        ops::material_text(project, "m1"),
+        Err(deck::error::Error::Input(_))
+    ));
 }

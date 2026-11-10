@@ -61,14 +61,19 @@ From a source checkout:
 ./scripts/install.sh
 ```
 
-The script builds the Web UI, installs `deck` at `~/.local/bin/deck` (or
-`<prefix>/bin/deck` with `--prefix`), and creates a Python 3.12 venv for
-`deck-tools` at `<prefix>/share/deck/venv`. It does not activate or roll back a
-managed Python release.
+The script prepares a complete directory under `<prefix>/share/deck/installations/`:
+the CLI with embedded WebUI, a non-editable deck-tools venv, and copies of all
+four role Skills and shared resources. `<prefix>/share/deck/current` selects
+that directory; `<prefix>/bin/deck` resolves it once and executes its real binary.
+Preparation failures leave the current installation selected. Upgrades retain
+old directories, so existing processes keep their tools. The venv is created
+in its final location and never moved. This installation is independent of the
+source checkout; Python itself, fonts, renderers and the external Host remain
+system prerequisites.
 
 By default the script links `deck-master`, `deck-content`, `deck-design`, and
 `deck-review` into `~/.codex/skills`. Each link points to a complete role
-directory in `deck-skill/`, with a regular `SKILL.md` and links to shared
+directory in `current/deck-skill/`, with a regular `SKILL.md` and links to shared
 `references` / `assets`, so Codex can discover it. `--skills-root DIR` changes
 the skill directory. `--prefix DIR` sets the CLI install root; `--dry-run`
 prints the plan without writing. The compatibility entry `deck` is no longer
@@ -76,7 +81,7 @@ installed, and `--skill-dir` has been removed.
 
 Rerunning removes only a leftover `deck` symlink pointing at this source's
 `deck-skill/`. Old role wrappers containing exactly the three managed links
-are upgraded to whole-directory symlinks; current role links are kept.
+are upgraded to links through current; existing current links are kept.
 Wrappers with extra files and other same-name entries cause exit 2 before
 any writes, with the path and target printed. If old Python-line links occupy
 these names, move those links away first (remove only the links, never their
@@ -88,10 +93,11 @@ Steps are in the [install guide](docs/getting-started.md#install-from-source).
 After install, `deck new ./my-deck --title '方案标题'` creates a work
 directory. The linked skill describes the first-run commands.
 
-A fresh install finds deck-tools in the prefix venv, so it does not need
-`DECK_TOOLS_PYTHON`. `cargo install --force` replaces a `deck` binary already
-present in `PREFIX/bin`. deck-tools is an editable install of this checkout;
-moving or deleting the checkout leaves that venv unable to import it.
+Standard installation and upgrades use `scripts/install.sh`, without
+`DECK_TOOLS_PYTHON`. Unknown CLI entries are preserved and reported as conflicts;
+Cargo records plus the associated built artifact identify supported old installs
+without executing unknown binaries.
+Old venvs and source links are retained for old processes during migration.
 
 Development in a worktree (do not reuse another checkout's venv):
 
@@ -99,6 +105,8 @@ Development in a worktree (do not reuse another checkout's venv):
 uv venv --python 3.12 --seed .venv
 .venv/bin/python -m pip install -e "./deck-tools[dev]"
 export DECK_TOOLS_PYTHON="$PWD/.venv/bin/python"
+cargo install --path rust --root "$PWD/.dev-prefix"
+export PATH="$PWD/.dev-prefix/bin:$PATH"
 (cd frontend && npm ci && npm test && npm run build)
 (cd rust && cargo test)
 ```
@@ -173,8 +181,10 @@ Keep the printed URL private. The server binds `127.0.0.1` only.
 
 ## Capability Boundaries
 
-1. Produced PPTX contains editable shapes and text. Tables and charts are
-   shape/text compositions, not Office-native spreadsheet-backed data objects.
+1. Produced PPTX contains editable shapes and text. Supported tables explicitly
+   marked `data-native-table="true"` with complete grid and ownership bindings
+   become native PPT tables; ordinary drawn tables remain shapes/text. Charts
+   are not Office-native spreadsheet-backed data charts.
 2. Incomplete work can be saved, exported as Markdown, and built. Missing or
    stale SVG pages are listed next to download; export is not blocked.
 3. Cancelled runs and results whose page basis has changed are stored and not

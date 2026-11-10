@@ -9,7 +9,8 @@
 ```bash
 uv venv --python 3.12 --seed .venv
 .venv/bin/python -m pip install -e './deck-tools[dev]'
-cargo install --path rust --root ~/.local
+cargo install --path rust --root "$PWD/.dev-prefix"
+export PATH="$PWD/.dev-prefix/bin:$PATH"
 export DECK_TOOLS_PYTHON="$PWD/.venv/bin/python"
 mkdir -p ~/.codex/skills
 for role in deck-master deck-content deck-design deck-review; do
@@ -19,9 +20,9 @@ done
 
 `scripts/install.sh` 默认将四个职责目录整体软链接到 `~/.codex/skills`，`--skills-root DIR` 更换目录。不再安装兼容入口 `deck`，`--skill-dir` 已取消。上面的手动链接示例适用于尚无同名入口的开发环境；升级请运行安装脚本。
 
-重复安装保留已指向本源职责目录的链接；只删除指向本源 `deck-skill/` 的旧 `deck` 软链接，并将仅含三条托管链接的旧包装目录升级为整目录软链接。包装目录有用户文件，或同名路径被其他入口（包括旧 Python 线）占用时，脚本在写入前退出 2，打印路径和目标。先移走该项；若为软链接，只删链接，不删目标目录，再安装。非本源的 `deck` 保留并提示可能抢触发。
+标准安装的四职责入口经 current 指向同一份完整安装副本；重复安装保留 current 链接，旧本源链接迁移到 current。只删除指向本源 `deck-skill/` 的旧 `deck` 软链接，并将仅含三条托管链接的旧包装目录升级为整目录软链接。包装目录有用户文件，或同名路径被其他入口（包括旧 Python 线）占用时，脚本在写入前退出 2，打印路径和目标。先移走该项；若为软链接，只删链接，不删目标目录，再安装。非本源的 `deck` 保留并提示可能抢触发。
 
-下文的 `deck` 指 `~/.local/bin/deck`。安装用了非默认 `--prefix` 时，二进制在 `<prefix>/bin/deck`。`<prefix>/bin` 不在 PATH 时，每条命令都用这个完整路径。`DECK_PROJECT` 是作者指定的新作品目录，`SOURCE_FILE` 是作者指定的一份原材料；不要根据示例搜索 HOME 或补读相邻目录。
+标准安装下文的 `deck` 指 `~/.local/bin/deck`；上述开发示例使用独立 `.dev-prefix/bin/deck`，不能覆盖标准薄入口。安装用了非默认 `--prefix` 时，二进制在 `<prefix>/bin/deck`。`<prefix>/bin` 不在 PATH 时，每条命令都用这个完整路径。`DECK_PROJECT` 是作者指定的新作品目录，`SOURCE_FILE` 是作者指定的一份原材料；不要根据示例搜索 HOME 或补读相邻目录。
 
 ## 新建与读材料
 
@@ -65,7 +66,7 @@ deck --project "$DECK_PROJECT" get > "$DECK_PROJECT/current.json"
 ```
 
 ```bash
-BASE=$("$DECK_TOOLS_PYTHON" -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "$DECK_PROJECT/current.json")
+BASE=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "$DECK_PROJECT/current.json")
 deck --project "$DECK_PROJECT" put --base "$BASE" "$DECK_PROJECT/framing.json"
 ```
 
@@ -119,7 +120,7 @@ deck --project "$DECK_PROJECT" put --base "$BASE" "$DECK_PROJECT/framing.json"
 
 ```bash
 deck --project "$DECK_PROJECT" get > "$DECK_PROJECT/current.json"
-BASE=$("$DECK_TOOLS_PYTHON" -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "$DECK_PROJECT/current.json")
+BASE=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "$DECK_PROJECT/current.json")
 deck --project "$DECK_PROJECT" put --base "$BASE" "$DECK_PROJECT/pages.json"
 deck --project "$DECK_PROJECT" show
 deck --project "$DECK_PROJECT" export md > "$DECK_PROJECT/manuscript.md"
@@ -149,9 +150,10 @@ deck --project "$DECK_PROJECT" export md > "$DECK_PROJECT/manuscript.md"
 2. `deck run result <run> <page> <图片文件>` 交回。首次结果可以自动采用；重交的修正版、取消后或依据已变的结果只保存。确认使用后 `deck run adopt <run> <page>`。`deck run show` 看状态，`deck run cancel <run>` 停止后续调用和自动采用。
 3. `deck run start svg --pages p1,p2` 准备 SVG。按原图的布局和关系重建，正文取 content.json，文字绑定 atoms.json。先读 [svg-subset.md](svg-subset.md)。错漏文字、局部排版和依据明确的连线可以沿用原图直接改。主结构要重排时先改蓝图。
 4. `deck run result <run> <page> <SVG文件>` 编译、渲染并回读。工具报错就改具体元素。Host 打开预览 PNG，对照原图检查端点、方向、分支、层级、侧栏和阅读顺序。
-5. `deck build` 构建 PPTX，`deck export pptx` 取最近构建路径。`missing_pages` 是没有 SVG、因此没有进入这次 PPTX 的页。`stale_pages` 是 SVG 依据与当前正文、原图或样式不一致。`stale_images` 在 `deck show` 的 `artifact_status` 里，指原图依据已变；只改讲稿不会让原图过期。构建成功不会清掉这两项。`export pptx` 的 `input_changed` 才表示构建之后 SVG、讲稿或构建设置又变了。
+5. `deck build` 构建 PPTX，`deck export pptx` 优先取当前构建输入匹配的成品路径，没有匹配时取最近历史成品并提示。`missing_pages` 是没有 SVG、因此没有进入这次 PPTX 的页。`stale_pages` 是 SVG 依据与当前正文、原图或样式不一致。`stale_images` 在 `deck show` 的 `artifact_status` 里，指原图依据已变；只改讲稿不会让原图过期。构建成功不会清掉这两项。`export pptx` 的 `input_changed` 才表示构建之后 SVG、讲稿或构建设置又变了。
 
 `soffice` 不可用时，SVG 的 `deck run result` 失败并说明如何安装 LibreOffice。停在这一步。不要改调 `compile_job`，不要手写 PPTX。
+已完成的 SVG 任务重交同一文件时，返回 `reused: true` 并沿用原回读，不重新检查，也不返回本次 `checked_version`；缺原回读时 findings 为 null。该返回不表示当前正文已经重新检查。
 
 ## 意见
 
@@ -172,3 +174,36 @@ python -m deck_tools.case_numbers path/to/numbers.json
 ```
 
 只读该文件。退出码 0 表示显式算式与期望一致，1 表示不一致，2 表示输入无效。不写回文件，也不判断来源、归因或 ROI。写稿、导出和审查都不依赖这次运行。
+
+
+`deck material text <id>` 返回抽取文本 path 和项目内不可变原件副本 original_path。
+原件缺失时 original_path 为 null，已有文本仍可读；解析未完成仍报 needs_tool。
+解析成功不代表已看过图，系统不保存历史视觉阅读是否完成；按本次任务查看必要图表、流程或扫描页，纯 TXT/MD 不增加看图要求。
+
+
+PPTX 默认优先下载与当前构建输入匹配的成品，没有匹配时下载最近可用历史成品并提示。
+input_changed 只表示构建输入匹配，不表示正文或视觉已最新；来源 version_id 标识构建时作品版本。
+
+
+## 读取和修改作品风格
+
+标准安装会自动定位自己的工具环境，无需设置开发用 DECK_TOOLS_PYTHON。
+先读取完整作品，保留当前 canvas、fonts 和 assets，再修改需要的字段：
+
+```bash
+deck get > snapshot.json
+python3 - <<'PYTHON'
+import json
+from pathlib import Path
+snapshot = json.loads(Path("snapshot.json").read_text())
+style = snapshot["deck"]["style"]
+style["palette"] = ["#164267", "#F5F7FA", "#D97706"]
+Path("style-patch.json").write_text(json.dumps({"style": style}, ensure_ascii=False))
+print(snapshot["version"])
+PYTHON
+deck put --base <上一步输出的版本号> style-patch.json
+deck doctor --fonts "Noto Sans CJK SC"
+```
+
+色板为无品牌示例；品牌项目使用自己的值。doctor 的字体参数换成当前实际选用的字体；缺工具或字体按错误提示处理。修改已有作品时不能用默认画布、默认字体或空 assets 覆盖原值。
+共享视觉规则只提供绘图语言；实际 palette/fonts/canvas 由作品动态进入任务。既有 task.md 不后台更新，软件更新也不批量使历史图片过期，需要新风格时显式准备新任务。

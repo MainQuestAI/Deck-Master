@@ -32,14 +32,11 @@ fn interpreter() -> Result<OsString> {
 }
 
 fn installed_python(exe: &Path) -> Option<PathBuf> {
-    let python = exe
-        .parent()?
-        .parent()?
-        .join("share")
-        .join("deck")
-        .join("venv")
-        .join("bin")
-        .join("python");
+    let installation = exe.parent()?.parent()?;
+    if installation.parent()?.file_name()? != "installations" {
+        return None;
+    }
+    let python = installation.join("share/deck/venv/bin/python");
     python.is_file().then_some(python)
 }
 
@@ -94,10 +91,10 @@ mod tests {
     use std::fs;
 
     #[test]
-    fn installed_venv_is_the_python_next_to_the_prefix_bin() {
+    fn installed_venv_is_pinned_to_the_real_installation_directory() {
         let temp = tempfile::tempdir().unwrap();
-        let python = temp
-            .path()
+        let installation = temp.path().join("share/deck/installations/first");
+        let python = installation
             .join("share")
             .join("deck")
             .join("venv")
@@ -105,10 +102,11 @@ mod tests {
             .join("python");
         fs::create_dir_all(python.parent().unwrap()).unwrap();
         fs::write(&python, "").unwrap();
-        let exe = temp.path().join("bin").join("deck");
+        let exe = installation.join("bin").join("deck");
         fs::create_dir_all(exe.parent().unwrap()).unwrap();
         fs::write(&exe, "").unwrap();
         assert_eq!(installed_python(&exe).as_deref(), Some(python.as_path()));
         assert!(installed_python(&python).is_none());
+        assert!(installed_python(&temp.path().join("bin/deck")).is_none());
     }
 }

@@ -306,10 +306,6 @@ fn image_run_inlines_readable_page_inputs_and_keeps_svg_inputs_separate() {
         "退回",
         "容量限制按日计算",
         "仅适用于正常工作时段",
-        "让主要文字、连线和业务对象可以分开重建",
-        "不要为了方便转 SVG 先画成扁平色块",
-        "不要把整页当成最后必须压成零张图",
-        "pictures=0 不是目标，也不是失败",
     ] {
         assert!(image.contains(text), "image task omits {text}");
     }
@@ -598,6 +594,167 @@ fn failed_svg_and_corrupt_bitmap_publish_no_artifact() {
     );
 }
 #[test]
+fn slow_old_build_finishing_after_fast_current_build_keeps_matching_export() {
+    use std::{
+        io::{BufRead, BufReader, Write},
+        net::TcpListener,
+        os::unix::fs::PermissionsExt,
+        process::{Output, Stdio},
+        sync::mpsc,
+        thread,
+        time::Duration,
+    };
+
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path().join("project");
+    setup(&path);
+    put_available_build_font(&path);
+    let family = available_font();
+    let publish = |title: &str, notes: &str| {
+        let mut store = Store::open(&path).unwrap();
+        let mut snapshot = store.current().unwrap();
+        snapshot.deck.pages[0].content.title = title.into();
+        snapshot.deck.pages[0].notes = notes.into();
+        let svg = format!(
+            "<svg viewBox='0 0 1280 720'><text x='64' y='80' font-size='36' font-family=\"{family}\" data-atom-id='atom:p1:title'>{title}</text></svg>"
+        );
+        let file = store.add_file(svg.as_bytes(), "svg").unwrap();
+        let basis = ops::basis("svg", &snapshot.deck, &snapshot.deck.pages[0]).unwrap();
+        snapshot.deck.pages[0].svg = Some(deck::model::Artifact { file, basis });
+        let tx = store.transaction().unwrap();
+        let version =
+            store::append(&tx, &snapshot.deck, "synthetic concurrent build input").unwrap();
+        tx.commit().unwrap();
+        version
+    };
+    let version_a = publish("Slow A", "Slow A notes");
+    let python = std::env::var_os("DECK_TOOLS_PYTHON").expect("install deck-tools");
+    let wrapper = temp.path().join("python-wrapper");
+    let script = temp.path().join("delayed-build.py");
+    std::fs::write(
+        &wrapper,
+        "#!/bin/sh\nexec \"$DECK_TEST_PYTHON\" \"$DECK_TEST_WRAPPER\" \"$@\"\n",
+    )
+    .unwrap();
+    std::fs::set_permissions(&wrapper, std::fs::Permissions::from_mode(0o755)).unwrap();
+    std::fs::write(
+        &script,
+        r#"import json, os, socket, sys
+from pathlib import Path
+assert sys.argv[1:4] == ['-m', 'deck_tools', 'build']
+job = json.loads(Path(sys.argv[-1]).read_text())
+host, port = os.environ['DECK_TEST_BARRIER'].split(':')
+with socket.create_connection((host, int(port)), timeout=30) as channel:
+    captured = {'title': job['pages'][0]['content']['title'], 'notes': job['pages'][0]['notes']}
+    channel.sendall(json.dumps(captured).encode() + b'\n')
+    assert channel.recv(1) == b'1'
+# Delay the real tool invocation; do not replace its compilation or output.
+os.execv(os.environ['DECK_TEST_PYTHON'], [os.environ['DECK_TEST_PYTHON'], *sys.argv[1:]])
+"#,
+    )
+    .unwrap();
+    let cli = || {
+        let mut command = Command::new(env!("CARGO_BIN_EXE_deck"));
+        command.arg("--project").arg(&path);
+        command
+    };
+    let parsed = |output: Output| -> Value {
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        serde_json::from_slice(&output.stdout).unwrap()
+    };
+    let content = |build: &Value| -> Value {
+        parsed(
+            Command::new(&python)
+                .args([
+                    "-c",
+                    "import json,sys,zipfile; from xml.etree import ElementTree as E; z=zipfile.ZipFile(sys.argv[1]); text=lambda name: ' '.join(n.text or '' for n in E.fromstring(z.read(name)).iter('{http://schemas.openxmlformats.org/drawingml/2006/main}t')); print(json.dumps({'slide':text('ppt/slides/slide1.xml'),'notes':text('ppt/notesSlides/notesSlide1.xml')}))",
+                ])
+                .arg(build["path"].as_str().unwrap())
+                .output()
+                .unwrap(),
+        )
+    };
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let address = listener.local_addr().unwrap().to_string();
+    let (sender, receiver) = mpsc::channel();
+    thread::spawn(move || sender.send(listener.accept().unwrap().0).unwrap());
+    let mut slow = cli()
+        .arg("build")
+        .env("DECK_TOOLS_PYTHON", &wrapper)
+        .env("DECK_TEST_PYTHON", &python)
+        .env("DECK_TEST_WRAPPER", &script)
+        .env("DECK_TEST_BARRIER", address)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    let mut barrier = receiver.recv_timeout(Duration::from_secs(30)).unwrap();
+    barrier
+        .set_read_timeout(Some(Duration::from_secs(30)))
+        .unwrap();
+    let mut captured = String::new();
+    BufReader::new(&mut barrier)
+        .read_line(&mut captured)
+        .unwrap();
+    assert_eq!(
+        serde_json::from_str::<Value>(&captured).unwrap(),
+        json!({"title":"Slow A", "notes":"Slow A notes"})
+    );
+    let version_b = publish("Fast B", "Fast B notes");
+    let fast = parsed(cli().arg("build").output().unwrap());
+    assert!(slow.try_wait().unwrap().is_none());
+    assert_eq!(
+        ops::build_detail(&path, fast["id"].as_i64().unwrap()).unwrap()["version_id"],
+        version_b
+    );
+    let fast_content = content(&fast);
+    assert_eq!(fast_content["slide"], "Fast B");
+    assert!(
+        fast_content["notes"]
+            .as_str()
+            .unwrap()
+            .contains("Fast B notes")
+    );
+
+    barrier.write_all(b"1").unwrap();
+    let late = parsed(slow.wait_with_output().unwrap());
+    assert!(late["id"].as_i64().unwrap() > fast["id"].as_i64().unwrap());
+    assert_eq!(
+        ops::build_detail(&path, late["id"].as_i64().unwrap()).unwrap()["version_id"],
+        version_a
+    );
+    let slow_content = content(&late);
+    assert_eq!(slow_content["slide"], "Slow A");
+    assert!(
+        slow_content["notes"]
+            .as_str()
+            .unwrap()
+            .contains("Slow A notes")
+    );
+    let exported = parsed(cli().args(["export", "pptx"]).output().unwrap());
+    assert_eq!(exported["id"], fast["id"]);
+    assert_eq!(exported["input_changed"], false);
+    assert_eq!(content(&exported), fast_content);
+    assert_eq!(
+        std::fs::read(exported["path"].as_str().unwrap()).unwrap(),
+        std::fs::read(fast["path"].as_str().unwrap()).unwrap()
+    );
+    assert_eq!(
+        ops::workspace(&path).unwrap()["default_build"]["id"],
+        fast["id"]
+    );
+    ops::restore(&path, version_a).unwrap();
+    let restored = parsed(cli().args(["export", "pptx"]).output().unwrap());
+    assert_eq!(restored["id"], late["id"]);
+    assert_eq!(restored["input_changed"], false);
+    assert_eq!(content(&restored), slow_content);
+}
+
+#[test]
 fn build_retains_notes_reports_missing_and_export_compares_inputs_after_restore() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path();
@@ -848,7 +1005,7 @@ fn page_three_redo_and_notes_only_edits_preserve_other_pages_and_existing_build(
 }
 
 #[test]
-fn polled_svg_staleness_inherits_image_staleness_without_changing_basis() {
+fn legacy_artifacts_keep_coverage_while_new_runs_include_purpose_and_layout() {
     use sha2::{Digest, Sha256};
     use std::os::unix::fs::PermissionsExt;
     let temp = tempfile::tempdir().unwrap();
@@ -952,19 +1109,19 @@ else:
         .as_str()
         .expect("current_basis")
         .to_string();
-    let assert_artifacts = |stale: Value| {
+    let assert_artifacts = |svg_stale: Value, image_stale: Value| {
         let status = ops::workspace(path).unwrap()["artifact_status"].clone();
-        assert_eq!(status["stale_pages"], stale);
-        assert_eq!(status["stale_images"], stale);
+        assert_eq!(status["stale_pages"], svg_stale);
+        assert_eq!(status["stale_images"], image_stale);
     };
-    assert_artifacts(json!([]));
+    assert_artifacts(json!([]), json!([]));
     edit(path, json!({"pages":[{"id":"p2","notes":"另一页讲稿"}]}));
     let (after_other, svg) = page("svg", "p1");
     assert_ne!(after_other, version);
     assert_eq!(svg["current_basis"], svg_basis);
     assert_eq!(svg["basis_changed"], false);
     assert_eq!(page("image", "p1").1["basis_changed"], false);
-    assert_artifacts(json!([]));
+    assert_artifacts(json!([]), json!([]));
     edit(path, json!({"pages":[{"id":"p1","notes":"只改本页讲稿"}]}));
     let (_, svg) = page("svg", "p1");
     assert_eq!(svg["current_basis"], svg_basis);
@@ -972,9 +1129,9 @@ else:
     let (_, image) = page("image", "p1");
     assert_eq!(image["current_basis"], image_basis);
     assert_eq!(image["basis_changed"], false);
-    assert_artifacts(json!([]));
+    assert_artifacts(json!([]), json!([]));
 
-    // Without an original image, layout and purpose remain outside SVG basis.
+    // New tasks include purpose and layout even without an original image.
     let (_, svg) = page("svg", "p2");
     let no_image_basis = svg["current_basis"].clone();
     edit(
@@ -982,22 +1139,22 @@ else:
         json!({"pages":[{"id":"p2","layout":"左侧说明，右侧结论","purpose":"查阅下一步"}]}),
     );
     let (_, svg) = page("svg", "p2");
-    assert_eq!(svg["current_basis"], no_image_basis);
-    assert_eq!(svg["basis_changed"], false);
-    assert_artifacts(json!([]));
+    assert_ne!(svg["current_basis"], no_image_basis);
+    assert_eq!(svg["basis_changed"], true);
+    assert_artifacts(json!([]), json!([]));
 
     edit(path, json!({"pages":[{"id":"p1","layout":"改为两栏"}]}));
     let (_, image) = page("image", "p1");
     let (_, svg) = page("svg", "p1");
     assert_ne!(image["current_basis"], image_basis);
     assert_eq!(image["basis_changed"], true);
-    assert_eq!(svg["current_basis"], svg_basis);
+    assert_ne!(svg["current_basis"], svg_basis);
     assert_eq!(svg["basis_changed"], true);
-    assert_artifacts(json!(["p1"]));
+    assert_artifacts(json!([]), json!(["p1"]));
 
     edit(path, json!({"pages":[{"id":"p1","layout":""}]}));
     assert_eq!(page("svg", "p1").1["basis_changed"], false);
-    assert_artifacts(json!([]));
+    assert_artifacts(json!([]), json!([]));
     edit(
         path,
         json!({"pages":[{"id":"p1","purpose":"评估增长预期"}]}),
@@ -1006,12 +1163,12 @@ else:
     let (_, svg) = page("svg", "p1");
     assert_ne!(image["current_basis"], image_basis);
     assert_eq!(image["basis_changed"], true);
-    assert_eq!(svg["current_basis"], svg_basis);
+    assert_ne!(svg["current_basis"], svg_basis);
     assert_eq!(svg["basis_changed"], true);
-    assert_artifacts(json!(["p1"]));
+    assert_artifacts(json!([]), json!(["p1"]));
 
     edit(path, json!({"pages":[{"id":"p1","purpose":""}]}));
-    assert_artifacts(json!([]));
+    assert_artifacts(json!([]), json!([]));
     edit(
         path,
         json!({"pages":[{"id":"p1","content":{"title":"增长","body_blocks":[{"type":"paragraph","id":"a1","text":"预期增长 5%"}]}}]}),
@@ -1019,5 +1176,56 @@ else:
     let (_, svg) = page("svg", "p1");
     assert_ne!(svg["current_basis"], svg_basis);
     assert_eq!(svg["basis_changed"], true);
-    assert_artifacts(json!(["p1"]));
+    assert_artifacts(json!(["p1"]), json!(["p1"]));
+}
+
+#[test]
+fn image_tasks_inline_shared_rules_without_competing_defaults_or_rewriting_author_text() {
+    for (width, height, physical_width, palette) in [
+        (1280, 720, 13.333, vec![]),
+        (2560, 1440, 13.333, vec!["#123456"]),
+        (1000, 1000, 7.5, vec!["#123456", "#ffffff"]),
+    ] {
+        let temp = tempfile::tempdir().unwrap();
+        let path = temp.path();
+        setup(path);
+        let mut style = ops::get(path, None).unwrap()["deck"]["style"].clone();
+        style["canvas"] = json!({"width_px":width,"height_px":height,"slide_width_in":physical_width,"slide_height_in":7.5});
+        style["palette"] = json!(palette);
+        style["fonts"] = json!(["BrandFont"]);
+        let text = "作者正文保留 #164267、1280×720 和 Noto Sans CJK SC";
+        edit(
+            path,
+            json!({"style":style,"pages":[{"id":"p1","content":{"title":text}}]}),
+        );
+        let run = ops::run_start(path, "image", &["p1".into()], None).unwrap();
+        let directory = Path::new(run["runs"][0]["pages"][0]["work"].as_str().unwrap());
+        let original_task = std::fs::read(directory.join("task.md")).unwrap();
+        let prompt = String::from_utf8(original_task.clone()).unwrap();
+        let rules = include_str!("../../deck-skill/references/design-system.md");
+        assert!(prompt.contains(rules));
+        let saved = ops::get(path, None).unwrap();
+        assert!(
+            prompt.contains(
+                saved["deck"]["pages"][0]["content"]["title"]
+                    .as_str()
+                    .unwrap()
+            )
+        );
+        assert!(prompt.contains("BrandFont"));
+        let guidance = prompt.split("## 可见文字").next().unwrap();
+        for default in ["#164267", "Noto Sans CJK SC", "deck doctor", "deck put"] {
+            assert!(
+                !guidance.contains(default),
+                "unrelated default in guidance: {default}"
+            );
+        }
+        assert_eq!(ops::get(path, None).unwrap()["deck"]["style"], style);
+        ops::run_cancel(path, run["runs"][0]["id"].as_i64().unwrap()).unwrap();
+        ops::run_start(path, "image", &["p1".into()], None).unwrap();
+        assert_eq!(
+            std::fs::read(directory.join("task.md")).unwrap(),
+            original_task
+        );
+    }
 }

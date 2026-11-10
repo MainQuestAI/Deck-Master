@@ -10,7 +10,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-pub const FORMAT_VERSION: i64 = 4;
+pub const FORMAT_VERSION: i64 = 5;
 
 pub struct Store {
     pub connection: Connection,
@@ -134,6 +134,9 @@ impl Store {
                 "ALTER TABLE run_pages ADD COLUMN preview_file TEXT;
             PRAGMA user_version = 4;",
             )?;
+        }
+        if version < 5 {
+            tx.pragma_update(None, "user_version", 5)?;
         }
         tx.commit()?;
         Ok(())

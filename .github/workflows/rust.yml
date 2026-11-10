@@ -27,7 +27,7 @@ jobs:
       - name: Install material tools
         run: |
           sudo apt-get update
-          sudo apt-get install --no-install-recommends -y poppler-utils
+          sudo apt-get install --no-install-recommends -y poppler-utils lsof
           python -m venv .venv
           .venv/bin/python -m pip install -e "./deck-tools[dev]"
       - uses: actions/setup-node@v7
@@ -50,7 +50,7 @@ jobs:
           cargo clippy --all-targets -- -D warnings
           cargo test
       - name: File tool tests
-        # The runner lacks rsvg-convert/soffice; render tests run locally only.
+        # Render tests run in the independent render job.
         run: .venv/bin/python -m pytest -q deck-tools/tests -m "not render" --basetemp="$RUNNER_TEMP/deck-tools"
       - name: Install script
         run: |
@@ -62,13 +62,13 @@ jobs:
           bash scripts/install.sh --dry-run --prefix "$RUNNER_TEMP/deck-prefix" | tee "$RUNNER_TEMP/default-plan"
           bash scripts/install.sh --prefix "$RUNNER_TEMP/deck-prefix"
           test -x "$RUNNER_TEMP/deck-prefix/bin/deck"
-          test -x "$RUNNER_TEMP/deck-prefix/share/deck/venv/bin/python"
-          "$RUNNER_TEMP/deck-prefix/share/deck/venv/bin/python" -c "import deck_tools"
+          test -x "$RUNNER_TEMP/deck-prefix/share/deck/current/share/deck/venv/bin/python"
+          "$RUNNER_TEMP/deck-prefix/share/deck/current/share/deck/venv/bin/python" -c "import deck_tools"
           bash scripts/install.sh --prefix "$RUNNER_TEMP/deck-prefix"
           "$RUNNER_TEMP/deck-prefix/bin/deck" --help >/dev/null
           for role in deck-master deck-content deck-design deck-review; do
             test -L "$HOME/.codex/skills/$role"
-            test "$(readlink "$HOME/.codex/skills/$role")" = "${{ github.workspace }}/deck-skill/$role"
+            test "$(readlink "$HOME/.codex/skills/$role")" = "$RUNNER_TEMP/deck-prefix/share/deck/current/deck-skill/$role"
             test -f "$HOME/.codex/skills/$role/SKILL.md"
             test ! -L "$HOME/.codex/skills/$role/SKILL.md"
           done
@@ -84,7 +84,7 @@ jobs:
           bash scripts/install.sh --prefix "$RUNNER_TEMP/deck-prefix" --skills-root "$RUNNER_TEMP/skills-root-write"
           for role in deck-master deck-content deck-design deck-review; do
             test -L "$RUNNER_TEMP/skills-root-write/$role"
-            test "$(readlink "$RUNNER_TEMP/skills-root-write/$role")" = "${{ github.workspace }}/deck-skill/$role"
+            test "$(readlink "$RUNNER_TEMP/skills-root-write/$role")" = "$RUNNER_TEMP/deck-prefix/share/deck/current/deck-skill/$role"
             test -f "$RUNNER_TEMP/skills-root-write/$role/SKILL.md"
             test ! -L "$RUNNER_TEMP/skills-root-write/$role/SKILL.md"
             test -L "$RUNNER_TEMP/skills-root-write/$role/references"
@@ -96,3 +96,29 @@ jobs:
           done
           test ! -e "$RUNNER_TEMP/skills-root-write/deck"
           test ! -L "$RUNNER_TEMP/skills-root-write/deck"
+
+  render:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install render toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y librsvg2-bin libreoffice-impress poppler-utils fontconfig fonts-noto-cjk fonts-dejavu-core
+          python -m venv .venv
+          .venv/bin/python -m pip install -e "./deck-tools[dev]"
+          rsvg-convert --version
+          soffice --version
+          pdftoppm -v
+          fc-match 'Noto Sans CJK SC'
+          git rev-parse HEAD
+      - name: Real rendering tests
+        run: .venv/bin/python -m pytest -q deck-tools/tests -m render --basetemp="$RUNNER_TEMP/deck-render"
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: render-failure
+          path: ${{ runner.temp }}/deck-render

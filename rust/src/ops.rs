@@ -83,6 +83,13 @@ pub fn workspace(project: &Path) -> Result<Value> {
     let tx = store.connection.transaction()?;
     let snapshot = store::current(&tx)?;
     let mut value = snapshot_value(&snapshot, None)?;
+    value["default_build"] = match default_build(&tx, &snapshot.deck)? {
+        Some(mut selected) => {
+            selected.as_object_mut().map(|value| value.remove("file"));
+            selected
+        }
+        None => Value::Null,
+    };
     value["runs"] = json!(runs(&tx, &snapshot.deck, None)?);
     let reviews = reviews(&tx, Some("open"), None)?;
     for page in value["deck"]["pages"].as_array_mut().into_iter().flatten() {
@@ -535,12 +542,27 @@ pub fn material_text(project: &Path, id: &str) -> Result<Value> {
         .iter()
         .find(|m| m.id == id)
         .ok_or_else(|| Error::Input(format!("材料 {id} 不存在；请用 deck show 查看材料")))?;
+    let original = if material.file.is_empty() {
+        None
+    } else {
+        match store.file(&material.file) {
+            Ok(path) => Some(path),
+            Err(Error::Missing(_)) => None,
+            Err(error) => return Err(error),
+        }
+    };
     if material.status == "needs_tool" {
-        return Err(Error::NeedsTool(
-            "材料尚未完成解析；请安装对应工具，再次运行 material add".into(),
-        ));
+        return Err(Error::NeedsTool(format!(
+            "材料尚未完成解析；原件：{}；请安装对应工具，再次运行 material add",
+            original
+                .as_ref()
+                .map(|path| path.display().to_string())
+                .unwrap_or_else(|| "不可用".into())
+        )));
     }
-    Ok(json!({ "id": id, "status": material.status, "path": store.file(&material.text_file)? }))
+    Ok(
+        json!({ "id": id, "status": material.status, "path": store.file(&material.text_file)?, "original_path": original }),
+    )
 }
 
 pub fn export_md(project: &Path) -> Result<String> {
@@ -647,6 +669,10 @@ pub fn asset_add(
 }
 
 pub fn basis(kind: &str, deck: &Deck, page: &Page) -> Result<String> {
+    calculate_basis(kind, deck, page, false)
+}
+
+fn calculate_basis(kind: &str, deck: &Deck, page: &Page, legacy: bool) -> Result<String> {
     use sha2::{Digest, Sha256};
     let mut style = deck.style.clone();
     style
@@ -654,10 +680,40 @@ pub fn basis(kind: &str, deck: &Deck, page: &Page) -> Result<String> {
         .retain(|asset| asset.is_effective_for(&page.id));
     let value = if kind == "image" {
         json!([page.content, page.layout, page.purpose, style])
-    } else {
+    } else if legacy {
         json!([page.content, page.image.as_ref().map(|i| &i.file), style])
+    } else {
+        json!([
+            page.content,
+            page.purpose,
+            page.layout,
+            page.image.as_ref().map(|i| &i.file),
+            style
+        ])
     };
-    Ok(format!("{:x}", Sha256::digest(serde_json::to_vec(&value)?)))
+    let hash = format!("{:x}", Sha256::digest(serde_json::to_vec(&value)?));
+    Ok(if kind == "svg" && !legacy {
+        format!("svg-v2:{hash}")
+    } else {
+        hash
+    })
+}
+
+fn current_basis_for(kind: &str, saved: &str, deck: &Deck, page: &Page) -> Result<String> {
+    let valid_hash =
+        |value: &str| value.len() == 64 && value.bytes().all(|c| c.is_ascii_hexdigit());
+    if kind == "image" {
+        return basis(kind, deck, page);
+    }
+    if saved.strip_prefix("svg-v2:").is_some_and(valid_hash) {
+        return basis(kind, deck, page);
+    }
+    if saved == "imported" || valid_hash(saved) {
+        return calculate_basis(kind, deck, page, true);
+    }
+    Err(Error::Input(
+        "无法识别 SVG 制作依据；请保留原件并重新准备任务".into(),
+    ))
 }
 
 fn image_is_stale(deck: &Deck, page: &Page) -> Result<bool> {
@@ -911,16 +967,23 @@ fn runs(connection: &rusqlite::Connection, deck: &Deck, id: Option<i64>) -> Resu
             let mut current_basis = None;
             let changed = match current_page {
                 Some(p) => {
-                    let key = (if kind == "image" { "image" } else { "svg" }, p.id.as_str());
+                    let algorithm = if kind == "image" {
+                        "image"
+                    } else if old.starts_with("svg-v2:") {
+                        "svg-v2"
+                    } else {
+                        "svg-legacy"
+                    };
+                    let key = (algorithm, p.id.as_str());
                     let current = match current_bases.entry(key) {
                         std::collections::hash_map::Entry::Occupied(entry) => entry.into_mut(),
                         std::collections::hash_map::Entry::Vacant(entry) => {
-                            entry.insert(basis(&kind, deck, p)?)
+                            entry.insert(current_basis_for(&kind, &old, deck, p)?)
                         }
                     };
                     current_basis = Some(current.clone());
                     // Derive image staleness without changing stored SVG hash inputs.
-                    *current != old || (kind == "svg" && image_is_stale(deck, p)?)
+                    *current != old
                 }
                 None => true,
             };
@@ -941,7 +1004,7 @@ fn runs(connection: &rusqlite::Connection, deck: &Deck, id: Option<i64>) -> Resu
                 .and_then(|p| p.image.as_ref())
                 .map(|image| file_url(&image.file));
             let result_url = result.as_deref().map(file_url);
-            pages.push(json!({"page_id":page,"status":state,"reason":reason,"basis_changed":changed,"current_basis":current_basis,"result_file":result,"result_url":result_url,"result_preview":preview,"current_image_url":current_image}));
+            pages.push(json!({"page_id":page,"status":state,"reason":reason,"basis_changed":changed,"basis_incomplete":kind == "svg" && !old.starts_with("svg-v2:"),"current_basis":current_basis,"result_file":result,"result_url":result_url,"result_preview":preview,"current_image_url":current_image}));
         }
         runs.push(json!({"id":id,"kind":kind,"status":status,"max_calls":max,"calls_used":used,"pages":pages}));
     }
@@ -967,7 +1030,28 @@ pub fn run_result(project: &Path, id: i64, page_id: &str, source: &Path) -> Resu
     let (kind, _, _, _) = run_record(&store.connection, id)?;
     let (old, _, _) = run_page(&store.connection, id, page_id)?;
     let snapshot = store.current()?;
+    let checked_version = snapshot.version;
     let data = std::fs::read(source)?;
+    if kind == "svg" {
+        use sha2::{Digest, Sha256};
+        let identity = format!("{:x}.svg", Sha256::digest(&data));
+        let (_, state, previous) = run_page(&store.connection, id, page_id)?;
+        if state == "done" && previous.as_deref() == Some(identity.as_str()) {
+            let path = store
+                .root
+                .join("work")
+                .join(id.to_string())
+                .join(format!("readback-{identity}.json"));
+            let findings: Value = match std::fs::read(&path) {
+                Ok(bytes) => serde_json::from_slice(&bytes)?,
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => Value::Null,
+                Err(error) => return Err(error.into()),
+            };
+            return Ok(
+                json!({"file":identity,"adopted":false,"reused":true,"findings":findings,"run":run_show(project,Some(id))?}),
+            );
+        }
+    }
     let temporary = tempfile::tempdir()?;
     let mut preview = None;
     let mut findings = Value::Null;
@@ -1014,7 +1098,9 @@ pub fn run_result(project: &Path, id: i64, page_id: &str, source: &Path) -> Resu
     let (_, status, _, _) = run_record(&tx, id)?;
     let mut snapshot = store::current(&tx)?;
     let eligible = match snapshot.deck.pages.iter().find(|p| p.id == page_id) {
-        Some(p) => basis(&kind, &snapshot.deck, p)? == old,
+        Some(p) => {
+            (kind != "svg" || old.starts_with("svg-v2:")) && basis(&kind, &snapshot.deck, p)? == old
+        }
         None => false,
     };
     let (_, current_state, previous) = run_page(&tx, id, page_id)?;
@@ -1058,7 +1144,9 @@ pub fn run_result(project: &Path, id: i64, page_id: &str, source: &Path) -> Resu
     )?;
     tx.execute("UPDATE runs SET status='done' WHERE id=? AND status='open' AND NOT EXISTS (SELECT 1 FROM run_pages WHERE run_id=? AND status!='done')",params![id,id])?;
     tx.commit()?;
-    Ok(json!({"file":file,"adopted":adopted,"findings":findings,"run":run_show(project,Some(id))?}))
+    Ok(
+        json!({"file":file,"adopted":adopted,"checked_version":checked_version,"findings":findings,"run":run_show(project,Some(id))?}),
+    )
 }
 
 pub fn run_adopt(project: &Path, id: i64, page_id: &str) -> Result<Value> {
@@ -1168,18 +1256,28 @@ pub fn artifact_status(deck: &Deck) -> Result<Value> {
         .collect();
     let mut stale = Vec::new();
     let mut stale_images = Vec::new();
+    let mut incomplete_basis_pages = Vec::new();
     for page in &deck.pages {
+        if page
+            .svg
+            .as_ref()
+            .is_some_and(|svg| !svg.basis.starts_with("svg-v2:"))
+        {
+            incomplete_basis_pages.push(&page.id);
+        }
         let image_stale = image_is_stale(deck, page)?;
         if image_stale {
             stale_images.push(&page.id);
         }
         if let Some(svg) = &page.svg
-            && (svg.basis != basis("svg", deck, page)? || image_stale)
+            && (svg.basis != current_basis_for("svg", &svg.basis, deck, page)?)
         {
             stale.push(&page.id);
         }
     }
-    Ok(json!({"missing_pages":missing,"stale_pages":stale,"stale_images":stale_images}))
+    Ok(
+        json!({"missing_pages":missing,"stale_pages":stale,"stale_images":stale_images,"incomplete_basis_pages":incomplete_basis_pages}),
+    )
 }
 
 pub fn build(project: &Path) -> Result<Value> {
@@ -1218,27 +1316,240 @@ pub fn build(project: &Path) -> Result<Value> {
     )
 }
 
-pub fn export_pptx(project: &Path) -> Result<Value> {
+// Selection and its metadata share the caller's read transaction.
+fn default_build(connection: &rusqlite::Connection, deck: &Deck) -> Result<Option<Value>> {
     use rusqlite::OptionalExtension;
-    let store = Store::open(project)?;
-    let deck = store.current()?.deck;
-    let build: Option<(i64, String, String, String)> = store
-        .connection
-        .query_row(
-            "SELECT id,input_digest,pptx_file,missing_pages FROM builds ORDER BY id DESC LIMIT 1",
-            [],
-            |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?)),
-        )
-        .optional()?;
-    let (id, digest, file, missing) =
-        build.ok_or_else(|| Error::Input("尚无构建；请先运行 deck build".into()))?;
-    let status = artifact_status(&deck)?;
-    let changed = digest != build_digest(&deck)?;
+    let digest = build_digest(deck)?;
+    let row = connection.query_row(
+        "SELECT id,version_id,input_digest,pptx_file,missing_pages,created_at FROM builds ORDER BY (input_digest=?1) DESC,id DESC LIMIT 1",
+        [&digest],
+        |r| Ok((r.get::<_,i64>(0)?,r.get::<_,i64>(1)?,r.get::<_,String>(2)?,r.get::<_,String>(3)?,r.get::<_,String>(4)?,r.get::<_,String>(5)?)),
+    ).optional()?;
+    row.map(|(id,version_id,input,file,missing,created)| {
+        let changed = input != digest;
+        Ok(json!({"id":id,"version_id":version_id,"file":file,"created_at":created,
+            "input_changed":changed,
+            "warning":if changed {"当前构建输入没有匹配的成品；下载的是最近可用历史成品，请按需重新构建"} else {""},
+            "build_missing_pages":serde_json::from_str::<Value>(&missing)?}))
+    }).transpose()
+}
+
+pub fn build_detail(project: &Path, id: i64) -> Result<Value> {
+    use rusqlite::OptionalExtension;
+    let mut store = Store::open(project)?;
+    let tx = store.connection.transaction()?;
+    let current = store::current(&tx)?;
+    let row = tx.query_row(
+        "SELECT version_id,input_digest,pptx_file,findings_json,missing_pages,created_at FROM builds WHERE id=?",
+        [id], |r| Ok((r.get::<_,i64>(0)?,r.get::<_,String>(1)?,r.get::<_,String>(2)?,r.get::<_,String>(3)?,r.get::<_,String>(4)?,r.get::<_,String>(5)?)),
+    ).optional()?.ok_or_else(|| Error::Missing(format!("构建 {id} 不存在")))?;
+    let (version_id, digest, file, findings, missing, created_at) = row;
+    let findings: Value = serde_json::from_str(&findings)?;
+    let source = store::load(&tx, version_id)?;
+    let imported = digest == "imported";
+    if !imported
+        && (!findings.is_object()
+            || !findings["findings"].is_array()
+            || !matches!(findings["status"].as_str(), Some("pass" | "fail")))
+    {
+        return Err(Error::Tool(
+            "构建回读结果不可读取；请保留原始产物并按需重新构建".into(),
+        ));
+    }
+    let mut pages = Vec::new();
+    let mut content_matches = true;
+    for (index, page) in source.pages.iter().enumerate() {
+        if page.svg.is_none() {
+            continue;
+        }
+        content_matches &= current
+            .deck
+            .pages
+            .iter()
+            .any(|now| now.id == page.id && now.content == page.content);
+        pages.push(json!({"page_id":page.id,"title":page.content.title,"source_order":index+1,"pptx_slide":pages.len()+1}));
+    }
+    let input_changed = digest != build_digest(&current.deck)?;
     Ok(
-        json!({"id":id,"path":store.file(&file)?,"input_changed":changed,"warning":if changed {"当前 SVG、讲稿或构建设置已变化；下载的是最近构建，请按需重新 build"} else {""},"missing_pages":status["missing_pages"],"stale_pages":status["stale_pages"],"build_missing_pages":serde_json::from_str::<Value>(&missing)?}),
+        json!({"id":id,"version_id":version_id,"created_at":created_at,"pptx_url":file_url(&file),
+        "findings":findings,"pages":pages,"build_missing_pages":serde_json::from_str::<Value>(&missing)?,
+        "current_version":current.version,"input_changed":input_changed,"readback_available":!imported,
+        "readback_matches_current":if imported {Value::Null} else {json!(!input_changed && content_matches)}}),
     )
+}
+
+pub fn export_pptx(project: &Path) -> Result<Value> {
+    let mut store = Store::open(project)?;
+    let tx = store.connection.transaction()?;
+    let deck = store::current(&tx)?.deck;
+    let mut selected = default_build(&tx, &deck)?
+        .ok_or_else(|| Error::Input("尚无构建；请先运行 deck build".into()))?;
+    let file = selected["file"]
+        .as_str()
+        .ok_or_else(|| Error::Tool("构建缺少文件引用".into()))?;
+    selected["path"] = json!(store::file_path(&store.root, file)?);
+    selected.as_object_mut().map(|value| value.remove("file"));
+    let status = artifact_status(&deck)?;
+    selected["missing_pages"] = status["missing_pages"].clone();
+    selected["stale_pages"] = status["stale_pages"].clone();
+    selected["stale_images"] = status["stale_images"].clone();
+    selected["incomplete_basis_pages"] = status["incomplete_basis_pages"].clone();
+    Ok(selected)
 }
 
 pub fn doctor(fonts: &[String]) -> Result<Value> {
     crate::tools::invoke("doctor", &json!({"fonts":fonts}))
+}
+
+#[cfg(test)]
+mod build_selection_tests {
+    use super::*;
+
+    #[test]
+    fn legacy_basis_survives_format_upgrade_and_does_not_claim_purpose_coverage() {
+        let temp = tempfile::tempdir().unwrap();
+        let mut store = Store::create(temp.path(), &Deck::default()).unwrap();
+        let mut deck = Deck::default();
+        deck.pages.push(Page {
+            id: "p1".into(),
+            ..Page::default()
+        });
+        let legacy = calculate_basis("svg", &deck, &deck.pages[0], true).unwrap();
+        deck.pages[0].svg = Some(crate::model::Artifact {
+            file: "historical.svg".into(),
+            basis: legacy.clone(),
+        });
+        let tx = store.transaction().unwrap();
+        store::append(&tx, &deck, "Legacy fixture").unwrap();
+        tx.commit().unwrap();
+        store
+            .connection
+            .pragma_update(None, "user_version", 4)
+            .unwrap();
+        drop(store);
+        let upgraded = Store::open(temp.path()).unwrap();
+        assert_eq!(
+            upgraded
+                .connection
+                .pragma_query_value(None, "user_version", |r| r.get::<_, i64>(0))
+                .unwrap(),
+            5
+        );
+        assert_eq!(
+            upgraded.current().unwrap().deck.pages[0]
+                .svg
+                .as_ref()
+                .unwrap()
+                .basis,
+            legacy
+        );
+        let old_v2 = basis("svg", &deck, &deck.pages[0]).unwrap();
+        deck.pages[0].purpose = "Changed purpose".into();
+        assert_eq!(
+            current_basis_for("svg", &legacy, &deck, &deck.pages[0]).unwrap(),
+            legacy
+        );
+        assert_ne!(basis("svg", &deck, &deck.pages[0]).unwrap(), old_v2);
+        let status = artifact_status(&deck).unwrap();
+        assert_eq!(status["stale_pages"], json!([]));
+        assert_eq!(status["incomplete_basis_pages"], json!(["p1"]));
+    }
+
+    #[test]
+    fn persisted_readback_compares_content_and_preserves_import_and_corruption_identity() {
+        let temp = tempfile::tempdir().unwrap();
+        let mut store = Store::create(temp.path(), &Deck::default()).unwrap();
+        let file = store.add_file(b"synthetic SVG", "svg").unwrap();
+        let mut deck = Deck::default();
+        deck.pages.push(Page {
+            id: "p1".into(),
+            ..Page::default()
+        });
+        deck.pages[0].svg = Some(crate::model::Artifact {
+            file,
+            basis: basis("svg", &deck, &deck.pages[0]).unwrap(),
+        });
+        let tx = store.transaction().unwrap();
+        let source = store::append(&tx, &deck, "Source").unwrap();
+        tx.commit().unwrap();
+        let report = json!({"status":"pass","findings":[],"visual_review":"not_evaluated","desktop_editing":"not_evaluated"});
+        store.connection.execute("INSERT INTO builds(version_id,input_digest,pptx_file,findings_json,missing_pages) VALUES (?,?, 'synthetic.pptx',?, '[]')",rusqlite::params![source,build_digest(&deck).unwrap(),report.to_string()]).unwrap();
+        let detail = build_detail(temp.path(), 1).unwrap();
+        assert_eq!(detail["readback_matches_current"], true);
+        assert_eq!(detail["pages"][0]["pptx_slide"], 1);
+        deck.pages[0].content.title = "Changed text".into();
+        let tx = store.transaction().unwrap();
+        store::append(&tx, &deck, "Content only").unwrap();
+        tx.commit().unwrap();
+        let detail = build_detail(temp.path(), 1).unwrap();
+        assert_eq!(detail["input_changed"], false);
+        assert_eq!(detail["readback_matches_current"], false);
+        store
+            .connection
+            .execute("UPDATE builds SET findings_json='broken' WHERE id=1", [])
+            .unwrap();
+        assert!(build_detail(temp.path(), 1).is_err());
+        assert_eq!(workspace(temp.path()).unwrap()["default_build"]["id"], 1);
+        store
+            .connection
+            .execute(
+                "UPDATE builds SET input_digest='imported',findings_json='[]' WHERE id=1",
+                [],
+            )
+            .unwrap();
+        let detail = build_detail(temp.path(), 1).unwrap();
+        assert_eq!(detail["readback_available"], false);
+        assert!(detail["readback_matches_current"].is_null());
+        assert!(matches!(
+            build_detail(temp.path(), 99),
+            Err(Error::Missing(_))
+        ));
+    }
+
+    #[test]
+    fn matching_build_wins_over_later_completion_and_restore_can_select_older_id() {
+        let temp = tempfile::tempdir().unwrap();
+        let mut store = Store::create(temp.path(), &Deck::default()).unwrap();
+        let mut older = Deck::default();
+        older.pages.push(Page {
+            id: "p1".into(),
+            notes: "old".into(),
+            ..Page::default()
+        });
+        let mut current = older.clone();
+        current.pages[0].notes = "new".into();
+        let old_file = store.add_file(b"old build", "pptx").unwrap();
+        let current_file = store.add_file(b"current build", "pptx").unwrap();
+        for (deck, file) in [
+            (&older, &old_file),
+            (&current, &current_file),
+            (&older, &old_file),
+        ] {
+            store.connection.execute("INSERT INTO builds(version_id,input_digest,pptx_file,findings_json,missing_pages) VALUES (1,?,?, '{}','[]')", rusqlite::params![build_digest(deck).unwrap(), file]).unwrap();
+        }
+        assert_eq!(
+            default_build(&store.connection, &current).unwrap().unwrap()["id"],
+            2
+        );
+        assert_eq!(
+            default_build(&store.connection, &older).unwrap().unwrap()["id"],
+            3
+        );
+        let tx = store.transaction().unwrap();
+        store::append(&tx, &current, "Current inputs").unwrap();
+        tx.commit().unwrap();
+        let export = export_pptx(temp.path()).unwrap();
+        assert_eq!(export["id"], 2);
+        assert_eq!(export["input_changed"], false);
+        assert_eq!(
+            std::fs::read(export["path"].as_str().unwrap()).unwrap(),
+            b"current build"
+        );
+        current.pages[0].notes = "unbuilt".into();
+        let fallback = default_build(&store.connection, &current).unwrap().unwrap();
+        assert_eq!(fallback["id"], 3);
+        assert_eq!(fallback["input_changed"], true);
+        std::fs::remove_file(store.file(&current_file).unwrap()).unwrap();
+        assert!(matches!(export_pptx(temp.path()), Err(Error::Missing(_))));
+    }
 }

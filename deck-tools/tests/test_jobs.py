@@ -341,3 +341,32 @@ def test_invalid_svg_cli_reports_element_without_publishing_file(tmp_path):
     assert not result.stdout
     assert json.loads(result.stderr)["element_id"] == "broken"
     assert not Path(job["output"]).exists()
+
+
+@pytest.mark.parametrize("group,kind", [("labels", "label"), ("footnotes", "footnote"), ("callouts", "callout")])
+def test_nested_text_items_keep_ids_paths_and_missing_text(tmp_path, group, kind):
+    job = job_fixture(tmp_path)
+    child = {"id": "child", "text": "Only valid for version 2", "children": [
+        {"id": "grandchild", "text": "Nested condition"}]}
+    parent = {"id": "parent", "text": "", "children": [child]}
+    job["pages"][0]["content"][group] = [parent]
+    atoms = visible_atoms(projection(job["pages"][0]))
+    atom = next(a for a in atoms if a["text"] == child["text"])
+    assert atom["atom_id"] == f"atom:p1:{kind}:child:text"
+    assert atom["pointer"] == f"/customer_visible/{group}/0/children/0/text"
+    report = compile_job(job)["findings"]["findings"]
+    assert any(f["code"] == "missing_visible_atom" and f["atom_id"] == atom["atom_id"] for f in report)
+    svg = Path(job["pages"][0]["svg"])
+    body = ""
+    for index, item in enumerate([child, child["children"][0]]):
+        node = f' data-node-ref="{item["id"]}"' if group == "labels" else ""
+        body += (f'<text data-atom-id="atom:p1:{kind}:{item["id"]}:text"{node} '
+                 f'x="60" y="{200 + index * 60}" font-family="{job["fonts"][0]}" '
+                 f'font-size="24">{item["text"]}</text>')
+    svg.write_text(svg.read_text().replace("</svg>", body + "</svg>"))
+    job["output"] = str(tmp_path / "complete")
+    assert not any(f["code"] == "missing_visible_atom" for f in compile_job(job)["findings"]["findings"])
+    parent["children"].insert(0, {"id": "sibling", "text": "Other"})
+    moved = next(a for a in visible_atoms(projection(job["pages"][0])) if a["text"] == child["text"])
+    assert moved["atom_id"] == atom["atom_id"]
+    assert moved["pointer"].endswith("/children/1/text")

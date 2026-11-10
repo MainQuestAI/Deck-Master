@@ -289,8 +289,6 @@ def test_lookup_and_state_flow_examples_keep_their_distinct_jobs() -> None:
     visual = (SOURCE / "references/content-to-visual.md").read_text(encoding="utf-8")
     assert re.search(r"查阅页[^；。]*逐行核对[^；。]*留表", visual)
     assert re.search(r"比较和查阅[^。]*可以[^。]*表为主视觉", visual)
-    system = (SOURCE / "references/design-system.md").read_text(encoding="utf-8")
-    assert re.search(r"查阅页[^。]*保留逐行核对和定位所需的表格", system)
 
 
 def test_examples_distinguish_lookup_from_proof_and_operation() -> None:

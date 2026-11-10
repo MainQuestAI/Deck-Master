@@ -1,3 +1,4 @@
+import { isPageDraftDirty } from '../../api.js';
 import React, { useState } from 'react';
 import { useDeckMaster } from '../../context/DeckMasterContext';
 
@@ -11,7 +12,7 @@ function PageRow({ page, index }) {
   };
   return <article className="s4-panel" aria-label={`第 ${index + 1} 页 · ${title}`} aria-current={currentPage === page.id ? 'true' : undefined}>
     <div className="row between"><h2>第 {getPageNumStr(page.id)} 页 · {title}</h2><div className="row"><button className="button" onClick={() => openPage(page.id)}>阅读</button><button className="button" onClick={() => editPage(page.id)}>修改正文与讲稿</button></div></div>
-    <p className="muted">{page.purpose || '尚未填写本页目的'}{drafts[page.id] && ' · 有未保存的修改'}</p>
+    <p className="muted">{page.purpose || '尚未填写本页目的'}{isPageDraftDirty(drafts[page.id]) && ' · 有未保存的修改'}</p>
     <div className="row">
       <button className="button" disabled={busy['page-order'] || index === 0} onClick={() => move(index - 1)}>上移</button>
       <button className="button" disabled={busy['page-order'] || index === pages.length - 1} onClick={() => move(index + 1)}>下移</button>

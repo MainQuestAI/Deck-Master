@@ -349,6 +349,16 @@ print(json.dumps({'preview': str(preview), 'findings': []}))
             "{}",
             String::from_utf8_lossy(&adopted_a.stderr)
         );
+        // This call must still perform a real check. A done identical submission
+        // now returns immediately; race an unadopted submission with adoption.
+        Store::open(&project)
+            .unwrap()
+            .connection
+            .execute(
+                "UPDATE run_pages SET status='unadopted' WHERE run_id=? AND page_id='p1'",
+                [id],
+            )
+            .unwrap();
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let address = listener.local_addr().unwrap().to_string();
         let (sender, receiver) = mpsc::channel();
@@ -384,6 +394,11 @@ print(json.dumps({'preview': str(preview), 'findings': []}))
             );
             b.clone()
         } else {
+            let adopted = deck(&project, &wrapper, &script, &python)
+                .args(["run", "adopt", &id.to_string(), "p1"])
+                .output()
+                .unwrap();
+            assert!(adopted.status.success());
             a.clone()
         };
         let before = ops::get(&project, None).unwrap();

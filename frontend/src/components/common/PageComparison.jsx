@@ -18,12 +18,13 @@ function locationText(value) {
 }
 
 export default function PageComparison({ page }) {
-  const { workspace, buildResult, getPageNumStr } = useDeckMaster();
+  const { workspace, buildResult, buildLoading, buildError, getPageNumStr } = useDeckMaster();
   const [zoom, setZoom] = useState(100);
   const [horizontal, setHorizontal] = useState(50);
   const [vertical, setVertical] = useState(50);
   const canvas = workspace.deck.style?.canvas;
   const findings = (buildResult?.findings?.findings || []).filter(finding => finding.page_id === page.id);
+  const hasPageReadback = buildResult?.readback_available !== false && buildResult?.pages?.some(item => item.page_id === page.id);
   const viewStyle = {
     aspectRatio: canvas ? `${canvas.width_px} / ${canvas.height_px}` : '16 / 9',
     '--compare-scale': zoom / 100,
@@ -45,11 +46,13 @@ export default function PageComparison({ page }) {
       </section>)}
     </div>
     <section className="s4-panel page-comparison-readback">
-      <h2>最近构建的本页回读发现{buildResult && `（${findings.length}）`}</h2>
-      {!buildResult ? <p className="muted">本次会话尚无构建回读结果，可在任务与交付中构建后查看。</p> : <>
-        <p className="muted">来自本次会话最近一次构建，可能早于当前页面。定位按回读记录显示。</p>
-        {findings.length ? <ul className="page-comparison-findings">{findings.map((finding, index) => <li key={index}>
-          <p>第 {getPageNumStr(page.id)} 页 · {formatFinding(finding)}</p>
+      <h2>{buildLoading && buildResult ? `上次读取构建 #${buildResult.id} 的本页回读发现` : '默认构建的本页回读发现'}{hasPageReadback && `（${findings.length}）`}</h2>
+      {buildLoading && <p role="status">{buildResult ? `正在刷新构建回读；暂留构建 #${buildResult.id}（来源版本 ${buildResult.version_id}）的历史结果。` : '正在读取构建回读…'}</p>}
+      {buildError && <p role="alert">回读结果不可读取：{buildError}</p>}
+      {!buildResult ? (!buildLoading && <p className="muted">尚无可展示的构建回读；只有单页检查时，不代表已有整稿构建回读。</p>) : <>
+        <p className="muted">来源版本 {buildResult.version_id} · {buildResult.created_at} · {buildResult.readback_available === false ? '导入成品没有构建回读' : buildResult.readback_matches_current === true ? '检查输入仍匹配，未重新执行检查' : '历史检查不代表当前正文已检查'}。定位按构建时记录显示。</p>
+        {!hasPageReadback ? <p className="muted">{buildResult.readback_available === false ? '该导入成品没有构建回读。' : '本页未参与该次构建，没有本页回读。'}</p> : findings.length ? <ul className="page-comparison-findings">{findings.map((finding, index) => <li key={index}>
+          <p>构建时第 {buildResult.pages?.find(item => item.page_id === page.id)?.source_order ?? "未知"} 页 · {formatFinding(finding)}</p>
           <dl>{locatorLabels.filter(([key]) => finding[key] != null).map(([key, label]) => <div key={key}><dt>{label}</dt><dd>{locationText(finding[key])}</dd></div>)}</dl>
           {finding.native_carriers?.map((carrier, carrierIndex) => <dl key={carrierIndex}>
             {[

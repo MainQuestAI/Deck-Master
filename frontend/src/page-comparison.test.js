@@ -13,6 +13,7 @@ const { createElement, act } = await import('react');
 const { createRoot } = await import('react-dom/client');
 const { DeckMasterProvider, useDeckMaster } = await import('./context/DeckMasterContext.jsx');
 const { default: PageReaderView } = await import('./components/scenes/PageReaderView.jsx');
+const { default: DeliveryView } = await import('./components/scenes/DeliveryView.jsx');
 const { formatFinding, fileUrl } = await import('./api.js');
 const originalFetch = globalThis.fetch;
 let root;
@@ -37,7 +38,7 @@ function Probe() {
   if (!state.workspace) return null;
   return createElement('div', null,
     state.actionError && createElement('p', { role: 'alert' }, state.actionError),
-    createElement(PageReaderView));
+    createElement(state.scene === 'delivery' ? DeliveryView : PageReaderView));
 }
 
 async function mount(t, first = page('p1')) {
@@ -55,7 +56,8 @@ async function mount(t, first = page('p1')) {
     const method = options.method || 'GET';
     const body = options.body && JSON.parse(options.body);
     requests.push({ url, method, body });
-    if (url === '/api/build') return Response.json({ id: 1, findings: { findings: buildFindings } });
+    if (url === '/api/build') { payload.default_build = { id: 1, version_id: 7 }; return Response.json({ id: 1 }); }
+    if (url === '/api/builds/1') return Response.json({ id: 1, version_id: 7, current_version: payload.version, readback_available: true, readback_matches_current: true, pages: payload.deck.pages.map((page, index) => ({ page_id: page.id, source_order: index + 1 })), findings: { findings: buildFindings } });
     if (url === '/api/reviews') {
       if (reviewFails) return Response.json({ error: '暂时无法保存' }, { status: 500 });
       const review = { id: 12, version_id: 7, page_id: null, method: 'human', ...body };
@@ -101,6 +103,27 @@ afterEach(async () => {
   globalThis.fetch = originalFetch;
   document.body.innerHTML = '<div id="root"></div>';
 });
+
+for (const [missing, stale, historicalMissing, changed] of [
+  [['p2'], ['p1'], ['p2'], false],
+  [[], [], ['p2'], true],
+  [[], [], [], false],
+]) {
+  test(`delivery separates current SVG status from build summary (${missing}/${historicalMissing}/${changed})`, async t => {
+    await mount(t);
+    payload.artifact_status = { missing_pages: missing, stale_pages: stale, stale_images: [] };
+    payload.default_build = { id: 1, version_id: 6, build_missing_pages: historicalMissing,
+      input_changed: changed, warning: changed ? 'Historical build inputs differ' : '' };
+    await act(async () => { await state.refresh(); state.setScene('delivery'); });
+    const [current, summary] = document.querySelectorAll('.s4-status');
+    assert.ok(current.textContent.includes(`缺 SVG：${missing.length ? '第 02 页' : '无'}`));
+    assert.ok(current.textContent.includes(`SVG 依据已变：${stale.length ? '第 01 页' : '无'}`));
+    assert.equal(summary.textContent.includes('缺 SVG'), false);
+    assert.equal(summary.textContent.includes('SVG 依据已变'), false);
+    assert.equal(summary.textContent.includes('该次构建未包含：第 02 页'), historicalMissing.length > 0);
+    assert.equal(summary.textContent.includes('Historical build inputs differ'), changed);
+  });
+}
 
 test('same selected page compares original on the left and adopted preview on the right with stale status', async t => {
   await mount(t);
@@ -234,3 +257,109 @@ test('natural-language review from comparison uses the existing page scope and r
   assert.equal(requests.filter(request => request.url === '/api/reviews/12/resolve').length, 1);
   assert.equal(state.workspace.version, 7);
 });
+
+
+test('persistent details refresh for changed default IDs and ignore a late older detail', async t => {
+  await mount(t);
+  const previousFetch = globalThis.fetch;
+  let finishOld;
+  const details = [];
+  globalThis.fetch = async (url, options) => {
+    if (url.startsWith('/api/builds/')) {
+      details.push(url);
+      if (url === '/api/builds/1') return new Promise(resolve => { finishOld = resolve; });
+      return Response.json({ id: 2, version_id: 7, current_version: payload.version, readback_matches_current: true, readback_available: true, pages: [], findings: { findings: [] } });
+    }
+    return previousFetch(url, options);
+  };
+  payload.default_build = { id: 1, version_id: 7 };
+  await act(async () => { await state.refresh(); });
+  assert.equal(typeof finishOld, 'function');
+  payload.default_build = { id: 2, version_id: 7 };
+  await act(async () => { await state.refresh(); });
+  assert.equal(state.buildResult.id, 2);
+  await act(async () => { finishOld(Response.json({ id: 1, current_version: 7, readback_matches_current: true })); });
+  assert.equal(state.buildResult.id, 2);
+  await act(async () => { await state.refresh(); await state.refresh(); });
+  assert.deepEqual(details, ['/api/builds/1', '/api/builds/2']);
+  payload.version += 1;
+  await act(async () => { await state.refresh(); });
+  assert.equal(details.length, 3);
+  assert.equal(state.buildResult.current_version, payload.version);
+});
+
+for (const scene of ['page', 'delivery']) {
+  test(`${scene} keeps the old readback labelled during refresh and rejects late responses`, async t => {
+    await mount(t);
+    payload.default_build = { id: 1, version_id: 7 };
+    await act(async () => { await state.refresh(); });
+    if (scene === 'page') await click('原图／编译预览对照');
+    else await act(async () => { state.setScene('delivery'); });
+    const original = state.buildResult;
+    await act(async () => { await state.refresh(); });
+    assert.equal(state.buildResult, original);
+    const previousFetch = globalThis.fetch;
+    const pending = [];
+    globalThis.fetch = (url, options) => url.startsWith('/api/builds/')
+      ? new Promise(resolve => { pending.push({ url, resolve, signal: options.signal }); })
+      : previousFetch(url, options);
+    payload.version = 8;
+    await act(async () => { await state.refresh(); });
+    const panel = () => document.querySelector(scene === 'page' ? '.page-comparison-readback' : '.s4-panel');
+    assert.equal(state.buildLoading, true);
+    assert.equal(state.buildResult.id, 1);
+    assert.equal(state.buildResult.readback_matches_current, null);
+    assert.ok(panel().textContent.includes('正在刷新构建回读'));
+    assert.ok(panel().textContent.includes('来源版本 7'));
+    assert.equal(panel().textContent.includes('尚无可展示的构建回读'), false);
+    payload.default_build = { id: 2, version_id: 8 };
+    await act(async () => { await state.refresh(); });
+    assert.equal(pending[0].signal.aborted, true);
+    assert.ok(panel().textContent.includes('暂留构建 #1'));
+    await act(async () => { pending[1].resolve(Response.json({ ...original, id: 2, version_id: 8,
+      current_version: 8, readback_matches_current: true })); });
+    assert.equal(state.buildResult.id, 2);
+    assert.equal(state.buildLoading, false);
+    await act(async () => { pending[0].resolve(Response.json({ ...original, current_version: 8 })); });
+    assert.equal(state.buildResult.id, 2);
+    assert.equal(state.buildResult.readback_matches_current, true);
+    payload.version = 9;
+    await act(async () => { await state.refresh(); });
+    assert.equal(state.buildLoading, true);
+    await act(async () => { pending[2].resolve(Response.json({ error: 'Unreadable latest report' }, { status: 500 })); });
+    assert.equal(state.buildLoading, false);
+    assert.equal(state.buildResult, null);
+    assert.ok(panel().querySelector('[role="alert"]').textContent.includes('Unreadable latest report'));
+  });
+}
+
+test('detail transport errors remain visible and do not become empty passing findings', async t => {
+  await mount(t);
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = (url, options) => url.startsWith('/api/builds/')
+    ? Promise.resolve(Response.json({ error: 'Stored readback is unreadable' }, { status: 500 }))
+    : previousFetch(url, options);
+  payload.default_build = { id: 1, version_id: 7 };
+  await act(async () => { await state.refresh(); });
+  await click('原图／编译预览对照');
+  assert.equal(state.buildResult, null);
+  assert.equal(state.buildError, 'Stored readback is unreadable');
+  assert.ok(document.querySelector('[role="alert"]').textContent.includes('Stored readback is unreadable'));
+});
+
+for (const imported of [true, false]) {
+  test(`a page without a stored report is not shown as zero findings (imported=${imported})`, async t => {
+    await mount(t);
+    const previousFetch = globalThis.fetch;
+    globalThis.fetch = (url, options) => url.startsWith('/api/builds/')
+      ? Promise.resolve(Response.json({ id: 1, version_id: 7, current_version: 7, readback_available: !imported, pages: [], findings: { findings: [] } }))
+      : previousFetch(url, options);
+    payload.default_build = { id: 1, version_id: 7 };
+    await act(async () => { await state.refresh(); });
+    await click('原图／编译预览对照');
+    const panel = document.querySelector('.page-comparison-readback');
+    assert.equal(panel.querySelector('h2').textContent.includes('（0）'), false);
+    assert.equal(panel.querySelectorAll('.page-comparison-findings').length, 0);
+    assert.ok(panel.textContent.includes(imported ? '该导入成品没有构建回读' : '本页未参与该次构建'));
+  });
+}

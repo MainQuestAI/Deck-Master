@@ -23,8 +23,8 @@ The previous Python workbench and official old-project exporter have been remove
 
 [`rust.yml`](.github/workflows/rust.yml) runs Rust checks, deck-tools tests,
 WebUI checks and install-script checks on pull requests and main pushes, with
-a manual entry. Run the commands in AGENTS.md section 3 locally; CI excludes
-render tests, so real rendering needs separate local verification.
+a manual entry. Run the commands in AGENTS.md section 3 locally; core CI excludes render tests and an independent Ubuntu render job runs them;
+local full rendering verification remains required.
 
 ## DCO
 

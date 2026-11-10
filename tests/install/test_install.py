@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import os
+import shutil
 import stat
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -25,6 +27,7 @@ def _run(args: list[str], *, env: dict[str, str] | None = None) -> subprocess.Co
         text=True,
         capture_output=True,
         env=merged,
+        check=False,
     )
 
 
@@ -41,11 +44,16 @@ def _assert_roles(root: Path) -> None:
     for role in ROLES:
         directory = root / role
         assert directory.is_symlink() and directory.is_dir()
-        assert Path(os.readlink(directory)) == SOURCE / role
+        target = Path(os.readlink(directory))
+        assert target.parts[-3:] == ("current", "deck-skill", role)
+        installation = directory.resolve().parent.parent
+        assert installation.parent.name == "installations"
         assert (directory / "SKILL.md").is_file()
         assert not (directory / "SKILL.md").is_symlink()
+        assert (directory / "SKILL.md").read_bytes() == (SOURCE / role / "SKILL.md").read_bytes()
         for name in ("references", "assets"):
-            assert (directory / name).resolve() == SOURCE / name
+            assert (directory / name).resolve() == installation / "deck-skill" / name
+
 
 
 def _wrapper(root: Path, role: str, *, new_target: bool = False, relative: bool = False) -> Path:
@@ -62,31 +70,26 @@ def _wrapper(root: Path, role: str, *, new_target: bool = False, relative: bool 
 
 
 def _stub_tools(tmp_path: Path) -> Path:
+    # These doubles exercise sequencing and failures, not real package provenance.
     bin_dir = tmp_path / "stub-bin"
     bin_dir.mkdir()
-    (bin_dir / "npm").write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
-    (bin_dir / "cargo").write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
-    (bin_dir / "uv").write_text(
-        "\n".join(
-            [
-                "#!/bin/sh",
-                "dest=",
-                "prev=",
-                'for arg in "$@"; do',
-                '  if [ "$prev" = "--seed" ]; then',
-                "    dest=$arg",
-                "  fi",
-                "  prev=$arg",
-                "done",
-                'mkdir -p "$dest/bin"',
-                "printf '%s\\n' '#!/bin/sh' 'exit 0' > \"$dest/bin/python\"",
-                'chmod +x "$dest/bin/python"',
-                "exit 0",
-                "",
-            ]
-        ),
-        encoding="utf-8",
-    )
+    (bin_dir / "npm").write_text("#!/bin/sh\nexit 0\n")
+    (bin_dir / "cargo").write_text("""#!/bin/sh
+while [ "$1" != "--root" ]; do shift; done
+mkdir -p "$2/bin"
+printf '%s\\n' '#!/bin/sh' 'exit 0' > "$2/bin/deck"
+chmod +x "$2/bin/deck"
+""")
+    (bin_dir / "uv").write_text(f"""#!{sys.executable}
+import pathlib, sys
+if sys.argv[1:3] == ['python', 'find']:
+    print({sys.executable!r})
+    raise SystemExit(0)
+dest = pathlib.Path(sys.argv[-1]) / 'bin'
+dest.mkdir(parents=True)
+(dest / 'python').write_text('#!/bin/sh\\nif [ "$DECK_TEST_FAIL" = pip ] && [ "$1" = -m ]; then exit 17; fi\\nif [ "$DECK_TEST_FAIL" = validate ] && [ "$1" = -c ]; then exit 17; fi\\nexit 0\\n')
+(dest / 'python').chmod(0o755)
+""")
     for name in ("npm", "cargo", "uv"):
         (bin_dir / name).chmod(0o755)
     return bin_dir
@@ -104,14 +107,14 @@ def test_default_dry_run_prints_four_entry_plan_without_writing(tmp_path: Path) 
     output = result.stdout
     assert "cargo install" in output and str(REPO / "rust") in output
     assert "uv venv --python 3.12 --seed" in output or "python3.12 -m venv" in output
-    assert str(prefix / "share/deck/venv") in output
+    assert str(prefix / "share/deck/installations") in output and "/share/deck/venv" in output
     assert "run build" in output
     assert f"deck-bin={prefix / 'bin/deck'}" in output
     assert f"skills-root={root}" in output
     assert "skill-entry=deck action=absent" in output
     for role in ROLES:
         assert f"skill-entry={role} action=create" in output
-        assert f"ln -s {SOURCE / role} {root / role}" in output
+        assert f"ln -s {prefix / 'share/deck/current/deck-skill' / role} {root / role}" in output
     assert not prefix.exists() and not root.exists()
 
 
@@ -245,7 +248,7 @@ def test_unmanaged_deck_warns_and_preserves_entry(tmp_path: Path, occupancy: str
         assert (root / role).is_symlink()
 
 
-def test_relative_whole_directory_links_are_kept(tmp_path: Path) -> None:
+def test_relative_source_links_migrate_to_the_installed_component_group(tmp_path: Path) -> None:
     root = tmp_path / "roles"
     root.mkdir()
     for role in ROLES:
@@ -253,5 +256,454 @@ def test_relative_whole_directory_links_are_kept(tmp_path: Path) -> None:
     result = _run(["--dry-run", "--prefix", str(tmp_path / "prefix"), "--skills-root", str(root)])
     assert result.returncode == 0, result.stderr
     for role in ROLES:
-        assert f"skill-entry={role} action=keep" in result.stdout
-    assert "ln -s" not in result.stdout
+        assert f"skill-entry={role} action=replace" in result.stdout
+    assert "ln -s" in result.stdout
+
+
+@pytest.mark.parametrize("stage", ["npm", "cargo", "venv", "pip", "validate"])
+def test_preparation_failure_keeps_current_and_all_entries(tmp_path: Path, stage: str) -> None:
+    prefix = tmp_path / "prefix"
+    root = tmp_path / "roles"
+    env = _stub_env(tmp_path)
+    args = ["--prefix", str(prefix), "--skills-root", str(root)]
+    assert _run(args, env=env).returncode == 0
+    current = prefix / "share/deck/current"
+    target = current.readlink()
+    entry = (prefix / "bin/deck").read_bytes()
+    links = {role: (root / role).readlink() for role in ROLES}
+    bin_dir = tmp_path / "stub-bin"
+    if stage in ("npm", "cargo"):
+        (bin_dir / stage).write_text("#!/bin/sh\nexit 17\n")
+    elif stage == "venv":
+        path = bin_dir / "uv"
+        path.write_text(path.read_text().replace("dest = pathlib.Path", "raise SystemExit(17)\ndest = pathlib.Path"))
+    else:
+        env["DECK_TEST_FAIL"] = stage
+    result = _run(args, env=env)
+    assert result.returncode == 17, result.stderr
+    assert ("validate" if stage == "validate" else "prepare") in result.stderr
+    assert current.readlink() == target
+    assert (prefix / "bin/deck").read_bytes() == entry
+    assert {role: (root / role).readlink() for role in ROLES} == links
+
+
+def test_unknown_binary_is_not_executed_or_replaced(tmp_path: Path) -> None:
+    prefix = tmp_path / "prefix"
+    entry = prefix / "bin/deck"
+    entry.parent.mkdir(parents=True)
+    marker = tmp_path / "executed"
+    source = f"#!/bin/sh\ntouch '{marker}'\n"
+    entry.write_text(source)
+    entry.chmod(0o755)
+    result = _run(["--prefix", str(prefix), "--skills-root", str(tmp_path / "roles")], env=_stub_env(tmp_path))
+    assert result.returncode == 2
+    assert entry.read_text() == source
+    assert not marker.exists()
+
+
+def _owned_legacy_source(tmp_path: Path, prefix: Path) -> Path:
+    import json
+    import shutil
+    source = tmp_path / "legacy-source"
+    (source / "rust/target/release").mkdir(parents=True)
+    (source / "rust/Cargo.toml").write_text('[package]\nname="deck"\n')
+    (source / "rust/target/release/deck").write_bytes((prefix / "bin/deck").read_bytes())
+    (source / "deck-tools").mkdir()
+    (source / "deck-tools/pyproject.toml").write_text('[project]\nname="deck-tools"\n')
+    shutil.copytree(SOURCE, source / "deck-skill", symlinks=True)
+    (prefix / ".crates2.json").write_text(json.dumps({"installs": {f"deck 1.1.2 (path+file://{source / 'rust'})": {"bins": ["deck"]}}}))
+    return source
+
+
+def test_cargo_owned_binary_and_source_links_migrate_without_touching_old_venv(tmp_path: Path) -> None:
+    prefix = tmp_path / "prefix"
+    entry = prefix / "bin/deck"
+    entry.parent.mkdir(parents=True)
+    entry.write_text("owned old binary")
+    legacy = _owned_legacy_source(tmp_path, prefix)
+    old_venv = prefix / "share/deck/venv"
+    old_venv.mkdir(parents=True)
+    (old_venv / "author-path").write_text("keep old environment")
+    roles = tmp_path / "roles"
+    roles.mkdir()
+    for role in ROLES:
+        (roles / role).symlink_to(legacy / "deck-skill" / role)
+    env = _stub_env(tmp_path)
+    args = ["--prefix", str(prefix), "--skills-root", str(roles)]
+    result = _run(args, env=env)
+    assert result.returncode == 0, result.stderr
+    assert (old_venv / "author-path").read_text() == "keep old environment"
+    assert entry.read_text().startswith("#!/usr/bin/env bash")
+    _assert_roles(roles)
+    assert _run(args, env=env).returncode == 0
+
+
+def test_interrupted_first_migration_reports_stage_and_can_retry(tmp_path: Path) -> None:
+    prefix = tmp_path / "prefix"
+    entry = prefix / "bin/deck"
+    entry.parent.mkdir(parents=True)
+    entry.write_text("owned old binary")
+    _owned_legacy_source(tmp_path, prefix)
+    root = tmp_path / "roles"
+    root.mkdir()
+    for role in ROLES:
+        (root / role).symlink_to(SOURCE / role)
+    env = _stub_env(tmp_path)
+    args = ["--prefix", str(prefix), "--skills-root", str(root)]
+    cargo = tmp_path / "stub-bin/cargo"
+    original_cargo = cargo.read_text()
+    cargo.write_text(original_cargo + f'\nchmod 555 "{entry.parent}"\n')
+    try:
+        failed = _run(args, env=env)
+    finally:
+        entry.parent.chmod(0o755)
+        cargo.write_text(original_cargo)
+    assert failed.returncode != 0
+    assert "install-entries" in failed.stderr
+    assert entry.read_text() == "owned old binary"
+    assert (prefix / "share/deck/current").is_symlink()
+    assert _run(args, env=env).returncode == 0
+    _assert_roles(root)
+
+
+
+@pytest.mark.parametrize("replacement", ["foreign replacement", "managed OLD binary"])
+def test_stale_cargo_record_does_not_authorize_replacing_foreign_binary(tmp_path: Path, replacement: str) -> None:
+    prefix = tmp_path / "prefix"
+    entry = prefix / "bin/deck"
+    entry.parent.mkdir(parents=True)
+    entry.write_text("managed old binary")
+    _owned_legacy_source(tmp_path, prefix)
+    entry.write_text(replacement)
+    result = _run(["--prefix", str(prefix), "--skills-root", str(tmp_path / "roles")], env=_stub_env(tmp_path))
+    assert result.returncode == 2
+    assert entry.read_text() == replacement
+
+
+def _interrupt_entry(tmp_path: Path, root: Path, point: str) -> Path:
+    tool = "ln" if point == "role-link" else "rm" if point == "wrapper-links" else "rmdir"
+    real = shutil.which(tool)
+    assert real is not None
+    target = root / ("deck-content" if point == "role-link" else "deck-master")
+    failure = tmp_path / "stub-bin" / tool
+    if point == "wrapper-links":
+        operation = f'"{real}" -- "{target}/SKILL.md"\nexit 17'
+        match = target / "SKILL.md"
+    else:
+        operation = "exit 17"
+        match = target
+    failure.write_text(f'''#!/bin/sh
+for arg do
+  if [ "$arg" = "{match}" ]; then
+    {operation}
+  fi
+done
+exec "{real}" "$@"
+''')
+    failure.chmod(0o755)
+    return failure
+
+
+@pytest.mark.parametrize("point", ["role-link", "wrapper-links", "wrapper-directory"])
+def test_entry_migration_retry_after_destructive_step(tmp_path: Path, point: str) -> None:
+    prefix = tmp_path / "prefix"
+    entry = prefix / "bin/deck"
+    entry.parent.mkdir(parents=True)
+    entry.write_text("owned old binary")
+    legacy = _owned_legacy_source(tmp_path, prefix)
+    old_venv = prefix / "share/deck/venv"
+    old_venv.mkdir(parents=True)
+    (old_venv / "author-path").write_text("keep old environment")
+    root = tmp_path / "roles"
+    root.mkdir()
+    if point == "role-link":
+        for role in ROLES:
+            (root / role).symlink_to(legacy / "deck-skill" / role)
+    else:
+        for role in ROLES:
+            _wrapper(root, role)
+    env = _stub_env(tmp_path)
+    args = ["--prefix", str(prefix), "--skills-root", str(root)]
+    failure = _interrupt_entry(tmp_path, root, point)
+    interrupted = _run(args, env=env)
+    assert interrupted.returncode == 17, interrupted.stderr
+    assert entry.read_text().startswith("#!/usr/bin/env bash")
+    if point == "role-link":
+        assert (root / "deck-master").readlink() == prefix / "share/deck/current/deck-skill/deck-master"
+        assert not (root / "deck-content").exists()
+    else:
+        wrapper = root / "deck-master"
+        assert wrapper.is_dir() and not wrapper.is_symlink()
+        assert {path.name for path in wrapper.iterdir()} == (
+            {"references", "assets"} if point == "wrapper-links" else set()
+        )
+    failure.unlink()
+    retry = _run(args, env=env)
+    assert retry.returncode == 0, retry.stderr
+    _assert_roles(root)
+    assert (old_venv / "author-path").read_text() == "keep old environment"
+    assert (legacy / "rust/target/release/deck").read_text() == "owned old binary"
+    assert "install-entries" in interrupted.stderr
+    assert not list((prefix / "share/deck/entry-migrations").glob("*.json"))
+
+
+@pytest.mark.parametrize("mutation", ["extra", "hidden", "retarget", "file", "directory"])
+def test_migration_receipt_does_not_authorize_changed_wrapper(tmp_path: Path, mutation: str) -> None:
+    root = tmp_path / "roles"
+    for role in ROLES:
+        _wrapper(root, role)
+    prefix = tmp_path / "prefix"
+    env = _stub_env(tmp_path)
+    args = ["--prefix", str(prefix), "--skills-root", str(root)]
+    failure = _interrupt_entry(tmp_path, root, "wrapper-links")
+    assert _run(args, env=env).returncode == 17
+    failure.unlink()
+    wrapper = root / "deck-master"
+    if mutation in ("extra", "hidden"):
+        (wrapper / (".notes" if mutation == "hidden" else "NOTES")).write_text("author note")
+    elif mutation == "retarget":
+        (wrapper / "assets").unlink()
+        (wrapper / "assets").symlink_to(tmp_path / "foreign")
+    elif mutation == "file":
+        (wrapper / "assets").unlink()
+        (wrapper / "assets").write_text("author asset")
+    else:
+        wrapper.rename(root / "preserved-wrapper")
+        wrapper.mkdir()
+    before = {str(p): os.readlink(p) if p.is_symlink() else p.read_bytes() if p.is_file() else None
+              for p in root.rglob("*")}
+    current = (prefix / "share/deck/current").readlink()
+    retry = _run(args, env=env)
+    assert retry.returncode == 2, retry.stderr
+    assert str(wrapper) in retry.stderr
+    assert not wrapper.is_symlink()
+    assert before == {str(p): os.readlink(p) if p.is_symlink() else p.read_bytes() if p.is_file() else None
+                      for p in root.rglob("*")}
+    assert (prefix / "share/deck/current").readlink() == current
+
+
+def test_migration_receipt_does_not_authorize_retargeted_cross_checkout_link(tmp_path: Path) -> None:
+    prefix = tmp_path / "prefix"
+    entry = prefix / "bin/deck"
+    entry.parent.mkdir(parents=True)
+    entry.write_text("owned old binary")
+    legacy = _owned_legacy_source(tmp_path, prefix)
+    root = tmp_path / "roles"
+    root.mkdir()
+    for role in ROLES:
+        (root / role).symlink_to(legacy / "deck-skill" / role)
+    env = _stub_env(tmp_path)
+    args = ["--prefix", str(prefix), "--skills-root", str(root)]
+    failure = _interrupt_entry(tmp_path, root, "role-link")
+    assert _run(args, env=env).returncode == 17
+    failure.unlink()
+    changed = root / "deck-design"
+    changed.unlink()
+    changed.symlink_to(tmp_path / "foreign")
+    retry = _run(args, env=env)
+    assert retry.returncode == 2, retry.stderr
+    assert changed.readlink() == tmp_path / "foreign"
+    assert not (root / "deck-content").is_symlink()
+
+
+def _uv_missing_python(tmp_path: Path, *, failure: str = "") -> Path:
+    tool = tmp_path / "stub-bin/uv"
+    builder = tool.with_name("uv-builder")
+    tool.rename(builder)
+    downloaded = tmp_path / "downloaded-python"
+    tool.write_text(f'''#!{sys.executable}
+import os, pathlib, sys
+downloaded = pathlib.Path({str(downloaded)!r})
+if sys.argv[1:3] == ['python', 'find']:
+    if not downloaded.exists() or {failure == 'find'!r}:
+        raise SystemExit(2)
+    print({sys.executable!r})
+elif sys.argv[1:3] == ['python', 'install']:
+    if {failure == 'install'!r}:
+        raise SystemExit(17)
+    downloaded.write_text('3.12')
+else:
+    os.execv({str(builder)!r}, [{str(builder)!r}, *sys.argv[1:]])
+''')
+    tool.chmod(0o755)
+    return downloaded
+
+
+def test_uv_installs_missing_python_before_installing_components(tmp_path: Path) -> None:
+    env = _stub_env(tmp_path)
+    downloaded = _uv_missing_python(tmp_path)
+    root = tmp_path / "roles"
+    result = _run(["--prefix", str(tmp_path / "prefix"), "--skills-root", str(root)], env=env)
+    assert result.returncode == 0, result.stderr
+    assert downloaded.read_text() == "3.12"
+    _assert_roles(root)
+
+
+def test_dry_run_with_missing_python_never_downloads_or_writes(tmp_path: Path) -> None:
+    env = _stub_env(tmp_path)
+    downloaded = _uv_missing_python(tmp_path)
+    prefix = tmp_path / "prefix"
+    root = tmp_path / "roles"
+    result = _run(["--dry-run", "--prefix", str(prefix), "--skills-root", str(root)], env=env)
+    assert result.returncode == 3, result.stderr
+    assert "3.12" in result.stderr and "--dry-run" in result.stderr
+    assert "uv python install 3.12" in result.stderr
+    assert not downloaded.exists() and not prefix.exists() and not root.exists()
+
+
+@pytest.mark.parametrize("failure", ["install", "find"])
+def test_python_preparation_failure_reports_phase_without_installing_entries(tmp_path: Path, failure: str) -> None:
+    env = _stub_env(tmp_path)
+    _uv_missing_python(tmp_path, failure=failure)
+    prefix = tmp_path / "prefix"
+    root = tmp_path / "roles"
+    result = _run(["--prefix", str(prefix), "--skills-root", str(root)], env=env)
+    assert result.returncode == (17 if failure == "install" else 3), result.stderr
+    assert "prepare-python" in result.stderr
+    assert not prefix.exists() and not root.exists()
+
+
+def test_install_without_uv_uses_python312(tmp_path: Path) -> None:
+    env = _stub_env(tmp_path)
+    bin_dir = tmp_path / "stub-bin"
+    builder = bin_dir / "venv-builder"
+    (bin_dir / "uv").rename(builder)
+    python = bin_dir / "python3.12"
+    python.write_text(f'''#!{sys.executable}
+import os, sys
+if sys.argv[1:3] == ['-m', 'venv']:
+    os.execv({str(builder)!r}, [{str(builder)!r}, 'venv', sys.argv[-1]])
+os.execv({sys.executable!r}, [{sys.executable!r}, *sys.argv[1:]])
+''')
+    python.chmod(0o755)
+    for name in ("bash", "dirname", "date", "readlink", "cat", "cmp", "mkdir", "cp", "mktemp", "env", "rm", "rmdir", "ln", "chmod"):
+        executable = shutil.which(name)
+        assert executable is not None
+        (bin_dir / name).symlink_to(executable)
+    env["PATH"] = str(bin_dir)
+    root = tmp_path / "roles"
+    result = _run(["--prefix", str(tmp_path / "prefix"), "--skills-root", str(root)], env=env)
+    assert result.returncode == 0, result.stderr
+    _assert_roles(root)
+
+
+@pytest.mark.parametrize("nested", [False, True])
+def test_command_substitution_failure_reports_phase_once(tmp_path: Path, nested: bool) -> None:
+    env = _stub_env(tmp_path)
+    failure = tmp_path / "stub-bin/mktemp"
+    failure.write_text("#!/bin/sh\nexit 17\n")
+    failure.chmod(0o755)
+    if nested:
+        startup = tmp_path / "bash-startup"
+        startup.write_text('mktemp() { local result; result=$(command mktemp "$@"); printf "%s\\n" "$result"; }\n')
+        env["BASH_ENV"] = str(startup)
+    result = _run(["--prefix", str(tmp_path / "prefix"), "--skills-root", str(tmp_path / "roles")], env=env)
+    assert result.returncode == 17, result.stderr
+    assert result.stderr.count("阶段失败") == 1, result.stderr
+    assert "validate" in result.stderr
+
+
+def test_required_receipt_check_explains_changed_entry_without_removing_files(tmp_path: Path) -> None:
+    env = _stub_env(tmp_path)
+    root = tmp_path / "roles"
+    for role in ROLES:
+        _wrapper(root, role)
+    compat = root / "deck"
+    compat.symlink_to(SOURCE)
+    author = root / "deck-master/NOTES"
+    real_rm = shutil.which("rm")
+    failure = tmp_path / "stub-bin/rm"
+    failure.write_text(f'''#!{sys.executable}
+import os, pathlib, sys
+if {str(compat)!r} in sys.argv[1:]:
+    os.unlink({str(compat)!r})
+    pathlib.Path({str(author)!r}).write_text('author addition')
+else:
+    os.execv({real_rm!r}, [{real_rm!r}, *sys.argv[1:]])
+''')
+    failure.chmod(0o755)
+    result = _run(["--prefix", str(tmp_path / "prefix"), "--skills-root", str(root)], env=env)
+    assert result.returncode == 1, result.stderr
+    assert "入口在记录后发生变化" in result.stderr and str(author.parent) in result.stderr
+    assert result.stderr.count("阶段失败") == 1 and "install-entries" in result.stderr
+    assert author.read_text() == "author addition"
+    assert (author.parent / "SKILL.md").is_symlink()
+
+
+@pytest.mark.parametrize("relative", [False, True])
+def test_recreated_role_link_to_same_recorded_target_can_retry(tmp_path: Path, relative: bool) -> None:
+    prefix = tmp_path / "prefix"
+    entry = prefix / "bin/deck"
+    entry.parent.mkdir(parents=True)
+    entry.write_text("owned old binary")
+    legacy = _owned_legacy_source(tmp_path, prefix)
+    root = tmp_path / "roles"
+    root.mkdir()
+    for role in ROLES:
+        (root / role).symlink_to(legacy / "deck-skill" / role)
+    env = _stub_env(tmp_path)
+    args = ["--prefix", str(prefix), "--skills-root", str(root)]
+    failure = _interrupt_entry(tmp_path, root, "role-link")
+    assert _run(args, env=env).returncode == 17
+    failure.unlink()
+    changed = root / "deck-design"
+    changed.rename(root / "saved-role-link")
+    target = legacy / "deck-skill/deck-design"
+    changed.symlink_to(os.path.relpath(target, root) if relative else target)
+    retry = _run(args, env=env)
+    assert retry.returncode == 0, retry.stderr
+    _assert_roles(root)
+    assert (root / "saved-role-link").is_symlink()
+
+
+def test_recreated_wrapper_internal_link_still_requires_original_identity(tmp_path: Path) -> None:
+    env = _stub_env(tmp_path)
+    root = tmp_path / "roles"
+    for role in ROLES:
+        _wrapper(root, role)
+    args = ["--prefix", str(tmp_path / "prefix"), "--skills-root", str(root)]
+    failure = _interrupt_entry(tmp_path, root, "wrapper-links")
+    assert _run(args, env=env).returncode == 17
+    failure.unlink()
+    assets = root / "deck-master/assets"
+    target = assets.readlink()
+    assets.rename(root / "saved-assets-link")
+    assets.symlink_to(target)
+    retry = _run(args, env=env)
+    assert retry.returncode == 2, retry.stderr
+    assert assets.readlink() == target
+    assert not (root / "deck-master").is_symlink()
+
+
+def test_python312_named_shim_with_wrong_version_is_rejected(tmp_path: Path) -> None:
+    env = _stub_env(tmp_path)
+    bin_dir = tmp_path / "stub-bin"
+    (bin_dir / "uv").unlink()
+    python = bin_dir / "python3.12"
+    python.write_text(f'''#!{sys.executable}
+import sys
+sys.version_info = (3, 13, 0)
+exec(sys.argv[2])
+''')
+    python.chmod(0o755)
+    for name in ("bash", "dirname", "date"):
+        (bin_dir / name).symlink_to(shutil.which(name))
+    env["PATH"] = str(bin_dir)
+    prefix = tmp_path / "prefix"
+    result = _run(["--prefix", str(prefix)], env=env)
+    assert result.returncode == 3, result.stderr
+    assert "prepare-python" in result.stderr and "Python 3.12" in result.stderr
+    assert not prefix.exists()
+
+
+def test_successful_validation_removes_only_its_temporary_probe(tmp_path: Path) -> None:
+    env = _stub_env(tmp_path)
+    temporary = tmp_path / "temporary"
+    temporary.mkdir()
+    sentinel = temporary / "author.txt"
+    sentinel.write_text("keep this")
+    env["TMPDIR"] = str(temporary)
+    result = _run(["--prefix", str(tmp_path / "prefix"), "--skills-root", str(tmp_path / "roles")], env=env)
+    assert result.returncode == 0, result.stderr
+    assert list(temporary.iterdir()) == [sentinel]
+    assert sentinel.read_text() == "keep this"

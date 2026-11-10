@@ -41,12 +41,13 @@ and permissions.
 ./scripts/install.sh
 ```
 
-The script builds the Web UI, installs the `deck` binary at `<prefix>/bin/deck`
-(default prefix `~/.local`, so `~/.local/bin/deck`), and creates a Python 3.12
-venv for `deck-tools` at `<prefix>/share/deck/venv`. The binary is not
-`<prefix>/deck`. `--dry-run` prints the plan, including `deck-bin`, and checks
-the selected skill paths without writing. A finished install prints that same
-`deck` path and the `deck` currently resolved on `PATH`.
+The script prepares the CLI, embedded frontend, non-editable Python package and
+four role resource directories together in `<prefix>/share/deck/installations/`.
+A single `<prefix>/share/deck/current` link selects the completed directory.
+`<prefix>/bin/deck` is the fixed entry and resolves the physical installation
+before executing it. The venv is created in its final position. Failed
+preparation leaves the old installation selected; old directories are retained
+for existing processes. `--dry-run` prints the plan without writing.
 
 If `<prefix>/bin` is not on `PATH`, add it or call `<prefix>/bin/deck`. A
 non-default `--prefix` means the skill and
@@ -57,7 +58,7 @@ Skill installation:
 - With no skill flag, install the four role entries `deck-master`,
   `deck-content`, `deck-design`, and `deck-review` into `~/.codex/skills`.
 - `--skills-root DIR` installs the same four entries into `DIR` instead.
-- Each entry is a symlink to the complete `deck-skill/<role>` directory.
+- Each entry is a symlink through `current/deck-skill/<role>` to the installed copy.
   Its `SKILL.md` is a regular file; relative `references` and `assets` links
   resolve to the shared method source. Codex can discover these directories.
 - The compatibility entry `deck` is no longer installed. `--skill-dir` has
@@ -68,7 +69,7 @@ if it points at this source's `deck-skill/`, and installs the four roles.
 For users with `deck` plus old role wrappers, rerunning also upgrades wrappers
 that contain only the three managed `SKILL.md`, `references`, and `assets`
 symlinks. It replaces each wrapper with a whole-directory symlink. Existing
-whole-directory links to this source are kept.
+links to this source migrate to current; current links are kept.
 
 Any extra file in a wrapper, or another entry occupying a role name, causes
 exit 2 before any writes; the script prints the path and target. This includes
@@ -83,9 +84,18 @@ prints an `install-scripts` warning for the rest. `frontend/package.json`
 allows the locked `esbuild` and `fsevents` versions so `npm ci` can install
 esbuild's platform binary. npm 10 ignores that field and still runs the scripts.
 
-A fresh install finds deck-tools in the prefix venv, so it does not need
-`DECK_TOOLS_PYTHON`. deck-tools is an editable install of this checkout;
-moving or deleting the checkout leaves that venv unable to import it.
+Standard installs do not need `DECK_TOOLS_PYTHON` and survive moving the source
+checkout. Use `scripts/install.sh` for upgrades. Unknown CLI entries are retained
+and reported; supported Cargo installations migrate using their installation
+records. Old venvs and source directories are not moved or removed.
+
+For development, use an independent prefix and this worktree's Python:
+
+```bash
+export DECK_TOOLS_PYTHON="$PWD/.venv/bin/python"
+cargo install --path rust --root "$PWD/.dev-prefix"
+export PATH="$PWD/.dev-prefix/bin:$PATH"
+```
 
 After install:
 
@@ -111,8 +121,70 @@ still imports an existing `legacy-export.v1` archive into a new directory.
 
 ## Upgrade
 
-Re-running `scripts/install.sh` upgrades an existing install. An existing
-venv is reused and the `deck` binary is overwritten.
+Re-running `scripts/install.sh` prepares a new complete directory and switches
+`current` after validation. It creates a new venv; existing processes retain their
+old tools. A supported legacy Cargo binary is migrated only when its installation
+record and associated built artifact agree. Unknown entries are preserved.
+
+If the legacy checkout was rebuilt after installation, its current
+`rust/target/release/deck` may differ from the installed binary. Exit 2 then
+means ownership could not be confirmed; the installer does not replace it.
+Keep the old source and venv. Verify the Cargo record, checkout and reported
+entries before making a manual change. If the original built artifact is still
+available, restore that verified artifact in the original checkout and retry
+there. Otherwise, back up the confirmed old CLI and each reported legacy role
+entry individually to a new directory outside `bin` and the skills root,
+preserving symlinks themselves and any user-added files, then rerun installation.
+Stop the legacy Deck and tool processes before this manual backup procedure.
+Never delete a symlink's target. Moving only `bin/deck` away and starting from a
+different checkout loses the evidence used to identify the old role links;
+it is not a complete cross-checkout migration procedure.
+
+## Remove one confirmed historical installation
+
+The installer never cleans up historical groups. Stop all Deck and tool
+processes and prevent them from restarting during manual cleanup. Choose one
+confirmed obsolete directory and preserve any files you added there first.
+The following example rejects `current`, symlinks, paths outside the installation
+root, an observed running process, and incomplete process checks. It needs
+`lsof`; missing tools or inspection errors stop cleanup. The checks are a
+snapshot, so keep processes stopped until the command finishes. Do not replace
+the single directory name with `installations/*`.
+
+```bash
+prefix="$HOME/.local"
+old_name='<confirmed-old-directory>'
+"$prefix/share/deck/current/share/deck/venv/bin/python" - "$prefix" "$old_name" <<'PY'
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+prefix = Path(sys.argv[1]).resolve(strict=True)
+root = (prefix / 'share/deck/installations').resolve(strict=True)
+name = sys.argv[2]
+if name in ('', '.', '..') or Path(name).name != name:
+    raise SystemExit('请指定 installations 下一个已确认的旧目录名；未删除。')
+old = root / name
+current = (prefix / 'share/deck/current').resolve(strict=True)
+if old.is_symlink() or not old.is_dir() or old.resolve().parent != root:
+    raise SystemExit('目标不是 installations 下的普通目录；未删除。')
+if current.parent != root or old.resolve() == current:
+    raise SystemExit('不能清理 current，或无法确认 current；未删除。')
+if shutil.which('lsof') is None:
+    raise SystemExit('需要 lsof 检查运行进程；未删除。')
+opened = subprocess.run(['lsof', '-nP', '+D', str(old)], capture_output=True, text=True, check=False)
+if opened.returncode != 1 or opened.stdout.strip() or opened.stderr.strip():
+    raise SystemExit('目录仍被进程使用，或检查不完整；未删除。')
+processes = subprocess.run(['ps', '-axww', '-o', 'command='], capture_output=True, text=True, check=False)
+if processes.returncode != 0 or processes.stderr.strip() or str(old) in processes.stdout:
+    raise SystemExit('仍有进程引用该目录，或无法核对进程；未删除。')
+if (prefix / 'share/deck/current').resolve(strict=True) == old.resolve():
+    raise SystemExit('current 已切到该目录；未删除。')
+shutil.rmtree(old)
+print('已清理单个确认的历史安装目录：', old)
+PY
+```
 
 ## Known limitations
 
@@ -130,8 +202,10 @@ venv is reused and the `deck` binary is overwritten.
   [1.1.0 notes](releases/1.1.0.md#maintainer-acceptance-2026-11-04).
   Actual WPS editing was not verified on the PR125 1.0.0 observation
   because the Mac device locked.
-- Native editable PPT output uses shapes and text. Tables/charts are composed
-  shapes/text rather than Office-native spreadsheet-backed data objects.
+- Native output uses editable shapes and text. Supported tables marked
+  `data-native-table="true"` with complete grid and ownership bindings become
+  native PPT tables; ordinary drawn tables remain shapes/text. Charts are not
+  Office-native spreadsheet-backed data charts.
 - `doctor` finding a font family does not prove LibreOffice can render every
   glyph. In the maintainer's macOS 27.0.1 arm64 / LibreOffice 26.8.1.1 run,
   `fc-match` found Noto CJK but default PDF rendering substituted unrelated

@@ -1,3 +1,4 @@
+import { isPageDraftDirty } from '../../api.js';
 import React from 'react';
 import { useDeckMaster } from '../../context/DeckMasterContext';
 import PageContent from '../common/PageContent';
@@ -39,6 +40,6 @@ export default function DrawerPanel() {
         </fieldset>
       </>}
     </div>
-    {drawer === 'editor' && page && <div className="drawer-foot"><button className="button" disabled={busy.save} onClick={() => { if ((!deleted && !draft.conflict) || window.confirm('确定放弃本地修改？未保存的输入将丢失。')) discardDraft(); }}>放弃本地修改</button>{!deleted && <button className="primary" disabled={busy.save || !!draft.conflict} onClick={saveDraft}>{busy.save ? '正在保存…' : '保存正文与讲稿'}</button>}</div>}
+    {drawer === 'editor' && page && <div className="drawer-foot"><button className="button" disabled={busy.save} onClick={() => { if ((!deleted && !draft.conflict && !isPageDraftDirty(draft)) || window.confirm('确定放弃本地修改？未保存的输入将丢失。')) discardDraft(); }}>放弃本地修改</button>{!deleted && <button className="primary" disabled={busy.save || !!draft.conflict} onClick={saveDraft}>{busy.save ? '正在保存…' : '保存正文与讲稿'}</button>}</div>}
   </section></div>;
 }
