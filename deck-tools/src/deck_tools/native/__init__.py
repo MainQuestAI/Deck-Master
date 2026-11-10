@@ -86,6 +86,17 @@ def validate_plan(plan, page):
             raise ValueError(f'文字必须与当前 content 的 atom 一致：{atom}')
         covered.add(atom)
 
+    def margin(item):
+        if 'margin' not in item:
+            return
+        value = item['margin']
+        values = value if isinstance(value, list) else [value] * 4
+        if len(values) != 4 or any(
+            isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or v < 0
+            for v in values
+        ):
+            raise ValueError('margin 必须是非负有限数字或 [上,右,下,左] 四个非负有限数字（原图像素）')
+
     for op in plan['ops']:
         kind = op['op']
         if kind not in ('text', 'shape', 'arrow', 'icon', 'image', 'table'):
@@ -100,6 +111,8 @@ def validate_plan(plan, page):
         if kind == 'text':
             text(op)
         elif kind == 'table':
+            margin(op)
+            margin(op.get('header_style', {}))
             widths, heights, rows = op['col_widths'], op['row_heights'], op['cells']
             if len(rows) != len(heights) or not widths or not heights or any(len(r) != len(widths) for r in rows):
                 raise ValueError('表格单元格、列宽和行高不匹配')
@@ -109,6 +122,7 @@ def validate_plan(plan, page):
                 raise ValueError('表格行高和列宽合计必须等于 bbox')
             for row in rows:
                 for cell in row:
+                    margin(cell)
                     text(cell)
         elif kind == 'icon':
             icon_file(op['icon_id'])

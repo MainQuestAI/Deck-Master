@@ -238,7 +238,7 @@ plan v1 的固定外形：
 | arrow | `start:[x,y], end:[x,y], color, width, arrowheads:{start?,end?}`；箭头端用 pptxgenjs 名称，如 triangle |
 | icon | `icon_id:"tabler-outline/<名称>", bbox, color` |
 | image | `file, bbox`；不得附正文或 atom，每张面积不超过画布 40% |
-| table | `bbox, col_widths:[...], row_heights:[...], header_style:{size,color,fill,weight,align,valign}, cells:[[{text,atom_id},...],...]`；表头算第一行，可指定与 text 同形的文字样式及 `line:{color,width}` |
+| table | `bbox, col_widths:[...], row_heights:[...], margin, header_style:{size,color,fill,weight,align,valign,margin}, cells:[[{text,atom_id,margin?},...],...]`；表头算第一行，可指定与 text 同形的文字样式及 `line:{color,width}`；margin 为非负数字或 `[上,右,下,左]` 四个非负数字，单位为原图像素，默认表头 `[5,8,5,8]`、正文 `[7,9,7,9]`；优先级为 cell.margin > header_style.margin（仅表头）> table.margin（全部单元格）> 默认值 |
 
 文字和表格单元格必须逐项匹配当前 content 的 atoms；用现有 `atoms` 文件命令取得编号。讲稿只放 page.notes，不放 plan。表格的行列尺寸合计等于 bbox；空字符串正文也可作为对应 atom 的原生文本。
 

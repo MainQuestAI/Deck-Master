@@ -58,6 +58,17 @@ def test_validate_plan_covers_current_content(sample):
     assert native.validate_plan(plan, page)['atoms'] == 5
 
 
+@pytest.mark.parametrize('target', ['table', 'header', 'cell'])
+@pytest.mark.parametrize('value', [-1, [1, 2, 3], [1, 2, -3, 4], '8', True, None, float('inf'), [0, 0, float('nan'), 0]])
+def test_validate_plan_rejects_invalid_table_margin(sample, target, value):
+    _, page, plan = sample
+    table = next(op for op in plan['ops'] if op['op'] == 'table')
+    item = {'table': table, 'header': table['header_style'], 'cell': table['cells'][1][0]}[target]
+    item['margin'] = value
+    with pytest.raises(ValueError):
+        native.validate_plan(plan, page)
+
+
 @pytest.mark.parametrize('fault', ['missing_atom', 'outside', 'background_image', 'unknown_icon', 'changed_text', 'image_text', 'composite'])
 def test_validate_plan_rejects_invalid_input(sample, fault):
     _, page, original = sample
@@ -96,6 +107,13 @@ def test_generator_readback_and_shared_xml_postprocessing(sample, mode):
             assert slide.notes_slide.notes_text_frame.text == expected['notes']
             assert {e.get('typeface') for e in root.findall('.//a:rPr/a:latin', native.NS)} == {'Noto Sans CJK SC'}
             assert {tc.get('anchor') for tc in root.findall('.//a:tcPr', native.NS)} == {'ctr'}
+            for row, margins in zip(root.findall('.//a:tr', native.NS), ([5, 8, 5, 8], [7, 9, 7, 9])):
+                for tc in row.findall('a:tc/a:tcPr', native.NS):
+                    assert int(tc.get('marL')) > 0
+                    for side, px in zip(('marT', 'marR', 'marB', 'marL'), margins):
+                        assert int(tc.get(side)) == pytest.approx(px * native.emu_per_px(plan), abs=2)
+            body = root.find('.//p:sp/p:txBody/a:bodyPr', native.NS)
+            assert [int(body.get(side)) for side in ('tIns', 'rIns', 'bIns', 'lIns')] == [0, 0, 0, 0]
             assert [int(tr.get('h')) for tr in root.findall('.//a:tr', native.NS)] == [round(h * native.emu_per_px(plan)) for h in [45, 75]]
             custom = root.xpath('//p:sp[p:nvSpPr/p:cNvPr/@name="native_6"]', namespaces=native.NS)[0]
             assert custom.find('p:spPr/a:custGeom', native.NS) is not None
@@ -104,6 +122,41 @@ def test_generator_readback_and_shared_xml_postprocessing(sample, mode):
         assert theme.count('typeface="Noto Sans CJK SC"') >= 2
         pres = etree.fromstring(archive.read('ppt/presentation.xml'))
         assert list(pres).index(pres.find('p:notesMasterIdLst', native.NS)) < list(pres).index(pres.find('p:sldIdLst', native.NS))
+
+
+@pytest.mark.parametrize('canvas_width', [800, 1672])
+@pytest.mark.parametrize('table_margin,header_margin,cell_margin', [
+    (4, None, None),
+    ([1, 2, 3, 4], 6, [0, 2, 3, 4]),
+    (3, 0, 0),
+    (None, None, [140, 3, 4, 5]),
+])
+def test_generator_table_margin_overrides(sample, canvas_width, table_margin, header_margin, cell_margin):
+    work, page, plan = sample
+    plan['canvas_px']['w'] = canvas_width
+    table = next(op for op in plan['ops'] if op['op'] == 'table')
+    if table_margin is not None:
+        table['margin'] = table_margin
+    if header_margin is not None:
+        table['header_style']['margin'] = header_margin
+    if cell_margin is not None:
+        table['cells'][0][0]['margin'] = cell_margin
+        table['cells'][1][0]['margin'] = cell_margin
+    native.write_json(page['plan'], plan)
+    output = native.generate([page], work / 'margins.pptx', mode='single')
+    with zipfile.ZipFile(output) as archive:
+        root = etree.fromstring(archive.read('ppt/slides/slide1.xml'))
+    for r, row in enumerate(root.findall('.//a:tr', native.NS)):
+        expected = [5, 8, 5, 8] if r == 0 else [7, 9, 7, 9]
+        if table_margin is not None:
+            expected = table_margin
+        if r == 0 and header_margin is not None:
+            expected = header_margin
+        for c, tc in enumerate(row.findall('a:tc/a:tcPr', native.NS)):
+            pixels = cell_margin if c == 0 and cell_margin is not None else expected
+            margins = pixels if isinstance(pixels, list) else [pixels] * 4
+            for side, px in zip(('marT', 'marR', 'marB', 'marL'), margins):
+                assert int(tc.get(side)) == pytest.approx(px * native.emu_per_px(plan), abs=2)
 
 
 

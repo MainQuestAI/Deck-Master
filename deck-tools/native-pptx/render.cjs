@@ -26,6 +26,12 @@ function textStyle(op) {
     margin: 0, paraSpaceAfterPt: 0, breakLine: false,
   };
 }
+function cellMargin(value) {
+  const pixels = Array.isArray(value) ? value : [value, value, value, value];
+  // PptxGenJS 4.0.1 treats the whole array as points when its first value is >= 1.
+  const convert = inch(pixels[0]) >= 1 ? pt : inch;
+  return pixels.map(convert);
+}
 function draw(pptx, slide, op, index, page, iconsDir) {
   const objectName = `native_${index}`;
   switch (op.op) {
@@ -70,6 +76,8 @@ function draw(pptx, slide, op, index, page, iconsDir) {
       const rows = op.cells.map((row, r) => row.map(cell => ({
         text: cell.text,
         options: { ...textStyle({ ...op, ...(r === 0 ? op.header_style : {}), ...cell }),
+          margin: cellMargin(cell.margin ?? (r === 0 ? op.header_style?.margin : undefined)
+            ?? op.margin ?? (r === 0 ? [5, 8, 5, 8] : [7, 9, 7, 9])),
           ...(r === 0 && op.header_style?.fill ? { fill: color(op.header_style.fill) } : {}) },
       })));
       slide.addTable(rows, {
