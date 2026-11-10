@@ -367,16 +367,17 @@ def test_interrupted_first_migration_reports_stage_and_can_retry(tmp_path: Path)
 
 
 
-def test_stale_cargo_record_does_not_authorize_replacing_foreign_binary(tmp_path: Path) -> None:
+@pytest.mark.parametrize("replacement", ["foreign replacement", "managed OLD binary"])
+def test_stale_cargo_record_does_not_authorize_replacing_foreign_binary(tmp_path: Path, replacement: str) -> None:
     prefix = tmp_path / "prefix"
     entry = prefix / "bin/deck"
     entry.parent.mkdir(parents=True)
     entry.write_text("managed old binary")
     _owned_legacy_source(tmp_path, prefix)
-    entry.write_text("foreign replacement")
+    entry.write_text(replacement)
     result = _run(["--prefix", str(prefix), "--skills-root", str(tmp_path / "roles")], env=_stub_env(tmp_path))
     assert result.returncode == 2
-    assert entry.read_text() == "foreign replacement"
+    assert entry.read_text() == replacement
 
 
 def _interrupt_entry(tmp_path: Path, root: Path, point: str) -> Path:
@@ -584,3 +585,125 @@ os.execv({sys.executable!r}, [{sys.executable!r}, *sys.argv[1:]])
     result = _run(["--prefix", str(tmp_path / "prefix"), "--skills-root", str(root)], env=env)
     assert result.returncode == 0, result.stderr
     _assert_roles(root)
+
+
+@pytest.mark.parametrize("nested", [False, True])
+def test_command_substitution_failure_reports_phase_once(tmp_path: Path, nested: bool) -> None:
+    env = _stub_env(tmp_path)
+    failure = tmp_path / "stub-bin/mktemp"
+    failure.write_text("#!/bin/sh\nexit 17\n")
+    failure.chmod(0o755)
+    if nested:
+        startup = tmp_path / "bash-startup"
+        startup.write_text('mktemp() { local result; result=$(command mktemp "$@"); printf "%s\\n" "$result"; }\n')
+        env["BASH_ENV"] = str(startup)
+    result = _run(["--prefix", str(tmp_path / "prefix"), "--skills-root", str(tmp_path / "roles")], env=env)
+    assert result.returncode == 17, result.stderr
+    assert result.stderr.count("阶段失败") == 1, result.stderr
+    assert "validate" in result.stderr
+
+
+def test_required_receipt_check_explains_changed_entry_without_removing_files(tmp_path: Path) -> None:
+    env = _stub_env(tmp_path)
+    root = tmp_path / "roles"
+    for role in ROLES:
+        _wrapper(root, role)
+    compat = root / "deck"
+    compat.symlink_to(SOURCE)
+    author = root / "deck-master/NOTES"
+    real_rm = shutil.which("rm")
+    failure = tmp_path / "stub-bin/rm"
+    failure.write_text(f'''#!{sys.executable}
+import os, pathlib, sys
+if {str(compat)!r} in sys.argv[1:]:
+    os.unlink({str(compat)!r})
+    pathlib.Path({str(author)!r}).write_text('author addition')
+else:
+    os.execv({real_rm!r}, [{real_rm!r}, *sys.argv[1:]])
+''')
+    failure.chmod(0o755)
+    result = _run(["--prefix", str(tmp_path / "prefix"), "--skills-root", str(root)], env=env)
+    assert result.returncode == 1, result.stderr
+    assert "入口在记录后发生变化" in result.stderr and str(author.parent) in result.stderr
+    assert result.stderr.count("阶段失败") == 1 and "install-entries" in result.stderr
+    assert author.read_text() == "author addition"
+    assert (author.parent / "SKILL.md").is_symlink()
+
+
+@pytest.mark.parametrize("relative", [False, True])
+def test_recreated_role_link_to_same_recorded_target_can_retry(tmp_path: Path, relative: bool) -> None:
+    prefix = tmp_path / "prefix"
+    entry = prefix / "bin/deck"
+    entry.parent.mkdir(parents=True)
+    entry.write_text("owned old binary")
+    legacy = _owned_legacy_source(tmp_path, prefix)
+    root = tmp_path / "roles"
+    root.mkdir()
+    for role in ROLES:
+        (root / role).symlink_to(legacy / "deck-skill" / role)
+    env = _stub_env(tmp_path)
+    args = ["--prefix", str(prefix), "--skills-root", str(root)]
+    failure = _interrupt_entry(tmp_path, root, "role-link")
+    assert _run(args, env=env).returncode == 17
+    failure.unlink()
+    changed = root / "deck-design"
+    changed.rename(root / "saved-role-link")
+    target = legacy / "deck-skill/deck-design"
+    changed.symlink_to(os.path.relpath(target, root) if relative else target)
+    retry = _run(args, env=env)
+    assert retry.returncode == 0, retry.stderr
+    _assert_roles(root)
+    assert (root / "saved-role-link").is_symlink()
+
+
+def test_recreated_wrapper_internal_link_still_requires_original_identity(tmp_path: Path) -> None:
+    env = _stub_env(tmp_path)
+    root = tmp_path / "roles"
+    for role in ROLES:
+        _wrapper(root, role)
+    args = ["--prefix", str(tmp_path / "prefix"), "--skills-root", str(root)]
+    failure = _interrupt_entry(tmp_path, root, "wrapper-links")
+    assert _run(args, env=env).returncode == 17
+    failure.unlink()
+    assets = root / "deck-master/assets"
+    target = assets.readlink()
+    assets.rename(root / "saved-assets-link")
+    assets.symlink_to(target)
+    retry = _run(args, env=env)
+    assert retry.returncode == 2, retry.stderr
+    assert assets.readlink() == target
+    assert not (root / "deck-master").is_symlink()
+
+
+def test_python312_named_shim_with_wrong_version_is_rejected(tmp_path: Path) -> None:
+    env = _stub_env(tmp_path)
+    bin_dir = tmp_path / "stub-bin"
+    (bin_dir / "uv").unlink()
+    python = bin_dir / "python3.12"
+    python.write_text(f'''#!{sys.executable}
+import sys
+sys.version_info = (3, 13, 0)
+exec(sys.argv[2])
+''')
+    python.chmod(0o755)
+    for name in ("bash", "dirname", "date"):
+        (bin_dir / name).symlink_to(shutil.which(name))
+    env["PATH"] = str(bin_dir)
+    prefix = tmp_path / "prefix"
+    result = _run(["--prefix", str(prefix)], env=env)
+    assert result.returncode == 3, result.stderr
+    assert "prepare-python" in result.stderr and "Python 3.12" in result.stderr
+    assert not prefix.exists()
+
+
+def test_successful_validation_removes_only_its_temporary_probe(tmp_path: Path) -> None:
+    env = _stub_env(tmp_path)
+    temporary = tmp_path / "temporary"
+    temporary.mkdir()
+    sentinel = temporary / "author.txt"
+    sentinel.write_text("keep this")
+    env["TMPDIR"] = str(temporary)
+    result = _run(["--prefix", str(tmp_path / "prefix"), "--skills-root", str(tmp_path / "roles")], env=env)
+    assert result.returncode == 0, result.stderr
+    assert list(temporary.iterdir()) == [sentinel]
+    assert sentinel.read_text() == "keep this"

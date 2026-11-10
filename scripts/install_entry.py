@@ -35,10 +35,12 @@ def snapshot(path: Path, action: str) -> dict:
 
 def matches(path: Path, receipt: dict) -> bool:
     actual = snapshot(path, receipt["action"])
+    if receipt["action"] == "replace":
+        target = Path(receipt["entry"]["target"])
+        expected = target if target.is_absolute() else path.parent / target
+        return path.resolve() == expected.resolve()
     if actual["identity"] != receipt["entry"]["identity"]:
         return False
-    if receipt["action"] == "replace":
-        return actual == receipt["entry"]
     expected = receipt["entry"]["links"]
     return all(name in expected and link == expected[name] for name, link in actual["links"].items())
 

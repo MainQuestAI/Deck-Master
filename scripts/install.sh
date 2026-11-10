@@ -83,7 +83,14 @@ need() {
 need cargo
 need npm
 phase=prepare-python
-trap 'code=$?; echo "install.sh: ${phase} 阶段失败（${code}）；未自动回滚或清理安装。请按相同参数重试。" >&2; exit "$code"' ERR
+install_failed() {
+  local code=$?
+  if [ "$BASH_SUBSHELL" -eq 0 ]; then
+    echo "install.sh: ${phase} 阶段失败（${code}）；未自动回滚或清理安装。请按相同参数重试。" >&2
+  fi
+  exit "$code"
+}
+trap install_failed ERR
 if command -v uv >/dev/null 2>&1; then
   venv_python=uv
   if ! host_python=$(uv python find --offline --no-python-downloads --no-cache 3.12 2>/dev/null); then
@@ -189,7 +196,7 @@ describe_entry() {
 legacy_source=""
 if [ -f "$deck_bin" ] && [ ! -L "$deck_bin" ]; then
   legacy_source=$("$host_python" - "$prefix" <<'LEGACY_SOURCE' || true
-import hashlib, json, pathlib, sys, urllib.parse
+import json, pathlib, sys, urllib.parse
 prefix = pathlib.Path(sys.argv[1])
 try:
     installs = json.loads((prefix / '.crates2.json').read_text())['installs']
@@ -201,7 +208,7 @@ try:
         built = crate / 'target/release/deck'
         if ((crate / 'Cargo.toml').is_file() and (repo / 'deck-tools/pyproject.toml').is_file()
                 and (repo / 'deck-skill/deck-master/SKILL.md').is_file() and built.is_file()
-                and hashlib.sha256(built.read_bytes()).digest() == hashlib.sha256((prefix / 'bin/deck').read_bytes()).digest()):
+                and built.read_bytes() == (prefix / 'bin/deck').read_bytes()):
             print(repo.resolve())
             raise SystemExit(0)
 except (OSError, ValueError, KeyError, IndexError):
@@ -220,6 +227,14 @@ note_conflict() {
 entry_receipt() {
   "$host_python" "$script_dir/install_entry.py" "$1" "$prefix" "$2" "$3" \
     "$skill_target" "$legacy_source" "${4:-}"
+}
+
+require_recorded_entry() {
+  entry_receipt check "$1" "$2" >/dev/null || {
+    local code=$?
+    echo "install.sh: 入口在记录后发生变化或迁移凭据不可读取：$1；请保留该入口和用户文件，核对后重试。" >&2
+    return "$code"
+  }
 }
 
 action_deck=absent
@@ -399,6 +414,7 @@ for role in ("deck-master", "deck-content", "deck-design", "deck-review"):
   env -u DECK_TOOLS_PYTHON -u PYTHONPATH "$installation/bin/deck" new "$probe_project" >/dev/null
   env -u DECK_TOOLS_PYTHON -u PYTHONPATH "$installation/bin/deck" --project "$probe_project" material add "$probe_project/source.txt" |
     "$venv_dir/bin/python" -c 'import json,sys; assert json.load(sys.stdin)["extraction"]["text"] == "Deck installation material check"'
+  run rm -rf -- "$probe_project"
 fi
 
 # Normal upgrades only replace this pointer; the prepared venv never moves.
@@ -450,7 +466,7 @@ link_role() {
   local role=$1 action=$2 dir="${skills_root}/$1"
   if [ "$action" = keep ]; then return; fi
   if [ "$dry_run" -eq 0 ] && { [ "$action" = upgrade ] || [ "$action" = replace ]; }; then
-    entry_receipt check "$dir" "$role" >/dev/null
+    require_recorded_entry "$dir" "$role"
   fi
   if [ "$action" = upgrade ]; then
     run rm -f -- "$dir/SKILL.md" "$dir/references" "$dir/assets"
@@ -461,7 +477,7 @@ link_role() {
   run ln -s "$current/deck-skill/$role" "$dir"
 }
 if [ "$action_deck" = remove ]; then
-  if [ "$dry_run" -eq 0 ]; then entry_receipt check "$compat_dir" deck >/dev/null; fi
+  if [ "$dry_run" -eq 0 ]; then require_recorded_entry "$compat_dir" deck; fi
   run rm -- "$compat_dir"
 fi
 for i in "${!roles[@]}"; do link_role "${roles[$i]}" "${actions[$i]}"; done
