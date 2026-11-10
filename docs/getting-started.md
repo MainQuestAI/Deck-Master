@@ -126,6 +126,66 @@ Re-running `scripts/install.sh` prepares a new complete directory and switches
 old tools. A supported legacy Cargo binary is migrated only when its installation
 record and associated built artifact agree. Unknown entries are preserved.
 
+If the legacy checkout was rebuilt after installation, its current
+`rust/target/release/deck` may differ from the installed binary. Exit 2 then
+means ownership could not be confirmed; the installer does not replace it.
+Keep the old source and venv. Verify the Cargo record, checkout and reported
+entries before making a manual change. If the original built artifact is still
+available, restore that verified artifact in the original checkout and retry
+there. Otherwise, back up the confirmed old CLI and each reported legacy role
+entry individually to a new directory outside `bin` and the skills root,
+preserving symlinks themselves and any user-added files, then rerun installation.
+Stop the legacy Deck and tool processes before this manual backup procedure.
+Never delete a symlink's target. Moving only `bin/deck` away and starting from a
+different checkout loses the evidence used to identify the old role links;
+it is not a complete cross-checkout migration procedure.
+
+## Remove one confirmed historical installation
+
+The installer never cleans up historical groups. Stop all Deck and tool
+processes and prevent them from restarting during manual cleanup. Choose one
+confirmed obsolete directory and preserve any files you added there first.
+The following example rejects `current`, symlinks, paths outside the installation
+root, an observed running process, and incomplete process checks. It needs
+`lsof`; missing tools or inspection errors stop cleanup. The checks are a
+snapshot, so keep processes stopped until the command finishes. Do not replace
+the single directory name with `installations/*`.
+
+```bash
+prefix="$HOME/.local"
+old_name='<confirmed-old-directory>'
+"$prefix/share/deck/current/share/deck/venv/bin/python" - "$prefix" "$old_name" <<'PY'
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+prefix = Path(sys.argv[1]).resolve(strict=True)
+root = (prefix / 'share/deck/installations').resolve(strict=True)
+name = sys.argv[2]
+if name in ('', '.', '..') or Path(name).name != name:
+    raise SystemExit('请指定 installations 下一个已确认的旧目录名；未删除。')
+old = root / name
+current = (prefix / 'share/deck/current').resolve(strict=True)
+if old.is_symlink() or not old.is_dir() or old.resolve().parent != root:
+    raise SystemExit('目标不是 installations 下的普通目录；未删除。')
+if current.parent != root or old.resolve() == current:
+    raise SystemExit('不能清理 current，或无法确认 current；未删除。')
+if shutil.which('lsof') is None:
+    raise SystemExit('需要 lsof 检查运行进程；未删除。')
+opened = subprocess.run(['lsof', '-nP', '+D', str(old)], capture_output=True, text=True, check=False)
+if opened.returncode != 1 or opened.stdout.strip() or opened.stderr.strip():
+    raise SystemExit('目录仍被进程使用，或检查不完整；未删除。')
+processes = subprocess.run(['ps', '-axww', '-o', 'command='], capture_output=True, text=True, check=False)
+if processes.returncode != 0 or processes.stderr.strip() or str(old) in processes.stdout:
+    raise SystemExit('仍有进程引用该目录，或无法核对进程；未删除。')
+if (prefix / 'share/deck/current').resolve(strict=True) == old.resolve():
+    raise SystemExit('current 已切到该目录；未删除。')
+shutil.rmtree(old)
+print('已清理单个确认的历史安装目录：', old)
+PY
+```
+
 ## Known limitations
 
 - UNC paths (`\\server\share`) are not covered by local-path sanitization in

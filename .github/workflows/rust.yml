@@ -27,7 +27,7 @@ jobs:
       - name: Install material tools
         run: |
           sudo apt-get update
-          sudo apt-get install --no-install-recommends -y poppler-utils
+          sudo apt-get install --no-install-recommends -y poppler-utils lsof
           python -m venv .venv
           .venv/bin/python -m pip install -e "./deck-tools[dev]"
       - uses: actions/setup-node@v7
