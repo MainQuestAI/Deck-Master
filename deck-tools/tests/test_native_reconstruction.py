@@ -14,6 +14,7 @@ import pytest
 
 from deck_tools import native
 from deck_tools.atoms import visible_atoms
+from deck_tools.render import RendererError
 from deck_tools.jobs import projection
 from deck_tools.vendor.cyberppt.test_select_icon import SelectIconTests  # noqa: F401
 
@@ -95,7 +96,7 @@ def test_generator_readback_and_shared_xml_postprocessing(sample, mode):
             assert slide.notes_slide.notes_text_frame.text == expected['notes']
             assert {e.get('typeface') for e in root.findall('.//a:rPr/a:latin', native.NS)} == {'Noto Sans CJK SC'}
             assert {tc.get('anchor') for tc in root.findall('.//a:tcPr', native.NS)} == {'ctr'}
-            assert [int(tr.get('h')) for tr in root.findall('.//a:tr', native.NS)] == [round(h * native.EMU_PX) for h in [45, 75]]
+            assert [int(tr.get('h')) for tr in root.findall('.//a:tr', native.NS)] == [round(h * native.emu_per_px(plan)) for h in [45, 75]]
             custom = root.xpath('//p:sp[p:nvSpPr/p:cNvPr/@name="native_6"]', namespaces=native.NS)[0]
             assert custom.find('p:spPr/a:custGeom', native.NS) is not None
             assert custom.find('p:spPr/a:ln/a:tailEnd', native.NS).get('type') == 'triangle'
@@ -104,6 +105,29 @@ def test_generator_readback_and_shared_xml_postprocessing(sample, mode):
         pres = etree.fromstring(archive.read('ppt/presentation.xml'))
         assert list(pres).index(pres.find('p:notesMasterIdLst', native.NS)) < list(pres).index(pres.find('p:sldIdLst', native.NS))
 
+
+
+def _with_canvas(page, plan, w, h, name):
+    path = Path(page['plan']).parent / f'{name}.json'
+    native.write_json(path, {**plan, 'canvas_px': {'w': w, 'h': h}})
+    return {**page, 'plan': str(path)}
+
+
+def test_generator_fixes_slide_width_and_keeps_source_aspect(sample):
+    work, page, plan = sample
+    wide = _with_canvas(page, plan, 1672, 941, 'wide')
+    presentation = Presentation(native.generate([wide], work / 'wide.pptx', mode='single'))
+    assert presentation.slide_width == pytest.approx(13.333 * 914400, abs=2)
+    assert presentation.slide_height == pytest.approx(13.333 * 914400 * 941 / 1672, abs=2)
+    table = next(shape for shape in presentation.slides[0].shapes if shape.has_table)
+    assert table.left == pytest.approx(20 * 13.333 * 914400 / 1672, abs=2)
+
+
+def test_deck_mode_rejects_mixed_canvas_sizes(sample):
+    work, page, plan = sample
+    other = _with_canvas(page, plan, 1672, 941, 'other')
+    with pytest.raises(RendererError, match='画布尺寸必须一致'):
+        native.generate([page, other], work / 'mixed.pptx', mode='deck')
 
 def test_postprocessor_repairs_duplicate_paragraph_properties(sample):
     work, page, plan = sample
@@ -125,7 +149,7 @@ def test_postprocessor_repairs_duplicate_paragraph_properties(sample):
         root = etree.fromstring(archive.read('ppt/slides/slide1.xml'))
     assert all(len(p.findall('a:pPr', native.NS)) <= 1 for p in root.findall('.//a:p', native.NS))
     assert root.find('.//a:tcPr', native.NS).get('anchor') == 'ctr'
-    assert int(root.find('.//a:tr', native.NS).get('h')) == 45 * native.EMU_PX
+    assert int(root.find('.//a:tr', native.NS).get('h')) == round(45 * native.emu_per_px(plan))
 
 
 @pytest.mark.parametrize('fault', ['side_by_side', 'note', 'plan_sha256'])

@@ -7,15 +7,20 @@ const PptxGenJS = require('pptxgenjs');
 
 const DEFAULT_FONT = 'Noto Sans CJK SC';
 const color = value => String(value).replace(/^#/, '');
-const box = ([x, y, w, h]) => ({ x: x / 96, y: y / 96, w: w / 96, h: h / 96 });
+const SLIDE_WIDTH_IN = 13.333;
+// Inches per source-image pixel; set once per job from the shared canvas width.
+let IN_PX = 0;
+const inch = px => px * IN_PX;
+const pt = px => px * IN_PX * 72;
+const box = ([x, y, w, h]) => ({ x: inch(x), y: inch(y), w: inch(w), h: inch(h) });
 const line = (value = {}) => ({
-  color: color(value.color || '000000'), width: (value.width ?? 1) * 0.75,
+  color: color(value.color || '000000'), width: pt(value.width ?? 1),
   transparency: value.color === 'none' ? 100 : 0,
   beginArrowType: value.arrowheads?.start, endArrowType: value.arrowheads?.end,
 });
 function textStyle(op) {
   return {
-    fontSize: (op.size ?? 16) * 0.75, fontFace: op.font || DEFAULT_FONT,
+    fontSize: pt(op.size ?? 16), fontFace: op.font || DEFAULT_FONT,
     color: color(op.color || '000000'), bold: op.weight === 'bold' || op.weight >= 600,
     align: op.align || 'left', valign: { center: 'mid', bottom: 'bottom', top: 'top' }[op.valign || 'top'],
     margin: 0, paraSpaceAfterPt: 0, breakLine: false,
@@ -69,27 +74,13 @@ function draw(pptx, slide, op, index, page, iconsDir) {
       })));
       slide.addTable(rows, {
         ...box(op.bbox), ...textStyle(op), objectName, autoPage: false,
-        colW: op.col_widths.map(w => w / 96), rowH: op.row_heights.map(h => h / 96),
-        border: { type: 'solid', color: color(op.line?.color || '000000'), pt: (op.line?.width ?? 1) * 0.75 },
+        colW: op.col_widths.map(inch), rowH: op.row_heights.map(inch),
+        border: { type: 'solid', color: color(op.line?.color || '000000'), pt: pt(op.line?.width ?? 1) },
       });
       break;
     }
     default: throw new Error(`不支持的原语：${op.op}`);
   }
-}
-function scaleOp(op, sx, sy) {
-  const result = structuredClone(op);
-  if (op.bbox) result.bbox = op.bbox.map((v, i) => v * (i % 2 ? sy : sx));
-  if (op.start) result.start = [op.start[0] * sx, op.start[1] * sy];
-  if (op.end) result.end = [op.end[0] * sx, op.end[1] * sy];
-  if (op.size) result.size = op.size * sy;
-  if (op.col_widths) result.col_widths = op.col_widths.map(v => v * sx);
-  if (op.row_heights) result.row_heights = op.row_heights.map(v => v * sy);
-  if (op.header_style?.size) result.header_style.size *= sy;
-  if (op.cells) result.cells.forEach(row => row.forEach(cell => { if (cell.size) cell.size *= sy; }));
-  if (op.width) result.width *= sy;
-  if (op.line?.width) result.line.width *= sy;
-  return result;
 }
 async function main() {
   const job = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
@@ -97,16 +88,22 @@ async function main() {
     throw new Error('请选择单页或整套模式并传入对应页面');
   }
   const pptx = new PptxGenJS();
-  const canvas = JSON.parse(fs.readFileSync(job.pages[0].plan, 'utf8')).canvas_px;
-  pptx.defineLayout({ name: 'native', width: canvas.w / 96, height: canvas.h / 96 });
+  const plans = job.pages.map(page => JSON.parse(fs.readFileSync(page.plan, 'utf8')));
+  const canvas = plans[0].canvas_px;
+  const mismatch = plans.findIndex(plan => plan.canvas_px.w !== canvas.w || plan.canvas_px.h !== canvas.h);
+  if (mismatch >= 0) {
+    throw new Error(`整套各页画布尺寸必须一致：第 1 页 ${canvas.w}×${canvas.h}，第 ${mismatch + 1} 页 ${plans[mismatch].canvas_px.w}×${plans[mismatch].canvas_px.h}`);
+  }
+  IN_PX = SLIDE_WIDTH_IN / canvas.w;
+  pptx.defineLayout({ name: 'native', width: SLIDE_WIDTH_IN, height: SLIDE_WIDTH_IN * canvas.h / canvas.w });
   pptx.layout = 'native';
   pptx.lang = 'zh-CN';
   pptx.theme = { headFontFace: DEFAULT_FONT, bodyFontFace: DEFAULT_FONT, lang: 'zh-CN' };
-  for (const page of job.pages) {
-    const plan = JSON.parse(fs.readFileSync(page.plan, 'utf8'));
+  for (const [index, page] of job.pages.entries()) {
+    const plan = plans[index];
     const slide = pptx.addSlide();
     slide.background = { color: color(plan.background) };
-    plan.ops.forEach((op, i) => draw(pptx, slide, scaleOp(op, canvas.w / plan.canvas_px.w, canvas.h / plan.canvas_px.h), i, page, job.icons_dir));
+    plan.ops.forEach((op, i) => draw(pptx, slide, op, i, page, job.icons_dir));
     slide.addNotes(page.notes || '');
   }
   await pptx.writeFile({ fileName: job.output });

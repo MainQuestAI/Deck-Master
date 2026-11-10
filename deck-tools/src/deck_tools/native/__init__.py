@@ -19,7 +19,12 @@ from ..render import NeedsTool, executable, render_deck, run
 ICONS = Path(__file__).resolve().parents[1] / 'resources' / 'icons' / 'tabler-outline'
 NS = {'a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
       'p': 'http://schemas.openxmlformats.org/presentationml/2006/main'}
-EMU_PX = 9525
+SLIDE_WIDTH_EMU = round(13.333 * 914400)
+
+
+def emu_per_px(plan):
+    """EMU per source-image pixel: slide width is fixed, height follows the source aspect ratio."""
+    return SLIDE_WIDTH_EMU / plan['canvas_px']['w']
 
 
 def native_pptx_dir():
@@ -131,7 +136,7 @@ def postprocess(pptx_path, plans):
     with zipfile.ZipFile(pptx_path) as archive:
         files = {item.filename: archive.read(item) for item in archive.infolist()}
     for index, plan in enumerate(plans, 1):
-        scale_y = plans[0]['canvas_px']['h'] / plan['canvas_px']['h']
+        emu = emu_per_px(plan)
         name = f'ppt/slides/slide{index}.xml'
         root = etree.fromstring(files[name])
         for para in root.findall('.//a:p', NS):
@@ -146,8 +151,8 @@ def postprocess(pptx_path, plans):
             if op is None or op['op'] != 'table':
                 continue
             for row, height in zip(frame.findall('.//a:tr', NS), op['row_heights']):
-                row.set('h', str(round(height * scale_y * EMU_PX)))
-            frame.find('p:xfrm/a:ext', NS).set('cy', str(round(op['bbox'][3] * scale_y * EMU_PX)))
+                row.set('h', str(round(height * emu)))
+            frame.find('p:xfrm/a:ext', NS).set('cy', str(round(op['bbox'][3] * emu)))
         for shape in root.findall('.//p:sp', NS):
             op = ops.get(shape.find('p:nvSpPr/p:cNvPr', NS).get('name'))
             if op is None or op['op'] != 'shape':
@@ -163,12 +168,12 @@ def postprocess(pptx_path, plans):
                 etree.SubElement(geometry, f'{{{NS["a"]}}}rect', l='0', t='0', r='r', b='b')
                 paths = etree.SubElement(geometry, f'{{{NS["a"]}}}pathLst')
                 path = etree.SubElement(paths, f'{{{NS["a"]}}}path',
-                                        w=str(round(op['bbox'][2] * EMU_PX)),
-                                        h=str(round(op['bbox'][3] * EMU_PX)),
+                                        w=str(round(op['bbox'][2] * emu)),
+                                        h=str(round(op['bbox'][3] * emu)),
                                         fill='none' if op.get('fill', 'none') == 'none' else 'norm', stroke='1')
                 for i, (x, y) in enumerate(op['points']):
                     command = etree.SubElement(path, f'{{{NS["a"]}}}{"moveTo" if i == 0 else "lnTo"}')
-                    etree.SubElement(command, f'{{{NS["a"]}}}pt', x=str(round(x * EMU_PX)), y=str(round(y * EMU_PX)))
+                    etree.SubElement(command, f'{{{NS["a"]}}}pt', x=str(round(x * emu)), y=str(round(y * emu)))
                 if op.get('closed'):
                     etree.SubElement(path, f'{{{NS["a"]}}}close')
                 props.insert(1, geometry)
