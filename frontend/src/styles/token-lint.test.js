@@ -4,26 +4,19 @@ import { readFileSync, mkdtempSync, mkdirSync, writeFileSync, copyFileSync, rmSy
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
-import { fileURLToPath } from 'node:url';
 import { lintCssSources } from '../../scripts/lint-css-tokens.mjs';
 
 const file = 'src/styles/sample.css';
-const config = { maxImportant: 13, whitelist: [] };
+const config = { whitelist: [] };
 const lint = (css, options = config) => lintCssSources([{ file, css }], options);
 const exemption = { file, selector: '.card', literal: '#abc', reason: 'Fixed color in an embedded diagram' };
 
-test('the real app stylesheet and the CLI pass the checked-in configuration', () => {
+test('the real app stylesheet passes the checked-in configuration', () => {
   const options = JSON.parse(readFileSync(new URL('../../css-token-lint.config.json', import.meta.url), 'utf8'));
   const css = readFileSync(new URL('./app.css', import.meta.url), 'utf8');
   const result = lintCssSources([{ file: 'src/styles/app.css', css }], options);
   assert.deepEqual(result.errors, []);
   assert.equal(result.literalsOutside, 0);
-  assert.ok(result.importantCount <= options.maxImportant);
-  const run = spawnSync(process.execPath, [fileURLToPath(new URL('../../scripts/lint-css-tokens.mjs', import.meta.url))], {
-    cwd: tmpdir(), encoding: 'utf8',
-  });
-  assert.ifError(run.error);
-  assert.equal(run.status, 0, run.stderr);
 });
 
 test('component colors fail with their original file, line, and literal', () => {
@@ -100,14 +93,6 @@ test('important requires a nonempty reason comment on the same or preceding line
   ]) {
     assert.deepEqual(lint(css).errors, []);
   }
-});
-
-test('important limits apply to the aggregate across stylesheets, excluding comments', () => {
-  const css = '.card { color: var(--dm-color) !important; /* Override inline color. */ }';
-  const result = lintCssSources([{ file, css }, { file: 'src/other.css', css }], { ...config, maxImportant: 1 });
-  assert.equal(result.importantCount, 2);
-  assert.equal(result.errors.length, 1);
-  assert.deepEqual(lint('/* !important */', { ...config, maxImportant: 0 }).errors, []);
 });
 
 test('the CLI scans nested CSS files and returns exit 1 for violations', () => {

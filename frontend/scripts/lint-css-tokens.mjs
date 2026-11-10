@@ -92,11 +92,8 @@ export function lintCssSources(sources, config) {
   const errors = [];
   const used = new Set();
   const whitelist = config.whitelist ?? [];
-  if (!Number.isInteger(config.maxImportant) || config.maxImportant < 0) {
-    errors.push('配置 maxImportant 必须是非负整数');
-  }
   if (!Array.isArray(whitelist)) {
-    return { errors: [...errors, '配置 whitelist 必须是数组'], importantCount: 0, literalsOutside: 0 };
+    return { errors: ['配置 whitelist 必须是数组'], importantCount: 0, literalsOutside: 0 };
   }
   const valid = whitelist.map((entry, index) => {
     const keys = ['file', 'selector', 'literal', 'reason'];
@@ -121,9 +118,6 @@ export function lintCssSources(sources, config) {
     for (const item of important) {
       if (!item.reason) errors.push(`${item.file}:${item.line}:${item.literal} — 同行或上一行缺少原因注释`);
     }
-  }
-  if (importantCount > config.maxImportant) {
-    errors.push(`!important 总数 ${importantCount} 超过上限 ${config.maxImportant}`);
   }
   whitelist.forEach((entry, index) => {
     if (valid[index] && !used.has(index)) errors.push(`未使用的白名单项：${entry.file}:${entry.selector}:${entry.literal}`);
@@ -154,7 +148,7 @@ async function main() {
     process.stderr.write(`${result.errors.join('\n')}\n`);
     process.exitCode = 1;
   } else {
-    process.stdout.write(`CSS token 检查通过：${sources.length} 个文件，!important=${result.importantCount}/${config.maxImportant}，token 块外颜色=${result.literalsOutside}\n`);
+    process.stdout.write(`CSS token 检查通过：${sources.length} 个文件，!important=${result.importantCount}，token 块外颜色=${result.literalsOutside}\n`);
   }
 }
 

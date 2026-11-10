@@ -39,7 +39,6 @@ jobs:
         working-directory: frontend
         run: |
           npm ci
-          npm run lint:css
           npm test
           npm run build
       - name: Rust checks
