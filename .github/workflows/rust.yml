@@ -49,6 +49,8 @@ jobs:
           cargo fmt --check
           cargo clippy --all-targets -- -D warnings
           cargo test
+      - name: Install native PPTX dependencies
+        run: npm ci --prefix deck-tools/native-pptx
       - name: File tool tests
         # Render tests run in the independent render job.
         run: .venv/bin/python -m pytest -q deck-tools/tests -m "not render" --basetemp="$RUNNER_TEMP/deck-tools"
@@ -61,6 +63,7 @@ jobs:
           export HOME="$(mktemp -d)"
           bash scripts/install.sh --dry-run --prefix "$RUNNER_TEMP/deck-prefix" | tee "$RUNNER_TEMP/default-plan"
           bash scripts/install.sh --prefix "$RUNNER_TEMP/deck-prefix"
+          (cd "$RUNNER_TEMP/deck-prefix/share/deck/current/share/deck/native-pptx" && node -e "require('pptxgenjs')")
           test -x "$RUNNER_TEMP/deck-prefix/bin/deck"
           test -x "$RUNNER_TEMP/deck-prefix/share/deck/current/share/deck/venv/bin/python"
           "$RUNNER_TEMP/deck-prefix/share/deck/current/share/deck/venv/bin/python" -c "import deck_tools"
@@ -115,6 +118,11 @@ jobs:
           pdftoppm -v
           fc-match 'Noto Sans CJK SC'
           git rev-parse HEAD
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+      - name: Install native PPTX dependencies
+        run: npm ci --prefix deck-tools/native-pptx
       - name: Real rendering tests
         run: .venv/bin/python -m pytest -q deck-tools/tests -m render --basetemp="$RUNNER_TEMP/deck-render"
       - uses: actions/upload-artifact@v4

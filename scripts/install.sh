@@ -391,6 +391,11 @@ else
   run python3.12 -m venv "$venv_dir"
 fi
 run "$venv_dir/bin/python" -m pip install "${repo_root}/deck-tools"
+run mkdir -p "$installation/share/deck/native-pptx"
+for native_file in render.cjs package.json package-lock.json; do
+  run cp "${repo_root}/deck-tools/native-pptx/$native_file" "$installation/share/deck/native-pptx/"
+done
+run npm --prefix "$installation/share/deck/native-pptx" ci --omit=dev
 run cp -R "$skill_target" "$installation/deck-skill"
 
 phase=validate

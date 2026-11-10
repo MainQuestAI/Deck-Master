@@ -20,12 +20,15 @@ from .compiler.svg import SvgError
 
 def main():
     parser = argparse.ArgumentParser(description="Deck 文件工具")
-    parser.add_argument("command", choices=["read-source", "atoms", "check-page", "build", "sanitize", "doctor", "image-info"], help="读取材料")
+    parser.add_argument("command", choices=["read-source", "atoms", "check-page", "build", "sanitize", "doctor", "image-info", "validate-plan", "crop", "render", "assemble"], help="读取材料")
     parser.add_argument("job", type=Path, help="包含 path 的 JSON 文件")
     args = parser.parse_args()
     try:
         job = json.loads(args.job.read_text(encoding="utf-8"))
-        if args.command == "read-source":
+        if args.command in ("validate-plan", "crop", "render", "assemble"):
+            from .native import dispatch
+            result = dispatch(args.command, job)
+        elif args.command == "read-source":
             result = asdict(read_source(Path(job["path"])))
         elif args.command == "image-info":
             from PIL import Image

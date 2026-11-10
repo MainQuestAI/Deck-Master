@@ -16,7 +16,7 @@ dev = ["pytest>=8"]
 where = ["src"]
 
 [tool.setuptools.package-data]
-deck_tools = ["resources/icons/lucide/*"]
+deck_tools = ["resources/icons/lucide/*", "vendor/cyberppt/*", "resources/icons/tabler-outline/*"]
 
 [tool.pytest.ini_options]
 markers = ["render: real local rendering tools"]

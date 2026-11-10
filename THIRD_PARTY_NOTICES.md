@@ -51,3 +51,32 @@ Copyright (c) 2025 Siqi Chen; MIT License. The canonical reference includes the
 complete upstream copyright and license text plus SHA-256 hashes of the fixed
 SKILL.md, README.md and LICENSE. The four role Skills share this reference from `deck-skill/references/`.
 This is a bounded Chinese PPT adaptation, not an installed third-party Skill.
+
+## CyberPPT select_icon
+
+Only `scripts/select_icon.py` and `scripts/test_select_icon.py` are bundled in
+`deck-tools/src/deck_tools/vendor/cyberppt/`, under the MIT License.
+Copyright (c) 2026 CyberPPT contributors
+
+Source repository / committer: [crazyykhllc-bit/CyberPPT](https://github.com/crazyykhllc-bit/CyberPPT),
+commit `980e557`; crazyykhllc-bit is identified as the source committer.
+The verbatim license is in that directory's LICENSE; SOURCE.md records original
+file hashes, adaptations and the files not ported. The native generator starts
+from a first-party project script and is not CyberPPT code.
+
+## Tabler Icons v3.46.0
+
+The outline set only is bundled in
+`deck-tools/src/deck_tools/resources/icons/tabler-outline/`.
+MIT License; © 2020-2026 Paweł Kuna.
+[Upstream](https://github.com/tabler/tabler-icons/tree/v3.46.0/icons/outline),
+commit `8ac7d81b72ece11072ef25ea9fd92e80c6f3c9fc`.
+LICENSE retains the full upstream copyright and permission notice;
+manifest.json records the source and file inventory.
+
+## pptxgenjs 4.0.1
+
+[Upstream](https://github.com/gitbrent/PptxGenJS/tree/v4.0.1), MIT License,
+Copyright (c) 2015-2022 Brent Ely.
+The exact runtime dependency is pinned in `deck-tools/native-pptx/package.json`
+and package-lock.json. npm installs its upstream LICENSE with the dependency.

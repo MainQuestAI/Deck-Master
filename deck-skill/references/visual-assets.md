@@ -4,7 +4,7 @@
 
 每套作品锁定一种通用图标家族，保持语义、线宽和尺寸一致。真实客户 logo、产品 UI、品牌图和作品图使用授权原件，不用生成图冒充真实产品或上线效果。模型自行描摹的图标不能算作图库复用。
 
-插画、人物、照片或场景只在业务说明需要时使用，放在有清楚边界的图像区域；主正文仍用原生对象。UI 示意须完整保留蓝图中已经画出的界面对象与分区关系，只有框架和关键字不等于完成还原；关键文字仍须可编辑。头像、入口图标、商品或内容图等可用 SVG 子集重画，或裁成有边界的局部 PNG/JPEG，按下方 `asset add` 登记后用 `image` 引用。截图或生成界面须明确其示意属性，不能冒充真实产品截图。分区说明与屏内控件的区别、原图到 SVG 的取舍见 [还原策略](reconstruction.md)。
+插画、人物、照片或场景只在业务说明需要时使用，放在有清楚边界的图像区域；主正文仍用原生对象。UI 示意须完整保留蓝图中已经画出的界面对象与分区关系，只有框架和关键字不等于完成还原；关键文字仍须可编辑。头像、入口图标、商品或内容图等可用 SVG 子集重画，或裁成有边界的局部 PNG/JPEG，按下方 `asset add` 登记后用 `image` 引用。native 路径不走 `asset add`：图标用随包的 Tabler outline，在 plan 里以 `icon_id` 引用；裁图用 `crop` 落在 `native/<页>/assets/`，由 plan 的 `image` op 引用。截图或生成界面须明确其示意属性，不能冒充真实产品截图。分区说明与屏内控件的区别、原图到 SVG 的取舍见 [还原策略](reconstruction.md)。
 
 ## 登记与使用范围
 
@@ -19,7 +19,7 @@ deck --project <project> asset add work-logo <logo.png> --source <来源> --lice
 
 同 ID 再添加会替换整条素材记录；需要保留的页范围、来源、许可须一并传入，省略即清空。通过 `deck put` 改 style 时仍提交完整 style，保留 canvas、palette、fonts 及实际需要的全部 assets。
 
-PNG/JPEG 原样登记；SVG 在添加时用 `rsvg-convert` 渲染为 PNG 后登记。缺少工具或渲染失败时按 CLI 错误处理，不把 SVG 当成 ImageGen 已能接收的附件。无需把第三方整库带入仓库、项目或提示词。
+PNG/JPEG 原样登记；SVG 在添加时用 `rsvg-convert` 渲染为 PNG 后登记。缺少工具或渲染失败时按 CLI 错误处理，不把 SVG 当成 ImageGen 已能接收的附件。除随包的 Tabler outline 图标库（MIT，许可见安装目录）外，不把第三方整库带入仓库、项目或提示词。
 
 `run start` 只将公共素材和绑定本页的素材复制到工作目录，并列在 attachments.json 中。style.json 可以包含完整作品清单；实际附件只取 attachments.json 已随附的文件，素材 ID 不能代替附件。不要把素材 ID 写进会导出的 purpose / layout，也不要写进可读稿。
 

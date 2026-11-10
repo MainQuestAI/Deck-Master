@@ -33,14 +33,14 @@ description: 用 Rust deck 做已有正文的页面设计、样页和指定页�
 
 先用一句写明这一页的画面必须让读者看出的对象、方向和分支。比较和查阅可以继续以表为主视觉。已写明的阅读任务或构图句要求状态、路径、闭环和旅程时，让关系成为主视觉，正文按关系组织，表最多当取材；生图前修订顺序见共享的 [page-writing](references/page-writing.md)。
 
-再按实际需要进入 [commands.md](references/commands.md) 的相应制作步骤；蓝图仍可用的局部返修直接进入 SVG 修正，需要新蓝图时才从生图开始：
+再按实际需要进入 [commands.md](references/commands.md) 的相应制作步骤；蓝图仍可用的局部返修直接修该页 plan，需要新蓝图时才从生图开始：
 
 1. **需要新蓝图时：** `deck run start image` 之后，读取该次 task.md 的原文作为 ImageGen 的 prompt，附件只使用 attachments.json 里的文件。
 2. **需要新蓝图时：** 交回、比对、需要时 `deck run adopt`。取消后或依据已变的结果只保存。
-3. 重建 SVG 前读共享的 [还原策略](references/reconstruction.md)，元素与绑定按 [SVG 子集](references/svg-subset.md)。SVG 按原图的布局和关系重建，正文取 content，文字绑定 atoms。错漏文字、局部排版和依据明确的连线可以沿用原图直接改 SVG。业务关系有歧义时问内容，主结构要重排时先改蓝图再重建。
-4. 在范围内 `deck build`，再用 `deck export pptx`。缺页、依据已变和构建之后又改过，按命令输出里的字段照实说明。
+3. 重建按共享的 [native 还原](references/native-reconstruction.md) 逐页做：坐标取原图，正文取 content，文字绑定 atoms；每页渲染后看并排图并写一行对照结论。局部错漏修该页 plan，业务关系有歧义时问内容，主结构要重排时先改蓝图再重建。
+4. 在范围内调用适配层 `assemble`，最终 PPTX 输出到 `<作品>/native/deck.pptx`。这一阶段的 `deck export pptx` 不包含它，交付时照实说明。适配层直调见 [命令](references/commands.md#native-还原文件工具)。
 
-`soffice` 不可用时停在 SVG 交回失败，不手写 PPTX，也不绕过 `deck build`。
+`soffice` 或 node 不可用时停下，报告 `deck doctor` 结果；不手写 PPTX。
 
 ## 交接
 
