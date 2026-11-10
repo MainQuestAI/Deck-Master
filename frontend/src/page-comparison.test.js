@@ -288,6 +288,51 @@ test('persistent details refresh for changed default IDs and ignore a late older
   assert.equal(state.buildResult.current_version, payload.version);
 });
 
+for (const scene of ['page', 'delivery']) {
+  test(`${scene} keeps the old readback labelled during refresh and rejects late responses`, async t => {
+    await mount(t);
+    payload.default_build = { id: 1, version_id: 7 };
+    await act(async () => { await state.refresh(); });
+    if (scene === 'page') await click('原图／编译预览对照');
+    else await act(async () => { state.setScene('delivery'); });
+    const original = state.buildResult;
+    await act(async () => { await state.refresh(); });
+    assert.equal(state.buildResult, original);
+    const previousFetch = globalThis.fetch;
+    const pending = [];
+    globalThis.fetch = (url, options) => url.startsWith('/api/builds/')
+      ? new Promise(resolve => { pending.push({ url, resolve, signal: options.signal }); })
+      : previousFetch(url, options);
+    payload.version = 8;
+    await act(async () => { await state.refresh(); });
+    const panel = () => document.querySelector(scene === 'page' ? '.page-comparison-readback' : '.s4-panel');
+    assert.equal(state.buildLoading, true);
+    assert.equal(state.buildResult.id, 1);
+    assert.equal(state.buildResult.readback_matches_current, null);
+    assert.ok(panel().textContent.includes('正在刷新构建回读'));
+    assert.ok(panel().textContent.includes('来源版本 7'));
+    assert.equal(panel().textContent.includes('尚无可展示的构建回读'), false);
+    payload.default_build = { id: 2, version_id: 8 };
+    await act(async () => { await state.refresh(); });
+    assert.equal(pending[0].signal.aborted, true);
+    assert.ok(panel().textContent.includes('暂留构建 #1'));
+    await act(async () => { pending[1].resolve(Response.json({ ...original, id: 2, version_id: 8,
+      current_version: 8, readback_matches_current: true })); });
+    assert.equal(state.buildResult.id, 2);
+    assert.equal(state.buildLoading, false);
+    await act(async () => { pending[0].resolve(Response.json({ ...original, current_version: 8 })); });
+    assert.equal(state.buildResult.id, 2);
+    assert.equal(state.buildResult.readback_matches_current, true);
+    payload.version = 9;
+    await act(async () => { await state.refresh(); });
+    assert.equal(state.buildLoading, true);
+    await act(async () => { pending[2].resolve(Response.json({ error: 'Unreadable latest report' }, { status: 500 })); });
+    assert.equal(state.buildLoading, false);
+    assert.equal(state.buildResult, null);
+    assert.ok(panel().querySelector('[role="alert"]').textContent.includes('Unreadable latest report'));
+  });
+}
+
 test('detail transport errors remain visible and do not become empty passing findings', async t => {
   await mount(t);
   const previousFetch = globalThis.fetch;

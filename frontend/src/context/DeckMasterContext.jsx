@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import * as api from '../api.js';
 
 const DeckMasterContext = createContext(null);
@@ -18,6 +18,7 @@ export function DeckMasterProvider({ children }) {
   const [downloadStatus, setDownloadStatus] = useState(null);
   const [buildResult, setBuildResult] = useState(null);
   const [buildError, setBuildError] = useState('');
+  const [buildLoading, setBuildLoading] = useState(false);
   const [galleryLayer, setGalleryLayer] = useState('original');
   const [galleryView, setGalleryView] = useState('grid');
   const [query, setQuery] = useState('');
@@ -90,18 +91,29 @@ export function DeckMasterProvider({ children }) {
     if (!needsReadback || !defaultBuildId) {
       setBuildResult(null);
       setBuildError('');
+      setBuildLoading(false);
       return;
     }
     const controller = new AbortController();
-    setBuildResult(null);
+    setBuildLoading(true);
     setBuildError('');
     api.getBuild(defaultBuildId, controller.signal).then(result => {
       if (!controller.signal.aborted) setBuildResult(result);
     }).catch(error => {
-      if (!controller.signal.aborted) setBuildError(error.message);
+      if (!controller.signal.aborted) {
+        setBuildResult(null);
+        setBuildError(error.message);
+      }
+    }).finally(() => {
+      if (!controller.signal.aborted) setBuildLoading(false);
     });
     return () => controller.abort();
   }, [defaultBuildId, workspaceVersion, needsReadback]);
+  const displayedBuildResult = useMemo(() => buildResult && {
+    ...buildResult,
+    readback_matches_current: buildResult.id === defaultBuildId && buildResult.current_version === workspaceVersion
+      ? buildResult.readback_matches_current : null,
+  }, [buildResult, defaultBuildId, workspaceVersion]);
 
   const perform = async (key, work) => {
     if (locks.current.has(key)) return;
@@ -312,7 +324,7 @@ export function DeckMasterProvider({ children }) {
     getPage, getPageNumStr, openPage, editPage, createPage, movePage, removePage, drafts, updateDraft, saveDraft, rebaseDraft, discardDraft,
     contextDrafts, openContextEdit, updateContextDraft, saveContext, refreshContextConflict, resolveContextConflict,
     drawer, openDrawer: setDrawer, closeDrawer: () => setDrawer(null),
-    stopRun, build, buildResult: buildResult && { ...buildResult, readback_matches_current: buildResult.current_version === workspace?.version ? buildResult.readback_matches_current : null }, buildError, defaultBuild: workspace?.default_build, download, downloadStatus, restore,
+    stopRun, build, buildResult: displayedBuildResult, buildLoading, buildError, defaultBuild: workspace?.default_build, download, downloadStatus, restore,
     addReview, resolveReview, reviewDrafts, setReviewDrafts,
     comparison, compareCandidate, adoptCandidate,
     galleryLayer, setGalleryLayer, galleryView, setGalleryView, query, setQuery,

@@ -66,6 +66,29 @@ try {
   await page.getByText(`默认构建 #${built.id}`, { exact: false }).waitFor();
   assert.doesNotMatch(await buildSummary.innerText(), /缺 SVG|SVG 依据已变/);
   observations.push('CLI build survives first open and browser reload, including missing pages');
+  await page.locator('details summary').filter({ hasText: '默认构建的回读发现' }).waitFor();
+  let releaseReadback;
+  const heldReadback = new Promise(resolve => { releaseReadback = resolve; });
+  const detailPattern = '**/api/builds/*';
+  const delayDetail = async route => {
+    const response = await route.fetch();
+    await heldReadback;
+    await route.fulfill({ response });
+  };
+  await page.route(detailPattern, delayDetail);
+  try {
+    patch({ pages: [{ id: 'p1', notes: 'Changed while readback refresh waits' }] });
+    await page.getByRole('status').filter({ hasText: '正在刷新构建回读' }).waitFor();
+    assert.match(await page.getByRole('status').filter({ hasText: '正在刷新构建回读' }).innerText(), new RegExp(`暂留构建 #${built.id}`));
+    assert.match(await page.locator('details summary').innerText(), new RegExp(`上次读取构建 #${built.id}`));
+    assert.equal(await page.getByText('尚无可展示的构建回读', { exact: false }).count(), 0);
+  } finally {
+    releaseReadback();
+    await page.unroute(detailPattern, delayDetail);
+  }
+  await page.locator('details summary').filter({ hasText: '默认构建的回读发现' }).waitFor();
+  await page.getByText('历史检查，不代表当前正文已检查', { exact: false }).waitFor();
+  observations.push('A real version change keeps the old readback labelled while the next HTTP detail response is delayed');
   await page.getByRole('button', { name: '比对与采用', exact: true }).first().click();
   await page.getByRole('button', { name: '采用此候选', exact: false }).click();
   await page.waitForFunction(async file => (await (await fetch('/api/deck')).json()).deck.pages[0].svg.file === file, candidate.file);
