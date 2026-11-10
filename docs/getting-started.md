@@ -108,6 +108,7 @@ deck serve ./my-deck
 `deck serve` prints a loopback URL and binds `127.0.0.1` only. Host or Origin
 that is not this process's loopback address is rejected. Keep the URL private.
 One process serves one project.
+The old `/studio/` and `/v2/` addresses no longer work; use the address printed by `deck serve`.
 
 Command examples: [README Quick Start](../README.md#quick-start) and
 [deck-skill/references/commands.md](../deck-skill/references/commands.md).
