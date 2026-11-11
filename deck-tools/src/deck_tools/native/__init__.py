@@ -5,9 +5,11 @@ import json
 import math
 import os
 from pathlib import Path
+import struct
 import sys
 import tempfile
 import zipfile
+import zlib
 
 from lxml import etree
 from PIL import Image, ImageDraw
@@ -149,6 +151,39 @@ def validate_plan(plan, page):
     return {'page': page['id'], 'atoms': len(covered)}
 
 
+def _transparent_png():
+    """1×1 transparent PNG used as the Office fallback for an SVG icon.
+
+    PptxGenJS 4.0.1 writes each SVG twice: the SVG part, and a PNG companion
+    it intends to replace with a placeholder once Node's fs module has loaded.
+    That replacement is not added to the media promise list until the load
+    finishes. A deck whose media are only in-memory SVGs therefore finishes
+    Promise.all immediately and stores the SVG XML in ppt/media/image-*.png.
+    A deck that also reads a raster file waits long enough for the placeholder,
+    which is why a full build can succeed while an icon-only subset fails in
+    sanitize with "invalid PNG payload".
+    """
+    def chunk(kind, payload):
+        crc = zlib.crc32(kind + payload) & 0xffffffff
+        return struct.pack('>I', len(payload)) + kind + payload + struct.pack('>I', crc)
+
+    header = struct.pack('>IIBBBBB', 1, 1, 8, 6, 0, 0, 0)
+    pixels = zlib.compress(b'\x00\x00\x00\x00\x00')
+    return b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', header) + chunk(b'IDAT', pixels) + chunk(b'IEND', b'')
+
+
+def _repair_svg_png_companions(files):
+    placeholder = None
+    for name, data in list(files.items()):
+        if not name.startswith('ppt/media/') or not name.lower().endswith('.png'):
+            continue
+        if data.startswith(b'\x89PNG\r\n\x1a\n') or not data.lstrip().startswith(b'<'):
+            continue
+        if placeholder is None:
+            placeholder = _transparent_png()
+        files[name] = placeholder
+
+
 def postprocess(pptx_path, plans):
     with zipfile.ZipFile(pptx_path) as archive:
         # PptxGenJS emits an empty embeddings directory even without embedded files.
@@ -212,6 +247,7 @@ def postprocess(pptx_path, plans):
         master = root.find('p:sldMasterIdLst', NS)
         root.insert(list(root).index(master) + 1 if master is not None else 0, notes)
     files['ppt/presentation.xml'] = etree.tostring(root, xml_declaration=True, encoding='UTF-8', standalone=True)
+    _repair_svg_png_companions(files)
     with zipfile.ZipFile(pptx_path, 'w', zipfile.ZIP_DEFLATED) as archive:
         for name, data in files.items():
             archive.writestr(name, data)
@@ -284,6 +320,33 @@ def render(job):
             'findings': findings[0]}
 
 
+def _missing_visible_atoms(text, atoms):
+    """Consume each atom once, longest first.
+
+    A short atom whose characters only occur inside a longer atom that is
+    actually on the slide is still missing. Deck build does not re-run
+    validate_plan, so this readback is what reports that gap.
+    """
+    remaining = text
+    missing = []
+    needles = []
+    for atom in atoms:
+        raw = atom.get('text')
+        if not raw:
+            continue
+        needle = ''.join(raw.split())
+        if needle:
+            needles.append((needle, atom))
+    needles.sort(key=lambda item: len(item[0]), reverse=True)
+    for needle, atom in needles:
+        index = remaining.find(needle)
+        if index < 0:
+            missing.append(atom)
+            continue
+        remaining = remaining[:index] + remaining[index + len(needle):]
+    return missing
+
+
 def readback(pptx, pages):
     from ..compiler.native import notes_records, normalize_notes
     findings = []
@@ -298,10 +361,9 @@ def readback(pptx, pages):
                 findings.append({'page_id': page['id'], 'code': 'speaker_notes_mismatch'})
             root = etree.fromstring(archive.read(f'ppt/slides/slide{index}.xml'))
             text = ''.join(''.join(root.xpath('//a:t/text()', namespaces=NS)).split())
-            for atom in visible_atoms(projection(page)):
-                if atom['text'] and ''.join(atom['text'].split()) not in text:
-                    findings.append({'page_id': page['id'], 'code': 'missing_visible_atom',
-                                     'atom_id': atom['atom_id'], 'text': atom['text']})
+            for atom in _missing_visible_atoms(text, visible_atoms(projection(page))):
+                findings.append({'page_id': page['id'], 'code': 'missing_visible_atom',
+                                 'atom_id': atom['atom_id'], 'text': atom['text']})
     return {'status': 'fail' if findings else 'pass', 'findings': findings}
 
 

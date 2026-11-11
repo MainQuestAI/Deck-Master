@@ -1427,6 +1427,18 @@ pub fn artifact_status(deck: &Deck) -> Result<Value> {
     artifact_status_for(deck, deck.pages.iter().any(|p| p.native.is_some()))
 }
 
+fn stale_image_warnings(stale_images: &Value) -> Value {
+    json!(
+        stale_images
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(|page_id| page_id.as_str())
+            .map(|page_id| json!({"level":"warning","code":"stale_image","page_id":page_id}))
+            .collect::<Vec<_>>()
+    )
+}
+
 fn artifact_status_for(deck: &Deck, native: bool) -> Result<Value> {
     let missing: Vec<_> = deck
         .pages
@@ -1518,7 +1530,7 @@ pub fn build(project: &Path) -> Result<Value> {
     let id = tx.last_insert_rowid();
     tx.commit()?;
     Ok(
-        json!({"id":id,"path":store.file(&file)?,"findings":output["findings"],"missing_pages":status["missing_pages"],"stale_pages":status["stale_pages"]}),
+        json!({"id":id,"path":store.file(&file)?,"findings":output["findings"],"missing_pages":status["missing_pages"],"stale_pages":status["stale_pages"],"stale_images":status["stale_images"],"warnings":stale_image_warnings(&status["stale_images"])}),
     )
 }
 
@@ -1604,6 +1616,7 @@ pub fn export_pptx(project: &Path) -> Result<Value> {
     selected["missing_pages"] = status["missing_pages"].clone();
     selected["stale_pages"] = status["stale_pages"].clone();
     selected["stale_images"] = status["stale_images"].clone();
+    selected["warnings"] = stale_image_warnings(&status["stale_images"]);
     selected["incomplete_basis_pages"] = status["incomplete_basis_pages"].clone();
     Ok(selected)
 }

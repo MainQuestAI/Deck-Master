@@ -286,6 +286,94 @@ def test_assemble_rejects_private_notes_with_adapter_error(sample, existing_deck
         assert list(output.parent.glob('*.pptx')) == [output]
 
 
+def test_icon_only_assemble_sanitizes_png_companions(tmp_path, monkeypatch):
+    """An icon-only subset used to store SVG XML in image-1-1.png."""
+    plan_path = tmp_path / 'plan.json'
+    page = {'id': 'p1', 'content': {'title': '合成图标页'}, 'notes': '合成讲稿', 'plan': str(plan_path)}
+    plan = {'schema': 'deck.native_plan.v1', 'page': 'p1', 'canvas_px': {'w': 800, 'h': 450},
+            'background': 'FFFFFF', 'ops': [
+                {'op': 'icon', 'icon_id': 'tabler-outline/anchor', 'bbox': [20, 20, 40, 40], 'color': '225588'}]}
+    native.write_json(plan_path, plan)
+    second_plan = tmp_path / 'second.json'
+    second = {**page, 'id': 'p2', 'plan': str(second_plan), 'notes': '第二页讲稿'}
+    native.write_json(second_plan, {**plan, 'page': 'p2'})
+    pages = [page, second]
+
+    def fake_render(pptx, directory, fonts):
+        assert Path(pptx).is_file()
+        made = []
+        for index in range(len(pages)):
+            image = Path(directory) / f'slide-{index}.png'
+            image.write_bytes(b'\x89PNG\r\n\x1a\nunused')
+            made.append(image)
+        return made
+
+    monkeypatch.setattr(native, 'render_deck', fake_render)
+    result = native.assemble({'work': str(tmp_path), 'pages': pages})
+    output = Path(result['pptx'])
+    assert output == (tmp_path / 'native' / 'deck.pptx').resolve()
+    source = etree.fromstring(native.icon_file('tabler-outline/anchor').read_bytes())
+    with zipfile.ZipFile(output) as archive:
+        names = archive.namelist()
+        assert not any(name.startswith('docProps/') for name in names)
+        pngs = [name for name in names if name.startswith('ppt/media/') and name.endswith('.png')]
+        svgs = [name for name in names if name.startswith('ppt/media/') and name.endswith('.svg')]
+        assert 'ppt/media/image-1-1.png' in pngs
+        assert pngs and len(pngs) == len(svgs)
+        for name in pngs:
+            assert archive.read(name).startswith(b'\x89PNG\r\n\x1a\n')
+        for name in svgs:
+            icon = etree.fromstring(archive.read(name))
+            assert icon.xpath('//*[local-name()="path"]/@d') == source.xpath('//*[local-name()="path"]/@d')
+    raster = tmp_path / 'raster.png'
+    Image.new('RGB', (8, 8), '#225588').save(raster)
+    plan['ops'].append({'op': 'image', 'file': str(raster), 'bbox': [80, 20, 8, 8]})
+    native.write_json(plan_path, plan)
+    mixed, _ = native.generate([page], tmp_path / 'mixed.pptx', mode='deck')
+    payload = raster.read_bytes()
+    with zipfile.ZipFile(mixed) as archive:
+        stored = [archive.read(name) for name in archive.namelist()
+                  if name.startswith('ppt/media/') and name.endswith('.png')]
+        assert payload in stored
+        assert all(item.startswith(b'\x89PNG\r\n\x1a\n') for item in stored)
+
+
+def test_readback_reports_short_atom_hidden_inside_longer_text(tmp_path, monkeypatch):
+    plan_path = tmp_path / 'plan.json'
+    page = {'id': 'p1', 'content': {'title': '甲', 'body_blocks': [
+        {'id': 'body', 'type': 'paragraph', 'text': '试验甲'}]}, 'notes': '合成讲稿', 'plan': str(plan_path)}
+    atoms = {atom['text']: atom for atom in visible_atoms(projection(page))}
+    longer = atoms['试验甲']
+    plan = {'schema': 'deck.native_plan.v1', 'page': 'p1', 'canvas_px': {'w': 800, 'h': 450},
+            'background': 'FFFFFF', 'ops': [
+                {'op': 'text', 'text': longer['text'], 'atom_id': longer['atom_id'],
+                 'bbox': [20, 20, 400, 48], 'size': 28, 'color': '225588'}]}
+    native.write_json(plan_path, plan)
+    with pytest.raises(ValueError):
+        native.validate_plan(plan, page)
+
+    def fake_render(pptx, directory, fonts):
+        assert Path(pptx).is_file()
+        image = Path(directory) / 'slide.png'
+        image.write_bytes(b'\x89PNG\r\n\x1a\nunused')
+        return [image]
+
+    monkeypatch.setattr(native, 'render_deck', fake_render)
+    result = native.assemble({'work': str(tmp_path), 'pages': [page]})
+    assert Path(result['pptx']).is_file()
+    missing = [item['text'] for item in result['findings']['findings']
+               if item['code'] == 'missing_visible_atom']
+    assert missing == ['甲']
+    both = deepcopy(plan)
+    both['ops'].append({'op': 'text', 'text': atoms['甲']['text'], 'atom_id': atoms['甲']['atom_id'],
+                        'bbox': [20, 80, 80, 40], 'size': 28, 'color': '225588'})
+    native.write_json(plan_path, both)
+    output, deck_findings = native.generate([page], tmp_path / 'both.pptx', mode='deck')
+    assert deck_findings == []
+    report = native.readback(output, [page])
+    assert not any(item['code'] == 'missing_visible_atom' for item in report['findings'])
+
+
 def test_generator_lookup_installed_then_development(tmp_path, monkeypatch):
     installed = tmp_path / 'share/deck/native-pptx'
     installed.mkdir(parents=True)

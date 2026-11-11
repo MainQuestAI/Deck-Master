@@ -1,5 +1,5 @@
 use deck::{
-    model::Patch,
+    model::{Artifact, Patch},
     ops,
     store::{self, Store},
 };
@@ -752,6 +752,66 @@ os.execv(os.environ['DECK_TEST_PYTHON'], [os.environ['DECK_TEST_PYTHON'], *sys.a
     assert_eq!(restored["id"], late["id"]);
     assert_eq!(restored["input_changed"], false);
     assert_eq!(content(&restored), slow_content);
+}
+
+#[test]
+fn build_and_export_warn_when_the_original_is_stale_but_the_page_was_readopted() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    setup(path);
+    put_available_build_font(path);
+    let mut store = Store::open(path).unwrap();
+    let mut snapshot = store.current().unwrap();
+    let image_path = path.join("original.png");
+    png(&image_path);
+    let image_file = store
+        .add_file(&std::fs::read(&image_path).unwrap(), "png")
+        .unwrap();
+    let image_basis = ops::basis("image", &snapshot.deck, &snapshot.deck.pages[0]).unwrap();
+    snapshot.deck.pages[0].image = Some(Artifact {
+        file: image_file,
+        basis: image_basis,
+    });
+    let family = available_font();
+    let svg_text = format!(
+        "<svg viewBox='0 0 1280 720'><text x='64' y='80' font-size='36' font-family=\"{family}\" data-atom-id='atom:p1:title'>Decision</text></svg>"
+    );
+    let svg = store.add_file(svg_text.as_bytes(), "svg").unwrap();
+    let svg_basis = ops::basis("svg", &snapshot.deck, &snapshot.deck.pages[0]).unwrap();
+    snapshot.deck.pages[0].svg = Some(Artifact {
+        file: svg,
+        basis: svg_basis,
+    });
+    let tx = store.transaction().unwrap();
+    store::append(&tx, &snapshot.deck, "synthetic current artifacts").unwrap();
+    tx.commit().unwrap();
+    drop(store);
+    edit(
+        path,
+        json!({"pages":[{"id":"p1","purpose":"目的已变，原图未重做"}]}),
+    );
+    let mut store = Store::open(path).unwrap();
+    let mut deck = store.current().unwrap().deck;
+    assert_ne!(
+        deck.pages[0].image.as_ref().unwrap().basis,
+        ops::basis("image", &deck, &deck.pages[0]).unwrap()
+    );
+    deck.pages[0].svg.as_mut().unwrap().basis = ops::basis("svg", &deck, &deck.pages[0]).unwrap();
+    let tx = store.transaction().unwrap();
+    store::append(&tx, &deck, "synthetic readopted page").unwrap();
+    tx.commit().unwrap();
+    drop(store);
+    let built = ops::build(path).unwrap();
+    let warning = json!([{"level":"warning","code":"stale_image","page_id":"p1"}]);
+    assert_eq!(built["stale_pages"], json!([]));
+    assert_eq!(built["stale_images"], json!(["p1"]));
+    assert_eq!(built["warnings"], warning);
+    assert_eq!(built["findings"]["status"], "pass");
+    let exported = ops::export_pptx(path).unwrap();
+    assert_eq!(exported["stale_pages"], json!([]));
+    assert_eq!(exported["stale_images"], json!(["p1"]));
+    assert_eq!(exported["warnings"], warning);
+    assert_eq!(exported["input_changed"], false);
 }
 
 #[test]

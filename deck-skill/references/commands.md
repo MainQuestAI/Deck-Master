@@ -150,7 +150,7 @@ deck --project "$DECK_PROJECT" export md > "$DECK_PROJECT/manuscript.md"
 2. `deck run result <run> <page> <图片文件>` 交回。首次结果可以自动采用；重交的修正版、取消后或依据已变的结果只保存。确认使用后 `deck run adopt <run> <page>`。`deck run show` 看状态，`deck run cancel <run>` 停止后续调用和自动采用。
 3. `deck run start svg --pages p1,p2` 准备 SVG。按原图的布局和关系重建，正文取 content.json，文字绑定 atoms.json。先读 [svg-subset.md](svg-subset.md)。错漏文字、局部排版和依据明确的连线可以沿用原图直接改。主结构要重排时先改蓝图。
 4. `deck run result <run> <page> <SVG文件>` 编译、渲染并回读。工具报错就改具体元素。Host 打开预览 PNG，对照原图检查端点、方向、分支、层级、侧栏和阅读顺序。
-5. `deck build` 构建 PPTX，`deck export pptx` 优先取当前构建输入匹配的成品路径，没有匹配时取最近历史成品并提示。`missing_pages` 是没有 SVG、因此没有进入这次 PPTX 的页。`stale_pages` 是 SVG 依据与当前正文、原图或样式不一致。`stale_images` 在 `deck show` 的 `artifact_status` 里，指原图依据已变；只改讲稿不会让原图过期。构建成功不会清掉这两项。`export pptx` 的 `input_changed` 才表示构建之后 SVG、讲稿或构建设置又变了。
+5. `deck build` 构建 PPTX，`deck export pptx` 优先取当前构建输入匹配的成品路径，没有匹配时取最近历史成品并提示。`missing_pages` 是没有 SVG（native 作品则是没有已采用 native）、因此没有进入这次 PPTX 的页。`stale_pages` 是已采用 SVG 或 native 的依据与当前正文、目的、布局、原图文件或样式不一致。`stale_images` 只比较原图依据。它在 `deck get` / `deck show` 的 `artifact_status` 里，也在 `deck build` 和 `deck export pptx` 里。这两条命令另给 `warnings`：`code` 为 `stale_image`、`level` 为 `warning`，列出原图依据已变的页号。不并入 `stale_pages`，不改变退出码，也不把回读 status 从 pass 改成 fail。只改讲稿不会让原图或页面过期。构建成功不会清掉这两项。`export pptx` 的 `input_changed` 才表示构建之后 SVG、native、讲稿或构建设置又变了。
 
 `soffice` 不可用时，SVG 的 `deck run result` 失败并说明如何安装 LibreOffice。停在这一步。不要改调 `compile_job`，不要手写 PPTX。
 已完成的 SVG 任务重交同一文件时，返回 `reused: true` 并沿用原回读，不重新检查，也不返回本次 `checked_version`；缺原回读时 findings 为 null。该返回不表示当前正文已经重新检查。
@@ -224,7 +224,7 @@ deck export pptx
 
 任务目录提供 content.json、atoms.json、style.json、attachments.json 与还原方法。坐标来自本页已采用原图，image op 的 file 相对 plan 所在目录。`run result` 先校验再渲染，返回 findings 与 side_by_side 路径；打开并排图，修正后再交回。native 只生成候选，必须用非空 `--note` 明确采用。`run show` 查看状态，`run cancel` 停止任务。
 
-原图或正文、目的、布局、样式变化后，已采用页面列在 stale_pages；只改讲稿不使页面过期，但需要重新 build。native 作品缺页列在 missing_pages，不回退 SVG。build 只收已采用的 plan，讲稿取当前 page.notes；export 仍优先匹配当前构建输入。
+正文、目的、布局、样式或原图文件变化后，已采用的 SVG 或 native 列在 `stale_pages`。重新 adopt 会按当时的正文更新 native 依据，`stale_pages` 可以因此变空；原图没重生时该页仍在 `stale_images`，并出现在 build 与 export pptx 的 `warnings` 里。不并入 `stale_pages`，不阻断构建或导出。只改讲稿不使页面过期，但需要重新 build。native 作品缺页列在 missing_pages，不回退 SVG。build 只收已采用的 plan，讲稿取当前 page.notes；export 仍优先匹配当前构建输入。
 
 validate-plan 与 crop 保留为文件辅助工具，用 deck-tools 所在 venv 的 Python 调用：
 

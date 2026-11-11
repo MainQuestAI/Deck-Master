@@ -198,12 +198,12 @@ Page 新增默认空的 `native: Option<Artifact>`，Artifact 仍为 file/basis�
 
 ### 3.6 构建与导出
 
-- `deck build`：取每页当前的 SVG，调用 `deck_tools build`（编译、回读、清洗），并记录输入摘要：页序、每页 svg 与 notes、画布、字体、素材 ID 对应的不可变文件。素材映射按 ID 排序，不包含本机绝对路径；正文变化单独通过 SVG 过期提示。缺 SVG 的页不进入 PPTX；SVG 已过期的页照常编入，回读会报出文字不一致。刚完成的 build 仍可能列出 `stale_pages`：它比较的是 SVG basis 与当前依据，不是这次 PPTX 文件的新旧。`stale_images` 只比较原图 basis，构建不会清掉它。`export pptx` 的 `input_changed` 才表示 SVG 文件、讲稿或构建设置在该次构建之后变了。
-- 有已采用 native 的作品按 native 构建：只读各页包中明确引用的 plan 与素材，用 assemble 一次生成整稿，讲稿取当前 page.notes；缺 native 的页列在 missing_pages，不回退 SVG。没有可参建页面时报输入错误并列出缺页，不写 builds；有参建页时沿用部分构建和 builds 表记录方式。组装不重查 Python 状态或按当前正文拒收已采用的旧 plan，正文差异由回读和 stale_pages 报告。
+- `deck build`：取每页当前的 SVG，调用 `deck_tools build`（编译、回读、清洗），并记录输入摘要：页序、每页 svg 与 notes、画布、字体、素材 ID 对应的不可变文件。素材映射按 ID 排序，不包含本机绝对路径；正文变化单独通过 SVG 过期提示。缺 SVG 的页不进入 PPTX；SVG 已过期的页照常编入，回读会报出文字不一致。刚完成的 build 仍可能列出 `stale_pages`：它比较的是 SVG basis 与当前依据，不是这次 PPTX 文件的新旧。`stale_images` 只比较原图 basis，构建不会清掉它。`deck build` 与 `deck export pptx` 都返回 `stale_images`，并在 `warnings` 里以 `level=warning`、`code=stale_image` 列出这些页。不并入 `stale_pages`，不改变退出码，也不把回读 `findings.status` 从 pass 改成 fail。`export pptx` 的 `input_changed` 才表示 SVG 文件、讲稿或构建设置在该次构建之后变了。
+- 有已采用 native 的作品按 native 构建：只读各页包中明确引用的 plan 与素材，用 assemble 一次生成整稿，讲稿取当前 page.notes；缺 native 的页列在 missing_pages，不回退 SVG。没有可参建页面时报输入错误并列出缺页，不写 builds；有参建页时沿用部分构建和 builds 表记录方式。组装不重查 Python 状态或按当前正文拒收已采用的旧 plan，正文差异由回读和 stale_pages 报告。回读按出现次数扣减：长句用掉自己的那一段后，没有单独画出的短 atom 仍记 `missing_visible_atom`。这只进入 findings，不让 assemble 失败退出，构建也不重跑 validate_plan。原图依据已变由 `stale_images` 与 `warnings` 报告，不阻断。
 - native 的 build_digest 取页序、native 文件与保存依据、当前 svg-v2 依据及 notes，加现有构建设置；当前依据使改正文或原图后的成品匹配状态发生变化。纯 SVG 的摘要和构建／导出路径保持原算法。默认导出继续用同一 default_build 匹配，不另设选择规则。build 在临时目录组装，只用明确引用，不扫描目录。
 - `deck export md`：任何时候都可以导出可读稿，包括未完成的作品，待补项照常显示。
 - `deck export pptx`：优先选择当前 build_digest 匹配的最大构建 ID，否则选择最新历史构建；选中文件缺失时报错，不悄悄替换为另一份。返回来源 version_id，HTTP 仍返回 PPTX 字节与 X-Deck-Status 元数据。该构建的输入摘要与当前作品不一致时给出提示。不用版本号判断，因为 restore 会产生编号更大、内容更旧的版本。
-- build 和 export 的输出里，以及界面的下载按钮旁，都列出缺 SVG 的页和 SVG 已过期的页。界面取 `POST /api/build` 的响应或轮询得到的 `artifact_status`。
+- build 和 export 的输出里，以及界面的下载按钮旁，都列出缺 SVG 的页、SVG 已过期的页，以及原图依据已变的页。界面取 `POST /api/build` 的响应或轮询得到的 `artifact_status`。
 - 原生表格回读按稳定行列身份核对 content 与实际单元格文字，并保留 SVG → PPT 的转换检查；同一原因不重复报告。发现项仍只报告，不增加采用或导出门槛。
 - 原生单元格与普通文字使用同一字号、填充和透明度可见性判据；非空表格标题继续做普通文字覆盖检查，空标题与空单元格不制造缺字发现。
 - SVG result/adopt 执行单页编译、渲染及回读，build 编译整稿；读取、摘要、列表都不会触发编译。
@@ -237,8 +237,8 @@ S5 界面接入：制作总览展示整稿待处理意见，单页工作区展�
 
 - `GET /api/deck` 返回 `{version, deck, artifact_status, runs, history, reviews, open_reviews_total}`，在同一 SQLite 只读事务中读取。`artifact_status` 含 `missing_pages/stale_pages/stale_images`；reviews 是全部 open 意见，method 原样返回，deck 每页另带 `open_reviews` 条数（整稿意见只计入总数），不汇总为通过或合格；runs 含每页状态、未采用原因、`result_file`、`result_url`、`result_preview`、`current_basis` 与 `current_image_url`（无图时为 null），不含本地工作路径。`result_preview` 是 SVG 候选在交回时保存的 check-page PNG 文件名；原图任务、尚未交回或旧记录没有该预览时为 null。`current_basis` 是该页该任务类型当前制作依据的摘要，页面已删除时为 null。轮询和 `run show` 只返回已保存的预览引用和这次读到的依据摘要，不调用 check-page。history 按新到旧列出 `id/created_at/summary`。run 状态独立于作品版本变化，轮询时应同时刷新。
 - PUT 请求体是裸 patch（与 put 的 patch 相同，不接受 `{deck:…}` 包装），成功返回 `{version, deck}`。冲突返回 HTTP 409 与 `{exit_code:5, base, submitted, conflicts:[{unit,current}]}`，整次不写入；`submitted` 原样保留裸 patch，界面也须保留编辑输入。
-- `POST /api/build` 返回 `{id, url, findings, missing_pages, stale_pages}`，url 是该次构建文件的 `/api/files/<sha>`。`GET /api/files/<sha>` 只在当前项目的 files 目录内查找，含扩展名的存储引用取点号前的 sha 用于 URL；文件响应禁止脚本执行。
-- `GET /api/export/md` 与 `GET /api/export/pptx` 直接返回下载内容，文件名为 `deck.md/deck.pptx`。`X-Deck-Status` 是 JSON（非 ASCII 字符使用 JSON 转义），含 `missing_pages/stale_pages`；PPTX 另含 `id/input_changed/warning/build_missing_pages`。
+- `POST /api/build` 返回 `{id, url, findings, missing_pages, stale_pages, stale_images, warnings}`，url 是该次构建文件的 `/api/files/<sha>`。`warnings` 只在原图依据已变时列出对应页，不改变 HTTP 状态。`GET /api/files/<sha>` 只在当前项目的 files 目录内查找，含扩展名的存储引用取点号前的 sha 用于 URL；文件响应禁止脚本执行。
+- `GET /api/export/md` 与 `GET /api/export/pptx` 直接返回下载内容，文件名为 `deck.md/deck.pptx`。`X-Deck-Status` 是 JSON（非 ASCII 字符使用 JSON 转义），含 `missing_pages/stale_pages`；PPTX 另含 `id/input_changed/warning/build_missing_pages/stale_images/warnings`。Markdown 的状态来自 `artifact_status`，其中已有 `stale_images`。
 - `GET /api/reviews` 返回 `{reviews:[意见]}`，可用 `status=open|resolved` 与 `page=pN` 过滤，按 id 升序；POST 接受 `{page_id?, text, reviewer?}`，reviewer 默认 author，服务端强制 method=human 并忽略请求中的 method。add 与 resolve 返回该条意见，resolve 幂等；意见不存在返回 404。
 - cancel 返回 `{runs:[目标 run]}`，restore 返回 `{version, deck}`。输入错误为 HTTP 400；非本机请求 403；文件或接口不存在 404；缺工具 503；工具执行失败 500。错误响应含 `error`，仅 HTTP 409 冲突附带 CLI `exit_code:5`。
 

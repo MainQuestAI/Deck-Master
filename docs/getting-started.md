@@ -193,11 +193,15 @@ PY
   `deck-tools`.
 - `GET /api/export/md` does not run the credential check used on exported
   PPTX slide text.
-- After `deck build`, `stale_pages` can still list pages whose SVG basis differs
-  from the current content, image, or style (including `imported`). That does
-  not mean the PPTX is out of date. `stale_images` on `deck show` is the
-  same comparison for original images. `deck export pptx` sets `input_changed`
-  only when the SVG files, notes, or build settings changed after that build.
+- After `deck build`, `stale_pages` can still list pages whose SVG or native
+  basis differs from the current content, purpose, layout, image file, or style
+  (including `imported`). That does not mean the PPTX is out of date.
+  `stale_images` is the same comparison for original images. `deck get`,
+  `deck show`, `deck build`, and `deck export pptx` all include it. Build and
+  PPTX export also list those page ids in `warnings` (`code` `stale_image`,
+  `level` `warning`). They are not folded into `stale_pages` and do not change
+  the exit code or the readback status. `deck export pptx` sets `input_changed`
+  only when the page files, notes, or build settings changed after that build.
 - PPTX has been rechecked through LibreOffice (`soffice`) rendering in the
   tool tests. The 2026-11-04 maintainer check is in the
   [1.1.0 notes](releases/1.1.0.md#maintainer-acceptance-2026-11-04).
