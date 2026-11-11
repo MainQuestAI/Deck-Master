@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- 只含图标、没有位图的 native 页面子集可以 `deck build`。PptxGenJS 在没有其他媒体文件要读时，会把 SVG 写进 PNG 伴生部件；组装前只替换仍挂着 SVG 关系的那张伴生 PNG，其它非法图片仍由清洗拒绝。SVG 图标本身保留。(#325)
+- `deck build` 与 `deck export pptx` 列出原图依据已变的页：`stale_images`，以及 `warnings`（`code` 为 `stale_image`，`level` 为 `warning`）。不并入 `stale_pages`，不改变退出码或回读 status。(#326)
+- native 构建回读在每个文字对象内按占用位置扣减正文，不跨对象拼接。短 atom 只出现在更长的已绘制句子里时记 `missing_visible_atom`，仍只作为 findings，不让 assemble 失败退出，也不在构建时重跑 validate_plan。(#327)
 - native 逐页还原接入 `deck run`、`deck build` 与 `deck export pptx`；候选须用非空 `--note` 明确采用，包含 Tabler outline 图标与局部裁图。
 - 项目格式 5 → 6：仅提升 user_version，保留历史数据与文件；新增可选 native 产物引用，旧程序会提示升级 deck。
 - 默认安装 `deck-master`、`deck-content`、`deck-design`、`deck-review` 四个职责入口到 `~/.codex/skills`，不再安装 `deck` 入口；`--skills-root` 可更换目录，`--skill-dir` 已取消。

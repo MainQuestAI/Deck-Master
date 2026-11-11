@@ -37,7 +37,9 @@ enum Commands {
         #[command(subcommand)]
         command: RunCommand,
     },
-    #[command(about = "将已采用的页面构建为可编辑 PPTX。stale_pages 表示页面依据已变")]
+    #[command(
+        about = "将已采用的页面构建为可编辑 PPTX。stale_pages 是页面依据已变；stale_images 与 warnings 是原图依据已变，不阻断"
+    )]
     Build,
     #[command(about = "检查解释器、rsvg-convert、soffice、pdftoppm、fc-match；未指定字体时只警告")]
     Doctor {
@@ -181,7 +183,7 @@ enum RunCommand {
 #[derive(Subcommand)]
 enum ExportCommand {
     #[command(
-        about = "优先下载当前输入匹配的 PPTX；无匹配时下载最近可用历史成品。stale_pages 表示页面依据已变"
+        about = "优先下载当前输入匹配的 PPTX；无匹配时下载最近可用历史成品。stale_pages 是页面依据已变；stale_images 与 warnings 是原图依据已变，不阻断"
     )]
     Pptx,
     #[command(about = "输出 Markdown，包括未完成内容")]

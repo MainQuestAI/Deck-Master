@@ -897,6 +897,8 @@ fn build_downloads_report_missing_stale_and_changed_inputs_without_gating() {
     );
     assert_eq!(build.json()["missing_pages"], json!(["待补😀"]));
     assert_eq!(build.json()["stale_pages"], json!(["p1"]));
+    assert_eq!(build.json()["stale_images"], json!([]));
+    assert_eq!(build.json()["warnings"], json!([]));
     assert!(build.json().get("path").is_none());
     let downloaded = service.request("GET", build.json()["url"].as_str().unwrap(), &[], "");
     assert_eq!(downloaded.status, 200);
@@ -918,6 +920,8 @@ fn build_downloads_report_missing_stale_and_changed_inputs_without_gating() {
         json!(["待补😀"])
     );
     assert_eq!(exported.artifact_status()["stale_pages"], json!(["p1"]));
+    assert_eq!(exported.artifact_status()["stale_images"], json!([]));
+    assert_eq!(exported.artifact_status()["warnings"], json!([]));
     let markdown = service.request("GET", "/api/export/md", &[], "");
     assert_eq!(markdown.status, 200);
     assert_eq!(
