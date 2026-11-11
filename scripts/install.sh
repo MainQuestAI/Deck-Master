@@ -397,6 +397,20 @@ for native_file in render.cjs package.json package-lock.json; do
 done
 run npm --prefix "$installation/share/deck/native-pptx" ci --omit=dev
 run cp -R "$skill_target" "$installation/deck-skill"
+# A new shell does not keep this process's PATH, so an older deck stays first.
+# The installed command text is what that next session reads.
+if [ "$dry_run" -eq 0 ] && [ "$prefix" != "${HOME}/.local" ]; then
+  "$host_python" - "$installation/deck-skill/references/commands.md" "$deck_bin" <<'PY'
+import pathlib, sys
+file = pathlib.Path(sys.argv[1])
+binary = sys.argv[2]
+text = file.read_text()
+token = "<prefix>/bin/deck"
+if token not in text:
+    raise SystemExit("install.sh: 安装副本的 commands.md 缺少 <prefix>/bin/deck，无法写上这次的路径")
+file.write_text(text.replace(token, binary))
+PY
+fi
 
 phase=validate
 if [ "$dry_run" -eq 0 ]; then
@@ -490,6 +504,18 @@ if [ "$dry_run" -eq 0 ]; then
   entry_receipt clear "$compat_dir" deck
   for role in "${roles[@]}"; do entry_receipt clear "$skills_root/$role" "$role"; done
   echo "已安装 deck：${deck_bin}"
+  if found=$(command -v deck 2>/dev/null); then
+    if [ "$(resolve_path "$found")" = "$(resolve_path "$deck_bin")" ]; then
+      if [ "$prefix" != "${HOME}/.local" ]; then
+        echo "当前 shell 会运行 ${deck_bin}。新开的会话使用自己的 PATH，可能先运行以前安装的 deck；请直接运行 ${deck_bin}。"
+      fi
+    else
+      echo "PATH 上先找到的 deck：${found}"
+      echo "刚安装的是 ${deck_bin}。新开的会话使用自己的 PATH，会先运行上面那个。请直接运行 ${deck_bin}，或把 ${prefix}/bin 放到 PATH 里它之前。"
+    fi
+  else
+    echo "PATH 中没有 deck。请直接运行 ${deck_bin}，或把 ${prefix}/bin 加入 PATH。"
+  fi
   echo "完整组件目录：${installation}"
   echo "四个职责入口：${skills_root}"
   if [ "$entry_action" = migrate ]; then

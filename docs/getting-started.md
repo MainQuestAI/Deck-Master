@@ -49,9 +49,12 @@ before executing it. The venv is created in its final position. Failed
 preparation leaves the old installation selected; old directories are retained
 for existing processes. `--dry-run` prints the plan without writing.
 
-If `<prefix>/bin` is not on `PATH`, add it or call `<prefix>/bin/deck`. A
-non-default `--prefix` means the skill and
-[commands.md](../deck-skill/references/commands.md) must use that full path.
+A new shell keeps its own `PATH` and drops a temporary export from the install
+session. If `command -v deck` is not `<prefix>/bin/deck`, that other `deck`
+(often `~/.local/bin/deck`) is the one a new session runs. Call
+`<prefix>/bin/deck`, or put `<prefix>/bin` ahead of it. For a non-default
+`--prefix`, the installed copy of
+[commands.md](../deck-skill/references/commands.md) names that absolute path.
 
 Skill installation:
 
