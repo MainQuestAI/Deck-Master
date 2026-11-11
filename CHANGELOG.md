@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- README 快速开始只保留三步：安装，在 Codex 中用一句话指向 `examples/first-run` 的合成样例，再用 `deck serve` 查看第一份稿。手动命令见 `deck-skill/references/commands.md`。
 - 非默认 `--prefix` 不改登录 shell 的 PATH。新会话会先运行 PATH 上已有的 `deck`。安装副本的 commands.md 写上这次的绝对路径；`command -v deck` 若指向别处，安装结束时打印那个路径。
 - 只含图标、没有位图的 native 页面子集可以 `deck build`。PptxGenJS 在没有其他媒体文件要读时，会把 SVG 写进 PNG 伴生部件；组装前只替换仍挂着 SVG 关系的那张伴生 PNG，其它非法图片仍由清洗拒绝。SVG 图标本身保留。(#325)
 - `deck build` 与 `deck export pptx` 列出原图依据已变的页：`stale_images`，以及 `warnings`（`code` 为 `stale_image`，`level` 为 `warning`）。不并入 `stale_pages`，不改变退出码或回读 status。(#326)

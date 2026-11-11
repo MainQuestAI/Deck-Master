@@ -108,13 +108,14 @@ deck --project ./my-deck doctor --fonts 'Source Han Sans SC'
 deck serve ./my-deck
 ```
 
+These three commands check that the installed CLI starts. The first draft uses the synthetic sample: open Codex in this checkout and type the one sentence in the [README Quick Start](../README.md#quick-start). It points at `examples/first-run/`.
+
 `deck serve` prints a loopback URL and binds `127.0.0.1` only. Host or Origin
 that is not this process's loopback address is rejected. Keep the URL private.
 One process serves one project.
 The old `/studio/` and `/v2/` addresses no longer work; use the address printed by `deck serve`.
 
-Command examples: [README Quick Start](../README.md#quick-start) and
-[deck-skill/references/commands.md](../deck-skill/references/commands.md).
+Command examples: [deck-skill/references/commands.md](../deck-skill/references/commands.md).
 Release scope: [1.1.2 notes](releases/1.1.2.md).
 
 ## Import an existing archive

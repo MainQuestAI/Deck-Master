@@ -85,45 +85,12 @@ export PATH="$PWD/.dev-prefix/bin:$PATH"
 
    > 用 examples/first-run/zh/material.md 按 examples/first-run/zh/brief.md 做一份 6 页方案，放在 ./first-deck。
 
-   Skill 会处理所需命令。[样例](examples/first-run/README.md)完全由合成材料构成。
+   [样例](examples/first-run/README.md)完全由合成材料构成。四个 Skill 会处理所需命令。
 3. 运行 `deck serve ./first-deck` 查看草稿。服务绑定 `127.0.0.1`，并打印可打开的 URL。
 
-**手动命令 / 使用自己的材料：** 准备自己的完整材料与任务说明，用命令实际返回的路径和 ID 替换占位符，不能直接将尖括号内容作为参数。以下命令假定安装后 `deck` 已在 PATH 中。
-
-```bash
-# 1. 新建作品目录，只添加作者指定的材料。
-deck new ./my-deck --title '方案标题'
-deck --project ./my-deck material add ./materials/brief.pdf
-deck --project ./my-deck material text m1
-
-# 2. 读取、修改并保存。put 按 --base 比较，只写入改动过的单元。
-#    冲突时退出码 5，当前版本不变。
-deck --project ./my-deck get > ./my-deck/current.json
-deck --project ./my-deck put --base <version> ./my-deck/patch.json
-deck --project ./my-deck show
-deck --project ./my-deck export md > ./my-deck/manuscript.md
-
-# 3. 出图、重建 SVG 或导出 PPTX 前检查本机工具与所选字体。
-deck --project ./my-deck doctor --fonts 'Source Han Sans SC'
-
-# 4. 先原图再 SVG，然后构建 PPTX。Host 每次调用 ImageGen 前先登记。
-deck --project ./my-deck run start image --pages p1,p2
-deck --project ./my-deck run call <run> p1
-deck --project ./my-deck run result <run> p1 ./page.png
-deck --project ./my-deck run start svg --pages p1,p2
-deck --project ./my-deck run result <run> p1 ./page.svg
-deck --project ./my-deck build
-deck --project ./my-deck export pptx
-
-# 5. 打开本机界面，只绑定 127.0.0.1。
-deck serve ./my-deck
-```
-
-`deck-master`、`deck-content`、`deck-design`、
-`deck-review` 是同一份 `references/` 和 `assets/` 上的四个职责入口，都调用
-Rust `deck`。可运行示例如 [commands.md](deck-skill/references/commands.md)。
-页上意见：`deck review add` / `list` / `resolve`。用 `deck restore <version>`
-把历史稿恢复为新版本（不删除后来的文件、run 与 build）。
+`deck-master`、`deck-content`、`deck-design`、`deck-review` 共用同一份
+`references/` 和 `assets/`，都调用 `deck`。其余命令见
+[commands.md](deck-skill/references/commands.md)。
 
 ## 工作台
 
