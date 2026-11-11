@@ -471,7 +471,7 @@ Q03 的并发回归 `slow_old_build_finishing_after_fast_current_build_keeps_mat
 ### 本地自包含安装
 
 每次在 prefix/share/deck/installations 下的最终目录构建 CLI（含前端），建立 venv，非 editable 安装同次源码的工具包并复制四角色及共享资源。检查实际模块位置、共享链接及真实 TXT 材料读取后，原子替换 current。
-固定 prefix/bin/deck 入口先解析 current 的物理目录再 exec，新进程使用新组件，旧进程继续使用原目录。标准升级只切换 current，不移动 venv、不清理旧安装。
+固定 prefix/bin/deck 入口先解析 current 的物理目录再 exec，新进程使用新组件，旧进程继续使用原目录。标准升级只切换 current，不移动 venv、不清理旧安装。非默认 prefix 不改登录 shell 的 PATH；新会话会先运行 PATH 上已有的 deck。安装副本的 commands.md 把 `<prefix>/bin/deck` 写成这次的绝对路径。安装结束时若 `command -v deck` 不是该入口，打印先找到的路径。
 旧普通二进制通过 Cargo 记录、关联源码布局及已构建二进制内容一致性确认归属；未知入口不执行、不覆盖。首次迁移多个入口不保证崩溃原子性，失败报告所处阶段并支持按原参数重试，保留旧 venv 和源码。
 首次清理前，在 prefix/share/deck/entry-migrations 原子保存已确认旧入口的目录或链接身份（设备号、inode）及链接目标，防止入口替换或包装目录部分清理后丢失归属。整目录软链接替换仅核对解析后的目标，允许重建到同一目标的链接；包装目录及其剩余内部链接仍核对设备号、inode 与目标。用户新增文件、改指其他目标、替换包装目录及没有凭据的空目录仍拒绝。全部入口安装成功后删除对应凭据；此记录只供首次入口迁移重试，不提供自动回滚或历史安装清理。函数及命令替换失败保留原退出码，由主 shell 报告一次实际阶段；正常的无凭据探测保持静默，清理前强制校验失败说明入口已变化。成功验证后只清理本次 mktemp 创建的探针项目。
 有 uv 但缺 Python 3.12 时，普通安装先用 uv 准备 3.12，再建工具环境；准备失败保留退出码并报告 prepare-python 阶段。dry-run 只离线查询已有的 3.12，禁用下载和缓存写入；缺解释器时退出 3 并提示先准备，不回退到任意 python3。无 uv 时使用并核实 python3.12。

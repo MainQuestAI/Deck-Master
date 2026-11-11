@@ -87,7 +87,7 @@ any writes, with the path and target printed. If old Python-line links occupy
 these names, move those links away first (remove only the links, never their
 target directories), then rerun. An unmanaged `deck` is preserved with a
 warning that it may compete with the four role entries for triggering.
-If `<prefix>/bin` is not on `PATH`, add it or call `<prefix>/bin/deck`.
+A new shell keeps its own PATH. If `command -v deck` is not `<prefix>/bin/deck`, call `<prefix>/bin/deck` or put `<prefix>/bin` ahead of the other entry. A non-default prefix writes that absolute path into the installed commands.md.
 Steps are in the [install guide](docs/getting-started.md#install-from-source).
 
 After install, follow the [Quick Start](#quick-start) to make your first deck.
