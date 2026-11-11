@@ -594,24 +594,11 @@ def _missing_visible_atoms(objects, atoms):
 
 
 def _omitted_column_label_ids(page):
-    """Column labels the plan lists as not drawn.
-
-    validate-plan already accepted these. Readback only skips column labels,
-    so any other id in omitted is still required on the slide.
-    """
-    path = page.get('plan')
-    if not isinstance(path, str) or not path:
-        return set()
-    try:
-        plan = read_json(path)
-    except (OSError, ValueError):
-        return set()
-    items = plan.get('omitted')
-    if not isinstance(items, list):
-        return set()
+    """Column labels the plan lists as not drawn. Other omitted ids stay required."""
+    plan = read_json(page['plan'])
     labels = set(column_cell_ids(projection(page)))
     return {
-        item['atom_id'] for item in items
+        item['atom_id'] for item in plan.get('omitted') or []
         if isinstance(item, dict) and item.get('atom_id') in labels
     }
 
