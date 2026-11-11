@@ -22,7 +22,7 @@ done
 
 标准安装的四职责入口经 current 指向同一份完整安装副本；重复安装保留 current 链接，旧本源链接迁移到 current。只删除指向本源 `deck-skill/` 的旧 `deck` 软链接，并将仅含三条托管链接的旧包装目录升级为整目录软链接。包装目录有用户文件，或同名路径被其他入口（包括旧 Python 线）占用时，脚本在写入前退出 2，打印路径和目标。先移走该项；若为软链接，只删链接，不删目标目录，再安装。非本源的 `deck` 保留并提示可能抢触发。
 
-标准安装下文的 `deck` 指 `~/.local/bin/deck`；上述开发示例使用独立 `.dev-prefix/bin/deck`，不能覆盖标准薄入口。安装用了非默认 `--prefix` 时，二进制在 `<prefix>/bin/deck`。`<prefix>/bin` 不在 PATH 时，每条命令都用这个完整路径。`DECK_PROJECT` 是作者指定的新作品目录，`SOURCE_FILE` 是作者指定的一份原材料；不要根据示例搜索 HOME 或补读相邻目录。
+标准安装下文的 `deck` 指 `~/.local/bin/deck`；上述开发示例使用独立 `.dev-prefix/bin/deck`，不能覆盖标准薄入口。安装用了非默认 `--prefix` 时，二进制在 `<prefix>/bin/deck`。新开的会话沿用自己的 PATH，不会保留安装时临时 export。先运行 `command -v deck`：结果若不是 `<prefix>/bin/deck`，下面每条命令都用 `<prefix>/bin/deck`。`DECK_PROJECT` 是作者指定的新作品目录，`SOURCE_FILE` 是作者指定的一份原材料；不要根据示例搜索 HOME 或补读相邻目录。
 
 ## 新建与读材料
 

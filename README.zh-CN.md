@@ -51,7 +51,7 @@ Deck Master 服务于需要讲清商业方案的人：解决方案架构师、�
 包装目录里有其他文件，或同名路径被外来入口占用时，脚本会在任何写入前退出 2，
 打印路径和目标。若是旧 Python 线留下的同名软链接，先移走该链接（只删链接，
 不删它指向的目录）再安装。非本源管理的 `deck` 会保留，并提示可能抢触发。
-若 `<prefix>/bin` 不在 PATH 中，请加入，或直接运行 `<prefix>/bin/deck`。步骤见
+新开的会话沿用自己的 PATH。`command -v deck` 若不是 `<prefix>/bin/deck`，请直接运行 `<prefix>/bin/deck`，或把 `<prefix>/bin` 放到那个结果之前。非默认 prefix 会把这个绝对路径写进安装后的 commands.md。步骤见
 [安装说明](docs/getting-started.md#install-from-source)。
 
 安装后按[快速开始](#快速开始)制作第一份方案。

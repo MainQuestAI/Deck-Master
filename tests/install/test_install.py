@@ -701,6 +701,51 @@ exec(sys.argv[2])
     assert not prefix.exists()
 
 
+def test_nondefault_prefix_names_its_binary_when_an_older_deck_is_first(tmp_path: Path) -> None:
+    old_bin = tmp_path / "old-bin"
+    old_bin.mkdir()
+    old_deck = old_bin / "deck"
+    old_deck.write_text("#!/bin/sh\necho old\n")
+    old_deck.chmod(0o755)
+    env = _stub_env(tmp_path)
+    env["PATH"] = f"{old_bin}:{env['PATH']}"
+    prefix = tmp_path / "prefix"
+    root = tmp_path / "roles"
+    result = _run(["--prefix", str(prefix), "--skills-root", str(root)], env=env)
+    assert result.returncode == 0, result.stderr
+    binary = str(prefix / "bin/deck")
+    installed = (root / "deck-master" / "references" / "commands.md").read_text()
+    assert binary in installed
+    assert "<prefix>/bin/deck" not in installed
+    assert "<prefix>/bin/deck" in (SOURCE / "references/commands.md").read_text()
+    assert str(old_deck) in result.stdout
+    assert binary in result.stdout
+    source_path = (SOURCE / "references/commands.md").resolve()
+    assert (root / "deck-master" / "references" / "commands.md").resolve() != source_path
+
+    ahead = tmp_path / "ahead"
+    ahead_root = tmp_path / "ahead-roles"
+    ahead_env = dict(env)
+    ahead_env["PATH"] = f"{ahead / 'bin'}:{env['PATH']}"
+    ahead_result = _run(["--prefix", str(ahead), "--skills-root", str(ahead_root)], env=ahead_env)
+    assert ahead_result.returncode == 0, ahead_result.stderr
+    ahead_binary = str(ahead / "bin/deck")
+    ahead_text = (ahead_root / "deck-content" / "references" / "commands.md").read_text()
+    assert ahead_binary in ahead_text
+    assert "<prefix>/bin/deck" not in ahead_text
+    assert str(old_deck) not in ahead_result.stdout
+    assert ahead_binary in ahead_result.stdout
+
+    default = tmp_path / "home" / ".local"
+    default_root = tmp_path / "default-roles"
+    default_result = _run(["--prefix", str(default), "--skills-root", str(default_root)], env=env)
+    assert default_result.returncode == 0, default_result.stderr
+    default_text = (default_root / "deck-review" / "references" / "commands.md").read_text()
+    assert default_text == (SOURCE / "references/commands.md").read_text()
+    assert str(old_deck) in default_result.stdout
+    assert str(default / "bin/deck") in default_result.stdout
+
+
 def test_successful_validation_removes_only_its_temporary_probe(tmp_path: Path) -> None:
     env = _stub_env(tmp_path)
     temporary = tmp_path / "temporary"
