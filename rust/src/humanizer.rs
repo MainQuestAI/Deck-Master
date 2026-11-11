@@ -2,10 +2,6 @@ use crate::error::Result;
 use crate::model::Content;
 use serde_json::Value;
 
-fn han(c: char) -> bool {
-    ('\u{3400}'..='\u{9fff}').contains(&c)
-}
-
 fn punctuation(c: char) -> bool {
     "，。、；：！？）】》％%".contains(c)
 }
@@ -22,19 +18,10 @@ pub fn text(input: &str) -> String {
             }
             let left = start.checked_sub(1).map(|i| chars[i]);
             let right = chars.get(index).copied();
-            // A Latin product token may include a separate version number.
-            let product = chars[..start]
-                .iter()
-                .rev()
-                .take_while(|c| c.is_ascii_alphanumeric() || matches!(c, ' ' | '.' | '-'))
-                .any(|c| c.is_ascii_alphabetic());
+            // Keep author spaces, including numbered labels ("1 数据与身份").
+            // A space that only pads punctuation is still dropped.
             let remove = match (left, right) {
-                (Some(a), Some(b)) => {
-                    (han(a) && b.is_ascii_digit())
-                        || (a.is_ascii_digit() && han(b) && !product)
-                        || punctuation(b)
-                        || ("（【《".contains(a))
-                }
+                (Some(a), Some(b)) => punctuation(b) || "（【《".contains(a),
                 _ => false,
             };
             if !remove {
