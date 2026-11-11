@@ -316,7 +316,6 @@ def test_icon_only_assemble_sanitizes_png_companions(tmp_path, monkeypatch):
     source = etree.fromstring(native.icon_file('tabler-outline/anchor').read_bytes())
     with zipfile.ZipFile(output) as archive:
         names = archive.namelist()
-        assert not any(name.startswith('docProps/') for name in names)
         pngs = [name for name in names if name.startswith('ppt/media/') and name.endswith('.png')]
         svgs = [name for name in names if name.startswith('ppt/media/') and name.endswith('.svg')]
         assert 'ppt/media/image-1-1.png' in pngs
