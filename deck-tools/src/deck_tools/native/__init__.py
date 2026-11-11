@@ -5,6 +5,7 @@ import json
 import math
 import os
 from pathlib import Path
+import posixpath
 import struct
 import sys
 import tempfile
@@ -172,12 +173,53 @@ def _transparent_png():
     return b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', header) + chunk(b'IDAT', pixels) + chunk(b'IEND', b'')
 
 
+def _part_name(source_part, target):
+    return posixpath.normpath(posixpath.join(posixpath.dirname(source_part), target))
+
+
+def _svg_companion_pngs(files):
+    """PNG parts that a slide blip uses only as the fallback for an SVG part."""
+    companions = set()
+    for name, data in files.items():
+        if not name.startswith('ppt/slides/_rels/slide') or not name.endswith('.xml.rels'):
+            continue
+        source = name.replace('/_rels/', '/')[:-len('.rels')]
+        rels = etree.fromstring(data)
+        targets = {}
+        for rel in rels:
+            rid = rel.get('Id')
+            target = rel.get('Target')
+            if rid and target and rel.get('TargetMode') != 'External':
+                targets[rid] = _part_name(source, target)
+        slide = etree.fromstring(files[source])
+        for element in slide.iter():
+            if etree.QName(element).localname != 'blip':
+                continue
+            png_rid = None
+            for key, value in element.attrib.items():
+                if etree.QName(key).localname == 'embed':
+                    png_rid = value
+            svg_rid = None
+            for child in element.iter():
+                if etree.QName(child).localname != 'svgBlip':
+                    continue
+                for key, value in child.attrib.items():
+                    if etree.QName(key).localname == 'embed':
+                        svg_rid = value
+            png_part = targets.get(png_rid)
+            svg_part = targets.get(svg_rid)
+            if not png_part or not svg_part or svg_part not in files:
+                continue
+            if png_part.lower().endswith('.png') and svg_part.lower().endswith('.svg'):
+                companions.add(png_part)
+    return companions
+
+
 def _repair_svg_png_companions(files):
     placeholder = None
-    for name, data in list(files.items()):
-        if not name.startswith('ppt/media/') or not name.lower().endswith('.png'):
-            continue
-        if data.startswith(b'\x89PNG\r\n\x1a\n') or not data.lstrip().startswith(b'<'):
+    for name in _svg_companion_pngs(files):
+        data = files.get(name)
+        if data is None or data.startswith(b'\x89PNG\r\n\x1a\n') or not data.lstrip().startswith(b'<'):
             continue
         if placeholder is None:
             placeholder = _transparent_png()
@@ -320,14 +362,42 @@ def render(job):
             'findings': findings[0]}
 
 
-def _missing_visible_atoms(text, atoms):
-    """Consume each atom once, longest first.
+def _slide_text_objects(root):
+    """One string per shape or table cell. Runs inside one object stay together."""
+    objects = []
+    for element in [*root.findall('.//p:sp', NS), *root.findall('.//a:tc', NS)]:
+        parts = element.xpath('.//a:t/text()', namespaces=NS)
+        text = ''.join(''.join(parts).split())
+        if text:
+            objects.append(text)
+    return objects
 
-    A short atom whose characters only occur inside a longer atom that is
-    actually on the slide is still missing. Deck build does not re-run
-    validate_plan, so this readback is what reports that gap.
+
+def _take_span(text, mask, needle):
+    length = len(needle)
+    start = 0
+    while start <= len(text) - length:
+        index = text.find(needle, start)
+        if index < 0:
+            return False
+        if any(mask[index:index + length]):
+            start = index + 1
+            continue
+        for offset in range(length):
+            mask[index + offset] = 1
+        return True
+    return False
+
+
+def _missing_visible_atoms(objects, atoms):
+    """Mark consumed characters inside one text object.
+
+    Longest atom first, so a short atom is missing when its only copy sits
+    inside a longer atom on the slide. Objects are not concatenated: drawing
+    20, 202, and 2 must not be read as one string. Deleting a match is also
+    wrong, because removing 中间 from 甲中间乙 would invent 甲乙.
     """
-    remaining = text
+    masks = [bytearray(len(text)) for text in objects]
     missing = []
     needles = []
     for atom in atoms:
@@ -339,11 +409,8 @@ def _missing_visible_atoms(text, atoms):
             needles.append((needle, atom))
     needles.sort(key=lambda item: len(item[0]), reverse=True)
     for needle, atom in needles:
-        index = remaining.find(needle)
-        if index < 0:
+        if not any(_take_span(text, mask, needle) for text, mask in zip(objects, masks)):
             missing.append(atom)
-            continue
-        remaining = remaining[:index] + remaining[index + len(needle):]
     return missing
 
 
@@ -360,8 +427,7 @@ def readback(pptx, pages):
             if actual['notes'] != normalize_notes(page.get('notes', '')):
                 findings.append({'page_id': page['id'], 'code': 'speaker_notes_mismatch'})
             root = etree.fromstring(archive.read(f'ppt/slides/slide{index}.xml'))
-            text = ''.join(''.join(root.xpath('//a:t/text()', namespaces=NS)).split())
-            for atom in _missing_visible_atoms(text, visible_atoms(projection(page))):
+            for atom in _missing_visible_atoms(_slide_text_objects(root), visible_atoms(projection(page))):
                 findings.append({'page_id': page['id'], 'code': 'missing_visible_atom',
                                  'atom_id': atom['atom_id'], 'text': atom['text']})
     return {'status': 'fail' if findings else 'pass', 'findings': findings}

@@ -14,6 +14,7 @@ import pytest
 from deck_tools import native
 from deck_tools.atoms import visible_atoms
 from deck_tools.compiler.native import notes_records
+from deck_tools.sanitize import OperationError, pptx as sanitize_pptx
 from deck_tools.render import RendererError
 from deck_tools.jobs import projection
 from deck_tools.vendor.cyberppt.test_select_icon import SelectIconTests  # noqa: F401
@@ -338,6 +339,26 @@ def test_icon_only_assemble_sanitizes_png_companions(tmp_path, monkeypatch):
         assert all(item.startswith(b'\x89PNG\r\n\x1a\n') for item in stored)
 
 
+def test_png_repair_does_not_replace_an_xml_image_asset(tmp_path):
+    plan_path = tmp_path / 'plan.json'
+    bad = tmp_path / 'bad.png'
+    bad.write_bytes(b'<!-- not a png -->')
+    page = {'id': 'p1', 'content': {'title': '合成图标页'}, 'notes': '合成讲稿', 'plan': str(plan_path)}
+    plan = {'schema': 'deck.native_plan.v1', 'page': 'p1', 'canvas_px': {'w': 800, 'h': 450},
+            'background': 'FFFFFF', 'ops': [
+                {'op': 'icon', 'icon_id': 'tabler-outline/anchor', 'bbox': [20, 20, 40, 40], 'color': '225588'},
+                {'op': 'image', 'file': str(bad), 'bbox': [80, 20, 8, 8]}]}
+    native.write_json(plan_path, plan)
+    output, _ = native.generate([page], tmp_path / 'mixed.pptx', mode='deck')
+    with zipfile.ZipFile(output) as archive:
+        payloads = [archive.read(name) for name in archive.namelist()
+                    if name.startswith('ppt/media/') and name.endswith('.png')]
+        assert b'<!-- not a png -->' in payloads
+        assert any(item.startswith(b'\x89PNG\r\n\x1a\n') for item in payloads)
+    with pytest.raises(OperationError):
+        sanitize_pptx(output.read_bytes(), 'deck.pptx', notes=[{'page_id': 'p1', 'notes': '合成讲稿'}])
+
+
 def test_readback_reports_short_atom_hidden_inside_longer_text(tmp_path, monkeypatch):
     plan_path = tmp_path / 'plan.json'
     page = {'id': 'p1', 'content': {'title': '甲', 'body_blocks': [
@@ -372,6 +393,40 @@ def test_readback_reports_short_atom_hidden_inside_longer_text(tmp_path, monkeyp
     assert deck_findings == []
     report = native.readback(output, [page])
     assert not any(item['code'] == 'missing_visible_atom' for item in report['findings'])
+
+
+def _text_page(tmp_path, blocks, ops):
+    plan_path = tmp_path / 'plan.json'
+    page = {'id': 'p1', 'content': {'body_blocks': blocks}, 'notes': '合成讲稿', 'plan': str(plan_path)}
+    native.write_json(plan_path, {'schema': 'deck.native_plan.v1', 'page': 'p1',
+                                   'canvas_px': {'w': 800, 'h': 450}, 'background': 'FFFFFF', 'ops': ops})
+    output, deck_findings = native.generate([page], tmp_path / 'page.pptx', mode='deck')
+    assert deck_findings == []
+    return page, output
+
+
+def test_readback_matches_overlapping_values_inside_separate_text_objects(tmp_path):
+    blocks = [{'id': name, 'type': 'paragraph', 'text': text}
+              for name, text in (('wide', '202'), ('mid', '20'), ('narrow', '2'))]
+    page = {'id': 'p1', 'content': {'body_blocks': blocks}, 'notes': '', 'plan': ''}
+    ops = []
+    for index, atom in enumerate(visible_atoms(projection(page))):
+        ops.append({'op': 'text', 'text': atom['text'], 'atom_id': atom['atom_id'],
+                    'bbox': [20, 20 + index * 60, 160, 40], 'size': 24, 'color': '225588'})
+    page, output = _text_page(tmp_path, blocks, ops)
+    report = native.readback(output, [page])
+    assert not any(item['code'] == 'missing_visible_atom' for item in report['findings'])
+
+
+def test_readback_does_not_join_characters_around_a_consumed_span(tmp_path):
+    blocks = [{'id': 'gap', 'type': 'paragraph', 'text': '甲乙'}]
+    page = {'id': 'p1', 'content': {'title': '中间', 'body_blocks': blocks}, 'notes': '合成讲稿', 'plan': ''}
+    ops = [{'op': 'text', 'text': '甲中间乙', 'bbox': [20, 20, 300, 40], 'size': 24, 'color': '225588'}]
+    page, output = _text_page(tmp_path, [{'id': 'gap', 'type': 'paragraph', 'text': '甲乙'}], ops)
+    page['content']['title'] = '中间'
+    report = native.readback(output, [page])
+    missing = [item['text'] for item in report['findings'] if item['code'] == 'missing_visible_atom']
+    assert '甲乙' in missing
 
 
 def test_generator_lookup_installed_then_development(tmp_path, monkeypatch):
