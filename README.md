@@ -128,49 +128,12 @@ archive into a new directory. The archive is read without modification.
 
    > Make a 6-page deck from examples/first-run/en/material.md following examples/first-run/en/brief.md, in ./first-deck.
 
-   The Skills handle the commands. The [sample](examples/first-run/README.md) is fully synthetic.
+   The [sample](examples/first-run/README.md) is fully synthetic. The four Skills run the commands.
 3. View the draft with `deck serve ./first-deck`. It binds `127.0.0.1` and prints the URL to open.
 
-**Manual commands / using your own material:** use your own complete material and
-brief, and substitute paths and IDs returned by the commands; do not paste the
-placeholders as values. These commands assume `deck` is on `PATH` after installation.
-
-```bash
-# 1. Create a work directory and add author-specified source files only.
-deck new ./my-deck --title '方案标题'
-deck --project ./my-deck material add ./materials/brief.pdf
-deck --project ./my-deck material text m1
-
-# 2. Read, edit, and save. put compares against --base and writes only
-#    changed units. Conflicts exit 5 and leave the current version unchanged.
-deck --project ./my-deck get > ./my-deck/current.json
-deck --project ./my-deck put --base <version> ./my-deck/patch.json
-deck --project ./my-deck show
-deck --project ./my-deck export md > ./my-deck/manuscript.md
-
-# 3. Check local tools and selected fonts before image / SVG / PPTX work.
-deck --project ./my-deck doctor --fonts 'Source Han Sans SC'
-
-# 4. Image then SVG, then build PPTX. Hosts register each ImageGen call.
-deck --project ./my-deck run start image --pages p1,p2
-deck --project ./my-deck run call <run> p1
-deck --project ./my-deck run result <run> p1 ./page.png
-deck --project ./my-deck run start svg --pages p1,p2
-deck --project ./my-deck run result <run> p1 ./page.svg
-deck --project ./my-deck build
-deck --project ./my-deck export pptx
-
-# 5. Open the local UI. It binds 127.0.0.1 only.
-deck serve ./my-deck
-```
-
-The four Skills `deck-master`, `deck-content`, `deck-design`, and `deck-review`
-describe judgment and which command to run. They share the same `references/`
-and `assets/` and call the Rust `deck` CLI. Worked command examples are in
+`deck-master`, `deck-content`, `deck-design`, and `deck-review` share
+`references/` and `assets/` and call `deck`. Further commands are in
 [deck-skill/references/commands.md](deck-skill/references/commands.md).
-Page reviews: `deck review add` / `list` / `resolve`. Restore a historical
-version with `deck restore <version>` (it writes a new version; files, runs and
-builds are not deleted).
 
 ## Workbench
 

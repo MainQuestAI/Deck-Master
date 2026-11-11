@@ -10,7 +10,7 @@
 安装与命令见 [安装说明](getting-started.md) 和 [README Quick Start](../README.md#quick-start)；已发布版本见 [1.1.2 发版说明](releases/1.1.2.md)。
 
 1. [安装与首次运行](getting-started.md)：`scripts/install.sh`、`deck serve`、Host 与渲染依赖、已知限制。
-2. [README Quick Start](../README.md#quick-start)：`deck new` / `put` / `run` / `build` / `serve`；ID 与路径必须来自真实执行。
+2. [README Quick Start](../README.md#quick-start)：安装后在 Codex 里用一句话指向 `examples/first-run`，再 `deck serve` 看第一份稿。其余命令见 [commands.md](../deck-skill/references/commands.md)。
 3. [Rust 重写开发稿](specs/rust-rebuild/README.md)：现行架构（Rust 核心 + deck-tools + WebUI）。
 4. 已有 `legacy-export.v1` 档案仍可用 `deck import` 导入；旧 Python 工作台与官方导出器已移除，历史说明见已发布的 [1.1.0 发版页](releases/1.1.0.md#upgrade-and-migration)。
 
