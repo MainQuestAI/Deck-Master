@@ -194,6 +194,13 @@ svg 类没有外部付费调用，不需要 `run call`，也没有 max_calls。�
 
 native 还原沿用同一 run 记录（Refs #231）：`run start native --pages ...` 准备正文、atoms、原图附件与还原方法；`run result` 调用 render，由 render 先校验 plan，再渲染并返回校验 findings 和并排图，仅保存 unadopted 候选。`run adopt --note` 必须带非空对照结论，才写入 page.native 和 page.preview。native 无 max_calls，basis 复用 svg-v2 的全部输入和前缀。
 
+校验在既有硬性检查通过后，可以给 findings 附加 `warnings`。没有提示时不带这个字段。两条都是 `level=warning`，不抛错，不改变 validate-plan、render 或 `deck run result` 的退出码，也不进入 assemble 回读，因此不把构建 `findings.status` 从 pass 改成 fail。构建仍不重跑 validate_plan。
+
+- `repeated_atom`：去掉空白后不少于 8 个字的 atom 出现在两个及以上文字对象或单元格，且多出来的次数没有布尔值 `repeat: true`。同一列名在每一组横排卡片上各作一次标题时不报。
+- `orphan_column_label`：列名 atom 只作为一个 text 出现，该列的文字对象分成至少两组横排，且列名字号小于这些文字的中位字号。
+- 列名可以写入 plan 的 `omitted`（`atom_id` 与非空 `reason`）而不再画一次。其他 atom 不能这样省略。
+- 原图中的行图标、卡片小图、人物和照片由还原方法要求登记为 icon 或 crop。计划检查不从原图像素推断缺图。
+
 Page 新增默认空的 `native: Option<Artifact>`，Artifact 仍为 file/basis。native 候选存为 `.deck/files/<sha>.native.json`，包含 plan、assets（id/file/sha256）、render_png、note；素材与渲染 PNG 同样按摘要保存。采用时写入结论会生成新包，不修改旧包。PagePatch 接受但忽略 native，与其他产物字段一致。项目格式从 5 升到 6，仅更新 user_version，不改历史 JSON；高版本仍在反序列化前提示升级。Python 不再保存或检查 status.json，采用与过期判断由 run 记录、page.native 和 basis 负责。
 
 ### 3.6 构建与导出

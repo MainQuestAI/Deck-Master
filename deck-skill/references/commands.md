@@ -245,14 +245,18 @@ plan v1 的固定外形：
 
 | op | 字段 |
 | --- | --- |
-| text | `text, atom_id, bbox:[x,y,w,h], size, color, weight`（`bold` 或数值），`align`（left/center/right），`valign`（top/center/bottom）；可用 `font` 指定已安装字体，默认 Noto Sans CJK SC |
+| text | `text, atom_id, bbox:[x,y,w,h], size, color, weight`（`bold` 或数值），`align`（left/center/right），`valign`（top/center/bottom），可选 `repeat:true`；可用 `font` 指定已安装字体，默认 Noto Sans CJK SC |
 | shape | `type`（pptxgenjs 形状名，或 custom），`bbox, fill, line:{color,width,arrowheads?}, transparency`（0–100），`radius, flip:{h,v}`；custom 加 `points:[[x,y],...]`（bbox 内局部点），可用 `closed:true` 闭合，`fill:"none"` 不填充 |
 | arrow | `start:[x,y], end:[x,y], color, width, arrowheads:{start?,end?}`；箭头端用 pptxgenjs 名称，如 triangle |
 | icon | `icon_id:"tabler-outline/<名称>", bbox, color` |
 | image | `file, bbox`；不得附正文或 atom，每张面积不超过画布 40% |
-| table | `bbox, col_widths:[...], row_heights:[...], margin, header_style:{size,color,fill,weight,align,valign,margin}, cells:[[{text,atom_id,margin?},...],...]`；表头算第一行，可指定与 text 同形的文字样式及 `line:{color,width}`；margin 为非负数字或 `[上,右,下,左]` 四个非负数字，单位为原图像素，默认表头 `[5,8,5,8]`、正文 `[7,9,7,9]`；优先级为 cell.margin > header_style.margin（仅表头）> table.margin（全部单元格）> 默认值 |
+| table | `bbox, col_widths:[...], row_heights:[...], margin, header_style:{size,color,fill,weight,align,valign,margin}, cells:[[{text,atom_id,margin?,repeat?},...],...]`；表头算第一行，可指定与 text 同形的文字样式及 `line:{color,width}`；margin 为非负数字或 `[上,右,下,左]` 四个非负数字，单位为原图像素，默认表头 `[5,8,5,8]`、正文 `[7,9,7,9]`；优先级为 cell.margin > header_style.margin（仅表头）> table.margin（全部单元格）> 默认值 |
 
 文字和表格单元格必须逐项匹配当前 content 的 atoms；用现有 `atoms` 文件命令取得编号。讲稿只放 page.notes，不放 plan。表格的行列尺寸合计等于 bbox；空字符串正文也可作为对应 atom 的原生文本。
+
+同一 atom 默认只出现一次。原图确实重复时，多出来的 text 或单元格加布尔值 `repeat: true`。列名可以不画，改写入顶层 `omitted: [{atom_id, reason}]`；`reason` 为非空字符串，且该 atom 必须是表格列名。其他 atom 不能这样省略。
+
+`run result` 和 validate-plan 在硬性检查通过后，可能多返回 `warnings`。没有提示时不带这个字段。`repeated_atom` 表示去掉空白后不少于 8 个字的 atom 被画了多次，且多出来的次数没有 `repeat: true`。列名在每一组横排卡片上各作一次标题时不报。`orphan_column_label` 表示列名只作为一个 text 出现，该列文字分成至少两组横排，且列名字号小于这些文字的中位字号。`warnings` 不改变退出码。构建不重跑 validate-plan，回读也不重复这两项。
 
 `deck run result` 保存候选和素材，并返回渲染 PNG 与并排图；每次重交后重新看图。`deck run adopt --note` 保存本次结论并采用；构建后检查整套输出。
 

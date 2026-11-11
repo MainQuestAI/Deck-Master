@@ -150,3 +150,31 @@ def _collect_table(atoms: list, page_id: str, block: dict, block_index: int) -> 
                 }
             )
 
+
+def column_cell_ids(page: dict) -> dict[str, list[str]]:
+    """Map each column-label atom to the cell atoms of that column.
+
+    Plan checks use the grouping to tell one leftover column name from a label
+    that titles a single column. The ids are the same strings visible_atoms emits.
+    """
+    page_id = page["page_id"]
+    visible = page.get("customer_visible") or {}
+    groups: dict[str, list[str]] = {}
+    for block_index, block in enumerate(visible.get("body_blocks") or []):
+        if block.get("type") != "table":
+            continue
+        table_id = _stable_id(block, f"table-{block_index + 1}")
+        for column_index, column in enumerate(block.get("columns") or []):
+            column_id = _stable_id(column, f"col-{column_index + 1}")
+            groups[_atom_id(page_id, "column", f"{table_id}:{column_id}", "label")] = []
+        for row_index, row in enumerate(block.get("rows") or []):
+            row_id = _stable_id(row, f"row-{row_index + 1}")
+            for cell_index, cell in enumerate(row.get("cells") or []):
+                column_id = cell.get("column_id") or f"col-{cell_index + 1}"
+                label_id = _atom_id(page_id, "column", f"{table_id}:{column_id}", "label")
+                cell_id = _atom_id(
+                    page_id, "cell", f"{table_id}:{row_id}:{column_id}", "display_text"
+                )
+                groups.setdefault(label_id, []).append(cell_id)
+    return groups
+

@@ -16,7 +16,7 @@ from lxml import etree
 from PIL import Image, ImageDraw
 
 from .. import sanitize
-from ..atoms import visible_atoms
+from ..atoms import column_cell_ids, visible_atoms
 from ..jobs import projection
 from ..render import NeedsTool, executable, render_deck, run
 
@@ -81,7 +81,8 @@ def validate_plan(plan, page):
     w, h = number(plan['canvas_px']['w']), number(plan['canvas_px']['h'])
     if min(w, h) <= 0:
         raise ValueError('画布尺寸必须大于零')
-    atoms = {a['atom_id']: a['text'] for a in visible_atoms(projection(page)) if a['text'] is not None}
+    projected = projection(page)
+    atoms = {a['atom_id']: a['text'] for a in visible_atoms(projected) if a['text'] is not None}
     covered = set()
 
     def text(item):
@@ -147,9 +148,187 @@ def validate_plan(plan, page):
                 inside_box([*point, 0, 0], op['bbox'][2], op['bbox'][3])
         if kind not in ('text', 'table', 'image') and any(key in op for key in ('text', 'atom_id', 'content')):
             raise ValueError('上屏文字必须使用 text 或 table 原语')
-    if covered != set(atoms):
-        raise ValueError('plan 缺少正文 atom：' + '、'.join(sorted(set(atoms) - covered)))
-    return {'page': page['id'], 'atoms': len(covered)}
+    groups = column_cell_ids(projected)
+    omitted = _omitted_column_labels(plan, atoms, groups)
+    missing = set(atoms) - covered - omitted
+    if missing:
+        raise ValueError('plan 缺少正文 atom：' + '、'.join(sorted(missing)))
+    result = {'page': page['id'], 'atoms': len(covered)}
+    warnings = _plan_warnings(plan, atoms, groups)
+    if warnings:
+        result['warnings'] = warnings
+    return result
+
+
+# Reports of a sentence drawn twice counted atoms of at least eight characters.
+# Shorter repeats are labels, not that finding.
+_REPEATED_ATOM_MIN_CHARS = 8
+
+
+def _omitted_column_labels(plan, atoms, groups):
+    """Column labels may be listed instead of drawn. Every other atom stays required."""
+    if 'omitted' not in plan:
+        return set()
+    items = plan['omitted']
+    if not isinstance(items, list):
+        raise ValueError('omitted 必须是列表')
+    omitted = set()
+    for item in items:
+        if not isinstance(item, dict):
+            raise ValueError('省略项必须包含 atom_id 和 reason')
+        atom_id = item.get('atom_id')
+        reason = item.get('reason')
+        if (
+            not isinstance(atom_id, str) or atom_id not in atoms
+            or not isinstance(reason, str) or not reason.strip()
+        ):
+            raise ValueError('省略项必须是当前正文的 atom，并写明理由')
+        if atom_id not in groups:
+            raise ValueError('只有表格列名可以标注省略')
+        omitted.add(atom_id)
+    return omitted
+
+
+def _finite_size(value):
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+
+
+def _band_tolerance(width):
+    # Cells of one column sit together. Cards in a row are farther apart than this.
+    return max(40, width * 0.08)
+
+
+def _x_bands(boxes, tolerance):
+    centers = sorted(box[0] + box[2] / 2 for box in boxes)
+    bands = []
+    for center in centers:
+        if bands and abs(center - bands[-1][0]) <= tolerance:
+            mean, count = bands[-1]
+            count += 1
+            bands[-1] = [mean + (center - mean) / count, count]
+        else:
+            bands.append([center, 1])
+    return bands
+
+
+def _placements(plan):
+    found = []
+    for op in plan['ops']:
+        if op['op'] == 'text':
+            found.append(_placement('text', op, op['bbox']))
+        elif op['op'] == 'table':
+            top = op['bbox'][1]
+            for row_index, row in enumerate(op['cells']):
+                left = op['bbox'][0]
+                height = op['row_heights'][row_index]
+                for col_index, cell in enumerate(row):
+                    width = op['col_widths'][col_index]
+                    found.append(_placement('cell', cell, [left, top, width, height]))
+                    left += width
+                top += height
+    return found
+
+
+def _placement(where, item, bbox):
+    return {
+        'where': where,
+        'atom_id': item.get('atom_id'),
+        'bbox': bbox,
+        'size': item.get('size'),
+        'repeat': item.get('repeat') is True,
+    }
+
+
+def _median(values):
+    ordered = sorted(values)
+    middle = len(ordered) // 2
+    if len(ordered) % 2:
+        return ordered[middle]
+    return (ordered[middle - 1] + ordered[middle]) / 2
+
+
+def _compact_length(text):
+    return len(''.join(text.split()))
+
+
+def _per_card_column_heading(placements, cell_boxes, tolerance):
+    """One column label above each horizontal group is the card-title placement."""
+    if len(placements) < 2 or any(item['where'] != 'text' for item in placements):
+        return False
+    bands = _x_bands(cell_boxes, tolerance)
+    if len(bands) != len(placements):
+        return False
+    used = set()
+    for item in placements:
+        center = item['bbox'][0] + item['bbox'][2] / 2
+        match = None
+        for index, (band_center, _count) in enumerate(bands):
+            if index in used:
+                continue
+            if abs(center - band_center) <= tolerance:
+                match = index
+                break
+        if match is None:
+            return False
+        used.add(match)
+    return True
+
+
+def _plan_warnings(plan, atoms, groups):
+    """Non-blocking hints. Assemble does not run this, and nothing here raises."""
+    tolerance = _band_tolerance(plan['canvas_px']['w'])
+    by_atom = {}
+    for item in _placements(plan):
+        by_atom.setdefault(item['atom_id'], []).append(item)
+    cell_boxes = {}
+    cell_sizes = {}
+    for label_id, cell_ids in groups.items():
+        boxes = []
+        sizes = []
+        for cell_id in cell_ids:
+            for item in by_atom.get(cell_id, []):
+                if item['where'] != 'text':
+                    continue
+                boxes.append(item['bbox'])
+                if _finite_size(item['size']):
+                    sizes.append(item['size'])
+        cell_boxes[label_id] = boxes
+        cell_sizes[label_id] = sizes
+    warnings = []
+    for atom_id in sorted(by_atom):
+        group = by_atom[atom_id]
+        text = atoms.get(atom_id)
+        if text is None:
+            continue
+        extras = len(group) - 1
+        if extras > 0 and _compact_length(text) >= _REPEATED_ATOM_MIN_CHARS:
+            marked = sum(item['repeat'] for item in group)
+            per_card = atom_id in groups and _per_card_column_heading(
+                group, cell_boxes.get(atom_id, []), tolerance)
+            if marked < extras and not per_card:
+                warnings.append({
+                    'level': 'warning',
+                    'code': 'repeated_atom',
+                    'atom_id': atom_id,
+                    'count': len(group),
+                    'text': text,
+                })
+        if atom_id not in groups:
+            continue
+        labels = [item for item in group if item['where'] == 'text']
+        sizes = cell_sizes.get(atom_id, [])
+        if len(labels) != 1 or len(_x_bands(cell_boxes.get(atom_id, []), tolerance)) < 2 or not sizes:
+            continue
+        label_size = labels[0]['size']
+        if not _finite_size(label_size) or not label_size < _median(sizes):
+            continue
+        warnings.append({
+            'level': 'warning',
+            'code': 'orphan_column_label',
+            'atom_id': atom_id,
+            'text': text,
+        })
+    return warnings
 
 
 def _transparent_png():
@@ -414,6 +593,16 @@ def _missing_visible_atoms(objects, atoms):
     return missing
 
 
+def _omitted_column_label_ids(page):
+    """Column labels the plan lists as not drawn. Other omitted ids stay required."""
+    plan = read_json(page['plan'])
+    labels = set(column_cell_ids(projection(page)))
+    return {
+        item['atom_id'] for item in plan.get('omitted') or []
+        if isinstance(item, dict) and item.get('atom_id') in labels
+    }
+
+
 def readback(pptx, pages):
     from ..compiler.native import notes_records, normalize_notes
     findings = []
@@ -427,7 +616,11 @@ def readback(pptx, pages):
             if actual['notes'] != normalize_notes(page.get('notes', '')):
                 findings.append({'page_id': page['id'], 'code': 'speaker_notes_mismatch'})
             root = etree.fromstring(archive.read(f'ppt/slides/slide{index}.xml'))
-            for atom in _missing_visible_atoms(_slide_text_objects(root), visible_atoms(projection(page))):
+            atoms = visible_atoms(projection(page))
+            omitted = _omitted_column_label_ids(page)
+            if omitted:
+                atoms = [atom for atom in atoms if atom['atom_id'] not in omitted]
+            for atom in _missing_visible_atoms(_slide_text_objects(root), atoms):
                 findings.append({'page_id': page['id'], 'code': 'missing_visible_atom',
                                  'atom_id': atom['atom_id'], 'text': atom['text']})
     return {'status': 'fail' if findings else 'pass', 'findings': findings}

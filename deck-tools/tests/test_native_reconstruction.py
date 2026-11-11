@@ -73,7 +73,179 @@ def _second_page(page, plan):
 
 def test_validate_plan_covers_current_content(sample):
     _, page, plan = sample
-    assert native.validate_plan(plan, page)['atoms'] == 5
+    assert native.validate_plan(plan, page) == {'page': 'p1', 'atoms': 5}
+
+
+def _plan(content, ops, omitted=None):
+    plan = {
+        'schema': 'deck.native_plan.v1', 'page': 'p1',
+        'canvas_px': {'w': 800, 'h': 450}, 'background': 'FFFFFF', 'ops': ops,
+    }
+    if omitted is not None:
+        plan['omitted'] = omitted
+    return {'id': 'p1', 'content': content, 'notes': ''}, plan
+
+
+def _text(atom_id, text, bbox, size=24, **extra):
+    return {'op': 'text', 'text': text, 'atom_id': atom_id, 'bbox': bbox, 'size': size,
+            'color': '225588', **extra}
+
+
+def _warning_codes(page, plan):
+    result = native.validate_plan(plan, page)
+    return result, [item['code'] for item in result.get('warnings', [])]
+
+
+def test_repeated_long_atom_warns_and_keeps_exit_code(tmp_path):
+    sentence = '一二三 四五六七八'
+    page, plan = _plan(
+        {'title': '合成页', 'body_blocks': [{'id': 'note', 'type': 'paragraph', 'text': sentence}]},
+        [
+            _text('atom:p1:title', '合成页', [20, 20, 300, 40]),
+            _text('atom:p1:block:note:text', sentence, [20, 80, 400, 40]),
+            _text('atom:p1:block:note:text', sentence, [20, 140, 400, 40]),
+        ],
+    )
+    result, codes = _warning_codes(page, plan)
+    assert codes == ['repeated_atom']
+    assert result['warnings'][0]['level'] == 'warning'
+    assert result['warnings'][0]['count'] == 2
+    assert result['warnings'][0]['atom_id'] == 'atom:p1:block:note:text'
+    plan['ops'][2]['repeat'] = True
+    result, codes = _warning_codes(page, plan)
+    assert codes == []
+    assert 'warnings' not in result
+    job = tmp_path / 'job.json'
+    native.write_json(tmp_path / 'plan.json', plan)
+    page['plan'] = str(tmp_path / 'plan.json')
+    plan['ops'][2].pop('repeat')
+    native.write_json(page['plan'], plan)
+    native.write_json(job, {'page': page})
+    completed = subprocess.run(
+        [sys.executable, '-m', 'deck_tools', 'validate-plan', str(job)],
+        capture_output=True, text=True, check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    answer = json.loads(completed.stdout)
+    assert [item['code'] for item in answer['warnings']] == ['repeated_atom']
+
+
+def test_short_repeat_and_per_card_column_titles_are_not_repeated_atoms():
+    label = '合成列的分组标题'
+    left = '左侧卡片里的合成说明'
+    right = '右侧卡片里的合成说明'
+    page, plan = _plan(
+        {'title': '短名', 'body_blocks': [{
+            'id': 'matrix', 'type': 'table',
+            'columns': [{'id': 'name', 'label': label}],
+            'rows': [
+                {'id': 'left', 'cells': [{'column_id': 'name', 'display_text': left}]},
+                {'id': 'right', 'cells': [{'column_id': 'name', 'display_text': right}]},
+            ],
+        }]},
+        [
+            _text('atom:p1:title', '短名', [20, 16, 200, 36]),
+            _text('atom:p1:title', '短名', [240, 16, 200, 36]),
+            _text('atom:p1:column:matrix:name:label', label, [160, 70, 200, 30], size=22),
+            _text('atom:p1:column:matrix:name:label', label, [480, 70, 200, 30], size=22),
+            _text('atom:p1:cell:matrix:left:name:display_text', left, [160, 120, 200, 40], size=28),
+            _text('atom:p1:cell:matrix:right:name:display_text', right, [480, 120, 200, 40], size=28),
+        ],
+    )
+    result, codes = _warning_codes(page, plan)
+    assert codes == []
+    assert 'warnings' not in result
+    plan['ops'][3]['bbox'] = [160, 110, 200, 30]
+    result, codes = _warning_codes(page, plan)
+    assert codes == ['repeated_atom']
+    assert result['warnings'][0]['atom_id'] == 'atom:p1:column:matrix:name:label'
+
+
+def test_card_above_table_can_mark_the_second_drawing():
+    sentence = '上图和下表各画一次的合成句子'
+    page, plan = _plan(
+        {'title': '合成页', 'body_blocks': [{
+            'id': 'matrix', 'type': 'table',
+            'columns': [{'id': 'item', 'label': '项目'}],
+            'rows': [{'id': 'one', 'cells': [{'column_id': 'item', 'display_text': sentence}]}],
+        }]},
+        [
+            _text('atom:p1:title', '合成页', [20, 16, 300, 36]),
+            _text('atom:p1:cell:matrix:one:item:display_text', sentence, [40, 70, 360, 40]),
+            {'op': 'table', 'bbox': [40, 200, 360, 80], 'col_widths': [360], 'row_heights': [36, 44],
+             'cells': [[
+                 {'text': '项目', 'atom_id': 'atom:p1:column:matrix:item:label'},
+             ], [
+                 {'text': sentence, 'atom_id': 'atom:p1:cell:matrix:one:item:display_text'},
+             ]]},
+        ],
+    )
+    _result, codes = _warning_codes(page, plan)
+    assert codes == ['repeated_atom']
+    plan['ops'][1]['repeat'] = True
+    _result, codes = _warning_codes(page, plan)
+    assert codes == []
+
+
+def test_orphan_column_label_warns_for_a_small_label_over_separate_groups():
+    left = '左侧卡片标题'
+    right = '右侧卡片标题'
+    content = {'title': '合成页', 'body_blocks': [{
+        'id': 'matrix', 'type': 'table',
+        'columns': [{'id': 'name', 'label': '模块'}],
+        'rows': [
+            {'id': 'left', 'cells': [{'column_id': 'name', 'display_text': left}]},
+            {'id': 'right', 'cells': [{'column_id': 'name', 'display_text': right}]},
+        ],
+    }]}
+    label = _text('atom:p1:column:matrix:name:label', '模块', [20, 80, 80, 24], size=14)
+    ops = [
+        _text('atom:p1:title', '合成页', [20, 16, 300, 36]),
+        label,
+        _text('atom:p1:cell:matrix:left:name:display_text', left, [160, 80, 200, 40], size=32),
+        _text('atom:p1:cell:matrix:right:name:display_text', right, [480, 80, 200, 40], size=32),
+    ]
+    _result, codes = _warning_codes(*_plan(content, ops))
+    assert codes == ['orphan_column_label']
+    label['size'] = 36
+    _result, codes = _warning_codes(*_plan(content, ops))
+    assert codes == []
+    label['size'] = 14
+    ops[3]['bbox'] = [160, 140, 200, 40]
+    _result, codes = _warning_codes(*_plan(content, ops))
+    assert codes == []
+
+
+def test_column_label_can_be_omitted_with_a_reason_and_other_atoms_cannot():
+    sentence = '仍然要画出来的合成单元格'
+    content = {'title': '合成页', 'body_blocks': [{
+        'id': 'matrix', 'type': 'table',
+        'columns': [{'id': 'name', 'label': '模块'}],
+        'rows': [{'id': 'one', 'cells': [{'column_id': 'name', 'display_text': sentence}]}],
+    }]}
+    drawn = [
+        _text('atom:p1:title', '合成页', [20, 16, 300, 36]),
+        _text('atom:p1:cell:matrix:one:name:display_text', sentence, [40, 80, 360, 40]),
+    ]
+    omitted = [{'atom_id': 'atom:p1:column:matrix:name:label', 'reason': '原图没有单独画出这一列名'}]
+    result, codes = _warning_codes(*_plan(content, drawn, omitted))
+    assert codes == []
+    assert result['atoms'] == 2
+    cell_page, cell_plan = _plan(
+        content, drawn,
+        [{'atom_id': 'atom:p1:cell:matrix:one:name:display_text', 'reason': '想省掉正文'}],
+    )
+    with pytest.raises(ValueError, match='只有表格列名'):
+        native.validate_plan(cell_plan, cell_page)
+    blank_page, blank_plan = _plan(
+        content, drawn,
+        [{'atom_id': 'atom:p1:column:matrix:name:label', 'reason': '  '}],
+    )
+    with pytest.raises(ValueError, match='写明理由'):
+        native.validate_plan(blank_plan, blank_page)
+    missing_page, missing_plan = _plan(content, drawn)
+    with pytest.raises(ValueError, match='缺少正文 atom'):
+        native.validate_plan(missing_plan, missing_page)
 
 
 @pytest.mark.parametrize('radius', [0, 8])
@@ -356,6 +528,48 @@ def test_png_repair_does_not_replace_an_xml_image_asset(tmp_path):
         assert any(item.startswith(b'\x89PNG\r\n\x1a\n') for item in payloads)
     with pytest.raises(OperationError):
         sanitize_pptx(output.read_bytes(), 'deck.pptx', notes=[{'page_id': 'p1', 'notes': '合成讲稿'}])
+
+
+def test_omitted_column_label_passes_assemble_readback_and_other_atoms_stay_required(tmp_path, monkeypatch):
+    label = '模块'
+    cell = '仍然要画出来的合成单元格'
+    page = {'id': 'p1', 'content': {'title': '合成页', 'body_blocks': [{
+        'id': 'matrix', 'type': 'table',
+        'columns': [{'id': 'name', 'label': label}],
+        'rows': [{'id': 'one', 'cells': [{'column_id': 'name', 'display_text': cell}]}],
+    }]}, 'notes': '合成讲稿', 'plan': str(tmp_path / 'plan.json')}
+    atoms = {atom['text']: atom for atom in visible_atoms(projection(page))}
+
+    def drawn(texts):
+        return [{
+            'op': 'text', 'text': text, 'atom_id': atoms[text]['atom_id'],
+            'bbox': [20, 20 + index * 60, 400, 40], 'size': 24, 'color': '225588',
+        } for index, text in enumerate(texts)]
+
+    plan = {
+        'schema': 'deck.native_plan.v1', 'page': 'p1', 'canvas_px': {'w': 800, 'h': 450},
+        'background': 'FFFFFF',
+        'omitted': [{'atom_id': atoms[label]['atom_id'], 'reason': '原图没有单独画出这一列名'}],
+        'ops': drawn(['合成页', cell]),
+    }
+    native.write_json(page['plan'], plan)
+
+    def fake_render(pptx, directory, fonts):
+        assert Path(pptx).is_file()
+        image = Path(directory) / 'slide.png'
+        image.write_bytes(b'\x89PNG\r\n\x1a\nunused')
+        return [image]
+
+    monkeypatch.setattr(native, 'render_deck', fake_render)
+    passed = native.assemble({'work': str(tmp_path), 'pages': [page]})
+    assert passed['findings'] == {'status': 'pass', 'findings': []}
+    plan['ops'] = drawn(['合成页'])
+    native.write_json(page['plan'], plan)
+    missed = native.assemble({'work': str(tmp_path), 'pages': [page]})
+    missing = [item['atom_id'] for item in missed['findings']['findings']
+               if item['code'] == 'missing_visible_atom']
+    assert missing == [atoms[cell]['atom_id']]
+    assert missed['findings']['status'] == 'fail'
 
 
 def test_readback_reports_short_atom_hidden_inside_longer_text(tmp_path, monkeypatch):
