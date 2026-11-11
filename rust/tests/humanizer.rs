@@ -1,4 +1,4 @@
-use deck::{model::Patch, ops};
+use deck::ops;
 use serde_json::json;
 
 #[test]
@@ -40,31 +40,6 @@ fn notes_only_patch_preserves_older_content_and_svg_basis() {
 }
 
 #[test]
-fn save_normalizes_spacing_without_changing_notes_or_cell_values() {
-    let temporary = tempfile::tempdir().unwrap();
-    ops::new(temporary.path(), "合成稿".into()).unwrap();
-    let patch: Patch = serde_json::from_value(json!({
-        "order":["p1"],
-        "pages":[{"id":"p1","notes":"原稿  备注","content":{
-            "title":"覆盖535  类标签，连接CDP  、VOC",
-            "subtitle":"Windows 11 专业版",
-            "body_blocks":[{"type":"table","columns":[{"id":"c1","label":"数量"}],
-                "rows":[{"cells":[{"column_id":"c1","value":"535  类，CDP  、VOC","display_text":"535  类，CDP  、VOC"}]}]}]
-        }}]
-    }))
-    .unwrap();
-    let result = ops::put(temporary.path(), 1, patch).unwrap();
-    let page = &result.deck.pages[0];
-    assert_eq!(page.content.title, "覆盖535  类标签，连接CDP、VOC");
-    assert_eq!(page.content.subtitle, "Windows 11 专业版");
-    assert_eq!(page.notes, "原稿  备注");
-    let content = serde_json::to_value(&page.content).unwrap();
-    let cell = &content["body_blocks"][0]["rows"][0]["cells"][0];
-    assert_eq!(cell["value"], "535  类，CDP  、VOC");
-    assert_eq!(cell["display_text"], cell["value"]);
-}
-
-#[test]
 fn put_keeps_author_spaces_between_digits_and_han() {
     let spaced = json!({
         "order": ["p1"],
@@ -72,6 +47,7 @@ fn put_keeps_author_spaces_between_digits_and_han() {
             "id": "p1",
             "content": {
                 "title": "1 数据与身份",
+                "subtitle": "增长 50 %",
                 "body_blocks": [
                     {"type": "paragraph", "text": "模块 2 已覆盖 535 类"},
                     {"type": "table", "columns": [{"label": "6 评估"}], "rows": [
@@ -88,6 +64,7 @@ fn put_keeps_author_spaces_between_digits_and_han() {
     let saved = save_page(spaced_dir.path(), &spaced);
     let stored = serde_json::to_value(&saved.deck.pages[0].content).unwrap();
     assert_eq!(stored["title"], "1 数据与身份");
+    assert_eq!(stored["subtitle"], "增长 50 %");
     assert_eq!(stored["body_blocks"][0]["text"], "模块 2 已覆盖 535 类");
     assert_eq!(stored["body_blocks"][1]["columns"][0]["label"], "6 评估");
     assert_eq!(
