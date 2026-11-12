@@ -18,7 +18,7 @@ from PIL import Image, ImageDraw
 from .. import sanitize
 from ..atoms import column_cell_ids, visible_atoms
 from ..jobs import projection
-from ..render import NeedsTool, executable, render_deck, run
+from ..render import NeedsTool, RendererError, executable, render_deck, run
 
 ICONS = Path(__file__).resolve().parents[1] / 'resources' / 'icons' / 'tabler-outline'
 NS = {'a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
@@ -371,16 +371,13 @@ def _plan_warnings(plan, atoms, groups):
 
 
 def _transparent_png():
-    """1×1 transparent PNG used as the Office fallback for an SVG icon.
+    """1×1 transparent PNG kept only when an SVG companion cannot be rendered.
 
-    PptxGenJS 4.0.1 writes each SVG twice: the SVG part, and a PNG companion
-    it intends to replace with a placeholder once Node's fs module has loaded.
-    That replacement is not added to the media promise list until the load
-    finishes. A deck whose media are only in-memory SVGs therefore finishes
-    Promise.all immediately and stores the SVG XML in ppt/media/image-*.png.
-    A deck that also reads a raster file waits long enough for the placeholder,
-    which is why a full build can succeed while an icon-only subset fails in
-    sanitize with "invalid PNG payload".
+    PptxGenJS 4.0.1 writes each SVG twice: the SVG part, and a PNG companion.
+    On Node the companion is the shared red-X placeholder once `fs` has loaded.
+    That replacement is not on the media promise list, so an icon-only deck
+    stores the SVG XML in ppt/media/image-*.png instead. A rendered PNG replaces
+    both. This stand-in is the old repair for the XML case when rendering fails.
     """
     def chunk(kind, payload):
         crc = zlib.crc32(kind + payload) & 0xffffffff
@@ -395,9 +392,28 @@ def _part_name(source_part, target):
     return posixpath.normpath(posixpath.join(posixpath.dirname(source_part), target))
 
 
+def _picture_extent(element):
+    """Display size in EMU of the picture that owns this blip, or None."""
+    pic = element
+    while pic is not None and etree.QName(pic).localname != 'pic':
+        pic = pic.getparent()
+    if pic is None:
+        return None
+    ext = pic.find('.//a:xfrm/a:ext', NS)
+    if ext is None:
+        return None
+    try:
+        cx, cy = int(ext.get('cx')), int(ext.get('cy'))
+    except (TypeError, ValueError):
+        return None
+    if cx <= 0 or cy <= 0:
+        return None
+    return cx, cy
+
+
 def _svg_companion_pngs(files):
-    """PNG parts that a slide blip uses only as the fallback for an SVG part."""
-    companions = set()
+    """(png part, svg part, extent EMU) for each blip that falls back from SVG to PNG."""
+    found = {}
     for name, data in files.items():
         if not name.startswith('ppt/slides/_rels/slide') or not name.endswith('.xml.rels'):
             continue
@@ -429,19 +445,64 @@ def _svg_companion_pngs(files):
             if not png_part or not svg_part or svg_part not in files:
                 continue
             if png_part.lower().endswith('.png') and svg_part.lower().endswith('.svg'):
-                companions.add(png_part)
-    return companions
+                found.setdefault(png_part, (svg_part, _picture_extent(element)))
+    return [(png, svg, extent) for png, (svg, extent) in found.items()]
+
+
+def _svg_png_width(extent):
+    """Pixel width for the fallback. Height follows the SVG.
+
+    Office shows this PNG at the picture's width. 192 dpi is twice the 96 dpi
+    slide grid, so the fallback stays sharp. rsvg-convert keeps the SVG aspect
+    ratio when only the width is set. 256 is the width when the picture extent
+    is missing.
+    """
+    if extent and extent[0] > 0:
+        return max(1, round(extent[0] / 914400 * 192))
+    return 256
+
+
+def _render_svg_png(svg, extent):
+    width = _svg_png_width(extent)
+    with tempfile.TemporaryDirectory(prefix='deck-svg-png-') as temp:
+        source = Path(temp) / 'icon.svg'
+        target = Path(temp) / 'icon.png'
+        source.write_bytes(svg)
+        run([executable('rsvg-convert'), '-w', str(width), '-o', str(target), str(source)])
+        data = target.read_bytes()
+    if not data.startswith(b'\x89PNG\r\n\x1a\n'):
+        raise RendererError('rsvg-convert 没有写出 PNG')
+    return data
 
 
 def _repair_svg_png_companions(files):
+    """Render each SVG companion. A failed render keeps the previous bytes."""
+    warnings = []
     placeholder = None
-    for name in _svg_companion_pngs(files):
+    for name, svg_part, extent in _svg_companion_pngs(files):
+        svg = files.get(svg_part)
+        if not svg:
+            continue
+        try:
+            files[name] = _render_svg_png(svg, extent)
+            continue
+        except NeedsTool:
+            detail = '缺少 rsvg-convert，这张 SVG 的备用图保留原来的占位。装好后重新构建。'
+        except (RendererError, OSError):
+            detail = '这张 SVG 的备用图没能渲染，已保留原来的占位。'
+        warnings.append({
+            'level': 'warning',
+            'code': 'svg_png_fallback',
+            'part': name,
+            'detail': detail,
+        })
         data = files.get(name)
         if data is None or data.startswith(b'\x89PNG\r\n\x1a\n') or not data.lstrip().startswith(b'<'):
             continue
         if placeholder is None:
             placeholder = _transparent_png()
         files[name] = placeholder
+    return warnings
 
 
 def postprocess(pptx_path, plans):
@@ -507,10 +568,11 @@ def postprocess(pptx_path, plans):
         master = root.find('p:sldMasterIdLst', NS)
         root.insert(list(root).index(master) + 1 if master is not None else 0, notes)
     files['ppt/presentation.xml'] = etree.tostring(root, xml_declaration=True, encoding='UTF-8', standalone=True)
-    _repair_svg_png_companions(files)
+    warnings = _repair_svg_png_companions(files)
     with zipfile.ZipFile(pptx_path, 'w', zipfile.ZIP_DEFLATED) as archive:
         for name, data in files.items():
             archive.writestr(name, data)
+    return warnings
 
 
 def generate(pages, output, *, mode):
@@ -527,8 +589,10 @@ def generate(pages, output, *, mode):
         write_json(job, {'mode': mode, 'pages': [{**p, 'plan': str(Path(p['plan']).resolve())} for p in pages],
                          'output': str(output), 'icons_dir': str(ICONS)})
         run([executable('node'), str(directory / 'render.cjs'), str(job)], cwd=directory)
-    postprocess(output, plans)
-    return output, findings
+    warnings = postprocess(output, plans)
+    if warnings and mode == 'single' and findings:
+        findings[0].setdefault('warnings', []).extend(warnings)
+    return output, findings, warnings
 
 
 def page_directory(work, page_id):
@@ -556,7 +620,7 @@ def crop(job):
 def render(job):
     page = job['page']
     directory = Path(job['output']).resolve() if 'output' in job else page_directory(job['work'], page['id'])
-    pptx, findings = generate([page], directory / 'page.pptx', mode='single')
+    pptx, findings, _warnings = generate([page], directory / 'page.pptx', mode='single')
     # Isolated conversion avoids picking up PNGs from an earlier, longer deck.
     with tempfile.TemporaryDirectory(prefix='deck-native-render-') as temp:
         images = render_deck(pptx, temp, fonts={})
@@ -670,8 +734,9 @@ def assemble(job):
     output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(dir=output.parent, prefix='.deck-', suffix='.pptx', delete=False) as temp:
         temporary = Path(temp.name)
+    warnings = []
     try:
-        generate(job['pages'], temporary, mode='deck')
+        _, _, warnings = generate(job['pages'], temporary, mode='deck')
         temporary.write_bytes(sanitize.pptx(
             temporary.read_bytes(), 'deck.pptx',
             notes=[{'page_id': p['id'], 'notes': p.get('notes', '')} for p in job['pages']]))
@@ -689,7 +754,10 @@ def assemble(job):
             target = directory / f'page-{i}.png'
             target.write_bytes(image.read_bytes())
             previews.append(str(target))
-    return {'pptx': str(output), 'render_pngs': previews, 'findings': readback(output, job['pages'])}
+    report = readback(output, job['pages'])
+    if warnings:
+        report['warnings'] = warnings
+    return {'pptx': str(output), 'render_pngs': previews, 'findings': report}
 
 
 def dispatch(command, job):

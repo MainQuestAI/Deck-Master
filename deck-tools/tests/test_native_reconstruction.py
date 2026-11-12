@@ -1,5 +1,7 @@
 """Synthetic file-only reconstruction, including the actual Node generator."""
 from copy import deepcopy
+import hashlib
+import io
 import json
 from pathlib import Path
 import subprocess
@@ -294,7 +296,7 @@ def test_generator_skips_radius_adjustment_for_zero_size(sample, shape_type, dim
     plan['ops'][0]['type'] = shape_type
     plan['ops'][0]['bbox'][dimension] = 0
     native.write_json(page['plan'], plan)
-    output, _ = native.generate([page], work / 'zero-size.pptx', mode='single')
+    output, _, _ = native.generate([page], work / 'zero-size.pptx', mode='single')
     with zipfile.ZipFile(output) as archive:
         root = etree.fromstring(archive.read('ppt/slides/slide1.xml'))
     shape = root.xpath('//p:sp[p:nvSpPr/p:cNvPr/@name="native_0"]', namespaces=native.NS)[0]
@@ -340,7 +342,7 @@ def test_validate_plan_rejects_invalid_input(sample, fault):
 def test_generator_readback_and_shared_xml_postprocessing(sample, mode):
     work, page, plan = sample
     pages = [page] if mode == 'single' else [page, _second_page(page, plan)]
-    output, _ = native.generate(pages, work / f'{mode}.pptx', mode=mode)
+    output, _, _ = native.generate(pages, work / f'{mode}.pptx', mode=mode)
     presentation = Presentation(output)
     assert len(presentation.slides) == len(pages)
     with zipfile.ZipFile(output) as archive:
@@ -390,7 +392,7 @@ def test_generator_table_margin_overrides(sample, canvas_width, table_margin, he
         table['cells'][0][0]['margin'] = cell_margin
         table['cells'][1][0]['margin'] = cell_margin
     native.write_json(page['plan'], plan)
-    output, _ = native.generate([page], work / 'margins.pptx', mode='single')
+    output, _, _ = native.generate([page], work / 'margins.pptx', mode='single')
     with zipfile.ZipFile(output) as archive:
         root = etree.fromstring(archive.read('ppt/slides/slide1.xml'))
     for r, row in enumerate(root.findall('.//a:tr', native.NS)):
@@ -416,7 +418,7 @@ def _with_canvas(page, plan, w, h, name):
 def test_generator_fixes_slide_width_and_keeps_source_aspect(sample):
     work, page, plan = sample
     wide = _with_canvas(page, plan, 1672, 941, 'wide')
-    output, _ = native.generate([wide], work / 'wide.pptx', mode='single')
+    output, _, _ = native.generate([wide], work / 'wide.pptx', mode='single')
     presentation = Presentation(output)
     assert presentation.slide_width == pytest.approx(13.333 * 914400, abs=2)
     assert presentation.slide_height == pytest.approx(13.333 * 914400 * 941 / 1672, abs=2)
@@ -432,7 +434,7 @@ def test_deck_mode_rejects_mixed_canvas_sizes(sample):
 
 def test_postprocessor_repairs_duplicate_paragraph_properties(sample):
     work, page, plan = sample
-    output, _ = native.generate([page], work / 'duplicate.pptx', mode='single')
+    output, _, _ = native.generate([page], work / 'duplicate.pptx', mode='single')
     with zipfile.ZipFile(output) as archive:
         files = {n: archive.read(n) for n in archive.namelist()}
     root = etree.fromstring(files['ppt/slides/slide1.xml'])
@@ -532,7 +534,7 @@ def test_icon_only_assemble_sanitizes_png_companions(tmp_path, monkeypatch):
     Image.new('RGB', (8, 8), '#225588').save(raster)
     plan['ops'].append({'op': 'image', 'file': str(raster), 'bbox': [80, 20, 8, 8]})
     native.write_json(plan_path, plan)
-    mixed, _ = native.generate([page], tmp_path / 'mixed.pptx', mode='deck')
+    mixed, _, _ = native.generate([page], tmp_path / 'mixed.pptx', mode='deck')
     payload = raster.read_bytes()
     with zipfile.ZipFile(mixed) as archive:
         stored = [archive.read(name) for name in archive.namelist()
@@ -551,7 +553,7 @@ def test_png_repair_does_not_replace_an_xml_image_asset(tmp_path):
                 {'op': 'icon', 'icon_id': 'tabler-outline/anchor', 'bbox': [20, 20, 40, 40], 'color': '225588'},
                 {'op': 'image', 'file': str(bad), 'bbox': [80, 20, 8, 8]}]}
     native.write_json(plan_path, plan)
-    output, _ = native.generate([page], tmp_path / 'mixed.pptx', mode='deck')
+    output, _, _ = native.generate([page], tmp_path / 'mixed.pptx', mode='deck')
     with zipfile.ZipFile(output) as archive:
         payloads = [archive.read(name) for name in archive.namelist()
                     if name.startswith('ppt/media/') and name.endswith('.png')]
@@ -559,6 +561,55 @@ def test_png_repair_does_not_replace_an_xml_image_asset(tmp_path):
         assert any(item.startswith(b'\x89PNG\r\n\x1a\n') for item in payloads)
     with pytest.raises(OperationError):
         sanitize_pptx(output.read_bytes(), 'deck.pptx', notes=[{'page_id': 'p1', 'notes': '合成讲稿'}])
+
+
+@pytest.mark.render
+def test_svg_icon_png_fallback_is_rendered_not_the_red_x(tmp_path, monkeypatch):
+    """A raster beside the icon makes PptxGenJS store its shared red-X PNG."""
+    plan_path = tmp_path / 'plan.json'
+    raster = tmp_path / 'raster.png'
+    Image.new('RGB', (8, 8), '#225588').save(raster)
+    page = {'id': 'p1', 'content': {}, 'notes': '合成讲稿', 'plan': str(plan_path)}
+    # Wide box, square icon: the fallback keeps the SVG aspect at the display width.
+    plan = {'schema': 'deck.native_plan.v1', 'page': 'p1', 'canvas_px': {'w': 800, 'h': 450},
+            'background': 'FFFFFF', 'ops': [
+                {'op': 'icon', 'icon_id': 'tabler-outline/anchor', 'bbox': [20, 20, 60, 30], 'color': '225588'},
+                {'op': 'image', 'file': str(raster), 'bbox': [100, 20, 8, 8]}]}
+    native.write_json(plan_path, plan)
+
+    def fake_render(pptx, directory, fonts):
+        assert Path(pptx).is_file()
+        image = Path(directory) / 'slide.png'
+        image.write_bytes(b'\x89PNG\r\n\x1a\nunused')
+        return [image]
+
+    monkeypatch.setattr(native, 'render_deck', fake_render)
+    result = native.assemble({'work': str(tmp_path), 'pages': [page]})
+    assert result['findings']['status'] == 'pass'
+    assert 'warnings' not in result['findings']
+    with zipfile.ZipFile(result['pptx']) as archive:
+        files = {name: archive.read(name) for name in archive.namelist()}
+    companions = native._svg_companion_pngs(files)
+    assert len(companions) == 1
+    png_name, svg_name, extent = companions[0]
+    data = files[png_name]
+    assert data.startswith(b'\x89PNG\r\n\x1a\n')
+    assert len(data) != 1594
+    assert not hashlib.sha1(data).hexdigest().startswith('7fb30585')
+    with Image.open(io.BytesIO(data)) as image:
+        image.load()
+        assert image.format == 'PNG'
+        expected = max(1, round(extent[0] / 914400 * 192))
+        assert expected > 1
+        assert image.size == (expected, expected)
+        assert image.convert('RGBA').getchannel('A').getextrema()[1] > 0
+    others = [name for name in files if name.startswith('ppt/media/') and name.endswith('.png') and name != png_name]
+    assert len(others) == 1
+    with Image.open(io.BytesIO(files[others[0]])) as image:
+        assert image.size == (8, 8)
+    source = etree.fromstring(native.icon_file('tabler-outline/anchor').read_bytes())
+    icon = etree.fromstring(files[svg_name])
+    assert icon.xpath('//*[local-name()="path"]/@d') == source.xpath('//*[local-name()="path"]/@d')
 
 
 def test_omitted_column_label_passes_assemble_readback_and_other_atoms_stay_required(tmp_path, monkeypatch):
@@ -633,7 +684,7 @@ def test_readback_reports_short_atom_hidden_inside_longer_text(tmp_path, monkeyp
     both['ops'].append({'op': 'text', 'text': atoms['甲']['text'], 'atom_id': atoms['甲']['atom_id'],
                         'bbox': [20, 80, 80, 40], 'size': 28, 'color': '225588'})
     native.write_json(plan_path, both)
-    output, deck_findings = native.generate([page], tmp_path / 'both.pptx', mode='deck')
+    output, deck_findings, _ = native.generate([page], tmp_path / 'both.pptx', mode='deck')
     assert deck_findings == []
     report = native.readback(output, [page])
     assert not any(item['code'] == 'missing_visible_atom' for item in report['findings'])
@@ -644,7 +695,7 @@ def _text_page(tmp_path, blocks, ops):
     page = {'id': 'p1', 'content': {'body_blocks': blocks}, 'notes': '合成讲稿', 'plan': str(plan_path)}
     native.write_json(plan_path, {'schema': 'deck.native_plan.v1', 'page': 'p1',
                                    'canvas_px': {'w': 800, 'h': 450}, 'background': 'FFFFFF', 'ops': ops})
-    output, deck_findings = native.generate([page], tmp_path / 'page.pptx', mode='deck')
+    output, deck_findings, _ = native.generate([page], tmp_path / 'page.pptx', mode='deck')
     assert deck_findings == []
     return page, output
 
