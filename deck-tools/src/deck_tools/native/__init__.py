@@ -155,6 +155,9 @@ def validate_plan(plan, page):
         raise ValueError('plan 缺少正文 atom：' + '、'.join(sorted(missing)))
     result = {'page': page['id'], 'atoms': len(covered)}
     warnings = _plan_warnings(plan, atoms, groups)
+    canvas = _canvas_not_original(plan, page)
+    if canvas:
+        warnings.append(canvas)
     if warnings:
         result['warnings'] = warnings
     return result
@@ -272,6 +275,42 @@ def _per_card_column_heading(placements, cell_boxes, tolerance):
             return False
         used.add(match)
     return True
+
+
+def _px_text(value):
+    if isinstance(value, float) and value.is_integer():
+        return str(int(value))
+    return str(value)
+
+
+def _canvas_not_original(plan, page):
+    """Hint when the plan canvas is still not the original's pixel size.
+
+    Image.size is the same pair image-info reports. It does not apply EXIF
+    orientation, so a rotated file is not treated as a different canvas.
+    An unreadable file is skipped: this hint must not become a new failure.
+    """
+    source = page.get('source_image')
+    if not isinstance(source, str) or not source:
+        return None
+    try:
+        with Image.open(source) as image:
+            image_size = image.size
+    except (OSError, ValueError):
+        return None
+    width, height = plan['canvas_px']['w'], plan['canvas_px']['h']
+    if (width, height) == image_size:
+        return None
+    return {
+        'level': 'warning',
+        'code': 'canvas_not_original',
+        'plan_px': {'w': width, 'h': height},
+        'image_px': {'w': image_size[0], 'h': image_size[1]},
+        'message': (
+            f'plan.canvas_px 为 {_px_text(width)}×{_px_text(height)}，本页原图为 '
+            f'{image_size[0]}×{image_size[1]} px。画布仍不是原图像素。此提示不阻止交回或采用。'
+        ),
+    }
 
 
 def _plan_warnings(plan, atoms, groups):

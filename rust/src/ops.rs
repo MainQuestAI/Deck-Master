@@ -1121,6 +1121,301 @@ fn native_result(
     ))
 }
 
+#[derive(Clone, PartialEq, Eq, Hash)]
+struct HeaderKey {
+    title: [i64; 4],
+    shape: Option<(String, [i64; 4])>,
+}
+
+fn round_px(value: &Value) -> Option<i64> {
+    let number = value.as_f64()?;
+    if !number.is_finite() {
+        return None;
+    }
+    let rounded = number.round();
+    if !(-1e12..=1e12).contains(&rounded) {
+        return None;
+    }
+    Some(rounded as i64)
+}
+
+fn bbox4(value: &Value) -> Option<[i64; 4]> {
+    let array = value.as_array()?;
+    if array.len() != 4 {
+        return None;
+    }
+    Some([
+        round_px(&array[0])?,
+        round_px(&array[1])?,
+        round_px(&array[2])?,
+        round_px(&array[3])?,
+    ])
+}
+
+fn atom_tail(atom_id: &str) -> &str {
+    atom_id
+        .rsplit_once(':')
+        .map(|(_, tail)| tail)
+        .unwrap_or(atom_id)
+}
+
+fn header_key(plan: &Value) -> Option<HeaderKey> {
+    let ops = plan.get("ops")?.as_array()?;
+    let mut title = None;
+    let mut saw_title = false;
+    let mut first_shape = None;
+    for op in ops {
+        let Some(kind) = op.get("op").and_then(Value::as_str) else {
+            continue;
+        };
+        if !saw_title && kind == "text" {
+            let Some(atom) = op.get("atom_id").and_then(Value::as_str) else {
+                continue;
+            };
+            if atom_tail(atom) == "title" {
+                saw_title = true;
+                title = op.get("bbox").and_then(bbox4);
+            }
+        }
+        if first_shape.is_none() && kind == "shape" {
+            first_shape = Some(op);
+        }
+    }
+    let title = title?;
+    let shape = match first_shape {
+        None => None,
+        Some(op) => {
+            let kind = op
+                .get("type")
+                .and_then(Value::as_str)
+                .unwrap_or("")
+                .to_string();
+            let bbox = bbox4(op.get("bbox")?)?;
+            Some((kind, bbox))
+        }
+    };
+    Some(HeaderKey { title, shape })
+}
+
+fn shared_layout_message(count: usize) -> String {
+    format!(
+        "本 run 已有 {count} 页共用同一题头（标题框与第一条 shape 相同）。请按这张原图逐页测量，不要套同一题头。此提示不阻止交回或采用。"
+    )
+}
+
+fn shared_layout_warnings(pages: &[(&str, &Value)]) -> Vec<Value> {
+    let mut keyed = Vec::new();
+    for (page_id, plan) in pages {
+        if let Some(key) = header_key(plan) {
+            keyed.push((*page_id, key));
+        }
+    }
+    let mut counts: HashMap<HeaderKey, usize> = HashMap::new();
+    for (_, key) in &keyed {
+        *counts.entry(key.clone()).or_insert(0) += 1;
+    }
+    let mut warnings = Vec::new();
+    for (page_id, key) in &keyed {
+        let count = counts[key];
+        if count >= 3 {
+            warnings.push(json!({
+                "level": "warning",
+                "code": "shared_layout",
+                "page_id": page_id,
+                "message": shared_layout_message(count),
+            }));
+        }
+    }
+    warnings
+}
+
+fn plan_refs(plans: &[(String, Value)]) -> Vec<(&str, &Value)> {
+    plans
+        .iter()
+        .map(|(page_id, plan)| (page_id.as_str(), plan))
+        .collect()
+}
+
+fn with_shared_layout(mut warnings: Value, pages: &[(&str, &Value)]) -> Value {
+    if let Some(list) = warnings.as_array_mut() {
+        list.extend(shared_layout_warnings(pages));
+    }
+    warnings
+}
+
+fn append_findings_warnings(findings: &mut Value, warnings: Vec<Value>) {
+    if warnings.is_empty() {
+        return;
+    }
+    let Some(object) = findings.as_object_mut() else {
+        return;
+    };
+    let entry = object.entry("warnings").or_insert_with(|| json!([]));
+    if let Some(list) = entry.as_array_mut() {
+        list.extend(warnings);
+    }
+}
+
+fn is_punctuation(c: char) -> bool {
+    if c.is_ascii_punctuation() {
+        return true;
+    }
+    matches!(
+        c,
+        '\u{00A1}'
+            | '\u{00A7}'
+            | '\u{00AB}'
+            | '\u{00B6}'
+            | '\u{00B7}'
+            | '\u{00BB}'
+            | '\u{00BF}'
+            | '\u{2010}'..='\u{2027}'
+            | '\u{2030}'..='\u{205E}'
+            | '\u{3001}'..='\u{3003}'
+            | '\u{3008}'..='\u{3011}'
+            | '\u{3014}'..='\u{301F}'
+            | '\u{3030}'
+            | '\u{303D}'
+            | '\u{30A0}'
+            | '\u{30FB}'
+            | '\u{FF01}'..='\u{FF0F}'
+            | '\u{FF1A}'..='\u{FF20}'
+            | '\u{FF3B}'..='\u{FF40}'
+            | '\u{FF5B}'..='\u{FF65}'
+            | '\u{FE10}'..='\u{FE19}'
+            | '\u{FE30}'..='\u{FE52}'
+            | '\u{FE54}'..='\u{FE61}'
+            | '\u{FE63}'
+            | '\u{FE68}'
+            | '\u{FE6A}'
+            | '\u{FE6B}'
+    )
+}
+
+fn take_prefix<'a>(text: &'a str, options: &[&str]) -> Option<&'a str> {
+    options
+        .iter()
+        .filter(|option| text.starts_with(*option))
+        .max_by_key(|option| option.len())
+        .map(|option| &text[option.len()..])
+}
+
+fn is_confirmation_only(note: &str) -> bool {
+    let stripped: String = note
+        .chars()
+        .filter(|c| !c.is_whitespace() && !is_punctuation(*c))
+        .collect();
+    if stripped.is_empty() {
+        return false;
+    }
+    let mut rest = stripped.as_str();
+    if let Some(next) = take_prefix(rest, &["本页", "此页", "该页"]) {
+        rest = next;
+    }
+    let Some(next) = take_prefix(
+        rest,
+        &[
+            "已核对",
+            "已对照",
+            "已查看",
+            "已复查",
+            "已复看",
+            "已确认",
+            "已检查",
+            "已核验",
+        ],
+    ) else {
+        return false;
+    };
+    rest = next;
+    if let Some(next) = take_prefix(rest, &["了", "过"]) {
+        rest = next;
+    }
+    if let Some(next) = take_prefix(
+        rest,
+        &[
+            "这一页",
+            "此页面",
+            "本页面",
+            "并排图",
+            "对照图",
+            "原图",
+            "本页",
+            "此页",
+            "该页",
+            "页面",
+            "生产稿",
+            "原稿",
+        ],
+    ) {
+        rest = next;
+    }
+    if let Some(next) = take_prefix(rest, &["后"]) {
+        rest = next;
+    }
+    if let Some(next) = take_prefix(
+        rest,
+        &[
+            "没有问题",
+            "没问题",
+            "一致",
+            "无误",
+            "完成",
+            "通过",
+            "正确",
+            "ok",
+            "OK",
+        ],
+    ) {
+        rest = next;
+    }
+    rest.is_empty()
+}
+
+fn note_unspecific_warning(page_id: &str) -> Value {
+    json!({
+        "level": "warning",
+        "code": "note_unspecific",
+        "page_id": page_id,
+        "message": "--note 去掉空白和标点后只剩确认用语，没有写出本页对照了什么。此提示不阻止采用。",
+    })
+}
+
+fn result_plans(
+    store: &Store,
+    run_id: i64,
+    current_page: &str,
+    current_plan: Option<&Value>,
+) -> Result<Vec<(String, Value)>> {
+    let mut statement = store.connection.prepare(
+        "SELECT page_id, result_file FROM run_pages WHERE run_id=? AND result_file IS NOT NULL ORDER BY rowid",
+    )?;
+    let rows = statement
+        .query_map([run_id], |row| {
+            Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+        })?
+        .collect::<std::result::Result<Vec<_>, _>>()?;
+    let mut plans = Vec::new();
+    let mut replaced = false;
+    for (page_id, file) in rows {
+        if page_id == current_page
+            && let Some(plan) = current_plan
+        {
+            plans.push((page_id, plan.clone()));
+            replaced = true;
+            continue;
+        }
+        let pack: NativePack = serde_json::from_slice(&std::fs::read(store.file(&file)?)?)?;
+        plans.push((page_id, pack.plan));
+    }
+    if let Some(plan) = current_plan
+        && !replaced
+    {
+        plans.push((current_page.to_string(), plan.clone()));
+    }
+    Ok(plans)
+}
+
 pub fn run_result(project: &Path, id: i64, page_id: &str, source: &Path) -> Result<Value> {
     use rusqlite::params;
     let mut store = Store::open(project)?;
@@ -1160,8 +1455,15 @@ pub fn run_result(project: &Path, id: i64, page_id: &str, source: &Path) -> Resu
             .iter()
             .find(|p| p.id == page_id)
             .ok_or_else(|| Error::Input("页面已删除；请保留原文件".into()))?;
-        let (packed, png, checked, comparison) =
+        let (packed, png, mut checked, comparison) =
             native_result(&store, id, page, source, &data, temporary.path())?;
+        let submitted: NativePack = serde_json::from_slice(&packed)?;
+        let plans = result_plans(&store, id, page_id, Some(&submitted.plan))?;
+        let layout = shared_layout_warnings(&plan_refs(&plans))
+            .into_iter()
+            .filter(|warning| warning.get("page_id").and_then(Value::as_str) == Some(page_id))
+            .collect();
+        append_findings_warnings(&mut checked, layout);
         data = packed;
         preview = Some(png);
         findings = checked;
@@ -1304,6 +1606,7 @@ fn run_adopt_with_options(
     } else {
         None
     };
+    let confirmation_only = note.is_some_and(is_confirmation_only);
     let (old, _, file) = run_page(&store.connection, id, page_id)?;
     let file = file.ok_or_else(|| Error::Input("此页尚无结果；请先交回文件".into()))?;
     if expected_file.is_some_and(|expected| expected != file) {
@@ -1312,6 +1615,12 @@ fn run_adopt_with_options(
         ));
     }
     store.file(&file)?;
+    let layout_warnings = if kind == "native" {
+        let plans = result_plans(&store, id, "", None)?;
+        shared_layout_warnings(&plan_refs(&plans))
+    } else {
+        Vec::new()
+    };
     let mut preview = None;
     if kind == "svg" {
         let snapshot = store.current()?;
@@ -1389,7 +1698,18 @@ fn run_adopt_with_options(
     )?;
     tx.execute("UPDATE runs SET status='done' WHERE id=? AND status='open' AND NOT EXISTS (SELECT 1 FROM run_pages WHERE run_id=? AND status!='done')",params![id,id])?;
     tx.commit()?;
-    run_show(project, Some(id))
+    let mut shown = run_show(project, Some(id))?;
+    if kind == "native" {
+        let mut warnings = Vec::new();
+        if confirmation_only {
+            warnings.push(note_unspecific_warning(page_id));
+        }
+        warnings.extend(layout_warnings);
+        if !warnings.is_empty() {
+            shown["warnings"] = json!(warnings);
+        }
+    }
+    Ok(shown)
 }
 
 fn build_digest(deck: &Deck) -> Result<String> {
@@ -1483,6 +1803,7 @@ pub fn build(project: &Path) -> Result<Value> {
     let status = artifact_status_for(&snapshot.deck, native)?;
     let temporary = tempfile::tempdir()?;
     let mut pages = Vec::new();
+    let mut native_plans = Vec::new();
     let mut job = Value::Null;
     for (index, page) in snapshot.deck.pages.iter().enumerate() {
         if native {
@@ -1491,6 +1812,7 @@ pub fn build(project: &Path) -> Result<Value> {
                     serde_json::from_slice(&std::fs::read(store.file(&artifact.file)?)?)?;
                 let plan = temporary.path().join(format!("{index}.json"));
                 native_plan_path(&store, &pack, &plan)?;
+                native_plans.push((page.id.clone(), pack.plan));
                 pages.push(
                     json!({"id":page.id,"content":page.content,"notes":page.notes,"plan":plan}),
                 );
@@ -1527,7 +1849,7 @@ pub fn build(project: &Path) -> Result<Value> {
     let id = tx.last_insert_rowid();
     tx.commit()?;
     Ok(
-        json!({"id":id,"path":store.file(&file)?,"findings":output["findings"],"missing_pages":status["missing_pages"],"stale_pages":status["stale_pages"],"stale_images":status["stale_images"],"warnings":stale_image_warnings(&status["stale_images"])}),
+        json!({"id":id,"path":store.file(&file)?,"findings":output["findings"],"missing_pages":status["missing_pages"],"stale_pages":status["stale_pages"],"stale_images":status["stale_images"],"warnings":with_shared_layout(stale_image_warnings(&status["stale_images"]), &plan_refs(&native_plans))}),
     )
 }
 
@@ -1613,7 +1935,26 @@ pub fn export_pptx(project: &Path) -> Result<Value> {
     selected["missing_pages"] = status["missing_pages"].clone();
     selected["stale_pages"] = status["stale_pages"].clone();
     selected["stale_images"] = status["stale_images"].clone();
-    selected["warnings"] = stale_image_warnings(&status["stale_images"]);
+    let plans = if deck.pages.iter().any(|page| page.native.is_some()) {
+        let mut plans = Vec::new();
+        for page in &deck.pages {
+            let Some(artifact) = &page.native else {
+                continue;
+            };
+            let pack: NativePack = serde_json::from_slice(&std::fs::read(store::file_path(
+                &store.root,
+                &artifact.file,
+            )?)?)?;
+            plans.push((page.id.clone(), pack.plan));
+        }
+        plans
+    } else {
+        Vec::new()
+    };
+    selected["warnings"] = with_shared_layout(
+        stale_image_warnings(&status["stale_images"]),
+        &plan_refs(&plans),
+    );
     selected["incomplete_basis_pages"] = status["incomplete_basis_pages"].clone();
     Ok(selected)
 }
@@ -1772,5 +2113,186 @@ mod build_selection_tests {
         assert_eq!(fallback["input_changed"], true);
         std::fs::remove_file(store.file(&current_file).unwrap()).unwrap();
         assert!(matches!(export_pptx(temp.path()), Err(Error::Missing(_))));
+    }
+}
+
+#[cfg(test)]
+mod layout_warning_tests {
+    use super::*;
+
+    fn text_op(page: &str, tail: &str, bbox: Value) -> Value {
+        json!({"op":"text","atom_id":format!("atom:{page}:{tail}"),"text":"t","bbox":bbox})
+    }
+
+    fn shape_op(kind: &str, bbox: Value) -> Value {
+        json!({"op":"shape","type":kind,"bbox":bbox})
+    }
+
+    fn plan(ops: Vec<Value>) -> Value {
+        json!({"ops": ops})
+    }
+
+    #[test]
+    fn three_pages_sharing_a_header_warn_and_two_pages_or_different_shapes_do_not() {
+        let title = json!([40, 30, 500, 48]);
+        let bar = json!([24, 24, 10, 36]);
+        let page = |id: &str, body_y: i64| {
+            plan(vec![
+                text_op(id, "title", title.clone()),
+                shape_op("rect", bar.clone()),
+                text_op(id, "body", json!([20, body_y, 200, 30])),
+                shape_op("ellipse", json!([80, body_y, 40, 20])),
+            ])
+        };
+        let pages = [
+            ("p1", page("p1", 120)),
+            ("p2", page("p2", 180)),
+            ("p3", page("p3", 240)),
+        ];
+        let warnings = shared_layout_warnings(&[
+            ("p1", &pages[0].1),
+            ("p2", &pages[1].1),
+            ("p3", &pages[2].1),
+        ]);
+        assert_eq!(
+            warnings
+                .iter()
+                .map(|warning| warning["page_id"].as_str().unwrap())
+                .collect::<Vec<_>>(),
+            ["p1", "p2", "p3"]
+        );
+        assert!(warnings.iter().all(|warning| {
+            warning["level"] == "warning" && warning["code"] == "shared_layout"
+        }));
+        let message = warnings[0]["message"].as_str().unwrap();
+        assert!(message.contains("本 run 已有 3 页共用同一题头"));
+        assert!(message.contains("此提示不阻止交回或采用"));
+        let two = [page("p1", 120), page("p2", 180)];
+        assert!(shared_layout_warnings(&[("p1", &two[0]), ("p2", &two[1])]).is_empty());
+        let varied: Vec<Value> = ["a", "b", "c", "d"]
+            .into_iter()
+            .enumerate()
+            .map(|(index, id)| {
+                plan(vec![
+                    text_op(id, "title", title.clone()),
+                    shape_op("rect", json!([10 + index * 20, 20, 12, 30])),
+                    text_op(id, "body", json!([20, 100, 80, 20])),
+                ])
+            })
+            .collect();
+        assert!(
+            shared_layout_warnings(&[
+                ("a", &varied[0]),
+                ("b", &varied[1]),
+                ("c", &varied[2]),
+                ("d", &varied[3]),
+            ])
+            .is_empty()
+        );
+        let rounded = [
+            plan(vec![
+                text_op("r1", "title", json!([20.4, 10, 30, 40])),
+                shape_op("rect", bar.clone()),
+            ]),
+            plan(vec![
+                text_op("r2", "title", json!([19.6, 10, 30, 40])),
+                shape_op("rect", bar.clone()),
+            ]),
+            plan(vec![
+                text_op("r3", "title", json!([20, 10, 30, 40])),
+                shape_op("rect", bar.clone()),
+            ]),
+        ];
+        assert_eq!(
+            shared_layout_warnings(&[
+                ("r1", &rounded[0]),
+                ("r2", &rounded[1]),
+                ("r3", &rounded[2]),
+            ])
+            .len(),
+            3
+        );
+        let untitled = [
+            plan(vec![
+                text_op("u1", "label", title.clone()),
+                shape_op("rect", bar.clone()),
+            ]),
+            plan(vec![
+                text_op("u2", "label", title.clone()),
+                shape_op("rect", bar.clone()),
+            ]),
+            plan(vec![
+                text_op("u3", "label", title.clone()),
+                shape_op("rect", bar.clone()),
+            ]),
+        ];
+        assert!(
+            shared_layout_warnings(&[
+                ("u1", &untitled[0]),
+                ("u2", &untitled[1]),
+                ("u3", &untitled[2]),
+            ])
+            .is_empty()
+        );
+    }
+
+    #[test]
+    fn confirmation_only_notes_are_boilerplate_and_specific_notes_are_not() {
+        assert!(is_confirmation_only("已核对"));
+        assert!(is_confirmation_only("已核对，没问题"));
+        assert!(is_confirmation_only("已查看并排图。"));
+        assert!(!is_confirmation_only(
+            "已查看并排图，四来源汇入数据的方向明确，四行来源及获取方式和用途完整，底部保留数据责任、更新与适用条件。"
+        ));
+        assert!(!is_confirmation_only("已对照文字与对象"));
+        assert!(!is_confirmation_only(
+            "标题框在原图标题带内，左侧三列与原图同序，底部限定条件保留"
+        ));
+        assert!(!is_confirmation_only(
+            "主表四行与原图对齐，右侧注释的适用范围保留"
+        ));
+        assert!(!is_confirmation_only("   "));
+        assert!(!is_confirmation_only(
+            "本页已核对了原图后，标题位置与四行来源一致"
+        ));
+    }
+
+    #[test]
+    fn anonymized_geometry_replay_matches_expected_warned_pages() {
+        let path =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/issue-337/geometry.json");
+        let fixture: Value = serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();
+        let sets = fixture.as_object().unwrap();
+        assert!(sets.contains_key("bad_first_result"));
+        assert!(sets.contains_key("good_final"));
+        for (name, set) in sets {
+            let pages = set["pages"].as_array().unwrap();
+            let plans: Vec<(String, Value)> = pages
+                .iter()
+                .enumerate()
+                .map(|(index, page)| {
+                    let id = page["page"].as_str().unwrap().to_string();
+                    let plan = json!({
+                        "ops": [
+                            {"op":"text","atom_id":format!("atom:{id}:title"),"text":"t","bbox":page["title_bbox"]},
+                            {"op":"shape","type":page["first_shape"]["type"],"bbox":page["first_shape"]["bbox"]},
+                            {"op":"text","atom_id":format!("atom:{id}:body"),"text":id,"bbox":[20, 220 + index, 140, 28]},
+                        ]
+                    });
+                    (id, plan)
+                })
+                .collect();
+            let warned: Vec<String> = shared_layout_warnings(&plan_refs(&plans))
+                .into_iter()
+                .map(|warning| warning["page_id"].as_str().unwrap().to_string())
+                .collect();
+            let expected: Vec<String> = set["expected_warned_pages"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|page| page.as_str().unwrap().to_string())
+                .collect();
+            assert_eq!(warned, expected, "{name}");
+        }
     }
 }

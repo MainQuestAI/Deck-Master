@@ -355,3 +355,281 @@ fn native_candidates_require_a_conclusion_then_build_export_use_adopted_packs_an
         json!(["p1"])
     );
 }
+
+fn seed_native_candidate(path: &Path, run_id: i64, page: &str, title: [i64; 4], shape: [i64; 4]) {
+    let store = Store::open(path).unwrap();
+    let png = store.add_file(b"synthetic-preview", "png").unwrap();
+    let plan = json!({
+        "schema":"deck.native_plan.v1",
+        "page": page,
+        "canvas_px": {"w": 800, "h": 450},
+        "ops": [
+            {"op":"text","atom_id":format!("atom:{page}:title"),"text":"t","bbox":title},
+            {"op":"shape","type":"rect","bbox":shape},
+            {"op":"text","atom_id":format!("atom:{page}:body"),"text":page,"bbox":[12, 120, 80, 24]}
+        ]
+    });
+    let pack = json!({"plan":plan,"assets":[],"render_png":png,"note":""});
+    let file = store
+        .add_file(pack.to_string().as_bytes(), "native.json")
+        .unwrap();
+    store
+        .connection
+        .execute(
+            "UPDATE run_pages SET result_file=?1, status='unadopted' WHERE run_id=?2 AND page_id=?3",
+            (&file, run_id, page),
+        )
+        .unwrap();
+}
+
+fn warning_codes(value: &Value) -> Vec<&str> {
+    value
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|item| item["code"].as_str().unwrap())
+        .collect()
+}
+
+#[test]
+fn native_task_states_original_pixel_size_and_omits_it_when_unreadable() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    cli(path, &["new", path.to_str().unwrap()]);
+    edit(
+        path,
+        json!({"order":["p1"],"pages":[{"id":"p1","content":{"title":"Alpha"}}]}),
+    );
+    python(&[
+        "-c",
+        "from PIL import Image; import sys; Image.new('RGB',(1672,941),'white').save(sys.argv[1]); print('{}')",
+        path.join("source.png").to_str().unwrap(),
+    ]);
+    let image = cli(path, &["run", "start", "image", "--pages", "p1"])["runs"][0]["id"].to_string();
+    cli(
+        path,
+        &[
+            "run",
+            "result",
+            &image,
+            "p1",
+            path.join("source.png").to_str().unwrap(),
+        ],
+    );
+    let run = cli(path, &["run", "start", "native", "--pages", "p1"]);
+    assert_eq!(run["runs"][0]["status"], "open");
+    let work = Path::new(run["runs"][0]["pages"][0]["work"].as_str().unwrap());
+    let task = std::fs::read_to_string(work.join("task.md")).unwrap();
+    let attachments: Value =
+        serde_json::from_slice(&std::fs::read(work.join("attachments.json")).unwrap()).unwrap();
+    let file = attachments
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|item| item["role"] == "original")
+        .unwrap()["file"]
+        .as_str()
+        .unwrap();
+    assert!(task.contains(&format!(
+        "本页原图 {file} 为 1672×941 px，plan.canvas_px 用这个尺寸。"
+    )));
+    let store = Store::open(path).unwrap();
+    let image_file = store.current().unwrap().deck.pages[0]
+        .image
+        .as_ref()
+        .unwrap()
+        .file
+        .clone();
+    std::fs::write(store.file(&image_file).unwrap(), b"not an image").unwrap();
+    drop(store);
+    let id = run["runs"][0]["id"].to_string();
+    cli(path, &["run", "cancel", &id]);
+    let again = cli(path, &["run", "start", "native", "--pages", "p1"]);
+    assert_eq!(again["runs"][0]["status"], "open");
+    let work = Path::new(again["runs"][0]["pages"][0]["work"].as_str().unwrap());
+    let task = std::fs::read_to_string(work.join("task.md")).unwrap();
+    assert!(!task.contains("plan.canvas_px 用这个尺寸"));
+}
+
+#[test]
+fn boilerplate_note_warns_without_blocking_adopt_and_blank_note_still_exits_2() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    cli(path, &["new", path.to_str().unwrap()]);
+    edit(
+        path,
+        json!({"order":["p1"],"pages":[{"id":"p1","content":{"title":"Alpha"}}]}),
+    );
+    let run = cli(path, &["run", "start", "native", "--pages", "p1"]);
+    let run_id = run["runs"][0]["id"].as_i64().unwrap();
+    let run_text = run_id.to_string();
+    seed_native_candidate(path, run_id, "p1", [40, 30, 500, 48], [24, 24, 10, 36]);
+    for note in ["", " \n "] {
+        let failed = command(path, &["run", "adopt", &run_text, "p1", "--note", note]);
+        assert_eq!(failed.status.code(), Some(2));
+        assert!(String::from_utf8_lossy(&failed.stderr).contains("--note"));
+    }
+    let adopted = cli(path, &["run", "adopt", &run_text, "p1", "--note", "已核对"]);
+    assert_eq!(warning_codes(&adopted["warnings"]), ["note_unspecific"]);
+    assert_eq!(adopted["warnings"][0]["level"], "warning");
+    let store = Store::open(path).unwrap();
+    let file = store.current().unwrap().deck.pages[0]
+        .native
+        .as_ref()
+        .unwrap()
+        .file
+        .clone();
+    let pack: Value =
+        serde_json::from_slice(&std::fs::read(store.file(&file).unwrap()).unwrap()).unwrap();
+    assert_eq!(pack["note"], "已核对");
+    assert!(pack.get("warnings").is_none());
+    drop(store);
+    let specific = "已查看并排图，四来源汇入数据的方向明确，四行来源及获取方式和用途完整，底部保留数据责任、更新与适用条件。";
+    let adopted = cli(path, &["run", "adopt", &run_text, "p1", "--note", specific]);
+    assert!(adopted.get("warnings").is_none());
+    let adopted = cli(
+        path,
+        &["run", "adopt", &run_text, "p1", "--note", "已查看并排图。"],
+    );
+    assert_eq!(warning_codes(&adopted["warnings"]), ["note_unspecific"]);
+}
+
+#[test]
+fn adopt_reports_shared_layout_for_three_result_pages_in_this_run() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    cli(path, &["new", path.to_str().unwrap()]);
+    edit(
+        path,
+        json!({"order":["p1","p2","p3"],"pages":[
+            {"id":"p1","content":{"title":"Alpha"}},
+            {"id":"p2","content":{"title":"Beta"}},
+            {"id":"p3","content":{"title":"Gamma"}}
+        ]}),
+    );
+    let run = cli(path, &["run", "start", "native", "--pages", "p1,p2,p3"]);
+    let run_id = run["runs"][0]["id"].as_i64().unwrap();
+    for page in ["p1", "p2", "p3"] {
+        seed_native_candidate(path, run_id, page, [40, 30, 500, 48], [24, 24, 10, 36]);
+    }
+    let adopted = cli(
+        path,
+        &[
+            "run",
+            "adopt",
+            &run_id.to_string(),
+            "p2",
+            "--note",
+            "标题框在原图标题带内，三列顺序与原图一致",
+        ],
+    );
+    let ids: Vec<_> = adopted["warnings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|warning| warning["page_id"].as_str().unwrap())
+        .collect();
+    assert_eq!(ids, ["p1", "p2", "p3"]);
+    assert_eq!(
+        warning_codes(&adopted["warnings"]),
+        ["shared_layout", "shared_layout", "shared_layout"]
+    );
+}
+
+fn shared_plan(path: &Path, page: &str, title: &str, body_y: i64) -> std::path::PathBuf {
+    let plan = json!({"schema":"deck.native_plan.v1", "page":page,
+    "canvas_px":{"w":800,"h":450},"background":"FFFFFF","ops":[
+        {"op":"text","text":title,"atom_id":format!("atom:{page}:title"),
+         "bbox":[40,30,500,48],"size":32},
+        {"op":"shape","type":"rect","bbox":[24,24,10,36],"fill":"CCDDEE"},
+        {"op":"text","text":"","atom_id":format!("atom:{page}:subtitle"),"bbox":[40,90,500,12],"size":12},
+        {"op":"shape","type":"ellipse","bbox":[80,body_y,60,24],"fill":"225588"},
+        {"op":"image","file":"asset.png","bbox":[20,200,80,80]},
+        {"op":"icon","icon_id":"tabler-outline/anchor","bbox":[200,200,40,40]}
+    ]});
+    let filename = path.join(format!("{page}-plan.json"));
+    std::fs::write(&filename, plan.to_string()).unwrap();
+    filename
+}
+
+#[test]
+#[ignore = "needs node + pptxgenjs + soffice; runs in the render job"]
+fn shared_layout_on_build_keeps_readback_pass() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    cli(path, &["new", path.to_str().unwrap()]);
+    edit(
+        path,
+        json!({"order":["p1","p2","p3"],"pages":[
+            {"id":"p1","content":{"title":"Alpha"},"notes":"第一页讲稿"},
+            {"id":"p2","content":{"title":"Beta"},"notes":"第二页讲稿"},
+            {"id":"p3","content":{"title":"Gamma"},"notes":"第三页讲稿"}
+        ]}),
+    );
+    python(&[
+        "-c",
+        "from PIL import Image; import sys; from pathlib import Path; p=Path(sys.argv[1]); Image.new('RGB',(800,450),'white').save(p/'source.png'); Image.new('RGB',(40,40),'teal').save(p/'asset.png'); print('{}')",
+        path.to_str().unwrap(),
+    ]);
+    let image =
+        cli(path, &["run", "start", "image", "--pages", "p1,p2,p3"])["runs"][0]["id"].to_string();
+    for id in ["p1", "p2", "p3"] {
+        cli(
+            path,
+            &[
+                "run",
+                "result",
+                &image,
+                id,
+                path.join("source.png").to_str().unwrap(),
+            ],
+        );
+    }
+    let run_id =
+        cli(path, &["run", "start", "native", "--pages", "p1,p2,p3"])["runs"][0]["id"].to_string();
+    let plans = [
+        shared_plan(path, "p1", "Alpha", 140),
+        shared_plan(path, "p2", "Beta", 180),
+        shared_plan(path, "p3", "Gamma", 220),
+    ];
+    for (index, plan_path) in plans.iter().enumerate() {
+        let page = format!("p{}", index + 1);
+        let result = cli(
+            path,
+            &["run", "result", &run_id, &page, plan_path.to_str().unwrap()],
+        );
+        assert_eq!(result["adopted"], false);
+        let codes = result["findings"]
+            .get("warnings")
+            .map(warning_codes)
+            .unwrap_or_default();
+        if index < 2 {
+            assert!(!codes.contains(&"shared_layout"), "{codes:?}");
+        } else {
+            assert_eq!(codes, ["shared_layout"]);
+        }
+        assert!(!codes.contains(&"canvas_not_original"));
+    }
+    for (page, note) in [
+        ("p1", "标题框在原图标题带内，左侧色条与原图同宽"),
+        ("p2", "标题框在原图标题带内，中部椭圆比前一页更低"),
+        ("p3", "标题框在原图标题带内，底部图标仍在右侧"),
+    ] {
+        let adopted = cli(path, &["run", "adopt", &run_id, page, "--note", note]);
+        assert_eq!(
+            warning_codes(&adopted["warnings"]),
+            ["shared_layout", "shared_layout", "shared_layout"]
+        );
+    }
+    let built = cli(path, &["build"]);
+    assert_eq!(built["findings"]["status"], "pass");
+    assert_eq!(
+        warning_codes(&built["warnings"]),
+        ["shared_layout", "shared_layout", "shared_layout"]
+    );
+    let exported = cli(path, &["export", "pptx"]);
+    assert_eq!(
+        warning_codes(&exported["warnings"]),
+        ["shared_layout", "shared_layout", "shared_layout"]
+    );
+}
