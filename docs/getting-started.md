@@ -203,7 +203,9 @@ PY
   `stale_images` is the same comparison for original images. `deck get`,
   `deck show`, `deck build`, and `deck export pptx` all include it. Build and
   PPTX export also list those page ids in `warnings` (`code` `stale_image`,
-  `level` `warning`). They are not folded into `stale_pages` and do not change
+  `level` `warning`). The same `warnings` array includes `shared_layout` when
+  at least three adopted pages share a header (title box and first shape).
+  They are not folded into `stale_pages` and do not change
   the exit code or the readback status. `deck export pptx` sets `input_changed`
   only when the page files, notes, or build settings changed after that build.
 - PPTX has been rechecked through LibreOffice (`soffice`) rendering in the

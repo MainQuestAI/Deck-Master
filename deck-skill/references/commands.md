@@ -215,9 +215,9 @@ deck doctor --fonts "Noto Sans CJK SC"
 ```bash
 deck run start native --pages p1,p2
 deck run result <run> p1 <p1-plan.json>
-deck run adopt <run> p1 --note '逐项对照后的实际结论'
+deck run adopt <run> p1 --note '标题框在原图标题带内，左侧三列与原图同序，底部限定条件保留'
 deck run result <run> p2 <p2-plan.json>
-deck run adopt <run> p2 --note '逐项对照后的实际结论'
+deck run adopt <run> p2 --note '主表四行与原图对齐，右侧注释的适用范围保留'
 deck build
 deck export pptx
 ```
@@ -256,9 +256,9 @@ plan v1 的固定外形：
 
 同一 atom 默认只出现一次。原图确实重复时，多出来的 text 或单元格加布尔值 `repeat: true`。列名可以不画，改写入顶层 `omitted: [{atom_id, reason}]`；`reason` 为非空字符串，且该 atom 必须是表格列名。其他 atom 不能这样省略。
 
-`run result` 和 validate-plan 在硬性检查通过后，可能多返回 `warnings`。没有提示时不带这个字段。`repeated_atom` 表示去掉空白后不少于 8 个字的 atom 被画了多次，且多出来的次数没有 `repeat: true`。列名在每一组横排卡片上各作一次标题时不报。`orphan_column_label` 表示列名只作为一个 text 出现，该列文字分成至少两组横排，且列名字号小于这些文字的中位字号。`warnings` 不改变退出码。构建不重跑 validate-plan，回读也不重复这两项。
+`run result` 和 validate-plan 在硬性检查通过后，可能多返回 `warnings`。没有提示时不带这个字段。`repeated_atom` 表示去掉空白后不少于 8 个字的 atom 被画了多次，且多出来的次数没有 `repeat: true`。列名在每一组横排卡片上各作一次标题时不报。`orphan_column_label` 表示列名只作为一个 text 出现，该列文字分成至少两组横排，且列名字号小于这些文字的中位字号。`canvas_not_original` 表示 `plan.canvas_px` 与能打开的原图像素不同；打不开原图时不报，也不因此失败。`shared_layout` 表示本 run 已有至少 3 页的标题框和第一条 shape 相同。这些 `warnings` 不改变退出码。构建不重跑 validate-plan，回读也不重复 `repeated_atom` 与 `orphan_column_label`。`deck build` 和 `deck export pptx` 的 `warnings` 在 `stale_image` 之外可以有 `shared_layout`，不把回读 status 从 pass 改成 fail。
 
-`deck run result` 保存候选和素材，并返回渲染 PNG 与并排图；每次重交后重新看图。`deck run adopt --note` 保存本次结论并采用；构建后检查整套输出。
+`deck run result` 保存候选和素材，并返回渲染 PNG 与并排图；每次重交后重新看图。`deck run adopt --note` 保存本次结论并采用。`--note` 必须非空；去掉空白和标点后只剩「已核对」「已查看并排图」这类确认用语时，采用仍成功，并返回 `note_unspecific`。要写本页对照到的对象，不要只写确认用语。构建后检查整套输出。
 
 图标索引与搜索可直接调用随包的工具；`<icons>` 是 deck_tools 包内的 `resources/icons/tabler-outline`：
 

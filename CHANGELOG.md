@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- native 交回、采用和构建可以多给出警告，不改变退出码，也不把回读 status 从 pass 改成 fail。空白 `--note` 仍拒绝。警告不写入 native 包。(#337)
+  - `canvas_not_original`：plan 画布与能打开的原图像素不同。
+  - `shared_layout`：同一题头（标题框与第一条 shape）达到 3 页。
+  - `note_unspecific`：非空 `--note` 去掉空白和标点后只剩确认用语。
+  - native 的 task.md 在读到原图时写上像素尺寸，供 `plan.canvas_px` 使用；读失败就省略，不取消 run。
 - native 组装用 rsvg-convert 按图标显示宽度渲染 SVG 的 PNG 备用图，替换 PptxGenJS 写入的红叉占位。某一张渲染失败时保留原占位，并在 findings 里记 `svg_png_fallback` warning，构建照常完成。(#338)
 - README 快速开始只保留三步：安装，在 Codex 中用一句话指向 `examples/first-run` 的合成样例，再用 `deck serve` 查看第一份稿。手动命令见 `deck-skill/references/commands.md`。
 - 非默认 `--prefix` 不改登录 shell 的 PATH。新会话会先运行 PATH 上已有的 `deck`。安装副本的 commands.md 写上这次的绝对路径；`command -v deck` 若指向别处，安装结束时打印那个路径。

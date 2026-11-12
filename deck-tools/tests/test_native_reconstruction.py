@@ -78,6 +78,36 @@ def test_validate_plan_covers_current_content(sample):
     assert native.validate_plan(plan, page) == {'page': 'p1', 'atoms': 5}
 
 
+def test_canvas_not_original_warns_only_when_pixels_differ(tmp_path):
+    source = tmp_path / 'source.png'
+    Image.new('RGB', (1672, 941), 'white').save(source)
+    page, plan = _plan(
+        {'title': '合成页'},
+        [_text('atom:p1:title', '合成页', [20, 20, 400, 40])],
+    )
+    page['source_image'] = str(source)
+    plan['canvas_px'] = {'w': 1280, 'h': 720}
+    result = native.validate_plan(plan, page)
+    assert [item['code'] for item in result['warnings']] == ['canvas_not_original']
+    warning = result['warnings'][0]
+    assert warning['level'] == 'warning'
+    assert warning['plan_px'] == {'w': 1280, 'h': 720}
+    assert warning['image_px'] == {'w': 1672, 'h': 941}
+    plan['canvas_px'] = {'w': 1672, 'h': 941}
+    matched = native.validate_plan(plan, page)
+    assert 'canvas_not_original' not in [item['code'] for item in matched.get('warnings', [])]
+    assert 'warnings' not in matched
+    plan['canvas_px'] = {'w': 1280, 'h': 720}
+    page['source_image'] = str(tmp_path / 'missing.png')
+    skipped = native.validate_plan(plan, page)
+    assert 'canvas_not_original' not in [item['code'] for item in skipped.get('warnings', [])]
+    unread = tmp_path / 'notes.txt'
+    unread.write_text('not an image', encoding='utf-8')
+    page['source_image'] = str(unread)
+    skipped = native.validate_plan(plan, page)
+    assert 'canvas_not_original' not in [item['code'] for item in skipped.get('warnings', [])]
+
+
 def _plan(content, ops, omitted=None):
     plan = {
         'schema': 'deck.native_plan.v1', 'page': 'p1',

@@ -67,6 +67,20 @@ fn image_prompt(deck: &Deck, page: &Page, context: &str) -> String {
     prompt
 }
 
+fn original_pixel_sentence(path: &Path, filename: &str) -> String {
+    // A failed read must not cancel the run; the host can still measure the file.
+    let Ok(info) = crate::tools::invoke("image-info", &json!({"path": path})) else {
+        return String::new();
+    };
+    let Some(width) = info.get("width").and_then(serde_json::Value::as_u64) else {
+        return String::new();
+    };
+    let Some(height) = info.get("height").and_then(serde_json::Value::as_u64) else {
+        return String::new();
+    };
+    format!("本页原图 {filename} 为 {width}×{height} px，plan.canvas_px 用这个尺寸。\n")
+}
+
 pub fn write(store: &Store, deck: &Deck, page: &Page, kind: &str, directory: &Path) -> Result<()> {
     std::fs::create_dir_all(directory)?;
     std::fs::write(
@@ -116,8 +130,14 @@ pub fn write(store: &Store, deck: &Deck, page: &Page, kind: &str, directory: &Pa
             directory.join("native-reconstruction.md"),
             include_str!("../../deck-skill/references/native-reconstruction.md"),
         )?;
+        let size_sentence = if let Some(image) = &page.image {
+            let name = format!("original-{}", image.file);
+            original_pixel_sentence(&directory.join(&name), &name)
+        } else {
+            String::new()
+        };
         format!(
-            "{context}\n按 native-reconstruction.md 逐页还原，正文取 content.json，文字绑定 atoms.json，坐标取 attachments.json 的已采用原图。用 deck run result 交回 plan.json，查看返回的并排图，再用 deck run adopt --note 写入实际对照结论并采用。\n"
+            "{context}\n{size_sentence}按 native-reconstruction.md 逐页还原，正文取 content.json，文字绑定 atoms.json，坐标取 attachments.json 的已采用原图。用 deck run result 交回 plan.json，查看返回的并排图，再用 deck run adopt --note 写入实际对照结论并采用。\n"
         )
     } else if kind == "svg" {
         let atoms = crate::tools::invoke("atoms", &json!({"page": page}))?;
