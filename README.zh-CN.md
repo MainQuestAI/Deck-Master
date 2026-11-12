@@ -16,7 +16,7 @@ Deck Master 是面向商业方案创作与表达的 AI 原生工作台，帮助�
 
 这些原则指导产品发展。当前工作台通过 `deck` 命令和本机 Web UI 连接内容策划、可编辑 SVG/PPT 制作、审查与修改。现阶段的实现范围见[能力边界](#能力边界)。
 
-**版本：** `1.1.2`（Rust 命令 `deck`、Python 生产工具包 `deck-tools`、WebUI）。源码版本、构建产物、当前安装和公开 GitHub Release 分别记录。使用前请阅读[安装与首次运行指南](docs/getting-started.md)。本版改动与已知限制见[1.1.2 发版说明](docs/releases/1.1.2.md)。**许可证：** Apache-2.0。
+**版本：** `1.1.3`（Rust 命令 `deck`、Python 生产工具包 `deck-tools`、WebUI）。源码版本、构建产物、当前安装和公开 GitHub Release 分别记录。使用前请阅读[安装与首次运行指南](docs/getting-started.md)。本版改动与已知限制见[1.1.3 发版说明](docs/releases/1.1.3.md)。**许可证：** Apache-2.0。
 
 现行作者路径是 `rust/` 核心、`deck-tools/` 生产工具、`frontend/` 中由 `deck serve` 提供的 WebUI，以及 `deck-skill/` 中的 Codex Skill。从普通材料目录即可开始，无须 PPT Master 后端或页面库。旧 Python 工作台与官方导出器已移出仓库。
 
@@ -127,7 +127,7 @@ deck doctor --fonts 'Source Han Sans SC'
 从[文档导航](docs/README.md)查找使用指南、继承工程规格与带日期的证据。历史报告不能证明当前源码线已通过，详见[归档索引](docs/archive/README.md)。
 
 - [安装、首次运行、Host 要求与已知限制](docs/getting-started.md)
-- [1.1.2 发版说明](docs/releases/1.1.2.md)
+- [1.1.3 发版说明](docs/releases/1.1.3.md)
 - [Rust 重写开发稿（现行架构）](docs/specs/rust-rebuild/README.md)
 - [核心理念：从业务判断到商业表达](docs/product-philosophy.md)
 - [下一轮商业表达能力：总方案与开发卡](docs/specs/deck-master-business-expression-20261029/README.md)

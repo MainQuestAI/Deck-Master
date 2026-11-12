@@ -30,11 +30,11 @@ content planning, editable SVG/PPT production, review and revision through the
 `deck` CLI and a local Web UI. See the [capability boundaries](#capability-boundaries)
 for current implementation limits.
 
-**Version:** `1.1.2` (Rust CLI `deck`, Python file tools `deck-tools`, WebUI).
+**Version:** `1.1.3` (Rust CLI `deck`, Python file tools `deck-tools`, WebUI).
 Source version, built artifacts, an active install and a published GitHub
 Release are separate facts. Start with the
 [installation and first-run guide](docs/getting-started.md). See
-[1.1.2 release notes](docs/releases/1.1.2.md) for changes and known limits. **License:** Apache-2.0.
+[1.1.3 release notes](docs/releases/1.1.3.md) for changes and known limits. **License:** Apache-2.0.
 
 The current authoring path is the Rust core in `rust/`, file tools in
 `deck-tools/`, the WebUI in `frontend/` served by `deck serve`, and the Codex
@@ -185,7 +185,7 @@ Start with the [documentation index](docs/README.md). Historical reports do not
 certify the current source line; see the [archive index](docs/archive/README.md).
 
 - [Installation, first run, Host requirements and known limitations](docs/getting-started.md)
-- [1.1.2 release notes](docs/releases/1.1.2.md)
+- [1.1.3 release notes](docs/releases/1.1.3.md)
 - [Rust rebuild plan (current architecture)](docs/specs/rust-rebuild/README.md)
 - [Product Philosophy (Chinese)](docs/product-philosophy.md)
 - [下一轮拟实施：商业表达与专家共创改稿闭环（版本号未定）](docs/specs/README.md#当前架构与下一轮拟实施主题)
