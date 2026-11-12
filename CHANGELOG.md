@@ -28,7 +28,7 @@ PyPI publication implied.
 - WebUI 样式收进设计变量并加上 token 检查；旧 `/studio/`、`/v2/` 地址不可用，请使用 `deck serve` 打印的地址。(#322)
 - 57 MiB 历史归档包移出工作树，保留为 release asset。(#247)
 - CI 将 `actions/setup-node` 从 4 升到 7。(#270)
-- 视觉人判仍由人做，`visual_review` 和 `desktop_editing` 不自动通过。真实 Host / ImageGen、PPTX → deck 导入本版不声称已完成或通过。江南e柜 b62ce27 验收第 1 轮 sim_v3 平均 0.674，命中 27/27，红叉占位 0；视觉由人判，不标通过。
+- 视觉人判仍由人做，`visual_review` 和 `desktop_editing` 不自动通过。真实 Host / ImageGen、PPTX → deck 导入本版不声称已完成或通过。内部 27 页还原验收，commit `b62ce271` 第 1 轮 sim_v3 平均 0.674，命中 27/27，红叉占位 0；视觉由人判，不标通过。
 
 ## 1.1.2 — 2026-11-09
 
