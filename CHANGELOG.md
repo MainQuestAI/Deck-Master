@@ -2,34 +2,33 @@
 
 ## Unreleased
 
-- native 交回、采用和构建可以多给出警告，不改变退出码，也不把回读 status 从 pass 改成 fail。空白 `--note` 仍拒绝。警告不写入 native 包。(#337)
-  - `canvas_not_original`：plan 画布与能打开的原图像素不同。
-  - `shared_layout`：同一题头（标题框与第一条 shape）达到 3 页。
-  - `note_unspecific`：非空 `--note` 去掉空白和标点后只剩确认用语。
-  - native 的 task.md 在读到原图时写上像素尺寸，供 `plan.canvas_px` 使用；读失败就省略，不取消 run。
-- native 组装用 rsvg-convert 按图标显示宽度渲染 SVG 的 PNG 备用图，替换 PptxGenJS 写入的红叉占位。某一张渲染失败时保留原占位，并在 findings 里记 `svg_png_fallback` warning，构建照常完成。(#338)
-- README 快速开始只保留三步：安装，在 Codex 中用一句话指向 `examples/first-run` 的合成样例，再用 `deck serve` 查看第一份稿。手动命令见 `deck-skill/references/commands.md`。
-- 非默认 `--prefix` 不改登录 shell 的 PATH。新会话会先运行 PATH 上已有的 `deck`。安装副本的 commands.md 写上这次的绝对路径；`command -v deck` 若指向别处，安装结束时打印那个路径。
-- 只含图标、没有位图的 native 页面子集可以 `deck build`。PptxGenJS 在没有其他媒体文件要读时，会把 SVG 写进 PNG 伴生部件；组装前只替换仍挂着 SVG 关系的那张伴生 PNG，其它非法图片仍由清洗拒绝。SVG 图标本身保留。(#325)
-- `deck build` 与 `deck export pptx` 列出原图依据已变的页：`stale_images`，以及 `warnings`（`code` 为 `stale_image`，`level` 为 `warning`）。不并入 `stale_pages`，不改变退出码或回读 status。(#326)
-- native 构建回读在每个文字对象内按占用位置扣减正文，不跨对象拼接。短 atom 只出现在更长的已绘制句子里时记 `missing_visible_atom`，仍只作为 findings，不让 assemble 失败退出，也不在构建时重跑 validate_plan。(#327)
-- native 逐页还原接入 `deck run`、`deck build` 与 `deck export pptx`；候选须用非空 `--note` 明确采用，包含 Tabler outline 图标与局部裁图。
-- 项目格式 5 → 6：仅提升 user_version，保留历史数据与文件；新增可选 native 产物引用，旧程序会提示升级 deck。
-- 默认安装 `deck-master`、`deck-content`、`deck-design`、`deck-review` 四个职责入口到 `~/.codex/skills`，不再安装 `deck` 入口；`--skills-root` 可更换目录，`--skill-dir` 已取消。
-- 每个入口改为整个职责目录的软链接，目录内保留真实 `SKILL.md`，让 Codex 能发现这些技能。
-- 再次运行安装脚本会只移除指向本源的旧 `deck` 软链接，并将仅含三条托管链接的旧职责包装目录升级为整目录软链接；含用户文件的目录会保留并报冲突。
-- 若同名旧 Python 线入口仍占用安装位置，脚本在写入前退出并打印路径和目标；请先移走该软链接（只删链接，不删目标目录）再安装。
-- 旧 Python 工作台（`src/deck_master/`、`skills/deck-*`、旧线测试与 `rebuild.yml`）已移出仓库。
-- 删除 `deck-master` 命令及其 `legacy-export`，旧项目不再提供官方导出。
-- Rust `deck import` 仍可导入已经存在的 `legacy-export.v1` 档案。
-- 项目格式 4 → 5：升级会提升 user_version，保留旧版本、文件和历史依据；旧程序遇到高版本格式会拒绝打开；不提供原地降级，回退需要使用升级前保留的完整项目副本。(#310)
-- 新增 `GET /api/builds/{id}`，按需持久读取构建详情；workspace 仍只返回构建摘要。(#310)
-- 安装布局：`scripts/install.sh` 在 `<prefix>/share/deck/installations/` 下准备完整目录（CLI 与内嵌 WebUI、非 editable 的 deck-tools venv、四个职责 Skill 及共享资源），验证后切换 `<prefix>/share/deck/current` 指针；职责入口链接经由 current；升级保留旧目录。首次多入口迁移中断时，`entry-migrations` 保存已确认入口的迁移凭据，供同参数重试，成功后删除。(#310)
-- 嵌套 labels/footnotes/callouts 的子项进入文字回读；材料保留不可变原件副本，`deck material text` 返回该副本路径，原件缺失时为 null。(#310)
-- 新 SVG 依据为 svg-v2，纳入 purpose/layout；历史依据保持兼容，原图过期单独显示。(#310)
-- 三类编辑共用同一套 draft dirty 判断。(#310)
-- 新增 `frontend/browser-smoke.mjs` 浏览器冒烟脚本；CI 新增独立 render job，安装 rsvg/LibreOffice/poppler/CJK 字体后运行 `pytest -m render`。(#310)
-- **行为变更**：`deck review add` 的 `--method` 改为必填，不再默认 `human`；漏写时报错并列出 `self_check`、`other_model`、`human`。依赖旧默认值的脚本需显式传入 `--method human`。
+## 1.1.3 — 2026-11-12
+
+See [1.1.3 release notes](docs/releases/1.1.3.md) for the changes merged after
+`v1.1.2` (`1f61c28e`) through `main` after #340 (`b62ce271`). Rust
+`deck`, `deck-tools` and WebUI source versions are `1.1.3`. The previous
+Python `deck-master` package was removed in #309. The release PR prepares
+these notes; tag `v1.1.3` and the GitHub Release follow separately after
+merge. Published status is recorded on
+[GitHub Releases](https://github.com/MainQuestAI/Deck-Master/releases), with no
+PyPI publication implied.
+
+- 默认安装四个职责入口到 `~/.codex/skills`，不再安装 `deck` 入口；每个入口改为整个职责目录的软链接；`--skills-root` 可更换目录，`--skill-dir` 已取消。(#308)
+- 旧 Python 工作台（`src/deck_master/`、`skills/deck-*`、旧线测试与 `rebuild.yml`）已移出仓库。删除 `deck-master` 命令及其 `legacy-export`，旧项目不再提供官方导出。Rust `deck import` 仍可导入已经存在的 `legacy-export.v1` 档案。(#309)
+- 项目格式 4 → 5 → 6：两次均只提升 user_version，保留历史数据与文件；格式 6 新增可选 native 产物引用。旧程序会提示升级或拒绝打开；不提供原地降级。(#310, #324)
+- 编辑、回读与安装：`GET /api/builds/{id}`；嵌套文字进入回读；材料保留不可变原件；svg-v2 依据；三类编辑共用 dirty 判断；安装改为完整目录与 `current` 指针，首次迁移中断可凭 `entry-migrations` 重试；CI 增加 render job 与浏览器冒烟脚本。(#310)
+- native 逐页还原接入 `deck run`、`deck build` 与 `deck export pptx`；候选须用非空 `--note` 明确采用，包含 Tabler outline 图标与局部裁图。(#323, #324)
+- 只含图标的 native 页面可以组装；`deck build` / `deck export pptx` 报告 `stale_image`；回读按对象扣减正文，短 atom 只出现在更长句子里时记 `missing_visible_atom`。(#328)
+- native 组装用 rsvg-convert 渲染 SVG 的 PNG 备用图，替换红叉占位；渲染失败时保留原占位并记 `svg_png_fallback` 警告，构建照常完成。(#339)
+- native 交回、采用和构建可给出警告，不改变退出码，也不把回读 status 从 pass 改成 fail：`shared_layout`、`canvas_not_original`、`note_unspecific`（#340）；`repeated_atom`、`orphan_column_label`（#334）。空白 `--note` 仍拒绝。警告不写入 native 包。
+- **行为变更**：`deck put` 按原文存储正文，不再清理数字与汉字之间的空格，以及只垫在标点旁的空格；已存储的版本不会被改写。(#333)
+- **行为变更**：`deck review add` 的 `--method` 改为必填，不再默认 `human`；漏写时报错并列出 `self_check`、`other_model`、`human`。(#320)
+- 非默认 `--prefix` 不改登录 shell 的 PATH；安装副本的 commands.md 写上这次的绝对路径；`command -v deck` 若指向别处，安装结束时打印那个路径。(#336)
+- 删除已无法运行的旧线示例，新增合成样例 `examples/first-run/`；README 快速开始改为安装、在 Codex 中指向该样例、再用 `deck serve` 查看。(#321, #335)
+- WebUI 样式收进设计变量并加上 token 检查；旧 `/studio/`、`/v2/` 地址不可用，请使用 `deck serve` 打印的地址。(#322)
+- 57 MiB 历史归档包移出工作树，保留为 release asset。(#247)
+- CI 将 `actions/setup-node` 从 4 升到 7。(#270)
+- 视觉人判仍由人做，`visual_review` 和 `desktop_editing` 不自动通过。真实 Host / ImageGen、PPTX → deck 导入本版不声称已完成或通过。江南e柜 b62ce27 验收第 1 轮 sim_v3 平均 0.674，命中 27/27，红叉占位 0；视觉由人判，不标通过。
 
 ## 1.1.2 — 2026-11-09
 

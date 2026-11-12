@@ -11,7 +11,7 @@
 
 ## 当前架构与下一轮拟实施主题
 
-现行实现：[Rust 重写开发稿](rust-rebuild/README.md)。核心在 `rust/`，生产工具在 `deck-tools/`，WebUI 在 `frontend/` 并由 `deck serve` 提供，新 Skill 在 `deck-skill/`。切片 S0–S6 已合入；发版说明见 [1.1.2](../releases/1.1.2.md)，安装与首次运行见 [getting-started](../getting-started.md)。
+现行实现：[Rust 重写开发稿](rust-rebuild/README.md)。核心在 `rust/`，生产工具在 `deck-tools/`，WebUI 在 `frontend/` 并由 `deck serve` 提供，新 Skill 在 `deck-skill/`。切片 S0–S6 已合入；发版说明见 [1.1.3](../releases/1.1.3.md)，安装与首次运行见 [getting-started](../getting-started.md)。
 
 下一轮主题是「商业表达与专家共创改稿闭环」，身份为**拟实施**，版本号未定。
 通过会话与分文件包按切片推进，采用的设计并回既有 [Rust 开发稿](rust-rebuild/README.md) 对应段落；
