@@ -536,6 +536,86 @@ fn adopt_reports_shared_layout_for_three_result_pages_in_this_run() {
     );
 }
 
+#[test]
+#[ignore = "needs node + pptxgenjs + soffice; runs in the render job"]
+fn corrupt_sibling_pack_still_lets_the_other_page_result_and_adopt() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    cli(path, &["new", path.to_str().unwrap()]);
+    edit(
+        path,
+        json!({"order":["p1","p2"],"pages":[
+            {"id":"p1","content":{"title":"Alpha"}},
+            {"id":"p2","content":{"title":"Beta"}}
+        ]}),
+    );
+    python(&[
+        "-c",
+        "from PIL import Image; import sys; from pathlib import Path; p=Path(sys.argv[1]); Image.new('RGB',(800,450),'white').save(p/'source.png'); Image.new('RGB',(40,40),'teal').save(p/'asset.png'); print('{}')",
+        path.to_str().unwrap(),
+    ]);
+    let image =
+        cli(path, &["run", "start", "image", "--pages", "p1,p2"])["runs"][0]["id"].to_string();
+    for id in ["p1", "p2"] {
+        cli(
+            path,
+            &[
+                "run",
+                "result",
+                &image,
+                id,
+                path.join("source.png").to_str().unwrap(),
+            ],
+        );
+    }
+    let run_id = cli(path, &["run", "start", "native", "--pages", "p1,p2"])["runs"][0]["id"]
+        .as_i64()
+        .unwrap();
+    seed_native_candidate(path, run_id, "p1", [40, 30, 500, 48], [24, 24, 10, 36]);
+    let store = Store::open(path).unwrap();
+    let corrupt: String = store
+        .connection
+        .query_row(
+            "SELECT result_file FROM run_pages WHERE run_id=?1 AND page_id=?2",
+            (run_id, "p1"),
+            |row| row.get(0),
+        )
+        .unwrap();
+    std::fs::write(store.file(&corrupt).unwrap(), b"not a pack").unwrap();
+    drop(store);
+    let plan = shared_plan(path, "p2", "Beta", 180);
+    let run_text = run_id.to_string();
+    let result = cli(
+        path,
+        &["run", "result", &run_text, "p2", plan.to_str().unwrap()],
+    );
+    assert_eq!(result["adopted"], false);
+    let adopted = cli(
+        path,
+        &[
+            "run",
+            "adopt",
+            &run_text,
+            "p2",
+            "--note",
+            "标题框在原图标题带内，中部椭圆比前一页更低",
+        ],
+    );
+    assert_eq!(adopted["runs"][0]["pages"][1]["status"], "done");
+    let failed = command(
+        path,
+        &[
+            "run",
+            "adopt",
+            &run_text,
+            "p1",
+            "--note",
+            "标题框在原图标题带内，这一页的包已损坏",
+        ],
+    );
+    assert_ne!(failed.status.code(), Some(0));
+}
+
 fn shared_plan(path: &Path, page: &str, title: &str, body_y: i64) -> std::path::PathBuf {
     let plan = json!({"schema":"deck.native_plan.v1", "page":page,
     "canvas_px":{"w":800,"h":450},"background":"FFFFFF","ops":[

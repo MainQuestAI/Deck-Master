@@ -1413,8 +1413,11 @@ fn result_plans(
             replaced = true;
             continue;
         }
-        let pack: NativePack = serde_json::from_slice(&std::fs::read(store.file(&file)?)?)?;
-        plans.push((page_id, pack.plan));
+        // Another page's pack only adds a shared_layout hint. Skip it when it cannot be read.
+        let Some(plan) = readable_native_plan(&store.root, &file) else {
+            continue;
+        };
+        plans.push((page_id, plan));
     }
     if let Some(plan) = current_plan
         && !replaced
