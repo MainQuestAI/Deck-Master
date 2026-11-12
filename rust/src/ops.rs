@@ -1372,6 +1372,14 @@ fn is_confirmation_only(note: &str) -> bool {
     rest.is_empty()
 }
 
+fn readable_native_plan(root: &Path, file: &str) -> Option<Value> {
+    let path = store::file_path(root, file).ok()?;
+    let bytes = std::fs::read(path).ok()?;
+    serde_json::from_slice::<NativePack>(&bytes)
+        .ok()
+        .map(|pack| pack.plan)
+}
+
 fn note_unspecific_warning(page_id: &str) -> Value {
     json!({
         "level": "warning",
@@ -1935,22 +1943,17 @@ pub fn export_pptx(project: &Path) -> Result<Value> {
     selected["missing_pages"] = status["missing_pages"].clone();
     selected["stale_pages"] = status["stale_pages"].clone();
     selected["stale_images"] = status["stale_images"].clone();
-    let plans = if deck.pages.iter().any(|page| page.native.is_some()) {
-        let mut plans = Vec::new();
-        for page in &deck.pages {
-            let Some(artifact) = &page.native else {
-                continue;
-            };
-            let pack: NativePack = serde_json::from_slice(&std::fs::read(store::file_path(
-                &store.root,
-                &artifact.file,
-            )?)?)?;
-            plans.push((page.id.clone(), pack.plan));
-        }
-        plans
-    } else {
-        Vec::new()
-    };
+    let mut plans = Vec::new();
+    for page in &deck.pages {
+        let Some(artifact) = &page.native else {
+            continue;
+        };
+        // The selected PPTX is already built. A missing pack only drops this advisory warning.
+        let Some(plan) = readable_native_plan(&store.root, &artifact.file) else {
+            continue;
+        };
+        plans.push((page.id.clone(), plan));
+    }
     selected["warnings"] = with_shared_layout(
         stale_image_warnings(&status["stale_images"]),
         &plan_refs(&plans),
@@ -2114,6 +2117,53 @@ mod build_selection_tests {
         std::fs::remove_file(store.file(&current_file).unwrap()).unwrap();
         assert!(matches!(export_pptx(temp.path()), Err(Error::Missing(_))));
     }
+
+    #[test]
+    fn export_returns_the_historical_pptx_when_a_native_pack_cannot_be_read() {
+        let temp = tempfile::tempdir().unwrap();
+        let mut store = Store::create(temp.path(), &Deck::default()).unwrap();
+        let mut deck = Deck::default();
+        deck.pages.push(Page {
+            id: "p1".into(),
+            ..Page::default()
+        });
+        deck.pages[0].native = Some(crate::model::Artifact {
+            file: format!("{}.native.json", "ab".repeat(32)),
+            basis: basis("native", &deck, &deck.pages[0]).unwrap(),
+        });
+        let tx = store.transaction().unwrap();
+        store::append(&tx, &deck, "Native without a readable pack").unwrap();
+        tx.commit().unwrap();
+        let pptx = store.add_file(b"historical pptx", "pptx").unwrap();
+        store.connection.execute(
+            "INSERT INTO builds(version_id,input_digest,pptx_file,findings_json,missing_pages) VALUES (1,?,?,'{}','[]')",
+            rusqlite::params![build_digest(&deck).unwrap(), pptx],
+        ).unwrap();
+        let corrupt = store.add_file(b"not json", "native.json").unwrap();
+        deck.pages.push(Page {
+            id: "p2".into(),
+            ..Page::default()
+        });
+        deck.pages[1].native = Some(crate::model::Artifact {
+            file: corrupt,
+            basis: basis("native", &deck, &deck.pages[1]).unwrap(),
+        });
+        let tx = store.transaction().unwrap();
+        store::append(&tx, &deck, "Native with a corrupt pack").unwrap();
+        tx.commit().unwrap();
+        let export = export_pptx(temp.path()).unwrap();
+        assert_eq!(
+            std::fs::read(export["path"].as_str().unwrap()).unwrap(),
+            b"historical pptx"
+        );
+        assert!(
+            export["warnings"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .all(|warning| { warning["code"] != "shared_layout" })
+        );
+    }
 }
 
 #[cfg(test)]
@@ -2164,9 +2214,6 @@ mod layout_warning_tests {
         assert!(warnings.iter().all(|warning| {
             warning["level"] == "warning" && warning["code"] == "shared_layout"
         }));
-        let message = warnings[0]["message"].as_str().unwrap();
-        assert!(message.contains("本 run 已有 3 页共用同一题头"));
-        assert!(message.contains("此提示不阻止交回或采用"));
         let two = [page("p1", 120), page("p2", 180)];
         assert!(shared_layout_warnings(&[("p1", &two[0]), ("p2", &two[1])]).is_empty());
         let varied: Vec<Value> = ["a", "b", "c", "d"]

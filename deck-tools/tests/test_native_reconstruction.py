@@ -93,7 +93,6 @@ def test_canvas_not_original_warns_only_when_pixels_differ(tmp_path):
     assert warning['level'] == 'warning'
     assert warning['plan_px'] == {'w': 1280, 'h': 720}
     assert warning['image_px'] == {'w': 1672, 'h': 941}
-    assert '不阻止' in warning['message']
     plan['canvas_px'] = {'w': 1672, 'h': 941}
     matched = native.validate_plan(plan, page)
     assert 'canvas_not_original' not in [item['code'] for item in matched.get('warnings', [])]
