@@ -131,7 +131,7 @@ jobs:
         run: cargo test --test native -- --ignored
       - name: Real rendering tests
         run: .venv/bin/python -m pytest -q deck-tools/tests -m render --basetemp="$RUNNER_TEMP/deck-render"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: render-failure
