@@ -60,11 +60,62 @@ fn seed_artifacts(path: &Path, image: &Path) {
         });
     }
     let tx = store.transaction().unwrap();
-    store::append(&tx, &deck, "synthetic artifacts").unwrap();
+    store::append(&tx, &mut deck, "synthetic artifacts").unwrap();
     tx.commit().unwrap();
 }
 
+fn allow_runs(path: &Path) {
+    let store = Store::open(path).unwrap();
+    let snapshot = store.current().unwrap();
+    let mut deck = snapshot.deck;
+    let mut changed = false;
+    if deck.brief.audience.trim().is_empty() {
+        deck.brief.audience = "业务负责人".into();
+        changed = true;
+    }
+    if deck.brief.decision.trim().is_empty() {
+        deck.brief.decision = "是否采用该方案".into();
+        changed = true;
+    }
+    if deck
+        .brief
+        .concerns
+        .iter()
+        .all(|item| item.trim().is_empty())
+    {
+        deck.brief.concerns = vec!["成本是否可控".into()];
+        changed = true;
+    }
+    if deck.brief.narrator.role.trim().is_empty() {
+        deck.brief.narrator.role = "项目负责人".into();
+        changed = true;
+    }
+    if deck.brief.narrator.tone.trim().is_empty() {
+        deck.brief.narrator.tone = "直接说明判断".into();
+        changed = true;
+    }
+    if deck
+        .framing
+        .storyline
+        .iter()
+        .all(|item| item.trim().is_empty())
+    {
+        deck.framing.storyline = vec!["先说明问题，再给出判断".into()];
+        changed = true;
+    }
+    if changed {
+        store
+            .connection
+            .execute(
+                "UPDATE versions SET deck_json=?1 WHERE id=?2",
+                rusqlite::params![serde_json::to_string(&deck).unwrap(), snapshot.version],
+            )
+            .unwrap();
+    }
+}
+
 fn attached_run(path: &Path, kind: &str, expected: [Vec<&str>; 2]) -> i64 {
+    allow_runs(path);
     let result = ops::run_start(path, kind, &["p1".into(), "p2".into()], None).unwrap();
     let store = Store::open(path).unwrap();
     let style = store.current().unwrap().deck.style;
@@ -304,7 +355,7 @@ fn scoped_stale_original_is_separate_from_current_svg() {
     // A rebuilt SVG is current even when the retained original has stale inputs.
     deck.pages[1].svg.as_mut().unwrap().basis = ops::basis("svg", &deck, &deck.pages[1]).unwrap();
     let tx = store.transaction().unwrap();
-    store::append(&tx, &deck, "synthetic current SVG basis").unwrap();
+    store::append(&tx, &mut deck, "synthetic current SVG basis").unwrap();
     tx.commit().unwrap();
     let status = ops::artifact_status(&deck).unwrap();
     assert_eq!(status["stale_images"], json!(["p2"]));

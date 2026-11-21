@@ -134,10 +134,9 @@ fn adopt_rechecks_candidate_after_tool_work_for_cli_and_http() {
                 1,
                 json!({"order":["p1"],"pages":[{"id":"p1","content":{"title":"Main"}}]}),
             );
-            let id =
-                ops::run_start(&project, "svg", &["p1".into()], None).unwrap()["runs"][0]["id"]
-                    .as_i64()
-                    .unwrap();
+            let id = run_start(&project, "svg", &["p1".into()], None).unwrap()["runs"][0]["id"]
+                .as_i64()
+                .unwrap();
             ops::run_cancel(&project, id).unwrap();
             let store = Store::open(&project).unwrap();
             let a = store.add_file(b"<svg>A</svg>", "svg").unwrap();
@@ -282,11 +281,10 @@ fn result_rechecks_candidate_after_tool_work_and_preserves_identical_status() {
             1,
             json!({"order":["p1","p2"],"pages":[{"id":"p1","content":{"title":"Main"}},{"id":"p2"}]}),
         );
-        let id =
-            ops::run_start(&project, "svg", &["p1".into(), "p2".into()], None).unwrap()["runs"][0]
-                ["id"]
-                .as_i64()
-                .unwrap();
+        let id = run_start(&project, "svg", &["p1".into(), "p2".into()], None).unwrap()["runs"][0]
+            ["id"]
+            .as_i64()
+            .unwrap();
         if cancelled {
             ops::run_cancel(&project, id).unwrap();
         }
@@ -430,6 +428,66 @@ print(json.dumps({'preview': str(preview), 'findings': []}))
     }
 }
 
+fn allow_runs(path: &Path) {
+    let store = Store::open(path).unwrap();
+    let snapshot = store.current().unwrap();
+    let mut deck = snapshot.deck;
+    let mut changed = false;
+    if deck.brief.audience.trim().is_empty() {
+        deck.brief.audience = "业务负责人".into();
+        changed = true;
+    }
+    if deck.brief.decision.trim().is_empty() {
+        deck.brief.decision = "是否采用该方案".into();
+        changed = true;
+    }
+    if deck
+        .brief
+        .concerns
+        .iter()
+        .all(|item| item.trim().is_empty())
+    {
+        deck.brief.concerns = vec!["成本是否可控".into()];
+        changed = true;
+    }
+    if deck.brief.narrator.role.trim().is_empty() {
+        deck.brief.narrator.role = "项目负责人".into();
+        changed = true;
+    }
+    if deck.brief.narrator.tone.trim().is_empty() {
+        deck.brief.narrator.tone = "直接说明判断".into();
+        changed = true;
+    }
+    if deck
+        .framing
+        .storyline
+        .iter()
+        .all(|item| item.trim().is_empty())
+    {
+        deck.framing.storyline = vec!["先说明问题，再给出判断".into()];
+        changed = true;
+    }
+    if changed {
+        store
+            .connection
+            .execute(
+                "UPDATE versions SET deck_json=?1 WHERE id=?2",
+                rusqlite::params![serde_json::to_string(&deck).unwrap(), snapshot.version],
+            )
+            .unwrap();
+    }
+}
+
+fn run_start(
+    path: &Path,
+    kind: &str,
+    ids: &[String],
+    max_calls: Option<i64>,
+) -> deck::error::Result<Value> {
+    allow_runs(path);
+    ops::run_start(path, kind, ids, max_calls)
+}
+
 fn edit(project: &Path, base: i64, value: Value) -> i64 {
     let patch: Patch = serde_json::from_value(value).unwrap();
     ops::put(project, base, patch).unwrap().version
@@ -464,7 +522,7 @@ fn historical_version_get_returns_saved_snapshot_without_business_writes() {
         }),
     );
     ops::review_add(path, Some("p1"), "当前意见", "author", "human").unwrap();
-    ops::run_start(path, "image", &["p1".into()], Some(1)).unwrap();
+    run_start(path, "image", &["p1".into()], Some(1)).unwrap();
     let store = Store::open(path).unwrap();
     let counts = || -> Vec<i64> {
         ["versions", "runs", "run_pages", "reviews", "builds"]
@@ -765,7 +823,7 @@ fn jpeg_result_named_png_downloads_as_jpeg() {
             .unwrap()
             .success()
     );
-    let run = ops::run_start(temp.path(), "image", &["p1".into()], None).unwrap();
+    let run = run_start(temp.path(), "image", &["p1".into()], None).unwrap();
     let id = run["runs"][0]["id"].as_i64().unwrap();
     ops::run_call(temp.path(), id, "p1", false).unwrap();
     let result = ops::run_result(temp.path(), id, "p1", &bitmap).unwrap();
@@ -787,7 +845,7 @@ fn http_cancel_uses_ops_and_late_result_stays_unadopted() {
         1,
         json!({"order":["p1"],"pages":[{"id":"p1"}]}),
     );
-    let run = ops::run_start(temp.path(), "image", &["p1".into()], None).unwrap();
+    let run = run_start(temp.path(), "image", &["p1".into()], None).unwrap();
     let id = run["runs"][0]["id"].as_i64().unwrap();
     ops::run_call(temp.path(), id, "p1", false).unwrap();
     let service = Service::start(temp.path());
@@ -880,7 +938,7 @@ fn build_downloads_report_missing_stale_and_changed_inputs_without_gating() {
     let basis = ops::basis("svg", &snapshot.deck, &snapshot.deck.pages[0]).unwrap();
     snapshot.deck.pages[0].svg = Some(Artifact { file, basis });
     let tx = store.transaction().unwrap();
-    let base = store::append(&tx, &snapshot.deck, "synthetic compiler fixture").unwrap();
+    let base = store::append(&tx, &mut snapshot.deck, "synthetic compiler fixture").unwrap();
     tx.commit().unwrap();
     edit(
         temp.path(),
@@ -1085,13 +1143,13 @@ fn http_adopt_matches_cli_with_candidates_and_existing_rejection_semantics() {
             .unwrap()
             .success()
     );
-    let first = ops::run_start(path, "image", &["p3".into()], None).unwrap()["runs"][0]["id"]
+    let first = run_start(path, "image", &["p3".into()], None).unwrap()["runs"][0]["id"]
         .as_i64()
         .unwrap();
     ops::run_call(path, first, "p3", false).unwrap();
     let first_result = ops::run_result(path, first, "p3", &bitmap).unwrap();
     let first_bytes = std::fs::read(&bitmap).unwrap();
-    let id = ops::run_start(path, "image", &["p3".into()], None).unwrap()["runs"][0]["id"]
+    let id = run_start(path, "image", &["p3".into()], None).unwrap()["runs"][0]["id"]
         .as_i64()
         .unwrap();
     let service = Service::start(path);
@@ -1215,7 +1273,7 @@ fn http_adopts_cancelled_runs_late_result() {
             .unwrap()
             .success()
     );
-    let id = ops::run_start(path, "image", &["p3".into()], None).unwrap()["runs"][0]["id"]
+    let id = run_start(path, "image", &["p3".into()], None).unwrap()["runs"][0]["id"]
         .as_i64()
         .unwrap();
     ops::run_call(path, id, "p3", false).unwrap();
@@ -1266,7 +1324,7 @@ fn http_adopts_only_selected_page_of_two_page_run() {
             .success()
     );
     let pages = ["p1".into(), "p2".into()];
-    let first = ops::run_start(path, "image", &pages, None).unwrap()["runs"][0]["id"]
+    let first = run_start(path, "image", &pages, None).unwrap()["runs"][0]["id"]
         .as_i64()
         .unwrap();
     for page in &pages {
@@ -1276,7 +1334,7 @@ fn http_adopts_only_selected_page_of_two_page_run() {
             true
         );
     }
-    let id = ops::run_start(path, "image", &pages, None).unwrap()["runs"][0]["id"]
+    let id = run_start(path, "image", &pages, None).unwrap()["runs"][0]["id"]
         .as_i64()
         .unwrap();
     for page in &pages {
@@ -1343,7 +1401,7 @@ fn http_rejects_adoption_after_page_deleted() {
             .unwrap()
             .success()
     );
-    let id = ops::run_start(path, "image", &["p3".into()], None).unwrap()["runs"][0]["id"]
+    let id = run_start(path, "image", &["p3".into()], None).unwrap()["runs"][0]["id"]
         .as_i64()
         .unwrap();
     ops::run_call(path, id, "p3", false).unwrap();
@@ -1428,6 +1486,7 @@ print(json.dumps({"preview": str(preview), "findings": []}))
         );
         serde_json::from_slice::<Value>(&output.stdout).unwrap()
     };
+    allow_runs(&project);
     let id = run(&["run", "start", "svg", "--pages", "p1"])["runs"][0]["id"]
         .as_i64()
         .unwrap();
@@ -1504,7 +1563,7 @@ fn candidate_only_native_build_fails_with_missing_pages_and_no_build_record() {
         1,
         json!({"order":["p1"],"pages":[{"id":"p1"}]}),
     );
-    let run = ops::run_start(temp.path(), "native", &["p1".into()], None).unwrap()["runs"][0]["id"]
+    let run = run_start(temp.path(), "native", &["p1".into()], None).unwrap()["runs"][0]["id"]
         .as_i64()
         .unwrap();
     let store = Store::open(temp.path()).unwrap();

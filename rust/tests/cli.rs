@@ -11,6 +11,29 @@ fn command(path: &Path, args: &[&str]) -> Output {
         .unwrap()
 }
 
+fn put_frame(path: &Path, base: &str, title: &str) {
+    let file = path.join(format!("frame-{base}.json"));
+    std::fs::write(
+        &file,
+        json!({
+            "brief": {
+                "title": title,
+                "audience": "业务负责人",
+                "decision": "是否采用该方案",
+                "concerns": ["成本是否可控"],
+                "narrator": {"role": "项目负责人", "tone": "直接说明判断"}
+            },
+            "framing": {"storyline": ["先说明问题，再给出判断"]}
+        })
+        .to_string(),
+    )
+    .unwrap();
+    output_json(command(
+        path,
+        &["put", "--base", base, file.to_str().unwrap()],
+    ));
+}
+
 fn output_json(output: Output) -> Value {
     assert!(
         output.status.success(),
@@ -60,6 +83,13 @@ fn cli_partial_edit_conflict_and_markdown_export() {
         &["put", "--base", "1", input.to_str().unwrap()],
     ));
     let mut partial = output_json(command(path, &["get", "--pages", "p1"]));
+    // writing_brief and outline are derived. A get envelope that still contains them is rejected.
+    partial.as_object_mut().unwrap().remove("writing_brief");
+    partial.as_object_mut().unwrap().remove("outline");
+    partial["deck"]["pages"][0]
+        .as_object_mut()
+        .unwrap()
+        .remove("revision");
     partial["deck"]["pages"][0]["notes"] = json!("新讲稿");
     std::fs::write(&input, partial.to_string()).unwrap();
     let saved = output_json(command(
@@ -130,6 +160,7 @@ fn new_deck_defaults_reach_image_task_without_putting_style() {
         path,
         &["put", "--base", "1", input.to_str().unwrap()],
     ));
+    put_frame(path, "2", "");
     let run = output_json(command(path, &["run", "start", "image", "--pages", "p1"]));
     let work = Path::new(run["runs"][0]["pages"][0]["work"].as_str().unwrap());
     let task = std::fs::read_to_string(work.join("task.md")).unwrap();
@@ -182,6 +213,7 @@ fn planned_page_survives_image_task_and_readable_export() {
         path,
         &["put", "--base", "1", input.to_str().unwrap()],
     ));
+    put_frame(path, "2", "合成任务方案");
     let expected: Value = serde_json::from_str(fixture).unwrap();
     let page = &expected["pages"][0];
     let run = output_json(command(
@@ -567,7 +599,7 @@ fn material_original_is_immutable_optional_and_invalid_references_are_errors() {
     let mut snapshot = store.current().unwrap();
     snapshot.deck.materials[0].file = "../invalid.md".into();
     let tx = store.transaction().unwrap();
-    store::append(&tx, &snapshot.deck, "Synthetic invalid reference").unwrap();
+    store::append(&tx, &mut snapshot.deck, "Synthetic invalid reference").unwrap();
     tx.commit().unwrap();
     assert!(matches!(
         ops::material_text(project, "m1"),

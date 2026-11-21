@@ -1,6 +1,5 @@
 use crate::{
     error::{Error, Result},
-    model::Patch,
     ops,
 };
 use serde_json::{Value, json};
@@ -245,7 +244,7 @@ fn route(project: &Path, request: &mut Request) -> Result<ResponseBox> {
             let mut data = Vec::new();
             request.as_reader().read_to_end(&mut data)?;
             let submitted: Value = serde_json::from_slice(&data)?;
-            let patch: Patch = serde_json::from_value(submitted.clone())?;
+            let patch = crate::ops::put_patch(submitted.clone(), false)?;
             match ops::put(project, base, patch) {
                 Ok(snapshot) => json_response(200, serde_json::to_value(snapshot)?),
                 Err(Error::Conflict(conflicts)) => json_response(

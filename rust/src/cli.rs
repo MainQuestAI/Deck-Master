@@ -1,5 +1,4 @@
 use crate::error::Result;
-use crate::model::Patch;
 use crate::ops;
 use clap::{CommandFactory, FromArgMatches, Parser, Subcommand, parser::ValueSource};
 use serde::Serialize;
@@ -294,11 +293,8 @@ pub fn run() -> Result<()> {
         Commands::Show => print_json(ops::show(&cli.project)?),
         Commands::Get { pages } => print_json(ops::get(&cli.project, pages.as_deref())?),
         Commands::Put { base, file } => {
-            let mut value: serde_json::Value = serde_json::from_slice(&std::fs::read(file)?)?;
-            if let Some(deck) = value.get_mut("deck") {
-                value = deck.take();
-            }
-            let patch: Patch = serde_json::from_value(value)?;
+            let value: serde_json::Value = serde_json::from_slice(&std::fs::read(file)?)?;
+            let patch = ops::put_patch(value, true)?;
             print_json(ops::put(&cli.project, base, patch)?)
         }
         Commands::Restore { version } => print_json(ops::restore(&cli.project, version)?),

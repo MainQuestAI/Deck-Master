@@ -103,25 +103,28 @@ deck-skill/           新 Skill（第 6 节）
 | runs | id、kind（image/svg）、status（open/done/cancelled）、max_calls、calls_used、created_at |
 | run_pages | run_id、page_id、basis、status（pending/started/done/unadopted）、result_file |
 | builds | id、version_id、input_digest、pptx_file、findings_json、missing_pages、created_at |
-| reviews | id、version_id、page_id、reviewer、method（self_check/other_model/human，界面显示为 自检/另一模型检查/人工意见）、text、status（open/resolved）、created_at、resolved_at（可空） |
+| reviews | id、version_id、page_id、reviewer、method（self_check/other_model/human，界面显示为 自检/另一模型检查/人工意见）、text、status（open/resolved）、created_at、resolved_at（可空）；格式 7 另有 record_kind（comment/content_review，默认 comment）、snapshot_json、checks_json。现有意见添加、列表和处理仍只读写原来的列 |
 
 - 当前作品就是 id 最大的那个版本。
 - reviews 绑定添加时的版本，page_id 可空表示整稿意见；不修改作品版本。处理意见只将 status 改为 resolved 并记录 resolved_at，重复处理保留首次时间。
 - 写入使用短事务（BEGIN IMMEDIATE），并设 busy_timeout，让 CLI 与服务能同时打开同一个库。
 - 文件按 sha256 命名，同一文件重复加入不会产生新文件。
-- 格式版本记在 `PRAGMA user_version`：库的版本比程序高时，提示升级 deck；比程序低时，按迁移代码升级。
+- 格式版本记在 `PRAGMA user_version`。比程序高时提示升级 deck。低于 6 时，打开项目按迁移代码升到 6 并停在 6。已经是 6 时，打开、读取、`run start`、构建和导出都不改 `user_version`、不改表、不追加作品版本。第一次追加 `versions.deck_json` 的写入（put、restore、添加材料、添加素材、自动采用、手动采用）在同一事务里把 reviews 补上格式 7 的列、把 `user_version` 设为 7，并把页修订从 0 写成 1。`deck new` 和导入到新目录直接建成格式 7。
 
 ### 3.3 作品模型（deck_json）
 
 ```json
 {
-  "brief": {"title": "", "audience": "", "task_type": "", "goal": "", "constraints": [], "page_limit": null},
+  "brief": {"title": "", "audience": "", "task_type": "", "goal": "", "constraints": [], "page_limit": null,
+            "decision": "", "concerns": [], "narrator": {"role": "", "tone": ""}},
   "materials": [{"id": "m1", "name": "", "file": "<sha>", "text_file": "<sha>", "status": "read|needs_tool"}],
-  "framing": {"thesis": "", "pillars": [{"title": "", "points": []}], "facts": [], "assumptions": [], "questions": []},
+  "framing": {"thesis": "", "pillars": [{"title": "", "points": []}], "facts": [], "assumptions": [], "questions": [],
+              "storyline": []},
   "style": {"canvas": {"width_px": 1280, "height_px": 720, "slide_width_in": 13.333, "slide_height_in": 7.5},
             "palette": [], "fonts": [], "assets": [{"id": "logo", "file": "<sha>"}]},
   "pages": [{"id": "p1", "purpose": "", "layout": "", "content": {}, "notes": "", "todo": [], "refs": [],
-             "image": null, "svg": null, "preview": null}]
+             "kind": "", "argument": null, "revision": 1,
+             "image": null, "svg": null, "preview": null, "native": null}]
 }
 ```
 
@@ -130,13 +133,14 @@ deck-skill/           新 Skill（第 6 节）
 - 块与条目（包括表格的列、行和单元格）缺少 id 时，由保存补齐；页内出现重复 id 时，由保存重新分配，不因此拒绝保存。模型不手写 id。
 - 新作品的画布默认是 1280×720 px，即 13.333×7.5 in 乘以 96。这样 SVG 的 px 换算成 PPT 的 pt 只需乘 0.75。旧项目导入时保留原画布。
 - `todo` 记录本页待补项，`refs` 记录可选的材料出处，例如"m1 第 3 页"。两者只用于展示，不阻止任何动作。
-- 作者字段（purpose、layout、content、notes、todo、refs）只由保存写入；产物字段（image、svg、preview）只由 run 写入，两者互不冲突。
+- 作者字段（purpose、layout、content、notes、todo、refs、kind、argument）只由保存写入；产物字段（image、svg、native、preview）只由 run 写入，两者互不冲突。`kind` 只接受 `judgment`、`explanation`、`reference`、`teaching` 或空字符串；其他非空值在 `deck put` 和 `run start` 报输入错误，不猜测同义词，也不自动分类。`argument` 是对象或 null，对象含 reasons、evidence、reasoning、rebuttal；evidence 每项有非空 text，并且 ref 与 gap 恰好出现一个。`revision` 由程序维护，逻辑初值是 1；只在作者字段变化时加 1，原图、SVG、native 和预览变化不加。PagePatch 用 `deny_unknown_fields` 拒绝提交 `revision`。缺这些字段的旧 JSON 按空值读取，缺 revision 时按 1 读取。
+- `deck get`、`deck show` 和 `GET /api/deck` 另给两个只读结果，不写入 deck_json，`deck put` 也不接受：`writing_brief` 按固定行输出受众、要做的决定、听众关心、讲述人、语气和故事线，空行跳过；`outline` 按页序给出 page_id、kind、title，未设 kind 时为空字符串。不输出 gap_list。
 - image 与 svg 记为 `{file, basis}`，basis 是生成时的依据摘要（3.5）。过期标记在读取时比较 basis 与当前依据得出，不落库。
 - image 过期只是提示：小幅改字只需重建 SVG；内容或布局大改时，由作者决定是否重新生图。
 
 ### 3.4 保存
 
-`deck get [--pages p3,p4]` 返回 `{version, deck}`。`deck put --base N file.json` 只提交改动过的单元，没有出现的单元视为未改。因此只取了几页的 Host 也能安全保存。
+`deck get [--pages p3,p4]` 返回作品和 §3.3 的只读 `writing_brief`、`outline`。`deck put --base N file.json` 只提交改动过的单元，没有出现的单元视为未改。因此只取了几页的 Host 也能安全保存。
 
 比较单元：brief、framing、style、order（页集合与顺序）、每页的作者字段。materials 与产物字段不参与比较。增删页时，同时提交该页和新的 order。
 
@@ -161,9 +165,9 @@ deck-skill/           新 Skill（第 6 节）
 
 `deck new <project> [--title 标题]` 新建空作品；其他命令以当前目录为项目，也可用全局参数 `--project <project>` 指定。S1 的命令输出默认为 JSON，`export md` 直接向 stdout 输出 Markdown，调用方可以重定向到文件。
 
-- `show` 返回 `{version, title, thesis, materials, pages, history}`。materials 只有 `id/name/status`；pages 只有 `id/title/purpose/todo`，不展开正文；history 按新到旧列出 `id/created_at/summary`。
-- `get` 返回 `{version, deck}`，deck 是 §3.3 的完整作品，另带从 pages 计算出的 `order: [page_id, ...]`。`get --pages p3,p4` 保留 brief、materials、framing、style，只返回选中的页，并省略 order，防止局部改稿误删未读取的页。
-- `put --base N file.json` 接受 deck 对象，也接受 get 的完整输出。顶层可以只交 brief、framing、style、order 或 pages；brief、framing、style 各自是完整单元，省略的内部字段按空值或默认值处理。pages 是带 id 的页列表，每页省略的作者字段沿用基线；同页作者字段仍作为一个单元比较。materials、image、svg、preview 即使回传也不写入。补丁带 content 时，`put` 按提交的原文保存正文，不整理空格（如“1 数据与身份”“增长 50 %”）。没有独立命令或校验。成功返回 `{version, deck}`；发生冲突时退出码为 5，stderr 中附 `{unit, current}` 列表。
+- `show` 返回 `{version, title, thesis, materials, pages, history, writing_brief, outline}`。materials 只有 `id/name/status`；pages 只有 `id/title/purpose/todo`，不展开正文；history 按新到旧列出 `id/created_at/summary`。`writing_brief` 与 `outline` 的形状见 §3.3。
+- `get` 返回 `{version, deck, artifact_status, writing_brief, outline}`，deck 是 §3.3 的完整作品，另带从 pages 计算出的 `order: [page_id, ...]`。`get --pages p3,p4` 保留 brief、materials、framing、style，只返回选中的页，并省略 order，防止局部改稿误删未读取的页；此时 outline 只含这些页。`writing_brief` 与 `outline` 不能回写。
+- `put --base N file.json` 接受 deck 对象。CLI 遇到顶层 `deck` 时先取出它；`writing_brief` 和 `outline` 出现在顶层或 deck 内都拒绝写入。顶层可以只交 brief、framing、style、order 或 pages；brief、framing、style 各自是完整单元，省略的内部字段按空值或默认值处理。pages 是带 id 的页列表，每页省略的作者字段沿用基线；同页作者字段仍作为一个单元比较。materials、image、svg、native、preview 即使回传也不写入。`revision` 不能提交。补丁带 content 时，`put` 按提交的原文保存正文，不整理空格（如“1 数据与身份”“增长 50 %”）。没有独立命令或校验。成功返回 `{version, deck}`；发生冲突时退出码为 5，stderr 中附 `{unit, current}` 列表。
 - 新增页必须同时交该页及包含它的 order；删除页必须同时交该页（`{id}` 即可）及去掉它的 order；只重排时交 order 即可。块、条目、列、行和单元格的 id 由保存补齐或去重，表格列引用随之修正。
 - `material add <file>` 保存原件，再从该不可变副本解析，返回 `{version, material, extraction}`。extraction 保留工具的 text、locators、tables、image_pages、detail、status；`pending_visual` 表示 Host 仍须读图，material 的 `read` 只表示文件已解析。缺解析工具时保留原件并记录 `needs_tool`，退出码为 3；安装工具后重新 add 可补齐文本。相同文件重复加入不新增材料或版本。
 - `material text <id>` 返回 `{id, status, path, original_path}`，path 是抽取文本的本地路径，original_path 为加入时保存的不可变原件副本路径（真实缺失时 null）；未完成解析时退出码为 3。持久作品只记录相对文件名，不记录材料源路径。
@@ -173,7 +177,9 @@ deck-skill/           新 Skill（第 6 节）
 
 ### 3.5 后台工作（run）
 
-run 用于需要 Host 执行、作者可以中途停止的工作：生图（image）和按原图重建 SVG（svg）。每一类同时最多有一个 open 的 run；已有同类 open run 时，start 报错并给出那个 run。
+run 用于需要 Host 执行、作者可以中途停止的工作：生图（image）、按原图重建 SVG（svg）和 native。每一类同时最多有一个 open 的 run；已有同类 open run 时，start 报错并给出那个 run。
+
+`run start image|svg|native` 在插入 runs 之前检查决策框架和故事线。brief.audience、brief.decision、brief.concerns（至少一条非空白）、brief.narrator.role、brief.narrator.tone、framing.storyline（至少一条非空白）有任一项空白时，返回输入错误（退出码 2），列出全部缺失字段，并给出可复制的 `deck put` 示例。不写 runs。通过时只写 runs 和 run_pages，不升级项目格式。`deck put`、`deck build`、`deck export` 不做这道检查。空 kind、判断页空 evidence、ref/gap 门禁和 gap_list 不在这一步。
 
 1. `deck run start image --pages p3,p4 [--max-calls N]`：记录每页当时的依据，写好 `work/<run_id>/` 下的提示词与附件。`max-calls` 默认为页数 × 2，作者可以改。
 2. `deck run call <run> <page>`：run 已取消或已达上限时拒绝；否则计数加一，该页标为 started。Host 在每次调用 ImageGen 之前执行这一步。该页已有结果未知的调用时，要加 `--retry` 才会登记，避免盲目重发。

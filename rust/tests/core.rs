@@ -5,8 +5,69 @@ use serde_json::{Value, json};
 use std::path::Path;
 use std::sync::{Arc, Barrier};
 
+fn allow_runs(path: &Path) {
+    let store = store::Store::open(path).unwrap();
+    let snapshot = store.current().unwrap();
+    let mut deck = snapshot.deck;
+    let mut changed = false;
+    if deck.brief.audience.trim().is_empty() {
+        deck.brief.audience = "业务负责人".into();
+        changed = true;
+    }
+    if deck.brief.decision.trim().is_empty() {
+        deck.brief.decision = "是否采用该方案".into();
+        changed = true;
+    }
+    if deck
+        .brief
+        .concerns
+        .iter()
+        .all(|item| item.trim().is_empty())
+    {
+        deck.brief.concerns = vec!["成本是否可控".into()];
+        changed = true;
+    }
+    if deck.brief.narrator.role.trim().is_empty() {
+        deck.brief.narrator.role = "项目负责人".into();
+        changed = true;
+    }
+    if deck.brief.narrator.tone.trim().is_empty() {
+        deck.brief.narrator.tone = "直接说明判断".into();
+        changed = true;
+    }
+    if deck
+        .framing
+        .storyline
+        .iter()
+        .all(|item| item.trim().is_empty())
+    {
+        deck.framing.storyline = vec!["先说明问题，再给出判断".into()];
+        changed = true;
+    }
+    if changed {
+        store
+            .connection
+            .execute(
+                "UPDATE versions SET deck_json=?1 WHERE id=?2",
+                rusqlite::params![serde_json::to_string(&deck).unwrap(), snapshot.version],
+            )
+            .unwrap();
+    }
+}
+
 fn patch(value: Value) -> Patch {
     serde_json::from_value(value).unwrap()
+}
+
+fn without_revision(mut deck: Value) -> Value {
+    if let Some(pages) = deck.get_mut("pages").and_then(Value::as_array_mut) {
+        for page in pages {
+            if let Some(page) = page.as_object_mut() {
+                page.remove("revision");
+            }
+        }
+    }
+    deck
 }
 
 fn two_pages(path: &Path) -> i64 {
@@ -186,7 +247,12 @@ fn partial_read_roundtrip_keeps_unseen_and_concurrently_changed_pages() {
         patch(json!({"pages":[{"id":"p2","notes":"另一作者"}]})),
     )
     .unwrap();
-    let saved = ops::put(temp.path(), base, patch(partial["deck"].take())).unwrap();
+    let saved = ops::put(
+        temp.path(),
+        base,
+        patch(without_revision(partial["deck"].take())),
+    )
+    .unwrap();
     assert_eq!(saved.deck.pages.len(), 2);
     assert_eq!(saved.deck.pages[1].notes, "另一作者");
 }
@@ -252,9 +318,13 @@ fn edit_of_deleted_page_conflicts_but_unchanged_snapshot_can_be_replayed() {
         5
     );
     assert_eq!(
-        ops::put(temp.path(), base, patch(snapshot["deck"].clone()))
-            .unwrap()
-            .version,
+        ops::put(
+            temp.path(),
+            base,
+            patch(without_revision(snapshot["deck"].clone()))
+        )
+        .unwrap()
+        .version,
         deleted.version
     );
 }
@@ -273,6 +343,7 @@ fn version_get_distinguishes_missing_from_invalid_without_changing_put_or_restor
     )
     .unwrap();
     ops::review_add(path, Some("p1"), "当前意见", "author", "human").unwrap();
+    allow_runs(path);
     ops::run_start(path, "image", &["p1".into()], Some(1)).unwrap();
     let before = ops::workspace(path).unwrap();
     let counts = || -> Vec<i64> {
@@ -352,9 +423,13 @@ fn ids_are_repaired_including_nested_bullets_and_table_references_and_retry_is_s
     );
     let roundtrip = ops::get(temp.path(), None).unwrap();
     assert_eq!(
-        ops::put(temp.path(), saved.version, patch(roundtrip["deck"].clone()))
-            .unwrap()
-            .version,
+        ops::put(
+            temp.path(),
+            saved.version,
+            patch(without_revision(roundtrip["deck"].clone()))
+        )
+        .unwrap()
+        .version,
         saved.version
     );
 }
@@ -370,7 +445,7 @@ fn author_save_never_replaces_material_or_artifact_fields() {
         basis: "basis".into(),
     });
     let tx = store.transaction().unwrap();
-    store::append(&tx, &current, "test artifact arrival").unwrap();
+    store::append(&tx, &mut current, "test artifact arrival").unwrap();
     tx.commit().unwrap();
     let saved = ops::put(temp.path(), base, patch(json!({"materials":[],"pages":[{"id":"p1","notes":"改讲稿","image":{"file":"overwrite","basis":"old"},"svg":null,"preview":null}]}))).unwrap();
     assert_eq!(
@@ -398,7 +473,7 @@ fn older_database_migrates_without_losing_versions_and_newer_database_is_refused
             .connection
             .pragma_query_value(None, "user_version", |r| r.get::<_, i64>(0))
             .unwrap(),
-        store::FORMAT_VERSION
+        6
     );
     store
         .connection
