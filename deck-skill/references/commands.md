@@ -74,7 +74,7 @@ deck --project "$DECK_PROJECT" put --base "$BASE" "$DECK_PROJECT/framing.json"
 
 ## 写正文
 
-再 `get` 读取保存后的版本，写 `pages.json`。下面用段落、要点和表格各说明一种实际内容关系；不是每页必须出现这三类块。
+再 `get` 读取保存后的版本，写 `pages.json`。先看这次 `get` 或 `show` 返回的 `writing_brief`，按其中的讲述人、语气、待决事项和关注点写；这项不能回写。下面用段落、要点和表格各说明一种实际内容关系；不是每页必须出现这三类块。硬性缺口只在承载它的主页正文里标一次，统一写成「待补：…」，并记入该页 `todo`。
 
 ```json
 {
@@ -90,12 +90,13 @@ deck --project "$DECK_PROJECT" put --base "$BASE" "$DECK_PROJECT/framing.json"
           {"type": "paragraph", "text": "只读检索可先返回适用原文。生成摘要是额外能力，其价值需扣除核查与维护工作后判断。"},
           {"type": "bullets", "heading": "拟议用法", "items": [
             {"text": "记录型号和版本，筛选可访问且适用的资料。"},
-            {"text": "展示原文出处，由人工核对后沿现有流程处理。"}
+            {"text": "展示原文出处，由人工核对后沿现有流程处理。"},
+            {"text": "待补：资料适用范围的维护安排"}
           ]}
         ]
       },
       "refs": ["合成材料：只读范围"],
-      "todo": ["确认资料适用范围的维护安排"]
+      "todo": ["待补：资料适用范围的维护安排"]
     },
     {
       "id": "p2",
@@ -148,7 +149,7 @@ deck --project "$DECK_PROJECT" export md > "$DECK_PROJECT/manuscript.md"
 
 1. `deck run start image --pages p1,p2` 准备任务。读取该次工作目录里的完整 task.md，按 attachments.json 定位素材。每次调用前 `deck run call <run> <page>`，再把 task.md 原文作为 ImageGen 的 prompt，把清单中的文件作为附件。结果未知时先核实，决定重试才加 `--retry`。
 2. `deck run result <run> <page> <图片文件>` 交回。首次结果可以自动采用；重交的修正版、取消后或依据已变的结果只保存。确认使用后 `deck run adopt <run> <page>`。`deck run show` 看状态，`deck run cancel <run>` 停止后续调用和自动采用。
-3. `deck run start svg --pages p1,p2` 准备 SVG。按原图的布局和关系重建，正文取 content.json，文字绑定 atoms.json。先读 [svg-subset.md](svg-subset.md)。错漏文字、局部排版和依据明确的连线可以沿用原图直接改。主结构要重排时先改蓝图。
+3. `deck run start svg --pages p1,p2` 准备 SVG。按原图的布局和关系重建，正文取 content.json，文字绑定 atoms.json。content.json 里已有的「待补：…」逐字保留，不删改、不挪到页脚。先读 [svg-subset.md](svg-subset.md)。错漏文字、局部排版和依据明确的连线可以沿用原图直接改。主结构要重排时先改蓝图。
 4. `deck run result <run> <page> <SVG文件>` 编译、渲染并回读。工具报错就改具体元素。Host 打开预览 PNG，对照原图检查端点、方向、分支、层级、侧栏和阅读顺序。
 5. `deck build` 构建 PPTX，`deck export pptx` 优先取当前构建输入匹配的成品路径，没有匹配时取最近历史成品并提示。`missing_pages` 是没有 SVG（native 作品则是没有已采用 native）、因此没有进入这次 PPTX 的页。`stale_pages` 是已采用 SVG 或 native 的依据与当前正文、目的、布局、原图文件或样式不一致。`stale_images` 只比较原图依据。它在 `deck get` / `deck show` 的 `artifact_status` 里，也在 `deck build` 和 `deck export pptx` 里。这两条命令另给 `warnings`：`code` 为 `stale_image`、`level` 为 `warning`，列出原图依据已变的页号。不并入 `stale_pages`，不改变退出码，也不把回读 status 从 pass 改成 fail。只改讲稿不会让原图或页面过期。构建成功不会清掉这两项。`export pptx` 的 `input_changed` 才表示构建之后 SVG、native、讲稿或构建设置又变了。
 

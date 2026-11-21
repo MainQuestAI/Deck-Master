@@ -591,6 +591,43 @@ fn writing_brief_skips_blank_lines_and_outline_follows_page_order() {
 }
 
 #[test]
+fn get_and_show_return_writing_brief_from_narrator_decision_and_concerns() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    ops::new(path, "合成作品".into()).unwrap();
+    ops::put(
+        path,
+        1,
+        patch(json!({
+            "brief": {
+                "title": "合成作品",
+                "audience": "业务负责人",
+                "decision": "是否采用该方案",
+                "concerns": ["成本是否可控", "  ", "口径是否一致"],
+                "narrator": {"role": "资深顾问", "tone": "结论先行"}
+            },
+            "order": ["p1"],
+            "pages": [{"id": "p1", "content": {"title": "封面"}}]
+        })),
+    )
+    .unwrap();
+    let expected = "讲述人：资深顾问。语气：结论先行。\n待决事项：是否采用该方案。\n读者关注点：\n- 成本是否可控\n- 口径是否一致";
+    let got = ops::get(path, None).unwrap();
+    let shown = ops::show(path).unwrap();
+    assert_eq!(got["writing_brief"], expected);
+    assert_eq!(shown["writing_brief"], expected);
+    assert_eq!(
+        ops::get(path, Some(&["p1".into()])).unwrap()["writing_brief"],
+        expected
+    );
+    assert!(got["deck"].get("writing_brief").is_none());
+    let stored: Value =
+        serde_json::from_str(&deck_json(path, got["version"].as_i64().unwrap())).unwrap();
+    assert!(stored.get("writing_brief").is_none());
+    assert!(stored["brief"].get("writing_brief").is_none());
+}
+
+#[test]
 fn argument_shape_is_checked_on_put_and_empty_evidence_is_stored() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path();
