@@ -38,7 +38,7 @@ description: 用 Rust deck 做已有正文的页面设计、样页和指定页�
 1. **需要新蓝图时：** `deck run start image` 之后，读取该次 task.md 的原文作为 ImageGen 的 prompt，附件只使用 attachments.json 里的文件。
 2. **需要新蓝图时：** 交回、比对、需要时 `deck run adopt`。取消后或依据已变的结果只保存。
 3. 重建按共享的 [native 还原](references/native-reconstruction.md) 逐页做：坐标取原图，正文取 content，文字绑定 atoms；用 `deck run start native` 准备任务、`deck run result` 交回 plan；每页看并排图，再用 `deck run adopt --note` 写一行实际对照结论并采用。局部错漏修该页 plan，业务关系有歧义时问内容，主结构要重排时先改蓝图再重建。
-4. 在范围内用 `deck build` 构建，再用 `deck export pptx` 取得成品路径。命令见 [命令](references/commands.md#native-还原)。
+4. 在范围内先按 [commands.md](references/commands.md) 看过最终页并记下出稿审稿，再用 `deck build` 构建，并用 `deck export pptx` 取得成品路径。命令见 [命令](references/commands.md#native-还原)。没有出稿审稿记录时，这两条命令仍会成功，并把 `content_review.status` 标成 `unreviewed`。
 
 `soffice` 或 node 不可用时停下，报告 `deck doctor` 结果；不手写 PPTX。
 
