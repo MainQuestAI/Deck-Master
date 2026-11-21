@@ -16,7 +16,60 @@ fn command(path: &Path, args: &[&str]) -> Output {
         .unwrap()
 }
 
+fn allow_runs(path: &Path) {
+    let store = Store::open(path).unwrap();
+    let snapshot = store.current().unwrap();
+    let mut deck = snapshot.deck;
+    let mut changed = false;
+    if deck.brief.audience.trim().is_empty() {
+        deck.brief.audience = "业务负责人".into();
+        changed = true;
+    }
+    if deck.brief.decision.trim().is_empty() {
+        deck.brief.decision = "是否采用该方案".into();
+        changed = true;
+    }
+    if deck
+        .brief
+        .concerns
+        .iter()
+        .all(|item| item.trim().is_empty())
+    {
+        deck.brief.concerns = vec!["成本是否可控".into()];
+        changed = true;
+    }
+    if deck.brief.narrator.role.trim().is_empty() {
+        deck.brief.narrator.role = "项目负责人".into();
+        changed = true;
+    }
+    if deck.brief.narrator.tone.trim().is_empty() {
+        deck.brief.narrator.tone = "直接说明判断".into();
+        changed = true;
+    }
+    if deck
+        .framing
+        .storyline
+        .iter()
+        .all(|item| item.trim().is_empty())
+    {
+        deck.framing.storyline = vec!["先说明问题，再给出判断".into()];
+        changed = true;
+    }
+    if changed {
+        store
+            .connection
+            .execute(
+                "UPDATE versions SET deck_json=?1 WHERE id=?2",
+                rusqlite::params![serde_json::to_string(&deck).unwrap(), snapshot.version],
+            )
+            .unwrap();
+    }
+}
+
 fn cli(path: &Path, args: &[&str]) -> Value {
+    if args.first() == Some(&"run") && args.get(1) == Some(&"start") {
+        allow_runs(path);
+    }
     let output = command(path, args);
     assert!(
         output.status.success(),
@@ -262,7 +315,7 @@ fn native_candidates_require_a_conclusion_then_build_export_use_adopted_packs_an
         basis: "imported".into(),
     });
     let tx = store.transaction().unwrap();
-    store::append(&tx, &current.deck, "Synthetic legacy artifact").unwrap();
+    store::append(&tx, &mut current.deck, "Synthetic legacy artifact").unwrap();
     tx.commit().unwrap();
     drop(store);
     let partial = cli(path, &["build"]);

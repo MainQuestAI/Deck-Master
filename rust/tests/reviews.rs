@@ -1,8 +1,4 @@
-use deck::{
-    error::Error,
-    ops,
-    store::{self, Store},
-};
+use deck::{error::Error, ops, store::Store};
 use rusqlite::params;
 use serde_json::{Value, json};
 
@@ -191,7 +187,7 @@ fn concurrent_v2_upgrade_preserves_versions_runs_builds_and_files() {
             .connection
             .pragma_query_value(None, "user_version", |row| row.get::<_, i64>(0))
             .unwrap(),
-        store::FORMAT_VERSION
+        6
     );
     for (table, mut expected) in tables.iter().zip(rows) {
         if *table == "run_pages" {

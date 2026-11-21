@@ -4,6 +4,13 @@ use std::collections::HashSet;
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
+pub struct Narrator {
+    pub role: String,
+    pub tone: String,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
 pub struct Brief {
     pub title: String,
     pub audience: String,
@@ -11,6 +18,9 @@ pub struct Brief {
     pub goal: String,
     pub constraints: Vec<String>,
     pub page_limit: Option<u32>,
+    pub decision: String,
+    pub concerns: Vec<String>,
+    pub narrator: Narrator,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
@@ -28,6 +38,7 @@ pub struct Framing {
     pub facts: Vec<String>,
     pub assumptions: Vec<String>,
     pub questions: Vec<String>,
+    pub storyline: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -260,12 +271,38 @@ impl Content {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
+pub struct Evidence {
+    #[serde(default)]
+    pub text: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub r#ref: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub gap: Option<String>,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct Argument {
+    pub reasons: Vec<String>,
+    pub evidence: Vec<Evidence>,
+    pub reasoning: String,
+    pub rebuttal: String,
+}
+
+pub const PAGE_KINDS: &[&str] = &["judgment", "explanation", "reference", "teaching"];
+
+fn initial_revision() -> u32 {
+    1
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Artifact {
     pub file: String,
     pub basis: String,
 }
 
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
 pub struct Page {
     pub id: String,
@@ -275,11 +312,36 @@ pub struct Page {
     pub notes: String,
     pub todo: Vec<String>,
     pub refs: Vec<String>,
+    pub kind: String,
+    pub argument: Option<Argument>,
+    #[serde(default = "initial_revision")]
+    pub revision: u32,
     pub image: Option<Artifact>,
     pub svg: Option<Artifact>,
     #[serde(default)]
     pub native: Option<Artifact>,
     pub preview: Option<String>,
+}
+
+impl Default for Page {
+    fn default() -> Self {
+        Self {
+            id: String::new(),
+            purpose: String::new(),
+            layout: String::new(),
+            content: Content::default(),
+            notes: String::new(),
+            todo: Vec::new(),
+            refs: Vec::new(),
+            kind: String::new(),
+            argument: None,
+            revision: 1,
+            image: None,
+            svg: None,
+            native: None,
+            preview: None,
+        }
+    }
 }
 
 impl Page {
@@ -292,11 +354,24 @@ impl Page {
             notes: Some(self.notes.clone()),
             todo: Some(self.todo.clone()),
             refs: Some(self.refs.clone()),
+            kind: Some(self.kind.clone()),
+            argument: Some(self.argument.clone()),
             image: None,
             svg: None,
             native: None,
             preview: None,
         }
+    }
+
+    pub fn author_fields_changed(&self, other: &Page) -> bool {
+        self.purpose != other.purpose
+            || self.layout != other.layout
+            || self.content != other.content
+            || self.notes != other.notes
+            || self.todo != other.todo
+            || self.refs != other.refs
+            || self.kind != other.kind
+            || self.argument != other.argument
     }
 }
 
@@ -320,6 +395,11 @@ pub struct PagePatch {
     pub notes: Option<String>,
     pub todo: Option<Vec<String>>,
     pub refs: Option<Vec<String>>,
+    #[serde(default)]
+    pub kind: Option<String>,
+    // Absent keeps the stored argument. null clears it. An object replaces it.
+    #[serde(default, deserialize_with = "present_argument")]
+    pub argument: Option<Option<Argument>>,
     #[serde(skip_serializing)]
     pub image: Option<Value>,
     #[serde(skip_serializing)]
@@ -330,10 +410,22 @@ pub struct PagePatch {
     pub preview: Option<Value>,
 }
 
+fn present_argument<'de, D>(
+    deserializer: D,
+) -> std::result::Result<Option<Option<Argument>>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    Ok(Some(Option::<Argument>::deserialize(deserializer)?))
+}
+
 impl PagePatch {
     pub fn apply(&self, page: &mut Page) {
         macro_rules! apply { ($($field:ident),*) => { $(if let Some(value) = &self.$field { page.$field = value.clone(); })* }; }
-        apply!(purpose, layout, content, notes, todo, refs);
+        apply!(purpose, layout, content, notes, todo, refs, kind);
+        if let Some(argument) = &self.argument {
+            page.argument = argument.clone();
+        }
     }
 }
 
@@ -352,4 +444,131 @@ pub struct Patch {
 pub struct Snapshot {
     pub version: i64,
     pub deck: Deck,
+}
+
+pub fn assign_revisions(previous: Option<&Deck>, next: &mut Deck) {
+    for page in &mut next.pages {
+        match previous.and_then(|deck| deck.pages.iter().find(|prior| prior.id == page.id)) {
+            Some(prior) => {
+                let baseline = if prior.revision == 0 {
+                    1
+                } else {
+                    prior.revision
+                };
+                page.revision = if prior.author_fields_changed(page) {
+                    baseline.saturating_add(1)
+                } else {
+                    baseline
+                };
+            }
+            None => page.revision = 1,
+        }
+    }
+}
+
+pub fn validate_kind(page_id: &str, kind: &str) -> crate::error::Result<()> {
+    if kind.is_empty() || PAGE_KINDS.contains(&kind) {
+        return Ok(());
+    }
+    Err(crate::error::Error::Input(format!(
+        "页面 {page_id} 的 kind 只接受 judgment、explanation、reference、teaching 或留空；当前是 {kind}"
+    )))
+}
+
+fn filled(value: &Option<String>) -> bool {
+    value.as_ref().is_some_and(|text| !text.trim().is_empty())
+}
+
+pub fn validate_argument(page_id: &str, argument: &Argument) -> crate::error::Result<()> {
+    for (index, item) in argument.evidence.iter().enumerate() {
+        // A blank string is not a ref or a gap. Missing both is left to run start.
+        if filled(&item.r#ref) && filled(&item.gap) {
+            return Err(crate::error::Error::Input(format!(
+                "页面 {page_id} 的 evidence 第 {} 项同时有 ref 和 gap；二者互斥",
+                index + 1
+            )));
+        }
+    }
+    Ok(())
+}
+
+pub fn missing_frame_fields(deck: &Deck) -> Vec<&'static str> {
+    let mut missing = Vec::new();
+    if deck.brief.audience.trim().is_empty() {
+        missing.push("brief.audience");
+    }
+    if deck.brief.decision.trim().is_empty() {
+        missing.push("brief.decision");
+    }
+    if deck
+        .brief
+        .concerns
+        .iter()
+        .all(|item| item.trim().is_empty())
+    {
+        missing.push("brief.concerns");
+    }
+    if deck.brief.narrator.role.trim().is_empty() {
+        missing.push("brief.narrator.role");
+    }
+    if deck.brief.narrator.tone.trim().is_empty() {
+        missing.push("brief.narrator.tone");
+    }
+    if deck
+        .framing
+        .storyline
+        .iter()
+        .all(|item| item.trim().is_empty())
+    {
+        missing.push("framing.storyline");
+    }
+    missing
+}
+
+pub fn writing_brief(deck: &Deck) -> String {
+    // Design §3.4. A blank narrator clause, decision, or concern is omitted.
+    let mut lines = Vec::new();
+    let role = deck.brief.narrator.role.trim();
+    let tone = deck.brief.narrator.tone.trim();
+    let mut narrator = String::new();
+    if !role.is_empty() {
+        narrator.push_str(&format!("讲述人：{role}。"));
+    }
+    if !tone.is_empty() {
+        narrator.push_str(&format!("语气：{tone}。"));
+    }
+    if !narrator.is_empty() {
+        lines.push(narrator);
+    }
+    let decision = deck.brief.decision.trim().trim_end_matches('。');
+    if !decision.is_empty() {
+        lines.push(format!("待决事项：{decision}。"));
+    }
+    let concerns: Vec<&str> = deck
+        .brief
+        .concerns
+        .iter()
+        .map(|item| item.trim())
+        .filter(|item| !item.is_empty())
+        .collect();
+    if !concerns.is_empty() {
+        lines.push("读者关注点：".into());
+        for concern in concerns {
+            lines.push(format!("- {concern}"));
+        }
+    }
+    lines.join("\n")
+}
+
+pub fn outline(pages: &[Page]) -> Value {
+    serde_json::json!(
+        pages
+            .iter()
+            .map(|page| serde_json::json!({
+                "page_id": page.id,
+                "kind": page.kind,
+                "title": page.content.title,
+            }))
+            .collect::<Vec<_>>()
+    )
 }

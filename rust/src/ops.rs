@@ -71,9 +71,20 @@ fn snapshot_value(snapshot: &Snapshot, pages: Option<&[String]>) -> Result<Value
         );
     }
     // A partial read omits order so an ordinary page edit cannot delete unseen pages.
-    Ok(
-        json!({ "version": snapshot.version, "deck": deck, "artifact_status": artifact_status(&snapshot.deck)? }),
-    )
+    let outlined: Vec<_> = snapshot
+        .deck
+        .pages
+        .iter()
+        .filter(|page| pages.is_none_or(|ids| ids.iter().any(|id| id == &page.id)))
+        .cloned()
+        .collect();
+    Ok(json!({
+        "version": snapshot.version,
+        "deck": deck,
+        "artifact_status": artifact_status(&snapshot.deck)?,
+        "writing_brief": crate::model::writing_brief(&snapshot.deck),
+        "outline": crate::model::outline(&outlined),
+    }))
 }
 
 pub fn workspace(project: &Path) -> Result<Value> {
@@ -159,6 +170,8 @@ pub fn show(project: &Path) -> Result<Value> {
         "pages": snapshot.deck.pages.iter().map(|p| json!({"id": p.id, "title": p.content.title, "purpose": p.purpose, "todo": p.todo, "open_reviews": page_review_count(&reviews, &p.id)})).collect::<Vec<_>>(),
         "open_reviews_total": reviews.len(),
         "artifact_status": artifact_status(&snapshot.deck)?,
+        "writing_brief": crate::model::writing_brief(&snapshot.deck),
+        "outline": crate::model::outline(&snapshot.deck.pages),
         "history": history
     }))
 }
@@ -293,6 +306,27 @@ fn merge<T: PartialEq + Clone + Serialize>(
     Ok(())
 }
 
+fn derived_output(value: &Value) -> bool {
+    value.get("writing_brief").is_some() || value.get("outline").is_some()
+}
+
+pub fn put_patch(mut value: Value, unwrap_deck: bool) -> Result<Patch> {
+    if derived_output(&value) {
+        return Err(Error::Input(
+            "writing_brief 和 outline 由读取时生成，不能写入；请从提交中去掉这两项".into(),
+        ));
+    }
+    if unwrap_deck && let Some(deck) = value.get("deck").cloned() {
+        if derived_output(&deck) {
+            return Err(Error::Input(
+                "writing_brief 和 outline 由读取时生成，不能写入；请从提交中去掉这两项".into(),
+            ));
+        }
+        value = deck;
+    }
+    Ok(serde_json::from_value(value)?)
+}
+
 pub fn put(project: &Path, version: i64, patch: Patch) -> Result<Snapshot> {
     let mut store = Store::open(project)?;
     let root = store.root.clone();
@@ -370,8 +404,9 @@ pub fn put(project: &Path, version: i64, patch: Patch) -> Result<Snapshot> {
         .cloned()
         .map(|p| (p.id.clone(), p))
         .collect();
+    let page_changes = patch.pages.unwrap_or_default();
     let mut submitted_ids = HashSet::new();
-    for change in patch.pages.unwrap_or_default() {
+    for change in &page_changes {
         if change.id.is_empty() || !submitted_ids.insert(change.id.clone()) {
             return Err(Error::Input(
                 "pages 包含空或重复页面 ID；请给每页一个不同的 ID".into(),
@@ -403,7 +438,7 @@ pub fn put(project: &Path, version: i64, patch: Patch) -> Result<Snapshot> {
                 author.apply(now);
             }
         } else if before.is_none() {
-            pages.insert(change.id, submitted);
+            pages.insert(change.id.clone(), submitted);
         } else if before.is_some_and(|p| p.author() != submitted.author()) {
             conflicts.push(Conflict {
                 unit: format!("pages/{}", change.id),
@@ -438,10 +473,20 @@ pub fn put(project: &Path, version: i64, patch: Patch) -> Result<Snapshot> {
             })
         })
         .collect::<Result<_>>()?;
+    for change in &page_changes {
+        if let Some(page) = deck.pages.iter().find(|page| page.id == change.id) {
+            if change.kind.is_some() {
+                crate::model::validate_kind(&page.id, &page.kind)?;
+            }
+            if let Some(Some(argument)) = &change.argument {
+                crate::model::validate_argument(&page.id, argument)?;
+            }
+        }
+    }
     let result_version = if deck == current.deck {
         current.version
     } else {
-        store::append(&tx, &deck, "保存作品")?
+        store::append(&tx, &mut deck, "保存作品")?
     };
     tx.commit()?;
     Ok(Snapshot {
@@ -453,8 +498,8 @@ pub fn put(project: &Path, version: i64, patch: Patch) -> Result<Snapshot> {
 pub fn restore(project: &Path, version: i64) -> Result<Snapshot> {
     let mut store = Store::open(project)?;
     let tx = store.transaction()?;
-    let deck = store::load(&tx, version)?;
-    let version = store::append(&tx, &deck, &format!("恢复自版本 {version}"))?;
+    let mut deck = store::load(&tx, version)?;
+    let version = store::append(&tx, &mut deck, &format!("恢复自版本 {version}"))?;
     tx.commit()?;
     Ok(Snapshot { version, deck })
 }
@@ -516,7 +561,7 @@ pub fn material_add(project: &Path, source: &Path) -> Result<Value> {
         true
     };
     let version = if changed {
-        store::append(&tx, &deck, "添加材料")?
+        store::append(&tx, &mut deck, "添加材料")?
     } else {
         current.version
     };
@@ -658,8 +703,9 @@ pub fn asset_add(
     } else {
         snapshot.deck.style.assets.push(asset.clone());
     }
-    if snapshot.deck != store::current(&tx)?.deck {
-        snapshot.version = store::append(&tx, &snapshot.deck, "选择素材")?;
+    let asset_changed = snapshot.deck != store::current(&tx)?.deck;
+    if asset_changed {
+        snapshot.version = store::append(&tx, &mut snapshot.deck, "选择素材")?;
     }
     tx.commit()?;
     Ok(json!({"version": snapshot.version, "asset": asset}))
@@ -751,6 +797,52 @@ fn run_page(
         .ok_or_else(|| Error::Input(format!("此 run 不包含页面 {page}；请用 deck run show 查看")))
 }
 
+fn blank_text(value: &str) -> bool {
+    value.trim().is_empty()
+}
+
+fn frame_example(deck: &Deck) -> Result<String> {
+    // put replaces brief and framing as whole units, so the snippet must carry
+    // every current field and fill only the ones the gate treats as empty.
+    let mut brief = deck.brief.clone();
+    let mut framing = deck.framing.clone();
+    if blank_text(&brief.audience) {
+        brief.audience = "管理层".into();
+    }
+    if blank_text(&brief.decision) {
+        brief.decision = "本周需拍板的事项".into();
+    }
+    if brief.concerns.iter().all(|item| blank_text(item)) {
+        brief.concerns = vec!["关注点一".into(), "关注点二".into()];
+    }
+    if blank_text(&brief.narrator.role) {
+        brief.narrator.role = "资深顾问".into();
+    }
+    if blank_text(&brief.narrator.tone) {
+        brief.narrator.tone = "结论先行，语气肯定".into();
+    }
+    if framing.storyline.iter().all(|item| blank_text(item)) {
+        framing.storyline = vec!["第一句主线".into(), "第二句主线".into()];
+    }
+    Ok(serde_json::to_string_pretty(&json!({
+        "brief": brief,
+        "framing": framing
+    }))?)
+}
+
+fn frame_gate_message(deck: &Deck, version: i64, missing: &[&str]) -> Result<String> {
+    // Design §5.3. Error::Input adds the "输入有误：" prefix. Empty kind is PR-C.
+    let listed = missing
+        .iter()
+        .map(|field| format!("- {field}"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    Ok(format!(
+        "无法开始生成。当前作品缺少以下字段：\n{listed}\n请先用 deck put 补全后再执行 run start。示例（--base 换成 deck show 中的当前版本号）：\n\n  deck put --base {version} payload.json\n\npayload.json 最小片段：\n{}",
+        frame_example(deck)?
+    ))
+}
+
 pub fn run_start(
     project: &Path,
     kind: &str,
@@ -792,7 +884,21 @@ pub fn run_start(
             "同类 run {id} 尚未结束；继续交回或先取消"
         )));
     }
-    let deck = store::current(&tx)?.deck;
+    let current = store::current(&tx)?;
+    let version = current.version;
+    let deck = current.deck;
+    for page_id in ids {
+        let page = deck
+            .pages
+            .iter()
+            .find(|page| &page.id == page_id)
+            .ok_or_else(|| Error::Input(format!("页面 {page_id} 已删除；请重新开始")))?;
+        crate::model::validate_kind(&page.id, &page.kind)?;
+    }
+    let missing = crate::model::missing_frame_fields(&deck);
+    if !missing.is_empty() {
+        return Err(Error::Input(frame_gate_message(&deck, version, &missing)?));
+    }
     tx.execute(
         "INSERT INTO runs(kind,status,max_calls) VALUES (?,'open',?)",
         params![
@@ -1549,8 +1655,9 @@ pub fn run_result(project: &Path, id: i64, page_id: &str, source: &Path) -> Resu
             page.svg = artifact;
             page.preview = preview.clone();
         }
-        if snapshot.deck != store::current(&tx)?.deck {
-            store::append(&tx, &snapshot.deck, "采用生成结果")?;
+        let adopted_changed = snapshot.deck != store::current(&tx)?.deck;
+        if adopted_changed {
+            store::append(&tx, &mut snapshot.deck, "采用生成结果")?;
         }
     }
     // An identical result can be returned safely after the final page closed the run.
@@ -1694,8 +1801,9 @@ fn run_adopt_with_options(
         page.svg = artifact;
         page.preview = preview.clone();
     }
-    if snapshot.deck != store::current(&tx)?.deck {
-        store::append(&tx, &snapshot.deck, "手动采用生成结果")?;
+    let adopt_changed = snapshot.deck != store::current(&tx)?.deck;
+    if adopt_changed {
+        store::append(&tx, &mut snapshot.deck, "手动采用生成结果")?;
     }
     if kind == "native" {
         tx.execute(
@@ -1988,7 +2096,7 @@ mod build_selection_tests {
             basis: legacy.clone(),
         });
         let tx = store.transaction().unwrap();
-        store::append(&tx, &deck, "Legacy fixture").unwrap();
+        store::append(&tx, &mut deck, "Legacy fixture").unwrap();
         tx.commit().unwrap();
         store
             .connection
@@ -2001,7 +2109,7 @@ mod build_selection_tests {
                 .connection
                 .pragma_query_value(None, "user_version", |r| r.get::<_, i64>(0))
                 .unwrap(),
-            store::FORMAT_VERSION
+            6
         );
         assert_eq!(
             upgraded.current().unwrap().deck.pages[0]
@@ -2038,7 +2146,7 @@ mod build_selection_tests {
             basis: basis("svg", &deck, &deck.pages[0]).unwrap(),
         });
         let tx = store.transaction().unwrap();
-        let source = store::append(&tx, &deck, "Source").unwrap();
+        let source = store::append(&tx, &mut deck, "Source").unwrap();
         tx.commit().unwrap();
         let report = json!({"status":"pass","findings":[],"visual_review":"not_evaluated","desktop_editing":"not_evaluated"});
         store.connection.execute("INSERT INTO builds(version_id,input_digest,pptx_file,findings_json,missing_pages) VALUES (?,?, 'synthetic.pptx',?, '[]')",rusqlite::params![source,build_digest(&deck).unwrap(),report.to_string()]).unwrap();
@@ -2047,7 +2155,7 @@ mod build_selection_tests {
         assert_eq!(detail["pages"][0]["pptx_slide"], 1);
         deck.pages[0].content.title = "Changed text".into();
         let tx = store.transaction().unwrap();
-        store::append(&tx, &deck, "Content only").unwrap();
+        store::append(&tx, &mut deck, "Content only").unwrap();
         tx.commit().unwrap();
         let detail = build_detail(temp.path(), 1).unwrap();
         assert_eq!(detail["input_changed"], false);
@@ -2104,7 +2212,7 @@ mod build_selection_tests {
             3
         );
         let tx = store.transaction().unwrap();
-        store::append(&tx, &current, "Current inputs").unwrap();
+        store::append(&tx, &mut current, "Current inputs").unwrap();
         tx.commit().unwrap();
         let export = export_pptx(temp.path()).unwrap();
         assert_eq!(export["id"], 2);
@@ -2135,7 +2243,7 @@ mod build_selection_tests {
             basis: basis("native", &deck, &deck.pages[0]).unwrap(),
         });
         let tx = store.transaction().unwrap();
-        store::append(&tx, &deck, "Native without a readable pack").unwrap();
+        store::append(&tx, &mut deck, "Native without a readable pack").unwrap();
         tx.commit().unwrap();
         let pptx = store.add_file(b"historical pptx", "pptx").unwrap();
         store.connection.execute(
@@ -2152,7 +2260,7 @@ mod build_selection_tests {
             basis: basis("native", &deck, &deck.pages[1]).unwrap(),
         });
         let tx = store.transaction().unwrap();
-        store::append(&tx, &deck, "Native with a corrupt pack").unwrap();
+        store::append(&tx, &mut deck, "Native with a corrupt pack").unwrap();
         tx.commit().unwrap();
         let export = export_pptx(temp.path()).unwrap();
         assert_eq!(
