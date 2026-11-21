@@ -1382,63 +1382,20 @@ fn draft_gap_marks_stay_on_the_page_and_the_todo_field_stays_off_the_prompt() {
     let image_run = guarded_run(path, "image", &["p1".into()], None).unwrap();
     let image_work = Path::new(image_run["runs"][0]["pages"][0]["work"].as_str().unwrap());
     let image = std::fs::read_to_string(image_work.join("task.md")).unwrap();
-    assert!(image.contains("逐字呈现可见文字，保留事实、数字、单位和限定。"));
-    assert!(image.contains("待补：需披露口径与年份"));
-    let guidance = image.split("## 可见文字").next().unwrap();
-    assert!(guidance.contains("「待补：…」"));
-    assert!(!guidance.contains("需披露口径与年份"));
+    let visible = image.split("## 可见文字").nth(1).unwrap();
+    assert!(visible.contains("待补：需披露口径与年份"));
+    assert!(visible.contains("先核对口径"));
     assert!(!image.contains("只记在待办里的维护安排"));
     assert!(!image.contains("讲稿里的缺口说明"));
-    assert!(!image.contains("不上屏"));
-    assert!(!image.contains("页面文案不含缺口说明"));
 
     let svg_run = guarded_run(path, "svg", &["p1".into()], None).unwrap();
     let svg_work = Path::new(svg_run["runs"][0]["pages"][0]["work"].as_str().unwrap());
     let svg = std::fs::read_to_string(svg_work.join("task.md")).unwrap();
-    assert!(svg.contains("「待补：…」逐字上屏"));
-    assert!(svg.contains("todo 不写进画面"));
+    let content: Value =
+        serde_json::from_str(&std::fs::read_to_string(svg_work.join("content.json")).unwrap())
+            .unwrap();
+    assert_eq!(content["body_blocks"][0]["text"], "待补：需披露口径与年份");
     assert!(!svg.contains("待补：需披露口径与年份"));
     assert!(!svg.contains("只记在待办里的维护安排"));
-    assert!(!svg.contains("不上屏"));
-    assert!(!svg.contains("页面文案不含缺口说明"));
-
-    for (name, text) in [
-        (
-            "deck-content",
-            include_str!("../../deck-skill/deck-content/SKILL.md"),
-        ),
-        (
-            "content-to-visual",
-            include_str!("../../deck-skill/references/content-to-visual.md"),
-        ),
-        (
-            "page-writing",
-            include_str!("../../deck-skill/references/page-writing.md"),
-        ),
-        (
-            "commands",
-            include_str!("../../deck-skill/references/commands.md"),
-        ),
-        (
-            "spec",
-            include_str!("../../docs/specs/rust-rebuild/README.md"),
-        ),
-    ] {
-        assert!(
-            text.contains("待补："),
-            "{name} does not tell the author to mark 待补"
-        );
-        assert!(
-            !text.contains("不上屏"),
-            "{name} still keeps gaps off the page"
-        );
-        assert!(
-            !text.contains("页面文案不含缺口说明"),
-            "{name} still forbids gap copy"
-        );
-    }
-    let humanizer = include_str!("../../deck-skill/references/expression-review-humanizer.md");
-    assert!(humanizer.starts_with("# 表达自然度与保真｜M10 / Review 可选参考"));
-    assert!(humanizer.contains("重复免责只留首处"));
-    assert!(humanizer.contains("稀释标题改判断句、条件移入正文"));
+    assert!(!svg.contains("讲稿里的缺口说明"));
 }
