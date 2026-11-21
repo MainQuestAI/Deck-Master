@@ -182,10 +182,6 @@ fn opening_v6_does_not_write_and_future_formats_still_ask_for_an_upgrade() {
         2
     );
 
-    let message = store::unsupported_format_message(7, 6);
-    assert!(message.contains('7'));
-    assert!(message.contains('6'));
-    assert!(message.contains("请升级 deck"));
     let store = store::Store::open(path).unwrap();
     store
         .connection
@@ -357,8 +353,8 @@ fn frame_gate_lists_every_missing_field_then_start_passes_without_upgrading_v6()
         patch(json!({
             "order":["p1"],
             "pages":[{"id":"p1","content":{"title":"一页"}}],
-            "brief":{"title":"合成作品","audience":"  ","concerns":["  "]},
-            "framing":{"storyline":[" "]}
+            "brief":{"title":"合成作品","goal":"保留目标","audience":"  ","concerns":["  "]},
+            "framing":{"thesis":"保留主张","storyline":[" "]}
         })),
     )
     .unwrap();
@@ -379,6 +375,9 @@ fn frame_gate_lists_every_missing_field_then_start_passes_without_upgrading_v6()
                 assert!(text.contains("\"role\": \"资深顾问\""), "{text}");
                 assert!(text.contains("\"tone\": \"结论先行，语气肯定\""), "{text}");
                 assert!(text.contains("\"第一句主线\""), "{text}");
+                assert!(text.contains("合成作品"), "{text}");
+                assert!(text.contains("保留目标"), "{text}");
+                assert!(text.contains("保留主张"), "{text}");
                 assert!(!text.contains("pages["), "{text}");
                 for field in [
                     "brief.audience",
@@ -402,21 +401,22 @@ fn frame_gate_lists_every_missing_field_then_start_passes_without_upgrading_v6()
     assert_eq!(user_version(path), 6);
     assert_eq!(deck_json(path, 2), before);
 
-    let store = store::Store::open(path).unwrap();
-    let mut value: Value = serde_json::from_str(&before).unwrap();
-    value["brief"] = frame_patch("合成作品")["brief"].clone();
-    value["framing"]["storyline"] = json!(["先说明问题，再给出判断"]);
-    let filled = value.to_string();
-    store
-        .connection
-        .execute("UPDATE versions SET deck_json=?1 WHERE id=2", [&filled])
-        .unwrap();
-    drop(store);
+    let Err(Error::Input(text)) = ops::run_start(path, "image", &["p1".into()], None) else {
+        panic!("frame should still be missing");
+    };
+    let snippet = text
+        .split("payload.json 最小片段：\n")
+        .nth(1)
+        .expect("snippet");
+    let saved = ops::put(path, 2, patch(serde_json::from_str(snippet).unwrap())).unwrap();
+    assert_eq!(saved.deck.brief.title, "合成作品");
+    assert_eq!(saved.deck.brief.goal, "保留目标");
+    assert_eq!(saved.deck.framing.thesis, "保留主张");
+    assert_eq!(saved.deck.brief.decision, "本周需拍板的事项");
+    assert_eq!(user_version(path), 7);
     let started = ops::run_start(path, "image", &["p1".into()], None).unwrap();
     assert_eq!(started["runs"][0]["pages"][0]["status"], "pending");
     assert_eq!(run_count(path), 1);
-    assert_eq!(user_version(path), 6);
-    assert_eq!(deck_json(path, 2), filled);
     assert!(
         ops::put(
             path,
@@ -425,6 +425,62 @@ fn frame_gate_lists_every_missing_field_then_start_passes_without_upgrading_v6()
         )
         .is_ok()
     );
+}
+
+#[test]
+fn snippet_for_only_a_missing_decision_keeps_the_rest_of_brief_and_framing() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    ops::new(path, "合成作品".into()).unwrap();
+    let created = ops::put(
+        path,
+        1,
+        patch(json!({
+            "brief": {
+                "title": "合成作品",
+                "goal": "保留目标",
+                "audience": "已有读者",
+                "concerns": ["已有关注"],
+                "narrator": {"role": "已有角色", "tone": "已有语气"}
+            },
+            "framing": {
+                "thesis": "保留主张",
+                "pillars": [{"title": "范围", "points": ["先试点"]}],
+                "storyline": ["已有主线"]
+            },
+            "order": ["p1"],
+            "pages": [{"id": "p1", "content": {"title": "一页"}}]
+        })),
+    )
+    .unwrap();
+    let Err(Error::Input(text)) = ops::run_start(path, "image", &["p1".into()], None) else {
+        panic!("decision should still be missing");
+    };
+    assert!(text.contains("- brief.decision"));
+    assert!(!text.contains("- brief.audience"));
+    assert!(text.contains("合成作品"));
+    assert!(text.contains("保留目标"));
+    assert!(text.contains("保留主张"));
+    assert!(text.contains("已有读者"));
+    assert!(text.contains("已有主线"));
+    let snippet = text
+        .split("payload.json 最小片段：\n")
+        .nth(1)
+        .expect("snippet");
+    let saved = ops::put(
+        path,
+        created.version,
+        patch(serde_json::from_str(snippet).unwrap()),
+    )
+    .unwrap();
+    assert_eq!(saved.deck.brief.title, "合成作品");
+    assert_eq!(saved.deck.brief.goal, "保留目标");
+    assert_eq!(saved.deck.brief.audience, "已有读者");
+    assert_eq!(saved.deck.brief.decision, "本周需拍板的事项");
+    assert_eq!(saved.deck.framing.thesis, "保留主张");
+    assert_eq!(saved.deck.framing.storyline, vec!["已有主线".to_string()]);
+    assert_eq!(run_count(path), 0);
+    assert!(ops::run_start(path, "image", &["p1".into()], None).is_ok());
 }
 
 #[test]
@@ -479,6 +535,10 @@ fn writing_brief_skips_blank_lines_and_outline_follows_page_order() {
     assert!(model::writing_brief(&both).starts_with("讲述人：负责人。语气：肯定。"));
     both.brief.narrator.role.clear();
     assert!(model::writing_brief(&both).starts_with("语气：肯定。"));
+    both.brief.decision = "是否采用。".into();
+    let decided = model::writing_brief(&both);
+    assert!(decided.contains("待决事项：是否采用。"));
+    assert!(!decided.contains("。。"));
     assert_eq!(
         model::outline(&deck.pages),
         json!([
@@ -550,11 +610,26 @@ fn argument_shape_is_checked_on_put_and_empty_evidence_is_stored() {
         path,
         created.version,
         patch(json!({"pages":[{"id":"p1","argument":{"evidence":[{"text":"一句"}]}}]})),
+    )
+    .unwrap();
+    assert!(missing.deck.pages[0].argument.is_some());
+    let blank_ref = ops::put(
+        path,
+        missing.version,
+        patch(
+            json!({"pages":[{"id":"p1","argument":{"evidence":[{"text":"一句","ref":"","gap":"缺数"}]}}]}),
+        ),
+    )
+    .unwrap();
+    assert_eq!(
+        blank_ref.deck.pages[0].argument.as_ref().unwrap().evidence[0]
+            .gap
+            .as_deref(),
+        Some("缺数")
     );
-    assert!(matches!(missing, Err(Error::Input(_))));
     let saved = ops::put(
         path,
-        created.version,
+        blank_ref.version,
         patch(json!({"pages":[{"id":"p1","argument":{
             "reasons":["因为范围已定"],
             "evidence":[{"text":"材料写了范围","ref":"m1"}],

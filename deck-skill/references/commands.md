@@ -130,11 +130,11 @@ deck --project "$DECK_PROJECT" export md > "$DECK_PROJECT/manuscript.md"
 
 ## 局部修改
 
-`deck --project "$DECK_PROJECT" get --pages p2` 只返回所选页，但保留任务与框架，并省略 order。读取后修改目标页的作者字段，再用此次返回的 version 保存；不需要读写其他页。
+`deck --project "$DECK_PROJECT" get --pages p2` 只返回所选页，但保留任务与框架，并省略 order。读取后修改目标页的作者字段，再用此次返回的 version 保存；不需要读写其他页。回传前去掉顶层 `writing_brief`、`outline`，以及每一页的 `revision`。
 
 - 只改文字时，提交该页完整 `content`；只改讲稿时，只交该页 id 与 notes。
 - 新增页：交新页面及包含它的完整 order；删除页：交 `{id}` 和去掉该页的完整 order；重排只交 order。
-- `put` 也接受 get 的完整输出。不改 materials、image、svg、native 或 preview；保存不会用它们更新材料或产物。
+- `put` 也接受 get 的完整输出，但要先去掉顶层 `writing_brief`、`outline`，以及每一页的 `revision`。这三项由读取生成或由程序维护，原样回传会被拒绝。不改 materials、image、svg、native 或 preview；保存不会用它们更新材料或产物。
 - 同一提交可以安全重试，没有实质变化就不新增版本。冲突时命令退出 5 并给当前冲突单元，先读取后合并作者意图，再保存。
 - `deck --project "$DECK_PROJECT" restore N` 把历史稿恢复为新版本，不删除后来的历史。
 

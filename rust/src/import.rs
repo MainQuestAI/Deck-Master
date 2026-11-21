@@ -68,10 +68,6 @@ struct PageSpec {
     image: Option<FileRef>,
     svg: Option<FileRef>,
     preview: Option<String>,
-    #[serde(default)]
-    kind: String,
-    #[serde(default)]
-    argument: Option<crate::model::Argument>,
 }
 
 pub fn from_archive(source: &Path, destination: &Path) -> Result<Value> {
@@ -193,24 +189,6 @@ fn import_staged(source: &Path, destination: &Path, archive: Archive) -> Result<
             }));
             continue;
         }
-        if !spec.kind.is_empty() && !crate::model::PAGE_KINDS.contains(&spec.kind.as_str()) {
-            unmapped.push(json!({
-                "kind": "page",
-                "id": spec.id,
-                "reason": format!("kind 只接受 judgment、explanation、reference、teaching 或留空；当前是 {}", spec.kind)
-            }));
-            continue;
-        }
-        if let Some(argument) = &spec.argument
-            && let Err(error) = crate::model::validate_argument(&spec.id, argument)
-        {
-            unmapped.push(json!({
-                "kind": "page",
-                "id": spec.id,
-                "reason": error.to_string()
-            }));
-            continue;
-        }
         let mut page = Page {
             id: spec.id,
             purpose: spec.purpose,
@@ -219,8 +197,6 @@ fn import_staged(source: &Path, destination: &Path, archive: Archive) -> Result<
             notes: spec.notes,
             todo: spec.todo,
             refs: spec.refs,
-            kind: spec.kind,
-            argument: spec.argument,
             ..Page::default()
         };
         page.content.normalize_ids()?;

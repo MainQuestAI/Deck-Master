@@ -481,17 +481,11 @@ fn filled(value: &Option<String>) -> bool {
 
 pub fn validate_argument(page_id: &str, argument: &Argument) -> crate::error::Result<()> {
     for (index, item) in argument.evidence.iter().enumerate() {
-        let number = index + 1;
-        // A present key is the JSON key, even when its string is blank.
-        // A usable ref or gap must be a non-empty string, and exactly one of them.
-        if item.r#ref.is_some() && item.gap.is_some() {
+        // A blank string is not a ref or a gap. Missing both is left to run start.
+        if filled(&item.r#ref) && filled(&item.gap) {
             return Err(crate::error::Error::Input(format!(
-                "页面 {page_id} 的 evidence 第 {number} 项同时有 ref 和 gap；二者互斥"
-            )));
-        }
-        if filled(&item.r#ref) == filled(&item.gap) {
-            return Err(crate::error::Error::Input(format!(
-                "页面 {page_id} 的 evidence 第 {number} 项必须恰好有一个非空的 ref 或 gap"
+                "页面 {page_id} 的 evidence 第 {} 项同时有 ref 和 gap；二者互斥",
+                index + 1
             )));
         }
     }
@@ -546,7 +540,7 @@ pub fn writing_brief(deck: &Deck) -> String {
     if !narrator.is_empty() {
         lines.push(narrator);
     }
-    let decision = deck.brief.decision.trim();
+    let decision = deck.brief.decision.trim().trim_end_matches('。');
     if !decision.is_empty() {
         lines.push(format!("待决事项：{decision}。"));
     }
