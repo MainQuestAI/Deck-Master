@@ -331,7 +331,7 @@ pub(crate) fn reviews_have_record_kind(connection: &Connection) -> Result<bool> 
 }
 
 fn migrate_v7(connection: &Connection) -> Result<()> {
-    let version: i64 = connection.pragma_query_value(None, "user_version", |row| row.get(0))?;
+    let version = user_version(connection)?;
     if version >= FORMAT_VERSION {
         return Ok(());
     }

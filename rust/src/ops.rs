@@ -1,7 +1,7 @@
 use crate::error::{Conflict, Error, Result};
 use crate::model::{Argument, Brief, Deck, Evidence, Page, Patch, Snapshot, Style};
 use crate::store::{self, Store};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
@@ -281,21 +281,8 @@ pub fn review_list(project: &Path, status: Option<&str>, page: Option<&str>) -> 
 }
 
 pub fn review_resolve(project: &Path, id: i64) -> Result<Review> {
-    use rusqlite::OptionalExtension;
     let mut store = Store::open(project)?;
     let tx = store.transaction()?;
-    if store::reviews_have_record_kind(&tx)? {
-        let kind: Option<String> = tx
-            .query_row("SELECT record_kind FROM reviews WHERE id=?", [id], |row| {
-                row.get(0)
-            })
-            .optional()?;
-        if kind.as_deref() == Some("content_review") {
-            return Err(Error::Input(
-                "出稿审稿不是意见，不能标记已处理。页或框架变了之后，重新执行 deck review add --record content_review".into(),
-            ));
-        }
-    }
     tx.execute("UPDATE reviews SET status='resolved',resolved_at=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id=? AND status='open'", [id])?;
     let value = review(&tx, id)?;
     tx.commit()?;
@@ -311,32 +298,6 @@ const CONTENT_CHECK_IDS: &[&str] = &[
     "final_pages_viewed",
 ];
 
-fn snapshot_unreadable() -> Error {
-    Error::Input("出稿审稿快照无法读取；请重新执行 deck review add --record content_review".into())
-}
-
-fn json_string(object: &serde_json::Map<String, Value>, key: &str) -> Result<String> {
-    match object.get(key) {
-        None => Ok(String::new()),
-        Some(Value::String(text)) => Ok(text.clone()),
-        Some(_) => Err(snapshot_unreadable()),
-    }
-}
-
-fn json_string_array(object: &serde_json::Map<String, Value>, key: &str) -> Result<Vec<String>> {
-    match object.get(key) {
-        None => Ok(Vec::new()),
-        Some(Value::Array(items)) => items
-            .iter()
-            .map(|item| match item {
-                Value::String(text) => Ok(text.clone()),
-                _ => Err(snapshot_unreadable()),
-            })
-            .collect(),
-        Some(_) => Err(snapshot_unreadable()),
-    }
-}
-
 fn frame_value(deck: &Deck) -> Value {
     json!({
         "audience": deck.brief.audience,
@@ -347,70 +308,7 @@ fn frame_value(deck: &Deck) -> Value {
     })
 }
 
-fn stored_frame(value: &Value) -> Result<Value> {
-    let Some(object) = value.as_object() else {
-        return Err(snapshot_unreadable());
-    };
-    let narrator = match object.get("narrator") {
-        None => json!({"role": "", "tone": ""}),
-        Some(Value::Object(narrator)) => json!({
-            "role": json_string(narrator, "role")?,
-            "tone": json_string(narrator, "tone")?,
-        }),
-        Some(_) => return Err(snapshot_unreadable()),
-    };
-    Ok(json!({
-        "audience": json_string(object, "audience")?,
-        "decision": json_string(object, "decision")?,
-        "concerns": json_string_array(object, "concerns")?,
-        "narrator": narrator,
-        "storyline": json_string_array(object, "storyline")?,
-    }))
-}
-
-fn canonical_json(value: &Value) -> Result<Vec<u8>> {
-    fn write(out: &mut Vec<u8>, value: &Value) -> Result<()> {
-        match value {
-            Value::Object(map) => {
-                let mut keys: Vec<&String> = map.keys().collect();
-                keys.sort_unstable();
-                out.push(b'{');
-                for (index, key) in keys.iter().enumerate() {
-                    if index > 0 {
-                        out.push(b',');
-                    }
-                    out.extend(serde_json::to_vec(&Value::String((*key).clone()))?);
-                    out.push(b':');
-                    write(out, &map[key.as_str()])?;
-                }
-                out.push(b'}');
-            }
-            Value::Array(items) => {
-                out.push(b'[');
-                for (index, item) in items.iter().enumerate() {
-                    if index > 0 {
-                        out.push(b',');
-                    }
-                    write(out, item)?;
-                }
-                out.push(b']');
-            }
-            other => out.extend(serde_json::to_vec(other)?),
-        }
-        Ok(())
-    }
-    let mut out = Vec::new();
-    write(&mut out, value)?;
-    Ok(out)
-}
-
-fn sha256_hex(bytes: &[u8]) -> String {
-    use sha2::{Digest, Sha256};
-    format!("{:x}", Sha256::digest(bytes))
-}
-
 fn review_snapshot(version: i64, deck: &Deck) -> Result<String> {
-    let frame = frame_value(deck);
     let snapshot = json!({
         "version_id": version,
         "pages": deck.pages.iter().map(|page| json!({
@@ -418,8 +316,7 @@ fn review_snapshot(version: i64, deck: &Deck) -> Result<String> {
             "revision": page.revision,
             "preview": page.preview,
         })).collect::<Vec<_>>(),
-        "framing": frame,
-        "framing_sha256": sha256_hex(&canonical_json(&frame)?),
+        "framing": frame_value(deck),
     });
     Ok(serde_json::to_string(&snapshot)?)
 }
@@ -431,16 +328,13 @@ fn load_checks(path: &Path) -> Result<Value> {
     };
     let mut seen = HashSet::new();
     for item in items {
-        let Some(object) = item.as_object() else {
-            return Err(Error::Input("出稿审稿的 checks 每一项必须是对象".into()));
+        let Some(id) = item.get("id").and_then(Value::as_str) else {
+            continue;
         };
-        let Some(id) = object.get("id").and_then(Value::as_str) else {
-            return Err(Error::Input("出稿审稿的 checks 每一项都要有 id".into()));
-        };
-        if !seen.insert(id.to_string()) {
-            return Err(Error::Input(format!("出稿审稿的 checks 里 {id} 重复了")));
+        if !CONTENT_CHECK_IDS.contains(&id) {
+            continue;
         }
-        match object.get("conclusion").and_then(Value::as_str) {
+        match item.get("conclusion").and_then(Value::as_str) {
             Some(conclusion) if !blank_text(conclusion) => {}
             _ => {
                 return Err(Error::Input(format!(
@@ -448,7 +342,7 @@ fn load_checks(path: &Path) -> Result<Value> {
                 )));
             }
         }
-        match object.get("pages").and_then(Value::as_array) {
+        match item.get("pages").and_then(Value::as_array) {
             Some(pages) if pages.iter().all(Value::is_string) => {}
             _ => {
                 return Err(Error::Input(format!(
@@ -456,18 +350,12 @@ fn load_checks(path: &Path) -> Result<Value> {
                 )));
             }
         }
-        if let Some(title) = object.get("title")
-            && !title.is_string()
-        {
-            return Err(Error::Input(format!(
-                "出稿审稿的 checks 里 {id} 的 title 必须是字符串"
-            )));
-        }
+        seen.insert(id);
     }
     let missing: Vec<&str> = CONTENT_CHECK_IDS
         .iter()
         .copied()
-        .filter(|id| !seen.contains(*id))
+        .filter(|id| !seen.contains(id))
         .collect();
     if !missing.is_empty() {
         return Err(Error::Input(format!(
@@ -533,26 +421,35 @@ fn unreviewed_status() -> Value {
     })
 }
 
-fn snapshot_pages(snapshot: &Value) -> Result<HashMap<String, u32>> {
-    let Some(pages) = snapshot.get("pages").and_then(Value::as_array) else {
-        return Err(snapshot_unreadable());
-    };
-    let mut revisions = HashMap::new();
-    for page in pages {
-        let Some(id) = page.get("id").and_then(Value::as_str) else {
-            return Err(snapshot_unreadable());
-        };
-        let Some(revision) = page.get("revision").and_then(Value::as_u64) else {
-            return Err(snapshot_unreadable());
-        };
-        let Ok(revision) = u32::try_from(revision) else {
-            return Err(snapshot_unreadable());
-        };
-        if revisions.insert(id.to_string(), revision).is_some() {
-            return Err(snapshot_unreadable());
-        }
-    }
-    Ok(revisions)
+fn stale_unreadable(method: &str) -> Value {
+    json!({
+        "status": "stale",
+        "methods": [method],
+        "version_id": Value::Null,
+        "unreviewed_pages": [],
+    })
+}
+
+// Called only when the key is present, so null stays a value instead of "missing".
+fn present_framing<'de, D>(deserializer: D) -> std::result::Result<Option<Value>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    Ok(Some(Value::deserialize(deserializer)?))
+}
+
+#[derive(Deserialize)]
+struct ContentReviewSnapshot {
+    version_id: i64,
+    pages: Vec<SnapshotPage>,
+    #[serde(default, deserialize_with = "present_framing")]
+    framing: Option<Value>,
+}
+
+#[derive(Deserialize)]
+struct SnapshotPage {
+    id: String,
+    revision: u32,
 }
 
 fn content_review_status(connection: &rusqlite::Connection, deck: &Deck) -> Result<Value> {
@@ -571,14 +468,15 @@ fn content_review_status(connection: &rusqlite::Connection, deck: &Deck) -> Resu
         return Ok(unreviewed_status());
     };
     let Some(snapshot_json) = snapshot_json else {
-        return Err(snapshot_unreadable());
+        return Ok(stale_unreadable(&method));
     };
-    let snapshot: Value =
-        serde_json::from_str(&snapshot_json).map_err(|_| snapshot_unreadable())?;
-    let Some(version_id) = snapshot.get("version_id").and_then(Value::as_i64) else {
-        return Err(snapshot_unreadable());
+    let Ok(snapshot) = serde_json::from_str::<ContentReviewSnapshot>(&snapshot_json) else {
+        return Ok(stale_unreadable(&method));
     };
-    let recorded = snapshot_pages(&snapshot)?;
+    let mut recorded = HashMap::new();
+    for page in &snapshot.pages {
+        recorded.entry(page.id.clone()).or_insert(page.revision);
+    }
     // Deck order is the stable order. A page created again with the same id
     // starts at revision 1, so a snapshot that also stored 1 cannot see it.
     let mut unreviewed_pages = Vec::new();
@@ -587,10 +485,10 @@ fn content_review_status(connection: &rusqlite::Connection, deck: &Deck) -> Resu
             unreviewed_pages.push(page.id.clone());
         }
     }
-    let frame_differs = match snapshot.get("framing") {
+    // A missing framing key is unknown. A present value is compared as stored.
+    let frame_differs = match &snapshot.framing {
         None => false,
-        Some(value) if !value.is_object() => false,
-        Some(value) => stored_frame(value)? != frame_value(deck),
+        Some(value) => value != &frame_value(deck),
     };
     let status = if unreviewed_pages.is_empty() && !frame_differs {
         "reviewed"
@@ -600,7 +498,7 @@ fn content_review_status(connection: &rusqlite::Connection, deck: &Deck) -> Resu
     Ok(json!({
         "status": status,
         "methods": [method],
-        "version_id": version_id,
+        "version_id": snapshot.version_id,
         "unreviewed_pages": unreviewed_pages,
     }))
 }

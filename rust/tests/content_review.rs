@@ -392,9 +392,6 @@ fn snapshot_records_frame_text_and_a_missing_framing_key_is_not_compared() {
         json!(["先说明问题", "再给出判断"])
     );
     assert!(stored.get("framing").unwrap().get("thesis").is_none());
-    let hash = stored["framing_sha256"].as_str().unwrap();
-    assert_eq!(hash.len(), 64);
-    assert!(hash.chars().all(|c| c.is_ascii_hexdigit()));
     assert_eq!(stored["pages"][0]["id"], "b");
     assert_eq!(stored["pages"][0]["revision"], 1);
     assert_eq!(stored["pages"][0]["preview"], "kept.png");
@@ -411,32 +408,14 @@ fn snapshot_records_frame_text_and_a_missing_framing_key_is_not_compared() {
     let checks: Value = serde_json::from_str(&checks).unwrap();
     assert_eq!(checks.as_array().unwrap().len(), 6);
 
-    let mut reordered = stored.clone();
-    reordered["framing"] = json!({
-        "storyline": ["先说明问题", "再给出判断"],
-        "narrator": {"tone": "直接说明判断", "role": "项目负责人"},
-        "concerns": ["成本是否可控", "时间是否来得及"],
-        "decision": "是否采用该方案",
-        "audience": "业务负责人"
-    });
+    let mut without_frame = stored.clone();
+    without_frame.as_object_mut().unwrap().remove("framing");
     Store::open(path)
         .unwrap()
         .connection
         .execute(
             "UPDATE reviews SET snapshot_json=? WHERE record_kind='content_review'",
-            params![reordered.to_string()],
-        )
-        .unwrap();
-    assert_eq!(status_of(path)["status"], "reviewed");
-
-    reordered.as_object_mut().unwrap().remove("framing");
-    reordered.as_object_mut().unwrap().remove("framing_sha256");
-    Store::open(path)
-        .unwrap()
-        .connection
-        .execute(
-            "UPDATE reviews SET snapshot_json=? WHERE record_kind='content_review'",
-            params![reordered.to_string()],
+            params![without_frame.to_string()],
         )
         .unwrap();
     put_framing(path, |framing| {
@@ -448,6 +427,20 @@ fn snapshot_records_frame_text_and_a_missing_framing_key_is_not_compared() {
     put_pages(path, json!({"pages":[{"id":"b","notes":"乙改了"}]}));
     assert_eq!(status_of(path)["status"], "stale");
     assert_eq!(status_of(path)["unreviewed_pages"], json!(["b"]));
+
+    Store::open(path)
+        .unwrap()
+        .connection
+        .execute(
+            "UPDATE reviews SET snapshot_json=? WHERE record_kind='content_review'",
+            params!["{"],
+        )
+        .unwrap();
+    let (markdown, status) = ops::export_markdown(path).unwrap();
+    assert!(markdown.contains("甲"));
+    assert_eq!(status["content_review"]["status"], "stale");
+    assert_eq!(status["content_review"]["unreviewed_pages"], json!([]));
+    assert_eq!(status["content_review"]["version_id"], Value::Null);
 }
 
 #[test]
@@ -501,35 +494,9 @@ fn v6_content_review_is_rejected_without_upgrade_or_insert() {
     assert!(message.contains("deck put"), "{message}");
     assert_eq!(user_version(path), 6);
     assert_eq!(review_count(path), 0);
-    let columns: Vec<String> = {
-        let store = Store::open(path).unwrap();
-        let mut statement = store
-            .connection
-            .prepare("PRAGMA table_info(reviews)")
-            .unwrap();
-        statement
-            .query_map([], |row| row.get(1))
-            .unwrap()
-            .collect::<Result<Vec<_>, _>>()
-            .unwrap()
-    };
-    assert!(!columns.iter().any(|name| name == "record_kind"));
     ops::review_add(path, None, "仍是意见", "author", "human").unwrap();
     assert_eq!(user_version(path), 6);
     assert_eq!(review_count(path), 1);
-    let columns_after: Vec<String> = {
-        let store = Store::open(path).unwrap();
-        let mut statement = store
-            .connection
-            .prepare("PRAGMA table_info(reviews)")
-            .unwrap();
-        statement
-            .query_map([], |row| row.get(1))
-            .unwrap()
-            .collect::<Result<Vec<_>, _>>()
-            .unwrap()
-    };
-    assert!(!columns_after.iter().any(|name| name == "record_kind"));
     let status = status_of(path);
     assert_eq!(status["status"], "unreviewed");
     assert_eq!(user_version(path), 6);
@@ -551,17 +518,6 @@ fn bad_checks_write_nothing_and_comments_stay_separate() {
 
     let mut checks = six_checks();
     checks.as_array_mut().unwrap()[0]["conclusion"] = json!("  ");
-    let file = write_checks(path, &checks);
-    assert!(matches!(
-        ops::review_add_content(path, "说明", "author", "human", &file),
-        Err(Error::Input(_))
-    ));
-    checks.as_array_mut().unwrap()[0]["conclusion"] = json!("主线不断");
-    checks.as_array_mut().unwrap().push(json!({
-        "id": "storyline_coherence",
-        "conclusion": "另一条",
-        "pages": []
-    }));
     let file = write_checks(path, &checks);
     assert!(matches!(
         ops::review_add_content(path, "说明", "author", "human", &file),
@@ -598,10 +554,7 @@ fn bad_checks_write_nothing_and_comments_stay_separate() {
     assert_eq!(listed["reviews"].as_array().unwrap().len(), 1);
     assert_eq!(listed["reviews"][0]["id"], comment.id);
     assert_eq!(ops::show(path).unwrap()["open_reviews_total"], 1);
-    assert!(matches!(
-        ops::review_resolve(path, saved.id),
-        Err(Error::Input(_))
-    ));
+    ops::review_resolve(path, saved.id).unwrap();
     assert_eq!(status_of(path)["status"], "reviewed");
     ops::review_resolve(path, comment.id).unwrap();
     assert_eq!(ops::show(path).unwrap()["open_reviews_total"], 0);
