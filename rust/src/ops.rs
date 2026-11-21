@@ -1,5 +1,5 @@
 use crate::error::{Conflict, Error, Result};
-use crate::model::{Brief, Deck, Page, Patch, Snapshot, Style};
+use crate::model::{Argument, Brief, Deck, Evidence, Page, Patch, Snapshot, Style};
 use crate::store::{self, Store};
 use serde::Serialize;
 use serde_json::{Value, json};
@@ -84,6 +84,7 @@ fn snapshot_value(snapshot: &Snapshot, pages: Option<&[String]>) -> Result<Value
         "artifact_status": artifact_status(&snapshot.deck)?,
         "writing_brief": crate::model::writing_brief(&snapshot.deck),
         "outline": crate::model::outline(&outlined),
+        "gap_list": crate::model::gap_list(&outlined),
     }))
 }
 
@@ -172,6 +173,7 @@ pub fn show(project: &Path) -> Result<Value> {
         "artifact_status": artifact_status(&snapshot.deck)?,
         "writing_brief": crate::model::writing_brief(&snapshot.deck),
         "outline": crate::model::outline(&snapshot.deck.pages),
+        "gap_list": crate::model::gap_list(&snapshot.deck.pages),
         "history": history
     }))
 }
@@ -307,20 +309,24 @@ fn merge<T: PartialEq + Clone + Serialize>(
 }
 
 fn derived_output(value: &Value) -> bool {
-    value.get("writing_brief").is_some() || value.get("outline").is_some()
+    value.get("writing_brief").is_some()
+        || value.get("outline").is_some()
+        || value.get("gap_list").is_some()
+}
+
+fn derived_rejected() -> Error {
+    Error::Input(
+        "writing_brief、outline 和 gap_list 由读取时生成，不能写入；请从提交中去掉这三项".into(),
+    )
 }
 
 pub fn put_patch(mut value: Value, unwrap_deck: bool) -> Result<Patch> {
     if derived_output(&value) {
-        return Err(Error::Input(
-            "writing_brief 和 outline 由读取时生成，不能写入；请从提交中去掉这两项".into(),
-        ));
+        return Err(derived_rejected());
     }
     if unwrap_deck && let Some(deck) = value.get("deck").cloned() {
         if derived_output(&deck) {
-            return Err(Error::Input(
-                "writing_brief 和 outline 由读取时生成，不能写入；请从提交中去掉这两项".into(),
-            ));
+            return Err(derived_rejected());
         }
         value = deck;
     }
@@ -801,37 +807,56 @@ fn blank_text(value: &str) -> bool {
     value.trim().is_empty()
 }
 
-fn frame_example(deck: &Deck) -> Result<String> {
-    // put replaces brief and framing as whole units, so the snippet must carry
-    // every current field and fill only the ones the gate treats as empty.
-    let mut brief = deck.brief.clone();
-    let mut framing = deck.framing.clone();
-    if blank_text(&brief.audience) {
-        brief.audience = "管理层".into();
+fn start_example(deck: &Deck, missing: &[String]) -> Result<String> {
+    // put replaces brief and framing as whole units, so a frame snippet carries
+    // every current field and fills only the ones the gate treats as empty.
+    // Blank kind is filled with explanation: a judgment sample without evidence
+    // would fail the next gate, so one copied put can start the run.
+    let frame_missing = missing.iter().any(|field| !field.starts_with("pages["));
+    let mut payload = serde_json::Map::new();
+    if frame_missing {
+        let mut brief = deck.brief.clone();
+        let mut framing = deck.framing.clone();
+        if blank_text(&brief.audience) {
+            brief.audience = "管理层".into();
+        }
+        if blank_text(&brief.decision) {
+            brief.decision = "本周需拍板的事项".into();
+        }
+        if brief.concerns.iter().all(|item| blank_text(item)) {
+            brief.concerns = vec!["关注点一".into(), "关注点二".into()];
+        }
+        if blank_text(&brief.narrator.role) {
+            brief.narrator.role = "资深顾问".into();
+        }
+        if blank_text(&brief.narrator.tone) {
+            brief.narrator.tone = "结论先行，语气肯定".into();
+        }
+        if framing.storyline.iter().all(|item| blank_text(item)) {
+            framing.storyline = vec!["第一句主线".into(), "第二句主线".into()];
+        }
+        payload.insert("brief".into(), serde_json::to_value(brief)?);
+        payload.insert("framing".into(), serde_json::to_value(framing)?);
     }
-    if blank_text(&brief.decision) {
-        brief.decision = "本周需拍板的事项".into();
+    let pages: Vec<Value> = deck
+        .pages
+        .iter()
+        .filter(|page| {
+            missing
+                .iter()
+                .any(|field| field == &format!("pages[{}].kind", page.id))
+        })
+        .map(|page| json!({"id": page.id, "kind": "explanation"}))
+        .collect();
+    if !pages.is_empty() {
+        payload.insert("pages".into(), json!(pages));
     }
-    if brief.concerns.iter().all(|item| blank_text(item)) {
-        brief.concerns = vec!["关注点一".into(), "关注点二".into()];
-    }
-    if blank_text(&brief.narrator.role) {
-        brief.narrator.role = "资深顾问".into();
-    }
-    if blank_text(&brief.narrator.tone) {
-        brief.narrator.tone = "结论先行，语气肯定".into();
-    }
-    if framing.storyline.iter().all(|item| blank_text(item)) {
-        framing.storyline = vec!["第一句主线".into(), "第二句主线".into()];
-    }
-    Ok(serde_json::to_string_pretty(&json!({
-        "brief": brief,
-        "framing": framing
-    }))?)
+    Ok(serde_json::to_string_pretty(&Value::Object(payload))?)
 }
 
-fn frame_gate_message(deck: &Deck, version: i64, missing: &[&str]) -> Result<String> {
-    // Design §5.3. Error::Input adds the "输入有误：" prefix. Empty kind is PR-C.
+fn frame_gate_message(deck: &Deck, version: i64, missing: &[String]) -> Result<String> {
+    // Design §5.3. Error::Input adds the "输入有误：" prefix.
+    // Blank kind is listed with the frame so one message matches that sample.
     let listed = missing
         .iter()
         .map(|field| format!("- {field}"))
@@ -839,8 +864,118 @@ fn frame_gate_message(deck: &Deck, version: i64, missing: &[&str]) -> Result<Str
         .join("\n");
     Ok(format!(
         "无法开始生成。当前作品缺少以下字段：\n{listed}\n请先用 deck put 补全后再执行 run start。示例（--base 换成 deck show 中的当前版本号）：\n\n  deck put --base {version} payload.json\n\npayload.json 最小片段：\n{}",
-        frame_example(deck)?
+        start_example(deck, missing)?
     ))
+}
+
+fn sample_argument() -> Argument {
+    Argument {
+        reasons: vec!["理由一".into(), "理由二".into()],
+        evidence: vec![Evidence {
+            text: "出处或待补说明".into(),
+            r#ref: None,
+            gap: Some("待补：需补充口径".into()),
+        }],
+        reasoning: String::new(),
+        rebuttal: String::new(),
+    }
+}
+
+fn repair_argument(argument: Option<&Argument>) -> Argument {
+    let Some(argument) = argument else {
+        return sample_argument();
+    };
+    if argument.evidence.is_empty() {
+        let mut sample = sample_argument();
+        if argument.reasons.iter().any(|item| !blank_text(item)) {
+            sample.reasons = argument.reasons.clone();
+        }
+        if !blank_text(&argument.reasoning) {
+            sample.reasoning = argument.reasoning.clone();
+        }
+        if !blank_text(&argument.rebuttal) {
+            sample.rebuttal = argument.rebuttal.clone();
+        }
+        return sample;
+    }
+    let mut repaired = argument.clone();
+    for item in &mut repaired.evidence {
+        if item.has_ref() || item.has_gap() {
+            continue;
+        }
+        if blank_text(&item.text) {
+            item.text = "出处或待补说明".into();
+        }
+        item.r#ref = None;
+        item.gap = Some("待补：需补充口径".into());
+    }
+    repaired
+}
+
+fn judgment_incomplete(page: &Page) -> bool {
+    if page.kind != "judgment" {
+        return false;
+    }
+    match &page.argument {
+        None => true,
+        Some(argument) if argument.evidence.is_empty() => true,
+        Some(argument) => argument
+            .evidence
+            .iter()
+            .any(|item| !item.has_ref() && !item.has_gap()),
+    }
+}
+
+fn incomplete_judgment_lines(targets: &[&Page]) -> Vec<String> {
+    let mut lines = Vec::new();
+    for page in targets {
+        if page.kind != "judgment" {
+            continue;
+        }
+        let Some(argument) = page
+            .argument
+            .as_ref()
+            .filter(|argument| !argument.evidence.is_empty())
+        else {
+            lines.push(format!(
+                "- pages[{}].argument.evidence 为空，请至少提供一条带 ref 或 gap 的证据",
+                page.id
+            ));
+            continue;
+        };
+        for (index, item) in argument.evidence.iter().enumerate() {
+            if !item.has_ref() && !item.has_gap() {
+                lines.push(format!(
+                    "- pages[{}].argument.evidence[{index}] 既没有 ref 也没有 gap",
+                    page.id
+                ));
+            }
+        }
+    }
+    lines
+}
+
+fn evidence_example(targets: &[&Page]) -> Result<String> {
+    let pages: Vec<Value> = targets
+        .iter()
+        .filter(|page| judgment_incomplete(page))
+        .map(|page| {
+            json!({
+                "id": page.id,
+                "kind": "judgment",
+                "argument": repair_argument(page.argument.as_ref()),
+            })
+        })
+        .collect();
+    Ok(serde_json::to_string_pretty(&json!({"pages": pages}))?)
+}
+
+fn evidence_gate_message(version: i64, lines: &[String], snippet: &str) -> String {
+    // Design §5.3 second sample. Error::Input adds the "输入有误：" prefix.
+    format!(
+        "无法开始生成。判断页证据不完整：\n{}\n请用 deck put 补全，例如：\n\n  deck put --base {version} payload.json\n\n{snippet}",
+        lines.join("\n")
+    )
 }
 
 pub fn run_start(
@@ -887,17 +1022,40 @@ pub fn run_start(
     let current = store::current(&tx)?;
     let version = current.version;
     let deck = current.deck;
-    for page_id in ids {
-        let page = deck
-            .pages
-            .iter()
-            .find(|page| &page.id == page_id)
-            .ok_or_else(|| Error::Input(format!("页面 {page_id} 已删除；请重新开始")))?;
-        crate::model::validate_kind(&page.id, &page.kind)?;
+    let targets: Vec<&Page> = deck
+        .pages
+        .iter()
+        .filter(|page| ids.iter().any(|id| id == &page.id))
+        .collect();
+    // §4.1 checks the frame before kind. §5.3 lists blank kind in that same
+    // missing-field error. Illegal kind is a different sentence, after both.
+    let mut missing: Vec<String> = crate::model::missing_frame_fields(&deck)
+        .into_iter()
+        .map(str::to_string)
+        .collect();
+    for page in &targets {
+        if blank_text(&page.kind) {
+            missing.push(format!("pages[{}].kind", page.id));
+        }
     }
-    let missing = crate::model::missing_frame_fields(&deck);
     if !missing.is_empty() {
         return Err(Error::Input(frame_gate_message(&deck, version, &missing)?));
+    }
+    for page in &targets {
+        crate::model::validate_kind(&page.id, &page.kind)?;
+        if page.kind == "judgment"
+            && let Some(argument) = &page.argument
+        {
+            crate::model::validate_argument(&page.id, argument)?;
+        }
+    }
+    let incomplete = incomplete_judgment_lines(&targets);
+    if !incomplete.is_empty() {
+        return Err(Error::Input(evidence_gate_message(
+            version,
+            &incomplete,
+            &evidence_example(&targets)?,
+        )));
     }
     tx.execute(
         "INSERT INTO runs(kind,status,max_calls) VALUES (?,'open',?)",

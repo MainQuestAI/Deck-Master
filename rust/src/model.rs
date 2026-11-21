@@ -280,6 +280,24 @@ pub struct Evidence {
     pub gap: Option<String>,
 }
 
+impl Evidence {
+    fn meaningful(value: &Option<String>) -> Option<&str> {
+        value.as_deref().filter(|text| !text.trim().is_empty())
+    }
+
+    pub fn has_ref(&self) -> bool {
+        Self::meaningful(&self.r#ref).is_some()
+    }
+
+    pub fn has_gap(&self) -> bool {
+        Self::meaningful(&self.gap).is_some()
+    }
+
+    pub fn gap_text(&self) -> Option<&str> {
+        Self::meaningful(&self.gap)
+    }
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
 pub struct Argument {
@@ -475,14 +493,11 @@ pub fn validate_kind(page_id: &str, kind: &str) -> crate::error::Result<()> {
     )))
 }
 
-fn filled(value: &Option<String>) -> bool {
-    value.as_ref().is_some_and(|text| !text.trim().is_empty())
-}
-
 pub fn validate_argument(page_id: &str, argument: &Argument) -> crate::error::Result<()> {
     for (index, item) in argument.evidence.iter().enumerate() {
-        // A blank string is not a ref or a gap. Missing both is left to run start.
-        if filled(&item.r#ref) && filled(&item.gap) {
+        // Whitespace-only ref/gap is absent. put stores that text and does not
+        // reject a missing pair; run start does, for judgment pages.
+        if item.has_ref() && item.has_gap() {
             return Err(crate::error::Error::Input(format!(
                 "页面 {page_id} 的 evidence 第 {} 项同时有 ref 和 gap；二者互斥",
                 index + 1
@@ -571,4 +586,36 @@ pub fn outline(pages: &[Page]) -> Value {
             }))
             .collect::<Vec<_>>()
     )
+}
+
+pub fn gap_list(pages: &[Page]) -> Value {
+    // Design §3.4. Aggregate each page in order. Do not rewrite or dedupe text.
+    // On one page, evidence gaps come before todos; the sample shows that source order.
+    let mut items = Vec::new();
+    for page in pages {
+        if let Some(argument) = &page.argument {
+            for item in &argument.evidence {
+                let Some(gap) = item.gap_text() else {
+                    continue;
+                };
+                items.push(serde_json::json!({
+                    "page_id": page.id,
+                    "source": "evidence",
+                    "text": item.text,
+                    "gap": gap,
+                }));
+            }
+        }
+        for todo in &page.todo {
+            if todo.trim().is_empty() {
+                continue;
+            }
+            items.push(serde_json::json!({
+                "page_id": page.id,
+                "source": "todo",
+                "text": todo,
+            }));
+        }
+    }
+    serde_json::Value::Array(items)
 }

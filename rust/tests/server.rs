@@ -467,6 +467,13 @@ fn allow_runs(path: &Path) {
         deck.framing.storyline = vec!["先说明问题，再给出判断".into()];
         changed = true;
     }
+    // Blank kind is not treated as a judgment page. These fixtures only need the start gate to open.
+    for page in &mut deck.pages {
+        if page.kind.trim().is_empty() {
+            page.kind = "explanation".into();
+            changed = true;
+        }
+    }
     if changed {
         store
             .connection
@@ -1580,4 +1587,49 @@ fn candidate_only_native_build_fails_with_missing_pages_and_no_build_record() {
             .unwrap(),
         0
     );
+}
+
+#[test]
+fn http_deck_read_includes_gap_list() {
+    let temp = tempfile::tempdir().unwrap();
+    ops::new(temp.path(), "合成作品".into()).unwrap();
+    edit(
+        temp.path(),
+        1,
+        json!({
+            "order": ["p2", "p1"],
+            "pages": [
+                {
+                    "id": "p2",
+                    "kind": "explanation",
+                    "todo": ["页面待办原文", "  "],
+                    "argument": {
+                        "evidence": [
+                            {"text": "有出处", "ref": "m1"},
+                            {"text": "材料未给出的对比基数", "gap": " 待补：需披露口径与年份 "}
+                        ]
+                    }
+                },
+                {"id": "p1", "todo": [""]}
+            ]
+        }),
+    );
+    let service = Service::start(temp.path());
+    let reply = service.request("GET", "/api/deck", &[], "");
+    assert_eq!(reply.status, 200);
+    let body = reply.json();
+    assert_eq!(
+        body["gap_list"],
+        json!([
+            {
+                "page_id": "p2",
+                "source": "evidence",
+                "text": "材料未给出的对比基数",
+                "gap": " 待补：需披露口径与年份 "
+            },
+            {"page_id": "p2", "source": "todo", "text": "页面待办原文"}
+        ])
+    );
+    assert!(body["gap_list"][1].get("gap").is_none());
+    assert!(body["deck"].get("gap_list").is_none());
 }
