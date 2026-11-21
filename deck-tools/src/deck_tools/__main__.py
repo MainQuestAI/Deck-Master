@@ -14,7 +14,7 @@ from .atoms import visible_atoms
 from .doctor import diagnose
 from .jobs import compile_job, projection
 from .render import NeedsTool, RendererError
-from .sanitize import sanitize, OperationError
+from .sanitize import attach_hint_findings, sanitize, OperationError
 from .compiler.svg import SvgError
 
 
@@ -44,11 +44,16 @@ def main():
         elif args.command == "sanitize":
             path = Path(job["path"])
             output = Path(job["output"])
+            found = []
             cleaned = sanitize(path.read_bytes(), path.suffix, path.name,
-                               preserve_notes=job.get("preserve_notes", False))
+                               preserve_notes=job.get("preserve_notes", False),
+                               findings=found)
             with output.open("xb") as stream:
                 stream.write(cleaned)
             result = {"path": str(output)}
+            if found:
+                result["findings"] = attach_hint_findings(
+                    {"status": "pass", "findings": []}, found)
         else:
             result = compile_job(job, preview=args.command == "check-page")
         print(json.dumps(result, ensure_ascii=False))
