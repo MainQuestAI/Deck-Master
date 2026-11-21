@@ -1359,3 +1359,42 @@ fn image_tasks_inline_shared_rules_without_competing_defaults_or_rewriting_autho
         );
     }
 }
+
+#[test]
+fn draft_gap_marks_stay_on_the_page_and_the_todo_field_stays_off_the_prompt() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    setup(path);
+    edit(
+        path,
+        json!({
+            "pages":[{
+                "id":"p1",
+                "content":{
+                    "title":"先核对口径",
+                    "body_blocks":[{"type":"paragraph","text":"待补：需披露口径与年份"}]
+                },
+                "todo":["只记在待办里的维护安排"],
+                "notes":"讲稿里的缺口说明"
+            }]
+        }),
+    );
+    let image_run = guarded_run(path, "image", &["p1".into()], None).unwrap();
+    let image_work = Path::new(image_run["runs"][0]["pages"][0]["work"].as_str().unwrap());
+    let image = std::fs::read_to_string(image_work.join("task.md")).unwrap();
+    let visible = image.split("## 可见文字").nth(1).unwrap();
+    assert!(visible.contains("待补：需披露口径与年份"));
+    assert!(visible.contains("先核对口径"));
+    assert!(!image.contains("只记在待办里的维护安排"));
+    assert!(!image.contains("讲稿里的缺口说明"));
+
+    let svg_run = guarded_run(path, "svg", &["p1".into()], None).unwrap();
+    let svg_work = Path::new(svg_run["runs"][0]["pages"][0]["work"].as_str().unwrap());
+    let svg = std::fs::read_to_string(svg_work.join("task.md")).unwrap();
+    let content: Value =
+        serde_json::from_str(&std::fs::read_to_string(svg_work.join("content.json")).unwrap())
+            .unwrap();
+    assert_eq!(content["body_blocks"][0]["text"], "待补：需披露口径与年份");
+    assert!(!svg.contains("只记在待办里的维护安排"));
+    assert!(!svg.contains("讲稿里的缺口说明"));
+}
