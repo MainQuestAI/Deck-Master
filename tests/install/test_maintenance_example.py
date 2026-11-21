@@ -51,8 +51,12 @@ def test_manual_cleanup_preserves_current_and_running_installations(tmp_path: Pa
     process = None
     try:
         if case == "busy":
+            # Multi-call coreutils selects its program from argv[0], so a copied
+            # cat named deck exits before this handshake. Hold the script open
+            # and exec cat; lsof +D still sees the installation directory.
             executable = old / "deck"
-            shutil.copy2(shutil.which("cat"), executable)
+            executable.write_text('#!/bin/sh\nexec 3<"$0"\nexec cat\n')
+            executable.chmod(0o755)
             process = subprocess.Popen([str(executable)], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
             process.stdin.write(b"ready\n")
             process.stdin.flush()
