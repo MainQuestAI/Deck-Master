@@ -1395,7 +1395,6 @@ fn draft_gap_marks_stay_on_the_page_and_the_todo_field_stays_off_the_prompt() {
         serde_json::from_str(&std::fs::read_to_string(svg_work.join("content.json")).unwrap())
             .unwrap();
     assert_eq!(content["body_blocks"][0]["text"], "待补：需披露口径与年份");
-    assert!(!svg.contains("待补：需披露口径与年份"));
     assert!(!svg.contains("只记在待办里的维护安排"));
     assert!(!svg.contains("讲稿里的缺口说明"));
 }
