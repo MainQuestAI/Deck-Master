@@ -28,9 +28,30 @@ fn put_frame(path: &Path, base: &str, title: &str) {
         .to_string(),
     )
     .unwrap();
-    output_json(command(
+    let framed = output_json(command(
         path,
         &["put", "--base", base, file.to_str().unwrap()],
+    ));
+    let pages: Vec<Value> = framed["deck"]["pages"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|page| page["kind"].as_str().unwrap_or("").trim().is_empty())
+        .map(|page| json!({"id": page["id"], "kind": "explanation"}))
+        .collect();
+    if pages.is_empty() {
+        return;
+    }
+    let kinds = path.join(format!("kinds-{base}.json"));
+    std::fs::write(&kinds, json!({"pages": pages}).to_string()).unwrap();
+    output_json(command(
+        path,
+        &[
+            "put",
+            "--base",
+            &framed["version"].to_string(),
+            kinds.to_str().unwrap(),
+        ],
     ));
 }
 
@@ -83,9 +104,10 @@ fn cli_partial_edit_conflict_and_markdown_export() {
         &["put", "--base", "1", input.to_str().unwrap()],
     ));
     let mut partial = output_json(command(path, &["get", "--pages", "p1"]));
-    // writing_brief and outline are derived. A get envelope that still contains them is rejected.
+    // writing_brief, outline, and gap_list are derived. A get envelope that still contains them is rejected.
     partial.as_object_mut().unwrap().remove("writing_brief");
     partial.as_object_mut().unwrap().remove("outline");
+    partial.as_object_mut().unwrap().remove("gap_list");
     partial["deck"]["pages"][0]
         .as_object_mut()
         .unwrap()

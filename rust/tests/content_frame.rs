@@ -378,7 +378,9 @@ fn frame_gate_lists_every_missing_field_then_start_passes_without_upgrading_v6()
                 assert!(text.contains("合成作品"), "{text}");
                 assert!(text.contains("保留目标"), "{text}");
                 assert!(text.contains("保留主张"), "{text}");
-                assert!(!text.contains("pages["), "{text}");
+                assert!(text.contains("- pages[p1].kind"), "{text}");
+                assert!(text.contains("\"kind\": \"explanation\""), "{text}");
+                assert!(!text.contains("判断页证据"), "{text}");
                 for field in [
                     "brief.audience",
                     "brief.decision",
@@ -417,10 +419,11 @@ fn frame_gate_lists_every_missing_field_then_start_passes_without_upgrading_v6()
     let started = ops::run_start(path, "image", &["p1".into()], None).unwrap();
     assert_eq!(started["runs"][0]["pages"][0]["status"], "pending");
     assert_eq!(run_count(path), 1);
+    assert_eq!(saved.deck.pages[0].kind, "explanation");
     assert!(
         ops::put(
             path,
-            2,
+            saved.version,
             patch(json!({"pages":[{"id":"p1","notes":"仍可保存"}]}))
         )
         .is_ok()

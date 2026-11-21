@@ -59,6 +59,13 @@ fn allow_runs(path: &Path) {
         deck.framing.storyline = vec!["先说明问题，再给出判断".into()];
         changed = true;
     }
+    // Blank kind is not treated as a judgment page. These fixtures only need the start gate to open.
+    for page in &mut deck.pages {
+        if page.kind.trim().is_empty() {
+            page.kind = "explanation".into();
+            changed = true;
+        }
+    }
     if changed {
         store
             .connection
