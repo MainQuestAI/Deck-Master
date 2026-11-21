@@ -392,7 +392,7 @@ def svg(data, where, depth=0):
     return cleaned
 
 
-def pptx(data, where, *, notes=None, include_notes=True):
+def pptx(data, where, *, notes=None, include_notes=True, findings=None):
     """Build a public copy from trusted, already-compiled Page notes only.
 
     The default remains a pure reading copy. Original notes parts are always
@@ -413,16 +413,20 @@ def pptx(data, where, *, notes=None, include_notes=True):
                         link_safe(url, location + '/link')
             if row['notes'] != text or row['page_id'] != record['page_id']:
                 reject(where, 'actual PPTX notes differ from selected Page text or stable identity')
-    clean = _clean_pptx(data, where)
+    clean, found = _clean_pptx(data, where)
     if notes is not None:
         projected = [{**record, 'notes': record['notes'] if include_notes else ''} for record in notes]
         rebuilt = attach_notes(clean, projected)
-        clean = _clean_pptx(rebuilt, where, keep_notes=True, page_ids=[r['page_id'] for r in notes])
+        # Repair again if the notes rewrite reintroduces a collision. The
+        # finding is for the original input, which the first pass already saw.
+        clean, _again = _clean_pptx(rebuilt, where, keep_notes=True, page_ids=[r['page_id'] for r in notes])
         actual = notes_records(clean)
         if len(actual) != len(notes) or any(
                 row['page_id'] != record['page_id'] or row['notes'] != normalize_notes(record['notes'])
                 for row, record in zip(actual, projected, strict=True)):
             reject(where, 'final public PPTX failed full notes readback')
+    if findings is not None:
+        findings.extend(found)
     return clean
 
 
@@ -445,6 +449,156 @@ def _slide_locations(source, where):
     return locations
 
 
+def _local_name(element):
+    return element.tag.rsplit("}", 1)[-1]
+
+
+def _unsigned_id(value):
+    """Integer value of a cNvPr id. Non-numeric tokens are not DrawingML ids."""
+    if value and re.fullmatch(r"[0-9]+", value):
+        return int(value)
+    return None
+
+
+# Attributes that cite a cNvPr/@id inside one slide part.
+# OOXML (ECMA-376 / ISO/IEC 29500) and this repo were both checked.
+# Updated here:
+#   a:stCxn/@id, a:endCxn/@id — CT_Connection, the other shape's cNvPr id
+#   p:spTgt/@spid, p:inkTgt/@spid — CT_TLShapeTargetElement
+#   p:subSp/@spid — CT_TLSubShapeId, a grouped shape inside that target
+#   p:bldP/@spid, p:bldDgm/@spid, p:bldGraphic/@spid, p:bldOleChart/@spid
+# Left unchanged (not a cNvPr id, or not in this part):
+#   cNvPr/@id itself; a:stCxn/@idx and a:endCxn/@idx (connection-site index)
+#   r:id, r:embed, r:link; a:hlinkClick; a:blip
+#   a:cxn in a:cxnLst (geometry site, no shape id)
+#   a16:creationId; p14:modId
+#   p:sndTgt; p:oleChartEl/@type; p:graphicEl chart/dgm build steps
+#   p:sldId/@id (presentation.xml, not a shape)
+#   v:shape/@id (VML)
+#   cNvPr in notes, layouts, masters, charts, diagrams, and comments
+#     (other parts; comments are dropped before this walk)
+_SHAPE_ID_REFERENCES = {
+    "stCxn": "id",
+    "endCxn": "id",
+    "spTgt": "spid",
+    "inkTgt": "spid",
+    "subSp": "spid",
+    "bldP": "spid",
+    "bldDgm": "spid",
+    "bldGraphic": "spid",
+    "bldOleChart": "spid",
+}
+
+
+def _element_id(element):
+    """Return the cNvPr id attribute key and its written value."""
+    key = _named_attribute(element, "id")
+    if key is None:
+        return None, None
+    return key, element.get(key)
+
+
+def _named_attribute(element, local_name):
+    """Unqualified OOXML attribute, or the same local name in a namespace."""
+    if local_name in element.attrib:
+        return local_name
+    suffix = "}" + local_name
+    for key in element.attrib:
+        if key.endswith(suffix):
+            return key
+    return None
+
+
+def _repair_duplicate_cnvpr_ids(root, part):
+    """Make cNvPr ids unique inside one slide part.
+
+    The first occurrence of an id is kept. A later collision gets a new id
+    above every id already used by a cNvPr or by a shape reference, so the
+    new id cannot capture a connector or animation that still names another
+    shape. References follow an old id only when that written id is no longer
+    on any cNvPr. An exact duplicate stays on the shape that kept the id;
+    retargeting it would point the connector at the other shape, or at the
+    connector itself when its own id was the one that changed.
+    """
+    nodes = [element for element in root.iter() if _local_name(element) == "cNvPr"]
+    occupied = set()
+    for element in nodes:
+        _id_attr, value = _element_id(element)
+        number = _unsigned_id(value)
+        if number is not None:
+            occupied.add(number)
+    for element in root.iter():
+        attr_name = _SHAPE_ID_REFERENCES.get(_local_name(element))
+        if not attr_name:
+            continue
+        key = _named_attribute(element, attr_name)
+        if key is None:
+            continue
+        number = _unsigned_id(element.get(key))
+        if number is not None:
+            occupied.add(number)
+    used_numbers = set(occupied)
+    next_id = max(used_numbers, default=0) + 1
+    seen = set()
+    retained = set()
+    collided = []
+    remap = {}
+    for element in nodes:
+        id_key, old = _element_id(element)
+        number = _unsigned_id(old)
+        identity = ("n", number) if number is not None else ("t", old)
+        if identity not in seen:
+            seen.add(identity)
+            if old is not None:
+                retained.add(old)
+            continue
+        collided.append(old if old is not None else "")
+        while next_id in used_numbers:
+            next_id += 1
+        new = str(next_id)
+        element.set(id_key or "id", new)
+        used_numbers.add(next_id)
+        seen.add(("n", next_id))
+        next_id += 1
+        if old is not None and old not in retained and old not in remap:
+            remap[old] = new
+    if remap:
+        for element in root.iter():
+            attr_name = _SHAPE_ID_REFERENCES.get(_local_name(element))
+            if not attr_name:
+                continue
+            key = _named_attribute(element, attr_name)
+            if key is None:
+                continue
+            updated = remap.get(element.get(key))
+            if updated is not None:
+                element.set(key, updated)
+    if not collided:
+        return []
+    distinct = list(dict.fromkeys(collided))
+    labels = [value if value else "空编号" for value in distinct]
+    return [{
+        "level": "hint",
+        "code": "duplicate_cnvpr_id",
+        "part": part,
+        "ids": distinct,
+        "detail": f"这一页的形状编号 {'、'.join(labels)} 重复，已改成页内唯一编号。",
+    }]
+
+
+def attach_hint_findings(report, hints):
+    """Record repaired duplicate shape ids without changing pass/fail.
+
+    Readback already decided status from its own findings. These hints
+    describe ids that were repaired, so they must not flip that status or
+    join the failing findings list.
+    """
+    if not hints or not isinstance(report, dict):
+        return report
+    report.setdefault("warnings", []).extend(hints)
+    return report
+
+
 def _clean_pptx(data, where, *, keep_notes=False, page_ids=None):
     import posixpath
 
@@ -460,6 +614,7 @@ def _clean_pptx(data, where, *, keep_notes=False, page_ids=None):
         reject(where, "PPTX presentation parts missing")
     if any(n.startswith("ppt/embeddings/") or "vbaProject" in n for n in names):
         reject(where, "embedded files or macros require separate review")
+    hints = []
     removed = {
         n
         for n in names
@@ -498,13 +653,17 @@ def _clean_pptx(data, where, *, keep_notes=False, page_ids=None):
                 covered = set()
                 if re.fullmatch(r"ppt/slides/slide[0-9]+\.xml", name):
                     covered = _reject_urls_split_across_runs(root, locations.get(name, where + "/" + name))
+                    # Before the name rewrite. 形状-N is the id, so a repeated
+                    # id would also repeat the name.
+                    hints.extend(_repair_duplicate_cnvpr_ids(root, name))
                 for parent in root.iter():
                     location = locations.get(name, where + '/' + name)
                     field = location + '/' + root.getroottree().getpath(parent)
                     local = parent.tag.rsplit("}", 1)[-1]
                     if local == "cNvPr":
                         # Non-visible shape labels and accessibility descriptions
-                        # can contain generation prompts. Preserve the drawing ID.
+                        # can contain generation prompts. Slide parts were given
+                        # unique ids above, so their 形状-N fallback no longer collides.
                         readable_name = parent.get("title", "")
                         text_safe(readable_name, f"{location}/形状 {parent.get('id', '')}/cNvPr.title")
                         for key in ("name", "descr", "title"):
@@ -565,10 +724,10 @@ def _clean_pptx(data, where, *, keep_notes=False, page_ids=None):
             part = zipfile.ZipInfo(name, date_time=(1980, 1, 1, 0, 0, 0))
             part.compress_type = zipfile.ZIP_DEFLATED
             target.writestr(part, raw)
-    return output.getvalue()
+    return output.getvalue(), hints
 
 
-def sanitize(data, suffix, where, *, preserve_notes=False):
+def sanitize(data, suffix, where, *, preserve_notes=False, findings=None):
     handlers = {".png": png, ".jpg": jpeg, ".jpeg": jpeg, ".svg": svg, ".pptx": pptx}
     if suffix.lower() not in handlers:
         reject(where, "unsupported public artifact format")
@@ -577,7 +736,7 @@ def sanitize(data, suffix, where, *, preserve_notes=False):
 
         try:
             notes = notes_records(data) if preserve_notes else None
-            return pptx(data, where, notes=notes)
+            return pptx(data, where, notes=notes, findings=findings)
         except OperationError:
             raise
         except (zipfile.BadZipFile, KeyError, ValueError, ET.XMLSyntaxError) as exc:
