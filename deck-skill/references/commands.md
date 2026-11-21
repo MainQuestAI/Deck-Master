@@ -98,7 +98,7 @@ deck --project "$DECK_PROJECT" put --base "$BASE" "$DECK_PROJECT/framing.json"
 deck --project "$DECK_PROJECT" show
 ```
 
-返回里要能看到 `writing_brief`。若把 `get` 或 `show` 重定向到文件，写正文前把该文件读回来；只取出 `version` 不算读过。按讲述人、语气、待决事项和关注点写；这项不能回写。下面用段落、要点和表格各说明一种实际内容关系；不是每页必须出现这三类块。提出主张、请求决定或给出建议的页写 `kind: judgment`，并手写与标题不同的 `argument`。不得把整稿标成 `explanation` 来通过页型门或证据门。硬性缺口的范围见 [page-writing](page-writing.md)。判断页的证据缺口只写入对应的 `evidence.gap`，不另记入 `todo`；其他页的硬性缺口记入该页 `todo`。正文里的「待补：…」与该缺口同一处，只标一次。
+返回里要能看到 `writing_brief`。若把 `get` 或 `show` 重定向到文件，写正文前把该文件读回来；只取出 `version` 不算读过。按讲述人、语气、待决事项和关注点写；这项不能回写。下面用段落、要点和表格各说明一种实际内容关系；不是每页必须出现这三类块。提出主张、请求决定或给出建议的页写 `kind: judgment`，并手写与标题不同的 `argument`。不得把整稿标成 `explanation` 来通过页型门或证据门。硬性缺口的范围见 [page-writing](page-writing.md)。判断页的证据缺口逐条写入对应的 `evidence.gap`，不另记入 `todo`；其他页的硬性缺口逐条记入该页 `todo`。只写在 `rebuttal` 或讲稿里不算登记，也不会进入 `gap_list`。登记文字只写缺什么，不写内部原因。正文里的「待补：…」与该缺口同一处，只标一次。
 
 ```json
 {
@@ -217,7 +217,7 @@ deck review add --method self_check --page p3 '这一页的问题'
 
 当前 Host 自查用 `self_check`，另一执行或模型用 `other_model`，真人用 `human`。`--method` 必填，没有默认值，省略会报错。落实并核对之后才 `deck review resolve <意见ID>`。审查默认只返回报告，不因为开了审查入口就改稿或生图。
 
-交付或 `export md`、`build`、`export pptx` 之前，必须先看最终页，再记一条出稿审稿。看的是刚才 `deck show` 或 `deck get` 里的定稿正文；已经有预览时打开预览。整稿一条，不带 `--page`。说明可以省略。`checks.json` 必须带齐下面六个 `id`。括号里的字是要替换的提示，换成这次阅读的结论，`pages` 写相关页 id。`evidence_supports_claim` 按页核对判断页的论证是不是手写的：理由不同于标题，证据指向材料原句，反驳不是各页同一句。`final_pages_viewed` 写下这次实际看过的页。
+交付或 `export md`、`build`、`export pptx` 之前，必须先看最终页，再记一条出稿审稿。看的是刚才 `deck show` 或 `deck get` 里的定稿正文；已经有预览时打开预览。整稿一条，不带 `--page`。说明可以省略。`checks.json` 必须带齐下面六个 `id`。括号里的字是要替换的提示，换成这次阅读的结论，`pages` 写相关页 id。`evidence_supports_claim` 按页核对判断页的论证是不是手写的：理由不同于标题，证据指向材料原句，反驳不是各页同一句。`no_internal_notes` 把材料里标明不给读者的内部条目逐条拿出来，对照读者可见的标题、正文、图表注、页脚，以及讲稿。要查的是这条在说的事还在不在，不只是原句或「内部」「保密」这类标签还在不在。换一种说法、说得更轻，仍算这条实质还在，不能通过。例如材料写「盘点表的差异件数只留在内部备忘，不要给读者」，正文或讲稿写成「差异件数先不在这页展开」：原句和「内部」「备忘」都不在，仍然不能通过。`final_pages_viewed` 写下这次实际看过的页。
 
 ```json
 [
@@ -225,7 +225,7 @@ deck review add --method self_check --page p3 '这一页的问题'
   {"id": "evidence_supports_claim", "conclusion": "（哪些判断页的理由不同于标题，证据指向哪条材料原句，反驳是否逐页不同）", "pages": []},
   {"id": "anticipated_objections", "conclusion": "（可预见的质疑是否已回答）", "pages": []},
   {"id": "overdefense", "conclusion": "（重复限定是否只留首处，判断页标题是否仍是判断句）", "pages": []},
-  {"id": "no_internal_notes", "conclusion": "（读者可见页面上有没有内部备注）", "pages": []},
+  {"id": "no_internal_notes", "conclusion": "（材料里每一条不给读者的内部条目，其实质有没有出现在读者可见文字或讲稿里；改写或说得更轻仍算出现）", "pages": []},
   {"id": "final_pages_viewed", "conclusion": "（这次实际看过的最终页）", "pages": []}
 ]
 ```
