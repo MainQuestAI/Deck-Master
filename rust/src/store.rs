@@ -322,6 +322,14 @@ fn has_column(connection: &Connection, table: &str, column: &str) -> Result<bool
     Ok(false)
 }
 
+pub(crate) fn user_version(connection: &Connection) -> Result<i64> {
+    Ok(connection.pragma_query_value(None, "user_version", |row| row.get(0))?)
+}
+
+pub(crate) fn reviews_have_record_kind(connection: &Connection) -> Result<bool> {
+    has_column(connection, "reviews", "record_kind")
+}
+
 fn migrate_v7(connection: &Connection) -> Result<()> {
     let version: i64 = connection.pragma_query_value(None, "user_version", |row| row.get(0))?;
     if version >= FORMAT_VERSION {

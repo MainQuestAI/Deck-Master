@@ -965,6 +965,10 @@ fn build_downloads_report_missing_stale_and_changed_inputs_without_gating() {
     assert_eq!(build.json()["stale_images"], json!([]));
     assert_eq!(build.json()["warnings"], json!([]));
     assert!(build.json().get("path").is_none());
+    let unreviewed =
+        json!({"status":"unreviewed","methods":[],"version_id":null,"unreviewed_pages":[]});
+    assert_eq!(build.json()["content_review"], unreviewed);
+    assert_eq!(build.artifact_status()["content_review"], unreviewed);
     let downloaded = service.request("GET", build.json()["url"].as_str().unwrap(), &[], "");
     assert_eq!(downloaded.status, 200);
     assert!(downloaded.body.starts_with(b"PK"));
@@ -987,12 +991,21 @@ fn build_downloads_report_missing_stale_and_changed_inputs_without_gating() {
     assert_eq!(exported.artifact_status()["stale_pages"], json!(["p1"]));
     assert_eq!(exported.artifact_status()["stale_images"], json!([]));
     assert_eq!(exported.artifact_status()["warnings"], json!([]));
+    assert_eq!(
+        exported.artifact_status()["content_review"]["status"],
+        "unreviewed"
+    );
     let markdown = service.request("GET", "/api/export/md", &[], "");
     assert_eq!(markdown.status, 200);
     assert_eq!(
         markdown.artifact_status()["missing_pages"],
         json!(["待补😀"])
     );
+    assert_eq!(
+        markdown.artifact_status()["content_review"]["unreviewed_pages"],
+        json!([])
+    );
+    assert!(markdown.artifact_status().get("warnings").is_none());
 }
 
 #[test]

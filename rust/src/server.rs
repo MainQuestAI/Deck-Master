@@ -143,7 +143,11 @@ fn build_response(project: &Path) -> Result<ResponseBox> {
     let sha = name.split('.').next().unwrap_or("").to_owned();
     value.as_object_mut().map(|o| o.remove("path"));
     value["url"] = json!(format!("/api/files/{sha}"));
-    json_response(200, value)
+    Ok(Response::from_data(serde_json::to_vec(&value)?)
+        .with_status_code(200)
+        .with_header(header("Content-Type", "application/json; charset=utf-8")?)
+        .with_header(status_header(&value)?)
+        .boxed())
 }
 
 fn route(project: &Path, request: &mut Request) -> Result<ResponseBox> {

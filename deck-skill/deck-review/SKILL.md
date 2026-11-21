@@ -43,6 +43,8 @@ description: 用 Rust deck 审查当前作品、外部可读稿或 PPTX。默认
 
 `--method` 必填，没有默认值，省略会报错。意见落实后才 `deck review resolve`；不能采纳的说明原因，不为了清零去改稿。
 
+作者要求记录出稿审稿时，用 `deck review add --record content_review`，并带上 `--method` 和 `--checks`。六项结论按这次阅读来写。不要手填版本号或页修订。这条记录不代替页上意见，也不阻止导出。
+
 案例或作者给出的算式文件，可以用 `python -m deck_tools.case_numbers` 复算。退出码只说明算式，不说明归因、来源或 ROI，也不是审查通过的条件。
 
 ## 交接

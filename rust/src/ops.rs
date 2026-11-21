@@ -214,10 +214,16 @@ fn reviews(
     if status.is_some_and(|s| !["open", "resolved"].contains(&s)) {
         return Err(Error::Input("意见状态只接受 open 或 resolved".into()));
     }
-    let mut query = connection.prepare(
+    // v6 has no record_kind. Content-review rows are not opinions.
+    let comments = if store::reviews_have_record_kind(connection)? {
+        " AND record_kind='comment'"
+    } else {
+        ""
+    };
+    let mut query = connection.prepare(&format!(
         "SELECT id,version_id,page_id,reviewer,method,text,status,created_at,resolved_at
-         FROM reviews WHERE (?1 IS NULL OR status=?1) AND (?2 IS NULL OR page_id=?2) ORDER BY id",
-    )?;
+         FROM reviews WHERE (?1 IS NULL OR status=?1) AND (?2 IS NULL OR page_id=?2){comments} ORDER BY id"
+    ))?;
     Ok(query
         .query_map(params![status, page], review_row)?
         .collect::<std::result::Result<_, _>>()?)
@@ -249,11 +255,7 @@ pub fn review_add(
     if text.trim().is_empty() {
         return Err(Error::Input("意见内容不能为空".into()));
     }
-    if !["self_check", "other_model", "human"].contains(&method) {
-        return Err(Error::Input(
-            "意见方法只接受 self_check、other_model 或 human".into(),
-        ));
-    }
+    review_method(method)?;
     let mut store = Store::open(project)?;
     let tx = store.transaction()?;
     let snapshot = store::current(&tx)?;
@@ -279,12 +281,328 @@ pub fn review_list(project: &Path, status: Option<&str>, page: Option<&str>) -> 
 }
 
 pub fn review_resolve(project: &Path, id: i64) -> Result<Review> {
+    use rusqlite::OptionalExtension;
     let mut store = Store::open(project)?;
     let tx = store.transaction()?;
+    if store::reviews_have_record_kind(&tx)? {
+        let kind: Option<String> = tx
+            .query_row("SELECT record_kind FROM reviews WHERE id=?", [id], |row| {
+                row.get(0)
+            })
+            .optional()?;
+        if kind.as_deref() == Some("content_review") {
+            return Err(Error::Input(
+                "出稿审稿不是意见，不能标记已处理。页或框架变了之后，重新执行 deck review add --record content_review".into(),
+            ));
+        }
+    }
     tx.execute("UPDATE reviews SET status='resolved',resolved_at=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id=? AND status='open'", [id])?;
     let value = review(&tx, id)?;
     tx.commit()?;
     Ok(value)
+}
+
+const CONTENT_CHECK_IDS: &[&str] = &[
+    "storyline_coherence",
+    "evidence_supports_claim",
+    "anticipated_objections",
+    "overdefense",
+    "no_internal_notes",
+    "final_pages_viewed",
+];
+
+fn snapshot_unreadable() -> Error {
+    Error::Input("出稿审稿快照无法读取；请重新执行 deck review add --record content_review".into())
+}
+
+fn json_string(object: &serde_json::Map<String, Value>, key: &str) -> Result<String> {
+    match object.get(key) {
+        None => Ok(String::new()),
+        Some(Value::String(text)) => Ok(text.clone()),
+        Some(_) => Err(snapshot_unreadable()),
+    }
+}
+
+fn json_string_array(object: &serde_json::Map<String, Value>, key: &str) -> Result<Vec<String>> {
+    match object.get(key) {
+        None => Ok(Vec::new()),
+        Some(Value::Array(items)) => items
+            .iter()
+            .map(|item| match item {
+                Value::String(text) => Ok(text.clone()),
+                _ => Err(snapshot_unreadable()),
+            })
+            .collect(),
+        Some(_) => Err(snapshot_unreadable()),
+    }
+}
+
+fn frame_value(deck: &Deck) -> Value {
+    json!({
+        "audience": deck.brief.audience,
+        "decision": deck.brief.decision,
+        "concerns": deck.brief.concerns,
+        "narrator": {"role": deck.brief.narrator.role, "tone": deck.brief.narrator.tone},
+        "storyline": deck.framing.storyline,
+    })
+}
+
+fn stored_frame(value: &Value) -> Result<Value> {
+    let Some(object) = value.as_object() else {
+        return Err(snapshot_unreadable());
+    };
+    let narrator = match object.get("narrator") {
+        None => json!({"role": "", "tone": ""}),
+        Some(Value::Object(narrator)) => json!({
+            "role": json_string(narrator, "role")?,
+            "tone": json_string(narrator, "tone")?,
+        }),
+        Some(_) => return Err(snapshot_unreadable()),
+    };
+    Ok(json!({
+        "audience": json_string(object, "audience")?,
+        "decision": json_string(object, "decision")?,
+        "concerns": json_string_array(object, "concerns")?,
+        "narrator": narrator,
+        "storyline": json_string_array(object, "storyline")?,
+    }))
+}
+
+fn canonical_json(value: &Value) -> Result<Vec<u8>> {
+    fn write(out: &mut Vec<u8>, value: &Value) -> Result<()> {
+        match value {
+            Value::Object(map) => {
+                let mut keys: Vec<&String> = map.keys().collect();
+                keys.sort_unstable();
+                out.push(b'{');
+                for (index, key) in keys.iter().enumerate() {
+                    if index > 0 {
+                        out.push(b',');
+                    }
+                    out.extend(serde_json::to_vec(&Value::String((*key).clone()))?);
+                    out.push(b':');
+                    write(out, &map[key.as_str()])?;
+                }
+                out.push(b'}');
+            }
+            Value::Array(items) => {
+                out.push(b'[');
+                for (index, item) in items.iter().enumerate() {
+                    if index > 0 {
+                        out.push(b',');
+                    }
+                    write(out, item)?;
+                }
+                out.push(b']');
+            }
+            other => out.extend(serde_json::to_vec(other)?),
+        }
+        Ok(())
+    }
+    let mut out = Vec::new();
+    write(&mut out, value)?;
+    Ok(out)
+}
+
+fn sha256_hex(bytes: &[u8]) -> String {
+    use sha2::{Digest, Sha256};
+    format!("{:x}", Sha256::digest(bytes))
+}
+
+fn review_snapshot(version: i64, deck: &Deck) -> Result<String> {
+    let frame = frame_value(deck);
+    let snapshot = json!({
+        "version_id": version,
+        "pages": deck.pages.iter().map(|page| json!({
+            "id": page.id,
+            "revision": page.revision,
+            "preview": page.preview,
+        })).collect::<Vec<_>>(),
+        "framing": frame,
+        "framing_sha256": sha256_hex(&canonical_json(&frame)?),
+    });
+    Ok(serde_json::to_string(&snapshot)?)
+}
+
+fn load_checks(path: &Path) -> Result<Value> {
+    let value: Value = serde_json::from_slice(&std::fs::read(path)?)?;
+    let Some(items) = value.as_array() else {
+        return Err(Error::Input("出稿审稿的 checks 必须是 JSON 数组".into()));
+    };
+    let mut seen = HashSet::new();
+    for item in items {
+        let Some(object) = item.as_object() else {
+            return Err(Error::Input("出稿审稿的 checks 每一项必须是对象".into()));
+        };
+        let Some(id) = object.get("id").and_then(Value::as_str) else {
+            return Err(Error::Input("出稿审稿的 checks 每一项都要有 id".into()));
+        };
+        if !seen.insert(id.to_string()) {
+            return Err(Error::Input(format!("出稿审稿的 checks 里 {id} 重复了")));
+        }
+        match object.get("conclusion").and_then(Value::as_str) {
+            Some(conclusion) if !blank_text(conclusion) => {}
+            _ => {
+                return Err(Error::Input(format!(
+                    "出稿审稿的 checks 里 {id} 缺少结论文本"
+                )));
+            }
+        }
+        match object.get("pages").and_then(Value::as_array) {
+            Some(pages) if pages.iter().all(Value::is_string) => {}
+            _ => {
+                return Err(Error::Input(format!(
+                    "出稿审稿的 checks 里 {id} 的 pages 必须是字符串数组"
+                )));
+            }
+        }
+        if let Some(title) = object.get("title")
+            && !title.is_string()
+        {
+            return Err(Error::Input(format!(
+                "出稿审稿的 checks 里 {id} 的 title 必须是字符串"
+            )));
+        }
+    }
+    let missing: Vec<&str> = CONTENT_CHECK_IDS
+        .iter()
+        .copied()
+        .filter(|id| !seen.contains(*id))
+        .collect();
+    if !missing.is_empty() {
+        return Err(Error::Input(format!(
+            "出稿审稿的 checks 缺少：{}",
+            missing.join("、")
+        )));
+    }
+    Ok(value)
+}
+
+fn review_method(method: &str) -> Result<()> {
+    if ["self_check", "other_model", "human"].contains(&method) {
+        Ok(())
+    } else {
+        Err(Error::Input(
+            "意见方法只接受 self_check、other_model 或 human".into(),
+        ))
+    }
+}
+
+pub fn review_add_content(
+    project: &Path,
+    text: &str,
+    reviewer: &str,
+    method: &str,
+    checks_path: &Path,
+) -> Result<Review> {
+    use rusqlite::params;
+    review_method(method)?;
+    let mut store = Store::open(project)?;
+    let tx = store.transaction()?;
+    let version = store::user_version(&tx)?;
+    if version < store::FORMAT_VERSION {
+        return Err(Error::Input(format!(
+            "当前项目仍是格式 {version}，不能记录出稿审稿。请先用 deck put 补全字段，项目升级后再执行 review add --record content_review"
+        )));
+    }
+    let checks = load_checks(checks_path)?;
+    let snapshot = store::current(&tx)?;
+    let snapshot_json = review_snapshot(snapshot.version, &snapshot.deck)?;
+    tx.execute(
+        "INSERT INTO reviews(version_id,page_id,reviewer,method,text,record_kind,snapshot_json,checks_json) VALUES (?,NULL,?,?,?,'content_review',?,?)",
+        params![
+            snapshot.version,
+            reviewer,
+            method,
+            text,
+            snapshot_json,
+            serde_json::to_string(&checks)?,
+        ],
+    )?;
+    let value = review(&tx, tx.last_insert_rowid())?;
+    tx.commit()?;
+    Ok(value)
+}
+
+fn unreviewed_status() -> Value {
+    json!({
+        "status": "unreviewed",
+        "methods": [],
+        "version_id": Value::Null,
+        "unreviewed_pages": [],
+    })
+}
+
+fn snapshot_pages(snapshot: &Value) -> Result<HashMap<String, u32>> {
+    let Some(pages) = snapshot.get("pages").and_then(Value::as_array) else {
+        return Err(snapshot_unreadable());
+    };
+    let mut revisions = HashMap::new();
+    for page in pages {
+        let Some(id) = page.get("id").and_then(Value::as_str) else {
+            return Err(snapshot_unreadable());
+        };
+        let Some(revision) = page.get("revision").and_then(Value::as_u64) else {
+            return Err(snapshot_unreadable());
+        };
+        let Ok(revision) = u32::try_from(revision) else {
+            return Err(snapshot_unreadable());
+        };
+        if revisions.insert(id.to_string(), revision).is_some() {
+            return Err(snapshot_unreadable());
+        }
+    }
+    Ok(revisions)
+}
+
+fn content_review_status(connection: &rusqlite::Connection, deck: &Deck) -> Result<Value> {
+    use rusqlite::OptionalExtension;
+    if !store::reviews_have_record_kind(connection)? {
+        return Ok(unreviewed_status());
+    }
+    let row: Option<(String, Option<String>)> = connection
+        .query_row(
+            "SELECT method, snapshot_json FROM reviews WHERE record_kind='content_review' ORDER BY id DESC LIMIT 1",
+            [],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )
+        .optional()?;
+    let Some((method, snapshot_json)) = row else {
+        return Ok(unreviewed_status());
+    };
+    let Some(snapshot_json) = snapshot_json else {
+        return Err(snapshot_unreadable());
+    };
+    let snapshot: Value =
+        serde_json::from_str(&snapshot_json).map_err(|_| snapshot_unreadable())?;
+    let Some(version_id) = snapshot.get("version_id").and_then(Value::as_i64) else {
+        return Err(snapshot_unreadable());
+    };
+    let recorded = snapshot_pages(&snapshot)?;
+    // Deck order is the stable order. A page created again with the same id
+    // starts at revision 1, so a snapshot that also stored 1 cannot see it.
+    let mut unreviewed_pages = Vec::new();
+    for page in &deck.pages {
+        if recorded.get(&page.id) != Some(&page.revision) {
+            unreviewed_pages.push(page.id.clone());
+        }
+    }
+    let frame_differs = match snapshot.get("framing") {
+        None => false,
+        Some(value) if !value.is_object() => false,
+        Some(value) => stored_frame(value)? != frame_value(deck),
+    };
+    let status = if unreviewed_pages.is_empty() && !frame_differs {
+        "reviewed"
+    } else {
+        "stale"
+    };
+    Ok(json!({
+        "status": status,
+        "methods": [method],
+        "version_id": version_id,
+        "unreviewed_pages": unreviewed_pages,
+    }))
 }
 
 fn merge<T: PartialEq + Clone + Serialize>(
@@ -618,8 +936,11 @@ pub fn export_md(project: &Path) -> Result<String> {
 }
 
 pub fn export_markdown(project: &Path) -> Result<(String, Value)> {
-    let deck = Store::open(project)?.current()?.deck;
-    Ok((crate::export::markdown(&deck), artifact_status(&deck)?))
+    let store = Store::open(project)?;
+    let deck = store.current()?.deck;
+    let mut status = artifact_status(&deck)?;
+    status["content_review"] = content_review_status(&store.connection, &deck)?;
+    Ok((crate::export::markdown(&deck), status))
 }
 
 pub fn asset_add(
@@ -2110,6 +2431,7 @@ pub fn build(project: &Path) -> Result<Value> {
             .join(",");
         return Err(Error::Input(format!("没有已采用的页面；缺页：{missing}")));
     }
+    let content_review = content_review_status(&store.connection, &snapshot.deck)?;
     let output = if native {
         crate::tools::invoke("assemble", &json!({"work":temporary.path(),"pages":pages}))?
     } else {
@@ -2126,7 +2448,7 @@ pub fn build(project: &Path) -> Result<Value> {
     let id = tx.last_insert_rowid();
     tx.commit()?;
     Ok(
-        json!({"id":id,"path":store.file(&file)?,"findings":output["findings"],"missing_pages":status["missing_pages"],"stale_pages":status["stale_pages"],"stale_images":status["stale_images"],"warnings":with_shared_layout(stale_image_warnings(&status["stale_images"]), &plan_refs(&native_plans))}),
+        json!({"id":id,"path":store.file(&file)?,"findings":output["findings"],"missing_pages":status["missing_pages"],"stale_pages":status["stale_pages"],"stale_images":status["stale_images"],"warnings":with_shared_layout(stale_image_warnings(&status["stale_images"]), &plan_refs(&native_plans)),"content_review":content_review}),
     )
 }
 
@@ -2228,6 +2550,7 @@ pub fn export_pptx(project: &Path) -> Result<Value> {
         &plan_refs(&plans),
     );
     selected["incomplete_basis_pages"] = status["incomplete_basis_pages"].clone();
+    selected["content_review"] = content_review_status(&tx, &deck)?;
     Ok(selected)
 }
 
