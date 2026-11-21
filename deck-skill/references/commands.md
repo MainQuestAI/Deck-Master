@@ -53,7 +53,7 @@ deck --project "$DECK_PROJECT" get > "$DECK_PROJECT/current.json"
     "goal": "判断是否先验证资料适用性检索及后续摘要的价值",
     "constraints": [
       "本期只读，正式处理由人工执行",
-      "不得把假设写成原因，也不得把预计写成承诺"
+      "不得使用内部缩写"
     ],
     "page_limit": null,
     "decision": "是否先验证资料适用性检索，再决定要不要做摘要",
