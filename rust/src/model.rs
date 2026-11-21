@@ -475,14 +475,23 @@ pub fn validate_kind(page_id: &str, kind: &str) -> crate::error::Result<()> {
     )))
 }
 
+fn filled(value: &Option<String>) -> bool {
+    value.as_ref().is_some_and(|text| !text.trim().is_empty())
+}
+
 pub fn validate_argument(page_id: &str, argument: &Argument) -> crate::error::Result<()> {
     for (index, item) in argument.evidence.iter().enumerate() {
-        let has_ref = item.r#ref.is_some();
-        let has_gap = item.gap.is_some();
-        if item.text.trim().is_empty() || has_ref == has_gap {
+        let number = index + 1;
+        // A present key is the JSON key, even when its string is blank.
+        // A usable ref or gap must be a non-empty string, and exactly one of them.
+        if item.r#ref.is_some() && item.gap.is_some() {
             return Err(crate::error::Error::Input(format!(
-                "页面 {page_id} 的 evidence 第 {} 项必须有非空 text，并且只能填写 ref 或 gap 其中一项",
-                index + 1
+                "页面 {page_id} 的 evidence 第 {number} 项同时有 ref 和 gap；二者互斥"
+            )));
+        }
+        if filled(&item.r#ref) == filled(&item.gap) {
+            return Err(crate::error::Error::Input(format!(
+                "页面 {page_id} 的 evidence 第 {number} 项必须恰好有一个非空的 ref 或 gap"
             )));
         }
     }
@@ -523,14 +532,23 @@ pub fn missing_frame_fields(deck: &Deck) -> Vec<&'static str> {
 }
 
 pub fn writing_brief(deck: &Deck) -> String {
+    // Design §3.4. A blank narrator clause, decision, or concern is omitted.
     let mut lines = Vec::new();
-    let audience = deck.brief.audience.trim();
-    if !audience.is_empty() {
-        lines.push(format!("受众：{audience}"));
+    let role = deck.brief.narrator.role.trim();
+    let tone = deck.brief.narrator.tone.trim();
+    let mut narrator = String::new();
+    if !role.is_empty() {
+        narrator.push_str(&format!("讲述人：{role}。"));
+    }
+    if !tone.is_empty() {
+        narrator.push_str(&format!("语气：{tone}。"));
+    }
+    if !narrator.is_empty() {
+        lines.push(narrator);
     }
     let decision = deck.brief.decision.trim();
     if !decision.is_empty() {
-        lines.push(format!("要做的决定：{decision}"));
+        lines.push(format!("待决事项：{decision}。"));
     }
     let concerns: Vec<&str> = deck
         .brief
@@ -540,27 +558,9 @@ pub fn writing_brief(deck: &Deck) -> String {
         .filter(|item| !item.is_empty())
         .collect();
     if !concerns.is_empty() {
-        lines.push(format!("听众关心：{}", concerns.join("、")));
-    }
-    let role = deck.brief.narrator.role.trim();
-    if !role.is_empty() {
-        lines.push(format!("讲述人：{role}"));
-    }
-    let tone = deck.brief.narrator.tone.trim();
-    if !tone.is_empty() {
-        lines.push(format!("语气：{tone}"));
-    }
-    let beats: Vec<&str> = deck
-        .framing
-        .storyline
-        .iter()
-        .map(|item| item.trim())
-        .filter(|item| !item.is_empty())
-        .collect();
-    if !beats.is_empty() {
-        lines.push("故事线：".into());
-        for (index, beat) in beats.iter().enumerate() {
-            lines.push(format!("{}. {beat}", index + 1));
+        lines.push("读者关注点：".into());
+        for concern in concerns {
+            lines.push(format!("- {concern}"));
         }
     }
     lines.join("\n")

@@ -797,32 +797,51 @@ fn run_page(
         .ok_or_else(|| Error::Input(format!("此 run 不包含页面 {page}；请用 deck run show 查看")))
 }
 
-fn frame_gate_message(deck: &Deck, kind: &str, version: i64, missing: &[&str]) -> Result<String> {
-    let mut brief = deck.brief.clone();
-    let mut framing = deck.framing.clone();
-    if brief.audience.trim().is_empty() {
-        brief.audience = "业务负责人".into();
+fn frame_example(missing: &[&str]) -> String {
+    let mut fields = Vec::new();
+    if missing.contains(&"brief.audience") {
+        fields.push("    \"audience\": \"管理层\"".to_string());
     }
-    if brief.decision.trim().is_empty() {
-        brief.decision = "是否采用该方案".into();
+    if missing.contains(&"brief.decision") {
+        fields.push("    \"decision\": \"本周需拍板的事项\"".to_string());
     }
-    if brief.concerns.iter().all(|item| item.trim().is_empty()) {
-        brief.concerns = vec!["成本是否可控".into()];
+    if missing.contains(&"brief.concerns") {
+        fields.push("    \"concerns\": [\"关注点一\", \"关注点二\"]".to_string());
     }
-    if brief.narrator.role.trim().is_empty() {
-        brief.narrator.role = "项目负责人".into();
+    let mut narrator = Vec::new();
+    if missing.contains(&"brief.narrator.role") {
+        narrator.push("\"role\": \"资深顾问\"".to_string());
     }
-    if brief.narrator.tone.trim().is_empty() {
-        brief.narrator.tone = "直接说明判断".into();
+    if missing.contains(&"brief.narrator.tone") {
+        narrator.push("\"tone\": \"结论先行，语气肯定\"".to_string());
     }
-    if framing.storyline.iter().all(|item| item.trim().is_empty()) {
-        framing.storyline = vec!["先说明问题，再给出判断".into()];
+    if !narrator.is_empty() {
+        fields.push(format!("    \"narrator\": {{ {} }}", narrator.join(", ")));
     }
-    let example = serde_json::to_string_pretty(&json!({"brief": brief, "framing": framing}))?;
-    Ok(format!(
-        "还不能开始 {kind}：决策框架或故事线还缺内容。\n缺少：{}\n请把下面的 JSON 存成文件，按这次任务改完后执行 deck put --base {version} <文件>\n{example}",
-        missing.join("、")
-    ))
+    let mut blocks = Vec::new();
+    if !fields.is_empty() {
+        blocks.push(format!("  \"brief\": {{\n{}\n  }}", fields.join(",\n")));
+    }
+    if missing.contains(&"framing.storyline") {
+        blocks.push(
+            "  \"framing\": {\n    \"storyline\": [\"第一句主线\", \"第二句主线\"]\n  }"
+                .to_string(),
+        );
+    }
+    format!("{{\n{}\n}}", blocks.join(",\n"))
+}
+
+fn frame_gate_message(version: i64, missing: &[&str]) -> String {
+    // Design §5.3. Error::Input adds the "输入有误：" prefix. Empty kind is PR-C.
+    let listed = missing
+        .iter()
+        .map(|field| format!("- {field}"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    format!(
+        "无法开始生成。当前作品缺少以下字段：\n{listed}\n请先用 deck put 补全后再执行 run start。示例（--base 换成 deck show 中的当前版本号）：\n\n  deck put --base {version} payload.json\n\npayload.json 最小片段：\n{}",
+        frame_example(missing)
+    )
 }
 
 pub fn run_start(
@@ -879,9 +898,7 @@ pub fn run_start(
     }
     let missing = crate::model::missing_frame_fields(&deck);
     if !missing.is_empty() {
-        return Err(Error::Input(frame_gate_message(
-            &deck, kind, version, &missing,
-        )?));
+        return Err(Error::Input(frame_gate_message(version, &missing)));
     }
     tx.execute(
         "INSERT INTO runs(kind,status,max_calls) VALUES (?,'open',?)",

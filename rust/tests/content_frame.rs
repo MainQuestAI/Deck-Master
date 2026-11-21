@@ -367,7 +367,19 @@ fn frame_gate_lists_every_missing_field_then_start_passes_without_upgrading_v6()
     for kind in ["image", "svg", "native"] {
         match ops::run_start(path, kind, &["p1".into()], None) {
             Err(Error::Input(text)) => {
-                assert!(text.contains("deck put"), "{text}");
+                let shown = format!("输入有误：{text}");
+                assert!(shown.starts_with("输入有误：无法开始生成。当前作品缺少以下字段："));
+                assert!(text.contains("deck put --base 2 payload.json"), "{text}");
+                assert!(text.contains("\"audience\": \"管理层\""), "{text}");
+                assert!(
+                    text.contains("\"decision\": \"本周需拍板的事项\""),
+                    "{text}"
+                );
+                assert!(text.contains("\"关注点一\""), "{text}");
+                assert!(text.contains("\"role\": \"资深顾问\""), "{text}");
+                assert!(text.contains("\"tone\": \"结论先行，语气肯定\""), "{text}");
+                assert!(text.contains("\"第一句主线\""), "{text}");
+                assert!(!text.contains("pages["), "{text}");
                 for field in [
                     "brief.audience",
                     "brief.decision",
@@ -376,7 +388,10 @@ fn frame_gate_lists_every_missing_field_then_start_passes_without_upgrading_v6()
                     "brief.narrator.tone",
                     "framing.storyline",
                 ] {
-                    assert!(text.contains(field), "{kind} missing {field}: {text}");
+                    assert!(
+                        text.contains(&format!("- {field}")),
+                        "{kind} missing {field}: {text}"
+                    );
                 }
             }
             Ok(_) => panic!("{kind} should be rejected"),
@@ -451,10 +466,19 @@ fn writing_brief_skips_blank_lines_and_outline_follows_page_order() {
         ],
         ..Deck::default()
     };
+    let brief = model::writing_brief(&deck);
     assert_eq!(
-        model::writing_brief(&deck),
-        "受众：业务负责人\n要做的决定：是否采用\n听众关心：成本\n讲述人：负责人\n故事线：\n1. 先说明问题\n2. 再给判断"
+        brief,
+        "讲述人：负责人。\n待决事项：是否采用。\n读者关注点：\n- 成本"
     );
+    assert!(!brief.contains("受众"));
+    assert!(!brief.contains("故事线"));
+    assert!(!brief.contains("先说明问题"));
+    let mut both = deck.clone();
+    both.brief.narrator.tone = "肯定".into();
+    assert!(model::writing_brief(&both).starts_with("讲述人：负责人。语气：肯定。"));
+    both.brief.narrator.role.clear();
+    assert!(model::writing_brief(&both).starts_with("语气：肯定。"));
     assert_eq!(
         model::outline(&deck.pages),
         json!([

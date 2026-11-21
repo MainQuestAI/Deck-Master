@@ -134,7 +134,7 @@ deck-skill/           新 Skill（第 6 节）
 - 新作品的画布默认是 1280×720 px，即 13.333×7.5 in 乘以 96。这样 SVG 的 px 换算成 PPT 的 pt 只需乘 0.75。旧项目导入时保留原画布。
 - `todo` 记录本页待补项，`refs` 记录可选的材料出处，例如"m1 第 3 页"。两者只用于展示，不阻止任何动作。
 - 作者字段（purpose、layout、content、notes、todo、refs、kind、argument）只由保存写入；产物字段（image、svg、native、preview）只由 run 写入，两者互不冲突。`kind` 只接受 `judgment`、`explanation`、`reference`、`teaching` 或空字符串；其他非空值在 `deck put` 和 `run start` 报输入错误，不猜测同义词，也不自动分类。`argument` 是对象或 null，对象含 reasons、evidence、reasoning、rebuttal；evidence 每项有非空 text，并且 ref 与 gap 恰好出现一个。`revision` 由程序维护，逻辑初值是 1；只在作者字段变化时加 1，原图、SVG、native 和预览变化不加。PagePatch 用 `deny_unknown_fields` 拒绝提交 `revision`。缺这些字段的旧 JSON 按空值读取，缺 revision 时按 1 读取。
-- `deck get`、`deck show` 和 `GET /api/deck` 另给两个只读结果，不写入 deck_json，`deck put` 也不接受：`writing_brief` 按固定行输出受众、要做的决定、听众关心、讲述人、语气和故事线，空行跳过；`outline` 按页序给出 page_id、kind、title，未设 kind 时为空字符串。不输出 gap_list。
+- `deck get`、`deck show` 和 `GET /api/deck` 另给两个只读结果，不写入 deck_json，`deck put` 也不接受。`writing_brief` 只拼已填写的讲述人、语气、待决事项和读者关注点，空项跳过该行：`讲述人：{role}。语气：{tone}。`、`待决事项：{decision}。`、`读者关注点：` 下每条 `- {concern}`。`outline` 按页序为 `{page_id, kind, title}`，未设 kind 时为 `""`。不输出 gap_list。
 - image 与 svg 记为 `{file, basis}`，basis 是生成时的依据摘要（3.5）。过期标记在读取时比较 basis 与当前依据得出，不落库。
 - image 过期只是提示：小幅改字只需重建 SVG；内容或布局大改时，由作者决定是否重新生图。
 
@@ -179,7 +179,7 @@ deck-skill/           新 Skill（第 6 节）
 
 run 用于需要 Host 执行、作者可以中途停止的工作：生图（image）、按原图重建 SVG（svg）和 native。每一类同时最多有一个 open 的 run；已有同类 open run 时，start 报错并给出那个 run。
 
-`run start image|svg|native` 在插入 runs 之前检查决策框架和故事线。brief.audience、brief.decision、brief.concerns（至少一条非空白）、brief.narrator.role、brief.narrator.tone、framing.storyline（至少一条非空白）有任一项空白时，返回输入错误（退出码 2），列出全部缺失字段，并给出可复制的 `deck put` 示例。不写 runs。通过时只写 runs 和 run_pages，不升级项目格式。`deck put`、`deck build`、`deck export` 不做这道检查。空 kind、判断页空 evidence、ref/gap 门禁和 gap_list 不在这一步。
+`run start image|svg|native` 在插入 runs 之前检查决策框架和故事线。brief.audience、brief.decision、brief.concerns（至少一条非空白）、brief.narrator.role、brief.narrator.tone、framing.storyline（至少一条非空白）有任一项空白时，以「输入有误：无法开始生成。当前作品缺少以下字段：」逐行列出，并给出 `deck put --base <当前版本> payload.json` 和最小 JSON。退出码 2，不写 runs。通过时只写 runs 和 run_pages，不升级项目格式。`deck put`、`deck build`、`deck export` 不做这道检查。空 kind、判断页空 evidence、ref/gap 门禁和 gap_list 不在这一步。
 
 1. `deck run start image --pages p3,p4 [--max-calls N]`：记录每页当时的依据，写好 `work/<run_id>/` 下的提示词与附件。`max-calls` 默认为页数 × 2，作者可以改。
 2. `deck run call <run> <page>`：run 已取消或已达上限时拒绝；否则计数加一，该页标为 started。Host 在每次调用 ImageGen 之前执行这一步。该页已有结果未知的调用时，要加 `--retry` 才会登记，避免盲目重发。
