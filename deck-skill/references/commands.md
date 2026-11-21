@@ -165,6 +165,14 @@ deck review add --method self_check --page p3 '这一页的问题'
 
 当前 Host 自查用 `self_check`，另一执行或模型用 `other_model`，真人用 `human`。`--method` 必填，没有默认值，省略会报错。落实并核对之后才 `deck review resolve <意见ID>`。审查默认只返回报告，不因为开了审查入口就改稿或生图。
 
+作者要求记下出稿审稿时，另用整稿一条，不带 `--page`：
+
+```bash
+deck review add --record content_review --method self_check --checks checks.json '简短说明'
+```
+
+说明可以省略。`checks.json` 写出六项结论和对应页码：主线是否连贯、证据能否推出结论、可预见的质疑是否已回答、去防御、读者可见页面上没有内部备注、最终页确实被看过。程序自己记下当时的版本、每页修订和框架，不用手填，也不根据这六项判通过。`deck build` 和 `deck export pptx` 的 JSON，以及下载用的 `X-Deck-Status`，会多一个 `content_review`。没有这条记录是 `unreviewed`；页修订和框架都没变是 `reviewed`；之后有页修订，或读者、待决事项、关注点、讲述人或主线变了，是 `stale`。只改了主线时，未审页列表可以是空的。它只是提示，不阻止构建或导出。项目还不是格式 7 时，这条命令会拒绝并要求先 `deck put`。
+
 ## 可选：核对案例算式
 
 用装有 deck-tools 的解释器：
