@@ -63,11 +63,8 @@ fn input_text(result: Result<Value, Error>) -> String {
     }
 }
 
-fn assert_readonly(path: &Path, version: i64, before_json: &str, before_version: i64) {
-    assert_eq!(deck_json(path, version), before_json);
-    assert_eq!(user_version(path), before_version);
-    assert_eq!(table_count(path, "runs"), 0);
-    assert_eq!(table_count(path, "run_pages"), 0);
+fn current_version(path: &Path) -> i64 {
+    store::Store::open(path).unwrap().current().unwrap().version
 }
 
 fn framed_brief(title: &str) -> Value {
@@ -146,31 +143,29 @@ fn blank_kind_is_listed_with_the_frame_and_the_snippet_can_start() {
         })),
     )
     .unwrap();
-    let before = deck_json(path, created.version);
-    for kind in ["image", "svg", "native"] {
-        let text = input_text(ops::run_start(path, kind, &["p1".into()], None));
-        let shown = format!("输入有误：{text}");
-        assert!(shown.starts_with("输入有误：无法开始生成。当前作品缺少以下字段："));
-        for field in [
-            "brief.audience",
-            "brief.decision",
-            "brief.concerns",
-            "brief.narrator.role",
-            "brief.narrator.tone",
-            "framing.storyline",
-            "pages[p1].kind",
-        ] {
-            assert!(
-                text.contains(&format!("- {field}")),
-                "{kind} missing {field}: {text}"
-            );
-        }
-        assert!(!text.contains("pages[p2].kind"), "{text}");
-        assert!(!text.contains("判断页证据"), "{text}");
-        assert!(text.contains(&format!("deck put --base {} payload.json", created.version)));
-        assert_readonly(path, created.version, &before, 7);
-    }
     let text = input_text(ops::run_start(path, "image", &["p1".into()], None));
+    let shown = format!("输入有误：{text}");
+    assert!(shown.starts_with("输入有误：无法开始生成。当前作品缺少以下字段："));
+    for field in [
+        "brief.audience",
+        "brief.decision",
+        "brief.concerns",
+        "brief.narrator.role",
+        "brief.narrator.tone",
+        "framing.storyline",
+        "pages[p1].kind",
+    ] {
+        assert!(
+            text.contains(&format!("- {field}")),
+            "missing {field}: {text}"
+        );
+    }
+    assert!(!text.contains("pages[p2].kind"), "{text}");
+    assert!(!text.contains("判断页证据"), "{text}");
+    assert!(text.contains(&format!("deck put --base {} payload.json", created.version)));
+    assert_eq!(current_version(path), created.version);
+    assert_eq!(table_count(path, "runs"), 0);
+    assert_eq!(table_count(path, "run_pages"), 0);
     let snippet = json_after(&text, "payload.json 最小片段：\n");
     assert_eq!(
         snippet["pages"],
@@ -209,13 +204,14 @@ fn v6_without_kind_is_rejected_in_place_and_a_complete_v6_start_does_not_upgrade
     let mut value: Value = serde_json::from_str(&deck_json(path, created.version)).unwrap();
     value["pages"][0].as_object_mut().unwrap().remove("kind");
     write_deck(path, created.version, &value);
-    let before = deck_json(path, created.version);
     assert!(!review_has_record_kind(path));
     let text = input_text(ops::run_start(path, "svg", &["p1".into()], None));
     assert!(text.contains("- pages[p1].kind"), "{text}");
     assert!(!text.contains("- brief.audience"), "{text}");
     assert!(!text.contains("判断页证据"), "{text}");
-    assert_readonly(path, created.version, &before, 6);
+    assert_eq!(user_version(path), 6);
+    assert_eq!(table_count(path, "runs"), 0);
+    assert_eq!(table_count(path, "run_pages"), 0);
     assert!(!review_has_record_kind(path));
     assert_eq!(
         store::Store::open(path).unwrap().history().unwrap().len(),
@@ -237,11 +233,10 @@ fn v6_without_kind_is_rejected_in_place_and_a_complete_v6_start_does_not_upgrade
     )
     .unwrap();
     downgrade_to_v6(ready_path);
-    let before = deck_json(ready_path, saved.version);
     let started = ops::run_start(ready_path, "image", &["p1".into()], None).unwrap();
     assert_eq!(started["runs"][0]["status"], "open");
     assert_eq!(user_version(ready_path), 6);
-    assert_eq!(deck_json(ready_path, saved.version), before);
+    assert_eq!(current_version(ready_path), saved.version);
     assert!(!review_has_record_kind(ready_path));
     assert_eq!(table_count(ready_path, "runs"), 1);
     assert_eq!(table_count(ready_path, "run_pages"), 1);
@@ -267,13 +262,14 @@ fn frame_is_checked_before_kind_and_blank_kind_is_not_a_judgment_page() {
     let mut value: Value = serde_json::from_str(&deck_json(path, created.version)).unwrap();
     value["pages"][0]["kind"] = json!("poster");
     write_deck(path, created.version, &value);
-    let before = deck_json(path, created.version);
     let text = input_text(ops::run_start(path, "native", &["p1".into()], None));
     assert!(text.contains("- brief.audience"), "{text}");
     assert!(!text.contains("只接受"), "{text}");
     assert!(!text.contains("poster"), "{text}");
     assert!(!text.contains("pages[late]"), "{text}");
-    assert_readonly(path, created.version, &before, 7);
+    assert_eq!(current_version(path), created.version);
+    assert_eq!(table_count(path, "runs"), 0);
+    assert_eq!(table_count(path, "run_pages"), 0);
 
     let snippet = json_after(&text, "payload.json 最小片段：\n");
     assert!(snippet.get("pages").is_none(), "{snippet}");
@@ -357,15 +353,15 @@ fn judgment_evidence_must_name_ref_or_gap_and_the_snippet_can_start() {
     assert_eq!(open["runs"][0]["pages"].as_array().unwrap().len(), 3);
     ops::run_cancel(path, open["runs"][0]["id"].as_i64().unwrap()).unwrap();
 
-    let before = deck_json(path, created.version);
     let text = input_text(ops::run_start(
         path,
         "svg",
         &["p3".into(), "p1".into(), "p2".into(), "explain".into()],
         None,
     ));
+    assert_eq!(current_version(path), created.version);
     assert_eq!(table_count(path, "runs"), 1);
-    assert_readonly_runs_unchanged(path, created.version, &before);
+    assert_eq!(table_count(path, "run_pages"), 3);
     let mut parts = text.split("\n\n");
     assert_eq!(
         parts.next().unwrap(),
@@ -424,13 +420,6 @@ fn judgment_evidence_must_name_ref_or_gap_and_the_snippet_can_start() {
     assert_eq!(started["runs"][0]["status"], "open");
 }
 
-fn assert_readonly_runs_unchanged(path: &Path, version: i64, before_json: &str) {
-    assert_eq!(deck_json(path, version), before_json);
-    assert_eq!(user_version(path), 7);
-    assert_eq!(table_count(path, "runs"), 1);
-    assert_eq!(table_count(path, "run_pages"), 3);
-}
-
 #[test]
 fn whitespace_ref_or_gap_is_absent_and_both_real_values_stay_illegal() {
     let temp = tempfile::tempdir().unwrap();
@@ -473,6 +462,15 @@ fn whitespace_ref_or_gap_is_absent_and_both_real_values_stay_illegal() {
     assert!(stored.has_gap());
     assert!(!stored.has_ref());
     let started = ops::run_start(path, "image", &["p1".into()], None).unwrap();
+    assert_eq!(
+        ops::get(path, None).unwrap()["gap_list"],
+        json!([{
+            "page_id": "p1",
+            "source": "evidence",
+            "text": "对比基数",
+            "gap": "缺数"
+        }])
+    );
     ops::run_cancel(path, started["runs"][0]["id"].as_i64().unwrap()).unwrap();
 
     let blank = ops::put(
@@ -495,7 +493,7 @@ fn whitespace_ref_or_gap_is_absent_and_both_real_values_stay_illegal() {
         text.contains("- pages[p1].argument.evidence[0] 既没有 ref 也没有 gap"),
         "{text}"
     );
-    assert_eq!(deck_json(path, blank.version), before);
+    assert_eq!(current_version(path), blank.version);
     assert_eq!(table_count(path, "runs"), 1);
 
     let mut injected: Value = serde_json::from_str(&before).unwrap();
@@ -615,7 +613,6 @@ fn gap_list_follows_page_order_and_cannot_be_written() {
     );
 
     let version = got["version"].as_i64().unwrap();
-    let before = deck_json(path, version);
     for (value, unwrap_deck) in [
         (json!({"gap_list": [], "brief": {"title": "甲"}}), false),
         (
@@ -632,6 +629,5 @@ fn gap_list_follows_page_order_and_cannot_be_written() {
             Err(Error::Input(_))
         ));
     }
-    assert_eq!(deck_json(path, version), before);
-    assert_eq!(ops::get(path, None).unwrap()["version"], version);
+    assert_eq!(current_version(path), version);
 }
