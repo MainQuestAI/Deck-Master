@@ -1,13 +1,15 @@
+> 历史背景副本，已移除私有来源信息。本文中的待批准、额度、运行顺序和旧状态规则均不作为当前执行指令；当前范围、行为与验收统一见[现行开发稿](../rust-rebuild/README.md#当前内容质量增量2026-11-23)。原 SHA 仅为历史引用，不是净化副本的内容校验值。
+
 Decision needed: 请 Los 一次拍板：① 批准偏离 D1–D5（含本补充 §3 对 D2/D3/D4 的措辞补全）；② Q1 选 A（“待补”在草稿页面醒目标出）或 B（只进讲稿备注 + 缺口清单），未答前 PR-D 阻塞；③ Host 实跑额度改为 SWE 自测 ≤6 + 核验与修复 ≤15，共 21 次（不批则维持 6 + 14，首跑回归降为静态 `pytest tests/install`）；④ 同意 AC-08 / PR-A 现在先行开工。可选确认：修复由 SWE 做、Codex 只核验（不回复即按默认）。
 
 # 内容质量切片 r2 · 修订补充（2026-11-20）
 
-- **本文件修订** `/workspace/_specs/deck-master-prd-cut-20261120-content-quality-r2.md`（SHA-256 `9e2de74c27611c48c37b157bb2deabc2c154bea95af063c6f0efd149e1b033fa`，273 行）。r2 原文不改。
+- **本文件修订** `deck-master-prd-cut-20261120-content-quality-r2.md`（SHA-256 `9e2de74c27611c48c37b157bb2deabc2c154bea95af063c6f0efd149e1b033fa`，273 行）。r2 原文不改。
 - 下文 “rL××” 指 r2 的行号。凡本补充与 r2 冲突，以本补充为准；未提到的条款仍按 r2 执行。
-- 本补充同时修订 `/workspace/_specs/content-quality-fixtures-20261120-r2/scoring-caliber-supplement-r2.md`（`47d781639bd26be54909aa3752d6ce2d3c3d88ce1df91f250ff9e6e932200a90`）的第 7 节。该文件原文也不改，下文用 “补充 §7.x” 指代其中条目。
+- 本补充同时修订 `scoring-caliber-supplement-r2.md`（`47d781639bd26be54909aa3752d6ce2d3c3d88ce1df91f250ff9e6e932200a90`）的第 7 节。该文件原文也不改，下文用 “补充 §7.x” 指代其中条目。
 - 依据的评审：
-  - CodeManger r2 复核 `/workspace/_specs/content-quality-eng-review-r2-20261120.md`（`791498234a7360bd2edd4acfe234585ea88f8c4a384868ec6475fa41e5e2ee4b`）
-  - Reviewer r2 重审 `/workspace/backups/reviewer-specs/content-quality-cut-review-r2-20261120.md`（`7333b37cb0bd6efd73fd263a84bb55952f5cda92ff062293fcada1d2886095d9`）
+  - CodeManger r2 复核 `content-quality-eng-review-r2-20261120.md`（`791498234a7360bd2edd4acfe234585ea88f8c4a384868ec6475fa41e5e2ee4b`）
+  - Reviewer r2 重审 `content-quality-cut-review-r2-20261120.md`（`7333b37cb0bd6efd73fd263a84bb55952f5cda92ff062293fcada1d2886095d9`）
 
 ## 1. 阻塞修订
 
@@ -17,14 +19,14 @@ rL35–40 中的缩写**作废**，一律以下列完整值为准。这些值由
 
 | 文件 | SHA-256（完整值） |
 |---|---|
-| `/workspace/_specs/deck-master-prd.md` | `e3433f3263ee946f7327dc4a25da13ebfebbe4e7fb83b9dec9c33e9f41d5e979` |
-| `/workspace/_specs/deck-master-prd-cut-20261116-yuyuan-baseline-first-run.md` | `3369cee04655b567e9c8e09d7b5ebec1edbb787581cba78e7eba4da5443cd1b8` |
-| `/workspace/_specs/deck-master-prd-cut-20261120-yuyuan-followup-DRAFT.md` | `3a3cd12e74fbd643600d8c3779089a5bbf7992723fe8d68c809866f4078130e0` |
-| `/workspace/_specs/yuyuan-ab-pm-closeout-20261120.md` | `e5f0fd39258aa2e424195132927fc57ed65fe0e4b227cb9dfb20620c0bc36a8e` |
-| `/workspace/deck-master-assessment-20261120/汇总评估.md` | `4ce204a3b9dc411df5617989b9b2f0a77ac23d79c6a106a6c2443516c64a8e01` |
-| `/workspace/deck-master-assessment-20261120/按影响排序整改建议.md` | `e4c10a707b36af307db4a7971fd41aa852d59af3874ca0cfbc51a69f9a7b9f43` |
-| `/workspace/_specs/deck-master-prd-cut-20261120-content-quality.md`（r1） | `b1d412eae0d78ee59c1fc881ddef1842a0fe50acb774d6b19c0ee833b99ddbb8` |
-| `/workspace/_specs/deck-master-prd-cut-20261120-content-quality-r2.md`（r2） | `9e2de74c27611c48c37b157bb2deabc2c154bea95af063c6f0efd149e1b033fa` |
+| `deck-master-prd.md` | `e3433f3263ee946f7327dc4a25da13ebfebbe4e7fb83b9dec9c33e9f41d5e979` |
+| `历史材料（未公开）` | `3369cee04655b567e9c8e09d7b5ebec1edbb787581cba78e7eba4da5443cd1b8` |
+| `历史材料（未公开）` | `3a3cd12e74fbd643600d8c3779089a5bbf7992723fe8d68c809866f4078130e0` |
+| `历史材料（未公开）` | `e5f0fd39258aa2e424195132927fc57ed65fe0e4b227cb9dfb20620c0bc36a8e` |
+| `汇总评估.md` | `4ce204a3b9dc411df5617989b9b2f0a77ac23d79c6a106a6c2443516c64a8e01` |
+| `按影响排序整改建议.md` | `e4c10a707b36af307db4a7971fd41aa852d59af3874ca0cfbc51a69f9a7b9f43` |
+| `deck-master-prd-cut-20261120-content-quality.md`（r1） | `b1d412eae0d78ee59c1fc881ddef1842a0fe50acb774d6b19c0ee833b99ddbb8` |
+| `deck-master-prd-cut-20261120-content-quality-r2.md`（r2） | `9e2de74c27611c48c37b157bb2deabc2c154bea95af063c6f0efd149e1b033fa` |
 
 ### 1.2 CodeManger N1 + Reviewer 建议 4：AC-06 预览绑定的定义（替换 rL12 中 D4 的“绑定”说法，以及 rL149、rL152、rL153）
 

@@ -1,7 +1,9 @@
+> 历史背景副本，已移除私有来源信息。本文中的待批准、额度、运行顺序和旧状态规则均不作为当前执行指令；当前范围、行为与验收统一见[现行开发稿](../rust-rebuild/README.md#当前内容质量增量2026-11-23)。原 SHA 仅为历史引用，不是净化副本的内容校验值。
+
 # Deck Master 内容质量切片 r2 · 复核（CodeManger，2026-11-20）
 
-- **复核对象**：`/workspace/_specs/deck-master-prd-cut-20261120-content-quality-r2.md`，SHA-256 实算为 `9e2de74c27611c48c37b157bb2deabc2c154bea95af063c6f0efd149e1b033fa`，与 PM 给的值一致。
-- **对照的评审**：我上一版评审 `/workspace/_specs/content-quality-eng-review-20261120.md`，SHA `fc68a3eb…3dc2`，与 r2 第 0 节所引一致。
+- **复核对象**：`deck-master-prd-cut-20261120-content-quality-r2.md`，SHA-256 实算为 `9e2de74c27611c48c37b157bb2deabc2c154bea95af063c6f0efd149e1b033fa`，与 PM 给的值一致。
+- **对照的评审**：我上一版评审 `content-quality-eng-review-20261120.md`，SHA `fc68a3eb…3dc2`，与 r2 第 0 节所引一致。
 - **已核对的文件**：
   - r2 夹具目录 `content-quality-fixtures-20261120-r2/` 的 7 个文件，实算 SHA 与 r2 第 0 节、补充第 1 节一致。
   - 三份 `inputs/*/material.md` 和原夹具“材料”小节逐行比对，内容一致，不含判分底稿。`task.txt` 与原夹具任务句一致。

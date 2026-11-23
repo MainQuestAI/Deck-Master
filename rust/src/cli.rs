@@ -115,13 +115,17 @@ enum ReviewCommand {
         #[arg(long, help = "出稿审稿的六项检查 JSON")]
         checks: Option<PathBuf>,
     },
-    #[command(about = "按状态或页面读取意见")]
+    #[command(about = "按类型、状态或页面读取审阅记录")]
     List {
         #[arg(long)]
         status: Option<String>,
         #[arg(long)]
         page: Option<String>,
+        #[arg(long, default_value = "comment", value_parser = ["comment", "content_review", "all"])]
+        record: String,
     },
+    #[command(about = "按编号读取完整审阅记录")]
+    Get { id: i64 },
     #[command(about = "标记意见已处理")]
     Resolve { id: i64 },
 }
@@ -265,11 +269,17 @@ pub fn run() -> Result<()> {
                     )?)
                 }
             }
-            ReviewCommand::List { status, page } => print_json(ops::review_list(
+            ReviewCommand::List {
+                status,
+                page,
+                record,
+            } => print_json(ops::review_list_records(
                 &cli.project,
                 status.as_deref(),
                 page.as_deref(),
+                &record,
             )?),
+            ReviewCommand::Get { id } => print_json(ops::review_get(&cli.project, id)?),
             ReviewCommand::Resolve { id } => print_json(ops::review_resolve(&cli.project, id)?),
         },
         Commands::Serve { directory } => crate::server::serve(&directory),

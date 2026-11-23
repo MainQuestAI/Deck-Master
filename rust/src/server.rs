@@ -84,9 +84,29 @@ fn content_type(path: &str) -> &'static str {
 }
 
 fn status_header(value: &Value) -> Result<Header> {
+    // Reports, notes and findings belong in the body, never in a download header.
+    let keys = [
+        "id",
+        "url",
+        "version_id",
+        "input_changed",
+        "warning",
+        "build_missing_pages",
+        "missing_pages",
+        "stale_pages",
+        "stale_images",
+        "warnings",
+        "incomplete_basis_pages",
+        "content_review",
+        "current_content_review",
+    ];
+    let value: serde_json::Map<String, Value> = keys
+        .into_iter()
+        .filter_map(|key| value.get(key).map(|value| (key.to_owned(), value.clone())))
+        .collect();
     // JSON in a header must also work for non-ASCII author page IDs.
     let mut ascii = String::new();
-    for c in serde_json::to_string(value)?.chars() {
+    for c in serde_json::to_string(&value)?.chars() {
         if c.is_ascii() {
             ascii.push(c);
         } else {
@@ -157,19 +177,30 @@ fn route(project: &Path, request: &mut Request) -> Result<ResponseBox> {
         (Method::Get, "/api/reviews") => {
             let mut status = None;
             let mut page = None;
+            let mut record = None;
             for pair in query.split('&').filter(|p| !p.is_empty()) {
                 let (key, value) = pair.split_once('=').unwrap_or((pair, ""));
                 let value = url_component(&value.replace('+', " "))?;
                 match key {
                     "status" => status = Some(value),
                     "page" => page = Some(value),
-                    _ => return Err(Error::Input("意见查询只接受 status 和 page".into())),
+                    "record" => record = Some(value),
+                    _ => return Err(Error::Input("审阅查询只接受 status、page 和 record".into())),
                 }
             }
             json_response(
                 200,
-                ops::review_list(project, status.as_deref(), page.as_deref())?,
+                ops::review_list_records(
+                    project,
+                    status.as_deref(),
+                    page.as_deref(),
+                    record.as_deref().unwrap_or("comment"),
+                )?,
             )
+        }
+        (Method::Get, path) if path.starts_with("/api/reviews/") => {
+            let id = identifier(&path[13..])?;
+            json_response(200, serde_json::to_value(ops::review_get(project, id)?)?)
         }
         (Method::Post, "/api/reviews") => {
             let input: ReviewInput = serde_json::from_reader(request.as_reader())?;

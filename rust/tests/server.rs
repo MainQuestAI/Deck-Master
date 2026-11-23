@@ -105,7 +105,7 @@ impl Service {
             .unwrap()
             .parse()
             .unwrap();
-        let headers = head
+        let headers: HashMap<String, String> = head
             .lines()
             .skip(1)
             .map(|line| {
@@ -113,10 +113,32 @@ impl Service {
                 (key.to_ascii_lowercase(), value.trim().to_owned())
             })
             .collect();
+        let mut body = bytes[end + 4..].to_vec();
+        // tiny_http streams large JSON bodies using chunked transfer encoding.
+        if headers
+            .get("transfer-encoding")
+            .is_some_and(|value| value == "chunked")
+        {
+            let mut encoded = body.as_slice();
+            let mut decoded = Vec::new();
+            loop {
+                let line_end = encoded.windows(2).position(|pair| pair == b"\r\n").unwrap();
+                let size =
+                    usize::from_str_radix(std::str::from_utf8(&encoded[..line_end]).unwrap(), 16)
+                        .unwrap();
+                if size == 0 {
+                    break;
+                }
+                encoded = &encoded[line_end + 2..];
+                decoded.extend_from_slice(&encoded[..size]);
+                encoded = &encoded[size + 2..];
+            }
+            body = decoded;
+        }
         Reply {
             status,
             headers,
-            body: bytes[end + 4..].to_vec(),
+            body,
         }
     }
 }
@@ -950,7 +972,9 @@ fn build_downloads_report_missing_stale_and_changed_inputs_without_gating() {
     edit(
         temp.path(),
         base,
-        json!({"pages":[{"id":"p1","content":{"title":"Changed"}}]}),
+        json!({"pages":[{"id":"p1","content":{"title":"Changed", "body_blocks":
+            (0..30).map(|index| json!({"type":"paragraph","text":format!("中文回读缺项 {index}")})).collect::<Vec<_>>()
+        },"notes":"这是需要完整保留的中文讲稿。".repeat(2000)}]}),
     );
     let service = Service::start(temp.path());
     let build = service.request("POST", "/api/build", &[], "");
@@ -969,6 +993,38 @@ fn build_downloads_report_missing_stale_and_changed_inputs_without_gating() {
         json!({"status":"unreviewed","methods":[],"version_id":null,"unreviewed_pages":[]});
     assert_eq!(build.json()["content_review"], unreviewed);
     assert_eq!(build.artifact_status()["content_review"], unreviewed);
+    assert!(build.body.len() > 20_000);
+    assert!(build.headers["x-deck-status"].len() < 2_000);
+    assert!(build.artifact_status().get("findings").is_none());
+    assert!(
+        build.json()["findings"]["findings"]
+            .as_array()
+            .unwrap()
+            .len()
+            >= 30
+    );
+    assert!(
+        build.json()["findings"]
+            .to_string()
+            .contains(&"这是需要完整保留的中文讲稿。".repeat(2000))
+    );
+    let fetched = Command::new("node").args(["--input-type=module", "-e",
+        "const r=await fetch(process.argv[1],{method:'POST'}); const body=await r.json(); console.log(JSON.stringify({status:r.status,header:r.headers.get('x-deck-status').length,notes:body.findings.notes}));",
+        &format!("http://{}/api/build", service.address),
+    ]).output().unwrap();
+    assert!(
+        fetched.status.success(),
+        "{}",
+        String::from_utf8_lossy(&fetched.stderr)
+    );
+    let fetched: Value = serde_json::from_slice(&fetched.stdout).unwrap();
+    assert_eq!(fetched["status"], 200);
+    assert!(fetched["header"].as_u64().unwrap() < 2_000);
+    assert!(
+        fetched["notes"]
+            .to_string()
+            .contains(&"这是需要完整保留的中文讲稿。".repeat(2000))
+    );
     let downloaded = service.request("GET", build.json()["url"].as_str().unwrap(), &[], "");
     assert_eq!(downloaded.status, 200);
     assert!(downloaded.body.starts_with(b"PK"));
@@ -1645,4 +1701,51 @@ fn http_deck_read_includes_gap_list() {
     );
     assert!(body["gap_list"][1].get("gap").is_none());
     assert!(body["deck"].get("gap_list").is_none());
+}
+
+#[test]
+fn http_reads_content_review_details_without_mixing_opinions() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    ops::new(path, "合成读回".into()).unwrap();
+    let checks = json!([
+        {"id":"storyline_coherence","conclusion":"主线有待明确","pages":[]},
+        {"id":"evidence_supports_claim","conclusion":"第二页待补证据","pages":["p2"]},
+        {"id":"anticipated_objections","conclusion":"已检查","pages":[]},
+        {"id":"overdefense","conclusion":"已检查","pages":[]},
+        {"id":"no_internal_notes","conclusion":"已检查","pages":[]},
+        {"id":"final_pages_viewed","conclusion":"已看正文","pages":[]}
+    ]);
+    let file = path.join("checks.json");
+    std::fs::write(&file, checks.to_string()).unwrap();
+    let saved = ops::review_add_content(path, "复审看证据", "Host", "self_check", &file).unwrap();
+    let service = Service::start(path);
+    let listed = service.request("GET", "/api/reviews?record=content_review", &[], "");
+    assert_eq!(listed.status, 200);
+    assert_eq!(listed.json()["reviews"][0]["checks"], checks);
+    assert_eq!(
+        listed.json()["reviews"][0]["snapshot"]["version_id"],
+        saved.version_id
+    );
+    let detail = service.request("GET", &format!("/api/reviews/{}", saved.id), &[], "");
+    assert_eq!(detail.status, 200);
+    assert_eq!(detail.json(), listed.json()["reviews"][0]);
+    assert_eq!(
+        service.request("GET", "/api/reviews", &[], "").json()["reviews"],
+        json!([])
+    );
+    assert_eq!(
+        service.request("GET", "/api/deck", &[], "").json()["open_reviews_total"],
+        0
+    );
+    assert_eq!(
+        service.request("GET", "/api/reviews/999", &[], "").status,
+        404
+    );
+    assert_eq!(
+        service
+            .request("GET", "/api/reviews?record=invalid", &[], "")
+            .status,
+        400
+    );
 }

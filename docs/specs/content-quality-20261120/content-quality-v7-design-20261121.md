@@ -1,3 +1,5 @@
+> 历史背景副本，已移除私有来源信息。本文中的待批准、额度、运行顺序和旧状态规则均不作为当前执行指令；当前范围、行为与验收统一见[现行开发稿](../rust-rebuild/README.md#当前内容质量增量2026-11-23)。原 SHA 仅为历史引用，不是净化副本的内容校验值。
+
 # Deck Master · 内容质量轮 v7 字段与门设计（2026-11-21）
 
 **结论：** `page.preview` 字节无法确认为可复现，出稿审稿的主绑定用 `version_id` + 每页 `page.revision`，预览标识只作附带记录、不参与 stale 判定。`page.kind` 为空时 `run start` 拒绝，不把空页型当作判断页；判断页 `evidence` 为空数组同样拒绝；v6 页没有页型时按同一规则处理，并给出可照抄的 `deck put` 示例。`FORMAT_VERSION` 6→7 的整套迁移（含 `reviews` 表加列与快照字段）由 PR-B 一次落地，PR-E 只使用这些列，不再升版本。新程序打开 v6 库默认只读、不写回、不改 `user_version`；只有显式会 `append` `versions.deck_json` 或写入出稿审稿记录的命令才把该库升级为 v7。`deck put` 放行补字段，不拦生成门；`run start` 在拒绝时不写运行记录，通过后只写 `runs` / `run_pages`，不升级格式。
@@ -8,9 +10,9 @@
 
 - **本文件**是 r2 第 6 节所说的带日期设计附件，供 SWE 开工 PR-B / PR-C / PR-E。不改 r2 与补充原文。
 - **依据（已用 `sha256sum` 实算）：**
-  - `/workspace/_specs/deck-master-prd-cut-20261120-content-quality-r2.md`  
+  - `deck-master-prd-cut-20261120-content-quality-r2.md`
     SHA-256 `9e2de74c27611c48c37b157bb2deabc2c154bea95af063c6f0efd149e1b033fa`
-  - `/workspace/_specs/deck-master-prd-cut-20261120-content-quality-r2-supplement.md`  
+  - `deck-master-prd-cut-20261120-content-quality-r2-supplement.md`
     SHA-256 `da847b091ff784a218276dc11c270ba44c2e7c17efad45da3e89a5b0b81c7f3b`
 - **仓库基线：** `MainQuestAI/Deck-Master` @ `865092226246aa57820aa4cdec291648aa3ddee0`。以下对现行实现的陈述均来自该 SHA 的单文件阅读（`rust/src/{model,store,ops,cli,server,error}.rs`，以及 `deck-skill/deck-review/SKILL.md`），没有 clone，也没有改产品代码。
 - **批准口径：** 产品经理于 2026-11-21 08:47（北京时间）向 CodeManger 转述：Los 在该对话卡片中批准 D1–D5，Q1 选 A，PR-A 可先开工。Host 实跑额度 21 次尚未答复，与本设计无关。

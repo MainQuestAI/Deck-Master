@@ -1,7 +1,9 @@
+> 历史背景副本，已移除私有来源信息。本文中的待批准、额度、运行顺序和旧状态规则均不作为当前执行指令；当前范围、行为与验收统一见[现行开发稿](../rust-rebuild/README.md#当前内容质量增量2026-11-23)。原 SHA 仅为历史引用，不是净化副本的内容校验值。
+
 # Deck Master 内容质量切片 · 实现可行性评审（CodeManger，2026-11-20）
 
-- 评审对象：`/workspace/_specs/deck-master-prd-cut-20261120-content-quality.md`，SHA-256 实算 `b1d412eae0d78ee59c1fc881ddef1842a0fe50acb774d6b19c0ee833b99ddbb8`，与 PM 给的值一致。
-- 夹具：`/workspace/_specs/content-quality-fixtures-20261120/` 下 5 个文件实算 SHA 与切片第 0 节冻结值全部一致。第 0 节列出的 6 份历史文件，当前 SHA 也全部一致（文件在 `/workspace/_specs/` 和 `/workspace/deck-master-assessment-20261120/` 下）。
+- 评审对象：`deck-master-prd-cut-20261120-content-quality.md`，SHA-256 实算 `b1d412eae0d78ee59c1fc881ddef1842a0fe50acb774d6b19c0ee833b99ddbb8`，与 PM 给的值一致。
+- 夹具：`content-quality-fixtures-20261120/` 下 5 个文件实算 SHA 与切片第 0 节冻结值全部一致。第 0 节列出的 6 份历史文件，当前 SHA 也全部一致（文件在 `_specs/` 和 `deck-master-assessment-20261120/` 下）。
 - 基线：用 cursor-github `get_branch` 复核，`MainQuestAI/Deck-Master` main = `865092226246aa57820aa4cdec291648aa3ddee0`，tree `c5e22979f269b619dcd5872394ce3250641b6295`，**没有漂移**。另外看到 **main 没有开分支保护**（`protected: false`）。
 - 读源码的方式：优先用现成证据（`codex/cloud-review/architecture-evidence.md` 的 EV 卡、`architect/07`、`汇总评估.md`）。缺的地方按锁定 SHA 单独读了公开文件，没有 clone，也没有扫全库。读过的文件：`AGENTS.md`、`docs/specs/rust-rebuild/README.md`（开发稿 v1.2）、`rust/src/{model,ops,prompts,export,cli,server,store,error}.rs`、`frontend/src/api.js`、`deck-tools/src/deck_tools/sanitize.py`、`deck-skill/{deck-master,deck-content,deck-review}/SKILL.md`、`deck-skill/references/{expression-review-humanizer,writing-profiles,page-writing,narrative-patterns}.md`。下文行号都按 `865092` 计。
 - 没做的事：没改代码，没开 PR，没跑 Host，没启动云端。M01/M08、method-review 全文、前端组件、native/render.cjs 没有逐行读；涉及这些的地方标为“落点待 SWE 确认”。
@@ -128,7 +130,7 @@
 ## 四、Host 运行额度：20 次是否合理
 
 **单次时长参考**
-- 豫园 11-16 基线：24 页，5440 秒（1 小时 30 分 40 秒），约 227 秒/页。来源 `/workspace/yuyuan-baseline-first-run-20261116/evidence/host-run-report.md:20`。
+- 历史项目 11-16 基线：24 页，5440 秒（1 小时 30 分 40 秒），约 227 秒/页。来源 `历史材料（未公开）`。
 - 11-20 本机：4 页，564.933 秒，约 141 秒/页。来源 `汇总评估.md:46`。
 
 CQ-F1/F2/F3 页数自定，商用决策稿按 8–12 页估。候选版多了“先写框架和主线、逐页五环、出稿审稿”几步，按 +20–30% 算，**单次约 20–60 分钟**。本机 4 页那次用量为输入约 437 万 token（缓存 426 万）、输出约 2.1 万 token，10 页左右大致翻倍。这里不折算费用，但要提醒 Los：额度用的是本机已登录的 ChatGPT/Codex 账号，频繁跑可能碰到账号限流，那时按 BLOCKED 处理。

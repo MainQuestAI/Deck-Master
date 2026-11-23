@@ -1,3 +1,5 @@
+> 历史背景副本，已移除私有来源信息。本文中的待批准、额度、运行顺序和旧状态规则均不作为当前执行指令；当前范围、行为与验收统一见[现行开发稿](../rust-rebuild/README.md#当前内容质量增量2026-11-23)。原 SHA 仅为历史引用，不是净化副本的内容校验值。
+
 Decision needed: 请 Los 一次拍板三件事：① 批准下表 D1–D5 五项对开发稿 v1.2 / AGENTS.md 的偏离；② Q1 选 A（“待补”在草稿页面上醒目标出）还是 B（只放讲稿备注 + 缺口清单），未答前 PR-D 阻塞；③ 批准本轮 Host 实跑上限 20 次（SWE 自测 ≤6，核验 + 修复 ≤14）。可选确认：修复由 SWE 做、Codex 只核验（默认如此，Los 不回复即按默认执行）。
 
 # Deck Master · 内容质量轮 PRD 切片 r2（2026-11-20）
@@ -17,11 +19,11 @@ Decision needed: 请 Los 一次拍板三件事：① 批准下表 D1–D5 五项
 
 ## 0. 文件身份、授权与替代关系
 
-- **本文件供执行使用，替代** `/workspace/_specs/deck-master-prd-cut-20261120-content-quality.md`（r1，SHA-256 `b1d412eae0d78ee59c1fc881ddef1842a0fe50acb774d6b19c0ee833b99ddbb8`）。r1 原件保留、不改，仅作历史；两者冲突时以 r2 为准。
+- **本文件供执行使用，替代** `deck-master-prd-cut-20261120-content-quality.md`（r1，SHA-256 `b1d412eae0d78ee59c1fc881ddef1842a0fe50acb774d6b19c0ee833b99ddbb8`）。r1 原件保留、不改，仅作历史；两者冲突时以 r2 为准。
 - 依据的评审：
-  - Reviewer：`/workspace/backups/reviewer-specs/content-quality-cut-review-20261120.md`（`db27f22bce439e62cc2fa800821fed6edcb426380592e2218340f3321f416fe3`）
-  - CodeManger：`/workspace/_specs/content-quality-eng-review-20261120.md`（`fc68a3eb12439419b760cc2ae5b6e510b44e4b492b429461b329fa6338243dc2`）
-- 夹具原件不改：`/workspace/_specs/content-quality-fixtures-20261120/`。各文件 SHA 与 r1 第 0 节一致，CodeManger 已核对。口径补充与分离后的输入放在 `/workspace/_specs/content-quality-fixtures-20261120-r2/`：
+  - Reviewer：`content-quality-cut-review-20261120.md`（`db27f22bce439e62cc2fa800821fed6edcb426380592e2218340f3321f416fe3`）
+  - CodeManger：`content-quality-eng-review-20261120.md`（`fc68a3eb12439419b760cc2ae5b6e510b44e4b492b429461b329fa6338243dc2`）
+- 夹具原件不改：`content-quality-fixtures-20261120/`。各文件 SHA 与 r1 第 0 节一致，CodeManger 已核对。口径补充与分离后的输入放在 `content-quality-fixtures-20261120-r2/`：
   - `scoring-caliber-supplement-r2.md`：`47d781639bd26be54909aa3752d6ce2d3c3d88ce1df91f250ff9e6e932200a90`
   - `inputs/CQ-F1/material.md`：`49db58e165f1a635ad6a1b59cea992e4e413161a0f148cddc2a89502b5cecd89`；`task.txt`：`1c4172a907db201708846a2fcf88331596d4897d62c24c82866ef2118f34b979`
   - `inputs/CQ-F2/material.md`：`13b782232cac2a7753bc2633ac4ca78f21d62c1898c7cada217b74f2f8f69ad8`；`task.txt`：`dd3b81a0c684b0a7e68b3936102e63a2691ace417af8e732259455504bf3a442`
@@ -32,12 +34,12 @@ Decision needed: 请 Los 一次拍板三件事：① 批准下表 D1–D5 五项
   - PM 的理解：21:27 这句授权的是**流程**，不是逐条认可上表的偏离。因此本轮除 PR-A 外，开发要等 Los 批准 D1–D5。合并到 main、打 tag、发 GitHub Release、发 PyPI 以及任何外发，都须 Los 另行同意。
 - 基线：main `865092226246aa57820aa4cdec291648aa3ddee0`（tree `c5e22979f269b619dcd5872394ce3250641b6295`，CodeManger 已核对，无漂移；main **未开分支保护**）。正式 tag `v1.1.3` 为 `718fdc01e88121644cb2fb0966ed63eb79ac4cc1`。
 - 历史文件（AC-07 核对不变，附绝对路径）：
-  - `/workspace/_specs/deck-master-prd.md`：`e3433f32…d5e979`
-  - `/workspace/_specs/deck-master-prd-cut-20261116-yuyuan-baseline-first-run.md`：`3369cee0…43cd1b8`
-  - `/workspace/_specs/deck-master-prd-cut-20261120-yuyuan-followup-DRAFT.md`：`3a3cd12e…0e130e0`
-  - `/workspace/_specs/yuyuan-ab-pm-closeout-20261120.md`：`e5f0fd39…6c36a8e`
-  - `/workspace/deck-master-assessment-20261120/汇总评估.md`：`4ce204a3…a64c2e9`
-  - `/workspace/deck-master-assessment-20261120/按影响排序整改建议.md`：`e4c10a70…f9b43`
+  - `deck-master-prd.md`：`e3433f32…d5e979`
+  - `历史材料（未公开）`：`3369cee0…43cd1b8`
+  - `历史材料（未公开）`：`3a3cd12e…0e130e0`
+  - `历史材料（未公开）`：`e5f0fd39…6c36a8e`
+  - `汇总评估.md`：`4ce204a3…a64c2e9`
+  - `按影响排序整改建议.md`：`e4c10a70…f9b43`
   - 完整 SHA 见 r1 第 0 节；r1 本身也纳入核对。
 - 切片日期：2026-11-20。Los 未设截止日期。CodeManger 估算开发 7–10 人日，不含 Host 实跑和评审往返。
 
@@ -247,7 +249,7 @@ Decision needed: 请 Los 一次拍板三件事：① 批准下表 D1–D5 五项
 
 ### 7.1 致 CodeManger + 架构师（设计，r2 生效即发）
 ```
-【内容质量轮 r2 · 设计】依据 /workspace/_specs/deck-master-prd-cut-20261120-content-quality-r2.md（替代 r1 b1d412ea 用于执行）。请架构师在 SWE 开工 PR-B/C/E/D 前交字段与门设计（名称、JSON 形状、错误信息、v6→v7 迁移），只覆盖偏离清单 D1–D5，另存日期文件。PR-A（AC-08）可同时分派 SWE。D1–D5 未获 Los 批准前不开工 B/C/E；Q1 未答前不开工 D。集成分支 rust/content-quality-20261120，PR 只进集成分支；对 main 的 PR 只开不合。
+【内容质量轮 r2 · 设计】依据 deck-master-prd-cut-20261120-content-quality-r2.md（替代 r1 b1d412ea 用于执行）。请架构师在 SWE 开工 PR-B/C/E/D 前交字段与门设计（名称、JSON 形状、错误信息、v6→v7 迁移），只覆盖偏离清单 D1–D5，另存日期文件。PR-A（AC-08）可同时分派 SWE。D1–D5 未获 Los 批准前不开工 B/C/E；Q1 未答前不开工 D。集成分支 rust/content-quality-20261120，PR 只进集成分支；对 main 的 PR 只开不合。
 ```
 
 ### 7.2 致 SWE（开发，经 CodeManger 分派）

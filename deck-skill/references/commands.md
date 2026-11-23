@@ -217,7 +217,7 @@ deck review add --method self_check --page p3 '这一页的问题'
 
 当前 Host 自查用 `self_check`，另一执行或模型用 `other_model`，真人用 `human`。`--method` 必填，没有默认值，省略会报错。落实并核对之后才 `deck review resolve <意见ID>`。审查默认只返回报告，不因为开了审查入口就改稿或生图。
 
-交付或 `export md`、`build`、`export pptx` 之前，必须先看最终页，再记一条出稿审稿。看的是刚才 `deck show` 或 `deck get` 里的定稿正文；已经有预览时打开预览。整稿一条，不带 `--page`。说明可以省略。`checks.json` 必须带齐下面六个 `id`。括号里的字是要替换的提示，换成这次阅读的结论，`pages` 写相关页 id。`evidence_supports_claim` 按页核对判断页的论证是不是手写的：理由不同于标题，证据指向材料原句，反驳不是各页同一句。`no_internal_notes` 把材料里标明不给读者的内部条目逐条拿出来，对照读者可见的标题、正文、图表注、页脚，以及讲稿。要查的是这条在说的事还在不在，不只是原句或「内部」「保密」这类标签还在不在。换一种说法、说得更轻，仍算这条实质还在，不能通过。例如材料写「盘点表的差异件数只留在内部备忘，不要给读者」，正文或讲稿写成「差异件数先不在这页展开」：原句和「内部」「备忘」都不在，仍然不能通过。材料里已经有、只是标明不给读者的数字或事项不是缺口，不登记，也不写「待补：…」。内部条目本身是「某项未定、先不写」时，承载页只登记「待补：<对象>」、不写原因，不算把该条写上屏。`final_pages_viewed` 写下这次实际看过的页。
+交付或 `export md`、`build`、`export pptx` 之前，必须先看最终页，再记一条出稿审稿。用 `deck get` 读取整稿的 `content`、`argument`、`notes`、`purpose` 和 `layout`；重定向到文件后实际读回完整内容。`deck show` 只用于总览、标题连读和写作简报，不含完整正文，不能据此填写出稿审稿。已有预览时按当前任务打开预览。整稿一条，不带 `--page`。说明可以省略。`checks.json` 必须带齐下面六个 `id`。括号里的字是要替换的提示，换成这次阅读的结论，`pages` 写相关页 id。`evidence_supports_claim` 按页核对判断页的论证是不是手写的：理由不同于标题，证据指向材料原句，反驳不是各页同一句。`no_internal_notes` 把材料里标明不给读者的内部条目逐条拿出来，对照读者可见的标题、正文、图表注、页脚，以及讲稿。要查的是这条在说的事还在不在，不只是原句或「内部」「保密」这类标签还在不在。换一种说法、说得更轻，仍算这条实质还在，不能通过。例如材料写「盘点表的差异件数只留在内部备忘，不要给读者」，正文或讲稿写成「差异件数先不在这页展开」：原句和「内部」「备忘」都不在，仍然不能通过。材料里已经有、只是标明不给读者的数字或事项不是缺口，不登记，也不写「待补：…」。内部条目本身是「某项未定、先不写」时，承载页只登记「待补：<对象>」、不写原因，不算把该条写上屏。`final_pages_viewed` 写下这次实际看过的页。
 
 ```json
 [
@@ -237,7 +237,7 @@ deck --project "$DECK_PROJECT" review add --record content_review --method self_
 deck --project "$DECK_PROJECT" export md > "$DECK_PROJECT/manuscript.md"
 ```
 
-程序自己记下当时的版本、每页修订和框架，不用手填，也不根据这六项判通过。`deck build` 和 `deck export pptx` 的 JSON，以及下载用的 `X-Deck-Status`，会多一个 `content_review`。没有这条记录是 `unreviewed`；页修订和框架都没变是 `reviewed`；之后有页修订，或读者、待决事项、关注点、讲述人或主线变了，是 `stale`。只改了主线时，未审页列表可以是空的。它只是提示，不阻止构建或导出。没有记录时导出仍会成功，并标 `unreviewed`；交付前仍要先记下这一条。项目还不是格式 7 时，这条命令会拒绝并要求先 `deck put`。页或框架在记录之后又改过，下一次交付前再记一次。
+程序自己记下当时的版本、每页修订和框架，不用手填，也不根据这六项判通过。`deck build` 和 `deck export pptx` 的 JSON，以及下载用的 `X-Deck-Status`，会多一个 `content_review`。没有这条记录是 `unreviewed`；页序、各页作者字段和框架都与历史审稿对象相符是 `reviewed`；新增、删除、重排、正文变化或框架变化时是 `stale`。同 ID 重建不会继承旧正文的审稿匹配。只改了主线、删页或重排时，未审页列表可以是空的。它只是提示，不阻止构建或导出。没有记录时导出仍会成功，并标 `unreviewed`；交付前仍要先记下这一条。项目还不是格式 7 时，这条命令会拒绝并要求先 `deck put`。页或框架在记录之后又改过，下一次交付前再记一次。
 
 ## 可选：核对案例算式
 
@@ -339,3 +339,13 @@ plan v1 的固定外形：
 ```bash
 python -m deck_tools.vendor.cyberppt.select_icon search --index <icons>/index.json --query "anchor" --limit 5
 ```
+
+
+读回上次六项结论与快照，用正常命令接手，不需要保留原 checks 文件：
+
+```bash
+deck --project "$DECK_PROJECT" review list --record content_review
+deck --project "$DECK_PROJECT" review get <记录ID>
+```
+
+默认 `review list` 仍只列意见；`--record all` 同时列出两种记录。下载 PPTX 的 `content_review` 对应实际构建来源，`current_content_review` 单独描述当前稿；`reviewed` 只表示审稿对象相符，不表示质量通过。导出后实际打开并阅读 `manuscript.md`；最终 PPTX 的内容与画面检查使用实际导出文件，不能用当前稿或 page.preview 代替。

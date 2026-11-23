@@ -13,7 +13,7 @@ import zipfile
 
 from lxml import etree
 
-from deck_tools.sanitize import attach_hint_findings, pptx
+from deck_tools.sanitize import _repair_duplicate_cnvpr_ids, attach_hint_findings, pptx
 
 P = "http://schemas.openxmlformats.org/presentationml/2006/main"
 A = "http://schemas.openxmlformats.org/drawingml/2006/main"
@@ -328,3 +328,38 @@ def test_sanitize_cli_emits_hint_without_failing(tmp_path):
     assert {item["code"] for item in payload["findings"]["warnings"]} == {"duplicate_cnvpr_id"}
     assert all(item["level"] == "hint" for item in payload["findings"]["warnings"])
     assert output.is_file()
+
+
+def test_old_sanitizer_fallbacks_follow_new_ids_and_author_titles_survive():
+    # Reproduce the old sanitizer: it assigned fallback names without fixing ids.
+    source = synthetic_duplicate_cnvpr_pptx()
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(io.BytesIO(source)) as archive:
+        with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as output:
+            for name in archive.namelist():
+                body = archive.read(name)
+                if name.startswith("ppt/slides/slide"):
+                    root = etree.fromstring(body)
+                    for node in _cnvprs(root):
+                        title = node.get("title") or "形状-" + node.get("id")
+                        node.set("name", title)
+                        node.set("title", title)
+                    body = etree.tostring(root)
+                output.writestr(name, body)
+    old = buffer.getvalue()
+    cleaned = pptx(old, "old-cleaned.pptx")
+    for index in (1, 2, 3):
+        root = _slide_root(cleaned, f"ppt/slides/slide{index}.xml")
+        _assert_unique_fallback_names(root, {"5": "角色"} if index == 1 else {})
+    # A title alone that resembles a fallback is insufficient evidence to rewrite it.
+    root = etree.fromstring(_slide(_tree("1") + _shape("4", "one") + _shape("4", "two", "形状-4"), "").encode())
+    _repair_duplicate_cnvpr_ids(root, "ppt/slides/slide1.xml")
+    assert _by_text(root, "two").get("id") != "4"
+    assert _by_text(root, "two").get("title") == "形状-4"
+
+    root = etree.fromstring(_slide(_tree("1") + _shape("4", "one") + _shape("4", "two", "业务对象"), "").encode())
+    named = _by_text(root, "two")
+    named.set("name", "业务对象")
+    _repair_duplicate_cnvpr_ids(root, "ppt/slides/slide1.xml")
+    assert named.get("id") != "4"
+    assert named.get("name") == named.get("title") == "业务对象"

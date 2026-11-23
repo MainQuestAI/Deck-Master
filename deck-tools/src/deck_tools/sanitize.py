@@ -557,6 +557,12 @@ def _repair_duplicate_cnvpr_ids(root, part):
             next_id += 1
         new = str(next_id)
         element.set(id_key or "id", new)
+        # Earlier sanitizer versions stored their fallback in both attributes.
+        # Only that exact pair is identifiable as a generated name.
+        fallback = "形状-" + (old or "")
+        if element.get("name") == fallback and element.get("title") == fallback:
+            element.set("name", "形状-" + new)
+            element.set("title", "形状-" + new)
         used_numbers.add(next_id)
         seen.add(("n", next_id))
         next_id += 1

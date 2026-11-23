@@ -270,13 +270,13 @@ fn changed_pages_are_listed_in_deck_order() {
 }
 
 #[test]
-fn added_page_is_listed_and_removed_page_is_not() {
+fn added_page_is_listed_and_removed_page_stales() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path();
     setup(path);
     record(path, "human", "看过");
     put_pages(path, json!({"order":["b"],"pages":[{"id":"a"}]}));
-    assert_eq!(status_of(path)["status"], "reviewed");
+    assert_eq!(status_of(path)["status"], "stale");
     assert_eq!(status_of(path)["unreviewed_pages"], json!([]));
     put_pages(
         path,
@@ -287,9 +287,9 @@ fn added_page_is_listed_and_removed_page_is_not() {
 }
 
 #[test]
-fn recreated_page_with_the_same_id_and_revision_one_stays_reviewed() {
+fn recreated_page_with_the_same_id_and_revision_one_is_stale() {
     // assign_revisions starts a page that was not in the previous deck at 1.
-    // The status rule compares that number with the snapshot, so this matches.
+    // Historical author fields must still detect the replacement.
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path();
     setup(path);
@@ -310,8 +310,8 @@ fn recreated_page_with_the_same_id_and_revision_one_stays_reviewed() {
         .unwrap();
     assert_eq!(page.revision, 1);
     assert_eq!(page.notes, "重做后的讲稿");
-    assert_eq!(status_of(path)["status"], "reviewed");
-    assert_eq!(status_of(path)["unreviewed_pages"], json!([]));
+    assert_eq!(status_of(path)["status"], "stale");
+    assert_eq!(status_of(path)["unreviewed_pages"], json!(["a"]));
 }
 
 #[test]
@@ -364,7 +364,7 @@ fn adopt_changes_only_the_version_and_stays_reviewed() {
 }
 
 #[test]
-fn snapshot_records_frame_text_and_a_missing_framing_key_is_not_compared() {
+fn snapshot_records_frame_text_and_old_records_use_historical_framing() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path();
     let version = setup(path);
@@ -422,7 +422,7 @@ fn snapshot_records_frame_text_and_a_missing_framing_key_is_not_compared() {
         framing["storyline"] = json!(["完全不同的主线"]);
         framing["thesis"] = json!("也改主张");
     });
-    assert_eq!(status_of(path)["status"], "reviewed");
+    assert_eq!(status_of(path)["status"], "stale");
     assert_eq!(status_of(path)["unreviewed_pages"], json!([]));
     put_pages(path, json!({"pages":[{"id":"b","notes":"乙改了"}]}));
     assert_eq!(status_of(path)["status"], "stale");
@@ -621,6 +621,17 @@ fn cli_accepts_content_review_and_rejects_a_page_or_checks_on_a_comment() {
     assert_eq!(body["text"], "命令说明");
     assert_eq!(body["page_id"], Value::Null);
     assert_eq!(body["method"], "self_check");
+    assert_eq!(body["record_kind"], "content_review");
+    assert_eq!(body["checks"], six_checks());
+    assert_eq!(body["snapshot"]["version_id"], current(path).version);
+    let id = body["id"].as_i64().unwrap().to_string();
+    let detail: Value = serde_json::from_slice(&run(&["review", "get", &id]).stdout).unwrap();
+    assert_eq!(detail, body);
+    let records: Value =
+        serde_json::from_slice(&run(&["review", "list", "--record", "content_review"]).stdout)
+            .unwrap();
+    assert_eq!(records["reviews"], json!([body]));
+
     assert_eq!(status_of(path)["status"], "reviewed");
     let comment_checks = run(&[
         "review",
@@ -637,4 +648,57 @@ fn cli_accepts_content_review_and_rejects_a_page_or_checks_on_a_comment() {
     let listed: Value = serde_json::from_slice(&run(&["review", "list"]).stdout).unwrap();
     assert_eq!(listed["reviews"].as_array().unwrap().len(), 1);
     assert_eq!(listed["reviews"][0]["text"], "意见");
+}
+
+#[test]
+fn reorder_stales_the_whole_manuscript_without_changing_page_revisions() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    setup(path);
+    record(path, "human", "看过");
+    put_pages(path, json!({"order":["a","b"]}));
+    assert_eq!(status_of(path)["status"], "stale");
+    assert_eq!(status_of(path)["unreviewed_pages"], json!([]));
+}
+
+// Synthetic build records isolate selection; they do not prove PPTX rendering.
+#[test]
+fn historical_download_review_is_bound_to_its_source_version() {
+    for (review_old, review_new) in [(false, true), (true, false), (true, true)] {
+        let temp = tempfile::tempdir().unwrap();
+        let path = temp.path();
+        let old = setup(path);
+        let store = Store::open(path).unwrap();
+        let file = store.add_file(b"synthetic build", "pptx").unwrap();
+        store.connection.execute(
+            "INSERT INTO builds(version_id,input_digest,pptx_file,findings_json,missing_pages) VALUES (?,'old-input',?,'{}','[]')",
+            params![old, file],
+        ).unwrap();
+        if review_old {
+            record(path, "human", "看过旧稿");
+        }
+        put_pages(path, json!({"pages":[{"id":"a","notes":"新讲稿"}]}));
+        if review_new {
+            record(path, "other_model", "看过新稿");
+        }
+        let exported = ops::export_pptx(path).unwrap();
+        assert_eq!(exported["version_id"], old);
+        assert_eq!(exported["input_changed"], true);
+        assert_eq!(
+            exported["content_review"]["status"],
+            if review_old { "reviewed" } else { "unreviewed" }
+        );
+        assert_eq!(
+            exported["content_review"]["version_id"],
+            if review_old { json!(old) } else { Value::Null }
+        );
+        assert_eq!(
+            exported["current_content_review"]["status"],
+            if review_new { "reviewed" } else { "stale" }
+        );
+        assert_eq!(
+            std::fs::read(exported["path"].as_str().unwrap()).unwrap(),
+            b"synthetic build"
+        );
+    }
 }

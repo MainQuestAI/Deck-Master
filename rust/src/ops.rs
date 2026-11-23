@@ -189,6 +189,11 @@ pub struct Review {
     pub status: String,
     pub created_at: String,
     pub resolved_at: Option<String>,
+    pub record_kind: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub snapshot: Option<Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub checks: Option<Value>,
 }
 
 fn review_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<Review> {
@@ -202,6 +207,31 @@ fn review_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<Review> {
         status: row.get(6)?,
         created_at: row.get(7)?,
         resolved_at: row.get(8)?,
+        record_kind: row.get(9)?,
+        snapshot: review_json(row, 10)?,
+        checks: review_json(row, 11)?,
+    })
+}
+
+fn review_json(row: &rusqlite::Row<'_>, index: usize) -> rusqlite::Result<Option<Value>> {
+    let text: Option<String> = row.get(index)?;
+    text.map(|text| {
+        serde_json::from_str(&text).map_err(|error| {
+            rusqlite::Error::FromSqlConversionFailure(
+                index,
+                rusqlite::types::Type::Text,
+                Box::new(error),
+            )
+        })
+    })
+    .transpose()
+}
+
+fn review_columns(connection: &rusqlite::Connection) -> Result<&'static str> {
+    Ok(if store::reviews_have_record_kind(connection)? {
+        "record_kind,snapshot_json,checks_json"
+    } else {
+        "'comment',NULL,NULL"
     })
 }
 
@@ -210,19 +240,37 @@ fn reviews(
     status: Option<&str>,
     page: Option<&str>,
 ) -> Result<Vec<Review>> {
+    review_records(connection, status, page, "comment")
+}
+
+fn review_records(
+    connection: &rusqlite::Connection,
+    status: Option<&str>,
+    page: Option<&str>,
+    record: &str,
+) -> Result<Vec<Review>> {
     use rusqlite::params;
     if status.is_some_and(|s| !["open", "resolved"].contains(&s)) {
         return Err(Error::Input("意见状态只接受 open 或 resolved".into()));
     }
-    // v6 has no record_kind. Content-review rows are not opinions.
-    let comments = if store::reviews_have_record_kind(connection)? {
-        " AND record_kind='comment'"
+    if !["comment", "content_review", "all"].contains(&record) {
+        return Err(Error::Input(
+            "记录类型只接受 comment、content_review 或 all".into(),
+        ));
+    }
+    let filter = if record == "all" {
+        String::new()
+    } else if store::reviews_have_record_kind(connection)? {
+        format!(" AND record_kind='{record}'")
+    } else if record == "content_review" {
+        " AND 0".into()
     } else {
-        ""
+        String::new()
     };
+    let columns = review_columns(connection)?;
     let mut query = connection.prepare(&format!(
-        "SELECT id,version_id,page_id,reviewer,method,text,status,created_at,resolved_at
-         FROM reviews WHERE (?1 IS NULL OR status=?1) AND (?2 IS NULL OR page_id=?2){comments} ORDER BY id"
+        "SELECT id,version_id,page_id,reviewer,method,text,status,created_at,resolved_at,{columns}
+         FROM reviews WHERE (?1 IS NULL OR status=?1) AND (?2 IS NULL OR page_id=?2){filter} ORDER BY id"
     ))?;
     Ok(query
         .query_map(params![status, page], review_row)?
@@ -231,8 +279,9 @@ fn reviews(
 
 fn review(connection: &rusqlite::Connection, id: i64) -> Result<Review> {
     use rusqlite::OptionalExtension;
+    let columns = review_columns(connection)?;
     connection.query_row(
-        "SELECT id,version_id,page_id,reviewer,method,text,status,created_at,resolved_at FROM reviews WHERE id=?",
+        &format!("SELECT id,version_id,page_id,reviewer,method,text,status,created_at,resolved_at,{columns} FROM reviews WHERE id=?"),
         [id], review_row,
     ).optional()?.ok_or_else(|| Error::Missing(format!("意见 {id} 不存在;请用 deck review list 查看")))
 }
@@ -276,8 +325,22 @@ pub fn review_add(
 }
 
 pub fn review_list(project: &Path, status: Option<&str>, page: Option<&str>) -> Result<Value> {
+    review_list_records(project, status, page, "comment")
+}
+
+pub fn review_list_records(
+    project: &Path,
+    status: Option<&str>,
+    page: Option<&str>,
+    record: &str,
+) -> Result<Value> {
     let store = Store::open(project)?;
-    Ok(json!({"reviews": reviews(&store.connection, status, page)?}))
+    Ok(json!({"reviews": review_records(&store.connection, status, page, record)?}))
+}
+
+pub fn review_get(project: &Path, id: i64) -> Result<Review> {
+    let store = Store::open(project)?;
+    review(&store.connection, id)
 }
 
 pub fn review_resolve(project: &Path, id: i64) -> Result<Review> {
@@ -441,26 +504,23 @@ where
 #[derive(Deserialize)]
 struct ContentReviewSnapshot {
     version_id: i64,
-    pages: Vec<SnapshotPage>,
     #[serde(default, deserialize_with = "present_framing")]
     framing: Option<Value>,
 }
 
-#[derive(Deserialize)]
-struct SnapshotPage {
-    id: String,
-    revision: u32,
-}
-
-fn content_review_status(connection: &rusqlite::Connection, deck: &Deck) -> Result<Value> {
+fn content_review_status(
+    connection: &rusqlite::Connection,
+    version: i64,
+    deck: &Deck,
+) -> Result<Value> {
     use rusqlite::OptionalExtension;
     if !store::reviews_have_record_kind(connection)? {
         return Ok(unreviewed_status());
     }
     let row: Option<(String, Option<String>)> = connection
         .query_row(
-            "SELECT method, snapshot_json FROM reviews WHERE record_kind='content_review' ORDER BY id DESC LIMIT 1",
-            [],
+            "SELECT method, snapshot_json FROM reviews WHERE record_kind='content_review' AND version_id<=? ORDER BY id DESC LIMIT 1",
+            [version],
             |row| Ok((row.get(0)?, row.get(1)?)),
         )
         .optional()?;
@@ -473,24 +533,36 @@ fn content_review_status(connection: &rusqlite::Connection, deck: &Deck) -> Resu
     let Ok(snapshot) = serde_json::from_str::<ContentReviewSnapshot>(&snapshot_json) else {
         return Ok(stale_unreadable(&method));
     };
-    let mut recorded = HashMap::new();
-    for page in &snapshot.pages {
-        recorded.entry(page.id.clone()).or_insert(page.revision);
-    }
-    // Deck order is the stable order. A page created again with the same id
-    // starts at revision 1, so a snapshot that also stored 1 cannot see it.
+    let recorded_deck = match store::load_optional(connection, snapshot.version_id) {
+        Ok(Some(deck)) => deck,
+        Ok(None) | Err(Error::Json(_)) => return Ok(stale_unreadable(&method)),
+        Err(error) => return Err(error),
+    };
+    let recorded: HashMap<_, _> = recorded_deck
+        .pages
+        .iter()
+        .map(|page| (&page.id, page))
+        .collect();
+    let order_differs = !deck
+        .pages
+        .iter()
+        .map(|page| &page.id)
+        .eq(recorded_deck.pages.iter().map(|page| &page.id));
     let mut unreviewed_pages = Vec::new();
     for page in &deck.pages {
-        if recorded.get(&page.id) != Some(&page.revision) {
+        if recorded
+            .get(&page.id)
+            .is_none_or(|prior| prior.author_fields_changed(page))
+        {
             unreviewed_pages.push(page.id.clone());
         }
     }
-    // A missing framing key is unknown. A present value is compared as stored.
+    // Old records without framing can use their immutable source version.
     let frame_differs = match &snapshot.framing {
-        None => false,
+        None => frame_value(&recorded_deck) != frame_value(deck),
         Some(value) => value != &frame_value(deck),
     };
-    let status = if unreviewed_pages.is_empty() && !frame_differs {
+    let status = if unreviewed_pages.is_empty() && !frame_differs && !order_differs {
         "reviewed"
     } else {
         "stale"
@@ -835,9 +907,10 @@ pub fn export_md(project: &Path) -> Result<String> {
 
 pub fn export_markdown(project: &Path) -> Result<(String, Value)> {
     let store = Store::open(project)?;
-    let deck = store.current()?.deck;
+    let snapshot = store.current()?;
+    let deck = snapshot.deck;
     let mut status = artifact_status(&deck)?;
-    status["content_review"] = content_review_status(&store.connection, &deck)?;
+    status["content_review"] = content_review_status(&store.connection, snapshot.version, &deck)?;
     Ok((crate::export::markdown(&deck), status))
 }
 
@@ -2329,7 +2402,8 @@ pub fn build(project: &Path) -> Result<Value> {
             .join(",");
         return Err(Error::Input(format!("没有已采用的页面；缺页：{missing}")));
     }
-    let content_review = content_review_status(&store.connection, &snapshot.deck)?;
+    let content_review =
+        content_review_status(&store.connection, snapshot.version, &snapshot.deck)?;
     let output = if native {
         crate::tools::invoke("assemble", &json!({"work":temporary.path(),"pages":pages}))?
     } else {
@@ -2346,7 +2420,7 @@ pub fn build(project: &Path) -> Result<Value> {
     let id = tx.last_insert_rowid();
     tx.commit()?;
     Ok(
-        json!({"id":id,"path":store.file(&file)?,"findings":output["findings"],"missing_pages":status["missing_pages"],"stale_pages":status["stale_pages"],"stale_images":status["stale_images"],"warnings":with_shared_layout(stale_image_warnings(&status["stale_images"]), &plan_refs(&native_plans)),"content_review":content_review}),
+        json!({"id":id,"version_id":snapshot.version,"path":store.file(&file)?,"findings":output["findings"],"missing_pages":status["missing_pages"],"stale_pages":status["stale_pages"],"stale_images":status["stale_images"],"warnings":with_shared_layout(stale_image_warnings(&status["stale_images"]), &plan_refs(&native_plans)),"content_review":content_review}),
     )
 }
 
@@ -2420,7 +2494,8 @@ pub fn build_detail(project: &Path, id: i64) -> Result<Value> {
 pub fn export_pptx(project: &Path) -> Result<Value> {
     let mut store = Store::open(project)?;
     let tx = store.connection.transaction()?;
-    let deck = store::current(&tx)?.deck;
+    let current = store::current(&tx)?;
+    let deck = current.deck;
     let mut selected = default_build(&tx, &deck)?
         .ok_or_else(|| Error::Input("尚无构建；请先运行 deck build".into()))?;
     let file = selected["file"]
@@ -2448,7 +2523,12 @@ pub fn export_pptx(project: &Path) -> Result<Value> {
         &plan_refs(&plans),
     );
     selected["incomplete_basis_pages"] = status["incomplete_basis_pages"].clone();
-    selected["content_review"] = content_review_status(&tx, &deck)?;
+    let source_version = selected["version_id"]
+        .as_i64()
+        .ok_or_else(|| Error::Tool("构建缺少来源版本".into()))?;
+    let source = store::load(&tx, source_version)?;
+    selected["content_review"] = content_review_status(&tx, source_version, &source)?;
+    selected["current_content_review"] = content_review_status(&tx, current.version, &deck)?;
     Ok(selected)
 }
 

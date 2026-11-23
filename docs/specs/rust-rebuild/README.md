@@ -2,6 +2,50 @@
 
 日期 2026-10-31，源码基线 `main@035845f228d1`。本稿合成自三份文件：《DeckMaster Rust 核心与后端全面重构方案》v1.1（PDF）、10-31 合并讨论稿和 Claude 的评审，三份都没有入库。之后又并入了 10-31 对 v1.2 的评审中经过核实的条目。本稿替代 v1.1 作为开发依据；开发规范以 [AGENTS.md](../../../AGENTS.md) 为准，两者冲突时以 AGENTS.md 为准。
 
+## 当前内容质量增量（2026-11-23）
+
+本节是 PR #352 的当前执行入口；下文 §3、§5、§6 给出实现合同。`content-quality-20261120/` 的需求修订与评审仅保留为净化后的历史背景，不再要求执行者解释覆盖顺序。D1–D5 已批准，Q1 已选 A（正文标记「待补：…」），不重新审批。沿用 Rust 核心、Python 文件工具、四职责 Skill。当前只修改后复审，不合并、不打 tag、不发版。
+
+当前阶段已有主要制作链路，正在验证内容质量方法是否形成稳定作品表现。字段落库和机制测试通过不等于内容质量改进已交付。新字段的 WebUI 编辑、最终视觉人判不属于 #352 本轮验收，不写成已通过。
+
+本轮修复的实际故障与合同：
+
+- 下载旧成品却显示当前新稿审稿：先选构建，再按 `builds.version_id` 读取来源作品；`content_review` 属于下载对象，`current_content_review` 单独描述当前稿。保留历史下载能力。
+- 删除、重排和同 ID 重建沿用旧审稿：按审稿 `version_id` 读取历史作者字段并比较完整页序；预览和产物变化不使内容审稿过期。`stale` 仍是提示。
+- 六项结论只有写入没有读回：`review list --record content_review|all` 与 `review get <id>` 返回方法、版本、类型、`checks` 和 `snapshot`；HTTP 使用同一用例。默认意见列表与待处理计数仍只含 comment。
+- 长中文讲稿和 findings 撑大响应头：完整构建报告只放 JSON body；`X-Deck-Status` 只放版本、下载和简短状态元数据。
+- `show` 不含完整正文：Host 用 `get` 读取 `content/argument/notes/purpose/layout` 后填写六项记录，`show` 用于总览、标题连读和写作简报；导出后实际读文件。无命令阅读证明门。
+- 旧 sanitizer 回退名随重复 ID 保留：只在旧 `name` 和 `title` 都恰为旧 ID 的「形状-N」时，随重编号更新；保留其他作者命名。
+
+内容效果仍按已有 AC 验收，不能用更多结构断言替代作品：
+
+| AC | 当前验收口径 |
+| --- | --- |
+| 01 受众与讲述 | 真实 Host 填写受众、待决事项、关注点、讲述人与语气；生成检查给可操作提示；v6 只读兼容、显式版本写入升级；旧程序拒绝 v7 |
+| 02 主线与页职责 | 历史显示先写主线再写正文；主线 5–8 句由核验人判断；判断页话题式标题不超过 1 个；逐页核对页型，明显误归类判失败，边界分歧记发现；数量不变成代码配额 |
+| 03 论证 | 判断页理由、证据、推理、反驳与边界逐页判读；无 ref/gap 证据拒绝生成，登记 gap 后放行；推理或反驳缺失不阻断生成，但记发现 |
+| 04 缺口与事实 | 材料明示或可直接推出的硬缺口全部登记，承载页正文标一次「待补：对象」；数字、案例、引语可追溯，推算有算式；不编造事实或目标；内部条目不搬到页面和讲稿 |
+| 05 表达 | 实际 Host 工具返回含 writing_brief；按讲述人写；保留必要不确定项，避免无关重复和复合工程腔；脚本只列候选，由人判断 |
+| 06 审稿与导出 | 正常 CLI/API 读回实际六项记录；核对导出字节、来源版本与适用审稿；覆盖新稿已审下载旧稿、旧稿已审后改稿、删页、重排、同 ID 重建、只改产物；记录不证明 Host 实际阅图，未阅图只记观察 |
+| 07 正式对照 | 以下对照、评分和中文首跑全部完成，才判内容效果交付 |
+| 08 PPTX 清洗 | 同页对象 ID 唯一，连接与动画引用正确；旧回退名更新，作者命名保留；XML 检查不冒充渲染或桌面编辑验收 |
+
+AC-07 的当前运行与评分规则：
+
+1. 先核对已有 R16–R21 的正式运行、实际产物和已用额度。已有运行保留，不停止、不挑稿、不为文档或响应头修复自动重跑全部六次。修改影响写作、审稿或产物时，补受影响的候选验证。
+2. 同一环境、同一 Host 设置，全新独立安装 main `865092226246aa57820aa4cdec291648aa3ddee0` 与候选，对 F1/F2/F3 每版各跑一次，共六次，全部登记。核对冻结输入 SHA、两版安装指纹、最终 PPTX、运行日志；判分底稿不进入写作输入。
+3. 评分图必须从最终导出的 PPTX 用同一渲染方式生成，记渲染器版本和图 SHA；不能使用 page.preview。匿名评分包含图和从成品抽出的讲稿，不给原始 PPTX 或候选专有派生字段。
+4. Q1-A 两段式：先遮盖「待补」标记，对 D1–D4、D6 评分并锁定；再看原稿对 D5、D7 评分，不改第一段。披露「标记可能暴露版本」的限制。逐夹具随机 X/Y 并封存映射。沿用既有两位评分人安排，修复后重评两位都换全新会话，参与开发和核验者不自评。
+5. 每个夹具每维候选均分不低于 main 减 0.5；至少两个夹具总分更高且包括 F3；候选 D7 两位评分人均给 2。分数必须有页码与原句支持。
+6. 最后一轮在最终候选上完成一次中文六页真实 Host 首跑；英文首跑已取消。保留原有两轮候选重跑限制、90 分钟单次上限及环境失败计次。历史记载拟定总额 21（开发 ≤6、核验与修复 ≤15），实际批准额与已用数须从原运行登记核实；无法核实不新启正式计费运行，不把未知数写成零。
+7. 同时执行 Rust、deck-tools、安装回归。结果分开记录机制测试、真实工具、真实 Host、作品判断。空的默认意见列表不代表无审稿，应读取 content_review 详情。
+
+当前核验状态：远端 #352 HEAD 为 `64a808ebf1ef35b3e13118b6745c3f7936836893`，main 与审查基线一致，PR 未合并。本工作区没有冻结 F1/F2/F3 输入包、R16–R21 运行登记、PPTX 与正式评分，实际额度也无法核实；AC-07 尚不可判通过。用户本机安装升级、正式 Host 运行、WPS/PowerPoint 编辑保存尚需在对应环境核验。
+
+本次修复的本地结果：Rust 常规 140 项与独立 native 实测 3 项通过，fmt/clippy 通过；前端 129 项和生产构建通过；deck-tools 与安装测试共 498 项，初跑 489 项通过、9 项因缺 rsvg-convert 失败，补齐真实工具后这 9 项全部通过。真实 CLI 的 SVG→PPTX 构建、历史下载与成品讲稿核对完成，两条相反审稿路径均正确；Node fetch 验证长中文讲稿和至少 30 条回读发现完整留在正文，状态头小于 2 KB。实际 main sanitizer→候选的旧产物再清洗通过。Linux 隔离新装完成，安装版 doctor ready，正常命令读回六项记录；这些不代替用户本机升级、正式 Host 首跑或作品效果验收。本次未新启正式 Host 运行，既有额度仍未知。
+
+后续按审查的三波推进：先收口上述正确性与 AC-07；接口稳定后推进正常从材料开稿的新整稿基准、既定 native 稿同页保真复测，以及 WebUI—Host 交接。继承已存在的制作与安装能力，不从零重建。WebUI 后续让 v7 意图可编辑、任务能交给 Host、native 候选可对照采用；普通保存不清空隐藏字段。Host 负责生产，浏览器不直接启动 image/svg；本阶段不加前端素材入口，不做 PPTX 导回 deck。作品阅读任务与连续论证是效果标准，不加表格/卡片/图标比例配额。
+
 ## 现状（1.1.0，2026-11-04）
 
 S0–S6 已合入 `main`，源码基线 `abb785eb`（PR #272 之后）。现行运行时是：
@@ -103,7 +147,7 @@ deck-skill/           新 Skill（第 6 节）
 | runs | id、kind（image/svg）、status（open/done/cancelled）、max_calls、calls_used、created_at |
 | run_pages | run_id、page_id、basis、status（pending/started/done/unadopted）、result_file |
 | builds | id、version_id、input_digest、pptx_file、findings_json、missing_pages、created_at |
-| reviews | id、version_id、page_id、reviewer、method（self_check/other_model/human，界面显示为 自检/另一模型检查/人工意见）、text、status（open/resolved）、created_at、resolved_at（可空）；格式 7 另有 record_kind（comment/content_review，默认 comment）、snapshot_json、checks_json。意见的添加和列表只读写原来的列，列表只看见 comment |
+| reviews | id、version_id、page_id、reviewer、method（self_check/other_model/human，界面显示为 自检/另一模型检查/人工意见）、text、status（open/resolved）、created_at、resolved_at（可空）；格式 7 另有 record_kind（comment/content_review，默认 comment）、snapshot_json、checks_json。默认列表只看见 comment；按类型或 ID 读取时返回六项结论与快照 |
 
 - 当前作品就是 id 最大的那个版本。
 - reviews 绑定添加时的版本，page_id 可空表示整稿意见；不修改作品版本。处理意见只将 status 改为 resolved 并记录 resolved_at，重复处理保留首次时间。
@@ -219,7 +263,7 @@ Page 新增默认空的 `native: Option<Artifact>`，Artifact 仍为 file/basis�
 - 有已采用 native 的作品按 native 构建：只读各页包中明确引用的 plan 与素材，用 assemble 一次生成整稿，讲稿取当前 page.notes；缺 native 的页列在 missing_pages，不回退 SVG。没有可参建页面时报输入错误并列出缺页，不写 builds；有参建页时沿用部分构建和 builds 表记录方式。组装不重查 Python 状态或按当前正文拒收已采用的旧 plan，正文差异由回读和 stale_pages 报告。回读在每个文字对象或单元格内按占用位置扣减，不把相邻对象拼成一条字符串：长句用掉自己的那一段后，没有单独画出的短 atom 仍记 `missing_visible_atom`。这只进入 findings，不让 assemble 失败退出，构建也不重跑 validate_plan。原图依据已变由 `stale_images` 与 `warnings` 报告，不并入与不阻断的规则见上一条。SVG 图标的 PNG 备用图在组装时用 rsvg-convert 按该图显示宽度渲染，高度跟随 SVG 自身比例，只替换这张 PNG。某一张失败时保留原占位，并在 findings 里记 `level=warning`、`code=svg_png_fallback`，不改变回读 status，assemble 照常返回。
 - native 的 build_digest 取页序、native 文件与保存依据、当前 svg-v2 依据及 notes，加现有构建设置；当前依据使改正文或原图后的成品匹配状态发生变化。纯 SVG 的摘要和构建／导出路径保持原算法。默认导出继续用同一 default_build 匹配，不另设选择规则。build 在临时目录组装，只用明确引用，不扫描目录。
 - `deck export md`：任何时候都可以导出可读稿，包括未完成的作品，待补项照常显示。命令输出仍是 Markdown。HTTP 状态在原有字段外增加 `content_review`。
-- `deck build` 与 `deck export pptx` 的 JSON 同样带 `content_review`：`status`、`methods`、`version_id`、`unreviewed_pages`。没有出稿审稿时 status 为 unreviewed，methods 和 unreviewed_pages 为空，version_id 为 null。有记录时取 id 最大的一条。当前每一页的 revision 都与快照相同，且上面五项框架原文与快照相同，则为 reviewed。任一页 revision 不同则为 stale，unreviewed_pages 只含这些页，按当前页序。页修订都相同但框架原文不同时为 stale，unreviewed_pages 为空。快照没有 framing 键时只比较页修订。快照读不出来时 status 为 stale、unreviewed_pages 为空，构建和导出仍成功。有 framing 时按存下的 JSON 原文比较。不因 version_id 变化判过期。thesis、pillars 以及其他 framing 字段不参与。只改预览或产物时，修订和框架都不变，仍为 reviewed。methods 是这一条记录的 method，放在数组里。该字段不阻断构建或导出，也不并入 warnings。删除后用同一 id 新建的页，revision 重新从 1 计；若快照里该页也是 1，则这一比较看不出来。Skill 要求交付或导出前先记录出稿审稿；没有记录时构建和导出仍然成功，status 为 unreviewed。
+- `deck build` 与导出返回 `content_review`：`status`、`methods`、`version_id`、`unreviewed_pages`。按目标作品版本选 `version_id` 不大于目标版本、id 最大的审稿记录，避免用新稿审稿描述旧成品；同版本构建后添加的审稿仍可适用。没有记录为 unreviewed。读取审稿版本的历史作品，对比完整有序页 ID 列表和各页作者字段（purpose/layout/content/notes/todo/refs/kind/argument），并比较快照中五项框架原文；旧记录缺 framing 时从历史作品取值。相符为 reviewed；新增、删除、重排、作者或框架变化为 stale。unreviewed_pages 只列新增或作者字段不同的现存页，按目标页序；纯删页、重排或框架变化时可以为空。快照或历史作品不可读取则 stale，仍可构建和导出。不因版本号本身、产物或预览变化过期。thesis、pillars 等其他框架字段不参与。六项结论不汇总成质量批准。PPTX 的审稿针对 builds.version_id 对应来源作品；current_content_review 单独描述当前稿。字段不阻断操作，不并入 warnings。
 - `deck export pptx`：优先选择当前 build_digest 匹配的最大构建 ID，否则选择最新历史构建；选中文件缺失时报错，不悄悄替换为另一份。返回来源 version_id，HTTP 仍返回 PPTX 字节与 X-Deck-Status 元数据。该构建的输入摘要与当前作品不一致时给出提示。不用版本号判断，因为 restore 会产生编号更大、内容更旧的版本。
 - build 和 export 的输出里，以及界面的下载按钮旁，都列出缺 SVG 的页、SVG 已过期的页，以及原图依据已变的页。界面取 `POST /api/build` 的响应或轮询得到的 `artifact_status`。
 - 原生表格回读按稳定行列身份核对 content 与实际单元格文字，并保留 SVG → PPT 的转换检查；同一原因不重复报告。发现项仍只报告，不增加采用或导出门槛。
@@ -255,9 +299,9 @@ S5 界面接入：制作总览展示整稿待处理意见，单页工作区展�
 
 - `GET /api/deck` 返回 `{version, deck, artifact_status, runs, history, reviews, open_reviews_total}`，在同一 SQLite 只读事务中读取。`artifact_status` 含 `missing_pages/stale_pages/stale_images`；reviews 是全部 open 意见，method 原样返回，deck 每页另带 `open_reviews` 条数（整稿意见只计入总数），不汇总为通过或合格；runs 含每页状态、未采用原因、`result_file`、`result_url`、`result_preview`、`current_basis` 与 `current_image_url`（无图时为 null），不含本地工作路径。`result_preview` 是 SVG 候选在交回时保存的 check-page PNG 文件名；原图任务、尚未交回或旧记录没有该预览时为 null。`current_basis` 是该页该任务类型当前制作依据的摘要，页面已删除时为 null。轮询和 `run show` 只返回已保存的预览引用和这次读到的依据摘要，不调用 check-page。history 按新到旧列出 `id/created_at/summary`。run 状态独立于作品版本变化，轮询时应同时刷新。
 - PUT 请求体是裸 patch（与 put 的 patch 相同，不接受 `{deck:…}` 包装），成功返回 `{version, deck}`。冲突返回 HTTP 409 与 `{exit_code:5, base, submitted, conflicts:[{unit,current}]}`，整次不写入；`submitted` 原样保留裸 patch，界面也须保留编辑输入。
-- `POST /api/build` 返回 `{id, url, findings, missing_pages, stale_pages, stale_images, warnings, content_review}`，url 是该次构建文件的 `/api/files/<sha>`。同一 JSON 写入 `X-Deck-Status`。`warnings` 列出原图依据已变的页（`stale_image`），以及已采用 plan 里共用题头达到 3 页的页（`shared_layout`）。`content_review` 与 `warnings` 并列，形状见 §3.6。不改变 HTTP 状态。`GET /api/files/<sha>` 只在当前项目的 files 目录内查找，含扩展名的存储引用取点号前的 sha 用于 URL；文件响应禁止脚本执行。
-- `GET /api/export/md` 与 `GET /api/export/pptx` 直接返回下载内容，文件名为 `deck.md/deck.pptx`。`X-Deck-Status` 是 JSON（非 ASCII 字符使用 JSON 转义），含 `missing_pages/stale_pages` 和 `content_review`；PPTX 另含 `id/input_changed/warning/build_missing_pages/stale_images/warnings`。Markdown 的状态来自 `artifact_status` 加上 `content_review`，其中已有 `stale_images`。`content_review` 不并入 `warnings`。
-- `GET /api/reviews` 返回 `{reviews:[意见]}`，可用 `status=open|resolved` 与 `page=pN` 过滤，按 id 升序；POST 接受 `{page_id?, text, reviewer?}`，reviewer 默认 author，服务端强制 method=human 并忽略请求中的 method。add 与 resolve 返回该条意见，resolve 幂等；意见不存在返回 404。
+- `POST /api/build` 返回 `{id, version_id, url, findings, missing_pages, stale_pages, stale_images, warnings, content_review}`，url 是该次构建文件的 `/api/files/<sha>`。完整 findings（含讲稿与回读）只留 JSON 正文。`X-Deck-Status` 仅带 id、url、version_id、缺页/过期摘要、warnings 和 content_review，不带报告正文。`warnings` 列出原图依据已变的页（`stale_image`），以及已采用 plan 里共用题头达到 3 页的页（`shared_layout`）。`content_review` 与 `warnings` 并列，形状见 §3.6。不改变 HTTP 状态。`GET /api/files/<sha>` 只在当前项目的 files 目录内查找，含扩展名的存储引用取点号前的 sha 用于 URL；文件响应禁止脚本执行。
+- `GET /api/export/md` 与 `GET /api/export/pptx` 直接返回下载内容，文件名为 `deck.md/deck.pptx`。`X-Deck-Status` 是 JSON（非 ASCII 字符使用 JSON 转义），含 `missing_pages/stale_pages` 和 `content_review`；PPTX 另含 `id/version_id/input_changed/warning/build_missing_pages/stale_images/warnings/current_content_review`。Markdown 的状态来自 `artifact_status` 加上 `content_review`，其中已有 `stale_images`。`content_review` 不并入 `warnings`。
+- `GET /api/reviews` 返回 `{reviews:[意见]}`，默认只含 comment，可用 `record=comment|content_review|all`、`status=open|resolved` 与 `page=pN` 过滤，按 id 升序；`GET /api/reviews/<id>` 返回完整记录（含 record_kind、checks、snapshot）；POST 接受 `{page_id?, text, reviewer?}`，reviewer 默认 author，服务端强制 method=human 并忽略请求中的 method。add 与 resolve 返回该条意见，resolve 幂等；意见不存在返回 404。
 - cancel 返回 `{runs:[目标 run]}`，restore 返回 `{version, deck}`。输入错误为 HTTP 400；非本机请求 403；文件或接口不存在 404；缺工具 503；工具执行失败 500。错误响应含 `error`，仅 HTTP 409 冲突附带 CLI `exit_code:5`。
 
 ### 3.8 错误
