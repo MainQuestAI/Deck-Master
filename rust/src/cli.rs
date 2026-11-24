@@ -1,5 +1,4 @@
-use crate::error::Result;
-use crate::model::Patch;
+use crate::error::{Error, Result};
 use crate::ops;
 use clap::{CommandFactory, FromArgMatches, Parser, Subcommand, parser::ValueSource};
 use serde::Serialize;
@@ -92,9 +91,9 @@ enum Commands {
 
 #[derive(Subcommand)]
 enum ReviewCommand {
-    #[command(about = "记录意见；不修改作品版本")]
+    #[command(about = "记录意见或出稿审稿；不修改作品版本")]
     Add {
-        text: String,
+        text: Option<String>,
         #[arg(long)]
         page: Option<String>,
         #[arg(
@@ -106,14 +105,27 @@ enum ReviewCommand {
         method: String,
         #[arg(long, default_value = "author")]
         reviewer: String,
+        #[arg(
+            long,
+            default_value = "comment",
+            value_parser = ["comment", "content_review"],
+            help = "comment 是意见；content_review 是整稿出稿审稿"
+        )]
+        record: String,
+        #[arg(long, help = "出稿审稿的六项检查 JSON")]
+        checks: Option<PathBuf>,
     },
-    #[command(about = "按状态或页面读取意见")]
+    #[command(about = "按类型、状态或页面读取审阅记录")]
     List {
         #[arg(long)]
         status: Option<String>,
         #[arg(long)]
         page: Option<String>,
+        #[arg(long, default_value = "comment", value_parser = ["comment", "content_review", "all"])]
+        record: String,
     },
+    #[command(about = "按编号读取完整审阅记录")]
+    Get { id: i64 },
     #[command(about = "标记意见已处理")]
     Resolve { id: i64 },
 }
@@ -222,18 +234,52 @@ pub fn run() -> Result<()> {
                 page,
                 method,
                 reviewer,
-            } => print_json(ops::review_add(
-                &cli.project,
-                page.as_deref(),
-                &text,
-                &reviewer,
-                &method,
-            )?),
-            ReviewCommand::List { status, page } => print_json(ops::review_list(
+                record,
+                checks,
+            } => {
+                if record == "content_review" {
+                    if page.is_some() {
+                        return Err(Error::Input(
+                            "出稿审稿是整稿一条，不能用 --page 指定页面".into(),
+                        ));
+                    }
+                    let Some(checks) = checks else {
+                        return Err(Error::Input(
+                            "出稿审稿需要 --checks 指向六项检查的 JSON 文件".into(),
+                        ));
+                    };
+                    print_json(ops::review_add_content(
+                        &cli.project,
+                        text.as_deref().unwrap_or(""),
+                        &reviewer,
+                        &method,
+                        &checks,
+                    )?)
+                } else if checks.is_some() {
+                    Err(Error::Input(
+                        "--checks 只用于出稿审稿（--record content_review）".into(),
+                    ))
+                } else {
+                    print_json(ops::review_add(
+                        &cli.project,
+                        page.as_deref(),
+                        text.as_deref().unwrap_or(""),
+                        &reviewer,
+                        &method,
+                    )?)
+                }
+            }
+            ReviewCommand::List {
+                status,
+                page,
+                record,
+            } => print_json(ops::review_list_records(
                 &cli.project,
                 status.as_deref(),
                 page.as_deref(),
+                &record,
             )?),
+            ReviewCommand::Get { id } => print_json(ops::review_get(&cli.project, id)?),
             ReviewCommand::Resolve { id } => print_json(ops::review_resolve(&cli.project, id)?),
         },
         Commands::Serve { directory } => crate::server::serve(&directory),
@@ -294,11 +340,8 @@ pub fn run() -> Result<()> {
         Commands::Show => print_json(ops::show(&cli.project)?),
         Commands::Get { pages } => print_json(ops::get(&cli.project, pages.as_deref())?),
         Commands::Put { base, file } => {
-            let mut value: serde_json::Value = serde_json::from_slice(&std::fs::read(file)?)?;
-            if let Some(deck) = value.get_mut("deck") {
-                value = deck.take();
-            }
-            let patch: Patch = serde_json::from_value(value)?;
+            let value: serde_json::Value = serde_json::from_slice(&std::fs::read(file)?)?;
+            let patch = ops::put_patch(value, true)?;
             print_json(ops::put(&cli.project, base, patch)?)
         }
         Commands::Restore { version } => print_json(ops::restore(&cli.project, version)?),

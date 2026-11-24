@@ -735,11 +735,13 @@ def assemble(job):
     with tempfile.NamedTemporaryFile(dir=output.parent, prefix='.deck-', suffix='.pptx', delete=False) as temp:
         temporary = Path(temp.name)
     warnings = []
+    hints = []
     try:
         _, _, warnings = generate(job['pages'], temporary, mode='deck')
         temporary.write_bytes(sanitize.pptx(
             temporary.read_bytes(), 'deck.pptx',
-            notes=[{'page_id': p['id'], 'notes': p.get('notes', '')} for p in job['pages']]))
+            notes=[{'page_id': p['id'], 'notes': p.get('notes', '')} for p in job['pages']],
+            findings=hints))
         os.replace(temporary, output)
     finally:
         temporary.unlink(missing_ok=True)
@@ -757,6 +759,7 @@ def assemble(job):
     report = readback(output, job['pages'])
     if warnings:
         report['warnings'] = warnings
+    sanitize.attach_hint_findings(report, hints)
     return {'pptx': str(output), 'render_pngs': previews, 'findings': report}
 
 

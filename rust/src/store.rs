@@ -10,7 +10,50 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-pub const FORMAT_VERSION: i64 = 6;
+pub const FORMAT_VERSION: i64 = 7;
+
+const FRESH_V7: &str = "
+CREATE TABLE versions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+    summary TEXT NOT NULL,
+    deck_json TEXT NOT NULL
+);
+CREATE TABLE runs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    kind TEXT NOT NULL, status TEXT NOT NULL,
+    max_calls INTEGER, calls_used INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+);
+CREATE TABLE run_pages (
+    run_id INTEGER NOT NULL, page_id TEXT NOT NULL, basis TEXT NOT NULL,
+    status TEXT NOT NULL, result_file TEXT, preview_file TEXT,
+    PRIMARY KEY (run_id, page_id)
+);
+CREATE TABLE builds (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, version_id INTEGER NOT NULL,
+    input_digest TEXT NOT NULL, pptx_file TEXT NOT NULL,
+    findings_json TEXT NOT NULL, missing_pages TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+);
+CREATE TABLE reviews (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    version_id INTEGER NOT NULL, page_id TEXT,
+    reviewer TEXT NOT NULL,
+    method TEXT NOT NULL CHECK (method IN ('self_check','other_model','human')),
+    text TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open','resolved')),
+    created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+    resolved_at TEXT,
+    record_kind TEXT NOT NULL DEFAULT 'comment' CHECK (record_kind IN ('comment','content_review')),
+    snapshot_json TEXT,
+    checks_json TEXT
+);
+PRAGMA user_version = 7;";
+
+pub fn unsupported_format_message(version: i64, supported: i64) -> String {
+    format!("项目格式为 {version}，当前程序只支持 {supported}；请升级 deck")
+}
 
 pub struct Store {
     pub connection: Connection,
@@ -38,9 +81,11 @@ impl Store {
         fs::create_dir(root.join("files"))?;
         let connection = Connection::open(root.join("deck.db"))?;
         let mut store = Self { connection, root };
-        store.configure()?;
+        store.connection.busy_timeout(Duration::from_secs(5))?;
         let tx = store.transaction()?;
-        append(&tx, deck, "新建作品")?;
+        tx.execute_batch(FRESH_V7)?;
+        let mut deck = deck.clone();
+        append(&tx, &mut deck, "新建作品")?;
         tx.commit()?;
         Ok(store)
     }
@@ -64,22 +109,29 @@ impl Store {
         let version: i64 = self
             .connection
             .pragma_query_value(None, "user_version", |row| row.get(0))?;
-        if version == FORMAT_VERSION {
-            return Ok(());
-        }
         if version > FORMAT_VERSION {
-            return Err(Error::Input(format!(
-                "项目格式为 {version}，当前程序只支持 {FORMAT_VERSION}；请升级 deck"
+            return Err(Error::Input(unsupported_format_message(
+                version,
+                FORMAT_VERSION,
             )));
+        }
+        // v6 stays readable. v7 columns are added in the same transaction as the
+        // first versions insert, not when a command only opens the database.
+        if version == 6 || version == FORMAT_VERSION {
+            return Ok(());
         }
         // Read the format after acquiring the write transaction: two clients may
         // open the same old project while another client is migrating it.
         let tx = self.transaction()?;
         let version: i64 = tx.pragma_query_value(None, "user_version", |row| row.get(0))?;
         if version > FORMAT_VERSION {
-            return Err(Error::Input(format!(
-                "项目格式为 {version}，当前程序只支持 {FORMAT_VERSION}；请升级 deck"
+            return Err(Error::Input(unsupported_format_message(
+                version,
+                FORMAT_VERSION,
             )));
+        }
+        if version == 6 || version == FORMAT_VERSION {
+            return Ok(());
         }
         if version == 0 {
             tx.execute_batch(
@@ -258,7 +310,54 @@ pub(crate) fn load_optional(connection: &Connection, version: i64) -> Result<Opt
         .map_err(Error::from)
 }
 
-pub fn append(connection: &Connection, deck: &Deck, summary: &str) -> Result<i64> {
+fn has_column(connection: &Connection, table: &str, column: &str) -> Result<bool> {
+    let mut statement = connection.prepare(&format!("PRAGMA table_info({table})"))?;
+    let mut rows = statement.query([])?;
+    while let Some(row) = rows.next()? {
+        let name: String = row.get(1)?;
+        if name == column {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
+pub(crate) fn user_version(connection: &Connection) -> Result<i64> {
+    Ok(connection.pragma_query_value(None, "user_version", |row| row.get(0))?)
+}
+
+pub(crate) fn reviews_have_record_kind(connection: &Connection) -> Result<bool> {
+    has_column(connection, "reviews", "record_kind")
+}
+
+fn migrate_v7(connection: &Connection) -> Result<()> {
+    let version = user_version(connection)?;
+    if version >= FORMAT_VERSION {
+        return Ok(());
+    }
+    if version < 6 {
+        return Err(Error::Input(
+            "项目格式尚未完成到 6 的迁移；请重新打开项目后再保存".into(),
+        ));
+    }
+    if !has_column(connection, "reviews", "record_kind")? {
+        connection.execute(
+            "ALTER TABLE reviews ADD COLUMN record_kind TEXT NOT NULL DEFAULT 'comment' CHECK (record_kind IN ('comment','content_review'))",
+            [],
+        )?;
+    }
+    if !has_column(connection, "reviews", "snapshot_json")? {
+        connection.execute("ALTER TABLE reviews ADD COLUMN snapshot_json TEXT", [])?;
+    }
+    if !has_column(connection, "reviews", "checks_json")? {
+        connection.execute("ALTER TABLE reviews ADD COLUMN checks_json TEXT", [])?;
+    }
+    connection.pragma_update(None, "user_version", FORMAT_VERSION)?;
+    Ok(())
+}
+
+pub fn append(connection: &Connection, deck: &mut Deck, summary: &str) -> Result<i64> {
+    migrate_v7(connection)?;
     connection.execute(
         "INSERT INTO versions (summary, deck_json) VALUES (?, ?)",
         params![summary, serde_json::to_string(deck)?],

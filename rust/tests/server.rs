@@ -105,7 +105,7 @@ impl Service {
             .unwrap()
             .parse()
             .unwrap();
-        let headers = head
+        let headers: HashMap<String, String> = head
             .lines()
             .skip(1)
             .map(|line| {
@@ -113,10 +113,32 @@ impl Service {
                 (key.to_ascii_lowercase(), value.trim().to_owned())
             })
             .collect();
+        let mut body = bytes[end + 4..].to_vec();
+        // tiny_http streams large JSON bodies using chunked transfer encoding.
+        if headers
+            .get("transfer-encoding")
+            .is_some_and(|value| value == "chunked")
+        {
+            let mut encoded = body.as_slice();
+            let mut decoded = Vec::new();
+            loop {
+                let line_end = encoded.windows(2).position(|pair| pair == b"\r\n").unwrap();
+                let size =
+                    usize::from_str_radix(std::str::from_utf8(&encoded[..line_end]).unwrap(), 16)
+                        .unwrap();
+                if size == 0 {
+                    break;
+                }
+                encoded = &encoded[line_end + 2..];
+                decoded.extend_from_slice(&encoded[..size]);
+                encoded = &encoded[size + 2..];
+            }
+            body = decoded;
+        }
         Reply {
             status,
             headers,
-            body: bytes[end + 4..].to_vec(),
+            body,
         }
     }
 }
@@ -134,10 +156,9 @@ fn adopt_rechecks_candidate_after_tool_work_for_cli_and_http() {
                 1,
                 json!({"order":["p1"],"pages":[{"id":"p1","content":{"title":"Main"}}]}),
             );
-            let id =
-                ops::run_start(&project, "svg", &["p1".into()], None).unwrap()["runs"][0]["id"]
-                    .as_i64()
-                    .unwrap();
+            let id = run_start(&project, "svg", &["p1".into()], None).unwrap()["runs"][0]["id"]
+                .as_i64()
+                .unwrap();
             ops::run_cancel(&project, id).unwrap();
             let store = Store::open(&project).unwrap();
             let a = store.add_file(b"<svg>A</svg>", "svg").unwrap();
@@ -282,11 +303,10 @@ fn result_rechecks_candidate_after_tool_work_and_preserves_identical_status() {
             1,
             json!({"order":["p1","p2"],"pages":[{"id":"p1","content":{"title":"Main"}},{"id":"p2"}]}),
         );
-        let id =
-            ops::run_start(&project, "svg", &["p1".into(), "p2".into()], None).unwrap()["runs"][0]
-                ["id"]
-                .as_i64()
-                .unwrap();
+        let id = run_start(&project, "svg", &["p1".into(), "p2".into()], None).unwrap()["runs"][0]
+            ["id"]
+            .as_i64()
+            .unwrap();
         if cancelled {
             ops::run_cancel(&project, id).unwrap();
         }
@@ -430,6 +450,73 @@ print(json.dumps({'preview': str(preview), 'findings': []}))
     }
 }
 
+fn allow_runs(path: &Path) {
+    let store = Store::open(path).unwrap();
+    let snapshot = store.current().unwrap();
+    let mut deck = snapshot.deck;
+    let mut changed = false;
+    if deck.brief.audience.trim().is_empty() {
+        deck.brief.audience = "业务负责人".into();
+        changed = true;
+    }
+    if deck.brief.decision.trim().is_empty() {
+        deck.brief.decision = "是否采用该方案".into();
+        changed = true;
+    }
+    if deck
+        .brief
+        .concerns
+        .iter()
+        .all(|item| item.trim().is_empty())
+    {
+        deck.brief.concerns = vec!["成本是否可控".into()];
+        changed = true;
+    }
+    if deck.brief.narrator.role.trim().is_empty() {
+        deck.brief.narrator.role = "项目负责人".into();
+        changed = true;
+    }
+    if deck.brief.narrator.tone.trim().is_empty() {
+        deck.brief.narrator.tone = "直接说明判断".into();
+        changed = true;
+    }
+    if deck
+        .framing
+        .storyline
+        .iter()
+        .all(|item| item.trim().is_empty())
+    {
+        deck.framing.storyline = vec!["先说明问题，再给出判断".into()];
+        changed = true;
+    }
+    // Blank kind is not treated as a judgment page. These fixtures only need the start gate to open.
+    for page in &mut deck.pages {
+        if page.kind.trim().is_empty() {
+            page.kind = "explanation".into();
+            changed = true;
+        }
+    }
+    if changed {
+        store
+            .connection
+            .execute(
+                "UPDATE versions SET deck_json=?1 WHERE id=?2",
+                rusqlite::params![serde_json::to_string(&deck).unwrap(), snapshot.version],
+            )
+            .unwrap();
+    }
+}
+
+fn run_start(
+    path: &Path,
+    kind: &str,
+    ids: &[String],
+    max_calls: Option<i64>,
+) -> deck::error::Result<Value> {
+    allow_runs(path);
+    ops::run_start(path, kind, ids, max_calls)
+}
+
 fn edit(project: &Path, base: i64, value: Value) -> i64 {
     let patch: Patch = serde_json::from_value(value).unwrap();
     ops::put(project, base, patch).unwrap().version
@@ -464,7 +551,7 @@ fn historical_version_get_returns_saved_snapshot_without_business_writes() {
         }),
     );
     ops::review_add(path, Some("p1"), "当前意见", "author", "human").unwrap();
-    ops::run_start(path, "image", &["p1".into()], Some(1)).unwrap();
+    run_start(path, "image", &["p1".into()], Some(1)).unwrap();
     let store = Store::open(path).unwrap();
     let counts = || -> Vec<i64> {
         ["versions", "runs", "run_pages", "reviews", "builds"]
@@ -765,7 +852,7 @@ fn jpeg_result_named_png_downloads_as_jpeg() {
             .unwrap()
             .success()
     );
-    let run = ops::run_start(temp.path(), "image", &["p1".into()], None).unwrap();
+    let run = run_start(temp.path(), "image", &["p1".into()], None).unwrap();
     let id = run["runs"][0]["id"].as_i64().unwrap();
     ops::run_call(temp.path(), id, "p1", false).unwrap();
     let result = ops::run_result(temp.path(), id, "p1", &bitmap).unwrap();
@@ -787,7 +874,7 @@ fn http_cancel_uses_ops_and_late_result_stays_unadopted() {
         1,
         json!({"order":["p1"],"pages":[{"id":"p1"}]}),
     );
-    let run = ops::run_start(temp.path(), "image", &["p1".into()], None).unwrap();
+    let run = run_start(temp.path(), "image", &["p1".into()], None).unwrap();
     let id = run["runs"][0]["id"].as_i64().unwrap();
     ops::run_call(temp.path(), id, "p1", false).unwrap();
     let service = Service::start(temp.path());
@@ -880,12 +967,14 @@ fn build_downloads_report_missing_stale_and_changed_inputs_without_gating() {
     let basis = ops::basis("svg", &snapshot.deck, &snapshot.deck.pages[0]).unwrap();
     snapshot.deck.pages[0].svg = Some(Artifact { file, basis });
     let tx = store.transaction().unwrap();
-    let base = store::append(&tx, &snapshot.deck, "synthetic compiler fixture").unwrap();
+    let base = store::append(&tx, &mut snapshot.deck, "synthetic compiler fixture").unwrap();
     tx.commit().unwrap();
     edit(
         temp.path(),
         base,
-        json!({"pages":[{"id":"p1","content":{"title":"Changed"}}]}),
+        json!({"pages":[{"id":"p1","content":{"title":"Changed", "body_blocks":
+            (0..30).map(|index| json!({"type":"paragraph","text":format!("中文回读缺项 {index}")})).collect::<Vec<_>>()
+        },"notes":"这是需要完整保留的中文讲稿。".repeat(2000)}]}),
     );
     let service = Service::start(temp.path());
     let build = service.request("POST", "/api/build", &[], "");
@@ -900,6 +989,42 @@ fn build_downloads_report_missing_stale_and_changed_inputs_without_gating() {
     assert_eq!(build.json()["stale_images"], json!([]));
     assert_eq!(build.json()["warnings"], json!([]));
     assert!(build.json().get("path").is_none());
+    let unreviewed =
+        json!({"status":"unreviewed","methods":[],"version_id":null,"unreviewed_pages":[]});
+    assert_eq!(build.json()["content_review"], unreviewed);
+    assert_eq!(build.artifact_status()["content_review"], unreviewed);
+    assert!(build.body.len() > 20_000);
+    assert!(build.headers["x-deck-status"].len() < 2_000);
+    assert!(build.artifact_status().get("findings").is_none());
+    assert!(
+        build.json()["findings"]["findings"]
+            .as_array()
+            .unwrap()
+            .len()
+            >= 30
+    );
+    assert!(
+        build.json()["findings"]
+            .to_string()
+            .contains(&"这是需要完整保留的中文讲稿。".repeat(2000))
+    );
+    let fetched = Command::new("node").args(["--input-type=module", "-e",
+        "const r=await fetch(process.argv[1],{method:'POST'}); const body=await r.json(); console.log(JSON.stringify({status:r.status,header:r.headers.get('x-deck-status').length,notes:body.findings.notes}));",
+        &format!("http://{}/api/build", service.address),
+    ]).output().unwrap();
+    assert!(
+        fetched.status.success(),
+        "{}",
+        String::from_utf8_lossy(&fetched.stderr)
+    );
+    let fetched: Value = serde_json::from_slice(&fetched.stdout).unwrap();
+    assert_eq!(fetched["status"], 200);
+    assert!(fetched["header"].as_u64().unwrap() < 2_000);
+    assert!(
+        fetched["notes"]
+            .to_string()
+            .contains(&"这是需要完整保留的中文讲稿。".repeat(2000))
+    );
     let downloaded = service.request("GET", build.json()["url"].as_str().unwrap(), &[], "");
     assert_eq!(downloaded.status, 200);
     assert!(downloaded.body.starts_with(b"PK"));
@@ -922,12 +1047,21 @@ fn build_downloads_report_missing_stale_and_changed_inputs_without_gating() {
     assert_eq!(exported.artifact_status()["stale_pages"], json!(["p1"]));
     assert_eq!(exported.artifact_status()["stale_images"], json!([]));
     assert_eq!(exported.artifact_status()["warnings"], json!([]));
+    assert_eq!(
+        exported.artifact_status()["content_review"]["status"],
+        "unreviewed"
+    );
     let markdown = service.request("GET", "/api/export/md", &[], "");
     assert_eq!(markdown.status, 200);
     assert_eq!(
         markdown.artifact_status()["missing_pages"],
         json!(["待补😀"])
     );
+    assert_eq!(
+        markdown.artifact_status()["content_review"]["unreviewed_pages"],
+        json!([])
+    );
+    assert!(markdown.artifact_status().get("warnings").is_none());
 }
 
 #[test]
@@ -1085,13 +1219,13 @@ fn http_adopt_matches_cli_with_candidates_and_existing_rejection_semantics() {
             .unwrap()
             .success()
     );
-    let first = ops::run_start(path, "image", &["p3".into()], None).unwrap()["runs"][0]["id"]
+    let first = run_start(path, "image", &["p3".into()], None).unwrap()["runs"][0]["id"]
         .as_i64()
         .unwrap();
     ops::run_call(path, first, "p3", false).unwrap();
     let first_result = ops::run_result(path, first, "p3", &bitmap).unwrap();
     let first_bytes = std::fs::read(&bitmap).unwrap();
-    let id = ops::run_start(path, "image", &["p3".into()], None).unwrap()["runs"][0]["id"]
+    let id = run_start(path, "image", &["p3".into()], None).unwrap()["runs"][0]["id"]
         .as_i64()
         .unwrap();
     let service = Service::start(path);
@@ -1215,7 +1349,7 @@ fn http_adopts_cancelled_runs_late_result() {
             .unwrap()
             .success()
     );
-    let id = ops::run_start(path, "image", &["p3".into()], None).unwrap()["runs"][0]["id"]
+    let id = run_start(path, "image", &["p3".into()], None).unwrap()["runs"][0]["id"]
         .as_i64()
         .unwrap();
     ops::run_call(path, id, "p3", false).unwrap();
@@ -1266,7 +1400,7 @@ fn http_adopts_only_selected_page_of_two_page_run() {
             .success()
     );
     let pages = ["p1".into(), "p2".into()];
-    let first = ops::run_start(path, "image", &pages, None).unwrap()["runs"][0]["id"]
+    let first = run_start(path, "image", &pages, None).unwrap()["runs"][0]["id"]
         .as_i64()
         .unwrap();
     for page in &pages {
@@ -1276,7 +1410,7 @@ fn http_adopts_only_selected_page_of_two_page_run() {
             true
         );
     }
-    let id = ops::run_start(path, "image", &pages, None).unwrap()["runs"][0]["id"]
+    let id = run_start(path, "image", &pages, None).unwrap()["runs"][0]["id"]
         .as_i64()
         .unwrap();
     for page in &pages {
@@ -1343,7 +1477,7 @@ fn http_rejects_adoption_after_page_deleted() {
             .unwrap()
             .success()
     );
-    let id = ops::run_start(path, "image", &["p3".into()], None).unwrap()["runs"][0]["id"]
+    let id = run_start(path, "image", &["p3".into()], None).unwrap()["runs"][0]["id"]
         .as_i64()
         .unwrap();
     ops::run_call(path, id, "p3", false).unwrap();
@@ -1428,6 +1562,7 @@ print(json.dumps({"preview": str(preview), "findings": []}))
         );
         serde_json::from_slice::<Value>(&output.stdout).unwrap()
     };
+    allow_runs(&project);
     let id = run(&["run", "start", "svg", "--pages", "p1"])["runs"][0]["id"]
         .as_i64()
         .unwrap();
@@ -1504,7 +1639,7 @@ fn candidate_only_native_build_fails_with_missing_pages_and_no_build_record() {
         1,
         json!({"order":["p1"],"pages":[{"id":"p1"}]}),
     );
-    let run = ops::run_start(temp.path(), "native", &["p1".into()], None).unwrap()["runs"][0]["id"]
+    let run = run_start(temp.path(), "native", &["p1".into()], None).unwrap()["runs"][0]["id"]
         .as_i64()
         .unwrap();
     let store = Store::open(temp.path()).unwrap();
@@ -1520,5 +1655,97 @@ fn candidate_only_native_build_fails_with_missing_pages_and_no_build_record() {
                 .get::<_, i64>(0))
             .unwrap(),
         0
+    );
+}
+
+#[test]
+fn http_deck_read_includes_gap_list() {
+    let temp = tempfile::tempdir().unwrap();
+    ops::new(temp.path(), "合成作品".into()).unwrap();
+    edit(
+        temp.path(),
+        1,
+        json!({
+            "order": ["p2", "p1"],
+            "pages": [
+                {
+                    "id": "p2",
+                    "kind": "explanation",
+                    "todo": ["页面待办原文", "  "],
+                    "argument": {
+                        "evidence": [
+                            {"text": "有出处", "ref": "m1"},
+                            {"text": "材料未给出的对比基数", "gap": " 待补：需披露口径与年份 "}
+                        ]
+                    }
+                },
+                {"id": "p1", "todo": [""]}
+            ]
+        }),
+    );
+    let service = Service::start(temp.path());
+    let reply = service.request("GET", "/api/deck", &[], "");
+    assert_eq!(reply.status, 200);
+    let body = reply.json();
+    assert_eq!(
+        body["gap_list"],
+        json!([
+            {
+                "page_id": "p2",
+                "source": "evidence",
+                "text": "材料未给出的对比基数",
+                "gap": " 待补：需披露口径与年份 "
+            },
+            {"page_id": "p2", "source": "todo", "text": "页面待办原文"}
+        ])
+    );
+    assert!(body["gap_list"][1].get("gap").is_none());
+    assert!(body["deck"].get("gap_list").is_none());
+}
+
+#[test]
+fn http_reads_content_review_details_without_mixing_opinions() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    ops::new(path, "合成读回".into()).unwrap();
+    let checks = json!([
+        {"id":"storyline_coherence","conclusion":"主线有待明确","pages":[]},
+        {"id":"evidence_supports_claim","conclusion":"第二页待补证据","pages":["p2"]},
+        {"id":"anticipated_objections","conclusion":"已检查","pages":[]},
+        {"id":"overdefense","conclusion":"已检查","pages":[]},
+        {"id":"no_internal_notes","conclusion":"已检查","pages":[]},
+        {"id":"final_pages_viewed","conclusion":"已看正文","pages":[]}
+    ]);
+    let file = path.join("checks.json");
+    std::fs::write(&file, checks.to_string()).unwrap();
+    let saved = ops::review_add_content(path, "复审看证据", "Host", "self_check", &file).unwrap();
+    let service = Service::start(path);
+    let listed = service.request("GET", "/api/reviews?record=content_review", &[], "");
+    assert_eq!(listed.status, 200);
+    assert_eq!(listed.json()["reviews"][0]["checks"], checks);
+    assert_eq!(
+        listed.json()["reviews"][0]["snapshot"]["version_id"],
+        saved.version_id
+    );
+    let detail = service.request("GET", &format!("/api/reviews/{}", saved.id), &[], "");
+    assert_eq!(detail.status, 200);
+    assert_eq!(detail.json(), listed.json()["reviews"][0]);
+    assert_eq!(
+        service.request("GET", "/api/reviews", &[], "").json()["reviews"],
+        json!([])
+    );
+    assert_eq!(
+        service.request("GET", "/api/deck", &[], "").json()["open_reviews_total"],
+        0
+    );
+    assert_eq!(
+        service.request("GET", "/api/reviews/999", &[], "").status,
+        404
+    );
+    assert_eq!(
+        service
+            .request("GET", "/api/reviews?record=invalid", &[], "")
+            .status,
+        400
     );
 }

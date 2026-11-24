@@ -4,6 +4,13 @@ use std::collections::HashSet;
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
+pub struct Narrator {
+    pub role: String,
+    pub tone: String,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
 pub struct Brief {
     pub title: String,
     pub audience: String,
@@ -11,6 +18,9 @@ pub struct Brief {
     pub goal: String,
     pub constraints: Vec<String>,
     pub page_limit: Option<u32>,
+    pub decision: String,
+    pub concerns: Vec<String>,
+    pub narrator: Narrator,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
@@ -28,6 +38,7 @@ pub struct Framing {
     pub facts: Vec<String>,
     pub assumptions: Vec<String>,
     pub questions: Vec<String>,
+    pub storyline: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -260,6 +271,46 @@ impl Content {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
+pub struct Evidence {
+    #[serde(default)]
+    pub text: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub r#ref: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub gap: Option<String>,
+}
+
+impl Evidence {
+    fn meaningful(value: &Option<String>) -> Option<&str> {
+        value.as_deref().filter(|text| !text.trim().is_empty())
+    }
+
+    pub fn has_ref(&self) -> bool {
+        Self::meaningful(&self.r#ref).is_some()
+    }
+
+    pub fn has_gap(&self) -> bool {
+        Self::meaningful(&self.gap).is_some()
+    }
+
+    pub fn gap_text(&self) -> Option<&str> {
+        Self::meaningful(&self.gap)
+    }
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct Argument {
+    pub reasons: Vec<String>,
+    pub evidence: Vec<Evidence>,
+    pub reasoning: String,
+    pub rebuttal: String,
+}
+
+pub const PAGE_KINDS: &[&str] = &["judgment", "explanation", "reference", "teaching"];
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Artifact {
     pub file: String,
     pub basis: String,
@@ -275,6 +326,8 @@ pub struct Page {
     pub notes: String,
     pub todo: Vec<String>,
     pub refs: Vec<String>,
+    pub kind: String,
+    pub argument: Option<Argument>,
     pub image: Option<Artifact>,
     pub svg: Option<Artifact>,
     #[serde(default)]
@@ -292,11 +345,24 @@ impl Page {
             notes: Some(self.notes.clone()),
             todo: Some(self.todo.clone()),
             refs: Some(self.refs.clone()),
+            kind: Some(self.kind.clone()),
+            argument: Some(self.argument.clone()),
             image: None,
             svg: None,
             native: None,
             preview: None,
         }
+    }
+
+    pub fn author_fields_changed(&self, other: &Page) -> bool {
+        self.purpose != other.purpose
+            || self.layout != other.layout
+            || self.content != other.content
+            || self.notes != other.notes
+            || self.todo != other.todo
+            || self.refs != other.refs
+            || self.kind != other.kind
+            || self.argument != other.argument
     }
 }
 
@@ -320,6 +386,11 @@ pub struct PagePatch {
     pub notes: Option<String>,
     pub todo: Option<Vec<String>>,
     pub refs: Option<Vec<String>>,
+    #[serde(default)]
+    pub kind: Option<String>,
+    // Absent keeps the stored argument. null clears it. An object replaces it.
+    #[serde(default, deserialize_with = "present_argument")]
+    pub argument: Option<Option<Argument>>,
     #[serde(skip_serializing)]
     pub image: Option<Value>,
     #[serde(skip_serializing)]
@@ -330,10 +401,22 @@ pub struct PagePatch {
     pub preview: Option<Value>,
 }
 
+fn present_argument<'de, D>(
+    deserializer: D,
+) -> std::result::Result<Option<Option<Argument>>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    Ok(Some(Option::<Argument>::deserialize(deserializer)?))
+}
+
 impl PagePatch {
     pub fn apply(&self, page: &mut Page) {
         macro_rules! apply { ($($field:ident),*) => { $(if let Some(value) = &self.$field { page.$field = value.clone(); })* }; }
-        apply!(purpose, layout, content, notes, todo, refs);
+        apply!(purpose, layout, content, notes, todo, refs, kind);
+        if let Some(argument) = &self.argument {
+            page.argument = argument.clone();
+        }
     }
 }
 
@@ -352,4 +435,140 @@ pub struct Patch {
 pub struct Snapshot {
     pub version: i64,
     pub deck: Deck,
+}
+
+pub fn validate_kind(page_id: &str, kind: &str) -> crate::error::Result<()> {
+    if kind.is_empty() || PAGE_KINDS.contains(&kind) {
+        return Ok(());
+    }
+    Err(crate::error::Error::Input(format!(
+        "页面 {page_id} 的 kind 只接受 judgment、explanation、reference、teaching 或留空；当前是 {kind}"
+    )))
+}
+
+pub fn validate_argument(page_id: &str, argument: &Argument) -> crate::error::Result<()> {
+    for (index, item) in argument.evidence.iter().enumerate() {
+        // Whitespace-only ref/gap is absent. put stores that text and does not
+        // reject a missing pair; run start does, for judgment pages.
+        if item.has_ref() && item.has_gap() {
+            return Err(crate::error::Error::Input(format!(
+                "页面 {page_id} 的 evidence 第 {} 项同时有 ref 和 gap；二者互斥",
+                index + 1
+            )));
+        }
+    }
+    Ok(())
+}
+
+pub fn missing_frame_fields(deck: &Deck) -> Vec<&'static str> {
+    let mut missing = Vec::new();
+    if deck.brief.audience.trim().is_empty() {
+        missing.push("brief.audience");
+    }
+    if deck.brief.decision.trim().is_empty() {
+        missing.push("brief.decision");
+    }
+    if deck
+        .brief
+        .concerns
+        .iter()
+        .all(|item| item.trim().is_empty())
+    {
+        missing.push("brief.concerns");
+    }
+    if deck.brief.narrator.role.trim().is_empty() {
+        missing.push("brief.narrator.role");
+    }
+    if deck.brief.narrator.tone.trim().is_empty() {
+        missing.push("brief.narrator.tone");
+    }
+    if deck
+        .framing
+        .storyline
+        .iter()
+        .all(|item| item.trim().is_empty())
+    {
+        missing.push("framing.storyline");
+    }
+    missing
+}
+
+pub fn writing_brief(deck: &Deck) -> String {
+    // Design §3.4. A blank narrator clause, decision, or concern is omitted.
+    let mut lines = Vec::new();
+    let role = deck.brief.narrator.role.trim();
+    let tone = deck.brief.narrator.tone.trim();
+    let mut narrator = String::new();
+    if !role.is_empty() {
+        narrator.push_str(&format!("讲述人：{role}。"));
+    }
+    if !tone.is_empty() {
+        narrator.push_str(&format!("语气：{tone}。"));
+    }
+    if !narrator.is_empty() {
+        lines.push(narrator);
+    }
+    let decision = deck.brief.decision.trim().trim_end_matches('。');
+    if !decision.is_empty() {
+        lines.push(format!("待决事项：{decision}。"));
+    }
+    let concerns: Vec<&str> = deck
+        .brief
+        .concerns
+        .iter()
+        .map(|item| item.trim())
+        .filter(|item| !item.is_empty())
+        .collect();
+    if !concerns.is_empty() {
+        lines.push("读者关注点：".into());
+        for concern in concerns {
+            lines.push(format!("- {concern}"));
+        }
+    }
+    lines.join("\n")
+}
+
+pub fn outline(pages: &[Page]) -> Value {
+    serde_json::json!(
+        pages
+            .iter()
+            .map(|page| serde_json::json!({
+                "page_id": page.id,
+                "kind": page.kind,
+                "title": page.content.title,
+            }))
+            .collect::<Vec<_>>()
+    )
+}
+
+pub fn gap_list(pages: &[Page]) -> Value {
+    // Design §3.4. Aggregate each page in order. Do not rewrite or dedupe text.
+    // On one page, evidence gaps come before todos; the sample shows that source order.
+    let mut items = Vec::new();
+    for page in pages {
+        if let Some(argument) = &page.argument {
+            for item in &argument.evidence {
+                let Some(gap) = item.gap_text() else {
+                    continue;
+                };
+                items.push(serde_json::json!({
+                    "page_id": page.id,
+                    "source": "evidence",
+                    "text": item.text,
+                    "gap": gap,
+                }));
+            }
+        }
+        for todo in &page.todo {
+            if todo.trim().is_empty() {
+                continue;
+            }
+            items.push(serde_json::json!({
+                "page_id": page.id,
+                "source": "todo",
+                "text": todo,
+            }));
+        }
+    }
+    serde_json::Value::Array(items)
 }

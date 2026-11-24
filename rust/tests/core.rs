@@ -5,6 +5,63 @@ use serde_json::{Value, json};
 use std::path::Path;
 use std::sync::{Arc, Barrier};
 
+fn allow_runs(path: &Path) {
+    let store = store::Store::open(path).unwrap();
+    let snapshot = store.current().unwrap();
+    let mut deck = snapshot.deck;
+    let mut changed = false;
+    if deck.brief.audience.trim().is_empty() {
+        deck.brief.audience = "业务负责人".into();
+        changed = true;
+    }
+    if deck.brief.decision.trim().is_empty() {
+        deck.brief.decision = "是否采用该方案".into();
+        changed = true;
+    }
+    if deck
+        .brief
+        .concerns
+        .iter()
+        .all(|item| item.trim().is_empty())
+    {
+        deck.brief.concerns = vec!["成本是否可控".into()];
+        changed = true;
+    }
+    if deck.brief.narrator.role.trim().is_empty() {
+        deck.brief.narrator.role = "项目负责人".into();
+        changed = true;
+    }
+    if deck.brief.narrator.tone.trim().is_empty() {
+        deck.brief.narrator.tone = "直接说明判断".into();
+        changed = true;
+    }
+    if deck
+        .framing
+        .storyline
+        .iter()
+        .all(|item| item.trim().is_empty())
+    {
+        deck.framing.storyline = vec!["先说明问题，再给出判断".into()];
+        changed = true;
+    }
+    // Blank kind is not treated as a judgment page. These fixtures only need the start gate to open.
+    for page in &mut deck.pages {
+        if page.kind.trim().is_empty() {
+            page.kind = "explanation".into();
+            changed = true;
+        }
+    }
+    if changed {
+        store
+            .connection
+            .execute(
+                "UPDATE versions SET deck_json=?1 WHERE id=?2",
+                rusqlite::params![serde_json::to_string(&deck).unwrap(), snapshot.version],
+            )
+            .unwrap();
+    }
+}
+
 fn patch(value: Value) -> Patch {
     serde_json::from_value(value).unwrap()
 }
@@ -77,10 +134,10 @@ fn missing_attachments_and_reviews_explain_how_to_find_or_add_them() {
         ops::project_file(path, &sha).unwrap_err().to_string(),
         format!("附件 {sha} 不存在;请先添加附件")
     );
-    assert_eq!(
-        ops::review_resolve(path, 99).unwrap_err().to_string(),
-        "意见 99 不存在;请用 deck review list 查看"
-    );
+    let missing = ops::review_resolve(path, 99).unwrap_err().to_string();
+    assert!(missing.contains("99"));
+    assert!(missing.contains("review list"));
+    assert!(missing.contains("--record"));
 }
 
 #[test]
@@ -273,6 +330,7 @@ fn version_get_distinguishes_missing_from_invalid_without_changing_put_or_restor
     )
     .unwrap();
     ops::review_add(path, Some("p1"), "当前意见", "author", "human").unwrap();
+    allow_runs(path);
     ops::run_start(path, "image", &["p1".into()], Some(1)).unwrap();
     let before = ops::workspace(path).unwrap();
     let counts = || -> Vec<i64> {
@@ -370,7 +428,7 @@ fn author_save_never_replaces_material_or_artifact_fields() {
         basis: "basis".into(),
     });
     let tx = store.transaction().unwrap();
-    store::append(&tx, &current, "test artifact arrival").unwrap();
+    store::append(&tx, &mut current, "test artifact arrival").unwrap();
     tx.commit().unwrap();
     let saved = ops::put(temp.path(), base, patch(json!({"materials":[],"pages":[{"id":"p1","notes":"改讲稿","image":{"file":"overwrite","basis":"old"},"svg":null,"preview":null}]}))).unwrap();
     assert_eq!(
@@ -398,7 +456,7 @@ fn older_database_migrates_without_losing_versions_and_newer_database_is_refused
             .connection
             .pragma_query_value(None, "user_version", |r| r.get::<_, i64>(0))
             .unwrap(),
-        store::FORMAT_VERSION
+        6
     );
     store
         .connection

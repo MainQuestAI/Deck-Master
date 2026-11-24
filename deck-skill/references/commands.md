@@ -40,7 +40,9 @@ deck --project "$DECK_PROJECT" material text m1
 deck --project "$DECK_PROJECT" get > "$DECK_PROJECT/current.json"
 ```
 
-从返回的 `version` 取基线。下面是合成示例，实际工作用已读材料改写，保存为作品目录中的 `framing.json`：
+从返回的 `version` 取基线。这一步的重定向只用于取出 `version`。写页面正文之前，按下一节让 `writing_brief` 出现在工具返回里。
+
+`concerns` 写 1–3 条读者关注点。写法约束放在 `constraints`，不放进 `concerns`。条数是写作口径，程序不按条数拒绝。下面是合成示例，实际工作用已读材料改写，保存为作品目录中的 `framing.json`：
 
 ```json
 {
@@ -49,8 +51,17 @@ deck --project "$DECK_PROJECT" get > "$DECK_PROJECT/current.json"
     "audience": "业务与 IT 负责人",
     "task_type": "首次提案",
     "goal": "判断是否先验证资料适用性检索及后续摘要的价值",
-    "constraints": ["本期只读，正式处理由人工执行"],
-    "page_limit": null
+    "constraints": [
+      "本期只读，正式处理由人工执行",
+      "不得使用内部缩写"
+    ],
+    "page_limit": null,
+    "decision": "是否先验证资料适用性检索，再决定要不要做摘要",
+    "concerns": [
+      "适用原文能否先被核对",
+      "摘要会不会增加核查和维护"
+    ],
+    "narrator": {"role": "业务与 IT 顾问", "tone": "结论先行，说明条件和取舍"}
   },
   "framing": {
     "thesis": "建议先验证资料适用性检索，再按实际增量决定是否增加生成摘要。",
@@ -60,7 +71,14 @@ deck --project "$DECK_PROJECT" get > "$DECK_PROJECT/current.json"
     }],
     "facts": ["合成材料要求只读，没有要求必须生成答案。"],
     "assumptions": ["能够取得设备型号与版本，并维护资料适用范围。"],
-    "questions": ["跨文档摘要能否减少包含核查在内的总处理时间？"]
+    "questions": ["跨文档摘要能否减少包含核查在内的总处理时间？"],
+    "storyline": [
+      "建议先验证资料适用性检索，再决定要不要做摘要。",
+      "只读检索可以先返回可核对的原文。",
+      "摘要还要另计核查和维护，材料没有要求必须生成。",
+      "资料适用范围由谁维护，材料没有写。",
+      "测得净处理时间下降之后，再决定是否扩展。"
+    ]
   }
 }
 ```
@@ -74,7 +92,13 @@ deck --project "$DECK_PROJECT" put --base "$BASE" "$DECK_PROJECT/framing.json"
 
 ## 写正文
 
-再 `get` 读取保存后的版本，写 `pages.json`。下面用段落、要点和表格各说明一种实际内容关系；不是每页必须出现这三类块。
+写 `pages.json` 之前，先让 `deck show` 或 `deck get` 的返回原文出现在这次工具结果里，读其中的 `writing_brief`，再写页面正文。
+
+```bash
+deck --project "$DECK_PROJECT" show
+```
+
+返回里要能看到 `writing_brief`。若把 `get` 或 `show` 重定向到文件，写正文前把该文件读回来；只取出 `version` 不算读过。按讲述人、语气、待决事项和关注点写；这项不能回写。下面用段落、要点和表格各说明一种实际内容关系；不是每页必须出现这三类块。提出主张、请求决定或给出建议的页写 `kind: judgment`，并手写与标题不同的 `argument`。不得把整稿标成 `explanation` 来通过页型门或证据门。硬性缺口的范围见 [page-writing](page-writing.md)。判断页的证据缺口逐条写入对应的 `evidence.gap`，不另记入 `todo`；其他页的硬性缺口逐条记入该页 `todo`。只写在 `rebuttal` 或讲稿里不算登记，也不会进入 `gap_list`。登记文字只写缺什么，不写内部原因。正文里的「待补：…」与该缺口同一处，只标一次。
 
 ```json
 {
@@ -82,6 +106,7 @@ deck --project "$DECK_PROJECT" put --base "$BASE" "$DECK_PROJECT/framing.json"
   "pages": [
     {
       "id": "p1",
+      "kind": "judgment",
       "purpose": "解释一期为何先解决资料适用性",
       "layout": "先说判断，再按使用步骤解释",
       "content": {
@@ -90,27 +115,54 @@ deck --project "$DECK_PROJECT" put --base "$BASE" "$DECK_PROJECT/framing.json"
           {"type": "paragraph", "text": "只读检索可先返回适用原文。生成摘要是额外能力，其价值需扣除核查与维护工作后判断。"},
           {"type": "bullets", "heading": "拟议用法", "items": [
             {"text": "记录型号和版本，筛选可访问且适用的资料。"},
-            {"text": "展示原文出处，由人工核对后沿现有流程处理。"}
+            {"text": "展示原文出处，由人工核对后沿现有流程处理。"},
+            {"text": "待补：资料适用范围的维护安排"}
           ]}
         ]
       },
-      "refs": ["合成材料：只读范围"],
-      "todo": ["确认资料适用范围的维护安排"]
+      "argument": {
+        "reasons": [
+          "只读检索能先返回可核对的原文，摘要还要另计核查和维护。",
+          "材料只要求本期只读，没有要求必须生成答案。"
+        ],
+        "evidence": [
+          {"text": "合成材料要求只读，没有要求必须生成答案。", "ref": "m1"},
+          {"text": "材料没有写资料适用范围由谁维护、如何更新。", "gap": "待补：资料适用范围的维护安排"}
+        ],
+        "reasoning": "先有可核对的原文，才能判断摘要是增量还是额外工作。",
+        "rebuttal": "若以后测得摘要减少了包含核查的总时间，再决定是否扩展；这一页不证明摘要没有价值。"
+      },
+      "refs": ["合成材料：只读范围"]
     },
     {
       "id": "p2",
+      "kind": "judgment",
       "purpose": "说明不同条件下的下一步选择",
       "layout": "按同一任务比较两种条件与动作",
       "content": {
         "title": "是否扩展摘要，取决于完整任务的净增量",
-        "body_blocks": [{
-          "type": "table",
-          "columns": [{"label": "观察条件"}, {"label": "建议动作"}],
-          "rows": [
-            {"cells": [{"display_text": "检索已够用，摘要增加核查工作"}, {"display_text": "保留检索，先改善资料适用性"}]},
-            {"cells": [{"display_text": "摘要减少总处理时间且依据可核查"}, {"display_text": "再核对扩展范围与维护成本"}]}
-          ]
-        }]
+        "body_blocks": [
+          {
+            "type": "table",
+            "columns": [{"label": "观察条件"}, {"label": "建议动作"}],
+            "rows": [
+              {"cells": [{"display_text": "检索已够用，摘要增加核查工作"}, {"display_text": "保留检索，先改善资料适用性"}]},
+              {"cells": [{"display_text": "摘要减少总处理时间且依据可核查"}, {"display_text": "再核对扩展范围与维护成本"}]}
+            ]
+          },
+          {"type": "paragraph", "text": "待补：摘要相对原文阅读的净处理时间"}
+        ]
+      },
+      "argument": {
+        "reasons": [
+          "检索已经够用时，摘要增加的是核查，不是新的原文。",
+          "只有总处理时间下降且依据可核查，才值得扩大范围。"
+        ],
+        "evidence": [
+          {"text": "材料没有给出摘要相对原文阅读的净处理时间。", "gap": "待补：摘要相对原文阅读的净处理时间"}
+        ],
+        "reasoning": "两种观察条件对应两种动作，不能从「有摘要功能」推出应该扩展。",
+        "rebuttal": "净增量尚未测量；本页只给出改选条件，不给出节省比例。"
       },
       "refs": ["本稿建议，实际增量待验证"]
     }
@@ -119,26 +171,26 @@ deck --project "$DECK_PROJECT" put --base "$BASE" "$DECK_PROJECT/framing.json"
 ```
 
 ```bash
+# 只取 version。writing_brief 已在写 pages.json 之前从 show 的返回里读过。
 deck --project "$DECK_PROJECT" get > "$DECK_PROJECT/current.json"
 BASE=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "$DECK_PROJECT/current.json")
 deck --project "$DECK_PROJECT" put --base "$BASE" "$DECK_PROJECT/pages.json"
 deck --project "$DECK_PROJECT" show
-deck --project "$DECK_PROJECT" export md > "$DECK_PROJECT/manuscript.md"
 ```
 
 页 id 用于选页，沿用已有值；新增页使用未占用值。块、条目、表格列、行与单元格不用手写 id，保存会补齐。表格单元格不填 column_id 时按列顺序对应；从已有页改表格则沿用其列引用。
 
 ## 局部修改
 
-`deck --project "$DECK_PROJECT" get --pages p2` 只返回所选页，但保留任务与框架，并省略 order。读取后修改目标页的作者字段，再用此次返回的 version 保存；不需要读写其他页。
+`deck --project "$DECK_PROJECT" get --pages p2` 只返回所选页，但保留任务与框架，并省略 order。读取后修改目标页的作者字段，再用此次返回的 version 保存；不需要读写其他页。回传前去掉顶层 `writing_brief`、`outline`、`gap_list`，以及每一页的 `revision`。
 
 - 只改文字时，提交该页完整 `content`；只改讲稿时，只交该页 id 与 notes。
 - 新增页：交新页面及包含它的完整 order；删除页：交 `{id}` 和去掉该页的完整 order；重排只交 order。
-- `put` 也接受 get 的完整输出。不改 materials、image、svg、native 或 preview；保存不会用它们更新材料或产物。
+- `put` 也接受 get 的完整输出，但要先去掉顶层 `writing_brief`、`outline`、`gap_list`，以及每一页的 `revision`。这四项由读取生成或由程序维护，原样回传会被拒绝。不改 materials、image、svg、native 或 preview；保存不会用它们更新材料或产物。
 - 同一提交可以安全重试，没有实质变化就不新增版本。冲突时命令退出 5 并给当前冲突单元，先读取后合并作者意图，再保存。
 - `deck --project "$DECK_PROJECT" restore N` 把历史稿恢复为新版本，不删除后来的历史。
 
-`export md` 向 stdout 输出正文、讲稿、待补与出处，不要求稿件完整。重定向前选一个新文件名；交稿前实际阅读该文件。当前内容阶段无需渲染器、生图、编译或界面。
+`export md` 向 stdout 输出正文、讲稿、待补与出处，不要求稿件完整。把它用作交付之前，先完成下面的出稿审稿。重定向前选一个新文件名；导出后实际阅读该文件。当前内容阶段无需渲染器、生图、编译或界面。
 
 ## 原图、SVG 与构建
 
@@ -148,9 +200,9 @@ deck --project "$DECK_PROJECT" export md > "$DECK_PROJECT/manuscript.md"
 
 1. `deck run start image --pages p1,p2` 准备任务。读取该次工作目录里的完整 task.md，按 attachments.json 定位素材。每次调用前 `deck run call <run> <page>`，再把 task.md 原文作为 ImageGen 的 prompt，把清单中的文件作为附件。结果未知时先核实，决定重试才加 `--retry`。
 2. `deck run result <run> <page> <图片文件>` 交回。首次结果可以自动采用；重交的修正版、取消后或依据已变的结果只保存。确认使用后 `deck run adopt <run> <page>`。`deck run show` 看状态，`deck run cancel <run>` 停止后续调用和自动采用。
-3. `deck run start svg --pages p1,p2` 准备 SVG。按原图的布局和关系重建，正文取 content.json，文字绑定 atoms.json。先读 [svg-subset.md](svg-subset.md)。错漏文字、局部排版和依据明确的连线可以沿用原图直接改。主结构要重排时先改蓝图。
+3. `deck run start svg --pages p1,p2` 准备 SVG。按原图的布局和关系重建，正文取 content.json，文字绑定 atoms.json。content.json 里已有的「待补：…」逐字保留，不删改、不挪到页脚，也不新写正文里没有的「待补」。先读 [svg-subset.md](svg-subset.md)。错漏文字、局部排版和依据明确的连线可以沿用原图直接改。主结构要重排时先改蓝图。
 4. `deck run result <run> <page> <SVG文件>` 编译、渲染并回读。工具报错就改具体元素。Host 打开预览 PNG，对照原图检查端点、方向、分支、层级、侧栏和阅读顺序。
-5. `deck build` 构建 PPTX，`deck export pptx` 优先取当前构建输入匹配的成品路径，没有匹配时取最近历史成品并提示。`missing_pages` 是没有 SVG（native 作品则是没有已采用 native）、因此没有进入这次 PPTX 的页。`stale_pages` 是已采用 SVG 或 native 的依据与当前正文、目的、布局、原图文件或样式不一致。`stale_images` 只比较原图依据。它在 `deck get` / `deck show` 的 `artifact_status` 里，也在 `deck build` 和 `deck export pptx` 里。这两条命令另给 `warnings`：`code` 为 `stale_image`、`level` 为 `warning`，列出原图依据已变的页号。不并入 `stale_pages`，不改变退出码，也不把回读 status 从 pass 改成 fail。只改讲稿不会让原图或页面过期。构建成功不会清掉这两项。`export pptx` 的 `input_changed` 才表示构建之后 SVG、native、讲稿或构建设置又变了。
+5. 先按「意见」一节看过最终页并记下出稿审稿，再 `deck build` 构建 PPTX。`deck export pptx` 优先取当前构建输入匹配的成品路径，没有匹配时取最近历史成品并提示。没有出稿审稿记录时，这两条命令仍会成功，并把 `content_review.status` 标成 `unreviewed`。`missing_pages` 是没有 SVG（native 作品则是没有已采用 native）、因此没有进入这次 PPTX 的页。`stale_pages` 是已采用 SVG 或 native 的依据与当前正文、目的、布局、原图文件或样式不一致。`stale_images` 只比较原图依据。它在 `deck get` / `deck show` 的 `artifact_status` 里，也在 `deck build` 和 `deck export pptx` 里。这两条命令另给 `warnings`：`code` 为 `stale_image`、`level` 为 `warning`，列出原图依据已变的页号。不并入 `stale_pages`，不改变退出码，也不把回读 status 从 pass 改成 fail。只改讲稿不会让原图或页面过期。构建成功不会清掉这两项。`export pptx` 的 `input_changed` 才表示构建之后 SVG、native、讲稿或构建设置又变了。
 
 `soffice` 不可用时，SVG 的 `deck run result` 失败并说明如何安装 LibreOffice。停在这一步。不要改调 `compile_job`，不要手写 PPTX。
 已完成的 SVG 任务重交同一文件时，返回 `reused: true` 并沿用原回读，不重新检查，也不返回本次 `checked_version`；缺原回读时 findings 为 null。该返回不表示当前正文已经重新检查。
@@ -164,6 +216,28 @@ deck review add --method self_check --page p3 '这一页的问题'
 ```
 
 当前 Host 自查用 `self_check`，另一执行或模型用 `other_model`，真人用 `human`。`--method` 必填，没有默认值，省略会报错。落实并核对之后才 `deck review resolve <意见ID>`。审查默认只返回报告，不因为开了审查入口就改稿或生图。
+
+交付或 `export md`、`build`、`export pptx` 之前，必须先看最终页，再记一条出稿审稿。用 `deck get` 读取整稿的 `content`、`argument`、`notes`、`purpose` 和 `layout`；重定向到文件后实际读回完整内容。`deck show` 只用于总览、标题连读和写作简报，不含完整正文，不能据此填写出稿审稿。已有预览时按当前任务打开预览。整稿一条，不带 `--page`。说明可以省略。`checks.json` 必须带齐下面六个 `id`。括号里的字是要替换的提示，换成这次阅读的结论，`pages` 写相关页 id。`evidence_supports_claim` 按页核对判断页的论证是不是手写的：理由不同于标题，证据指向材料原句，反驳不是各页同一句。`no_internal_notes` 把材料里标明不给读者的内部条目逐条拿出来，对照读者可见的标题、正文、图表注、页脚，以及讲稿。要查的是这条在说的事还在不在，不只是原句或「内部」「保密」这类标签还在不在。换一种说法、说得更轻，仍算这条实质还在，不能通过。例如材料写「盘点表的差异件数只留在内部备忘，不要给读者」，正文或讲稿写成「差异件数先不在这页展开」：原句和「内部」「备忘」都不在，仍然不能通过。材料里已经有、只是标明不给读者的数字或事项不是缺口，不登记，也不写「待补：…」。内部条目本身是「某项未定、先不写」时，承载页只登记「待补：<对象>」、不写原因，不算把该条写上屏。`final_pages_viewed` 写下这次实际看过的页。
+
+```json
+[
+  {"id": "storyline_coherence", "conclusion": "（主线是否连贯）", "pages": []},
+  {"id": "evidence_supports_claim", "conclusion": "（哪些判断页的理由不同于标题，证据指向哪条材料原句，反驳是否逐页不同）", "pages": []},
+  {"id": "anticipated_objections", "conclusion": "（可预见的质疑是否已回答）", "pages": []},
+  {"id": "overdefense", "conclusion": "（重复限定是否只留首处，判断页标题是否仍是判断句）", "pages": []},
+  {"id": "no_internal_notes", "conclusion": "（材料里每一条不给读者的内部条目，其实质有没有出现在读者可见文字或讲稿里；改写或说得更轻仍算出现。条目本身是「某项未定、先不写」时，只登记「待补：<对象>」且不写原因，不算出现）", "pages": []},
+  {"id": "final_pages_viewed", "conclusion": "（这次实际看过的最终页）", "pages": []}
+]
+```
+
+把替换后的内容写成 `checks.json`，记录成功后再导出：
+
+```bash
+deck --project "$DECK_PROJECT" review add --record content_review --method self_check --checks "$DECK_PROJECT/checks.json" '简短说明'
+deck --project "$DECK_PROJECT" export md > "$DECK_PROJECT/manuscript.md"
+```
+
+程序自己记下当时的版本、每页修订和框架，不用手填，也不根据这六项判通过。`deck build` 和 `deck export pptx` 的 JSON，以及下载用的 `X-Deck-Status`，会多一个 `content_review`。没有这条记录是 `unreviewed`；页序、各页作者字段和框架都与历史审稿对象相符是 `reviewed`；新增、删除、重排、正文变化或框架变化时是 `stale`。同 ID 重建不会继承旧正文的审稿匹配。只改了主线、删页或重排时，未审页列表可以是空的。它只是提示，不阻止构建或导出。没有记录时导出仍会成功，并标 `unreviewed`；交付前仍要先记下这一条。项目还不是格式 7 时，这条命令会拒绝并要求先 `deck put`。页或框架在记录之后又改过，下一次交付前再记一次。
 
 ## 可选：核对案例算式
 
@@ -265,3 +339,13 @@ plan v1 的固定外形：
 ```bash
 python -m deck_tools.vendor.cyberppt.select_icon search --index <icons>/index.json --query "anchor" --limit 5
 ```
+
+
+读回上次六项结论与快照，用正常命令接手，不需要保留原 checks 文件：
+
+```bash
+deck --project "$DECK_PROJECT" review list --record content_review
+deck --project "$DECK_PROJECT" review get <记录ID>
+```
+
+默认 `review list` 仍只列意见；`--record all` 同时列出两种记录。下载 PPTX 的 `content_review` 对应实际构建来源，`current_content_review` 单独描述当前稿；`reviewed` 只表示审稿对象相符，不表示质量通过。导出后实际打开并阅读 `manuscript.md`；最终 PPTX 的内容与画面检查使用实际导出文件，不能用当前稿或 page.preview 代替。

@@ -25,7 +25,7 @@ fn notes_only_patch_preserves_older_content_and_svg_basis() {
         .unwrap();
     snapshot.deck.pages[0].svg = Some(Artifact { file, basis });
     let tx = store.transaction().unwrap();
-    let base = store::append(&tx, &snapshot.deck, "older content fixture").unwrap();
+    let base = store::append(&tx, &mut snapshot.deck, "older content fixture").unwrap();
     tx.commit().unwrap();
     let patch = serde_json::from_value(json!({"pages":[{"id":"p1","notes":"新讲稿"}]})).unwrap();
     let result = ops::put(path, base, patch).unwrap();

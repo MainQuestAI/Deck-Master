@@ -1,4 +1,4 @@
-use crate::model::{Block, Content, Deck, TextItem};
+use crate::model::{Block, Content, Deck, Page, TextItem};
 
 fn bullets(output: &mut String, values: &[TextItem], depth: usize) {
     for item in values {
@@ -14,6 +14,24 @@ fn list(output: &mut String, label: &str, values: &[String]) {
             output.push_str(&format!("- {value}\n"));
         }
     }
+}
+
+// Mirror model::gap_list order: evidence gaps before todos, whitespace-only items skipped.
+fn page_gaps(page: &Page) -> Vec<String> {
+    let mut gaps = Vec::new();
+    if let Some(argument) = &page.argument {
+        for item in &argument.evidence {
+            if let Some(gap) = item.gap_text() {
+                gaps.push(gap.to_string());
+            }
+        }
+    }
+    for todo in &page.todo {
+        if !todo.trim().is_empty() {
+            gaps.push(todo.clone());
+        }
+    }
+    gaps
 }
 
 fn cell(text: &str) -> String {
@@ -122,7 +140,7 @@ pub fn markdown(deck: &Deck) -> String {
         if !page.notes.is_empty() {
             output.push_str(&format!("\n**讲稿**\n\n{}\n", page.notes));
         }
-        list(&mut output, "待补", &page.todo);
+        list(&mut output, "待补", &page_gaps(page));
         list(&mut output, "出处", &page.refs);
     }
     output

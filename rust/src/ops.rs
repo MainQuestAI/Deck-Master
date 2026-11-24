@@ -1,7 +1,7 @@
 use crate::error::{Conflict, Error, Result};
-use crate::model::{Brief, Deck, Page, Patch, Snapshot, Style};
+use crate::model::{Argument, Brief, Deck, Evidence, Page, Patch, Snapshot, Style};
 use crate::store::{self, Store};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
@@ -71,9 +71,21 @@ fn snapshot_value(snapshot: &Snapshot, pages: Option<&[String]>) -> Result<Value
         );
     }
     // A partial read omits order so an ordinary page edit cannot delete unseen pages.
-    Ok(
-        json!({ "version": snapshot.version, "deck": deck, "artifact_status": artifact_status(&snapshot.deck)? }),
-    )
+    let outlined: Vec<_> = snapshot
+        .deck
+        .pages
+        .iter()
+        .filter(|page| pages.is_none_or(|ids| ids.iter().any(|id| id == &page.id)))
+        .cloned()
+        .collect();
+    Ok(json!({
+        "version": snapshot.version,
+        "deck": deck,
+        "artifact_status": artifact_status(&snapshot.deck)?,
+        "writing_brief": crate::model::writing_brief(&snapshot.deck),
+        "outline": crate::model::outline(&outlined),
+        "gap_list": crate::model::gap_list(&outlined),
+    }))
 }
 
 pub fn workspace(project: &Path) -> Result<Value> {
@@ -159,6 +171,9 @@ pub fn show(project: &Path) -> Result<Value> {
         "pages": snapshot.deck.pages.iter().map(|p| json!({"id": p.id, "title": p.content.title, "purpose": p.purpose, "todo": p.todo, "open_reviews": page_review_count(&reviews, &p.id)})).collect::<Vec<_>>(),
         "open_reviews_total": reviews.len(),
         "artifact_status": artifact_status(&snapshot.deck)?,
+        "writing_brief": crate::model::writing_brief(&snapshot.deck),
+        "outline": crate::model::outline(&snapshot.deck.pages),
+        "gap_list": crate::model::gap_list(&snapshot.deck.pages),
         "history": history
     }))
 }
@@ -174,6 +189,11 @@ pub struct Review {
     pub status: String,
     pub created_at: String,
     pub resolved_at: Option<String>,
+    pub record_kind: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub snapshot: Option<Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub checks: Option<Value>,
 }
 
 fn review_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<Review> {
@@ -187,6 +207,31 @@ fn review_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<Review> {
         status: row.get(6)?,
         created_at: row.get(7)?,
         resolved_at: row.get(8)?,
+        record_kind: row.get(9)?,
+        snapshot: review_json(row, 10)?,
+        checks: review_json(row, 11)?,
+    })
+}
+
+fn review_json(row: &rusqlite::Row<'_>, index: usize) -> rusqlite::Result<Option<Value>> {
+    let text: Option<String> = row.get(index)?;
+    text.map(|text| {
+        serde_json::from_str(&text).map_err(|error| {
+            rusqlite::Error::FromSqlConversionFailure(
+                index,
+                rusqlite::types::Type::Text,
+                Box::new(error),
+            )
+        })
+    })
+    .transpose()
+}
+
+fn review_columns(connection: &rusqlite::Connection) -> Result<&'static str> {
+    Ok(if store::reviews_have_record_kind(connection)? {
+        "record_kind,snapshot_json,checks_json"
+    } else {
+        "'comment',NULL,NULL"
     })
 }
 
@@ -195,14 +240,38 @@ fn reviews(
     status: Option<&str>,
     page: Option<&str>,
 ) -> Result<Vec<Review>> {
+    review_records(connection, status, page, "comment")
+}
+
+fn review_records(
+    connection: &rusqlite::Connection,
+    status: Option<&str>,
+    page: Option<&str>,
+    record: &str,
+) -> Result<Vec<Review>> {
     use rusqlite::params;
     if status.is_some_and(|s| !["open", "resolved"].contains(&s)) {
         return Err(Error::Input("意见状态只接受 open 或 resolved".into()));
     }
-    let mut query = connection.prepare(
-        "SELECT id,version_id,page_id,reviewer,method,text,status,created_at,resolved_at
-         FROM reviews WHERE (?1 IS NULL OR status=?1) AND (?2 IS NULL OR page_id=?2) ORDER BY id",
-    )?;
+    if !["comment", "content_review", "all"].contains(&record) {
+        return Err(Error::Input(
+            "记录类型只接受 comment、content_review 或 all".into(),
+        ));
+    }
+    let filter = if record == "all" {
+        String::new()
+    } else if store::reviews_have_record_kind(connection)? {
+        format!(" AND record_kind='{record}'")
+    } else if record == "content_review" {
+        " AND 0".into()
+    } else {
+        String::new()
+    };
+    let columns = review_columns(connection)?;
+    let mut query = connection.prepare(&format!(
+        "SELECT id,version_id,page_id,reviewer,method,text,status,created_at,resolved_at,{columns}
+         FROM reviews WHERE (?1 IS NULL OR status=?1) AND (?2 IS NULL OR page_id=?2){filter} ORDER BY id"
+    ))?;
     Ok(query
         .query_map(params![status, page], review_row)?
         .collect::<std::result::Result<_, _>>()?)
@@ -210,10 +279,11 @@ fn reviews(
 
 fn review(connection: &rusqlite::Connection, id: i64) -> Result<Review> {
     use rusqlite::OptionalExtension;
+    let columns = review_columns(connection)?;
     connection.query_row(
-        "SELECT id,version_id,page_id,reviewer,method,text,status,created_at,resolved_at FROM reviews WHERE id=?",
+        &format!("SELECT id,version_id,page_id,reviewer,method,text,status,created_at,resolved_at,{columns} FROM reviews WHERE id=?"),
         [id], review_row,
-    ).optional()?.ok_or_else(|| Error::Missing(format!("意见 {id} 不存在;请用 deck review list 查看")))
+    ).optional()?.ok_or_else(|| Error::Missing(format!("意见 {id} 不存在;请用 deck review list --record all 查看")))
 }
 
 fn page_review_count(reviews: &[Review], page: &str) -> usize {
@@ -234,11 +304,7 @@ pub fn review_add(
     if text.trim().is_empty() {
         return Err(Error::Input("意见内容不能为空".into()));
     }
-    if !["self_check", "other_model", "human"].contains(&method) {
-        return Err(Error::Input(
-            "意见方法只接受 self_check、other_model 或 human".into(),
-        ));
-    }
+    review_method(method)?;
     let mut store = Store::open(project)?;
     let tx = store.transaction()?;
     let snapshot = store::current(&tx)?;
@@ -259,8 +325,22 @@ pub fn review_add(
 }
 
 pub fn review_list(project: &Path, status: Option<&str>, page: Option<&str>) -> Result<Value> {
+    review_list_records(project, status, page, "comment")
+}
+
+pub fn review_list_records(
+    project: &Path,
+    status: Option<&str>,
+    page: Option<&str>,
+    record: &str,
+) -> Result<Value> {
     let store = Store::open(project)?;
-    Ok(json!({"reviews": reviews(&store.connection, status, page)?}))
+    Ok(json!({"reviews": review_records(&store.connection, status, page, record)?}))
+}
+
+pub fn review_get(project: &Path, id: i64) -> Result<Review> {
+    let store = Store::open(project)?;
+    review(&store.connection, id)
 }
 
 pub fn review_resolve(project: &Path, id: i64) -> Result<Review> {
@@ -270,6 +350,228 @@ pub fn review_resolve(project: &Path, id: i64) -> Result<Review> {
     let value = review(&tx, id)?;
     tx.commit()?;
     Ok(value)
+}
+
+const CONTENT_CHECK_IDS: &[&str] = &[
+    "storyline_coherence",
+    "evidence_supports_claim",
+    "anticipated_objections",
+    "overdefense",
+    "no_internal_notes",
+    "final_pages_viewed",
+];
+
+fn frame_value(deck: &Deck) -> Value {
+    json!({
+        "audience": deck.brief.audience,
+        "decision": deck.brief.decision,
+        "concerns": deck.brief.concerns,
+        "narrator": {"role": deck.brief.narrator.role, "tone": deck.brief.narrator.tone},
+        "storyline": deck.framing.storyline,
+    })
+}
+
+fn review_snapshot(version: i64, deck: &Deck) -> Result<String> {
+    let snapshot = json!({
+        "version_id": version,
+        "pages": deck.pages.iter().map(|page| json!({
+            "id": page.id,
+            "preview": page.preview,
+        })).collect::<Vec<_>>(),
+        "framing": frame_value(deck),
+    });
+    Ok(serde_json::to_string(&snapshot)?)
+}
+
+fn load_checks(path: &Path) -> Result<Value> {
+    let value: Value = serde_json::from_slice(&std::fs::read(path)?)?;
+    let Some(items) = value.as_array() else {
+        return Err(Error::Input("出稿审稿的 checks 必须是 JSON 数组".into()));
+    };
+    let mut seen = HashSet::new();
+    for item in items {
+        let Some(id) = item.get("id").and_then(Value::as_str) else {
+            continue;
+        };
+        if !CONTENT_CHECK_IDS.contains(&id) {
+            continue;
+        }
+        match item.get("conclusion").and_then(Value::as_str) {
+            Some(conclusion) if !blank_text(conclusion) => {}
+            _ => {
+                return Err(Error::Input(format!(
+                    "出稿审稿的 checks 里 {id} 缺少结论文本"
+                )));
+            }
+        }
+        match item.get("pages").and_then(Value::as_array) {
+            Some(pages) if pages.iter().all(Value::is_string) => {}
+            _ => {
+                return Err(Error::Input(format!(
+                    "出稿审稿的 checks 里 {id} 的 pages 必须是字符串数组"
+                )));
+            }
+        }
+        seen.insert(id);
+    }
+    let missing: Vec<&str> = CONTENT_CHECK_IDS
+        .iter()
+        .copied()
+        .filter(|id| !seen.contains(id))
+        .collect();
+    if !missing.is_empty() {
+        return Err(Error::Input(format!(
+            "出稿审稿的 checks 缺少：{}",
+            missing.join("、")
+        )));
+    }
+    Ok(value)
+}
+
+fn review_method(method: &str) -> Result<()> {
+    if ["self_check", "other_model", "human"].contains(&method) {
+        Ok(())
+    } else {
+        Err(Error::Input(
+            "意见方法只接受 self_check、other_model 或 human".into(),
+        ))
+    }
+}
+
+pub fn review_add_content(
+    project: &Path,
+    text: &str,
+    reviewer: &str,
+    method: &str,
+    checks_path: &Path,
+) -> Result<Review> {
+    use rusqlite::params;
+    review_method(method)?;
+    let mut store = Store::open(project)?;
+    let tx = store.transaction()?;
+    let version = store::user_version(&tx)?;
+    if version < store::FORMAT_VERSION {
+        return Err(Error::Input(format!(
+            "当前项目仍是格式 {version}，不能记录出稿审稿。请先用 deck put 补全字段，项目升级后再执行 review add --record content_review"
+        )));
+    }
+    let checks = load_checks(checks_path)?;
+    let snapshot = store::current(&tx)?;
+    let snapshot_json = review_snapshot(snapshot.version, &snapshot.deck)?;
+    tx.execute(
+        "INSERT INTO reviews(version_id,page_id,reviewer,method,text,record_kind,snapshot_json,checks_json) VALUES (?,NULL,?,?,?,'content_review',?,?)",
+        params![
+            snapshot.version,
+            reviewer,
+            method,
+            text,
+            snapshot_json,
+            serde_json::to_string(&checks)?,
+        ],
+    )?;
+    let value = review(&tx, tx.last_insert_rowid())?;
+    tx.commit()?;
+    Ok(value)
+}
+
+fn unreviewed_status() -> Value {
+    json!({
+        "status": "unreviewed",
+        "methods": [],
+        "version_id": Value::Null,
+        "unreviewed_pages": [],
+    })
+}
+
+fn stale_unreadable(method: &str) -> Value {
+    json!({
+        "status": "stale",
+        "methods": [method],
+        "version_id": Value::Null,
+        "unreviewed_pages": [],
+    })
+}
+
+// Called only when the key is present, so null stays a value instead of "missing".
+fn present_framing<'de, D>(deserializer: D) -> std::result::Result<Option<Value>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    Ok(Some(Value::deserialize(deserializer)?))
+}
+
+#[derive(Deserialize)]
+struct ContentReviewSnapshot {
+    version_id: i64,
+    #[serde(default, deserialize_with = "present_framing")]
+    framing: Option<Value>,
+}
+
+fn content_review_status(
+    connection: &rusqlite::Connection,
+    version: i64,
+    deck: &Deck,
+) -> Result<Value> {
+    use rusqlite::OptionalExtension;
+    if !store::reviews_have_record_kind(connection)? {
+        return Ok(unreviewed_status());
+    }
+    let row: Option<(String, Option<String>)> = connection
+        .query_row(
+            "SELECT method, snapshot_json FROM reviews WHERE record_kind='content_review' AND version_id<=? ORDER BY id DESC LIMIT 1",
+            [version],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )
+        .optional()?;
+    let Some((method, snapshot_json)) = row else {
+        return Ok(unreviewed_status());
+    };
+    let Some(snapshot_json) = snapshot_json else {
+        return Ok(stale_unreadable(&method));
+    };
+    let Ok(snapshot) = serde_json::from_str::<ContentReviewSnapshot>(&snapshot_json) else {
+        return Ok(stale_unreadable(&method));
+    };
+    let recorded_deck = match store::load_optional(connection, snapshot.version_id) {
+        Ok(Some(deck)) => deck,
+        Ok(None) | Err(Error::Json(_)) => return Ok(stale_unreadable(&method)),
+        Err(error) => return Err(error),
+    };
+    let recorded: HashMap<_, _> = recorded_deck
+        .pages
+        .iter()
+        .map(|page| (&page.id, page))
+        .collect();
+    let order_differs = !deck
+        .pages
+        .iter()
+        .map(|page| &page.id)
+        .eq(recorded_deck.pages.iter().map(|page| &page.id));
+    let mut unreviewed_pages = Vec::new();
+    for page in &deck.pages {
+        if recorded
+            .get(&page.id)
+            .is_none_or(|prior| prior.author_fields_changed(page))
+        {
+            unreviewed_pages.push(page.id.clone());
+        }
+    }
+    // Old records without framing can use their immutable source version.
+    let frame_differs = match &snapshot.framing {
+        None => frame_value(&recorded_deck) != frame_value(deck),
+        Some(value) => value != &frame_value(deck),
+    };
+    let status = if unreviewed_pages.is_empty() && !frame_differs && !order_differs {
+        "reviewed"
+    } else {
+        "stale"
+    };
+    Ok(json!({
+        "status": status,
+        "methods": [method],
+        "version_id": snapshot.version_id,
+        "unreviewed_pages": unreviewed_pages,
+    }))
 }
 
 fn merge<T: PartialEq + Clone + Serialize>(
@@ -291,6 +593,31 @@ fn merge<T: PartialEq + Clone + Serialize>(
         });
     }
     Ok(())
+}
+
+fn derived_output(value: &Value) -> bool {
+    value.get("writing_brief").is_some()
+        || value.get("outline").is_some()
+        || value.get("gap_list").is_some()
+}
+
+fn derived_rejected() -> Error {
+    Error::Input(
+        "writing_brief、outline 和 gap_list 由读取时生成，不能写入；请从提交中去掉这三项".into(),
+    )
+}
+
+pub fn put_patch(mut value: Value, unwrap_deck: bool) -> Result<Patch> {
+    if derived_output(&value) {
+        return Err(derived_rejected());
+    }
+    if unwrap_deck && let Some(deck) = value.get("deck").cloned() {
+        if derived_output(&deck) {
+            return Err(derived_rejected());
+        }
+        value = deck;
+    }
+    Ok(serde_json::from_value(value)?)
 }
 
 pub fn put(project: &Path, version: i64, patch: Patch) -> Result<Snapshot> {
@@ -370,8 +697,9 @@ pub fn put(project: &Path, version: i64, patch: Patch) -> Result<Snapshot> {
         .cloned()
         .map(|p| (p.id.clone(), p))
         .collect();
+    let page_changes = patch.pages.unwrap_or_default();
     let mut submitted_ids = HashSet::new();
-    for change in patch.pages.unwrap_or_default() {
+    for change in &page_changes {
         if change.id.is_empty() || !submitted_ids.insert(change.id.clone()) {
             return Err(Error::Input(
                 "pages 包含空或重复页面 ID；请给每页一个不同的 ID".into(),
@@ -403,7 +731,7 @@ pub fn put(project: &Path, version: i64, patch: Patch) -> Result<Snapshot> {
                 author.apply(now);
             }
         } else if before.is_none() {
-            pages.insert(change.id, submitted);
+            pages.insert(change.id.clone(), submitted);
         } else if before.is_some_and(|p| p.author() != submitted.author()) {
             conflicts.push(Conflict {
                 unit: format!("pages/{}", change.id),
@@ -438,10 +766,20 @@ pub fn put(project: &Path, version: i64, patch: Patch) -> Result<Snapshot> {
             })
         })
         .collect::<Result<_>>()?;
+    for change in &page_changes {
+        if let Some(page) = deck.pages.iter().find(|page| page.id == change.id) {
+            if change.kind.is_some() {
+                crate::model::validate_kind(&page.id, &page.kind)?;
+            }
+            if let Some(Some(argument)) = &change.argument {
+                crate::model::validate_argument(&page.id, argument)?;
+            }
+        }
+    }
     let result_version = if deck == current.deck {
         current.version
     } else {
-        store::append(&tx, &deck, "保存作品")?
+        store::append(&tx, &mut deck, "保存作品")?
     };
     tx.commit()?;
     Ok(Snapshot {
@@ -453,8 +791,8 @@ pub fn put(project: &Path, version: i64, patch: Patch) -> Result<Snapshot> {
 pub fn restore(project: &Path, version: i64) -> Result<Snapshot> {
     let mut store = Store::open(project)?;
     let tx = store.transaction()?;
-    let deck = store::load(&tx, version)?;
-    let version = store::append(&tx, &deck, &format!("恢复自版本 {version}"))?;
+    let mut deck = store::load(&tx, version)?;
+    let version = store::append(&tx, &mut deck, &format!("恢复自版本 {version}"))?;
     tx.commit()?;
     Ok(Snapshot { version, deck })
 }
@@ -516,7 +854,7 @@ pub fn material_add(project: &Path, source: &Path) -> Result<Value> {
         true
     };
     let version = if changed {
-        store::append(&tx, &deck, "添加材料")?
+        store::append(&tx, &mut deck, "添加材料")?
     } else {
         current.version
     };
@@ -567,8 +905,12 @@ pub fn export_md(project: &Path) -> Result<String> {
 }
 
 pub fn export_markdown(project: &Path) -> Result<(String, Value)> {
-    let deck = Store::open(project)?.current()?.deck;
-    Ok((crate::export::markdown(&deck), artifact_status(&deck)?))
+    let store = Store::open(project)?;
+    let snapshot = store.current()?;
+    let deck = snapshot.deck;
+    let mut status = artifact_status(&deck)?;
+    status["content_review"] = content_review_status(&store.connection, snapshot.version, &deck)?;
+    Ok((crate::export::markdown(&deck), status))
 }
 
 pub fn asset_add(
@@ -658,8 +1000,9 @@ pub fn asset_add(
     } else {
         snapshot.deck.style.assets.push(asset.clone());
     }
-    if snapshot.deck != store::current(&tx)?.deck {
-        snapshot.version = store::append(&tx, &snapshot.deck, "选择素材")?;
+    let asset_changed = snapshot.deck != store::current(&tx)?.deck;
+    if asset_changed {
+        snapshot.version = store::append(&tx, &mut snapshot.deck, "选择素材")?;
     }
     tx.commit()?;
     Ok(json!({"version": snapshot.version, "asset": asset}))
@@ -751,6 +1094,181 @@ fn run_page(
         .ok_or_else(|| Error::Input(format!("此 run 不包含页面 {page}；请用 deck run show 查看")))
 }
 
+fn blank_text(value: &str) -> bool {
+    value.trim().is_empty()
+}
+
+fn start_example(deck: &Deck, missing: &[String]) -> Result<String> {
+    // put replaces brief and framing as whole units, so a frame snippet carries
+    // every current field and fills only the ones the gate treats as empty.
+    // Blank kind is filled with explanation: a judgment sample without evidence
+    // would fail the next gate, so one copied put can start the run.
+    let frame_missing = missing.iter().any(|field| !field.starts_with("pages["));
+    let mut payload = serde_json::Map::new();
+    if frame_missing {
+        let mut brief = deck.brief.clone();
+        let mut framing = deck.framing.clone();
+        if blank_text(&brief.audience) {
+            brief.audience = "管理层".into();
+        }
+        if blank_text(&brief.decision) {
+            brief.decision = "本周需拍板的事项".into();
+        }
+        if brief.concerns.iter().all(|item| blank_text(item)) {
+            brief.concerns = vec!["关注点一".into(), "关注点二".into()];
+        }
+        if blank_text(&brief.narrator.role) {
+            brief.narrator.role = "资深顾问".into();
+        }
+        if blank_text(&brief.narrator.tone) {
+            brief.narrator.tone = "结论先行，语气肯定".into();
+        }
+        if framing.storyline.iter().all(|item| blank_text(item)) {
+            framing.storyline = vec!["第一句主线".into(), "第二句主线".into()];
+        }
+        payload.insert("brief".into(), serde_json::to_value(brief)?);
+        payload.insert("framing".into(), serde_json::to_value(framing)?);
+    }
+    let pages: Vec<Value> = deck
+        .pages
+        .iter()
+        .filter(|page| {
+            missing
+                .iter()
+                .any(|field| field == &format!("pages[{}].kind", page.id))
+        })
+        .map(|page| json!({"id": page.id, "kind": "explanation"}))
+        .collect();
+    if !pages.is_empty() {
+        payload.insert("pages".into(), json!(pages));
+    }
+    Ok(serde_json::to_string_pretty(&Value::Object(payload))?)
+}
+
+fn frame_gate_message(deck: &Deck, version: i64, missing: &[String]) -> Result<String> {
+    // Design §5.3. Error::Input adds the "输入有误：" prefix.
+    // Blank kind is listed with the frame so one message matches that sample.
+    let listed = missing
+        .iter()
+        .map(|field| format!("- {field}"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    Ok(format!(
+        "无法开始生成。当前作品缺少以下字段：\n{listed}\n请先用 deck put 补全后再执行 run start。示例（--base 换成 deck show 中的当前版本号）：\n\n  deck put --base {version} payload.json\n\npayload.json 最小片段：\n{}",
+        start_example(deck, missing)?
+    ))
+}
+
+fn sample_argument() -> Argument {
+    Argument {
+        reasons: vec!["理由一".into(), "理由二".into()],
+        evidence: vec![Evidence {
+            text: "出处或待补说明".into(),
+            r#ref: None,
+            gap: Some("待补：需补充口径".into()),
+        }],
+        reasoning: String::new(),
+        rebuttal: String::new(),
+    }
+}
+
+fn repair_argument(argument: Option<&Argument>) -> Argument {
+    let Some(argument) = argument else {
+        return sample_argument();
+    };
+    if argument.evidence.is_empty() {
+        let mut sample = sample_argument();
+        if argument.reasons.iter().any(|item| !blank_text(item)) {
+            sample.reasons = argument.reasons.clone();
+        }
+        if !blank_text(&argument.reasoning) {
+            sample.reasoning = argument.reasoning.clone();
+        }
+        if !blank_text(&argument.rebuttal) {
+            sample.rebuttal = argument.rebuttal.clone();
+        }
+        return sample;
+    }
+    let mut repaired = argument.clone();
+    for item in &mut repaired.evidence {
+        if item.has_ref() || item.has_gap() {
+            continue;
+        }
+        if blank_text(&item.text) {
+            item.text = "出处或待补说明".into();
+        }
+        item.r#ref = None;
+        item.gap = Some("待补：需补充口径".into());
+    }
+    repaired
+}
+
+fn judgment_incomplete(page: &Page) -> bool {
+    if page.kind != "judgment" {
+        return false;
+    }
+    match &page.argument {
+        None => true,
+        Some(argument) if argument.evidence.is_empty() => true,
+        Some(argument) => argument
+            .evidence
+            .iter()
+            .any(|item| !item.has_ref() && !item.has_gap()),
+    }
+}
+
+fn incomplete_judgment_lines(targets: &[&Page]) -> Vec<String> {
+    let mut lines = Vec::new();
+    for page in targets {
+        if page.kind != "judgment" {
+            continue;
+        }
+        let Some(argument) = page
+            .argument
+            .as_ref()
+            .filter(|argument| !argument.evidence.is_empty())
+        else {
+            lines.push(format!(
+                "- pages[{}].argument.evidence 为空，请至少提供一条带 ref 或 gap 的证据",
+                page.id
+            ));
+            continue;
+        };
+        for (index, item) in argument.evidence.iter().enumerate() {
+            if !item.has_ref() && !item.has_gap() {
+                lines.push(format!(
+                    "- pages[{}].argument.evidence[{index}] 既没有 ref 也没有 gap",
+                    page.id
+                ));
+            }
+        }
+    }
+    lines
+}
+
+fn evidence_example(targets: &[&Page]) -> Result<String> {
+    let pages: Vec<Value> = targets
+        .iter()
+        .filter(|page| judgment_incomplete(page))
+        .map(|page| {
+            json!({
+                "id": page.id,
+                "kind": "judgment",
+                "argument": repair_argument(page.argument.as_ref()),
+            })
+        })
+        .collect();
+    Ok(serde_json::to_string_pretty(&json!({"pages": pages}))?)
+}
+
+fn evidence_gate_message(version: i64, lines: &[String], snippet: &str) -> String {
+    // Design §5.3 second sample. Error::Input adds the "输入有误：" prefix.
+    format!(
+        "无法开始生成。判断页证据不完整：\n{}\n请用 deck put 补全，例如：\n\n  deck put --base {version} payload.json\n\n{snippet}",
+        lines.join("\n")
+    )
+}
+
 pub fn run_start(
     project: &Path,
     kind: &str,
@@ -792,7 +1310,44 @@ pub fn run_start(
             "同类 run {id} 尚未结束；继续交回或先取消"
         )));
     }
-    let deck = store::current(&tx)?.deck;
+    let current = store::current(&tx)?;
+    let version = current.version;
+    let deck = current.deck;
+    let targets: Vec<&Page> = deck
+        .pages
+        .iter()
+        .filter(|page| ids.iter().any(|id| id == &page.id))
+        .collect();
+    // §4.1 checks the frame before kind. §5.3 lists blank kind in that same
+    // missing-field error. Illegal kind is a different sentence, after both.
+    let mut missing: Vec<String> = crate::model::missing_frame_fields(&deck)
+        .into_iter()
+        .map(str::to_string)
+        .collect();
+    for page in &targets {
+        if blank_text(&page.kind) {
+            missing.push(format!("pages[{}].kind", page.id));
+        }
+    }
+    if !missing.is_empty() {
+        return Err(Error::Input(frame_gate_message(&deck, version, &missing)?));
+    }
+    for page in &targets {
+        crate::model::validate_kind(&page.id, &page.kind)?;
+        if page.kind == "judgment"
+            && let Some(argument) = &page.argument
+        {
+            crate::model::validate_argument(&page.id, argument)?;
+        }
+    }
+    let incomplete = incomplete_judgment_lines(&targets);
+    if !incomplete.is_empty() {
+        return Err(Error::Input(evidence_gate_message(
+            version,
+            &incomplete,
+            &evidence_example(&targets)?,
+        )));
+    }
     tx.execute(
         "INSERT INTO runs(kind,status,max_calls) VALUES (?,'open',?)",
         params![
@@ -1549,8 +2104,9 @@ pub fn run_result(project: &Path, id: i64, page_id: &str, source: &Path) -> Resu
             page.svg = artifact;
             page.preview = preview.clone();
         }
-        if snapshot.deck != store::current(&tx)?.deck {
-            store::append(&tx, &snapshot.deck, "采用生成结果")?;
+        let adopted_changed = snapshot.deck != store::current(&tx)?.deck;
+        if adopted_changed {
+            store::append(&tx, &mut snapshot.deck, "采用生成结果")?;
         }
     }
     // An identical result can be returned safely after the final page closed the run.
@@ -1694,8 +2250,9 @@ fn run_adopt_with_options(
         page.svg = artifact;
         page.preview = preview.clone();
     }
-    if snapshot.deck != store::current(&tx)?.deck {
-        store::append(&tx, &snapshot.deck, "手动采用生成结果")?;
+    let adopt_changed = snapshot.deck != store::current(&tx)?.deck;
+    if adopt_changed {
+        store::append(&tx, &mut snapshot.deck, "手动采用生成结果")?;
     }
     if kind == "native" {
         tx.execute(
@@ -1844,6 +2401,8 @@ pub fn build(project: &Path) -> Result<Value> {
             .join(",");
         return Err(Error::Input(format!("没有已采用的页面；缺页：{missing}")));
     }
+    let content_review =
+        content_review_status(&store.connection, snapshot.version, &snapshot.deck)?;
     let output = if native {
         crate::tools::invoke("assemble", &json!({"work":temporary.path(),"pages":pages}))?
     } else {
@@ -1860,7 +2419,7 @@ pub fn build(project: &Path) -> Result<Value> {
     let id = tx.last_insert_rowid();
     tx.commit()?;
     Ok(
-        json!({"id":id,"path":store.file(&file)?,"findings":output["findings"],"missing_pages":status["missing_pages"],"stale_pages":status["stale_pages"],"stale_images":status["stale_images"],"warnings":with_shared_layout(stale_image_warnings(&status["stale_images"]), &plan_refs(&native_plans))}),
+        json!({"id":id,"version_id":snapshot.version,"path":store.file(&file)?,"findings":output["findings"],"missing_pages":status["missing_pages"],"stale_pages":status["stale_pages"],"stale_images":status["stale_images"],"warnings":with_shared_layout(stale_image_warnings(&status["stale_images"]), &plan_refs(&native_plans)),"content_review":content_review}),
     )
 }
 
@@ -1934,7 +2493,8 @@ pub fn build_detail(project: &Path, id: i64) -> Result<Value> {
 pub fn export_pptx(project: &Path) -> Result<Value> {
     let mut store = Store::open(project)?;
     let tx = store.connection.transaction()?;
-    let deck = store::current(&tx)?.deck;
+    let current = store::current(&tx)?;
+    let deck = current.deck;
     let mut selected = default_build(&tx, &deck)?
         .ok_or_else(|| Error::Input("尚无构建；请先运行 deck build".into()))?;
     let file = selected["file"]
@@ -1962,6 +2522,12 @@ pub fn export_pptx(project: &Path) -> Result<Value> {
         &plan_refs(&plans),
     );
     selected["incomplete_basis_pages"] = status["incomplete_basis_pages"].clone();
+    let source_version = selected["version_id"]
+        .as_i64()
+        .ok_or_else(|| Error::Tool("构建缺少来源版本".into()))?;
+    let source = store::load(&tx, source_version)?;
+    selected["content_review"] = content_review_status(&tx, source_version, &source)?;
+    selected["current_content_review"] = content_review_status(&tx, current.version, &deck)?;
     Ok(selected)
 }
 
@@ -1988,7 +2554,7 @@ mod build_selection_tests {
             basis: legacy.clone(),
         });
         let tx = store.transaction().unwrap();
-        store::append(&tx, &deck, "Legacy fixture").unwrap();
+        store::append(&tx, &mut deck, "Legacy fixture").unwrap();
         tx.commit().unwrap();
         store
             .connection
@@ -2001,7 +2567,7 @@ mod build_selection_tests {
                 .connection
                 .pragma_query_value(None, "user_version", |r| r.get::<_, i64>(0))
                 .unwrap(),
-            store::FORMAT_VERSION
+            6
         );
         assert_eq!(
             upgraded.current().unwrap().deck.pages[0]
@@ -2038,7 +2604,7 @@ mod build_selection_tests {
             basis: basis("svg", &deck, &deck.pages[0]).unwrap(),
         });
         let tx = store.transaction().unwrap();
-        let source = store::append(&tx, &deck, "Source").unwrap();
+        let source = store::append(&tx, &mut deck, "Source").unwrap();
         tx.commit().unwrap();
         let report = json!({"status":"pass","findings":[],"visual_review":"not_evaluated","desktop_editing":"not_evaluated"});
         store.connection.execute("INSERT INTO builds(version_id,input_digest,pptx_file,findings_json,missing_pages) VALUES (?,?, 'synthetic.pptx',?, '[]')",rusqlite::params![source,build_digest(&deck).unwrap(),report.to_string()]).unwrap();
@@ -2047,7 +2613,7 @@ mod build_selection_tests {
         assert_eq!(detail["pages"][0]["pptx_slide"], 1);
         deck.pages[0].content.title = "Changed text".into();
         let tx = store.transaction().unwrap();
-        store::append(&tx, &deck, "Content only").unwrap();
+        store::append(&tx, &mut deck, "Content only").unwrap();
         tx.commit().unwrap();
         let detail = build_detail(temp.path(), 1).unwrap();
         assert_eq!(detail["input_changed"], false);
@@ -2104,7 +2670,7 @@ mod build_selection_tests {
             3
         );
         let tx = store.transaction().unwrap();
-        store::append(&tx, &current, "Current inputs").unwrap();
+        store::append(&tx, &mut current, "Current inputs").unwrap();
         tx.commit().unwrap();
         let export = export_pptx(temp.path()).unwrap();
         assert_eq!(export["id"], 2);
@@ -2135,7 +2701,7 @@ mod build_selection_tests {
             basis: basis("native", &deck, &deck.pages[0]).unwrap(),
         });
         let tx = store.transaction().unwrap();
-        store::append(&tx, &deck, "Native without a readable pack").unwrap();
+        store::append(&tx, &mut deck, "Native without a readable pack").unwrap();
         tx.commit().unwrap();
         let pptx = store.add_file(b"historical pptx", "pptx").unwrap();
         store.connection.execute(
@@ -2152,7 +2718,7 @@ mod build_selection_tests {
             basis: basis("native", &deck, &deck.pages[1]).unwrap(),
         });
         let tx = store.transaction().unwrap();
-        store::append(&tx, &deck, "Native with a corrupt pack").unwrap();
+        store::append(&tx, &mut deck, "Native with a corrupt pack").unwrap();
         tx.commit().unwrap();
         let export = export_pptx(temp.path()).unwrap();
         assert_eq!(
