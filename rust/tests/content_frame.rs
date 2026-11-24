@@ -248,6 +248,54 @@ fn put_rejects_derived_output() {
 }
 
 #[test]
+fn page_patch_rejects_unknown_fields() {
+    let error = serde_json::from_value::<deck::model::Patch>(json!({
+        "pages":[{"id":"p1","not_a_real_field":1}]
+    }))
+    .unwrap_err()
+    .to_string();
+    assert!(error.contains("unknown field"));
+}
+
+#[test]
+fn legacy_format7_deck_with_revision_still_opens_and_noop_save_keeps_version() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    ops::new(path, "合成作品".into()).unwrap();
+    let saved = ops::put(
+        path,
+        1,
+        patch(json!({"order":["p1"],"pages":[{"id":"p1","content":{"title":"一页"}}]})),
+    )
+    .unwrap();
+    // Simulate a format-7 draft written before the revision counter was retired.
+    let connection = Connection::open(path.join(".deck/deck.db")).unwrap();
+    let stored: String = connection
+        .query_row(
+            "SELECT deck_json FROM versions WHERE id=?1",
+            [saved.version],
+            |row| row.get(0),
+        )
+        .unwrap();
+    let mut deck: Value = serde_json::from_str(&stored).unwrap();
+    deck["pages"][0]["revision"] = json!(1);
+    connection
+        .execute(
+            "UPDATE versions SET deck_json=?1 WHERE id=?2",
+            rusqlite::params![deck.to_string(), saved.version],
+        )
+        .unwrap();
+    drop(connection);
+    // The retired counter is tolerated on read and never leaks back into output.
+    let read = ops::get(path, None).unwrap();
+    assert_eq!(read["deck"]["pages"][0]["id"], "p1");
+    assert!(read["deck"]["pages"][0].get("revision").is_none());
+    // A save with no author change must not append a version because of the legacy field.
+    let again = ops::put(path, saved.version, patch(json!({"pages":[{"id":"p1"}]}))).unwrap();
+    assert_eq!(again.version, saved.version);
+}
+
+#[test]
 fn illegal_kind_is_rejected_on_put_and_run_start_without_writing() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path();

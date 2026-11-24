@@ -137,7 +137,7 @@ fn missing_attachments_and_reviews_explain_how_to_find_or_add_them() {
     let missing = ops::review_resolve(path, 99).unwrap_err().to_string();
     assert!(missing.contains("99"));
     assert!(missing.contains("review list"));
-    assert!(missing.contains("--record"));
+    assert!(missing.contains("--record all"));
 }
 
 #[test]

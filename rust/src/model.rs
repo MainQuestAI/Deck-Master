@@ -333,6 +333,11 @@ pub struct Page {
     #[serde(default)]
     pub native: Option<Artifact>,
     pub preview: Option<String>,
+    // Format-7 drafts written before the revision counter was retired persisted a
+    // per-page `revision`. Accept it on read so those databases still open; it is
+    // never written back and never read by any logic.
+    #[serde(default, rename = "revision", skip_serializing)]
+    pub legacy_revision: Option<u32>,
 }
 
 impl Page {

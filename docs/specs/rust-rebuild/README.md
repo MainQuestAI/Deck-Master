@@ -16,7 +16,7 @@
 - 长中文讲稿和 findings 撑大响应头：完整构建报告只放 JSON body；`X-Deck-Status` 只放版本、下载和简短状态元数据。
 - `show` 不含完整正文：Host 用 `get` 读取 `content/argument/notes/purpose/layout` 后填写六项记录，`show` 用于总览、标题连读和写作简报；导出后实际读文件。无命令阅读证明门。
 - 旧 sanitizer 回退名随重复 ID 保留：只在旧 `name` 和 `title` 都恰为旧 ID 的「形状-N」时，随重编号更新；保留其他作者命名。
-- get 输出原样回传被拒：`revision` 只写不读，从格式 7 移除；去掉三个只读派生项后，get 输出可原样 put 回传。
+- get 输出原样回传被拒：`revision` 只写不读，新写入不再含它；去掉三个只读派生项后，get 输出可原样 put 回传。早期格式 7 稿里已有的 `revision` 读时容忍、永不写回、不参与任何判断，旧库仍能打开。
 
 内容效果仍按已有 AC 验收，不能用更多结构断言替代作品：
 
@@ -151,7 +151,7 @@ deck-skill/           新 Skill（第 6 节）
 - `deck review add` 默认 `--record comment`。`--record content_review` 只在格式 7 上追加整稿一条：`page_id` 为空，说明可空，`--checks` 必须包含 storyline_coherence、evidence_supports_claim、anticipated_objections、overdefense、no_internal_notes、final_pages_viewed。这六项每一项要有去掉空白后仍在的结论文本，以及字符串页码列表。程序把当时的 version_id、每页 preview，以及 brief.audience、brief.decision、brief.concerns、brief.narrator（role 与 tone）、framing.storyline 的原文写入 snapshot_json。调用方不填这些值。六项结论不改变状态。格式低于 7 时拒绝，提示先 `deck put`，不升级、不插入。意见列表和待处理计数不含出稿审稿。`review resolve` 仍按 id 把 open 改为 resolved。
 - 写入使用短事务（BEGIN IMMEDIATE），并设 busy_timeout，让 CLI 与服务能同时打开同一个库。
 - 文件按 sha256 命名，同一文件重复加入不会产生新文件。
-- 格式版本记在 `PRAGMA user_version`。比程序高时提示升级 deck。低于 6 时，打开项目按迁移代码升到 6 并停在 6。已经是 6 时，打开、读取、`run start`、构建和导出都不改 `user_version`、不改表、不追加作品版本。第一次追加 `versions.deck_json` 的写入（put、restore、添加材料、添加素材、自动采用、手动采用）在同一事务里把 reviews 补上格式 7 的列、把 `user_version` 设为 7，并把页修订从 0 写成 1。`deck new` 和导入到新目录直接建成格式 7。
+- 格式版本记在 `PRAGMA user_version`。比程序高时提示升级 deck。低于 6 时，打开项目按迁移代码升到 6 并停在 6。已经是 6 时，打开、读取、`run start`、构建和导出都不改 `user_version`、不改表、不追加作品版本。第一次追加 `versions.deck_json` 的写入（put、restore、添加材料、添加素材、自动采用、手动采用）在同一事务里把 reviews 补上格式 7 的列、把 `user_version` 设为 7。`deck new` 和导入到新目录直接建成格式 7。
 
 ### 3.3 作品模型（deck_json）
 
