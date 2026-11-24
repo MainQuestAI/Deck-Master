@@ -20,8 +20,75 @@ fn png(path: &Path) {
     let python = std::env::var_os("DECK_TOOLS_PYTHON").expect("install this worktree's deck-tools");
     assert!(Command::new(python).args(["-c", "from PIL import Image; import sys; Image.new('RGB',(16,16),'teal').save(sys.argv[1])"]).arg(path).status().unwrap().success());
 }
+fn allow_runs(path: &Path) {
+    let store = Store::open(path).unwrap();
+    let snapshot = store.current().unwrap();
+    let mut deck = snapshot.deck;
+    let mut changed = false;
+    if deck.brief.audience.trim().is_empty() {
+        deck.brief.audience = "业务负责人".into();
+        changed = true;
+    }
+    if deck.brief.decision.trim().is_empty() {
+        deck.brief.decision = "是否采用该方案".into();
+        changed = true;
+    }
+    if deck
+        .brief
+        .concerns
+        .iter()
+        .all(|item| item.trim().is_empty())
+    {
+        deck.brief.concerns = vec!["成本是否可控".into()];
+        changed = true;
+    }
+    if deck.brief.narrator.role.trim().is_empty() {
+        deck.brief.narrator.role = "项目负责人".into();
+        changed = true;
+    }
+    if deck.brief.narrator.tone.trim().is_empty() {
+        deck.brief.narrator.tone = "直接说明判断".into();
+        changed = true;
+    }
+    if deck
+        .framing
+        .storyline
+        .iter()
+        .all(|item| item.trim().is_empty())
+    {
+        deck.framing.storyline = vec!["先说明问题，再给出判断".into()];
+        changed = true;
+    }
+    // Blank kind is not treated as a judgment page. These fixtures only need the start gate to open.
+    for page in &mut deck.pages {
+        if page.kind.trim().is_empty() {
+            page.kind = "explanation".into();
+            changed = true;
+        }
+    }
+    if changed {
+        store
+            .connection
+            .execute(
+                "UPDATE versions SET deck_json=?1 WHERE id=?2",
+                rusqlite::params![serde_json::to_string(&deck).unwrap(), snapshot.version],
+            )
+            .unwrap();
+    }
+}
+
+fn guarded_run(
+    path: &Path,
+    kind: &str,
+    ids: &[String],
+    max_calls: Option<i64>,
+) -> deck::error::Result<Value> {
+    allow_runs(path);
+    ops::run_start(path, kind, ids, max_calls)
+}
+
 fn start(path: &Path, max: i64) -> i64 {
-    ops::run_start(path, "image", &["p1".into()], Some(max)).unwrap()["runs"][0]["id"]
+    guarded_run(path, "image", &["p1".into()], Some(max)).unwrap()["runs"][0]["id"]
         .as_i64()
         .unwrap()
 }
@@ -133,10 +200,10 @@ fn open_multi_page_run_keeps_replacements_and_delayed_results_as_candidates() {
             .unwrap()
             .success()
     );
-    let id = ops::run_start(path, "image", &["p1".into(), "p2".into()], Some(4)).unwrap()["runs"]
-        [0]["id"]
-        .as_i64()
-        .unwrap();
+    let id =
+        guarded_run(path, "image", &["p1".into(), "p2".into()], Some(4)).unwrap()["runs"][0]["id"]
+            .as_i64()
+            .unwrap();
     ops::run_call(path, id, "p1", false).unwrap();
     let first = ops::run_result(path, id, "p1", &a).unwrap();
     assert_eq!(first["adopted"], true);
@@ -232,7 +299,7 @@ fn unknown_call_requires_explicit_retry_and_cannot_exceed_limit() {
     let path = temp.path();
     setup(path);
     let id = start(path, 2);
-    assert!(ops::run_start(path, "image", &["p2".into()], None).is_err());
+    assert!(guarded_run(path, "image", &["p2".into()], None).is_err());
     ops::run_call(path, id, "p1", false).unwrap();
     assert!(ops::run_call(path, id, "p1", false).is_err());
     assert_eq!(
@@ -322,7 +389,7 @@ fn image_run_inlines_readable_page_inputs_and_keeps_svg_inputs_separate() {
         serde_json::from_slice(&std::fs::read(work.join("attachments.json")).unwrap()).unwrap();
     assert_eq!(attachments, json!([]));
 
-    let svg = ops::run_start(path, "svg", &["p1".into()], None).unwrap();
+    let svg = guarded_run(path, "svg", &["p1".into()], None).unwrap();
     let work = Path::new(svg["runs"][0]["pages"][0]["work"].as_str().unwrap());
     let svg = std::fs::read_to_string(work.join("task.md")).unwrap();
     for requirement in [
@@ -379,7 +446,7 @@ fn svg_reconstruction_task() -> String {
             ]}
         }]}),
     );
-    let run = ops::run_start(path, "svg", &["p1".into()], None).unwrap();
+    let run = guarded_run(path, "svg", &["p1".into()], None).unwrap();
     let work = Path::new(run["runs"][0]["pages"][0]["work"].as_str().unwrap());
     std::fs::read_to_string(work.join("task.md")).unwrap()
 }
@@ -569,7 +636,7 @@ fn failed_svg_and_corrupt_bitmap_publish_no_artifact() {
     setup(path);
     let broken = path.join("broken.svg");
     std::fs::write(&broken, "<svg viewBox='0 0 100 100'><script/></svg>").unwrap();
-    let run = ops::run_start(path, "svg", &["p1".into()], None).unwrap();
+    let run = guarded_run(path, "svg", &["p1".into()], None).unwrap();
     let id = run["runs"][0]["id"].as_i64().unwrap();
     assert_eq!(
         ops::run_result(path, id, "p1", &broken)
@@ -623,7 +690,7 @@ fn slow_old_build_finishing_after_fast_current_build_keeps_matching_export() {
         snapshot.deck.pages[0].svg = Some(deck::model::Artifact { file, basis });
         let tx = store.transaction().unwrap();
         let version =
-            store::append(&tx, &snapshot.deck, "synthetic concurrent build input").unwrap();
+            store::append(&tx, &mut snapshot.deck, "synthetic concurrent build input").unwrap();
         tx.commit().unwrap();
         version
     };
@@ -783,7 +850,7 @@ fn build_and_export_warn_when_the_original_is_stale_but_the_page_was_readopted()
         basis: svg_basis,
     });
     let tx = store.transaction().unwrap();
-    store::append(&tx, &snapshot.deck, "synthetic current artifacts").unwrap();
+    store::append(&tx, &mut snapshot.deck, "synthetic current artifacts").unwrap();
     tx.commit().unwrap();
     drop(store);
     edit(
@@ -798,7 +865,7 @@ fn build_and_export_warn_when_the_original_is_stale_but_the_page_was_readopted()
     );
     deck.pages[0].svg.as_mut().unwrap().basis = ops::basis("svg", &deck, &deck.pages[0]).unwrap();
     let tx = store.transaction().unwrap();
-    store::append(&tx, &deck, "synthetic readopted page").unwrap();
+    store::append(&tx, &mut deck, "synthetic readopted page").unwrap();
     tx.commit().unwrap();
     drop(store);
     let built = ops::build(path).unwrap();
@@ -831,7 +898,7 @@ fn build_retains_notes_reports_missing_and_export_compares_inputs_after_restore(
     snapshot.deck.pages[0].svg = Some(deck::model::Artifact { file: svg, basis });
     snapshot.deck.pages[0].notes = "Speaker notes\n\nLast line\n".into();
     let tx = store.transaction().unwrap();
-    let baseline = store::append(&tx, &snapshot.deck, "synthetic compiler fixture").unwrap();
+    let baseline = store::append(&tx, &mut snapshot.deck, "synthetic compiler fixture").unwrap();
     tx.commit().unwrap();
     let build = ops::build(path).unwrap();
     assert_eq!(build["missing_pages"], json!(["p2"]));
@@ -891,7 +958,7 @@ fn version_one_database_keeps_versions_files_and_gains_delivery_tables() {
             .connection
             .pragma_query_value(None, "user_version", |r| r.get::<_, i64>(0))
             .unwrap(),
-        store::FORMAT_VERSION
+        6
     );
     start(path, 1);
 }
@@ -949,6 +1016,7 @@ fn page_three_redo_and_notes_only_edits_preserve_other_pages_and_existing_build(
     )
     .unwrap();
     put_available_build_font(path);
+    allow_runs(path);
     let image = path.join("new.png");
     png(&image);
     let mut store = Store::open(path).unwrap();
@@ -977,7 +1045,7 @@ fn page_three_redo_and_notes_only_edits_preserve_other_pages_and_existing_build(
         snapshot.deck.pages[index].preview = Some(preview.clone());
     }
     let tx = store.transaction().unwrap();
-    let baseline = store::append(&tx, &snapshot.deck, "synthetic three-page fixture").unwrap();
+    let baseline = store::append(&tx, &mut snapshot.deck, "synthetic three-page fixture").unwrap();
     tx.commit().unwrap();
     let build = ops::build(path).unwrap();
     let build_bytes = std::fs::read(build["path"].as_str().unwrap()).unwrap();
@@ -1009,7 +1077,7 @@ fn page_three_redo_and_notes_only_edits_preserve_other_pages_and_existing_build(
         .collect();
     let python = std::env::var_os("DECK_TOOLS_PYTHON").unwrap();
     assert!(Command::new(python).args(["-c", "from PIL import Image; import sys; Image.new('RGB',(16,16),'navy').save(sys.argv[1])"]).arg(&image).status().unwrap().success());
-    let run = ops::run_start(path, "image", &["p3".into()], None).unwrap();
+    let run = guarded_run(path, "image", &["p3".into()], None).unwrap();
     let id = run["runs"][0]["id"].as_i64().unwrap();
     assert_eq!(run["runs"][0]["pages"].as_array().unwrap().len(), 1);
     assert_eq!(
@@ -1105,7 +1173,7 @@ fn legacy_artifacts_keep_coverage_while_new_runs_include_purpose_and_layout() {
         });
     }
     let tx = store.transaction().unwrap();
-    store::append(&tx, &snapshot.deck, "synthetic legacy SVG bases").unwrap();
+    store::append(&tx, &mut snapshot.deck, "synthetic legacy SVG bases").unwrap();
     tx.commit().unwrap();
     let wrapper = temp.path().join("python-wrapper");
     let script = temp.path().join("tool.py");
@@ -1126,6 +1194,7 @@ else:
 "#,
     )
     .unwrap();
+    allow_runs(path);
     let started = Command::new(env!("CARGO_BIN_EXE_deck"))
         .arg("--project")
         .arg(path)
@@ -1163,7 +1232,7 @@ else:
         .expect("current_basis")
         .to_string();
     assert_eq!(svg["basis_changed"], false);
-    ops::run_start(path, "image", &["p1".into(), "p2".into()], None).unwrap();
+    guarded_run(path, "image", &["p1".into(), "p2".into()], None).unwrap();
     let (_, image) = page("image", "p1");
     let image_basis = image["current_basis"]
         .as_str()
@@ -1258,7 +1327,7 @@ fn image_tasks_inline_shared_rules_without_competing_defaults_or_rewriting_autho
             path,
             json!({"style":style,"pages":[{"id":"p1","content":{"title":text}}]}),
         );
-        let run = ops::run_start(path, "image", &["p1".into()], None).unwrap();
+        let run = guarded_run(path, "image", &["p1".into()], None).unwrap();
         let directory = Path::new(run["runs"][0]["pages"][0]["work"].as_str().unwrap());
         let original_task = std::fs::read(directory.join("task.md")).unwrap();
         let prompt = String::from_utf8(original_task.clone()).unwrap();
@@ -1282,10 +1351,49 @@ fn image_tasks_inline_shared_rules_without_competing_defaults_or_rewriting_autho
         }
         assert_eq!(ops::get(path, None).unwrap()["deck"]["style"], style);
         ops::run_cancel(path, run["runs"][0]["id"].as_i64().unwrap()).unwrap();
-        ops::run_start(path, "image", &["p1".into()], None).unwrap();
+        guarded_run(path, "image", &["p1".into()], None).unwrap();
         assert_eq!(
             std::fs::read(directory.join("task.md")).unwrap(),
             original_task
         );
     }
+}
+
+#[test]
+fn draft_gap_marks_stay_on_the_page_and_the_todo_field_stays_off_the_prompt() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    setup(path);
+    edit(
+        path,
+        json!({
+            "pages":[{
+                "id":"p1",
+                "content":{
+                    "title":"先核对口径",
+                    "body_blocks":[{"type":"paragraph","text":"待补：需披露口径与年份"}]
+                },
+                "todo":["只记在待办里的维护安排"],
+                "notes":"讲稿里的缺口说明"
+            }]
+        }),
+    );
+    let image_run = guarded_run(path, "image", &["p1".into()], None).unwrap();
+    let image_work = Path::new(image_run["runs"][0]["pages"][0]["work"].as_str().unwrap());
+    let image = std::fs::read_to_string(image_work.join("task.md")).unwrap();
+    let visible = image.split("## 可见文字").nth(1).unwrap();
+    assert!(visible.contains("待补：需披露口径与年份"));
+    assert!(visible.contains("先核对口径"));
+    assert!(!image.contains("只记在待办里的维护安排"));
+    assert!(!image.contains("讲稿里的缺口说明"));
+
+    let svg_run = guarded_run(path, "svg", &["p1".into()], None).unwrap();
+    let svg_work = Path::new(svg_run["runs"][0]["pages"][0]["work"].as_str().unwrap());
+    let svg = std::fs::read_to_string(svg_work.join("task.md")).unwrap();
+    let content: Value =
+        serde_json::from_str(&std::fs::read_to_string(svg_work.join("content.json")).unwrap())
+            .unwrap();
+    assert_eq!(content["body_blocks"][0]["text"], "待补：需披露口径与年份");
+    assert!(!svg.contains("只记在待办里的维护安排"));
+    assert!(!svg.contains("讲稿里的缺口说明"));
 }

@@ -197,10 +197,7 @@ fn import_staged(source: &Path, destination: &Path, archive: Archive) -> Result<
             notes: spec.notes,
             todo: spec.todo,
             refs: spec.refs,
-            image: None,
-            svg: None,
-            native: None,
-            preview: None,
+            ..Page::default()
         };
         page.content.normalize_ids()?;
         page.image = artifact(&store, source, spec.image, &mut files)?;
@@ -229,7 +226,7 @@ fn import_staged(source: &Path, destination: &Path, archive: Archive) -> Result<
         }));
     }
     let tx = store.transaction()?;
-    let version = store::append(&tx, &deck, "从旧项目导入")?;
+    let version = store::append(&tx, &mut deck, "从旧项目导入")?;
     if let Some(file) = &last_export {
         tx.execute(
             "INSERT INTO builds(version_id,input_digest,pptx_file,findings_json,missing_pages) VALUES (?,?,?,?,?)",

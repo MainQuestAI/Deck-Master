@@ -43,6 +43,8 @@ description: 用 Rust deck 审查当前作品、外部可读稿或 PPTX。默认
 
 `--method` 必填，没有默认值，省略会报错。意见落实后才 `deck review resolve`；不能采纳的说明原因，不为了清零去改稿。
 
+交付或导出前先看最终页，再用 `deck review add --record content_review`，并带上 `--method` 和 `--checks`。六项结论按这次阅读来写。`evidence_supports_claim`（证据能否推出结论）核对每个判断页：理由不同于标题，证据指向材料原句，反驳是这一页自己的。`no_internal_notes` 按材料里每一条标明不给读者的内部条目，逐条对照读者可见文字和讲稿。实质被改写或说得更轻，即使原句和保密标签都不在，也不通过。条目本身是「某项未定、先不写」时，只登记「待补：<对象>」、不写原因，不算把该条写上屏。不要手填版本号或页修订。这条记录不代替页上意见。没有它时导出仍会成功，并标 `unreviewed`。命令和六项 id 见 [commands.md](references/commands.md)。
+
 案例或作者给出的算式文件，可以用 `python -m deck_tools.case_numbers` 复算。退出码只说明算式，不说明归因、来源或 ROI，也不是审查通过的条件。
 
 ## 交接

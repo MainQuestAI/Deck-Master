@@ -5,7 +5,7 @@ from pathlib import Path
 from .compiler import CompileOptions, SvgInput, compile_deck
 from .compiler.svg import parse_svg
 from .render import readback, render_deck, resolve_fonts
-from .sanitize import pptx
+from .sanitize import attach_hint_findings, pptx
 
 
 def projection(page):
@@ -57,7 +57,10 @@ def compile_job(job, *, preview=False):
             raise RuntimeError("渲染页数与输入不一致；请检查 LibreOffice 输出")
         answer["preview"] = str(images[0])
     else:
+        hints = []
         cleaned = pptx(result.pptx_path.read_bytes(), "deck.pptx",
-                       notes=[{"page_id": p["id"], "notes": p.get("notes", "")} for p in pages])
+                       notes=[{"page_id": p["id"], "notes": p.get("notes", "")} for p in pages],
+                       findings=hints)
         result.pptx_path.write_bytes(cleaned)
+        attach_hint_findings(answer["findings"], hints)
     return answer

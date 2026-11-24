@@ -757,7 +757,14 @@ def test_render_and_assemble_real_synthetic_source(sample):
     answer = json.loads(result.stdout)
     assert Path(answer['pptx']) == work / 'native/deck.pptx'
     assert len(answer['render_pngs']) == 2
-    assert answer['findings'] == {'status': 'pass', 'findings': []}
+    # PptxGenJS repeats a cNvPr id on these shape-and-table pages. Sanitize
+    # repairs that and records a hint; the hint must not fail readback.
+    report = answer['findings']
+    assert report['status'] == 'pass'
+    assert report['findings'] == []
+    hints = report.get('warnings', [])
+    assert hints and all(item['code'] == 'duplicate_cnvpr_id' and item['level'] == 'hint' for item in hints)
+    assert {item['part'] for item in hints} == {'ppt/slides/slide1.xml', 'ppt/slides/slide2.xml'}
     assert all(Path(image).is_file() for image in answer['render_pngs'])
     output = Path(answer['pptx'])
     assert [(r['page_id'], r['notes']) for r in notes_records(output.read_bytes())] == [
@@ -768,6 +775,17 @@ def test_render_and_assemble_real_synthetic_source(sample):
         assert not any(name.startswith('docProps/') for name in archive.namelist())
         icons = [name for name in archive.namelist() if name.startswith('ppt/media/') and name.endswith('.svg')]
         assert len(icons) == 2
+        for name in archive.namelist():
+            if not name.startswith('ppt/slides/slide') or not name.endswith('.xml'):
+                continue
+            slide = etree.fromstring(archive.read(name))
+            ids = [node.get('id') for node in slide.iter() if etree.QName(node).localname == 'cNvPr']
+            assert ids and len(ids) == len(set(ids))
+            for node in slide.iter():
+                if etree.QName(node).localname != 'cNvPr':
+                    continue
+                if (node.get('name') or '').startswith('形状-'):
+                    assert node.get('name') == '形状-' + node.get('id')
         source = etree.fromstring(native.icon_file('tabler-outline/anchor').read_bytes())
         for name in icons:
             icon = etree.fromstring(archive.read(name))
