@@ -333,6 +333,7 @@ pub(super) fn default_build(
 pub fn build_detail(project: &Path, id: i64) -> Result<Value> {
     use rusqlite::OptionalExtension;
     let mut store = Store::open(project)?;
+    let root = store.root.clone();
     let tx = store.read_transaction()?;
     let current = store::current(&tx)?;
     let row = tx.query_row(
@@ -367,11 +368,28 @@ pub fn build_detail(project: &Path, id: i64) -> Result<Value> {
         pages.push(json!({"page_id":page.id,"title":page.content.title,"source_order":index+1,"pptx_slide":pages.len()+1}));
     }
     let input_changed = digest != build_digest(&current.deck)?;
+    let status = artifact_status(&current.deck)?;
+    let mut plans = Vec::new();
+    for page in &current.deck.pages {
+        let Some(artifact) = &page.native else {
+            continue;
+        };
+        if let Some(plan) = crate::ops::native::readable_native_plan(&root, &artifact.file) {
+            plans.push((page.id.clone(), plan));
+        }
+    }
+    let warnings = with_shared_layout(
+        stale_image_warnings(&status["stale_images"]),
+        &plan_refs(&plans),
+    );
+    let content_review = content_review_status(&tx, version_id, &source)?;
+    let current_content_review = content_review_status(&tx, current.version, &current.deck)?;
     Ok(
         json!({"id":id,"version_id":version_id,"created_at":created_at,"pptx_url":file_url(&file),
         "findings":findings,"pages":pages,"build_missing_pages":serde_json::from_str::<Value>(&missing)?,
         "current_version":current.version,"input_changed":input_changed,"readback_available":!imported,
-        "readback_matches_current":if imported {Value::Null} else {json!(!input_changed && content_matches)}}),
+        "readback_matches_current":if imported {Value::Null} else {json!(!input_changed && content_matches)},
+        "warnings":warnings,"content_review":content_review,"current_content_review":current_content_review}),
     )
 }
 

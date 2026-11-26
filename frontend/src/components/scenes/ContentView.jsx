@@ -29,12 +29,12 @@ function PageRow({ page, index }) {
   </article>;
 }
 
-export default function ContentView() {
+export default function ContentView({ suppressActionError = false }) {
   const { pages, createPage, editPage, drafts, getPage, busy, actionError } = useDeckMaster();
   const removedDrafts = Object.values(drafts).filter(draft => !getPage(draft.page.id));
   return <div>
     <div className="view-head"><div><h1>内容与页序</h1><p>按当前页序阅读正文与讲稿。</p></div><button className="primary" onClick={createPage} disabled={busy.create}>新增页面</button></div>
-    {actionError && <p className="s4-message" role="alert">{actionError}</p>}
+    {!suppressActionError && actionError && <p className="s4-message" role="alert">{actionError}</p>}
     {!pages.length && <div className="s4-empty">尚无页面；新增第一页开始制作。</div>}
     {pages.map((page, index) => <PageRow key={page.id} page={page} index={index} />)}
     {removedDrafts.length > 0 && <section className="s4-panel" aria-label="已移除页面的未保存输入">

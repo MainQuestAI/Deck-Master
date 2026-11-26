@@ -143,10 +143,19 @@ export function fileUrl(reference) {
   return `/api/files/${sha}`;
 }
 
-export async function exportDeck(format) {
+export function safeExportFilename(title, format) {
+  const cleaned = String(title || '')
+    .replace(/[\\/:*?"<>|\u0000-\u001f]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/^[.\s]+|[.\s]+$/g, '')
+    .slice(0, 80);
+  return `${cleaned || 'deck'}.${format}`;
+}
+
+export async function exportDeck(format, title) {
   return request(`/api/export/${format}`, {}, 15000, async response => {
     const status = JSON.parse(response.headers.get('X-Deck-Status') || '{}');
-    return { blob: await response.blob(), filename: `deck.${format}`, status };
+    return { blob: await response.blob(), filename: safeExportFilename(title, format), status };
   });
 }
 

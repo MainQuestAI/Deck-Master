@@ -1,7 +1,7 @@
 import React from 'react';
 import { useDeckMaster } from '../../context/DeckMasterContext';
 
-const methods = { human: '人工意见', self_check: 'Host 自检', other_model: '其他模型复核' };
+const methods = { human: '人工意见', self_check: '自检', other_model: '另一模型检查' };
 
 export default function ReviewPanel({ pageId }) {
   const { workspace, addReview, resolveReview, reviewDrafts, setReviewDrafts, busy } = useDeckMaster();

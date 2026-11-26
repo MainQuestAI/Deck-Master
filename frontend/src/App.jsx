@@ -14,7 +14,7 @@ import Toast from './components/common/Toast';
 import { useDeckMaster } from './context/DeckMasterContext';
 
 export default function App() {
-  const { scene, workspace, connectionError, actionError, refresh, currentPage } = useDeckMaster();
+  const { scene, workspace, connectionError, actionError, drawer, refresh, currentPage, pendingDraftRecovery, restoreSavedDrafts, dismissSavedDrafts } = useDeckMaster();
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, [scene, currentPage]);
@@ -29,8 +29,15 @@ export default function App() {
         <Topbar />
         <div className="workspace-view">
           {connectionError && <div className="s4-message" role="alert">{connectionError} <button onClick={refresh}>重新连接</button></div>}
-          {actionError && <div className="s4-message" role="alert">{actionError}</div>}
-          {workspace ? <Scene /> : <p role="status">{connectionError ? '作品尚未加载' : '正在读取作品…'}</p>}
+          {actionError && !drawer && <div className="s4-message" role="alert">{actionError}</div>}
+          {pendingDraftRecovery && <div className="s4-message" role="status" aria-label="未保存草稿恢复提示">
+            发现上次未保存的草稿（来自版本 {pendingDraftRecovery.version}），是否恢复？
+            {' '}
+            <button type="button" className="button tiny primary" onClick={restoreSavedDrafts}>恢复草稿</button>
+            {' '}
+            <button type="button" className="button tiny" onClick={dismissSavedDrafts}>忽略</button>
+          </div>}
+          {workspace ? <Scene suppressActionError /> : <p role="status">{connectionError ? '作品尚未加载' : '正在读取作品…'}</p>}
         </div>
       </main>
     </div>

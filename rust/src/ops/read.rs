@@ -147,6 +147,8 @@ pub fn workspace_with_etag(
     }
     value["open_reviews_total"] = json!(reviews.len());
     value["reviews"] = json!(reviews);
+    value["content_review"] =
+        crate::ops::review::content_review_status(&tx, snapshot.version, &snapshot.deck)?;
     let (history, history_total) = store::history_page(&tx, query.history_limit)?;
     value["history_has_more"] = json!(history.len() < history_total);
     value["history_total"] = json!(history_total);

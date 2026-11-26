@@ -828,3 +828,62 @@ fn cli_json_errors_cover_needs_tool_conflict_svg_subset_corrupt_and_project_new(
     assert_eq!(corrupt_err["code"], "data_corrupt");
     assert_eq!(corrupt_err["exit_code"], 7);
 }
+
+#[test]
+fn serve_binds_explicit_port_and_serves_webui_and_api() {
+    use std::io::{BufRead, BufReader, Read, Write};
+    use std::net::{TcpListener, TcpStream};
+    use std::process::Stdio;
+
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path().join("serve-demo");
+    output_json(command(
+        &path,
+        &["new", path.to_str().unwrap(), "--title", "本地预览测试"],
+    ));
+
+    // Reserve an ephemeral port and immediately release it for --port testing.
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let port = listener.local_addr().unwrap().port();
+    drop(listener);
+
+    let mut child = Command::new(env!("CARGO_BIN_EXE_deck"))
+        .args(["serve", path.to_str().unwrap(), "--port", &port.to_string()])
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+
+    let stdout = child.stdout.take().unwrap();
+    let mut reader = BufReader::new(stdout);
+    let mut line = String::new();
+    reader.read_line(&mut line).unwrap();
+    let expected_url = format!("http://127.0.0.1:{port}");
+    assert_eq!(line.trim(), expected_url);
+
+    let fetch = |target: &str| -> String {
+        let mut stream = TcpStream::connect(format!("127.0.0.1:{port}")).unwrap();
+        write!(
+            stream,
+            "GET {target} HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nConnection: close\r\n\r\n"
+        )
+        .unwrap();
+        let mut response = String::new();
+        stream.read_to_string(&mut response).unwrap();
+        response
+    };
+
+    let html = fetch("/");
+    assert!(html.starts_with("HTTP/1.1 200"), "{html}");
+    assert!(html.contains("<!doctype html>") || html.contains("<!DOCTYPE html>"));
+
+    let api = fetch("/api/deck");
+    assert!(api.starts_with("HTTP/1.1 200"), "{api}");
+    let body_str = api.split("\r\n\r\n").nth(1).unwrap();
+    let body: Value = serde_json::from_str(body_str).unwrap();
+    assert_eq!(body["deck"]["brief"]["title"], "本地预览测试");
+    assert_eq!(body["content_review"]["status"], "unreviewed");
+
+    let _ = child.kill();
+    let _ = child.wait();
+}

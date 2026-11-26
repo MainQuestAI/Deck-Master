@@ -3,6 +3,36 @@ import * as api from '../api.js';
 
 const DeckMasterContext = createContext(null);
 
+function draftStorageKey(workspace) {
+  const title = workspace?.deck?.brief?.title || 'untitled';
+  return `deck-master-drafts:${title}`;
+}
+
+function safeSessionRead(key) {
+  try {
+    const raw = globalThis.sessionStorage?.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function safeSessionWrite(key, value) {
+  try {
+    globalThis.sessionStorage?.setItem(key, JSON.stringify(value));
+  } catch {
+    // Session draft caching is best-effort and must never interrupt editing.
+  }
+}
+
+function safeSessionRemove(key) {
+  try {
+    globalThis.sessionStorage?.removeItem(key);
+  } catch {
+    // Ignore unavailable storage.
+  }
+}
+
 export function DeckMasterProvider({ children }) {
   const [workspace, setWorkspace] = useState(null);
   const [connectionError, setConnectionError] = useState('');
@@ -30,6 +60,8 @@ export function DeckMasterProvider({ children }) {
   useEffect(() => { pageNavigation.current = { currentPage, comparison }; }, [currentPage, comparison]);
   const [reviewDrafts, setReviewDrafts] = useState({});
   const [handoffRequest, setHandoffRequest] = useState(null);
+  const [pendingDraftRecovery, setPendingDraftRecovery] = useState(null);
+  const recoveryCheckedRef = useRef(false);
   const [toast, setToast] = useState(null);
   const [theme, setTheme] = useState(() => {
     try { return localStorage.getItem('deck-master-theme') || 'light'; }
@@ -47,6 +79,47 @@ export function DeckMasterProvider({ children }) {
   }, [toast]);
 
   const hasUnsavedInputs = api.hasUnsavedInputs(drafts, contextDrafts, reviewDrafts);
+  useEffect(() => {
+    setActionError('');
+  }, [scene]);
+  useEffect(() => {
+    if (!workspace || recoveryCheckedRef.current) return;
+    recoveryCheckedRef.current = true;
+    if (Object.keys(drafts).length > 0 || contextDrafts.brief || contextDrafts.framing) return;
+    const cached = safeSessionRead(draftStorageKey(workspace));
+    if (!cached || typeof cached !== 'object') return;
+    const cachedDrafts = cached.drafts && typeof cached.drafts === 'object' ? cached.drafts : {};
+    const cachedContext = cached.contextDrafts && typeof cached.contextDrafts === 'object'
+      ? { brief: cached.contextDrafts.brief || null, framing: cached.contextDrafts.framing || null }
+      : { brief: null, framing: null };
+    const dirtyPages = Object.entries(cachedDrafts).filter(([, draft]) => api.isPageDraftDirty(draft));
+    const dirtyContexts = Object.entries(cachedContext).filter(([kind, draft]) => draft && api.contextUnitPatch(kind, draft) !== null);
+    if (dirtyPages.length === 0 && dirtyContexts.length === 0) return;
+    setPendingDraftRecovery({
+      version: cached.version ?? workspace.version,
+      pageCount: dirtyPages.length,
+      contextKinds: dirtyContexts.map(([kind]) => kind),
+      drafts: Object.fromEntries(dirtyPages),
+      contextDrafts: {
+        brief: dirtyContexts.some(([kind]) => kind === 'brief') ? cachedContext.brief : null,
+        framing: dirtyContexts.some(([kind]) => kind === 'framing') ? cachedContext.framing : null,
+      },
+    });
+  }, [workspace, drafts, contextDrafts]);
+  useEffect(() => {
+    if (!workspace || !recoveryCheckedRef.current || pendingDraftRecovery) return;
+    const key = draftStorageKey(workspace);
+    const dirtyDrafts = Object.fromEntries(Object.entries(drafts).filter(([, draft]) => api.isPageDraftDirty(draft)));
+    const dirtyContext = {
+      brief: contextDrafts.brief && api.contextUnitPatch('brief', contextDrafts.brief) !== null ? contextDrafts.brief : null,
+      framing: contextDrafts.framing && api.contextUnitPatch('framing', contextDrafts.framing) !== null ? contextDrafts.framing : null,
+    };
+    if (Object.keys(dirtyDrafts).length > 0 || dirtyContext.brief || dirtyContext.framing) {
+      safeSessionWrite(key, { version: workspace.version, drafts: dirtyDrafts, contextDrafts: dirtyContext });
+    } else {
+      safeSessionRemove(key);
+    }
+  }, [workspace, drafts, contextDrafts, pendingDraftRecovery]);
   useEffect(() => {
     if (!hasUnsavedInputs) return;
     const warn = event => {
@@ -310,7 +383,7 @@ export function DeckMasterProvider({ children }) {
     await reload();
   });
   const download = (format) => perform(`export-${format}`, async () => {
-    const result = await api.exportDeck(format);
+    const result = await api.exportDeck(format, workspace?.deck?.brief?.title);
     setDownloadStatus(result.status);
     const url = URL.createObjectURL(result.blob);
     const link = document.createElement('a');
@@ -320,6 +393,20 @@ export function DeckMasterProvider({ children }) {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     setToast('已开始下载');
   });
+  const restoreSavedDrafts = () => {
+    if (!pendingDraftRecovery) return;
+    setDrafts(value => ({ ...pendingDraftRecovery.drafts, ...value }));
+    setContextDrafts(value => ({
+      brief: value.brief || pendingDraftRecovery.contextDrafts.brief,
+      framing: value.framing || pendingDraftRecovery.contextDrafts.framing,
+    }));
+    setPendingDraftRecovery(null);
+    setToast('已恢复上次未保存的草稿');
+  };
+  const dismissSavedDrafts = () => {
+    if (workspace) safeSessionRemove(draftStorageKey(workspace));
+    setPendingDraftRecovery(null);
+  };
   const restore = (version) => perform('restore', async () => {
     acceptSave(await api.restoreVersion(version));
     setToast('已恢复为新版本，历史和未保存输入仍保留');
@@ -359,6 +446,7 @@ export function DeckMasterProvider({ children }) {
     connectionError, actionError, busy, refresh: reload, scene, setScene, currentPage,
     getPage, getPageNumStr, openPage, openPageReviews, openHostHandoff, handoffRequest, editPage, createPage, movePage, removePage, drafts, updateDraft, saveDraft, rebaseDraft, discardDraft,
     contextDrafts, openContextEdit, updateContextDraft, saveContext, refreshContextConflict, resolveContextConflict,
+    pendingDraftRecovery, restoreSavedDrafts, dismissSavedDrafts,
     drawer, openDrawer: setDrawer, closeDrawer: () => setDrawer(null),
     stopRun, build, buildResult: displayedBuildResult, buildLoading, buildError, defaultBuild: workspace?.default_build, download, downloadStatus, restore,
     addReview, resolveReview, reviewDrafts, setReviewDrafts,

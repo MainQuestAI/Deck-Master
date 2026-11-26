@@ -34,6 +34,14 @@ enum Commands {
     Serve {
         #[arg(value_name = "PROJECT", help = "作品目录（省略时使用 --project）")]
         directory: Option<PathBuf>,
+        #[arg(
+            long,
+            default_value_t = 0,
+            help = "监听端口（默认 0，自动分配空闲端口）"
+        )]
+        port: u16,
+        #[arg(long, help = "启动后用本机默认浏览器打开")]
+        open: bool,
     },
     #[command(about = "选择图片素材")]
     Asset {
@@ -413,14 +421,18 @@ fn dispatch(cli: Cli, project_explicit: bool) -> Result<()> {
             ReviewCommand::Get { id } => print_json(ops::review_get(&cli.project, id)?),
             ReviewCommand::Resolve { id } => print_json(ops::review_resolve(&cli.project, id)?),
         },
-        Commands::Serve { directory } => {
+        Commands::Serve {
+            directory,
+            port,
+            open,
+        } => {
             if directory.is_some() && project_explicit {
                 return Err(Error::Input(
                     "serve 不能同时指定位置参数目录与 --project；请只传其中之一".into(),
                 ));
             }
             let target = directory.unwrap_or(cli.project);
-            crate::server::serve(&target)
+            crate::server::serve_with_options(&target, port, open)
         }
         Commands::Build => print_json(ops::build(&cli.project)?),
         Commands::Doctor { fonts } => {
