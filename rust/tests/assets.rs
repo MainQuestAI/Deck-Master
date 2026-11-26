@@ -218,11 +218,15 @@ fn legacy_asset_payload_round_trips_and_public_style_keeps_both_hash_formulas() 
         file: "original.png".into(),
         basis: "unused".into(),
     });
+    let mut expected_style = style.clone();
+    expected_style["assets"] = json!([
+        {"id":asset.id,"file":file},
+        {"id":"modern-public","file":file}]);
     for page in &deck.pages {
         for (kind, inputs) in [
             (
                 "image",
-                json!([page.content, page.layout, page.purpose, style]),
+                json!([page.content, page.layout, page.purpose, expected_style]),
             ),
             (
                 "svg",
@@ -231,7 +235,7 @@ fn legacy_asset_payload_round_trips_and_public_style_keeps_both_hash_formulas() 
                     page.purpose,
                     page.layout,
                     page.image.as_ref().map(|i| &i.file),
-                    style
+                    expected_style
                 ]),
             ),
         ] {
@@ -244,6 +248,61 @@ fn legacy_asset_payload_round_trips_and_public_style_keeps_both_hash_formulas() 
             assert_eq!(ops::basis(kind, &deck, page).unwrap(), expected);
         }
     }
+}
+
+#[test]
+fn asset_metadata_and_extra_page_binding_do_not_stale_existing_bound_page() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    ops::new(path, "合成素材元数据测试".into()).unwrap();
+    edit(
+        path,
+        json!({"order":["p1","p2","p3"],"pages":[
+            {"id":"p1","purpose":"说明交付","layout":"输入到输出","content":{"title":"交付"}},
+            {"id":"p2","content":{"title":"中段"}},
+            {"id":"p3","content":{"title":"收尾"}}
+        ]}),
+    );
+    let logo = path.join("logo.png");
+    let generated = path.join("generated.png");
+    bitmap(&logo, "teal");
+    bitmap(&generated, "navy");
+    ops::asset_add(path, "logo", &logo, &["p1".into()], "source-a", "MIT").unwrap();
+    seed_artifacts(path, &logo);
+    allow_runs(path);
+
+    let before_deck = Store::open(path).unwrap().current().unwrap().deck;
+    let p1_image_before = ops::basis("image", &before_deck, &before_deck.pages[0]).unwrap();
+    let p1_svg_before = ops::basis("svg", &before_deck, &before_deck.pages[0]).unwrap();
+
+    // Start an open image run for p1 before changing metadata and adding p3.
+    let run = ops::run_start(path, "image", &["p1".into()], None).unwrap();
+    let run_id = run["runs"][0]["id"].as_i64().unwrap();
+
+    ops::asset_add(
+        path,
+        "logo",
+        &logo,
+        &["p1".into(), "p3".into()],
+        "source-b",
+        "CC0",
+    )
+    .unwrap();
+
+    let after_deck = Store::open(path).unwrap().current().unwrap().deck;
+    assert_eq!(
+        ops::basis("image", &after_deck, &after_deck.pages[0]).unwrap(),
+        p1_image_before
+    );
+    assert_eq!(
+        ops::basis("svg", &after_deck, &after_deck.pages[0]).unwrap(),
+        p1_svg_before
+    );
+    assert_stale(path, json!(["p3"]));
+
+    // Because p1's effective asset file did not change, the in-flight run still auto-adopts.
+    let result = ops::run_result(path, run_id, "p1", &generated).unwrap();
+    assert_eq!(result["adopted"], true);
 }
 
 #[test]
