@@ -91,6 +91,7 @@ def main():
             "crop",
             "render",
             "assemble",
+            "icon-search",
         ],
         help="文件工具子命令",
     )
@@ -108,7 +109,7 @@ def main():
         if not isinstance(job, dict):
             raise InputError("任务参数必须是 JSON 对象")
 
-        if args.command in ("validate-plan", "crop", "render", "assemble"):
+        if args.command in ("validate-plan", "crop", "render", "assemble", "icon-search"):
             from .native import dispatch
             result = dispatch(args.command, job)
         elif args.command == "read-source":

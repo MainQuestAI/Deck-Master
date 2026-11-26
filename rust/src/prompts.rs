@@ -138,7 +138,8 @@ pub fn write(store: &Store, deck: &Deck, page: &Page, kind: &str, directory: &Pa
             String::new()
         };
         format!(
-            "{context}\n{size_sentence}按 native-reconstruction.md 逐页还原，正文取 content.json，文字绑定 atoms.json，坐标取 attachments.json 的已采用原图。用 deck run result 交回 plan.json，查看返回的并排图，再用 deck run adopt --note 写入实际对照结论并采用。\n"
+            "{context}\n{size_sentence}按 native-reconstruction.md 逐页还原，正文取 content.json，文字绑定 atoms.json，坐标取 attachments.json 的已采用原图。\n常用命令：\n- 检索图标：deck icon search <关键词> [--limit 12]\n- 裁剪局部图：deck run crop <run> {} --bbox x,y,w,h --name <名称>（写入本页 assets/<名称>.png）\n- 预检 plan：deck run validate <run> {} <plan.json>（不提交结果）\n- 交回并采用：先 deck run result 交回 plan.json，查看返回的并排图，再用 deck run adopt --note 写入实际对照结论并采用。\n",
+            page.id, page.id
         )
     } else if kind == "svg" {
         let atoms = crate::tools::invoke("atoms", &json!({"page": page}))?;

@@ -14,6 +14,7 @@ pub use basis::basis;
 pub use build::{artifact_status, build, build_detail};
 pub use export::{doctor, export_markdown, export_md, export_pptx};
 pub use material::{material_add, material_text};
+pub use native::{icon_search, run_crop, run_validate};
 pub use read::{
     WorkspaceQuery, get, import, new, project_file, show, version_get, workspace,
     workspace_with_etag,

@@ -45,6 +45,11 @@ enum Commands {
         #[command(subcommand)]
         command: RunCommand,
     },
+    #[command(about = "检索内置 Tabler 图标")]
+    Icon {
+        #[command(subcommand)]
+        command: IconCommand,
+    },
     #[command(
         about = "将已采用的页面构建为可编辑 PPTX。stale_pages 是页面依据已变；stale_images 是原图依据已变。warnings 里的 stale_image 与 shared_layout 都不阻断"
     )]
@@ -177,6 +182,16 @@ enum AssetCommand {
 }
 
 #[derive(Subcommand)]
+enum IconCommand {
+    #[command(about = "按中文或英文关键词检索内置 Tabler 图标")]
+    Search {
+        query: String,
+        #[arg(long, default_value_t = 12, help = "最多返回的图标数量（1-100）")]
+        limit: usize,
+    },
+}
+
+#[derive(Subcommand)]
 enum RunCommand {
     #[command(about = "准备指定页的生图、SVG 或 native 任务")]
     Start {
@@ -222,6 +237,21 @@ enum RunCommand {
             help = "native 必填：本页对照结论。只剩确认用语时仍采用，并提示 note_unspecific"
         )]
         note: Option<String>,
+    },
+    #[command(about = "从 native 页面原图裁剪局部图并保存到当前页面工作目录")]
+    Crop {
+        run: i64,
+        page: String,
+        #[arg(long, value_name = "x,y,w,h", help = "原图像素坐标框：x,y,w,h")]
+        bbox: String,
+        #[arg(long, help = "输出素材名（保存为 assets/<name>.png）")]
+        name: String,
+    },
+    #[command(about = "校验 native plan.json，不提交结果也不修改数据库")]
+    Validate {
+        run: i64,
+        page: String,
+        file: PathBuf,
     },
 }
 
@@ -415,7 +445,19 @@ fn dispatch(cli: Cli, project_explicit: bool) -> Result<()> {
             RunCommand::Adopt { run, page, note } => {
                 ops::run_adopt_with_note(&cli.project, run, &page, note.as_deref())?
             }
+            RunCommand::Crop {
+                run,
+                page,
+                bbox,
+                name,
+            } => ops::run_crop(&cli.project, run, &page, &bbox, &name)?,
+            RunCommand::Validate { run, page, file } => {
+                ops::run_validate(&cli.project, run, &page, &file)?
+            }
         }),
+        Commands::Icon {
+            command: IconCommand::Search { query, limit },
+        } => print_json(ops::icon_search(&query, limit)?),
         Commands::Export {
             command: ExportCommand::Pptx,
         } => print_json(ops::export_pptx(&cli.project)?),

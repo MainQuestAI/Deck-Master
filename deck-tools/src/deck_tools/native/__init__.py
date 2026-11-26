@@ -689,17 +689,71 @@ def page_directory(work, page_id):
 
 
 def crop(job):
+    from PIL import ImageOps
+
     page = job['page']
-    destination = page_directory(job['work'], page['id']) / 'assets'
-    target = (destination / f'{job["id"]}.png').resolve()
-    if not target.is_relative_to(destination.resolve()):
+    crop_id = job.get('id')
+    if (
+        not isinstance(crop_id, str)
+        or not crop_id.strip()
+        or '/' in crop_id
+        or '\\' in crop_id
+        or crop_id in ('.', '..')
+        or crop_id.startswith('.')
+    ):
+        raise ValueError('裁图名称必须是不含路径分隔符的文件名')
+    if 'output_dir' in job:
+        destination = Path(job['output_dir']).resolve()
+    else:
+        destination = (page_directory(job['work'], page['id']) / 'assets').resolve()
+    target = (destination / f'{crop_id}.png').resolve()
+    if not target.is_relative_to(destination) or target.parent != destination:
         raise ValueError('裁图编号必须位于本页 assets 目录下')
+    box = job.get('box')
+    if not isinstance(box, list) or len(box) != 4:
+        raise ValueError('bbox 必须是 [x,y,w,h]')
+    x, y, w, h = map(number, box)
+    if w <= 0 or h <= 0:
+        raise ValueError('裁图宽高必须大于零')
     with Image.open(page['source_image']) as image:
-        inside_box(job['box'], *image.size)
-        x, y, w, h = job['box']
+        transposed = ImageOps.exif_transpose(image)
+        inside_box([x, y, w, h], *transposed.size)
         destination.mkdir(parents=True, exist_ok=True)
-        image.crop((x, y, x + w, y + h)).save(target)
-    return {'file': str(target)}
+        cropped = transposed.crop((x, y, x + w, y + h))
+        cropped.save(target, format='PNG')
+        out_w, out_h = cropped.size
+    return {
+        'file': str(target),
+        'relative_path': f'assets/{crop_id}.png',
+        'width': out_w,
+        'height': out_h,
+        'format': 'PNG',
+    }
+
+
+def icon_search(job):
+    from ..vendor.cyberppt.select_icon import load_index, search_icons
+
+    query = job.get('query')
+    if not isinstance(query, str) or not query.strip():
+        raise ValueError('请提供非空的图标检索关键词')
+    limit = job.get('limit', 12)
+    if isinstance(limit, bool) or not isinstance(limit, int) or limit < 1 or limit > 100:
+        raise ValueError('limit 必须是 1 到 100 之间的整数')
+    index_path = ICONS / 'index.json'
+    if not index_path.is_file():
+        raise NeedsTool('找不到内置 Tabler 图标索引；请重新安装 deck-tools')
+    index = load_index(index_path)
+    matches = search_icons(index, query, library='tabler-outline', limit=limit)
+    items = []
+    for item in matches:
+        items.append({
+            'icon_id': item['icon_id'],
+            'name': item['name'],
+            'category': item.get('category', ''),
+            'tags': item.get('tags', []),
+        })
+    return {'query': query, 'count': len(items), 'icons': items}
 
 
 def render(job):
@@ -855,4 +909,9 @@ def assemble(job):
 def dispatch(command, job):
     if command == 'validate-plan':
         return validate_plan(read_json(job['page']['plan']), job['page'])
-    return {'crop': crop, 'render': render, 'assemble': assemble}[command](job)
+    return {
+        'crop': crop,
+        'render': render,
+        'assemble': assemble,
+        'icon-search': icon_search,
+    }[command](job)
