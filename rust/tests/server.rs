@@ -1870,3 +1870,64 @@ fn http_errors_use_structured_schema_hide_cli_syntax_and_map_busy_and_corrupt() 
     assert_eq!(corrupt_json["code"], "data_corrupt");
     assert_eq!(corrupt_json["exit_code"], 7);
 }
+
+#[test]
+fn deck_polling_supports_etag_304_pagination_and_immutable_file_cache() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    ops::new(path, "轮询优化".into()).unwrap();
+    for step in 1..=5 {
+        let base = Store::open(path).unwrap().current().unwrap().version;
+        ops::put(
+            path,
+            base,
+            serde_json::from_value(json!({"brief": {"title": format!("标题 {step}")}})).unwrap(),
+        )
+        .unwrap();
+    }
+    let file = Store::open(path)
+        .unwrap()
+        .add_file(b"immutable-bytes", "png")
+        .unwrap();
+    let service = Service::start(path);
+
+    // 1. Initial GET returns 200 with ETag and pagination metadata.
+    let first = service.request("GET", "/api/deck?history_limit=2", &[], "");
+    assert_eq!(first.status, 200);
+    let etag = first.headers.get("etag").expect("ETag header").clone();
+    assert!(etag.starts_with("\"w1-"), "{etag}");
+    let body = first.json();
+    assert_eq!(body["history"].as_array().unwrap().len(), 2);
+    assert_eq!(body["history_total"], 6);
+    assert_eq!(body["history_has_more"], true);
+
+    // 2. Conditional GET with matching ETag returns 304 with empty body.
+    let cached = service.request(
+        "GET",
+        "/api/deck?history_limit=2",
+        &[("If-None-Match", etag.as_str())],
+        "",
+    );
+    assert_eq!(cached.status, 304);
+    assert!(cached.body.is_empty());
+    assert_eq!(cached.headers.get("etag"), Some(&etag));
+
+    // 3. A review write invalidates ETag immediately so polling receives 200.
+    ops::review_add(path, None, "新增意见", "author", "human").unwrap();
+    let invalidated = service.request(
+        "GET",
+        "/api/deck?history_limit=2",
+        &[("If-None-Match", etag.as_str())],
+        "",
+    );
+    assert_eq!(invalidated.status, 200);
+    assert_ne!(invalidated.headers.get("etag"), Some(&etag));
+
+    // 4. Content-addressed file endpoint serves immutable Cache-Control header.
+    let asset = service.request("GET", &format!("/api/files/{}", &file[..64]), &[], "");
+    assert_eq!(asset.status, 200);
+    assert_eq!(
+        asset.headers.get("cache-control").map(String::as_str),
+        Some("private, max-age=31536000, immutable")
+    );
+}

@@ -459,26 +459,44 @@ pub(super) fn file_url(file: &str) -> String {
     format!("/api/files/{}", file.split('.').next().unwrap_or(""))
 }
 
-pub(super) fn runs(
+type RunRow = (i64, String, String, Option<i64>, i64);
+type RunPageRow = (String, String, String, Option<String>, Option<String>);
+
+fn load_run_pages_batch(
+    connection: &rusqlite::Connection,
+    run_ids: &[i64],
+) -> Result<HashMap<i64, Vec<RunPageRow>>> {
+    let mut grouped: HashMap<i64, Vec<RunPageRow>> = HashMap::new();
+    if run_ids.is_empty() {
+        return Ok(grouped);
+    }
+    let placeholders = vec!["?"; run_ids.len()].join(",");
+    let sql = format!(
+        "SELECT run_id,page_id,basis,status,result_file,preview_file FROM run_pages WHERE run_id IN ({placeholders}) ORDER BY run_id DESC, rowid ASC"
+    );
+    let mut statement = connection.prepare(&sql)?;
+    let params = rusqlite::params_from_iter(run_ids.iter());
+    let mut rows = statement.query(params)?;
+    while let Some(row) = rows.next()? {
+        let run_id: i64 = row.get(0)?;
+        grouped.entry(run_id).or_default().push((
+            row.get(1)?,
+            row.get(2)?,
+            row.get(3)?,
+            row.get(4)?,
+            row.get(5)?,
+        ));
+    }
+    Ok(grouped)
+}
+
+fn hydrate_runs(
     connection: &rusqlite::Connection,
     deck: &Deck,
-    id: Option<i64>,
+    rows: Vec<RunRow>,
 ) -> Result<Vec<Value>> {
-    if let Some(id) = id {
-        run_record(connection, id)?;
-    }
-    let mut query=connection.prepare("SELECT id,kind,status,max_calls,calls_used FROM runs WHERE (?1 IS NULL OR id=?1) ORDER BY id DESC")?;
-    let rows = query
-        .query_map([id], |r| {
-            Ok((
-                r.get::<_, i64>(0)?,
-                r.get::<_, String>(1)?,
-                r.get::<_, String>(2)?,
-                r.get::<_, Option<i64>>(3)?,
-                r.get::<_, i64>(4)?,
-            ))
-        })?
-        .collect::<std::result::Result<Vec<_>, _>>()?;
+    let run_ids: Vec<i64> = rows.iter().map(|row| row.0).collect();
+    let mut pages_by_run = load_run_pages_batch(connection, &run_ids)?;
     let current_pages: HashMap<_, _> = deck
         .pages
         .iter()
@@ -486,24 +504,11 @@ pub(super) fn runs(
         .collect();
     // Reuse each page/kind basis only during this read; later polls read a fresh deck.
     let mut current_bases = HashMap::new();
-    let mut runs = Vec::new();
+    let mut runs = Vec::with_capacity(rows.len());
     for (id, kind, status, max, used) in rows {
-        let mut query = connection.prepare(
-            "SELECT page_id,basis,status,result_file,preview_file FROM run_pages WHERE run_id=? ORDER BY rowid",
-        )?;
-        let rows = query
-            .query_map([id], |r| {
-                Ok((
-                    r.get::<_, String>(0)?,
-                    r.get::<_, String>(1)?,
-                    r.get::<_, String>(2)?,
-                    r.get::<_, Option<String>>(3)?,
-                    r.get::<_, Option<String>>(4)?,
-                ))
-            })?
-            .collect::<std::result::Result<Vec<_>, _>>()?;
-        let mut pages = Vec::new();
-        for (page, old, state, result, preview) in rows {
+        let page_rows = pages_by_run.remove(&id).unwrap_or_default();
+        let mut pages = Vec::with_capacity(page_rows.len());
+        for (page, old, state, result, preview) in page_rows {
             let current_page = current_pages.get(page.as_str());
             let mut current_basis = None;
             let mut basis_unreadable = false;
@@ -550,6 +555,60 @@ pub(super) fn runs(
         runs.push(json!({"id":id,"kind":kind,"status":status,"max_calls":max,"calls_used":used,"pages":pages}));
     }
     Ok(runs)
+}
+
+pub(super) fn runs(
+    connection: &rusqlite::Connection,
+    deck: &Deck,
+    id: Option<i64>,
+) -> Result<Vec<Value>> {
+    if let Some(id) = id {
+        run_record(connection, id)?;
+    }
+    let mut query = connection.prepare(
+        "SELECT id,kind,status,max_calls,calls_used FROM runs WHERE (?1 IS NULL OR id=?1) ORDER BY id DESC",
+    )?;
+    let rows = query
+        .query_map([id], |r| {
+            Ok((
+                r.get::<_, i64>(0)?,
+                r.get::<_, String>(1)?,
+                r.get::<_, String>(2)?,
+                r.get::<_, Option<i64>>(3)?,
+                r.get::<_, i64>(4)?,
+            ))
+        })?
+        .collect::<std::result::Result<Vec<_>, _>>()?;
+    hydrate_runs(connection, deck, rows)
+}
+
+pub(super) fn runs_paged(
+    connection: &rusqlite::Connection,
+    deck: &Deck,
+    recent_limit: usize,
+) -> Result<(Vec<Value>, usize, bool)> {
+    let total: i64 = connection.query_row("SELECT COUNT(*) FROM runs", [], |r| r.get(0))?;
+    // Always include every open run plus up to recent_limit most recent closed runs.
+    let mut query = connection.prepare(
+        "SELECT id,kind,status,max_calls,calls_used FROM runs
+         WHERE status = 'open'
+            OR id IN (SELECT id FROM runs WHERE status != 'open' ORDER BY id DESC LIMIT ?1)
+         ORDER BY id DESC",
+    )?;
+    let rows = query
+        .query_map([recent_limit as i64], |r| {
+            Ok((
+                r.get::<_, i64>(0)?,
+                r.get::<_, String>(1)?,
+                r.get::<_, String>(2)?,
+                r.get::<_, Option<i64>>(3)?,
+                r.get::<_, i64>(4)?,
+            ))
+        })?
+        .collect::<std::result::Result<Vec<_>, _>>()?;
+    let total = total.max(0) as usize;
+    let has_more = rows.len() < total;
+    Ok((hydrate_runs(connection, deck, rows)?, total, has_more))
 }
 
 pub(super) fn page_job(store: &Store, deck: &Deck, page: &Page, svg: &Path) -> Result<Value> {

@@ -320,7 +320,41 @@ fn route(project: &Path, request: &mut Request) -> Result<ResponseBox> {
         (Method::Get, path) if path.starts_with("/api/builds/") => {
             json_response(200, ops::build_detail(project, identifier(&path[12..])?)?)
         }
-        (Method::Get, "/api/deck") => json_response(200, ops::workspace(project)?),
+        (Method::Get, "/api/deck") => {
+            let mut ws_query = ops::WorkspaceQuery::default();
+            for pair in query.split('&').filter(|p| !p.is_empty()) {
+                let (key, value) = pair.split_once('=').unwrap_or((pair, ""));
+                let parsed = identifier(value)? as usize;
+                let clamped = parsed.min(500);
+                match key {
+                    "runs_limit" => ws_query.runs_limit = clamped,
+                    "history_limit" => ws_query.history_limit = clamped,
+                    _ => {
+                        return Err(Error::Input(
+                            "工作区查询只接受 runs_limit 和 history_limit".into(),
+                        ));
+                    }
+                }
+            }
+            let if_none_match = request
+                .headers()
+                .iter()
+                .find(|h| h.field.equiv("If-None-Match"))
+                .map(|h| h.value.as_str());
+            let (etag, snapshot) = ops::workspace_with_etag(project, ws_query, if_none_match)?;
+            match snapshot {
+                None => Ok(Response::empty(304)
+                    .with_header(header("ETag", &etag)?)
+                    .with_header(header("Cache-Control", "no-cache")?)
+                    .boxed()),
+                Some(body) => Ok(Response::from_data(serde_json::to_vec(&body)?)
+                    .with_status_code(200)
+                    .with_header(header("Content-Type", "application/json; charset=utf-8")?)
+                    .with_header(header("ETag", &etag)?)
+                    .with_header(header("Cache-Control", "no-cache")?)
+                    .boxed()),
+            }
+        }
         (Method::Get, path) if path.starts_with("/api/versions/") => {
             let version = identifier(&path[14..])?;
             json_response(
@@ -400,6 +434,10 @@ fn route(project: &Path, request: &mut Request) -> Result<ResponseBox> {
                     content_type(file.to_str().unwrap_or("")),
                 )?)
                 .with_header(header(
+                    "Cache-Control",
+                    "private, max-age=31536000, immutable",
+                )?)
+                .with_header(header(
                     "Content-Security-Policy",
                     "sandbox; default-src 'none'; img-src data:; style-src 'unsafe-inline'; frame-ancestors 'none'",
                 )?)
@@ -447,7 +485,13 @@ fn handle_request(project: &Path, port: u16, mut request: Request) {
         json_response(403, json!({"error":"仅接受本服务的本机 Host 与 Origin"}))
     };
     match response.and_then(|mut response| {
-        response.add_header(header("Cache-Control", "no-store")?);
+        if !response
+            .headers()
+            .iter()
+            .any(|item| item.field.equiv("Cache-Control"))
+        {
+            response.add_header(header("Cache-Control", "no-store")?);
+        }
         response.add_header(header("X-Content-Type-Options", "nosniff")?);
         response.add_header(header("X-Frame-Options", "DENY")?);
         if !response

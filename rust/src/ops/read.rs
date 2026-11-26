@@ -2,7 +2,7 @@ use crate::error::{Error, Result};
 use crate::model::{Brief, Deck, Snapshot, Style};
 use crate::ops::build::{artifact_status, default_build};
 use crate::ops::review::{page_review_count, reviews};
-use crate::ops::run::runs;
+use crate::ops::run::runs_paged;
 use crate::store::{self, Store};
 use serde_json::{Value, json};
 use std::path::Path;
@@ -89,11 +89,41 @@ fn snapshot_value(snapshot: &Snapshot, pages: Option<&[String]>) -> Result<Value
     }))
 }
 
-pub fn workspace(project: &Path) -> Result<Value> {
+#[derive(Debug, Clone, Copy)]
+pub struct WorkspaceQuery {
+    pub runs_limit: usize,
+    pub history_limit: usize,
+}
+
+impl Default for WorkspaceQuery {
+    fn default() -> Self {
+        Self {
+            runs_limit: 20,
+            history_limit: 50,
+        }
+    }
+}
+
+fn etag_matches(header_value: &str, current: &str) -> bool {
+    header_value.split(',').any(|token| {
+        let token = token.trim();
+        token == "*" || token == current || token.strip_prefix("W/") == Some(current)
+    })
+}
+
+pub fn workspace_with_etag(
+    project: &Path,
+    query: WorkspaceQuery,
+    if_none_match: Option<&str>,
+) -> Result<(String, Option<Value>)> {
     let mut store = Store::open(project)?;
     // A deferred read transaction keeps the polling response on one snapshot,
     // without reserving SQLite's writer slot.
     let tx = store.read_transaction()?;
+    let etag = store::workspace_etag(&tx, query.runs_limit, query.history_limit)?;
+    if if_none_match.is_some_and(|tag| etag_matches(tag, &etag)) {
+        return Ok((etag, None));
+    }
     let snapshot = store::current(&tx)?;
     let mut value = snapshot_value(&snapshot, None)?;
     value["default_build"] = match default_build(&tx, &snapshot.deck)? {
@@ -103,7 +133,11 @@ pub fn workspace(project: &Path) -> Result<Value> {
         }
         None => Value::Null,
     };
-    value["runs"] = json!(runs(&tx, &snapshot.deck, None)?);
+    let (paged_runs, runs_total, runs_has_more) =
+        runs_paged(&tx, &snapshot.deck, query.runs_limit)?;
+    value["runs"] = json!(paged_runs);
+    value["runs_total"] = json!(runs_total);
+    value["runs_has_more"] = json!(runs_has_more);
     let reviews = reviews(&tx, Some("open"), None)?;
     for page in value["deck"]["pages"].as_array_mut().into_iter().flatten() {
         page["open_reviews"] = json!(page_review_count(
@@ -113,8 +147,42 @@ pub fn workspace(project: &Path) -> Result<Value> {
     }
     value["open_reviews_total"] = json!(reviews.len());
     value["reviews"] = json!(reviews);
-    value["history"] = json!(store::history(&tx)?);
-    Ok(value)
+    let (history, history_total) = store::history_page(&tx, query.history_limit)?;
+    value["history_has_more"] = json!(history.len() < history_total);
+    value["history_total"] = json!(history_total);
+    value["history"] = json!(history);
+    Ok((etag, Some(value)))
+}
+
+pub fn workspace(project: &Path) -> Result<Value> {
+    let (_, value) = workspace_with_etag(project, WorkspaceQuery::default(), None)?;
+    value.ok_or_else(|| Error::Tool("工作区快照意外为空".into()))
+}
+
+const KNOWN_FILE_EXTENSIONS: &[&str] = &[
+    "png",
+    "jpg",
+    "jpeg",
+    "svg",
+    "pptx",
+    "pdf",
+    "txt",
+    "md",
+    "json",
+    "native.json",
+    "webp",
+    "gif",
+    "docx",
+    "bin",
+];
+
+fn verify_in_files_dir(store: &Store, directory: &Path, name: &str) -> Result<std::path::PathBuf> {
+    let path = store.file(name)?.canonicalize()?;
+    if path.starts_with(directory) {
+        Ok(path)
+    } else {
+        Err(Error::Input("附件必须位于当前项目 files 目录内".into()))
+    }
 }
 
 pub fn project_file(project: &Path, sha: &str) -> Result<std::path::PathBuf> {
@@ -124,17 +192,22 @@ pub fn project_file(project: &Path, sha: &str) -> Result<std::path::PathBuf> {
     let store = Store::open(project)?;
     let directory = store.root.join("files").canonicalize()?;
     let sha = sha.to_ascii_lowercase();
+    // Fast path: probe common known extensions directly to avoid scanning .deck/files/.
+    for ext in KNOWN_FILE_EXTENSIONS {
+        let name = format!("{sha}.{ext}");
+        let candidate = directory.join(&name);
+        if candidate.is_file() {
+            return verify_in_files_dir(&store, &directory, &name);
+        }
+    }
+    // Fallback for uncommon extensions (e.g. uploaded .csv/.xlsx source files).
     let mut entries = std::fs::read_dir(&directory)?.collect::<std::io::Result<Vec<_>>>()?;
     entries.sort_by_key(|entry| entry.file_name());
     for entry in entries {
         let name = entry.file_name();
         let Some(name) = name.to_str() else { continue };
         if name.split_once('.').is_some_and(|(hash, _)| hash == sha) {
-            let path = store.file(name)?.canonicalize()?;
-            if path.starts_with(&directory) {
-                return Ok(path);
-            }
-            return Err(Error::Input("附件必须位于当前项目 files 目录内".into()));
+            return verify_in_files_dir(&store, &directory, name);
         }
     }
     Err(Error::Missing(format!("附件 {sha} 不存在;请先添加附件")))

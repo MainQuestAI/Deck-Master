@@ -440,3 +440,62 @@ test('vite dev proxy only permits absent or local dev origins', async () => {
   assert.equal(isAllowedDevOrigin('http://127.0.0.1:9999', 5173), false);
   assert.equal(isAllowedDevOrigin('null', 5173), false);
 });
+
+test('pollDeck sends If-None-Match and returns unchanged on 304 without parsing body', async () => {
+  const { pollDeck } = await import('./api.js');
+  const seenHeaders = [];
+  globalThis.fetch = async (url, options) => {
+    assert.equal(url, '/api/deck');
+    seenHeaders.push(options.headers || {});
+    if (options.headers?.['If-None-Match'] === '"w1-abc"') {
+      return new Response(null, { status: 304, headers: { ETag: '"w1-abc"' } });
+    }
+    return new Response(JSON.stringify({ version: 2 }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', ETag: '"w1-abc"' },
+    });
+  };
+  const first = await pollDeck();
+  assert.equal(first.unchanged, false);
+  assert.equal(first.etag, '"w1-abc"');
+  assert.deepEqual(first.data, { version: 2 });
+
+  const second = await pollDeck({ etag: first.etag });
+  assert.equal(second.unchanged, true);
+  assert.equal(second.etag, '"w1-abc"');
+  assert.equal(second.data, null);
+  assert.deepEqual(seenHeaders, [{}, { 'If-None-Match': '"w1-abc"' }]);
+});
+
+test('createVisibilityPoller pauses when document is hidden and polls immediately when visible again', async (t) => {
+  const { createVisibilityPoller } = await import('./api.js');
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  let listener = null;
+  const fakeDoc = {
+    hidden: false,
+    addEventListener(event, fn) { if (event === 'visibilitychange') listener = fn; },
+    removeEventListener(event, fn) { if (event === 'visibilitychange' && listener === fn) listener = null; },
+  };
+  let calls = 0;
+  const stop = createVisibilityPoller({
+    doc: fakeDoc,
+    intervalMs: 1500,
+    poll: async () => { calls += 1; },
+  });
+  await Promise.resolve();
+  assert.equal(calls, 1);
+
+  fakeDoc.hidden = true;
+  listener();
+  t.mock.timers.tick(10000);
+  await Promise.resolve();
+  assert.equal(calls, 1);
+
+  fakeDoc.hidden = false;
+  listener();
+  await Promise.resolve();
+  assert.equal(calls, 2);
+
+  stop();
+  assert.equal(listener, null);
+});
