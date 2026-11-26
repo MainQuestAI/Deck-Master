@@ -773,3 +773,85 @@ fn shared_layout_on_build_keeps_readback_pass() {
         ["shared_layout", "shared_layout", "shared_layout"]
     );
 }
+
+#[test]
+fn native_result_rejects_escaped_and_non_png_jpeg_image_assets_without_storing_files() {
+    let temp = tempfile::tempdir().unwrap();
+    let project = temp.path().join("project");
+    let outside = temp.path().join("secret.png");
+    // Minimal valid 1x1 PNG so image run result accepts it cleanly.
+    let png: &[u8] = &[
+        0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44,
+        0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x02, 0x00, 0x00, 0x00, 0x90,
+        0x77, 0x53, 0xde, 0x00, 0x00, 0x00, 0x0c, 0x49, 0x44, 0x41, 0x54, 0x08, 0xd7, 0x63, 0xf8,
+        0xcf, 0xc0, 0x00, 0x00, 0x03, 0x01, 0x01, 0x00, 0x18, 0xdd, 0x8d, 0xb0, 0x00, 0x00, 0x00,
+        0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82,
+    ];
+    std::fs::write(&outside, png).unwrap();
+
+    cli(
+        &project,
+        &["new", project.to_str().unwrap(), "--title", "原生路径测试"],
+    );
+    edit(
+        &project,
+        json!({"order":["p1"],"pages":[{"id":"p1","purpose":"说明","layout":"左图右文","content":{"title":"合成标题"}}]}),
+    );
+    let image_run =
+        cli(&project, &["run", "start", "image", "--pages", "p1"])["runs"][0]["id"].to_string();
+    cli(
+        &project,
+        &["run", "result", &image_run, "p1", outside.to_str().unwrap()],
+    );
+    let run_id =
+        cli(&project, &["run", "start", "native", "--pages", "p1"])["runs"][0]["id"].to_string();
+
+    let work_dir = temp.path().join("plan-work");
+    std::fs::create_dir_all(&work_dir).unwrap();
+    let gif_path = work_dir.join("anim.gif");
+    std::fs::write(&gif_path, b"GIF89a\x01\x00\x01\x00").unwrap();
+    #[cfg(unix)]
+    std::os::unix::fs::symlink(&outside, work_dir.join("link.png")).unwrap();
+
+    let files_dir = project.join(".deck/files");
+    let before_count = std::fs::read_dir(&files_dir).unwrap().count();
+
+    let mut bad_files = vec![
+        outside.to_str().unwrap().to_string(),
+        "../secret.png".to_string(),
+        "anim.gif".to_string(),
+        "missing.png".to_string(),
+    ];
+    #[cfg(unix)]
+    bad_files.push("link.png".to_string());
+
+    for bad in bad_files {
+        let plan_path = work_dir.join("plan.json");
+        let plan = json!({
+            "schema": "deck.native_plan.v1",
+            "page": "p1",
+            "canvas_px": {"w": 800, "h": 450},
+            "background": "FFFFFF",
+            "ops": [
+                {"op": "text", "atom_id": "p1:title", "text": "合成标题", "bbox": [20, 20, 300, 40]},
+                {"op": "image", "file": bad, "bbox": [500, 100, 100, 100]}
+            ]
+        });
+        std::fs::write(&plan_path, serde_json::to_vec(&plan).unwrap()).unwrap();
+        let output = command(
+            &project,
+            &["run", "result", &run_id, "p1", plan_path.to_str().unwrap()],
+        );
+        assert_eq!(
+            output.status.code(),
+            Some(2),
+            "expected exit 2 for {bad}, stderr={}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert_eq!(
+            std::fs::read_dir(&files_dir).unwrap().count(),
+            before_count,
+            "rejected asset {bad} must not write into .deck/files"
+        );
+    }
+}

@@ -73,6 +73,30 @@ def icon_file(icon_id):
     return candidate
 
 
+def _validate_image_asset(op, page):
+    name = op.get('file')
+    if not isinstance(name, str) or not name.strip():
+        raise ValueError('image 缺少素材文件')
+    rel = Path(name)
+    if rel.is_absolute() or '..' in rel.parts:
+        raise ValueError(f'image 素材必须是当前任务目录内的相对路径：{name}')
+    plan_path = page.get('plan')
+    if not plan_path:
+        return
+    plan_dir = Path(plan_path).resolve().parent
+    candidate = (plan_dir / rel).resolve()
+    if not candidate.is_relative_to(plan_dir) or not candidate.is_file():
+        raise ValueError(f'image 素材路径越出当前任务目录或不存在：{name}')
+    try:
+        with Image.open(candidate) as image:
+            if image.format not in ('PNG', 'JPEG'):
+                raise ValueError(f'image 素材只支持 PNG 或 JPEG：{name}')
+    except ValueError:
+        raise
+    except Exception as exc:
+        raise ValueError(f'image 素材无法按 PNG/JPEG 读取：{name}（{exc}）') from exc
+
+
 def validate_plan(plan, page):
     if plan.get('schema') != 'deck.native_plan.v1' or plan.get('page') != page['id']:
         raise ValueError('plan 格式或页编号不匹配')
@@ -138,6 +162,7 @@ def validate_plan(plan, page):
                 raise ValueError('image 不能承载正文，请用原生文字或表格')
             if op['bbox'][2] * op['bbox'][3] > w * h * 0.4:
                 raise ValueError('单张图片面积不能超过画布的 40%')
+            _validate_image_asset(op, page)
         elif kind == 'shape' and op['type'] == 'custom':
             points = op['points']
             if len(points) < 2:
