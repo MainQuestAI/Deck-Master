@@ -131,6 +131,12 @@ jobs:
         run: cargo test --test native -- --ignored
       - name: Real rendering tests
         run: .venv/bin/python -m pytest -q deck-tools/tests -m render --basetemp="$RUNNER_TEMP/deck-render"
+      - name: Browser smoke test (manual dispatch)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          (cd frontend && npm ci && npm run build && npx playwright install chromium)
+          bash scripts/install.sh --prefix "$RUNNER_TEMP/smoke-prefix"
+          node frontend/browser-smoke.mjs --deck "$RUNNER_TEMP/smoke-prefix/bin/deck" --out "$RUNNER_TEMP/browser-smoke"
       - uses: actions/upload-artifact@v7
         if: failure()
         with:

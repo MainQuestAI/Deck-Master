@@ -140,3 +140,36 @@ test('artifact and workspace presentation churn alone is not a body change', () 
   after.style = { palette: ['#ffffff'] };
   assert.deepEqual(diffDecks(before, after), { brief: [], framing: [], pages: [], hasChanges: false });
 });
+
+test('v7 intent fields (decision, concerns, narrator, storyline, kind, argument) are detected in history diffs', () => {
+  const before = deck();
+  before.brief.decision = '待定';
+  before.brief.concerns = ['成本'];
+  before.brief.narrator = { role: '项目负责人', tone: '平实' };
+  before.framing.storyline = ['背景', '方案'];
+  before.pages[0].kind = 'explanation';
+  before.pages[0].argument = {
+    reasons: ['原因一'],
+    evidence: [{ text: '样本数据', ref: 'm1 第 1 页' }],
+    reasoning: '旧推理',
+    rebuttal: '旧反驳',
+  };
+
+  const after = structuredClone(before);
+  after.brief.decision = '批准试点';
+  after.brief.concerns = ['成本', '交付节奏'];
+  after.brief.narrator.tone = '直接给结论';
+  after.framing.storyline = ['背景', '判断', '行动'];
+  after.pages[0].kind = 'judgment';
+  after.pages[0].argument.reasoning = '新推理';
+
+  const diff = diffDecks(before, after);
+  assert.equal(diff.hasChanges, true);
+  const all = allChanges(diff);
+  assert.ok(all.some(item => item.label === '待决事项' && item.before === '待定' && item.after === '批准试点'));
+  assert.ok(all.some(item => item.label === '读者关注点' && item.after.length === 2));
+  assert.ok(all.some(item => item.label === '讲述语气' && item.before === '平实' && item.after === '直接给结论'));
+  assert.ok(all.some(item => item.label === '故事主线' && item.after.length === 3));
+  assert.ok(all.some(item => item.label === '页型' && item.before === 'explanation' && item.after === 'judgment'));
+  assert.ok(all.some(item => item.label === '推理' && item.before === '旧推理' && item.after === '新推理'));
+});

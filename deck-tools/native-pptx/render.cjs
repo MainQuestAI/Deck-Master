@@ -74,9 +74,15 @@ function draw(pptx, slide, op, index, page, iconsDir) {
         ...box(op.bbox), objectName });
       break;
     }
-    case 'image':
-      slide.addImage({ path: path.resolve(path.dirname(page.plan), op.file), ...box(op.bbox), objectName });
+    case 'image': {
+      const planDir = fs.realpathSync(path.dirname(page.plan));
+      const assetPath = fs.realpathSync(path.resolve(planDir, op.file));
+      if (assetPath !== planDir && !assetPath.startsWith(planDir + path.sep)) {
+        throw new Error(`image 素材路径越出当前任务目录：${op.file}`);
+      }
+      slide.addImage({ path: assetPath, ...box(op.bbox), objectName });
       break;
+    }
     case 'table': {
       const rows = op.cells.map((row, r) => row.map(cell => ({
         text: cell.text,

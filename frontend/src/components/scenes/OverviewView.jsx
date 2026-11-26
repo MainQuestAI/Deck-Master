@@ -40,9 +40,18 @@ function ReadList({ label, items }) {
 }
 
 function BriefReading({ value }) {
+  const narrator = [value.narrator?.role, value.narrator?.tone].filter(Boolean).join(' · ');
   return <div className="s4-reading">
-    {[['作品标题', value.title], ['本次面向谁', value.audience], ['本次任务', value.task_type], ['希望对方理解或做出什么判断', value.goal]].map(([label, text]) => <section key={label}><h3>{label}</h3><p>{text || '尚未填写'}</p></section>)}
-    <ReadList label="已有决定与实际约束" items={value.constraints} />
+    {[
+      ['作品标题', value.title],
+      ['本次面向谁', value.audience],
+      ['本次任务', value.task_type],
+      ['希望对方理解或做出什么判断', value.goal],
+      ['待决事项', value.decision],
+      ['讲述人与语气', narrator],
+    ].map(([label, text]) => <section key={label}><h3>{label}</h3><p>{text || '尚未填写'}</p></section>)}
+    <ReadList label="读者关注点" items={value.concerns || []} />
+    <ReadList label="已有决定与实际约束" items={value.constraints || []} />
     <section><h3>页数上限</h3><p>{value.page_limit ?? '未设置'}</p></section>
   </div>;
 }
@@ -50,11 +59,12 @@ function BriefReading({ value }) {
 function FramingReading({ value, expanded = false }) {
   return <div className="s4-reading">
     <section><h3>中心主张</h3><p>{value.thesis || '尚未填写中心主张'}</p></section>
-    <section><h3>业务框架分组</h3>{value.pillars.length ? value.pillars.map((pillar, index) => <section key={index}><h4>{pillar.title || '未命名分组'}</h4>{pillar.points.length ? <ul>{pillar.points.map((point, i) => <li key={i}>{point || '（空支持点）'}</li>)}</ul> : <p className="muted">尚无支持点</p>}</section>) : <p className="muted">尚无框架分组，可直接添加</p>}</section>
+    <ReadList label="故事主线" items={value.storyline || []} />
+    <section><h3>业务框架分组</h3>{(value.pillars || []).length ? value.pillars.map((pillar, index) => <section key={index}><h4>{pillar.title || '未命名分组'}</h4>{pillar.points.length ? <ul>{pillar.points.map((point, i) => <li key={i}>{point || '（空支持点）'}</li>)}</ul> : <p className="muted">尚无支持点</p>}</section>) : <p className="muted">尚无框架分组，可直接添加</p>}</section>
     <details open={expanded}><summary>事实、假设与待回答问题</summary>
-      <ReadList label="已知事实" items={value.facts} />
-      <ReadList label="当前假设" items={value.assumptions} />
-      <ReadList label="待回答问题" items={value.questions} />
+      <ReadList label="已知事实" items={value.facts || []} />
+      <ReadList label="当前假设" items={value.assumptions || []} />
+      <ReadList label="待回答问题" items={value.questions || []} />
     </details>
   </div>;
 }

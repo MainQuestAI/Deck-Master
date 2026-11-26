@@ -469,9 +469,21 @@ def test_crop_and_validate_plan_json_entrypoint(sample):
     assert invoke('validate-plan', {'page': page})['atoms'] == 5
 
 
+def _available_font():
+    result = subprocess.run(['fc-match', '-f', '%{family}', 'sans-serif'], capture_output=True, text=True, check=False)
+    family = result.stdout.strip().split(',')[0].strip() if result.returncode == 0 else ''
+    return family or 'DejaVu Sans'
+
+
 @pytest.mark.parametrize('existing_deck', [None, b'synthetic existing deck'])
 def test_assemble_rejects_private_notes_with_adapter_error(sample, existing_deck):
-    work, page, _ = sample
+    work, page, original = sample
+    font = _available_font()
+    plan = deepcopy(original)
+    for op in plan['ops']:
+        if op.get('op') in ('text', 'table'):
+            op['font'] = font
+    native.write_json(page['plan'], plan)
     page['notes'] = '合成路径 /Users/x/demo'
     job = work / 'job.json'
     native.write_json(job, {'work': str(work), 'pages': [page]})
@@ -621,9 +633,11 @@ def test_omitted_column_label_passes_assemble_readback_and_other_atoms_stay_requ
     }]}, 'notes': '合成讲稿', 'plan': str(tmp_path / 'plan.json')}
     atoms = {atom['text']: atom for atom in visible_atoms(projection(page))}
 
+    font = _available_font()
+
     def drawn(texts):
         return [{
-            'op': 'text', 'text': text, 'atom_id': atoms[text]['atom_id'],
+            'op': 'text', 'text': text, 'atom_id': atoms[text]['atom_id'], 'font': font,
             'bbox': [20, 20 + index * 60, 400, 40], 'size': 24, 'color': '225588',
         } for index, text in enumerate(texts)]
 
@@ -659,9 +673,10 @@ def test_readback_reports_short_atom_hidden_inside_longer_text(tmp_path, monkeyp
         {'id': 'body', 'type': 'paragraph', 'text': '试验甲'}]}, 'notes': '合成讲稿', 'plan': str(plan_path)}
     atoms = {atom['text']: atom for atom in visible_atoms(projection(page))}
     longer = atoms['试验甲']
+    font = _available_font()
     plan = {'schema': 'deck.native_plan.v1', 'page': 'p1', 'canvas_px': {'w': 800, 'h': 450},
             'background': 'FFFFFF', 'ops': [
-                {'op': 'text', 'text': longer['text'], 'atom_id': longer['atom_id'],
+                {'op': 'text', 'text': longer['text'], 'atom_id': longer['atom_id'], 'font': font,
                  'bbox': [20, 20, 400, 48], 'size': 28, 'color': '225588'}]}
     native.write_json(plan_path, plan)
     with pytest.raises(ValueError):
@@ -819,3 +834,20 @@ def test_native_render_checks_missing_fonts_with_needs_tool(sample):
     native.write_json(page['plan'], plan)
     with pytest.raises(NeedsTool):
         native.render({'work': str(tmp_path), 'page': page})
+
+
+def test_validate_plan_rejects_escaped_and_non_png_jpeg_image_assets(sample):
+    tmp_path, page, original = sample
+    plan_dir = Path(page['plan']).parent
+    outside = tmp_path / 'outside.png'
+    Image.new('RGB', (16, 16), '#112233').save(outside)
+    gif = plan_dir / 'assets' / 'anim.gif'
+    Image.new('RGB', (16, 16), '#112233').save(gif, format='GIF')
+    link = plan_dir / 'assets' / 'escape.png'
+    link.symlink_to(outside)
+
+    for bad_file in (str(outside), '../../outside.png', 'assets/escape.png', 'assets/anim.gif', 'assets/missing.png'):
+        plan = deepcopy(original)
+        plan['ops'][3]['file'] = bad_file
+        with pytest.raises(ValueError):
+            native.validate_plan(plan, page)

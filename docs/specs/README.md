@@ -5,7 +5,7 @@
 实施/验收状态从对应源码和实际检查确认；历史材料中的“ready”“最终”“完成”等原文
 限定在其记录时点。保留历史路径供追溯，不据此恢复旧任务或前置手续。
 2026-10-30 起 `*/contracts/` 下的 schema 副本已全部删除（85 份与运行合同逐字节相同，
-审计见 [overdefense-audit-20261030](../diagnostics/overdefense-audit-20261030.md) OD-D1）；
+审计见 `docs/diagnostics/overdefense-audit-20261030.md`（未入库历史审计） OD-D1）；
 旧 Python 工作台及其运行合同已移出仓库，不再有活动的旧线 schema；旧规格只供历史追溯，
 不再建立副本。现行模型与导入边界见 [Rust 开发稿](rust-rebuild/README.md)。
 

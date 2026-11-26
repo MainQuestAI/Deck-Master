@@ -624,3 +624,76 @@ fn material_original_is_immutable_optional_and_invalid_references_are_errors() {
         Err(deck::error::Error::Input(_))
     ));
 }
+
+#[test]
+fn deck_tools_subprocess_ignores_project_dir_python_modules() {
+    let temp = tempfile::tempdir().unwrap();
+    let project = temp.path().join("project");
+    std::fs::create_dir_all(&project).unwrap();
+    let sentinel = project.join("hijacked.txt");
+    let trap = format!(
+        "from pathlib import Path\nPath({:?}).write_text('pwned')\nraise RuntimeError('should not import from cwd')\n",
+        sentinel.to_string_lossy()
+    );
+    std::fs::write(project.join("json.py"), &trap).unwrap();
+    std::fs::write(project.join("deck_tools.py"), &trap).unwrap();
+    let note = project.join("note.txt");
+    std::fs::write(&note, "合成材料正文").unwrap();
+
+    let new_out = Command::new(env!("CARGO_BIN_EXE_deck"))
+        .current_dir(&project)
+        .args(["new", ".", "--title", "隔离测试"])
+        .output()
+        .unwrap();
+    assert!(
+        new_out.status.success(),
+        "{}",
+        String::from_utf8_lossy(&new_out.stderr)
+    );
+
+    let add_out = Command::new(env!("CARGO_BIN_EXE_deck"))
+        .current_dir(&project)
+        .args(["material", "add", "note.txt"])
+        .output()
+        .unwrap();
+    assert!(
+        add_out.status.success(),
+        "{}",
+        String::from_utf8_lossy(&add_out.stderr)
+    );
+    assert!(
+        !sentinel.exists(),
+        "project-local python modules must never be imported by deck_tools"
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn deck_tools_subprocess_kills_and_reports_timeout() {
+    use std::os::unix::fs::PermissionsExt;
+    let temp = tempfile::tempdir().unwrap();
+    let fake_python = temp.path().join("slow-python.sh");
+    std::fs::write(&fake_python, "#!/bin/sh\nexec sleep 30\n").unwrap();
+    let mut perms = std::fs::metadata(&fake_python).unwrap().permissions();
+    perms.set_mode(0o755);
+    std::fs::set_permissions(&fake_python, perms).unwrap();
+
+    let started = std::time::Instant::now();
+    let output = Command::new(env!("CARGO_BIN_EXE_deck"))
+        .env("DECK_TOOLS_PYTHON", &fake_python)
+        .env("DECK_TOOLS_TIMEOUT_SECS", "1")
+        .arg("doctor")
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(4));
+    assert!(
+        String::from_utf8_lossy(&output.stderr).contains("超时"),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(
+        started.elapsed().as_secs() < 10,
+        "timed-out subprocess took {:?}",
+        started.elapsed()
+    );
+}
