@@ -12,7 +12,7 @@ from deck_tools.render import readback, render_deck
 from hostenv import host_fonts, resolve_host_font
 from test_native_table_geometry import PID, atom, page_fixture, svg_fixture
 
-pytestmark = pytest.mark.render
+# Only tests calling render_deck require external rendering tools.
 
 
 def rendered_words(png):
@@ -22,6 +22,7 @@ def rendered_words(png):
             for word in ET.fromstring(data).iter('{http://www.w3.org/1999/xhtml}word')]
 
 
+@pytest.mark.render
 @pytest.mark.parametrize('anchor', ['start', 'end'])
 @pytest.mark.parametrize('multiline', [False, True])
 def test_column_boundary_anchor_trims_only_empty_slack(tmp_path, anchor, multiline):
@@ -105,6 +106,7 @@ def tight_table(tmp_path, anchor, gap, *, multiline=False, name='tight'):
     return page, parse_svg(path.read_bytes(), page_id=PID), compiled, identity
 
 
+@pytest.mark.render
 @pytest.mark.parametrize('anchor', ['start', 'middle', 'end'])
 @pytest.mark.parametrize('multiline', [False, True])
 def test_only_empty_slack_is_trimmed_with_alignment_anchor_preserved(tmp_path, anchor, multiline, monkeypatch):
@@ -137,6 +139,7 @@ def test_only_empty_slack_is_trimmed_with_alignment_anchor_preserved(tmp_path, a
         assert max(abs(x-y) for x, y in zip(old, new)) <= .075  # 0.1 px, renderer quantization only
 
 
+@pytest.mark.render
 @pytest.mark.parametrize('anchor', ['start', 'middle', 'end'])
 @pytest.mark.parametrize('multiline', [False, True])
 def test_true_glyph_overflow_is_still_refused(tmp_path, anchor, multiline):

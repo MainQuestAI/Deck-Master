@@ -53,19 +53,37 @@ def run(args, **kwargs):
         raise RendererError(f'{Path(args[0]).name} timed out after {exc.timeout}s') from exc
 
 
+class FontPath(str):
+    def __new__(cls, path: str, face_index: int = 0):
+        obj = super().__new__(cls, path)
+        obj.face_index = face_index
+        return obj
+
+
+def _family_matches(requested: str, matched_families: str) -> bool:
+    target = requested.strip().lower()
+    return any(alias.strip().lower() == target for alias in matched_families.split(','))
+
+
 def resolve_fonts(pages):
-    fonts={}
+    fonts = {}
     for page in pages:
         for shape in [run for source in page['shapes']
                       for run in [source, *source.get('runs', [])]]:
             if 'kind' not in shape:
                 shape = {**shape, 'kind': 'text'}
-            if shape['kind']!='text':continue
-            name=shape['font_family'];key=name+(':bold' if shape['bold'] else '')
-            if key in fonts:continue
-            result=run([executable('fc-match'),'-f','%{family}\n%{file}',name+(':style=Bold' if shape['bold'] else '')]).stdout.decode().split('\n',1)
-            if len(result)!=2 or name.lower() not in result[0].lower():raise NeedsTool(f'font {name} unavailable; explicitly choose an installed font in design and SVG')
-            fonts[key]=result[1]
+            if shape['kind'] != 'text':
+                continue
+            name = shape['font_family']
+            key = name + (':bold' if shape['bold'] else '')
+            if key in fonts:
+                continue
+            query = name + (':style=Bold' if shape['bold'] else '')
+            parts = run([executable('fc-match'), '-f', '%{family}\n%{file}\n%{index}', query]).stdout.decode().split('\n', 2)
+            if len(parts) < 2 or not _family_matches(name, parts[0]):
+                raise NeedsTool(f'font {name} unavailable; explicitly choose an installed font in design and SVG')
+            index = int(parts[2].strip()) if len(parts) == 3 and parts[2].strip().isdigit() else 0
+            fonts[key] = FontPath(parts[1], index)
     return fonts
 
 

@@ -187,7 +187,7 @@ def emit(pages, width, height, fonts, output):
                     run_file = fonts.get(run_key) or fonts.get(text_run['font_family'])
                     if not run_file:
                         raise ValueError(f"{page['page_id']}/{s['id']}: font file not supplied: {run_key}")
-                    run_font = ImageFont.truetype(str(run_file), size=1000)
+                    run_font = ImageFont.truetype(str(run_file), size=1000, index=getattr(run_file, 'face_index', 0))
                     text_width += run_font.getlength(text_run['text']) / 1000 * text_run['font_size']
                 text_width += max(0, len(s['text']) - 1) * s.get('letter_spacing', 0)
                 w=s.get('text_width', text_width+s['font_size']*1.0)

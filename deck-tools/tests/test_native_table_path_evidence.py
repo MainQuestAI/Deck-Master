@@ -18,7 +18,7 @@ from deck_tools.render import readback, render_deck
 from hostenv import host_fonts
 from test_native_table_geometry import compile_fixture, page_fixture, svg_fixture, NS, PID
 
-pytestmark = pytest.mark.render
+# Only tests calling render_deck require external rendering tools.
 
 
 def change_paths(original, target, mutation):
@@ -162,6 +162,7 @@ def test_actual_unrounded_rect_frame_remains_supported(tmp_path):
     assert readback(compiled.pptx_path, [parse_svg(path.read_bytes(), page_id=PID)], [page])['status'] == 'pass'
 
 
+@pytest.mark.render
 def test_valid_header_only_rule_renders_incomplete_grid_and_is_unverified(tmp_path):
     page, _, compiled, source = compile_fixture(tmp_path)
     target = tmp_path / 'header-only-native-rule.pptx'
