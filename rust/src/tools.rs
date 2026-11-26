@@ -2,9 +2,21 @@ use crate::error::{Error, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::ffi::OsString;
-use std::io::Write;
+use std::io::Read;
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
+use std::time::{Duration, Instant};
+
+const DEFAULT_TIMEOUT_SECS: u64 = 600;
+
+fn timeout_duration() -> Duration {
+    std::env::var("DECK_TOOLS_TIMEOUT_SECS")
+        .ok()
+        .and_then(|value| value.trim().parse::<u64>().ok())
+        .filter(|&secs| secs > 0)
+        .map(Duration::from_secs)
+        .unwrap_or_else(|| Duration::from_secs(DEFAULT_TIMEOUT_SECS))
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Extraction {
@@ -42,21 +54,63 @@ fn installed_python(exe: &Path) -> Option<PathBuf> {
 
 pub fn invoke(command: &str, value: &Value) -> Result<Value> {
     let python = interpreter()?;
-    let mut job = tempfile::NamedTempFile::new()?;
-    serde_json::to_writer(&mut job, value)?;
-    job.flush()?;
-    let output = Command::new(python)
-        .args(["-m", "deck_tools", command])
-        .arg(job.path())
-        .output()
+    // Isolate job file and subprocess cwd away from the project directory so customer
+    // materials (e.g. json.py) cannot shadow stdlib or deck_tools imports.
+    let job_dir = tempfile::tempdir()?;
+    let job_path = job_dir.path().join("job.json");
+    std::fs::write(&job_path, serde_json::to_vec(value)?)?;
+    let mut child = Command::new(python)
+        .args(["-P", "-m", "deck_tools", command])
+        .arg(&job_path)
+        .env("PYTHONSAFEPATH", "1")
+        .current_dir(job_dir.path())
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
         .map_err(|e| {
             Error::NeedsTool(format!(
                 "无法启动 deck-tools 解释器：{e}；请检查 DECK_TOOLS_PYTHON 或 scripts/install.sh 安装的环境"
             ))
         })?;
-    if !output.status.success() {
-        let detail = String::from_utf8_lossy(&output.stderr).trim().to_string();
-        return Err(match output.status.code() {
+    let mut stdout_pipe = child.stdout.take();
+    let mut stderr_pipe = child.stderr.take();
+    let stdout_thread = std::thread::spawn(move || {
+        let mut buf = Vec::new();
+        if let Some(ref mut pipe) = stdout_pipe {
+            let _ = pipe.read_to_end(&mut buf);
+        }
+        buf
+    });
+    let stderr_thread = std::thread::spawn(move || {
+        let mut buf = Vec::new();
+        if let Some(ref mut pipe) = stderr_pipe {
+            let _ = pipe.read_to_end(&mut buf);
+        }
+        buf
+    });
+    let timeout = timeout_duration();
+    let started = Instant::now();
+    let status = loop {
+        if let Some(status) = child.try_wait()? {
+            break status;
+        }
+        if started.elapsed() >= timeout {
+            let _ = child.kill();
+            let _ = child.wait();
+            // Do not join reader threads on timeout: a grandchild (e.g. soffice) may still hold pipes open.
+            return Err(Error::Tool(format!(
+                "{command} 执行超时（超过 {} 秒）；请检查环境或调整 DECK_TOOLS_TIMEOUT_SECS 后重试",
+                timeout.as_secs()
+            )));
+        }
+        std::thread::sleep(Duration::from_millis(20));
+    };
+    let stdout = stdout_thread.join().unwrap_or_default();
+    let stderr = stderr_thread.join().unwrap_or_default();
+    if !status.success() {
+        let detail = String::from_utf8_lossy(&stderr).trim().to_string();
+        return Err(match status.code() {
             Some(2) => Error::Input(detail),
             Some(3) => Error::NeedsTool(detail),
             _ if detail.contains("No module named deck_tools") => Error::NeedsTool(
@@ -65,7 +119,7 @@ pub fn invoke(command: &str, value: &Value) -> Result<Value> {
             _ => Error::Tool(format!("{command}：{detail}；请修复工具后重试")),
         });
     }
-    serde_json::from_slice(&output.stdout).map_err(|e| {
+    serde_json::from_slice(&stdout).map_err(|e| {
         Error::Tool(format!(
             "{command} 返回无效 JSON：{e}；请检查 deck-tools 安装"
         ))

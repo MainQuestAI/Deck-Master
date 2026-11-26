@@ -3,8 +3,58 @@ use crate::{
     ops,
 };
 use serde_json::{Value, json};
-use std::{fs::File, io::Write, net::SocketAddr, path::Path};
+use std::{
+    fs::File,
+    io::{Read, Write},
+    net::SocketAddr,
+    path::Path,
+    sync::{Arc, Mutex, mpsc},
+};
 use tiny_http::{Header, Method, Request, Response, ResponseBox, Server};
+
+const MAX_BODY_BYTES: usize = 8 * 1024 * 1024;
+const MAX_WORKERS: usize = 16;
+
+fn is_json_content_type(request: &Request) -> bool {
+    let mut found = false;
+    for header in request.headers() {
+        if header.field.equiv("Content-Type") {
+            if found {
+                return false;
+            }
+            let media = header.value.as_str().split(';').next().unwrap_or("").trim();
+            if !media.eq_ignore_ascii_case("application/json") {
+                return false;
+            }
+            found = true;
+        }
+    }
+    found
+}
+
+fn read_body_limited(request: &mut Request) -> Result<std::result::Result<Vec<u8>, ResponseBox>> {
+    if request
+        .body_length()
+        .is_some_and(|len| len > MAX_BODY_BYTES)
+    {
+        return Ok(Err(json_response(
+            413,
+            json!({"error":"请求体超过 8 MiB 上限"}),
+        )?));
+    }
+    let mut body = Vec::new();
+    request
+        .as_reader()
+        .take((MAX_BODY_BYTES + 1) as u64)
+        .read_to_end(&mut body)?;
+    if body.len() > MAX_BODY_BYTES {
+        return Ok(Err(json_response(
+            413,
+            json!({"error":"请求体超过 8 MiB 上限"}),
+        )?));
+    }
+    Ok(Ok(body))
+}
 
 include!(concat!(env!("OUT_DIR"), "/assets.rs"));
 
@@ -203,7 +253,17 @@ fn route(project: &Path, request: &mut Request) -> Result<ResponseBox> {
             json_response(200, serde_json::to_value(ops::review_get(project, id)?)?)
         }
         (Method::Post, "/api/reviews") => {
-            let input: ReviewInput = serde_json::from_reader(request.as_reader())?;
+            let body = match read_body_limited(request)? {
+                Ok(body) => body,
+                Err(response) => return Ok(response),
+            };
+            if !body.is_empty() && !is_json_content_type(request) {
+                return json_response(
+                    415,
+                    json!({"error":"请求头 Content-Type 必须为 application/json"}),
+                );
+            }
+            let input: ReviewInput = serde_json::from_slice(&body)?;
             json_response(
                 200,
                 serde_json::to_value(ops::review_add(
@@ -235,8 +295,16 @@ fn route(project: &Path, request: &mut Request) -> Result<ResponseBox> {
             struct AdoptInput {
                 expected_file: Option<String>,
             }
-            let mut body = Vec::new();
-            request.as_reader().read_to_end(&mut body)?;
+            let body = match read_body_limited(request)? {
+                Ok(body) => body,
+                Err(response) => return Ok(response),
+            };
+            if !body.is_empty() && !is_json_content_type(request) {
+                return json_response(
+                    415,
+                    json!({"error":"请求头 Content-Type 必须为 application/json"}),
+                );
+            }
             let input: AdoptInput = if body.is_empty() {
                 AdoptInput::default()
             } else {
@@ -276,8 +344,16 @@ fn route(project: &Path, request: &mut Request) -> Result<ResponseBox> {
                 .strip_prefix("base=")
                 .ok_or_else(|| Error::Input("保存需要 ?base=读取时的版本号".into()))?;
             let base = identifier(base)?;
-            let mut data = Vec::new();
-            request.as_reader().read_to_end(&mut data)?;
+            let data = match read_body_limited(request)? {
+                Ok(data) => data,
+                Err(response) => return Ok(response),
+            };
+            if !is_json_content_type(request) {
+                return json_response(
+                    415,
+                    json!({"error":"请求头 Content-Type 必须为 application/json"}),
+                );
+            }
             let submitted: Value = serde_json::from_slice(&data)?;
             let patch = crate::ops::put_patch(submitted.clone(), false)?;
             match ops::put(project, base, patch) {
@@ -330,7 +406,7 @@ fn route(project: &Path, request: &mut Request) -> Result<ResponseBox> {
                 )?)
                 .with_header(header(
                     "Content-Security-Policy",
-                    "sandbox; default-src 'none'; img-src data:; style-src 'unsafe-inline'",
+                    "sandbox; default-src 'none'; img-src data:; style-src 'unsafe-inline'; frame-ancestors 'none'",
                 )?)
                 .boxed())
         }
@@ -353,13 +429,43 @@ fn route(project: &Path, request: &mut Request) -> Result<ResponseBox> {
                 path.trim_start_matches('/')
             };
             if let Some((_, bytes)) = ASSETS.iter().find(|(key, _)| *key == name) {
-                return Ok(Response::from_data(*bytes)
-                    .with_header(header("Content-Type", content_type(name))?)
-                    .boxed());
+                let mut response = Response::from_data(*bytes)
+                    .with_header(header("Content-Type", content_type(name))?);
+                if name.ends_with(".html") {
+                    response = response.with_header(header(
+                        "Content-Security-Policy",
+                        "default-src 'self'; img-src 'self' data:; frame-ancestors 'none'",
+                    )?);
+                }
+                return Ok(response.boxed());
             }
             json_response(404, json!({"error":"文件不存在"}))
         }
         _ => json_response(404, json!({"error":"接口不存在"})),
+    }
+}
+
+fn handle_request(project: &Path, port: u16, mut request: Request) {
+    let response = if local_request(&request, port) {
+        route(project, &mut request).or_else(error_response)
+    } else {
+        json_response(403, json!({"error":"仅接受本服务的本机 Host 与 Origin"}))
+    };
+    match response.and_then(|mut response| {
+        response.add_header(header("Cache-Control", "no-store")?);
+        response.add_header(header("X-Content-Type-Options", "nosniff")?);
+        response.add_header(header("X-Frame-Options", "DENY")?);
+        if !response
+            .headers()
+            .iter()
+            .any(|item| item.field.equiv("Content-Security-Policy"))
+        {
+            response.add_header(header("Content-Security-Policy", "frame-ancestors 'none'")?);
+        }
+        request.respond(response).map_err(Error::Io)
+    }) {
+        Ok(()) => {}
+        Err(error) => eprintln!("本地请求失败：{error}"),
     }
 }
 
@@ -374,26 +480,38 @@ pub fn serve(project: &Path) -> Result<()> {
         .ok_or_else(|| Error::Input("无法取得本地监听地址".into()))?;
     println!("http://{address}");
     std::io::stdout().flush()?;
-    loop {
-        let request = server.recv()?;
+    let (sender, receiver) = mpsc::channel::<Request>();
+    let receiver = Arc::new(Mutex::new(receiver));
+    for _ in 0..MAX_WORKERS {
+        let rx = Arc::clone(&receiver);
         let project = project.clone();
+        let port = address.port();
         std::thread::spawn(move || {
-            let mut request = request;
-            let response = if local_request(&request, address.port()) {
-                route(&project, &mut request).or_else(error_response)
-            } else {
-                json_response(403, json!({"error":"仅接受本服务的本机 Host 与 Origin"}))
-            };
-            match response.and_then(|mut response| {
-                response.add_header(header("Cache-Control", "no-store")?);
-                response.add_header(header("X-Content-Type-Options", "nosniff")?);
-                request.respond(response).map_err(Error::Io)
-            }) {
-                Ok(()) => {}
-                Err(error) => eprintln!("本地请求失败：{error}"),
+            loop {
+                let request = match rx.lock() {
+                    Ok(guard) => match guard.recv() {
+                        Ok(request) => request,
+                        Err(_) => break,
+                    },
+                    Err(_) => break,
+                };
+                handle_request(&project, port, request);
             }
         });
     }
+    loop {
+        match server.recv() {
+            Ok(request) => {
+                if sender.send(request).is_err() {
+                    break;
+                }
+            }
+            Err(error) => {
+                eprintln!("接收本机连接失败：{error}");
+            }
+        }
+    }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -421,11 +539,15 @@ mod tests {
             (Method::Put, "/api/deck?base=99", 400),
             (Method::Post, "/api/restore/99", 400),
         ] {
-            let mut request = tiny_http::TestRequest::new()
+            let is_write = matches!(method, Method::Put | Method::Post);
+            let mut builder = tiny_http::TestRequest::new()
                 .with_method(method)
                 .with_path(url)
-                .with_body("{}")
-                .into();
+                .with_body("{}");
+            if is_write {
+                builder = builder.with_header(header("Content-Type", "application/json").unwrap());
+            }
+            let mut request = builder.into();
             let response = route(path, &mut request).or_else(error_response).unwrap();
             assert_eq!(response.status_code().0, expected_status, "{url}");
             let body: Value = serde_json::from_reader(response.into_reader()).unwrap();

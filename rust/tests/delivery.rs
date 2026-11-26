@@ -708,7 +708,7 @@ fn slow_old_build_finishing_after_fast_current_build_keeps_matching_export() {
         &script,
         r#"import json, os, socket, sys
 from pathlib import Path
-assert sys.argv[1:4] == ['-m', 'deck_tools', 'build']
+assert sys.argv[1:5] == ['-P', '-m', 'deck_tools', 'build']
 job = json.loads(Path(sys.argv[-1]).read_text())
 host, port = os.environ['DECK_TEST_BARRIER'].split(':')
 with socket.create_connection((host, int(port)), timeout=30) as channel:

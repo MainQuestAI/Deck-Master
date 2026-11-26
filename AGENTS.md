@@ -29,9 +29,11 @@ Deck Master 帮助作者围绕一次商业任务，把材料做成有主张、�
 ```bash
 uv venv --python 3.12 --seed .venv                     # 没有 uv 时：python3.12 -m venv .venv
 .venv/bin/python -m pip install -e "./deck-tools[dev]" # 新工具包
+npm ci --prefix deck-tools/native-pptx                 # native PPTX 依赖
 
 (cd frontend && npm ci && npm test && npm run build)  # cargo 前构建 WebUI
 (cd rust && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test)
+(cd rust && cargo test --test native -- --ignored)     # 真实 native 端到端渲染测试
 .venv/bin/python -m pytest -q deck-tools/tests --basetemp="$HOME/.cache/deck-pytest/tools"
 .venv/bin/python -m pytest -q tests/install --basetemp="$HOME/.cache/deck-pytest/install"
 ```

@@ -24,7 +24,21 @@ function patch(value) {
   return command('put', '--base', command('get').version, path);
 }
 command('new', project, '--title', 'Installed browser smoke');
-patch({ order: ['p1', 'p2'], pages: [{ id: 'p1', content: { title: 'Browser workflow' }, notes: 'Speaker notes' }, { id: 'p2', content: { title: 'Second page' } }] });
+patch({
+  brief: {
+    title: 'Installed browser smoke',
+    audience: 'Product reviewer',
+    decision: 'Verify browser editing and delivery',
+    concerns: ['Saved edits match exported PPTX'],
+    narrator: { role: 'Presenter', tone: 'Direct' },
+  },
+  framing: { storyline: ['Edit copy in browser, adopt candidate, and export PPTX'] },
+  order: ['p1', 'p2'],
+  pages: [
+    { id: 'p1', kind: 'explanation', purpose: 'Verify workflow', layout: 'Title slide', content: { title: 'Browser workflow' }, notes: 'Speaker notes' },
+    { id: 'p2', kind: 'explanation', purpose: 'Verify partial build', layout: 'Title slide', content: { title: 'Second page' } },
+  ],
+});
 const style = command('get').deck.style;
 const family = execFileSync('fc-match', ['-f', '%{family}', 'sans-serif'], { encoding: 'utf8' }).split(',')[0];
 style.fonts = [family];
