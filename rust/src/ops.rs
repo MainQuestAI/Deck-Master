@@ -1015,9 +1015,19 @@ pub fn basis(kind: &str, deck: &Deck, page: &Page) -> Result<String> {
 fn calculate_basis(kind: &str, deck: &Deck, page: &Page, legacy: bool) -> Result<String> {
     use sha2::{Digest, Sha256};
     let mut style = deck.style.clone();
-    style
+    // Only {id, file} affect page visuals; metadata (pages/source/license) must not invalidate already-bound pages.
+    style.assets = style
         .assets
-        .retain(|asset| asset.is_effective_for(&page.id));
+        .into_iter()
+        .filter(|asset| asset.is_effective_for(&page.id))
+        .map(|asset| crate::model::Asset {
+            id: asset.id,
+            file: asset.file,
+            pages: Vec::new(),
+            source: String::new(),
+            license: String::new(),
+        })
+        .collect();
     let value = if kind == "image" {
         json!([page.content, page.layout, page.purpose, style])
     } else if legacy {
