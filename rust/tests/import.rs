@@ -409,3 +409,51 @@ fn import_cli_writes_report_json() {
     assert_eq!(report["pages"], 1);
     assert_eq!(report["open_calls"][0]["task_id"], "task-synth");
 }
+
+#[test]
+fn import_rejects_duplicate_page_material_and_asset_ids_without_destination() {
+    for (case, mutate, expected) in [
+        (
+            "duplicate_page",
+            Box::new(|manifest: &mut Value| {
+                let first = manifest["pages"][0].clone();
+                manifest["pages"].as_array_mut().unwrap().push(first);
+            }) as Box<dyn Fn(&mut Value)>,
+            "重复页面 ID",
+        ),
+        (
+            "duplicate_material",
+            Box::new(|manifest: &mut Value| {
+                let first = manifest["materials"][0].clone();
+                manifest["materials"].as_array_mut().unwrap().push(first);
+            }),
+            "重复材料 ID",
+        ),
+        (
+            "duplicate_asset",
+            Box::new(|manifest: &mut Value| {
+                manifest["style"]["assets"] = json!([
+                    {"id": "logo", "file": "page.png"},
+                    {"id": "logo", "file": "page.png"}
+                ]);
+            }),
+            "重复或空素材 ID",
+        ),
+    ] {
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("archive");
+        fs::create_dir(&source).unwrap();
+        let mut manifest = archive(&source);
+        mutate(&mut manifest);
+        fs::write(
+            source.join("manifest.json"),
+            serde_json::to_vec_pretty(&manifest).unwrap(),
+        )
+        .unwrap();
+        let dest = temp.path().join("new-deck");
+        let output = run_import(&source, &dest);
+        assert_import_rejected(&output, &dest, temp.path());
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert!(stderr.contains(expected), "{case}: {stderr}");
+    }
+}

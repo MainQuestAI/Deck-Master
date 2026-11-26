@@ -26,10 +26,7 @@ pub fn material_add(project: &Path, source: &Path) -> Result<Value> {
     let mut material = if let Some(index) = existing {
         deck.materials[index].clone()
     } else {
-        let mut number = 1;
-        while deck.materials.iter().any(|m| m.id == format!("m{number}")) {
-            number += 1;
-        }
+        let number = store::max_material_number(&tx)? + 1;
         crate::model::Material {
             id: format!("m{number}"),
             name: name.into(),

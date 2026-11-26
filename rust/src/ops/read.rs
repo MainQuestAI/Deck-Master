@@ -93,7 +93,7 @@ pub fn workspace(project: &Path) -> Result<Value> {
     let mut store = Store::open(project)?;
     // A deferred read transaction keeps the polling response on one snapshot,
     // without reserving SQLite's writer slot.
-    let tx = store.connection.transaction()?;
+    let tx = store.read_transaction()?;
     let snapshot = store::current(&tx)?;
     let mut value = snapshot_value(&snapshot, None)?;
     value["default_build"] = match default_build(&tx, &snapshot.deck)? {
@@ -142,7 +142,7 @@ pub fn project_file(project: &Path, sha: &str) -> Result<std::path::PathBuf> {
 
 pub fn show(project: &Path) -> Result<Value> {
     let mut store = Store::open(project)?;
-    let tx = store.connection.transaction()?;
+    let tx = store.read_transaction()?;
     let snapshot = store::current(&tx)?;
     let reviews = reviews(&tx, Some("open"), None)?;
     let history = store::history(&tx)?;

@@ -175,7 +175,7 @@ pub(super) fn default_build(
 pub fn build_detail(project: &Path, id: i64) -> Result<Value> {
     use rusqlite::OptionalExtension;
     let mut store = Store::open(project)?;
-    let tx = store.connection.transaction()?;
+    let tx = store.read_transaction()?;
     let current = store::current(&tx)?;
     let row = tx.query_row(
         "SELECT version_id,input_digest,pptx_file,findings_json,missing_pages,created_at FROM builds WHERE id=?",

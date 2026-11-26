@@ -147,8 +147,12 @@ pub fn put(project: &Path, version: i64, patch: Patch) -> Result<Snapshot> {
             id: change.id.clone(),
             ..Page::default()
         });
+        let base_ids = before
+            .map(|page| page.content.collect_ids())
+            .transpose()?
+            .unwrap_or_default();
         change.apply(&mut submitted);
-        submitted.content.normalize_ids()?;
+        submitted.content.normalize_ids_with_reserved(&base_ids)?;
         if let Some(now) = pages.get_mut(&change.id) {
             let b = before.map(Page::author);
             let mut c = Some(now.author());

@@ -554,3 +554,134 @@ fn all_three_way_cases_apply_to_brief_framing_and_style() {
         5
     );
 }
+
+#[test]
+fn new_and_written_databases_use_wal_and_allow_concurrent_reads() {
+    let temp = tempfile::tempdir().unwrap();
+    ops::new(temp.path(), "WAL 作品".into()).unwrap();
+    let mode = |path: &Path| -> String {
+        store::Store::open(path)
+            .unwrap()
+            .connection
+            .pragma_query_value(None, "journal_mode", |row| row.get(0))
+            .unwrap()
+    };
+    assert_eq!(mode(temp.path()).to_ascii_lowercase(), "wal");
+
+    // Simulate a legacy rollback-journal DB: read-only open stays untouched, first write enables WAL.
+    {
+        let store = store::Store::open(temp.path()).unwrap();
+        let _: String = store
+            .connection
+            .query_row("PRAGMA journal_mode = DELETE", [], |row| row.get(0))
+            .unwrap();
+    }
+    assert_eq!(mode(temp.path()).to_ascii_lowercase(), "delete");
+    let _ = ops::get(temp.path(), None).unwrap();
+    assert_eq!(mode(temp.path()).to_ascii_lowercase(), "delete");
+    ops::put(temp.path(), 1, patch(json!({"brief":{"title":"触发 WAL"}}))).unwrap();
+    assert_eq!(mode(temp.path()).to_ascii_lowercase(), "wal");
+
+    // A writer holding an IMMEDIATE transaction must not block a concurrent reader snapshot.
+    let mut writer = store::Store::open(temp.path()).unwrap();
+    let tx = writer.transaction().unwrap();
+    let mut deck = store::current(&tx).unwrap().deck;
+    deck.brief.title = "未提交标题".into();
+    store::append(&tx, &mut deck, "未提交").unwrap();
+    let reader = store::Store::open(temp.path()).unwrap();
+    assert_eq!(reader.current().unwrap().deck.brief.title, "触发 WAL");
+    tx.commit().unwrap();
+    assert_eq!(reader.current().unwrap().deck.brief.title, "未提交标题");
+}
+
+#[test]
+fn max_material_number_tracks_history_across_restore() {
+    let temp = tempfile::tempdir().unwrap();
+    ops::new(temp.path(), "材料历史".into()).unwrap();
+    {
+        let mut store = store::Store::open(temp.path()).unwrap();
+        let tx = store.transaction().unwrap();
+        let mut deck = store::current(&tx).unwrap().deck;
+        deck.materials.push(deck::model::Material {
+            id: "m1".into(),
+            name: "a.txt".into(),
+            file: "f1".into(),
+            text_file: "t1".into(),
+            status: "read".into(),
+        });
+        deck.materials.push(deck::model::Material {
+            id: "m2".into(),
+            name: "b.txt".into(),
+            file: "f2".into(),
+            text_file: "t2".into(),
+            status: "read".into(),
+        });
+        store::append(&tx, &mut deck, "添加历史材料").unwrap();
+        tx.commit().unwrap();
+    }
+    let restored = ops::restore(temp.path(), 1).unwrap();
+    assert!(restored.deck.materials.is_empty());
+    let store = store::Store::open(temp.path()).unwrap();
+    assert_eq!(store::max_material_number(&store.connection).unwrap(), 2);
+}
+
+#[test]
+fn deleting_block_and_adding_new_block_does_not_reuse_deleted_id_and_replay_stays_idempotent() {
+    let temp = tempfile::tempdir().unwrap();
+    ops::new(temp.path(), "块 ID 不复用".into()).unwrap();
+    let first = ops::put(
+        temp.path(),
+        1,
+        patch(json!({
+            "order": ["p1"],
+            "pages": [{
+                "id": "p1",
+                "content": {
+                    "title": "标题",
+                    "body_blocks": [
+                        {"type": "paragraph", "text": "旧段一"},
+                        {"type": "paragraph", "text": "旧段二"}
+                    ]
+                }
+            }]
+        })),
+    )
+    .unwrap();
+    let initial_ids: Vec<String> = first.deck.pages[0]
+        .content
+        .body_blocks
+        .iter()
+        .map(|block| match block {
+            deck::model::Block::Paragraph { id, .. } => id.clone(),
+            _ => unreachable!(),
+        })
+        .collect();
+    assert_eq!(initial_ids, vec!["a1", "a2"]);
+
+    let replace_patch = json!({
+        "pages": [{
+            "id": "p1",
+            "content": {
+                "title": "标题",
+                "body_blocks": [
+                    {"type": "paragraph", "id": "a2", "text": "旧段二"},
+                    {"type": "paragraph", "text": "新增段"}
+                ]
+            }
+        }]
+    });
+    let updated = ops::put(temp.path(), first.version, patch(replace_patch.clone())).unwrap();
+    let updated_ids: Vec<String> = updated.deck.pages[0]
+        .content
+        .body_blocks
+        .iter()
+        .map(|block| match block {
+            deck::model::Block::Paragraph { id, .. } => id.clone(),
+            _ => unreachable!(),
+        })
+        .collect();
+    assert_eq!(updated_ids, vec!["a2", "a3"]);
+
+    let replayed = ops::put(temp.path(), first.version, patch(replace_patch)).unwrap();
+    assert_eq!(replayed.version, updated.version);
+}

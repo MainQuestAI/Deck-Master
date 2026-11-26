@@ -3,7 +3,7 @@ use crate::model::{Artifact, Asset, Brief, Content, Deck, Framing, Material, Pag
 use crate::store::{self, Store};
 use serde::Deserialize;
 use serde_json::{Value, json};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Component, Path, PathBuf};
 
 const FORMAT: &str = "legacy-export.v1";
@@ -122,6 +122,7 @@ fn import_staged(source: &Path, destination: &Path, archive: Archive) -> Result<
     let mut store = Store::create(destination, &Deck::default())?;
     let mut files = HashMap::new();
     let mut materials = Vec::new();
+    let mut seen_materials = HashSet::new();
     for spec in archive.materials {
         if spec.id.is_empty() {
             unmapped.push(json!({
@@ -130,6 +131,12 @@ fn import_staged(source: &Path, destination: &Path, archive: Archive) -> Result<
                 "reason": "材料缺少 id，未导入"
             }));
             continue;
+        }
+        if !seen_materials.insert(spec.id.clone()) {
+            return Err(Error::Input(format!(
+                "档案包含重复材料 ID：{}；请修正档案后再导入",
+                spec.id
+            )));
         }
         let file = if spec.file.is_empty() {
             String::new()
@@ -158,12 +165,20 @@ fn import_staged(source: &Path, destination: &Path, archive: Archive) -> Result<
     }
     deck.materials = materials;
     let mut assets = Vec::new();
+    let mut seen_assets = HashSet::new();
     for asset in deck.style.assets.drain(..) {
+        if asset.id.is_empty() || !seen_assets.insert(asset.id.clone()) {
+            return Err(Error::Input(format!(
+                "档案包含重复或空素材 ID：{}；请修正档案后再导入",
+                asset.id
+            )));
+        }
         let file = ingest(&store, source, &asset.file, &mut files)?;
         assets.push(Asset { file, ..asset });
     }
     deck.style.assets = assets;
     let mut pages = Vec::new();
+    let mut seen_pages = HashSet::new();
     for value in archive.pages {
         let id = value
             .get("id")
@@ -188,6 +203,12 @@ fn import_staged(source: &Path, destination: &Path, archive: Archive) -> Result<
                 "reason": "页面缺少 id，未导入"
             }));
             continue;
+        }
+        if !seen_pages.insert(spec.id.clone()) {
+            return Err(Error::Input(format!(
+                "档案包含重复页面 ID：{}；请修正档案后再导入",
+                spec.id
+            )));
         }
         let mut page = Page {
             id: spec.id,

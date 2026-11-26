@@ -371,14 +371,17 @@ pub fn run_call(project: &Path, id: i64, page: &str, retry: bool) -> Result<Valu
 }
 
 pub fn run_cancel(project: &Path, id: i64) -> Result<Value> {
-    let store = Store::open(project)?;
-    run_record(&store.connection, id)?;
-    store.connection.execute(
+    let mut store = Store::open(project)?;
+    let tx = store.transaction()?;
+    run_record(&tx, id)?;
+    tx.execute(
         "UPDATE runs SET status='cancelled' WHERE id=? AND status='open'",
         [id],
     )?;
-    let deck = store.current()?.deck;
-    Ok(json!({"runs": runs(&store.connection, &deck, Some(id))?}))
+    let deck = store::current(&tx)?.deck;
+    let list = runs(&tx, &deck, Some(id))?;
+    tx.commit()?;
+    Ok(json!({"runs": list}))
 }
 
 pub fn run_show(project: &Path, id: Option<i64>) -> Result<Value> {
@@ -715,7 +718,7 @@ fn run_adopt_with_options(
     note: Option<&str>,
 ) -> Result<Value> {
     use rusqlite::params;
-    let store = Store::open(project)?;
+    let mut store = Store::open(project)?;
     let (kind, _, _, _) = run_record(&store.connection, id)?;
     let note = if kind == "native" {
         Some(
@@ -776,10 +779,7 @@ fn run_adopt_with_options(
     } else {
         file.clone()
     };
-    let tx = rusqlite::Transaction::new_unchecked(
-        &store.connection,
-        rusqlite::TransactionBehavior::Immediate,
-    )?;
+    let tx = store.transaction()?;
     if run_page(&tx, id, page_id)?.2.as_deref() != Some(file.as_str()) {
         return Err(Error::Conflict(
             "候选已更新；请读取当前候选后重新采用".into(),
