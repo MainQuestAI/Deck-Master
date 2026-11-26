@@ -88,6 +88,13 @@ impl Service {
         {
             write!(stream, "Host: {}\r\n", self.address).unwrap();
         }
+        if !body.is_empty()
+            && !headers
+                .iter()
+                .any(|(name, _)| name.eq_ignore_ascii_case("content-type"))
+        {
+            write!(stream, "Content-Type: application/json\r\n").unwrap();
+        }
         for (name, value) in headers {
             write!(stream, "{name}: {value}\r\n").unwrap();
         }
@@ -1748,4 +1755,63 @@ fn http_reads_content_review_details_without_mixing_opinions() {
             .status,
         400
     );
+}
+
+#[test]
+fn security_headers_body_limit_and_json_content_type_are_enforced() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    ops::new(path, "安全加固测试".into()).unwrap();
+    let service = Service::start(path);
+
+    let root = service.request("GET", "/", &[], "");
+    assert_eq!(root.status, 200);
+    assert_eq!(
+        root.headers.get("x-frame-options").map(String::as_str),
+        Some("DENY")
+    );
+    let root_csp = root
+        .headers
+        .get("content-security-policy")
+        .map(String::as_str)
+        .unwrap_or("");
+    assert!(root_csp.contains("frame-ancestors 'none'"), "{root_csp}");
+    assert!(root_csp.contains("default-src 'self'"), "{root_csp}");
+
+    let api = service.request("GET", "/api/deck", &[], "");
+    assert_eq!(api.status, 200);
+    assert_eq!(
+        api.headers.get("x-frame-options").map(String::as_str),
+        Some("DENY")
+    );
+    assert!(
+        api.headers
+            .get("content-security-policy")
+            .is_some_and(|v| v.contains("frame-ancestors 'none'"))
+    );
+
+    let plain_review = service.request(
+        "POST",
+        "/api/reviews",
+        &[("Content-Type", "text/plain")],
+        r#"{"text":"跨站表单"}"#,
+    );
+    assert_eq!(plain_review.status, 415);
+
+    let form_put = service.request(
+        "PUT",
+        "/api/deck?base=1",
+        &[("Content-Type", "application/x-www-form-urlencoded")],
+        r#"{"brief":{"title":"覆盖"}}"#,
+    );
+    assert_eq!(form_put.status, 415);
+
+    let huge = "a".repeat(8 * 1024 * 1024 + 16);
+    let oversized = service.request(
+        "PUT",
+        "/api/deck?base=1",
+        &[("Content-Type", "application/json")],
+        &huge,
+    );
+    assert_eq!(oversized.status, 413);
 }

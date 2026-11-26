@@ -430,3 +430,13 @@ test('dirty tracks author changes across all draft areas without treating draft 
   draft.page.notes = 'Notes';
   assert.equal(hasUnsavedInputs({ p1: draft }, {}, { deck: '' }), true);
 });
+
+test('vite dev proxy only permits absent or local dev origins', async () => {
+  const { isAllowedDevOrigin } = await import('../vite.config.js');
+  assert.equal(isAllowedDevOrigin(undefined, 5173), true);
+  assert.equal(isAllowedDevOrigin('http://127.0.0.1:5173', 5173), true);
+  assert.equal(isAllowedDevOrigin('http://localhost:5173', 5173), true);
+  assert.equal(isAllowedDevOrigin('https://evil.example', 5173), false);
+  assert.equal(isAllowedDevOrigin('http://127.0.0.1:9999', 5173), false);
+  assert.equal(isAllowedDevOrigin('null', 5173), false);
+});
