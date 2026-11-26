@@ -791,3 +791,20 @@ def test_render_and_assemble_real_synthetic_source(sample):
             icon = etree.fromstring(archive.read(name))
             assert icon.tag == source.tag
             assert icon.xpath('//*[local-name()="path"]/@d') == source.xpath('//*[local-name()="path"]/@d')
+
+
+def test_validate_plan_rejects_escaped_and_non_png_jpeg_image_assets(sample):
+    tmp_path, page, original = sample
+    plan_dir = Path(page['plan']).parent
+    outside = tmp_path / 'outside.png'
+    Image.new('RGB', (16, 16), '#112233').save(outside)
+    gif = plan_dir / 'assets' / 'anim.gif'
+    Image.new('RGB', (16, 16), '#112233').save(gif, format='GIF')
+    link = plan_dir / 'assets' / 'escape.png'
+    link.symlink_to(outside)
+
+    for bad_file in (str(outside), '../../outside.png', 'assets/escape.png', 'assets/anim.gif', 'assets/missing.png'):
+        plan = deepcopy(original)
+        plan['ops'][3]['file'] = bad_file
+        with pytest.raises(ValueError):
+            native.validate_plan(plan, page)

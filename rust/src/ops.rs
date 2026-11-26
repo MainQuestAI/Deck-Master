@@ -1591,14 +1591,62 @@ struct NativePack {
     note: String,
 }
 
+fn resolve_native_asset(base_dir: &Path, name: &str) -> Result<(Vec<u8>, &'static str)> {
+    use std::path::Component;
+    if name.trim().is_empty() {
+        return Err(Error::Input("image 缺少素材文件".into()));
+    }
+    let rel = Path::new(name);
+    if rel.is_absolute()
+        || rel.components().any(|c| {
+            matches!(
+                c,
+                Component::ParentDir | Component::RootDir | Component::Prefix(_)
+            )
+        })
+    {
+        return Err(Error::Input(format!(
+            "image 素材必须是当前任务目录内的相对路径：{name}"
+        )));
+    }
+    let base = base_dir.canonicalize()?;
+    let resolved = base
+        .join(rel)
+        .canonicalize()
+        .map_err(|_| Error::Input(format!("image 素材文件不存在：{name}")))?;
+    if !resolved.starts_with(&base) || !resolved.is_file() {
+        return Err(Error::Input(format!(
+            "image 素材路径越出当前任务目录：{name}"
+        )));
+    }
+    let bytes = std::fs::read(&resolved)?;
+    let ext = if bytes.starts_with(b"\x89PNG\r\n\x1a\n") {
+        "png"
+    } else if bytes.starts_with(b"\xff\xd8\xff") {
+        "jpg"
+    } else {
+        return Err(Error::Input(format!(
+            "image 素材只支持 PNG 或 JPEG：{name}"
+        )));
+    };
+    Ok((bytes, ext))
+}
+
 fn native_plan_path(store: &Store, pack: &NativePack, path: &Path) -> Result<()> {
     let mut plan = pack.plan.clone();
+    let assets_dir = path.parent().unwrap_or(Path::new(".")).join("assets");
     for op in plan["ops"].as_array_mut().into_iter().flatten() {
         if op["op"] == "image" {
             let file = op["file"]
                 .as_str()
                 .ok_or_else(|| Error::Input("image 缺少素材文件".into()))?;
-            op["file"] = json!(store.file(file)?.canonicalize()?);
+            let stored = store.file(file)?;
+            std::fs::create_dir_all(&assets_dir)?;
+            let staged = assets_dir.join(file);
+            if !staged.exists() && std::fs::hard_link(&stored, &staged).is_err() {
+                std::fs::copy(&stored, &staged)?;
+            }
+            op["file"] = json!(format!("assets/{file}"));
         }
     }
     std::fs::write(path, serde_json::to_vec(&plan)?)?;
@@ -1618,20 +1666,26 @@ fn native_result(
     let path = temporary.join("plan.json");
     let mut input = serde_json::to_value(page)?;
     input["plan"] = json!(path);
-    let mut assets = Vec::new();
-    for op in plan["ops"].as_array_mut().into_iter().flatten() {
+    let base_dir = source.parent().unwrap_or(Path::new("."));
+    let mut staged_assets = Vec::new();
+    for op in plan["ops"].as_array().into_iter().flatten() {
         if op["op"] == "image" {
             let name = op["file"]
                 .as_str()
                 .ok_or_else(|| Error::Input("image 缺少素材文件".into()))?;
-            let asset = source.parent().unwrap_or(Path::new(".")).join(name);
-            let bytes = std::fs::read(&asset)?;
-            let file = store.add_file(
-                &bytes,
-                asset.extension().and_then(|s| s.to_str()).unwrap_or("bin"),
-            )?;
+            let (bytes, ext) = resolve_native_asset(base_dir, name)?;
+            staged_assets.push((name.to_string(), bytes, ext));
+        }
+    }
+    let mut assets = Vec::new();
+    let mut asset_iter = staged_assets.into_iter();
+    for op in plan["ops"].as_array_mut().into_iter().flatten() {
+        if op["op"] == "image"
+            && let Some((name, bytes, ext)) = asset_iter.next()
+        {
+            let file = store.add_file(&bytes, ext)?;
             assets.push(NativeAsset {
-                id: name.into(),
+                id: name,
                 file: file.clone(),
                 sha256: format!("{:x}", Sha256::digest(&bytes)),
             });
