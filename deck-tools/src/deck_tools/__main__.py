@@ -14,7 +14,7 @@ from .atoms import visible_atoms
 from .doctor import diagnose
 from .jobs import compile_job, projection
 from .render import NeedsTool, RendererError
-from .sanitize import attach_hint_findings, sanitize, OperationError
+from .sanitize import attach_hint_findings, sanitize, sanitize_template, OperationError
 from .compiler.svg import SvgError
 
 
@@ -84,6 +84,7 @@ def main():
             "check-page",
             "build",
             "sanitize",
+            "sanitize-template",
             "doctor",
             "image-info",
             "normalize-image",
@@ -135,6 +136,13 @@ def main():
             result = visible_atoms(projection(job["page"]))
         elif args.command == "doctor":
             result = diagnose(job.get("fonts", []))
+        elif args.command == "sanitize-template":
+            path = Path(_require_str(job, "path"))
+            output = Path(_require_str(job, "output"))
+            cleaned, layouts = sanitize_template(path.read_bytes(), path.name)
+            with output.open("xb") as stream:
+                stream.write(cleaned)
+            result = {"path": str(output), "layouts": layouts}
         elif args.command == "sanitize":
             path = Path(_require_str(job, "path"))
             output = Path(_require_str(job, "output"))

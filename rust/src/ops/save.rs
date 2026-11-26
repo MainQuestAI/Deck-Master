@@ -91,6 +91,20 @@ pub fn put(project: &Path, version: i64, patch: Patch) -> Result<Snapshot> {
                 crate::store::file_path(&root, &asset.file)?;
             }
         }
+        if deck.style.theme != current.deck.style.theme
+            && let Some(theme) = deck.style.theme.as_deref()
+        {
+            let resolved = crate::store::file_path(&root, theme)?;
+            if resolved
+                .extension()
+                .and_then(|ext| ext.to_str())
+                .is_none_or(|ext| !ext.eq_ignore_ascii_case("pptx"))
+            {
+                return Err(Error::Input(
+                    "style.theme 必须指向已清洗的 .pptx 附件".into(),
+                ));
+            }
+        }
     }
 
     let base_order: Vec<_> = base.pages.iter().map(|p| p.id.clone()).collect();

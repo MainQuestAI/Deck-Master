@@ -10,9 +10,9 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-pub const FORMAT_VERSION: i64 = 7;
+pub const FORMAT_VERSION: i64 = 8;
 
-const FRESH_V7: &str = "
+const FRESH_V8: &str = "
 CREATE TABLE versions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
@@ -49,7 +49,7 @@ CREATE TABLE reviews (
     snapshot_json TEXT,
     checks_json TEXT
 );
-PRAGMA user_version = 7;";
+PRAGMA user_version = 8;";
 
 pub fn unsupported_format_message(version: i64, supported: i64) -> String {
     format!("项目格式为 {version}，当前程序只支持 {supported}；请升级 deck")
@@ -101,7 +101,7 @@ impl Store {
             connection.busy_timeout(Duration::from_secs(5))?;
             enable_wal_mode(&connection)?;
             let tx = connection.transaction_with_behavior(TransactionBehavior::Immediate)?;
-            tx.execute_batch(FRESH_V7)?;
+            tx.execute_batch(FRESH_V8)?;
             let mut deck = deck.clone();
             append(&tx, &mut deck, "新建作品")?;
             tx.commit()?;
@@ -145,9 +145,9 @@ impl Store {
                 FORMAT_VERSION,
             )));
         }
-        // v6 stays readable. v7 columns are added in the same transaction as the
-        // first versions insert, not when a command only opens the database.
-        if version == 6 || version == FORMAT_VERSION {
+        // v6 and v7 stay readable without mutation. Upgrades run in the first write
+        // transaction, never when a command only opens the database.
+        if matches!(version, 6 | 7 | FORMAT_VERSION) {
             return Ok(());
         }
         // Read the format after acquiring the write transaction: two clients may
@@ -160,7 +160,7 @@ impl Store {
                 FORMAT_VERSION,
             )));
         }
-        if version == 6 || version == FORMAT_VERSION {
+        if matches!(version, 6 | 7 | FORMAT_VERSION) {
             return Ok(());
         }
         if version == 0 {
@@ -430,7 +430,7 @@ pub(crate) fn reviews_have_record_kind(connection: &Connection) -> Result<bool> 
     has_column(connection, "reviews", "record_kind")
 }
 
-fn migrate_v7(connection: &Connection) -> Result<()> {
+fn migrate_latest(connection: &Connection) -> Result<()> {
     let version = user_version(connection)?;
     if version >= FORMAT_VERSION {
         return Ok(());
@@ -440,18 +440,21 @@ fn migrate_v7(connection: &Connection) -> Result<()> {
             "项目格式尚未完成到 6 的迁移；请重新打开项目后再保存".into(),
         ));
     }
-    if !has_column(connection, "reviews", "record_kind")? {
-        connection.execute(
-            "ALTER TABLE reviews ADD COLUMN record_kind TEXT NOT NULL DEFAULT 'comment' CHECK (record_kind IN ('comment','content_review'))",
-            [],
-        )?;
+    if version < 7 {
+        if !has_column(connection, "reviews", "record_kind")? {
+            connection.execute(
+                "ALTER TABLE reviews ADD COLUMN record_kind TEXT NOT NULL DEFAULT 'comment' CHECK (record_kind IN ('comment','content_review'))",
+                [],
+            )?;
+        }
+        if !has_column(connection, "reviews", "snapshot_json")? {
+            connection.execute("ALTER TABLE reviews ADD COLUMN snapshot_json TEXT", [])?;
+        }
+        if !has_column(connection, "reviews", "checks_json")? {
+            connection.execute("ALTER TABLE reviews ADD COLUMN checks_json TEXT", [])?;
+        }
     }
-    if !has_column(connection, "reviews", "snapshot_json")? {
-        connection.execute("ALTER TABLE reviews ADD COLUMN snapshot_json TEXT", [])?;
-    }
-    if !has_column(connection, "reviews", "checks_json")? {
-        connection.execute("ALTER TABLE reviews ADD COLUMN checks_json TEXT", [])?;
-    }
+    // v7 -> v8 adds optional style.theme in deck_json (backward compatible, no DDL needed).
     connection.pragma_update(None, "user_version", FORMAT_VERSION)?;
     Ok(())
 }
@@ -488,7 +491,7 @@ pub fn max_material_number(connection: &Connection) -> Result<u64> {
 }
 
 pub fn append(tx: &Transaction<'_>, deck: &mut Deck, summary: &str) -> Result<i64> {
-    migrate_v7(tx)?;
+    migrate_latest(tx)?;
     tx.execute(
         "INSERT INTO versions (summary, deck_json) VALUES (?, ?)",
         params![summary, serde_json::to_string(deck)?],

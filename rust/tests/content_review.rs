@@ -145,7 +145,7 @@ fn export_without_a_content_review_is_unreviewed() {
         json!({"status":"unreviewed","methods":[],"version_id":null,"unreviewed_pages":[]})
     );
     assert!(status.get("warnings").is_none());
-    assert_eq!(user_version(path), 7);
+    assert_eq!(user_version(path), deck::store::FORMAT_VERSION);
 }
 
 #[test]

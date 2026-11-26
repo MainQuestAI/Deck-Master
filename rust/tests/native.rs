@@ -1169,3 +1169,169 @@ fn mixed_svg_and_native_deck_builds_all_three_slides_and_passes_readback() {
     assert_eq!(detail["pages"].as_array().unwrap().len(), 3);
     assert_eq!(detail["readback_matches_current"], true);
 }
+
+#[test]
+fn corporate_theme_set_build_clear_and_v7_db_compatibility() {
+    let temp = tempfile::tempdir().unwrap();
+    let project = temp.path().join("theme-project");
+    let template_path = temp.path().join("corp-template.pptx");
+
+    let py = std::env::var_os("DECK_TOOLS_PYTHON").expect("install this worktree's deck-tools");
+    let make_script = r#"
+import sys, zipfile
+from pptx import Presentation
+from pptx.util import Inches
+
+out = sys.argv[1]
+prs = Presentation()
+prs.core_properties.author = 'Template Author'
+prs.slide_masters[0].placeholders[0].text_frame.text = '企业母版页眉标记'
+s = prs.slides.add_slide(prs.slide_layouts[6])
+s.shapes.add_textbox(Inches(1), Inches(1), Inches(4), Inches(1)).text_frame.text = '旧模板遗留内容'
+s.notes_slide.notes_text_frame.text = '旧模板私密讲稿'
+prs.save(out)
+with zipfile.ZipFile(out) as zin:
+    files = {i.filename: zin.read(i.filename) for i in zin.infolist() if not i.is_dir()}
+files['ppt/theme/theme1.xml'] = files['ppt/theme/theme1.xml'].replace(b'4472C4', b'13579B').replace(b'4F81BD', b'13579B')
+files['ppt/comments/comment1.xml'] = b'<?xml version="1.0" encoding="UTF-8"?><p:cmLst xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:cm><p:text>private_comment</p:text></p:cm></p:cmLst>'
+with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as zout:
+    for k, v in files.items():
+        zout.writestr(k, v)
+"#;
+    let made = Command::new(&py)
+        .args(["-c", make_script, template_path.to_str().unwrap()])
+        .output()
+        .unwrap();
+    assert!(
+        made.status.success(),
+        "{}",
+        String::from_utf8_lossy(&made.stderr)
+    );
+
+    let font_out = Command::new("fc-match")
+        .args(["-f", "%{family}", "sans-serif"])
+        .output()
+        .unwrap();
+    let family = String::from_utf8_lossy(&font_out.stdout)
+        .split(',')
+        .next()
+        .unwrap_or("DejaVu Sans")
+        .trim()
+        .to_string();
+
+    cli(
+        &project,
+        &["new", project.to_str().unwrap(), "--title", "母版主题测试"],
+    );
+    edit(
+        &project,
+        json!({
+            "style": {"fonts": [&family]},
+            "order": ["p1"],
+            "pages": [{"id": "p1", "purpose": "说明", "layout": "单栏", "notes": "新讲稿", "content": {"title": "正式内容标题"}}]
+        }),
+    );
+
+    // Simulate a legacy v7 database: read-only open/show must NOT mutate user_version.
+    {
+        let store = Store::open(&project).unwrap();
+        store
+            .connection
+            .pragma_update(None, "user_version", 7)
+            .unwrap();
+    }
+    let _ = ops::show(&project).unwrap();
+    assert_eq!(
+        Store::open(&project)
+            .unwrap()
+            .connection
+            .pragma_query_value(None, "user_version", |r| r.get::<_, i64>(0))
+            .unwrap(),
+        7
+    );
+
+    // deck style theme set sanitizes the corporate template, upgrades v7 -> v8, and records style.theme.
+    let set_res = cli(
+        &project,
+        &["style", "theme", "set", template_path.to_str().unwrap()],
+    );
+    let theme_file = set_res["theme"].as_str().unwrap().to_string();
+    assert!(theme_file.ends_with(".pptx"));
+    assert!(set_res["layouts"].as_u64().unwrap() >= 1);
+    assert_eq!(
+        Store::open(&project)
+            .unwrap()
+            .connection
+            .pragma_query_value(None, "user_version", |r| r.get::<_, i64>(0))
+            .unwrap(),
+        store::FORMAT_VERSION
+    );
+
+    // Adopt a native slide and build with the corporate theme.
+    let mut store = Store::open(&project).unwrap();
+    let mut deck = store.current().unwrap().deck;
+    let pack = json!({
+        "plan": {
+            "schema": "deck.native_plan.v1",
+            "page": "p1",
+            "canvas_px": {"w": 1280, "h": 720},
+            "background": "#FFFFFF",
+            "ops": [
+                {"op": "text", "atom_id": "atom:p1:title", "text": "正式内容标题", "bbox": [60, 90, 500, 60], "font": &family, "size": 28, "color": "#13579B"}
+            ]
+        },
+        "assets": [],
+        "render_png": "",
+        "note": "标题与位置一致"
+    });
+    let native_file = store
+        .add_file(&serde_json::to_vec(&pack).unwrap(), "native.json")
+        .unwrap();
+    deck.pages[0].native = Some(Artifact {
+        file: native_file,
+        basis: ops::basis("native", &deck, &deck.pages[0]).unwrap(),
+    });
+    let tx = store.transaction().unwrap();
+    store::append(&tx, &mut deck, "Adopt p1 native").unwrap();
+    tx.commit().unwrap();
+    drop(store);
+
+    let built = cli(&project, &["build"]);
+    assert_eq!(built["findings"]["status"], "pass");
+    let built_pptx = built["path"].as_str().unwrap();
+
+    // Verify output PPTX inherits theme color + master header and leaks ZERO old slides/comments/author.
+    let verify_script = r#"
+import sys, zipfile
+from pptx import Presentation
+
+path = sys.argv[1]
+prs = Presentation(path)
+assert len(prs.slides) == 1, len(prs.slides)
+with zipfile.ZipFile(path) as z:
+    theme = z.read('ppt/theme/theme1.xml')
+    master = z.read('ppt/slideMasters/slideMaster1.xml')
+    joined = b''.join(z.read(n) for n in z.namelist() if n.endswith('.xml'))
+    assert b'13579B' in theme
+    assert '企业母版页眉标记'.encode('utf-8') in master
+    assert '旧模板遗留内容'.encode('utf-8') not in joined
+    assert '旧模板私密讲稿'.encode('utf-8') not in joined
+    assert b'private_comment' not in joined
+    assert b'Template Author' not in joined
+"#;
+    let verified = Command::new(&py)
+        .args(["-c", verify_script, built_pptx])
+        .output()
+        .unwrap();
+    assert!(
+        verified.status.success(),
+        "{}",
+        String::from_utf8_lossy(&verified.stderr)
+    );
+
+    // Clearing theme resets style.theme to null and invalidates build_digest.
+    let cleared = cli(&project, &["style", "theme", "clear"]);
+    assert!(cleared["theme"].is_null());
+    let exported = cli(&project, &["export", "pptx"]);
+    assert_eq!(exported["input_changed"], true);
+}

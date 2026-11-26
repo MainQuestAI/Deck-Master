@@ -276,7 +276,7 @@ pub fn review_add_content(
     let mut store = Store::open(project)?;
     let tx = store.transaction()?;
     let version = store::user_version(&tx)?;
-    if version < store::FORMAT_VERSION {
+    if version < 7 {
         return Err(Error::Input(format!(
             "当前项目仍是格式 {version}，不能记录出稿审稿。请先用 deck put 补全字段，项目升级后再执行 review add --record content_review"
         )));

@@ -9,7 +9,7 @@ mod review;
 mod run;
 mod save;
 
-pub use asset::asset_add;
+pub use asset::{asset_add, style_theme_clear, style_theme_set};
 pub use basis::basis;
 pub use build::{artifact_status, build, build_detail};
 pub use export::{doctor, export_markdown, export_md, export_pptx};

@@ -1091,3 +1091,91 @@ def test_mixed_svg_and_native_compile_job_builds_three_slide_editable_pptx(tmp_p
         ('p2', '第二页讲稿'),
         ('p3', '第三页讲稿'),
     ]
+
+
+def test_sanitize_template_strips_slides_comments_author_and_keeps_master_theme(tmp_path):
+    from deck_tools.sanitize import sanitize_template
+    from pptx.util import Inches
+
+    # Build a synthetic corporate template with:
+    # - custom theme accent1 color (#123456)
+    # - corporate master header shape ("企业页眉横幅")
+    # - an old slide containing confidential text & speaker notes
+    # - author core property & XML comment inside theme1.xml
+    raw_template = tmp_path / 'corp-template.pptx'
+    prs = Presentation()
+    prs.core_properties.author = 'Confidential Author'
+    prs.core_properties.comments = 'Internal draft'
+    master = prs.slide_masters[0]
+    master.placeholders[0].text_frame.text = '示例企业母版页眉'
+    old_slide = prs.slides.add_slide(prs.slide_layouts[6])
+    old_slide.shapes.add_textbox(Inches(1), Inches(1), Inches(4), Inches(1)).text_frame.text = '旧模板机密页面内容'
+    old_slide.notes_slide.notes_text_frame.text = '旧模板私密讲稿'
+    prs.save(raw_template)
+
+    # Inject custom theme accent1 (#123456) and a comment part into the template archive.
+    with zipfile.ZipFile(raw_template) as zin:
+        items = {info.filename: zin.read(info.filename) for info in zin.infolist() if not info.is_dir()}
+    theme_xml = items['ppt/theme/theme1.xml'].decode('utf-8')
+    theme_xml = theme_xml.replace('4472C4', '123456').replace('4F81BD', '123456')
+    theme_xml = theme_xml.replace('</a:theme>', '<!-- internal template comment --></a:theme>')
+    items['ppt/theme/theme1.xml'] = theme_xml.encode('utf-8')
+    items['ppt/comments/comment1.xml'] = b'<?xml version="1.0" encoding="UTF-8"?><p:cmLst xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:cm><p:text>secret comment</p:text></p:cm></p:cmLst>'
+    with zipfile.ZipFile(raw_template, 'w', zipfile.ZIP_DEFLATED) as zout:
+        for name, data in items.items():
+            zout.writestr(name, data)
+
+    cleaned_bytes, layout_count = sanitize_template(raw_template.read_bytes(), raw_template.name)
+    assert layout_count >= 1
+    cleaned_path = tmp_path / 'cleaned-theme.pptx'
+    cleaned_path.write_bytes(cleaned_bytes)
+
+    with zipfile.ZipFile(cleaned_path) as archive:
+        names = archive.namelist()
+        assert not any(n.startswith('ppt/slides/') for n in names)
+        assert not any(n.startswith('ppt/notesSlides/') for n in names)
+        assert not any(n.startswith('ppt/comments/') for n in names)
+        assert not any(n.startswith('docProps/') for n in names)
+        theme_out = archive.read('ppt/theme/theme1.xml').decode('utf-8')
+        assert '123456' in theme_out
+        assert 'internal template comment' not in theme_out
+        master_out = archive.read('ppt/slideMasters/slideMaster1.xml').decode('utf-8')
+        assert '示例企业母版页眉' in master_out
+
+    # Build a native slide on top of the cleaned corporate template.
+    family = _available_font()
+    plan_path = tmp_path / 'plan.json'
+    native.write_json(
+        plan_path,
+        {
+            'schema': 'deck.native_plan.v1',
+            'page': 'p1',
+            'canvas_px': {'w': 1280, 'h': 720},
+            'background': '#FFFFFF',
+            'ops': [
+                {
+                    'op': 'text',
+                    'atom_id': 'atom:p1:title',
+                    'text': '新作品正文标题',
+                    'bbox': [60, 100, 500, 60],
+                    'font': family,
+                    'size': 28,
+                    'color': '#123456',
+                }
+            ],
+        },
+    )
+    page = {'id': 'p1', 'content': {'title': '新作品正文标题', 'body_blocks': []}, 'notes': '正式讲稿', 'plan': str(plan_path)}
+    assembled = native.assemble({'work': str(tmp_path), 'pages': [page], 'theme': str(cleaned_path)})
+    assert assembled['findings'] == {'status': 'pass', 'findings': []}
+    out_pptx = Path(assembled['pptx'])
+    out_prs = Presentation(out_pptx)
+    assert len(out_prs.slides) == 1
+    with zipfile.ZipFile(out_pptx) as archive:
+        joined = b''.join(archive.read(n) for n in archive.namelist() if n.endswith('.xml'))
+        assert b'123456' in archive.read('ppt/theme/theme1.xml')
+        assert '示例企业母版页眉'.encode('utf-8') in archive.read('ppt/slideMasters/slideMaster1.xml')
+        assert '旧模板机密页面内容'.encode('utf-8') not in joined
+        assert '旧模板私密讲稿'.encode('utf-8') not in joined
+        assert b'secret comment' not in joined
+        assert b'Confidential Author' not in joined

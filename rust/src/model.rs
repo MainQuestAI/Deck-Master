@@ -87,6 +87,8 @@ pub struct Style {
     pub palette: Vec<String>,
     pub fonts: Vec<String>,
     pub assets: Vec<Asset>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub theme: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
