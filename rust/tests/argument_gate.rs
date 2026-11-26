@@ -125,7 +125,7 @@ fn json_after(text: &str, marker: &str) -> Value {
 }
 
 #[test]
-fn blank_kind_is_listed_with_the_frame_and_the_snippet_can_start() {
+fn blank_page_fields_block_with_empty_skeleton_while_missing_frame_only_warns() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path();
     ops::new(path, "合成作品".into()).unwrap();
@@ -138,14 +138,62 @@ fn blank_kind_is_listed_with_the_frame_and_the_snippet_can_start() {
             "framing": {"thesis": "保留主张", "storyline": [" "]},
             "pages": [
                 {"id": "p1", "content": {"title": "一页"}, "notes": "保留讲稿"},
-                {"id": "p2", "kind": "reference", "content": {"title": "查阅"}}
+                {"id": "p2", "kind": "reference", "purpose": "查阅表", "layout": "单表", "content": {"title": "查阅"}}
             ]
         })),
     )
     .unwrap();
     let text = input_text(ops::run_start(path, "image", &["p1".into()], None));
     let shown = format!("输入有误：{text}");
-    assert!(shown.starts_with("输入有误：无法开始生成。当前作品缺少以下字段："));
+    assert!(shown.starts_with("输入有误：无法开始生成。目标页面缺少生成必需字段："));
+    for field in ["pages[p1].purpose", "pages[p1].layout", "pages[p1].kind"] {
+        assert!(
+            text.contains(&format!("- {field}")),
+            "missing {field}: {text}"
+        );
+    }
+    // Missing deck-level frame fields no longer block run start, and no fake copy-paste placeholders appear.
+    for non_blocking in [
+        "brief.audience",
+        "brief.decision",
+        "framing.storyline",
+        "管理层",
+        "关注点一",
+        "explanation",
+    ] {
+        assert!(
+            !text.contains(non_blocking),
+            "unexpected {non_blocking}: {text}"
+        );
+    }
+    assert!(!text.contains("pages[p2]"), "{text}");
+    assert!(!text.contains("判断页证据"), "{text}");
+    assert!(text.contains(&format!("deck put --base {} payload.json", created.version)));
+    assert_eq!(current_version(path), created.version);
+    assert_eq!(table_count(path, "runs"), 0);
+    assert_eq!(table_count(path, "run_pages"), 0);
+    let snippet = json_after(&text, "payload.json 空骨架（请填入真实内容）：\n");
+    assert_eq!(
+        snippet["pages"],
+        json!([{"id": "p1", "kind": "", "layout": "", "purpose": ""}])
+    );
+    // Filling only the real page fields lets run start proceed with non-blocking frame warnings.
+    let saved = ops::put(
+        path,
+        created.version,
+        patch(json!({"pages":[{"id":"p1","kind":"explanation","purpose":"说明现状","layout":"左图右文"}]})),
+    )
+    .unwrap();
+    assert_eq!(saved.deck.pages[0].content.title, "一页");
+    assert_eq!(saved.deck.pages[0].notes, "保留讲稿");
+    let started = ops::run_start(path, "image", &["p1".into()], None).unwrap();
+    assert_eq!(started["runs"][0]["pages"][0]["status"], "pending");
+    let warned_fields: Vec<&str> = started["warnings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(|w| w["field"].as_str())
+        .collect();
     for field in [
         "brief.audience",
         "brief.decision",
@@ -153,34 +201,12 @@ fn blank_kind_is_listed_with_the_frame_and_the_snippet_can_start() {
         "brief.narrator.role",
         "brief.narrator.tone",
         "framing.storyline",
-        "pages[p1].kind",
     ] {
         assert!(
-            text.contains(&format!("- {field}")),
-            "missing {field}: {text}"
+            warned_fields.contains(&field),
+            "missing warning {field}: {warned_fields:?}"
         );
     }
-    assert!(!text.contains("pages[p2].kind"), "{text}");
-    assert!(!text.contains("判断页证据"), "{text}");
-    assert!(text.contains(&format!("deck put --base {} payload.json", created.version)));
-    assert_eq!(current_version(path), created.version);
-    assert_eq!(table_count(path, "runs"), 0);
-    assert_eq!(table_count(path, "run_pages"), 0);
-    let snippet = json_after(&text, "payload.json 最小片段：\n");
-    assert_eq!(
-        snippet["pages"],
-        json!([{"id": "p1", "kind": "explanation"}])
-    );
-    assert!(snippet["brief"]["goal"] == "保留目标");
-    assert!(snippet["framing"]["thesis"] == "保留主张");
-    let saved = ops::put(path, created.version, patch(snippet)).unwrap();
-    assert_eq!(saved.deck.pages[0].content.title, "一页");
-    assert_eq!(saved.deck.pages[0].notes, "保留讲稿");
-    assert_eq!(saved.deck.pages[0].kind, "explanation");
-    assert_eq!(saved.deck.pages[1].kind, "reference");
-    assert_eq!(saved.deck.brief.goal, "保留目标");
-    let started = ops::run_start(path, "image", &["p1".into()], None).unwrap();
-    assert_eq!(started["runs"][0]["pages"][0]["status"], "pending");
     assert_eq!(table_count(path, "runs"), 1);
 }
 
@@ -196,7 +222,7 @@ fn v6_without_kind_is_rejected_in_place_and_a_complete_v6_start_does_not_upgrade
             "brief": framed_brief("合成作品"),
             "framing": storyline(),
             "order": ["p1"],
-            "pages": [{"id": "p1", "content": {"title": "旧页"}}]
+            "pages": [{"id": "p1", "purpose": "说明旧页", "layout": "单栏", "content": {"title": "旧页"}}]
         })),
     )
     .unwrap();
@@ -228,13 +254,14 @@ fn v6_without_kind_is_rejected_in_place_and_a_complete_v6_start_does_not_upgrade
             "brief": framed_brief("合成作品"),
             "framing": storyline(),
             "order": ["p1"],
-            "pages": [{"id": "p1", "kind": "explanation", "content": {"title": "可生成"}}]
+            "pages": [{"id": "p1", "kind": "explanation", "purpose": "说明结论", "layout": "单栏", "content": {"title": "可生成"}}]
         })),
     )
     .unwrap();
     downgrade_to_v6(ready_path);
     let started = ops::run_start(ready_path, "image", &["p1".into()], None).unwrap();
     assert_eq!(started["runs"][0]["status"], "open");
+    assert!(started.get("warnings").is_none());
     assert_eq!(user_version(ready_path), 6);
     assert_eq!(current_version(ready_path), saved.version);
     assert!(!review_has_record_kind(ready_path));
@@ -243,7 +270,7 @@ fn v6_without_kind_is_rejected_in_place_and_a_complete_v6_start_does_not_upgrade
 }
 
 #[test]
-fn frame_is_checked_before_kind_and_blank_kind_is_not_a_judgment_page() {
+fn page_required_fields_are_checked_before_kind_validation_and_blank_kind_is_not_judgment() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path();
     ops::new(path, "合成作品".into()).unwrap();
@@ -253,7 +280,7 @@ fn frame_is_checked_before_kind_and_blank_kind_is_not_a_judgment_page() {
         patch(json!({
             "order": ["p1", "late"],
             "pages": [
-                {"id": "p1", "kind": "explanation", "content": {"title": "一页"}},
+                {"id": "p1", "kind": "explanation", "purpose": "说明一页", "layout": "左右分栏", "content": {"title": "一页"}},
                 {"id": "late", "content": {"title": "未选"}}
             ]
         })),
@@ -262,28 +289,19 @@ fn frame_is_checked_before_kind_and_blank_kind_is_not_a_judgment_page() {
     let mut value: Value = serde_json::from_str(&deck_json(path, created.version)).unwrap();
     value["pages"][0]["kind"] = json!("poster");
     write_deck(path, created.version, &value);
-    let text = input_text(ops::run_start(path, "native", &["p1".into()], None));
-    assert!(text.contains("- brief.audience"), "{text}");
-    assert!(!text.contains("只接受"), "{text}");
-    assert!(!text.contains("poster"), "{text}");
-    assert!(!text.contains("pages[late]"), "{text}");
+    let illegal = input_text(ops::run_start(path, "native", &["p1".into()], None));
+    assert!(illegal.contains("只接受"), "{illegal}");
+    assert!(illegal.contains("poster"), "{illegal}");
+    assert!(!illegal.contains("pages[late]"), "{illegal}");
+    assert!(!illegal.contains("判断页证据"), "{illegal}");
     assert_eq!(current_version(path), created.version);
     assert_eq!(table_count(path, "runs"), 0);
     assert_eq!(table_count(path, "run_pages"), 0);
 
-    let snippet = json_after(&text, "payload.json 最小片段：\n");
-    assert!(snippet.get("pages").is_none(), "{snippet}");
-    let framed = ops::put(path, created.version, patch(snippet)).unwrap();
-    let illegal = input_text(ops::run_start(path, "image", &["p1".into()], None));
-    assert!(illegal.contains("只接受"), "{illegal}");
-    assert!(illegal.contains("poster"), "{illegal}");
-    assert!(!illegal.contains("判断页证据"), "{illegal}");
-    assert_eq!(table_count(path, "runs"), 0);
-
-    let mut current: Value = serde_json::from_str(&deck_json(path, framed.version)).unwrap();
+    let mut current: Value = serde_json::from_str(&deck_json(path, created.version)).unwrap();
     current["pages"][0]["kind"] = json!("  ");
     current["pages"][0]["argument"] = json!(null);
-    write_deck(path, framed.version, &current);
+    write_deck(path, created.version, &current);
     let blank = input_text(ops::run_start(path, "image", &["p1".into()], None));
     assert!(blank.contains("- pages[p1].kind"), "{blank}");
     assert!(!blank.contains("判断页证据"), "{blank}");
@@ -292,7 +310,7 @@ fn frame_is_checked_before_kind_and_blank_kind_is_not_a_judgment_page() {
 
     let rejected = ops::put(
         path,
-        framed.version,
+        created.version,
         patch(json!({"pages":[{"id":"p1","kind":"  "}]})),
     );
     let rejected = input_text(rejected.map(|_| Value::Null));
@@ -300,7 +318,7 @@ fn frame_is_checked_before_kind_and_blank_kind_is_not_a_judgment_page() {
 }
 
 #[test]
-fn judgment_evidence_must_name_ref_or_gap_and_the_snippet_can_start() {
+fn judgment_evidence_must_name_ref_or_gap_and_skeleton_has_no_fake_placeholders() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path();
     ops::new(path, "合成作品".into()).unwrap();
@@ -312,10 +330,12 @@ fn judgment_evidence_must_name_ref_or_gap_and_the_snippet_can_start() {
             "framing": storyline(),
             "order": ["p1", "p2", "p3", "explain", "lookup", "teach"],
             "pages": [
-                {"id": "p1", "kind": "judgment", "content": {"title": "待证主张"}},
+                {"id": "p1", "kind": "judgment", "purpose": "判断一", "layout": "左右分栏", "content": {"title": "待证主张"}},
                 {
                     "id": "p2",
                     "kind": "judgment",
+                    "purpose": "判断二",
+                    "layout": "左右分栏",
                     "content": {"title": "已有理由"},
                     "argument": {
                         "reasons": ["已有理由"],
@@ -327,6 +347,8 @@ fn judgment_evidence_must_name_ref_or_gap_and_the_snippet_can_start() {
                 {
                     "id": "p3",
                     "kind": "judgment",
+                    "purpose": "判断三",
+                    "layout": "左右分栏",
                     "content": {"title": "第三条"},
                     "argument": {
                         "evidence": [
@@ -336,9 +358,9 @@ fn judgment_evidence_must_name_ref_or_gap_and_the_snippet_can_start() {
                         ]
                     }
                 },
-                {"id": "explain", "kind": "explanation", "argument": {"evidence": [{"text": ""}]}},
-                {"id": "lookup", "kind": "reference"},
-                {"id": "teach", "kind": "teaching"}
+                {"id": "explain", "kind": "explanation", "purpose": "说明", "layout": "单栏", "content": {"title": "说明页"}, "argument": {"evidence": [{"text": ""}]}},
+                {"id": "lookup", "kind": "reference", "purpose": "查阅", "layout": "单表", "content": {"title": "查阅页"}},
+                {"id": "teach", "kind": "teaching", "purpose": "讲解", "layout": "步骤图", "content": {"title": "教学页"}}
             ]
         })),
     )
@@ -365,7 +387,7 @@ fn judgment_evidence_must_name_ref_or_gap_and_the_snippet_can_start() {
     let mut parts = text.split("\n\n");
     assert_eq!(
         parts.next().unwrap(),
-        "无法开始生成。判断页证据不完整：\n- pages[p1].argument.evidence 为空，请至少提供一条带 ref 或 gap 的证据\n- pages[p2].argument.evidence 为空，请至少提供一条带 ref 或 gap 的证据\n- pages[p3].argument.evidence[1] 既没有 ref 也没有 gap\n- pages[p3].argument.evidence[2] 既没有 ref 也没有 gap\n请用 deck put 补全，例如："
+        "无法开始生成。判断页证据不完整：\n- pages[p1].argument.evidence 为空，请至少提供一条带 ref 或 gap 的证据\n- pages[p2].argument.evidence 为空，请至少提供一条带 ref 或 gap 的证据\n- pages[p3].argument.evidence[1] 既没有 ref 也没有 gap\n- pages[p3].argument.evidence[2] 既没有 ref 也没有 gap\n请用 deck put 补全（请填入真实出处 ref 或待补说明 gap）："
     );
     assert_eq!(
         parts.next().unwrap(),
@@ -377,32 +399,32 @@ fn judgment_evidence_must_name_ref_or_gap_and_the_snippet_can_start() {
     assert_eq!(
         snippet["pages"][0]["argument"],
         json!({
-            "reasons": ["理由一", "理由二"],
-            "evidence": [{"text": "出处或待补说明", "gap": "待补：需补充口径"}],
+            "reasons": [],
+            "evidence": [{"text": "", "ref": ""}],
             "reasoning": "",
             "rebuttal": ""
         })
     );
-    assert_eq!(
-        snippet["pages"][1]["argument"]["reasons"],
-        json!(["已有理由"])
-    );
-    assert_eq!(snippet["pages"][1]["argument"]["reasoning"], "已有推理");
-    assert_eq!(
-        snippet["pages"][2]["argument"]["evidence"][0],
-        json!({"text": "有出处", "ref": "m1"})
-    );
-    assert_eq!(
-        snippet["pages"][2]["argument"]["evidence"][1],
-        json!({"text": "一句", "gap": "待补：需补充口径"})
-    );
-    assert_eq!(
-        snippet["pages"][2]["argument"]["evidence"][2]["text"],
-        "出处或待补说明"
-    );
-    let saved = ops::put(path, created.version, patch(snippet)).unwrap();
-    assert_eq!(saved.deck.pages[0].content.title, "待证主张");
-    assert_eq!(saved.deck.pages[2].content.title, "第三条");
+    assert!(!text.contains("理由一"), "{text}");
+    assert!(!text.contains("待补：需补充口径"), "{text}");
+    // Blindly copying the empty skeleton must STILL fail the evidence gate.
+    let copied = ops::put(path, created.version, patch(snippet)).unwrap();
+    assert!(ops::run_start(path, "image", &["p1".into()], None).is_err());
+
+    // Providing genuine ref / gap opens the gate cleanly.
+    let filled = ops::put(
+        path,
+        copied.version,
+        patch(json!({
+            "pages": [
+                {"id": "p1", "argument": {"evidence": [{"text": "成本下降 12%", "ref": "m1"}]}},
+                {"id": "p2", "argument": {"reasons": ["已有理由"], "evidence": [{"text": "基数待补", "gap": "缺基数"}], "reasoning": "已有推理"}},
+                {"id": "p3", "argument": {"evidence": [{"text": "有出处", "ref": "m1"}]}}
+            ]
+        })),
+    )
+    .unwrap();
+    assert_eq!(filled.deck.pages[0].content.title, "待证主张");
     let started = ops::run_start(
         path,
         "image",
@@ -433,8 +455,8 @@ fn whitespace_ref_or_gap_is_absent_and_both_real_values_stay_illegal() {
             "framing": storyline(),
             "order": ["p1", "p2"],
             "pages": [
-                {"id": "p1", "kind": "judgment"},
-                {"id": "p2", "kind": "explanation"}
+                {"id": "p1", "kind": "judgment", "purpose": "判断", "layout": "左右分栏", "content": {"title": "判断页"}},
+                {"id": "p2", "kind": "explanation", "purpose": "说明", "layout": "单栏", "content": {"title": "说明页"}}
             ]
         })),
     )

@@ -59,8 +59,20 @@ fn allow_runs(path: &Path) {
         deck.framing.storyline = vec!["先说明问题，再给出判断".into()];
         changed = true;
     }
-    // Blank kind is not treated as a judgment page. These fixtures only need the start gate to open.
+    // Fill generation-required page fields for non-gate delivery fixtures.
     for page in &mut deck.pages {
+        if page.content.title.trim().is_empty() {
+            page.content.title = format!("{} 标题", page.id);
+            changed = true;
+        }
+        if page.purpose.trim().is_empty() {
+            page.purpose = format!("说明 {}", page.id);
+            changed = true;
+        }
+        if page.layout.trim().is_empty() {
+            page.layout = "左右分栏".into();
+            changed = true;
+        }
         if page.kind.trim().is_empty() {
             page.kind = "explanation".into();
             changed = true;
@@ -1278,7 +1290,7 @@ else:
     assert_eq!(svg["basis_changed"], true);
     assert_artifacts(json!([]), json!(["p1"]));
 
-    edit(path, json!({"pages":[{"id":"p1","layout":""}]}));
+    edit(path, json!({"pages":[{"id":"p1","layout":"左右分栏"}]}));
     assert_eq!(page("svg", "p1").1["basis_changed"], false);
     assert_artifacts(json!([]), json!([]));
     edit(
@@ -1293,7 +1305,7 @@ else:
     assert_eq!(svg["basis_changed"], true);
     assert_artifacts(json!([]), json!(["p1"]));
 
-    edit(path, json!({"pages":[{"id":"p1","purpose":""}]}));
+    edit(path, json!({"pages":[{"id":"p1","purpose":"说明 p1"}]}));
     assert_artifacts(json!([]), json!([]));
     edit(
         path,
@@ -1496,4 +1508,75 @@ fn workspace_reads_legacy_svg_v2_imported_and_unreadable_basis_without_failing()
     assert_eq!(p2["basis_changed"], true);
     assert_eq!(p2["basis_unreadable"], true);
     assert!(p2["current_basis"].is_null());
+}
+
+#[test]
+fn run_call_rejects_changed_basis_without_incrementing_calls_used() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    setup(path);
+    let id = start(path, 2);
+    edit(
+        path,
+        json!({"pages":[{"id":"p1","content":{"title":"启动后已修改标题"}}]}),
+    );
+
+    let err = ops::run_call(path, id, "p1", false).unwrap_err();
+    assert_eq!(err.exit_code(), 2);
+    assert!(err.to_string().contains("依据"), "{err}");
+
+    let shown = ops::run_show(path, Some(id)).unwrap();
+    assert_eq!(shown["runs"][0]["calls_used"], 0);
+    assert_eq!(shown["runs"][0]["pages"][0]["status"], "pending");
+}
+
+#[test]
+fn concurrent_run_call_respects_max_calls_barrier() {
+    use std::sync::{Arc, Barrier};
+
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path().to_path_buf();
+    setup(&path);
+    edit(
+        &path,
+        json!({
+            "order": ["p1", "p2", "p3"],
+            "pages": [
+                {"id": "p1", "purpose": "页一", "layout": "单栏", "kind": "explanation", "content": {"title": "页一"}},
+                {"id": "p2", "purpose": "页二", "layout": "单栏", "kind": "explanation", "content": {"title": "页二"}},
+                {"id": "p3", "purpose": "页三", "layout": "单栏", "kind": "explanation", "content": {"title": "页三"}}
+            ]
+        }),
+    );
+    let id = guarded_run(
+        &path,
+        "image",
+        &["p1".into(), "p2".into(), "p3".into()],
+        Some(2),
+    )
+    .unwrap()["runs"][0]["id"]
+        .as_i64()
+        .unwrap();
+
+    let pages = ["p1", "p2", "p3", "p1", "p2", "p3"];
+    let barrier = Arc::new(Barrier::new(pages.len()));
+    let handles: Vec<_> = pages
+        .into_iter()
+        .map(|page| {
+            let path = path.clone();
+            let barrier = Arc::clone(&barrier);
+            std::thread::spawn(move || {
+                barrier.wait();
+                ops::run_call(&path, id, page, true)
+            })
+        })
+        .collect();
+    let successes = handles
+        .into_iter()
+        .map(|h| h.join().unwrap())
+        .filter(Result::is_ok)
+        .count();
+    assert_eq!(successes, 2);
+    let shown = ops::run_show(&path, Some(id)).unwrap();
+    assert_eq!(shown["runs"][0]["calls_used"], 2);
 }
