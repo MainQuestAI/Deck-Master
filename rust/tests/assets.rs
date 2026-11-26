@@ -800,3 +800,44 @@ fn asset_registration_rechecks_pages_deleted_during_conversion() {
         );
     }
 }
+
+#[test]
+fn exif_rotated_jpeg_asset_is_transposed_at_intake_and_passes_export_sanitize() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    setup(path);
+    let rotated = path.join("portrait.jpg");
+    // Create a 20x10 JPEG with EXIF Orientation=6 (90 deg CW -> visual 10x20).
+    let output = Command::new(std::env::var_os("DECK_TOOLS_PYTHON").unwrap())
+        .args([
+            "-c",
+            "from PIL import Image; import sys; im=Image.new('RGB',(20,10),'teal'); ex=im.getexif(); ex[274]=6; im.save(sys.argv[1], format='JPEG', exif=ex.tobytes())",
+        ])
+        .arg(&rotated)
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let added = ops::asset_add(path, "portrait", &rotated, &["p1".into()], "", "").unwrap();
+    let stored_name = added["asset"]["file"].as_str().unwrap();
+    let stored_path = Store::open(path).unwrap().file(stored_name).unwrap();
+
+    // Verify pixels were transposed to 10x20, orientation is 1, and sanitize accepts it.
+    let verify = Command::new(std::env::var_os("DECK_TOOLS_PYTHON").unwrap())
+        .args([
+            "-c",
+            "from PIL import Image; from pathlib import Path; import sys; from deck_tools.sanitize import jpeg; p=Path(sys.argv[1]); im=Image.open(p); assert im.size==(10,20), im.size; assert im.getexif().get(274,1)==1; cleaned=jpeg(p.read_bytes(),'portrait.jpg'); assert cleaned.startswith(b'\\xff\\xd8')",
+        ])
+        .arg(&stored_path)
+        .output()
+        .unwrap();
+    assert!(
+        verify.status.success(),
+        "{}",
+        String::from_utf8_lossy(&verify.stderr)
+    );
+}

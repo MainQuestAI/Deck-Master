@@ -949,28 +949,28 @@ pub fn asset_add(
         }
     }
     let ext = input.extension().and_then(|v| v.to_str()).unwrap_or("bin");
-    let (data, ext) = if ext.eq_ignore_ascii_case("svg") {
-        let output = std::process::Command::new("rsvg-convert")
-            .arg("--format=png")
-            .arg(input.canonicalize()?)
-            .output()
-            .map_err(|error| {
-                if error.kind() == std::io::ErrorKind::NotFound {
-                    Error::NeedsTool(
-                        "SVG 素材需要 rsvg-convert；请安装 librsvg 后重新添加，或先转成 PNG/JPEG"
-                            .into(),
-                    )
-                } else {
-                    Error::Tool(format!("无法运行 rsvg-convert：{error}"))
-                }
-            })?;
-        if !output.status.success() || !output.stdout.starts_with(b"\x89PNG\r\n\x1a\n") {
-            return Err(Error::Tool(format!(
-                "SVG 素材转 PNG 失败；请检查 SVG 后重新添加：{}",
-                String::from_utf8_lossy(&output.stderr).trim()
-            )));
-        }
-        (output.stdout, "png")
+    let is_svg = ext.eq_ignore_ascii_case("svg");
+    let temporary = tempfile::tempdir()?;
+    let output_path = temporary.path().join("normalized");
+    let info = crate::tools::invoke(
+        "normalize-image",
+        &json!({
+            "path": input.canonicalize()?,
+            "output": output_path,
+            "svg": is_svg,
+        }),
+    )?;
+    let (data, ext) = if info["normalized"].as_bool() == Some(true) {
+        let out_ext = match info["format"].as_str() {
+            Some("PNG") => "png",
+            Some("JPEG") => "jpg",
+            _ => {
+                return Err(Error::Tool(
+                    "normalize-image 未返回 PNG 或 JPEG 格式".into(),
+                ));
+            }
+        };
+        (std::fs::read(&output_path)?, out_ext)
     } else {
         (std::fs::read(input)?, ext)
     };
@@ -1619,17 +1619,35 @@ fn native_result(
     let mut input = serde_json::to_value(page)?;
     input["plan"] = json!(path);
     let mut assets = Vec::new();
-    for op in plan["ops"].as_array_mut().into_iter().flatten() {
+    for (index, op) in plan["ops"].as_array_mut().into_iter().flatten().enumerate() {
         if op["op"] == "image" {
             let name = op["file"]
                 .as_str()
                 .ok_or_else(|| Error::Input("image 缺少素材文件".into()))?;
             let asset = source.parent().unwrap_or(Path::new(".")).join(name);
-            let bytes = std::fs::read(&asset)?;
-            let file = store.add_file(
-                &bytes,
-                asset.extension().and_then(|s| s.to_str()).unwrap_or("bin"),
+            let normalized = temporary.join(format!("asset-{index}"));
+            let info = crate::tools::invoke(
+                "normalize-image",
+                &json!({"path": asset.canonicalize()?, "output": normalized, "svg": false}),
             )?;
+            let (bytes, ext) = if info["normalized"].as_bool() == Some(true) {
+                let out_ext = match info["format"].as_str() {
+                    Some("PNG") => "png",
+                    Some("JPEG") => "jpg",
+                    _ => {
+                        return Err(Error::Tool(
+                            "normalize-image 未返回 PNG 或 JPEG 格式".into(),
+                        ));
+                    }
+                };
+                (std::fs::read(&normalized)?, out_ext)
+            } else {
+                (
+                    std::fs::read(&asset)?,
+                    asset.extension().and_then(|s| s.to_str()).unwrap_or("bin"),
+                )
+            };
+            let file = store.add_file(&bytes, ext)?;
             assets.push(NativeAsset {
                 id: name.into(),
                 file: file.clone(),
@@ -2055,14 +2073,25 @@ pub fn run_result(project: &Path, id: i64, page_id: &str, source: &Path) -> Resu
         findings = output["findings"].clone();
         "svg"
     } else {
-        // Decode the exact saved bytes, not a mutable Host file.
+        // Decode and normalize EXIF orientation on the exact saved bytes, not a mutable Host file.
         let bitmap = temporary.path().join("image");
+        let normalized = temporary.path().join("image-normalized");
         std::fs::write(&bitmap, &data)?;
-        let info = crate::tools::invoke("image-info", &json!({"path": bitmap}))?;
+        let info = crate::tools::invoke(
+            "normalize-image",
+            &json!({"path": bitmap, "output": normalized, "svg": false}),
+        )?;
+        if info["normalized"].as_bool() == Some(true) {
+            data = std::fs::read(&normalized)?;
+        }
         match info["format"].as_str() {
             Some("PNG") => "png",
             Some("JPEG") => "jpg",
-            _ => return Err(Error::Tool("image-info 未返回 PNG 或 JPEG 格式".into())),
+            _ => {
+                return Err(Error::Tool(
+                    "normalize-image 未返回 PNG 或 JPEG 格式".into(),
+                ));
+            }
         }
     };
     let file = store.add_file(&data, extension)?;
