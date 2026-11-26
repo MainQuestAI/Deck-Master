@@ -220,7 +220,8 @@ pub(super) fn default_build(
         Ok(json!({"id":id,"version_id":version_id,"file":file,"created_at":created,
             "input_changed":changed,
             "warning":if changed {"当前构建输入没有匹配的成品；下载的是最近可用历史成品，请按需重新构建"} else {""},
-            "build_missing_pages":serde_json::from_str::<Value>(&missing)?}))
+            "build_missing_pages":serde_json::from_str::<Value>(&missing)
+                .map_err(|e| Error::DataCorrupt(format!("构建缺页记录损坏：{e}")))?}))
     }).transpose()
 }
 
@@ -234,7 +235,8 @@ pub fn build_detail(project: &Path, id: i64) -> Result<Value> {
         [id], |r| Ok((r.get::<_,i64>(0)?,r.get::<_,String>(1)?,r.get::<_,String>(2)?,r.get::<_,String>(3)?,r.get::<_,String>(4)?,r.get::<_,String>(5)?)),
     ).optional()?.ok_or_else(|| Error::Missing(format!("构建 {id} 不存在")))?;
     let (version_id, digest, file, findings, missing, created_at) = row;
-    let findings: Value = serde_json::from_str(&findings)?;
+    let findings: Value = serde_json::from_str(&findings)
+        .map_err(|e| Error::DataCorrupt(format!("构建回读 JSON 损坏：{e}")))?;
     let source = store::load(&tx, version_id)?;
     let imported = digest == "imported";
     if !imported

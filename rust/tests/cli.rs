@@ -697,3 +697,134 @@ fn deck_tools_subprocess_kills_and_reports_timeout() {
         started.elapsed()
     );
 }
+
+#[test]
+fn cli_json_errors_cover_needs_tool_conflict_svg_subset_corrupt_and_project_new() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path().join("deck-proj");
+
+    // `deck --project <dir> new` works without duplicating the positional argument.
+    let created = Command::new(env!("CARGO_BIN_EXE_deck"))
+        .args([
+            "--project",
+            path.to_str().unwrap(),
+            "new",
+            "--title",
+            "JSON 错误测试",
+        ])
+        .output()
+        .unwrap();
+    assert!(
+        created.status.success(),
+        "{}",
+        String::from_utf8_lossy(&created.stderr)
+    );
+
+    // 1. NeedsTool -> exit 3 with structured JSON error.
+    let missing_tool = Command::new(env!("CARGO_BIN_EXE_deck"))
+        .env("DECK_TOOLS_PYTHON", temp.path().join("no-such-python"))
+        .args(["--error-format", "json", "doctor"])
+        .output()
+        .unwrap();
+    assert_eq!(missing_tool.status.code(), Some(3));
+    let tool_err: Value = serde_json::from_slice(&missing_tool.stderr).unwrap();
+    assert_eq!(tool_err["code"], "needs_tool");
+    assert_eq!(tool_err["exit_code"], 3);
+    assert!(tool_err["next"].as_str().is_some_and(|s| !s.is_empty()));
+
+    // 2. Conflict -> exit 5 with structured details.conflicts.
+    let p1 = path.join("p1.json");
+    std::fs::write(
+        &p1,
+        json!({"order":["p1"],"pages":[{"id":"p1","purpose":"目的","layout":"布局","kind":"explanation","content":{"title":"标题"}}]}).to_string(),
+    )
+    .unwrap();
+    output_json(command(
+        &path,
+        &["put", "--base", "1", p1.to_str().unwrap()],
+    ));
+    let a = path.join("a.json");
+    std::fs::write(
+        &a,
+        json!({"pages":[{"id":"p1","notes":"版本A"}]}).to_string(),
+    )
+    .unwrap();
+    output_json(command(&path, &["put", "--base", "2", a.to_str().unwrap()]));
+    let b = path.join("b.json");
+    std::fs::write(
+        &b,
+        json!({"pages":[{"id":"p1","notes":"版本B"}]}).to_string(),
+    )
+    .unwrap();
+    let conflict = Command::new(env!("CARGO_BIN_EXE_deck"))
+        .args([
+            "--project",
+            path.to_str().unwrap(),
+            "--error-format",
+            "json",
+            "put",
+            "--base",
+            "2",
+            b.to_str().unwrap(),
+        ])
+        .output()
+        .unwrap();
+    assert_eq!(conflict.status.code(), Some(5));
+    let conflict_err: Value = serde_json::from_slice(&conflict.stderr).unwrap();
+    assert_eq!(conflict_err["code"], "conflict");
+    assert_eq!(conflict_err["exit_code"], 5);
+    assert_eq!(conflict_err["details"]["conflicts"][0]["unit"], "pages/p1");
+
+    // 3. SvgSubset -> exit 2 with code=svg_subset and rule details.
+    put_frame(&path, "3", "JSON 错误测试");
+    let run = output_json(command(&path, &["run", "start", "svg", "--pages", "p1"]));
+    let run_id = run["runs"][0]["id"].as_i64().unwrap().to_string();
+    let bad_svg = path.join("bad.svg");
+    std::fs::write(&bad_svg, "<svg viewBox='0 0 100 100'><script/></svg>").unwrap();
+    let svg_fail = Command::new(env!("CARGO_BIN_EXE_deck"))
+        .args([
+            "--project",
+            path.to_str().unwrap(),
+            "--error-format",
+            "json",
+            "run",
+            "result",
+            &run_id,
+            "p1",
+            bad_svg.to_str().unwrap(),
+        ])
+        .output()
+        .unwrap();
+    assert_eq!(svg_fail.status.code(), Some(2));
+    let svg_err: Value = serde_json::from_slice(&svg_fail.stderr).unwrap();
+    assert_eq!(svg_err["code"], "svg_subset");
+    assert_eq!(svg_err["exit_code"], 2);
+    assert_eq!(svg_err["step"], "check-page");
+    assert!(svg_err["details"].is_object());
+
+    // 4. DataCorrupt -> exit 7 when DB deck_json is corrupted.
+    {
+        let store = deck::store::Store::open(&path).unwrap();
+        store
+            .connection
+            .execute(
+                "UPDATE versions SET deck_json = '{not-json' WHERE id = (SELECT max(id) FROM versions)",
+                [],
+            )
+            .unwrap();
+    }
+    let corrupt = Command::new(env!("CARGO_BIN_EXE_deck"))
+        .args([
+            "--project",
+            path.to_str().unwrap(),
+            "--error-format",
+            "json",
+            "get",
+        ])
+        .output()
+        .unwrap();
+    assert_eq!(corrupt.status.code(), Some(7));
+    let corrupt_err: Value = serde_json::from_slice(&corrupt.stderr).unwrap();
+    assert_eq!(corrupt_err["code"], "data_corrupt");
+    assert_eq!(corrupt_err["exit_code"], 7);
+}

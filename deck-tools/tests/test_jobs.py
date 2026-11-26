@@ -337,7 +337,7 @@ def test_invalid_svg_cli_reports_element_without_publishing_file(tmp_path):
     path = tmp_path / "job.json"
     path.write_text(json.dumps(job))
     result = subprocess.run([sys.executable, "-m", "deck_tools", "check-page", str(path)], capture_output=True, text=True)
-    assert result.returncode == 4
+    assert result.returncode == 2
     assert not result.stdout
     assert json.loads(result.stderr)["element_id"] == "broken"
     assert not Path(job["output"]).exists()

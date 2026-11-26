@@ -1,4 +1,8 @@
-"""Material-reader errors local to this package."""
+"""Errors local to deck-tools."""
+
+
+class InputError(Exception):
+    exit_code = 2
 
 
 class SourceUnreadable(Exception):

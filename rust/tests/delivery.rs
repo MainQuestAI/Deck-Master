@@ -638,12 +638,9 @@ fn failed_svg_and_corrupt_bitmap_publish_no_artifact() {
     std::fs::write(&broken, "<svg viewBox='0 0 100 100'><script/></svg>").unwrap();
     let run = guarded_run(path, "svg", &["p1".into()], None).unwrap();
     let id = run["runs"][0]["id"].as_i64().unwrap();
-    assert_eq!(
-        ops::run_result(path, id, "p1", &broken)
-            .unwrap_err()
-            .exit_code(),
-        4
-    );
+    let err = ops::run_result(path, id, "p1", &broken).unwrap_err();
+    assert_eq!(err.exit_code(), 2);
+    assert_eq!(err.code(), "svg_subset");
     assert!(
         Store::open(path).unwrap().current().unwrap().deck.pages[0]
             .svg

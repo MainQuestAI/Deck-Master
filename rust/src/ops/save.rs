@@ -192,7 +192,7 @@ pub fn put(project: &Path, version: i64, patch: Patch) -> Result<Snapshot> {
         ));
     }
     if !conflicts.is_empty() {
-        return Err(Error::Conflict(serde_json::to_string(&conflicts)?));
+        return Err(Error::conflict_items(conflicts));
     }
     deck.pages = order
         .iter()

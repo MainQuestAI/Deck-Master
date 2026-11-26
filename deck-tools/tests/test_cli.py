@@ -146,3 +146,50 @@ def test_normalize_image_transposes_exif_and_rejects_non_image(tmp_path):
     bad_res = subprocess.run([sys.executable, "-m", "deck_tools", "normalize-image", str(bad_job)], capture_output=True, text=True, check=False)
     assert bad_res.returncode == 2
     assert not bad_res.stdout
+
+
+def test_svg_error_exits_2_with_structured_diagnostic_and_internal_bug_exits_4(tmp_path):
+    svg = tmp_path / "bad.svg"
+    svg.write_text("<svg viewBox='0 0 100 100'><script/></svg>", encoding="utf-8")
+    job = tmp_path / "svg-job.json"
+    job.write_text(
+        json.dumps(
+            {
+                "output": str(tmp_path / "out"),
+                "canvas": {"width_px": 1280, "height_px": 720, "slide_width_in": 13.333, "slide_height_in": 7.5},
+                "fonts": [],
+                "assets": {},
+                "pages": [{"id": "p1", "svg": str(svg), "notes": "", "content": {"title": "测试"}}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    svg_out = subprocess.run(
+        [sys.executable, "-m", "deck_tools", "check-page", str(job)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert svg_out.returncode == 2
+    assert not svg_out.stdout
+    diag = json.loads(svg_out.stderr)
+    assert diag["code"] == "svg_subset"
+    assert "message" in diag
+
+    # Unexpected internal KeyError inside a tool must exit 4 (tool bug), never 2 (input error).
+    code = (
+        "import sys, deck_tools.__main__ as m\n"
+        "m.diagnose = lambda fonts: (_ for _ in ()).throw(KeyError('internal_bug'))\n"
+        "sys.argv = ['deck_tools', 'doctor', sys.argv[1]]\n"
+        "sys.exit(m.main())\n"
+    )
+    doc_job = tmp_path / "doc.json"
+    doc_job.write_text("{}", encoding="utf-8")
+    bug_out = subprocess.run(
+        [sys.executable, "-c", code, str(doc_job)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert bug_out.returncode == 4
+    assert "KeyError" in bug_out.stderr
