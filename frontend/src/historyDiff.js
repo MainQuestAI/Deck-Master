@@ -1,12 +1,18 @@
 export const briefFields = {
   title: '作品名称', audience: '受众', task_type: '本次任务', goal: '要达成的结果',
+  decision: '待决事项', concerns: '读者关注点', narrator: '讲述人与语气',
   constraints: '已知约束', page_limit: '页数要求',
 };
 export const framingFields = {
-  thesis: '中心主张', pillars: '框架分组', facts: '已知事实', assumptions: '当前假设', questions: '待回答问题',
+  thesis: '中心主张', storyline: '故事主线', pillars: '框架分组',
+  facts: '已知事实', assumptions: '当前假设', questions: '待回答问题',
 };
-export const pageFields = { purpose: '本页目的', layout: '版式要求', notes: '讲稿', todo: '待补', refs: '出处' };
+export const pageFields = {
+  kind: '页型', purpose: '本页目的', layout: '版式要求', notes: '讲稿', todo: '待补', refs: '出处', argument: '论证结构',
+};
 export const contentFields = { title: '页面标题', subtitle: '副标题', body_blocks: '正文块', labels: '标签', callouts: '补充', footnotes: '脚注' };
+const argumentFields = { reasons: '理由', evidence: '证据', reasoning: '推理', rebuttal: '反驳与边界' };
+const narratorFields = { role: '讲述人角色', tone: '讲述语气' };
 
 function equal(left, right) {
   if (left === right) return true;
@@ -92,9 +98,20 @@ export function authorPage(page) {
   };
 }
 
+function objectFieldsChanges(label, before, after, fieldLabels) {
+  if (equal(before, after)) return [];
+  if (before && after && typeof before === 'object' && typeof after === 'object') {
+    const children = fields(before, after, fieldLabels);
+    return children.length ? [{ label, kind: 'changed', children }] : [];
+  }
+  return [{ label, before: before ?? null, after: after ?? null, kind: 'changed' }];
+}
+
 function pageChanges(left, right) {
+  const { argument: _ignored, ...scalarPageFields } = pageFields;
   return [
-    ...fields(left, right, pageFields),
+    ...fields(left, right, scalarPageFields),
+    ...objectFieldsChanges(pageFields.argument, left.argument, right.argument, argumentFields),
     ...fields(left.content, right.content, { title: '页面标题', subtitle: '副标题' }),
     ...sequence('正文块', left.content?.body_blocks, right.content?.body_blocks, blockChanges,
       (block, index) => `${block.type === 'table' ? '表格' : block.type === 'bullets' ? '要点组' : '段落'} ${index + 1}`),
@@ -103,7 +120,11 @@ function pageChanges(left, right) {
 }
 
 export function diffDecks(left, right) {
-  const brief = fields(left.brief, right.brief, briefFields);
+  const { narrator: _ignored, ...scalarBriefFields } = briefFields;
+  const brief = [
+    ...fields(left.brief, right.brief, scalarBriefFields),
+    ...objectFieldsChanges(briefFields.narrator, left.brief?.narrator, right.brief?.narrator, narratorFields),
+  ];
   const framing = fields(left.framing, right.framing, framingFields);
   const pages = sequence('页面', (left.pages || []).map(authorPage), (right.pages || []).map(authorPage), pageChanges,
     (page, index) => `第 ${index + 1} 页：${page.content?.title || '未命名页面'}`);

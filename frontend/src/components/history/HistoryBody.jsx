@@ -4,8 +4,9 @@ import { briefFields, framingFields, pageFields, contentFields, authorPage } fro
 const labels = {
   ...briefFields, ...framingFields, ...pageFields, ...contentFields,
   content: '正文', title: '标题', text: '文字', heading: '要点标题', items: '要点', children: '子项',
-  tone: '语气', points: '支持点', columns: '列', rows: '行', cells: '单元格', label: '列标题',
+  role: '角色', tone: '语气', points: '支持点', columns: '列', rows: '行', cells: '单元格', label: '列标题',
   display_text: '显示文字', value: '原始值', unit: '单位', column_id: '所属列', type: '类型',
+  reasons: '理由', evidence: '证据', reasoning: '推理', rebuttal: '反驳与边界', ref: '出处', gap: '待补缺口',
 };
 const types = { paragraph: '段落', bullets: '要点', table: '表格' };
 
