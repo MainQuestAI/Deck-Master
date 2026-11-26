@@ -281,3 +281,61 @@ test('existing nested items and string raw values remain editable without droppi
   assert.deepEqual(saved.body_blocks[1].items[0], { ...original.content.body_blocks[1].items[0], children: [{ id: 'child', text: '第二批' }] });
   assert.deepEqual(saved.body_blocks[0].rows[0].cells[1], { ...original.content.body_blocks[0].rows[0].cells[1], value: '显式修改' });
 });
+
+test('drawer edits page kind and argument with mutually exclusive ref/gap evidence and supports clearing argument', async t => {
+  const original = page();
+  original.kind = '';
+  original.argument = null;
+  await mount(t, original);
+
+  await fill('页型', 'judgment');
+  assert.ok(document.body.textContent.includes('待补提示（不影响保存）'));
+  await click('添加论证结构');
+  await click('添加理由');
+  await fill('理由 1', '两周试点即可验证核心瓶颈');
+  await click('添加证据');
+  await fill('证据 1 内容', '试点成本可控');
+  await fill('证据 1 出处', '合成材料第 1 页');
+  await click('添加证据');
+  await fill('证据 2 内容', '历史转化率对比');
+  await fill('证据 2 依据方式', 'gap');
+  await fill('证据 2 缺口说明', '需补充去年同期基线');
+  // Toggle evidence 1 from ref -> gap -> ref and verify mutual exclusion on payload.
+  await fill('证据 1 依据方式', 'gap');
+  await fill('证据 1 依据方式', 'ref');
+  await fill('证据 1 出处', '合成材料第 3 页');
+  await fill('推理', '低成本验证可降低全面上线风险');
+  await fill('反驳与边界', '仅覆盖试点区域，不含海外分支');
+
+  await click('保存正文与讲稿');
+  assert.deepEqual(writes[0], {
+    url: '/api/deck?base=7',
+    patch: {
+      pages: [{
+        id: 'p1',
+        kind: 'judgment',
+        argument: {
+          reasons: ['两周试点即可验证核心瓶颈'],
+          evidence: [
+            { text: '试点成本可控', ref: '合成材料第 3 页' },
+            { text: '历史转化率对比', gap: '需补充去年同期基线' },
+          ],
+          reasoning: '低成本验证可降低全面上线风险',
+          rebuttal: '仅覆盖试点区域，不含海外分支',
+        },
+      }],
+    },
+  });
+  for (const item of writes[0].patch.pages[0].argument.evidence) {
+    assert.equal(Object.hasOwn(item, 'ref') && Object.hasOwn(item, 'gap'), false);
+  }
+
+  // Reopen and clear argument -> sends explicit argument: null without touching other fields.
+  await act(async () => { state.editPage('p1'); });
+  await click('清除论证结构');
+  await click('保存正文与讲稿');
+  assert.deepEqual(writes[1], {
+    url: '/api/deck?base=8',
+    patch: { pages: [{ id: 'p1', argument: null }] },
+  });
+});

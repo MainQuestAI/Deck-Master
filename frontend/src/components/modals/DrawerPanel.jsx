@@ -1,4 +1,5 @@
 import { isPageDraftDirty } from '../../api.js';
+import { missingPageHints } from '../../schema/fields.js';
 import React from 'react';
 import { useDeckMaster } from '../../context/DeckMasterContext';
 import PageContent from '../common/PageContent';
@@ -31,13 +32,25 @@ export default function DrawerPanel() {
           <p>继续保存会用您打开时的正文替换当前正文，请先在上方对比。</p>
           <button className="button" disabled={!workspace.deck.pages.some(item => item.id === page.id)} onClick={rebaseDraft}>保留我的修改，以当前版本继续</button>
         </section>}
-        <fieldset disabled={busy.save} className="s4-fieldset"><ContentEditor content={page.content} change={content => updateDraft({ ...page, content })} />
+        <fieldset disabled={busy.save} className="s4-fieldset">
+          <ContentEditor
+            content={page.content}
+            change={content => updateDraft({ ...page, content })}
+            kind={page.kind ?? ''}
+            onKindChange={kind => updateDraft({ ...page, kind })}
+            argument={page.argument ?? null}
+            onArgumentChange={argument => updateDraft({ ...page, argument })}
+          />
           <Field label="本页目的" value={page.purpose} onChange={purpose => updateDraft({ ...page, purpose })} />
           <Field label="版式要求" value={page.layout} onChange={layout => updateDraft({ ...page, layout })} />
           <Field label="讲稿" value={page.notes} multiline onChange={notes => updateDraft({ ...page, notes })} />
           <TextList label="待补" items={page.todo} change={todo => updateDraft({ ...page, todo })} />
           <TextList label="出处" items={page.refs} change={refs => updateDraft({ ...page, refs })} />
         </fieldset>
+        {(() => {
+          const hints = missingPageHints(page);
+          return hints.length > 0 && <p className="muted">待补提示（不影响保存）：{hints.join('、')}</p>;
+        })()}
       </>}
     </div>
     {drawer === 'editor' && page && <div className="drawer-foot"><button className="button" disabled={busy.save} onClick={() => { if ((!deleted && !draft.conflict && !isPageDraftDirty(draft)) || window.confirm('确定放弃本地修改？未保存的输入将丢失。')) discardDraft(); }}>放弃本地修改</button>{!deleted && <button className="primary" disabled={busy.save || !!draft.conflict} onClick={saveDraft}>{busy.save ? '正在保存…' : '保存正文与讲稿'}</button>}</div>}

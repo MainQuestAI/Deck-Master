@@ -1,9 +1,10 @@
 import React from 'react';
 import { collectContentIds, createParagraph, createBullets, createTable, moveIndex } from '../../content-structure.js';
+import ArgumentEditor from './ArgumentEditor';
 import { Field, ItemFields, ListActions } from './EditorFields';
 import TableEditor from './TableEditor';
 
-export default function ContentEditor({ content, change }) {
+export default function ContentEditor({ content, change, kind, onKindChange, argument, onArgumentChange }) {
   const blocks = content.body_blocks || [];
   const usedIds = collectContentIds(content);
   const changeBlocks = body_blocks => change({ ...content, body_blocks });
@@ -11,6 +12,14 @@ export default function ContentEditor({ content, change }) {
   return <>
     <Field label="页面标题" value={content.title} onChange={title => change({ ...content, title })} />
     <Field label="副标题" value={content.subtitle} onChange={subtitle => change({ ...content, subtitle })} />
+    {onKindChange && onArgumentChange && (
+      <ArgumentEditor
+        kind={kind}
+        onKindChange={onKindChange}
+        argument={argument}
+        onArgumentChange={onArgumentChange}
+      />
+    )}
     {blocks.map((block, index) => <section className="s4-panel" key={block.id || index} aria-label={`正文块 ${index + 1}`}>
       <h3>{index + 1}. {{ paragraph: '段落', bullets: '要点', table: '表格' }[block.type]}</h3>
       <ListActions label={`正文块 ${index + 1}`} index={index} length={blocks.length}

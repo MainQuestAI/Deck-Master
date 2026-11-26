@@ -358,3 +358,59 @@ test('conflict keepMine preserves concurrent server updates to v7 brief and fram
     },
   });
 });
+
+test('overview edits v7 brief/framing intent fields without blocking partial saves and renders derived summary panel', async t => {
+  await mount(t);
+  payload.writing_brief = '讲述人：业务负责人。语气：先给结论。\n待决事项：批准试点预算。';
+  payload.outline = [{ page_id: 'p1', kind: 'judgment', title: '试点建议' }];
+  payload.gap_list = [
+    { page_id: 'p1', source: 'evidence', text: '去年基线', gap: '缺少同期数据' },
+    { page_id: 'p1', source: 'todo', text: '补充预算明细' },
+  ];
+  payload.deck.pages = [{
+    id: 'p1', purpose: '结论', layout: '', notes: '', todo: [], refs: [], kind: 'judgment', argument: null,
+    content: { title: '试点建议', subtitle: '', body_blocks: [], labels: [], callouts: [], footnotes: [] },
+    image: null, svg: null, preview: null,
+  }];
+  await poll(t);
+
+  const summary = document.querySelector('details[aria-label="写作简报、提纲与缺口汇总"]');
+  assert.ok(summary);
+  assert.ok(summary.textContent.includes('讲述人：业务负责人'));
+  assert.ok(summary.textContent.includes('试点建议'));
+  assert.ok(summary.textContent.includes('判断页'));
+  assert.ok(summary.textContent.includes('缺少同期数据'));
+  assert.ok(summary.textContent.includes('补充预算明细'));
+
+  await click('编辑任务信息');
+  assert.ok(section('brief').textContent.includes('待补提示（不影响保存）'));
+  await fill('待决事项', '批准第一阶段试点预算');
+  await click('添加读者关注点');
+  await fill('读者关注点 1', '投入产出比');
+  await click('添加读者关注点');
+  await fill('读者关注点 2', '交付周期');
+  await fill('讲述人角色', '项目负责人');
+  await fill('讲述语气', '直接给结论');
+  await click('保存任务信息');
+  assert.deepEqual(requests[0].patch, {
+    brief: {
+      ...brief,
+      decision: '批准第一阶段试点预算',
+      concerns: ['投入产出比', '交付周期'],
+      narrator: { role: '项目负责人', tone: '直接给结论' },
+    },
+  });
+
+  await click('编辑业务框架');
+  await click('添加故事主线');
+  await fill('故事主线 1', '痛点与现状');
+  await click('添加故事主线');
+  await fill('故事主线 2', '试点方案与预期收益');
+  await click('保存业务框架');
+  assert.deepEqual(requests[1].patch, {
+    framing: {
+      ...framing,
+      storyline: ['痛点与现状', '试点方案与预期收益'],
+    },
+  });
+});
