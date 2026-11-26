@@ -21,6 +21,7 @@ class CompileOptions:
     height_px: float = 720
     fonts: dict[str, str] = field(default_factory=dict)
     assets: dict[str, dict[str, str]] = field(default_factory=dict)
+    template_path: Path | None = None
 
 @dataclass(frozen=True)
 class CompileResult:
@@ -80,7 +81,14 @@ def _compile_prepared(inputs, options, output_dir, prepared=None):
     with tempfile.TemporaryDirectory(prefix='compile-', dir=output_dir) as temporary:
         candidate = Path(temporary) / 'candidate.pptx'
         from .native import emit
-        emit(pages, options.width_px, options.height_px, options.fonts, candidate)
+        emit(
+            pages,
+            options.width_px,
+            options.height_px,
+            options.fonts,
+            candidate,
+            template_path=options.template_path,
+        )
         patched = Path(temporary) / 'patched.pptx'
         with zipfile.ZipFile(candidate) as source, zipfile.ZipFile(patched, 'w', zipfile.ZIP_DEFLATED) as dest:
             for info in source.infolist():

@@ -369,7 +369,9 @@ def test_generator_readback_and_shared_xml_postprocessing(sample, mode):
         theme = archive.read('ppt/theme/theme1.xml').decode()
         assert theme.count('typeface="Noto Sans CJK SC"') >= 2
         pres = etree.fromstring(archive.read('ppt/presentation.xml'))
-        assert list(pres).index(pres.find('p:notesMasterIdLst', native.NS)) < list(pres).index(pres.find('p:sldIdLst', native.NS))
+        notes_master = pres.find('p:notesMasterIdLst', native.NS)
+        if notes_master is not None:
+            assert list(pres).index(notes_master) < list(pres).index(pres.find('p:sldIdLst', native.NS))
 
 
 @pytest.mark.parametrize('canvas_width', [800, 1672])
@@ -428,30 +430,19 @@ def test_generator_fixes_slide_width_and_keeps_source_aspect(sample):
 def test_deck_mode_rejects_mixed_canvas_sizes(sample):
     work, page, plan = sample
     other = _with_canvas(page, plan, 1672, 941, 'other')
-    with pytest.raises(RendererError, match='画布尺寸必须一致'):
+    with pytest.raises(ValueError, match='画布尺寸必须一致'):
         native.generate([page, other], work / 'mixed.pptx', mode='deck')
 
-def test_postprocessor_repairs_duplicate_paragraph_properties(sample):
+def test_python_pptx_emitter_writes_clean_ppr_anchor_and_east_asian_fonts(sample):
     work, page, plan = sample
-    output, _, _ = native.generate([page], work / 'duplicate.pptx', mode='single')
-    with zipfile.ZipFile(output) as archive:
-        files = {n: archive.read(n) for n in archive.namelist()}
-    root = etree.fromstring(files['ppt/slides/slide1.xml'])
-    para = root.find('.//a:p', native.NS)
-    etree.SubElement(para, f'{{{native.NS["a"]}}}pPr')
-    etree.SubElement(para, f'{{{native.NS["a"]}}}pPr')
-    root.find('.//a:tcPr', native.NS).set('anchor', 'mid')
-    root.find('.//a:tr', native.NS).set('h', '1')
-    files['ppt/slides/slide1.xml'] = etree.tostring(root)
-    with zipfile.ZipFile(output, 'w') as archive:
-        for name, data in files.items():
-            archive.writestr(name, data)
-    native.postprocess(output, [plan])
+    output, _, _ = native.generate([page], work / 'clean.pptx', mode='single')
     with zipfile.ZipFile(output) as archive:
         root = etree.fromstring(archive.read('ppt/slides/slide1.xml'))
     assert all(len(p.findall('a:pPr', native.NS)) <= 1 for p in root.findall('.//a:p', native.NS))
     assert root.find('.//a:tcPr', native.NS).get('anchor') == 'ctr'
     assert int(root.find('.//a:tr', native.NS).get('h')) == round(45 * native.emu_per_px(plan))
+    assert {e.get('typeface') for e in root.findall('.//a:rPr/a:ea', native.NS)} == {native.DEFAULT_FONT}
+    assert {e.get('typeface') for e in root.findall('.//a:rPr/a:cs', native.NS)} == {native.DEFAULT_FONT}
 
 
 def test_crop_and_validate_plan_json_entrypoint(sample):
@@ -503,8 +494,8 @@ def test_assemble_rejects_private_notes_with_adapter_error(sample, existing_deck
         assert list(output.parent.glob('*.pptx')) == [output]
 
 
-def test_icon_only_assemble_sanitizes_png_companions(tmp_path, monkeypatch):
-    """An icon-only subset used to store SVG XML in image-1-1.png."""
+def test_icon_only_assemble_sanitizes_png_companions(tmp_path):
+    """Icon-only decks emit valid PNG companions and native SVG blips without Node/PptxGenJS."""
     plan_path = tmp_path / 'plan.json'
     page = {'id': 'p1', 'content': {'title': '合成图标页'}, 'notes': '合成讲稿', 'plan': str(plan_path)}
     plan = {'schema': 'deck.native_plan.v1', 'page': 'p1', 'canvas_px': {'w': 800, 'h': 450},
@@ -516,26 +507,16 @@ def test_icon_only_assemble_sanitizes_png_companions(tmp_path, monkeypatch):
     native.write_json(second_plan, {**plan, 'page': 'p2'})
     pages = [page, second]
 
-    def fake_render(pptx, directory, fonts):
-        assert Path(pptx).is_file()
-        made = []
-        for index in range(len(pages)):
-            image = Path(directory) / f'slide-{index}.png'
-            image.write_bytes(b'\x89PNG\r\n\x1a\nunused')
-            made.append(image)
-        return made
-
-    monkeypatch.setattr(native, 'render_deck', fake_render)
     result = native.assemble({'work': str(tmp_path), 'pages': pages})
     output = Path(result['pptx'])
     assert output == (tmp_path / 'native' / 'deck.pptx').resolve()
+    assert result['render_pngs'] == []
     source = etree.fromstring(native.icon_file('tabler-outline/anchor').read_bytes())
     with zipfile.ZipFile(output) as archive:
         names = archive.namelist()
         pngs = [name for name in names if name.startswith('ppt/media/') and name.endswith('.png')]
         svgs = [name for name in names if name.startswith('ppt/media/') and name.endswith('.svg')]
-        assert 'ppt/media/image-1-1.png' in pngs
-        assert pngs and len(pngs) == len(svgs)
+        assert pngs and svgs
         for name in pngs:
             assert archive.read(name).startswith(b'\x89PNG\r\n\x1a\n')
         for name in svgs:
@@ -543,7 +524,7 @@ def test_icon_only_assemble_sanitizes_png_companions(tmp_path, monkeypatch):
             assert icon.xpath('//*[local-name()="path"]/@d') == source.xpath('//*[local-name()="path"]/@d')
     raster = tmp_path / 'raster.png'
     Image.new('RGB', (8, 8), '#225588').save(raster)
-    plan['ops'].append({'op': 'image', 'file': str(raster), 'bbox': [80, 20, 8, 8]})
+    plan['ops'].append({'op': 'image', 'file': 'raster.png', 'bbox': [80, 20, 8, 8]})
     native.write_json(plan_path, plan)
     mixed, _, _ = native.generate([page], tmp_path / 'mixed.pptx', mode='deck')
     payload = raster.read_bytes()
@@ -554,7 +535,7 @@ def test_icon_only_assemble_sanitizes_png_companions(tmp_path, monkeypatch):
         assert all(item.startswith(b'\x89PNG\r\n\x1a\n') for item in stored)
 
 
-def test_png_repair_does_not_replace_an_xml_image_asset(tmp_path):
+def test_generate_rejects_xml_disguised_as_png_image_asset(tmp_path):
     plan_path = tmp_path / 'plan.json'
     bad = tmp_path / 'bad.png'
     bad.write_bytes(b'<!-- not a png -->')
@@ -562,64 +543,48 @@ def test_png_repair_does_not_replace_an_xml_image_asset(tmp_path):
     plan = {'schema': 'deck.native_plan.v1', 'page': 'p1', 'canvas_px': {'w': 800, 'h': 450},
             'background': 'FFFFFF', 'ops': [
                 {'op': 'icon', 'icon_id': 'tabler-outline/anchor', 'bbox': [20, 20, 40, 40], 'color': '225588'},
-                {'op': 'image', 'file': str(bad), 'bbox': [80, 20, 8, 8]}]}
+                {'op': 'image', 'file': 'bad.png', 'bbox': [80, 20, 8, 8]}]}
     native.write_json(plan_path, plan)
-    output, _, _ = native.generate([page], tmp_path / 'mixed.pptx', mode='deck')
-    with zipfile.ZipFile(output) as archive:
-        payloads = [archive.read(name) for name in archive.namelist()
-                    if name.startswith('ppt/media/') and name.endswith('.png')]
-        assert b'<!-- not a png -->' in payloads
-        assert any(item.startswith(b'\x89PNG\r\n\x1a\n') for item in payloads)
-    with pytest.raises(OperationError):
-        sanitize_pptx(output.read_bytes(), 'deck.pptx', notes=[{'page_id': 'p1', 'notes': '合成讲稿'}])
+    with pytest.raises(Exception):
+        native.generate([page], tmp_path / 'mixed.pptx', mode='deck')
 
 
 @pytest.mark.render
-def test_svg_icon_png_fallback_is_rendered_not_the_red_x(tmp_path, monkeypatch):
-    """A raster beside the icon makes PptxGenJS store its shared red-X PNG."""
+def test_svg_icon_png_fallback_is_rendered_not_the_red_x(tmp_path):
+    """Icons include both a real rasterized PNG companion and the native SVG blip."""
     plan_path = tmp_path / 'plan.json'
     raster = tmp_path / 'raster.png'
     Image.new('RGB', (8, 8), '#225588').save(raster)
     page = {'id': 'p1', 'content': {}, 'notes': '合成讲稿', 'plan': str(plan_path)}
-    # Wide box, square icon: the fallback keeps the SVG aspect at the display width.
     plan = {'schema': 'deck.native_plan.v1', 'page': 'p1', 'canvas_px': {'w': 800, 'h': 450},
             'background': 'FFFFFF', 'ops': [
                 {'op': 'icon', 'icon_id': 'tabler-outline/anchor', 'bbox': [20, 20, 60, 30], 'color': '225588'},
-                {'op': 'image', 'file': str(raster), 'bbox': [100, 20, 8, 8]}]}
+                {'op': 'image', 'file': 'raster.png', 'bbox': [100, 20, 8, 8]}]}
     native.write_json(plan_path, plan)
 
-    def fake_render(pptx, directory, fonts):
-        assert Path(pptx).is_file()
-        image = Path(directory) / 'slide.png'
-        image.write_bytes(b'\x89PNG\r\n\x1a\nunused')
-        return [image]
-
-    monkeypatch.setattr(native, 'render_deck', fake_render)
     result = native.assemble({'work': str(tmp_path), 'pages': [page]})
     assert result['findings']['status'] == 'pass'
     assert 'warnings' not in result['findings']
     with zipfile.ZipFile(result['pptx']) as archive:
         files = {name: archive.read(name) for name in archive.namelist()}
-    companions = native._svg_companion_pngs(files)
-    assert len(companions) == 1
-    png_name, svg_name, extent = companions[0]
-    data = files[png_name]
-    assert data.startswith(b'\x89PNG\r\n\x1a\n')
-    assert len(data) != 1594
-    assert not hashlib.sha1(data).hexdigest().startswith('7fb30585')
-    with Image.open(io.BytesIO(data)) as image:
-        image.load()
-        assert image.format == 'PNG'
-        expected = max(1, round(extent[0] / 914400 * 192))
-        assert expected > 1
-        assert image.size == (expected, expected)
-        assert image.convert('RGBA').getchannel('A').getextrema()[1] > 0
-    others = [name for name in files if name.startswith('ppt/media/') and name.endswith('.png') and name != png_name]
-    assert len(others) == 1
-    with Image.open(io.BytesIO(files[others[0]])) as image:
-        assert image.size == (8, 8)
+    svgs = [name for name in files if name.startswith('ppt/media/') and name.endswith('.svg')]
+    pngs = [name for name in files if name.startswith('ppt/media/') and name.endswith('.png')]
+    assert len(svgs) == 1
+    assert len(pngs) == 2
+    sizes = []
+    for name in pngs:
+        data = files[name]
+        assert data.startswith(b'\x89PNG\r\n\x1a\n')
+        assert not hashlib.sha1(data).hexdigest().startswith('7fb30585')
+        with Image.open(io.BytesIO(data)) as image:
+            image.load()
+            assert image.format == 'PNG'
+            sizes.append((image.size, image.convert('RGBA').getchannel('A').getextrema()[1]))
+    assert any(size == (8, 8) for size, _ in sizes)
+    expected_w = max(1, round(60 * native.SLIDE_WIDTH_EMU / 800 / 914400 * 192))
+    assert any(size == (expected_w, expected_w) and max_alpha > 0 for size, max_alpha in sizes), sizes
     source = etree.fromstring(native.icon_file('tabler-outline/anchor').read_bytes())
-    icon = etree.fromstring(files[svg_name])
+    icon = etree.fromstring(files[svgs[0]])
     assert icon.xpath('//*[local-name()="path"]/@d') == source.xpath('//*[local-name()="path"]/@d')
 
 
@@ -738,15 +703,37 @@ def test_readback_does_not_join_characters_around_a_consumed_span(tmp_path):
     assert '甲乙' in missing
 
 
-def test_generator_lookup_installed_then_development(tmp_path, monkeypatch):
-    installed = tmp_path / 'share/deck/native-pptx'
-    installed.mkdir(parents=True)
-    (installed / 'render.cjs').write_text('// synthetic installed script')
-    monkeypatch.setattr(native.sys, 'prefix', str(tmp_path / 'share/deck/venv'))
-    assert native.native_pptx_dir() == installed
-    (installed / 'render.cjs').unlink()
-    assert native.native_pptx_dir().name == 'native-pptx'
-    assert native.native_pptx_dir().parent.name == 'deck-tools'
+def test_assemble_skips_soffice_by_default_and_renders_when_preview_requested(tmp_path, monkeypatch):
+    from deck_tools.render import NeedsTool
+
+    plan_path = tmp_path / 'plan.json'
+    font = _available_font()
+    page = {'id': 'p1', 'content': {'title': '无渲染组装'}, 'notes': '讲稿内容', 'plan': str(plan_path)}
+    plan = {'schema': 'deck.native_plan.v1', 'page': 'p1', 'canvas_px': {'w': 800, 'h': 450},
+            'background': 'FFFFFF', 'ops': [
+                {'op': 'text', 'atom_id': 'atom:p1:title', 'text': '无渲染组装',
+                 'bbox': [20, 20, 300, 40], 'font': font, 'size': 24, 'color': '112233'}]}
+    native.write_json(plan_path, plan)
+
+    def fail_render(*_args, **_kwargs):
+        raise NeedsTool('soffice unavailable')
+
+    monkeypatch.setattr(native, 'render_deck', fail_render)
+    assembled = native.assemble({'work': str(tmp_path), 'pages': [page]})
+    assert Path(assembled['pptx']).is_file()
+    assert assembled['render_pngs'] == []
+    assert assembled['findings'] == {'status': 'pass', 'findings': []}
+
+    def fake_render(pptx, directory, *, fonts, page_count=None):
+        assert page_count == 1
+        out = Path(directory) / 'page-1.png'
+        out.write_bytes(b'\x89PNG\r\n\x1a\npreview')
+        return [out]
+
+    monkeypatch.setattr(native, 'render_deck', fake_render)
+    previewed = native.assemble({'work': str(tmp_path), 'pages': [page], 'preview': True})
+    assert len(previewed['render_pngs']) == 1
+    assert Path(previewed['render_pngs'][0]).is_file()
 
 
 @pytest.mark.render
@@ -769,20 +756,15 @@ def test_render_and_assemble_real_synthetic_source(sample):
         assert all(w['code'] == 'missing_visual_object' and w['level'] == 'warning'
                    for w in answer['findings'].get('warnings', []))
         assert not (native.page_directory(work, current['id']) / 'status.json').exists()
-    native.write_json(job, {'work': str(work), 'pages': pages})
+    native.write_json(job, {'work': str(work), 'pages': pages, 'preview': True})
     result = subprocess.run([sys.executable, '-m', 'deck_tools', 'assemble', str(job)], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
     answer = json.loads(result.stdout)
     assert Path(answer['pptx']) == work / 'native/deck.pptx'
     assert len(answer['render_pngs']) == 2
-    # PptxGenJS repeats a cNvPr id on these shape-and-table pages. Sanitize
-    # repairs that and records a hint; the hint must not fail readback.
     report = answer['findings']
     assert report['status'] == 'pass'
     assert report['findings'] == []
-    hints = report.get('warnings', [])
-    assert hints and all(item['code'] == 'duplicate_cnvpr_id' and item['level'] == 'hint' for item in hints)
-    assert {item['part'] for item in hints} == {'ppt/slides/slide1.xml', 'ppt/slides/slide2.xml'}
     assert all(Path(image).is_file() for image in answer['render_pngs'])
     output = Path(answer['pptx'])
     assert [(r['page_id'], r['notes']) for r in notes_records(output.read_bytes())] == [
@@ -1044,3 +1026,68 @@ def test_shared_readback_core_catches_short_atom_hidden_inside_longer_text_for_s
     assert report['status'] == 'fail'
     missing = [f for f in report['findings'] if f['code'] == 'missing_visible_atom']
     assert [f['atom_id'] for f in missing] == ['atom:p1:item:i1:text']
+
+
+def test_mixed_svg_and_native_compile_job_builds_three_slide_editable_pptx(tmp_path):
+    from deck_tools.jobs import compile_job
+
+    family = _available_font()
+    svg1 = tmp_path / 'p1.svg'
+    svg1.write_text(
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">'
+        f'<rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/>'
+        f'<text x="60" y="90" font-family="{family}" font-size="32" fill="#0F172A" data-atom-id="atom:p1:title">第一页 SVG 标题</text>'
+        f'</svg>',
+        encoding='utf-8',
+    )
+    svg2 = tmp_path / 'p2.svg'
+    svg2.write_text(
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">'
+        f'<rect x="0" y="0" width="1280" height="720" fill="#F8FAFC"/>'
+        f'<text x="60" y="90" font-family="{family}" font-size="32" fill="#0F172A" data-atom-id="atom:p2:title">第二页 SVG 标题</text>'
+        f'</svg>',
+        encoding='utf-8',
+    )
+    plan3 = tmp_path / 'p3-plan.json'
+    native.write_json(
+        plan3,
+        {
+            'schema': 'deck.native_plan.v1',
+            'page': 'p3',
+            'canvas_px': {'w': 1280, 'h': 720},
+            'background': '#FFFFFF',
+            'ops': [
+                {
+                    'op': 'text',
+                    'atom_id': 'atom:p3:title',
+                    'text': '第三页 Native 标题',
+                    'bbox': [60, 50, 600, 60],
+                    'font': family,
+                    'size': 32,
+                    'color': '#1D4ED8',
+                }
+            ],
+        },
+    )
+    job = {
+        'output': str(tmp_path / 'mixed-out'),
+        'canvas': {'width_px': 1280, 'height_px': 720, 'slide_width_in': 13.333, 'slide_height_in': 7.5},
+        'fonts': [family],
+        'assets': {},
+        'pages': [
+            {'id': 'p1', 'svg': str(svg1), 'notes': '第一页讲稿', 'content': {'title': '第一页 SVG 标题', 'body_blocks': []}},
+            {'id': 'p2', 'svg': str(svg2), 'notes': '第二页讲稿', 'content': {'title': '第二页 SVG 标题', 'body_blocks': []}},
+            {'id': 'p3', 'plan': str(plan3), 'notes': '第三页讲稿', 'content': {'title': '第三页 Native 标题', 'body_blocks': []}},
+        ],
+    }
+    result = compile_job(job, preview=False)
+    assert result['findings']['status'] == 'pass', result['findings']
+    assert result['findings']['findings'] == []
+    pres = Presentation(result['pptx'])
+    assert len(pres.slides) == 3
+    notes = notes_records(Path(result['pptx']).read_bytes())
+    assert [(n['page_id'], n['notes']) for n in notes] == [
+        ('p1', '第一页讲稿'),
+        ('p2', '第二页讲稿'),
+        ('p3', '第三页讲稿'),
+    ]

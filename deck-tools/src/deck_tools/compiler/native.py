@@ -4,6 +4,7 @@ B0 2a866cf: keep explicit alpha=0; no business runtime imports.
 The current IR contains only source-derived coordinates and visible text.
 """
 from pathlib import Path
+import functools
 from PIL import ImageFont, ImageColor
 from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE
@@ -13,6 +14,11 @@ from pptx.util import Pt
 import io
 import hashlib
 import copy
+
+
+@functools.lru_cache(maxsize=64)
+def _load_truetype_font(font_path: str, size: int, face_index: int):
+    return ImageFont.truetype(font_path, size=size, index=face_index)
 
 
 def _role_name(source, page_id):
@@ -149,152 +155,157 @@ def _trim_table_text_slack(grid_shapes, text_boxes, page_id):
             shape.left = anchor - ({'middle': maximum // 2, 'end': maximum}.get(source['anchor'], 0))
 
 
-def emit(pages, width, height, fonts, output):
-    pres=Presentation();pres.slide_width=round(width*9525);pres.slide_height=round(height*9525)
-    for page in pages:
-        slide=pres.slides.add_slide(pres.slide_layouts[6]); k=min(width/page['width'],height/page['height'])
-        slide.name = page['page_id']
-        if page.get('speaker_notes'):
-            _write_notes(slide, page['speaker_notes'])
-        ox=(width-page['width']*k)/2;oy=(height-page['height']*k)/2
-        def X(x):return round((ox+x*k)*9525)
-        def Y(y):return round((oy+y*k)*9525)
-        def S(v):return round(v*k*9525)
-        grid_shapes, text_boxes = [], []
-        native_by_source = {}
-        for s in page['shapes']:
-            if s['kind']=='image':
-                from PIL import Image
-                x,y,w,h=s['x'],s['y'],s['width'],s['height']
-                if s['fit']=='contain':
-                    with Image.open(s['asset_path']) as raster:iw,ih=raster.size
-                    ratio=min(w/iw,h/ih);x+=(w-iw*ratio)/2;y+=(h-ih*ratio)/2;w=iw*ratio;h=ih*ratio
-                sh=slide.shapes.add_picture(s['asset_path'],X(x),Y(y),S(w),S(h));sh.name=s.get('atom_id') or s['id']
-                sh._element.nvPicPr.cNvPr.set('title', _role_name(s, page['page_id']))
-                native_by_source[id(s)] = sh
-                if s['fit']=='cover':
-                    with Image.open(s['asset_path']) as raster:iw,ih=raster.size
-                    if iw/ih>w/h:sh.crop_left=sh.crop_right=(1-(w/h)/(iw/ih))/2
-                    else:sh.crop_top=sh.crop_bottom=(1-(iw/ih)/(w/h))/2
-                continue
-            if s['kind']=='text':
-                family=s['font_family'];key=family+(':bold' if s['bold'] else '')
-                filename=fonts.get(key,fonts.get(family))
-                if not filename:raise ValueError(f"{page['page_id']}/{s['id']}: font file not supplied: {key}")
-                text_width = 0
-                for text_run in s.get('runs', [s]):
-                    run_key = text_run['font_family'] + (':bold' if text_run['bold'] else '')
-                    run_file = fonts.get(run_key) or fonts.get(text_run['font_family'])
-                    if not run_file:
-                        raise ValueError(f"{page['page_id']}/{s['id']}: font file not supplied: {run_key}")
-                    run_font = ImageFont.truetype(str(run_file), size=1000, index=getattr(run_file, 'face_index', 0))
-                    text_width += run_font.getlength(text_run['text']) / 1000 * text_run['font_size']
-                text_width += max(0, len(s['text']) - 1) * s.get('letter_spacing', 0)
-                w=s.get('text_width', text_width+s['font_size']*1.0)
-                anchor=s['x']
-                # The extra glyph of slack keeps Office from clipping text, but
-                # should not itself create a false slide-boundary overflow.
-                # Shrink only slack and recompute the box from the same anchor;
-                # otherwise centered/right-aligned glyphs move with the box.
-                if not s.get('rotation') and 0 <= anchor <= page['width']:
-                    maximum = {'middle': 2*min(anchor, page['width']-anchor),
-                               'end': anchor}.get(s['anchor'], page['width']-anchor)
-                    if text_width <= maximum < w:
-                        w = maximum
-                x=anchor
-                if s['anchor']=='middle':x-=w/2
-                if s['anchor']=='end':x-=w
-                y=s['y']-s['font_size']*.88;h=s.get('text_height', s['font_size']*1.5)
-                # The IR anchor is already in final page coordinates; glyph rotation is
-                # applied once through sh.rotation below, so the box stays at the anchor.
-                sh=slide.shapes.add_textbox(X(x),Y(y),S(w),S(h))
-                text_boxes.append((s, sh, S(text_width), X(anchor)))
-                tf=sh.text_frame;tf.clear();tf.word_wrap='text_width' in s;tf.vertical_anchor=MSO_ANCHOR.TOP
-                from pptx.enum.text import MSO_AUTO_SIZE
-                tf.auto_size=MSO_AUTO_SIZE.NONE
-                tf.margin_left=tf.margin_right=tf.margin_top=tf.margin_bottom=0
-                p=tf.paragraphs[0];p.alignment={'middle':PP_ALIGN.CENTER,'end':PP_ALIGN.RIGHT}.get(s['anchor'],PP_ALIGN.LEFT)
-                p.space_before=p.space_after=Pt(0)
-                if s.get('bullet'):
-                    props = p._p.get_or_add_pPr()
-                    props.set('marL', str(S(s['font_size'])))
-                    props.set('indent', str(-S(s['font_size'] * .75)))
-                    bullet = OxmlElement('a:buChar')
-                    bullet.set('char', '•')
-                    props.append(bullet)
-                for text_run in s.get('runs', [s]):
-                    run = p.add_run()
-                    run.text = text_run['text']
-                    props = run._r.get_or_add_rPr()
-                    # Write before table conversion copies the editable text body.
-                    if s.get('letter_spacing'):
-                        props.set('spc', str(round(s['letter_spacing'] * k * 75)))
-                    # Fill properties must precede latin/ea/cs in a:rPr.
-                    paint(props, text_run['fill'], text_run['opacity'] * text_run['fill_opacity'])
-                    run.font.size = Pt(text_run['font_size'] * k * .75)
-                    run.font.name = text_run['font_family']
-                    run.font.bold = text_run['bold']
-                    for name in ('ea', 'cs'):
-                        element = OxmlElement('a:' + name)
-                        element.set('typeface', text_run['font_family'])
-                        props.append(element)
-            elif s['kind'] in ('rect','circle','ellipse'):
-                shape=MSO_SHAPE.OVAL if s['kind']!='rect' else MSO_SHAPE.ROUNDED_RECTANGLE if s.get('rx') else MSO_SHAPE.RECTANGLE
-                sh=slide.shapes.add_shape(shape,X(s['x']),Y(s['y']),S(s['width']),S(s['height']))
-                if shape==MSO_SHAPE.ROUNDED_RECTANGLE:
-                    sh.adjustments[0]=min(.5,s['rx']/min(s['width'],s['height']))
-            else:
-                cmds=list(s.get('commands') or [{('moveTo' if i==0 else 'lineTo'):{'x':p[0],'y':p[1]}} for i,p in enumerate(s['points'])])
-                if s['kind']=='polygon':cmds.append({'close':{}})
-                pts=[next(iter(c.values())) for c in cmds if 'close' not in c]
-                l=min(p['x'] for p in pts);t=min(p['y'] for p in pts);w=max(.01,max(p['x'] for p in pts)-l);h=max(.01,max(p['y'] for p in pts)-t)
-                sh=slide.shapes.add_shape(MSO_SHAPE.RECTANGLE,X(l),Y(t),S(w),S(h))
-                sp=sh._element.spPr
-                for old in list(sp):
-                    if old.tag.rsplit('}',1)[-1]=='prstGeom':sp.remove(old)
-                geom=OxmlElement('a:custGeom')
-                for tag in ('avLst','gdLst','ahLst','cxnLst'):geom.append(OxmlElement('a:'+tag))
-                rect=OxmlElement('a:rect')
-                for name,val in [('l','0'),('t','0'),('r','r'),('b','b')]:rect.set(name,val)
-                geom.append(rect);lst=OxmlElement('a:pathLst');path=OxmlElement('a:path');path.set('w',str(max(1,S(w))));path.set('h',str(max(1,S(h))))
-                for c in cmds:
-                    op=next(iter(c));node=OxmlElement('a:'+('lnTo' if op=='lineTo' else op))
-                    if op!='close':
-                        point=OxmlElement('a:pt');point.set('x',str(S(c[op]['x']-l)));point.set('y',str(S(c[op]['y']-t)));node.append(point)
-                    path.append(node)
-                lst.append(path);geom.append(lst);sp.append(geom)
+def emit_svg_slide(pres, page, width, height, fonts, *, blank_layout=None):
+    from ..native.generate import select_blank_layout
+
+    layout = blank_layout if blank_layout is not None else select_blank_layout(pres)
+    slide = pres.slides.add_slide(layout)
+    k = min(width / page['width'], height / page['height'])
+    slide.name = page['page_id']
+    if page.get('speaker_notes'):
+        _write_notes(slide, page['speaker_notes'])
+    ox = (width - page['width'] * k) / 2
+    oy = (height - page['height'] * k) / 2
+    def X(x):return round((ox+x*k)*9525)
+    def Y(y):return round((oy+y*k)*9525)
+    def S(v):return round(v*k*9525)
+    grid_shapes, text_boxes = [], []
+    native_by_source = {}
+    for s in page['shapes']:
+        if s['kind']=='image':
+            from PIL import Image
+            x,y,w,h=s['x'],s['y'],s['width'],s['height']
+            if s['fit']=='contain':
+                with Image.open(s['asset_path']) as raster:iw,ih=raster.size
+                ratio=min(w/iw,h/ih);x+=(w-iw*ratio)/2;y+=(h-ih*ratio)/2;w=iw*ratio;h=ih*ratio
+            sh=slide.shapes.add_picture(s['asset_path'],X(x),Y(y),S(w),S(h));sh.name=s.get('atom_id') or s['id']
+            sh._element.nvPicPr.cNvPr.set('title', _role_name(s, page['page_id']))
             native_by_source[id(s)] = sh
-            if s.get('rotation'):sh.rotation=s['rotation']
-            sh.name=s.get('atom_id') or s['id']
-            identity = sh._element.nvSpPr.cNvPr
-            identity.set('title', _role_name(s, page['page_id']))
-            if s.get('atom_id') == f"atom:{page['page_id']}:title":
-                placeholder = OxmlElement('p:ph')
-                placeholder.set('type', 'title')
-                sh._element.nvSpPr.nvPr.append(placeholder)
-            for node in list(sh._element):
-                if node.tag.rsplit('}',1)[-1]=='style':sh._element.remove(node)
-            if s['kind']!='text':
-                # CT_ShapeProperties order: geometry, fill, a:ln, effectLst.
-                paint(sh._element.spPr,s['fill'],s['opacity']*s['fill_opacity'])
-                line=sh._element.spPr.get_or_add_ln();line.set('w',str(S(s['stroke_width'])))
-                paint(line,s['stroke'],s['opacity']*s['stroke_opacity'])
-                caps={'butt':'flat','round':'rnd','square':'sq'}
-                joins={'miter':'miter','round':'round','bevel':'bevel'}
-                if s.get('stroke_linecap','butt') not in caps or s.get('stroke_linejoin','miter') not in joins:
-                    raise ValueError(f"{page['page_id']}/{s['id']}: unsupported stroke cap/join")
-                line.set('cap',caps[s.get('stroke_linecap','butt')])
-                join=OxmlElement('a:'+joins[s.get('stroke_linejoin','miter')])
-                if s.get('stroke_linejoin','miter')=='miter':join.set('lim',str(round(s.get('stroke_miterlimit',4)*100000)))
-                line.append(join)
-                sh._element.spPr.append(OxmlElement('a:effectLst'))
-            else:
-                sh._element.spPr.append(OxmlElement('a:effectLst'))
-            if s['kind'] == 'line' or s.get('table_frame'):
-                grid_shapes.append((s, sh))
-        _trim_table_text_slack(grid_shapes, text_boxes, page['page_id'])
-        _editable_tables(slide, page, X, Y, S, native_by_source)
-        _module_groups(slide, page, native_by_source)
+            if s['fit']=='cover':
+                with Image.open(s['asset_path']) as raster:iw,ih=raster.size
+                if iw/ih>w/h:sh.crop_left=sh.crop_right=(1-(w/h)/(iw/ih))/2
+                else:sh.crop_top=sh.crop_bottom=(1-(iw/ih)/(w/h))/2
+            continue
+        if s['kind']=='text':
+            family=s['font_family'];key=family+(':bold' if s['bold'] else '')
+            filename=fonts.get(key,fonts.get(family))
+            if not filename:raise ValueError(f"{page['page_id']}/{s['id']}: font file not supplied: {key}")
+            text_width = 0
+            for text_run in s.get('runs', [s]):
+                run_key = text_run['font_family'] + (':bold' if text_run['bold'] else '')
+                run_file = fonts.get(run_key) or fonts.get(text_run['font_family'])
+                if not run_file:
+                    raise ValueError(f"{page['page_id']}/{s['id']}: font file not supplied: {run_key}")
+                run_font = _load_truetype_font(str(run_file), 1000, getattr(run_file, 'face_index', 0))
+                text_width += run_font.getlength(text_run['text']) / 1000 * text_run['font_size']
+            text_width += max(0, len(s['text']) - 1) * s.get('letter_spacing', 0)
+            w=s.get('text_width', text_width+s['font_size']*1.0)
+            anchor=s['x']
+            if not s.get('rotation') and 0 <= anchor <= page['width']:
+                maximum = {'middle': 2*min(anchor, page['width']-anchor),
+                           'end': anchor}.get(s['anchor'], page['width']-anchor)
+                if text_width <= maximum < w:
+                    w = maximum
+            x=anchor
+            if s['anchor']=='middle':x-=w/2
+            if s['anchor']=='end':x-=w
+            y=s['y']-s['font_size']*.88;h=s.get('text_height', s['font_size']*1.5)
+            sh=slide.shapes.add_textbox(X(x),Y(y),S(w),S(h))
+            text_boxes.append((s, sh, S(text_width), X(anchor)))
+            tf=sh.text_frame;tf.clear();tf.word_wrap='text_width' in s;tf.vertical_anchor=MSO_ANCHOR.TOP
+            tf.auto_size=MSO_AUTO_SIZE.NONE
+            tf.margin_left=tf.margin_right=tf.margin_top=tf.margin_bottom=0
+            p=tf.paragraphs[0];p.alignment={'middle':PP_ALIGN.CENTER,'end':PP_ALIGN.RIGHT}.get(s['anchor'],PP_ALIGN.LEFT)
+            p.space_before=p.space_after=Pt(0)
+            if s.get('bullet'):
+                props = p._p.get_or_add_pPr()
+                props.set('marL', str(S(s['font_size'])))
+                props.set('indent', str(-S(s['font_size'] * .75)))
+                bullet = OxmlElement('a:buChar')
+                bullet.set('char', '•')
+                props.append(bullet)
+            for text_run in s.get('runs', [s]):
+                run = p.add_run()
+                run.text = text_run['text']
+                props = run._r.get_or_add_rPr()
+                if s.get('letter_spacing'):
+                    props.set('spc', str(round(s['letter_spacing'] * k * 75)))
+                paint(props, text_run['fill'], text_run['opacity'] * text_run['fill_opacity'])
+                run.font.size = Pt(text_run['font_size'] * k * .75)
+                run.font.name = text_run['font_family']
+                run.font.bold = text_run['bold']
+                for name in ('ea', 'cs'):
+                    element = OxmlElement('a:' + name)
+                    element.set('typeface', text_run['font_family'])
+                    props.append(element)
+        elif s['kind'] in ('rect','circle','ellipse'):
+            shape=MSO_SHAPE.OVAL if s['kind']!='rect' else MSO_SHAPE.ROUNDED_RECTANGLE if s.get('rx') else MSO_SHAPE.RECTANGLE
+            sh=slide.shapes.add_shape(shape,X(s['x']),Y(s['y']),S(s['width']),S(s['height']))
+            if shape==MSO_SHAPE.ROUNDED_RECTANGLE:
+                sh.adjustments[0]=min(.5,s['rx']/min(s['width'],s['height']))
+        else:
+            cmds=list(s.get('commands') or [{('moveTo' if i==0 else 'lineTo'):{'x':p[0],'y':p[1]}} for i,p in enumerate(s['points'])])
+            if s['kind']=='polygon':cmds.append({'close':{}})
+            pts=[next(iter(c.values())) for c in cmds if 'close' not in c]
+            l=min(p['x'] for p in pts);t=min(p['y'] for p in pts);w=max(.01,max(p['x'] for p in pts)-l);h=max(.01,max(p['y'] for p in pts)-t)
+            sh=slide.shapes.add_shape(MSO_SHAPE.RECTANGLE,X(l),Y(t),S(w),S(h))
+            sp=sh._element.spPr
+            for old in list(sp):
+                if old.tag.rsplit('}',1)[-1]=='prstGeom':sp.remove(old)
+            geom=OxmlElement('a:custGeom')
+            for tag in ('avLst','gdLst','ahLst','cxnLst'):geom.append(OxmlElement('a:'+tag))
+            rect=OxmlElement('a:rect')
+            for name,val in [('l','0'),('t','0'),('r','r'),('b','b')]:rect.set(name,val)
+            geom.append(rect);lst=OxmlElement('a:pathLst');path=OxmlElement('a:path');path.set('w',str(max(1,S(w))));path.set('h',str(max(1,S(h))))
+            for c in cmds:
+                op=next(iter(c));node=OxmlElement('a:'+('lnTo' if op=='lineTo' else op))
+                if op!='close':
+                    point=OxmlElement('a:pt');point.set('x',str(S(c[op]['x']-l)));point.set('y',str(S(c[op]['y']-t)));node.append(point)
+                path.append(node)
+            lst.append(path);geom.append(lst);sp.append(geom)
+        native_by_source[id(s)] = sh
+        if s.get('rotation'):sh.rotation=s['rotation']
+        sh.name=s.get('atom_id') or s['id']
+        identity = sh._element.nvSpPr.cNvPr
+        identity.set('title', _role_name(s, page['page_id']))
+        if s.get('atom_id') == f"atom:{page['page_id']}:title":
+            placeholder = OxmlElement('p:ph')
+            placeholder.set('type', 'title')
+            sh._element.nvSpPr.nvPr.append(placeholder)
+        for node in list(sh._element):
+            if node.tag.rsplit('}',1)[-1]=='style':sh._element.remove(node)
+        if s['kind']!='text':
+            paint(sh._element.spPr,s['fill'],s['opacity']*s['fill_opacity'])
+            line=sh._element.spPr.get_or_add_ln();line.set('w',str(S(s['stroke_width'])))
+            paint(line,s['stroke'],s['opacity']*s['stroke_opacity'])
+            caps={'butt':'flat','round':'rnd','square':'sq'}
+            joins={'miter':'miter','round':'round','bevel':'bevel'}
+            if s.get('stroke_linecap','butt') not in caps or s.get('stroke_linejoin','miter') not in joins:
+                raise ValueError(f"{page['page_id']}/{s['id']}: unsupported stroke cap/join")
+            line.set('cap',caps[s.get('stroke_linecap','butt')])
+            join=OxmlElement('a:'+joins[s.get('stroke_linejoin','miter')])
+            if s.get('stroke_linejoin','miter')=='miter':join.set('lim',str(round(s.get('stroke_miterlimit',4)*100000)))
+            line.append(join)
+            sh._element.spPr.append(OxmlElement('a:effectLst'))
+        else:
+            sh._element.spPr.append(OxmlElement('a:effectLst'))
+        if s['kind'] == 'line' or s.get('table_frame'):
+            grid_shapes.append((s, sh))
+    _trim_table_text_slack(grid_shapes, text_boxes, page['page_id'])
+    _editable_tables(slide, page, X, Y, S, native_by_source)
+    _module_groups(slide, page, native_by_source)
+
+
+def emit(pages, width, height, fonts, output, *, template_path=None):
+    from ..native.generate import select_blank_layout
+
+    pres = Presentation(str(template_path)) if template_path else Presentation()
+    if not template_path:
+        pres.slide_width = round(width * 9525)
+        pres.slide_height = round(height * 9525)
+    blank_layout = select_blank_layout(pres)
+    for page in pages:
+        emit_svg_slide(pres, page, width, height, fonts, blank_layout=blank_layout)
     pres.save(output)
 
 

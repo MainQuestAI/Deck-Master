@@ -209,7 +209,7 @@ fn v5_pages_without_native_upgrade_only_user_version_and_future_formats_prompt_u
 }
 
 #[test]
-#[ignore = "needs node + pptxgenjs + soffice; runs in the render job"]
+#[ignore = "needs soffice; runs in the render job"]
 fn native_candidates_require_a_conclusion_then_build_export_use_adopted_packs_and_current_notes() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path();
@@ -306,8 +306,8 @@ fn native_candidates_require_a_conclusion_then_build_export_use_adopted_packs_an
             " 已对照文字与对象 ",
         ],
     );
-    let mut store = Store::open(path).unwrap();
-    let mut current = store.current().unwrap();
+    let store = Store::open(path).unwrap();
+    let current = store.current().unwrap();
     let adopted = current.deck.pages[0].native.as_ref().unwrap();
     assert_ne!(adopted.file, candidate);
     assert!(adopted.basis.starts_with("svg-v3:"));
@@ -327,15 +327,7 @@ fn native_candidates_require_a_conclusion_then_build_export_use_adopted_packs_an
         std::fs::read(store.file(candidate).unwrap()).unwrap(),
         candidate_bytes
     );
-    // An old SVG on the missing page must never supply a native slide.
-    let svg = store.add_file(b"synthetic unused svg", "svg").unwrap();
-    current.deck.pages[1].svg = Some(Artifact {
-        file: svg,
-        basis: "imported".into(),
-    });
-    let tx = store.transaction().unwrap();
-    store::append(&tx, &mut current.deck, "Synthetic legacy artifact").unwrap();
-    tx.commit().unwrap();
+    // Before p2 adopts either native or svg, partial build reports p2 as missing.
     drop(store);
     let partial = cli(path, &["build"]);
     assert_eq!(partial["missing_pages"], json!(["p2"]));
@@ -609,7 +601,7 @@ fn adopt_reports_shared_layout_for_three_result_pages_in_this_run() {
 }
 
 #[test]
-#[ignore = "needs node + pptxgenjs + soffice; runs in the render job"]
+#[ignore = "needs soffice; runs in the render job"]
 fn corrupt_sibling_pack_still_lets_the_other_page_result_and_adopt() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path();
@@ -705,7 +697,7 @@ fn shared_plan(path: &Path, page: &str, title: &str, body_y: i64) -> std::path::
 }
 
 #[test]
-#[ignore = "needs node + pptxgenjs + soffice; runs in the render job"]
+#[ignore = "needs soffice; runs in the render job"]
 fn shared_layout_on_build_keeps_readback_pass() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path();
@@ -1080,4 +1072,100 @@ fn native_cli_icon_search_crop_and_validate_end_to_end() {
         ],
     );
     assert_eq!(path_out.status.code(), Some(2));
+}
+
+#[test]
+fn mixed_svg_and_native_deck_builds_all_three_slides_and_passes_readback() {
+    let temp = tempfile::tempdir().unwrap();
+    let project = temp.path().join("mixed-project");
+
+    // Pick a system font guaranteed to be installed in both macOS and Ubuntu CI.
+    let font_out = Command::new("fc-match")
+        .args(["-f", "%{family}", "sans-serif"])
+        .output()
+        .unwrap();
+    let family = String::from_utf8_lossy(&font_out.stdout)
+        .split(',')
+        .next()
+        .unwrap_or("DejaVu Sans")
+        .trim()
+        .to_string();
+
+    cli(
+        &project,
+        &["new", project.to_str().unwrap(), "--title", "混合构建测试"],
+    );
+    edit(
+        &project,
+        json!({
+            "style": {"fonts": [&family]},
+            "order": ["p1", "p2", "p3"],
+            "pages": [
+                {"id": "p1", "purpose": "概述", "layout": "单栏", "notes": "第一页讲稿", "content": {"title": "SVG 第一页"}},
+                {"id": "p2", "purpose": "细节", "layout": "双栏", "notes": "第二页讲稿", "content": {"title": "SVG 第二页"}},
+                {"id": "p3", "purpose": "结论", "layout": "卡片", "notes": "第三页讲稿", "content": {"title": "Native 第三页"}}
+            ]
+        }),
+    );
+
+    let store = Store::open(&project).unwrap();
+    let mut deck = store.current().unwrap().deck;
+
+    let svg1 = format!(
+        r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720"><rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/><text x="60" y="90" font-family="{family}" font-size="32" fill="#111111" data-atom-id="atom:p1:title">SVG 第一页</text></svg>"##
+    );
+    let svg2 = format!(
+        r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720"><rect x="0" y="0" width="1280" height="720" fill="#F8FAFC"/><text x="60" y="90" font-family="{family}" font-size="32" fill="#111111" data-atom-id="atom:p2:title">SVG 第二页</text></svg>"##
+    );
+    let f1 = store.add_file(svg1.as_bytes(), "svg").unwrap();
+    let f2 = store.add_file(svg2.as_bytes(), "svg").unwrap();
+    let pack3 = json!({
+        "plan": {
+            "schema": "deck.native_plan.v1",
+            "page": "p3",
+            "canvas_px": {"w": 1280, "h": 720},
+            "background": "#FFFFFF",
+            "ops": [
+                {"op": "text", "atom_id": "atom:p3:title", "text": "Native 第三页", "bbox": [60, 50, 600, 60], "font": &family, "size": 32, "color": "#1D4ED8"}
+            ]
+        },
+        "assets": [],
+        "render_png": "",
+        "note": "标题框与文字一致"
+    });
+    let f3 = store
+        .add_file(&serde_json::to_vec(&pack3).unwrap(), "native.json")
+        .unwrap();
+
+    deck.pages[0].svg = Some(Artifact {
+        file: f1,
+        basis: ops::basis("svg", &deck, &deck.pages[0]).unwrap(),
+    });
+    deck.pages[1].svg = Some(Artifact {
+        file: f2,
+        basis: ops::basis("svg", &deck, &deck.pages[1]).unwrap(),
+    });
+    deck.pages[2].native = Some(Artifact {
+        file: f3,
+        basis: ops::basis("native", &deck, &deck.pages[2]).unwrap(),
+    });
+
+    let mut store = Store::open(&project).unwrap();
+    let tx = store.transaction().unwrap();
+    store::append(&tx, &mut deck, "Adopt mixed SVG and native pages").unwrap();
+    tx.commit().unwrap();
+
+    let status = ops::artifact_status(&deck).unwrap();
+    assert_eq!(status["build_mode"], "mixed");
+    assert_eq!(status["missing_pages"], json!([]));
+
+    let built = cli(&project, &["build"]);
+    assert_eq!(built["build_mode"], "mixed");
+    assert_eq!(built["missing_pages"], json!([]));
+    assert_eq!(built["findings"]["status"], "pass");
+    assert_eq!(built["findings"]["findings"], json!([]));
+
+    let detail = ops::build_detail(&project, built["id"].as_i64().unwrap()).unwrap();
+    assert_eq!(detail["pages"].as_array().unwrap().len(), 3);
+    assert_eq!(detail["readback_matches_current"], true);
 }

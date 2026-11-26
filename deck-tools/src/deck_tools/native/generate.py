@@ -1,45 +1,116 @@
-"""Native PPTX generation, OOXML postprocessing, and single-page rendering."""
+"""Pure-Python (python-pptx) native PPTX emitter and single-page renderer."""
 
 from __future__ import annotations
 
+import functools
+import hashlib
+import io
 from pathlib import Path
-import posixpath
+import re
 import struct
-import sys
 import tempfile
 import zipfile
 import zlib
 
 from lxml import etree
 from PIL import Image, ImageDraw
+from pptx import Presentation
+from pptx.dml.color import RGBColor
+from pptx.enum.shapes import MSO_CONNECTOR, MSO_SHAPE
+from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
+from pptx.opc.constants import RELATIONSHIP_TYPE as RT
+from pptx.opc.package import Part
+from pptx.opc.packuri import PackURI
+from pptx.util import Emu, Pt
 
 from ..render import NeedsTool, RendererError, executable, run
 from .plan import (
+    DEFAULT_FONT,
     ICONS,
     NS,
+    SLIDE_WIDTH_EMU,
     _resolve_native_fonts,
-    emu_per_px,
+    _validate_color,
     page_directory,
     read_json,
     validate_plan,
-    write_json,
 )
 from .readback import detect_missing_visual_objects
 
+EMU_PER_PT = 12700
 
-def native_pptx_dir():
-    installed = Path(sys.prefix).parent / "native-pptx"
-    development = Path(__file__).resolve().parents[3] / "native-pptx"
-    for directory in (installed, development):
-        if (directory / "render.cjs").is_file():
-            return directory
-    raise NeedsTool("找不到 native-pptx；请重新运行安装脚本")
+_A_NS = NS["a"]
+_P_NS = NS["p"]
+_R_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+_ASVG_NS = "http://schemas.microsoft.com/office/drawing/2016/SVG/main"
+_SVG_EXT_URI = "{96DAC541-7B7A-43D3-8B79-37D633B846F1}"
+
+_ALIGN_MAP = {
+    "left": PP_ALIGN.LEFT,
+    "center": PP_ALIGN.CENTER,
+    "right": PP_ALIGN.RIGHT,
+    "justify": PP_ALIGN.JUSTIFY,
+}
+
+_VALIGN_MAP = {
+    "top": MSO_ANCHOR.TOP,
+    "center": MSO_ANCHOR.MIDDLE,
+    "mid": MSO_ANCHOR.MIDDLE,
+    "bottom": MSO_ANCHOR.BOTTOM,
+}
+
+_TC_ANCHOR_MAP = {
+    "top": "t",
+    "center": "ctr",
+    "mid": "ctr",
+    "bottom": "b",
+}
+
+_ARROWHEAD_MAP = {
+    "triangle": "triangle",
+    "arrow": "arrow",
+    "stealth": "stealth",
+    "diamond": "diamond",
+    "oval": "oval",
+    "none": "none",
+}
+
+_PRST_ALIASES = {
+    "rect": "rect",
+    "roundRect": "roundRect",
+    "ellipse": "ellipse",
+    "oval": "ellipse",
+    "triangle": "triangle",
+    "rtTriangle": "rtTriangle",
+    "diamond": "diamond",
+    "parallelogram": "parallelogram",
+    "trapezoid": "trapezoid",
+    "pentagon": "pentagon",
+    "hexagon": "hexagon",
+    "octagon": "octagon",
+    "chevron": "chevron",
+    "homePlate": "homePlate",
+    "rightArrow": "rightArrow",
+    "leftArrow": "leftArrow",
+    "upArrow": "upArrow",
+    "downArrow": "downArrow",
+    "line": "line",
+    "plus": "plus",
+    "star5": "star5",
+    "can": "can",
+    "cube": "cube",
+    "flowChartProcess": "flowChartProcess",
+    "flowChartDecision": "flowChartDecision",
+    "flowChartTerminator": "flowChartTerminator",
+}
+
+_VALID_PRST = re.compile(r"^[A-Za-z][A-Za-z0-9]*$")
 
 
-def _transparent_png():
-    """1×1 transparent PNG kept only when an SVG companion cannot be rendered."""
+def _transparent_png() -> bytes:
+    """1×1 transparent PNG used only when an SVG companion cannot be rasterized."""
 
-    def chunk(kind, payload):
+    def chunk(kind: bytes, payload: bytes) -> bytes:
         crc = zlib.crc32(kind + payload) & 0xFFFFFFFF
         return struct.pack(">I", len(payload)) + kind + payload + struct.pack(">I", crc)
 
@@ -48,76 +119,15 @@ def _transparent_png():
     return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", header) + chunk(b"IDAT", pixels) + chunk(b"IEND", b"")
 
 
-def _part_name(source_part, target):
-    return posixpath.normpath(posixpath.join(posixpath.dirname(source_part), target))
-
-
-def _picture_extent(element):
-    """Display size in EMU of the picture that owns this blip, or None."""
-    pic = element
-    while pic is not None and etree.QName(pic).localname != "pic":
-        pic = pic.getparent()
-    if pic is None:
-        return None
-    ext = pic.find(".//a:xfrm/a:ext", NS)
-    if ext is None:
-        return None
-    try:
-        cx, cy = int(ext.get("cx")), int(ext.get("cy"))
-    except (TypeError, ValueError):
-        return None
-    if cx <= 0 or cy <= 0:
-        return None
-    return cx, cy
-
-
-def _svg_companion_pngs(files):
-    """(png part, svg part, extent EMU) for each blip that falls back from SVG to PNG."""
-    found = {}
-    for name, data in files.items():
-        if not name.startswith("ppt/slides/_rels/slide") or not name.endswith(".xml.rels"):
-            continue
-        source = name.replace("/_rels/", "/")[: -len(".rels")]
-        rels = etree.fromstring(data)
-        targets = {}
-        for rel in rels:
-            rid = rel.get("Id")
-            target = rel.get("Target")
-            if rid and target and rel.get("TargetMode") != "External":
-                targets[rid] = _part_name(source, target)
-        slide = etree.fromstring(files[source])
-        for element in slide.iter():
-            if etree.QName(element).localname != "blip":
-                continue
-            png_rid = None
-            for key, value in element.attrib.items():
-                if etree.QName(key).localname == "embed":
-                    png_rid = value
-            svg_rid = None
-            for child in element.iter():
-                if etree.QName(child).localname != "svgBlip":
-                    continue
-                for key, value in child.attrib.items():
-                    if etree.QName(key).localname == "embed":
-                        svg_rid = value
-            png_part = targets.get(png_rid)
-            svg_part = targets.get(svg_rid)
-            if not png_part or not svg_part or svg_part not in files:
-                continue
-            if png_part.lower().endswith(".png") and svg_part.lower().endswith(".svg"):
-                found.setdefault(png_part, (svg_part, _picture_extent(element)))
-    return [(png, svg, extent) for png, (svg, extent) in found.items()]
-
-
-def _svg_png_width(extent):
-    """Pixel width for the fallback. Height follows the SVG."""
+def _svg_png_width(extent) -> int:
+    """Pixel width for the PNG fallback at 192 dpi (2x slide grid)."""
     if extent and extent[0] > 0:
         return max(1, round(extent[0] / 914400 * 192))
     return 256
 
 
-def _render_svg_png(svg, extent):
-    width = _svg_png_width(extent)
+@functools.lru_cache(maxsize=256)
+def _render_svg_png_cached(svg_sha256: str, width: int, svg: bytes) -> bytes:
     with tempfile.TemporaryDirectory(prefix="deck-svg-png-") as temp:
         source = Path(temp) / "icon.svg"
         target = Path(temp) / "icon.png"
@@ -129,149 +139,584 @@ def _render_svg_png(svg, extent):
     return data
 
 
-def _repair_svg_png_companions(files):
-    """Render each SVG companion. A failed render keeps the previous bytes."""
-    warnings = []
-    placeholder = None
-    for name, svg_part, extent in _svg_companion_pngs(files):
-        svg = files.get(svg_part)
-        if not svg:
-            continue
-        try:
-            files[name] = _render_svg_png(svg, extent)
-            continue
-        except NeedsTool:
-            detail = "缺少 rsvg-convert，这张 SVG 的备用图保留原来的占位。装好后重新构建。"
-        except (RendererError, OSError):
-            detail = "这张 SVG 的备用图没能渲染，已保留原来的占位。"
+def _render_svg_png(svg: bytes, extent) -> bytes:
+    width = _svg_png_width(extent)
+    digest = hashlib.sha256(svg).hexdigest()
+    return _render_svg_png_cached(digest, width, svg)
+
+
+def _hex(value: str) -> str:
+    return str(value).lstrip("#").upper()
+
+
+def _rgb(value: str) -> RGBColor:
+    return RGBColor.from_string(_hex(value))
+
+
+def _is_bold(weight) -> bool:
+    if weight == "bold":
+        return True
+    if isinstance(weight, (int, float)) and not isinstance(weight, bool):
+        return weight >= 600
+    return False
+
+
+def _set_run_fonts(run, family: str) -> None:
+    run.font.name = family
+    rpr = run._r.get_or_add_rPr()
+    for tag in ("latin", "ea", "cs"):
+        node = rpr.find(f"{{{_A_NS}}}{tag}")
+        if node is None:
+            node = etree.SubElement(rpr, f"{{{_A_NS}}}{tag}")
+        node.set("typeface", family)
+
+
+def _apply_line_xml(parent_elem, line_spec: dict | None, emu_per_px: float, *, tag: str = "ln") -> None:
+    existing = parent_elem.find(f"{{{_A_NS}}}{tag}")
+    if existing is not None:
+        parent_elem.remove(existing)
+    ln = etree.SubElement(parent_elem, f"{{{_A_NS}}}{tag}")
+    if not line_spec or line_spec.get("color") == "none":
+        etree.SubElement(ln, f"{{{_A_NS}}}noFill")
+        return
+    width_px = line_spec.get("width", 1)
+    ln.set("w", str(max(1, round(width_px * emu_per_px))))
+    solid = etree.SubElement(ln, f"{{{_A_NS}}}solidFill")
+    etree.SubElement(solid, f"{{{_A_NS}}}srgbClr", val=_hex(line_spec.get("color", "000000")))
+    arrowheads = line_spec.get("arrowheads") or {}
+    start_head = arrowheads.get("start")
+    end_head = arrowheads.get("end")
+    if start_head and start_head != "none":
+        etree.SubElement(
+            ln,
+            f"{{{_A_NS}}}headEnd",
+            type=_ARROWHEAD_MAP.get(start_head, "triangle"),
+            w="med",
+            len="med",
+        )
+    if end_head and end_head != "none":
+        etree.SubElement(
+            ln,
+            f"{{{_A_NS}}}tailEnd",
+            type=_ARROWHEAD_MAP.get(end_head, "triangle"),
+            w="med",
+            len="med",
+        )
+
+
+def _apply_fill_xml(sp_pr, fill_color: str | None, transparency: float = 0) -> None:
+    for tag in ("noFill", "solidFill", "gradFill", "blipFill", "pattFill", "grpFill"):
+        node = sp_pr.find(f"{{{_A_NS}}}{tag}")
+        if node is not None:
+            sp_pr.remove(node)
+    if fill_color == "none":
+        etree.SubElement(sp_pr, f"{{{_A_NS}}}noFill")
+        return
+    solid = etree.SubElement(sp_pr, f"{{{_A_NS}}}solidFill")
+    srgb = etree.SubElement(solid, f"{{{_A_NS}}}srgbClr", val=_hex(fill_color or "FFFFFF"))
+    if transparency and transparency > 0:
+        alpha = max(0, min(100000, round((100 - float(transparency)) * 1000)))
+        etree.SubElement(srgb, f"{{{_A_NS}}}alpha", val=str(alpha))
+
+
+def _set_slide_background(slide, hex_color: str) -> None:
+    bg = slide.background
+    bg.fill.solid()
+    bg.fill.fore_color.rgb = _rgb(hex_color)
+
+
+def _add_text_op(slide, op: dict, emu_per_px: float, object_name: str) -> None:
+    x, y, w, h = op["bbox"]
+    box = slide.shapes.add_textbox(
+        Emu(round(x * emu_per_px)),
+        Emu(round(y * emu_per_px)),
+        Emu(round(w * emu_per_px)),
+        Emu(round(h * emu_per_px)),
+    )
+    box.name = object_name
+    tf = box.text_frame
+    tf.word_wrap = True
+    tf.margin_left = Emu(0)
+    tf.margin_right = Emu(0)
+    tf.margin_top = Emu(0)
+    tf.margin_bottom = Emu(0)
+    tf.vertical_anchor = _VALIGN_MAP.get(op.get("valign") or "top", MSO_ANCHOR.TOP)
+
+    family = op.get("font") or DEFAULT_FONT
+    size_pt = (op.get("size", 16) * emu_per_px) / EMU_PER_PT
+    bold = _is_bold(op.get("weight"))
+    color = _rgb(op.get("color") or "000000")
+    align = _ALIGN_MAP.get(op.get("align") or "left", PP_ALIGN.LEFT)
+
+    lines = str(op["text"]).split("\n")
+    for idx, line_text in enumerate(lines):
+        para = tf.paragraphs[0] if idx == 0 else tf.add_paragraph()
+        para.alignment = align
+        para.space_before = Pt(0)
+        para.space_after = Pt(0)
+        run = para.add_run()
+        run.text = line_text
+        run.font.size = Pt(size_pt)
+        run.font.bold = bold
+        run.font.color.rgb = color
+        _set_run_fonts(run, family)
+
+
+def _add_shape_op(slide, op: dict, emu_per_px: float, object_name: str) -> None:
+    x, y, w, h = op["bbox"]
+    shape_type = op["type"]
+    if shape_type != "custom":
+        prst = _PRST_ALIASES.get(shape_type)
+        if prst is None and not _VALID_PRST.match(str(shape_type)):
+            raise ValueError(f"不支持的形状：{shape_type}")
+        prst = prst or shape_type
+    else:
+        prst = "rect"
+
+    shape = slide.shapes.add_shape(
+        MSO_SHAPE.RECTANGLE,
+        Emu(round(x * emu_per_px)),
+        Emu(round(y * emu_per_px)),
+        Emu(round(w * emu_per_px)),
+        Emu(round(h * emu_per_px)),
+    )
+    shape.name = object_name
+    sp_pr = shape._element.spPr
+
+    style_node = shape._element.find(f"{{{_P_NS}}}style")
+    if style_node is not None:
+        shape._element.remove(style_node)
+    tx_body = shape._element.find(f"{{{_P_NS}}}txBody")
+    if tx_body is not None:
+        shape._element.remove(tx_body)
+
+    xfrm = sp_pr.find(f"{{{_A_NS}}}xfrm")
+    flip = op.get("flip") or {}
+    if flip.get("h"):
+        xfrm.set("flipH", "1")
+    if flip.get("v"):
+        xfrm.set("flipV", "1")
+
+    for old in list(sp_pr):
+        if etree.QName(old).localname in ("prstGeom", "custGeom"):
+            sp_pr.remove(old)
+
+    if shape_type == "custom":
+        geometry = etree.Element(f"{{{_A_NS}}}custGeom")
+        for tag in ("avLst", "gdLst", "ahLst", "cxnLst"):
+            etree.SubElement(geometry, f"{{{_A_NS}}}{tag}")
+        etree.SubElement(geometry, f"{{{_A_NS}}}rect", l="0", t="0", r="r", b="b")
+        paths = etree.SubElement(geometry, f"{{{_A_NS}}}pathLst")
+        path_elem = etree.SubElement(
+            paths,
+            f"{{{_A_NS}}}path",
+            w=str(max(1, round(w * emu_per_px))),
+            h=str(max(1, round(h * emu_per_px))),
+            fill="none" if op.get("fill", "none") == "none" else "norm",
+            stroke="1",
+        )
+        for idx, (px, py) in enumerate(op["points"]):
+            cmd = etree.SubElement(path_elem, f"{{{_A_NS}}}{'moveTo' if idx == 0 else 'lnTo'}")
+            etree.SubElement(
+                cmd,
+                f"{{{_A_NS}}}pt",
+                x=str(round(px * emu_per_px)),
+                y=str(round(py * emu_per_px)),
+            )
+        if op.get("closed"):
+            etree.SubElement(path_elem, f"{{{_A_NS}}}close")
+        sp_pr.insert(1, geometry)
+    else:
+        effective_prst = prst
+        geometry = etree.Element(f"{{{_A_NS}}}prstGeom", prst=effective_prst)
+        av_lst = etree.SubElement(geometry, f"{{{_A_NS}}}avLst")
+        if effective_prst in ("rect", "roundRect") and op.get("radius") and min(w, h) > 0:
+            geometry.set("prst", "roundRect")
+            ratio = min(0.5, op["radius"] / min(w, h))
+            etree.SubElement(av_lst, f"{{{_A_NS}}}gd", name="adj", fmla=f"val {round(ratio * 100000)}")
+        sp_pr.insert(1, geometry)
+
+    _apply_fill_xml(sp_pr, op.get("fill", "FFFFFF"), op.get("transparency", 0))
+    _apply_line_xml(sp_pr, op.get("line"), emu_per_px)
+
+
+def _add_arrow_op(slide, op: dict, emu_per_px: float, object_name: str) -> None:
+    x1, y1 = op["start"]
+    x2, y2 = op["end"]
+    connector = slide.shapes.add_connector(
+        MSO_CONNECTOR.STRAIGHT,
+        Emu(round(x1 * emu_per_px)),
+        Emu(round(y1 * emu_per_px)),
+        Emu(round(x2 * emu_per_px)),
+        Emu(round(y2 * emu_per_px)),
+    )
+    connector.name = object_name
+    style_node = connector._element.find(f"{{{_P_NS}}}style")
+    if style_node is not None:
+        connector._element.remove(style_node)
+    _apply_line_xml(
+        connector._element.spPr,
+        {
+            "color": op.get("color", "000000"),
+            "width": op.get("width", 1),
+            "arrowheads": op.get("arrowheads"),
+        },
+        emu_per_px,
+    )
+
+
+def _add_icon_op(
+    slide,
+    op: dict,
+    emu_per_px: float,
+    object_name: str,
+    icons_dir: Path,
+    svg_counter: list[int],
+    warnings: list[dict],
+) -> None:
+    x, y, w, h = op["bbox"]
+    cx = max(1, round(w * emu_per_px))
+    cy = max(1, round(h * emu_per_px))
+    name = op["icon_id"].removeprefix("tabler-outline/")
+    svg_text = (icons_dir / f"{name}.svg").read_text(encoding="utf-8").replace(
+        "currentColor", f"#{_hex(op.get('color') or '000000')}"
+    )
+    svg_bytes = svg_text.encode("utf-8")
+
+    try:
+        png_bytes = _render_svg_png(svg_bytes, (cx, cy))
+    except NeedsTool:
+        png_bytes = _transparent_png()
         warnings.append(
             {
                 "level": "warning",
                 "code": "svg_png_fallback",
-                "part": name,
-                "detail": detail,
+                "part": object_name,
+                "detail": "缺少 rsvg-convert，这张 SVG 的备用图保留透明占位。装好后重新构建。",
             }
         )
-        data = files.get(name)
-        if data is None or data.startswith(b"\x89PNG\r\n\x1a\n") or not data.lstrip().startswith(b"<"):
-            continue
-        if placeholder is None:
-            placeholder = _transparent_png()
-        files[name] = placeholder
-    return warnings
+    except (RendererError, OSError):
+        png_bytes = _transparent_png()
+        warnings.append(
+            {
+                "level": "warning",
+                "code": "svg_png_fallback",
+                "part": object_name,
+                "detail": "这张 SVG 的备用图没能渲染，已保留透明占位。",
+            }
+        )
 
-
-def postprocess(pptx_path, plans):
-    with zipfile.ZipFile(pptx_path) as archive:
-        # PptxGenJS emits an empty embeddings directory even without embedded files.
-        files = {item.filename: archive.read(item) for item in archive.infolist() if not item.is_dir()}
-    for index, plan in enumerate(plans, 1):
-        emu = emu_per_px(plan)
-        name = f"ppt/slides/slide{index}.xml"
-        root = etree.fromstring(files[name])
-        root.find("p:cSld", NS).set("name", plan["page"])
-        for para in root.findall(".//a:p", NS):
-            for duplicate in para.findall("a:pPr", NS)[1:]:
-                para.remove(duplicate)
-        for cell in root.findall(".//a:tcPr", NS):
-            if cell.get("anchor") == "mid":
-                cell.set("anchor", "ctr")
-        ops = {f"native_{i}": op for i, op in enumerate(plan["ops"])}
-        for frame in root.findall(".//p:graphicFrame", NS):
-            op = ops.get(frame.find("p:nvGraphicFramePr/p:cNvPr", NS).get("name"))
-            if op is None or op["op"] != "table":
-                continue
-            for row, height in zip(frame.findall(".//a:tr", NS), op["row_heights"]):
-                row.set("h", str(round(height * emu)))
-            frame.find("p:xfrm/a:ext", NS).set("cy", str(round(op["bbox"][3] * emu)))
-        for shape in root.findall(".//p:sp", NS):
-            op = ops.get(shape.find("p:nvSpPr/p:cNvPr", NS).get("name"))
-            if op is None or op["op"] != "shape":
-                continue
-            props = shape.find("p:spPr", NS)
-            if op["type"] == "custom":
-                for old in list(props):
-                    if etree.QName(old).localname in ("prstGeom", "custGeom"):
-                        props.remove(old)
-                geometry = etree.Element(f'{{{NS["a"]}}}custGeom')
-                for tag in ("avLst", "gdLst", "ahLst", "cxnLst"):
-                    etree.SubElement(geometry, f'{{{NS["a"]}}}{tag}')
-                etree.SubElement(geometry, f'{{{NS["a"]}}}rect', l="0", t="0", r="r", b="b")
-                paths = etree.SubElement(geometry, f'{{{NS["a"]}}}pathLst')
-                path = etree.SubElement(
-                    paths,
-                    f'{{{NS["a"]}}}path',
-                    w=str(round(op["bbox"][2] * emu)),
-                    h=str(round(op["bbox"][3] * emu)),
-                    fill="none" if op.get("fill", "none") == "none" else "norm",
-                    stroke="1",
-                )
-                for i, (x, y) in enumerate(op["points"]):
-                    command = etree.SubElement(path, f'{{{NS["a"]}}}{"moveTo" if i == 0 else "lnTo"}')
-                    etree.SubElement(
-                        command,
-                        f'{{{NS["a"]}}}pt',
-                        x=str(round(x * emu)),
-                        y=str(round(y * emu)),
-                    )
-                if op.get("closed"):
-                    etree.SubElement(path, f'{{{NS["a"]}}}close')
-                props.insert(1, geometry)
-            elif op["type"] in ("rect", "roundRect") and op.get("radius") and min(op["bbox"][2:]) > 0:
-                geometry = props.find("a:prstGeom", NS)
-                geometry.set("prst", "roundRect")
-                adjustments = geometry.find("a:avLst", NS)
-                for child in list(adjustments):
-                    adjustments.remove(child)
-                radius = min(0.5, op["radius"] / min(op["bbox"][2:]))
-                etree.SubElement(
-                    adjustments,
-                    f'{{{NS["a"]}}}gd',
-                    name="adj",
-                    fmla=f"val {round(radius * 100000)}",
-                )
-        files[name] = etree.tostring(root, xml_declaration=True, encoding="UTF-8", standalone=True)
-    root = etree.fromstring(files["ppt/presentation.xml"])
-    notes = root.find("p:notesMasterIdLst", NS)
-    if notes is not None:
-        root.remove(notes)
-        master = root.find("p:sldMasterIdLst", NS)
-        root.insert(list(root).index(master) + 1 if master is not None else 0, notes)
-    files["ppt/presentation.xml"] = etree.tostring(
-        root, xml_declaration=True, encoding="UTF-8", standalone=True
+    pic = slide.shapes.add_picture(
+        io.BytesIO(png_bytes),
+        Emu(round(x * emu_per_px)),
+        Emu(round(y * emu_per_px)),
+        Emu(cx),
+        Emu(cy),
     )
-    warnings = _repair_svg_png_companions(files)
-    with zipfile.ZipFile(pptx_path, "w", zipfile.ZIP_DEFLATED) as archive:
-        for name, data in files.items():
-            archive.writestr(name, data)
-    return warnings
+    pic.name = object_name
+
+    svg_counter[0] += 1
+    partname = PackURI(f"/ppt/media/icon-{svg_counter[0]}.svg")
+    svg_part = Part(partname, "image/svg+xml", slide.part.package, svg_bytes)
+    rel_id = slide.part.relate_to(svg_part, RT.IMAGE)
+
+    blip = pic._element.find(f".//{{{_A_NS}}}blip")
+    ext_lst = blip.find(f"{{{_A_NS}}}extLst")
+    if ext_lst is None:
+        ext_lst = etree.SubElement(blip, f"{{{_A_NS}}}extLst")
+    ext = etree.SubElement(ext_lst, f"{{{_A_NS}}}ext", uri=_SVG_EXT_URI)
+    svg_blip = etree.SubElement(ext, f"{{{_ASVG_NS}}}svgBlip")
+    svg_blip.set(f"{{{_R_NS}}}embed", rel_id)
 
 
-def generate(pages, output, *, mode):
+def _add_image_op(slide, op: dict, emu_per_px: float, object_name: str, page: dict) -> None:
+    plan_dir = Path(page["plan"]).resolve().parent
+    asset_path = (plan_dir / op["file"]).resolve()
+    if not asset_path.is_relative_to(plan_dir) or not asset_path.is_file():
+        raise ValueError(f"image 素材路径越出当前任务目录或不存在：{op['file']}")
+    with Image.open(asset_path) as image:
+        if image.format not in ("PNG", "JPEG"):
+            raise ValueError(f"image 素材只支持 PNG 或 JPEG：{op['file']}")
+    x, y, w, h = op["bbox"]
+    pic = slide.shapes.add_picture(
+        str(asset_path),
+        Emu(round(x * emu_per_px)),
+        Emu(round(y * emu_per_px)),
+        Emu(round(w * emu_per_px)),
+        Emu(round(h * emu_per_px)),
+    )
+    pic.name = object_name
+
+
+def _cell_margins_px(value) -> tuple[float, float, float, float]:
+    if isinstance(value, list):
+        return tuple(float(v) for v in value)
+    v = float(value)
+    return (v, v, v, v)
+
+
+def _add_table_op(slide, op: dict, emu_per_px: float, object_name: str) -> None:
+    x, y, w, h = op["bbox"]
+    rows_data = op["cells"]
+    row_count = len(rows_data)
+    col_count = len(op["col_widths"])
+    frame = slide.shapes.add_table(
+        row_count,
+        col_count,
+        Emu(round(x * emu_per_px)),
+        Emu(round(y * emu_per_px)),
+        Emu(round(w * emu_per_px)),
+        Emu(round(h * emu_per_px)),
+    )
+    frame.name = object_name
+    table = frame.table
+
+    tbl_pr = table._tbl.tblPr
+    tbl_pr.set("firstRow", "0")
+    tbl_pr.set("bandRow", "0")
+    for style_id in tbl_pr.findall(f"{{{_A_NS}}}tableStyleId"):
+        tbl_pr.remove(style_id)
+
+    for col_idx, col_w in enumerate(op["col_widths"]):
+        table.columns[col_idx].width = Emu(round(col_w * emu_per_px))
+    for row_idx, row_h in enumerate(op["row_heights"]):
+        table.rows[row_idx].height = Emu(round(row_h * emu_per_px))
+
+    border_spec = op.get("line") if isinstance(op.get("line"), dict) else {"color": "000000", "width": 1}
+    header_style = op.get("header_style") or {}
+
+    for r_idx, row in enumerate(rows_data):
+        for c_idx, cell_spec in enumerate(row):
+            cell = table.cell(r_idx, c_idx)
+            merged = {**op, **(header_style if r_idx == 0 else {}), **cell_spec}
+            margin_src = (
+                cell_spec.get("margin")
+                if "margin" in cell_spec
+                else (
+                    header_style.get("margin")
+                    if r_idx == 0 and "margin" in header_style
+                    else (op.get("margin") if "margin" in op else ([5, 8, 5, 8] if r_idx == 0 else [7, 9, 7, 9]))
+                )
+            )
+            mt, mr, mb, ml = _cell_margins_px(margin_src)
+            tc_pr = cell._tc.get_or_add_tcPr()
+            tc_pr.set("marT", str(round(mt * emu_per_px)))
+            tc_pr.set("marR", str(round(mr * emu_per_px)))
+            tc_pr.set("marB", str(round(mb * emu_per_px)))
+            tc_pr.set("marL", str(round(ml * emu_per_px)))
+            tc_pr.set("anchor", _TC_ANCHOR_MAP.get(merged.get("valign") or "top", "t"))
+
+            for side in ("lnL", "lnR", "lnT", "lnB"):
+                _apply_line_xml(tc_pr, border_spec, emu_per_px, tag=side)
+
+            fill_val = cell_spec.get("fill") if "fill" in cell_spec else (header_style.get("fill") if r_idx == 0 else None)
+            if fill_val and fill_val != "none":
+                _apply_fill_xml(tc_pr, fill_val, 0)
+            else:
+                _apply_fill_xml(tc_pr, "none", 0)
+
+            tf = cell.text_frame
+            tf.word_wrap = True
+            family = merged.get("font") or DEFAULT_FONT
+            size_pt = (merged.get("size", 16) * emu_per_px) / EMU_PER_PT
+            bold = _is_bold(merged.get("weight"))
+            color = _rgb(merged.get("color") or "000000")
+            align = _ALIGN_MAP.get(merged.get("align") or "left", PP_ALIGN.LEFT)
+
+            lines = str(cell_spec["text"]).split("\n")
+            for line_idx, line_text in enumerate(lines):
+                para = tf.paragraphs[0] if line_idx == 0 else tf.add_paragraph()
+                para.alignment = align
+                para.space_before = Pt(0)
+                para.space_after = Pt(0)
+                run = para.add_run()
+                run.text = line_text
+                run.font.size = Pt(size_pt)
+                run.font.bold = bold
+                run.font.color.rgb = color
+                _set_run_fonts(run, family)
+
+    ext = frame._element.find(f"{{{_P_NS}}}xfrm/{{{_A_NS}}}ext")
+    if ext is not None:
+        ext.set("cy", str(round(h * emu_per_px)))
+
+
+def select_blank_layout(prs: Presentation):
+    """Choose the cleanest blank slide layout from a stock or corporate template."""
+    layouts = list(prs.slide_layouts)
+    for layout in layouts:
+        if (layout.name or "").strip().lower() in ("blank", "空白"):
+            return layout
+    for layout in layouts:
+        if len(layout.placeholders) == 0:
+            return layout
+    if len(layouts) > 6:
+        return layouts[6]
+    return layouts[-1]
+
+
+def ensure_svg_content_type_and_notes_order(
+    pptx_path: Path, *, set_default_theme_font: bool = True
+) -> None:
+    """Ensure [Content_Types].xml declares svg, notesMasterIdLst precedes sldIdLst, and stock theme uses DEFAULT_FONT."""
+    with zipfile.ZipFile(pptx_path) as archive:
+        files = {item.filename: archive.read(item) for item in archive.infolist() if not item.is_dir()}
+    changed = False
+
+    if any(name.lower().endswith(".svg") for name in files):
+        ct_root = etree.fromstring(files["[Content_Types].xml"])
+        ct_ns = "http://schemas.openxmlformats.org/package/2006/content-types"
+        existing = {
+            node.get("Extension", "").lower() for node in ct_root.findall(f"{{{ct_ns}}}Default")
+        }
+        if "svg" not in existing:
+            etree.SubElement(ct_root, f"{{{ct_ns}}}Default", Extension="svg", ContentType="image/svg+xml")
+            files["[Content_Types].xml"] = etree.tostring(
+                ct_root, xml_declaration=True, encoding="UTF-8", standalone=True
+            )
+            changed = True
+
+    if set_default_theme_font and "ppt/theme/theme1.xml" in files:
+        theme_root = etree.fromstring(files["ppt/theme/theme1.xml"])
+        for slot in ("majorFont", "minorFont"):
+            node = theme_root.find(f".//a:{slot}", NS)
+            if node is None:
+                continue
+            for tag in ("latin", "ea", "cs"):
+                font_el = node.find(f"a:{tag}", NS)
+                if font_el is not None:
+                    font_el.set("typeface", DEFAULT_FONT)
+        files["ppt/theme/theme1.xml"] = etree.tostring(
+            theme_root, xml_declaration=True, encoding="UTF-8", standalone=True
+        )
+        changed = True
+
+    pres_root = etree.fromstring(files["ppt/presentation.xml"])
+    notes = pres_root.find("p:notesMasterIdLst", NS)
+    sld_list = pres_root.find("p:sldIdLst", NS)
+    if notes is not None and sld_list is not None:
+        children = list(pres_root)
+        if children.index(notes) > children.index(sld_list):
+            pres_root.remove(notes)
+            master = pres_root.find("p:sldMasterIdLst", NS)
+            insert_at = list(pres_root).index(master) + 1 if master is not None else 0
+            pres_root.insert(insert_at, notes)
+            files["ppt/presentation.xml"] = etree.tostring(
+                pres_root, xml_declaration=True, encoding="UTF-8", standalone=True
+            )
+            changed = True
+
+    if changed:
+        with zipfile.ZipFile(pptx_path, "w", zipfile.ZIP_DEFLATED) as archive:
+            for name, data in files.items():
+                archive.writestr(name, data)
+
+
+def emit_native_slide(
+    prs: Presentation,
+    page: dict,
+    plan: dict,
+    *,
+    emu_per_px_val: float | None = None,
+    icons_dir: Path = ICONS,
+    svg_counter: list[int] | None = None,
+    warnings: list[dict] | None = None,
+    blank_layout=None,
+    preserve_theme_background: bool = False,
+) -> None:
+    """Append one native plan slide to an existing python-pptx Presentation."""
+    from ..compiler.native import _write_notes
+
+    _validate_color(plan.get("background"), "background")
+    if svg_counter is None:
+        svg_counter = [0]
+    if warnings is None:
+        warnings = []
+    layout = blank_layout if blank_layout is not None else select_blank_layout(prs)
+    slide = prs.slides.add_slide(layout)
+    slide._element.find(f"{{{_P_NS}}}cSld").set("name", plan["page"])
+    if not preserve_theme_background:
+        _set_slide_background(slide, plan["background"])
+
+    scale = emu_per_px_val if emu_per_px_val is not None else (int(prs.slide_width) / plan["canvas_px"]["w"])
+    for idx, op in enumerate(plan["ops"]):
+        object_name = f"native_{idx}"
+        kind = op["op"]
+        if kind == "text":
+            _add_text_op(slide, op, scale, object_name)
+        elif kind == "shape":
+            _add_shape_op(slide, op, scale, object_name)
+        elif kind == "arrow":
+            _add_arrow_op(slide, op, scale, object_name)
+        elif kind == "icon":
+            _add_icon_op(slide, op, scale, object_name, icons_dir, svg_counter, warnings)
+        elif kind == "image":
+            _add_image_op(slide, op, scale, object_name, page)
+        elif kind == "table":
+            _add_table_op(slide, op, scale, object_name)
+        else:
+            raise ValueError(f"不支持的原语：{kind}")
+
+    notes_text = page.get("notes") or ""
+    _write_notes(slide, notes_text)
+
+
+def generate(
+    pages: list[dict],
+    output: Path | str,
+    *,
+    mode: str,
+    icons_dir: Path = ICONS,
+    template_path: Path | str | None = None,
+):
+    """Emit a native PPTX purely via python-pptx without Node.js or pptxgenjs."""
+    if mode not in ("single", "deck") or not pages or (mode == "single" and len(pages) != 1):
+        raise ValueError("请选择单页或整套模式并传入对应页面")
+
     plans = [read_json(page["plan"]) for page in pages]
-    # Adopted deck plans were validated on result; content drift is reported by readback.
     findings = []
     if mode == "single":
         findings = [validate_plan(plan, page) for plan, page in zip(plans, pages)]
-    directory = native_pptx_dir()
-    output = Path(output).resolve()
-    output.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix="deck-native-") as temp:
-        job = Path(temp) / "job.json"
-        write_json(
-            job,
-            {
-                "mode": mode,
-                "pages": [{**p, "plan": str(Path(p["plan"]).resolve())} for p in pages],
-                "output": str(output),
-                "icons_dir": str(ICONS),
-            },
+
+    canvas = plans[0]["canvas_px"]
+    for idx, plan in enumerate(plans[1:], 2):
+        if plan["canvas_px"]["w"] != canvas["w"] or plan["canvas_px"]["h"] != canvas["h"]:
+            raise ValueError(
+                f"整套各页画布尺寸必须一致：第 1 页 {canvas['w']}×{canvas['h']}，"
+                f"第 {idx} 页 {plan['canvas_px']['w']}×{plan['canvas_px']['h']}"
+            )
+
+    prs = Presentation(str(template_path)) if template_path else Presentation()
+    if not template_path:
+        prs.slide_width = Emu(SLIDE_WIDTH_EMU)
+        prs.slide_height = Emu(round(SLIDE_WIDTH_EMU * canvas["h"] / canvas["w"]))
+    emu_per_px_val = int(prs.slide_width) / canvas["w"]
+    blank_layout = select_blank_layout(prs)
+
+    svg_counter = [0]
+    warnings: list[dict] = []
+    for page, plan in zip(pages, plans):
+        emit_native_slide(
+            prs,
+            page,
+            plan,
+            emu_per_px_val=emu_per_px_val,
+            icons_dir=icons_dir,
+            svg_counter=svg_counter,
+            warnings=warnings,
+            blank_layout=blank_layout,
         )
-        run([executable("node"), str(directory / "render.cjs"), str(job)], cwd=directory)
-    warnings = postprocess(output, plans)
+
+    output_path = Path(output).resolve()
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    prs.save(str(output_path))
+    ensure_svg_content_type_and_notes_order(
+        output_path, set_default_theme_font=not bool(template_path)
+    )
+
     if warnings and mode == "single" and findings:
         findings[0].setdefault("warnings", []).extend(warnings)
-    return output, findings, warnings
+    return output_path, findings, warnings
 
 
 def render(job):
