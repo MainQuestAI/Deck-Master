@@ -303,7 +303,7 @@ fn illegal_kind_is_rejected_on_put_and_run_start_without_writing() {
     let created = ops::put(
         path,
         1,
-        patch(json!({"order":["p1"],"pages":[{"id":"p1","content":{"title":"一页"}}]})),
+        patch(json!({"order":["p1"],"pages":[{"id":"p1","purpose":"说明现状","layout":"单栏","content":{"title":"一页"}}]})),
     )
     .unwrap();
     let before = deck_json(path, created.version);
@@ -338,7 +338,7 @@ fn illegal_kind_is_rejected_on_put_and_run_start_without_writing() {
 }
 
 #[test]
-fn frame_gate_lists_every_missing_field_then_start_passes_without_upgrading_v6() {
+fn page_gate_rejects_missing_page_fields_on_v6_and_missing_frame_warns_without_blocking() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path();
     ops::new(path, "合成作品".into()).unwrap();
@@ -359,36 +359,27 @@ fn frame_gate_lists_every_missing_field_then_start_passes_without_upgrading_v6()
         match ops::run_start(path, kind, &["p1".into()], None) {
             Err(Error::Input(text)) => {
                 let shown = format!("输入有误：{text}");
-                assert!(shown.starts_with("输入有误：无法开始生成。当前作品缺少以下字段："));
+                assert!(shown.starts_with("输入有误：无法开始生成。目标页面缺少生成必需字段："));
                 assert!(text.contains("deck put --base 2 payload.json"), "{text}");
-                assert!(text.contains("\"audience\": \"管理层\""), "{text}");
-                assert!(
-                    text.contains("\"decision\": \"本周需拍板的事项\""),
-                    "{text}"
-                );
-                assert!(text.contains("\"关注点一\""), "{text}");
-                assert!(text.contains("\"role\": \"资深顾问\""), "{text}");
-                assert!(text.contains("\"tone\": \"结论先行，语气肯定\""), "{text}");
-                assert!(text.contains("\"第一句主线\""), "{text}");
-                assert!(text.contains("合成作品"), "{text}");
-                assert!(text.contains("保留目标"), "{text}");
-                assert!(text.contains("保留主张"), "{text}");
-                assert!(text.contains("- pages[p1].kind"), "{text}");
-                assert!(text.contains("\"kind\": \"explanation\""), "{text}");
-                assert!(!text.contains("判断页证据"), "{text}");
-                for field in [
-                    "brief.audience",
-                    "brief.decision",
-                    "brief.concerns",
-                    "brief.narrator.role",
-                    "brief.narrator.tone",
-                    "framing.storyline",
-                ] {
+                for field in ["pages[p1].purpose", "pages[p1].layout", "pages[p1].kind"] {
                     assert!(
                         text.contains(&format!("- {field}")),
                         "{kind} missing {field}: {text}"
                     );
                 }
+                for forbidden in [
+                    "管理层",
+                    "本周需拍板的事项",
+                    "关注点一",
+                    "资深顾问",
+                    "第一句主线",
+                ] {
+                    assert!(
+                        !text.contains(forbidden),
+                        "{kind} leaked fake placeholder {forbidden}: {text}"
+                    );
+                }
+                assert!(!text.contains("判断页证据"), "{text}");
             }
             Ok(_) => panic!("{kind} should be rejected"),
             Err(error) => panic!("{kind} should be rejected, got {error}"),
@@ -398,23 +389,22 @@ fn frame_gate_lists_every_missing_field_then_start_passes_without_upgrading_v6()
     assert_eq!(user_version(path), 6);
     assert_eq!(deck_json(path, 2), before);
 
-    let Err(Error::Input(text)) = ops::run_start(path, "image", &["p1".into()], None) else {
-        panic!("frame should still be missing");
-    };
-    let snippet = text
-        .split("payload.json 最小片段：\n")
-        .nth(1)
-        .expect("snippet");
-    let saved = ops::put(path, 2, patch(serde_json::from_str(snippet).unwrap())).unwrap();
+    // Filling the page fields lets run start succeed even when deck frame fields are still empty,
+    // emitting structured warnings instead of blocking.
+    let saved = ops::put(
+        path,
+        2,
+        patch(json!({"pages":[{"id":"p1","kind":"explanation","purpose":"说明现状","layout":"左图右文"}]})),
+    )
+    .unwrap();
     assert_eq!(saved.deck.brief.title, "合成作品");
     assert_eq!(saved.deck.brief.goal, "保留目标");
     assert_eq!(saved.deck.framing.thesis, "保留主张");
-    assert_eq!(saved.deck.brief.decision, "本周需拍板的事项");
     assert_eq!(user_version(path), 7);
     let started = ops::run_start(path, "image", &["p1".into()], None).unwrap();
     assert_eq!(started["runs"][0]["pages"][0]["status"], "pending");
+    assert!(started["warnings"].as_array().is_some_and(|w| w.len() == 6));
     assert_eq!(run_count(path), 1);
-    assert_eq!(saved.deck.pages[0].kind, "explanation");
     assert!(
         ops::put(
             path,
@@ -426,11 +416,11 @@ fn frame_gate_lists_every_missing_field_then_start_passes_without_upgrading_v6()
 }
 
 #[test]
-fn snippet_for_only_a_missing_decision_keeps_the_rest_of_brief_and_framing() {
+fn missing_decision_only_warns_and_keeps_the_rest_of_brief_and_framing() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path();
     ops::new(path, "合成作品".into()).unwrap();
-    let created = ops::put(
+    ops::put(
         path,
         1,
         patch(json!({
@@ -447,38 +437,17 @@ fn snippet_for_only_a_missing_decision_keeps_the_rest_of_brief_and_framing() {
                 "storyline": ["已有主线"]
             },
             "order": ["p1"],
-            "pages": [{"id": "p1", "content": {"title": "一页"}}]
+            "pages": [{"id": "p1", "kind": "explanation", "purpose": "说明现状", "layout": "单栏", "content": {"title": "一页"}}]
         })),
     )
     .unwrap();
-    let Err(Error::Input(text)) = ops::run_start(path, "image", &["p1".into()], None) else {
-        panic!("decision should still be missing");
-    };
-    assert!(text.contains("- brief.decision"));
-    assert!(!text.contains("- brief.audience"));
-    assert!(text.contains("合成作品"));
-    assert!(text.contains("保留目标"));
-    assert!(text.contains("保留主张"));
-    assert!(text.contains("已有读者"));
-    assert!(text.contains("已有主线"));
-    let snippet = text
-        .split("payload.json 最小片段：\n")
-        .nth(1)
-        .expect("snippet");
-    let saved = ops::put(
-        path,
-        created.version,
-        patch(serde_json::from_str(snippet).unwrap()),
-    )
-    .unwrap();
-    assert_eq!(saved.deck.brief.title, "合成作品");
-    assert_eq!(saved.deck.brief.goal, "保留目标");
-    assert_eq!(saved.deck.brief.audience, "已有读者");
-    assert_eq!(saved.deck.brief.decision, "本周需拍板的事项");
-    assert_eq!(saved.deck.framing.thesis, "保留主张");
-    assert_eq!(saved.deck.framing.storyline, vec!["已有主线".to_string()]);
-    assert_eq!(run_count(path), 0);
-    assert!(ops::run_start(path, "image", &["p1".into()], None).is_ok());
+    let started = ops::run_start(path, "image", &["p1".into()], None).unwrap();
+    assert_eq!(started["runs"][0]["status"], "open");
+    let warnings = started["warnings"].as_array().unwrap();
+    assert_eq!(warnings.len(), 1);
+    assert_eq!(warnings[0]["code"], "missing_frame_field");
+    assert_eq!(warnings[0]["field"], "brief.decision");
+    assert_eq!(run_count(path), 1);
 }
 
 #[test]

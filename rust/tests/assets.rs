@@ -17,8 +17,8 @@ fn setup(path: &Path) {
     edit(
         path,
         json!({"order":["p1","p2"],"pages":[
-            {"id":"p1","purpose":"说明交付","layout":"输入到输出","content":{"title":"交付"}},
-            {"id":"p2","content":{"title":"下一步"}}
+            {"id":"p1","purpose":"说明交付","layout":"输入到输出","kind":"explanation","content":{"title":"交付"}},
+            {"id":"p2","purpose":"说明下一步","layout":"单栏","kind":"explanation","content":{"title":"下一步"}}
         ]}),
     );
 }
@@ -106,8 +106,20 @@ fn allow_runs(path: &Path) {
         deck.framing.storyline = vec!["先说明问题，再给出判断".into()];
         changed = true;
     }
-    // Blank kind is not treated as a judgment page. These fixtures only need the start gate to open.
+    // Fill generation-required page fields for non-gate asset fixtures.
     for page in &mut deck.pages {
+        if page.content.title.trim().is_empty() {
+            page.content.title = format!("{} 标题", page.id);
+            changed = true;
+        }
+        if page.purpose.trim().is_empty() {
+            page.purpose = format!("说明 {}", page.id);
+            changed = true;
+        }
+        if page.layout.trim().is_empty() {
+            page.layout = "左右分栏".into();
+            changed = true;
+        }
         if page.kind.trim().is_empty() {
             page.kind = "explanation".into();
             changed = true;
@@ -270,9 +282,9 @@ fn asset_metadata_and_extra_page_binding_do_not_stale_existing_bound_page() {
     edit(
         path,
         json!({"order":["p1","p2","p3"],"pages":[
-            {"id":"p1","purpose":"说明交付","layout":"输入到输出","content":{"title":"交付"}},
-            {"id":"p2","content":{"title":"中段"}},
-            {"id":"p3","content":{"title":"收尾"}}
+            {"id":"p1","purpose":"说明交付","layout":"输入到输出","kind":"explanation","content":{"title":"交付"}},
+            {"id":"p2","purpose":"说明中段","layout":"单栏","kind":"explanation","content":{"title":"中段"}},
+            {"id":"p3","purpose":"说明收尾","layout":"单栏","kind":"explanation","content":{"title":"收尾"}}
         ]}),
     );
     let logo = path.join("logo.png");

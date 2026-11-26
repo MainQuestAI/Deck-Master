@@ -47,109 +47,82 @@ fn blank_text(value: &str) -> bool {
     value.trim().is_empty()
 }
 
-fn start_example(deck: &Deck, missing: &[String]) -> Result<String> {
-    // put replaces brief and framing as whole units, so a frame snippet carries
-    // every current field and fills only the ones the gate treats as empty.
-    // Blank kind is filled with explanation: a judgment sample without evidence
-    // would fail the next gate, so one copied put can start the run.
-    let frame_missing = missing.iter().any(|field| !field.starts_with("pages["));
-    let mut payload = serde_json::Map::new();
-    if frame_missing {
-        let mut brief = deck.brief.clone();
-        let mut framing = deck.framing.clone();
-        if blank_text(&brief.audience) {
-            brief.audience = "管理层".into();
-        }
-        if blank_text(&brief.decision) {
-            brief.decision = "本周需拍板的事项".into();
-        }
-        if brief.concerns.iter().all(|item| blank_text(item)) {
-            brief.concerns = vec!["关注点一".into(), "关注点二".into()];
-        }
-        if blank_text(&brief.narrator.role) {
-            brief.narrator.role = "资深顾问".into();
-        }
-        if blank_text(&brief.narrator.tone) {
-            brief.narrator.tone = "结论先行，语气肯定".into();
-        }
-        if framing.storyline.iter().all(|item| blank_text(item)) {
-            framing.storyline = vec!["第一句主线".into(), "第二句主线".into()];
-        }
-        payload.insert("brief".into(), serde_json::to_value(brief)?);
-        payload.insert("framing".into(), serde_json::to_value(framing)?);
-    }
-    let pages: Vec<Value> = deck
-        .pages
+fn page_skeleton_example(targets: &[&Page], missing: &[String]) -> Result<String> {
+    // Provide an empty structural skeleton only — never pre-fill fake placeholder content.
+    let pages: Vec<Value> = targets
         .iter()
-        .filter(|page| {
-            missing
-                .iter()
-                .any(|field| field == &format!("pages[{}].kind", page.id))
+        .filter_map(|page| {
+            let mut obj = serde_json::Map::new();
+            let prefix = format!("pages[{}].", page.id);
+            let mut has_missing = false;
+            for field in missing {
+                let Some(rest) = field.strip_prefix(&prefix) else {
+                    continue;
+                };
+                has_missing = true;
+                match rest {
+                    "kind" => {
+                        obj.insert("kind".into(), json!(""));
+                    }
+                    "purpose" => {
+                        obj.insert("purpose".into(), json!(""));
+                    }
+                    "layout" => {
+                        obj.insert("layout".into(), json!(""));
+                    }
+                    "content.title" => {
+                        obj.insert("content".into(), json!({"title": ""}));
+                    }
+                    _ => {}
+                }
+            }
+            if !has_missing {
+                return None;
+            }
+            obj.insert("id".into(), json!(page.id));
+            Some(Value::Object(obj))
         })
-        .map(|page| json!({"id": page.id, "kind": "explanation"}))
         .collect();
-    if !pages.is_empty() {
-        payload.insert("pages".into(), json!(pages));
-    }
-    Ok(serde_json::to_string_pretty(&Value::Object(payload))?)
+    Ok(serde_json::to_string_pretty(&json!({"pages": pages}))?)
 }
 
-fn frame_gate_message(deck: &Deck, version: i64, missing: &[String]) -> Result<String> {
-    // Design §5.3. Error::Input adds the "输入有误：" prefix.
-    // Blank kind is listed with the frame so one message matches that sample.
+fn page_gate_message(version: i64, targets: &[&Page], missing: &[String]) -> Result<String> {
     let listed = missing
         .iter()
         .map(|field| format!("- {field}"))
         .collect::<Vec<_>>()
         .join("\n");
     Ok(format!(
-        "无法开始生成。当前作品缺少以下字段：\n{listed}\n请先用 deck put 补全后再执行 run start。示例（--base 换成 deck show 中的当前版本号）：\n\n  deck put --base {version} payload.json\n\npayload.json 最小片段：\n{}",
-        start_example(deck, missing)?
+        "无法开始生成。目标页面缺少生成必需字段：\n{listed}\n请先用 deck put 补全后再执行 run start（--base 换成当前版本号）：\n\n  deck put --base {version} payload.json\n\npayload.json 空骨架（请填入真实内容）：\n{}",
+        page_skeleton_example(targets, missing)?
     ))
 }
 
-fn sample_argument() -> Argument {
+fn frame_warnings(deck: &Deck) -> Vec<Value> {
+    crate::model::missing_frame_fields(deck)
+        .into_iter()
+        .map(|field| {
+            json!({
+                "level": "warning",
+                "code": "missing_frame_field",
+                "field": field,
+                "message": format!("作品缺少 {field}；不阻止本次生成，建议出稿前补全"),
+            })
+        })
+        .collect()
+}
+
+fn empty_argument_skeleton() -> Argument {
     Argument {
-        reasons: vec!["理由一".into(), "理由二".into()],
+        reasons: Vec::new(),
         evidence: vec![Evidence {
-            text: "出处或待补说明".into(),
-            r#ref: None,
-            gap: Some("待补：需补充口径".into()),
+            text: String::new(),
+            r#ref: Some(String::new()),
+            gap: None,
         }],
         reasoning: String::new(),
         rebuttal: String::new(),
     }
-}
-
-fn repair_argument(argument: Option<&Argument>) -> Argument {
-    let Some(argument) = argument else {
-        return sample_argument();
-    };
-    if argument.evidence.is_empty() {
-        let mut sample = sample_argument();
-        if argument.reasons.iter().any(|item| !blank_text(item)) {
-            sample.reasons = argument.reasons.clone();
-        }
-        if !blank_text(&argument.reasoning) {
-            sample.reasoning = argument.reasoning.clone();
-        }
-        if !blank_text(&argument.rebuttal) {
-            sample.rebuttal = argument.rebuttal.clone();
-        }
-        return sample;
-    }
-    let mut repaired = argument.clone();
-    for item in &mut repaired.evidence {
-        if item.has_ref() || item.has_gap() {
-            continue;
-        }
-        if blank_text(&item.text) {
-            item.text = "出处或待补说明".into();
-        }
-        item.r#ref = None;
-        item.gap = Some("待补：需补充口径".into());
-    }
-    repaired
 }
 
 fn judgment_incomplete(page: &Page) -> bool {
@@ -203,7 +176,7 @@ fn evidence_example(targets: &[&Page]) -> Result<String> {
             json!({
                 "id": page.id,
                 "kind": "judgment",
-                "argument": repair_argument(page.argument.as_ref()),
+                "argument": empty_argument_skeleton(),
             })
         })
         .collect();
@@ -211,9 +184,8 @@ fn evidence_example(targets: &[&Page]) -> Result<String> {
 }
 
 fn evidence_gate_message(version: i64, lines: &[String], snippet: &str) -> String {
-    // Design §5.3 second sample. Error::Input adds the "输入有误：" prefix.
     format!(
-        "无法开始生成。判断页证据不完整：\n{}\n请用 deck put 补全，例如：\n\n  deck put --base {version} payload.json\n\n{snippet}",
+        "无法开始生成。判断页证据不完整：\n{}\n请用 deck put 补全（请填入真实出处 ref 或待补说明 gap）：\n\n  deck put --base {version} payload.json\n\n{snippet}",
         lines.join("\n")
     )
 }
@@ -259,21 +231,27 @@ pub fn run_start(
             .iter()
             .filter(|page| ids.iter().any(|id| id == &page.id))
             .collect();
-        // §4.1 checks the frame before kind. §5.3 lists blank kind in that same
-        // missing-field error. Illegal kind is a different sentence, after both.
-        let mut missing: Vec<String> = crate::model::missing_frame_fields(deck)
-            .into_iter()
-            .map(str::to_string)
-            .collect();
+        // Strictly validate only fields consumed by generation on the target pages.
+        // Missing deck-level frame fields are reported as non-blocking warnings instead.
+        let mut missing: Vec<String> = Vec::new();
         for page in &targets {
+            if blank_text(&page.content.title) {
+                missing.push(format!("pages[{}].content.title", page.id));
+            }
+            if blank_text(&page.purpose) {
+                missing.push(format!("pages[{}].purpose", page.id));
+            }
+            if blank_text(&page.layout) {
+                missing.push(format!("pages[{}].layout", page.id));
+            }
             if blank_text(&page.kind) {
                 missing.push(format!("pages[{}].kind", page.id));
             }
         }
         if !missing.is_empty() {
-            return Err(Error::Input(frame_gate_message(
-                deck,
+            return Err(Error::Input(page_gate_message(
                 snapshot.version,
+                &targets,
                 &missing,
             )?));
         }
@@ -382,7 +360,12 @@ pub fn run_start(
         tx.commit()?;
         return Err(error.into());
     }
-    run_show(project, Some(id))
+    let mut shown = run_show(project, Some(id))?;
+    let warnings = frame_warnings(&staged_snapshot.deck);
+    if !warnings.is_empty() {
+        shown["warnings"] = json!(warnings);
+    }
+    Ok(shown)
 }
 
 pub fn run_call(project: &Path, id: i64, page: &str, retry: bool) -> Result<Value> {
@@ -390,9 +373,21 @@ pub fn run_call(project: &Path, id: i64, page: &str, retry: bool) -> Result<Valu
     let mut store = Store::open(project)?;
     let tx = store.transaction()?;
     let (kind, status, max, used) = run_record(&tx, id)?;
-    let (_, state, _) = run_page(&tx, id, page)?;
+    let (old_basis, state, _) = run_page(&tx, id, page)?;
     if kind != "image" || status != "open" {
         return Err(Error::Input("此 run 不能调用生图；请查看状态".into()));
+    }
+    let deck = store::current(&tx)?.deck;
+    let current_page = deck.page(page).ok_or_else(|| {
+        Error::Input(format!(
+            "页面 {page} 已删除；请取消 run {id} 后重新准备任务"
+        ))
+    })?;
+    let current_basis = current_basis_for(&kind, &old_basis, &deck, current_page)?;
+    if current_basis != old_basis {
+        return Err(Error::Input(format!(
+            "页面 {page} 的依据在启动后已变化，拒绝登记生图调用；请取消 run {id} 并重新执行 deck run start"
+        )));
     }
     if max.is_some_and(|max| used >= max) {
         return Err(Error::Input("已达生图调用上限；请停止调用".into()));

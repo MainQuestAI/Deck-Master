@@ -28,8 +28,8 @@ fn setup(path: &Path) -> i64 {
             },
             "order": ["b", "a"],
             "pages": [
-                {"id": "b", "kind": "explanation", "content": {"title": "乙"}},
-                {"id": "a", "kind": "explanation", "content": {"title": "甲"}}
+                {"id": "b", "kind": "explanation", "purpose": "说明乙", "layout": "左右分栏", "content": {"title": "乙"}},
+                {"id": "a", "kind": "explanation", "purpose": "说明甲", "layout": "左右分栏", "content": {"title": "甲"}}
             ]
         }))
         .unwrap(),

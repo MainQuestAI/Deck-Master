@@ -55,8 +55,20 @@ fn allow_runs(path: &Path) {
         deck.framing.storyline = vec!["先说明问题，再给出判断".into()];
         changed = true;
     }
-    // Blank kind is not treated as a judgment page. These fixtures only need the start gate to open.
+    // Fill generation-required page fields for non-gate native fixtures.
     for page in &mut deck.pages {
+        if page.content.title.trim().is_empty() {
+            page.content.title = format!("{} 标题", page.id);
+            changed = true;
+        }
+        if page.purpose.trim().is_empty() {
+            page.purpose = format!("说明 {}", page.id);
+            changed = true;
+        }
+        if page.layout.trim().is_empty() {
+            page.layout = "左右分栏".into();
+            changed = true;
+        }
         if page.kind.trim().is_empty() {
             page.kind = "explanation".into();
             changed = true;
