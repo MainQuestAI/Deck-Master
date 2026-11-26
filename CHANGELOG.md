@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- 项目格式 6 → 7：新增 `brief.decision`、`brief.concerns`、`brief.narrator`、`framing.storyline`、`pages[].kind`、`pages[].argument` 及出稿审稿记录（`review add --record content_review`、`review list --record content_review|all`、`review get <id>`），修复导出审稿版本绑定、删除/重排后审稿过期判断及重复 `cNvPr` ID 回退名更新。(#353)
+- CI 将 `actions/upload-artifact` 从 4 升到 7。(#342)
+
 ## 1.1.3 — 2026-11-12
 
 See [1.1.3 release notes](docs/releases/1.1.3.md) for the changes merged after
@@ -175,7 +178,7 @@ Slice design remains in the [Rust rebuild plan](docs/specs/rust-rebuild/README.m
 - **#249**: remove byte-identical spec schema mirrors (overdefense P0).
 
 Two workflows: [`rust.yml`](.github/workflows/rust.yml) covers `rust/` and
-`deck-tools/` on pull requests and `main`; [`rebuild.yml`](.github/workflows/rebuild.yml)
+`deck-tools/` on pull requests and `main`; `rebuild.yml` (removed in #309)
 covers the Python line on `main` only. Render tests that need
 rsvg-convert/soffice stay local (`-m "not render"` in CI).
 
