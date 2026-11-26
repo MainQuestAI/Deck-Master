@@ -208,18 +208,7 @@ impl Store {
     }
 
     pub fn history(&self) -> Result<Vec<Version>> {
-        let mut query = self
-            .connection
-            .prepare("SELECT id, created_at, summary FROM versions ORDER BY id DESC")?;
-        Ok(query
-            .query_map([], |row| {
-                Ok(Version {
-                    id: row.get(0)?,
-                    created_at: row.get(1)?,
-                    summary: row.get(2)?,
-                })
-            })?
-            .collect::<std::result::Result<_, _>>()?)
+        history(&self.connection)
     }
 
     pub fn add_file(&self, data: &[u8], extension: &str) -> Result<String> {
@@ -274,6 +263,20 @@ pub fn file_path(root: &Path, name: &str) -> Result<PathBuf> {
         return Err(Error::Missing(format!("附件 {name} 不存在;请先添加附件")));
     }
     Ok(path)
+}
+
+pub fn history(connection: &Connection) -> Result<Vec<Version>> {
+    let mut query =
+        connection.prepare("SELECT id, created_at, summary FROM versions ORDER BY id DESC")?;
+    Ok(query
+        .query_map([], |row| {
+            Ok(Version {
+                id: row.get(0)?,
+                created_at: row.get(1)?,
+                summary: row.get(2)?,
+            })
+        })?
+        .collect::<std::result::Result<_, _>>()?)
 }
 
 pub fn current(connection: &Connection) -> Result<Snapshot> {
