@@ -1,6 +1,18 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { rmSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+
+function cleanWebDistAssets() {
+  const assetsDir = fileURLToPath(new URL('../rust/web-dist/assets', import.meta.url));
+  return {
+    name: 'clean-web-dist-assets',
+    buildStart() {
+      // Remove stale generated bundles while keeping tracked rust/web-dist/index.html intact.
+      rmSync(assetsDir, { recursive: true, force: true });
+    },
+  };
+}
 
 export function isAllowedDevOrigin(origin, port = 5173) {
   if (!origin) return true;
@@ -21,7 +33,7 @@ export default defineConfig(() => {
   }
   return {
     envDir: false,
-    plugins: [react()],
+    plugins: [react(), cleanWebDistAssets()],
     build: {
       outDir: '../rust/web-dist',
       // The tracked shell also lets cargo build without npm. Only assets are generated.
