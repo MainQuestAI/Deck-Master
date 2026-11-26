@@ -1931,3 +1931,130 @@ fn deck_polling_supports_etag_304_pagination_and_immutable_file_cache() {
         Some("private, max-age=31536000, immutable")
     );
 }
+
+#[test]
+fn http_native_adopt_requires_note_reports_warnings_and_conflicts_on_candidate_change() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    ops::new(path, "合成原生方案".into()).unwrap();
+    let base = edit(
+        path,
+        1,
+        json!({
+            "order": ["p1"],
+            "pages": [{
+                "id": "p1",
+                "purpose": "说明原生还原",
+                "layout": "单栏",
+                "kind": "explanation",
+                "content": {
+                    "title": "原生标题",
+                    "body_blocks": [{"type": "paragraph", "id": "a1", "text": "正文"}]
+                }
+            }]
+        }),
+    );
+    assert!(base >= 2);
+    allow_runs(path);
+
+    let store = Store::open(path).unwrap();
+    let img = store.add_file(b"fake-source-png", "png").unwrap();
+    let render_png = store.add_file(b"fake-render-png", "png").unwrap();
+    // Attach an original image so native run_start can proceed.
+    let mut snapshot = store.current().unwrap();
+    let img_basis = ops::basis("image", &snapshot.deck, &snapshot.deck.pages[0]).unwrap();
+    snapshot.deck.pages[0].image = Some(deck::model::Artifact {
+        file: img,
+        basis: img_basis,
+    });
+    store
+        .connection
+        .execute(
+            "UPDATE versions SET deck_json=?1 WHERE id=?2",
+            rusqlite::params![
+                serde_json::to_string(&snapshot.deck).unwrap(),
+                snapshot.version
+            ],
+        )
+        .unwrap();
+
+    let started = run_start(path, "native", &["p1".into()], None).unwrap();
+    let run_id = started["runs"][0]["id"].as_i64().unwrap();
+
+    let pack_bytes = serde_json::to_vec(&json!({
+        "plan": {
+            "page_id": "p1",
+            "background": {"color": "#FFFFFF"},
+            "ops": []
+        },
+        "assets": [],
+        "render_png": render_png,
+        "note": ""
+    }))
+    .unwrap();
+    let candidate_file = store.add_file(&pack_bytes, "native.json").unwrap();
+    store
+        .connection
+        .execute(
+            "UPDATE run_pages SET status='unadopted', result_file=?1, preview_file=?2 WHERE run_id=?3 AND page_id='p1'",
+            rusqlite::params![candidate_file, render_png, run_id],
+        )
+        .unwrap();
+
+    let service = Service::start(path);
+    let url = format!("/api/runs/{run_id}/adopt/p1");
+
+    // 1. Missing note -> 400.
+    let missing_note = service.request(
+        "POST",
+        &url,
+        &[("Content-Type", "application/json")],
+        &json!({ "expected_file": candidate_file }).to_string(),
+    );
+    assert_eq!(missing_note.status, 400);
+    assert!(
+        missing_note.json()["error"]
+            .as_str()
+            .unwrap_or("")
+            .contains("对照结论")
+    );
+
+    // 2. Changed expected_file -> 409.
+    let conflict = service.request(
+        "POST",
+        &url,
+        &[("Content-Type", "application/json")],
+        &json!({
+            "expected_file": "0000000000000000000000000000000000000000000000000000000000000000.native.json",
+            "note": "标题与正文位置对齐原图"
+        })
+        .to_string(),
+    );
+    assert_eq!(conflict.status, 409);
+
+    // 3. Confirmation-only boilerplate note -> 200 with note_unspecific warning.
+    let adopted = service.request(
+        "POST",
+        &url,
+        &[("Content-Type", "application/json")],
+        &json!({ "expected_file": candidate_file, "note": "本页已核对" }).to_string(),
+    );
+    assert_eq!(
+        adopted.status,
+        200,
+        "{}",
+        String::from_utf8_lossy(&adopted.body)
+    );
+    let body = adopted.json();
+    let warnings = body["warnings"].as_array().expect("warnings array");
+    assert!(
+        warnings.iter().any(|w| w["code"] == "note_unspecific"),
+        "{warnings:?}"
+    );
+    let current = Store::open(path).unwrap().current().unwrap();
+    assert!(current.deck.pages[0].native.is_some());
+    assert_eq!(
+        current.deck.pages[0].preview.as_deref(),
+        Some(render_png.as_str())
+    );
+}

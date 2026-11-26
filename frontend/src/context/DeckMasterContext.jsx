@@ -343,10 +343,15 @@ export function DeckMasterProvider({ children }) {
     setComparison(api.comparisonSnapshot(run, result, page, workspace.version));
     setScene('compare');
   };
-  const adoptCandidate = () => perform('adopt', async () => {
-    await api.adoptCandidate(comparison.runId, comparison.pageId, comparison.candidateFile);
-    setToast('候选已采用');
+  const adoptCandidate = (note) => perform('adopt', async () => {
+    const result = await api.adoptCandidate(comparison.runId, comparison.pageId, comparison.candidateFile, note);
+    const warnings = Array.isArray(result?.warnings) ? result.warnings : [];
+    const updatedPage = result?.runs?.[0]?.pages?.find(item => item.page_id === comparison.pageId);
+    const adoptedFile = updatedPage?.result_file || comparison.candidateFile;
+    setComparison(current => current ? { ...current, adoptedFile, adoptedWarnings: warnings } : current);
+    setToast(warnings.length ? '候选已采用（有警告提示）' : '候选已采用');
     await reload();
+    return result;
   });
 
   return <DeckMasterContext.Provider value={{

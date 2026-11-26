@@ -258,19 +258,83 @@ test('image comparison keeps the bitmap files on both sides', async () => {
 });
 
 
-test('native runs are skipped in overview, delivery and comparison', async () => {
+test('native runs appear in overview and delivery, can be stopped, compared side by side, and adopted with note and warnings', async () => {
   const { comparisonSnapshot } = await import('./api.js');
-  payload = workspace({ kind: 'native', candidateFile: 'candidate.native.json' });
+  payload = workspace({
+    kind: 'native',
+    candidateFile: 'candidate.native.json',
+    resultPreview: 'native-render.png',
+  });
+  payload.artifact_status.build_mode = 'native';
+  payload.runs[0].pages[0].result_preview = 'native-render.png';
   payload.deck.pages[0].native = { file: 'current.native.json', basis: 'svg-v2:basis' };
-  assert.equal(comparisonSnapshot(payload.runs[0], payload.runs[0].pages[0], payload.deck.pages[0], 8), null);
-  installFetch();
+
+  const snap = comparisonSnapshot(payload.runs[0], payload.runs[0].pages[0], payload.deck.pages[0], 8);
+  assert.ok(snap);
+  assert.equal(snap.currentView, 'original.png');
+  assert.equal(snap.candidateView, 'native-render.png');
+  assert.equal(snap.candidateFile, 'candidate.native.json');
+
+  calls.length = 0;
+  pending.length = 0;
+  globalThis.fetch = (url, options = {}) => {
+    const record = { url: String(url), method: options.method || 'GET', body: options.body };
+    calls.push(record);
+    if (record.url.includes('/cancel')) {
+      payload.runs[0].status = 'cancelled';
+      return Promise.resolve(Response.json({ runs: structuredClone(payload.runs) }));
+    }
+    if (record.url.includes('/adopt/')) {
+      payload.deck.pages[0].native = { file: 'adopted-with-note.native.json', basis: 'svg-v2:basis' };
+      payload.runs[0].pages[0].result_file = 'adopted-with-note.native.json';
+      payload.runs[0].pages[0].status = 'done';
+      return Promise.resolve(Response.json({
+        runs: structuredClone(payload.runs),
+        warnings: [{ code: 'note_unspecific', page_id: 'p1', message: '对照结论过于笼统，请补充具体核对细节' }],
+      }));
+    }
+    return new Promise(resolve => {
+      pending.push(() => resolve(Response.json(structuredClone(payload))));
+    });
+  };
+
   root = createRoot(document.getElementById('root'));
   await act(async () => { root.render(createElement(DeckMasterProvider, null, createElement(App))); });
   await settle();
+
   const metric = [...document.querySelectorAll('.metric-item')].find(node => node.textContent.includes('进行中任务'));
-  assert.equal(metric.querySelector('strong').textContent, '0');
+  assert.equal(metric.querySelector('strong').textContent, '1');
+
   await act(async () => { click('#nav-delivery'); });
-  assert.equal(document.querySelector('[href="/api/files/candidate"]'), null);
-  assert.equal(document.body.textContent.includes('比对与采用'), false);
-  assert.equal(document.body.textContent.includes('暂无制作任务'), true);
+  assert.ok(document.body.textContent.includes('原生还原'));
+  assert.ok(document.body.textContent.includes('缺原生还原'));
+
+  // Open native run can be stopped from delivery view.
+  await act(async () => { click('停止任务'); });
+  await settle();
+  assert.ok(calls.some(call => call.url === '/api/runs/4/cancel' && call.method === 'POST'));
+
+  // Open side-by-side comparison for native candidate.
+  await act(async () => { click('比对与采用'); });
+  assert.deepEqual(imageSources(), ['/api/files/original', '/api/files/native-render']);
+
+  const adopt = () => [...document.querySelectorAll('button')].find(button => button.textContent.includes('采用此候选'));
+  assert.equal(adopt().disabled, true);
+
+  const noteInput = document.querySelector('textarea');
+  assert.ok(noteInput);
+  await act(async () => {
+    Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set.call(noteInput, 'ok');
+    noteInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+  });
+  assert.equal(adopt().disabled, false);
+
+  await act(async () => { adopt().click(); });
+  await settle();
+
+  const adoptCall = calls.find(call => call.url.includes('/adopt/'));
+  assert.equal(adoptCall.url, '/api/runs/4/adopt/p1');
+  assert.deepEqual(JSON.parse(adoptCall.body), { expected_file: 'candidate.native.json', note: 'ok' });
+  assert.ok(document.body.textContent.includes('当前作品已采用此候选'));
+  assert.ok(document.body.textContent.includes('对照结论过于笼统'));
 });

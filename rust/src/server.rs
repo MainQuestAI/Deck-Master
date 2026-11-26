@@ -283,6 +283,7 @@ fn route(project: &Path, request: &mut Request) -> Result<ResponseBox> {
             #[serde(deny_unknown_fields)]
             struct AdoptInput {
                 expected_file: Option<String>,
+                note: Option<String>,
             }
             let body = match read_body_limited(request)? {
                 Ok(body) => body,
@@ -299,11 +300,12 @@ fn route(project: &Path, request: &mut Request) -> Result<ResponseBox> {
             } else {
                 serde_json::from_slice(&body)?
             };
-            let mut result = ops::run_adopt_candidate(
+            let mut result = ops::run_adopt_with_options(
                 project,
                 identifier(run)?,
                 &url_component(page)?,
                 input.expected_file.as_deref(),
+                input.note.as_deref(),
             )?;
             for page in result["runs"][0]["pages"]
                 .as_array_mut()

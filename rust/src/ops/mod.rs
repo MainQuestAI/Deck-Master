@@ -24,7 +24,7 @@ pub use review::{
     review_resolve,
 };
 pub use run::{
-    run_adopt, run_adopt_candidate, run_adopt_with_note, run_call, run_cancel, run_result,
-    run_show, run_start,
+    run_adopt, run_adopt_candidate, run_adopt_with_note, run_adopt_with_options, run_call,
+    run_cancel, run_result, run_show, run_start,
 };
 pub use save::{put, put_patch, restore};
