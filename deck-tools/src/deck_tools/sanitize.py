@@ -152,7 +152,7 @@ def png(data, where):
     try:
         with Image.open(io.BytesIO(data)) as original:
             if original.getexif().get(274, 1) != 1:
-                reject(where, "PNG orientation must be normalized before a public copy")
+                reject(where, "PNG 含未转正的 EXIF 方向标记，无法直接导出；请重新导入素材以自动转正")
     except OperationError:
         raise
     except Exception:
@@ -214,7 +214,7 @@ def jpeg(data, where):
     try:
         with Image.open(io.BytesIO(data)) as original:
             if original.getexif().get(274, 1) != 1:
-                reject(where, "JPEG orientation must be normalized before a public copy")
+                reject(where, "JPEG 含未转正的 EXIF 方向标记，无法直接导出；请重新导入素材以自动转正")
     except OperationError:
         raise
     except Exception:

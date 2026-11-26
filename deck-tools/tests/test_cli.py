@@ -116,3 +116,33 @@ def test_read_source_pptx_ignores_unrelated_large_media(tmp_path):
     assert output.returncode == 0, output.stderr
     data = json.loads(output.stdout)
     assert "只读幻灯片正文" in data["text"]
+
+
+def test_normalize_image_transposes_exif_and_rejects_non_image(tmp_path):
+    from PIL import Image
+
+    src = tmp_path / "portrait.jpg"
+    im = Image.new("RGB", (20, 10), "teal")
+    ex = im.getexif()
+    ex[274] = 6
+    im.save(src, format="JPEG", exif=ex.tobytes())
+    out = tmp_path / "out.jpg"
+    job = tmp_path / "job.json"
+    job.write_text(json.dumps({"path": str(src), "output": str(out), "svg": False}), encoding="utf-8")
+    res = subprocess.run([sys.executable, "-m", "deck_tools", "normalize-image", str(job)], capture_output=True, text=True, check=False)
+    assert res.returncode == 0, res.stderr
+    payload = json.loads(res.stdout)
+    assert payload["normalized"] is True
+    assert payload["width"] == 10
+    assert payload["height"] == 20
+    with Image.open(out) as cleaned:
+        assert cleaned.size == (10, 20)
+        assert cleaned.getexif().get(274, 1) == 1
+
+    bad = tmp_path / "not-image.png"
+    bad.write_bytes(b"not a valid image")
+    bad_job = tmp_path / "bad.json"
+    bad_job.write_text(json.dumps({"path": str(bad), "output": str(tmp_path / "bad-out.png"), "svg": False}), encoding="utf-8")
+    bad_res = subprocess.run([sys.executable, "-m", "deck_tools", "normalize-image", str(bad_job)], capture_output=True, text=True, check=False)
+    assert bad_res.returncode == 2
+    assert not bad_res.stdout
