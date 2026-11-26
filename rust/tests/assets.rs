@@ -24,7 +24,10 @@ fn setup(path: &Path) {
 }
 
 fn bitmap(path: &Path, color: &str) {
-    let output = Command::new(std::env::var_os("DECK_TOOLS_PYTHON").unwrap())
+    let python = std::env::var_os("DECK_TOOLS_PYTHON").expect(
+        "DECK_TOOLS_PYTHON must be set to this worktree's .venv/bin/python (see AGENTS.md §3)",
+    );
+    let output = Command::new(python)
         .args(["-c", "from PIL import Image; import sys; Image.new('RGB',(1,1),sys.argv[2]).save(sys.argv[1])"])
         .arg(path)
         .arg(color)
