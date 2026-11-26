@@ -577,3 +577,150 @@ pub fn gap_list(pages: &[Page]) -> Value {
     }
     serde_json::Value::Array(items)
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum RunKind {
+    Image,
+    Svg,
+    Native,
+}
+
+impl RunKind {
+    pub fn parse(value: &str) -> crate::error::Result<Self> {
+        match value {
+            "image" => Ok(Self::Image),
+            "svg" => Ok(Self::Svg),
+            "native" => Ok(Self::Native),
+            _ => Err(crate::error::Error::Input(
+                "请选择 image、svg 或 native".into(),
+            )),
+        }
+    }
+
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Image => "image",
+            Self::Svg => "svg",
+            Self::Native => "native",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum RunStatus {
+    Open,
+    Done,
+    Cancelled,
+}
+
+impl RunStatus {
+    pub fn parse(value: &str) -> Option<Self> {
+        match value {
+            "open" => Some(Self::Open),
+            "done" => Some(Self::Done),
+            "cancelled" => Some(Self::Cancelled),
+            _ => None,
+        }
+    }
+
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Open => "open",
+            Self::Done => "done",
+            Self::Cancelled => "cancelled",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum RunPageState {
+    Pending,
+    Started,
+    Done,
+    Unadopted,
+}
+
+impl RunPageState {
+    pub fn parse(value: &str) -> Option<Self> {
+        match value {
+            "pending" => Some(Self::Pending),
+            "started" => Some(Self::Started),
+            "done" => Some(Self::Done),
+            "unadopted" => Some(Self::Unadopted),
+            _ => None,
+        }
+    }
+
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Pending => "pending",
+            Self::Started => "started",
+            Self::Done => "done",
+            Self::Unadopted => "unadopted",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ReviewMethod {
+    SelfCheck,
+    OtherModel,
+    Human,
+}
+
+impl ReviewMethod {
+    pub fn parse(value: &str) -> crate::error::Result<Self> {
+        match value {
+            "self_check" => Ok(Self::SelfCheck),
+            "other_model" => Ok(Self::OtherModel),
+            "human" => Ok(Self::Human),
+            _ => Err(crate::error::Error::Input(
+                "审阅方式只接受 self_check、other_model 或 human".into(),
+            )),
+        }
+    }
+
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::SelfCheck => "self_check",
+            Self::OtherModel => "other_model",
+            Self::Human => "human",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ReviewRecordKind {
+    Comment,
+    ContentReview,
+}
+
+impl ReviewRecordKind {
+    pub fn parse(value: &str) -> crate::error::Result<Self> {
+        match value {
+            "comment" => Ok(Self::Comment),
+            "content_review" => Ok(Self::ContentReview),
+            _ => Err(crate::error::Error::Input(
+                "审阅类型只接受 comment 或 content_review".into(),
+            )),
+        }
+    }
+
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Comment => "comment",
+            Self::ContentReview => "content_review",
+        }
+    }
+}
+
+impl Deck {
+    pub fn page(&self, id: &str) -> Option<&Page> {
+        self.pages.iter().find(|page| page.id == id)
+    }
+}
