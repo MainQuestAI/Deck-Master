@@ -791,3 +791,31 @@ def test_render_and_assemble_real_synthetic_source(sample):
             icon = etree.fromstring(archive.read(name))
             assert icon.tag == source.tag
             assert icon.xpath('//*[local-name()="path"]/@d') == source.xpath('//*[local-name()="path"]/@d')
+
+
+@pytest.mark.parametrize('bad_color', ['#FFF', 'white', '', None, '12345G'])
+def test_validate_plan_rejects_invalid_colors_and_missing_background(sample, bad_color):
+    _, page, original = sample
+    plan = deepcopy(original)
+    if bad_color is None:
+        del plan['background']
+    else:
+        plan['background'] = bad_color
+    with pytest.raises(ValueError):
+        native.validate_plan(plan, page)
+
+    plan2 = deepcopy(original)
+    plan2['ops'][1]['color'] = bad_color if bad_color is not None else 'red'
+    with pytest.raises(ValueError):
+        native.validate_plan(plan2, page)
+
+
+def test_native_render_checks_missing_fonts_with_needs_tool(sample):
+    from deck_tools.render import NeedsTool
+
+    tmp_path, page, original = sample
+    plan = deepcopy(original)
+    plan['ops'][1]['font'] = 'DeckMasterNonexistentFontXYZ'
+    native.write_json(page['plan'], plan)
+    with pytest.raises(NeedsTool):
+        native.render({'work': str(tmp_path), 'page': page})

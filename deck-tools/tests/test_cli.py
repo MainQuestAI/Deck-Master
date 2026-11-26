@@ -86,3 +86,33 @@ def test_non_object_job_is_input_error(tmp_path):
     job.write_text("null", encoding="utf-8")
     output = subprocess.run([sys.executable, "-m", "deck_tools", "read-source", str(job)], capture_output=True, text=True, check=False)
     assert output.returncode == 2 and not output.stdout
+
+
+def test_read_source_rejects_high_ratio_zip_bomb(tmp_path):
+    import zipfile
+
+    bomb = tmp_path / "bomb.docx"
+    with zipfile.ZipFile(bomb, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr("word/document.xml", b"A" * (2 * 1024 * 1024))
+    output = invoke(tmp_path, bomb)
+    assert output.returncode == 2
+    assert not output.stdout
+    assert "压缩" in output.stderr or "上限" in output.stderr
+
+
+def test_read_source_pptx_ignores_unrelated_large_media(tmp_path):
+    import zipfile
+    from pptx import Presentation
+
+    src = tmp_path / "with-media.pptx"
+    pres = Presentation()
+    slide = pres.slides.add_slide(pres.slide_layouts[6])
+    slide.shapes.add_textbox(0, 0, 1000000, 500000).text_frame.text = "只读幻灯片正文"
+    pres.save(src)
+    with zipfile.ZipFile(src, "a", compression=zipfile.ZIP_DEFLATED) as archive:
+        # Simulate a large video entry that would bloat memory if python-pptx loaded all parts.
+        archive.writestr("ppt/media/video1.mp4", b"\x00" * (4 * 1024 * 1024))
+    output = invoke(tmp_path, src)
+    assert output.returncode == 0, output.stderr
+    data = json.loads(output.stdout)
+    assert "只读幻灯片正文" in data["text"]

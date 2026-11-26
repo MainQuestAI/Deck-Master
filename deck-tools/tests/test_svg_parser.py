@@ -293,3 +293,20 @@ def test_text_typography_fields_and_rotation():
     assert run['font_size'] == 16
     assert run['rotation'] == pytest.approx(90)
     assert (run['x'], run['y']) == pytest.approx((-20.0, 10.0))
+
+
+def test_utf16_doctype_is_rejected():
+    svg_text = '<?xml version="1.0" encoding="utf-16"?><!DOCTYPE svg [<!ENTITY x "boom">]><svg viewBox="0 0 100 100"><text x="1" y="10">&x;</text></svg>'
+    with pytest.raises(SvgError):
+        parse_svg(svg_text.encode('utf-16'), page_id='p1')
+
+
+def test_compressed_arc_flags_are_parsed():
+    shape = parse('<path d="M 10 10 a5 5 0 105 5" fill="none" stroke="#000000" stroke-width="1"/>')[0]
+    last = shape['commands'][-1]['lineTo']
+    assert (last['x'], last['y']) == pytest.approx((15.0, 15.0))
+
+
+def test_extreme_curve_coordinates_are_rejected():
+    with pytest.raises(SvgError):
+        parse('<path d="M 0 0 C 1e20 0 0 1e20 10 10" fill="none" stroke="#000000" stroke-width="1"/>')

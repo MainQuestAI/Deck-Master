@@ -5,6 +5,11 @@ const fs = require('node:fs');
 const path = require('node:path');
 const PptxGenJS = require('pptxgenjs');
 
+// Never allow PptxGenJS to silently fall back (e.g. invalid colors to 000000).
+console.warn = (...args) => {
+  throw new Error(`PptxGenJS 告警已拦截：${args.map(String).join(' ')}`);
+};
+
 const DEFAULT_FONT = 'Noto Sans CJK SC';
 const color = value => String(value).replace(/^#/, '');
 const SLIDE_WIDTH_IN = 13.333;

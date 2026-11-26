@@ -18,7 +18,7 @@ from deck_tools.compiler.svg import parse_svg
 from deck_tools.render import executable, readback, render_deck, run
 from hostenv import host_fonts, resolve_host_font
 
-pytestmark = pytest.mark.render
+# Only tests calling render_deck / rsvg-convert require external rendering tools.
 PID = 'neutral-table'
 NS = {'p': 'http://schemas.openxmlformats.org/presentationml/2006/main',
       'a': 'http://schemas.openxmlformats.org/drawingml/2006/main'}
@@ -201,6 +201,7 @@ def test_same_text_wrong_source_cell_is_located_after_real_compile(tmp_path, mut
     assert any(f['code'] == 'table_cell_ownership_mismatch' and f.get('atom_id') == atom('alpha', 'action') for f in report['findings'])
 
 
+@pytest.mark.render
 def test_actual_mixed_alignment_and_same_text_swap_renders_are_retained(tmp_path):
     page, svg, compiled, source = compile_fixture(tmp_path)
     corrupted = tmp_path / 'same-text-swap.pptx'

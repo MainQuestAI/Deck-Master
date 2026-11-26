@@ -175,10 +175,30 @@ def _read_pdf(path: Path) -> SourceExtract:
     )
 
 
+MAX_ZIP_MEMBER_BYTES = 50 * 1024 * 1024
+MAX_ZIP_TOTAL_BYTES = 200 * 1024 * 1024
+MAX_ZIP_RATIO = 100
+
+
+def _check_zip_limits(archive: zipfile.ZipFile, path: Path, members: list[str] | None = None) -> None:
+    entries = [archive.getinfo(name) for name in members] if members is not None else archive.infolist()
+    total = 0
+    for info in entries:
+        if info.file_size > MAX_ZIP_MEMBER_BYTES:
+            raise SourceUnreadable(str(path), f"压缩包成员过大，超过安全上限：{info.filename}")
+        total += info.file_size
+        if total > MAX_ZIP_TOTAL_BYTES:
+            raise SourceUnreadable(str(path), "压缩包总解压体积超过安全上限")
+        if info.file_size > 1024 * 1024 and info.compress_size > 0:
+            if info.file_size / info.compress_size > MAX_ZIP_RATIO:
+                raise SourceUnreadable(str(path), f"压缩包压缩比异常，已拒绝读取：{info.filename}")
+
+
 def _read_docx(path: Path) -> SourceExtract:
     namespace = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
     try:
         with zipfile.ZipFile(path) as archive:
+            _check_zip_limits(archive, path, members=["word/document.xml"])
             xml_bytes = archive.read("word/document.xml")
     except (zipfile.BadZipFile, KeyError) as exc:
         raise SourceUnreadable(str(path), f"unreadable DOCX: {exc}")
@@ -260,56 +280,109 @@ def _read_docx(path: Path) -> SourceExtract:
 
 
 def _read_pptx(path: Path) -> SourceExtract:
+    from lxml import etree
+
+    parser = etree.XMLParser(resolve_entities=False, no_network=True, huge_tree=False)
+    ns_a = "http://schemas.openxmlformats.org/drawingml/2006/main"
+    ns_p = "http://schemas.openxmlformats.org/presentationml/2006/main"
+    ns_r = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+    ns_rel = "http://schemas.openxmlformats.org/package/2006/relationships"
+
+    def resolve_rel_target(base_part: str, target: str) -> str:
+        from posixpath import dirname, join, normpath
+
+        cleaned = target.lstrip("/") if target.startswith("/") else normpath(join(dirname(base_part), target))
+        return cleaned
+
+    def read_xml(archive: zipfile.ZipFile, part_name: str):
+        _check_zip_limits(archive, path, members=[part_name])
+        return etree.fromstring(archive.read(part_name), parser=parser)
+
     try:
-        from pptx import Presentation
-        from pptx.enum.shapes import MSO_SHAPE_TYPE
-    except ImportError:
-        return SourceExtract(
-            original_uri=str(path),
-            original_sha256=measure_hash(path),
-            format="pptx",
-            format_kind="pptx",
-            status="needs_tool",
-            detail="python-pptx not installed in this CLI environment",
-        )
-    try:
-        presentation = Presentation(str(path))
-    except Exception as exc:  # noqa: BLE001 - python-pptx raises broad errors
+        with zipfile.ZipFile(path) as archive:
+            names = set(archive.namelist())
+            slide_parts: list[str] = []
+            if "ppt/presentation.xml" in names and "ppt/_rels/presentation.xml.rels" in names:
+                pres = read_xml(archive, "ppt/presentation.xml")
+                rels = read_xml(archive, "ppt/_rels/presentation.xml.rels")
+                rel_map = {
+                    rel.get("Id"): resolve_rel_target("ppt/presentation.xml", rel.get("Target", ""))
+                    for rel in rels.findall(f"{{{ns_rel}}}Relationship")
+                }
+                for sld_id in pres.findall(f".//{{{ns_p}}}sldIdLst/{{{ns_p}}}sldId"):
+                    target = rel_map.get(sld_id.get(f"{{{ns_r}}}id"))
+                    if target and target in names:
+                        slide_parts.append(target)
+            if not slide_parts:
+                slide_parts = sorted(
+                    name for name in names
+                    if re.fullmatch(r"ppt/slides/slide\d+\.xml", name)
+                )
+            if not slide_parts and "ppt/presentation.xml" not in names:
+                raise SourceUnreadable(str(path), "unreadable PPTX: missing presentation.xml")
+
+            locators: list[dict] = []
+            text_parts: list[str] = []
+            image_pages: list[dict] = []
+            for index, slide_part in enumerate(slide_parts, start=1):
+                root = read_xml(archive, slide_part)
+                page_lines: list[str] = []
+                visual = False
+                for elem in root.iter():
+                    tag = elem.tag
+                    if tag in (f"{{{ns_p}}}pic", f"{{{ns_p}}}cxnSp"):
+                        visual = True
+                    elif tag == f"{{{ns_p}}}graphicFrame":
+                        if elem.find(f".//{{{ns_a}}}tbl") is None:
+                            visual = True
+                    elif tag == f"{{{ns_p}}}sp":
+                        nv = elem.find(f"{{{ns_p}}}nvSpPr/{{{ns_p}}}cNvSpPr")
+                        is_textbox = nv is not None and nv.get("txBox") in ("1", "true")
+                        if not is_textbox and elem.find(f".//{{{ns_a}}}prstGeom") is not None:
+                            visual = True
+                        if elem.find(f".//{{{ns_a}}}custGeom") is not None:
+                            visual = True
+                for tx_body in root.findall(f".//{{{ns_p}}}txBody"):
+                    for paragraph in tx_body.findall(f"{{{ns_a}}}p"):
+                        text = "".join(t.text or "" for t in paragraph.findall(f".//{{{ns_a}}}t"))
+                        if text.strip():
+                            page_lines.append(text)
+                for tbl in root.findall(f".//{{{ns_a}}}tbl"):
+                    rows = []
+                    for tr in tbl.findall(f"{{{ns_a}}}tr"):
+                        row_cells = []
+                        for tc in tr.findall(f"{{{ns_a}}}tc"):
+                            cell_paras = []
+                            for p in tc.findall(f".//{{{ns_a}}}p"):
+                                cell_paras.append("".join(t.text or "" for t in p.findall(f".//{{{ns_a}}}t")))
+                            row_cells.append("\n".join(cell_paras))
+                        rows.append(row_cells)
+                    page_lines.append(json.dumps(rows, ensure_ascii=False))
+                slide_rels_part = slide_part.replace("ppt/slides/", "ppt/slides/_rels/") + ".rels"
+                if slide_rels_part in names:
+                    srels = read_xml(archive, slide_rels_part)
+                    for rel in srels.findall(f"{{{ns_rel}}}Relationship"):
+                        if (rel.get("Type") or "").endswith("/notesSlide"):
+                            notes_part = resolve_rel_target(slide_part, rel.get("Target", ""))
+                            if notes_part in names:
+                                notes_root = read_xml(archive, notes_part)
+                                note_lines = []
+                                for sp in notes_root.findall(f".//{{{ns_p}}}sp"):
+                                    ph = sp.find(f".//{{{ns_p}}}ph")
+                                    if ph is not None and ph.get("type") == "body":
+                                        for p in sp.findall(f".//{{{ns_a}}}p"):
+                                            note_lines.append("".join(t.text or "" for t in p.findall(f".//{{{ns_a}}}t")))
+                                notes = "\n".join(note_lines).strip()
+                                if notes:
+                                    page_lines.append("[speaker notes] " + notes)
+                if visual or not page_lines:
+                    image_pages.append({"locator": f"slide-{index}", "reason": "graphical meaning or textless slide requires actual visual reading"})
+                locators.append({"locator": f"slide-{index}", "kind": "slide", "text": "\n".join(page_lines)})
+                text_parts.append("\n".join(page_lines))
+    except SourceUnreadable:
+        raise
+    except (zipfile.BadZipFile, KeyError, etree.XMLSyntaxError) as exc:
         raise SourceUnreadable(str(path), f"unreadable PPTX: {exc}")
-    locators: list[dict] = []
-    text_parts: list[str] = []
-    image_pages=[]
-    visual_types = {
-        MSO_SHAPE_TYPE.AUTO_SHAPE, MSO_SHAPE_TYPE.CHART, MSO_SHAPE_TYPE.DIAGRAM,
-        MSO_SHAPE_TYPE.FREEFORM, MSO_SHAPE_TYPE.IGX_GRAPHIC, MSO_SHAPE_TYPE.LINE,
-        MSO_SHAPE_TYPE.PICTURE, MSO_SHAPE_TYPE.LINKED_PICTURE,
-    }
-    def shapes_recursive(shapes):
-        for shape in shapes:
-            yield shape
-            if hasattr(shape,"shapes"):yield from shapes_recursive(shape.shapes)
-    for index, slide in enumerate(presentation.slides, start=1):
-        page_lines = []
-        visual=False
-        for shape in shapes_recursive(slide.shapes):
-            if shape.shape_type in visual_types:visual=True
-            if shape.has_text_frame:
-                for paragraph in shape.text_frame.paragraphs:
-                    text = "".join(run.text for run in paragraph.runs)
-                    if text.strip():
-                        page_lines.append(text)
-            if getattr(shape, "has_table", False):
-                rows = [
-                    [cell.text for cell in row.cells]
-                    for row in shape.table.rows
-                ]
-                page_lines.append(json.dumps(rows, ensure_ascii=False))
-        if slide.has_notes_slide:
-            notes=slide.notes_slide.notes_text_frame.text
-            if notes.strip():page_lines.append("[speaker notes] "+notes)
-        if visual or not page_lines:image_pages.append({"locator":f"slide-{index}","reason":"graphical meaning or textless slide requires actual visual reading"})
-        locators.append({"locator": f"slide-{index}", "kind": "slide", "text": "\n".join(page_lines)})
-        text_parts.append("\n".join(page_lines))
     return SourceExtract(
         original_uri=str(path),
         original_sha256=measure_hash(path),

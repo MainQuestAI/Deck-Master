@@ -66,9 +66,23 @@ def parse_svg(data: bytes, *, page_id: str, assets: dict[str, str] | None = None
         raise SvgError(f'{page_id}: {exc}') from exc
 
 
-def _parse_svg(data: bytes, *, page_id: str, assets: dict[str, str] | None = None) -> dict:
-    if re.search(br'<!\s*(DOCTYPE|ENTITY)', data, re.I):
+def _reject_xml_doctype_or_entities(data: bytes, *, page_id: str) -> None:
+    from lxml import etree
+
+    parser = etree.XMLParser(resolve_entities=False, no_network=True, huge_tree=False)
+    try:
+        parsed = etree.fromstring(data, parser=parser)
+    except etree.XMLSyntaxError as exc:
+        raise SvgError(f'{page_id}: invalid XML ({exc})') from exc
+    if parsed.getroottree().docinfo.doctype:
         raise SvgError(f'{page_id}: XML entities/DOCTYPE are forbidden')
+    for node in parsed.iter():
+        if isinstance(node, etree._Entity):
+            raise SvgError(f'{page_id}: XML entities/DOCTYPE are forbidden')
+
+
+def _parse_svg(data: bytes, *, page_id: str, assets: dict[str, str] | None = None) -> dict:
+    _reject_xml_doctype_or_entities(data, page_id=page_id)
     root = ET.fromstring(data)
     list(image_elements(root, page_id=page_id, assets=assets or {}))
     def numbers(raw):
@@ -324,6 +338,10 @@ def _parse_svg(data: bytes, *, page_id: str, assets: dict[str, str] | None = Non
     return dict(page_id=page_id,width=box[2],height=box[3],shapes=shapes)
 
 
+MAX_PATH_COMMANDS = 10_000
+MAX_PATH_COORD = 1e6
+
+
 def parse_path(d: str, identity: str) -> list:
     """M/L/H/V/C/Q/Z, including relative forms; curves flattened to 0.2px."""
     tokens=re.findall(r'[A-Za-z]|[-+]?(?:\d*\.\d+|\d+\.?\d*)(?:[eE][-+]?\d+)?',d)
@@ -331,8 +349,13 @@ def parse_path(d: str, identity: str) -> list:
         raise SvgError(f'{identity}: invalid path data')
     out=[]; pos=[0.,0.]; start=pos[:]; i=0; command=None
     def emit(p):
+        if len(out) >= MAX_PATH_COMMANDS:
+            raise SvgError(f'{identity}: path exceeds maximum segment limit ({MAX_PATH_COMMANDS})')
         out.append({'lineTo':dict(x=p[0],y=p[1])})
     def curve(points,depth=0):
+        for pt in points:
+            if not (math.isfinite(pt[0]) and math.isfinite(pt[1])) or max(abs(pt[0]), abs(pt[1])) > MAX_PATH_COORD:
+                raise SvgError(f'{identity}: path curve coordinates exceed safe range')
         a,b=points[0],points[-1]
         dx, dy = b[0] - a[0], b[1] - a[1]
         length_squared = dx * dx + dy * dy

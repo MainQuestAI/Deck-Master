@@ -6,6 +6,7 @@ import math
 import os
 from pathlib import Path
 import posixpath
+import re
 import struct
 import sys
 import tempfile
@@ -18,7 +19,10 @@ from PIL import Image, ImageDraw
 from .. import sanitize
 from ..atoms import column_cell_ids, visible_atoms
 from ..jobs import projection
-from ..render import NeedsTool, RendererError, executable, render_deck, run
+from ..render import NeedsTool, RendererError, executable, render_deck, resolve_fonts, run
+
+DEFAULT_FONT = 'Noto Sans CJK SC'
+_HEX_COLOR = re.compile(r'^#?[0-9A-Fa-f]{6}$')
 
 ICONS = Path(__file__).resolve().parents[1] / 'resources' / 'icons' / 'tabler-outline'
 NS = {'a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
@@ -73,11 +77,43 @@ def icon_file(icon_id):
     return candidate
 
 
+def _validate_color(value, label, *, allow_none=False):
+    if allow_none and value == 'none':
+        return
+    if not isinstance(value, str) or not _HEX_COLOR.match(value):
+        suffix = '或 none' if allow_none else ''
+        raise ValueError(f'{label} 必须是 6 位十六进制颜色（如 #225588）{suffix}：{value!r}')
+
+
+def _resolve_native_fonts(plans):
+    shapes = []
+    for plan in plans:
+        for op in plan.get('ops', []):
+            kind = op.get('op')
+            if kind == 'text':
+                bold = op.get('weight') == 'bold' or (
+                    isinstance(op.get('weight'), (int, float)) and op['weight'] >= 600
+                )
+                shapes.append({'kind': 'text', 'font_family': op.get('font') or DEFAULT_FONT, 'bold': bold})
+            elif kind == 'table':
+                table_font = op.get('font') or DEFAULT_FONT
+                header = op.get('header_style') or {}
+                for row_index, row in enumerate(op.get('cells', [])):
+                    for cell in row:
+                        style = {**op, **(header if row_index == 0 else {}), **cell}
+                        bold = style.get('weight') == 'bold' or (
+                            isinstance(style.get('weight'), (int, float)) and style['weight'] >= 600
+                        )
+                        shapes.append({'kind': 'text', 'font_family': style.get('font') or table_font, 'bold': bold})
+    return resolve_fonts([{'shapes': shapes}]) if shapes else {}
+
+
 def validate_plan(plan, page):
     if plan.get('schema') != 'deck.native_plan.v1' or plan.get('page') != page['id']:
         raise ValueError('plan 格式或页编号不匹配')
     if 'notes' in plan:
         raise ValueError('讲稿通过 page.notes 传入，不写进 plan')
+    _validate_color(plan.get('background'), 'background')
     w, h = number(plan['canvas_px']['w']), number(plan['canvas_px']['h'])
     if min(w, h) <= 0:
         raise ValueError('画布尺寸必须大于零')
@@ -111,15 +147,33 @@ def validate_plan(plan, page):
                 if len(point) != 2:
                     raise ValueError('箭头端点必须是 [x,y]')
                 inside_box([*point, 0, 0], w, h)
+            if 'color' in op:
+                _validate_color(op['color'], 'arrow.color', allow_none=True)
         else:
             inside_box(op['bbox'], w, h)
+        if kind == 'shape':
+            if 'fill' in op:
+                _validate_color(op['fill'], 'shape.fill', allow_none=True)
+            if isinstance(op.get('line'), dict) and 'color' in op['line']:
+                _validate_color(op['line']['color'], 'shape.line.color', allow_none=True)
         if kind == 'shape' and 'radius' in op and op['type'] not in ('rect', 'roundRect'):
             raise ValueError('圆角只用于矩形')
         if kind == 'text':
+            if 'color' in op:
+                _validate_color(op['color'], 'text.color')
             text(op)
         elif kind == 'table':
+            if 'color' in op:
+                _validate_color(op['color'], 'table.color')
+            if isinstance(op.get('line'), dict) and 'color' in op['line']:
+                _validate_color(op['line']['color'], 'table.line.color', allow_none=True)
+            header = op.get('header_style') or {}
+            if 'color' in header:
+                _validate_color(header['color'], 'table.header_style.color')
+            if 'fill' in header:
+                _validate_color(header['fill'], 'table.header_style.fill', allow_none=True)
             margin(op)
-            margin(op.get('header_style', {}))
+            margin(header)
             widths, heights, rows = op['col_widths'], op['row_heights'], op['cells']
             if len(rows) != len(heights) or not widths or not heights or any(len(r) != len(widths) for r in rows):
                 raise ValueError('表格单元格、列宽和行高不匹配')
@@ -129,9 +183,15 @@ def validate_plan(plan, page):
                 raise ValueError('表格行高和列宽合计必须等于 bbox')
             for row in rows:
                 for cell in row:
+                    if 'color' in cell:
+                        _validate_color(cell['color'], 'table.cell.color')
+                    if 'fill' in cell:
+                        _validate_color(cell['fill'], 'table.cell.fill', allow_none=True)
                     margin(cell)
                     text(cell)
         elif kind == 'icon':
+            if 'color' in op:
+                _validate_color(op['color'], 'icon.color')
             icon_file(op['icon_id'])
         elif kind == 'image':
             if any(key in op for key in ('text', 'atom_id', 'cells', 'content')):
@@ -620,10 +680,12 @@ def crop(job):
 def render(job):
     page = job['page']
     directory = Path(job['output']).resolve() if 'output' in job else page_directory(job['work'], page['id'])
+    plans = [read_json(page['plan'])]
+    resolved_fonts = _resolve_native_fonts(plans)
     pptx, findings, _warnings = generate([page], directory / 'page.pptx', mode='single')
     # Isolated conversion avoids picking up PNGs from an earlier, longer deck.
     with tempfile.TemporaryDirectory(prefix='deck-native-render-') as temp:
-        images = render_deck(pptx, temp, fonts={})
+        images = render_deck(pptx, temp, fonts=resolved_fonts)
         if len(images) != 1:
             raise RuntimeError('单页渲染没有得到一张 PNG')
         preview = directory / 'render.png'
@@ -732,6 +794,8 @@ def readback(pptx, pages):
 def assemble(job):
     output = (Path(job['work']) / 'native' / 'deck.pptx').resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
+    plans = [read_json(p['plan']) for p in job['pages']]
+    resolved_fonts = _resolve_native_fonts(plans)
     with tempfile.NamedTemporaryFile(dir=output.parent, prefix='.deck-', suffix='.pptx', delete=False) as temp:
         temporary = Path(temp.name)
     warnings = []
@@ -747,7 +811,7 @@ def assemble(job):
         temporary.unlink(missing_ok=True)
     directory = output.parent / 'deck-render'
     with tempfile.TemporaryDirectory(prefix='deck-native-deck-') as temp:
-        images = render_deck(output, temp, fonts={})
+        images = render_deck(output, temp, fonts=resolved_fonts)
         if len(images) != len(job['pages']):
             raise RuntimeError('整套渲染页数与输入不一致')
         directory.mkdir(exist_ok=True)

@@ -153,6 +153,21 @@ def _parse_path(path_data: str, *, element_id: str, visual_id: str = "") -> list
         index += 1
         return value
 
+    def flag() -> int:
+        nonlocal index
+        if index >= len(tokens) or re.fullmatch(r"[A-Za-z]", tokens[index]):
+            raise SvgNativeError(f"SVG path command has incomplete coordinates on {element_id}", element_id=element_id, visual_id=visual_id, property_name="d")
+        token = tokens[index]
+        if token[0] not in ("0", "1"):
+            raise SvgNativeError(f"SVG arc flags must be 0 or 1 on {element_id}", element_id=element_id, visual_id=visual_id, property_name="d")
+        value = int(token[0])
+        rest = token[1:]
+        if rest:
+            tokens[index] = rest
+        else:
+            index += 1
+        return value
+
     def point(x: float, y: float, relative: bool) -> tuple[float, float]:
         return (x + current[0], y + current[1]) if relative else (x, y)
 
@@ -171,7 +186,7 @@ def _parse_path(path_data: str, *, element_id: str, visual_id: str = "") -> list
         relative = command.islower()
         upper = command.upper()
         arity = _COMMAND_ARGS[upper]
-        if index + arity > len(tokens) or any(re.fullmatch(r"[A-Za-z]", token) for token in tokens[index : index + arity]):
+        if upper != "A" and (index + arity > len(tokens) or any(re.fullmatch(r"[A-Za-z]", token) for token in tokens[index : index + arity])):
             raise SvgNativeError(f"SVG path command has incomplete coordinates on {element_id}", element_id=element_id, visual_id=visual_id, property_name="d")
         if upper == "M":
             target = point(number(), number(), relative)
@@ -226,10 +241,7 @@ def _parse_path(path_data: str, *, element_id: str, visual_id: str = "") -> list
             previous_quadratic_control, previous_cubic_control = control, None
         elif upper == "A":
             rx, ry, rotation = number(), number(), number()
-            large_arc_value, sweep_value = number(), number()
-            if large_arc_value not in (0.0, 1.0) or sweep_value not in (0.0, 1.0):
-                raise SvgNativeError(f"SVG arc flags must be 0 or 1 on {element_id}", element_id=element_id, visual_id=visual_id, property_name="d")
-            large_arc, sweep = int(large_arc_value), int(sweep_value)
+            large_arc, sweep = flag(), flag()
             target = point(number(), number(), relative)
             arc_segments = _arc_cubics(current, rx, ry, rotation, large_arc, sweep, target)
             commands.extend(arc_segments)
