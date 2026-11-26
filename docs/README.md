@@ -33,7 +33,7 @@ D00–D08、Narrative.v2 与 execution-index 不作为现行开工清单。
 | 新线 Skill | 四个职责 Skill（[Master](../deck-skill/deck-master/SKILL.md)、[Content](../deck-skill/deck-content/SKILL.md)、[Design](../deck-skill/deck-design/SKILL.md)、[Review](../deck-skill/deck-review/SKILL.md)） | 调用 `deck`；命令见 [commands.md](../deck-skill/references/commands.md) |
 | 设计约束 | [DESIGN](../DESIGN.md) | 由该入口选择当前设计；旧原型和模拟按钮不证明已有服务 |
 | 工程规格与依赖 | [Spec 索引](specs/README.md) | 现行架构读 rust-rebuild；旧 Narrative、writer、方法冻结与证明链已退役，不是新开发前置 |
-| 发版记录 | [releases](releases/README.md) | 当前跟进与限制见 [1.1.3 说明](releases/1.1.3.md)；1.0.0 仍是准备记录 |
+| 发版记录 | [releases](releases/README.md) | 当前跟进与限制见 [1.1.4 说明](releases/1.1.4.md)；1.0.0 仍是准备记录 |
 | 测试与审查证据 | [报告索引](reports/README.md) | 核对日期、源码 SHA、范围、未执行项及是否同一发行文件；维护者验收仅是特定版本/机器观察，不是跨环境保证 |
 | 历史/归档 | [归档索引](archive/README.md) | 追溯原始决定，不能充当当前命令说明 |
 

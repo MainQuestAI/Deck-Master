@@ -2,7 +2,20 @@
 
 ## Unreleased
 
+## 1.1.4 — 2026-11-26
+
+See [1.1.4 release notes](docs/releases/1.1.4.md) for the changes merged after
+`v1.1.3` (`718fdc01`) through `main` after #361 (`31ca2881`). Rust `deck`,
+`deck-tools` and WebUI source versions are `1.1.4`.
+
 - 项目格式 6 → 7：新增 `brief.decision`、`brief.concerns`、`brief.narrator`、`framing.storyline`、`pages[].kind`、`pages[].argument` 及出稿审稿记录（`review add --record content_review`、`review list --record content_review|all`、`review get <id>`），修复导出审稿版本绑定、删除/重排后审稿过期判断及重复 `cNvPr` ID 回退名更新。(#353)
+- `calculate_basis` 将本页有效素材投影为 `{id, file}`，素材元数据或新增页绑定不再误令既有页过期。(#354)
+- WebUI 总览支持展示格式 7 字段，保存冲突改为键级合并保留并发修改的 v7 字段，历史对比纳入全部 v7 字段。(#355)
+- 加固 native plan 图片素材路径边界（限定当前任务目录内相对路径 + PNG/JPEG 格式）与 `deck-tools` 子进程隔离（`-P`、`PYTHONSAFEPATH=1`、临时 `cwd` 及可配置超时）。(#356, #357)
+- 新增 `deck-tools normalize-image` 在素材/生图/native 入口统一执行 EXIF 方向转正、去元数据与像素上限校验，SVG 素材转 PNG 收口到 `deck-tools`。(#358)
+- 本地服务增加防点击劫持头（`X-Frame-Options: DENY`、`CSP: frame-ancestors 'none'`）、8 MiB 请求体上限、JSON `Content-Type` 校验与 16 线程池；Vite 代理仅放行本机 Origin。(#359)
+- 修复 macOS `token-lint` 符号链接路径测试、`browser-smoke.mjs` 格式 7 适配与若干文档断链。(#360)
+- 加固 `deck-tools` 颜色/字体/Zip 压缩比与 SVG DOCTYPE/曲线细分/压缩弧线校验，下沉纯 XML 回读测试的 `render` 标记进默认 PR CI。(#361)
 - CI 将 `actions/upload-artifact` 从 4 升到 7。(#342)
 
 ## 1.1.3 — 2026-11-12
