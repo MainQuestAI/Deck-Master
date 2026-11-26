@@ -229,7 +229,7 @@ run 用于需要 Host 执行、作者可以中途停止的工作：生图（imag
 4. `deck run cancel <run>`：直接改状态，不需要填写说明。之后的 call 被拒绝，迟到的 result 只保存、不自动采用。
 5. `deck run show [<run>]`：列出每页状态。started 但没有结果的页显示为"结果未知"，是否重试由作者或 Host 决定；重试同样计数。
 
-依据的组成：image 取该页的 content、layout、purpose 与 style；新 svg 取该页的 content、purpose、layout、image 文件与本页有效 style，保存为 svg-v2:<sha256>。旧裸 hash 仍按 content、image 文件与本页有效 style 比较，展示旧依据未记录目的和布局；imported 保留导入身份。
+依据的组成：使用显式 `BasisInput` 投影结构（将本页有效素材投影为按 `(id, file)` 排序的 `{id, file}` 列表，与整模型序列化解耦）。新 image 取该页的 content、layout、purpose 与投影 style，保存为 `img-v2:<sha256>`；新 svg 与 native 取该页的 content、purpose、layout、image 文件与投影 style，保存为 `svg-v3:<sha256>`。读取时向后兼容旧裸 hash（image 与 v1 svg）、`svg-v2:<sha256>` 与 `imported`；若历史记录包含无法识别的前缀，读取工作区不会崩溃，而在对应 run 页标记 `basis_unreadable: true`。
 
 svg 类没有外部付费调用，不需要 `run call`，也没有 max_calls。它的 result 先经过 `deck_tools check-page`：
 

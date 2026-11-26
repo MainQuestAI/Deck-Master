@@ -1397,3 +1397,106 @@ fn draft_gap_marks_stay_on_the_page_and_the_todo_field_stays_off_the_prompt() {
     assert!(!svg.contains("只记在待办里的维护安排"));
     assert!(!svg.contains("讲稿里的缺口说明"));
 }
+
+#[test]
+fn workspace_reads_legacy_svg_v2_imported_and_unreadable_basis_without_failing() {
+    use sha2::{Digest, Sha256};
+
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    setup(path);
+    edit(
+        path,
+        json!({
+            "order": ["p1", "p2"],
+            "pages": [
+                {"id": "p1", "purpose": "第一页目的", "layout": "左图右文", "content": {"title": "第一页"}},
+                {"id": "p2", "purpose": "第二页目的", "layout": "上下分栏", "content": {"title": "第二页"}}
+            ]
+        }),
+    );
+
+    let mut store = store::Store::open(path).unwrap();
+    let mut snapshot = store.current().unwrap();
+    let legacy_bare_image = format!(
+        "{:x}",
+        Sha256::digest(
+            serde_json::to_vec(&json!([
+                snapshot.deck.pages[0].content,
+                snapshot.deck.pages[0].layout,
+                snapshot.deck.pages[0].purpose,
+                snapshot.deck.style
+            ]))
+            .unwrap()
+        )
+    );
+    snapshot.deck.pages[0].image = Some(deck::model::Artifact {
+        file: "legacy-img.png".into(),
+        basis: legacy_bare_image.clone(),
+    });
+    let legacy_svg_v2 = format!(
+        "svg-v2:{:x}",
+        Sha256::digest(
+            serde_json::to_vec(&json!([
+                snapshot.deck.pages[0].content,
+                snapshot.deck.pages[0].purpose,
+                snapshot.deck.pages[0].layout,
+                snapshot.deck.pages[0].image.as_ref().map(|i| &i.file),
+                snapshot.deck.style
+            ]))
+            .unwrap()
+        )
+    );
+    let svg_v3 = ops::basis("svg", &snapshot.deck, &snapshot.deck.pages[1]).unwrap();
+    assert!(svg_v3.starts_with("svg-v3:"));
+
+    snapshot.deck.pages[0].svg = Some(deck::model::Artifact {
+        file: "legacy-v2.svg".into(),
+        basis: legacy_svg_v2.clone(),
+    });
+    snapshot.deck.pages[1].svg = Some(deck::model::Artifact {
+        file: "corrupt-basis.svg".into(),
+        basis: "svg-v99:not-a-known-prefix".into(),
+    });
+    let tx = store.transaction().unwrap();
+    store::append(&tx, &mut snapshot.deck, "mixed basis fixture").unwrap();
+    tx.execute(
+        "INSERT INTO runs(id, kind, status, max_calls, calls_used) VALUES (91, 'svg', 'open', NULL, 0)",
+        [],
+    )
+    .unwrap();
+    tx.execute(
+        "INSERT INTO run_pages(run_id, page_id, basis, status) VALUES (91, 'p1', ?, 'pending')",
+        [&legacy_svg_v2],
+    )
+    .unwrap();
+    tx.execute(
+        "INSERT INTO run_pages(run_id, page_id, basis, status) VALUES (91, 'p2', 'svg-v99:corrupt', 'unadopted')",
+        [],
+    )
+    .unwrap();
+    tx.commit().unwrap();
+
+    let workspace = ops::workspace(path).unwrap();
+    // Legacy bare image + svg-v2 on p1 stay fresh; unreadable basis on p2 marks stale without crashing.
+    assert_eq!(workspace["artifact_status"]["stale_images"], json!([]));
+    assert_eq!(workspace["artifact_status"]["stale_pages"], json!(["p2"]));
+    assert_eq!(
+        workspace["artifact_status"]["incomplete_basis_pages"],
+        json!(["p2"])
+    );
+    let run = workspace["runs"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|row| row["id"] == 91)
+        .unwrap();
+    let p1 = &run["pages"][0];
+    let p2 = &run["pages"][1];
+    assert_eq!(p1["basis_changed"], false);
+    assert_eq!(p1["basis_unreadable"], false);
+    assert_eq!(p1["basis_incomplete"], false);
+    assert_eq!(p2["basis_changed"], true);
+    assert_eq!(p2["basis_unreadable"], true);
+    assert!(p2["current_basis"].is_null());
+}

@@ -221,36 +221,45 @@ fn legacy_asset_payload_round_trips_and_public_style_keeps_both_hash_formulas() 
         file: "original.png".into(),
         basis: "unused".into(),
     });
-    let mut expected_style = style.clone();
-    expected_style["assets"] = json!([
-        {"id":asset.id,"file":file},
-        {"id":"modern-public","file":file}]);
-    for page in &deck.pages {
-        for (kind, inputs) in [
-            (
-                "image",
-                json!([page.content, page.layout, page.purpose, expected_style]),
-            ),
-            (
-                "svg",
-                json!([
-                    page.content,
-                    page.purpose,
-                    page.layout,
-                    page.image.as_ref().map(|i| &i.file),
-                    expected_style
-                ]),
-            ),
-        ] {
-            let original = format!("{:x}", Sha256::digest(serde_json::to_vec(&inputs).unwrap()));
-            let expected = if kind == "svg" {
-                format!("svg-v2:{original}")
-            } else {
-                original
-            };
-            assert_eq!(ops::basis(kind, &deck, page).unwrap(), expected);
-        }
+    let mut reordered = deck.clone();
+    reordered.style.assets.reverse();
+    let mut stripped = deck.clone();
+    for asset in &mut stripped.style.assets {
+        asset.source.clear();
+        asset.license.clear();
     }
+    for page in &deck.pages {
+        let image_basis = ops::basis("image", &deck, page).unwrap();
+        let svg_basis = ops::basis("svg", &deck, page).unwrap();
+        assert!(image_basis.starts_with("img-v2:"));
+        assert!(svg_basis.starts_with("svg-v3:"));
+        assert_eq!(ops::basis("image", &reordered, page).unwrap(), image_basis);
+        assert_eq!(ops::basis("svg", &reordered, page).unwrap(), svg_basis);
+        assert_eq!(ops::basis("image", &stripped, page).unwrap(), image_basis);
+        assert_eq!(ops::basis("svg", &stripped, page).unwrap(), svg_basis);
+    }
+    // Verify legacy svg-v2 basis stored on deck stays non-stale under current explicit contract.
+    let legacy_svg_v2 = format!(
+        "svg-v2:{:x}",
+        Sha256::digest(
+            serde_json::to_vec(&json!([
+                deck.pages[0].content,
+                deck.pages[0].purpose,
+                deck.pages[0].layout,
+                deck.pages[0].image.as_ref().map(|i| &i.file),
+                stripped.style
+            ]))
+            .unwrap()
+        )
+    );
+    deck.pages[0].svg = Some(Artifact {
+        file: "legacy-v2.svg".into(),
+        basis: legacy_svg_v2,
+    });
+    assert_eq!(
+        ops::artifact_status(&deck).unwrap()["stale_pages"],
+        json!([])
+    );
 }
 
 #[test]

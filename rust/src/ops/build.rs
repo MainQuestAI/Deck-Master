@@ -1,39 +1,87 @@
 use crate::error::{Error, Result};
-use crate::model::Deck;
-use crate::ops::basis::{basis, current_basis_for, image_is_stale};
+use crate::model::{Artifact, Canvas, Deck};
+use crate::ops::basis::{basis, current_basis_for, image_is_stale, is_complete_render_basis};
 use crate::ops::native::{NativePack, native_plan_path, plan_refs, with_shared_layout};
 use crate::ops::review::content_review_status;
 use crate::ops::run::{file_url, page_job};
 use crate::store::{self, Store};
+use serde::Serialize;
 use serde_json::{Value, json};
+use std::collections::BTreeMap;
 use std::path::Path;
+
+#[derive(Serialize)]
+struct NativeBuildPage<'a> {
+    id: &'a str,
+    native: Option<&'a Artifact>,
+    current_basis: String,
+    notes: &'a str,
+}
+
+#[derive(Serialize)]
+struct SvgBuildPage<'a> {
+    id: &'a str,
+    svg_file: Option<&'a str>,
+    notes: &'a str,
+}
+
+#[derive(Serialize)]
+struct BuildDigestInput<'a, P: Serialize> {
+    mode: &'a str,
+    pages: Vec<P>,
+    canvas: &'a Canvas,
+    fonts: &'a [String],
+    assets: BTreeMap<&'a str, &'a str>,
+}
 
 fn build_digest(deck: &Deck) -> Result<String> {
     use sha2::{Digest, Sha256};
     let native = deck.pages.iter().any(|p| p.native.is_some());
-    let pages: Vec<_> = deck
-        .pages
-        .iter()
-        .map(|p| {
-            if native {
-                Ok(json!([p.id, p.native, basis("native", deck, p)?, p.notes]))
-            } else {
-                Ok(json!([p.id, p.svg.as_ref().map(|s| &s.file), p.notes]))
-            }
-        })
-        .collect::<Result<_>>()?;
-    let assets: std::collections::BTreeMap<_, _> = deck
+    let assets: BTreeMap<&str, &str> = deck
         .style
         .assets
         .iter()
-        .map(|asset| (&asset.id, &asset.file))
+        .map(|asset| (asset.id.as_str(), asset.file.as_str()))
         .collect();
-    let inputs =
-        json!({"pages":pages,"canvas":deck.style.canvas,"fonts":deck.style.fonts,"assets":assets});
-    Ok(format!(
-        "{:x}",
-        Sha256::digest(serde_json::to_vec(&inputs)?)
-    ))
+    let encoded = if native {
+        let pages: Vec<_> = deck
+            .pages
+            .iter()
+            .map(|p| {
+                Ok(NativeBuildPage {
+                    id: &p.id,
+                    native: p.native.as_ref(),
+                    current_basis: basis("native", deck, p)?,
+                    notes: &p.notes,
+                })
+            })
+            .collect::<Result<_>>()?;
+        serde_json::to_vec(&BuildDigestInput {
+            mode: "native",
+            pages,
+            canvas: &deck.style.canvas,
+            fonts: &deck.style.fonts,
+            assets,
+        })?
+    } else {
+        let pages: Vec<_> = deck
+            .pages
+            .iter()
+            .map(|p| SvgBuildPage {
+                id: &p.id,
+                svg_file: p.svg.as_ref().map(|s| s.file.as_str()),
+                notes: &p.notes,
+            })
+            .collect();
+        serde_json::to_vec(&BuildDigestInput {
+            mode: "svg",
+            pages,
+            canvas: &deck.style.canvas,
+            fonts: &deck.style.fonts,
+            assets,
+        })?
+    };
+    Ok(format!("{:x}", Sha256::digest(encoded)))
 }
 
 pub fn artifact_status(deck: &Deck) -> Result<Value> {
@@ -72,7 +120,7 @@ fn artifact_status_for(deck: &Deck, native: bool) -> Result<Value> {
         let artifact = if native { &page.native } else { &page.svg };
         if artifact
             .as_ref()
-            .is_some_and(|svg| !svg.basis.starts_with("svg-v2:"))
+            .is_some_and(|svg| !is_complete_render_basis(&svg.basis))
         {
             incomplete_basis_pages.push(&page.id);
         }
@@ -80,10 +128,14 @@ fn artifact_status_for(deck: &Deck, native: bool) -> Result<Value> {
         if image_stale {
             stale_images.push(&page.id);
         }
-        if let Some(svg) = artifact
-            && (svg.basis != current_basis_for("svg", &svg.basis, deck, page)?)
-        {
-            stale.push(&page.id);
+        if let Some(svg) = artifact {
+            let stale_render = match current_basis_for("svg", &svg.basis, deck, page) {
+                Ok(current) => svg.basis != current,
+                Err(_) => true,
+            };
+            if stale_render {
+                stale.push(&page.id);
+            }
         }
     }
     Ok(
@@ -225,7 +277,7 @@ pub fn build_detail(project: &Path, id: i64) -> Result<Value> {
 mod build_selection_tests {
     use super::*;
     use crate::model::Page;
-    use crate::ops::basis::calculate_basis;
+    use crate::ops::basis::calculate_legacy_basis;
     use crate::ops::{export_pptx, workspace};
 
     #[test]
@@ -237,7 +289,7 @@ mod build_selection_tests {
             id: "p1".into(),
             ..Page::default()
         });
-        let legacy = calculate_basis("svg", &deck, &deck.pages[0], true).unwrap();
+        let legacy = calculate_legacy_basis("svg", &deck, &deck.pages[0], false).unwrap();
         deck.pages[0].svg = Some(crate::model::Artifact {
             file: "historical.svg".into(),
             basis: legacy.clone(),
