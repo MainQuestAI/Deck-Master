@@ -809,7 +809,8 @@ fn files_are_project_scoped_and_symlinks_cannot_escape() {
     std::fs::remove_file(first.path().join(".deck/files").join(&local)).unwrap();
     let missing = service.request("GET", &format!("/api/files/{}", &local[..64]), &[], "");
     assert_eq!(missing.status, 404);
-    assert!(missing.json().get("exit_code").is_none());
+    assert_eq!(missing.json()["code"], "missing");
+    assert_eq!(missing.json()["exit_code"], 2);
     assert_eq!(
         service
             .request("GET", &format!("/api/files/{}", &foreign[..64]), &[], "")
@@ -1814,4 +1815,46 @@ fn security_headers_body_limit_and_json_content_type_are_enforced() {
         &huge,
     );
     assert_eq!(oversized.status, 413);
+}
+
+#[test]
+fn http_errors_use_structured_schema_hide_cli_syntax_and_map_busy_and_corrupt() {
+    let temp = tempfile::tempdir().unwrap();
+    ops::new(temp.path(), "HTTP 错误测试".into()).unwrap();
+    let service = Service::start(temp.path());
+
+    // Missing build on export returns 400 structured JSON without CLI command syntax.
+    let no_build = service.request("GET", "/api/export/pptx", &[], "");
+    assert_eq!(no_build.status, 400);
+    let body = no_build.json();
+    assert_eq!(body["code"], "input");
+    assert_eq!(body["exit_code"], 2);
+    assert!(!body["message"].as_str().unwrap().contains("deck build"));
+    assert!(!body["next"].as_str().unwrap().contains("deck "));
+
+    // SQLite busy error maps to exit code 6 and HTTP 503.
+    let busy = deck::error::Error::from(rusqlite::Error::SqliteFailure(
+        rusqlite::ffi::Error::new(rusqlite::ffi::SQLITE_BUSY),
+        Some("database is locked".into()),
+    ));
+    assert_eq!(busy.exit_code(), 6);
+    assert_eq!(busy.http_status(), 503);
+    assert_eq!(busy.code(), "busy");
+
+    // Corrupt deck_json in DB maps to HTTP 500 + data_corrupt + exit_code 7.
+    {
+        let store = Store::open(temp.path()).unwrap();
+        store
+            .connection
+            .execute(
+                "UPDATE versions SET deck_json = '{corrupt' WHERE id = 1",
+                [],
+            )
+            .unwrap();
+    }
+    let corrupt = service.request("GET", "/api/deck", &[], "");
+    assert_eq!(corrupt.status, 500);
+    let corrupt_json = corrupt.json();
+    assert_eq!(corrupt_json["code"], "data_corrupt");
+    assert_eq!(corrupt_json["exit_code"], 7);
 }

@@ -1,4 +1,4 @@
-use crate::error::{Error, Result};
+use crate::error::{Error, ErrorFormat, Result};
 use crate::ops;
 use clap::{CommandFactory, FromArgMatches, Parser, Subcommand, parser::ValueSource};
 use serde::Serialize;
@@ -10,6 +10,15 @@ use std::path::PathBuf;
 struct Cli {
     #[arg(long, global = true, default_value = ".", help = "作品目录")]
     project: PathBuf,
+    #[arg(
+        long,
+        global = true,
+        default_value = "text",
+        value_parser = ["text", "json"],
+        value_name = "text|json",
+        help = "错误输出格式：text（默认）或 json（结构化 JSON 到 stderr）"
+    )]
+    error_format: String,
     #[command(subcommand)]
     command: Commands,
 }
@@ -23,8 +32,8 @@ enum Commands {
     },
     #[command(about = "在本机浏览、修改和下载作品")]
     Serve {
-        #[arg(value_name = "PROJECT")]
-        directory: PathBuf,
+        #[arg(value_name = "PROJECT", help = "作品目录（省略时使用 --project）")]
+        directory: Option<PathBuf>,
     },
     #[command(about = "选择图片素材")]
     Asset {
@@ -51,7 +60,8 @@ enum Commands {
     },
     #[command(about = "新建不完整作品")]
     New {
-        project: PathBuf,
+        #[arg(value_name = "PROJECT", help = "新建作品目录（省略时使用 --project）")]
+        project: Option<PathBuf>,
         #[arg(long, default_value = "", help = "作品标题")]
         title: String,
     },
@@ -117,11 +127,21 @@ enum ReviewCommand {
     },
     #[command(about = "按类型、状态或页面读取审阅记录")]
     List {
-        #[arg(long)]
+        #[arg(
+            long,
+            value_parser = ["open", "resolved"],
+            value_name = "open|resolved",
+            help = "按状态筛选：open 或 resolved"
+        )]
         status: Option<String>,
-        #[arg(long)]
+        #[arg(long, help = "按页面 ID 筛选")]
         page: Option<String>,
-        #[arg(long, default_value = "comment", value_parser = ["comment", "content_review", "all"])]
+        #[arg(
+            long,
+            default_value = "comment",
+            value_parser = ["comment", "content_review", "all"],
+            help = "记录类型：comment、content_review 或 all"
+        )]
         record: String,
     },
     #[command(about = "按编号读取完整审阅记录")]
@@ -160,10 +180,20 @@ enum AssetCommand {
 enum RunCommand {
     #[command(about = "准备指定页的生图、SVG 或 native 任务")]
     Start {
+        #[arg(
+            value_parser = ["image", "svg", "native"],
+            value_name = "image|svg|native",
+            help = "任务类型：image、svg 或 native"
+        )]
         kind: String,
-        #[arg(long, value_delimiter = ',', required = true)]
+        #[arg(
+            long,
+            value_delimiter = ',',
+            required = true,
+            help = "目标页面 ID（逗号分隔）"
+        )]
         pages: Vec<String>,
-        #[arg(long)]
+        #[arg(long, help = "仅 image 可设：最大外部调用次数")]
         max_calls: Option<i64>,
     },
     #[command(about = "生图前登记一次外部调用")]
@@ -213,20 +243,69 @@ fn print_json(value: impl Serialize) -> Result<()> {
     Ok(())
 }
 
-pub fn run() -> Result<()> {
-    let mut command = Cli::command();
-    let matches = command.get_matches_mut();
-    if matches.subcommand_name() == Some("serve")
-        && matches.value_source("project") == Some(ValueSource::CommandLine)
-    {
-        command
-            .error(
-                clap::error::ErrorKind::ArgumentConflict,
-                "serve 不接受 --project",
-            )
-            .exit();
+fn requested_json_errors() -> bool {
+    let mut args = std::env::args().skip(1);
+    while let Some(arg) = args.next() {
+        if arg == "--error-format" && args.next().as_deref() == Some("json") {
+            return true;
+        }
+        if arg == "--error-format=json" {
+            return true;
+        }
     }
+    false
+}
+
+pub fn execute() -> i32 {
+    let json_hint = requested_json_errors();
+    let command = Cli::command();
+    let matches = match command.try_get_matches() {
+        Ok(matches) => matches,
+        Err(error) => {
+            if json_hint && error.exit_code() != 0 {
+                let err = Error::Input(error.to_string().trim().to_string());
+                eprintln!(
+                    "{}",
+                    serde_json::to_string_pretty(&err.to_json(Some("cli"), false))
+                        .unwrap_or_else(|_| err.to_string())
+                );
+                return err.exit_code();
+            }
+            error.exit();
+        }
+    };
+    let project_explicit = matches.value_source("project") == Some(ValueSource::CommandLine);
+    let step = matches.subcommand_name().map(str::to_string);
     let cli = Cli::from_arg_matches(&matches).unwrap_or_else(|error| error.exit());
+    let format = if cli.error_format == "json" {
+        ErrorFormat::Json
+    } else {
+        ErrorFormat::Text
+    };
+    if let Err(error) = dispatch(cli, project_explicit) {
+        match format {
+            ErrorFormat::Text => eprintln!("{error}"),
+            ErrorFormat::Json => {
+                eprintln!(
+                    "{}",
+                    serde_json::to_string_pretty(&error.to_json(step.as_deref(), false))
+                        .unwrap_or_else(|_| error.to_string())
+                );
+            }
+        }
+        return error.exit_code();
+    }
+    0
+}
+
+pub fn run() -> Result<()> {
+    let matches = Cli::command().get_matches();
+    let project_explicit = matches.value_source("project") == Some(ValueSource::CommandLine);
+    let cli = Cli::from_arg_matches(&matches).unwrap_or_else(|error| error.exit());
+    dispatch(cli, project_explicit)
+}
+
+fn dispatch(cli: Cli, project_explicit: bool) -> Result<()> {
     match cli.command {
         Commands::Review { command } => match command {
             ReviewCommand::Add {
@@ -282,7 +361,15 @@ pub fn run() -> Result<()> {
             ReviewCommand::Get { id } => print_json(ops::review_get(&cli.project, id)?),
             ReviewCommand::Resolve { id } => print_json(ops::review_resolve(&cli.project, id)?),
         },
-        Commands::Serve { directory } => crate::server::serve(&directory),
+        Commands::Serve { directory } => {
+            if directory.is_some() && project_explicit {
+                return Err(Error::Input(
+                    "serve 不能同时指定位置参数目录与 --project；请只传其中之一".into(),
+                ));
+            }
+            let target = directory.unwrap_or(cli.project);
+            crate::server::serve(&target)
+        }
         Commands::Build => print_json(ops::build(&cli.project)?),
         Commands::Doctor { fonts } => {
             let result = ops::doctor(&fonts)?;
@@ -332,7 +419,10 @@ pub fn run() -> Result<()> {
         Commands::Export {
             command: ExportCommand::Pptx,
         } => print_json(ops::export_pptx(&cli.project)?),
-        Commands::New { project, title } => print_json(ops::new(&project, title)?),
+        Commands::New { project, title } => {
+            let target = project.unwrap_or(cli.project);
+            print_json(ops::new(&target, title)?)
+        }
         Commands::Import {
             source,
             destination,

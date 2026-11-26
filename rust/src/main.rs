@@ -1,8 +1,8 @@
 #![forbid(unsafe_code)]
 
 fn main() {
-    if let Err(error) = deck::cli::run() {
-        eprintln!("{error}");
-        std::process::exit(error.exit_code());
+    let code = deck::cli::execute();
+    if code != 0 {
+        std::process::exit(code);
     }
 }

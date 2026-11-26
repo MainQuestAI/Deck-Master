@@ -330,7 +330,8 @@ pub fn current(connection: &Connection) -> Result<Snapshot> {
         row.ok_or_else(|| Error::Input("项目没有作品版本；请检查所选项目".into()))?;
     Ok(Snapshot {
         version,
-        deck: serde_json::from_str(&json)?,
+        deck: serde_json::from_str(&json)
+            .map_err(|e| Error::DataCorrupt(format!("作品版本 {version} 的 JSON 无法解析：{e}")))?,
     })
 }
 
@@ -347,9 +348,11 @@ pub(crate) fn load_optional(connection: &Connection, version: i64) -> Result<Opt
             |row| row.get(0),
         )
         .optional()?;
-    json.map(|json| serde_json::from_str(&json))
-        .transpose()
-        .map_err(Error::from)
+    json.map(|json| {
+        serde_json::from_str(&json)
+            .map_err(|e| Error::DataCorrupt(format!("历史版本 {version} 的 JSON 无法解析：{e}")))
+    })
+    .transpose()
 }
 
 fn has_column(connection: &Connection, table: &str, column: &str) -> Result<bool> {
@@ -414,7 +417,8 @@ pub fn max_material_number(connection: &Connection) -> Result<u64> {
     let mut max_number = 0u64;
     while let Some(row) = rows.next()? {
         let json: String = row.get(0)?;
-        let parsed: MaterialsOnly = serde_json::from_str(&json)?;
+        let parsed: MaterialsOnly = serde_json::from_str(&json)
+            .map_err(|e| Error::DataCorrupt(format!("历史版本材料记录损坏：{e}")))?;
         for material in parsed.materials {
             if let Some(number) = material
                 .id

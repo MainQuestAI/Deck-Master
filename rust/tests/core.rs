@@ -218,12 +218,11 @@ fn same_page_conflict_is_atomic_and_reports_current_author_content() {
     )
     .unwrap_err();
     assert_eq!(error.exit_code(), 5);
-    let Error::Conflict(body) = error else {
+    let Error::Conflict { items, .. } = error else {
         panic!("expected conflict")
     };
-    let conflicts: Value = serde_json::from_str(&body).unwrap();
-    assert_eq!(conflicts[0]["unit"], "pages/p1");
-    assert_eq!(conflicts[0]["current"]["notes"], "先保存");
+    assert_eq!(items[0].unit, "pages/p1");
+    assert_eq!(items[0].current["notes"], "先保存");
     let current = store::Store::open(temp.path()).unwrap().current().unwrap();
     assert_eq!(current.version, first.version);
     assert_eq!(current.deck.brief.title, "合成作品");

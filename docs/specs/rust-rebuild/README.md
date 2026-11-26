@@ -299,11 +299,12 @@ S5 界面接入：制作总览展示整稿待处理意见，单页工作区展�
 - `POST /api/build` 返回 `{id, version_id, url, findings, missing_pages, stale_pages, stale_images, warnings, content_review}`，url 是该次构建文件的 `/api/files/<sha>`。完整 findings（含讲稿与回读）只留 JSON 正文。`X-Deck-Status` 仅带 id、url、version_id、缺页/过期摘要、warnings 和 content_review，不带报告正文。`warnings` 列出原图依据已变的页（`stale_image`），以及已采用 plan 里共用题头达到 3 页的页（`shared_layout`）。`content_review` 与 `warnings` 并列，形状见 §3.6。不改变 HTTP 状态。`GET /api/files/<sha>` 只在当前项目的 files 目录内查找，含扩展名的存储引用取点号前的 sha 用于 URL；文件响应禁止脚本执行。
 - `GET /api/export/md` 与 `GET /api/export/pptx` 直接返回下载内容，文件名为 `deck.md/deck.pptx`。`X-Deck-Status` 是 JSON（非 ASCII 字符使用 JSON 转义），含 `missing_pages/stale_pages` 和 `content_review`；PPTX 另含 `id/version_id/input_changed/warning/build_missing_pages/stale_images/warnings/current_content_review`。Markdown 的状态来自 `artifact_status` 加上 `content_review`，其中已有 `stale_images`。`content_review` 不并入 `warnings`。
 - `GET /api/reviews` 返回 `{reviews:[意见]}`，默认只含 comment，可用 `record=comment|content_review|all`、`status=open|resolved` 与 `page=pN` 过滤，按 id 升序；`GET /api/reviews/<id>` 返回完整记录（含 record_kind、checks、snapshot）；POST 接受 `{page_id?, text, reviewer?}`，reviewer 默认 author，服务端强制 method=human 并忽略请求中的 method。add 与 resolve 返回该条意见，resolve 幂等；意见不存在返回 404。
-- cancel 返回 `{runs:[目标 run]}`，restore 返回 `{version, deck}`。输入错误为 HTTP 400；非本机请求 403；文件或接口不存在 404；缺工具 503；工具执行失败 500。错误响应含 `error`，仅 HTTP 409 冲突附带 CLI `exit_code:5`。
+- cancel 返回 `{runs:[目标 run]}`，restore 返回 `{version, deck}`。输入或 SVG 子集错误为 HTTP 400；非本机请求 403；文件或接口不存在 404；冲突 409；缺工具或数据库锁忙 503；工具失败或库内数据损坏 500。错误响应统一返回 `{code, exit_code, step, message, next, error, details?}`，文案不夹带 CLI 参数指令。
 
 ### 3.8 错误
 
-- 退出码：0 成功；2 输入错误；3 缺工具或依赖（soffice、字体等）；4 工具执行失败；5 保存冲突（附冲突内容）。
+- 退出码：0 成功；2 输入、缺失或 SVG 子集错误；3 缺工具或依赖（soffice、字体等）；4 工具执行失败或内部异常；5 保存冲突（附冲突内容）；6 数据库并发锁忙（`SQLITE_BUSY`）；7 项目持久化数据损坏（库内 JSON 损坏等）。
+- CLI 支持全局 `--error-format text|json`（默认 `text`），`json` 模式将统一结构 `{code, exit_code, step, message, next, error, details?}` 输出到 stderr。
 - 错误信息写明哪一步失败、原因和下一步该做什么。
 - 对外部输入和工具结果不使用 unwrap / expect。
 - 工具失败就报失败，不用整页图片之类的替代产物顶替。

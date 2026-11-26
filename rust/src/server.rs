@@ -70,19 +70,8 @@ fn json_response(status: u16, value: Value) -> Result<ResponseBox> {
 }
 
 fn error_response(error: Error) -> Result<ResponseBox> {
-    let status = match &error {
-        Error::Conflict(_) => 409,
-        Error::NeedsTool(_) => 503,
-        Error::Tool(_) => 500,
-        Error::Missing(_) => 404,
-        Error::Io(_) | Error::Sql(_) => 500,
-        _ => 400,
-    };
-    let mut value = json!({"error": error.to_string()});
-    if status == 409 {
-        value["exit_code"] = json!(error.exit_code());
-    }
-    json_response(status, value)
+    let status = error.http_status();
+    json_response(status, error.to_json(Some("http"), true))
 }
 
 fn local_authority(authority: &str, port: u16) -> bool {
@@ -358,12 +347,18 @@ fn route(project: &Path, request: &mut Request) -> Result<ResponseBox> {
             let patch = crate::ops::put_patch(submitted.clone(), false)?;
             match ops::put(project, base, patch) {
                 Ok(snapshot) => json_response(200, serde_json::to_value(snapshot)?),
-                Err(Error::Conflict(conflicts)) => json_response(
+                Err(Error::Conflict { items, .. }) => json_response(
                     409,
                     json!({
+                        "code": "conflict",
+                        "exit_code": 5,
+                        "step": "put",
+                        "message": "保存冲突；请比较当前内容后重新提交，保留本地输入",
+                        "next": "请读取当前最新内容、解决冲突后重新提交",
                         "error": "保存冲突；请比较当前内容后重新提交，保留本地输入",
-                        "exit_code": 5, "base": base, "submitted": submitted,
-                        "conflicts": serde_json::from_str::<Value>(&conflicts)?
+                        "base": base,
+                        "submitted": submitted,
+                        "conflicts": items,
                     }),
                 ),
                 Err(error) => Err(error),

@@ -238,110 +238,149 @@ pub fn run_start(
         ));
     }
     let mut store = Store::open(project)?;
-    let snapshot = store.current()?;
-    for id in ids {
-        if snapshot.deck.page(id).is_none() {
-            return Err(Error::Input(format!("页面 {id} 不存在")));
-        }
-    }
     let root = store.root.clone();
-    let tx = store.transaction()?;
-    let open: Option<i64> = tx
+    let work_root = root.join("work");
+    std::fs::create_dir_all(&work_root)?;
+
+    // Validate against the current snapshot and stage prompt files in a temporary directory
+    // before inserting the DB run record, so crashes or tool failures leave no empty open run.
+    let mut staged_snapshot = store.current()?;
+    let validate_and_stage = |store: &Store,
+                              snapshot: &crate::model::Snapshot|
+     -> Result<(Vec<(String, String)>, tempfile::TempDir)> {
+        let deck = &snapshot.deck;
+        for id in ids {
+            if deck.page(id).is_none() {
+                return Err(Error::Input(format!("页面 {id} 不存在")));
+            }
+        }
+        let targets: Vec<&Page> = deck
+            .pages
+            .iter()
+            .filter(|page| ids.iter().any(|id| id == &page.id))
+            .collect();
+        // §4.1 checks the frame before kind. §5.3 lists blank kind in that same
+        // missing-field error. Illegal kind is a different sentence, after both.
+        let mut missing: Vec<String> = crate::model::missing_frame_fields(deck)
+            .into_iter()
+            .map(str::to_string)
+            .collect();
+        for page in &targets {
+            if blank_text(&page.kind) {
+                missing.push(format!("pages[{}].kind", page.id));
+            }
+        }
+        if !missing.is_empty() {
+            return Err(Error::Input(frame_gate_message(
+                deck,
+                snapshot.version,
+                &missing,
+            )?));
+        }
+        for page in &targets {
+            crate::model::validate_kind(&page.id, &page.kind)?;
+            if page.kind == "judgment"
+                && let Some(argument) = &page.argument
+            {
+                crate::model::validate_argument(&page.id, argument)?;
+            }
+        }
+        let incomplete = incomplete_judgment_lines(&targets);
+        if !incomplete.is_empty() {
+            return Err(Error::Input(evidence_gate_message(
+                snapshot.version,
+                &incomplete,
+                &evidence_example(&targets)?,
+            )));
+        }
+        let staging = tempfile::Builder::new()
+            .prefix(".stage-")
+            .tempdir_in(&work_root)?;
+        let mut page_bases = Vec::with_capacity(ids.len());
+        // Page IDs are data, so work paths use an ordinal rather than the author's ID.
+        for (index, page_id) in ids.iter().enumerate() {
+            let page = deck
+                .page(page_id)
+                .ok_or_else(|| Error::Input(format!("页面 {page_id} 不存在")))?;
+            page_bases.push((page_id.clone(), basis(kind, deck, page)?));
+            crate::prompts::write(
+                store,
+                deck,
+                page,
+                kind,
+                &staging.path().join((index + 1).to_string()),
+            )?;
+        }
+        Ok((page_bases, staging))
+    };
+
+    // Check open run before doing any prompt/tool staging work.
+    if let Some(open_id) = store
+        .connection
         .query_row(
             "SELECT id FROM runs WHERE kind=? AND status='open'",
             [kind],
-            |r| r.get(0),
+            |r| r.get::<_, i64>(0),
         )
-        .optional()?;
-    if let Some(id) = open {
+        .optional()?
+    {
         return Err(Error::Input(format!(
-            "同类 run {id} 尚未结束；继续交回或先取消"
+            "同类 run {open_id} 尚未结束；继续交回或先取消"
         )));
     }
-    let current = store::current(&tx)?;
-    let version = current.version;
-    let deck = current.deck;
-    let targets: Vec<&Page> = deck
-        .pages
-        .iter()
-        .filter(|page| ids.iter().any(|id| id == &page.id))
-        .collect();
-    // §4.1 checks the frame before kind. §5.3 lists blank kind in that same
-    // missing-field error. Illegal kind is a different sentence, after both.
-    let mut missing: Vec<String> = crate::model::missing_frame_fields(&deck)
-        .into_iter()
-        .map(str::to_string)
-        .collect();
-    for page in &targets {
-        if blank_text(&page.kind) {
-            missing.push(format!("pages[{}].kind", page.id));
+    let (mut page_bases, mut staging) = validate_and_stage(&store, &staged_snapshot)?;
+    let id = loop {
+        let tx = store.transaction()?;
+        let open: Option<i64> = tx
+            .query_row(
+                "SELECT id FROM runs WHERE kind=? AND status='open'",
+                [kind],
+                |r| r.get(0),
+            )
+            .optional()?;
+        if let Some(open_id) = open {
+            return Err(Error::Input(format!(
+                "同类 run {open_id} 尚未结束；继续交回或先取消"
+            )));
         }
-    }
-    if !missing.is_empty() {
-        return Err(Error::Input(frame_gate_message(&deck, version, &missing)?));
-    }
-    for page in &targets {
-        crate::model::validate_kind(&page.id, &page.kind)?;
-        if page.kind == "judgment"
-            && let Some(argument) = &page.argument
-        {
-            crate::model::validate_argument(&page.id, argument)?;
+        let current = store::current(&tx)?;
+        if current.version != staged_snapshot.version {
+            drop(tx);
+            staged_snapshot = current;
+            let (next_bases, next_staging) = validate_and_stage(&store, &staged_snapshot)?;
+            page_bases = next_bases;
+            staging = next_staging;
+            continue;
         }
-    }
-    let incomplete = incomplete_judgment_lines(&targets);
-    if !incomplete.is_empty() {
-        return Err(Error::Input(evidence_gate_message(
-            version,
-            &incomplete,
-            &evidence_example(&targets)?,
-        )));
-    }
-    tx.execute(
-        "INSERT INTO runs(kind,status,max_calls) VALUES (?,'open',?)",
-        params![
-            kind,
-            if kind == "image" {
-                Some(max_calls.unwrap_or(ids.len() as i64 * 2))
-            } else {
-                None
-            }
-        ],
-    )?;
-    let id = tx.last_insert_rowid();
-    for page_id in ids {
-        let page = deck
-            .pages
-            .iter()
-            .find(|p| &p.id == page_id)
-            .ok_or_else(|| Error::Input(format!("页面 {page_id} 已删除；请重新开始")))?;
         tx.execute(
-            "INSERT INTO run_pages(run_id,page_id,basis,status) VALUES (?,?,?,'pending')",
-            params![id, page_id, basis(kind, &deck, page)?],
+            "INSERT INTO runs(kind,status,max_calls) VALUES (?,'open',?)",
+            params![
+                kind,
+                if kind == "image" {
+                    Some(max_calls.unwrap_or(ids.len() as i64 * 2))
+                } else {
+                    None
+                }
+            ],
         )?;
-    }
-    tx.commit()?;
-    // Page IDs are data, so work paths use an ordinal rather than the author's ID.
-    for (index, page_id) in ids.iter().enumerate() {
-        let page = deck
-            .pages
-            .iter()
-            .find(|p| &p.id == page_id)
-            .ok_or_else(|| Error::Input("页面不存在".into()))?;
-        if let Err(error) = crate::prompts::write(
-            &store,
-            &deck,
-            page,
-            kind,
-            &root
-                .join("work")
-                .join(id.to_string())
-                .join((index + 1).to_string()),
-        ) {
-            store
-                .connection
-                .execute("UPDATE runs SET status='cancelled' WHERE id=?", [id])?;
-            return Err(error);
+        let id = tx.last_insert_rowid();
+        for (page_id, page_basis) in &page_bases {
+            tx.execute(
+                "INSERT INTO run_pages(run_id,page_id,basis,status) VALUES (?,?,?,'pending')",
+                params![id, page_id, page_basis],
+            )?;
         }
+        tx.commit()?;
+        break id;
+    };
+    let final_work = work_root.join(id.to_string());
+    let kept = staging.keep();
+    if let Err(error) = std::fs::rename(&kept, &final_work) {
+        let _ = std::fs::remove_dir_all(&kept);
+        let tx = store.transaction()?;
+        tx.execute("UPDATE runs SET status='cancelled' WHERE id=?", [id])?;
+        tx.commit()?;
+        return Err(error.into());
     }
     run_show(project, Some(id))
 }
@@ -741,9 +780,7 @@ fn run_adopt_with_options(
     let (old, _, file) = run_page(&store.connection, id, page_id)?;
     let file = file.ok_or_else(|| Error::Input("此页尚无结果；请先交回文件".into()))?;
     if expected_file.is_some_and(|expected| expected != file) {
-        return Err(Error::Conflict(
-            "候选已更新；请读取当前候选后重新采用".into(),
-        ));
+        return Err(Error::conflict("候选已更新；请读取当前候选后重新采用"));
     }
     store.file(&file)?;
     let layout_warnings = if kind == "native" {
@@ -787,9 +824,7 @@ fn run_adopt_with_options(
     };
     let tx = store.transaction()?;
     if run_page(&tx, id, page_id)?.2.as_deref() != Some(file.as_str()) {
-        return Err(Error::Conflict(
-            "候选已更新；请读取当前候选后重新采用".into(),
-        ));
+        return Err(Error::conflict("候选已更新；请读取当前候选后重新采用"));
     }
     let mut snapshot = store::current(&tx)?;
     let page = snapshot

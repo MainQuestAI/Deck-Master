@@ -111,7 +111,25 @@ pub fn invoke(command: &str, value: &Value) -> Result<Value> {
     if !status.success() {
         let detail = String::from_utf8_lossy(&stderr).trim().to_string();
         return Err(match status.code() {
-            Some(2) => Error::Input(detail),
+            Some(2) => {
+                if let Ok(parsed) = serde_json::from_str::<Value>(&detail)
+                    && (parsed.get("code").and_then(Value::as_str) == Some("svg_subset")
+                        || (parsed.get("rule").is_some() && parsed.get("message").is_some()))
+                {
+                    let message = parsed
+                        .get("message")
+                        .and_then(Value::as_str)
+                        .unwrap_or(&detail)
+                        .to_string();
+                    Error::SvgSubset {
+                        step: command.to_string(),
+                        message,
+                        details: parsed,
+                    }
+                } else {
+                    Error::Input(detail)
+                }
+            }
             Some(3) => Error::NeedsTool(detail),
             _ if detail.contains("No module named deck_tools") => Error::NeedsTool(
                 "当前解释器没有 deck-tools；请在 DECK_TOOLS_PYTHON 对应环境安装 deck-tools".into(),
