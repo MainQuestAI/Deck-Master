@@ -56,6 +56,7 @@ pub fn unsupported_format_message(version: i64, supported: i64) -> String {
 }
 
 pub struct Store {
+    #[doc(hidden)]
     pub connection: Connection,
     pub root: PathBuf,
 }
@@ -67,6 +68,15 @@ pub struct Version {
     pub summary: String,
 }
 
+fn enable_wal_mode(connection: &Connection) -> Result<()> {
+    let mode: String = connection.pragma_query_value(None, "journal_mode", |row| row.get(0))?;
+    if !mode.eq_ignore_ascii_case("wal") {
+        let _: String = connection.query_row("PRAGMA journal_mode = WAL", [], |row| row.get(0))?;
+    }
+    connection.pragma_update(None, "synchronous", "NORMAL")?;
+    Ok(())
+}
+
 impl Store {
     pub fn create(project: &Path, deck: &Deck) -> Result<Self> {
         if project.join(".deckmaster").exists() {
@@ -74,20 +84,40 @@ impl Store {
                 "目标包含旧项目；请选择新目录，旧项目不会原地改写".into(),
             ));
         }
-        fs::create_dir_all(project)?;
         let root = project.join(".deck");
-        fs::create_dir(&root)
-            .map_err(|e| Error::Input(format!("无法新建项目（可能已存在）：{e}；请选择新目录")))?;
-        fs::create_dir(root.join("files"))?;
-        let connection = Connection::open(root.join("deck.db"))?;
-        let mut store = Self { connection, root };
-        store.connection.busy_timeout(Duration::from_secs(5))?;
-        let tx = store.transaction()?;
-        tx.execute_batch(FRESH_V7)?;
-        let mut deck = deck.clone();
-        append(&tx, &mut deck, "新建作品")?;
-        tx.commit()?;
-        Ok(store)
+        if root.exists() {
+            return Err(Error::Input(
+                "无法新建项目（可能已存在）：目标目录已包含 .deck；请选择新目录".into(),
+            ));
+        }
+        fs::create_dir_all(project)?;
+        // Stage creation in a sibling temp directory so any failure leaves no half-initialized .deck/.
+        let staging = tempfile::Builder::new()
+            .prefix(".deck-init-")
+            .tempdir_in(project)?;
+        fs::create_dir(staging.path().join("files"))?;
+        {
+            let mut connection = Connection::open(staging.path().join("deck.db"))?;
+            connection.busy_timeout(Duration::from_secs(5))?;
+            enable_wal_mode(&connection)?;
+            let tx = connection.transaction_with_behavior(TransactionBehavior::Immediate)?;
+            tx.execute_batch(FRESH_V7)?;
+            let mut deck = deck.clone();
+            append(&tx, &mut deck, "新建作品")?;
+            tx.commit()?;
+        }
+        let kept = staging.keep();
+        if let Err(error) = fs::rename(&kept, &root) {
+            let _ = fs::remove_dir_all(&kept);
+            return Err(Error::Input(format!(
+                "无法新建项目（可能已存在）：{error}；请选择新目录"
+            )));
+        }
+        let connection =
+            Connection::open_with_flags(root.join("deck.db"), OpenFlags::SQLITE_OPEN_READ_WRITE)?;
+        connection.busy_timeout(Duration::from_secs(5))?;
+        connection.pragma_update(None, "synchronous", "NORMAL")?;
+        Ok(Self { connection, root })
     }
 
     pub fn open(project: &Path) -> Result<Self> {
@@ -198,9 +228,14 @@ impl Store {
     }
 
     pub fn transaction(&mut self) -> Result<Transaction<'_>> {
+        enable_wal_mode(&self.connection)?;
         Ok(self
             .connection
             .transaction_with_behavior(TransactionBehavior::Immediate)?)
+    }
+
+    pub fn read_transaction(&mut self) -> Result<Transaction<'_>> {
+        Ok(self.connection.transaction()?)
     }
 
     pub fn current(&self) -> Result<Snapshot> {
@@ -212,37 +247,41 @@ impl Store {
     }
 
     pub fn add_file(&self, data: &[u8], extension: &str) -> Result<String> {
-        let extension: String = if extension == "native.json" {
-            extension.into()
-        } else {
-            extension
-                .chars()
-                .filter(char::is_ascii_alphanumeric)
-                .take(16)
-                .collect()
-        };
-        let extension = if extension.is_empty() {
-            "bin"
-        } else {
-            &extension
-        };
-        let name = format!("{:x}.{extension}", Sha256::digest(data));
-        let files = self.root.join("files");
-        let mut temp = tempfile::NamedTempFile::new_in(&files)?;
-        temp.write_all(data)?;
-        temp.as_file().sync_all()?;
-        match temp.persist_noclobber(files.join(&name)) {
-            Ok(_) => {}
-            Err(e) if e.error.kind() == std::io::ErrorKind::AlreadyExists => {}
-            Err(e) => return Err(Error::Io(e.error)),
-        }
-        File::open(files)?.sync_all()?;
-        Ok(name)
+        add_file(&self.root, data, extension)
     }
 
     pub fn file(&self, name: &str) -> Result<PathBuf> {
         file_path(&self.root, name)
     }
+}
+
+pub fn add_file(root: &Path, data: &[u8], extension: &str) -> Result<String> {
+    let extension: String = if extension == "native.json" {
+        extension.into()
+    } else {
+        extension
+            .chars()
+            .filter(char::is_ascii_alphanumeric)
+            .take(16)
+            .collect()
+    };
+    let extension = if extension.is_empty() {
+        "bin"
+    } else {
+        &extension
+    };
+    let name = format!("{:x}.{extension}", Sha256::digest(data));
+    let files = root.join("files");
+    let mut temp = tempfile::NamedTempFile::new_in(&files)?;
+    temp.write_all(data)?;
+    temp.as_file().sync_all()?;
+    match temp.persist_noclobber(files.join(&name)) {
+        Ok(_) => {}
+        Err(e) if e.error.kind() == std::io::ErrorKind::AlreadyExists => {}
+        Err(e) => return Err(Error::Io(e.error)),
+    }
+    File::open(files)?.sync_all()?;
+    Ok(name)
 }
 
 pub fn file_path(root: &Path, name: &str) -> Result<PathBuf> {
@@ -359,11 +398,41 @@ fn migrate_v7(connection: &Connection) -> Result<()> {
     Ok(())
 }
 
-pub fn append(connection: &Connection, deck: &mut Deck, summary: &str) -> Result<i64> {
-    migrate_v7(connection)?;
-    connection.execute(
+pub fn max_material_number(connection: &Connection) -> Result<u64> {
+    #[derive(serde::Deserialize)]
+    struct MaterialId {
+        id: String,
+    }
+    #[derive(serde::Deserialize)]
+    struct MaterialsOnly {
+        #[serde(default)]
+        materials: Vec<MaterialId>,
+    }
+
+    let mut query = connection.prepare("SELECT deck_json FROM versions")?;
+    let mut rows = query.query([])?;
+    let mut max_number = 0u64;
+    while let Some(row) = rows.next()? {
+        let json: String = row.get(0)?;
+        let parsed: MaterialsOnly = serde_json::from_str(&json)?;
+        for material in parsed.materials {
+            if let Some(number) = material
+                .id
+                .strip_prefix('m')
+                .and_then(|digits| digits.parse::<u64>().ok())
+            {
+                max_number = max_number.max(number);
+            }
+        }
+    }
+    Ok(max_number)
+}
+
+pub fn append(tx: &Transaction<'_>, deck: &mut Deck, summary: &str) -> Result<i64> {
+    migrate_v7(tx)?;
+    tx.execute(
         "INSERT INTO versions (summary, deck_json) VALUES (?, ?)",
         params![summary, serde_json::to_string(deck)?],
     )?;
-    Ok(connection.last_insert_rowid())
+    Ok(tx.last_insert_rowid())
 }

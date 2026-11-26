@@ -21,7 +21,8 @@ pub fn export_markdown(project: &Path) -> Result<(String, Value)> {
 
 pub fn export_pptx(project: &Path) -> Result<Value> {
     let mut store = Store::open(project)?;
-    let tx = store.connection.transaction()?;
+    let root = store.root.clone();
+    let tx = store.read_transaction()?;
     let current = store::current(&tx)?;
     let deck = current.deck;
     let mut selected = default_build(&tx, &deck)?
@@ -29,7 +30,7 @@ pub fn export_pptx(project: &Path) -> Result<Value> {
     let file = selected["file"]
         .as_str()
         .ok_or_else(|| Error::Tool("构建缺少文件引用".into()))?;
-    selected["path"] = json!(store::file_path(&store.root, file)?);
+    selected["path"] = json!(store::file_path(&root, file)?);
     selected.as_object_mut().map(|value| value.remove("file"));
     let status = artifact_status(&deck)?;
     selected["missing_pages"] = status["missing_pages"].clone();
@@ -41,7 +42,7 @@ pub fn export_pptx(project: &Path) -> Result<Value> {
             continue;
         };
         // The selected PPTX is already built. A missing pack only drops this advisory warning.
-        let Some(plan) = readable_native_plan(&store.root, &artifact.file) else {
+        let Some(plan) = readable_native_plan(&root, &artifact.file) else {
             continue;
         };
         plans.push((page.id.clone(), plan));

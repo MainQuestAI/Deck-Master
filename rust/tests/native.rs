@@ -298,7 +298,7 @@ fn native_candidates_require_a_conclusion_then_build_export_use_adopted_packs_an
     let mut current = store.current().unwrap();
     let adopted = current.deck.pages[0].native.as_ref().unwrap();
     assert_ne!(adopted.file, candidate);
-    assert!(adopted.basis.starts_with("svg-v2:"));
+    assert!(adopted.basis.starts_with("svg-v3:"));
     assert_eq!(
         adopted.basis,
         ops::basis("svg", &current.deck, &current.deck.pages[0]).unwrap()

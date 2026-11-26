@@ -1,6 +1,8 @@
 use crate::error::{Error, Result};
 use crate::model::{Argument, Deck, Evidence, Page, RunKind};
-use crate::ops::basis::{basis, current_basis_for};
+use crate::ops::basis::{
+    basis, basis_cache_algorithm, current_basis_for, is_complete_render_basis,
+};
 use crate::ops::native::{
     NativePack, append_findings_warnings, is_confirmation_only, native_result,
     note_unspecific_warning, plan_refs, result_plans, shared_layout_warnings,
@@ -371,14 +373,17 @@ pub fn run_call(project: &Path, id: i64, page: &str, retry: bool) -> Result<Valu
 }
 
 pub fn run_cancel(project: &Path, id: i64) -> Result<Value> {
-    let store = Store::open(project)?;
-    run_record(&store.connection, id)?;
-    store.connection.execute(
+    let mut store = Store::open(project)?;
+    let tx = store.transaction()?;
+    run_record(&tx, id)?;
+    tx.execute(
         "UPDATE runs SET status='cancelled' WHERE id=? AND status='open'",
         [id],
     )?;
-    let deck = store.current()?.deck;
-    Ok(json!({"runs": runs(&store.connection, &deck, Some(id))?}))
+    let deck = store::current(&tx)?.deck;
+    let list = runs(&tx, &deck, Some(id))?;
+    tx.commit()?;
+    Ok(json!({"runs": list}))
 }
 
 pub fn run_show(project: &Path, id: Option<i64>) -> Result<Value> {
@@ -467,26 +472,26 @@ pub(super) fn runs(
         for (page, old, state, result, preview) in rows {
             let current_page = current_pages.get(page.as_str());
             let mut current_basis = None;
+            let mut basis_unreadable = false;
             let changed = match current_page {
-                Some(p) => {
-                    let algorithm = if kind == "image" {
-                        "image"
-                    } else if old.starts_with("svg-v2:") {
-                        "svg-v2"
-                    } else {
-                        "svg-legacy"
-                    };
-                    let key = (algorithm, p.id.as_str());
-                    let current = match current_bases.entry(key) {
-                        std::collections::hash_map::Entry::Occupied(entry) => entry.into_mut(),
-                        std::collections::hash_map::Entry::Vacant(entry) => {
-                            entry.insert(current_basis_for(&kind, &old, deck, p)?)
-                        }
-                    };
-                    current_basis = Some(current.clone());
-                    // Derive image staleness without changing stored SVG hash inputs.
-                    *current != old
-                }
+                Some(p) => match basis_cache_algorithm(&kind, &old) {
+                    Some(algorithm) => {
+                        let key = (algorithm, p.id.as_str());
+                        let current = match current_bases.entry(key) {
+                            std::collections::hash_map::Entry::Occupied(entry) => entry.into_mut(),
+                            std::collections::hash_map::Entry::Vacant(entry) => {
+                                entry.insert(current_basis_for(&kind, &old, deck, p)?)
+                            }
+                        };
+                        current_basis = Some(current.clone());
+                        // Derive image staleness without changing stored SVG hash inputs.
+                        *current != old
+                    }
+                    None => {
+                        basis_unreadable = true;
+                        true
+                    }
+                },
                 None => true,
             };
             let reason = if state == "unadopted" {
@@ -506,7 +511,7 @@ pub(super) fn runs(
                 .and_then(|p| p.image.as_ref())
                 .map(|image| file_url(&image.file));
             let result_url = result.as_deref().map(file_url);
-            pages.push(json!({"page_id":page,"status":state,"reason":reason,"basis_changed":changed,"basis_incomplete":kind == "svg" && !old.starts_with("svg-v2:"),"current_basis":current_basis,"result_file":result,"result_url":result_url,"result_preview":preview,"current_image_url":current_image}));
+            pages.push(json!({"page_id":page,"status":state,"reason":reason,"basis_changed":changed,"basis_incomplete":kind == "svg" && !is_complete_render_basis(&old),"basis_unreadable":basis_unreadable,"current_basis":current_basis,"result_file":result,"result_url":result_url,"result_preview":preview,"current_image_url":current_image}));
         }
         runs.push(json!({"id":id,"kind":kind,"status":status,"max_calls":max,"calls_used":used,"pages":pages}));
     }
@@ -634,7 +639,11 @@ pub fn run_result(project: &Path, id: i64, page_id: &str, source: &Path) -> Resu
     let mut snapshot = store::current(&tx)?;
     let eligible = match snapshot.deck.pages.iter().find(|p| p.id == page_id) {
         Some(p) => {
-            (kind != "svg" || old.starts_with("svg-v2:")) && basis(&kind, &snapshot.deck, p)? == old
+            (kind != "svg" || is_complete_render_basis(&old))
+                && current_basis_for(&kind, &old, &snapshot.deck, p)
+                    .ok()
+                    .as_deref()
+                    == Some(old.as_str())
         }
         None => false,
     };
@@ -715,7 +724,7 @@ fn run_adopt_with_options(
     note: Option<&str>,
 ) -> Result<Value> {
     use rusqlite::params;
-    let store = Store::open(project)?;
+    let mut store = Store::open(project)?;
     let (kind, _, _, _) = run_record(&store.connection, id)?;
     let note = if kind == "native" {
         Some(
@@ -776,10 +785,7 @@ fn run_adopt_with_options(
     } else {
         file.clone()
     };
-    let tx = rusqlite::Transaction::new_unchecked(
-        &store.connection,
-        rusqlite::TransactionBehavior::Immediate,
-    )?;
+    let tx = store.transaction()?;
     if run_page(&tx, id, page_id)?.2.as_deref() != Some(file.as_str()) {
         return Err(Error::Conflict(
             "候选已更新；请读取当前候选后重新采用".into(),

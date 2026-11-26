@@ -191,26 +191,42 @@ fn assign(id: &mut String, seen: &mut HashSet<String>, reserved: &HashSet<String
     }
 }
 
-impl Content {
-    pub fn normalize_ids(&mut self) -> crate::error::Result<()> {
-        fn collect(value: &Value, ids: &mut HashSet<String>) {
-            match value {
-                Value::Object(object) => {
-                    if let Some(Value::String(id)) = object.get("id") {
-                        ids.insert(id.clone());
-                    }
-                    for child in object.values() {
-                        collect(child, ids);
-                    }
-                }
-                Value::Array(array) => {
-                    for child in array {
-                        collect(child, ids);
-                    }
-                }
-                _ => {}
+fn collect_content_ids(value: &Value, ids: &mut HashSet<String>) {
+    match value {
+        Value::Object(object) => {
+            if let Some(Value::String(id)) = object.get("id")
+                && !id.is_empty()
+            {
+                ids.insert(id.clone());
+            }
+            for child in object.values() {
+                collect_content_ids(child, ids);
             }
         }
+        Value::Array(array) => {
+            for child in array {
+                collect_content_ids(child, ids);
+            }
+        }
+        _ => {}
+    }
+}
+
+impl Content {
+    pub fn collect_ids(&self) -> crate::error::Result<HashSet<String>> {
+        let mut ids = HashSet::new();
+        collect_content_ids(&serde_json::to_value(self)?, &mut ids);
+        Ok(ids)
+    }
+
+    pub fn normalize_ids(&mut self) -> crate::error::Result<()> {
+        self.normalize_ids_with_reserved(&HashSet::new())
+    }
+
+    pub fn normalize_ids_with_reserved(
+        &mut self,
+        extra_reserved: &HashSet<String>,
+    ) -> crate::error::Result<()> {
         fn items(
             values: &mut [TextItem],
             seen: &mut HashSet<String>,
@@ -222,8 +238,8 @@ impl Content {
                 items(&mut item.children, seen, reserved, next);
             }
         }
-        let mut reserved = HashSet::new();
-        collect(&serde_json::to_value(&self)?, &mut reserved);
+        let mut reserved = extra_reserved.clone();
+        collect_content_ids(&serde_json::to_value(&self)?, &mut reserved);
         let mut seen = HashSet::new();
         let mut next = 1;
         for block in &mut self.body_blocks {

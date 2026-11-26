@@ -15,7 +15,8 @@ pub fn asset_add(
     if id.is_empty() {
         return Err(Error::Input("素材 ID 不能为空".into()));
     }
-    let store = Store::open(project)?;
+    let mut store = Store::open(project)?;
+    let root = store.root.clone();
     let has_page_scope = !pages.is_empty();
     let mut seen = HashSet::new();
     let pages: Vec<String> = pages
@@ -65,11 +66,7 @@ pub fn asset_add(
     } else {
         (std::fs::read(input)?, ext)
     };
-    // Share the connection borrow so content can be persisted after the page recheck.
-    let tx = rusqlite::Transaction::new_unchecked(
-        &store.connection,
-        rusqlite::TransactionBehavior::Immediate,
-    )?;
+    let tx = store.transaction()?;
     let mut snapshot = store::current(&tx)?;
     for page in &pages {
         if !snapshot.deck.pages.iter().any(|p| &p.id == page) {
@@ -78,7 +75,7 @@ pub fn asset_add(
             )));
         }
     }
-    let file = store.add_file(&data, ext)?;
+    let file = store::add_file(&root, &data, ext)?;
     let asset = crate::model::Asset {
         id: id.into(),
         file,
