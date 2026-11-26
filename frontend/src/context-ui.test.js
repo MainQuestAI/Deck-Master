@@ -293,3 +293,68 @@ test('new framing groups and supporting lists remain editable and preserve exist
     questions: ['待回答问题补充', ...framing.questions],
   } });
 });
+
+test('conflict keepMine preserves concurrent server updates to v7 brief and framing fields', async t => {
+  await mount(t);
+  payload.deck.brief = {
+    ...brief,
+    decision: '',
+    concerns: [],
+    narrator: { role: '', tone: '' },
+  };
+  payload.deck.framing = {
+    ...framing,
+    storyline: [],
+  };
+  await poll(t);
+
+  // Brief conflict: author only edits title while Host fills v7 fields.
+  await click('编辑任务信息');
+  await fill('作品标题', '作者修订标题');
+  payload.version = 8;
+  payload.deck.brief = {
+    ...payload.deck.brief,
+    decision: '批准试点预算',
+    concerns: ['交付周期', '合规边界'],
+    narrator: { role: '项目负责人', tone: '直接给判断' },
+  };
+  const serverBrief = structuredClone(payload.deck.brief);
+  const save = write;
+  write = async () => Response.json({ exit_code: 5, conflicts: [{ unit: 'brief', current: serverBrief }] }, { status: 409 });
+  await click('保存任务信息');
+  const serverBriefView = section('brief').querySelector('[aria-label="服务器当前整单元"]').textContent;
+  assert.ok(serverBriefView.includes('批准试点预算'));
+  assert.ok(serverBriefView.includes('交付周期'));
+  assert.ok(serverBriefView.includes('项目负责人 · 直接给判断'));
+  await click('保留我的整单元，核对后再保存');
+  write = save;
+  await click('保存任务信息');
+  assert.deepEqual(requests[1].patch, {
+    brief: {
+      ...serverBrief,
+      title: '作者修订标题',
+    },
+  });
+
+  // Framing conflict: author only edits thesis while Host fills storyline.
+  await click('编辑业务框架');
+  await fill('中心主张', '作者修订主张');
+  payload.version = 10;
+  payload.deck.framing = {
+    ...payload.deck.framing,
+    storyline: ['现状痛点', '试点方案', '决策建议'],
+  };
+  const serverFraming = structuredClone(payload.deck.framing);
+  write = async () => Response.json({ exit_code: 5, conflicts: [{ unit: 'framing', current: serverFraming }] }, { status: 409 });
+  await click('保存业务框架');
+  assert.ok(section('framing').querySelector('[aria-label="服务器当前整单元"]').textContent.includes('现状痛点'));
+  await click('保留我的整单元，核对后再保存');
+  write = save;
+  await click('保存业务框架');
+  assert.deepEqual(requests[3].patch, {
+    framing: {
+      ...serverFraming,
+      thesis: '作者修订主张',
+    },
+  });
+});

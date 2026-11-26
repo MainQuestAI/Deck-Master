@@ -115,6 +115,17 @@ export function contextUnitPatch(kind, draft) {
   return JSON.stringify(draft.original) === JSON.stringify(draft.value) ? null : { [kind]: structuredClone(draft.value) };
 }
 
+// Keep only keys the author actually changed so concurrent edits to other (including v7) fields are preserved.
+export function mergeContextConflictValue(serverValue, draft) {
+  const merged = structuredClone(serverValue);
+  for (const key of Object.keys(draft.value)) {
+    if (JSON.stringify(draft.value[key]) !== JSON.stringify(draft.original[key])) {
+      merged[key] = structuredClone(draft.value[key]);
+    }
+  }
+  return merged;
+}
+
 export function reorderPages(order, pageId, toIndex) {
   const fromIndex = order.indexOf(pageId);
   if (fromIndex < 0 || !Number.isFinite(toIndex)) return order;

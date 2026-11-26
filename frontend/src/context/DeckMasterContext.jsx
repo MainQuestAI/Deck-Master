@@ -194,7 +194,10 @@ export function DeckMasterProvider({ children }) {
       const snapshot = draft.conflict?.snapshot;
       if (!snapshot) return value;
       const next = api.createContextDraft(snapshot.deck[kind], snapshot.version);
-      return { ...value, [kind]: keepMine ? { ...next, value: draft.value } : next };
+      return {
+        ...value,
+        [kind]: keepMine ? { ...next, value: api.mergeContextConflictValue(snapshot.deck[kind], draft) } : next,
+      };
     });
   };
   const saveContext = (kind) => perform(`save-${kind}`, async () => {
