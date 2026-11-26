@@ -339,3 +339,41 @@ test('drawer edits page kind and argument with mutually exclusive ref/gap eviden
     patch: { pages: [{ id: 'p1', argument: null }] },
   });
 });
+
+test('page drawer 3-way conflict diff merges disjoint edits and applies per-field choice on conflicting fields', async t => {
+  await mount(t);
+  await fill('本页目的', '我的新目的');
+  await fill('版式要求', '我的新布局');
+
+  payload.version = 9;
+  payload.deck.pages[0].notes = '服务器更新的讲稿';
+  payload.deck.pages[0].layout = '服务器更新的布局';
+  const serverPage = structuredClone(payload.deck.pages[0]);
+  const fetchDeck = globalThis.fetch;
+  globalThis.fetch = async (url, options = {}) => {
+    if (options.method !== 'PUT') return fetchDeck(url, options);
+    writes.push({ url, patch: JSON.parse(options.body) });
+    return Response.json({ exit_code: 5, conflicts: [{ unit: 'pages/p1', current: serverPage }] }, { status: 409 });
+  };
+  await click('保存正文与讲稿');
+
+  const diffBox = document.querySelector('[aria-label="字段级三方冲突对照"]');
+  assert.ok(diffBox);
+  assert.ok(diffBox.querySelector('[data-conflict-field="layout"]'));
+  assert.equal(diffBox.querySelector('[data-conflict-field="purpose"]'), null);
+  assert.equal(diffBox.querySelector('[data-conflict-field="notes"]'), null);
+
+  // Pick server for layout; purpose (mine) and notes (server) merge automatically.
+  await click('版式要求：采用当前', diffBox);
+  await click('按所选字段合并，以当前版本继续', diffBox);
+
+  globalThis.fetch = fetchDeck;
+  await click('保存正文与讲稿');
+  assert.deepEqual(writes.at(-1), {
+    url: '/api/deck?base=9',
+    patch: { pages: [{ id: 'p1', purpose: '我的新目的' }] },
+  });
+  assert.equal(payload.deck.pages[0].notes, '服务器更新的讲稿');
+  assert.equal(payload.deck.pages[0].layout, '服务器更新的布局');
+  assert.equal(payload.deck.pages[0].purpose, '我的新目的');
+});

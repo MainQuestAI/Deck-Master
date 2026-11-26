@@ -41,6 +41,13 @@ async function mount(t) {
     return Response.json({ version: payload.version, deck: payload.deck });
   };
   globalThis.fetch = async (url, options = {}) => {
+    if (options.method === 'POST' && url === '/api/reviews') {
+      const body = JSON.parse(options.body);
+      requests.push({ url, method: 'POST', body });
+      const created = { id: payload.reviews.length + 1, method: 'human', version_id: payload.version, page_id: body.page_id ?? null, text: body.text };
+      payload.reviews = [...payload.reviews, created];
+      return Response.json(created);
+    }
     if (options.method !== 'PUT') return Response.json(structuredClone(payload));
     const patch = JSON.parse(options.body);
     requests.push({ url, patch });
@@ -413,4 +420,91 @@ test('overview edits v7 brief/framing intent fields without blocking partial sav
       storyline: ['痛点与现状', '试点方案与预期收益'],
     },
   });
+});
+
+test('field-level 3-way conflict diff merges disjoint edits and allows per-field selection on colliding keys', async t => {
+  await mount(t);
+  await click('编辑任务信息');
+  await fill('作品标题', '我的新标题');
+  await fill('希望对方理解或做出什么判断', '我的目标');
+
+  // Server concurrently changes goal (collides), title (collides), and audience (disjoint).
+  payload.version = 10;
+  payload.deck.brief = {
+    ...brief,
+    title: '服务器标题',
+    goal: '服务器目标',
+    audience: '服务器更新的受众',
+  };
+  const serverBrief = structuredClone(payload.deck.brief);
+  const save = write;
+  write = async () => Response.json({ exit_code: 5, conflicts: [{ unit: 'brief', current: serverBrief }] }, { status: 409 });
+  await click('保存任务信息');
+
+  const diffBox = section('brief').querySelector('[aria-label="字段级三方冲突对照"]');
+  assert.ok(diffBox);
+  assert.ok(diffBox.querySelector('[data-conflict-field="title"]'));
+  assert.ok(diffBox.querySelector('[data-conflict-field="goal"]'));
+  assert.equal(diffBox.querySelector('[data-conflict-field="audience"]'), null);
+
+  // Choose server for title, keep mine for goal; disjoint audience must remain server's value.
+  await click('作品名称：采用当前', diffBox);
+  await click('要达成的结果：保留我的', diffBox);
+  await click('按所选字段合并，核对后再保存', diffBox);
+
+  assert.equal(state.contextDrafts.brief.base, 10);
+  assert.equal(state.contextDrafts.brief.conflict, null);
+  write = save;
+  await click('保存任务信息');
+  assert.deepEqual(requests.at(-1), {
+    url: '/api/deck?base=10',
+    patch: {
+      brief: {
+        ...serverBrief,
+        title: '服务器标题',
+        goal: '我的目标',
+        audience: '服务器更新的受众',
+      },
+    },
+  });
+});
+
+test('overview Host handoff creates a human review with non-auto-run instruction and matrix shows open review badges', async t => {
+  await mount(t);
+  payload.deck.pages = [
+    {
+      id: 'p1', purpose: '结论', layout: '', notes: '', todo: [], refs: [], kind: 'judgment', argument: null,
+      open_reviews: 2,
+      content: { title: '结论页', subtitle: '', body_blocks: [], labels: [], callouts: [], footnotes: [] },
+      image: null, svg: null, preview: null,
+    },
+    {
+      id: 'p2', purpose: '附录', layout: '', notes: '', todo: [], refs: [], kind: 'reference', argument: null,
+      open_reviews: 0,
+      content: { title: '附录页', subtitle: '', body_blocks: [], labels: [], callouts: [], footnotes: [] },
+      image: null, svg: null, preview: null,
+    },
+  ];
+  await poll(t);
+
+  const badgeButton = document.querySelector('button[aria-label="查看第 01 页 2 条待处理意见"]');
+  assert.ok(badgeButton);
+  assert.equal(badgeButton.textContent, '2 条意见');
+  await act(async () => { badgeButton.click(); });
+  assert.equal(state.currentPage, 'p1');
+  assert.equal(state.scene, 'page');
+
+  const handoff = document.querySelector('section[aria-label="整稿交给 Host"]');
+  await click('交给 Host', handoff);
+  await fill('给 Host 的补充说明', '请先补齐判断页证据并重绘配图');
+  await click('写入意见并生成 Host 指令', handoff);
+
+  const postReq = requests.find(req => req.method === 'POST' && req.url === '/api/reviews');
+  assert.ok(postReq);
+  assert.ok(postReq.body.text.includes('交给 Host'));
+  assert.ok(postReq.body.text.includes('请先补齐判断页证据并重绘配图'));
+  const card = handoff.querySelector('[aria-label="可复制的 Host 指令"]');
+  assert.ok(card);
+  assert.ok(card.textContent.includes('复制指令不会自动启动生成'));
+  assert.ok(card.textContent.includes('#1'));
 });

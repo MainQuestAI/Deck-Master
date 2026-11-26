@@ -29,6 +29,7 @@ export function DeckMasterProvider({ children }) {
   const pageNavigation = useRef({ currentPage, comparison });
   useEffect(() => { pageNavigation.current = { currentPage, comparison }; }, [currentPage, comparison]);
   const [reviewDrafts, setReviewDrafts] = useState({});
+  const [handoffRequest, setHandoffRequest] = useState(null);
   const [toast, setToast] = useState(null);
   const [theme, setTheme] = useState(() => {
     try { return localStorage.getItem('deck-master-theme') || 'light'; }
@@ -134,6 +135,25 @@ export function DeckMasterProvider({ children }) {
   const getPage = (id) => pages.find(page => page.id === id);
   const getPageNumStr = (id) => String(pages.findIndex(page => page.id === id) + 1).padStart(2, '0');
   const openPage = (id) => { setCurrentPage(id); setScene('page'); setDrawer(null); };
+  const openHostHandoff = (pageId, intent = 'fill_content') => {
+    setPresentation(null);
+    setDrawer(null);
+    if (pageId) {
+      setCurrentPage(pageId);
+      setScene('page');
+    } else {
+      setScene('overview');
+    }
+    setHandoffRequest({ pageId: pageId || null, intent, nonce: Date.now() });
+  };
+  const openPageReviews = (id) => {
+    setCurrentPage(id);
+    setScene('page');
+    setDrawer(null);
+    setTimeout(() => {
+      document.getElementById('page-reviews')?.scrollIntoView?.({ behavior: 'smooth' });
+    }, 0);
+  };
   const editPage = (id) => {
     const page = getPage(id);
     if (!page && !drafts[id]) return;
@@ -157,9 +177,19 @@ export function DeckMasterProvider({ children }) {
       await reload();
     }
   });
-  const rebaseDraft = () => {
-    setDrafts(value => ({ ...value, [currentPage]: { ...value[currentPage], base: workspace.version, conflict: null } }));
-    setToast('已保留输入；请核对后再次保存');
+  const rebaseDraft = (mergedPage = null) => {
+    const current = getPage(currentPage);
+    setDrafts(value => ({
+      ...value,
+      [currentPage]: {
+        ...value[currentPage],
+        base: workspace.version,
+        original: mergedPage && current ? structuredClone(current) : value[currentPage].original,
+        page: mergedPage ? structuredClone(mergedPage) : value[currentPage].page,
+        conflict: null,
+      },
+    }));
+    setToast(mergedPage ? '已按所选字段合并；请核对后再次保存' : '已保留输入；请核对后再次保存');
   };
   const discardDraft = () => {
     setDrafts(value => { const next = { ...value }; delete next[currentPage]; return next; });
@@ -183,12 +213,15 @@ export function DeckMasterProvider({ children }) {
       setContextDrafts(value => ({ ...value, [kind]: { ...value[kind], error: error.message } }));
     }
   };
-  const resolveContextConflict = (kind, keepMine) => {
+  const resolveContextConflict = (kind, keepMine, mergedValue = null) => {
     setContextDrafts(value => {
       const draft = value[kind];
       const snapshot = draft.conflict?.snapshot;
       if (!snapshot) return value;
       const next = api.createContextDraft(snapshot.deck[kind], snapshot.version);
+      if (mergedValue) {
+        return { ...value, [kind]: { ...next, value: structuredClone(mergedValue) } };
+      }
       return {
         ...value,
         [kind]: keepMine ? { ...next, value: api.mergeContextConflictValue(snapshot.deck[kind], draft) } : next,
@@ -319,7 +352,7 @@ export function DeckMasterProvider({ children }) {
   return <DeckMasterContext.Provider value={{
     workspace, pages, revision: workspace?.version, activeProject: workspace?.deck.brief.title || '未命名作品',
     connectionError, actionError, busy, refresh: reload, scene, setScene, currentPage,
-    getPage, getPageNumStr, openPage, editPage, createPage, movePage, removePage, drafts, updateDraft, saveDraft, rebaseDraft, discardDraft,
+    getPage, getPageNumStr, openPage, openPageReviews, openHostHandoff, handoffRequest, editPage, createPage, movePage, removePage, drafts, updateDraft, saveDraft, rebaseDraft, discardDraft,
     contextDrafts, openContextEdit, updateContextDraft, saveContext, refreshContextConflict, resolveContextConflict,
     drawer, openDrawer: setDrawer, closeDrawer: () => setDrawer(null),
     stopRun, build, buildResult: displayedBuildResult, buildLoading, buildError, defaultBuild: workspace?.default_build, download, downloadStatus, restore,
