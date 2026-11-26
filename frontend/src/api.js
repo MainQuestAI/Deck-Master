@@ -17,7 +17,7 @@ async function request(path, options = {}, timeout = 15000, read = response => r
       if (options.signal?.aborted) throw error;
       throw new Error('无法连接本地服务，请检查 deck serve 是否仍在运行后重试');
     });
-    if (!response.ok) {
+    if (!response.ok && response.status !== 304) {
       const data = await response.json().catch(() => ({ error: `请求失败（${response.status}），请重试` }));
       throw new ApiError(response.status, data);
     }
@@ -35,6 +35,72 @@ async function request(path, options = {}, timeout = 15000, read = response => r
 const post = (path, timeout, timeoutMessage) => request(path, { method: 'POST' }, timeout, undefined, timeoutMessage);
 
 export const getDeck = (signal) => request('/api/deck', { signal });
+
+export async function pollDeck({ signal, etag } = {}) {
+  const headers = etag ? { 'If-None-Match': etag } : undefined;
+  return request('/api/deck', { signal, ...(headers ? { headers } : {}) }, 15000, async response => {
+    const nextEtag = response.headers?.get?.('ETag') || etag || null;
+    if (response.status === 304) {
+      return { unchanged: true, etag: nextEtag, data: null };
+    }
+    return { unchanged: false, etag: nextEtag, data: await response.json() };
+  });
+}
+
+export function createVisibilityPoller({ poll, intervalMs = 1500, maxBackoffMs = 15000, doc = globalThis.document }) {
+  const controller = new AbortController();
+  let timer = null;
+  let retryDelay = intervalMs;
+  let inFlight = false;
+
+  const isHidden = () => doc?.visibilityState === 'hidden'
+    || (Boolean(doc) && !('visibilityState' in doc) && Boolean(doc.hidden));
+
+  const clearTimer = () => {
+    if (timer !== null) {
+      clearTimeout(timer);
+      timer = null;
+    }
+  };
+
+  const run = async (force = false) => {
+    if (controller.signal.aborted || (!force && isHidden()) || inFlight) return;
+    inFlight = true;
+    clearTimer();
+    let delay = intervalMs;
+    try {
+      await poll(controller.signal);
+      retryDelay = intervalMs;
+    } catch {
+      delay = retryDelay;
+      retryDelay = Math.min(retryDelay * 2, maxBackoffMs);
+    } finally {
+      inFlight = false;
+    }
+    if (!controller.signal.aborted && !isHidden()) {
+      timer = setTimeout(run, delay);
+    }
+  };
+
+  const onVisibilityChange = () => {
+    if (controller.signal.aborted) return;
+    if (isHidden()) {
+      clearTimer();
+    } else {
+      retryDelay = intervalMs;
+      run();
+    }
+  };
+
+  doc?.addEventListener?.('visibilitychange', onVisibilityChange);
+  run(true);
+
+  return () => {
+    controller.abort();
+    clearTimer();
+    doc?.removeEventListener?.('visibilitychange', onVisibilityChange);
+  };
+}
 export const putDeck = (base, patch) => request(`/api/deck?base=${base}`, {
   method: 'PUT',
   headers: { 'Content-Type': 'application/json' },

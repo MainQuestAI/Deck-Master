@@ -15,6 +15,7 @@ export function DeckMasterProvider({ children }) {
   const [busy, setBusy] = useState({});
   const locks = useRef(new Set());
   const readId = useRef(0);
+  const etagRef = useRef(null);
   const [downloadStatus, setDownloadStatus] = useState(null);
   const [buildResult, setBuildResult] = useState(null);
   const [buildError, setBuildError] = useState('');
@@ -55,34 +56,28 @@ export function DeckMasterProvider({ children }) {
     return () => window.removeEventListener('beforeunload', warn);
   }, [hasUnsavedInputs]);
 
-  const refresh = useCallback(async (signal) => {
+  const refresh = useCallback(async (signal, { conditional = false } = {}) => {
     const id = ++readId.current;
-    const incoming = await api.getDeck(signal);
-    if (signal?.aborted || id !== readId.current) return incoming;
-    setWorkspace(current => api.mergeWorkspace(current, incoming));
+    const result = await api.pollDeck({ signal, etag: conditional ? etagRef.current : null });
+    if (signal?.aborted || id !== readId.current) return result.data;
+    if (result.etag) etagRef.current = result.etag;
+    if (!result.unchanged && result.data) {
+      setWorkspace(current => api.mergeWorkspace(current, result.data));
+    }
     setConnectionError('');
-    return incoming;
+    return result.data;
   }, []);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    let timer;
-    let retryDelay = 1500;
-    const poll = async () => {
-      let delay = 1500;
+  useEffect(() => api.createVisibilityPoller({
+    poll: async (signal) => {
       try {
-        await refresh(controller.signal);
-        retryDelay = 1500;
+        await refresh(signal, { conditional: true });
       } catch (error) {
-        if (!controller.signal.aborted) setConnectionError(`与本地服务断开，正在重试。${error.message}`);
-        delay = retryDelay;
-        retryDelay = Math.min(retryDelay * 2, 15000);
+        if (!signal.aborted) setConnectionError(`与本地服务断开，正在重试。${error.message}`);
+        throw error;
       }
-      if (!controller.signal.aborted) timer = setTimeout(poll, delay);
-    };
-    poll();
-    return () => { controller.abort(); clearTimeout(timer); };
-  }, [refresh]);
+    },
+  }), [refresh]);
 
   const defaultBuildId = workspace?.default_build?.id;
   const workspaceVersion = workspace?.version;

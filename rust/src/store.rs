@@ -318,6 +318,61 @@ pub fn history(connection: &Connection) -> Result<Vec<Version>> {
         .collect::<std::result::Result<_, _>>()?)
 }
 
+pub fn history_page(connection: &Connection, limit: usize) -> Result<(Vec<Version>, usize)> {
+    let total: i64 = connection.query_row("SELECT COUNT(*) FROM versions", [], |r| r.get(0))?;
+    let mut query = connection
+        .prepare("SELECT id, created_at, summary FROM versions ORDER BY id DESC LIMIT ?1")?;
+    let items = query
+        .query_map([limit as i64], |row| {
+            Ok(Version {
+                id: row.get(0)?,
+                created_at: row.get(1)?,
+                summary: row.get(2)?,
+            })
+        })?
+        .collect::<std::result::Result<Vec<_>, _>>()?;
+    Ok((items, total.max(0) as usize))
+}
+
+pub fn workspace_etag(
+    connection: &Connection,
+    runs_limit: usize,
+    history_limit: usize,
+) -> Result<String> {
+    let row: (i64, i64, i64, String, String, i64, i64, i64, String) = connection.query_row(
+        "SELECT
+            COALESCE((SELECT MAX(id) FROM versions), 0),
+            (SELECT COUNT(*) FROM versions),
+            COALESCE((SELECT MAX(id) FROM runs), 0),
+            COALESCE((SELECT GROUP_CONCAT(id || ':' || status || ':' || calls_used, ',') FROM (SELECT id, status, calls_used FROM runs ORDER BY id DESC LIMIT 100)), ''),
+            COALESCE((SELECT GROUP_CONCAT(run_id || ':' || page_id || ':' || status || ':' || COALESCE(result_file,'') || ':' || COALESCE(preview_file,''), ',') FROM (SELECT run_id, page_id, status, result_file, preview_file FROM run_pages ORDER BY run_id DESC, rowid ASC LIMIT 200)), ''),
+            COALESCE((SELECT MAX(id) FROM builds), 0),
+            COALESCE((SELECT MAX(id) FROM reviews), 0),
+            (SELECT COUNT(*) FROM reviews WHERE status='open'),
+            COALESCE((SELECT MAX(resolved_at) FROM reviews), '')",
+        [],
+        |r| {
+            Ok((
+                r.get(0)?,
+                r.get(1)?,
+                r.get(2)?,
+                r.get(3)?,
+                r.get(4)?,
+                r.get(5)?,
+                r.get(6)?,
+                r.get(7)?,
+                r.get(8)?,
+            ))
+        },
+    )?;
+    let fingerprint = format!(
+        "v{}:{}:r{}:{}:rp{}:b{}:rv{}:{}:{}:lim{}:{}",
+        row.0, row.1, row.2, row.3, row.4, row.5, row.6, row.7, row.8, runs_limit, history_limit
+    );
+    let hex = format!("{:x}", Sha256::digest(fingerprint.as_bytes()));
+    Ok(format!("\"w1-{}\"", &hex[..32]))
+}
+
 pub fn current(connection: &Connection) -> Result<Snapshot> {
     let row: Option<(i64, String)> = connection
         .query_row(

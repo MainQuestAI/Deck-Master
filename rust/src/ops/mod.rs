@@ -14,7 +14,10 @@ pub use basis::basis;
 pub use build::{artifact_status, build, build_detail};
 pub use export::{doctor, export_markdown, export_md, export_pptx};
 pub use material::{material_add, material_text};
-pub use read::{get, import, new, project_file, show, version_get, workspace};
+pub use read::{
+    WorkspaceQuery, get, import, new, project_file, show, version_get, workspace,
+    workspace_with_etag,
+};
 pub use review::{
     Review, review_add, review_add_content, review_get, review_list, review_list_records,
     review_resolve,
