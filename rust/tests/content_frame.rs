@@ -182,7 +182,7 @@ fn opening_v6_does_not_write_and_future_formats_still_ask_for_an_upgrade() {
     let store = store::Store::open(path).unwrap();
     store
         .connection
-        .pragma_update(None, "user_version", 8)
+        .pragma_update(None, "user_version", store::FORMAT_VERSION + 1)
         .unwrap();
     drop(store);
     match store::Store::open(path) {
@@ -212,7 +212,7 @@ fn first_put_on_v6_upgrades_in_one_transaction() {
     )
     .unwrap();
     assert_eq!(saved.version, 3);
-    assert_eq!(user_version(path), 7);
+    assert_eq!(user_version(path), store::FORMAT_VERSION);
     let columns = review_columns(path);
     for name in ["record_kind", "snapshot_json", "checks_json"] {
         assert!(columns.iter().any(|column| column == name), "{name}");
@@ -314,7 +314,7 @@ fn illegal_kind_is_rejected_on_put_and_run_start_without_writing() {
     );
     assert!(matches!(rejected, Err(Error::Input(_))));
     assert_eq!(deck_json(path, created.version), before);
-    assert_eq!(user_version(path), 7);
+    assert_eq!(user_version(path), store::FORMAT_VERSION);
     ops::put(path, created.version, patch(frame_patch("合成作品"))).unwrap();
     let store = store::Store::open(path).unwrap();
     let version = store.current().unwrap().version;
@@ -400,7 +400,7 @@ fn page_gate_rejects_missing_page_fields_on_v6_and_missing_frame_warns_without_b
     assert_eq!(saved.deck.brief.title, "合成作品");
     assert_eq!(saved.deck.brief.goal, "保留目标");
     assert_eq!(saved.deck.framing.thesis, "保留主张");
-    assert_eq!(user_version(path), 7);
+    assert_eq!(user_version(path), store::FORMAT_VERSION);
     let started = ops::run_start(path, "image", &["p1".into()], None).unwrap();
     assert_eq!(started["runs"][0]["pages"][0]["status"], "pending");
     assert!(started["warnings"].as_array().is_some_and(|w| w.len() == 6));
@@ -666,7 +666,7 @@ fn new_project_is_format_7_and_put_does_not_require_the_frame() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path();
     ops::new(path, "合成作品".into()).unwrap();
-    assert_eq!(user_version(path), 7);
+    assert_eq!(user_version(path), store::FORMAT_VERSION);
     assert!(
         review_columns(path)
             .iter()
@@ -679,5 +679,5 @@ fn new_project_is_format_7_and_put_does_not_require_the_frame() {
     )
     .unwrap();
     assert!(ops::build(path).is_err());
-    assert_eq!(user_version(path), 7);
+    assert_eq!(user_version(path), store::FORMAT_VERSION);
 }

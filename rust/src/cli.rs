@@ -40,6 +40,11 @@ enum Commands {
         #[command(subcommand)]
         command: AssetCommand,
     },
+    #[command(about = "管理作品视觉风格与母版主题")]
+    Style {
+        #[command(subcommand)]
+        command: StyleCommand,
+    },
     #[command(about = "准备、停止和交回 Host 任务")]
     Run {
         #[command(subcommand)]
@@ -179,6 +184,23 @@ enum AssetCommand {
         #[arg(long, default_value = "", help = "所选素材的许可")]
         license: String,
     },
+}
+
+#[derive(Subcommand)]
+enum StyleCommand {
+    #[command(about = "设置或清除企业 PPTX 母版主题")]
+    Theme {
+        #[command(subcommand)]
+        command: ThemeCommand,
+    },
+}
+
+#[derive(Subcommand)]
+enum ThemeCommand {
+    #[command(about = "清洗并导入企业 PPTX 模板作为输出母版（仅保留母版、版式和主题）")]
+    Set { file: PathBuf },
+    #[command(about = "清除已配置的母版主题，恢复默认 16:9 空白母版")]
+    Clear,
 }
 
 #[derive(Subcommand)]
@@ -458,6 +480,12 @@ fn dispatch(cli: Cli, project_explicit: bool) -> Result<()> {
         Commands::Icon {
             command: IconCommand::Search { query, limit },
         } => print_json(ops::icon_search(&query, limit)?),
+        Commands::Style {
+            command: StyleCommand::Theme { command },
+        } => print_json(match command {
+            ThemeCommand::Set { file } => ops::style_theme_set(&cli.project, &file)?,
+            ThemeCommand::Clear => ops::style_theme_clear(&cli.project)?,
+        }),
         Commands::Export {
             command: ExportCommand::Pptx,
         } => print_json(ops::export_pptx(&cli.project)?),

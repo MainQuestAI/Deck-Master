@@ -95,3 +95,57 @@ pub fn asset_add(
     tx.commit()?;
     Ok(json!({"version": snapshot.version, "asset": asset}))
 }
+
+pub fn style_theme_set(project: &Path, input: &Path) -> Result<Value> {
+    let canonical = input
+        .canonicalize()
+        .map_err(|_| Error::Input(format!("母版模板文件不存在：{}", input.display())))?;
+    let is_pptx = canonical
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .is_some_and(|ext| ext.eq_ignore_ascii_case("pptx"));
+    if !is_pptx {
+        return Err(Error::Input("母版主题只支持 .pptx 文件".into()));
+    }
+    let mut store = Store::open(project)?;
+    let root = store.root.clone();
+    let temporary = tempfile::tempdir()?;
+    let output_path = temporary.path().join("theme.pptx");
+    let info = crate::tools::invoke(
+        "sanitize-template",
+        &json!({
+            "path": canonical,
+            "output": output_path,
+        }),
+    )?;
+    let cleaned = std::fs::read(&output_path)?;
+    let file = store::add_file(&root, &cleaned, "pptx")?;
+    let tx = store.transaction()?;
+    let mut snapshot = store::current(&tx)?;
+    let changed = snapshot.deck.style.theme.as_deref() != Some(file.as_str());
+    snapshot.deck.style.theme = Some(file.clone());
+    if changed {
+        snapshot.version = store::append(&tx, &mut snapshot.deck, "设置母版主题")?;
+    }
+    tx.commit()?;
+    Ok(json!({
+        "version": snapshot.version,
+        "theme": file,
+        "layouts": info["layouts"],
+    }))
+}
+
+pub fn style_theme_clear(project: &Path) -> Result<Value> {
+    let mut store = Store::open(project)?;
+    let tx = store.transaction()?;
+    let mut snapshot = store::current(&tx)?;
+    if snapshot.deck.style.theme.is_some() {
+        snapshot.deck.style.theme = None;
+        snapshot.version = store::append(&tx, &mut snapshot.deck, "清除母版主题")?;
+    }
+    tx.commit()?;
+    Ok(json!({
+        "version": snapshot.version,
+        "theme": Value::Null,
+    }))
+}

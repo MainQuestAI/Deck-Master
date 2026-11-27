@@ -733,6 +733,134 @@ def _clean_pptx(data, where, *, keep_notes=False, page_ids=None):
     return output.getvalue(), hints
 
 
+def sanitize_template(data, where):
+    """Strip all slides, notes, comments, author metadata, and private paths from a template PPTX.
+
+    Retains only slide masters, slide layouts, theme colors/fonts, and media
+    referenced by those masters/layouts so generated decks inherit corporate styling
+    without leaking source presentation content.
+    """
+    import posixpath
+    from pptx import Presentation
+
+    try:
+        source = zipfile.ZipFile(io.BytesIO(data))
+    except zipfile.BadZipFile:
+        reject(where, "模板不是有效的 PPTX 文件")
+    names = source.namelist()
+    if len(set(names)) != len(names) or any(n.startswith("/") or ".." in n.split("/") for n in names):
+        reject(where, "模板包含不安全的压缩包路径")
+    if "[Content_Types].xml" not in names or "ppt/presentation.xml" not in names:
+        reject(where, "模板缺少 PPTX 演示文稿核心部件")
+    if any(n.startswith("ppt/embeddings/") or "vbaProject" in n for n in names):
+        reject(where, "模板包含嵌入文件或宏，请清除后重试")
+
+    drop_prefixes = (
+        "docProps/",
+        "ppt/slides/",
+        "ppt/notesSlides/",
+        "ppt/notesMasters/",
+        "ppt/comments/",
+        "ppt/commentAuthors",
+        "customXml/",
+        "ppt/persons/",
+        "ppt/printerSettings/",
+        "ppt/charts/",
+        "ppt/diagrams/",
+        "ppt/tags/",
+    )
+    removed = {n for n in names if n.startswith(drop_prefixes)}
+
+    # Keep only ppt/media/* still referenced by retained slideMasters/slideLayouts/theme parts.
+    kept_media = set()
+    for name in names:
+        if name in removed or name.endswith("/") or not name.endswith(".rels"):
+            continue
+        rels = xml(source.read(name), where + "/" + name)
+        base = posixpath.dirname(posixpath.dirname(name)) if "/_rels/" in name else ""
+        for rel in rels:
+            if rel.get("TargetMode") == "External":
+                continue
+            uri = rel.get("Target", "")
+            resolved = posixpath.normpath(posixpath.join(base, uri)).lstrip("/")
+            if resolved.startswith("ppt/media/"):
+                kept_media.add(resolved)
+    for name in names:
+        if name.startswith("ppt/media/") and not name.endswith("/") and name not in kept_media:
+            removed.add(name)
+
+    output = io.BytesIO()
+    with source, zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as target:
+        for name in names:
+            if name in removed or name.endswith("/"):
+                continue
+            raw = source.read(name)
+            if name.endswith((".xml", ".rels")):
+                root = xml(raw, where + "/" + name)
+                if name == "ppt/presentation.xml":
+                    for child in list(root):
+                        local = _local_name(child)
+                        if local == "sldIdLst":
+                            for slide_id in list(child):
+                                child.remove(slide_id)
+                        elif local == "notesMasterIdLst":
+                            root.remove(child)
+                for parent in root.iter():
+                    local = _local_name(parent)
+                    if local == "cNvPr":
+                        parent.attrib.pop("descr", None)
+                        for attr in ("name", "title"):
+                            val = parent.get(attr)
+                            if val:
+                                text_safe(val, f"{where}/{name}/@{attr}")
+                    for child in list(parent):
+                        clocal = _local_name(child)
+                        if clocal == "Override" and child.get("PartName", "").lstrip("/") in removed:
+                            parent.remove(child)
+                        elif clocal == "Relationship":
+                            uri = child.get("Target", "")
+                            if child.get("TargetMode") == "External":
+                                link_safe(uri, f"{where}/{name}/Target")
+                            else:
+                                base = posixpath.dirname(posixpath.dirname(name)) if "/_rels/" in name else ""
+                                resolved = posixpath.normpath(posixpath.join(base, uri)).lstrip("/")
+                                if resolved in removed:
+                                    parent.remove(child)
+                        elif clocal in ("notesMasterIdLst", "notesMasterId"):
+                            parent.remove(child)
+                    text_safe(parent.text, f"{where}/{name}/text")
+                    text_safe(parent.tail, f"{where}/{name}/tail")
+                    for key, value in parent.attrib.items():
+                        text_safe(value, f"{where}/{name}/@{key}")
+                raw = ET.tostring(root, encoding="utf-8", xml_declaration=True)
+                text_safe(raw.decode("utf-8"), where + "/" + name)
+            elif name.lower().endswith(".png"):
+                raw = png(raw, where + "/" + name)
+            elif name.lower().endswith((".jpg", ".jpeg")):
+                raw = jpeg(raw, where + "/" + name)
+            elif name.lower().endswith(".svg"):
+                raw = svg(raw, where + "/" + name)
+            else:
+                reject(where + "/" + name, "模板包含不受支持的非 XML 部件")
+            part = zipfile.ZipInfo(name, date_time=(1980, 1, 1, 0, 0, 0))
+            part.compress_type = zipfile.ZIP_DEFLATED
+            target.writestr(part, raw)
+
+    cleaned = output.getvalue()
+    try:
+        prs = Presentation(io.BytesIO(cleaned))
+        if len(prs.slides) != 0:
+            reject(where, "模板清洗后仍残留幻灯片")
+        layout_count = len(prs.slide_layouts)
+        if layout_count == 0:
+            reject(where, "模板缺少可用幻灯片版式")
+    except OperationError:
+        raise
+    except Exception as exc:
+        reject(where, f"清洗后的模板无法打开：{exc}")
+    return cleaned, layout_count
+
+
 def sanitize(data, suffix, where, *, preserve_notes=False, findings=None):
     handlers = {".png": png, ".jpg": jpeg, ".jpeg": jpeg, ".svg": svg, ".pptx": pptx}
     if suffix.lower() not in handlers:

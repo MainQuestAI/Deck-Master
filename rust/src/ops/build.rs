@@ -42,6 +42,8 @@ struct BuildDigestInput<'a, P: Serialize> {
     canvas: &'a Canvas,
     fonts: &'a [String],
     assets: BTreeMap<&'a str, &'a str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    theme: Option<&'a str>,
 }
 
 fn page_build_mode(deck: &Deck, page: &Page) -> Option<&'static str> {
@@ -126,6 +128,7 @@ fn build_digest(deck: &Deck) -> Result<String> {
                 canvas: &deck.style.canvas,
                 fonts: &deck.style.fonts,
                 assets,
+                theme: deck.style.theme.as_deref(),
             })?
         }
         "native" => {
@@ -147,6 +150,7 @@ fn build_digest(deck: &Deck) -> Result<String> {
                 canvas: &deck.style.canvas,
                 fonts: &deck.style.fonts,
                 assets,
+                theme: deck.style.theme.as_deref(),
             })?
         }
         _ => {
@@ -165,6 +169,7 @@ fn build_digest(deck: &Deck) -> Result<String> {
                 canvas: &deck.style.canvas,
                 fonts: &deck.style.fonts,
                 assets,
+                theme: deck.style.theme.as_deref(),
             })?
         }
     };
@@ -272,11 +277,22 @@ pub fn build(project: &Path) -> Result<Value> {
     }
     let content_review =
         content_review_status(&store.connection, snapshot.version, &snapshot.deck)?;
+    let theme_path = match snapshot.deck.style.theme.as_deref() {
+        Some(file) => Some(store.file(file)?.canonicalize()?),
+        None => None,
+    };
     let output = if mode == "native" {
-        crate::tools::invoke("assemble", &json!({"work":temporary.path(),"pages":pages}))?
+        let mut payload = json!({"work": temporary.path(), "pages": pages});
+        if let Some(theme) = &theme_path {
+            payload["theme"] = json!(theme);
+        }
+        crate::tools::invoke("assemble", &payload)?
     } else {
         svg_job_template["pages"] = json!(pages);
         svg_job_template["output"] = json!(temporary.path().join("build"));
+        if let Some(theme) = &theme_path {
+            svg_job_template["theme"] = json!(theme);
+        }
         crate::tools::invoke("build", &svg_job_template)?
     };
     let path = output["pptx"]
