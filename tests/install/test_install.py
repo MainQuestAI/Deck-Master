@@ -508,7 +508,7 @@ dest.mkdir(parents=True)
 (dest / 'python').chmod(0o755)
 """)
     (bin_dir / "uv").chmod(0o755)
-    for name in ("bash", "sh", "dirname", "basename", "date", "readlink", "cat", "cmp", "mkdir", "cp", "mktemp", "env", "rm", "rmdir", "ln", "chmod", "tar", "awk", "head", "sed"):
+    for name in ("bash", "sh", "dirname", "basename", "date", "readlink", "cat", "cmp", "mkdir", "cp", "mktemp", "env", "rm", "rmdir", "ln", "chmod", "tar", "gzip", "uname", "awk", "head", "sed"):
         executable = shutil.which(name)
         assert executable is not None
         (bin_dir / name).symlink_to(executable)

@@ -536,7 +536,7 @@ Q03 的并发回归 `slow_old_build_finishing_after_fast_current_build_keeps_mat
 被非托管入口占用的 `<prefix>/bin/deck` 或职责路径在写入前退出 2，不执行、不覆盖、不自动回滚或清理历史安装；不再维护旧 Cargo 普通二进制识别或 `entry-migrations` 迁移凭据。安装验证后清理本次 mktemp 创建的探针项目，最后调用 `deck doctor` 提示缺失渲染工具（不阻断安装；macOS 缺渲染工具时给出 Homebrew 一键补齐提示，缺 `fc-conflist` 时自动回退探测标准 Homebrew Fontconfig 路径）。
 本云环境已实际验证 Linux 新装、升级后旧进程工具固定、真实 pip 准备失败不切换及源码移走；macOS 安装未执行。「旧布局迁移」只是此前安装器的历史验证记录，不是现行合约：现行安装不再识别旧 Cargo 二进制，也不做旧布局迁移，见上一段。
 有 uv 但缺 Python 3.12 时，普通安装先用 uv 准备 3.12，再建工具环境；准备失败保留退出码并报告 prepare-python 阶段。dry-run 只离线查询已有的 3.12，禁用下载和缓存写入；缺解释器时退出 3 并提示先准备，不回退到任意 python3。无 uv 时使用并核实 python3.12。
-`rust.yml` 已接入 `macos-14` CI 任务（涵盖前端构建与测试、Rust 测试、deck-tools、install 套件及 `--from-source` 真实安装验证）；`release.yml` 负责按标签构建并校验预编译包。
+`rust.yml` 已接入 `macos-15` CI 任务（涵盖前端构建与测试、Rust 测试、deck-tools、install 套件及 `--from-source` 真实安装验证）；`release.yml` 负责按标签构建并校验预编译包。
 共享纯绘图规则已在编译时加入 image task；实际色板、字体与画布仍由作品动态提供，旧任务文件与图片依据不因软件更新改写。SVG 还原服从已选蓝图。
 
 ### Q10 本轮性能诊断（Linux，2026-11-09）

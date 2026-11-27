@@ -98,7 +98,7 @@ jobs:
           test ! -L "$RUNNER_TEMP/skills-root-write/deck"
 
   macos:
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
