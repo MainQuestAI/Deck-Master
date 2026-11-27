@@ -9,7 +9,7 @@ export default function ReviewPanel({ pageId }) {
   const text = reviewDrafts[scope] || '';
   const reviews = (workspace.reviews || []).filter(review => review.page_id === (pageId || null));
   const saving = busy[`review-add-${scope}`];
-  return <section className="s4-panel">
+  return <section id={pageId ? 'page-reviews' : 'deck-reviews'} className="s4-panel">
     <h2>{pageId ? '本页意见' : '整稿意见'}（{reviews.length} 条待处理）</h2>
     {reviews.length ? <ul className="s5-reviews">{reviews.map(review => <li key={review.id}>
       <p className="muted">{methods[review.method] || review.method} · 版本 {review.version_id}</p>

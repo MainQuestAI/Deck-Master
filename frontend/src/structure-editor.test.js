@@ -175,17 +175,20 @@ test('mounted structure drawer retains a 409 draft through polling and reopening
   assert.equal(saveButton().disabled, true);
   await act(async () => { t.mock.timers.tick(1500); });
   assert.equal(writes.length, 1);
-  await click('保留我的修改，以当前版本继续');
+  await click('按所选字段合并，以当前版本继续');
   assert.equal(state.drafts.p1.base, 9);
   assert.equal(state.drafts.p1.conflict, null);
-  assert.deepEqual(draft(), mine.page);
+  assert.equal(draft().content.title, '另一入口再次更新的标题');
+  assert.equal(draft().notes, server.notes);
+  assert.deepEqual(draft().content.body_blocks, mine.page.content.body_blocks);
   assert.equal(saveButton().disabled, false);
   assert.equal(writes.length, 1);
+  const expectedMergedContent = { ...mine.page.content, title: '另一入口再次更新的标题' };
   globalThis.fetch = fetchDeck;
   await click('保存正文与讲稿');
-  assert.deepEqual(writes[1], { url: '/api/deck?base=9', patch: conflict.submitted });
+  assert.deepEqual(writes[1], { url: '/api/deck?base=9', patch: { pages: [{ id: 'p1', content: expectedMergedContent }] } });
   assert.equal(writes.length, 2);
-  assert.deepEqual(payload.deck.pages[0].content, mine.page.content);
+  assert.deepEqual(payload.deck.pages[0].content, expectedMergedContent);
   assert.equal(payload.deck.pages[0].notes, server.notes);
   assert.equal(state.drafts.p1, undefined);
   assert.equal(state.drawer, null);
@@ -338,6 +341,96 @@ test('drawer edits page kind and argument with mutually exclusive ref/gap eviden
     url: '/api/deck?base=8',
     patch: { pages: [{ id: 'p1', argument: null }] },
   });
+});
+
+test('page drawer 3-way conflict diff merges disjoint edits and applies per-field choice on conflicting fields', async t => {
+  await mount(t);
+  await fill('本页目的', '我的新目的');
+  await fill('版式要求', '我的新布局');
+
+  payload.version = 9;
+  payload.deck.pages[0].notes = '服务器更新的讲稿';
+  payload.deck.pages[0].layout = '服务器更新的布局';
+  const serverPage = structuredClone(payload.deck.pages[0]);
+  const fetchDeck = globalThis.fetch;
+  globalThis.fetch = async (url, options = {}) => {
+    if (options.method !== 'PUT') return fetchDeck(url, options);
+    writes.push({ url, patch: JSON.parse(options.body) });
+    return Response.json({ exit_code: 5, conflicts: [{ unit: 'pages/p1', current: serverPage }] }, { status: 409 });
+  };
+  await click('保存正文与讲稿');
+
+  // Legacy whole-page bypass button must be gone; all conflicts go through structured diff.
+  assert.equal(
+    [...document.querySelectorAll('button')].some(node => node.textContent === '保留我的修改，以当前版本继续'),
+    false,
+  );
+  const diffBox = document.querySelector('[aria-label="字段级三方冲突对照"]');
+  assert.ok(diffBox);
+  assert.ok(diffBox.querySelector('[data-conflict-field="layout"]'));
+  assert.equal(diffBox.querySelector('[data-conflict-field="purpose"]'), null);
+  assert.equal(diffBox.querySelector('[data-conflict-field="notes"]'), null);
+
+  // Pick server for layout; purpose (mine) and notes (server) merge automatically.
+  await click('版式要求：采用当前', diffBox);
+  await click('按所选字段合并，以当前版本继续', diffBox);
+
+  globalThis.fetch = fetchDeck;
+  await click('保存正文与讲稿');
+  assert.deepEqual(writes.at(-1), {
+    url: '/api/deck?base=9',
+    patch: { pages: [{ id: 'p1', purpose: '我的新目的' }] },
+  });
+  assert.equal(payload.deck.pages[0].notes, '服务器更新的讲稿');
+  assert.equal(payload.deck.pages[0].layout, '服务器更新的布局');
+  assert.equal(payload.deck.pages[0].purpose, '我的新目的');
+});
+
+test('page drawer structured conflict renders readable content and argument previews without raw JSON', async t => {
+  const original = page();
+  original.kind = 'judgment';
+  original.argument = {
+    reasons: ['原始理由'],
+    evidence: [{ text: '原始样本', ref: 'm1 第 1 页' }],
+    reasoning: '原始推理',
+    rebuttal: '',
+  };
+  await mount(t, original);
+  await fill('页面标题', '我的新标题');
+  await fill('证据 1 内容', '我的新证据');
+
+  payload.version = 10;
+  payload.deck.pages[0].content.title = '服务器标题';
+  payload.deck.pages[0].argument.evidence = [{ text: '服务器证据', gap: '待补核对' }];
+  payload.deck.pages[0].argument.reasoning = '服务器推理';
+  const serverPage = structuredClone(payload.deck.pages[0]);
+  const fetchDeck = globalThis.fetch;
+  globalThis.fetch = async (url, options = {}) => {
+    if (options.method !== 'PUT') return fetchDeck(url, options);
+    writes.push({ url, patch: JSON.parse(options.body) });
+    return Response.json({ exit_code: 5, conflicts: [{ unit: 'pages/p1', current: serverPage }] }, { status: 409 });
+  };
+  await click('保存正文与讲稿');
+
+  const diffBox = document.querySelector('[aria-label="字段级三方冲突对照"]');
+  assert.ok(diffBox.querySelector('[data-conflict-field="content.title"]'));
+  assert.ok(diffBox.querySelector('[data-conflict-field="argument.evidence"]'));
+  // Disjoint argument.reasoning edit stays auto-merged, not flagged as conflict.
+  assert.equal(diffBox.querySelector('[data-conflict-field="argument.reasoning"]'), null);
+  assert.ok(diffBox.textContent.includes('服务器证据'));
+  assert.ok(diffBox.textContent.includes('缺口：待补核对'));
+  assert.equal(diffBox.textContent.includes('"display_text"'), false);
+  assert.equal(diffBox.textContent.includes('"gap"'), false);
+
+  await click('页面标题：采用当前', diffBox);
+  await click('论证结构 · 证据：保留我的', diffBox);
+  await click('按所选字段合并，以当前版本继续', diffBox);
+
+  globalThis.fetch = fetchDeck;
+  await click('保存正文与讲稿');
+  assert.equal(payload.deck.pages[0].content.title, '服务器标题');
+  assert.equal(payload.deck.pages[0].argument.reasoning, '服务器推理');
+  assert.deepEqual(payload.deck.pages[0].argument.evidence, [{ text: '我的新证据', ref: 'm1 第 1 页' }]);
 });
 
 test('drawer preserves gap when incoming evidence has whitespace-only ref and keeps judgment hint on empty skeleton', async t => {

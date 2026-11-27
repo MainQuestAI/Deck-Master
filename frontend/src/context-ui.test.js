@@ -13,6 +13,8 @@ const { createElement, act } = await import('react');
 const { createRoot } = await import('react-dom/client');
 const { DeckMasterProvider, useDeckMaster } = await import('./context/DeckMasterContext.jsx');
 const { default: OverviewView } = await import('./components/scenes/OverviewView.jsx');
+const { default: PageReaderView } = await import('./components/scenes/PageReaderView.jsx');
+const { hasUnsavedInputs } = await import('./api.js');
 
 const brief = { title: '合成方案', audience: '业务团队', task_type: '首提', goal: '确认范围', constraints: ['只用公开信息', '先小范围试点'], page_limit: 12 };
 const framing = { thesis: '先试点再扩大', pillars: [{ title: '范围', points: ['两批试点', '每批两周'] }, { title: '行动', points: ['安排负责人'] }], facts: ['已有流程'], assumptions: ['有负责人'], questions: ['何时开始？'] };
@@ -25,7 +27,9 @@ let hidden = false;
 
 function Probe() {
   state = useDeckMaster();
-  return state.workspace && !hidden ? createElement(OverviewView) : null;
+  if (!state.workspace || hidden) return null;
+  if (state.scene === 'page') return createElement(PageReaderView);
+  return createElement(OverviewView);
 }
 
 async function mount(t) {
@@ -41,6 +45,13 @@ async function mount(t) {
     return Response.json({ version: payload.version, deck: payload.deck });
   };
   globalThis.fetch = async (url, options = {}) => {
+    if (options.method === 'POST' && url === '/api/reviews') {
+      const body = JSON.parse(options.body);
+      requests.push({ url, method: 'POST', body });
+      const created = { id: payload.reviews.length + 1, method: 'human', version_id: payload.version, page_id: body.page_id ?? null, text: body.text };
+      payload.reviews = [...payload.reviews, created];
+      return Response.json(created);
+    }
     if (options.method !== 'PUT') return Response.json(structuredClone(payload));
     const patch = JSON.parse(options.body);
     requests.push({ url, patch });
@@ -413,4 +424,209 @@ test('overview edits v7 brief/framing intent fields without blocking partial sav
       storyline: ['痛点与现状', '试点方案与预期收益'],
     },
   });
+});
+
+test('field-level 3-way conflict diff merges disjoint edits and allows per-field selection on colliding keys', async t => {
+  await mount(t);
+  await click('编辑任务信息');
+  await fill('作品标题', '我的新标题');
+  await fill('希望对方理解或做出什么判断', '我的目标');
+
+  // Server concurrently changes goal (collides), title (collides), and audience (disjoint).
+  payload.version = 10;
+  payload.deck.brief = {
+    ...brief,
+    title: '服务器标题',
+    goal: '服务器目标',
+    audience: '服务器更新的受众',
+  };
+  const serverBrief = structuredClone(payload.deck.brief);
+  const save = write;
+  write = async () => Response.json({ exit_code: 5, conflicts: [{ unit: 'brief', current: serverBrief }] }, { status: 409 });
+  await click('保存任务信息');
+
+  const diffBox = section('brief').querySelector('[aria-label="字段级三方冲突对照"]');
+  assert.ok(diffBox);
+  assert.ok(diffBox.querySelector('[data-conflict-field="title"]'));
+  assert.ok(diffBox.querySelector('[data-conflict-field="goal"]'));
+  assert.equal(diffBox.querySelector('[data-conflict-field="audience"]'), null);
+
+  // Choose server for title, keep mine for goal; disjoint audience must remain server's value.
+  await click('作品标题：采用当前', diffBox);
+  await click('希望对方理解或做出什么判断：保留我的', diffBox);
+  await click('按所选字段合并，核对后再保存', diffBox);
+
+  assert.equal(state.contextDrafts.brief.base, 10);
+  assert.equal(state.contextDrafts.brief.conflict, null);
+  write = save;
+  await click('保存任务信息');
+  assert.deepEqual(requests.at(-1), {
+    url: '/api/deck?base=10',
+    patch: {
+      brief: {
+        ...serverBrief,
+        title: '服务器标题',
+        goal: '我的目标',
+        audience: '服务器更新的受众',
+      },
+    },
+  });
+});
+
+test('brief narrator merges role/tone independently and framing pillars conflict renders readable preview', async t => {
+  await mount(t);
+  payload.deck.brief = { ...brief, narrator: { role: '原角色', tone: '原语气' } };
+  await poll(t);
+
+  await click('编辑任务信息');
+  await fill('讲述人角色', '作者新角色');
+  payload.version = 10;
+  payload.deck.brief = { ...brief, narrator: { role: '原角色', tone: '服务器新语气' } };
+  const serverBrief = structuredClone(payload.deck.brief);
+  const save = write;
+  write = async () => Response.json({ exit_code: 5, conflicts: [{ unit: 'brief', current: serverBrief }] }, { status: 409 });
+  await click('保存任务信息');
+
+  const briefDiff = section('brief').querySelector('[aria-label="字段级三方冲突对照"]');
+  // narrator.role (mine) and narrator.tone (server) do not collide!
+  assert.equal(briefDiff.querySelector('[data-conflict-field="narrator.role"]'), null);
+  assert.equal(briefDiff.querySelector('[data-conflict-field="narrator.tone"]'), null);
+  assert.ok(briefDiff.textContent.includes('讲述人角色'));
+  assert.ok(briefDiff.textContent.includes('讲述语气'));
+  await click('按所选字段合并，核对后再保存', briefDiff);
+  write = save;
+  await click('保存任务信息');
+  assert.deepEqual(requests.at(-1).patch.brief.narrator, { role: '作者新角色', tone: '服务器新语气' });
+
+  // Framing pillars conflict must render readable pillar headings and points instead of raw JSON.
+  await click('编辑业务框架');
+  await fill('分组 1 标题', '作者分组');
+  payload.version = 12;
+  payload.deck.framing = {
+    ...framing,
+    pillars: [{ title: '服务器分组', points: ['服务器要点'] }, framing.pillars[1]],
+  };
+  const serverFraming = structuredClone(payload.deck.framing);
+  write = async () => Response.json({ exit_code: 5, conflicts: [{ unit: 'framing', current: serverFraming }] }, { status: 409 });
+  await click('保存业务框架');
+
+  const framingDiff = section('framing').querySelector('[aria-label="字段级三方冲突对照"]');
+  assert.ok(framingDiff.querySelector('[data-conflict-field="pillars"]'));
+  assert.ok(framingDiff.textContent.includes('服务器分组'));
+  assert.ok(framingDiff.textContent.includes('服务器要点'));
+  assert.ok(framingDiff.textContent.includes('作者分组'));
+  assert.equal(framingDiff.textContent.includes('"points"'), false);
+});
+
+test('overview Host handoff uses workspace.reviews counts and preserves ReviewPanel drafts', async t => {
+  await mount(t);
+  payload.deck.pages = [
+    {
+      id: 'p1', purpose: '结论', layout: '', notes: '', todo: [], refs: [], kind: 'judgment', argument: null,
+      content: { title: '结论页', subtitle: '', body_blocks: [], labels: [], callouts: [], footnotes: [] },
+      image: null, svg: null, preview: null,
+    },
+    {
+      id: 'p2', purpose: '附录', layout: '', notes: '', todo: [], refs: [], kind: 'reference', argument: null,
+      content: { title: '附录页', subtitle: '', body_blocks: [], labels: [], callouts: [], footnotes: [] },
+      image: null, svg: null, preview: null,
+    },
+  ];
+  payload.reviews = [
+    { id: 101, method: 'human', version_id: 7, page_id: 'p1', text: '补齐证据出处' },
+    { id: 102, method: 'self_check', version_id: 7, page_id: 'p1', text: '结论句太长' },
+  ];
+  await poll(t);
+
+  // Open review count must derive from real workspace.reviews without fake page.open_reviews field.
+  const badgeButton = document.querySelector('button[aria-label="查看第 01 页 2 条待处理意见"]');
+  assert.ok(badgeButton);
+  assert.equal(badgeButton.textContent, '2 条意见');
+
+  // Type an unsaved draft in deck ReviewPanel, then submit deck HostHandoffCard; ReviewPanel draft must survive.
+  const deckReviewBox = document.querySelector('#deck-reviews textarea');
+  await act(async () => {
+    Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set.call(deckReviewBox, '尚未提交的整稿意见');
+    deckReviewBox.dispatchEvent(new window.Event('input', { bubbles: true }));
+  });
+  const handoff = document.querySelector('section[aria-label="整稿交给 Host"]');
+  await click('交给 Host', handoff);
+  await fill('给 Host 的补充说明', '请先补齐判断页证据并重绘配图');
+  assert.equal(hasUnsavedInputs(state.drafts, state.contextDrafts, state.reviewDrafts, state.handoffDrafts), true);
+  await click('写入意见并生成 Host 指令', handoff);
+
+  const postReq = requests.find(req => req.method === 'POST' && req.url === '/api/reviews');
+  assert.ok(postReq);
+  assert.ok(postReq.body.text.includes('交给 Host'));
+  assert.ok(postReq.body.text.includes('请先补齐判断页证据并重绘配图'));
+  assert.equal(state.reviewDrafts.deck, '尚未提交的整稿意见');
+  const card = handoff.querySelector('[aria-label="可复制的 Host 指令"]');
+  assert.ok(card);
+  assert.ok(card.textContent.includes('复制指令不会自动启动生成'));
+  assert.ok(card.textContent.includes('#3'));
+});
+
+test('single-page Host handoff isolates page drafts across page switches, preserves across scene switches, consumes nonce and protects page ReviewPanel draft', async t => {
+  await mount(t);
+  payload.deck.pages = [
+    {
+      id: 'p1', purpose: '结论', layout: '', notes: '', todo: [], refs: [], kind: 'judgment', argument: null,
+      content: { title: '第一页', subtitle: '', body_blocks: [], labels: [], callouts: [], footnotes: [] },
+      image: null, svg: null, preview: null,
+    },
+    {
+      id: 'p2', purpose: '附录', layout: '', notes: '', todo: [], refs: [], kind: 'reference', argument: null,
+      content: { title: '第二页', subtitle: '', body_blocks: [], labels: [], callouts: [], footnotes: [] },
+      image: null, svg: null, preview: null,
+    },
+  ];
+  await poll(t);
+
+  // Navigate to p1 and trigger openHostHandoff via PageArtwork "进入制作".
+  await act(async () => { state.openPage('p1'); });
+  await click('原图');
+  await click('进入制作');
+  let p1Handoff = document.querySelector('section[aria-label="本页交给 Host"]');
+  assert.ok(p1Handoff.querySelector('select'));
+  assert.equal(p1Handoff.querySelector('select').value, 'redraw_image');
+  assert.equal(state.handoffRequest, null);
+
+  // Collapse and re-click "进入制作" on the same page with same intent -> must re-expand cleanly!
+  await click('收起交给 Host', p1Handoff);
+  assert.equal(p1Handoff.querySelector('select'), null);
+  await click('进入制作');
+  assert.ok(p1Handoff.querySelector('select'));
+  assert.equal(p1Handoff.querySelector('select').value, 'redraw_image');
+
+  // Type an unsaved handoff note on p1 AND an unsaved ReviewPanel draft on p1.
+  await fill('给 Host 的补充说明', '仅属于第一页的重绘要求');
+  const p1ReviewBox = document.querySelector('#page-reviews textarea');
+  await act(async () => {
+    Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set.call(p1ReviewBox, '第一页未提交审阅草稿');
+    p1ReviewBox.dispatchEvent(new window.Event('input', { bubbles: true }));
+  });
+  assert.equal(hasUnsavedInputs(state.drafts, state.contextDrafts, state.reviewDrafts, state.handoffDrafts), true);
+
+  // Switch to p2: p1's handoff note MUST NOT bleed into p2.
+  await act(async () => { state.openPage('p2'); });
+  const p2Handoff = document.querySelector('section[aria-label="本页交给 Host"]');
+  await click('交给 Host', p2Handoff);
+  assert.equal(input('给 Host 的补充说明', p2Handoff).value, '');
+
+  // Switch scene to overview and back to p1: p1's handoff note survives unmount/remount.
+  await act(async () => { state.setScene('overview'); });
+  assert.equal(hasUnsavedInputs(state.drafts, state.contextDrafts, state.reviewDrafts, state.handoffDrafts), true);
+  await act(async () => { state.openPage('p1'); });
+  p1Handoff = document.querySelector('section[aria-label="本页交给 Host"]');
+  assert.equal(input('给 Host 的补充说明', p1Handoff).value, '仅属于第一页的重绘要求');
+
+  // Submit p1 handoff: creates review on page_id 'p1' and does NOT clear p1's ReviewPanel draft!
+  await click('写入意见并生成 Host 指令', p1Handoff);
+  const postReq = requests.find(req => req.method === 'POST' && req.url === '/api/reviews');
+  assert.ok(postReq);
+  assert.equal(postReq.body.page_id, 'p1');
+  assert.ok(postReq.body.text.includes('仅属于第一页的重绘要求'));
+  assert.equal(state.reviewDrafts['page:p1'], '第一页未提交审阅草稿');
+  assert.equal(input('给 Host 的补充说明', p1Handoff).value, '');
+  assert.ok(p1Handoff.querySelector('[aria-label="可复制的 Host 指令"]').textContent.includes('p1'));
 });

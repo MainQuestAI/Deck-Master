@@ -2,6 +2,7 @@ import { isPageDraftDirty } from '../../api.js';
 import { PAGE_KIND_LABELS, evidenceMode, missingPageHints } from '../../schema/fields.js';
 import React from 'react';
 import { useDeckMaster } from '../../context/DeckMasterContext';
+import FieldConflictDiff from '../common/FieldConflictDiff';
 import PageContent from '../common/PageContent';
 import ContentEditor from '../editor/ContentEditor';
 import { Field, TextList } from '../editor/EditorFields';
@@ -43,10 +44,21 @@ export default function DrawerPanel() {
         <Field label="版式要求" value={page.layout} multiline readOnly />
         <Field label="讲稿" value={page.notes} multiline readOnly />
       </> : page && <>
-        {draft.conflict && <section className="s4-message" role="alert"><h3>保存冲突，您的输入仍保留</h3><p>当前内容已被修改。比较后，可基于当前版本再次保存；不会自动覆盖。</p>
-          {(() => { const current = workspace.deck.pages.find(item => item.id === page.id); return <details><summary>查看当前保存内容（版本 {workspace.version}）</summary>{current ? <><PageContent content={current.content} /><ArgumentSummary kind={current.kind} argument={current.argument} /><p>讲稿：{current.notes}</p><p>目的：{current.purpose}</p><p>布局：{current.layout}</p></> : <p>页面已移除或页序已改变。请保留输入，返回作品核对。</p>}</details>; })()}
-          <p>继续保存会用您打开时的正文替换当前正文，请先在上方对比。</p>
-          <button className="button" disabled={!workspace.deck.pages.some(item => item.id === page.id)} onClick={rebaseDraft}>保留我的修改，以当前版本继续</button>
+        {draft.conflict && <section className="s4-message" role="alert"><h3>保存冲突，您的输入仍保留</h3><p>当前内容已被修改。请通过下方字段级对照逐项选择并合并，不会自动覆盖。</p>
+          {(() => {
+            const current = workspace.deck.pages.find(item => item.id === page.id);
+            return <>
+              {current ? <FieldConflictDiff
+                schemaKind="page"
+                base={draft.original}
+                server={current}
+                mine={page}
+                applyLabel="按所选字段合并，以当前版本继续"
+                onApply={merged => rebaseDraft(merged)}
+              /> : <p>页面已移除或页序已改变。请保留输入，返回作品核对。</p>}
+              <details><summary>查看当前保存内容（版本 {workspace.version}）</summary>{current ? <><PageContent content={current.content} /><ArgumentSummary kind={current.kind} argument={current.argument} /><p>讲稿：{current.notes}</p><p>目的：{current.purpose}</p><p>布局：{current.layout}</p></> : <p>页面已移除或页序已改变。请保留输入，返回作品核对。</p>}</details>
+            </>;
+          })()}
         </section>}
         <fieldset disabled={busy.save} className="s4-fieldset">
           <ContentEditor

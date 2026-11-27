@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import Icon from '../common/Icon';
 import { contextUnitPatch } from '../../api.js';
 import { BRIEF_FIELDS, FRAMING_FIELDS, NARRATOR_FIELDS, PAGE_KIND_LABELS, missingContextHints } from '../../schema/fields.js';
+import FieldConflictDiff from '../common/FieldConflictDiff';
+import HostHandoffCard from '../common/HostHandoffCard';
 import ReviewPanel from '../common/ReviewPanel';
 import { useDeckMaster } from '../../context/DeckMasterContext';
 
@@ -172,9 +174,21 @@ function ContextSection({ kind, title, Reading, Fields }) {
       {draft.error && <p className="s4-message" role="alert">{draft.error}</p>}
       {draft.conflict && <section className="s4-message" role="alert">
         <h3>{title}保存冲突，您的输入仍保留</h3>
-        <p>请核对两个完整单元。选择后可继续编辑，再点击保存。</p>
-        <section className="s4-panel" aria-label="服务器当前整单元"><h4>服务器当前整单元</h4>{current ? <Reading value={current} expanded /> : <p>尚未读取当前内容，请重试读取。</p>}</section>
-        <section className="s4-panel" aria-label="我的整单元"><h4>我的整单元</h4><Reading value={draft.value} expanded /></section>
+        <p>请核对差异字段。可逐项选择“保留我的”或“采用当前”合并，也可整单元处理后再保存。</p>
+        <FieldConflictDiff
+          schemaKind={kind}
+          base={draft.original}
+          server={current}
+          mine={draft.value}
+          disabled={saving || !draft.conflict.snapshot}
+          applyLabel="按所选字段合并，核对后再保存"
+          onApply={merged => resolveContextConflict(kind, true, merged)}
+        />
+        <details>
+          <summary>查看完整单元对照</summary>
+          <section className="s4-panel" aria-label="服务器当前整单元"><h4>服务器当前整单元</h4>{current ? <Reading value={current} expanded /> : <p>尚未读取当前内容，请重试读取。</p>}</section>
+          <section className="s4-panel" aria-label="我的整单元"><h4>我的整单元</h4><Reading value={draft.value} expanded /></section>
+        </details>
         <div className="head-actions">
           {!draft.conflict.snapshot && <button className="button" disabled={saving} onClick={() => refreshContextConflict(kind)}>重新读取服务器当前内容</button>}
           <button className="button" disabled={saving || !draft.conflict.snapshot} onClick={() => resolveContextConflict(kind, false)}>采用服务器当前整单元</button>
@@ -197,9 +211,10 @@ function ContextSection({ kind, title, Reading, Fields }) {
 }
 
 export default function OverviewView() {
-  const { pages, workspace, query, setQuery, openPage, createPage, busy, openDrawer, setScene, getPageNumStr } = useDeckMaster();
+  const { pages, workspace, query, setQuery, openPage, openPageReviews, createPage, busy, openDrawer, setScene, getPageNumStr } = useDeckMaster();
   const status = workspace.artifact_status;
   const filtered = pages.filter(page => page.content.title.includes(query));
+  const openReviewCount = page => (workspace.reviews || []).filter(review => review.page_id === page.id).length;
   return <div>
     <div className="view-head"><div><h1>制作总览</h1><p>浏览当前作品，修改内容并继续制作。</p></div><div className="head-actions"><button className="button" onClick={() => openDrawer('history')}><Icon name="layers" />版本历史记录</button><button className="button" onClick={createPage} disabled={busy.create}>新增页面</button></div></div>
     <ContextSection kind="brief" title="任务信息" Reading={BriefReading} Fields={BriefFields} />
@@ -209,14 +224,19 @@ export default function OverviewView() {
       {[[pages.length, '逐页稿'], [pages.filter(page => page.image).length, '原图'], [pages.filter(page => page.svg).length, 'SVG'], [workspace.runs.filter(run => run.kind !== 'native' && run.status === 'open').length, '进行中任务']].map(([value, label]) => <div className="metric-item" key={label}><strong>{value}</strong><p>{label}</p></div>)}
     </div>
     <section className="next-banner"><div className="mark-icon"><Icon name="page" /></div><div className="grow"><h2>{pages.length ? '查看逐页稿并继续制作' : '作品还是空的'}</h2><p>{pages.length ? '正文、讲稿与产物按页保存。' : '新增第一页，开始写正文与讲稿。'}</p></div><button className="primary" disabled={busy.create} onClick={() => pages.length ? openPage(pages[0].id) : createPage()}>{pages.length ? '进入制作' : '新增第一页'}</button></section>
+    <HostHandoffCard />
     {pages.length > 0 && <>
       <div className="toolbar"><label className="search-box"><Icon name="search" /><input aria-label="搜索页面" placeholder="搜索页名" value={query} onChange={event => setQuery(event.target.value)} /></label><button className="button" onClick={() => setScene('delivery')}>任务与下载</button></div>
-      <div className="matrix-container"><table className="matrix-table"><thead><tr><th>页面</th><th>原图</th><th>SVG</th><th>操作</th></tr></thead><tbody>{filtered.map(page => <tr key={page.id}>
-        <td><button className="page-entry-link" onClick={() => openPage(page.id)}><span className="p-no num">{getPageNumStr(page.id)}</span>{page.content.title || '未命名页面'}</button></td>
-        <td><span className={`badge ${status.stale_images.includes(page.id) ? 'warn' : 'neutral'}`}>{!page.image ? '未制作' : status.stale_images.includes(page.id) ? '依据已变' : '已采用'}</span></td>
-        <td><span className={`badge ${status.stale_pages.includes(page.id) ? 'warn' : 'neutral'}`}>{!page.svg ? '未制作' : status.stale_pages.includes(page.id) ? '依据已变' : '已采用'}</span></td>
-        <td><button className="button tiny quiet" onClick={() => openPage(page.id)}>打开</button></td>
-      </tr>)}</tbody></table>{filtered.length === 0 && <p className="s4-empty">没有匹配的页面</p>}</div>
+      <div className="matrix-container"><table className="matrix-table"><thead><tr><th>页面</th><th>原图</th><th>SVG</th><th>待处理意见</th><th>操作</th></tr></thead><tbody>{filtered.map(page => {
+        const count = openReviewCount(page);
+        return <tr key={page.id}>
+          <td><button className="page-entry-link" onClick={() => openPage(page.id)}><span className="p-no num">{getPageNumStr(page.id)}</span>{page.content.title || '未命名页面'}</button></td>
+          <td><span className={`badge ${status.stale_images.includes(page.id) ? 'warn' : 'neutral'}`}>{!page.image ? '未制作' : status.stale_images.includes(page.id) ? '依据已变' : '已采用'}</span></td>
+          <td><span className={`badge ${status.stale_pages.includes(page.id) ? 'warn' : 'neutral'}`}>{!page.svg ? '未制作' : status.stale_pages.includes(page.id) ? '依据已变' : '已采用'}</span></td>
+          <td>{count > 0 ? <button className="badge warn" type="button" aria-label={`查看第 ${getPageNumStr(page.id)} 页 ${count} 条待处理意见`} onClick={() => openPageReviews(page.id)}>{count} 条意见</button> : <span className="badge neutral">0 条</span>}</td>
+          <td><button className="button tiny quiet" onClick={() => openPage(page.id)}>打开</button></td>
+        </tr>;
+      })}</tbody></table>{filtered.length === 0 && <p className="s4-empty">没有匹配的页面</p>}</div>
     </>}
     <ReviewPanel />
   </div>;
