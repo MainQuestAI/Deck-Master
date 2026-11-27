@@ -1,8 +1,0 @@
-{
-  "name": "deck-native-pptx",
-  "version": "0.0.0",
-  "private": true,
-  "dependencies": {
-    "pptxgenjs": "4.0.1"
-  }
-}

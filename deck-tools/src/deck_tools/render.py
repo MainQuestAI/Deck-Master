@@ -51,9 +51,9 @@ def executable(name):
     return path
 
 
-def run(args, **kwargs):
+def run(args, *, timeout=120, **kwargs):
     try:
-        return subprocess.run(args, check=True, capture_output=True, timeout=120, **kwargs)
+        return subprocess.run(args, check=True, capture_output=True, timeout=timeout, **kwargs)
     except subprocess.CalledProcessError as exc:
         detail = (exc.stderr or b'').decode(errors='replace').strip()
         raise RendererError(f'{Path(args[0]).name} exited {exc.returncode}: {detail or "no stderr"}') from exc
@@ -126,18 +126,52 @@ def renderer_environment():
     return {**os.environ, 'FONTCONFIG_FILE': str(config)}
 
 
-def render_deck(pptx_path, output_dir, *, fonts):
-    output_dir=Path(output_dir);output_dir.mkdir(parents=True,exist_ok=True)
+def _pptx_slide_count(pptx_path):
+    try:
+        with zipfile.ZipFile(pptx_path) as archive:
+            count = sum(
+                1
+                for name in archive.namelist()
+                if re.fullmatch(r"ppt/slides/slide[0-9]+\.xml", name)
+            )
+            return max(1, count)
+    except (OSError, zipfile.BadZipFile):
+        return 1
+
+
+def render_deck(pptx_path, output_dir, *, fonts, page_count=None):
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
     # resolve_fonts already verified these fonts using the host's Fontconfig.
     # Bridge the macOS bundle's different default prefix to that full config.
     # Linux and explicit caller configuration retain their existing behavior.
     environment = renderer_environment()
-    profile=(output_dir/'lo-profile').resolve().as_uri()
-    run([executable('soffice'),f'-env:UserInstallation={profile}','--headless','--convert-to','pdf','--outdir',str(output_dir),str(pptx_path)], env=environment)
-    pdf=output_dir/(Path(pptx_path).stem+'.pdf')
-    if not pdf.is_file():raise RuntimeError('renderer did not produce a PDF')
-    run([executable('pdftoppm'),'-r','120','-png',str(pdf),str(output_dir/'page')], env=environment)
-    return sorted(output_dir.glob('page-*.png'),key=lambda p:int(p.stem.split('-')[-1]))
+    pages = max(1, int(page_count)) if page_count is not None else _pptx_slide_count(pptx_path)
+    timeout = max(120, 60 + 10 * pages)
+    profile = (output_dir / "lo-profile").resolve().as_uri()
+    run(
+        [
+            executable("soffice"),
+            f"-env:UserInstallation={profile}",
+            "--headless",
+            "--convert-to",
+            "pdf",
+            "--outdir",
+            str(output_dir),
+            str(pptx_path),
+        ],
+        env=environment,
+        timeout=timeout,
+    )
+    pdf = output_dir / (Path(pptx_path).stem + ".pdf")
+    if not pdf.is_file():
+        raise RuntimeError("renderer did not produce a PDF")
+    run(
+        [executable("pdftoppm"), "-r", "120", "-png", str(pdf), str(output_dir / "page")],
+        env=environment,
+        timeout=timeout,
+    )
+    return sorted(output_dir.glob("page-*.png"), key=lambda p: int(p.stem.split("-")[-1]))
 
 
 def readback(pptx_path, pages, expected_pages):

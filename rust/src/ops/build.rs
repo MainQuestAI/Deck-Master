@@ -1,5 +1,5 @@
 use crate::error::{Error, Result};
-use crate::model::{Artifact, Canvas, Deck};
+use crate::model::{Artifact, Canvas, Deck, Page};
 use crate::ops::basis::{basis, current_basis_for, image_is_stale, is_complete_render_basis};
 use crate::ops::native::{NativePack, native_plan_path, plan_refs, with_shared_layout};
 use crate::ops::review::content_review_status;
@@ -26,6 +26,16 @@ struct SvgBuildPage<'a> {
 }
 
 #[derive(Serialize)]
+struct MixedBuildPage<'a> {
+    id: &'a str,
+    mode: &'a str,
+    native: Option<&'a Artifact>,
+    svg_file: Option<&'a str>,
+    current_basis: Option<String>,
+    notes: &'a str,
+}
+
+#[derive(Serialize)]
 struct BuildDigestInput<'a, P: Serialize> {
     mode: &'a str,
     pages: Vec<P>,
@@ -34,58 +44,172 @@ struct BuildDigestInput<'a, P: Serialize> {
     assets: BTreeMap<&'a str, &'a str>,
 }
 
+fn page_build_mode(deck: &Deck, page: &Page) -> Option<&'static str> {
+    match (&page.native, &page.svg) {
+        (Some(_), None) => Some("native"),
+        (None, Some(_)) => Some("svg"),
+        (Some(nat), Some(svg)) => {
+            let svg_fresh = current_basis_for("svg", &svg.basis, deck, page)
+                .is_ok_and(|current| current == svg.basis);
+            let native_stale = current_basis_for("svg", &nat.basis, deck, page)
+                .map(|current| current != nat.basis)
+                .unwrap_or(true);
+            if svg_fresh && native_stale {
+                Some("svg")
+            } else {
+                Some("native")
+            }
+        }
+        (None, None) => None,
+    }
+}
+
+fn deck_build_mode(deck: &Deck) -> &'static str {
+    let mut has_native = false;
+    let mut has_svg = false;
+    for page in &deck.pages {
+        match page_build_mode(deck, page) {
+            Some("native") => has_native = true,
+            Some("svg") => has_svg = true,
+            _ => {}
+        }
+    }
+    match (has_native, has_svg) {
+        (true, true) => "mixed",
+        (true, false) => "native",
+        (false, true) => "svg",
+        (false, false) => "empty",
+    }
+}
+
 fn build_digest(deck: &Deck) -> Result<String> {
     use sha2::{Digest, Sha256};
-    let native = deck.pages.iter().any(|p| p.native.is_some());
+    let mode = deck_build_mode(deck);
     let assets: BTreeMap<&str, &str> = deck
         .style
         .assets
         .iter()
         .map(|asset| (asset.id.as_str(), asset.file.as_str()))
         .collect();
-    let encoded = if native {
-        let pages: Vec<_> = deck
-            .pages
-            .iter()
-            .map(|p| {
-                Ok(NativeBuildPage {
+    let encoded = match mode {
+        "mixed" => {
+            let pages: Vec<_> = deck
+                .pages
+                .iter()
+                .map(|p| {
+                    let selected = page_build_mode(deck, p).unwrap_or("none");
+                    Ok(MixedBuildPage {
+                        id: &p.id,
+                        mode: selected,
+                        native: if selected == "native" {
+                            p.native.as_ref()
+                        } else {
+                            None
+                        },
+                        svg_file: if selected == "svg" {
+                            p.svg.as_ref().map(|s| s.file.as_str())
+                        } else {
+                            None
+                        },
+                        current_basis: if selected == "native" {
+                            Some(basis("native", deck, p)?)
+                        } else {
+                            None
+                        },
+                        notes: &p.notes,
+                    })
+                })
+                .collect::<Result<_>>()?;
+            serde_json::to_vec(&BuildDigestInput {
+                mode: "mixed",
+                pages,
+                canvas: &deck.style.canvas,
+                fonts: &deck.style.fonts,
+                assets,
+            })?
+        }
+        "native" => {
+            let pages: Vec<_> = deck
+                .pages
+                .iter()
+                .map(|p| {
+                    Ok(NativeBuildPage {
+                        id: &p.id,
+                        native: p.native.as_ref(),
+                        current_basis: basis("native", deck, p)?,
+                        notes: &p.notes,
+                    })
+                })
+                .collect::<Result<_>>()?;
+            serde_json::to_vec(&BuildDigestInput {
+                mode: "native",
+                pages,
+                canvas: &deck.style.canvas,
+                fonts: &deck.style.fonts,
+                assets,
+            })?
+        }
+        _ => {
+            let pages: Vec<_> = deck
+                .pages
+                .iter()
+                .map(|p| SvgBuildPage {
                     id: &p.id,
-                    native: p.native.as_ref(),
-                    current_basis: basis("native", deck, p)?,
+                    svg_file: p.svg.as_ref().map(|s| s.file.as_str()),
                     notes: &p.notes,
                 })
-            })
-            .collect::<Result<_>>()?;
-        serde_json::to_vec(&BuildDigestInput {
-            mode: "native",
-            pages,
-            canvas: &deck.style.canvas,
-            fonts: &deck.style.fonts,
-            assets,
-        })?
-    } else {
-        let pages: Vec<_> = deck
-            .pages
-            .iter()
-            .map(|p| SvgBuildPage {
-                id: &p.id,
-                svg_file: p.svg.as_ref().map(|s| s.file.as_str()),
-                notes: &p.notes,
-            })
-            .collect();
-        serde_json::to_vec(&BuildDigestInput {
-            mode: "svg",
-            pages,
-            canvas: &deck.style.canvas,
-            fonts: &deck.style.fonts,
-            assets,
-        })?
+                .collect();
+            serde_json::to_vec(&BuildDigestInput {
+                mode: "svg",
+                pages,
+                canvas: &deck.style.canvas,
+                fonts: &deck.style.fonts,
+                assets,
+            })?
+        }
     };
     Ok(format!("{:x}", Sha256::digest(encoded)))
 }
 
 pub fn artifact_status(deck: &Deck) -> Result<Value> {
-    artifact_status_for(deck, deck.pages.iter().any(|p| p.native.is_some()))
+    let mode = deck_build_mode(deck);
+    let mut missing = Vec::new();
+    let mut stale = Vec::new();
+    let mut stale_images = Vec::new();
+    let mut incomplete_basis_pages = Vec::new();
+    for page in &deck.pages {
+        let selected = page_build_mode(deck, page);
+        let artifact = match selected {
+            Some("native") => page.native.as_ref(),
+            Some("svg") => page.svg.as_ref(),
+            _ => {
+                missing.push(&page.id);
+                None
+            }
+        };
+        if artifact.is_some_and(|art| !is_complete_render_basis(&art.basis)) {
+            incomplete_basis_pages.push(&page.id);
+        }
+        if image_is_stale(deck, page)? {
+            stale_images.push(&page.id);
+        }
+        if let Some(art) = artifact {
+            let stale_render = match current_basis_for("svg", &art.basis, deck, page) {
+                Ok(current) => art.basis != current,
+                Err(_) => true,
+            };
+            if stale_render {
+                stale.push(&page.id);
+            }
+        }
+    }
+    Ok(json!({
+        "build_mode": mode,
+        "missing_pages": missing,
+        "stale_pages": stale,
+        "stale_images": stale_images,
+        "incomplete_basis_pages": incomplete_basis_pages,
+    }))
 }
 
 pub(super) fn stale_image_warnings(stale_images: &Value) -> Value {
@@ -100,75 +224,40 @@ pub(super) fn stale_image_warnings(stale_images: &Value) -> Value {
     )
 }
 
-fn artifact_status_for(deck: &Deck, native: bool) -> Result<Value> {
-    let missing: Vec<_> = deck
-        .pages
-        .iter()
-        .filter(|p| {
-            if native {
-                p.native.is_none()
-            } else {
-                p.svg.is_none()
-            }
-        })
-        .map(|p| &p.id)
-        .collect();
-    let mut stale = Vec::new();
-    let mut stale_images = Vec::new();
-    let mut incomplete_basis_pages = Vec::new();
-    for page in &deck.pages {
-        let artifact = if native { &page.native } else { &page.svg };
-        if artifact
-            .as_ref()
-            .is_some_and(|svg| !is_complete_render_basis(&svg.basis))
-        {
-            incomplete_basis_pages.push(&page.id);
-        }
-        let image_stale = image_is_stale(deck, page)?;
-        if image_stale {
-            stale_images.push(&page.id);
-        }
-        if let Some(svg) = artifact {
-            let stale_render = match current_basis_for("svg", &svg.basis, deck, page) {
-                Ok(current) => svg.basis != current,
-                Err(_) => true,
-            };
-            if stale_render {
-                stale.push(&page.id);
-            }
-        }
-    }
-    Ok(
-        json!({"missing_pages":missing,"stale_pages":stale,"stale_images":stale_images,"incomplete_basis_pages":incomplete_basis_pages}),
-    )
-}
-
 pub fn build(project: &Path) -> Result<Value> {
     use rusqlite::params;
     let mut store = Store::open(project)?;
     let snapshot = store.current()?;
-    let native = snapshot.deck.pages.iter().any(|p| p.native.is_some());
-    let status = artifact_status_for(&snapshot.deck, native)?;
+    let mode = deck_build_mode(&snapshot.deck);
+    let status = artifact_status(&snapshot.deck)?;
     let temporary = tempfile::tempdir()?;
     let mut pages = Vec::new();
     let mut native_plans = Vec::new();
-    let mut job = Value::Null;
+    let mut svg_job_template = Value::Null;
     for (index, page) in snapshot.deck.pages.iter().enumerate() {
-        if native {
-            if let Some(artifact) = &page.native {
-                let pack: NativePack =
-                    serde_json::from_slice(&std::fs::read(store.file(&artifact.file)?)?)?;
-                let plan = temporary.path().join(format!("{index}.json"));
-                native_plan_path(&store, &pack, &plan)?;
-                native_plans.push((page.id.clone(), pack.plan));
-                pages.push(
-                    json!({"id":page.id,"content":page.content,"notes":page.notes,"plan":plan}),
-                );
+        match page_build_mode(&snapshot.deck, page) {
+            Some("native") => {
+                if let Some(artifact) = &page.native {
+                    let pack: NativePack =
+                        serde_json::from_slice(&std::fs::read(store.file(&artifact.file)?)?)?;
+                    let plan_dir = temporary.path().join(format!("native-{index}"));
+                    std::fs::create_dir_all(&plan_dir)?;
+                    let plan = plan_dir.join("plan.json");
+                    native_plan_path(&store, &pack, &plan)?;
+                    native_plans.push((page.id.clone(), pack.plan));
+                    pages.push(
+                        json!({"id":page.id,"content":page.content,"notes":page.notes,"plan":plan}),
+                    );
+                }
             }
-        } else if let Some(svg) = &page.svg {
-            let input = page_job(&store, &snapshot.deck, page, &store.file(&svg.file)?)?;
-            pages.push(input["pages"][0].clone());
-            job = input;
+            Some("svg") => {
+                if let Some(svg) = &page.svg {
+                    let input = page_job(&store, &snapshot.deck, page, &store.file(&svg.file)?)?;
+                    pages.push(input["pages"][0].clone());
+                    svg_job_template = input;
+                }
+            }
+            _ => {}
         }
     }
     if pages.is_empty() {
@@ -183,12 +272,12 @@ pub fn build(project: &Path) -> Result<Value> {
     }
     let content_review =
         content_review_status(&store.connection, snapshot.version, &snapshot.deck)?;
-    let output = if native {
+    let output = if mode == "native" {
         crate::tools::invoke("assemble", &json!({"work":temporary.path(),"pages":pages}))?
     } else {
-        job["pages"] = json!(pages);
-        job["output"] = json!(temporary.path().join("build"));
-        crate::tools::invoke("build", &job)?
+        svg_job_template["pages"] = json!(pages);
+        svg_job_template["output"] = json!(temporary.path().join("build"));
+        crate::tools::invoke("build", &svg_job_template)?
     };
     let path = output["pptx"]
         .as_str()
@@ -199,7 +288,7 @@ pub fn build(project: &Path) -> Result<Value> {
     let id = tx.last_insert_rowid();
     tx.commit()?;
     Ok(
-        json!({"id":id,"version_id":snapshot.version,"path":store.file(&file)?,"findings":output["findings"],"missing_pages":status["missing_pages"],"stale_pages":status["stale_pages"],"stale_images":status["stale_images"],"warnings":with_shared_layout(stale_image_warnings(&status["stale_images"]), &plan_refs(&native_plans)),"content_review":content_review}),
+        json!({"id":id,"version_id":snapshot.version,"build_mode":mode,"path":store.file(&file)?,"findings":output["findings"],"missing_pages":status["missing_pages"],"stale_pages":status["stale_pages"],"stale_images":status["stale_images"],"warnings":with_shared_layout(stale_image_warnings(&status["stale_images"]), &plan_refs(&native_plans)),"content_review":content_review}),
     )
 }
 
@@ -250,13 +339,8 @@ pub fn build_detail(project: &Path, id: i64) -> Result<Value> {
     }
     let mut pages = Vec::new();
     let mut content_matches = true;
-    let native = source.pages.iter().any(|p| p.native.is_some());
     for (index, page) in source.pages.iter().enumerate() {
-        if if native {
-            page.native.is_none()
-        } else {
-            page.svg.is_none()
-        } {
+        if page_build_mode(&source, page).is_none() {
             continue;
         }
         content_matches &= current

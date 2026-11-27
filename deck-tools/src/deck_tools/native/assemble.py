@@ -19,6 +19,7 @@ def assemble(job):
     output.parent.mkdir(parents=True, exist_ok=True)
     plans = [read_json(p["plan"]) for p in job["pages"]]
     resolved_fonts = _resolve_native_fonts(plans)
+    template_path = job.get("theme")
     with tempfile.NamedTemporaryFile(
         dir=output.parent, prefix=".deck-", suffix=".pptx", delete=False
     ) as temp:
@@ -26,7 +27,12 @@ def assemble(job):
     warnings = []
     hints = []
     try:
-        _, _, warnings = generate(job["pages"], temporary, mode="deck")
+        _, _, warnings = generate(
+            job["pages"],
+            temporary,
+            mode="deck",
+            template_path=template_path,
+        )
         temporary.write_bytes(
             sanitize.pptx(
                 temporary.read_bytes(),
@@ -38,17 +44,25 @@ def assemble(job):
         os.replace(temporary, output)
     finally:
         temporary.unlink(missing_ok=True)
-    directory = output.parent / "deck-render"
-    with tempfile.TemporaryDirectory(prefix="deck-native-deck-") as temp:
-        images = package_render_deck(output, temp, fonts=resolved_fonts)
-        if len(images) != len(job["pages"]):
-            raise RuntimeError("整套渲染页数与输入不一致")
-        directory.mkdir(exist_ok=True)
-        previews = []
-        for i, image in enumerate(images, 1):
-            target = directory / f"page-{i}.png"
-            target.write_bytes(image.read_bytes())
-            previews.append(str(target))
+
+    previews = []
+    if job.get("preview") is True:
+        directory = output.parent / "deck-render"
+        with tempfile.TemporaryDirectory(prefix="deck-native-deck-") as temp:
+            images = package_render_deck(
+                output,
+                temp,
+                fonts=resolved_fonts,
+                page_count=len(job["pages"]),
+            )
+            if len(images) != len(job["pages"]):
+                raise RuntimeError("整套渲染页数与输入不一致")
+            directory.mkdir(exist_ok=True)
+            for i, image in enumerate(images, 1):
+                target = directory / f"page-{i}.png"
+                target.write_bytes(image.read_bytes())
+                previews.append(str(target))
+
     report = readback(output, job["pages"])
     if warnings:
         report["warnings"] = warnings
