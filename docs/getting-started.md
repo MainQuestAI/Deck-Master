@@ -35,10 +35,16 @@ Historical notes are in the published [1.1.0 release page](releases/1.1.0.md#upg
 CLI inspection needs no model call. Image generation uses the Host's account
 and permissions.
 
-## Install from source
+## Install
+
+By default, `scripts/install.sh` downloads and SHA-256-verifies the platform
+prebuilt bundle (`darwin-arm64` / `linux-x86_64`) with no local Rust or Node
+toolchain required (only Python 3.12 or `uv`). Pass `--from-source` to compile
+from a local checkout:
 
 ```bash
-./scripts/install.sh
+./scripts/install.sh                # prebuilt bundle (default)
+./scripts/install.sh --from-source  # build locally from checkout
 ```
 
 The script prepares the CLI, embedded frontend, non-editable Python package and

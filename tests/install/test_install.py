@@ -17,12 +17,16 @@ ROLES = ("deck-master", "deck-content", "deck-design", "deck-review")
 SOURCE = REPO / "deck-skill"
 
 
-def _run(args: list[str], *, env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
+def _run(args: list[str], *, env: dict[str, str] | None = None, from_source: bool = True) -> subprocess.CompletedProcess[str]:
     merged = os.environ.copy()
     if env:
         merged.update(env)
+    cmd = [str(SCRIPT)]
+    if from_source and "--from-source" not in args and "--archive" not in args:
+        cmd.append("--from-source")
+    cmd.extend(args)
     return subprocess.run(
-        [str(SCRIPT), *args],
+        cmd,
         cwd=str(REPO),
         text=True,
         capture_output=True,
@@ -454,3 +458,76 @@ def test_successful_validation_removes_only_its_temporary_probe(tmp_path: Path) 
     assert result.returncode == 0, result.stderr
     assert list(temporary.iterdir()) == [sentinel]
     assert sentinel.read_text() == "keep this"
+
+
+def _make_prebuilt_bundle(tmp_path: Path) -> tuple[Path, Path]:
+    import hashlib
+    import tarfile
+
+    stage = tmp_path / "bundle-stage"
+    (stage / "bin").mkdir(parents=True)
+    (stage / "wheels").mkdir(parents=True)
+    deck_bin = stage / "bin/deck"
+    deck_bin.write_text("#!/bin/sh\nif [ \"$1\" = doctor ]; then echo '{\"status\":\"ready\"}'; fi\nexit 0\n")
+    deck_bin.chmod(0o755)
+    (stage / "wheels/deck_tools-1.1.4-py3-none-any.whl").write_bytes(b"fake-wheel")
+    (stage / "requirements.lock").write_text("lxml==6.1.3\n")
+    shutil.copytree(SOURCE, stage / "deck-skill", symlinks=True)
+    archive = tmp_path / "deck-master-v1.1.4-test.tar.gz"
+    with tarfile.open(archive, "w:gz") as tar:
+        for entry in ("bin", "wheels", "requirements.lock", "deck-skill"):
+            tar.add(stage / entry, arcname=entry)
+    digest = hashlib.sha256(archive.read_bytes()).hexdigest()
+    sha_file = tmp_path / "deck-master-v1.1.4-test.tar.gz.sha256"
+    sha_file.write_text(f"{digest}  {archive.name}\n")
+    return archive, sha_file
+
+
+def test_default_prebuilt_dry_run_and_archive_install_without_rust_or_node(tmp_path: Path) -> None:
+    prefix = tmp_path / "prefix"
+    root = tmp_path / "roles"
+    dry = _run(["--dry-run", "--prefix", str(prefix), "--skills-root", str(root)], from_source=False)
+    assert dry.returncode == 0, dry.stderr
+    assert "mode=prebuilt" in dry.stdout
+    assert "releases/download/" in dry.stdout
+    assert "download-and-verify" in dry.stdout
+    assert not prefix.exists()
+
+    archive, sha_file = _make_prebuilt_bundle(tmp_path)
+    # Build a PATH without cargo or npm to prove prebuilt mode does not need Rust/Node.
+    bin_dir = tmp_path / "no-rust-node-bin"
+    bin_dir.mkdir()
+    (bin_dir / "uv").write_text(f"""#!{sys.executable}
+import pathlib, sys
+if sys.argv[1:3] == ['python', 'find']:
+    print({sys.executable!r})
+    raise SystemExit(0)
+dest = pathlib.Path(sys.argv[-1]) / 'bin'
+dest.mkdir(parents=True)
+(dest / 'python').write_text('#!/bin/sh\\nexit 0\\n')
+(dest / 'python').chmod(0o755)
+""")
+    (bin_dir / "uv").chmod(0o755)
+    for name in ("bash", "sh", "dirname", "basename", "date", "readlink", "cat", "cmp", "mkdir", "cp", "mktemp", "env", "rm", "rmdir", "ln", "chmod", "tar", "awk", "head", "sed"):
+        executable = shutil.which(name)
+        assert executable is not None
+        (bin_dir / name).symlink_to(executable)
+    env = {"PATH": str(bin_dir)}
+
+    bad_sha = _run(
+        ["--archive", str(archive), "--sha256", "0" * 64, "--prefix", str(prefix), "--skills-root", str(root)],
+        env=env,
+        from_source=False,
+    )
+    assert bad_sha.returncode != 0
+    assert "SHA-256" in bad_sha.stderr
+    assert not (prefix / "share/deck/current").exists()
+
+    ok = _run(
+        ["--archive", str(archive), "--sha256", str(sha_file), "--prefix", str(prefix), "--skills-root", str(root)],
+        env=env,
+        from_source=False,
+    )
+    assert ok.returncode == 0, ok.stderr
+    assert '"status":"ready"' in ok.stdout
+    _assert_roles(root)

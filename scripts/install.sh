@@ -1,18 +1,26 @@
 #!/usr/bin/env bash
 # Install the Rust CLI, a dedicated deck-tools venv, and Codex skill links.
-# Prepare a complete local component group before switching one current link.
+# Default mode downloads and verifies a platform prebuilt bundle; --from-source
+# builds from this local checkout. Both modes prepare a complete component group
+# before atomically switching the single current symlink.
 set -Eeuo pipefail
 
 usage() {
   cat <<'EOF'
-用法：install.sh [--prefix DIR] [--skills-root DIR] [--dry-run]
+用法：install.sh [--prefix DIR] [--skills-root DIR] [--version TAG] [--archive PATH|URL] [--sha256 PATH|HEX] [--from-source] [--dry-run]
 
 安装 deck、独立的 deck-tools 环境和四个 Codex 职责入口。
 
-  --prefix DIR       CLI 安装根目录（默认 ~/.local）
-  --skills-root DIR  技能根目录（默认 ~/.codex/skills）
-  --dry-run          打印计划并检查路径，不写入
+  --prefix DIR          CLI 安装根目录（默认 ~/.local）
+  --skills-root DIR     技能根目录（默认 ~/.codex/skills）
+  --version TAG         预编译发布标签（默认取仓库当前版本 vX.Y.Z）
+  --archive PATH|URL    使用指定的预编译压缩包（本地路径或 https URL）
+  --sha256 PATH|HEX     预编译压缩包的 SHA-256 校验文件或 64 位摘要
+  --from-source         从本地源码编译安装（需要 cargo 与 npm）
+  --dry-run             打印计划并检查路径，不写入
 
+默认下载并校验当前平台的预编译包（macOS arm64 / Linux x86_64），无需本地
+Rust 或 Node 环境；也可传 --from-source 回退本地源码编译。
 默认将 deck-master、deck-content、deck-design、deck-review 整个目录
 软链接到 ~/.codex/skills；--skills-root 更换目录。不再安装兼容入口 deck。
 EOF
@@ -22,6 +30,11 @@ script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 repo_root=$(CDPATH= cd -- "$script_dir/.." && pwd)
 prefix="${HOME}/.local"
 skills_root="${HOME}/.codex/skills"
+mode="${DECK_INSTALL_MODE:-prebuilt}"
+release_repo="${DECK_RELEASE_REPO:-MainQuestAI/Deck-Master}"
+release_tag="${DECK_INSTALL_VERSION:-}"
+archive_spec=""
+sha256_spec=""
 dry_run=0
 
 while [ $# -gt 0 ]; do
@@ -38,6 +51,26 @@ while [ $# -gt 0 ]; do
     --skills-root)
       [ $# -ge 2 ] || { echo "install.sh: --skills-root 需要目录" >&2; exit 2; }
       skills_root=$2
+      shift 2
+      ;;
+    --from-source)
+      mode=source
+      shift
+      ;;
+    --version)
+      [ $# -ge 2 ] || { echo "install.sh: --version 需要发布标签（如 v2.0.0）" >&2; exit 2; }
+      release_tag=$2
+      shift 2
+      ;;
+    --archive)
+      [ $# -ge 2 ] || { echo "install.sh: --archive 需要本地路径或 URL" >&2; exit 2; }
+      archive_spec=$2
+      mode=prebuilt
+      shift 2
+      ;;
+    --sha256)
+      [ $# -ge 2 ] || { echo "install.sh: --sha256 需要校验文件或 64 位 SHA-256 摘要" >&2; exit 2; }
+      sha256_spec=$2
       shift 2
       ;;
     --dry-run)
@@ -64,6 +97,18 @@ done
 case "$prefix" in /*) ;; *) prefix="$PWD/$prefix" ;; esac
 case "$skills_root" in /*) ;; *) skills_root="$PWD/$skills_root" ;; esac
 while [ "$prefix" != / ] && [ "${prefix%/}" != "$prefix" ]; do prefix=${prefix%/}; done
+
+detect_target() {
+  local os arch
+  os=$(uname -s)
+  arch=$(uname -m)
+  case "${os}:${arch}" in
+    Darwin:arm64) printf 'darwin-arm64\n' ;;
+    Linux:x86_64|Linux:amd64) printf 'linux-x86_64\n' ;;
+    *) return 1 ;;
+  esac
+}
+
 skill_target="${repo_root}/deck-skill"
 compat_dir="${skills_root}/deck"
 roles=(deck-master deck-content deck-design deck-review)
@@ -80,17 +125,49 @@ need() {
   }
 }
 
-need cargo
-need npm
+if [ "$mode" = source ]; then
+  need cargo
+  need npm
+else
+  if [ -z "$archive_spec" ]; then
+    if ! target=$(detect_target); then
+      echo "install.sh: 当前平台（$(uname -s)/$(uname -m)）暂无预编译包；请使用 --from-source 从源码安装。" >&2
+      exit 2
+    fi
+    if [ -z "$release_tag" ] && [ -f "${repo_root}/rust/Cargo.toml" ]; then
+      crate_ver=$(sed -n 's/^version = "\([^"]*\)"/\1/p' "${repo_root}/rust/Cargo.toml" | head -n 1)
+      if [ -n "$crate_ver" ]; then
+        release_tag="v${crate_ver}"
+      fi
+    fi
+    if [ -z "$release_tag" ]; then
+      echo "install.sh: 无法确定预编译版本；请传 --version vX.Y.Z 或 --from-source。" >&2
+      exit 2
+    fi
+    archive_spec="https://github.com/${release_repo}/releases/download/${release_tag}/deck-master-${release_tag}-${target}.tar.gz"
+    if [ -z "$sha256_spec" ]; then
+      sha256_spec="${archive_spec}.sha256"
+    fi
+  fi
+  case "$archive_spec" in
+    http://*|https://*) need curl ;;
+  esac
+  case "$sha256_spec" in
+    http://*|https://*) need curl ;;
+  esac
+  need tar
+fi
+
 phase=prepare-python
 install_failed() {
-  local code=$?
+  local code=${1:-$?}
   if [ "$BASH_SUBSHELL" -eq 0 ]; then
     echo "install.sh: ${phase} 阶段失败（${code}）；未自动回滚或清理安装。请按相同参数重试。" >&2
   fi
   exit "$code"
 }
 trap install_failed ERR
+
 if command -v uv >/dev/null 2>&1; then
   venv_python=uv
   if ! host_python=$(uv python find --offline --no-python-downloads --no-cache 3.12 2>/dev/null); then
@@ -117,32 +194,34 @@ if ! "$host_python" -c 'import sys; sys.exit(0 if sys.version_info[:2] == (3, 12
   exit 3
 fi
 
-[ -d "$skill_target" ] || {
-  echo "install.sh: 找不到 ${skill_target}" >&2
-  exit 2
-}
-for role in "${roles[@]}"; do
-  [ -f "${skill_target}/${role}/SKILL.md" ] || {
-    echo "install.sh: 找不到 ${skill_target}/${role}/SKILL.md" >&2
+if [ "$mode" = source ]; then
+  [ -d "$skill_target" ] || {
+    echo "install.sh: 找不到 ${skill_target}" >&2
     exit 2
   }
-done
-[ -d "${skill_target}/references" ] && [ -d "${skill_target}/assets" ] || {
-  echo "install.sh: 找不到共享 references 或 assets" >&2
-  exit 2
-}
-[ -d "${repo_root}/rust" ] || {
-  echo "install.sh: 找不到 ${repo_root}/rust" >&2
-  exit 2
-}
-[ -d "${repo_root}/deck-tools" ] || {
-  echo "install.sh: 找不到 ${repo_root}/deck-tools" >&2
-  exit 2
-}
-[ -d "${repo_root}/frontend" ] || {
-  echo "install.sh: 找不到 ${repo_root}/frontend" >&2
-  exit 2
-}
+  for role in "${roles[@]}"; do
+    [ -f "${skill_target}/${role}/SKILL.md" ] || {
+      echo "install.sh: 找不到 ${skill_target}/${role}/SKILL.md" >&2
+      exit 2
+    }
+  done
+  [ -d "${skill_target}/references" ] && [ -d "${skill_target}/assets" ] || {
+    echo "install.sh: 找不到共享 references 或 assets" >&2
+    exit 2
+  }
+  [ -d "${repo_root}/rust" ] || {
+    echo "install.sh: 找不到 ${repo_root}/rust" >&2
+    exit 2
+  }
+  [ -d "${repo_root}/deck-tools" ] || {
+    echo "install.sh: 找不到 ${repo_root}/deck-tools" >&2
+    exit 2
+  }
+  [ -d "${repo_root}/frontend" ] || {
+    echo "install.sh: 找不到 ${repo_root}/frontend" >&2
+    exit 2
+  }
+fi
 
 resolve_path() {
   local path=$1
@@ -285,6 +364,7 @@ run() {
 }
 
 if [ "$dry_run" -eq 1 ]; then
+  echo "mode=${mode}"
   echo "prefix=${prefix}"
   echo "deck-bin=${deck_bin}"
   echo "venv=${venv_dir}"
@@ -298,20 +378,108 @@ if [ "$dry_run" -eq 1 ]; then
   else
     echo "venv-tool=python3.12"
   fi
+  if [ "$mode" = prebuilt ]; then
+    echo "archive=${archive_spec}"
+    if [ -n "$sha256_spec" ]; then
+      echo "sha256=${sha256_spec}"
+    fi
+  fi
 fi
 
 phase=prepare
 run mkdir -p "$installation"
-run npm --prefix "${repo_root}/frontend" ci
-run npm --prefix "${repo_root}/frontend" run build
-run cargo install --path "${repo_root}/rust" --root "$installation" --locked
-if [ "$venv_python" = uv ]; then
-  run uv venv --python 3.12 --seed "$venv_dir"
+if [ "$mode" = source ]; then
+  run npm --prefix "${repo_root}/frontend" ci
+  run npm --prefix "${repo_root}/frontend" run build
+  run cargo install --path "${repo_root}/rust" --root "$installation" --locked
+  if [ "$venv_python" = uv ]; then
+    run uv venv --python 3.12 --seed "$venv_dir"
+  else
+    run python3.12 -m venv "$venv_dir"
+  fi
+  run "$venv_dir/bin/python" -m pip install "${repo_root}/deck-tools"
+  run cp -R "$skill_target" "$installation/deck-skill"
 else
-  run python3.12 -m venv "$venv_dir"
+  if [ "$dry_run" -eq 1 ]; then
+    plan download-and-verify "$archive_spec" "${sha256_spec:-<no-sha256>}"
+    if [ "$venv_python" = uv ]; then
+      plan uv venv --python 3.12 --seed "$venv_dir"
+    else
+      plan python3.12 -m venv "$venv_dir"
+    fi
+    plan "$venv_dir/bin/python" -m pip install -r "<bundle>/requirements.lock"
+    plan "$venv_dir/bin/python" -m pip install --no-deps "<bundle>/wheels/deck_tools-*.whl"
+  else
+    stage_dir=$(mktemp -d "${TMPDIR:-/tmp}/deck-bundle.XXXXXXXX")
+    trap 'rc=$?; rm -rf -- "$stage_dir"; install_failed "$rc"' ERR
+    local_archive="${stage_dir}/bundle.tar.gz"
+    case "$archive_spec" in
+      http://*|https://*)
+        curl -fsSL "$archive_spec" -o "$local_archive"
+        ;;
+      *)
+        [ -f "$archive_spec" ] || { echo "install.sh: 找不到预编译包 ${archive_spec}" >&2; rm -rf -- "$stage_dir"; exit 2; }
+        cp "$archive_spec" "$local_archive"
+        ;;
+    esac
+    if [ -n "$sha256_spec" ]; then
+      expected_sha=""
+      case "$sha256_spec" in
+        http://*|https://*)
+          expected_sha=$(curl -fsSL "$sha256_spec" | awk '{print $1}' | head -n 1)
+          ;;
+        *)
+          if [ -f "$sha256_spec" ]; then
+            expected_sha=$(awk '{print $1}' "$sha256_spec" | head -n 1)
+          else
+            expected_sha=$sha256_spec
+          fi
+          ;;
+      esac
+      "$host_python" - "$local_archive" "$expected_sha" <<'VERIFY_SHA'
+import hashlib, pathlib, sys
+archive = pathlib.Path(sys.argv[1])
+expected = sys.argv[2].strip().lower()
+if len(expected) != 64 or any(c not in "0123456789abcdef" for c in expected):
+    raise SystemExit("install.sh: 无效的 SHA-256 校验值：" + expected)
+actual = hashlib.sha256(archive.read_bytes()).hexdigest().lower()
+if actual != expected:
+    raise SystemExit(f"install.sh: 预编译包 SHA-256 校验失败（期望 {expected}，实际 {actual}）；已中止安装。")
+VERIFY_SHA
+    fi
+    mkdir -p "$stage_dir/extracted"
+    tar -xzf "$local_archive" -C "$stage_dir/extracted"
+    [ -x "$stage_dir/extracted/bin/deck" ] || { echo "install.sh: 预编译包缺少可执行文件 bin/deck" >&2; rm -rf -- "$stage_dir"; exit 2; }
+    [ -d "$stage_dir/extracted/deck-skill" ] || { echo "install.sh: 预编译包缺少 deck-skill 目录" >&2; rm -rf -- "$stage_dir"; exit 2; }
+    mkdir -p "$installation/bin"
+    cp "$stage_dir/extracted/bin/deck" "$installation/bin/deck"
+    chmod 755 "$installation/bin/deck"
+    cp -R "$stage_dir/extracted/deck-skill" "$installation/deck-skill"
+    if [ "$venv_python" = uv ]; then
+      uv venv --python 3.12 --seed "$venv_dir"
+    else
+      python3.12 -m venv "$venv_dir"
+    fi
+    if [ -f "$stage_dir/extracted/requirements.lock" ]; then
+      "$venv_dir/bin/python" -m pip install -r "$stage_dir/extracted/requirements.lock"
+    fi
+    wheel_found=0
+    for wheel in "$stage_dir/extracted"/wheels/deck_tools-*.whl; do
+      if [ -f "$wheel" ]; then
+        wheel_found=1
+        "$venv_dir/bin/python" -m pip install --no-deps "$wheel"
+      fi
+    done
+    if [ "$wheel_found" -eq 0 ]; then
+      echo "install.sh: 预编译包缺少 wheels/deck_tools-*.whl" >&2
+      rm -rf -- "$stage_dir"
+      exit 2
+    fi
+    rm -rf -- "$stage_dir"
+    trap install_failed ERR
+  fi
 fi
-run "$venv_dir/bin/python" -m pip install "${repo_root}/deck-tools"
-run cp -R "$skill_target" "$installation/deck-skill"
+
 # A new shell does not keep this process's PATH, so an older deck stays first.
 # The installed command text is what that next session reads.
 if [ "$dry_run" -eq 0 ] && [ "$prefix" != "${HOME}/.local" ]; then

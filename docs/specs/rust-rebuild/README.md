@@ -531,11 +531,12 @@ Q03 的并发回归 `slow_old_build_finishing_after_fast_current_build_keeps_mat
 
 ### 本地自包含安装
 
-每次在 prefix/share/deck/installations 下的最终目录构建 CLI（含前端），建立 venv，非 editable 安装同次源码的工具包并复制四角色及共享资源。检查实际模块位置、共享链接及真实 TXT 材料读取后，原子替换 current。
+每次在 prefix/share/deck/installations 下的最终目录准备 CLI（含前端）、独立 venv、非 editable 安装的 deck-tools 与四角色共享资源。默认下载并校验平台预编译包（`darwin-arm64` / `linux-x86_64`，含 `bin/deck`、`wheels/deck_tools-*.whl`、`requirements.lock` 与 `deck-skill/`），无需本机 Rust 或 Node；支持 `--version` / `--archive` / `--sha256`，并保留 `--from-source` 源码构建回退。检查实际模块位置、共享链接及真实 TXT 材料读取后，原子替换 current。
 固定 prefix/bin/deck 入口先解析 current 的物理目录再 exec，新进程使用新组件，旧进程继续使用原目录。标准升级只切换 current，不移动 venv、不清理旧安装。非默认 prefix 不改登录 shell 的 PATH；新会话会先运行 PATH 上已有的 deck。安装副本的 commands.md 把 `<prefix>/bin/deck` 写成这次的绝对路径。安装结束时若 `command -v deck` 不是该入口，打印先找到的路径。
-被非托管入口占用的 `<prefix>/bin/deck` 或职责路径在写入前退出 2，不执行、不覆盖、不自动回滚或清理历史安装；不再维护旧 Cargo 普通二进制识别或 `entry-migrations` 迁移凭据。安装验证后清理本次 mktemp 创建的探针项目，最后调用 `deck doctor` 提示缺失渲染工具（不阻断安装）。
-有 uv 但缺 Python 3.12 时，普通安装先用 uv 准备 3.12，再建工具环境；准备失败保留退出码并报告 prepare-python 阶段。dry-run 只离线查询已有的 3.12，禁用下载和缓存写入；缺解释器时退出 3 并提示先准备，不回退到任意 python3。无 uv 时使用并核实 python3.12。
+被非托管入口占用的 `<prefix>/bin/deck` 或职责路径在写入前退出 2，不执行、不覆盖、不自动回滚或清理历史安装；不再维护旧 Cargo 普通二进制识别或 `entry-migrations` 迁移凭据。安装验证后清理本次 mktemp 创建的探针项目，最后调用 `deck doctor` 提示缺失渲染工具（不阻断安装；macOS 缺渲染工具时给出 Homebrew 一键补齐提示，缺 `fc-conflist` 时自动回退探测标准 Homebrew Fontconfig 路径）。
 本云环境已实际验证 Linux 新装、升级后旧进程工具固定、真实 pip 准备失败不切换及源码移走；macOS 安装未执行。「旧布局迁移」只是此前安装器的历史验证记录，不是现行合约：现行安装不再识别旧 Cargo 二进制，也不做旧布局迁移，见上一段。
+有 uv 但缺 Python 3.12 时，普通安装先用 uv 准备 3.12，再建工具环境；准备失败保留退出码并报告 prepare-python 阶段。dry-run 只离线查询已有的 3.12，禁用下载和缓存写入；缺解释器时退出 3 并提示先准备，不回退到任意 python3。无 uv 时使用并核实 python3.12。
+`rust.yml` 已接入 `macos-14` CI 任务（涵盖前端构建与测试、Rust 测试、deck-tools、install 套件及 `--from-source` 真实安装验证）；`release.yml` 负责按标签构建并校验预编译包。
 共享纯绘图规则已在编译时加入 image task；实际色板、字体与画布仍由作品动态提供，旧任务文件与图片依据不因软件更新改写。SVG 还原服从已选蓝图。
 
 ### Q10 本轮性能诊断（Linux，2026-11-09）

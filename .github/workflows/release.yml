@@ -1,0 +1,138 @@
+name: Release prebuilt bundles
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Bundle tag name for dry-run dispatch (e.g. v2.0.0-rc1)"
+        required: false
+        default: "v0.0.0-dev"
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            target: darwin-arm64
+          - os: ubuntu-24.04
+            target: linux-x86_64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Build embedded WebUI
+        working-directory: frontend
+        run: |
+          npm ci
+          npm test
+          npm run lint:css
+          npm run build
+      - name: Build Rust release binary
+        working-directory: rust
+        run: cargo build --release --locked
+      - name: Build deck-tools wheel
+        run: |
+          mkdir -p dist/wheels
+          python -m pip wheel --no-deps ./deck-tools -w dist/wheels
+      - name: Assemble self-contained bundle
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+          TARGET: ${{ matrix.target }}
+        run: |
+          if [ "${GITHUB_REF_TYPE:-}" = "tag" ]; then
+            TAG="${GITHUB_REF_NAME}"
+          else
+            TAG="${INPUT_TAG:-v0.0.0-dev}"
+          fi
+          STAGE="dist/bundle"
+          rm -rf "$STAGE"
+          mkdir -p "$STAGE/bin" "$STAGE/wheels"
+          cp rust/target/release/deck "$STAGE/bin/deck"
+          chmod +x "$STAGE/bin/deck"
+          cp dist/wheels/deck_tools-*.whl "$STAGE/wheels/"
+          cp deck-tools/requirements.lock "$STAGE/requirements.lock"
+          cp -R deck-skill "$STAGE/deck-skill"
+          ARCHIVE="dist/deck-master-${TAG}-${TARGET}.tar.gz"
+          tar -C "$STAGE" -czf "$ARCHIVE" bin wheels requirements.lock deck-skill
+          if command -v sha256sum >/dev/null 2>&1; then
+            (cd dist && sha256sum "$(basename "$ARCHIVE")" > "$(basename "$ARCHIVE").sha256")
+          else
+            (cd dist && shasum -a 256 "$(basename "$ARCHIVE")" > "$(basename "$ARCHIVE").sha256")
+          fi
+          ls -lh dist/deck-master-*
+      - name: Smoke-test prebuilt bundle without Rust or Node
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+          TARGET: ${{ matrix.target }}
+        run: |
+          if [ "${GITHUB_REF_TYPE:-}" = "tag" ]; then
+            TAG="${GITHUB_REF_NAME}"
+          else
+            TAG="${INPUT_TAG:-v0.0.0-dev}"
+          fi
+          ARCHIVE="$PWD/dist/deck-master-${TAG}-${TARGET}.tar.gz"
+          python -m pip install uv
+          SMOKE_HOME="$(mktemp -d)"
+          CLEAN_PATH="$RUNNER_TEMP/clean-bin"
+          mkdir -p "$CLEAN_PATH"
+          for tool in bash sh env dirname basename readlink cat cmp mkdir cp mktemp rm rmdir ln chmod tar gzip uname curl uv python3.12 shasum sha256sum date head cut awk tr sed; do
+            found=$(command -v "$tool" || true)
+            if [ -n "$found" ]; then
+              ln -sf "$found" "$CLEAN_PATH/$tool"
+            fi
+          done
+          HOME="$SMOKE_HOME" PATH="$CLEAN_PATH" bash scripts/install.sh \
+            --archive "$ARCHIVE" \
+            --sha256 "${ARCHIVE}.sha256" \
+            --prefix "$RUNNER_TEMP/prebuilt-prefix" \
+            --skills-root "$RUNNER_TEMP/prebuilt-skills"
+          "$RUNNER_TEMP/prebuilt-prefix/bin/deck" --help >/dev/null
+          "$RUNNER_TEMP/prebuilt-prefix/bin/deck" new "$RUNNER_TEMP/first-run-check" --title "Prebuilt Check" >/dev/null
+          "$RUNNER_TEMP/prebuilt-prefix/bin/deck" --project "$RUNNER_TEMP/first-run-check" show >/dev/null
+      - uses: actions/upload-artifact@v7
+        with:
+          name: bundle-${{ matrix.target }}
+          path: |
+            dist/deck-master-*.tar.gz
+            dist/deck-master-*.tar.gz.sha256
+
+  publish:
+    needs: package
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          path: release-assets
+          merge-multiple: true
+      - name: Combine SHA256SUMS
+        working-directory: release-assets
+        run: |
+          cat *.sha256 | sort > SHA256SUMS
+          cat SHA256SUMS
+      - name: Publish GitHub Release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" release-assets/* --clobber
+          else
+            gh release create "$TAG" release-assets/* --title "Deck Master $TAG" --generate-notes
+          fi

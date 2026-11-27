@@ -12,11 +12,21 @@ dependencies = ["python-pptx>=1.0", "Pillow>=10", "lxml>=5"]
 [project.optional-dependencies]
 dev = ["pytest>=8"]
 
+[tool.setuptools]
+include-package-data = false
+
 [tool.setuptools.packages.find]
 where = ["src"]
+exclude = ["deck_tools.vendor*"]
 
 [tool.setuptools.package-data]
-deck_tools = ["resources/icons/lucide/*", "vendor/cyberppt/*", "resources/icons/tabler-outline/*"]
+deck_tools = [
+  "resources/icons/lucide/*",
+  "resources/icons/tabler-outline/*",
+  "vendor/cyberppt/LICENSE",
+  "vendor/cyberppt/SOURCE.md",
+  "vendor/cyberppt/select_icon.py",
+]
 
 [tool.pytest.ini_options]
 markers = ["render: real local rendering tools"]

@@ -49,3 +49,43 @@ def test_named_missing_font_still_blocks(monkeypatch):
     assert font["available"] is False
     assert font.get("level") != "warn"
     assert not any(item["name"] == "fonts" for item in result["checks"])
+
+
+def test_macos_homebrew_fontconfig_fallback_and_brew_hint(monkeypatch, tmp_path):
+    from deck_tools import render
+
+    fake_conf_dir = tmp_path / "homebrew" / "etc" / "fonts"
+    fake_conf_dir.mkdir(parents=True)
+    fake_conf = fake_conf_dir / "fonts.conf"
+    fake_conf.write_text("<fontconfig/>", encoding="utf-8")
+
+    monkeypatch.setattr(render.sys, "platform", "darwin")
+    monkeypatch.setattr(doctor.sys, "platform", "darwin")
+    monkeypatch.delenv("FONTCONFIG_FILE", raising=False)
+    monkeypatch.delenv("FONTCONFIG_PATH", raising=False)
+    monkeypatch.setattr(render, "HOMEBREW_FONTCONFIG_CANDIDATES", (fake_conf,))
+
+    def missing_conflist(name):
+        if name == "fc-conflist":
+            raise NeedsTool("fc-conflist unavailable")
+        return f"/opt/homebrew/bin/{name}"
+
+    monkeypatch.setattr(render, "executable", missing_conflist)
+    env = render.renderer_environment()
+    assert env is not None
+    assert env["FONTCONFIG_FILE"] == str(fake_conf)
+
+    # Doctor reports macos_brew_hint when any render tool is missing on macOS.
+    def missing_soffice(name):
+        if name == "soffice":
+            raise NeedsTool("soffice unavailable")
+        return f"/opt/homebrew/bin/{name}"
+
+    monkeypatch.setattr(doctor, "executable", missing_soffice)
+    monkeypatch.setattr(doctor, "renderer_environment", lambda: env)
+    result = doctor.diagnose([])
+    assert result["status"] == "needs_tool"
+    assert "brew install librsvg poppler fontconfig" in result["macos_brew_hint"]
+    fc_check = next(item for item in result["checks"] if item["name"] == "renderer_fontconfig")
+    assert fc_check["available"] is True
+    assert fc_check["path"] == str(fake_conf)

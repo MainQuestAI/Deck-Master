@@ -95,6 +95,56 @@ def resolve_fonts(pages):
     return fonts
 
 
+HOMEBREW_FONTCONFIG_CANDIDATES = (
+    Path("/opt/homebrew/etc/fonts/fonts.conf"),
+    Path("/usr/local/etc/fonts/fonts.conf"),
+)
+
+
+def _readable_file(path: Path) -> bool:
+    try:
+        with path.open("rb") as stream:
+            stream.read(1)
+        return True
+    except OSError:
+        return False
+
+
+def discover_macos_fontconfig() -> Path:
+    """Discover the active Fontconfig root on macOS.
+
+    Uses fc-conflist when installed so an ambiguous or broken active Fontconfig
+    configuration is never silently overridden. Falls back to standard Homebrew
+    paths only when fc-conflist itself is unavailable.
+    """
+    try:
+        conflist = executable("fc-conflist")
+    except NeedsTool:
+        for candidate in HOMEBREW_FONTCONFIG_CANDIDATES:
+            if _readable_file(candidate):
+                return candidate
+        raise NeedsTool(
+            "cannot discover host Fontconfig (brew install fontconfig); configure FONTCONFIG_FILE"
+        )
+    try:
+        listing = run([conflist]).stdout.decode()
+    except (OSError, RendererError, UnicodeError) as exc:
+        raise NeedsTool(
+            "cannot discover host Fontconfig (brew install fontconfig); configure FONTCONFIG_FILE"
+        ) from exc
+    configs = set()
+    for line in listing.splitlines():
+        match = re.match(r"^\+ (/.*/fonts\.conf): ", line)
+        if match:
+            configs.add(Path(match.group(1)))
+    if len(configs) != 1:
+        raise NeedsTool("host Fontconfig root is missing or ambiguous; configure FONTCONFIG_FILE")
+    config = configs.pop()
+    if not _readable_file(config):
+        raise NeedsTool("host Fontconfig root is unreadable; configure FONTCONFIG_FILE")
+    return config
+
+
 def renderer_environment():
     """Use the host's full Fontconfig configuration in macOS render children.
 
@@ -103,27 +153,12 @@ def renderer_environment():
     Discover the active host configuration, without changing global settings or
     replacing it with a partial font-directory configuration.
     """
-    if sys.platform != 'darwin' or any(os.environ.get(key) for key in
-                                     ('FONTCONFIG_FILE', 'FONTCONFIG_PATH')):
+    if sys.platform != "darwin" or any(
+        os.environ.get(key) for key in ("FONTCONFIG_FILE", "FONTCONFIG_PATH")
+    ):
         return None  # Inherit the caller's explicit configuration unchanged.
-    try:
-        listing = run([executable('fc-conflist')]).stdout.decode()
-    except (OSError, RendererError, UnicodeError) as exc:
-        raise NeedsTool('cannot discover host Fontconfig; configure FONTCONFIG_FILE') from exc
-    configs = set()
-    for line in listing.splitlines():
-        match = re.match(r'^\+ (/.*/fonts\.conf): ', line)
-        if match:
-            configs.add(Path(match.group(1)))
-    if len(configs) != 1:
-        raise NeedsTool('host Fontconfig root is missing or ambiguous; configure FONTCONFIG_FILE')
-    config = configs.pop()
-    try:
-        with config.open('rb') as stream:
-            stream.read(1)
-    except OSError as exc:
-        raise NeedsTool('host Fontconfig root is unreadable; configure FONTCONFIG_FILE') from exc
-    return {**os.environ, 'FONTCONFIG_FILE': str(config)}
+    config = discover_macos_fontconfig()
+    return {**os.environ, "FONTCONFIG_FILE": str(config)}
 
 
 def _pptx_slide_count(pptx_path):
