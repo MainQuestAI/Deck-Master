@@ -12,7 +12,7 @@ console.warn = (...args) => {
 
 const DEFAULT_FONT = 'Noto Sans CJK SC';
 const color = value => String(value).replace(/^#/, '');
-const SLIDE_WIDTH_IN = 13.333;
+const SLIDE_WIDTH_IN = 40 / 3;
 // Inches per source-image pixel; set once per job from the shared canvas width.
 let IN_PX = 0;
 const inch = px => px * IN_PX;

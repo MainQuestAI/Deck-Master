@@ -12,6 +12,14 @@ import zipfile
 import xml.etree.ElementTree as ET
 from copy import deepcopy
 from .atoms import visible_atoms
+from .readback_core import (
+    DRAWING_NS,
+    check_notes_and_count,
+    check_shapes_outside_slide,
+    missing_visible_atoms,
+    normalize_text,
+    slide_text_objects,
+)
 class NeedsTool(RuntimeError):
     pass
 
@@ -132,39 +140,49 @@ def render_deck(pptx_path, output_dir, *, fonts):
     return sorted(output_dir.glob('page-*.png'),key=lambda p:int(p.stem.split('-')[-1]))
 
 
-def readback(pptx_path,pages,expected_pages):
-    ns={'a':'http://schemas.openxmlformats.org/drawingml/2006/main','p':'http://schemas.openxmlformats.org/presentationml/2006/main'}
-    findings=[];stats=[]
+def readback(pptx_path, pages, expected_pages):
+    ns = DRAWING_NS
+    stats = []
     from .compiler.native import notes_records, normalize_notes
+
     actual_notes = notes_records(pptx_path)
-    for row, page in zip(actual_notes, expected_pages):
-        if row['page_id'] != page['page_id']:
-            findings.append({'page_id': page['page_id'], 'code': 'notes_page_identity_mismatch'})
-        if row['notes'] != normalize_notes(page.get('speaker_notes', '')):
-            findings.append({'page_id': page['page_id'], 'code': 'speaker_notes_mismatch'})
-    normalize=lambda t:''.join(str(t).split())
+    findings = check_notes_and_count(
+        actual_notes,
+        [(page["page_id"], page.get("speaker_notes", "")) for page in expected_pages],
+        normalize_notes=normalize_notes,
+        include_svg_inputs=len(pages),
+    )
+    normalize = normalize_text
     with zipfile.ZipFile(pptx_path) as z:
-        presentation=ET.fromstring(z.read('ppt/presentation.xml'))
-        slide_ids=presentation.findall('p:sldIdLst/p:sldId',ns)
-        sld_sz=presentation.find('p:sldSz',ns)
-        slide_cx=int(sld_sz.get('cx'));slide_cy=int(sld_sz.get('cy'))
-        relationships=ET.fromstring(z.read('ppt/_rels/presentation.xml.rels'))
-        targets={r.get('Id'):r.get('Target') for r in relationships if r.get('TargetMode')!='External'}
-        slide_paths=[]
+        presentation = ET.fromstring(z.read("ppt/presentation.xml"))
+        slide_ids = presentation.findall("p:sldIdLst/p:sldId", ns)
+        sld_sz = presentation.find("p:sldSz", ns)
+        slide_cx = int(sld_sz.get("cx"))
+        slide_cy = int(sld_sz.get("cy"))
+        relationships = ET.fromstring(z.read("ppt/_rels/presentation.xml.rels"))
+        targets = {
+            r.get("Id"): r.get("Target")
+            for r in relationships
+            if r.get("TargetMode") != "External"
+        }
+        slide_paths = []
         for slide_id in slide_ids:
-            target=targets.get(slide_id.get('{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id'),'')
-            slide_paths.append(posixpath.normpath(posixpath.join('ppt',target)) if not target.startswith('/') else target.lstrip('/'))
-        actual_count=len(slide_ids)
-        if actual_count!=len(expected_pages) or len(pages)!=len(expected_pages):
-            findings.append({'code':'slide_count_mismatch','actual':actual_count,'expected':len(expected_pages),'svg_inputs':len(pages)})
-        for index,(source,page) in enumerate(zip(pages,expected_pages),1):
-            slide_path=slide_paths[index-1] if index<=len(slide_paths) else ''
+            target = targets.get(
+                slide_id.get("{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id"),
+                "",
+            )
+            slide_paths.append(
+                posixpath.normpath(posixpath.join("ppt", target))
+                if not target.startswith("/")
+                else target.lstrip("/")
+            )
+        for index, (source, page) in enumerate(zip(pages, expected_pages), 1):
+            slide_path = slide_paths[index - 1] if index <= len(slide_paths) else ""
             if slide_path not in z.namelist():
-                findings.append({'page_id':page['page_id'],'code':'missing_slide'})
+                findings.append({"page_id": page["page_id"], "code": "missing_slide"})
                 continue
-            root=ET.fromstring(z.read(slide_path))
-            texts=[e.text or '' for e in root.findall('.//a:t',ns)]
-            joined=normalize(''.join(texts))
+            root = ET.fromstring(z.read(slide_path))
+            texts = [e.text or "" for e in root.findall(".//a:t", ns)]
             tables = {s['table_id'] for s in source['shapes']
                       if s.get('native_table') and s.get('table_frame')}
             graphics = {graphic.find('p:nvGraphicFramePr/p:cNvPr', ns).get('name'): graphic
@@ -224,35 +242,27 @@ def readback(pptx_path,pages,expected_pages):
                             for sp in root.findall('.//p:sp', ns) if sp.findall('.//a:t', ns)]
             if native_texts != svg_texts:
                 findings.append({'page_id':page['page_id'],'code':'svg_ppt_text_mismatch'})
-            for atom in visible_atoms(checked_page):
-                if atom.get('text') and normalize(atom['text']) not in joined:
-                    findings.append({'page_id':page['page_id'],'code':'missing_visible_atom','atom_id':atom['atom_id'],'text':atom['text']})
+            for atom in missing_visible_atoms(
+                slide_text_objects(root, merge_same_atom=True),
+                visible_atoms(checked_page),
+                allow_split_spans=True,
+            ):
+                findings.append(
+                    {
+                        "page_id": page["page_id"],
+                        "code": "missing_visible_atom",
+                        "atom_id": atom["atom_id"],
+                        "text": atom["text"],
+                    }
+                )
             from .readback_text import _check_required_text
+
             findings.extend(_check_required_text(root, checked_source, checked_page))
             from .readback_relations import check_native_relations
+
             findings.extend(check_native_relations(root, checked_source, checked_page))
-            # AC-K10: a shape box leaving the slide. Native tables are graphic
-            # frames: the compiler removes their frame, rules and cell text, so
-            # the p:sp walk never sees the table's on-slide transform.
-            carriers = [(sp.find('p:nvSpPr/p:cNvPr', ns), sp.find('p:spPr/a:xfrm', ns))
-                        for sp in root.findall('.//p:sp', ns)]
-            carriers.extend((graphic.find('p:nvGraphicFramePr/p:cNvPr', ns), graphic.find('p:xfrm', ns))
-                            for graphic in root.findall('.//p:graphicFrame', ns))
-            for name_node, xfrm in carriers:
-                if name_node is None or xfrm is None:
-                    continue
-                off = xfrm.find('a:off', ns)
-                ext = xfrm.find('a:ext', ns)
-                if off is None or ext is None:
-                    continue
-                x = int(off.get('x'))
-                y = int(off.get('y'))
-                w = int(ext.get('cx'))
-                h = int(ext.get('cy'))
-                if x < 0 or y < 0 or x + w > slide_cx or y + h > slide_cy:
-                    findings.append({'page_id': page['page_id'], 'code': 'shape_outside_slide',
-                                     'element': name_node.get('name'), 'bounds': [x, y, w, h],
-                                     'slide': [slide_cx, slide_cy]})
+            # AC-K10: a shape or native table leaving the slide bounds.
+            findings.extend(check_shapes_outside_slide(root, page["page_id"], slide_cx, slide_cy))
             # AC-K08: verify declared node/edge relations against the actual
             # slide geometry, located via data-node-ref/data-edge-ref bindings.
             visual=page.get('visual_spec') or {}

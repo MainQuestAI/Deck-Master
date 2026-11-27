@@ -4,7 +4,6 @@ from pathlib import Path
 import math
 import hashlib
 import json
-import subprocess
 import tempfile
 import zipfile
 from lxml import etree as ET
@@ -18,13 +17,10 @@ class SvgInput:
 
 @dataclass(frozen=True)
 class CompileOptions:
-    node_executable: str | None = None
-    artifact_module: str | None = None
     width_px: float = 1280
     height_px: float = 720
     fonts: dict[str, str] = field(default_factory=dict)
     assets: dict[str, dict[str, str]] = field(default_factory=dict)
-    timeout_seconds: int = 120
 
 @dataclass(frozen=True)
 class CompileResult:
@@ -81,7 +77,6 @@ def _compile_prepared(inputs, options, output_dir, prepared=None):
             diagnostics.append({'page_id': page['page_id'], 'code': 'contained_with_letterbox', 'scale': scale, 'horizontal_margin_px': horizontal, 'vertical_margin_px': vertical})
     manifest = output_dir / 'compile-input.json'
     manifest.write_text(json.dumps({'pages': pages, 'width': options.width_px, 'height': options.height_px, 'diagnostics': diagnostics, 'compiler_version': 'python-native-v1', 'fonts': {k: {'sha256': hashlib.sha256(Path(v).read_bytes()).hexdigest()} for k,v in options.fonts.items()}}, ensure_ascii=False, indent=2))
-    script = Path(__file__).parents[1] / 'resources' / 'compiler' / 'native.mjs'
     with tempfile.TemporaryDirectory(prefix='compile-', dir=output_dir) as temporary:
         candidate = Path(temporary) / 'candidate.pptx'
         from .native import emit

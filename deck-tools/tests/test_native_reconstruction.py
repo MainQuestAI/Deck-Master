@@ -419,10 +419,10 @@ def test_generator_fixes_slide_width_and_keeps_source_aspect(sample):
     wide = _with_canvas(page, plan, 1672, 941, 'wide')
     output, _, _ = native.generate([wide], work / 'wide.pptx', mode='single')
     presentation = Presentation(output)
-    assert presentation.slide_width == pytest.approx(13.333 * 914400, abs=2)
-    assert presentation.slide_height == pytest.approx(13.333 * 914400 * 941 / 1672, abs=2)
+    assert presentation.slide_width == pytest.approx(native.SLIDE_WIDTH_EMU, abs=2)
+    assert presentation.slide_height == pytest.approx(native.SLIDE_WIDTH_EMU * 941 / 1672, abs=2)
     table = next(shape for shape in presentation.slides[0].shapes if shape.has_table)
-    assert table.left == pytest.approx(20 * 13.333 * 914400 / 1672, abs=2)
+    assert table.left == pytest.approx(20 * native.SLIDE_WIDTH_EMU / 1672, abs=2)
 
 
 def test_deck_mode_rejects_mixed_canvas_sizes(sample):
@@ -764,7 +764,10 @@ def test_render_and_assemble_real_synthetic_source(sample):
                 assert image.width > 0 and image.height > 0
         with Image.open(answer['side_by_side']) as image:
             assert image.size == (1600, 480)
-        assert answer['findings'] == {'page': current['id'], 'atoms': 5}
+        assert answer['findings']['page'] == current['id']
+        assert answer['findings']['atoms'] == 5
+        assert all(w['code'] == 'missing_visual_object' and w['level'] == 'warning'
+                   for w in answer['findings'].get('warnings', []))
         assert not (native.page_directory(work, current['id']) / 'status.json').exists()
     native.write_json(job, {'work': str(work), 'pages': pages})
     result = subprocess.run([sys.executable, '-m', 'deck_tools', 'assemble', str(job)], capture_output=True, text=True)
@@ -909,3 +912,135 @@ def test_crop_output_dir_exif_transpose_and_zero_size_rejection(tmp_path):
             'box': [0, 0, 10, 10],
             'page': {'id': 'p1', 'source_image': str(source)},
         })
+
+
+def test_detect_missing_visual_objects_reports_omitted_icon_and_illustration_without_blocking(tmp_path):
+    from PIL import ImageDraw
+
+    canvas_w, canvas_h = 800, 450
+    source = tmp_path / 'source.png'
+    rendered = tmp_path / 'render.png'
+
+    # Source image: clean white slide with a light card, a dark-blue row icon at [60, 140, 48, 48],
+    # and a red/amber illustration portrait at [560, 120, 160, 180].
+    src_img = Image.new('RGB', (canvas_w, canvas_h), '#FFFFFF')
+    src_draw = ImageDraw.Draw(src_img)
+    src_draw.rectangle([40, 110, 420, 340], fill='#F1F5F9', outline='#CBD5E1')
+    src_draw.ellipse([60, 140, 108, 188], fill='#1D4ED8')
+    src_draw.rectangle([560, 120, 720, 300], fill='#DC2626', outline='#7F1D1D')
+    src_img.save(source)
+
+    # Rendered image: card is drawn, text area has slight text rendering, but icon & illustration omitted!
+    rnd_img = Image.new('RGB', (canvas_w, canvas_h), '#FFFFFF')
+    rnd_draw = ImageDraw.Draw(rnd_img)
+    rnd_draw.rectangle([40, 110, 420, 340], fill='#F1F5F9', outline='#CBD5E1')
+    # Text region difference (must be masked out and NOT flagged as missing_visual_object).
+    rnd_draw.rectangle([130, 145, 380, 185], fill='#0F172A')
+    rnd_img.save(rendered)
+
+    plan_omitting_objects = {
+        'schema': 'deck.native_plan.v1',
+        'page': 'p1',
+        'canvas_px': {'w': canvas_w, 'h': canvas_h},
+        'background': '#FFFFFF',
+        'ops': [
+            {'op': 'shape', 'type': 'rect', 'bbox': [40, 110, 380, 230], 'fill': '#F1F5F9'},
+            {'op': 'text', 'atom_id': 'atom:p1:title', 'text': '标题', 'bbox': [130, 145, 250, 40]},
+        ],
+    }
+    warnings = native.detect_missing_visual_objects(source, rendered, plan_omitting_objects)
+    assert len(warnings) == 2
+    assert all(w['code'] == 'missing_visual_object' and w['level'] == 'warning' for w in warnings)
+    boxes = [w['bbox'] for w in warnings]
+    # Larger illustration (~[560, 120, 160, 180]) and row icon (~[60, 140, 48, 48]) both located.
+    assert any(520 <= b[0] <= 590 and 90 <= b[1] <= 150 and b[2] >= 120 for b in boxes), boxes
+    assert any(40 <= b[0] <= 90 and 120 <= b[1] <= 170 and b[2] >= 30 for b in boxes), boxes
+
+    # Once both objects are registered as icon/image in the plan, warnings disappear.
+    plan_with_objects = deepcopy(plan_omitting_objects)
+    plan_with_objects['ops'].extend([
+        {'op': 'icon', 'icon_id': 'tabler-outline/shield', 'bbox': [60, 140, 48, 48], 'color': '#1D4ED8'},
+        {'op': 'image', 'file': 'assets/portrait.png', 'bbox': [560, 120, 160, 180]},
+    ])
+    assert native.detect_missing_visual_objects(source, rendered, plan_with_objects) == []
+
+
+@pytest.mark.render
+def test_native_render_emits_missing_visual_object_warning_and_exits_cleanly(tmp_path):
+    from PIL import ImageDraw
+
+    source = tmp_path / 'source.png'
+    src_img = Image.new('RGB', (800, 450), '#FFFFFF')
+    draw = ImageDraw.Draw(src_img)
+    draw.rectangle([540, 110, 720, 290], fill='#B91C1C')
+    src_img.save(source)
+
+    plan_path = tmp_path / 'plan.json'
+    plan = {
+        'schema': 'deck.native_plan.v1',
+        'page': 'p1',
+        'canvas_px': {'w': 800, 'h': 450},
+        'background': '#FFFFFF',
+        'ops': [
+            {
+                'op': 'text',
+                'atom_id': 'atom:p1:title',
+                'text': '合成标题',
+                'bbox': [40, 40, 320, 48],
+                'font': _available_font(),
+                'size': 28,
+                'color': '#0F172A',
+            },
+        ],
+    }
+    native.write_json(plan_path, plan)
+    page = {
+        'id': 'p1',
+        'content': {'title': '合成标题', 'body_blocks': []},
+        'notes': '',
+        'source_image': str(source),
+        'plan': str(plan_path),
+    }
+    result = native.render({'work': str(tmp_path), 'page': page})
+    assert Path(result['pptx']).is_file()
+    assert Path(result['render_png']).is_file()
+    warnings = result['findings'].get('warnings', [])
+    missing_obj = [w for w in warnings if w.get('code') == 'missing_visual_object']
+    assert missing_obj, warnings
+    assert missing_obj[0]['level'] == 'warning'
+    x, y, w, h = missing_obj[0]['bbox']
+    assert 500 <= x <= 570 and 80 <= y <= 140 and w >= 140 and h >= 140
+
+
+def test_shared_readback_core_catches_short_atom_hidden_inside_longer_text_for_svg(tmp_path):
+    from deck_tools.compiler import CompileOptions, SvgInput, compile_deck
+    from deck_tools.render import readback, resolve_fonts
+
+    family = _available_font()
+    fonts = resolve_fonts([{'shapes': [{'kind': 'text', 'font_family': family, 'bold': False}]}])
+    svg = tmp_path / 'p1.svg'
+    svg.write_text(
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450">'
+        f'<text x="40" y="60" font-family="{family}" font-size="24" fill="#111111" data-atom-id="atom:p1:title">年度目标2026</text>'
+        f'</svg>',
+        encoding='utf-8',
+    )
+    compiled = compile_deck(
+        [SvgInput('p1', svg)],
+        CompileOptions(width_px=800, height_px=450, fonts=fonts),
+        tmp_path / 'out',
+    )
+    manifest = native.read_json(compiled.manifest_path)
+    expected = [{
+        'page_id': 'p1',
+        'customer_visible': {
+            'title': '年度目标2026',
+            'body_blocks': [{'id': 'b1', 'type': 'bullets', 'items': [{'id': 'i1', 'text': '2026'}]}],
+        },
+        'speaker_notes': '',
+        'visual_spec': {'nodes': [], 'edges': []},
+    }]
+    report = readback(compiled.pptx_path, manifest['pages'], expected)
+    assert report['status'] == 'fail'
+    missing = [f for f in report['findings'] if f['code'] == 'missing_visible_atom']
+    assert [f['atom_id'] for f in missing] == ['atom:p1:item:i1:text']
