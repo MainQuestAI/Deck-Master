@@ -112,8 +112,9 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - name: Setup Python environment
+      - name: Install material tools and Python environment
         run: |
+          HOMEBREW_NO_AUTO_UPDATE=1 brew install poppler
           python -m pip install uv
           uv venv --python 3.12 --seed .venv
           .venv/bin/python -m pip install -e "./deck-tools[dev]"
