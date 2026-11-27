@@ -161,19 +161,6 @@ export function DeckMasterProvider({ children }) {
 
   const defaultBuildId = workspace?.default_build?.id;
   const workspaceVersion = workspace?.version;
-  const contentReviewKey = useMemo(
-    () => JSON.stringify(workspace?.content_review ?? null),
-    [workspace?.content_review],
-  );
-  useEffect(() => {
-    if (!downloadSnapshot) return;
-    if (
-      downloadSnapshot.workspaceVersion !== workspaceVersion
-      || downloadSnapshot.contentReviewKey !== contentReviewKey
-    ) {
-      setDownloadSnapshot(null);
-    }
-  }, [downloadSnapshot, workspaceVersion, contentReviewKey]);
   const downloadStatus = downloadSnapshot?.status || null;
   const needsReadback = scene === 'delivery' || scene === 'page';
   useEffect(() => {
@@ -415,13 +402,13 @@ export function DeckMasterProvider({ children }) {
   });
   const build = () => perform('build', async () => {
     const result = await api.buildDeck();
-    setDownloadSnapshot({ kind: 'build', status: result, workspaceVersion, contentReviewKey });
+    setDownloadSnapshot({ kind: 'build', status: result });
     setToast('PPTX 已构建，可下载');
     await reload();
   });
   const download = (format) => perform(`export-${format}`, async () => {
     const result = await api.exportDeck(format, workspace?.deck?.brief?.title);
-    setDownloadSnapshot({ kind: `export-${format}`, status: result.status, workspaceVersion, contentReviewKey });
+    setDownloadSnapshot({ kind: `export-${format}`, status: result.status });
     const url = URL.createObjectURL(result.blob);
     const link = document.createElement('a');
     link.href = url;
