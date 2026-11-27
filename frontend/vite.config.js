@@ -3,10 +3,11 @@ import react from '@vitejs/plugin-react';
 import { rmSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-function cleanWebDistAssets() {
+export function cleanWebDistAssets() {
   const assetsDir = fileURLToPath(new URL('../rust/web-dist/assets', import.meta.url));
   return {
     name: 'clean-web-dist-assets',
+    apply: 'build',
     buildStart() {
       // Remove stale generated bundles while keeping tracked rust/web-dist/index.html intact.
       rmSync(assetsDir, { recursive: true, force: true });
