@@ -15,6 +15,8 @@ import {
   PAGE_KINDS,
   buildEvidenceItem,
   evidenceMode,
+  missingContextHints,
+  missingPageHints,
 } from './fields.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -59,4 +61,34 @@ test('evidence helper guarantees mutual exclusion between ref and gap', () => {
   assert.deepEqual(gapItem, { text: '缺少对照数据', gap: '需补充去年同期基线' });
   assert.equal(Object.hasOwn(gapItem, 'ref'), false);
   assert.equal(evidenceMode(gapItem), 'gap');
+
+  // Whitespace-only ref must not shadow a real gap (matches rust Evidence::has_ref/has_gap).
+  assert.equal(evidenceMode({ text: '对照数据', ref: '   ', gap: '缺少去年同期基线' }), 'gap');
+  assert.equal(evidenceMode({ text: '对照数据', ref: 'm1 第 1 页', gap: '   ' }), 'ref');
+  assert.equal(evidenceMode({ text: '空缺口草稿', gap: '' }), 'gap');
+});
+
+test('missingPageHints aligns with backend judgment gate and missingContextHints matches form labels', () => {
+  const basePage = { content: { title: '结论' }, purpose: '给出判断', kind: 'judgment' };
+  assert.ok(missingPageHints({ ...basePage, argument: null }).some(h => h.includes('论证证据')));
+  assert.ok(missingPageHints({ ...basePage, argument: {} }).some(h => h.includes('论证证据')));
+  assert.ok(missingPageHints({
+    ...basePage,
+    argument: { reasons: ['理由'], evidence: [{ text: '无出处', ref: '   ', gap: '  ' }], reasoning: '', rebuttal: '' },
+  }).some(h => h.includes('论证证据')));
+  assert.equal(
+    missingPageHints({
+      ...basePage,
+      argument: { reasons: [], evidence: [{ text: '样本', ref: 'm1 p1' }], reasoning: '', rebuttal: '' },
+    }).length,
+    0,
+  );
+  assert.equal(
+    missingPageHints({
+      ...basePage,
+      argument: { reasons: [], evidence: [{ text: '基线', gap: '缺去年同期数据' }], reasoning: '', rebuttal: '' },
+    }).length,
+    0,
+  );
+  assert.ok(missingContextHints('brief', {}).includes('本次面向谁'));
 });

@@ -29,7 +29,9 @@ export function DeckMasterProvider({ children }) {
   const pageNavigation = useRef({ currentPage, comparison });
   useEffect(() => { pageNavigation.current = { currentPage, comparison }; }, [currentPage, comparison]);
   const [reviewDrafts, setReviewDrafts] = useState({});
+  const [handoffDrafts, setHandoffDrafts] = useState({});
   const [handoffRequest, setHandoffRequest] = useState(null);
+  const handoffNonceRef = useRef(0);
   const [toast, setToast] = useState(null);
   const [theme, setTheme] = useState(() => {
     try { return localStorage.getItem('deck-master-theme') || 'light'; }
@@ -46,7 +48,7 @@ export function DeckMasterProvider({ children }) {
     return () => clearTimeout(timer);
   }, [toast]);
 
-  const hasUnsavedInputs = api.hasUnsavedInputs(drafts, contextDrafts, reviewDrafts);
+  const hasUnsavedInputs = api.hasUnsavedInputs(drafts, contextDrafts, reviewDrafts, handoffDrafts);
   useEffect(() => {
     if (!hasUnsavedInputs) return;
     const warn = event => {
@@ -144,8 +146,25 @@ export function DeckMasterProvider({ children }) {
     } else {
       setScene('overview');
     }
-    setHandoffRequest({ pageId: pageId || null, intent, nonce: Date.now() });
+    setHandoffRequest({ pageId: pageId || null, intent, nonce: ++handoffNonceRef.current });
   };
+  const consumeHandoffRequest = useCallback((nonce) => {
+    setHandoffRequest(current => (current && current.nonce === nonce ? null : current));
+  }, []);
+  const updateHandoffDraft = useCallback((scope, patch) => {
+    setHandoffDrafts(prev => ({
+      ...prev,
+      [scope]: {
+        open: false,
+        intent: 'fill_content',
+        note: '',
+        instruction: '',
+        copied: false,
+        ...(prev[scope] || {}),
+        ...patch,
+      },
+    }));
+  }, []);
   const openPageReviews = (id) => {
     setCurrentPage(id);
     setScene('page');
@@ -325,13 +344,18 @@ export function DeckMasterProvider({ children }) {
     setToast('已恢复为新版本，历史和未保存输入仍保留');
     await reload();
   });
-  const addReview = (text, pageId) => perform(`review-add-${pageId ? `page:${pageId}` : 'deck'}`, async () => {
-    const review = await api.addReview(text, pageId);
-    setReviewDrafts(value => ({ ...value, [pageId ? `page:${pageId}` : 'deck']: '' }));
-    setToast('意见已保存');
-    await reload();
-    return review;
-  });
+  const addReview = (text, pageId, { clearDraft = true, busyKey } = {}) => perform(
+    busyKey || `review-add-${pageId ? `page:${pageId}` : 'deck'}`,
+    async () => {
+      const review = await api.addReview(text, pageId);
+      if (clearDraft) {
+        setReviewDrafts(value => ({ ...value, [pageId ? `page:${pageId}` : 'deck']: '' }));
+      }
+      setToast('意见已保存');
+      await reload();
+      return review;
+    },
+  );
   const resolveReview = (id) => perform(`review-resolve-${id}`, async () => {
     await api.resolveReview(id);
     setToast('意见已标记为已处理');
@@ -352,7 +376,7 @@ export function DeckMasterProvider({ children }) {
   return <DeckMasterContext.Provider value={{
     workspace, pages, revision: workspace?.version, activeProject: workspace?.deck.brief.title || '未命名作品',
     connectionError, actionError, busy, refresh: reload, scene, setScene, currentPage,
-    getPage, getPageNumStr, openPage, openPageReviews, openHostHandoff, handoffRequest, editPage, createPage, movePage, removePage, drafts, updateDraft, saveDraft, rebaseDraft, discardDraft,
+    getPage, getPageNumStr, openPage, openPageReviews, openHostHandoff, handoffRequest, consumeHandoffRequest, handoffDrafts, updateHandoffDraft, editPage, createPage, movePage, removePage, drafts, updateDraft, saveDraft, rebaseDraft, discardDraft,
     contextDrafts, openContextEdit, updateContextDraft, saveContext, refreshContextConflict, resolveContextConflict,
     drawer, openDrawer: setDrawer, closeDrawer: () => setDrawer(null),
     stopRun, build, buildResult: displayedBuildResult, buildLoading, buildError, defaultBuild: workspace?.default_build, download, downloadStatus, restore,

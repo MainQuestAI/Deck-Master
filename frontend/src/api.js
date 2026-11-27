@@ -257,10 +257,11 @@ export function isPageDraftDirty(draft) {
   return !!draft && Object.keys(draftPatch(draft).pages[0]).some(key => key !== 'id');
 }
 
-export function hasUnsavedInputs(drafts, contextDrafts, reviewDrafts) {
+export function hasUnsavedInputs(drafts, contextDrafts, reviewDrafts, handoffDrafts = {}) {
   return Object.values(drafts).some(isPageDraftDirty)
     || Object.entries(contextDrafts).some(([kind, draft]) => draft && contextUnitPatch(kind, draft) !== null)
-    || Object.values(reviewDrafts).some(text => text.trim().length > 0);
+    || Object.values(reviewDrafts).some(text => text.trim().length > 0)
+    || Object.values(handoffDrafts).some(item => (item?.note || '').trim().length > 0);
 }
 
 export const getBuild = (id, signal) => request(`/api/builds/${encodeURIComponent(id)}`, { signal });
