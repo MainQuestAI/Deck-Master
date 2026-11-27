@@ -339,3 +339,36 @@ test('drawer edits page kind and argument with mutually exclusive ref/gap eviden
     patch: { pages: [{ id: 'p1', argument: null }] },
   });
 });
+
+test('drawer preserves gap when incoming evidence has whitespace-only ref and keeps judgment hint on empty skeleton', async t => {
+  const original = page();
+  original.kind = 'judgment';
+  original.argument = {
+    reasons: [],
+    evidence: [{ text: '去年基线', ref: '   ', gap: '缺少去年同期基线' }],
+    reasoning: '',
+    rebuttal: '',
+  };
+  await mount(t, original);
+
+  // Whitespace-only ref must be detected as gap mode so existing gap is shown and preserved on edit.
+  assert.equal(input('证据 1 依据方式').value, 'gap');
+  assert.equal(input('证据 1 缺口说明').value, '缺少去年同期基线');
+  await fill('证据 1 内容', '去年同期转化率基线');
+  await click('保存正文与讲稿');
+  assert.deepEqual(writes[0].patch.pages[0].argument.evidence, [
+    { text: '去年同期转化率基线', gap: '缺少去年同期基线' },
+  ]);
+});
+
+test('drawer keeps judgment evidence hint on empty argument skeleton until ref or gap is provided', async t => {
+  const emptyJudgment = page();
+  emptyJudgment.kind = 'judgment';
+  emptyJudgment.argument = { reasons: [], evidence: [], reasoning: '', rebuttal: '' };
+  await mount(t, emptyJudgment);
+  assert.ok(document.body.textContent.includes('论证证据（判断页需至少一条带非空白出处或缺口的证据）'));
+  await click('添加证据');
+  await fill('证据 1 内容', '有效样本');
+  await fill('证据 1 出处', 'm1 第 2 页');
+  assert.equal(document.body.textContent.includes('论证证据（判断页需至少一条带非空白出处或缺口的证据）'), false);
+});

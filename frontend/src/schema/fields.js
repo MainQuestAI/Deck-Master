@@ -1,15 +1,15 @@
 // Single author field registry kept in sync with rust/src/model.rs.
 
 export const BRIEF_FIELDS = {
-  title: '作品名称',
-  audience: '受众',
+  title: '作品标题',
+  audience: '本次面向谁',
   task_type: '本次任务',
-  goal: '要达成的结果',
+  goal: '希望对方理解或做出什么判断',
   decision: '待决事项',
   concerns: '读者关注点',
   narrator: '讲述人与语气',
-  constraints: '已知约束',
-  page_limit: '页数要求',
+  constraints: '已有决定与实际约束',
+  page_limit: '页数上限',
 };
 
 export const NARRATOR_FIELDS = {
@@ -20,7 +20,7 @@ export const NARRATOR_FIELDS = {
 export const FRAMING_FIELDS = {
   thesis: '中心主张',
   storyline: '故事主线',
-  pillars: '框架分组',
+  pillars: '业务框架分组',
   facts: '已知事实',
   assumptions: '当前假设',
   questions: '待回答问题',
@@ -86,6 +86,10 @@ export const PAGE_KIND_LABELS = {
   teaching: '教学页',
 };
 
+export function hasNonBlankText(value) {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
 export function emptyArgument() {
   return {
     reasons: [],
@@ -96,7 +100,11 @@ export function emptyArgument() {
 }
 
 export function evidenceMode(item) {
-  if (item && typeof item.gap === 'string' && !item.ref) return 'gap';
+  // Align with rust/src/model.rs Evidence::has_ref / has_gap: whitespace-only values are absent.
+  const hasRef = hasNonBlankText(item?.ref);
+  const hasGap = hasNonBlankText(item?.gap);
+  if (hasGap && !hasRef) return 'gap';
+  if (hasRef) return 'ref';
   if (item && Object.hasOwn(item, 'gap') && !Object.hasOwn(item, 'ref')) return 'gap';
   return 'ref';
 }
@@ -108,27 +116,32 @@ export function buildEvidenceItem(text, mode, detail) {
   return { text: text ?? '', ref: detail ?? '' };
 }
 
+export function hasValidJudgmentEvidence(argument) {
+  if (!argument || !Array.isArray(argument.evidence)) return false;
+  return argument.evidence.some(item => hasNonBlankText(item?.ref) || hasNonBlankText(item?.gap));
+}
+
 export function missingContextHints(kind, value = {}) {
   const missing = [];
   if (kind === 'brief') {
-    if (!value.audience?.trim()) missing.push('受众');
-    if (!value.decision?.trim()) missing.push('待决事项');
-    if (!(value.concerns || []).some(item => item?.trim())) missing.push('读者关注点');
-    if (!value.narrator?.role?.trim()) missing.push('讲述人角色');
-    if (!value.narrator?.tone?.trim()) missing.push('讲述语气');
+    if (!hasNonBlankText(value.audience)) missing.push(BRIEF_FIELDS.audience);
+    if (!hasNonBlankText(value.decision)) missing.push(BRIEF_FIELDS.decision);
+    if (!(value.concerns || []).some(hasNonBlankText)) missing.push(BRIEF_FIELDS.concerns);
+    if (!hasNonBlankText(value.narrator?.role)) missing.push(NARRATOR_FIELDS.role);
+    if (!hasNonBlankText(value.narrator?.tone)) missing.push(NARRATOR_FIELDS.tone);
   } else if (kind === 'framing') {
-    if (!value.thesis?.trim()) missing.push('中心主张');
-    if (!(value.storyline || []).some(item => item?.trim())) missing.push('故事主线');
+    if (!hasNonBlankText(value.thesis)) missing.push(FRAMING_FIELDS.thesis);
+    if (!(value.storyline || []).some(hasNonBlankText)) missing.push(FRAMING_FIELDS.storyline);
   }
   return missing;
 }
 
 export function missingPageHints(page = {}) {
   const missing = [];
-  if (!page.content?.title?.trim()) missing.push('页面标题');
-  if (!page.purpose?.trim()) missing.push('本页目的');
-  if (page.kind === 'judgment' && !page.argument) {
-    missing.push('论证结构（判断页建议补充理由与证据）');
+  if (!hasNonBlankText(page.content?.title)) missing.push(CONTENT_FIELDS.title);
+  if (!hasNonBlankText(page.purpose)) missing.push(PAGE_FIELDS.purpose);
+  if (page.kind === 'judgment' && !hasValidJudgmentEvidence(page.argument)) {
+    missing.push('论证证据（判断页需至少一条带非空白出处或缺口的证据）');
   }
   return missing;
 }

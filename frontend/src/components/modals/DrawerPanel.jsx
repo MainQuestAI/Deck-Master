@@ -1,5 +1,5 @@
 import { isPageDraftDirty } from '../../api.js';
-import { missingPageHints } from '../../schema/fields.js';
+import { PAGE_KIND_LABELS, evidenceMode, missingPageHints } from '../../schema/fields.js';
 import React from 'react';
 import { useDeckMaster } from '../../context/DeckMasterContext';
 import PageContent from '../common/PageContent';
@@ -7,6 +7,21 @@ import ContentEditor from '../editor/ContentEditor';
 import { Field, TextList } from '../editor/EditorFields';
 import useDialogFocus from './useDialogFocus';
 import HistoryPanel from '../history/HistoryPanel.jsx';
+
+function ArgumentSummary({ kind, argument }) {
+  return <>
+    <p>页型：{PAGE_KIND_LABELS[kind] || kind || '未指定'}</p>
+    {argument && <div className="s4-reading">
+      {(argument.reasons || []).length > 0 && <p>理由：{argument.reasons.join('；')}</p>}
+      {(argument.evidence || []).length > 0 && <ul>{argument.evidence.map((item, idx) => {
+        const mode = evidenceMode(item);
+        return <li key={idx}>{item.text || '（空证据）'}（{mode === 'gap' ? `缺口：${item.gap}` : `出处：${item.ref || '未填'}`}）</li>;
+      })}</ul>}
+      {argument.reasoning && <p>推理：{argument.reasoning}</p>}
+      {argument.rebuttal && <p>反驳与边界：{argument.rebuttal}</p>}
+    </div>}
+  </>;
+}
 
 export default function DrawerPanel() {
   const { drawer, closeDrawer, drafts, currentPage, updateDraft, saveDraft, rebaseDraft, discardDraft, workspace, busy, actionError } = useDeckMaster();
@@ -23,12 +38,13 @@ export default function DrawerPanel() {
       {drawer === 'history' ? <HistoryPanel /> : deleted ? <>
         <p className="s4-message">当前页面已不存在。以下输入只读，可选中复制，转移后再放弃。</p>
         <PageContent content={page.content} />
+        <ArgumentSummary kind={page.kind} argument={page.argument} />
         <Field label="本页目的" value={page.purpose} multiline readOnly />
         <Field label="版式要求" value={page.layout} multiline readOnly />
         <Field label="讲稿" value={page.notes} multiline readOnly />
       </> : page && <>
         {draft.conflict && <section className="s4-message" role="alert"><h3>保存冲突，您的输入仍保留</h3><p>当前内容已被修改。比较后，可基于当前版本再次保存；不会自动覆盖。</p>
-          {(() => { const current = workspace.deck.pages.find(item => item.id === page.id); return <details><summary>查看当前保存内容（版本 {workspace.version}）</summary>{current ? <><PageContent content={current.content} /><p>讲稿：{current.notes}</p><p>目的：{current.purpose}</p><p>布局：{current.layout}</p></> : <p>页面已移除或页序已改变。请保留输入，返回作品核对。</p>}</details>; })()}
+          {(() => { const current = workspace.deck.pages.find(item => item.id === page.id); return <details><summary>查看当前保存内容（版本 {workspace.version}）</summary>{current ? <><PageContent content={current.content} /><ArgumentSummary kind={current.kind} argument={current.argument} /><p>讲稿：{current.notes}</p><p>目的：{current.purpose}</p><p>布局：{current.layout}</p></> : <p>页面已移除或页序已改变。请保留输入，返回作品核对。</p>}</details>; })()}
           <p>继续保存会用您打开时的正文替换当前正文，请先在上方对比。</p>
           <button className="button" disabled={!workspace.deck.pages.some(item => item.id === page.id)} onClick={rebaseDraft}>保留我的修改，以当前版本继续</button>
         </section>}
