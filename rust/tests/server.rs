@@ -2004,20 +2004,26 @@ fn http_native_adopt_requires_note_reports_warnings_and_conflicts_on_candidate_c
     let service = Service::start(path);
     let url = format!("/api/runs/{run_id}/adopt/p1");
 
-    // 1. Missing note -> 400.
-    let missing_note = service.request(
-        "POST",
-        &url,
-        &[("Content-Type", "application/json")],
-        &json!({ "expected_file": candidate_file }).to_string(),
-    );
-    assert_eq!(missing_note.status, 400);
-    assert!(
-        missing_note.json()["error"]
+    // 1. Missing, empty, and whitespace-only note -> 400 without CLI flag syntax.
+    for body_payload in [
+        json!({ "expected_file": candidate_file }),
+        json!({ "expected_file": candidate_file, "note": "" }),
+        json!({ "expected_file": candidate_file, "note": "   \t\n " }),
+    ] {
+        let missing_note = service.request(
+            "POST",
+            &url,
+            &[("Content-Type", "application/json")],
+            &body_payload.to_string(),
+        );
+        assert_eq!(missing_note.status, 400);
+        let err_msg = missing_note.json()["error"]
             .as_str()
             .unwrap_or("")
-            .contains("对照结论")
-    );
+            .to_owned();
+        assert!(err_msg.contains("对照结论"), "{err_msg}");
+        assert!(!err_msg.contains("--note"), "{err_msg}");
+    }
 
     // 2. Changed expected_file -> 409.
     let conflict = service.request(
@@ -2032,7 +2038,7 @@ fn http_native_adopt_requires_note_reports_warnings_and_conflicts_on_candidate_c
     );
     assert_eq!(conflict.status, 409);
 
-    // 3. Confirmation-only boilerplate note -> 200 with note_unspecific warning.
+    // 3. Confirmation-only boilerplate note -> 200 with HTTP-sanitized note_unspecific warning.
     let adopted = service.request(
         "POST",
         &url,
@@ -2047,10 +2053,16 @@ fn http_native_adopt_requires_note_reports_warnings_and_conflicts_on_candidate_c
     );
     let body = adopted.json();
     let warnings = body["warnings"].as_array().expect("warnings array");
+    let unspecific = warnings
+        .iter()
+        .find(|w| w["code"] == "note_unspecific")
+        .expect("note_unspecific warning");
+    let warning_msg = unspecific["message"].as_str().unwrap_or("");
     assert!(
-        warnings.iter().any(|w| w["code"] == "note_unspecific"),
-        "{warnings:?}"
+        warning_msg.contains("本页对照结论去掉空白和标点后只剩确认用语"),
+        "{warning_msg}"
     );
+    assert!(!warning_msg.contains("--note"), "{warning_msg}");
     let current = Store::open(path).unwrap().current().unwrap();
     assert!(current.deck.pages[0].native.is_some());
     assert_eq!(

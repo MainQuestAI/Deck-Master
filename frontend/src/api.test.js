@@ -129,6 +129,30 @@ test('draftPatch includes todo and refs when they change, and omits them when no
   assert.deepEqual(draftPatch(notesOnly), { pages: [{ id: 'p1', notes: '只改讲稿' }] });
 });
 
+test('draftPatch includes kind and argument changes, handles explicit null clear, and ignores unchanged defaults', () => {
+  const page = { id: 'p1', content: { title: '原稿', body_blocks: [] }, notes: '讲稿' };
+  const clean = createDraft(page, 2);
+  clean.page.kind = '';
+  clean.page.argument = null;
+  assert.deepEqual(draftPatch(clean), { pages: [{ id: 'p1' }] });
+
+  const edited = createDraft(page, 2);
+  edited.page.kind = 'judgment';
+  edited.page.argument = { reasons: ['效率提升'], evidence: [{ text: '实测数据', ref: 'm1 p2' }], reasoning: '直接支持', rebuttal: '' };
+  assert.deepEqual(draftPatch(edited), {
+    pages: [{
+      id: 'p1',
+      kind: 'judgment',
+      argument: edited.page.argument,
+    }],
+  });
+
+  const withArg = { ...page, kind: 'judgment', argument: edited.page.argument };
+  const cleared = createDraft(withArg, 3);
+  cleared.page.argument = null;
+  assert.deepEqual(draftPatch(cleared), { pages: [{ id: 'p1', argument: null }] });
+});
+
 test('same-version polling refreshes runs; older polls cannot undo saves', () => {
   const current = { version: 3, runs: [{ status: 'open' }] };
   const incoming = { version: 3, runs: [{ status: 'cancelled' }] };

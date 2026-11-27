@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Icon from '../common/Icon';
-import { contextUnitPatch } from '../../api.js';
-import { BRIEF_FIELDS, FRAMING_FIELDS, PAGE_KIND_LABELS, missingContextHints } from '../../schema/fields.js';
+import { contextUnitPatch, pageRenderMode } from '../../api.js';
+import { BRIEF_FIELDS, FRAMING_FIELDS, NARRATOR_FIELDS, PAGE_KIND_LABELS, missingContextHints } from '../../schema/fields.js';
 import FieldConflictDiff from '../common/FieldConflictDiff';
 import HostHandoffCard from '../common/HostHandoffCard';
 import ReviewPanel from '../common/ReviewPanel';
@@ -47,28 +47,28 @@ function BriefReading({ value }) {
   const narrator = [value.narrator?.role, value.narrator?.tone].filter(Boolean).join(' · ');
   return <div className="s4-reading">
     {[
-      ['作品标题', value.title],
-      ['本次面向谁', value.audience],
-      ['本次任务', value.task_type],
-      ['希望对方理解或做出什么判断', value.goal],
-      ['待决事项', value.decision],
-      ['讲述人与语气', narrator],
+      [BRIEF_FIELDS.title, value.title],
+      [BRIEF_FIELDS.audience, value.audience],
+      [BRIEF_FIELDS.task_type, value.task_type],
+      [BRIEF_FIELDS.goal, value.goal],
+      [BRIEF_FIELDS.decision, value.decision],
+      [BRIEF_FIELDS.narrator, narrator],
     ].map(([label, text]) => <section key={label}><h3>{label}</h3><p>{text || '尚未填写'}</p></section>)}
-    <ReadList label="读者关注点" items={value.concerns || []} />
-    <ReadList label="已有决定与实际约束" items={value.constraints || []} />
-    <section><h3>页数上限</h3><p>{value.page_limit ?? '未设置'}</p></section>
+    <ReadList label={BRIEF_FIELDS.concerns} items={value.concerns || []} />
+    <ReadList label={BRIEF_FIELDS.constraints} items={value.constraints || []} />
+    <section><h3>{BRIEF_FIELDS.page_limit}</h3><p>{value.page_limit ?? '未设置'}</p></section>
   </div>;
 }
 
 function FramingReading({ value, expanded = false }) {
   return <div className="s4-reading">
-    <section><h3>中心主张</h3><p>{value.thesis || '尚未填写中心主张'}</p></section>
-    <ReadList label="故事主线" items={value.storyline || []} />
-    <section><h3>业务框架分组</h3>{(value.pillars || []).length ? value.pillars.map((pillar, index) => <section key={index}><h4>{pillar.title || '未命名分组'}</h4>{pillar.points.length ? <ul>{pillar.points.map((point, i) => <li key={i}>{point || '（空支持点）'}</li>)}</ul> : <p className="muted">尚无支持点</p>}</section>) : <p className="muted">尚无框架分组，可直接添加</p>}</section>
+    <section><h3>{FRAMING_FIELDS.thesis}</h3><p>{value.thesis || '尚未填写中心主张'}</p></section>
+    <ReadList label={FRAMING_FIELDS.storyline} items={value.storyline || []} />
+    <section><h3>{FRAMING_FIELDS.pillars}</h3>{(value.pillars || []).length ? value.pillars.map((pillar, index) => <section key={index}><h4>{pillar.title || '未命名分组'}</h4>{pillar.points.length ? <ul>{pillar.points.map((point, i) => <li key={i}>{point || '（空支持点）'}</li>)}</ul> : <p className="muted">尚无支持点</p>}</section>) : <p className="muted">尚无框架分组，可直接添加</p>}</section>
     <details open={expanded}><summary>事实、假设与待回答问题</summary>
-      <ReadList label="已知事实" items={value.facts || []} />
-      <ReadList label="当前假设" items={value.assumptions || []} />
-      <ReadList label="待回答问题" items={value.questions || []} />
+      <ReadList label={FRAMING_FIELDS.facts} items={value.facts || []} />
+      <ReadList label={FRAMING_FIELDS.assumptions} items={value.assumptions || []} />
+      <ReadList label={FRAMING_FIELDS.questions} items={value.questions || []} />
     </details>
   </div>;
 }
@@ -80,31 +80,31 @@ function BriefFields({ value, change }) {
     narrator: { role: value.narrator?.role ?? '', tone: value.narrator?.tone ?? '', [key]: next },
   });
   return <>
-    <Field label="作品标题" value={value.title} onChange={field('title')} />
-    <Field label="本次面向谁" value={value.audience} onChange={field('audience')} multiline />
-    <Field label="本次任务" value={value.task_type} onChange={field('task_type')} list="context-task-types" />
+    <Field label={BRIEF_FIELDS.title} value={value.title} onChange={field('title')} />
+    <Field label={BRIEF_FIELDS.audience} value={value.audience} onChange={field('audience')} multiline />
+    <Field label={BRIEF_FIELDS.task_type} value={value.task_type} onChange={field('task_type')} list="context-task-types" />
     <datalist id="context-task-types">{['首提', '竞标', '汇报'].map(text => <option key={text} value={text} />)}</datalist>
-    <Field label="希望对方理解或做出什么判断" value={value.goal} onChange={field('goal')} multiline />
-    <Field label="待决事项" value={value.decision} onChange={field('decision')} multiline />
+    <Field label={BRIEF_FIELDS.goal} value={value.goal} onChange={field('goal')} multiline />
+    <Field label={BRIEF_FIELDS.decision} value={value.decision} onChange={field('decision')} multiline />
     <TextList
-      label="读者关注点"
+      label={BRIEF_FIELDS.concerns}
       items={value.concerns || []}
       change={field('concerns')}
       hint="建议聚焦 1–3 条核心关注点，不限制保存。"
     />
-    <Field label="讲述人角色" value={value.narrator?.role ?? ''} onChange={narratorField('role')} />
-    <Field label="讲述语气" value={value.narrator?.tone ?? ''} onChange={narratorField('tone')} />
-    <TextList label="已有决定与实际约束" items={value.constraints || []} change={field('constraints')} />
-    <Field label="页数上限（可留空）" type="number" min="0" max="4294967295" step="1" value={value.page_limit} onChange={text => field('page_limit')(text === '' ? null : Number(text))} />
+    <Field label={NARRATOR_FIELDS.role} value={value.narrator?.role ?? ''} onChange={narratorField('role')} />
+    <Field label={NARRATOR_FIELDS.tone} value={value.narrator?.tone ?? ''} onChange={narratorField('tone')} />
+    <TextList label={BRIEF_FIELDS.constraints} items={value.constraints || []} change={field('constraints')} />
+    <Field label={`${BRIEF_FIELDS.page_limit}（可留空）`} type="number" min="0" max="4294967295" step="1" value={value.page_limit} onChange={text => field('page_limit')(text === '' ? null : Number(text))} />
   </>;
 }
 
 function FramingFields({ value, change }) {
   const field = key => next => change({ ...value, [key]: next });
   return <>
-    <Field label="中心主张" value={value.thesis} onChange={field('thesis')} multiline />
-    <TextList label="故事主线" items={value.storyline || []} change={field('storyline')} />
-    <h3>业务框架分组</h3>
+    <Field label={FRAMING_FIELDS.thesis} value={value.thesis} onChange={field('thesis')} multiline />
+    <TextList label={FRAMING_FIELDS.storyline} items={value.storyline || []} change={field('storyline')} />
+    <h3>{FRAMING_FIELDS.pillars}</h3>
     {(value.pillars || []).map((pillar, index) => {
       const changePillar = next => field('pillars')(value.pillars.map((item, i) => i === index ? next : item));
       return <section className="s4-panel" key={index}>
@@ -115,9 +115,9 @@ function FramingFields({ value, change }) {
     })}
     <button className="button" type="button" onClick={() => field('pillars')([...(value.pillars || []), { title: '', points: [] }])}>添加分组</button>
     <details><summary>编辑事实、假设与待回答问题</summary>
-      <TextList label="已知事实" items={value.facts || []} change={field('facts')} />
-      <TextList label="当前假设" items={value.assumptions || []} change={field('assumptions')} />
-      <TextList label="待回答问题" items={value.questions || []} change={field('questions')} />
+      <TextList label={FRAMING_FIELDS.facts} items={value.facts || []} change={field('facts')} />
+      <TextList label={FRAMING_FIELDS.assumptions} items={value.assumptions || []} change={field('assumptions')} />
+      <TextList label={FRAMING_FIELDS.questions} items={value.questions || []} change={field('questions')} />
     </details>
   </>;
 }
@@ -176,10 +176,10 @@ function ContextSection({ kind, title, Reading, Fields }) {
         <h3>{title}保存冲突，您的输入仍保留</h3>
         <p>请核对差异字段。可逐项选择“保留我的”或“采用当前”合并，也可整单元处理后再保存。</p>
         <FieldConflictDiff
+          schemaKind={kind}
           base={draft.original}
           server={current}
           mine={draft.value}
-          fieldLabels={kind === 'brief' ? BRIEF_FIELDS : FRAMING_FIELDS}
           disabled={saving || !draft.conflict.snapshot}
           applyLabel="按所选字段合并，核对后再保存"
           onApply={merged => resolveContextConflict(kind, true, merged)}
@@ -214,7 +214,7 @@ export default function OverviewView() {
   const { pages, workspace, query, setQuery, openPage, openPageReviews, createPage, busy, openDrawer, setScene, getPageNumStr } = useDeckMaster();
   const status = workspace.artifact_status;
   const filtered = pages.filter(page => page.content.title.includes(query));
-  const openReviewCount = page => page.open_reviews ?? (workspace.reviews || []).filter(review => review.page_id === page.id).length;
+  const openReviewCount = page => (workspace.reviews || []).filter(review => review.page_id === page.id).length;
   return <div>
     <div className="view-head"><div><h1>制作总览</h1><p>浏览当前作品，修改内容并继续制作。</p></div><div className="head-actions"><button className="button" onClick={() => openDrawer('history')}><Icon name="layers" />版本历史记录</button><button className="button" onClick={createPage} disabled={busy.create}>新增页面</button></div></div>
     <ContextSection kind="brief" title="任务信息" Reading={BriefReading} Fields={BriefFields} />
@@ -234,15 +234,14 @@ export default function OverviewView() {
       <div className="toolbar"><label className="search-box"><Icon name="search" /><input aria-label="搜索页面" placeholder="搜索页名" value={query} onChange={event => setQuery(event.target.value)} /></label><button className="button" onClick={() => setScene('delivery')}>任务与下载</button></div>
       <div className="matrix-container"><table className="matrix-table"><thead><tr><th>页面</th><th>原图</th><th>{status.build_mode === 'native' ? '原生还原' : status.build_mode === 'mixed' ? '可编辑页' : 'SVG'}</th><th>待处理意见</th><th>操作</th></tr></thead><tbody>{filtered.map(page => {
         const count = openReviewCount(page);
+        const pageMode = pageRenderMode(page, status);
         const editableLabel = !(page.svg || page.native)
           ? '未制作'
           : status.stale_pages.includes(page.id)
             ? '依据已变'
-            : page.native && !page.svg
+            : pageMode === 'native'
               ? '原生已采用'
-              : page.native && page.svg
-                ? '混合已采用'
-                : '已采用';
+              : '已采用';
         return <tr key={page.id}>
           <td><button className="page-entry-link" onClick={() => openPage(page.id)}><span className="p-no num">{getPageNumStr(page.id)}</span>{page.content.title || '未命名页面'}</button></td>
           <td><span className={`badge ${status.stale_images.includes(page.id) ? 'warn' : 'neutral'}`}>{!page.image ? '未制作' : status.stale_images.includes(page.id) ? '依据已变' : '已采用'}</span></td>

@@ -1,13 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useDeckMaster } from '../../context/DeckMasterContext';
 
-const PAGE_INTENTS = [
-  { id: 'fill_content', label: '补齐内容/论证' },
-  { id: 'redraw_image', label: '重绘原图' },
-  { id: 'rebuild_editable', label: '按原图重做可编辑页' },
-];
-
-const DECK_INTENTS = [
+const INTENTS = [
   { id: 'fill_content', label: '补齐内容/论证' },
   { id: 'redraw_image', label: '重绘原图' },
   { id: 'rebuild_editable', label: '按原图重做可编辑页' },
@@ -31,49 +25,66 @@ export function buildHostInstruction({ pageId, pageTitle, pageNumStr, intentLabe
   return lines.join('\n');
 }
 
-export default function HostHandoffCard({ pageId = null, pageTitle = '', pageNumStr = '', defaultIntent = 'fill_content', autoExpand = false }) {
-  const { addReview, busy } = useDeckMaster();
-  const intents = pageId ? PAGE_INTENTS : DECK_INTENTS;
-  const [open, setOpen] = useState(autoExpand);
-  const [intent, setIntent] = useState(defaultIntent);
-  const [note, setNote] = useState('');
-  const [instruction, setInstruction] = useState('');
-  const [copied, setCopied] = useState(false);
+export default function HostHandoffCard({ pageId = null, pageTitle = '', pageNumStr = '' }) {
+  const {
+    addReview,
+    busy,
+    handoffDrafts,
+    updateHandoffDraft,
+    handoffRequest,
+    consumeHandoffRequest,
+  } = useDeckMaster();
+  const scope = pageId ? `page:${pageId}` : 'deck';
+  const state = handoffDrafts[scope] || {
+    open: false,
+    intent: 'fill_content',
+    note: '',
+    instruction: '',
+    copied: false,
+  };
 
   useEffect(() => {
-    if (autoExpand) {
-      setOpen(true);
-      setIntent(defaultIntent);
-    }
-  }, [autoExpand, defaultIntent]);
+    if (!handoffRequest) return;
+    if ((handoffRequest.pageId || null) !== (pageId || null)) return;
+    updateHandoffDraft(scope, {
+      open: true,
+      intent: handoffRequest.intent || 'fill_content',
+    });
+    consumeHandoffRequest(handoffRequest.nonce);
+  }, [handoffRequest, pageId, scope, updateHandoffDraft, consumeHandoffRequest]);
 
-  const scope = pageId ? `page:${pageId}` : 'deck';
-  const saving = !!busy[`review-add-${scope}`];
-  const currentIntent = intents.find(item => item.id === intent) || intents[0];
+  const saving = !!busy[`handoff-add-${scope}`];
+  const currentIntent = INTENTS.find(item => item.id === state.intent) || INTENTS[0];
 
   const submitHandoff = async event => {
     event.preventDefault();
-    const reviewText = `[交给 Host · ${currentIntent.label}]${note.trim() ? ` ${note.trim()}` : ''}`;
-    const review = await addReview(reviewText, pageId || undefined);
+    const noteText = state.note || '';
+    const reviewText = `[交给 Host · ${currentIntent.label}]${noteText.trim() ? ` ${noteText.trim()}` : ''}`;
+    const review = await addReview(reviewText, pageId || undefined, {
+      clearDraft: false,
+      busyKey: `handoff-add-${scope}`,
+    });
     if (!review) return;
-    setInstruction(buildHostInstruction({
-      pageId,
-      pageTitle,
-      pageNumStr,
-      intentLabel: currentIntent.label,
-      note,
-      reviewId: review.id,
-    }));
-    setCopied(false);
-    setNote('');
+    updateHandoffDraft(scope, {
+      instruction: buildHostInstruction({
+        pageId,
+        pageTitle,
+        pageNumStr,
+        intentLabel: currentIntent.label,
+        note: noteText,
+        reviewId: review.id,
+      }),
+      copied: false,
+      note: '',
+    });
   };
 
   const copyInstruction = async () => {
     try {
-      await navigator.clipboard?.writeText(instruction);
-      setCopied(true);
+      await navigator.clipboard?.writeText(state.instruction);
+      updateHandoffDraft(scope, { copied: true });
     } catch {
-      setCopied(false);
+      updateHandoffDraft(scope, { copied: false });
     }
   };
 
@@ -83,26 +94,35 @@ export default function HostHandoffCard({ pageId = null, pageTitle = '', pageNum
         <h2>{pageId ? '交给 Host 处理本页' : '交给 Host 继续制作'}</h2>
         <p className="muted">选择制作意图并写入人工意见，生成可复制的 Host 指令。</p>
       </div>
-      <button type="button" className="button" aria-expanded={open} onClick={() => setOpen(value => !value)}>
-        {open ? '收起交给 Host' : '交给 Host'}
+      <button
+        type="button"
+        className="button"
+        aria-expanded={state.open}
+        onClick={() => updateHandoffDraft(scope, { open: !state.open })}
+      >
+        {state.open ? '收起交给 Host' : '交给 Host'}
       </button>
     </div>
-    {open && <>
+    {state.open && <>
       <form onSubmit={submitHandoff}>
         <label className="form-group s4-field">
           <span>交接意图</span>
-          <select value={intent} disabled={saving} onChange={event => setIntent(event.target.value)}>
-            {intents.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
+          <select
+            value={state.intent}
+            disabled={saving}
+            onChange={event => updateHandoffDraft(scope, { intent: event.target.value })}
+          >
+            {INTENTS.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
           </select>
         </label>
         <label className="form-group s4-field">
           <span>给 Host 的补充说明</span>
           <textarea
             rows={2}
-            value={note}
+            value={state.note}
             disabled={saving}
             placeholder="例如：把第二栏改成对比表，或重绘信息图并保留现有结论"
-            onChange={event => setNote(event.target.value)}
+            onChange={event => updateHandoffDraft(scope, { note: event.target.value })}
           />
         </label>
         <div className="head-actions s4-actions">
@@ -111,14 +131,14 @@ export default function HostHandoffCard({ pageId = null, pageTitle = '', pageNum
           </button>
         </div>
       </form>
-      {instruction && <section className="s4-panel" aria-label="可复制的 Host 指令">
+      {state.instruction && <section className="s4-panel" aria-label="可复制的 Host 指令">
         <div className="row between">
           <strong>Host 指令</strong>
           <button type="button" className="button tiny" onClick={copyInstruction}>
-            {copied ? '已复制指令' : '复制指令'}
+            {state.copied ? '已复制指令' : '复制指令'}
           </button>
         </div>
-        <pre className="s4-reading">{instruction}</pre>
+        <pre className="s4-reading">{state.instruction}</pre>
         <p className="muted">注意：复制指令不会自动启动生成，请粘贴到当前 Host 会话中继续执行。</p>
       </section>}
     </>}

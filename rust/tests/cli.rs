@@ -832,7 +832,7 @@ fn cli_json_errors_cover_needs_tool_conflict_svg_subset_corrupt_and_project_new(
 #[test]
 fn serve_binds_explicit_port_and_serves_webui_and_api() {
     use std::io::{BufRead, BufReader, Read, Write};
-    use std::net::{TcpListener, TcpStream};
+    use std::net::TcpStream;
     use std::process::Stdio;
 
     let temp = tempfile::tempdir().unwrap();
@@ -842,13 +842,9 @@ fn serve_binds_explicit_port_and_serves_webui_and_api() {
         &["new", path.to_str().unwrap(), "--title", "本地预览测试"],
     ));
 
-    // Reserve an ephemeral port and immediately release it for --port testing.
-    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
-    let port = listener.local_addr().unwrap().port();
-    drop(listener);
-
+    // Bind port 0 via --port 0 to avoid TOCTOU races on ephemeral port reservation.
     let mut child = Command::new(env!("CARGO_BIN_EXE_deck"))
-        .args(["serve", path.to_str().unwrap(), "--port", &port.to_string()])
+        .args(["serve", path.to_str().unwrap(), "--port", "0"])
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
@@ -858,14 +854,17 @@ fn serve_binds_explicit_port_and_serves_webui_and_api() {
     let mut reader = BufReader::new(stdout);
     let mut line = String::new();
     reader.read_line(&mut line).unwrap();
-    let expected_url = format!("http://127.0.0.1:{port}");
-    assert_eq!(line.trim(), expected_url);
+    let address = line
+        .trim()
+        .strip_prefix("http://")
+        .expect("serve prints http://<addr>");
+    assert!(address.starts_with("127.0.0.1:"), "{line}");
 
     let fetch = |target: &str| -> String {
-        let mut stream = TcpStream::connect(format!("127.0.0.1:{port}")).unwrap();
+        let mut stream = TcpStream::connect(address).unwrap();
         write!(
             stream,
-            "GET {target} HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nConnection: close\r\n\r\n"
+            "GET {target} HTTP/1.1\r\nHost: {address}\r\nConnection: close\r\n\r\n"
         )
         .unwrap();
         let mut response = String::new();
@@ -883,6 +882,9 @@ fn serve_binds_explicit_port_and_serves_webui_and_api() {
     let body: Value = serde_json::from_str(body_str).unwrap();
     assert_eq!(body["deck"]["brief"]["title"], "本地预览测试");
     assert_eq!(body["content_review"]["status"], "unreviewed");
+    let ws_id = body["workspace_id"].as_str().expect("stable workspace_id");
+    assert_eq!(ws_id.len(), 16);
+    assert!(ws_id.bytes().all(|b| b.is_ascii_hexdigit()));
 
     let _ = child.kill();
     let _ = child.wait();

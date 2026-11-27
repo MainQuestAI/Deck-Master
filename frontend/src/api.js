@@ -143,6 +143,21 @@ export function fileUrl(reference) {
   return `/api/files/${sha}`;
 }
 
+// Resolve whether a page's active editable artifact is native or svg,
+// following the backend's per-page build mode before falling back to artifact presence.
+export function pageRenderMode(page, status) {
+  const explicit = status?.page_modes?.[page?.id];
+  if (explicit === 'native' || explicit === 'svg') return explicit;
+  if (page?.native && !page?.svg) return 'native';
+  if (page?.svg && !page?.native) return 'svg';
+  if (page?.native && page?.svg) return status?.build_mode === 'svg' ? 'svg' : 'native';
+  return status?.build_mode === 'native' ? 'native' : 'svg';
+}
+
+export function isNativePage(page, status) {
+  return pageRenderMode(page, status) === 'native';
+}
+
 export function safeExportFilename(title, format) {
   const cleaned = String(title || '')
     .replace(/[\\/:*?"<>|\u0000-\u001f]/g, ' ')
@@ -268,10 +283,11 @@ export function isPageDraftDirty(draft) {
   return !!draft && Object.keys(draftPatch(draft).pages[0]).some(key => key !== 'id');
 }
 
-export function hasUnsavedInputs(drafts, contextDrafts, reviewDrafts) {
+export function hasUnsavedInputs(drafts, contextDrafts, reviewDrafts, handoffDrafts = {}) {
   return Object.values(drafts).some(isPageDraftDirty)
     || Object.entries(contextDrafts).some(([kind, draft]) => draft && contextUnitPatch(kind, draft) !== null)
-    || Object.values(reviewDrafts).some(text => text.trim().length > 0);
+    || Object.values(reviewDrafts).some(text => text.trim().length > 0)
+    || Object.values(handoffDrafts).some(item => (item?.note || '').trim().length > 0);
 }
 
 export const getBuild = (id, signal) => request(`/api/builds/${encodeURIComponent(id)}`, { signal });
