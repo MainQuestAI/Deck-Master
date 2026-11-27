@@ -12,6 +12,8 @@ from PIL import Image, ImageChops, ImageDraw
 from pptx import Presentation
 import pytest
 
+pytestmark = pytest.mark.render
+
 from deck_tools import native
 from deck_tools.atoms import visible_atoms
 from deck_tools.jobs import projection
