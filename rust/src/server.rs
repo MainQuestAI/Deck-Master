@@ -90,11 +90,12 @@ fn sanitize_http_warnings(value: &mut Value) {
 }
 
 fn local_authority(authority: &str, port: u16) -> bool {
-    let Some((host, supplied_port)) = authority.rsplit_once(':') else {
-        return false;
-    };
-    (host.eq_ignore_ascii_case("localhost") || host == "127.0.0.1")
-        && supplied_port.parse::<u16>() == Ok(port)
+    if let Some((host, supplied_port)) = authority.rsplit_once(':') {
+        (host.eq_ignore_ascii_case("localhost") || host == "127.0.0.1")
+            && supplied_port.parse::<u16>() == Ok(port)
+    } else {
+        port == 80 && (authority.eq_ignore_ascii_case("localhost") || authority == "127.0.0.1")
+    }
 }
 
 fn local_request(request: &Request, port: u16) -> bool {
@@ -526,17 +527,48 @@ fn handle_request(project: &Path, port: u16, mut request: Request) {
     }
 }
 
+fn open_in_browser(url: &str) {
+    let command = if cfg!(target_os = "macos") {
+        ("open", vec![url])
+    } else if cfg!(target_os = "windows") {
+        ("cmd", vec!["/C", "start", "", url])
+    } else {
+        ("xdg-open", vec![url])
+    };
+    if let Err(error) = std::process::Command::new(command.0)
+        .args(command.1)
+        .stdin(std::process::Stdio::null())
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .spawn()
+    {
+        eprintln!("无法自动打开浏览器：{error}；请手动访问 {url}");
+    }
+}
+
 pub fn serve(project: &Path) -> Result<()> {
+    serve_with_options(project, 0, false)
+}
+
+pub fn serve_with_options(project: &Path, port: u16, open_browser: bool) -> Result<()> {
     let project = project.canonicalize()?;
     ops::get(&project, None)?;
-    let server = Server::http("127.0.0.1:0")
-        .map_err(|e| Error::Input(format!("无法启动本地服务：{e}；请检查网络权限")))?;
+    let bind_addr = format!("127.0.0.1:{port}");
+    let server = Server::http(&bind_addr).map_err(|e| {
+        Error::Input(format!(
+            "无法启动本地服务（{bind_addr}）：{e}；请检查端口占用或网络权限"
+        ))
+    })?;
     let address: SocketAddr = server
         .server_addr()
         .to_ip()
         .ok_or_else(|| Error::Input("无法取得本地监听地址".into()))?;
-    println!("http://{address}");
+    let url = format!("http://{address}");
+    println!("{url}");
     std::io::stdout().flush()?;
+    if open_browser {
+        open_in_browser(&url);
+    }
     let (sender, receiver) = mpsc::channel::<Request>();
     let receiver = Arc::new(Mutex::new(receiver));
     for _ in 0..MAX_WORKERS {
@@ -622,5 +654,16 @@ mod tests {
         let temp = tempfile::tempdir().unwrap();
         let error = std::fs::read(temp.path().join("missing-tool-output")).unwrap_err();
         assert_eq!(error_response(error.into()).unwrap().status_code().0, 500);
+    }
+
+    #[test]
+    fn local_authority_accepts_port_80_without_explicit_port_and_rejects_foreign_hosts() {
+        assert!(local_authority("127.0.0.1", 80));
+        assert!(local_authority("localhost", 80));
+        assert!(local_authority("127.0.0.1:80", 80));
+        assert!(local_authority("localhost:8080", 8080));
+        assert!(!local_authority("127.0.0.1", 8080));
+        assert!(!local_authority("example.com", 80));
+        assert!(!local_authority("example.com:80", 80));
     }
 }

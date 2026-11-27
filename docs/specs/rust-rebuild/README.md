@@ -294,7 +294,7 @@ S5 界面接入：制作总览展示整稿待处理意见，单页工作区展�
 
 后端接口供前端联调的返回形状：
 
-- `GET /api/deck` 返回 `{version, deck, artifact_status, runs, history, reviews, open_reviews_total}`，在同一 SQLite 只读事务中读取。`artifact_status` 含 `build_mode`（`svg|native|mixed|empty`）、`page_modes`（各已参建页的实际构建模式 `{page_id: "native"|"svg"}`）、`missing_pages/stale_pages/stale_images/incomplete_basis_pages`；reviews 是全部 open 意见，method 原样返回，不汇总为通过或合格；runs 含每页状态、未采用原因、`result_file`、`result_url`、`result_preview`、`current_basis` 与 `current_image_url`（无图时为 null），不含本地工作路径。`result_preview` 是 SVG 候选在交回时保存的 check-page PNG 文件名，或是 native 候选在交回时保存的原生渲染预览 PNG（`render_png`）；原图任务、尚未交回或旧记录没有该预览时为 null。native 比对页左侧固定展示原图（`page.image.file`），右侧展示候选的 `result_preview`。`current_basis` 是该页该任务类型当前制作依据的摘要，页面已删除时为 null。轮询和 `run show` 只返回已保存的预览引用和这次读到的依据摘要，不调用 check-page。history 按新到旧列出 `id/created_at/summary`。run 状态独立于作品版本变化，轮询时应同时刷新。
+- `GET /api/deck` 返回 `{workspace_id, version, deck, artifact_status, runs, history, reviews, open_reviews_total, content_review}`，在同一 SQLite 只读事务中读取。`workspace_id` 是不泄露本机路径的稳定项目标识（基于规范化项目目录与初始版本时间戳哈希），供浏览器草稿隔离与标题改名连续性使用。`artifact_status` 含 `build_mode`（`svg|native|mixed|empty`）、`page_modes`（各已参建页的实际构建模式 `{page_id: "native"|"svg"}`）、`missing_pages/stale_pages/stale_images/incomplete_basis_pages`；reviews 是全部 open 意见，method 原样返回，不汇总为通过或合格；runs 含每页状态、未采用原因、`result_file`、`result_url`、`result_preview`、`current_basis` 与 `current_image_url`（无图时为 null），不含本地工作路径。`result_preview` 是 SVG 候选在交回时保存的 check-page PNG 文件名，或是 native 候选在交回时保存的原生渲染预览 PNG（`render_png`）；原图任务、尚未交回或旧记录没有该预览时为 null。native 比对页左侧固定展示原图（`page.image.file`），右侧展示候选的 `result_preview`。`current_basis` 是该页该任务类型当前制作依据的摘要，页面已删除时为 null。轮询和 `run show` 只返回已保存的预览引用和这次读到的依据摘要，不调用 check-page。history 按新到旧列出 `id/created_at/summary`。run 状态独立于作品版本变化，轮询时应同时刷新。
 - PUT 请求体是裸 patch（与 put 的 patch 相同，不接受 `{deck:…}` 包装），成功返回 `{version, deck}`。冲突返回 HTTP 409 与 `{exit_code:5, base, submitted, conflicts:[{unit,current}]}`，整次不写入；`submitted` 原样保留裸 patch，界面也须保留编辑输入。
 - `POST /api/build` 返回 `{id, version_id, url, findings, missing_pages, stale_pages, stale_images, warnings, content_review}`，url 是该次构建文件的 `/api/files/<sha>`。完整 findings（含讲稿与回读）只留 JSON 正文。`X-Deck-Status` 仅带 id、url、version_id、缺页/过期摘要、warnings 和 content_review，不带报告正文。`warnings` 列出原图依据已变的页（`stale_image`），以及已采用 plan 里共用题头达到 3 页的页（`shared_layout`）。`content_review` 与 `warnings` 并列，形状见 §3.6。不改变 HTTP 状态。`GET /api/files/<sha>` 只在当前项目的 files 目录内查找，含扩展名的存储引用取点号前的 sha 用于 URL；文件响应禁止脚本执行。
 - `GET /api/export/md` 与 `GET /api/export/pptx` 直接返回下载内容，文件名为 `deck.md/deck.pptx`。`X-Deck-Status` 是 JSON（非 ASCII 字符使用 JSON 转义），含 `missing_pages/stale_pages` 和 `content_review`；PPTX 另含 `id/version_id/input_changed/warning/build_missing_pages/stale_images/warnings/current_content_review`。Markdown 的状态来自 `artifact_status` 加上 `content_review`，其中已有 `stale_images`。`content_review` 不并入 `warnings`。
@@ -508,8 +508,8 @@ labels、footnotes、callouts 的 children 与孙项递归进入同一 atoms 投
 
 材料续作：material text 增加 original_path，指向加入时保存的不可变副本。
 缺原件不阻断已有文本，非法引用保持错误；needs_tool 保持失败退出并说明可用原件位置。
-未保存编辑：正文、任务/框架、意见按实际内容差异统一判断 dirty；内容列表、单页阅读、放弃确认及 beforeunload 共用该判断。
-不新增草稿持久化，收起保留不确认，冲突和已删页输入继续保留。
+未保存编辑：正文、任务/框架、意见和交接说明按实际内容差异统一判断 dirty；内容列表、单页阅读、放弃确认及 beforeunload 共用该判断。
+未保存的正文与任务/框架草稿按 `workspace_id` 镜像到浏览器 `sessionStorage`，刷新或同端口重连后提示作者显式“恢复草稿”或“忽略”；未确认前再次刷新不删除草稿，浏览器禁用存储时静默降级，不写入项目数据库。收起保留不确认，冲突和已删页输入继续保留。
 
 
 ### 当前增量：依据兼容与构建回读

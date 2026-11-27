@@ -828,3 +828,64 @@ fn cli_json_errors_cover_needs_tool_conflict_svg_subset_corrupt_and_project_new(
     assert_eq!(corrupt_err["code"], "data_corrupt");
     assert_eq!(corrupt_err["exit_code"], 7);
 }
+
+#[test]
+fn serve_binds_explicit_port_and_serves_webui_and_api() {
+    use std::io::{BufRead, BufReader, Read, Write};
+    use std::net::TcpStream;
+    use std::process::Stdio;
+
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path().join("serve-demo");
+    output_json(command(
+        &path,
+        &["new", path.to_str().unwrap(), "--title", "本地预览测试"],
+    ));
+
+    // Bind port 0 via --port 0 to avoid TOCTOU races on ephemeral port reservation.
+    let mut child = Command::new(env!("CARGO_BIN_EXE_deck"))
+        .args(["serve", path.to_str().unwrap(), "--port", "0"])
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+
+    let stdout = child.stdout.take().unwrap();
+    let mut reader = BufReader::new(stdout);
+    let mut line = String::new();
+    reader.read_line(&mut line).unwrap();
+    let address = line
+        .trim()
+        .strip_prefix("http://")
+        .expect("serve prints http://<addr>");
+    assert!(address.starts_with("127.0.0.1:"), "{line}");
+
+    let fetch = |target: &str| -> String {
+        let mut stream = TcpStream::connect(address).unwrap();
+        write!(
+            stream,
+            "GET {target} HTTP/1.1\r\nHost: {address}\r\nConnection: close\r\n\r\n"
+        )
+        .unwrap();
+        let mut response = String::new();
+        stream.read_to_string(&mut response).unwrap();
+        response
+    };
+
+    let html = fetch("/");
+    assert!(html.starts_with("HTTP/1.1 200"), "{html}");
+    assert!(html.contains("<!doctype html>") || html.contains("<!DOCTYPE html>"));
+
+    let api = fetch("/api/deck");
+    assert!(api.starts_with("HTTP/1.1 200"), "{api}");
+    let body_str = api.split("\r\n\r\n").nth(1).unwrap();
+    let body: Value = serde_json::from_str(body_str).unwrap();
+    assert_eq!(body["deck"]["brief"]["title"], "本地预览测试");
+    assert_eq!(body["content_review"]["status"], "unreviewed");
+    let ws_id = body["workspace_id"].as_str().expect("stable workspace_id");
+    assert_eq!(ws_id.len(), 16);
+    assert!(ws_id.bytes().all(|b| b.is_ascii_hexdigit()));
+
+    let _ = child.kill();
+    let _ = child.wait();
+}
