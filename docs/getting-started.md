@@ -67,20 +67,14 @@ Skill installation:
 - The compatibility entry `deck` is no longer installed. `--skill-dir` has
   been removed; use `--skills-root` to choose a skill directory.
 
-For users with only `deck`, rerun the script: it removes that symlink only
-if it points at this source's `deck-skill/`, and installs the four roles.
-For users with `deck` plus old role wrappers, rerunning also upgrades wrappers
-that contain only the three managed `SKILL.md`, `references`, and `assets`
-symlinks. It replaces each wrapper with a whole-directory symlink. Existing
-links to this source migrate to current; current links are kept.
-
-Any extra file in a wrapper, or another entry occupying a role name, causes
-exit 2 before any writes; the script prints the path and target. This includes
-same-name links from the old Python installer. Move those links away first
-(remove the symlink only, never its target directory), or move a regular
-directory aside, then rerun. An unmanaged `deck` entry is preserved with a
-warning that it may compete with the four roles for triggering; it does not
-block installation.
+- Any existing entry occupying a role name (file, directory, or foreign symlink)
+  causes exit 2 before any writes; the script prints the path and target. Move
+  that entry aside first (remove the symlink only, never its target directory),
+  then rerun. An unmanaged `deck` entry is preserved with a warning that it may
+  compete with the four roles for triggering; it does not block installation.
+- At the end of installation, `scripts/install.sh` runs `deck doctor` to print
+  local renderer availability; missing rendering tools emit a warning without
+  blocking installation.
 
 npm 12 blocks dependency install scripts unless `allowScripts` lists them, and
 prints an `install-scripts` warning for the rest. `frontend/package.json`
@@ -88,9 +82,10 @@ allows the locked `esbuild` and `fsevents` versions so `npm ci` can install
 esbuild's platform binary. npm 10 ignores that field and still runs the scripts.
 
 Standard installs do not need `DECK_TOOLS_PYTHON` and survive moving the source
-checkout. Use `scripts/install.sh` for upgrades. Unknown CLI entries are retained
-and reported; supported Cargo installations migrate using their installation
-records. Old venvs and source directories are not moved or removed.
+checkout. Use `scripts/install.sh` for upgrades. Occupied CLI entries that do
+not match the managed thin wrapper are retained and reported with exit 2. Old
+installations under `<prefix>/share/deck/installations/` are kept for running
+processes.
 
 For development, use an independent prefix and this worktree's Python:
 
@@ -126,24 +121,12 @@ still imports an existing `legacy-export.v1` archive into a new directory.
 
 ## Upgrade
 
-Re-running `scripts/install.sh` prepares a new complete directory and switches
-`current` after validation. It creates a new venv; existing processes retain their
-old tools. A supported legacy Cargo binary is migrated only when its installation
-record and associated built artifact agree. Unknown entries are preserved.
-
-If the legacy checkout was rebuilt after installation, its current
-`rust/target/release/deck` may differ from the installed binary. Exit 2 then
-means ownership could not be confirmed; the installer does not replace it.
-Keep the old source and venv. Verify the Cargo record, checkout and reported
-entries before making a manual change. If the original built artifact is still
-available, restore that verified artifact in the original checkout and retry
-there. Otherwise, back up the confirmed old CLI and each reported legacy role
-entry individually to a new directory outside `bin` and the skills root,
-preserving symlinks themselves and any user-added files, then rerun installation.
-Stop the legacy Deck and tool processes before this manual backup procedure.
-Never delete a symlink's target. Moving only `bin/deck` away and starting from a
-different checkout loses the evidence used to identify the old role links;
-it is not a complete cross-checkout migration procedure.
+Re-running `scripts/install.sh` prepares a new complete directory under
+`<prefix>/share/deck/installations/`, validates it, atomically switches
+`<prefix>/share/deck/current`, and runs `deck doctor`. Existing processes
+retain their old directory and tools. If `<prefix>/bin/deck` or any role link
+is occupied by an unmanaged path, installation exits 2 without modifying it—back
+up or move the occupying entry aside first, then rerun.
 
 ## Remove one confirmed historical installation
 
