@@ -126,7 +126,7 @@ test('view reads a frozen historical body; only the explicit whole-deck restore 
   assert.ok(reading().textContent.includes('讲稿 3'));
   assert.ok(reading().textContent.includes('3 元'));
   const fieldLabels = [...reading().querySelectorAll('dt')].map(node => node.textContent);
-  assert.ok(fieldLabels.includes('作品名称'));
+  assert.ok(fieldLabels.includes('作品标题'));
   assert.ok(fieldLabels.includes('页面标题'));
   assert.equal(reading().textContent.includes('正文 7'), false);
   assert.deepEqual(calls.filter(call => call.url.startsWith('/api/versions/')), [{ url: '/api/versions/3', method: 'GET' }]);

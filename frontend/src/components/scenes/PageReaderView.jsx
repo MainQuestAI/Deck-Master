@@ -8,7 +8,7 @@ import ReviewPanel from '../common/ReviewPanel';
 import PageComparison from '../common/PageComparison';
 
 export default function PageReaderView() {
-  const { currentPage, getPage, getPageNumStr, editPage, createPage, busy, drafts, handoffRequest } = useDeckMaster();
+  const { currentPage, getPage, getPageNumStr, editPage, createPage, busy, drafts } = useDeckMaster();
   const [layer, setLayer] = useState('text');
   const page = getPage(currentPage);
   const deletedDrafts = Object.values(drafts).filter(draft => !getPage(draft.page.id));
@@ -26,8 +26,6 @@ export default function PageReaderView() {
       pageId={page.id}
       pageTitle={page.content.title}
       pageNumStr={getPageNumStr(page.id)}
-      defaultIntent={handoffRequest?.pageId === page.id ? handoffRequest.intent : 'fill_content'}
-      autoExpand={handoffRequest?.pageId === page.id}
     />
     <ReviewPanel pageId={page.id} />
   </div>;
