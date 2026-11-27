@@ -809,7 +809,7 @@ pub fn run_adopt_with_note(
     run_adopt_with_options(project, id, page_id, None, note)
 }
 
-fn run_adopt_with_options(
+pub fn run_adopt_with_options(
     project: &Path,
     id: i64,
     page_id: &str,

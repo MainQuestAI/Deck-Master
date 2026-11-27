@@ -74,6 +74,21 @@ fn error_response(error: Error) -> Result<ResponseBox> {
     json_response(status, error.to_json(Some("http"), true))
 }
 
+fn sanitize_http_warnings(value: &mut Value) {
+    for warning in value
+        .get_mut("warnings")
+        .and_then(Value::as_array_mut)
+        .into_iter()
+        .flatten()
+    {
+        if let Some(message) = warning.get("message").and_then(Value::as_str) {
+            let cleaned =
+                message.replace("--note 去掉空白和标点后", "本页对照结论去掉空白和标点后");
+            warning["message"] = json!(cleaned);
+        }
+    }
+}
+
 fn local_authority(authority: &str, port: u16) -> bool {
     let Some((host, supplied_port)) = authority.rsplit_once(':') else {
         return false;
@@ -283,6 +298,7 @@ fn route(project: &Path, request: &mut Request) -> Result<ResponseBox> {
             #[serde(deny_unknown_fields)]
             struct AdoptInput {
                 expected_file: Option<String>,
+                note: Option<String>,
             }
             let body = match read_body_limited(request)? {
                 Ok(body) => body,
@@ -299,11 +315,12 @@ fn route(project: &Path, request: &mut Request) -> Result<ResponseBox> {
             } else {
                 serde_json::from_slice(&body)?
             };
-            let mut result = ops::run_adopt_candidate(
+            let mut result = ops::run_adopt_with_options(
                 project,
                 identifier(run)?,
                 &url_component(page)?,
                 input.expected_file.as_deref(),
+                input.note.as_deref(),
             )?;
             for page in result["runs"][0]["pages"]
                 .as_array_mut()
@@ -315,6 +332,7 @@ fn route(project: &Path, request: &mut Request) -> Result<ResponseBox> {
                     page.remove("work");
                 }
             }
+            sanitize_http_warnings(&mut result);
             json_response(200, result)
         }
         (Method::Get, path) if path.starts_with("/api/builds/") => {

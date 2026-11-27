@@ -178,12 +178,16 @@ fn build_digest(deck: &Deck) -> Result<String> {
 
 pub fn artifact_status(deck: &Deck) -> Result<Value> {
     let mode = deck_build_mode(deck);
+    let mut page_modes = BTreeMap::new();
     let mut missing = Vec::new();
     let mut stale = Vec::new();
     let mut stale_images = Vec::new();
     let mut incomplete_basis_pages = Vec::new();
     for page in &deck.pages {
         let selected = page_build_mode(deck, page);
+        if let Some(page_mode) = selected {
+            page_modes.insert(page.id.as_str(), page_mode);
+        }
         let artifact = match selected {
             Some("native") => page.native.as_ref(),
             Some("svg") => page.svg.as_ref(),
@@ -210,6 +214,7 @@ pub fn artifact_status(deck: &Deck) -> Result<Value> {
     }
     Ok(json!({
         "build_mode": mode,
+        "page_modes": page_modes,
         "missing_pages": missing,
         "stale_pages": stale,
         "stale_images": stale_images,

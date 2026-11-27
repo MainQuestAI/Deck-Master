@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Icon from '../common/Icon';
-import { contextUnitPatch } from '../../api.js';
+import { contextUnitPatch, pageRenderMode } from '../../api.js';
 import { BRIEF_FIELDS, FRAMING_FIELDS, NARRATOR_FIELDS, PAGE_KIND_LABELS, missingContextHints } from '../../schema/fields.js';
 import FieldConflictDiff from '../common/FieldConflictDiff';
 import HostHandoffCard from '../common/HostHandoffCard';
@@ -221,18 +221,31 @@ export default function OverviewView() {
     <ContextSection kind="framing" title="业务框架" Reading={FramingReading} Fields={FramingFields} />
     <DerivedSummaryPanel workspace={workspace} openPage={openPage} getPageNumStr={getPageNumStr} />
     <div className="metric-summary">
-      {[[pages.length, '逐页稿'], [pages.filter(page => page.image).length, '原图'], [pages.filter(page => page.svg).length, 'SVG'], [workspace.runs.filter(run => run.kind !== 'native' && run.status === 'open').length, '进行中任务']].map(([value, label]) => <div className="metric-item" key={label}><strong>{value}</strong><p>{label}</p></div>)}
+      {[
+        [pages.length, '逐页稿'],
+        [pages.filter(page => page.image).length, '原图'],
+        [pages.filter(page => page.svg || page.native).length, status.build_mode === 'native' ? '原生还原' : status.build_mode === 'mixed' ? '可编辑页（混合）' : 'SVG'],
+        [workspace.runs.filter(run => run.status === 'open').length, '进行中任务'],
+      ].map(([value, label]) => <div className="metric-item" key={label}><strong>{value}</strong><p>{label}</p></div>)}
     </div>
     <section className="next-banner"><div className="mark-icon"><Icon name="page" /></div><div className="grow"><h2>{pages.length ? '查看逐页稿并继续制作' : '作品还是空的'}</h2><p>{pages.length ? '正文、讲稿与产物按页保存。' : '新增第一页，开始写正文与讲稿。'}</p></div><button className="primary" disabled={busy.create} onClick={() => pages.length ? openPage(pages[0].id) : createPage()}>{pages.length ? '进入制作' : '新增第一页'}</button></section>
     <HostHandoffCard />
     {pages.length > 0 && <>
       <div className="toolbar"><label className="search-box"><Icon name="search" /><input aria-label="搜索页面" placeholder="搜索页名" value={query} onChange={event => setQuery(event.target.value)} /></label><button className="button" onClick={() => setScene('delivery')}>任务与下载</button></div>
-      <div className="matrix-container"><table className="matrix-table"><thead><tr><th>页面</th><th>原图</th><th>SVG</th><th>待处理意见</th><th>操作</th></tr></thead><tbody>{filtered.map(page => {
+      <div className="matrix-container"><table className="matrix-table"><thead><tr><th>页面</th><th>原图</th><th>{status.build_mode === 'native' ? '原生还原' : status.build_mode === 'mixed' ? '可编辑页' : 'SVG'}</th><th>待处理意见</th><th>操作</th></tr></thead><tbody>{filtered.map(page => {
         const count = openReviewCount(page);
+        const pageMode = pageRenderMode(page, status);
+        const editableLabel = !(page.svg || page.native)
+          ? '未制作'
+          : status.stale_pages.includes(page.id)
+            ? '依据已变'
+            : pageMode === 'native'
+              ? '原生已采用'
+              : '已采用';
         return <tr key={page.id}>
           <td><button className="page-entry-link" onClick={() => openPage(page.id)}><span className="p-no num">{getPageNumStr(page.id)}</span>{page.content.title || '未命名页面'}</button></td>
           <td><span className={`badge ${status.stale_images.includes(page.id) ? 'warn' : 'neutral'}`}>{!page.image ? '未制作' : status.stale_images.includes(page.id) ? '依据已变' : '已采用'}</span></td>
-          <td><span className={`badge ${status.stale_pages.includes(page.id) ? 'warn' : 'neutral'}`}>{!page.svg ? '未制作' : status.stale_pages.includes(page.id) ? '依据已变' : '已采用'}</span></td>
+          <td><span className={`badge ${status.stale_pages.includes(page.id) ? 'warn' : 'neutral'}`}>{editableLabel}</span></td>
           <td>{count > 0 ? <button className="badge warn" type="button" aria-label={`查看第 ${getPageNumStr(page.id)} 页 ${count} 条待处理意见`} onClick={() => openPageReviews(page.id)}>{count} 条意见</button> : <span className="badge neutral">0 条</span>}</td>
           <td><button className="button tiny quiet" onClick={() => openPage(page.id)}>打开</button></td>
         </tr>;

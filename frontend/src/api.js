@@ -116,22 +116,24 @@ export const addReview = (text, pageId) => request('/api/reviews', {
   body: JSON.stringify({ text, ...(pageId ? { page_id: pageId } : {}) }),
 });
 export const resolveReview = (id) => post(`/api/reviews/${id}/resolve`);
-export const adoptCandidate = (runId, pageId, file) => request(`/api/runs/${runId}/adopt/${encodeURIComponent(pageId)}`, {
+export const adoptCandidate = (runId, pageId, file, note) => request(`/api/runs/${runId}/adopt/${encodeURIComponent(pageId)}`, {
   method: 'POST', headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ expected_file: file }),
+  body: JSON.stringify({ expected_file: file, ...(note !== undefined ? { note } : {}) }),
 }, null);
 
 export function comparisonSnapshot(run, result, page, version) {
-  if (run.kind === 'native') return null;
   const svg = run.kind === 'svg';
+  const native = run.kind === 'native';
   return {
     runId: run.id, pageId: page.id, kind: run.kind, title: page.content.title,
     currentFile: page[run.kind]?.file || null, candidateFile: result.result_file,
-    // SVG sides are the compiled previews captured now. Adoption still uses candidateFile.
-    currentView: svg ? page.preview || null : page[run.kind]?.file || null,
-    candidateView: svg ? result.result_preview || null : result.result_file,
+    // SVG compares compiled previews; native compares the original image against the rendered native PNG.
+    currentView: native ? page.image?.file || null : svg ? page.preview || null : page[run.kind]?.file || null,
+    candidateView: (svg || native) ? result.result_preview || null : result.result_file,
     version, reason: result.reason, basisChanged: result.basis_changed,
     currentBasis: result.current_basis ?? null,
+    adoptedFile: null,
+    adoptedWarnings: [],
   };
 }
 
@@ -139,6 +141,21 @@ export function fileUrl(reference) {
   if (!reference) return null;
   const sha = reference.split('.')[0];
   return `/api/files/${sha}`;
+}
+
+// Resolve whether a page's active editable artifact is native or svg,
+// following the backend's per-page build mode before falling back to artifact presence.
+export function pageRenderMode(page, status) {
+  const explicit = status?.page_modes?.[page?.id];
+  if (explicit === 'native' || explicit === 'svg') return explicit;
+  if (page?.native && !page?.svg) return 'native';
+  if (page?.svg && !page?.native) return 'svg';
+  if (page?.native && page?.svg) return status?.build_mode === 'svg' ? 'svg' : 'native';
+  return status?.build_mode === 'native' ? 'native' : 'svg';
+}
+
+export function isNativePage(page, status) {
+  return pageRenderMode(page, status) === 'native';
 }
 
 export async function exportDeck(format) {
