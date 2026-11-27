@@ -1,12 +1,12 @@
 {
-  "name": "deck-master-ui-hierarchy-samples-20261023",
+  "name": "deck-master-webui",
   "private": true,
   "version": "1.1.4",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "test": "node --import ./src/test/register-jsx.js --test src/schema/fields.test.js src/api.test.js src/context-ui.test.js src/page-ops.test.js src/compare.test.js src/delivery-continuity.test.js src/page-comparison.test.js src/historyDiff.test.js src/history-ui.test.js src/components/modals/useDialogFocus.test.js src/components/modals/PresentationModal.test.js src/content-structure.test.js src/structure-editor.test.js src/styles/token-lint.test.js",
+    "test": "node scripts/run-tests.mjs",
     "lint:css": "node scripts/lint-css-tokens.mjs",
     "preview": "vite preview",
     "test:browser": "node browser-smoke.mjs"
