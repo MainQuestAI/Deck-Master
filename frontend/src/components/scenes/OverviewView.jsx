@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Icon from '../common/Icon';
 import { contextUnitPatch } from '../../api.js';
+import { BRIEF_FIELDS, FRAMING_FIELDS, NARRATOR_FIELDS, PAGE_KIND_LABELS, missingContextHints } from '../../schema/fields.js';
 import ReviewPanel from '../common/ReviewPanel';
 import { useDeckMaster } from '../../context/DeckMasterContext';
 
@@ -24,9 +25,10 @@ function ListActions({ label, items, index, change }) {
   </div>;
 }
 
-function TextList({ label, items, change }) {
+function TextList({ label, items = [], change, hint = '' }) {
   return <section className="form-group">
     <h3>{label}</h3>
+    {hint && <p className="muted">{hint}</p>}
     {items.map((item, index) => <div className="s4-panel" key={index}>
       <Field label={`${label} ${index + 1}`} value={item} onChange={text => change(items.map((value, i) => i === index ? text : value))} />
       <ListActions label={`${label} ${index + 1}`} items={items} index={index} change={change} />
@@ -43,51 +45,65 @@ function BriefReading({ value }) {
   const narrator = [value.narrator?.role, value.narrator?.tone].filter(Boolean).join(' · ');
   return <div className="s4-reading">
     {[
-      ['作品标题', value.title],
-      ['本次面向谁', value.audience],
-      ['本次任务', value.task_type],
-      ['希望对方理解或做出什么判断', value.goal],
-      ['待决事项', value.decision],
-      ['讲述人与语气', narrator],
+      [BRIEF_FIELDS.title, value.title],
+      [BRIEF_FIELDS.audience, value.audience],
+      [BRIEF_FIELDS.task_type, value.task_type],
+      [BRIEF_FIELDS.goal, value.goal],
+      [BRIEF_FIELDS.decision, value.decision],
+      [BRIEF_FIELDS.narrator, narrator],
     ].map(([label, text]) => <section key={label}><h3>{label}</h3><p>{text || '尚未填写'}</p></section>)}
-    <ReadList label="读者关注点" items={value.concerns || []} />
-    <ReadList label="已有决定与实际约束" items={value.constraints || []} />
-    <section><h3>页数上限</h3><p>{value.page_limit ?? '未设置'}</p></section>
+    <ReadList label={BRIEF_FIELDS.concerns} items={value.concerns || []} />
+    <ReadList label={BRIEF_FIELDS.constraints} items={value.constraints || []} />
+    <section><h3>{BRIEF_FIELDS.page_limit}</h3><p>{value.page_limit ?? '未设置'}</p></section>
   </div>;
 }
 
 function FramingReading({ value, expanded = false }) {
   return <div className="s4-reading">
-    <section><h3>中心主张</h3><p>{value.thesis || '尚未填写中心主张'}</p></section>
-    <ReadList label="故事主线" items={value.storyline || []} />
-    <section><h3>业务框架分组</h3>{(value.pillars || []).length ? value.pillars.map((pillar, index) => <section key={index}><h4>{pillar.title || '未命名分组'}</h4>{pillar.points.length ? <ul>{pillar.points.map((point, i) => <li key={i}>{point || '（空支持点）'}</li>)}</ul> : <p className="muted">尚无支持点</p>}</section>) : <p className="muted">尚无框架分组，可直接添加</p>}</section>
+    <section><h3>{FRAMING_FIELDS.thesis}</h3><p>{value.thesis || '尚未填写中心主张'}</p></section>
+    <ReadList label={FRAMING_FIELDS.storyline} items={value.storyline || []} />
+    <section><h3>{FRAMING_FIELDS.pillars}</h3>{(value.pillars || []).length ? value.pillars.map((pillar, index) => <section key={index}><h4>{pillar.title || '未命名分组'}</h4>{pillar.points.length ? <ul>{pillar.points.map((point, i) => <li key={i}>{point || '（空支持点）'}</li>)}</ul> : <p className="muted">尚无支持点</p>}</section>) : <p className="muted">尚无框架分组，可直接添加</p>}</section>
     <details open={expanded}><summary>事实、假设与待回答问题</summary>
-      <ReadList label="已知事实" items={value.facts || []} />
-      <ReadList label="当前假设" items={value.assumptions || []} />
-      <ReadList label="待回答问题" items={value.questions || []} />
+      <ReadList label={FRAMING_FIELDS.facts} items={value.facts || []} />
+      <ReadList label={FRAMING_FIELDS.assumptions} items={value.assumptions || []} />
+      <ReadList label={FRAMING_FIELDS.questions} items={value.questions || []} />
     </details>
   </div>;
 }
 
 function BriefFields({ value, change }) {
   const field = key => next => change({ ...value, [key]: next });
+  const narratorField = key => next => change({
+    ...value,
+    narrator: { role: value.narrator?.role ?? '', tone: value.narrator?.tone ?? '', [key]: next },
+  });
   return <>
-    <Field label="作品标题" value={value.title} onChange={field('title')} />
-    <Field label="本次面向谁" value={value.audience} onChange={field('audience')} multiline />
-    <Field label="本次任务" value={value.task_type} onChange={field('task_type')} list="context-task-types" />
+    <Field label={BRIEF_FIELDS.title} value={value.title} onChange={field('title')} />
+    <Field label={BRIEF_FIELDS.audience} value={value.audience} onChange={field('audience')} multiline />
+    <Field label={BRIEF_FIELDS.task_type} value={value.task_type} onChange={field('task_type')} list="context-task-types" />
     <datalist id="context-task-types">{['首提', '竞标', '汇报'].map(text => <option key={text} value={text} />)}</datalist>
-    <Field label="希望对方理解或做出什么判断" value={value.goal} onChange={field('goal')} multiline />
-    <TextList label="已有决定与实际约束" items={value.constraints} change={field('constraints')} />
-    <Field label="页数上限（可留空）" type="number" min="0" max="4294967295" step="1" value={value.page_limit} onChange={text => field('page_limit')(text === '' ? null : Number(text))} />
+    <Field label={BRIEF_FIELDS.goal} value={value.goal} onChange={field('goal')} multiline />
+    <Field label={BRIEF_FIELDS.decision} value={value.decision} onChange={field('decision')} multiline />
+    <TextList
+      label={BRIEF_FIELDS.concerns}
+      items={value.concerns || []}
+      change={field('concerns')}
+      hint="建议聚焦 1–3 条核心关注点，不限制保存。"
+    />
+    <Field label={NARRATOR_FIELDS.role} value={value.narrator?.role ?? ''} onChange={narratorField('role')} />
+    <Field label={NARRATOR_FIELDS.tone} value={value.narrator?.tone ?? ''} onChange={narratorField('tone')} />
+    <TextList label={BRIEF_FIELDS.constraints} items={value.constraints || []} change={field('constraints')} />
+    <Field label={`${BRIEF_FIELDS.page_limit}（可留空）`} type="number" min="0" max="4294967295" step="1" value={value.page_limit} onChange={text => field('page_limit')(text === '' ? null : Number(text))} />
   </>;
 }
 
 function FramingFields({ value, change }) {
   const field = key => next => change({ ...value, [key]: next });
   return <>
-    <Field label="中心主张" value={value.thesis} onChange={field('thesis')} multiline />
-    <h3>业务框架分组</h3>
-    {value.pillars.map((pillar, index) => {
+    <Field label={FRAMING_FIELDS.thesis} value={value.thesis} onChange={field('thesis')} multiline />
+    <TextList label={FRAMING_FIELDS.storyline} items={value.storyline || []} change={field('storyline')} />
+    <h3>{FRAMING_FIELDS.pillars}</h3>
+    {(value.pillars || []).map((pillar, index) => {
       const changePillar = next => field('pillars')(value.pillars.map((item, i) => i === index ? next : item));
       return <section className="s4-panel" key={index}>
         <Field label={`分组 ${index + 1} 标题`} value={pillar.title} onChange={title => changePillar({ ...pillar, title })} />
@@ -95,13 +111,48 @@ function FramingFields({ value, change }) {
         <ListActions label={`分组 ${index + 1}`} items={value.pillars} index={index} change={field('pillars')} />
       </section>;
     })}
-    <button className="button" type="button" onClick={() => field('pillars')([...value.pillars, { title: '', points: [] }])}>添加分组</button>
+    <button className="button" type="button" onClick={() => field('pillars')([...(value.pillars || []), { title: '', points: [] }])}>添加分组</button>
     <details><summary>编辑事实、假设与待回答问题</summary>
-      <TextList label="已知事实" items={value.facts} change={field('facts')} />
-      <TextList label="当前假设" items={value.assumptions} change={field('assumptions')} />
-      <TextList label="待回答问题" items={value.questions} change={field('questions')} />
+      <TextList label={FRAMING_FIELDS.facts} items={value.facts || []} change={field('facts')} />
+      <TextList label={FRAMING_FIELDS.assumptions} items={value.assumptions || []} change={field('assumptions')} />
+      <TextList label={FRAMING_FIELDS.questions} items={value.questions || []} change={field('questions')} />
     </details>
   </>;
+}
+
+function DerivedSummaryPanel({ workspace, openPage, getPageNumStr }) {
+  const writingBrief = workspace.writing_brief || '';
+  const outline = workspace.outline || [];
+  const gapList = workspace.gap_list || [];
+  return <details className="s4-panel" aria-label="写作简报、提纲与缺口汇总">
+    <summary>写作简报、提纲与缺口汇总（只读）</summary>
+    <div className="s4-reading">
+      <section>
+        <h3>写作简报</h3>
+        {writingBrief ? <pre className="s4-reading">{writingBrief}</pre> : <p className="muted">尚未生成写作简报（补齐讲述人、待决事项或读者关注点后自动生成）。</p>}
+      </section>
+      <section>
+        <h3>提纲</h3>
+        {outline.length ? <ul>{outline.map((item, index) => <li key={item.page_id || index}>
+          <button className="page-entry-link" type="button" onClick={() => openPage(item.page_id)}>
+            <span className="p-no num">{getPageNumStr(item.page_id)}</span>
+            {item.title || '未命名页面'}
+          </button>
+          {item.kind && <span className="badge neutral">{PAGE_KIND_LABELS[item.kind] || item.kind}</span>}
+        </li>)}</ul> : <p className="muted">暂无页面提纲。</p>}
+      </section>
+      <section>
+        <h3>缺口清单</h3>
+        {gapList.length ? <ul>{gapList.map((item, index) => <li key={`${item.page_id}-${item.source}-${index}`}>
+          <button className="button tiny quiet" type="button" onClick={() => openPage(item.page_id)}>第 {getPageNumStr(item.page_id)} 页</button>
+          {' '}
+          <span className="badge warn">{item.source === 'evidence' ? '证据缺口' : '待补'}</span>
+          {' '}
+          <span>{item.text}{item.gap ? ` — ${item.gap}` : ''}</span>
+        </li>)}</ul> : <p className="muted">当前无待补缺口。</p>}
+      </section>
+    </div>
+  </details>;
 }
 
 function ContextSection({ kind, title, Reading, Fields }) {
@@ -132,6 +183,10 @@ function ContextSection({ kind, title, Reading, Fields }) {
       </section>}
       <form onSubmit={event => { event.preventDefault(); saveContext(kind); }}>
         <fieldset className="s4-fieldset" disabled={saving}><Fields value={draft.value} change={next => updateContextDraft(kind, next)} /></fieldset>
+        {(() => {
+          const hints = missingContextHints(kind, draft.value);
+          return hints.length > 0 && <p className="muted">待补提示（不影响保存）：{hints.join('、')}</p>;
+        })()}
         <div className="head-actions s4-actions">
           <span role="status">{contextUnitPatch(kind, draft) ? '有未保存的输入' : '没有未保存的修改'}</span>
           <button className="button" type="submit" disabled={saving || !!draft.conflict || !contextUnitPatch(kind, draft)}>{saving ? '正在保存…' : `保存${title}`}</button>
@@ -149,6 +204,7 @@ export default function OverviewView() {
     <div className="view-head"><div><h1>制作总览</h1><p>浏览当前作品，修改内容并继续制作。</p></div><div className="head-actions"><button className="button" onClick={() => openDrawer('history')}><Icon name="layers" />版本历史记录</button><button className="button" onClick={createPage} disabled={busy.create}>新增页面</button></div></div>
     <ContextSection kind="brief" title="任务信息" Reading={BriefReading} Fields={BriefFields} />
     <ContextSection kind="framing" title="业务框架" Reading={FramingReading} Fields={FramingFields} />
+    <DerivedSummaryPanel workspace={workspace} openPage={openPage} getPageNumStr={getPageNumStr} />
     <div className="metric-summary">
       {[[pages.length, '逐页稿'], [pages.filter(page => page.image).length, '原图'], [pages.filter(page => page.svg).length, 'SVG'], [workspace.runs.filter(run => run.kind !== 'native' && run.status === 'open').length, '进行中任务']].map(([value, label]) => <div className="metric-item" key={label}><strong>{value}</strong><p>{label}</p></div>)}
     </div>

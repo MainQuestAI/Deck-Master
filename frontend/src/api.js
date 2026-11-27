@@ -1,3 +1,5 @@
+import { PAGE_AUTHOR_FIELDS } from './schema/fields.js';
+
 export class ApiError extends Error {
   constructor(status, data) {
     super(data.error || `请求失败（${status}），请重试`);
@@ -163,11 +165,19 @@ export function createPageId(pages, drafts, randomUUID = () => crypto.randomUUID
   return id;
 }
 
+function normalizedAuthorFieldValue(field, value) {
+  if (field === 'kind') return value ?? '';
+  if (field === 'argument') return value ?? null;
+  return value;
+}
+
 export function draftPatch(draft) {
   const page = { id: draft.page.id };
-  for (const field of ['content', 'purpose', 'layout', 'notes', 'todo', 'refs']) {
-    if (JSON.stringify(draft.original[field]) !== JSON.stringify(draft.page[field])) {
-      page[field] = draft.page[field];
+  for (const field of Object.keys(PAGE_AUTHOR_FIELDS)) {
+    const before = normalizedAuthorFieldValue(field, draft.original[field]);
+    const after = normalizedAuthorFieldValue(field, draft.page[field]);
+    if (JSON.stringify(before) !== JSON.stringify(after)) {
+      page[field] = after;
     }
   }
   return { pages: [page] };
