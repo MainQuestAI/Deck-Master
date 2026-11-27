@@ -466,6 +466,31 @@ fn route(project: &Path, request: &mut Request) -> Result<ResponseBox> {
             200,
             serde_json::to_value(ops::restore(project, identifier(&path[13..])?)?)?,
         ),
+        (Method::Post, path) if path.starts_with("/api/pages/") && path.ends_with("/image") => {
+            let page_raw = path
+                .strip_prefix("/api/pages/")
+                .and_then(|p| p.strip_suffix("/image"))
+                .filter(|p| !p.is_empty() && !p.contains('/'))
+                .ok_or_else(|| Error::Input("上传原图需要页面编号".into()))?;
+            let page_id = url_component(page_raw)?;
+            let mut media_types = request
+                .headers()
+                .iter()
+                .filter(|h| h.field.equiv("Content-Type"))
+                .map(|h| h.value.as_str().split(';').next().unwrap_or("").trim());
+            let media = match (media_types.next(), media_types.next()) {
+                (Some(ct), None) if !ct.is_empty() => ct.to_owned(),
+                _ => return Err(Error::Input("原图上传只支持 PNG 或 JPEG 图片".into())),
+            };
+            let body = match read_body_limited(request)? {
+                Ok(body) => body,
+                Err(response) => return Ok(response),
+            };
+            json_response(
+                200,
+                ops::page_image_upload(project, &page_id, &body, &media)?,
+            )
+        }
         (Method::Post, path) if path.starts_with("/api/runs/") && path.ends_with("/cancel") => {
             let text = path
                 .strip_prefix("/api/runs/")

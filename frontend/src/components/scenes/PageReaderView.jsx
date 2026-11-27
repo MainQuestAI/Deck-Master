@@ -8,7 +8,7 @@ import ReviewPanel from '../common/ReviewPanel';
 import PageComparison from '../common/PageComparison';
 
 export default function PageReaderView() {
-  const { workspace, currentPage, getPage, getPageNumStr, editPage, createPage, busy, drafts } = useDeckMaster();
+  const { workspace, currentPage, getPage, getPageNumStr, editPage, createPage, busy, drafts, uploadPageImage } = useDeckMaster();
   const [layer, setLayer] = useState('text');
   const page = getPage(currentPage);
   const deletedDrafts = Object.values(drafts).filter(draft => !getPage(draft.page.id));
@@ -18,8 +18,31 @@ export default function PageReaderView() {
   </section>;
   if (!page) return <><div className="s4-empty"><p>当前页面已不存在，或尚无页面</p><button className="primary" onClick={createPage} disabled={busy.create}>新增页面</button></div>{savedInput}</>;
   const nativePreview = isNativePage(page, workspace.artifact_status);
+  const handleImageUpload = async event => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    const result = await uploadPageImage(page.id, file);
+    if (result) setLayer('original');
+  };
   return <div>
-    <div className="view-head"><div><h1>第 {getPageNumStr(page.id)} 页 · {page.content.title || '未命名页面'}</h1><p>{page.purpose}</p></div><button className="primary" onClick={() => editPage(page.id)}>{isPageDraftDirty(drafts[page.id]) ? '继续未保存的修改' : '修改正文与讲稿'}</button></div>
+    <div className="view-head">
+      <div><h1>第 {getPageNumStr(page.id)} 页 · {page.content.title || '未命名页面'}</h1><p>{page.purpose}</p></div>
+      <div className="head-actions">
+        <label className="button">
+          {busy['upload-image'] ? '正在上传原图…' : '上传原图'}
+          <input
+            type="file"
+            accept="image/png,image/jpeg"
+            aria-label="上传原图"
+            disabled={!!busy['upload-image']}
+            onChange={handleImageUpload}
+            style={{ display: 'none' }}
+          />
+        </label>
+        <button className="primary" onClick={() => editPage(page.id)}>{isPageDraftDirty(drafts[page.id]) ? '继续未保存的修改' : '修改正文与讲稿'}</button>
+      </div>
+    </div>
     <div className="toolbar"><div className="segmented-control reader-layers">{[['text', '正文'], ['original', '原图'], ['svg', nativePreview ? '原生渲染预览' : 'SVG 预览'], ['compare', nativePreview ? '原图／原生渲染对照' : '原图／编译预览对照']].map(([key, label]) => <button key={key} aria-pressed={layer === key} className={layer === key ? 'active' : ''} onClick={() => setLayer(key)}>{label}</button>)}</div></div>
     {layer === 'compare' ? <PageComparison key={page.id} page={page} /> : <div className="reader-container"><article className="manuscript-card">{layer === 'text' ? <PageContent content={page.content} /> : <PageArtwork page={page} layer={layer} />}</article><aside className="s4-panel"><h2>讲稿</h2><p className="s4-reading">{page.notes || '尚未填写讲稿'}</p>{page.todo.length > 0 && <><h3>待补内容</h3><ul>{page.todo.map((todo, index) => <li key={index}>{todo}</li>)}</ul></>}</aside></div>}
     {savedInput}
