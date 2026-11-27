@@ -878,7 +878,12 @@ fn build_and_export_warn_when_the_original_is_stale_but_the_page_was_readopted()
     tx.commit().unwrap();
     drop(store);
     let built = ops::build(path).unwrap();
-    let warning = json!([{"level":"warning","code":"stale_image","page_id":"p1"}]);
+    let warning = json!([{
+        "level": "warning",
+        "code": "stale_image",
+        "page_id": "p1",
+        "message": "页面 p1 原图制作依据已变，请核对或重绘原图",
+    }]);
     assert_eq!(built["stale_pages"], json!([]));
     assert_eq!(built["stale_images"], json!(["p1"]));
     assert_eq!(built["warnings"], warning);

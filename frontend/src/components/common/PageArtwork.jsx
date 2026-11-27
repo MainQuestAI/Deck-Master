@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { fileUrl } from '../../api.js';
+import { fileUrl, isNativePage } from '../../api.js';
 import { useDeckMaster } from '../../context/DeckMasterContext';
 import PageContent from './PageContent';
 
@@ -10,7 +10,7 @@ export default function PageArtwork({ page, layer }) {
   const reference = layer === 'original' ? page.image?.file : page.preview;
   const status = workspace.artifact_status;
   const stale = (layer === 'original' ? status.stale_images : status.stale_pages).includes(page.id);
-  const isNativePreview = layer !== 'original' && (Boolean(page.native) && !page.svg || status.build_mode === 'native');
+  const isNativePreview = layer !== 'original' && isNativePage(page, status);
   const layerLabel = layer === 'original' ? '原图' : isNativePreview ? '原生渲染预览' : 'SVG 预览';
   const url = fileUrl(reference);
   return <div className="s4-artwork">

@@ -111,12 +111,33 @@ fn etag_matches(header_value: &str, current: &str) -> bool {
     })
 }
 
+fn workspace_id(store_root: &Path, tx: &rusqlite::Transaction<'_>) -> String {
+    use sha2::{Digest, Sha256};
+    let canonical = store_root
+        .canonicalize()
+        .unwrap_or_else(|_| store_root.to_path_buf());
+    let origin_ts: String = tx
+        .query_row(
+            "SELECT created_at FROM versions ORDER BY id ASC LIMIT 1",
+            [],
+            |row| row.get(0),
+        )
+        .unwrap_or_default();
+    let mut hasher = Sha256::new();
+    hasher.update(canonical.to_string_lossy().as_bytes());
+    hasher.update(b"\0");
+    hasher.update(origin_ts.as_bytes());
+    let digest = format!("{:x}", hasher.finalize());
+    digest[..16].to_owned()
+}
+
 pub fn workspace_with_etag(
     project: &Path,
     query: WorkspaceQuery,
     if_none_match: Option<&str>,
 ) -> Result<(String, Option<Value>)> {
     let mut store = Store::open(project)?;
+    let store_root = store.root.clone();
     // A deferred read transaction keeps the polling response on one snapshot,
     // without reserving SQLite's writer slot.
     let tx = store.read_transaction()?;
@@ -126,6 +147,7 @@ pub fn workspace_with_etag(
     }
     let snapshot = store::current(&tx)?;
     let mut value = snapshot_value(&snapshot, None)?;
+    value["workspace_id"] = json!(workspace_id(&store_root, &tx));
     value["default_build"] = match default_build(&tx, &snapshot.deck)? {
         Some(mut selected) => {
             selected.as_object_mut().map(|value| value.remove("file"));

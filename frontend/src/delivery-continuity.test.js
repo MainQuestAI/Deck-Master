@@ -32,8 +32,9 @@ const { safeExportFilename } = await import('./api.js');
 const { default: App } = await import('./App.jsx');
 const { DeckMasterProvider } = await import('./context/DeckMasterContext.jsx');
 
-function sampleWorkspace() {
+function sampleWorkspace(workspaceId = 'ws-demo-0001') {
   return {
+    workspace_id: workspaceId,
     version: 5,
     deck: {
       brief: { title: '季度汇报: Q4/计划', audience: '管理层', task_type: '汇报', goal: '确认预算', decision: '批准试点', concerns: ['周期'], narrator: { role: '负责人', tone: '直接' }, constraints: [], page_limit: 10 },
@@ -82,8 +83,10 @@ const sampleBuildDetail = {
   content_review: { status: 'reviewed', methods: ['other_model'], version_id: 4, unreviewed_pages: [] },
   current_content_review: { status: 'stale', methods: ['self_check'], version_id: 4, unreviewed_pages: ['p2'] },
   warnings: [
-    { code: 'stale_image', page_id: 'p1', message: '第 1 页原图依据已变' },
-    { code: 'shared_layout', pages: ['p1', 'p2'], message: '多页复用相同结构，请核对节奏' },
+    // Test real backend stale_image payload shape even when message is omitted (legacy builds)
+    // as well as current backend shared_layout message.
+    { level: 'warning', code: 'stale_image', page_id: 'p1' },
+    { level: 'warning', code: 'shared_layout', pages: ['p1', 'p2'], message: '本组第 1、2 页复用同一题头，请核对节奏' },
   ],
 };
 
@@ -127,18 +130,24 @@ test('delivery view shows content_review, current_content_review, warnings, and 
   const pressed = [...document.querySelectorAll('.segmented-control button')].find(btn => btn.getAttribute('aria-pressed') === 'true');
   assert.ok(pressed);
 
-  // Navigate to DeliveryView and verify content reviews + warnings + jumps.
+  // Navigate to DeliveryView and verify live vs build-snapshot content reviews + warnings + jumps.
   await act(async () => { document.querySelector('#nav-delivery').click(); });
-  assert.ok(document.querySelector('[aria-label="构建来源版本内容审阅"]').textContent.includes('已审阅'));
-  assert.ok(document.querySelector('[aria-label="构建来源版本内容审阅"]').textContent.includes('另一模型检查'));
-  const currentReviewBox = document.querySelector('[aria-label="当前版本内容审阅"]');
-  assert.ok(currentReviewBox);
-  assert.ok(currentReviewBox.textContent.includes('需复审'));
-  assert.ok(document.querySelector('[aria-label="交付警告"]').textContent.includes('第 1 页原图依据已变'));
-  assert.ok(document.querySelector('[aria-label="交付警告"]').textContent.includes('多页复用相同结构'));
+  const liveReviewBox = document.querySelector('[aria-label="当前作品内容审阅"]');
+  assert.ok(liveReviewBox);
+  assert.ok(liveReviewBox.textContent.includes('需复审'));
+  const buildReviewBox = document.querySelector('[aria-label="默认构建来源版本内容审阅"]');
+  assert.ok(buildReviewBox);
+  assert.ok(buildReviewBox.textContent.includes('已审阅'));
+  assert.ok(buildReviewBox.textContent.includes('另一模型检查'));
+
+  // stale_image warning without message must map to actionable Chinese, never leaking raw "stale_image".
+  const warningBox = document.querySelector('[aria-label="交付警告"]');
+  assert.ok(warningBox.textContent.includes('第 01 页原图制作依据已变，请核对或重绘原图'));
+  assert.equal(warningBox.textContent.includes('stale_image'), false);
+  assert.ok(warningBox.textContent.includes('复用同一题头'));
 
   // Click unreviewed page button -> jumps directly to PageReaderView for p2.
-  const jumpP2 = [...currentReviewBox.querySelectorAll('button')].find(btn => btn.textContent.includes('第 02 页'));
+  const jumpP2 = [...liveReviewBox.querySelectorAll('button')].find(btn => btn.textContent.includes('第 02 页'));
   assert.ok(jumpP2);
   await act(async () => { jumpP2.click(); });
   assert.ok(document.querySelector('h1').textContent.includes('第二页行动'));
@@ -151,8 +160,50 @@ test('delivery view shows content_review, current_content_review, warnings, and 
   assert.ok(document.querySelector('h1').textContent.includes('第一页结论'));
 });
 
-test('draft continuity mirrors unsaved drafts to sessionStorage and restores on remount', async () => {
+test('delivery view invalidates stale downloadStatus after content_review updates and never mislabels live review as build review', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
   const ws = sampleWorkspace();
+  ws.default_build = null;
+  ws.content_review = { status: 'unreviewed', methods: [], version_id: 5, unreviewed_pages: ['p1', 'p2'] };
+  globalThis.fetch = async (url, options = {}) => {
+    if (options.method === 'POST' && url === '/api/build') {
+      return Response.json({
+        id: 20,
+        version_id: 5,
+        url: '/api/files/bbbb',
+        missing_pages: [],
+        stale_pages: [],
+        stale_images: [],
+        warnings: [],
+        content_review: { status: 'unreviewed', methods: [], version_id: 5, unreviewed_pages: ['p1', 'p2'] },
+      });
+    }
+    return Response.json(structuredClone(ws));
+  };
+  root = createRoot(document.getElementById('root'));
+  await act(async () => { root.render(createElement(DeckMasterProvider, null, createElement(App))); });
+  await act(async () => { document.querySelector('#nav-delivery').click(); });
+
+  // Before any build, only live review is shown — never labeled as build source review.
+  assert.ok(document.querySelector('[aria-label="当前作品内容审阅"]').textContent.includes('未审阅'));
+  assert.equal(document.querySelector('[aria-label="默认构建来源版本内容审阅"]'), null);
+  assert.equal(document.querySelector('[aria-label="最近构建来源版本内容审阅"]'), null);
+
+  // Trigger build -> downloadSnapshot appears with recent build review.
+  const buildBtn = [...document.querySelectorAll('button')].find(btn => btn.textContent === '构建 PPTX');
+  await act(async () => { buildBtn.click(); });
+  assert.ok(document.querySelector('[aria-label="最近构建来源版本内容审阅"]').textContent.includes('未审阅'));
+
+  // Now Host records a content review -> next poll updates workspace.content_review
+  // and must invalidate stale downloadStatus so live review reflects "已审阅" cleanly.
+  ws.content_review = { status: 'reviewed', methods: ['self_check'], version_id: 5, unreviewed_pages: [] };
+  await act(async () => { t.mock.timers.tick(1500); });
+  assert.ok(document.querySelector('[aria-label="当前作品内容审阅"]').textContent.includes('已审阅'));
+  assert.equal(document.querySelector('[aria-label="最近构建来源版本内容审阅"]'), null);
+});
+
+test('draft continuity survives a second reload before Restore/Dismiss and isolates workspaces by workspace_id across title renames', async () => {
+  const ws = sampleWorkspace('ws-alpha-1111');
   globalThis.fetch = async (url) => {
     if (String(url).startsWith('/api/builds/')) return Response.json(structuredClone(sampleBuildDetail));
     return Response.json(structuredClone(ws));
@@ -160,7 +211,7 @@ test('draft continuity mirrors unsaved drafts to sessionStorage and restores on 
   root = createRoot(document.getElementById('root'));
   await act(async () => { root.render(createElement(DeckMasterProvider, null, createElement(App))); });
 
-  // Edit brief title without saving -> mirrored into sessionStorage.
+  // Edit brief title without saving -> mirrored into sessionStorage under workspace_id.
   const editBtn = [...document.querySelectorAll('button')].find(btn => btn.textContent === '编辑任务信息');
   await act(async () => { editBtn.click(); });
   const titleLabel = [...document.querySelectorAll('label')].find(node => node.querySelector('span')?.textContent === '作品标题');
@@ -170,15 +221,44 @@ test('draft continuity mirrors unsaved drafts to sessionStorage and restores on 
     titleInput.dispatchEvent(new window.Event('input', { bubbles: true }));
   });
 
-  // Unmount and remount App (simulating reload / reconnect on same port).
+  // First reload: recovery banner shows, user does NOT click Restore or Dismiss yet!
+  // Also simulate server brief.title rename on the same workspace_id.
+  ws.deck.brief.title = '服务端重命名后的标题';
   await act(async () => { root.unmount(); });
   root = createRoot(document.getElementById('root'));
   await act(async () => { root.render(createElement(DeckMasterProvider, null, createElement(App))); });
+  assert.ok(document.querySelector('[aria-label="未保存草稿恢复提示"]'));
 
+  // Second reload BEFORE clicking Restore/Dismiss: draft must STILL be intact (regression for same-cycle remove race)!
+  await act(async () => { root.unmount(); });
+  root = createRoot(document.getElementById('root'));
+  await act(async () => { root.render(createElement(DeckMasterProvider, null, createElement(App))); });
   const banner = document.querySelector('[aria-label="未保存草稿恢复提示"]');
   assert.ok(banner);
   assert.ok(banner.textContent.includes('版本 5'));
-  const restoreBtn = [...banner.querySelectorAll('button')].find(btn => btn.textContent === '恢复草稿');
+
+  // A different project served on the same port (different workspace_id) must NOT see ws-alpha's draft!
+  await act(async () => { root.unmount(); });
+  const otherWs = sampleWorkspace('ws-beta-2222');
+  globalThis.fetch = async (url) => {
+    if (String(url).startsWith('/api/builds/')) return Response.json(structuredClone(sampleBuildDetail));
+    return Response.json(structuredClone(otherWs));
+  };
+  root = createRoot(document.getElementById('root'));
+  await act(async () => { root.render(createElement(DeckMasterProvider, null, createElement(App))); });
+  assert.equal(document.querySelector('[aria-label="未保存草稿恢复提示"]'), null);
+
+  // Switch back to ws-alpha: draft is STILL available and restores cleanly!
+  await act(async () => { root.unmount(); });
+  globalThis.fetch = async (url) => {
+    if (String(url).startsWith('/api/builds/')) return Response.json(structuredClone(sampleBuildDetail));
+    return Response.json(structuredClone(ws));
+  };
+  root = createRoot(document.getElementById('root'));
+  await act(async () => { root.render(createElement(DeckMasterProvider, null, createElement(App))); });
+  const alphaBanner = document.querySelector('[aria-label="未保存草稿恢复提示"]');
+  assert.ok(alphaBanner);
+  const restoreBtn = [...alphaBanner.querySelectorAll('button')].find(btn => btn.textContent === '恢复草稿');
   await act(async () => { restoreBtn.click(); });
 
   const reopenBtn = [...document.querySelectorAll('button')].find(btn => btn.textContent === '编辑任务信息');

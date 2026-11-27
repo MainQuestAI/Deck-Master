@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useDeckMaster } from '../../context/DeckMasterContext';
-import { formatFinding } from '../../api.js';
+import { formatFinding, isNativePage } from '../../api.js';
 import PageArtwork from './PageArtwork';
 
 const locatorLabels = [
@@ -25,13 +25,14 @@ export default function PageComparison({ page }) {
   const canvas = workspace.deck.style?.canvas;
   const findings = (buildResult?.findings?.findings || []).filter(finding => finding.page_id === page.id);
   const hasPageReadback = buildResult?.readback_available !== false && buildResult?.pages?.some(item => item.page_id === page.id);
+  const nativePreview = isNativePage(page, workspace.artifact_status);
   const viewStyle = {
     aspectRatio: canvas ? `${canvas.width_px} / ${canvas.height_px}` : '16 / 9',
     '--compare-scale': zoom / 100,
     '--compare-left': `${-(zoom - 100) * horizontal / 100}%`,
     '--compare-top': `${-(zoom - 100) * vertical / 100}%`,
   };
-  return <section className="page-comparison" aria-label="本页原图与编译预览对照">
+  return <section className="page-comparison" aria-label={nativePreview ? '本页原图与原生渲染预览对照' : '本页原图与编译预览对照'}>
     <p className="muted">两侧共用缩放和查看位置。放大后，调整横向、纵向位置查看同一区域。讲稿见正文层。</p>
     <div className="page-comparison-controls">
       <label>缩放 · {zoom}%<input type="range" aria-label="对照缩放" min="100" max="400" step="25" value={zoom} onChange={event => setZoom(Number(event.target.value))} /></label>
@@ -40,7 +41,7 @@ export default function PageComparison({ page }) {
       <button className="button" onClick={() => { setZoom(100); setHorizontal(50); setVertical(50); }}>查看整页</button>
     </div>
     <div className="page-comparison-panes">
-      {[['original', '原图'], ['svg', '已采用的编译预览']].map(([layer, label]) => <section className="s4-panel" key={layer}>
+      {[['original', '原图'], ['svg', nativePreview ? '已采用的原生渲染预览' : '已采用的编译预览']].map(([layer, label]) => <section className="s4-panel" key={layer}>
         <h2>第 {getPageNumStr(page.id)} 页 · {label}</h2>
         <div className="page-comparison-viewport" style={viewStyle}><PageArtwork page={page} layer={layer} /></div>
       </section>)}

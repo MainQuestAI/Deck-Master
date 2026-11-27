@@ -4,8 +4,8 @@ import * as api from '../api.js';
 const DeckMasterContext = createContext(null);
 
 function draftStorageKey(workspace) {
-  const title = workspace?.deck?.brief?.title || 'untitled';
-  return `deck-master-drafts:${title}`;
+  const id = workspace?.workspace_id || 'default';
+  return `deck-master-drafts:${id}`;
 }
 
 function safeSessionRead(key) {
@@ -46,7 +46,7 @@ export function DeckMasterProvider({ children }) {
   const locks = useRef(new Set());
   const readId = useRef(0);
   const etagRef = useRef(null);
-  const [downloadStatus, setDownloadStatus] = useState(null);
+  const [downloadSnapshot, setDownloadSnapshot] = useState(null);
   const [buildResult, setBuildResult] = useState(null);
   const [buildError, setBuildError] = useState('');
   const [buildLoading, setBuildLoading] = useState(false);
@@ -59,9 +59,12 @@ export function DeckMasterProvider({ children }) {
   const pageNavigation = useRef({ currentPage, comparison });
   useEffect(() => { pageNavigation.current = { currentPage, comparison }; }, [currentPage, comparison]);
   const [reviewDrafts, setReviewDrafts] = useState({});
+  const [handoffDrafts, setHandoffDrafts] = useState({});
   const [handoffRequest, setHandoffRequest] = useState(null);
   const [pendingDraftRecovery, setPendingDraftRecovery] = useState(null);
   const recoveryCheckedRef = useRef(false);
+  const pendingRecoveryRef = useRef(false);
+  const handoffNonceRef = useRef(0);
   const [toast, setToast] = useState(null);
   const [theme, setTheme] = useState(() => {
     try { return localStorage.getItem('deck-master-theme') || 'light'; }
@@ -78,7 +81,7 @@ export function DeckMasterProvider({ children }) {
     return () => clearTimeout(timer);
   }, [toast]);
 
-  const hasUnsavedInputs = api.hasUnsavedInputs(drafts, contextDrafts, reviewDrafts);
+  const hasUnsavedInputs = api.hasUnsavedInputs(drafts, contextDrafts, reviewDrafts, handoffDrafts);
   useEffect(() => {
     setActionError('');
   }, [scene]);
@@ -95,6 +98,9 @@ export function DeckMasterProvider({ children }) {
     const dirtyPages = Object.entries(cachedDrafts).filter(([, draft]) => api.isPageDraftDirty(draft));
     const dirtyContexts = Object.entries(cachedContext).filter(([kind, draft]) => draft && api.contextUnitPatch(kind, draft) !== null);
     if (dirtyPages.length === 0 && dirtyContexts.length === 0) return;
+    // Block the write effect synchronously in the same render cycle so cached drafts
+    // are never deleted before the author chooses Restore or Dismiss.
+    pendingRecoveryRef.current = true;
     setPendingDraftRecovery({
       version: cached.version ?? workspace.version,
       pageCount: dirtyPages.length,
@@ -107,7 +113,7 @@ export function DeckMasterProvider({ children }) {
     });
   }, [workspace, drafts, contextDrafts]);
   useEffect(() => {
-    if (!workspace || !recoveryCheckedRef.current || pendingDraftRecovery) return;
+    if (!workspace || !recoveryCheckedRef.current || pendingRecoveryRef.current || pendingDraftRecovery) return;
     const key = draftStorageKey(workspace);
     const dirtyDrafts = Object.fromEntries(Object.entries(drafts).filter(([, draft]) => api.isPageDraftDirty(draft)));
     const dirtyContext = {
@@ -155,6 +161,20 @@ export function DeckMasterProvider({ children }) {
 
   const defaultBuildId = workspace?.default_build?.id;
   const workspaceVersion = workspace?.version;
+  const contentReviewKey = useMemo(
+    () => JSON.stringify(workspace?.content_review ?? null),
+    [workspace?.content_review],
+  );
+  useEffect(() => {
+    if (!downloadSnapshot) return;
+    if (
+      downloadSnapshot.workspaceVersion !== workspaceVersion
+      || downloadSnapshot.contentReviewKey !== contentReviewKey
+    ) {
+      setDownloadSnapshot(null);
+    }
+  }, [downloadSnapshot, workspaceVersion, contentReviewKey]);
+  const downloadStatus = downloadSnapshot?.status || null;
   const needsReadback = scene === 'delivery' || scene === 'page';
   useEffect(() => {
     if (!needsReadback || !defaultBuildId) {
@@ -217,8 +237,25 @@ export function DeckMasterProvider({ children }) {
     } else {
       setScene('overview');
     }
-    setHandoffRequest({ pageId: pageId || null, intent, nonce: Date.now() });
+    setHandoffRequest({ pageId: pageId || null, intent, nonce: ++handoffNonceRef.current });
   };
+  const consumeHandoffRequest = useCallback((nonce) => {
+    setHandoffRequest(current => (current && current.nonce === nonce ? null : current));
+  }, []);
+  const updateHandoffDraft = useCallback((scope, patch) => {
+    setHandoffDrafts(prev => ({
+      ...prev,
+      [scope]: {
+        open: false,
+        intent: 'fill_content',
+        note: '',
+        instruction: '',
+        copied: false,
+        ...(prev[scope] || {}),
+        ...patch,
+      },
+    }));
+  }, []);
   const openPageReviews = (id) => {
     setCurrentPage(id);
     setScene('page');
@@ -378,13 +415,13 @@ export function DeckMasterProvider({ children }) {
   });
   const build = () => perform('build', async () => {
     const result = await api.buildDeck();
-    setDownloadStatus(result);
+    setDownloadSnapshot({ kind: 'build', status: result, workspaceVersion, contentReviewKey });
     setToast('PPTX 已构建，可下载');
     await reload();
   });
   const download = (format) => perform(`export-${format}`, async () => {
     const result = await api.exportDeck(format, workspace?.deck?.brief?.title);
-    setDownloadStatus(result.status);
+    setDownloadSnapshot({ kind: `export-${format}`, status: result.status, workspaceVersion, contentReviewKey });
     const url = URL.createObjectURL(result.blob);
     const link = document.createElement('a');
     link.href = url;
@@ -395,6 +432,7 @@ export function DeckMasterProvider({ children }) {
   });
   const restoreSavedDrafts = () => {
     if (!pendingDraftRecovery) return;
+    pendingRecoveryRef.current = false;
     setDrafts(value => ({ ...pendingDraftRecovery.drafts, ...value }));
     setContextDrafts(value => ({
       brief: value.brief || pendingDraftRecovery.contextDrafts.brief,
@@ -404,6 +442,7 @@ export function DeckMasterProvider({ children }) {
     setToast('已恢复上次未保存的草稿');
   };
   const dismissSavedDrafts = () => {
+    pendingRecoveryRef.current = false;
     if (workspace) safeSessionRemove(draftStorageKey(workspace));
     setPendingDraftRecovery(null);
   };
@@ -412,13 +451,18 @@ export function DeckMasterProvider({ children }) {
     setToast('已恢复为新版本，历史和未保存输入仍保留');
     await reload();
   });
-  const addReview = (text, pageId) => perform(`review-add-${pageId ? `page:${pageId}` : 'deck'}`, async () => {
-    const review = await api.addReview(text, pageId);
-    setReviewDrafts(value => ({ ...value, [pageId ? `page:${pageId}` : 'deck']: '' }));
-    setToast('意见已保存');
-    await reload();
-    return review;
-  });
+  const addReview = (text, pageId, { clearDraft = true, busyKey } = {}) => perform(
+    busyKey || `review-add-${pageId ? `page:${pageId}` : 'deck'}`,
+    async () => {
+      const review = await api.addReview(text, pageId);
+      if (clearDraft) {
+        setReviewDrafts(value => ({ ...value, [pageId ? `page:${pageId}` : 'deck']: '' }));
+      }
+      setToast('意见已保存');
+      await reload();
+      return review;
+    },
+  );
   const resolveReview = (id) => perform(`review-resolve-${id}`, async () => {
     await api.resolveReview(id);
     setToast('意见已标记为已处理');
@@ -431,11 +475,23 @@ export function DeckMasterProvider({ children }) {
     setScene('compare');
   };
   const adoptCandidate = (note) => perform('adopt', async () => {
-    const result = await api.adoptCandidate(comparison.runId, comparison.pageId, comparison.candidateFile, note);
+    const target = {
+      runId: comparison.runId,
+      pageId: comparison.pageId,
+      candidateFile: comparison.candidateFile,
+    };
+    const result = await api.adoptCandidate(target.runId, target.pageId, target.candidateFile, note);
     const warnings = Array.isArray(result?.warnings) ? result.warnings : [];
-    const updatedPage = result?.runs?.[0]?.pages?.find(item => item.page_id === comparison.pageId);
-    const adoptedFile = updatedPage?.result_file || comparison.candidateFile;
-    setComparison(current => current ? { ...current, adoptedFile, adoptedWarnings: warnings } : current);
+    const updatedPage = result?.runs?.[0]?.pages?.find(item => item.page_id === target.pageId);
+    const adoptedFile = updatedPage?.result_file || target.candidateFile;
+    setComparison(current => (
+      current
+      && current.runId === target.runId
+      && current.pageId === target.pageId
+      && current.candidateFile === target.candidateFile
+        ? { ...current, adoptedFile, adoptedWarnings: warnings }
+        : current
+    ));
     setToast(warnings.length ? '候选已采用（有警告提示）' : '候选已采用');
     await reload();
     return result;
@@ -444,11 +500,11 @@ export function DeckMasterProvider({ children }) {
   return <DeckMasterContext.Provider value={{
     workspace, pages, revision: workspace?.version, activeProject: workspace?.deck.brief.title || '未命名作品',
     connectionError, actionError, busy, refresh: reload, scene, setScene, currentPage,
-    getPage, getPageNumStr, openPage, openPageReviews, openHostHandoff, handoffRequest, editPage, createPage, movePage, removePage, drafts, updateDraft, saveDraft, rebaseDraft, discardDraft,
+    getPage, getPageNumStr, openPage, openPageReviews, openHostHandoff, handoffRequest, consumeHandoffRequest, handoffDrafts, updateHandoffDraft, editPage, createPage, movePage, removePage, drafts, updateDraft, saveDraft, rebaseDraft, discardDraft,
     contextDrafts, openContextEdit, updateContextDraft, saveContext, refreshContextConflict, resolveContextConflict,
     pendingDraftRecovery, restoreSavedDrafts, dismissSavedDrafts,
     drawer, openDrawer: setDrawer, closeDrawer: () => setDrawer(null),
-    stopRun, build, buildResult: displayedBuildResult, buildLoading, buildError, defaultBuild: workspace?.default_build, download, downloadStatus, restore,
+    stopRun, build, buildResult: displayedBuildResult, buildLoading, buildError, defaultBuild: workspace?.default_build, download, downloadStatus, downloadSnapshot, restore,
     addReview, resolveReview, reviewDrafts, setReviewDrafts,
     comparison, compareCandidate, adoptCandidate,
     galleryLayer, setGalleryLayer, galleryView, setGalleryView, query, setQuery,

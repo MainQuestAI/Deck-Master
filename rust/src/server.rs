@@ -74,12 +74,28 @@ fn error_response(error: Error) -> Result<ResponseBox> {
     json_response(status, error.to_json(Some("http"), true))
 }
 
+fn sanitize_http_warnings(value: &mut Value) {
+    for warning in value
+        .get_mut("warnings")
+        .and_then(Value::as_array_mut)
+        .into_iter()
+        .flatten()
+    {
+        if let Some(message) = warning.get("message").and_then(Value::as_str) {
+            let cleaned =
+                message.replace("--note 去掉空白和标点后", "本页对照结论去掉空白和标点后");
+            warning["message"] = json!(cleaned);
+        }
+    }
+}
+
 fn local_authority(authority: &str, port: u16) -> bool {
-    let Some((host, supplied_port)) = authority.rsplit_once(':') else {
-        return false;
-    };
-    (host.eq_ignore_ascii_case("localhost") || host == "127.0.0.1")
-        && supplied_port.parse::<u16>() == Ok(port)
+    if let Some((host, supplied_port)) = authority.rsplit_once(':') {
+        (host.eq_ignore_ascii_case("localhost") || host == "127.0.0.1")
+            && supplied_port.parse::<u16>() == Ok(port)
+    } else {
+        port == 80 && (authority.eq_ignore_ascii_case("localhost") || authority == "127.0.0.1")
+    }
 }
 
 fn local_request(request: &Request, port: u16) -> bool {
@@ -317,6 +333,7 @@ fn route(project: &Path, request: &mut Request) -> Result<ResponseBox> {
                     page.remove("work");
                 }
             }
+            sanitize_http_warnings(&mut result);
             json_response(200, result)
         }
         (Method::Get, path) if path.starts_with("/api/builds/") => {
@@ -637,5 +654,16 @@ mod tests {
         let temp = tempfile::tempdir().unwrap();
         let error = std::fs::read(temp.path().join("missing-tool-output")).unwrap_err();
         assert_eq!(error_response(error.into()).unwrap().status_code().0, 500);
+    }
+
+    #[test]
+    fn local_authority_accepts_port_80_without_explicit_port_and_rejects_foreign_hosts() {
+        assert!(local_authority("127.0.0.1", 80));
+        assert!(local_authority("localhost", 80));
+        assert!(local_authority("127.0.0.1:80", 80));
+        assert!(local_authority("localhost:8080", 8080));
+        assert!(!local_authority("127.0.0.1", 8080));
+        assert!(!local_authority("example.com", 80));
+        assert!(!local_authority("example.com:80", 80));
     }
 }

@@ -28,12 +28,34 @@ function ContentReviewSummary({ title, review, getPage, getPageNumStr, openPage 
   </div>;
 }
 
+function formatDeliveryWarning(item, getPage, getPageNumStr) {
+  if (item.message) return item.message;
+  if (item.code === 'stale_image') {
+    const label = item.page_id
+      ? (getPage(item.page_id) ? `第 ${getPageNumStr(item.page_id)} 页` : `页面 ${item.page_id}`)
+      : '部分页面';
+    return `${label}原图制作依据已变，请核对或重绘原图`;
+  }
+  if (item.code === 'shared_layout') {
+    return '多页复用相同结构，请核对整稿节奏';
+  }
+  return item.code || '交付提示';
+}
+
 export default function DeliveryView() {
-  const { workspace, stopRun, busy, build, buildResult, buildLoading, buildError, defaultBuild, download, downloadStatus, openDrawer, getPage, getPageNumStr, openPage, compareCandidate } = useDeckMaster();
+  const { workspace, stopRun, busy, build, buildResult, buildLoading, buildError, defaultBuild, download, downloadStatus, downloadSnapshot, openDrawer, getPage, getPageNumStr, openPage, compareCandidate } = useDeckMaster();
   const runs = workspace.runs || [];
-  const contentReview = downloadStatus?.content_review || buildResult?.content_review || workspace.content_review || null;
-  const currentContentReview = downloadStatus?.current_content_review || buildResult?.current_content_review || null;
-  const warnings = downloadStatus?.warnings || buildResult?.warnings || [];
+  const liveContentReview = workspace.content_review || null;
+  const snapshotReview = (downloadSnapshot?.kind === 'build' || downloadSnapshot?.kind === 'export-pptx')
+    && downloadSnapshot?.status?.content_review
+    ? {
+        title: downloadSnapshot.kind === 'build' ? '最近构建来源版本内容审阅' : '最近导出快照内容审阅',
+        review: downloadSnapshot.status.content_review,
+      }
+    : buildResult?.content_review
+      ? { title: '默认构建来源版本内容审阅', review: buildResult.content_review }
+      : null;
+  const warnings = downloadStatus?.warnings ?? buildResult?.warnings ?? [];
   return <div>
     <div className="view-head"><div><h1>任务与交付</h1><p>停止进行中的任务，构建并下载当前作品。</p></div><button className="button" onClick={() => openDrawer('history')}>版本历史与恢复</button></div>
     <section className="s4-panel"><h2>构建与下载</h2><div className="head-actions s4-actions"><button className="primary" onClick={build} disabled={busy.build}>{busy.build ? '正在构建…' : '构建 PPTX'}</button><button className="button" onClick={() => download('md')} disabled={busy['export-md']}>下载 Markdown</button><button className="button" onClick={() => download('pptx')} disabled={busy['export-pptx']}>下载 PPTX</button></div>
@@ -43,16 +65,16 @@ export default function DeliveryView() {
       {buildLoading && <p role="status">{buildResult ? `正在刷新构建回读；暂留构建 #${buildResult.id}（来源版本 ${buildResult.version_id}）的历史结果。` : '正在读取构建回读…'}</p>}
       {buildResult && <p>来源版本 {buildResult.version_id} · {buildResult.created_at} · {buildResult.readback_available === false ? '导入成品没有构建回读' : buildResult.readback_matches_current === true ? '该次检查输入仍匹配；未重新执行检查' : '历史检查，不代表当前正文已检查'}</p>}
       {downloadStatus && <><h3>最近构建或下载的状态</h3><ArtifactStatus status={downloadStatus} /></>}
-      <ContentReviewSummary title="构建来源版本内容审阅" review={contentReview} getPage={getPage} getPageNumStr={getPageNumStr} openPage={openPage} />
-      {currentContentReview && JSON.stringify(currentContentReview) !== JSON.stringify(contentReview) && (
-        <ContentReviewSummary title="当前版本内容审阅" review={currentContentReview} getPage={getPage} getPageNumStr={getPageNumStr} openPage={openPage} />
+      <ContentReviewSummary title="当前作品内容审阅" review={liveContentReview} getPage={getPage} getPageNumStr={getPageNumStr} openPage={openPage} />
+      {snapshotReview && (
+        <ContentReviewSummary title={snapshotReview.title} review={snapshotReview.review} getPage={getPage} getPageNumStr={getPageNumStr} openPage={openPage} />
       )}
       {warnings.length > 0 && <div className="s4-panel" aria-label="交付警告">
         <h3>交付警告</h3>
         <ul>{warnings.map((item, index) => {
           const pageIds = Array.isArray(item.pages) ? item.pages : item.page_id ? [item.page_id] : [];
           return <li key={index}>
-            <span>{item.message || item.code}</span>
+            <span>{formatDeliveryWarning(item, getPage, getPageNumStr)}</span>
             {pageIds.map(pageId => getPage(pageId) && (
               <button key={pageId} type="button" className="button tiny quiet" onClick={() => openPage(pageId)}>查看第 {getPageNumStr(pageId)} 页</button>
             ))}
@@ -66,7 +88,7 @@ export default function DeliveryView() {
     <h2>制作任务</h2>
     {!runs.length && <p className="s4-empty">暂无制作任务。Host 开始制作后，进度将在这里显示。</p>}
     {runs.map(run => <section className="s4-panel" key={run.id}><div className="row between"><h3>{runKinds[run.kind] || run.kind} · {states[run.status] || run.status}</h3>{run.status === 'open' && <button className="button" disabled={busy[`cancel-${run.id}`]} onClick={() => stopRun(run.id)}>{busy[`cancel-${run.id}`] ? '正在停止…' : '停止任务'}</button>}</div>
-      <ul>{run.pages.map(page => <li key={page.page_id}>{getPage(page.page_id) ? `第 ${getPageNumStr(page.page_id)} 页` : '已移除页面'} · {states[page.status] || page.status}{page.reason && ` · ${page.reason}`}{page.basis_changed && ' · 依据已变'}{page.basis_incomplete && ' · 旧依据未记录目的和布局'}{page.result_file && <>{getPage(page.page_id) && <button className="button tiny" onClick={() => compareCandidate(run, page)}>比对与采用</button>}<a className="button tiny quiet" href={fileUrl(page.result_file)} target="_blank" rel="noreferrer">查看结果</a></>}</li>)}</ul>
+      <ul>{run.pages.map(page => <li key={page.page_id}>{getPage(page.page_id) ? `第 ${getPageNumStr(page.page_id)} 页` : '已移除页面'} · {states[page.status] || page.status}{page.reason && ` · ${page.reason}`}{page.basis_changed && ' · 依据已变'}{page.basis_incomplete && ' · 旧依据未记录目的和布局'}{page.result_file && <>{getPage(page.page_id) && <button className="button tiny" onClick={() => compareCandidate(run, page)}>比对与采用</button>}{run.kind === 'native' && page.result_preview ? <a className="button tiny quiet" href={fileUrl(page.result_preview)} target="_blank" rel="noreferrer">查看渲染预览</a> : <a className="button tiny quiet" href={fileUrl(page.result_file)} target="_blank" rel="noreferrer">查看结果</a>}</>}</li>)}</ul>
     </section>)}
   </div>;
 }
