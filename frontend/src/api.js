@@ -143,6 +143,21 @@ export function fileUrl(reference) {
   return `/api/files/${sha}`;
 }
 
+// Resolve whether a page's active editable artifact is native or svg,
+// following the backend's per-page build mode before falling back to artifact presence.
+export function pageRenderMode(page, status) {
+  const explicit = status?.page_modes?.[page?.id];
+  if (explicit === 'native' || explicit === 'svg') return explicit;
+  if (page?.native && !page?.svg) return 'native';
+  if (page?.svg && !page?.native) return 'svg';
+  if (page?.native && page?.svg) return status?.build_mode === 'svg' ? 'svg' : 'native';
+  return status?.build_mode === 'native' ? 'native' : 'svg';
+}
+
+export function isNativePage(page, status) {
+  return pageRenderMode(page, status) === 'native';
+}
+
 export async function exportDeck(format) {
   return request(`/api/export/${format}`, {}, 15000, async response => {
     const status = JSON.parse(response.headers.get('X-Deck-Status') || '{}');

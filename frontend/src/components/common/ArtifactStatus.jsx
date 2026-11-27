@@ -16,10 +16,15 @@ export default function ArtifactStatus({ status }) {
     : mode === 'mixed'
       ? '可编辑页依据已变'
       : 'SVG 依据已变';
+  const incompleteLabel = mode === 'native'
+    ? '旧原生还原依据未记录目的和布局'
+    : mode === 'mixed'
+      ? '旧可编辑页依据未记录目的和布局'
+      : '旧 SVG 依据未记录目的和布局';
   return <div className="s4-status" aria-live="polite">
     {Array.isArray(status.missing_pages) && Array.isArray(status.stale_pages) && <p>{missingLabel}：{names(status.missing_pages)}；{staleLabel}：{names(status.stale_pages)}</p>}
     {status.stale_images?.length > 0 && <p>原图制作依据已变：{names(status.stale_images)}</p>}
-    {status.incomplete_basis_pages?.length > 0 && <p>旧 SVG 依据未记录目的和布局：{names(status.incomplete_basis_pages)}</p>}
+    {status.incomplete_basis_pages?.length > 0 && <p>{incompleteLabel}：{names(status.incomplete_basis_pages)}</p>}
     {status.input_changed && <p className="s4-message">{status.warning || '当前作品已改变，下载的是最近一次构建；可重新构建。'}</p>}
     {status.build_missing_pages?.length > 0 && <p>该次构建未包含：{names(status.build_missing_pages)}</p>}
   </div>;

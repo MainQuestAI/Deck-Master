@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Icon from '../common/Icon';
-import { contextUnitPatch } from '../../api.js';
+import { contextUnitPatch, pageRenderMode } from '../../api.js';
 import { BRIEF_FIELDS, FRAMING_FIELDS, NARRATOR_FIELDS, PAGE_KIND_LABELS, missingContextHints } from '../../schema/fields.js';
 import FieldConflictDiff from '../common/FieldConflictDiff';
 import HostHandoffCard from '../common/HostHandoffCard';
@@ -234,15 +234,14 @@ export default function OverviewView() {
       <div className="toolbar"><label className="search-box"><Icon name="search" /><input aria-label="搜索页面" placeholder="搜索页名" value={query} onChange={event => setQuery(event.target.value)} /></label><button className="button" onClick={() => setScene('delivery')}>任务与下载</button></div>
       <div className="matrix-container"><table className="matrix-table"><thead><tr><th>页面</th><th>原图</th><th>{status.build_mode === 'native' ? '原生还原' : status.build_mode === 'mixed' ? '可编辑页' : 'SVG'}</th><th>待处理意见</th><th>操作</th></tr></thead><tbody>{filtered.map(page => {
         const count = openReviewCount(page);
+        const pageMode = pageRenderMode(page, status);
         const editableLabel = !(page.svg || page.native)
           ? '未制作'
           : status.stale_pages.includes(page.id)
             ? '依据已变'
-            : page.native && !page.svg
+            : pageMode === 'native'
               ? '原生已采用'
-              : page.native && page.svg
-                ? '混合已采用'
-                : '已采用';
+              : '已采用';
         return <tr key={page.id}>
           <td><button className="page-entry-link" onClick={() => openPage(page.id)}><span className="p-no num">{getPageNumStr(page.id)}</span>{page.content.title || '未命名页面'}</button></td>
           <td><span className={`badge ${status.stale_images.includes(page.id) ? 'warn' : 'neutral'}`}>{!page.image ? '未制作' : status.stale_images.includes(page.id) ? '依据已变' : '已采用'}</span></td>

@@ -368,11 +368,23 @@ export function DeckMasterProvider({ children }) {
     setScene('compare');
   };
   const adoptCandidate = (note) => perform('adopt', async () => {
-    const result = await api.adoptCandidate(comparison.runId, comparison.pageId, comparison.candidateFile, note);
+    const target = {
+      runId: comparison.runId,
+      pageId: comparison.pageId,
+      candidateFile: comparison.candidateFile,
+    };
+    const result = await api.adoptCandidate(target.runId, target.pageId, target.candidateFile, note);
     const warnings = Array.isArray(result?.warnings) ? result.warnings : [];
-    const updatedPage = result?.runs?.[0]?.pages?.find(item => item.page_id === comparison.pageId);
-    const adoptedFile = updatedPage?.result_file || comparison.candidateFile;
-    setComparison(current => current ? { ...current, adoptedFile, adoptedWarnings: warnings } : current);
+    const updatedPage = result?.runs?.[0]?.pages?.find(item => item.page_id === target.pageId);
+    const adoptedFile = updatedPage?.result_file || target.candidateFile;
+    setComparison(current => (
+      current
+      && current.runId === target.runId
+      && current.pageId === target.pageId
+      && current.candidateFile === target.candidateFile
+        ? { ...current, adoptedFile, adoptedWarnings: warnings }
+        : current
+    ));
     setToast(warnings.length ? '候选已采用（有警告提示）' : '候选已采用');
     await reload();
     return result;
