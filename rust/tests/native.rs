@@ -867,3 +867,217 @@ fn native_result_rejects_escaped_and_non_png_jpeg_image_assets_without_storing_f
         );
     }
 }
+
+#[test]
+fn native_cli_icon_search_crop_and_validate_end_to_end() {
+    let temp = tempfile::tempdir().unwrap();
+    let project = temp.path().join("project");
+
+    // 1. deck icon search works for both Chinese commercial terms and English tags without needing a project.
+    let zh = cli(&project, &["icon", "search", "供应链", "--limit", "5"]);
+    assert_eq!(zh["query"], "供应链");
+    let zh_ids: Vec<&str> = zh["icons"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|item| item["icon_id"].as_str().unwrap())
+        .collect();
+    assert!(!zh_ids.is_empty());
+    assert!(
+        zh_ids.iter().all(|id| id.starts_with("tabler-outline/")),
+        "unexpected icon ids: {zh_ids:?}"
+    );
+    assert!(
+        zh_ids
+            .iter()
+            .any(|id| id.contains("truck") || id.contains("package")),
+        "expected supply-chain icon in {zh_ids:?}"
+    );
+
+    let en = cli(&project, &["icon", "search", "shield", "--limit", "5"]);
+    let en_ids: Vec<&str> = en["icons"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|item| item["icon_id"].as_str().unwrap())
+        .collect();
+    assert_eq!(en_ids.first().copied(), Some("tabler-outline/shield"));
+
+    // 2. Prepare project with a 400x200 source PNG and start a native run.
+    cli(
+        &project,
+        &["new", project.to_str().unwrap(), "--title", "C16 原生命令"],
+    );
+    edit(
+        &project,
+        json!({
+            "order": ["p1"],
+            "pages": [{
+                "id": "p1",
+                "purpose": "演示原生工具链",
+                "layout": "左图右文",
+                "content": {"title": "供应链安全方案", "subtitle": "核心举措"}
+            }]
+        }),
+    );
+    let source_img = temp.path().join("source.png");
+    let py = std::env::var_os("DECK_TOOLS_PYTHON").expect("install this worktree's deck-tools");
+    let made = Command::new(py)
+        .args([
+            "-c",
+            "from PIL import Image; import sys; Image.new('RGB', (400, 200), (240, 245, 250)).save(sys.argv[1])",
+            source_img.to_str().unwrap(),
+        ])
+        .output()
+        .unwrap();
+    assert!(made.status.success());
+
+    let image_run =
+        cli(&project, &["run", "start", "image", "--pages", "p1"])["runs"][0]["id"].to_string();
+    cli(
+        &project,
+        &[
+            "run",
+            "result",
+            &image_run,
+            "p1",
+            source_img.to_str().unwrap(),
+        ],
+    );
+    let started = cli(&project, &["run", "start", "native", "--pages", "p1"]);
+    let run_id = started["runs"][0]["id"].to_string();
+    let work_dir =
+        Path::new(started["runs"][0]["pages"][0]["work"].as_str().unwrap()).to_path_buf();
+    let task_md = std::fs::read_to_string(work_dir.join("task.md")).unwrap();
+    assert!(task_md.contains("deck icon search"));
+    assert!(task_md.contains("deck run crop"));
+    assert!(task_md.contains("deck run validate"));
+
+    // 3. deck run crop writes only into work/<run>/<ordinal>/assets/<name>.png and rejects path traversal.
+    let cropped = cli(
+        &project,
+        &[
+            "run",
+            "crop",
+            &run_id,
+            "p1",
+            "--bbox",
+            "20,10,120,80",
+            "--name",
+            "hero_card",
+        ],
+    );
+    assert_eq!(cropped["relative_path"], "assets/hero_card.png");
+    assert_eq!(cropped["width"], 120);
+    assert_eq!(cropped["height"], 80);
+    assert_eq!(cropped["format"], "PNG");
+    let expected_crop = work_dir.join("assets").join("hero_card.png");
+    assert!(expected_crop.is_file());
+    assert_eq!(
+        Path::new(cropped["path"].as_str().unwrap())
+            .canonicalize()
+            .unwrap(),
+        expected_crop.canonicalize().unwrap()
+    );
+
+    let bad_crop = command(
+        &project,
+        &[
+            "run",
+            "crop",
+            &run_id,
+            "p1",
+            "--bbox",
+            "0,0,50,50",
+            "--name",
+            "../escape",
+        ],
+    );
+    assert_eq!(bad_crop.status.code(), Some(2));
+
+    // 4. deck run validate checks valid plans and catches bad colors / escaped paths without changing DB.
+    let before_version = Store::open(&project).unwrap().current().unwrap().version;
+    let plan_path = work_dir.join("plan.json");
+    let valid_plan = json!({
+        "schema": "deck.native_plan.v1",
+        "page": "p1",
+        "canvas_px": {"w": 400, "h": 200},
+        "background": "#FFFFFF",
+        "ops": [
+            {"op": "text", "atom_id": "atom:p1:title", "text": "供应链安全方案", "bbox": [20, 20, 200, 36]},
+            {"op": "text", "atom_id": "atom:p1:subtitle", "text": "核心举措", "bbox": [20, 56, 200, 20]},
+            {"op": "icon", "icon_id": en_ids[0], "bbox": [240, 20, 32, 32], "color": "#225588"},
+            {"op": "image", "file": "assets/hero_card.png", "bbox": [20, 80, 120, 80]}
+        ]
+    });
+    std::fs::write(&plan_path, serde_json::to_vec_pretty(&valid_plan).unwrap()).unwrap();
+    let validated = cli(
+        &project,
+        &[
+            "run",
+            "validate",
+            &run_id,
+            "p1",
+            plan_path.to_str().unwrap(),
+        ],
+    );
+    assert_eq!(validated["valid"], true);
+    assert_eq!(validated["atoms"], 2);
+
+    // Ensure run validate did not submit result or modify version.
+    assert_eq!(
+        Store::open(&project).unwrap().current().unwrap().version,
+        before_version
+    );
+    let shown = cli(&project, &["run", "show", &run_id]);
+    assert_eq!(shown["runs"][0]["pages"][0]["status"], "pending");
+
+    // Invalid hex color -> exit 2
+    let bad_color_path = work_dir.join("bad-color.json");
+    let bad_color = json!({
+        "schema": "deck.native_plan.v1",
+        "page": "p1",
+        "canvas_px": {"w": 400, "h": 200},
+        "background": "not-a-color",
+        "ops": [
+            {"op": "text", "atom_id": "atom:p1:title", "text": "供应链安全方案", "bbox": [20, 20, 200, 36]}
+        ]
+    });
+    std::fs::write(&bad_color_path, serde_json::to_vec(&bad_color).unwrap()).unwrap();
+    let color_out = command(
+        &project,
+        &[
+            "run",
+            "validate",
+            &run_id,
+            "p1",
+            bad_color_path.to_str().unwrap(),
+        ],
+    );
+    assert_eq!(color_out.status.code(), Some(2));
+
+    // Escaped image path -> exit 2
+    let bad_path_plan = work_dir.join("bad-path.json");
+    let bad_path = json!({
+        "schema": "deck.native_plan.v1",
+        "page": "p1",
+        "canvas_px": {"w": 400, "h": 200},
+        "background": "#FFFFFF",
+        "ops": [
+            {"op": "text", "atom_id": "atom:p1:title", "text": "供应链安全方案", "bbox": [20, 20, 200, 36]},
+            {"op": "image", "file": "../outside.png", "bbox": [20, 80, 120, 80]}
+        ]
+    });
+    std::fs::write(&bad_path_plan, serde_json::to_vec(&bad_path).unwrap()).unwrap();
+    let path_out = command(
+        &project,
+        &[
+            "run",
+            "validate",
+            &run_id,
+            "p1",
+            bad_path_plan.to_str().unwrap(),
+        ],
+    );
+    assert_eq!(path_out.status.code(), Some(2));
+}

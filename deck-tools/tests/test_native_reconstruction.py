@@ -851,3 +851,61 @@ def test_validate_plan_rejects_escaped_and_non_png_jpeg_image_assets(sample):
         plan['ops'][3]['file'] = bad_file
         with pytest.raises(ValueError):
             native.validate_plan(plan, page)
+
+
+def test_icon_search_uses_svg_tags_and_chinese_commercial_synonyms(tmp_path):
+    from deck_tools.vendor.cyberppt.select_icon import build_index, search_icons
+
+    lib = tmp_path / 'tabler-outline'
+    lib.mkdir()
+    (lib / 'cargo-van.svg').write_text(
+        '<!--\ntags: [logistics, delivery, freight]\ncategory: Vehicles\n-->\n'
+        '<svg viewBox="0 0 24 24"><path d="M1 1h22v22H1z"/></svg>\n',
+        encoding='utf-8',
+    )
+    index = build_index(tmp_path, icons_root_label='.')
+    assert index['icons_root'] == '.'
+    assert 'logistics' in index['icons'][0]['tags']
+    assert index['icons'][0]['category'] == 'Vehicles'
+    assert search_icons(index, 'freight', limit=5)[0]['icon_id'] == 'tabler-outline/cargo-van'
+
+    zh = native.dispatch('icon-search', {'query': '供应链', 'limit': 5})
+    assert zh['count'] > 0
+    assert any('truck' in item['icon_id'] or 'package' in item['icon_id'] for item in zh['icons'])
+
+    en = native.dispatch('icon-search', {'query': 'shield', 'limit': 5})
+    assert en['icons'][0]['icon_id'] == 'tabler-outline/shield'
+
+
+def test_crop_output_dir_exif_transpose_and_zero_size_rejection(tmp_path):
+    source = tmp_path / 'rotated.jpg'
+    img = Image.new('RGB', (120, 60), '#225588')
+    exif = img.getexif()
+    exif[274] = 6  # 90 deg CW -> transposed size is 60x120
+    img.save(source, format='JPEG', exif=exif.tobytes())
+
+    out_dir = tmp_path / 'assets'
+    result = native.crop({
+        'output_dir': str(out_dir),
+        'id': 'portrait',
+        'box': [5, 10, 40, 80],
+        'page': {'id': 'p1', 'source_image': str(source)},
+    })
+    assert result['relative_path'] == 'assets/portrait.png'
+    assert (result['width'], result['height']) == (40, 80)
+    assert Path(result['file']).is_file()
+
+    with pytest.raises(ValueError):
+        native.crop({
+            'output_dir': str(out_dir),
+            'id': 'zero',
+            'box': [0, 0, 0, 10],
+            'page': {'id': 'p1', 'source_image': str(source)},
+        })
+    with pytest.raises(ValueError):
+        native.crop({
+            'output_dir': str(out_dir),
+            'id': '../escape',
+            'box': [0, 0, 10, 10],
+            'page': {'id': 'p1', 'source_image': str(source)},
+        })

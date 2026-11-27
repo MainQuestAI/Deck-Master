@@ -5,6 +5,206 @@ use serde_json::{Value, json};
 use std::collections::HashMap;
 use std::path::Path;
 
+pub fn icon_search(query: &str, limit: usize) -> Result<Value> {
+    let trimmed = query.trim();
+    if trimmed.is_empty() {
+        return Err(Error::Input("请提供非空的图标检索关键词".into()));
+    }
+    if limit == 0 || limit > 100 {
+        return Err(Error::Input("limit 必须是 1 到 100 之间的整数".into()));
+    }
+    crate::tools::invoke("icon-search", &json!({"query": trimmed, "limit": limit}))
+}
+
+fn parse_bbox(raw: &str) -> Result<[f64; 4]> {
+    let parts: Vec<&str> = raw.split(',').map(str::trim).collect();
+    if parts.len() != 4 {
+        return Err(Error::Input(
+            "bbox 必须是逗号分隔的四个数字：x,y,w,h".into(),
+        ));
+    }
+    let mut values = [0.0_f64; 4];
+    for (slot, part) in values.iter_mut().zip(parts) {
+        let parsed: f64 = part
+            .parse()
+            .map_err(|_| Error::Input(format!("bbox 包含无效数字：{part}")))?;
+        if !parsed.is_finite() {
+            return Err(Error::Input("bbox 坐标和尺寸必须是有限数字".into()));
+        }
+        *slot = parsed;
+    }
+    if values[0] < 0.0 || values[1] < 0.0 || values[2] <= 0.0 || values[3] <= 0.0 {
+        return Err(Error::Input(
+            "bbox 的 x、y 须为非负数，w、h 须大于零".into(),
+        ));
+    }
+    Ok(values)
+}
+
+fn validate_crop_name(raw: &str) -> Result<String> {
+    let trimmed = raw.trim();
+    let stem = trimmed
+        .strip_suffix(".png")
+        .or_else(|| trimmed.strip_suffix(".PNG"))
+        .unwrap_or(trimmed);
+    if stem.is_empty()
+        || stem == "."
+        || stem == ".."
+        || stem.starts_with('.')
+        || stem.contains("..")
+        || stem
+            .chars()
+            .any(|c| matches!(c, '/' | '\\' | ':' | '\0') || c.is_whitespace() || c.is_control())
+    {
+        return Err(Error::Input(format!(
+            "裁图名称必须是不含路径分隔符与空白的合法文件名：{raw}"
+        )));
+    }
+    Ok(stem.to_string())
+}
+
+fn native_run_page_ordinal(
+    connection: &rusqlite::Connection,
+    run_id: i64,
+    page_id: &str,
+    require_open: bool,
+) -> Result<usize> {
+    use rusqlite::OptionalExtension;
+    let record: Option<(String, String)> = connection
+        .query_row(
+            "SELECT kind, status FROM runs WHERE id=?",
+            [run_id],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )
+        .optional()?;
+    let Some((kind, status)) = record else {
+        return Err(Error::Input(format!(
+            "run {run_id} 不存在；请用 deck run show 查看"
+        )));
+    };
+    if kind != "native" {
+        return Err(Error::Input(format!(
+            "run {run_id} 不是 native 任务（当前为 {kind}）"
+        )));
+    }
+    if require_open && status != "open" {
+        return Err(Error::Input(format!(
+            "run {run_id} 已结束（状态为 {status}），不能再写入裁图"
+        )));
+    }
+    let mut stmt =
+        connection.prepare("SELECT page_id FROM run_pages WHERE run_id=? ORDER BY rowid ASC")?;
+    let pages = stmt
+        .query_map([run_id], |row| row.get::<_, String>(0))?
+        .collect::<std::result::Result<Vec<_>, _>>()?;
+    pages
+        .iter()
+        .position(|id| id == page_id)
+        .map(|idx| idx + 1)
+        .ok_or_else(|| {
+            Error::Input(format!(
+                "run {run_id} 不包含页面 {page_id}；请用 deck run show 查看"
+            ))
+        })
+}
+
+pub fn run_crop(
+    project: &Path,
+    run_id: i64,
+    page_id: &str,
+    bbox_raw: &str,
+    name_raw: &str,
+) -> Result<Value> {
+    let bbox = parse_bbox(bbox_raw)?;
+    let name = validate_crop_name(name_raw)?;
+    let store = Store::open(project)?;
+    let ordinal = native_run_page_ordinal(&store.connection, run_id, page_id, true)?;
+    let snapshot = store.current()?;
+    let page = snapshot
+        .deck
+        .page(page_id)
+        .ok_or_else(|| Error::Input(format!("页面 {page_id} 不存在")))?;
+    let image = page
+        .image
+        .as_ref()
+        .ok_or_else(|| Error::Input("本页没有已采用的原图；请先交回并采用原图".into()))?;
+    let source_image = store.file(&image.file)?.canonicalize()?;
+    let work_dir = store
+        .root
+        .join("work")
+        .join(run_id.to_string())
+        .join(ordinal.to_string());
+    let assets_dir = work_dir.join("assets");
+    std::fs::create_dir_all(&assets_dir)?;
+    let canonical_assets = assets_dir.canonicalize()?;
+    let cropped = crate::tools::invoke(
+        "crop",
+        &json!({
+            "output_dir": canonical_assets,
+            "id": name,
+            "box": bbox,
+            "page": {
+                "id": page.id,
+                "source_image": source_image,
+            }
+        }),
+    )?;
+    let output_path = cropped["file"]
+        .as_str()
+        .ok_or_else(|| Error::Tool("crop 缺少输出文件路径".into()))?;
+    let canonical_out = Path::new(output_path).canonicalize()?;
+    if !canonical_out.starts_with(&canonical_assets) || !canonical_out.is_file() {
+        return Err(Error::Tool("crop 输出路径越出当前页面 assets 目录".into()));
+    }
+    let temporary = tempfile::tempdir()?;
+    let normalized_path = temporary.path().join("normalized.png");
+    let info = crate::tools::invoke(
+        "normalize-image",
+        &json!({"path": canonical_out, "output": normalized_path, "svg": false}),
+    )?;
+    if info["normalized"].as_bool() == Some(true) {
+        std::fs::write(&canonical_out, std::fs::read(&normalized_path)?)?;
+    }
+    Ok(json!({
+        "run": run_id,
+        "page_id": page.id,
+        "name": name,
+        "relative_path": format!("assets/{name}.png"),
+        "path": canonical_out,
+        "bbox": bbox,
+        "width": info["width"],
+        "height": info["height"],
+        "format": info["format"],
+    }))
+}
+
+pub fn run_validate(project: &Path, run_id: i64, page_id: &str, plan_file: &Path) -> Result<Value> {
+    let store = Store::open(project)?;
+    let _ordinal = native_run_page_ordinal(&store.connection, run_id, page_id, false)?;
+    let canonical_plan = plan_file
+        .canonicalize()
+        .map_err(|_| Error::Input(format!("plan 文件不存在：{}", plan_file.display())))?;
+    let raw = std::fs::read(&canonical_plan)?;
+    let _parsed: Value = serde_json::from_slice(&raw)
+        .map_err(|e| Error::Input(format!("plan JSON 格式无效：{e}")))?;
+    let snapshot = store.current()?;
+    let page = snapshot
+        .deck
+        .page(page_id)
+        .ok_or_else(|| Error::Input(format!("页面 {page_id} 不存在")))?;
+    let mut input = serde_json::to_value(page)?;
+    input["plan"] = json!(canonical_plan);
+    if let Some(image) = &page.image {
+        input["source_image"] = json!(store.file(&image.file)?.canonicalize()?);
+    }
+    let mut result = crate::tools::invoke("validate-plan", &json!({"page": input}))?;
+    if let Some(obj) = result.as_object_mut() {
+        obj.insert("valid".into(), json!(true));
+        obj.insert("run".into(), json!(run_id));
+    }
+    Ok(result)
+}
+
 #[derive(serde::Serialize, serde::Deserialize)]
 pub(super) struct NativeAsset {
     pub(super) id: String,
