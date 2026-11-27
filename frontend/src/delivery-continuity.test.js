@@ -160,7 +160,7 @@ test('delivery view shows content_review, current_content_review, warnings, and 
   assert.ok(document.querySelector('h1').textContent.includes('第一页结论'));
 });
 
-test('delivery view invalidates stale downloadStatus after content_review updates and never mislabels live review as build review', async (t) => {
+test('delivery view keeps recent build snapshot alongside updated live content_review and never mislabels live review as build review', async (t) => {
   t.mock.timers.enable({ apis: ['setTimeout'] });
   const ws = sampleWorkspace();
   ws.default_build = null;
@@ -194,12 +194,12 @@ test('delivery view invalidates stale downloadStatus after content_review update
   await act(async () => { buildBtn.click(); });
   assert.ok(document.querySelector('[aria-label="最近构建来源版本内容审阅"]').textContent.includes('未审阅'));
 
-  // Now Host records a content review -> next poll updates workspace.content_review
-  // and must invalidate stale downloadStatus so live review reflects "已审阅" cleanly.
+  // When Host records a content review on the same version, live review immediately updates to "已审阅"
+  // while the recent build snapshot stays visible with its build-time status.
   ws.content_review = { status: 'reviewed', methods: ['self_check'], version_id: 5, unreviewed_pages: [] };
   await act(async () => { t.mock.timers.tick(1500); });
   assert.ok(document.querySelector('[aria-label="当前作品内容审阅"]').textContent.includes('已审阅'));
-  assert.equal(document.querySelector('[aria-label="最近构建来源版本内容审阅"]'), null);
+  assert.ok(document.querySelector('[aria-label="最近构建来源版本内容审阅"]').textContent.includes('未审阅'));
 });
 
 test('draft continuity survives a second reload before Restore/Dismiss and isolates workspaces by workspace_id across title renames', async () => {
