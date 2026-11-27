@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import { rmSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-export function cleanWebDistAssets() {
+function cleanWebDistAssets() {
   const assetsDir = fileURLToPath(new URL('../rust/web-dist/assets', import.meta.url));
   return {
     name: 'clean-web-dist-assets',

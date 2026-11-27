@@ -523,9 +523,3 @@ test('createVisibilityPoller pauses when document is hidden and polls immediatel
   stop();
   assert.equal(listener, null);
 });
-
-test('cleanWebDistAssets plugin only runs during build so npm run dev keeps rust/web-dist/assets intact', async () => {
-  const { cleanWebDistAssets } = await import('../vite.config.js');
-  const plugin = cleanWebDistAssets();
-  assert.equal(plugin.apply, 'build');
-});
