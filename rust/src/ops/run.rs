@@ -190,6 +190,53 @@ fn evidence_gate_message(version: i64, lines: &[String], snippet: &str) -> Strin
     )
 }
 
+fn write_original_image_snapshot(dir: &Path, deck: &Deck, ids: &[String]) -> Result<()> {
+    let mut originals = serde_json::Map::new();
+    for page_id in ids {
+        let file = deck
+            .page(page_id)
+            .and_then(|page| page.image.as_ref())
+            .map(|image| image.file.clone());
+        originals.insert(page_id.clone(), json!(file));
+    }
+    let path = dir.join(".original-images.json");
+    let temporary = path.with_extension("json.tmp");
+    std::fs::write(&temporary, serde_json::to_vec(&Value::Object(originals))?)?;
+    std::fs::rename(temporary, path)?;
+    Ok(())
+}
+
+/// Image basis hashes content, layout, purpose, and style only. An upload while
+/// the run is open changes `page.image.file` without changing that hash, so
+/// auto-adopt compares the file recorded at run start instead.
+fn original_image_unchanged(root: &Path, run_id: i64, page_id: &str, page: &Page) -> Result<bool> {
+    let path = root
+        .join("work")
+        .join(run_id.to_string())
+        .join(".original-images.json");
+    let bytes = match std::fs::read(&path) {
+        Ok(bytes) => bytes,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(true),
+        Err(error) => return Err(error.into()),
+    };
+    let recorded: serde_json::Map<String, Value> = serde_json::from_slice(&bytes)
+        .map_err(|error| Error::DataCorrupt(format!("原图起点记录无法读取：{error}")))?;
+    let Some(value) = recorded.get(page_id) else {
+        return Ok(false);
+    };
+    let started = match value {
+        Value::Null => None,
+        Value::String(file) => Some(file.as_str()),
+        _ => {
+            return Err(Error::DataCorrupt(
+                "原图起点记录里的文件名不是字符串".into(),
+            ));
+        }
+    };
+    let current = page.image.as_ref().map(|image| image.file.as_str());
+    Ok(started == current)
+}
+
 pub fn run_start(
     project: &Path,
     kind: &str,
@@ -351,6 +398,15 @@ pub fn run_start(
         tx.commit()?;
         break id;
     };
+    if kind == "image"
+        && let Err(error) =
+            write_original_image_snapshot(staging.path(), &staged_snapshot.deck, ids)
+    {
+        let tx = store.transaction()?;
+        tx.execute("UPDATE runs SET status='cancelled' WHERE id=?", [id])?;
+        tx.commit()?;
+        return Err(error);
+    }
     let final_work = work_root.join(id.to_string());
     let kept = staging.keep();
     if let Err(error) = std::fs::rename(&kept, &final_work) {
@@ -727,6 +783,7 @@ pub fn run_result(project: &Path, id: i64, page_id: &str, source: &Path) -> Resu
             serde_json::to_vec_pretty(&findings)?,
         )?;
     }
+    let root = store.root.clone();
     let tx = store.transaction()?;
     let (_, status, _, _) = run_record(&tx, id)?;
     let mut snapshot = store::current(&tx)?;
@@ -741,9 +798,23 @@ pub fn run_result(project: &Path, id: i64, page_id: &str, source: &Path) -> Resu
         None => false,
     };
     let (_, current_state, previous) = run_page(&tx, id, page_id)?;
+    let image_still_original = if kind == "image" {
+        match snapshot.deck.pages.iter().find(|p| p.id == page_id) {
+            Some(page) => original_image_unchanged(&root, id, page_id, page)?,
+            None => true,
+        }
+    } else {
+        true
+    };
     // Only the first result may write the page automatically. Later files can
-    // arrive out of order while another page keeps this run open.
-    let adopted = kind != "native" && status == "open" && eligible && previous.is_none();
+    // arrive out of order while another page keeps this run open. An original
+    // uploaded after the run started stays in place; the result remains a
+    // candidate the author can adopt by hand.
+    let adopted = kind != "native"
+        && status == "open"
+        && eligible
+        && previous.is_none()
+        && image_still_original;
     if adopted {
         let page = snapshot
             .deck

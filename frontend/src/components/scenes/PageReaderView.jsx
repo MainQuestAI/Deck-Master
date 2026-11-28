@@ -1,5 +1,5 @@
 import { isNativePage, isPageDraftDirty } from '../../api.js';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useDeckMaster } from '../../context/DeckMasterContext';
 import PageArtwork from '../common/PageArtwork';
 import PageContent from '../common/PageContent';
@@ -10,6 +10,7 @@ import PageComparison from '../common/PageComparison';
 export default function PageReaderView() {
   const { workspace, currentPage, getPage, getPageNumStr, editPage, createPage, busy, drafts, uploadPageImage } = useDeckMaster();
   const [layer, setLayer] = useState('text');
+  const imageInputRef = useRef(null);
   const page = getPage(currentPage);
   const deletedDrafts = Object.values(drafts).filter(draft => !getPage(draft.page.id));
   const savedInput = deletedDrafts.length > 0 && <section className="s4-panel">
@@ -29,17 +30,22 @@ export default function PageReaderView() {
     <div className="view-head">
       <div><h1>第 {getPageNumStr(page.id)} 页 · {page.content.title || '未命名页面'}</h1><p>{page.purpose}</p></div>
       <div className="head-actions">
-        <label className="button">
+        <button
+          type="button"
+          disabled={!!busy['upload-image']}
+          onClick={() => imageInputRef.current?.click()}
+        >
           {busy['upload-image'] ? '正在上传原图…' : '上传原图'}
-          <input
-            type="file"
-            accept="image/png,image/jpeg"
-            aria-label="上传原图"
-            disabled={!!busy['upload-image']}
-            onChange={handleImageUpload}
-            style={{ display: 'none' }}
-          />
-        </label>
+        </button>
+        <input
+          ref={imageInputRef}
+          className="sr-only"
+          type="file"
+          accept="image/png,image/jpeg"
+          aria-label="上传原图"
+          disabled={!!busy['upload-image']}
+          onChange={handleImageUpload}
+        />
         <button className="primary" onClick={() => editPage(page.id)}>{isPageDraftDirty(drafts[page.id]) ? '继续未保存的修改' : '修改正文与讲稿'}</button>
       </div>
     </div>

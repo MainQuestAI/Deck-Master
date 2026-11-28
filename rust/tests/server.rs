@@ -897,6 +897,62 @@ fn jpeg_result_named_png_downloads_as_jpeg() {
 }
 
 #[test]
+fn late_image_result_keeps_original_uploaded_during_the_run() {
+    let temp = tempfile::tempdir().unwrap();
+    ops::new(temp.path(), "晚到原图".into()).unwrap();
+    edit(
+        temp.path(),
+        1,
+        json!({"order":["p1"],"pages":[{"id":"p1"}]}),
+    );
+    let python = std::env::var_os("DECK_TOOLS_PYTHON").expect("install this worktree's deck-tools");
+    let original = temp.path().join("original.png");
+    let late = temp.path().join("late.jpg");
+    assert!(
+        Command::new(&python)
+            .args([
+                "-c",
+                "from PIL import Image; import sys; Image.new('RGB',(12,8),'navy').save(sys.argv[1], format='PNG'); Image.new('RGB',(8,8),'teal').save(sys.argv[2], format='JPEG')"
+            ])
+            .arg(&original)
+            .arg(&late)
+            .status()
+            .unwrap()
+            .success()
+    );
+    let started = run_start(temp.path(), "image", &["p1".into()], None).unwrap();
+    let id = started["runs"][0]["id"].as_i64().unwrap();
+    ops::run_call(temp.path(), id, "p1", false).unwrap();
+    let uploaded = ops::page_image_upload(
+        temp.path(),
+        "p1",
+        &std::fs::read(&original).unwrap(),
+        "image/png",
+    )
+    .unwrap();
+    let uploaded_file = uploaded["image"]["file"].as_str().unwrap().to_string();
+    assert!(uploaded_file.ends_with(".png"));
+    let result = ops::run_result(temp.path(), id, "p1", &late).unwrap();
+    assert_eq!(result["adopted"], false);
+    let current = Store::open(temp.path()).unwrap().current().unwrap();
+    assert_eq!(
+        current.deck.pages[0].image.as_ref().unwrap().file,
+        uploaded_file
+    );
+    let shown = ops::run_show(temp.path(), Some(id)).unwrap();
+    assert_eq!(shown["runs"][0]["pages"][0]["status"], "unadopted");
+    assert_eq!(shown["runs"][0]["pages"][0]["basis_changed"], false);
+    let candidate = result["file"].as_str().unwrap();
+    assert!(candidate.ends_with(".jpg"));
+    ops::run_adopt(temp.path(), id, "p1").unwrap();
+    let adopted = Store::open(temp.path()).unwrap().current().unwrap();
+    assert_eq!(
+        adopted.deck.pages[0].image.as_ref().unwrap().file,
+        candidate
+    );
+}
+
+#[test]
 fn http_cancel_uses_ops_and_late_result_stays_unadopted() {
     let temp = tempfile::tempdir().unwrap();
     ops::new(temp.path(), String::new()).unwrap();
@@ -2147,6 +2203,15 @@ fn http_page_image_upload_validates_transposes_exif_enforces_limit_and_preserves
     assert_eq!(body["width"], 16);
     assert_eq!(body["height"], 12);
     let image_url = body["image_url"].as_str().unwrap();
+    let same = service.request_bytes(
+        "POST",
+        "/api/pages/p1/image",
+        &[("Content-Type", "image/png")],
+        &png_bytes,
+    );
+    assert_eq!(same.status, 200, "{}", String::from_utf8_lossy(&same.body));
+    assert_eq!(same.json()["version"], body["version"]);
+    assert_eq!(same.json()["image"]["file"], body["image"]["file"]);
     let fetched = service.request("GET", image_url, &[], "");
     assert_eq!(fetched.status, 200);
     assert_eq!(fetched.body, png_bytes);
@@ -2195,6 +2260,8 @@ fn http_page_image_upload_validates_transposes_exif_enforces_limit_and_preserves
         b"not a real png file",
     );
     assert_eq!(invalid_bytes.status, 400);
+    let invalid_text = String::from_utf8_lossy(&invalid_bytes.body);
+    assert!(invalid_text.contains("无法读取图片文件"), "{invalid_text}");
 
     // 5. Unsupported Content-Type -> 400.
     let wrong_ct = service.request_bytes(
@@ -2204,6 +2271,8 @@ fn http_page_image_upload_validates_transposes_exif_enforces_limit_and_preserves
         b"hello",
     );
     assert_eq!(wrong_ct.status, 400);
+    let wrong_text = String::from_utf8_lossy(&wrong_ct.body);
+    assert!(wrong_text.contains("原图上传只支持"), "{wrong_text}");
 
     // 6. Missing page -> 404.
     let missing = service.request_bytes(
@@ -2213,6 +2282,8 @@ fn http_page_image_upload_validates_transposes_exif_enforces_limit_and_preserves
         &png_bytes,
     );
     assert_eq!(missing.status, 404);
+    let missing_text = String::from_utf8_lossy(&missing.body);
+    assert!(missing_text.contains("不存在"), "{missing_text}");
 
     // 7. Oversized upload (> 8 MiB) -> 413.
     let oversized = vec![0u8; 8 * 1024 * 1024 + 16];

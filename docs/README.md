@@ -13,6 +13,7 @@
 2. [README Quick Start](../README.md#quick-start)：安装后在 Codex 里用一句话指向 `examples/first-run`，再 `deck serve` 看第一份稿。其余命令见 [commands.md](../deck-skill/references/commands.md)。
 3. [Rust 重写开发稿](specs/rust-rebuild/README.md)：现行架构（Rust 核心 + deck-tools + WebUI）。
 4. 已有 `legacy-export.v1` 档案仍可用 `deck import` 导入；旧 Python 工作台与官方导出器已移除，历史说明见已发布的 [1.1.0 发版页](releases/1.1.0.md#upgrade-and-migration)。
+5. [Host 最小执行协议](host-contract.md)：外部 Host 通过 `deck` 驱动项目时的顺序、退出码，以及 WebUI 原图上传。
 
 没有模型、工具或审查能力时保留实际缺口。只读演示、工程检查、实际 Host 制作、
 专业认可与正式交付是不同证据，不承诺几分钟内生成任意完整成品。

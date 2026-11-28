@@ -35,7 +35,7 @@ Deck Master does not embed an LLM, ImageGen provider, or agent loop. Any externa
 | Exit code | `code` | Host action |
 | --- | --- | --- |
 | `0` | — | Success; parse JSON from `stdout`. |
-| `2` | `input` / `svg_subset` / `missing` | Fix payload, path, or SVG subset violation; do not retry blindly. |
+| `2` | `input` / `svg_subset` / `missing` / `io` / `sql` | Fix the payload, path, SVG subset, file access, or project database problem; do not retry blindly. `io` and `sql` are also exit 2. |
 | `3` | `needs_tool` | Missing local dependency (`soffice`, `rsvg-convert`, `pdftoppm`, fonts). Run `deck doctor` and report to the author; never bypass `deck build`. |
 | `4` | `tool` | Subprocess/render failure; inspect `message`/`details` and report. |
 | `5` | `conflict` | Re-read with `deck get`, merge author edits, and re-submit with the new `--base`. |

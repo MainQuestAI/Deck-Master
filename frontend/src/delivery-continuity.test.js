@@ -322,8 +322,12 @@ test('page reader uploads PNG original image and switches immediately to origina
   assert.ok(openP1);
   await act(async () => { openP1.click(); });
 
+  const uploadButton = [...document.querySelectorAll('button')].find(btn => btn.textContent.includes('上传原图'));
+  assert.ok(uploadButton);
+  assert.equal(uploadButton.disabled, false);
   const fileInput = document.querySelector('input[type="file"][aria-label="上传原图"]');
   assert.ok(fileInput);
+  assert.ok(fileInput.classList.contains('sr-only'));
   const fakePng = new window.File([new Uint8Array([137, 80, 78, 71])], 'design.png', { type: 'image/png' });
   Object.defineProperty(fileInput, 'files', { configurable: true, value: [fakePng] });
   await act(async () => {
