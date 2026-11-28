@@ -26,9 +26,9 @@ Deck Master 服务于需要讲清商业方案的人：解决方案架构师、�
 
 ## 安装
 
-需要 Rust 1.88 或更新版本，最低版本由 Cargo 检查。生产工具使用 Python 3.11 或 3.12（CI 与 `scripts/install.sh` 使用 3.12）。`deck-tools` 的包元数据允许 3.13，排除 3.14。
+生产工具使用 Python 3.11 或 3.12（CI 与 `scripts/install.sh` 使用 3.12）。`deck-tools` 的包元数据允许 3.13，排除 3.14。Rust 1.88（最低版本由 Cargo 检查）和 Node 只在 `--from-source` 与本地开发时需要。
 
-从源码安装：
+默认从源码安装，与 `--from-source` 相同。公开的 GitHub Release `v1.1.4` 还没有预编译附件，所以 `./scripts/install.sh` 不会去下载。已有压缩包时用 `--archive`；远程 URL 必须同时给出 `--sha256`，本地文件可以省略。
 
 ```bash
 ./scripts/install.sh

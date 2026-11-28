@@ -18,6 +18,32 @@ updates:
       runtime-deps:
         dependency-type: "production"
 
+  # Rust dependencies (rust/Cargo.toml).
+  - package-ecosystem: "cargo"
+    directory: "/rust"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "rust"
+    commit-message:
+      prefix: "chore(deps)"
+
+  # Frontend WebUI dependencies (frontend/package.json).
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "frontend"
+    commit-message:
+      prefix: "chore(deps)"
+
   # GitHub Actions workflow versions.
   - package-ecosystem: "github-actions"
     directory: "/"

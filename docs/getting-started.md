@@ -14,11 +14,13 @@ Historical notes are in the published [1.1.0 release page](releases/1.1.0.md#upg
 
 ## Requirements
 
-- Rust 1.88 or later. Cargo enforces `rust-version` in `rust/Cargo.toml`.
 - Python 3.12 for the `scripts/install.sh` deck-tools venv. `deck-tools`
-  metadata allows 3.11–3.13 and excludes 3.14. CI uses 3.12.
-- Node 22 to build the WebUI (`frontend/`). The install script runs
-  `npm ci` and `npm run build`; the binary embeds that output.
+  metadata allows 3.11–3.13 and excludes 3.14. CI uses 3.12. Every install
+  path needs this interpreter (or `uv`, which can prepare it).
+- Rust 1.88 or later and Node 22 are required only for `--from-source` and
+  for local development. Cargo enforces `rust-version` in `rust/Cargo.toml`.
+  The source install runs `npm ci` and `npm run build` so the binary can
+  embed the WebUI. A prebuilt `--archive` install does not need Rust or Node.
 - For content and image work, an external Host (first Host: Codex). Install
   and authenticate [Codex CLI](https://developers.openai.com/codex/cli)
   separately if using the linked Skill.
@@ -37,8 +39,22 @@ and permissions.
 
 ## Install from source
 
+`./scripts/install.sh` builds from this checkout. That is the same as
+`--from-source`, and it is the default because the published GitHub Release
+`v1.1.4` has no prebuilt assets. Rust and Node are required for this path.
+
 ```bash
-./scripts/install.sh
+./scripts/install.sh                # from source (default)
+./scripts/install.sh --from-source  # same as the default
+```
+
+A prebuilt bundle (`darwin-arm64` / `linux-x86_64`) can be installed only when
+you already have the archive. A remote URL must include `--sha256`; a local
+file may omit it. The bundle must contain `requirements.lock`.
+
+```bash
+./scripts/install.sh --archive ./deck-master.tar.gz
+./scripts/install.sh --archive https://example.invalid/deck-master.tar.gz --sha256 <64-hex-or-file>
 ```
 
 The script prepares the CLI, embedded frontend, non-editable Python package and
