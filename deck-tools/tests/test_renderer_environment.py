@@ -73,8 +73,9 @@ def test_existing_environment_is_inherited_without_discovery(
 def test_bad_discovery_stops_before_rendering(tmp_path, renderer_calls, listing):
     calls, response = renderer_calls
     response['stdout'] = listing
-    with pytest.raises(pipeline.NeedsTool, match='configure FONTCONFIG_FILE'):
+    with pytest.raises(pipeline.NeedsTool, match='FONTCONFIG_FILE') as caught:
         pipeline.render_deck(tmp_path / 'deck.pptx', tmp_path / 'out', fonts={})
+    assert any('\u4e00' <= char <= '\u9fff' for char in str(caught.value))
     assert [args[0] for args, _ in calls] == ['fc-conflist']
 
 

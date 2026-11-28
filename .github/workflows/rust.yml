@@ -52,6 +52,11 @@ jobs:
       - name: File tool tests
         # Render tests run in the independent render job.
         run: .venv/bin/python -m pytest -q deck-tools/tests -m "not render" --basetemp="$RUNNER_TEMP/deck-tools"
+      - name: Non-editable wheel import smoke
+        run: |
+          python -m venv "$RUNNER_TEMP/wheel-smoke"
+          "$RUNNER_TEMP/wheel-smoke/bin/python" -m pip install ./deck-tools
+          "$RUNNER_TEMP/wheel-smoke/bin/python" -c "import deck_tools, pathlib; path = pathlib.Path(deck_tools.__file__).resolve(); assert 'site-packages' in path.parts, path; import deck_tools.render, deck_tools.doctor"
       - name: Install script
         run: |
           python -m pip install uv

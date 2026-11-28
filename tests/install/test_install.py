@@ -460,7 +460,7 @@ def test_successful_validation_removes_only_its_temporary_probe(tmp_path: Path) 
     assert sentinel.read_text() == "keep this"
 
 
-def _make_prebuilt_bundle(tmp_path: Path) -> tuple[Path, Path]:
+def _make_prebuilt_bundle(tmp_path: Path, *, lock: bool = True) -> tuple[Path, Path]:
     import hashlib
     import tarfile
 
@@ -471,11 +471,14 @@ def _make_prebuilt_bundle(tmp_path: Path) -> tuple[Path, Path]:
     deck_bin.write_text("#!/bin/sh\nif [ \"$1\" = doctor ]; then echo '{\"status\":\"ready\"}'; fi\nexit 0\n")
     deck_bin.chmod(0o755)
     (stage / "wheels/deck_tools-1.1.4-py3-none-any.whl").write_bytes(b"fake-wheel")
-    (stage / "requirements.lock").write_text("lxml==6.1.3\n")
+    entries = ["bin", "wheels", "deck-skill"]
+    if lock:
+        (stage / "requirements.lock").write_text("lxml==6.1.3\n")
+        entries.append("requirements.lock")
     shutil.copytree(SOURCE, stage / "deck-skill", symlinks=True)
     archive = tmp_path / "deck-master-v1.1.4-test.tar.gz"
     with tarfile.open(archive, "w:gz") as tar:
-        for entry in ("bin", "wheels", "requirements.lock", "deck-skill"):
+        for entry in entries:
             tar.add(stage / entry, arcname=entry)
     digest = hashlib.sha256(archive.read_bytes()).hexdigest()
     sha_file = tmp_path / "deck-master-v1.1.4-test.tar.gz.sha256"
@@ -483,18 +486,8 @@ def _make_prebuilt_bundle(tmp_path: Path) -> tuple[Path, Path]:
     return archive, sha_file
 
 
-def test_default_prebuilt_dry_run_and_archive_install_without_rust_or_node(tmp_path: Path) -> None:
-    prefix = tmp_path / "prefix"
-    root = tmp_path / "roles"
-    dry = _run(["--dry-run", "--prefix", str(prefix), "--skills-root", str(root)], from_source=False)
-    assert dry.returncode == 0, dry.stderr
-    assert "mode=prebuilt" in dry.stdout
-    assert "releases/download/" in dry.stdout
-    assert "download-and-verify" in dry.stdout
-    assert not prefix.exists()
-
-    archive, sha_file = _make_prebuilt_bundle(tmp_path)
-    # Build a PATH without cargo or npm to prove prebuilt mode does not need Rust/Node.
+def _prebuilt_path(tmp_path: Path) -> str:
+    # A PATH without cargo or npm, so a passing prebuilt install cannot be a source build.
     bin_dir = tmp_path / "no-rust-node-bin"
     bin_dir.mkdir()
     (bin_dir / "uv").write_text(f"""#!{sys.executable}
@@ -508,11 +501,72 @@ dest.mkdir(parents=True)
 (dest / 'python').chmod(0o755)
 """)
     (bin_dir / "uv").chmod(0o755)
-    for name in ("bash", "sh", "dirname", "basename", "date", "readlink", "cat", "cmp", "mkdir", "cp", "mktemp", "env", "rm", "rmdir", "ln", "chmod", "tar", "gzip", "uname", "awk", "head", "sed"):
+    for name in ("bash", "sh", "dirname", "basename", "date", "readlink", "cat", "cmp", "mkdir", "cp", "mktemp", "env", "rm", "rmdir", "ln", "chmod", "tar", "gzip", "uname", "awk", "head", "sed", "curl"):
         executable = shutil.which(name)
         assert executable is not None
         (bin_dir / name).symlink_to(executable)
-    env = {"PATH": str(bin_dir)}
+    return str(bin_dir)
+
+
+def test_default_install_builds_from_source(tmp_path: Path) -> None:
+    prefix = tmp_path / "prefix"
+    root = tmp_path / "roles"
+    dry = _run(
+        ["--dry-run", "--prefix", str(prefix), "--skills-root", str(root)],
+        env=_stub_env(tmp_path),
+        from_source=False,
+    )
+    assert dry.returncode == 0, dry.stderr
+    assert "mode=source" in dry.stdout
+    assert "cargo install" in dry.stdout
+    assert "releases/download/" not in dry.stdout
+    assert not prefix.exists()
+
+
+def test_version_flag_plans_a_prebuilt_download(tmp_path: Path) -> None:
+    dry = _run(
+        ["--dry-run", "--version", "v1.1.4", "--prefix", str(tmp_path / "prefix"), "--skills-root", str(tmp_path / "roles")],
+        from_source=False,
+    )
+    assert dry.returncode == 0, dry.stderr
+    assert "mode=prebuilt" in dry.stdout
+    assert "releases/download/v1.1.4/" in dry.stdout
+    assert ".sha256" in dry.stdout
+
+
+def test_remote_archive_without_sha256_is_rejected(tmp_path: Path) -> None:
+    prefix = tmp_path / "prefix"
+    result = _run(
+        ["--archive", "https://example.invalid/deck.tar.gz", "--prefix", str(prefix), "--skills-root", str(tmp_path / "roles")],
+        from_source=False,
+    )
+    assert result.returncode == 2
+    assert "--sha256" in result.stderr
+    assert "不能跳过校验" in result.stderr
+    assert not prefix.exists()
+
+
+def test_prebuilt_download_failure_names_the_archive(tmp_path: Path) -> None:
+    bin_dir = tmp_path / "curl-bin"
+    bin_dir.mkdir()
+    (bin_dir / "curl").write_text("#!/bin/sh\nexit 22\n")
+    (bin_dir / "curl").chmod(0o755)
+    result = _run(
+        ["--version", "v9.9.9", "--prefix", str(tmp_path / "prefix"), "--skills-root", str(tmp_path / "roles")],
+        env={"PATH": f"{bin_dir}:{os.environ['PATH']}"},
+        from_source=False,
+    )
+    assert result.returncode == 22
+    assert "下载预编译包失败" in result.stderr
+    assert "--from-source" in result.stderr
+    assert "prepare 阶段失败" not in result.stderr
+
+
+def test_prebuilt_archive_install_without_rust_or_node(tmp_path: Path) -> None:
+    prefix = tmp_path / "prefix"
+    root = tmp_path / "roles"
+    archive, sha_file = _make_prebuilt_bundle(tmp_path)
+    env = {"PATH": _prebuilt_path(tmp_path)}
 
     bad_sha = _run(
         ["--archive", str(archive), "--sha256", "0" * 64, "--prefix", str(prefix), "--skills-root", str(root)],
@@ -523,6 +577,14 @@ dest.mkdir(parents=True)
     assert "SHA-256" in bad_sha.stderr
     assert not (prefix / "share/deck/current").exists()
 
+    omitted = _run(
+        ["--archive", str(archive), "--prefix", str(tmp_path / "local-prefix"), "--skills-root", str(tmp_path / "local-roles")],
+        env=env,
+        from_source=False,
+    )
+    assert omitted.returncode == 0, omitted.stderr
+    _assert_roles(tmp_path / "local-roles")
+
     ok = _run(
         ["--archive", str(archive), "--sha256", str(sha_file), "--prefix", str(prefix), "--skills-root", str(root)],
         env=env,
@@ -531,3 +593,17 @@ dest.mkdir(parents=True)
     assert ok.returncode == 0, ok.stderr
     assert '"status":"ready"' in ok.stdout
     _assert_roles(root)
+
+
+def test_prebuilt_bundle_without_requirements_lock_fails(tmp_path: Path) -> None:
+    prefix = tmp_path / "prefix"
+    archive, sha_file = _make_prebuilt_bundle(tmp_path / "unlocked", lock=False)
+    result = _run(
+        ["--archive", str(archive), "--sha256", str(sha_file), "--prefix", str(prefix), "--skills-root", str(tmp_path / "roles")],
+        env={"PATH": _prebuilt_path(tmp_path)},
+        from_source=False,
+    )
+    assert result.returncode == 2
+    assert "requirements.lock" in result.stderr
+    assert "--no-deps" in result.stderr
+    assert not (prefix / "share/deck/current").exists()

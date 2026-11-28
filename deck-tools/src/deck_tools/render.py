@@ -124,13 +124,16 @@ def discover_macos_fontconfig() -> Path:
             if _readable_file(candidate):
                 return candidate
         raise NeedsTool(
-            "cannot discover host Fontconfig (brew install fontconfig); configure FONTCONFIG_FILE"
+            "找不到本机 Fontconfig 配置。macOS 请运行 brew install fontconfig；"
+            "若已安装，请把 FONTCONFIG_FILE 设为可读的 fonts.conf 后重试。"
         )
     try:
         listing = run([conflist]).stdout.decode()
     except (OSError, RendererError, UnicodeError) as exc:
         raise NeedsTool(
-            "cannot discover host Fontconfig (brew install fontconfig); configure FONTCONFIG_FILE"
+            "无法读取本机 Fontconfig（fc-conflist 执行失败）。"
+            "macOS 请运行 brew install fontconfig 后重试；"
+            "或把 FONTCONFIG_FILE 设为可读的 fonts.conf。"
         ) from exc
     configs = set()
     for line in listing.splitlines():
@@ -138,10 +141,16 @@ def discover_macos_fontconfig() -> Path:
         if match:
             configs.add(Path(match.group(1)))
     if len(configs) != 1:
-        raise NeedsTool("host Fontconfig root is missing or ambiguous; configure FONTCONFIG_FILE")
+        raise NeedsTool(
+            "本机 Fontconfig 配置缺失，或同时有多份有效的 fonts.conf。"
+            "请只保留一份有效配置，或把 FONTCONFIG_FILE 设为要使用的 fonts.conf。"
+        )
     config = configs.pop()
     if not _readable_file(config):
-        raise NeedsTool("host Fontconfig root is unreadable; configure FONTCONFIG_FILE")
+        raise NeedsTool(
+            "本机 Fontconfig 的 fonts.conf 无法读取。"
+            "请检查该文件的权限，或把 FONTCONFIG_FILE 设为另一份可读的 fonts.conf。"
+        )
     return config
 
 

@@ -55,7 +55,11 @@ Rust 1.88 or later is required; Cargo checks the declared minimum. File tools
 use Python 3.11 or 3.12 (3.12 in CI and in `scripts/install.sh`). Package
 metadata for `deck-tools` allows 3.13 and excludes 3.14.
 
-From a source checkout:
+From a source checkout. This is the default: `./scripts/install.sh` builds
+from this repository (`--from-source`). The published GitHub Release `v1.1.4`
+has no prebuilt assets, so the script does not download one. Rust and Node
+are required for this default and for local development. A prebuilt
+`--archive` does not need them; a remote archive URL also requires `--sha256`.
 
 ```bash
 ./scripts/install.sh

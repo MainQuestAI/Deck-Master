@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Install the Rust CLI, a dedicated deck-tools venv, and Codex skill links.
-# Default mode downloads and verifies a platform prebuilt bundle; --from-source
-# builds from this local checkout. Both modes prepare a complete component group
-# before atomically switching the single current symlink.
+# The default builds from this checkout. Published GitHub Releases do not yet
+# ship prebuilt assets, so a download is opt-in via --archive or --version.
+# Both modes prepare a complete component group before switching current.
 set -Eeuo pipefail
 
 usage() {
@@ -13,14 +13,16 @@ usage() {
 
   --prefix DIR          CLI 安装根目录（默认 ~/.local）
   --skills-root DIR     技能根目录（默认 ~/.codex/skills）
-  --version TAG         预编译发布标签（默认取仓库当前版本 vX.Y.Z）
+  --version TAG         改为下载该标签的预编译包（当前公开 Release 还没有附件）
   --archive PATH|URL    使用指定的预编译压缩包（本地路径或 https URL）
   --sha256 PATH|HEX     预编译压缩包的 SHA-256 校验文件或 64 位摘要
-  --from-source         从本地源码编译安装（需要 cargo 与 npm）
+  --from-source         从本地源码编译安装（需要 cargo 与 npm；这也是默认行为）
   --dry-run             打印计划并检查路径，不写入
 
-默认下载并校验当前平台的预编译包（macOS arm64 / Linux x86_64），无需本地
-Rust 或 Node 环境；也可传 --from-source 回退本地源码编译。
+默认与 --from-source 相同，从本仓库源码编译，需要 Rust 与 Node。
+公开的 GitHub Release 还没有预编译附件，所以默认不会下载。
+已有压缩包时用 --archive；远程 URL 必须同时提供 --sha256，本地文件可以省略。
+--version 会尝试下载该标签的预编译包。下载失败时请改回 --from-source。
 默认将 deck-master、deck-content、deck-design、deck-review 整个目录
 软链接到 ~/.codex/skills；--skills-root 更换目录。不再安装兼容入口 deck。
 EOF
@@ -30,7 +32,7 @@ script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 repo_root=$(CDPATH= cd -- "$script_dir/.." && pwd)
 prefix="${HOME}/.local"
 skills_root="${HOME}/.codex/skills"
-mode="${DECK_INSTALL_MODE:-prebuilt}"
+mode="${DECK_INSTALL_MODE:-source}"
 release_repo="${DECK_RELEASE_REPO:-MainQuestAI/Deck-Master}"
 release_tag="${DECK_INSTALL_VERSION:-}"
 archive_spec=""
@@ -60,6 +62,7 @@ while [ $# -gt 0 ]; do
     --version)
       [ $# -ge 2 ] || { echo "install.sh: --version 需要发布标签（如 v2.0.0）" >&2; exit 2; }
       release_tag=$2
+      mode=prebuilt
       shift 2
       ;;
     --archive)
@@ -150,7 +153,13 @@ else
     fi
   fi
   case "$archive_spec" in
-    http://*|https://*) need curl ;;
+    http://*|https://*)
+      if [ -z "$sha256_spec" ]; then
+        echo "install.sh: --archive 是远程 URL 时必须提供 --sha256（校验文件或 64 位摘要），不能跳过校验。本地文件可以省略 --sha256。请补上校验，或改用 --from-source 从源码安装。" >&2
+        exit 2
+      fi
+      need curl
+      ;;
   esac
   case "$sha256_spec" in
     http://*|https://*) need curl ;;
@@ -415,7 +424,13 @@ else
     local_archive="${stage_dir}/bundle.tar.gz"
     case "$archive_spec" in
       http://*|https://*)
-        curl -fsSL "$archive_spec" -o "$local_archive"
+        curl_code=0
+        curl -fsSL "$archive_spec" -o "$local_archive" || curl_code=$?
+        if [ "$curl_code" -ne 0 ]; then
+          echo "install.sh: 下载预编译包失败：${archive_spec}。公开的 GitHub Release 可能还没有这个附件。请核对标签和文件名，或改用 --from-source 从源码安装。" >&2
+          rm -rf -- "$stage_dir"
+          exit "$curl_code"
+        fi
         ;;
       *)
         [ -f "$archive_spec" ] || { echo "install.sh: 找不到预编译包 ${archive_spec}" >&2; rm -rf -- "$stage_dir"; exit 2; }
@@ -460,9 +475,12 @@ VERIFY_SHA
     else
       python3.12 -m venv "$venv_dir"
     fi
-    if [ -f "$stage_dir/extracted/requirements.lock" ]; then
-      "$venv_dir/bin/python" -m pip install -r "$stage_dir/extracted/requirements.lock"
+    if [ ! -f "$stage_dir/extracted/requirements.lock" ]; then
+      echo "install.sh: 预编译包缺少 requirements.lock。不能在没有锁文件时用 --no-deps 安装 wheel，否则运行依赖会缺失。请换用带 requirements.lock 的包，或改用 --from-source 从源码安装。" >&2
+      rm -rf -- "$stage_dir"
+      exit 2
     fi
+    "$venv_dir/bin/python" -m pip install -r "$stage_dir/extracted/requirements.lock"
     wheel_found=0
     for wheel in "$stage_dir/extracted"/wheels/deck_tools-*.whl; do
       if [ -f "$wheel" ]; then
