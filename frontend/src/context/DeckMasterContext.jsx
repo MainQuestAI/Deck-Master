@@ -484,6 +484,13 @@ export function DeckMasterProvider({ children }) {
     return result;
   });
 
+  const uploadPageImage = (pageId, file) => perform('upload-image', async () => {
+    const result = await api.uploadPageImage(pageId, file);
+    setToast('页面原图已上传');
+    await reload();
+    return result;
+  });
+
   return <DeckMasterContext.Provider value={{
     workspace, pages, revision: workspace?.version, activeProject: workspace?.deck.brief.title || '未命名作品',
     connectionError, actionError, busy, refresh: reload, scene, setScene, currentPage,
@@ -493,7 +500,7 @@ export function DeckMasterProvider({ children }) {
     drawer, openDrawer: setDrawer, closeDrawer: () => setDrawer(null),
     stopRun, build, buildResult: displayedBuildResult, buildLoading, buildError, defaultBuild: workspace?.default_build, download, downloadStatus, downloadSnapshot, restore,
     addReview, resolveReview, reviewDrafts, setReviewDrafts,
-    comparison, compareCandidate, adoptCandidate,
+    comparison, compareCandidate, adoptCandidate, uploadPageImage,
     galleryLayer, setGalleryLayer, galleryView, setGalleryView, query, setQuery,
     presentation, setPresentation, toast, theme, toggleTheme: () => setTheme(value => value === 'dark' ? 'light' : 'dark'),
   }}>{children}</DeckMasterContext.Provider>;

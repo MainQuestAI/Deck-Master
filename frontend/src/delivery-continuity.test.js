@@ -294,3 +294,59 @@ test('disabled sessionStorage degrades silently without interrupting editing or 
   assert.equal(titleInput.value, '无痕模式输入');
   assert.equal(document.querySelector('[aria-label="未保存草稿恢复提示"]'), null);
 });
+
+test('page reader uploads PNG original image and switches immediately to original layer', async () => {
+  const ws = sampleWorkspace();
+  ws.deck.pages[0].image = null;
+  const calls = [];
+  globalThis.fetch = async (url, options = {}) => {
+    calls.push({ url: String(url), method: options.method || 'GET', headers: options.headers });
+    if (options.method === 'POST' && String(url) === '/api/pages/p1/image') {
+      ws.version += 1;
+      ws.deck.pages[0].image = { file: 'uploaded1234.png', basis: 'b2' };
+      return Response.json({
+        version: ws.version,
+        page_id: 'p1',
+        image: ws.deck.pages[0].image,
+        image_url: '/api/files/uploaded1234',
+      });
+    }
+    if (String(url).startsWith('/api/builds/')) return Response.json(structuredClone(sampleBuildDetail));
+    return Response.json(structuredClone(ws));
+  };
+  root = createRoot(document.getElementById('root'));
+  await act(async () => { root.render(createElement(DeckMasterProvider, null, createElement(App))); });
+
+  // Open page p1 in PageReaderView.
+  const openP1 = [...document.querySelectorAll('button')].find(btn => btn.textContent.includes('第一页结论'));
+  assert.ok(openP1);
+  await act(async () => { openP1.click(); });
+
+  const uploadButton = [...document.querySelectorAll('button')].find(btn => btn.textContent.includes('上传原图'));
+  assert.ok(uploadButton);
+  assert.equal(uploadButton.disabled, false);
+  const fileInput = document.querySelector('input[type="file"][aria-label="上传原图"]');
+  assert.ok(fileInput);
+  assert.ok(fileInput.classList.contains('sr-only'));
+  const fakePng = new window.File([new Uint8Array([137, 80, 78, 71])], 'design.png', { type: 'image/png' });
+  Object.defineProperty(fileInput, 'files', { configurable: true, value: [fakePng] });
+  await act(async () => {
+    fileInput.dispatchEvent(new window.Event('change', { bubbles: true }));
+  });
+
+  const post = calls.find(call => call.method === 'POST' && call.url === '/api/pages/p1/image');
+  assert.ok(post);
+  assert.equal(post.headers['Content-Type'], 'image/png');
+  const img = document.querySelector('.s4-artwork img');
+  assert.ok(img);
+  assert.equal(img.getAttribute('src'), '/api/files/uploaded1234');
+
+  // File with empty browser MIME type falls back to filename extension (.jpg -> image/jpeg).
+  const fakeJpg = new window.File([new Uint8Array([255, 216, 255])], 'slide-photo.JPG', { type: '' });
+  Object.defineProperty(fileInput, 'files', { configurable: true, value: [fakeJpg] });
+  await act(async () => {
+    fileInput.dispatchEvent(new window.Event('change', { bubbles: true }));
+  });
+  const jpgPost = calls.filter(call => call.method === 'POST' && call.url === '/api/pages/p1/image').at(-1);
+  assert.equal(jpgPost.headers['Content-Type'], 'image/jpeg');
+});

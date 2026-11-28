@@ -121,6 +121,20 @@ export const adoptCandidate = (runId, pageId, file, note) => request(`/api/runs/
   body: JSON.stringify({ expected_file: file, ...(note !== undefined ? { note } : {}) }),
 }, null);
 
+function inferImageContentType(file) {
+  if (file?.type) return file.type;
+  const name = (file?.name || '').toLowerCase();
+  if (name.endsWith('.png')) return 'image/png';
+  if (name.endsWith('.jpg') || name.endsWith('.jpeg')) return 'image/jpeg';
+  return 'application/octet-stream';
+}
+
+export const uploadPageImage = (pageId, file) => request(`/api/pages/${encodeURIComponent(pageId)}/image`, {
+  method: 'POST',
+  headers: { 'Content-Type': inferImageContentType(file) },
+  body: file,
+}, 30000);
+
 export function comparisonSnapshot(run, result, page, version) {
   const svg = run.kind === 'svg';
   const native = run.kind === 'native';

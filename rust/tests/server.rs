@@ -72,6 +72,16 @@ impl Service {
     }
 
     fn request(&self, method: &str, path: &str, headers: &[(&str, &str)], body: &str) -> Reply {
+        self.request_bytes(method, path, headers, body.as_bytes())
+    }
+
+    fn request_bytes(
+        &self,
+        method: &str,
+        path: &str,
+        headers: &[(&str, &str)],
+        body: &[u8],
+    ) -> Reply {
         let mut stream = TcpStream::connect(self.address).unwrap();
         stream
             .set_read_timeout(Some(Duration::from_secs(30)))
@@ -98,7 +108,8 @@ impl Service {
         for (name, value) in headers {
             write!(stream, "{name}: {value}\r\n").unwrap();
         }
-        write!(stream, "\r\n{body}").unwrap();
+        stream.write_all(b"\r\n").unwrap();
+        let _ = stream.write_all(body);
         let mut bytes = Vec::new();
         stream.read_to_end(&mut bytes).unwrap();
         let end = bytes.windows(4).position(|s| s == b"\r\n\r\n").unwrap();
@@ -883,6 +894,62 @@ fn jpeg_result_named_png_downloads_as_jpeg() {
     assert_eq!(downloaded.status, 200);
     assert_eq!(downloaded.headers["content-type"], "image/jpeg");
     assert_eq!(downloaded.body, std::fs::read(bitmap).unwrap());
+}
+
+#[test]
+fn late_image_result_keeps_original_uploaded_during_the_run() {
+    let temp = tempfile::tempdir().unwrap();
+    ops::new(temp.path(), "晚到原图".into()).unwrap();
+    edit(
+        temp.path(),
+        1,
+        json!({"order":["p1"],"pages":[{"id":"p1"}]}),
+    );
+    let python = std::env::var_os("DECK_TOOLS_PYTHON").expect("install this worktree's deck-tools");
+    let original = temp.path().join("original.png");
+    let late = temp.path().join("late.jpg");
+    assert!(
+        Command::new(&python)
+            .args([
+                "-c",
+                "from PIL import Image; import sys; Image.new('RGB',(12,8),'navy').save(sys.argv[1], format='PNG'); Image.new('RGB',(8,8),'teal').save(sys.argv[2], format='JPEG')"
+            ])
+            .arg(&original)
+            .arg(&late)
+            .status()
+            .unwrap()
+            .success()
+    );
+    let started = run_start(temp.path(), "image", &["p1".into()], None).unwrap();
+    let id = started["runs"][0]["id"].as_i64().unwrap();
+    ops::run_call(temp.path(), id, "p1", false).unwrap();
+    let uploaded = ops::page_image_upload(
+        temp.path(),
+        "p1",
+        &std::fs::read(&original).unwrap(),
+        "image/png",
+    )
+    .unwrap();
+    let uploaded_file = uploaded["image"]["file"].as_str().unwrap().to_string();
+    assert!(uploaded_file.ends_with(".png"));
+    let result = ops::run_result(temp.path(), id, "p1", &late).unwrap();
+    assert_eq!(result["adopted"], false);
+    let current = Store::open(temp.path()).unwrap().current().unwrap();
+    assert_eq!(
+        current.deck.pages[0].image.as_ref().unwrap().file,
+        uploaded_file
+    );
+    let shown = ops::run_show(temp.path(), Some(id)).unwrap();
+    assert_eq!(shown["runs"][0]["pages"][0]["status"], "unadopted");
+    assert_eq!(shown["runs"][0]["pages"][0]["basis_changed"], false);
+    let candidate = result["file"].as_str().unwrap();
+    assert!(candidate.ends_with(".jpg"));
+    ops::run_adopt(temp.path(), id, "p1").unwrap();
+    let adopted = Store::open(temp.path()).unwrap().current().unwrap();
+    assert_eq!(
+        adopted.deck.pages[0].image.as_ref().unwrap().file,
+        candidate
+    );
 }
 
 #[test]
@@ -2069,4 +2136,162 @@ fn http_native_adopt_requires_note_reports_warnings_and_conflicts_on_candidate_c
         current.deck.pages[0].preview.as_deref(),
         Some(render_png.as_str())
     );
+}
+
+#[test]
+fn http_page_image_upload_validates_transposes_exif_enforces_limit_and_preserves_text() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path();
+    ops::new(path, "手工上传原图方案".into()).unwrap();
+    let v2 = edit(
+        path,
+        1,
+        json!({
+            "order": ["p1"],
+            "pages": [{
+                "id": "p1",
+                "purpose": "展示核心架构",
+                "layout": "居中图解",
+                "kind": "explanation",
+                "notes": "原始讲稿",
+                "content": {
+                    "title": "架构图",
+                    "body_blocks": [{"type": "paragraph", "id": "a1", "text": "核心正文"}]
+                }
+            }]
+        }),
+    );
+    assert_eq!(v2, 2);
+
+    let python = std::env::var_os("DECK_TOOLS_PYTHON").expect("DECK_TOOLS_PYTHON set");
+    let png_path = path.join("sample.png");
+    let exif_jpg_path = path.join("rotated.jpg");
+    let generated = Command::new(&python)
+        .args([
+            "-c",
+            "from PIL import Image; import sys; Image.new('RGB',(16,12),'navy').save(sys.argv[1], format='PNG'); im=Image.new('RGB',(20,10),'teal'); ex=im.getexif(); ex[274]=6; im.save(sys.argv[2], format='JPEG', exif=ex.tobytes())",
+        ])
+        .arg(&png_path)
+        .arg(&exif_jpg_path)
+        .output()
+        .unwrap();
+    assert!(
+        generated.status.success(),
+        "{}",
+        String::from_utf8_lossy(&generated.stderr)
+    );
+    let png_bytes = std::fs::read(&png_path).unwrap();
+    let exif_jpg_bytes = std::fs::read(&exif_jpg_path).unwrap();
+
+    let service = Service::start(path);
+
+    // 1. Valid PNG upload -> 200 and serves uploaded image.
+    let uploaded = service.request_bytes(
+        "POST",
+        "/api/pages/p1/image",
+        &[("Content-Type", "image/png")],
+        &png_bytes,
+    );
+    assert_eq!(
+        uploaded.status,
+        200,
+        "{}",
+        String::from_utf8_lossy(&uploaded.body)
+    );
+    let body = uploaded.json();
+    assert_eq!(body["version"], 3);
+    assert_eq!(body["width"], 16);
+    assert_eq!(body["height"], 12);
+    let image_url = body["image_url"].as_str().unwrap();
+    let same = service.request_bytes(
+        "POST",
+        "/api/pages/p1/image",
+        &[("Content-Type", "image/png")],
+        &png_bytes,
+    );
+    assert_eq!(same.status, 200, "{}", String::from_utf8_lossy(&same.body));
+    assert_eq!(same.json()["version"], body["version"]);
+    assert_eq!(same.json()["image"]["file"], body["image"]["file"]);
+    let fetched = service.request("GET", image_url, &[], "");
+    assert_eq!(fetched.status, 200);
+    assert_eq!(fetched.body, png_bytes);
+
+    // 2. Concurrent text edit by another writer before next image upload is preserved untouched.
+    let v4 = edit(
+        path,
+        3,
+        json!({
+            "pages": [{"id": "p1", "notes": "他人并发更新的讲稿"}]
+        }),
+    );
+    assert_eq!(v4, 4);
+
+    // 3. EXIF-rotated 20x10 JPEG upload -> transposed to 10x20, keeps v4 notes, keeps v4 restorable.
+    let rotated_resp = service.request_bytes(
+        "POST",
+        "/api/pages/p1/image",
+        &[("Content-Type", "image/jpeg")],
+        &exif_jpg_bytes,
+    );
+    assert_eq!(
+        rotated_resp.status,
+        200,
+        "{}",
+        String::from_utf8_lossy(&rotated_resp.body)
+    );
+    let rot_body = rotated_resp.json();
+    assert_eq!(rot_body["version"], 5);
+    assert_eq!(rot_body["width"], 10);
+    assert_eq!(rot_body["height"], 20);
+    let current = Store::open(path).unwrap().current().unwrap();
+    assert_eq!(current.deck.pages[0].notes, "他人并发更新的讲稿");
+    assert_eq!(current.deck.pages[0].content.title, "架构图");
+    let prev = ops::version_get(path, 3).unwrap();
+    assert_eq!(
+        prev.deck.pages[0].image.as_ref().unwrap().file,
+        body["image"]["file"].as_str().unwrap()
+    );
+
+    // 4. Invalid file bytes -> 400.
+    let invalid_bytes = service.request_bytes(
+        "POST",
+        "/api/pages/p1/image",
+        &[("Content-Type", "image/png")],
+        b"not a real png file",
+    );
+    assert_eq!(invalid_bytes.status, 400);
+    let invalid_text = String::from_utf8_lossy(&invalid_bytes.body);
+    assert!(invalid_text.contains("无法读取图片文件"), "{invalid_text}");
+
+    // 5. Unsupported Content-Type -> 400.
+    let wrong_ct = service.request_bytes(
+        "POST",
+        "/api/pages/p1/image",
+        &[("Content-Type", "text/plain")],
+        b"hello",
+    );
+    assert_eq!(wrong_ct.status, 400);
+    let wrong_text = String::from_utf8_lossy(&wrong_ct.body);
+    assert!(wrong_text.contains("原图上传只支持"), "{wrong_text}");
+
+    // 6. Missing page -> 404.
+    let missing = service.request_bytes(
+        "POST",
+        "/api/pages/no-such-page/image",
+        &[("Content-Type", "image/png")],
+        &png_bytes,
+    );
+    assert_eq!(missing.status, 404);
+    let missing_text = String::from_utf8_lossy(&missing.body);
+    assert!(missing_text.contains("不存在"), "{missing_text}");
+
+    // 7. Oversized upload (> 8 MiB) -> 413.
+    let oversized = vec![0u8; 8 * 1024 * 1024 + 16];
+    let too_large = service.request_bytes(
+        "POST",
+        "/api/pages/p1/image",
+        &[("Content-Type", "image/png")],
+        &oversized,
+    );
+    assert_eq!(too_large.status, 413);
 }

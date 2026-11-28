@@ -41,7 +41,7 @@ AC-07 的当前运行与评分规则：
 6. 最后一轮在最终候选上完成一次中文六页真实 Host 首跑；英文首跑已取消。保留原有两轮候选重跑限制、90 分钟单次上限及环境失败计次。历史记载拟定总额 21（开发 ≤6、核验与修复 ≤15），实际批准额与已用数须从原运行登记核实；无法核实不新启正式计费运行，不把未知数写成零。
 7. 同时执行 Rust、deck-tools、安装回归。结果分开记录机制测试、真实工具、真实 Host、作品判断。空的默认意见列表不代表无审稿，应读取 content_review 详情。
 
-后续按审查的三波推进：先收口上述正确性与 AC-07；接口稳定后推进正常从材料开稿的新整稿基准、既定 native 稿同页保真复测，以及 WebUI—Host 交接。继承已存在的制作与安装能力，不从零重建。WebUI 后续让 v7 意图可编辑、任务能交给 Host、native 候选可对照采用；普通保存不清空隐藏字段。Host 负责生产，浏览器不直接启动 image/svg；本阶段不加前端素材入口，不做 PPTX 导回 deck。作品阅读任务与连续论证是效果标准，不加表格/卡片/图标比例配额。
+后续按审查的三波推进：先收口上述正确性与 AC-07；接口稳定后推进正常从材料开稿的新整稿基准、既定 native 稿同页保真复测，以及 WebUI—Host 交接。继承已存在的制作与安装能力，不从零重建。WebUI 后续让 v7 意图可编辑、任务能交给 Host、native 候选可对照采用；普通保存不清空隐藏字段。Host 负责生产，浏览器不直接启动 image/svg；作者可以在单页上传原图。不做 PPTX 导回 deck。作品阅读任务与连续论证是效果标准，不加表格/卡片/图标比例配额。
 
 ## 现状（1.1.0，2026-11-04）
 
@@ -274,7 +274,7 @@ Page 新增默认空的 `native: Option<Artifact>`，Artifact 仍为 file/basis�
 
 服务与 CLI 共用 ops，各自直连 SQLite。服务不跨请求缓存作品状态；同次 run 列表读取按页面 ID 查找作品，并复用每页每种任务的依据摘要，历史 run 不重复计算相同依据。界面按版本号轮询作品变化，run 与意见在同版本时也刷新。
 
-接口：`GET /api/deck`、`GET /api/builds/{id}`、`GET /api/versions/{version}`、`PUT /api/deck?base=N`、`POST /api/runs/{id}/cancel`、`POST /api/build`、`GET /api/files/{sha}`（sha 只接受 64 位十六进制）、`GET /api/export/{md|pptx}`、`GET|POST /api/reviews`、`POST /api/reviews/{id}/resolve`、`POST /api/runs/{run}/adopt/{page}`、`POST /api/restore/{version}`。接口以 S4 完成判断所需为限；手动采用接口沿用 `deck run adopt` 的行为与返回；导出只列出缺失和过期的页，不拦截（见 2.1、3.6）。
+接口：`GET /api/deck`、`GET /api/builds/{id}`、`GET /api/versions/{version}`、`PUT /api/deck?base=N`、`POST /api/runs/{id}/cancel`、`POST /api/build`、`GET /api/files/{sha}`（sha 只接受 64 位十六进制）、`GET /api/export/{md|pptx}`、`GET|POST /api/reviews`、`POST /api/reviews/{id}/resolve`、`POST /api/runs/{run}/adopt/{page}`、`POST /api/pages/<page>/image`、`POST /api/restore/{version}`。接口以 S4 完成判断所需为限；手动采用接口沿用 `deck run adopt` 的行为与返回；导出只列出缺失和过期的页，不拦截（见 2.1、3.6）。
 
 `GET /api/versions/{version}`（#281）只读指定历史版本，成功返回现有 Snapshot 形状 `{version, deck}`，不含当前 live reviews/runs；版本不存在返回 404，非法编号返回 400，不触发恢复或构建。
 
@@ -300,6 +300,7 @@ S5 界面接入：制作总览展示整稿待处理意见，单页工作区展�
 - `GET /api/export/md` 与 `GET /api/export/pptx` 直接返回下载内容，文件名为 `deck.md/deck.pptx`。`X-Deck-Status` 是 JSON（非 ASCII 字符使用 JSON 转义），含 `missing_pages/stale_pages` 和 `content_review`；PPTX 另含 `id/version_id/input_changed/warning/build_missing_pages/stale_images/warnings/current_content_review`。Markdown 的状态来自 `artifact_status` 加上 `content_review`，其中已有 `stale_images`。`content_review` 不并入 `warnings`。
 - `GET /api/reviews` 返回 `{reviews:[意见]}`，默认只含 comment，可用 `record=comment|content_review|all`、`status=open|resolved` 与 `page=pN` 过滤，按 id 升序；`GET /api/reviews/<id>` 返回完整记录（含 record_kind、checks、snapshot）；POST 接受 `{page_id?, text, reviewer?}`，reviewer 默认 author，服务端强制 method=human 并忽略请求中的 method。add 与 resolve 返回该条意见，resolve 幂等；意见不存在返回 404。
 - `POST /api/runs/<run>/adopt/<page>` 接受 `{expected_file?, note?}`（`AdoptInput`）：`expected_file` 与当前候选文件不一致时返回 409；`native` 任务必须提供非空白 `note`（本页对照结论），缺省或全空白返回 400（文案不含 CLI 参数）。成功返回 200 及 `{runs:[目标 run], warnings:[...]}`，HTTP 层会将 `note_unspecific` 等警告文案转为无 CLI 参数的中文提示。
+- `POST /api/pages/<page>/image` 接受原始 PNG/JPEG 请求体（`Content-Type: image/png` 或 `image/jpeg`，上限 8 MiB），经 `normalize-image` 校验格式并按 EXIF 自动转正；写事务内重读最新作品并仅更新该页 `image`，不覆盖并发文本或讲稿修改，返回 200 及 `{version, page_id, image, image_url, width, height}`（相同内容幂等不新增版本；类型或字节无效返回 400，页面不存在返回 404，超限返回 413）。外部 Host 接入最小协议见 [Host 最小执行协议](../../../docs/host-contract.md)。
 - cancel 返回 `{runs:[目标 run]}`，restore 返回 `{version, deck}`。输入或 SVG 子集错误为 HTTP 400；非本机请求 403；文件或接口不存在 404；冲突 409；缺工具或数据库锁忙 503；工具失败或库内数据损坏 500。错误响应统一返回 `{code, exit_code, step, message, next, error, details?}`，文案不夹带 CLI 参数指令。
 
 ### 3.8 错误
