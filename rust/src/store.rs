@@ -270,7 +270,10 @@ pub fn add_file(root: &Path, data: &[u8], extension: &str) -> Result<String> {
     } else {
         &extension
     };
-    let name = format!("{:x}.{extension}", Sha256::digest(data));
+    let name = format!(
+        "{}.{extension}",
+        crate::ops::lower_hex(Sha256::digest(data))
+    );
     let files = root.join("files");
     let mut temp = tempfile::NamedTempFile::new_in(&files)?;
     temp.write_all(data)?;
@@ -369,7 +372,7 @@ pub fn workspace_etag(
         "v{}:{}:r{}:{}:rp{}:b{}:rv{}:{}:{}:lim{}:{}",
         row.0, row.1, row.2, row.3, row.4, row.5, row.6, row.7, row.8, runs_limit, history_limit
     );
-    let hex = format!("{:x}", Sha256::digest(fingerprint.as_bytes()));
+    let hex = crate::ops::lower_hex(Sha256::digest(fingerprint.as_bytes()));
     Ok(format!("\"w1-{}\"", &hex[..32]))
 }
 

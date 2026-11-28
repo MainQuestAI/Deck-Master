@@ -7,6 +7,14 @@ use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{path::Path, process::Command};
 
+fn lower_hex(bytes: impl AsRef<[u8]>) -> String {
+    bytes
+        .as_ref()
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
+}
+
 fn edit(path: &Path, patch: Value) {
     let version = Store::open(path).unwrap().current().unwrap().version;
     ops::put(path, version, serde_json::from_value(patch).unwrap()).unwrap();
@@ -252,8 +260,8 @@ fn legacy_asset_payload_round_trips_and_public_style_keeps_both_hash_formulas() 
     }
     // Verify legacy svg-v2 basis stored on deck stays non-stale under current explicit contract.
     let legacy_svg_v2 = format!(
-        "svg-v2:{:x}",
-        Sha256::digest(
+        "svg-v2:{}",
+        lower_hex(Sha256::digest(
             serde_json::to_vec(&json!([
                 deck.pages[0].content,
                 deck.pages[0].purpose,
@@ -262,7 +270,7 @@ fn legacy_asset_payload_round_trips_and_public_style_keeps_both_hash_formulas() 
                 stripped.style
             ]))
             .unwrap()
-        )
+        ))
     );
     deck.pages[0].svg = Some(Artifact {
         file: "legacy-v2.svg".into(),

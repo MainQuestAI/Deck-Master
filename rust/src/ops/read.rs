@@ -127,7 +127,7 @@ fn workspace_id(store_root: &Path, tx: &rusqlite::Transaction<'_>) -> String {
     hasher.update(canonical.to_string_lossy().as_bytes());
     hasher.update(b"\0");
     hasher.update(origin_ts.as_bytes());
-    let digest = format!("{:x}", hasher.finalize());
+    let digest = super::lower_hex(hasher.finalize());
     digest[..16].to_owned()
 }
 

@@ -7,6 +7,14 @@ use serde_json::{Value, json};
 use std::path::Path;
 use std::process::Command;
 
+fn lower_hex(bytes: impl AsRef<[u8]>) -> String {
+    bytes
+        .as_ref()
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
+}
+
 fn setup(path: &Path) {
     ops::new(path, "合成技术方案".into()).unwrap();
     let patch: Patch = serde_json::from_value(json!({"order":["p1","p2"],"pages":[{"id":"p1","content":{"title":"Decision"}},{"id":"p2","content":{"title":"Next"}}]})).unwrap();
@@ -1180,10 +1188,7 @@ fn legacy_artifacts_keep_coverage_while_new_runs_include_purpose_and_layout() {
         ]);
         snapshot.deck.pages[index].svg = Some(deck::model::Artifact {
             file: svg_file.clone(),
-            basis: format!(
-                "{:x}",
-                Sha256::digest(serde_json::to_vec(&legacy_inputs).unwrap())
-            ),
+            basis: lower_hex(Sha256::digest(serde_json::to_vec(&legacy_inputs).unwrap())),
         });
     }
     let tx = store.transaction().unwrap();
@@ -1432,25 +1437,22 @@ fn workspace_reads_legacy_svg_v2_imported_and_unreadable_basis_without_failing()
 
     let mut store = store::Store::open(path).unwrap();
     let mut snapshot = store.current().unwrap();
-    let legacy_bare_image = format!(
-        "{:x}",
-        Sha256::digest(
-            serde_json::to_vec(&json!([
-                snapshot.deck.pages[0].content,
-                snapshot.deck.pages[0].layout,
-                snapshot.deck.pages[0].purpose,
-                snapshot.deck.style
-            ]))
-            .unwrap()
-        )
-    );
+    let legacy_bare_image = lower_hex(Sha256::digest(
+        serde_json::to_vec(&json!([
+            snapshot.deck.pages[0].content,
+            snapshot.deck.pages[0].layout,
+            snapshot.deck.pages[0].purpose,
+            snapshot.deck.style
+        ]))
+        .unwrap(),
+    ));
     snapshot.deck.pages[0].image = Some(deck::model::Artifact {
         file: "legacy-img.png".into(),
         basis: legacy_bare_image.clone(),
     });
     let legacy_svg_v2 = format!(
-        "svg-v2:{:x}",
-        Sha256::digest(
+        "svg-v2:{}",
+        lower_hex(Sha256::digest(
             serde_json::to_vec(&json!([
                 snapshot.deck.pages[0].content,
                 snapshot.deck.pages[0].purpose,
@@ -1459,7 +1461,7 @@ fn workspace_reads_legacy_svg_v2_imported_and_unreadable_basis_without_failing()
                 snapshot.deck.style
             ]))
             .unwrap()
-        )
+        ))
     );
     let svg_v3 = ops::basis("svg", &snapshot.deck, &snapshot.deck.pages[1]).unwrap();
     assert!(svg_v3.starts_with("svg-v3:"));

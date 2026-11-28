@@ -25,6 +25,14 @@ fn pptx_fixture(action: &str, path: &Path, variant: &str) -> Value {
     }
 }
 
+fn lower_hex(bytes: impl AsRef<[u8]>) -> String {
+    bytes
+        .as_ref()
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
+}
+
 fn write_file(root: &Path, name: &str, data: &[u8]) {
     fs::create_dir_all(root.join("files")).unwrap();
     fs::write(root.join("files").join(name), data).unwrap();
@@ -219,7 +227,7 @@ fn unsafe_or_unavailable_last_export_does_not_block_editable_content() {
             pptx_fixture("make", &original, variant);
         }
         let bytes = fs::read(&original).unwrap();
-        let digest = format!("{:x}", Sha256::digest(&bytes));
+        let digest = lower_hex(Sha256::digest(&bytes));
         let dest = temp.path().join("new-deck");
         let mut command = Command::new(env!("CARGO_BIN_EXE_deck"));
         command.arg("import").arg(&source).arg(&dest);
