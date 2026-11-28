@@ -412,10 +412,14 @@ else
   echo "四个职责入口：${skills_root}"
 
   phase=doctor
+  # doctor writes the JSON check result to stdout before it exits.
+  # Exit 3 means a tool is missing; exit 4 is a tool failure such as a timeout.
   echo "正在检查本机渲染环境（deck doctor）："
   doctor_code=0
   env -u DECK_TOOLS_PYTHON -u PYTHONPATH "$deck_bin" doctor || doctor_code=$?
-  if [ "$doctor_code" -ne 0 ]; then
-    echo "install.sh: 警告：deck doctor 检测到缺少部分渲染工具（退出码 ${doctor_code}）；CLI 与基础编辑仍可用，需要渲染/回读前请按上方提示补齐依赖。" >&2
+  if [ "$doctor_code" -eq 3 ]; then
+    echo "install.sh: 警告：deck doctor 检测到缺少部分渲染工具（退出码 3）；CLI 与基础编辑仍可用，需要渲染/回读前请按上方 JSON 提示补齐依赖。" >&2
+  elif [ "$doctor_code" -ne 0 ]; then
+    echo "install.sh: 警告：deck doctor 未能完成检查（退出码 ${doctor_code}）。缺工具是退出码 3；超时或工具执行失败是退出码 4。请查看上方 JSON 结果。CLI 与基础编辑仍可用。" >&2
   fi
 fi

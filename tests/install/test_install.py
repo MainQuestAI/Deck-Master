@@ -66,6 +66,10 @@ mkdir -p "$2/bin"
 cat <<'DECK' > "$2/bin/deck"
 #!/bin/sh
 if [ "$1" = doctor ]; then
+  if [ -n "${DECK_TEST_DOCTOR_CODE:-}" ]; then
+    echo '{"status":"tool"}'
+    exit "$DECK_TEST_DOCTOR_CODE"
+  fi
   if [ "$DECK_TEST_DOCTOR_FAIL" = 1 ]; then
     echo '{"status":"needs_tool","checks":[{"name":"soffice","available":false}]}'
     exit 3
@@ -161,6 +165,20 @@ def test_post_install_doctor_missing_tool_warns_without_failing(tmp_path: Path) 
     assert result.returncode == 0, result.stderr
     assert '"status":"needs_tool"' in result.stdout
     assert "警告" in result.stderr and "deck doctor" in result.stderr
+    assert "缺少部分渲染工具" in result.stderr and "退出码 3" in result.stderr
+    _assert_roles(root)
+
+
+def test_post_install_doctor_other_failure_does_not_claim_missing_tools(tmp_path: Path) -> None:
+    env = _stub_env(tmp_path)
+    env["DECK_TEST_DOCTOR_CODE"] = "4"
+    root = tmp_path / "roles"
+    result = _run(["--prefix", str(tmp_path / "prefix"), "--skills-root", str(root)], env=env)
+    assert result.returncode == 0, result.stderr
+    assert '"status":"tool"' in result.stdout
+    assert "警告" in result.stderr and "deck doctor" in result.stderr
+    assert "退出码 4" in result.stderr
+    assert "缺少部分渲染工具" not in result.stderr
     _assert_roles(root)
 
 

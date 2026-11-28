@@ -79,24 +79,24 @@ the skill directory. `--prefix DIR` sets the CLI install root; `--dry-run`
 prints the plan without writing. The compatibility entry `deck` is no longer
 installed, and `--skill-dir` has been removed.
 
-Rerunning removes only a leftover `deck` symlink pointing at this source's
-`deck-skill/`. Old role wrappers containing exactly the three managed links
-are upgraded to links through current; existing current links are kept.
-Wrappers with extra files and other same-name entries cause exit 2 before
-any writes, with the path and target printed. If old Python-line links occupy
-these names, move those links away first (remove only the links, never their
-target directories), then rerun. An unmanaged `deck` is preserved with a
-warning that it may compete with the four role entries for triggering.
+Rerunning prepares a new directory and switches `<prefix>/share/deck/current`.
+It does not migrate old entries or binaries. If `<prefix>/bin/deck` or a role
+entry is already occupied by an unmanaged path (file, directory, or foreign
+symlink), the script exits 2 before any writes and prints the path and target.
+Move that entry aside first (if it is a symlink, remove only the link, never
+its target directory), then rerun. An unmanaged skill entry named `deck` is
+preserved with a warning that it may compete with the four role entries for
+triggering; it does not block installation.
 A new shell keeps its own PATH. If `command -v deck` is not `<prefix>/bin/deck`, call `<prefix>/bin/deck` or put `<prefix>/bin` ahead of the other entry. A non-default prefix writes that absolute path into the installed commands.md.
 Steps are in the [install guide](docs/getting-started.md#install-from-source).
 
 After install, follow the [Quick Start](#quick-start) to make your first deck.
 
 Standard installation and upgrades use `scripts/install.sh`, without
-`DECK_TOOLS_PYTHON`. Unknown CLI entries are preserved and reported as conflicts;
-Cargo records plus the associated built artifact identify supported old installs
-without executing unknown binaries.
-Old venvs and source links are retained for old processes during migration.
+`DECK_TOOLS_PYTHON`. After install, the script runs `deck doctor` and prints
+local renderer availability; that check does not block installation. Old
+installation directories stay in place for running processes. Nothing is
+migrated or deleted automatically.
 
 Development in a worktree (do not reuse another checkout's venv):
 
