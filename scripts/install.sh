@@ -11,7 +11,7 @@ usage() {
 
   --prefix DIR       CLI 安装根目录（默认 ~/.local）
   --skills-root DIR  技能根目录（默认 ~/.codex/skills）
-  --dry-run          打印计划并检查技能路径，不写入
+  --dry-run          打印计划并检查路径，不写入
 
 默认将 deck-master、deck-content、deck-design、deck-review 整个目录
 软链接到 ~/.codex/skills；--skills-root 更换目录。不再安装兼容入口 deck。
@@ -191,107 +191,28 @@ describe_entry() {
   fi
 }
 
-# Cargo metadata plus the associated built artifact identify an old managed
-# binary. A stale Cargo record alone must not authorize replacing another tool.
-legacy_source=""
-if [ -f "$deck_bin" ] && [ ! -L "$deck_bin" ]; then
-  legacy_source=$("$host_python" - "$prefix" <<'LEGACY_SOURCE' || true
-import json, pathlib, sys, urllib.parse
-prefix = pathlib.Path(sys.argv[1])
-try:
-    installs = json.loads((prefix / '.crates2.json').read_text())['installs']
-    for key, value in installs.items():
-        if not key.startswith('deck ') or value.get('bins') != ['deck']:
-            continue
-        crate = pathlib.Path(urllib.parse.unquote(key.split('(path+file://', 1)[1].rstrip(')')))
-        repo = crate.parent
-        built = crate / 'target/release/deck'
-        if ((crate / 'Cargo.toml').is_file() and (repo / 'deck-tools/pyproject.toml').is_file()
-                and (repo / 'deck-skill/deck-master/SKILL.md').is_file() and built.is_file()
-                and built.read_bytes() == (prefix / 'bin/deck').read_bytes()):
-            print(repo.resolve())
-            raise SystemExit(0)
-except (OSError, ValueError, KeyError, IndexError):
-    pass
-raise SystemExit(1)
-LEGACY_SOURCE
-  )
-fi
-
 conflicts=0
 note_conflict() {
   conflicts=1
   printf '%s\n' "$1" >&2
 }
 
-entry_receipt() {
-  "$host_python" "$script_dir/install_entry.py" "$1" "$prefix" "$2" "$3" \
-    "$skill_target" "$legacy_source" "${4:-}"
-}
-
-require_recorded_entry() {
-  entry_receipt check "$1" "$2" >/dev/null || {
-    local code=$?
-    echo "install.sh: 入口在记录后发生变化或迁移凭据不可读取：$1；请保留该入口和用户文件，核对后重试。" >&2
-    return "$code"
-  }
-}
-
 action_deck=absent
-if same_link "$compat_dir" "$skill_target" || { [ -n "$legacy_source" ] && same_link "$compat_dir" "$legacy_source/deck-skill"; } \
-  || [ "$(entry_receipt check "$compat_dir" deck)" = replace ]; then
-  action_deck=remove
-elif [ -e "$compat_dir" ] || [ -L "$compat_dir" ]; then
+if [ -e "$compat_dir" ] || [ -L "$compat_dir" ]; then
   action_deck=unmanaged
-  echo "install.sh: ${compat_dir} 还有一个非本安装器管理的 deck（$(describe_entry "$compat_dir")），可能与四个职责入口抢触发；保留该路径并继续安装。" >&2
+  echo "install.sh: ${compat_dir} 存在一个非本安装器管理的 deck（$(describe_entry "$compat_dir")），可能与四个职责入口抢触发；保留该路径并继续安装。" >&2
 fi
-
-wrapper_for_source() {
-  local dir=$1
-  local role=$2
-  local source_root=$3
-  local entry
-  [ -d "$dir" ] && [ ! -L "$dir" ] || return 1
-  { same_link "${dir}/SKILL.md" "${source_root}/${role}.md" \
-    || same_link "${dir}/SKILL.md" "${source_root}/${role}/SKILL.md"; } \
-    && same_link "${dir}/references" "${source_root}/references" \
-    && same_link "${dir}/assets" "${source_root}/assets" || return 1
-  # Include hidden entries so upgrading never discards an author's extra files.
-  for entry in "$dir"/* "$dir"/.[!.]* "$dir"/..?*; do
-    [ -e "$entry" ] || [ -L "$entry" ] || continue
-    case "${entry##*/}" in
-      SKILL.md|references|assets) ;;
-      *) return 1 ;;
-    esac
-  done
-}
-
-managed_wrapper() {
-  wrapper_for_source "$1" "$2" "$skill_target" || {
-    [ -n "$legacy_source" ] && wrapper_for_source "$1" "$2" "$legacy_source/deck-skill"
-  }
-}
 
 actions=()
 check_role() {
   local role=$1
-  local dir="${skills_root}/${role}" saved_action
+  local dir="${skills_root}/${role}"
   if same_link "$dir" "${current}/deck-skill/${role}"; then
     actions+=(keep)
-  elif same_link "$dir" "${skill_target}/${role}" || { [ -n "$legacy_source" ] && same_link "$dir" "$legacy_source/deck-skill/$role"; }; then
-    actions+=(replace)
   elif [ ! -e "$dir" ] && [ ! -L "$dir" ]; then
     actions+=(create)
-  elif managed_wrapper "$dir" "$role"; then
-    actions+=(upgrade)
-  elif saved_action=$(entry_receipt check "$dir" "$role"); then
-    actions+=("$saved_action")
   else
-    note_conflict "install.sh: ${dir} 已占用，不能作为 ${role} 安装。路径：${dir}；目标：$(describe_entry "$dir")。
-SKILL.md：$(describe_entry "${dir}/SKILL.md")
-references：$(describe_entry "${dir}/references")
-assets：$(describe_entry "${dir}/assets")
-请先移走该路径；若为软链接，只删除链接，不要删除它指向的目录，然后重新运行。未改写该路径。"
+    note_conflict "install.sh: ${dir} 已占用，不能作为 ${role} 安装。路径：${dir}；目标：$(describe_entry "$dir")。请先移走该路径（若为软链接，只删除链接，不要删除它指向的目录），然后重新运行。未改写该路径。"
     actions+=(conflict)
   fi
 }
@@ -314,21 +235,20 @@ entry_action=create
 if [ -e "$deck_bin" ] || [ -L "$deck_bin" ]; then
   if [ -f "$deck_bin" ] && [ ! -L "$deck_bin" ] && cmp -s "$deck_bin" <(entry_text); then
     entry_action=keep
-  elif [ -n "$legacy_source" ]; then
-    entry_action=migrate
   else
-    note_conflict "install.sh: ${deck_bin} 已占用且无法确认归属；请手工移走此入口后重试，未改写该路径。"
+    note_conflict "install.sh: ${deck_bin} 已占用（$(describe_entry "$deck_bin")）；请手工移走此入口后重试，未改写该路径。"
   fi
 fi
+
 if [ -e "$current" ] || [ -L "$current" ]; then
   if [ ! -L "$current" ]; then
-    note_conflict "install.sh: ${current} 不是受管软链接；未改写该路径。"
+    note_conflict "install.sh: ${current} 不是受管软链接（$(describe_entry "$current")）；未改写该路径。"
   else
     resolved_current=$(resolve_path "$current")
     resolved_installations=$(resolve_path "$installations")
     case "$resolved_current" in
       "$resolved_installations"/*) ;;
-      *) note_conflict "install.sh: ${current} 指向其他位置；请手工处理，未改写该路径。" ;;
+      *) note_conflict "install.sh: ${current} 指向其他位置（$(describe_entry "$current")）；请手工处理，未改写该路径。" ;;
     esac
   fi
 fi
@@ -437,9 +357,8 @@ if [ "$dry_run" -eq 1 ]; then
   plan atomic-replace-current "$current" "$installation"
 else
   "$host_python" - "$current" "$installation" <<'SWITCH'
-import os, pathlib, sys
+import os, pathlib, secrets, sys
 current = pathlib.Path(sys.argv[1])
-import secrets
 link = current.with_name('.current-' + secrets.token_hex(16))
 link.symlink_to(sys.argv[2])
 try:
@@ -451,16 +370,6 @@ fi
 
 phase=install-entries
 run mkdir -p "${prefix}/bin" "$skills_root"
-# Preserve ownership before replacing the binary or removing any old link.
-# The record binds each entry's inode and link targets, not stale Cargo data.
-if [ "$dry_run" -eq 0 ]; then
-  if [ "$action_deck" = remove ]; then entry_receipt record "$compat_dir" deck replace; fi
-  for i in "${!roles[@]}"; do
-    case "${actions[$i]}" in
-      replace|upgrade) entry_receipt record "$skills_root/${roles[$i]}" "${roles[$i]}" "${actions[$i]}" ;;
-    esac
-  done
-fi
 if [ "$entry_action" != keep ]; then
   if [ "$dry_run" -eq 1 ]; then
     plan install-fixed-entry "$deck_bin"
@@ -476,28 +385,16 @@ os.replace(temporary, entry)
 ENTRY_INSTALL
   fi
 fi
-link_role() {
-  local role=$1 action=$2 dir="${skills_root}/$1"
-  if [ "$action" = keep ]; then return; fi
-  if [ "$dry_run" -eq 0 ] && { [ "$action" = upgrade ] || [ "$action" = replace ]; }; then
-    require_recorded_entry "$dir" "$role"
+
+for i in "${!roles[@]}"; do
+  if [ "${actions[$i]}" != keep ]; then
+    run ln -s "$current/deck-skill/${roles[$i]}" "${skills_root}/${roles[$i]}"
   fi
-  if [ "$action" = upgrade ]; then
-    run rm -f -- "$dir/SKILL.md" "$dir/references" "$dir/assets"
-    run rmdir -- "$dir"
-  elif [ "$action" = replace ]; then
-    run rm -- "$dir"
-  fi
-  run ln -s "$current/deck-skill/$role" "$dir"
-}
-if [ "$action_deck" = remove ]; then
-  if [ "$dry_run" -eq 0 ]; then require_recorded_entry "$compat_dir" deck; fi
-  run rm -- "$compat_dir"
-fi
-for i in "${!roles[@]}"; do link_role "${roles[$i]}" "${actions[$i]}"; done
-if [ "$dry_run" -eq 0 ]; then
-  entry_receipt clear "$compat_dir" deck
-  for role in "${roles[@]}"; do entry_receipt clear "$skills_root/$role" "$role"; done
+done
+
+if [ "$dry_run" -eq 1 ]; then
+  plan "$deck_bin" doctor
+else
   echo "已安装 deck：${deck_bin}"
   if found=$(command -v deck 2>/dev/null); then
     if [ "$(resolve_path "$found")" = "$(resolve_path "$deck_bin")" ]; then
@@ -513,7 +410,16 @@ if [ "$dry_run" -eq 0 ]; then
   fi
   echo "完整组件目录：${installation}"
   echo "四个职责入口：${skills_root}"
-  if [ "$entry_action" = migrate ]; then
-    echo "旧布局 venv 和源码保留供旧进程使用；停止旧进程后可另行处理。"
+
+  phase=doctor
+  # doctor writes the JSON check result to stdout before it exits.
+  # Exit 3 means a tool is missing; exit 4 is a tool failure such as a timeout.
+  echo "正在检查本机渲染环境（deck doctor）："
+  doctor_code=0
+  env -u DECK_TOOLS_PYTHON -u PYTHONPATH "$deck_bin" doctor || doctor_code=$?
+  if [ "$doctor_code" -eq 3 ]; then
+    echo "install.sh: 警告：deck doctor 检测到缺少部分渲染工具（退出码 3）；CLI 与基础编辑仍可用，需要渲染/回读前请按上方 JSON 提示补齐依赖。" >&2
+  elif [ "$doctor_code" -ne 0 ]; then
+    echo "install.sh: 警告：deck doctor 未能完成检查（退出码 ${doctor_code}）。缺工具是退出码 3；超时或工具执行失败是退出码 4。请查看上方 JSON 结果。CLI 与基础编辑仍可用。" >&2
   fi
 fi
