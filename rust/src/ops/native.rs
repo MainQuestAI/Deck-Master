@@ -337,7 +337,7 @@ pub(super) fn native_result(
             assets.push(NativeAsset {
                 id: name,
                 file: file.clone(),
-                sha256: format!("{:x}", Sha256::digest(&bytes)),
+                sha256: super::lower_hex(Sha256::digest(&bytes)),
             });
             op["file"] = json!(file);
         }

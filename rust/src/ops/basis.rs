@@ -60,8 +60,18 @@ struct RenderBasisInput<'a> {
     style: StyleBasis<'a>,
 }
 
+// sha2 0.11 dropped LowerHex on digest output. Keep the 0.10 "{:x}" form:
+// lowercase, two digits per byte, leading zeros preserved.
+pub(crate) fn lower_hex(bytes: impl AsRef<[u8]>) -> String {
+    bytes
+        .as_ref()
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
+}
+
 fn sha256_hex<T: Serialize>(input: &T) -> Result<String> {
-    Ok(format!("{:x}", Sha256::digest(serde_json::to_vec(input)?)))
+    Ok(lower_hex(Sha256::digest(serde_json::to_vec(input)?)))
 }
 
 fn valid_hex_hash(value: &str) -> bool {

@@ -11,6 +11,7 @@ mod save;
 
 pub use asset::{asset_add, page_image_upload, style_theme_clear, style_theme_set};
 pub use basis::basis;
+pub(crate) use basis::lower_hex;
 pub use build::{artifact_status, build, build_detail};
 pub use export::{doctor, export_markdown, export_md, export_pptx};
 pub use material::{material_add, material_text};

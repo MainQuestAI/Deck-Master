@@ -690,7 +690,7 @@ pub fn run_result(project: &Path, id: i64, page_id: &str, source: &Path) -> Resu
     let mut data = std::fs::read(source)?;
     if kind == "svg" {
         use sha2::{Digest, Sha256};
-        let identity = format!("{:x}.svg", Sha256::digest(&data));
+        let identity = format!("{}.svg", super::lower_hex(Sha256::digest(&data)));
         let (_, state, previous) = run_page(&store.connection, id, page_id)?;
         if state == "done" && previous.as_deref() == Some(identity.as_str()) {
             let path = store

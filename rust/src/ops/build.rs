@@ -173,7 +173,7 @@ fn build_digest(deck: &Deck) -> Result<String> {
             })?
         }
     };
-    Ok(format!("{:x}", Sha256::digest(encoded)))
+    Ok(super::lower_hex(Sha256::digest(encoded)))
 }
 
 pub fn artifact_status(deck: &Deck) -> Result<Value> {
